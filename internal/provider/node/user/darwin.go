@@ -125,3 +125,29 @@ func (d *Darwin) DeleteGroup(
 ) (*GroupResult, error) {
 	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
 }
+
+// ListKeys returns ErrUnsupported on Darwin.
+func (d *Darwin) ListKeys(
+	_ context.Context,
+	_ string,
+) ([]SSHKey, error) {
+	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+}
+
+// AddKey returns ErrUnsupported on Darwin.
+func (d *Darwin) AddKey(
+	_ context.Context,
+	_ string,
+	_ SSHKey,
+) (*SSHKeyResult, error) {
+	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+}
+
+// RemoveKey returns ErrUnsupported on Darwin.
+func (d *Darwin) RemoveKey(
+	_ context.Context,
+	_ string,
+	_ string,
+) (*SSHKeyResult, error) {
+	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+}

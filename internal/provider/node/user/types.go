@@ -36,6 +36,9 @@ type Provider interface {
 	CreateGroup(ctx context.Context, opts CreateGroupOpts) (*GroupResult, error)
 	UpdateGroup(ctx context.Context, name string, opts UpdateGroupOpts) (*GroupResult, error)
 	DeleteGroup(ctx context.Context, name string) (*GroupResult, error)
+	ListKeys(ctx context.Context, username string) ([]SSHKey, error)
+	AddKey(ctx context.Context, username string, key SSHKey) (*SSHKeyResult, error)
+	RemoveKey(ctx context.Context, username string, fingerprint string) (*SSHKeyResult, error)
 }
 
 // User represents a system user account.
@@ -100,4 +103,17 @@ type GroupResult struct {
 	Name    string `json:"name"`
 	Changed bool   `json:"changed"`
 	Error   string `json:"error,omitempty"`
+}
+
+// SSHKey represents an SSH public key from authorized_keys.
+type SSHKey struct {
+	Type        string `json:"type"`
+	Fingerprint string `json:"fingerprint"`
+	Comment     string `json:"comment,omitempty"`
+	RawLine     string `json:"raw_line,omitempty"`
+}
+
+// SSHKeyResult represents the result of an SSH key mutation operation.
+type SSHKeyResult struct {
+	Changed bool `json:"changed"`
 }

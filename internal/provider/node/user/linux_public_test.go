@@ -270,6 +270,68 @@ func (suite *LinuxPublicTestSuite) TestDeleteGroup() {
 	}
 }
 
+func (suite *LinuxPublicTestSuite) TestListKeys() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result, err := suite.provider.ListKeys(suite.ctx, "testuser")
+
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func (suite *LinuxPublicTestSuite) TestAddKey() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result, err := suite.provider.AddKey(suite.ctx, "testuser", user.SSHKey{
+				RawLine: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI test@example",
+			})
+
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func (suite *LinuxPublicTestSuite) TestRemoveKey() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result, err := suite.provider.RemoveKey(suite.ctx, "testuser", "SHA256:abc123")
+
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
 func TestLinuxPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(LinuxPublicTestSuite))
 }

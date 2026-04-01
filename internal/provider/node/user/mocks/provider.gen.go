@@ -35,6 +35,21 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 	return m.recorder
 }
 
+// AddKey mocks base method.
+func (m *MockProvider) AddKey(ctx context.Context, username string, key user.SSHKey) (*user.SSHKeyResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddKey", ctx, username, key)
+	ret0, _ := ret[0].(*user.SSHKeyResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddKey indicates an expected call of AddKey.
+func (mr *MockProviderMockRecorder) AddKey(ctx, username, key interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddKey", reflect.TypeOf((*MockProvider)(nil).AddKey), ctx, username, key)
+}
+
 // ChangePassword mocks base method.
 func (m *MockProvider) ChangePassword(ctx context.Context, name, password string) (*user.Result, error) {
 	m.ctrl.T.Helper()
@@ -155,6 +170,21 @@ func (mr *MockProviderMockRecorder) ListGroups(ctx interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGroups", reflect.TypeOf((*MockProvider)(nil).ListGroups), ctx)
 }
 
+// ListKeys mocks base method.
+func (m *MockProvider) ListKeys(ctx context.Context, username string) ([]user.SSHKey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListKeys", ctx, username)
+	ret0, _ := ret[0].([]user.SSHKey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListKeys indicates an expected call of ListKeys.
+func (mr *MockProviderMockRecorder) ListKeys(ctx, username interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListKeys", reflect.TypeOf((*MockProvider)(nil).ListKeys), ctx, username)
+}
+
 // ListUsers mocks base method.
 func (m *MockProvider) ListUsers(ctx context.Context) ([]user.User, error) {
 	m.ctrl.T.Helper()
@@ -168,6 +198,21 @@ func (m *MockProvider) ListUsers(ctx context.Context) ([]user.User, error) {
 func (mr *MockProviderMockRecorder) ListUsers(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUsers", reflect.TypeOf((*MockProvider)(nil).ListUsers), ctx)
+}
+
+// RemoveKey mocks base method.
+func (m *MockProvider) RemoveKey(ctx context.Context, username, fingerprint string) (*user.SSHKeyResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveKey", ctx, username, fingerprint)
+	ret0, _ := ret[0].(*user.SSHKeyResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RemoveKey indicates an expected call of RemoveKey.
+func (mr *MockProviderMockRecorder) RemoveKey(ctx, username, fingerprint interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveKey", reflect.TypeOf((*MockProvider)(nil).RemoveKey), ctx, username, fingerprint)
 }
 
 // UpdateGroup mocks base method.
