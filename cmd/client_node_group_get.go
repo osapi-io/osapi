@@ -56,16 +56,14 @@ var clientNodeGroupGetCmd = &cobra.Command{
 
 		results := make([]cli.ResultRow, 0)
 		for _, r := range resp.Data.Results {
-			var errPtr *string
 			if r.Error != "" {
-				errPtr = &r.Error
-			}
-			if errPtr != nil || len(r.Groups) == 0 {
+				var errPtr *string
+				e := r.Error
+				errPtr = &e
 				results = append(results, cli.ResultRow{
 					Hostname: r.Hostname,
 					Status:   r.Status,
 					Error:    errPtr,
-					Fields:   []string{"", "", ""},
 				})
 
 				continue

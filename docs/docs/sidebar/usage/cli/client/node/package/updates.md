@@ -19,10 +19,14 @@ $ osapi client node package updates --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME    CURRENT      NEW
-  web-01    nginx   1.24.0-2     1.26.0-1
-  web-01    curl    8.5.0-2      8.7.1-1
-  web-02    nginx   1.24.0-2     1.26.0-1
+  web-01
+  NAME    CURRENT      NEW
+  nginx   1.24.0-2     1.26.0-1
+  curl    8.5.0-2      8.7.1-1
+
+  web-02
+  NAME    CURRENT      NEW
+  nginx   1.24.0-2     1.26.0-1
 ```
 
 ## JSON Output

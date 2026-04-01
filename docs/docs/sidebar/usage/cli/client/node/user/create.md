@@ -6,8 +6,10 @@ Create a new user account:
 $ osapi client node user create --target web-01 \
     --name deploy --shell /bin/bash --groups sudo,docker
 
-  NAME     CHANGED  STATUS
-  deploy   true     ok
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  NAME     CHANGED
+  deploy   true
 ```
 
 ## Flags

@@ -6,8 +6,10 @@ Update an existing user account:
 $ osapi client node user update --target web-01 \
     --name deploy --shell /bin/zsh
 
-  NAME     CHANGED  STATUS
-  deploy   true     ok
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  NAME     CHANGED
+  deploy   true
 ```
 
 Lock or unlock an account:

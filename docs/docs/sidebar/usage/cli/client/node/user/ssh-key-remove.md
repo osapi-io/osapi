@@ -6,13 +6,28 @@ Remove an SSH authorized key by fingerprint:
 $ osapi client node user ssh-key remove --target web-01 \
     --name deploy --fingerprint 'SHA256:abc123...'
 
-  HOSTNAME  CHANGED  STATUS
-  web-01    true     ok
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  CHANGED
+  true
 ```
 
 The key matching the given SHA256 fingerprint is removed from the user's
 `~/.ssh/authorized_keys` file. Returns `changed: false` if the fingerprint is
 not found.
+
+When targeting all hosts:
+
+```bash
+$ osapi client node user ssh-key remove --target _all \
+    --name deploy --fingerprint 'SHA256:abc123...'
+
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  HOSTNAME  CHANGED
+  web-01    true
+  web-02    true
+```
 
 ## Flags
 

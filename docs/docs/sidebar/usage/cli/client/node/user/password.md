@@ -6,8 +6,10 @@ Change a user's password:
 $ osapi client node user password --target web-01 \
     --name deploy --password 'newpass123'
 
-  NAME     CHANGED  STATUS
-  deploy   true     ok
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  NAME     CHANGED
+  deploy   true
 ```
 
 The password is sent as plaintext and hashed by the agent using the system's

@@ -18,21 +18,26 @@ $ osapi client node ntp get --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  SYNCHRONIZED  STRATUM  OFFSET    SOURCE     SERVERS
-  web-01    yes           2        +0.000123  192.0.2.1  0.pool.ntp.org, 1.pool.ntp.org
-  web-02    yes           2        +0.000045  192.0.2.1  0.pool.ntp.org, 1.pool.ntp.org
+  web-01
+  SYNCHRONIZED  STRATUM  OFFSET     SOURCE     SERVERS
+  yes           2        +0.000123  192.0.2.1  0.pool.ntp.org, 1.pool.ntp.org
+
+  web-02
+  SYNCHRONIZED  STRATUM  OFFSET     SOURCE     SERVERS
+  yes           2        +0.000045  192.0.2.1  0.pool.ntp.org, 1.pool.ntp.org
 ```
 
-When some hosts are skipped, a STATUS column is shown:
+When some hosts are skipped, HOSTNAME, STATUS, and ERROR columns appear
+alongside data columns:
 
 ```bash
 $ osapi client node ntp get --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS   SYNCHRONIZED  STRATUM  OFFSET  SOURCE  SERVERS  ERROR
-  web-01    ok       yes           2        +0.000123  192.0.2.1  0.pool.ntp.org
-  mac-01    skipped                                                    unsupported platform
+  HOSTNAME  STATUS   ERROR                 SYNCHRONIZED  STRATUM  OFFSET     SOURCE     SERVERS
+  web-01    ok                              yes           2        +0.000123  192.0.2.1  0.pool.ntp.org
+  mac-01    skipped  unsupported platform
 ```
 
 ## JSON Output

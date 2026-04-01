@@ -19,9 +19,13 @@ $ osapi client node package update --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  CHANGED
-  web-01    true
-  web-02    true
+  web-01
+  CHANGED
+  true
+
+  web-02
+  CHANGED
+  true
 ```
 
 ## JSON Output
