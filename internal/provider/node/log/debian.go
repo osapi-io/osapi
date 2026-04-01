@@ -59,6 +59,7 @@ func (d *Debian) Query(
 	_ context.Context,
 	opts QueryOpts,
 ) ([]Entry, error) {
+	d.logger.Debug("executing log.Query")
 	args := buildArgs(opts)
 
 	output, err := d.execManager.RunCmd("journalctl", args)
@@ -75,6 +76,9 @@ func (d *Debian) QueryUnit(
 	unit string,
 	opts QueryOpts,
 ) ([]Entry, error) {
+	d.logger.Debug("executing log.QueryUnit",
+		slog.String("unit", unit),
+	)
 	args := buildUnitArgs(unit, opts)
 
 	output, err := d.execManager.RunCmd("journalctl", args)
