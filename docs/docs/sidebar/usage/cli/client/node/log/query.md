@@ -55,12 +55,12 @@ $ osapi client node log query --target web-01 --lines 1 --json
 
 ## Flags
 
-| Flag              | Description                                              | Default |
-| ----------------- | -------------------------------------------------------- | ------- |
-| `-T, --target`    | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
-| `--lines`         | Maximum number of log lines to return                    | `100`   |
-| `--since`         | Return entries since this time (e.g., `1h`,              |         |
-|                   | `2026-01-01 00:00:00`)                                   |         |
-| `--priority`      | Filter by priority level (e.g., `err`, `warning`,        |         |
-|                   | `info`)                                                  |         |
-| `-j, --json`      | Output raw JSON response                                 |         |
+| Flag           | Description                                              | Default |
+| -------------- | -------------------------------------------------------- | ------- |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
+| `--lines`      | Maximum number of log lines to return                    | `100`   |
+| `--since`      | Return entries since this time (e.g., `1h`,              |         |
+|                | `2026-01-01 00:00:00`)                                   |         |
+| `--priority`   | Filter by priority level (e.g., `err`, `warning`,        |         |
+|                | `info`)                                                  |         |
+| `-j, --json`   | Output raw JSON response                                 |         |

@@ -1,19 +1,29 @@
 # Log Management Provider Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use
+> superpowers:subagent-driven-development (recommended) or
+> superpowers:executing-plans to implement this plan task-by-task. Steps use
+> checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add read-only log viewing to OSAPI via `journalctl --output=json`, with optional filtering by lines, time range, and priority.
+**Goal:** Add read-only log viewing to OSAPI via `journalctl --output=json`,
+with optional filtering by lines, time range, and priority.
 
-**Architecture:** Direct provider at `internal/provider/node/log/` using `exec.Manager` to run `journalctl`. Two API endpoints: query all journal entries and query by unit name. Read-only with `log:read` permission added to all built-in roles.
+**Architecture:** Direct provider at `internal/provider/node/log/` using
+`exec.Manager` to run `journalctl`. Two API endpoints: query all journal entries
+and query by unit name. Read-only with `log:read` permission added to all
+built-in roles.
 
-**Tech Stack:** Go, exec.Manager, journalctl JSON output, oapi-codegen strict-server
+**Tech Stack:** Go, exec.Manager, journalctl JSON output, oapi-codegen
+strict-server
 
 ---
 
 ## File Structure
 
 ### Provider Layer
-- Create: `internal/provider/node/log/types.go` — Provider interface + domain types
+
+- Create: `internal/provider/node/log/types.go` — Provider interface + domain
+  types
 - Create: `internal/provider/node/log/debian.go` — journalctl implementation
 - Create: `internal/provider/node/log/debian_query.go` — shared query logic
 - Create: `internal/provider/node/log/darwin.go` — macOS stub
@@ -24,12 +34,14 @@
 - Test: `internal/provider/node/log/linux_public_test.go`
 
 ### Agent Layer
+
 - Create: `internal/agent/processor_log.go` — log operation dispatcher
 - Modify: `internal/agent/processor.go` — add `log` case + logProvider param
 - Modify: `cmd/agent_setup.go` — create log provider factory, wire into registry
 - Test: `internal/agent/processor_log_public_test.go`
 
 ### API Layer
+
 - Create: `internal/controller/api/node/log/gen/api.yaml` — OpenAPI spec
 - Create: `internal/controller/api/node/log/gen/cfg.yaml` — oapi-codegen config
 - Create: `internal/controller/api/node/log/gen/generate.go` — go:generate
@@ -37,7 +49,8 @@
 - Create: `internal/controller/api/node/log/log.go` — New(), compile-time check
 - Create: `internal/controller/api/node/log/validate.go` — validateHostname
 - Create: `internal/controller/api/node/log/log_query_get.go` — query handler
-- Create: `internal/controller/api/node/log/log_unit_get.go` — query unit handler
+- Create: `internal/controller/api/node/log/log_unit_get.go` — query unit
+  handler
 - Create: `internal/controller/api/node/log/handler.go` — Handler() registration
 - Modify: `cmd/controller_setup.go` — register log handler
 - Test: `internal/controller/api/node/log/log_query_get_public_test.go`
@@ -45,12 +58,14 @@
 - Test: `internal/controller/api/node/log/handler_public_test.go`
 
 ### Operations & Permissions
+
 - Modify: `pkg/sdk/client/operations.go` — add log operation constants
 - Modify: `internal/job/types.go` — add log operation aliases
 - Modify: `pkg/sdk/client/permissions.go` — add `PermLogRead`
 - Modify: `internal/authtoken/permissions.go` — add `PermLogRead` to all roles
 
 ### SDK Layer
+
 - Create: `pkg/sdk/client/log.go` — LogService methods
 - Create: `pkg/sdk/client/log_types.go` — SDK result types + conversions
 - Modify: `pkg/sdk/client/osapi.go` — add Log field
@@ -58,11 +73,13 @@
 - Test: `pkg/sdk/client/log_types_public_test.go`
 
 ### CLI Layer
+
 - Create: `cmd/client_node_log.go` — parent command
 - Create: `cmd/client_node_log_query.go` — query subcommand
 - Create: `cmd/client_node_log_unit.go` — query-unit subcommand
 
 ### Documentation
+
 - Create: `docs/docs/sidebar/features/log-management.md` — feature page
 - Create: `docs/docs/sidebar/usage/cli/client/node/log/log.md` — CLI landing
 - Create: `docs/docs/sidebar/usage/cli/client/node/log/query.md` — query CLI doc
@@ -71,12 +88,15 @@
 - Create: `examples/sdk/client/log.go` — SDK example
 - Modify: `docs/docs/sidebar/features/features.md` — add log to table
 - Modify: `docs/docs/sidebar/features/authentication.md` — add log:read to roles
-- Modify: `docs/docs/sidebar/usage/configuration.md` — add log:read to permissions
-- Modify: `docs/docs/sidebar/architecture/architecture.md` — add log feature link
+- Modify: `docs/docs/sidebar/usage/configuration.md` — add log:read to
+  permissions
+- Modify: `docs/docs/sidebar/architecture/architecture.md` — add log feature
+  link
 - Modify: `docs/docs/sidebar/architecture/api-guidelines.md` — add log endpoints
 - Modify: `docs/docusaurus.config.ts` — add SDK dropdown + features dropdown
 
 ### Integration Test
+
 - Create: `test/integration/log_test.go` — smoke test
 
 ---
@@ -84,6 +104,7 @@
 ### Task 1: Provider Interface and Types
 
 **Files:**
+
 - Create: `internal/provider/node/log/types.go`
 
 - [ ] **Step 1: Create provider interface and types**
@@ -144,8 +165,7 @@ type Entry struct {
 
 - [ ] **Step 2: Verify it compiles**
 
-Run: `go build ./internal/provider/node/log/...`
-Expected: PASS
+Run: `go build ./internal/provider/node/log/...` Expected: PASS
 
 - [ ] **Step 3: Commit**
 
@@ -159,6 +179,7 @@ git commit -m "feat(log): add provider interface and types"
 ### Task 2: Platform Stubs (Darwin + Linux)
 
 **Files:**
+
 - Create: `internal/provider/node/log/darwin.go`
 - Create: `internal/provider/node/log/linux.go`
 - Test: `internal/provider/node/log/darwin_public_test.go`
@@ -292,8 +313,8 @@ func TestLinuxPublicTestSuite(t *testing.T) {
 
 - [ ] **Step 3: Run tests to verify they fail**
 
-Run: `go test -v ./internal/provider/node/log/...`
-Expected: FAIL — Darwin and Linux types don't exist yet
+Run: `go test -v ./internal/provider/node/log/...` Expected: FAIL — Darwin and
+Linux types don't exist yet
 
 - [ ] **Step 4: Implement darwin stub**
 
@@ -415,8 +436,8 @@ func (l *Linux) QueryUnit(
 
 - [ ] **Step 6: Run tests to verify they pass**
 
-Run: `go test -v ./internal/provider/node/log/...`
-Expected: PASS — all 4 tests pass
+Run: `go test -v ./internal/provider/node/log/...` Expected: PASS — all 4 tests
+pass
 
 - [ ] **Step 7: Commit**
 
@@ -431,6 +452,7 @@ git commit -m "feat(log): add darwin and linux provider stubs"
 ### Task 3: Debian Provider Implementation
 
 **Files:**
+
 - Create: `internal/provider/node/log/debian.go`
 - Create: `internal/provider/node/log/debian_query.go`
 - Create: `internal/provider/node/log/mocks/generate.go`
@@ -467,8 +489,8 @@ package mocks
 
 - [ ] **Step 2: Generate mocks**
 
-Run: `go generate ./internal/provider/node/log/mocks/...`
-Expected: generates `provider.gen.go`
+Run: `go generate ./internal/provider/node/log/mocks/...` Expected: generates
+`provider.gen.go`
 
 - [ ] **Step 3: Write debian provider tests**
 
@@ -738,8 +760,8 @@ func TestDebianPublicTestSuite(t *testing.T) {
 
 - [ ] **Step 4: Run tests to verify they fail**
 
-Run: `go test -v ./internal/provider/node/log/...`
-Expected: FAIL — Debian type doesn't exist yet
+Run: `go test -v ./internal/provider/node/log/...` Expected: FAIL — Debian type
+doesn't exist yet
 
 - [ ] **Step 5: Implement debian.go**
 
@@ -1011,8 +1033,8 @@ func parseTimestamp(
 
 - [ ] **Step 7: Run tests to verify they pass**
 
-Run: `go test -v ./internal/provider/node/log/...`
-Expected: PASS — all tests pass
+Run: `go test -v ./internal/provider/node/log/...` Expected: PASS — all tests
+pass
 
 - [ ] **Step 8: Commit**
 
@@ -1028,6 +1050,7 @@ git commit -m "feat(log): add debian provider with journalctl parsing"
 ### Task 4: Operations, Permissions, and Agent Wiring
 
 **Files:**
+
 - Modify: `pkg/sdk/client/operations.go` — add log operations
 - Modify: `internal/job/types.go` — add log operation aliases
 - Modify: `pkg/sdk/client/permissions.go` — add `PermLogRead`
@@ -1074,33 +1097,42 @@ Add to `pkg/sdk/client/permissions.go` after the Package permissions:
 Add to `internal/authtoken/permissions.go`:
 
 1. Add constant after PackageWrite:
+
 ```go
 	PermLogRead = client.PermLogRead
 ```
 
 2. Add to `AllPermissions` slice:
+
 ```go
 	PermLogRead,
 ```
 
 3. Add to admin role after `PermPackageWrite`:
+
 ```go
 		PermLogRead,
 ```
 
 4. Add to write role after `PermPackageWrite`:
+
 ```go
 		PermLogRead,
 ```
 
 5. Add to read role after `PermPackageRead`:
+
 ```go
 		PermLogRead,
 ```
 
 - [ ] **Step 5: Write agent processor tests**
 
-Create `internal/agent/processor_log_public_test.go`. The tests exercise `processLogOperation` via the node processor's `log` case. Follow the same pattern as `processor_process_public_test.go` — table-driven tests with gomock for the log provider mock. Test cases:
+Create `internal/agent/processor_log_public_test.go`. The tests exercise
+`processLogOperation` via the node processor's `log` case. Follow the same
+pattern as `processor_process_public_test.go` — table-driven tests with gomock
+for the log provider mock. Test cases:
+
 - `log.query` with default opts (empty data)
 - `log.query` with all options (lines, since, priority)
 - `log.queryUnit` with unit name
@@ -1108,7 +1140,12 @@ Create `internal/agent/processor_log_public_test.go`. The tests exercise `proces
 - invalid operation format (`log` with no sub-op)
 - nil log provider
 
-The tests construct a `job.Request` with `Operation: "log.query"` (note: the node processor strips the base operation from the dotted format `"hostname.get"` → `"hostname"`, but for log the operation string passed to `processLogOperation` is already `"log.query"`, `"log.queryUnit"` etc. The node processor matches on `baseOperation` which is `"log"`, then delegates to `processLogOperation` which splits on `.` to get the sub-op).
+The tests construct a `job.Request` with `Operation: "log.query"` (note: the
+node processor strips the base operation from the dotted format `"hostname.get"`
+→ `"hostname"`, but for log the operation string passed to `processLogOperation`
+is already `"log.query"`, `"log.queryUnit"` etc. The node processor matches on
+`baseOperation` which is `"log"`, then delegates to `processLogOperation` which
+splits on `.` to get the sub-op).
 
 - [ ] **Step 6: Run tests to verify they fail**
 
@@ -1231,7 +1268,8 @@ func processLogQueryUnit(
 
 - [ ] **Step 8: Wire log into NewNodeProcessor**
 
-Add `logProvider logProv.Provider` parameter to `NewNodeProcessor` in `internal/agent/processor.go`. Add the import:
+Add `logProvider logProv.Provider` parameter to `NewNodeProcessor` in
+`internal/agent/processor.go`. Add the import:
 
 ```go
 logProv "github.com/retr0h/osapi/internal/provider/node/log"
@@ -1247,11 +1285,13 @@ Add the case in the switch:
 - [ ] **Step 9: Create log provider factory in agent_setup.go**
 
 Add import:
+
 ```go
 logProv "github.com/retr0h/osapi/internal/provider/node/log"
 ```
 
 Add factory function:
+
 ```go
 // createLogProvider creates a platform-specific log provider. On Debian, the
 // log provider reads journal entries via journalctl. In containers, journalctl
@@ -1279,17 +1319,18 @@ func createLogProvider(
 ```
 
 Add to `setupAgent` after `packageProvider`:
+
 ```go
 	// --- Log provider ---
 	logProvider := createLogProvider(log, execManager)
 ```
 
-Add `logProvider` to the `NewNodeProcessor` call and the providers list in `registry.Register("node", ...)`.
+Add `logProvider` to the `NewNodeProcessor` call and the providers list in
+`registry.Register("node", ...)`.
 
 - [ ] **Step 10: Run tests**
 
-Run: `go test -v ./internal/agent/... && go build ./...`
-Expected: PASS
+Run: `go test -v ./internal/agent/... && go build ./...` Expected: PASS
 
 - [ ] **Step 11: Commit**
 
@@ -1306,6 +1347,7 @@ git commit -m "feat(log): add operations, permissions, and agent wiring"
 ### Task 5: OpenAPI Spec and Code Generation
 
 **Files:**
+
 - Create: `internal/controller/api/node/log/gen/api.yaml`
 - Create: `internal/controller/api/node/log/gen/cfg.yaml`
 - Create: `internal/controller/api/node/log/gen/generate.go`
@@ -1350,8 +1392,8 @@ paths:
     get:
       summary: Query journal entries
       description: >
-        Query systemd journal entries on the target node with optional
-        filtering by lines, time range, and priority.
+        Query systemd journal entries on the target node with optional filtering
+        by lines, time range, and priority.
       tags:
         - log_operations
       operationId: GetNodeLog
@@ -1375,16 +1417,15 @@ paths:
           in: query
           required: false
           description: >
-            Time filter in journalctl format (e.g., "1 hour ago",
-            "2026-03-31").
+            Time filter in journalctl format (e.g., "1 hour ago", "2026-03-31").
           schema:
             type: string
         - name: priority
           in: query
           required: false
           description: >
-            Minimum priority level (0-7 or name: emerg, alert, crit,
-            err, warning, notice, info, debug).
+            Minimum priority level (0-7 or name: emerg, alert, crit, err,
+            warning, notice, info, debug).
           schema:
             type: string
       responses:
@@ -1417,8 +1458,8 @@ paths:
     get:
       summary: Query journal entries for a unit
       description: >
-        Query systemd journal entries for a specific unit on the target
-        node with optional filtering.
+        Query systemd journal entries for a specific unit on the target node
+        with optional filtering.
       tags:
         - log_operations
       operationId: GetNodeLogUnit
@@ -1443,16 +1484,15 @@ paths:
           in: query
           required: false
           description: >
-            Time filter in journalctl format (e.g., "1 hour ago",
-            "2026-03-31").
+            Time filter in journalctl format (e.g., "1 hour ago", "2026-03-31").
           schema:
             type: string
         - name: priority
           in: query
           required: false
           description: >
-            Minimum priority level (0-7 or name: emerg, alert, crit,
-            err, warning, notice, info, debug).
+            Minimum priority level (0-7 or name: emerg, alert, crit, err,
+            warning, notice, info, debug).
           schema:
             type: string
       responses:
@@ -1490,8 +1530,8 @@ components:
       in: path
       required: true
       description: >
-        Target agent hostname, reserved routing value (_any, _all),
-        or label selector (key:value).
+        Target agent hostname, reserved routing value (_any, _all), or label
+        selector (key:value).
       # NOTE: x-oapi-codegen-extra-tags on path params do not generate
       # validate tags in strict-server mode. Validation is handled
       # manually in handlers via validateHostname().
@@ -1535,19 +1575,19 @@ components:
         timestamp:
           type: string
           description: Entry timestamp in RFC3339 format.
-          example: "2026-03-31T22:30:45.123456Z"
+          example: '2026-03-31T22:30:45.123456Z'
         unit:
           type: string
           description: Systemd unit or syslog identifier.
-          example: "nginx.service"
+          example: 'nginx.service'
         priority:
           type: string
           description: Priority level name.
-          example: "info"
+          example: 'info'
         message:
           type: string
           description: Log message.
-          example: "Started nginx"
+          example: 'Started nginx'
         pid:
           type: integer
           description: Process ID that generated the entry.
@@ -1555,7 +1595,7 @@ components:
         hostname:
           type: string
           description: Hostname where the entry originated.
-          example: "web-01"
+          example: 'web-01'
 
     LogResultEntry:
       type: object
@@ -1589,7 +1629,7 @@ components:
           type: string
           format: uuid
           description: The job ID used to process this request.
-          example: "550e8400-e29b-41d4-a716-446655440000"
+          example: '550e8400-e29b-41d4-a716-446655440000'
         results:
           type: array
           items:
@@ -1670,13 +1710,12 @@ package gen
 
 - [ ] **Step 4: Generate code**
 
-Run: `go generate ./internal/controller/api/node/log/gen/...`
-Expected: generates `log.gen.go`
+Run: `go generate ./internal/controller/api/node/log/gen/...` Expected:
+generates `log.gen.go`
 
 - [ ] **Step 5: Regenerate combined spec**
 
-Run: `just generate`
-Expected: combined spec updated, all code regenerates
+Run: `just generate` Expected: combined spec updated, all code regenerates
 
 - [ ] **Step 6: Commit**
 
@@ -1690,6 +1729,7 @@ git commit -m "feat(log): add OpenAPI spec and generated code"
 ### Task 6: API Handler Implementation
 
 **Files:**
+
 - Create: `internal/controller/api/node/log/types.go`
 - Create: `internal/controller/api/node/log/log.go`
 - Create: `internal/controller/api/node/log/validate.go`
@@ -1704,6 +1744,7 @@ git commit -m "feat(log): add OpenAPI spec and generated code"
 - [ ] **Step 1: Create handler types, factory, and validate**
 
 Create `internal/controller/api/node/log/types.go`:
+
 ```go
 package log
 
@@ -1722,6 +1763,7 @@ type Log struct {
 ```
 
 Create `internal/controller/api/node/log/log.go`:
+
 ```go
 package log
 
@@ -1748,6 +1790,7 @@ func New(
 ```
 
 Create `internal/controller/api/node/log/validate.go`:
+
 ```go
 package log
 
@@ -1769,7 +1812,9 @@ func validateHostname(
 
 - [ ] **Step 2: Write handler tests for GetNodeLog**
 
-Create `internal/controller/api/node/log/log_query_get_public_test.go` — follow the same pattern as `process_list_get_public_test.go`. Test cases:
+Create `internal/controller/api/node/log/log_query_get_public_test.go` — follow
+the same pattern as `process_list_get_public_test.go`. Test cases:
+
 - success (single target)
 - skipped (single target)
 - broadcast success
@@ -1779,11 +1824,15 @@ Create `internal/controller/api/node/log/log_query_get_public_test.go` — follo
 - TestGetNodeLogHTTP (raw HTTP through middleware)
 - TestGetNodeLogRBACHTTP (auth: 401, 403, 200)
 
-The test should mock `s.mockJobClient.EXPECT().Query(...)` with category `"node"` and operation `job.OperationLogQuery`. The handler must pass query params (`lines`, `since`, `priority`) as JSON data.
+The test should mock `s.mockJobClient.EXPECT().Query(...)` with category
+`"node"` and operation `job.OperationLogQuery`. The handler must pass query
+params (`lines`, `since`, `priority`) as JSON data.
 
 - [ ] **Step 3: Write handler tests for GetNodeLogUnit**
 
-Create `internal/controller/api/node/log/log_unit_get_public_test.go` — same pattern. Test cases:
+Create `internal/controller/api/node/log/log_unit_get_public_test.go` — same
+pattern. Test cases:
+
 - success (single target)
 - skipped (single target)
 - broadcast success
@@ -1792,7 +1841,8 @@ Create `internal/controller/api/node/log/log_unit_get_public_test.go` — same p
 - TestGetNodeLogUnitHTTP
 - TestGetNodeLogUnitRBACHTTP
 
-The handler must pass `unit` (from path param) and query params as JSON data with operation `job.OperationLogQueryUnit`.
+The handler must pass `unit` (from path param) and query params as JSON data
+with operation `job.OperationLogQueryUnit`.
 
 - [ ] **Step 4: Implement GetNodeLog handler**
 
@@ -1988,15 +2038,21 @@ func (s *Log) getNodeLogBroadcast(
 }
 ```
 
-Note: The import for `validation` is `"github.com/retr0h/osapi/internal/validation"`. All files need full license headers.
+Note: The import for `validation` is
+`"github.com/retr0h/osapi/internal/validation"`. All files need full license
+headers.
 
 - [ ] **Step 5: Implement GetNodeLogUnit handler**
 
-Create `internal/controller/api/node/log/log_unit_get.go` — same pattern as `log_query_get.go` but adds unit from `request.Name` path param. Passes `{"unit":"...","lines":...,"since":"...","priority":"..."}` as job data. Uses `job.OperationLogQueryUnit`.
+Create `internal/controller/api/node/log/log_unit_get.go` — same pattern as
+`log_query_get.go` but adds unit from `request.Name` path param. Passes
+`{"unit":"...","lines":...,"since":"...","priority":"..."}` as job data. Uses
+`job.OperationLogQueryUnit`.
 
 - [ ] **Step 6: Implement handler.go**
 
-Create `internal/controller/api/node/log/handler.go` — same pattern as `internal/controller/api/node/process/handler.go`:
+Create `internal/controller/api/node/log/handler.go` — same pattern as
+`internal/controller/api/node/process/handler.go`:
 
 ```go
 package log
@@ -2050,18 +2106,21 @@ func Handler(
 - [ ] **Step 7: Register handler in controller_setup.go**
 
 Add import:
+
 ```go
 logAPI "github.com/retr0h/osapi/internal/controller/api/node/log"
 ```
 
 Add after the `packageAPI.Handler(...)` line:
+
 ```go
 	handlers = append(handlers, logAPI.Handler(log, jc, signingKey, customRoles)...)
 ```
 
 - [ ] **Step 8: Write handler_public_test.go**
 
-Test route registration and middleware execution (same pattern as other handler tests).
+Test route registration and middleware execution (same pattern as other handler
+tests).
 
 - [ ] **Step 9: Run tests**
 
@@ -2080,6 +2139,7 @@ git commit -m "feat(log): add API handlers with broadcast support"
 ### Task 7: SDK Service
 
 **Files:**
+
 - Create: `pkg/sdk/client/log.go`
 - Create: `pkg/sdk/client/log_types.go`
 - Modify: `pkg/sdk/client/osapi.go`
@@ -2088,7 +2148,9 @@ git commit -m "feat(log): add API handlers with broadcast support"
 
 - [ ] **Step 1: Write SDK service tests**
 
-Create `pkg/sdk/client/log_public_test.go` — test with `httptest.Server`. Test cases for `Query` and `QueryUnit`:
+Create `pkg/sdk/client/log_public_test.go` — test with `httptest.Server`. Test
+cases for `Query` and `QueryUnit`:
+
 - success (200)
 - auth error (401, 403)
 - server error (500)
@@ -2098,6 +2160,7 @@ Create `pkg/sdk/client/log_public_test.go` — test with `httptest.Server`. Test
 - [ ] **Step 2: Write SDK types tests**
 
 Create `pkg/sdk/client/log_types_public_test.go` — test conversion functions:
+
 - `logCollectionFromGen` with full data
 - `logCollectionFromGen` with error entries
 - `logEntryInfoFromGen` field mapping
@@ -2283,25 +2346,26 @@ func (s *LogService) QueryUnit(
 - [ ] **Step 5: Wire LogService in osapi.go**
 
 Add field to Client struct:
+
 ```go
 	// Log provides log viewing operations (query journal entries).
 	Log *LogService
 ```
 
 Add initialization in `New()`:
+
 ```go
 	c.Log = &LogService{client: httpClient}
 ```
 
 - [ ] **Step 6: Regenerate SDK client**
 
-Run: `go generate ./pkg/sdk/client/gen/...`
-Expected: SDK client picks up log endpoints
+Run: `go generate ./pkg/sdk/client/gen/...` Expected: SDK client picks up log
+endpoints
 
 - [ ] **Step 7: Run tests**
 
-Run: `go test -v ./pkg/sdk/client/...`
-Expected: PASS
+Run: `go test -v ./pkg/sdk/client/...` Expected: PASS
 
 - [ ] **Step 8: Commit**
 
@@ -2317,6 +2381,7 @@ git commit -m "feat(log): add SDK service with tests"
 ### Task 8: CLI Commands
 
 **Files:**
+
 - Create: `cmd/client_node_log.go`
 - Create: `cmd/client_node_log_query.go`
 - Create: `cmd/client_node_log_unit.go`
@@ -2568,8 +2633,8 @@ func init() {
 
 - [ ] **Step 4: Build and verify**
 
-Run: `go build ./... && go run main.go client node log --help`
-Expected: shows `query` and `unit` subcommands
+Run: `go build ./... && go run main.go client node log --help` Expected: shows
+`query` and `unit` subcommands
 
 - [ ] **Step 5: Commit**
 
@@ -2583,6 +2648,7 @@ git commit -m "feat(log): add CLI commands for journal log viewing"
 ### Task 9: Documentation and SDK Example
 
 **Files:**
+
 - Create: `docs/docs/sidebar/features/log-management.md`
 - Create: `docs/docs/sidebar/usage/cli/client/node/log/log.md`
 - Create: `docs/docs/sidebar/usage/cli/client/node/log/query.md`
@@ -2598,7 +2664,9 @@ git commit -m "feat(log): add CLI commands for journal log viewing"
 
 - [ ] **Step 1: Create feature page**
 
-Create `docs/docs/sidebar/features/log-management.md` following the process-management.md template. Include:
+Create `docs/docs/sidebar/features/log-management.md` following the
+process-management.md template. Include:
+
 - How It Works (Query, QueryUnit)
 - Operations table
 - CLI Usage examples
@@ -2611,6 +2679,7 @@ Create `docs/docs/sidebar/features/log-management.md` following the process-mana
 - [ ] **Step 2: Create CLI doc pages**
 
 Create landing page `docs/docs/sidebar/usage/cli/client/node/log/log.md`:
+
 ```markdown
 ---
 sidebar_position: 1
@@ -2621,22 +2690,27 @@ sidebar_position: 1
 <DocCardList />
 ```
 
-Create `query.md` and `unit.md` pages with usage examples, flags, and output samples.
+Create `query.md` and `unit.md` pages with usage examples, flags, and output
+samples.
 
 - [ ] **Step 3: Create SDK doc page**
 
-Create `docs/docs/sidebar/sdk/client/operations/log.md` following existing SDK doc patterns. Document `Query` and `QueryUnit` methods with code examples.
+Create `docs/docs/sidebar/sdk/client/operations/log.md` following existing SDK
+doc patterns. Document `Query` and `QueryUnit` methods with code examples.
 
 - [ ] **Step 4: Create SDK example**
 
-Create `examples/sdk/client/log.go` — demonstrate `Query` and `QueryUnit` with error handling and result printing. Under ~100 lines.
+Create `examples/sdk/client/log.go` — demonstrate `Query` and `QueryUnit` with
+error handling and result printing. Under ~100 lines.
 
 - [ ] **Step 5: Update cross-references**
 
 Update these files to add log management:
+
 - `features/features.md` — add row to features table
 - `features/authentication.md` — add `log:read` to all three role tables
-- `usage/configuration.md` — add `log:read` to permissions comments and role tables
+- `usage/configuration.md` — add `log:read` to permissions comments and role
+  tables
 - `architecture/architecture.md` — add log feature link
 - `architecture/api-guidelines.md` — add log endpoint rows to path pattern table
 - `docusaurus.config.ts` — add to Features dropdown and SDK dropdown
@@ -2653,13 +2727,17 @@ git commit -m "docs: add log management feature docs, SDK example, and cross-ref
 ### Task 10: Integration Test
 
 **Files:**
+
 - Create: `test/integration/log_test.go`
 
 - [ ] **Step 1: Write integration test**
 
-Create `test/integration/log_test.go` with `//go:build integration` tag. Follow the pattern of existing integration tests. Test:
+Create `test/integration/log_test.go` with `//go:build integration` tag. Follow
+the pattern of existing integration tests. Test:
+
 - `osapi client node log query --target _any --json` → verify JSON output
-- `osapi client node log unit --target _any --name sshd.service --json` → verify JSON output or graceful error
+- `osapi client node log unit --target _any --name sshd.service --json` → verify
+  JSON output or graceful error
 
 - [ ] **Step 2: Commit**
 

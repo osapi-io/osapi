@@ -4,22 +4,21 @@ sidebar_position: 4
 
 # Log
 
-The `Log` service provides methods for querying the systemd journal on
-target hosts. Access via `client.Log.Query()` and
-`client.Log.QueryUnit()`.
+The `Log` service provides methods for querying the systemd journal on target
+hosts. Access via `client.Log.Query()` and `client.Log.QueryUnit()`.
 
 ## Methods
 
-| Method                                  | Description                                    |
-| --------------------------------------- | ---------------------------------------------- |
-| `Query(ctx, hostname, opts)`            | Query journal entries for the host             |
-| `QueryUnit(ctx, hostname, unit, opts)`  | Query journal entries for a specific unit      |
+| Method                                 | Description                               |
+| -------------------------------------- | ----------------------------------------- |
+| `Query(ctx, hostname, opts)`           | Query journal entries for the host        |
+| `QueryUnit(ctx, hostname, unit, opts)` | Query journal entries for a specific unit |
 
 ## Request Types
 
-| Type           | Fields                                                               |
-| -------------- | -------------------------------------------------------------------- |
-| `LogQueryOpts` | `Lines` (`*int`), `Since` (`*string`), `Priority` (`*string`)        |
+| Type           | Fields                                                        |
+| -------------- | ------------------------------------------------------------- |
+| `LogQueryOpts` | `Lines` (`*int`), `Since` (`*string`), `Priority` (`*string`) |
 
 ## Usage
 
@@ -66,23 +65,23 @@ resp, err := c.Log.Query(ctx, "_all", client.LogQueryOpts{})
 
 `LogEntryResult` is returned per host in the `Collection.Results` slice:
 
-| Field      | Type        | Description                        |
-| ---------- | ----------- | ---------------------------------- |
-| `Hostname` | `string`    | Target host                        |
-| `Status`   | `string`    | `ok`, `skipped`, or `failed`       |
-| `Entries`  | `[]LogEntry`| Journal entries (nil if none)      |
-| `Error`    | `string`    | Error message if the call failed   |
+| Field      | Type         | Description                      |
+| ---------- | ------------ | -------------------------------- |
+| `Hostname` | `string`     | Target host                      |
+| `Status`   | `string`     | `ok`, `skipped`, or `failed`     |
+| `Entries`  | `[]LogEntry` | Journal entries (nil if none)    |
+| `Error`    | `string`     | Error message if the call failed |
 
 `LogEntry` fields:
 
-| Field       | Type     | Description                           |
-| ----------- | -------- | ------------------------------------- |
-| `Timestamp` | `string` | ISO 8601 timestamp                    |
-| `Unit`      | `string` | Systemd unit name                     |
-| `Priority`  | `string` | Log priority (e.g., `info`, `err`)    |
-| `Message`   | `string` | Log message text                      |
-| `PID`       | `int`    | Process ID that generated the entry   |
-| `Hostname`  | `string` | Hostname from the journal entry       |
+| Field       | Type     | Description                         |
+| ----------- | -------- | ----------------------------------- |
+| `Timestamp` | `string` | ISO 8601 timestamp                  |
+| `Unit`      | `string` | Systemd unit name                   |
+| `Priority`  | `string` | Log priority (e.g., `info`, `err`)  |
+| `Message`   | `string` | Log message text                    |
+| `PID`       | `int`    | Process ID that generated the entry |
+| `Hostname`  | `string` | Hostname from the journal entry     |
 
 ## Example
 
@@ -90,10 +89,10 @@ resp, err := c.Log.Query(ctx, "_all", client.LogQueryOpts{})
 
 ## Permissions
 
-| Operation          | Permission |
-| ------------------ | ---------- |
-| Query, QueryUnit   | `log:read` |
+| Operation        | Permission |
+| ---------------- | ---------- |
+| Query, QueryUnit | `log:read` |
 
-Log management is supported on the Debian OS family (Ubuntu, Debian,
-Raspbian). On unsupported platforms (Darwin, generic Linux) and inside
-containers, operations return `status: skipped`.
+Log management is supported on the Debian OS family (Ubuntu, Debian, Raspbian).
+On unsupported platforms (Darwin, generic Linux) and inside containers,
+operations return `status: skipped`.

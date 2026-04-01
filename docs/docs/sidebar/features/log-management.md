@@ -4,27 +4,27 @@ sidebar_position: 23
 
 # Log Management
 
-OSAPI provides read-only access to the systemd journal on managed hosts.
-Log entries are retrieved via `journalctl` and returned as structured
-JSON with timestamp, unit, priority, message, PID, and hostname fields.
+OSAPI provides read-only access to the systemd journal on managed hosts. Log
+entries are retrieved via `journalctl` and returned as structured JSON with
+timestamp, unit, priority, message, PID, and hostname fields.
 
 ## How It Works
 
-The log provider queries the systemd journal on the agent host at
-request time. Each request returns a live snapshot — up to the
-requested number of entries matching the given filters.
+The log provider queries the systemd journal on the agent host at request time.
+Each request returns a live snapshot — up to the requested number of entries
+matching the given filters.
 
 ### Query
 
 Returns journal log entries for the target host. The agent runs
-`journalctl --output=json` with optional `--lines`, `--since`, and
-`--priority` flags and returns the parsed entries.
+`journalctl --output=json` with optional `--lines`, `--since`, and `--priority`
+flags and returns the parsed entries.
 
 ### QueryUnit
 
-Returns journal log entries scoped to a specific systemd unit. The
-agent adds the `-u <unit>` flag to the journalctl invocation alongside
-the same optional filters.
+Returns journal log entries scoped to a specific systemd unit. The agent adds
+the `-u <unit>` flag to the journalctl invocation alongside the same optional
+filters.
 
 ## Operations
 
@@ -54,8 +54,8 @@ All commands support `--json` for raw JSON output.
 
 ## Broadcast Support
 
-All log operations support broadcast targeting. Use `--target _all` to
-query logs on every registered agent, or use a label selector like
+All log operations support broadcast targeting. Use `--target _all` to query
+logs on every registered agent, or use a label selector like
 `--target group:web` to target a subset.
 
 Responses always include per-host results:
@@ -79,31 +79,28 @@ Skipped and failed hosts appear with their error in the output.
 | Darwin    | Skipped |
 | Linux     | Skipped |
 
-On unsupported platforms, log operations return `status: skipped`
-instead of failing. See
-[Platform Detection](../sdk/platform/detection.md) for details on OS
-family detection.
+On unsupported platforms, log operations return `status: skipped` instead of
+failing. See [Platform Detection](../sdk/platform/detection.md) for details on
+OS family detection.
 
 ## Container Behavior
 
-Log operations return `status: skipped` inside containers. `journalctl`
-requires a running systemd instance which is not available in
-standard container environments.
+Log operations return `status: skipped` inside containers. `journalctl` requires
+a running systemd instance which is not available in standard container
+environments.
 
 ## Permissions
 
-| Operation          | Permission |
-| ------------------ | ---------- |
-| Query, QueryUnit   | `log:read` |
+| Operation        | Permission |
+| ---------------- | ---------- |
+| Query, QueryUnit | `log:read` |
 
-Log querying requires `log:read`, included in all built-in roles
-(`admin`, `write`, `read`).
+Log querying requires `log:read`, included in all built-in roles (`admin`,
+`write`, `read`).
 
 ## Related
 
 - [CLI Reference](../usage/cli/client/node/log/log.md) -- log commands
 - [SDK Reference](../sdk/client/operations/log.md) -- Log service
-- [Platform Detection](../sdk/platform/detection.md) -- OS family
-  detection
-- [Configuration](../usage/configuration.md) -- full configuration
-  reference
+- [Platform Detection](../sdk/platform/detection.md) -- OS family detection
+- [Configuration](../usage/configuration.md) -- full configuration reference
