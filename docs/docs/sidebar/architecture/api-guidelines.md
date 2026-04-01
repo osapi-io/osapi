@@ -59,6 +59,8 @@ Sub-resources represent distinct capabilities of the node:
 | `/node/{hostname}/user`                        | User        |
 | `/node/{hostname}/user/{name}`                 | User        |
 | `/node/{hostname}/user/{name}/password`        | User        |
+| `/node/{hostname}/user/{name}/ssh-key`         | User        |
+| `/node/{hostname}/user/{name}/ssh-key/{fingerprint}` | User  |
 | `/node/{hostname}/group`                       | Group       |
 | `/node/{hostname}/group/{name}`                | Group       |
 | `/node/{hostname}/package`                     | Package     |
