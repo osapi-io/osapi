@@ -39,9 +39,9 @@ func (d *Debian) List(
 
 	customCAs := d.listCustomCAs(ctx)
 
-	result := make([]Entry, 0, len(systemCAs)+len(customCAs))
-	result = append(result, systemCAs...)
+	result := make([]Entry, 0, len(customCAs)+len(systemCAs))
 	result = append(result, customCAs...)
+	result = append(result, systemCAs...)
 
 	return result, nil
 }

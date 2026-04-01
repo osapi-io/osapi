@@ -140,14 +140,14 @@ func (suite *DebianListPublicTestSuite) TestList() {
 			) {
 				suite.NoError(err)
 				suite.Len(entries, 3)
-				// System certs first.
-				suite.Equal("mozilla/DigiCert", entries[0].Name)
-				suite.Equal("system", entries[0].Source)
-				suite.Equal("mozilla/LetsEncrypt", entries[1].Name)
+				// Custom certs first.
+				suite.Equal("my-ca", entries[0].Name)
+				suite.Equal("custom", entries[0].Source)
+				// System certs after.
+				suite.Equal("mozilla/DigiCert", entries[1].Name)
 				suite.Equal("system", entries[1].Source)
-				// Custom cert last.
-				suite.Equal("my-ca", entries[2].Name)
-				suite.Equal("custom", entries[2].Source)
+				suite.Equal("mozilla/LetsEncrypt", entries[2].Name)
+				suite.Equal("system", entries[2].Source)
 			},
 		},
 		{
