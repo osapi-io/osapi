@@ -43,6 +43,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/disk"
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
+	logProv "github.com/retr0h/osapi/internal/provider/node/log"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
 	ntpProv "github.com/retr0h/osapi/internal/provider/node/ntp"
 	powerProv "github.com/retr0h/osapi/internal/provider/node/power"
@@ -205,6 +206,9 @@ func setupAgent(
 	// --- Package provider ---
 	packageProvider := createPackageProvider(log, execManager)
 
+	// --- Log provider ---
+	logProvider := createLogProvider(log, execManager)
+
 	// --- Build registry ---
 	registry := agent.NewProviderRegistry()
 
@@ -222,6 +226,7 @@ func setupAgent(
 			processProvider,
 			userProvider,
 			packageProvider,
+			logProvider,
 			appConfig,
 			log,
 		),
@@ -236,6 +241,7 @@ func setupAgent(
 		processProvider,
 		userProvider,
 		packageProvider,
+		logProvider,
 	)
 
 	registry.Register("network",
@@ -534,5 +540,28 @@ func createPackageProvider(
 		return aptProv.NewDarwinProvider()
 	default:
 		return aptProv.NewLinuxProvider()
+	}
+}
+
+// createLogProvider creates a platform-specific log provider. On Debian, the
+// log provider queries journal logs via journalctl. In containers, journalctl
+// requires systemd which is not available, so the provider is disabled. On
+// other platforms, all operations return ErrUnsupported.
+func createLogProvider(
+	log *slog.Logger,
+	execManager exec.Manager,
+) logProv.Provider {
+	plat := platform.Detect()
+
+	switch plat {
+	case "debian":
+		if platform.IsContainer() {
+			return logProv.NewLinuxProvider()
+		}
+		return logProv.NewDebianProvider(log, execManager)
+	case "darwin":
+		return logProv.NewDarwinProvider()
+	default:
+		return logProv.NewLinuxProvider()
 	}
 }
