@@ -6,13 +6,31 @@ Add an SSH authorized key for a user:
 $ osapi client node user ssh-key add --target web-01 \
     --name deploy --key 'ssh-ed25519 AAAA... user@laptop'
 
-  HOSTNAME  CHANGED  STATUS
-  web-01    true     ok
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  CHANGED
+  true
 ```
 
-The key is appended to the user's `~/.ssh/authorized_keys` file. If the file or
-`~/.ssh` directory does not exist, it is created with correct permissions (`700`
-for the directory, `600` for the file). Duplicate keys are not added.
+The key is appended to the user's `~/.ssh/authorized_keys` file. If
+the file or `~/.ssh` directory does not exist, it is created with
+correct permissions (`700` for the directory, `600` for the file).
+
+Adding a key that already exists (same fingerprint) returns
+`changed: false`.
+
+When targeting all hosts:
+
+```bash
+$ osapi client node user ssh-key add --target _all \
+    --name deploy --key 'ssh-ed25519 AAAA... user@laptop'
+
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  HOSTNAME  CHANGED
+  web-01    true
+  web-02    true
+```
 
 ## Flags
 
