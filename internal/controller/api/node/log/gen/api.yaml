@@ -1,0 +1,281 @@
+# Copyright (c) 2024 John Dewey
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+---
+openapi: 3.0.0
+info:
+  title: Log Management API
+  version: 1.0.0
+tags:
+  - name: log_operations
+    x-displayName: Node/Log
+    description: Log viewing operations on a target node.
+
+paths:
+  /node/{hostname}/log:
+    get:
+      summary: Get system log entries
+      description: >
+        Retrieve log entries from the target node's system journal.
+      tags:
+        - log_operations
+      operationId: GetNodeLog
+      security:
+        - BearerAuth:
+            - log:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - name: lines
+          in: query
+          required: false
+          description: >
+            Maximum number of log lines to return.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=10000
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 10000
+        - name: since
+          in: query
+          required: false
+          description: >
+            Return log entries since this time. Accepts systemd time
+            specifications (e.g., "1h", "2026-01-01 00:00:00").
+          schema:
+            type: string
+        - name: priority
+          in: query
+          required: false
+          description: >
+            Filter by log priority level (e.g., "err", "warning", "info",
+            "debug").
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Log entries from the target node.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving log entries.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/log/unit/{name}:
+    get:
+      summary: Get log entries for a systemd unit
+      description: >
+        Retrieve log entries for a specific systemd unit on the target node.
+      tags:
+        - log_operations
+      operationId: GetNodeLogUnit
+      security:
+        - BearerAuth:
+            - log:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UnitName'
+        - name: lines
+          in: query
+          required: false
+          description: >
+            Maximum number of log lines to return.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=10000
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 10000
+        - name: since
+          in: query
+          required: false
+          description: >
+            Return log entries since this time. Accepts systemd time
+            specifications (e.g., "1h", "2026-01-01 00:00:00").
+          schema:
+            type: string
+        - name: priority
+          in: query
+          required: false
+          description: >
+            Filter by log priority level (e.g., "err", "warning", "info",
+            "debug").
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Log entries for the specified unit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving unit log entries.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+# -- Reusable components --
+
+components:
+  parameters:
+    Hostname:
+      name: hostname
+      in: path
+      required: true
+      description: >
+        Target agent hostname, reserved routing value (_any, _all),
+        or label selector (key:value).
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in handlers via validateHostname().
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1,valid_target
+      schema:
+        type: string
+        minLength: 1
+
+    UnitName:
+      name: name
+      in: path
+      required: true
+      description: >
+        Systemd unit name (e.g., "nginx.service", "sshd.service").
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in the handler.
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1
+      schema:
+        type: string
+        minLength: 1
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    # -- Response schemas --
+
+    LogEntryInfo:
+      type: object
+      description: A single log entry from the system journal.
+      properties:
+        timestamp:
+          type: string
+          description: Log entry timestamp.
+          example: "2026-01-15T10:30:00Z"
+        unit:
+          type: string
+          description: Systemd unit that produced this entry.
+          example: "nginx.service"
+        priority:
+          type: string
+          description: Log priority level.
+          example: "info"
+        message:
+          type: string
+          description: Log message text.
+          example: "Server started successfully"
+        pid:
+          type: integer
+          description: Process identifier that produced this entry.
+          example: 1234
+        hostname:
+          type: string
+          description: Hostname of the system that produced this entry.
+          example: "web-01"
+
+    LogResultEntry:
+      type: object
+      description: Log result for a single agent.
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        entries:
+          type: array
+          description: Log entries from this agent.
+          items:
+            $ref: '#/components/schemas/LogEntryInfo'
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    # -- Collection responses --
+
+    LogCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogResultEntry'
+      required:
+        - results

@@ -410,6 +410,28 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Node/Log",
+      link: {
+        type: "doc",
+        id: "gen/api/log-management-api-log-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-log",
+          label: "Get system log entries",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-log-unit",
+          label: "Get log entries for a systemd unit",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Node/Network",
       link: {
         type: "doc",
