@@ -53,46 +53,61 @@ var clientContainerDockerInspectCmd = &cobra.Command{
 		if resp.Data.JobID != "" {
 			fmt.Println()
 			cli.PrintKV("Job ID", resp.Data.JobID)
-			fmt.Println()
 		}
 
+		results := make([]cli.ResultRow, 0)
 		for _, r := range resp.Data.Results {
-			cli.PrintKV("Hostname", r.Hostname)
 			if r.Error != "" {
-				cli.PrintKV("Error", r.Error)
+				var errPtr *string
+				e := r.Error
+				errPtr = &e
+				results = append(results, cli.ResultRow{
+					Hostname: r.Hostname,
+					Status:   r.Status,
+					Error:    errPtr,
+				})
+
 				continue
 			}
-			cli.PrintKV("ID", r.ID, "Name", r.Name)
-			cli.PrintKV("Image", r.Image, "State", r.State)
-			cli.PrintKV("Created", r.Created)
-			if r.Health != "" {
-				cli.PrintKV("Health", r.Health)
-			}
-			cli.PrintKV("Ports", cli.FormatList(r.Ports))
-			cli.PrintKV("Mounts", cli.FormatList(r.Mounts))
 
+			network := ""
 			if len(r.NetworkSettings) > 0 {
-				ip := r.NetworkSettings["ip_address"]
-				gateway := r.NetworkSettings["gateway"]
-				if ip != "" {
-					cli.PrintKV("Network IP", ip)
+				parts := make([]string, 0)
+				if ip := r.NetworkSettings["ip_address"]; ip != "" {
+					parts = append(parts, "ip="+ip)
 				}
-				if gateway != "" {
-					cli.PrintKV("Network Gateway", gateway)
+				if gw := r.NetworkSettings["gateway"]; gw != "" {
+					parts = append(parts, "gw="+gw)
 				}
-
-				// Display any other network settings
-				other := make([]string, 0)
 				for k, v := range r.NetworkSettings {
 					if k != "ip_address" && k != "gateway" && v != "" {
-						other = append(other, k+"="+v)
+						parts = append(parts, k+"="+v)
 					}
 				}
-				if len(other) > 0 {
-					cli.PrintKV("Network", strings.Join(other, ", "))
-				}
+				network = strings.Join(parts, ", ")
 			}
+
+			results = append(results, cli.ResultRow{
+				Hostname: r.Hostname,
+				Status:   r.Status,
+				Fields: []string{
+					r.ID,
+					r.Name,
+					r.Image,
+					r.State,
+					r.Created,
+					r.Health,
+					cli.FormatList(r.Ports),
+					cli.FormatList(r.Mounts),
+					network,
+				},
+			})
 		}
+		headers, rows := cli.BuildBroadcastTable(
+			results,
+			[]string{"ID", "NAME", "IMAGE", "STATE", "CREATED", "HEALTH", "PORTS", "MOUNTS", "NETWORK"},
+		)
+		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 
