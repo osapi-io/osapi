@@ -424,6 +424,12 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
+          id: "gen/api/get-node-log-source",
+          label: "List log sources",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
           id: "gen/api/get-node-log-unit",
           label: "Get log entries for a systemd unit",
           className: "api-method get",
