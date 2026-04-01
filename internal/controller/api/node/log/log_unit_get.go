@@ -70,17 +70,11 @@ func (s *Log) GetNodeLogUnit(
 		payload.Priority = *request.Params.Priority
 	}
 
-	data, err := json.Marshal(payload)
-	if err != nil {
-		errMsg := err.Error()
-		return gen.GetNodeLogUnit500JSONResponse{Error: &errMsg}, nil
-	}
-
 	if job.IsBroadcastTarget(hostname) {
-		return s.getNodeLogUnitBroadcast(ctx, hostname, data)
+		return s.getNodeLogUnitBroadcast(ctx, hostname, payload)
 	}
 
-	jobID, resp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationLogQueryUnit, data)
+	jobID, resp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationLogQueryUnit, payload)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeLogUnit500JSONResponse{Error: &errMsg}, nil
@@ -137,14 +131,14 @@ func logEntriesFromUnitResponse(
 func (s *Log) getNodeLogUnitBroadcast(
 	ctx context.Context,
 	target string,
-	data []byte,
+	payload unitQueryPayload,
 ) (gen.GetNodeLogUnitResponseObject, error) {
 	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"node",
 		job.OperationLogQueryUnit,
-		data,
+		payload,
 	)
 	if err != nil {
 		errMsg := err.Error()

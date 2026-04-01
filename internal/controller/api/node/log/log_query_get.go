@@ -32,6 +32,7 @@ import (
 	logProv "github.com/retr0h/osapi/internal/provider/node/log"
 )
 
+
 // GetNodeLog returns system log entries from a target node.
 func (s *Log) GetNodeLog(
 	ctx context.Context,
@@ -59,17 +60,11 @@ func (s *Log) GetNodeLog(
 		opts.Priority = *request.Params.Priority
 	}
 
-	data, err := json.Marshal(opts)
-	if err != nil {
-		errMsg := err.Error()
-		return gen.GetNodeLog500JSONResponse{Error: &errMsg}, nil
-	}
-
 	if job.IsBroadcastTarget(hostname) {
-		return s.getNodeLogBroadcast(ctx, hostname, data)
+		return s.getNodeLogBroadcast(ctx, hostname, opts)
 	}
 
-	jobID, resp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationLogQuery, data)
+	jobID, resp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationLogQuery, opts)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeLog500JSONResponse{Error: &errMsg}, nil
@@ -160,14 +155,14 @@ func intPtrOrNil(
 func (s *Log) getNodeLogBroadcast(
 	ctx context.Context,
 	target string,
-	data []byte,
+	opts logProv.QueryOpts,
 ) (gen.GetNodeLogResponseObject, error) {
 	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"node",
 		job.OperationLogQuery,
-		data,
+		opts,
 	)
 	if err != nil {
 		errMsg := err.Error()
