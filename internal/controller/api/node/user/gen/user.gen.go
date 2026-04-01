@@ -34,6 +34,20 @@ const (
 	GroupMutationResultStatusSkipped GroupMutationResultStatus = "skipped"
 )
 
+// Defines values for SSHKeyEntryStatus.
+const (
+	SSHKeyEntryStatusFailed  SSHKeyEntryStatus = "failed"
+	SSHKeyEntryStatusOk      SSHKeyEntryStatus = "ok"
+	SSHKeyEntryStatusSkipped SSHKeyEntryStatus = "skipped"
+)
+
+// Defines values for SSHKeyMutationEntryStatus.
+const (
+	SSHKeyMutationEntryStatusFailed  SSHKeyMutationEntryStatus = "failed"
+	SSHKeyMutationEntryStatusOk      SSHKeyMutationEntryStatus = "ok"
+	SSHKeyMutationEntryStatusSkipped SSHKeyMutationEntryStatus = "skipped"
+)
+
 // Defines values for UserEntryStatus.
 const (
 	UserEntryStatusFailed  UserEntryStatus = "failed"
@@ -132,6 +146,74 @@ type GroupMutationResultStatus string
 type GroupUpdateRequest struct {
 	// Members Group member usernames (replaces existing).
 	Members *[]string `json:"members,omitempty"`
+}
+
+// SSHKeyAddRequest defines model for SSHKeyAddRequest.
+type SSHKeyAddRequest struct {
+	// Key Full SSH public key line (e.g., "ssh-ed25519 AAAA... user@host").
+	Key string `json:"key" validate:"required,min=1"`
+}
+
+// SSHKeyCollectionResponse defines model for SSHKeyCollectionResponse.
+type SSHKeyCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []SSHKeyEntry       `json:"results"`
+}
+
+// SSHKeyEntry SSH key list result for a single agent.
+type SSHKeyEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// Keys SSH authorized keys on this agent.
+	Keys *[]SSHKeyInfo `json:"keys,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status SSHKeyEntryStatus `json:"status"`
+}
+
+// SSHKeyEntryStatus The status of the operation for this host.
+type SSHKeyEntryStatus string
+
+// SSHKeyInfo An SSH authorized key entry.
+type SSHKeyInfo struct {
+	// Comment Key comment (typically user@host).
+	Comment *string `json:"comment,omitempty"`
+
+	// Fingerprint SHA256 fingerprint of the key.
+	Fingerprint *string `json:"fingerprint,omitempty"`
+
+	// Type Key type (e.g., ssh-rsa, ssh-ed25519).
+	Type *string `json:"type,omitempty"`
+}
+
+// SSHKeyMutationEntry SSH key mutation result for a single agent.
+type SSHKeyMutationEntry struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status SSHKeyMutationEntryStatus `json:"status"`
+}
+
+// SSHKeyMutationEntryStatus The status of the operation for this host.
+type SSHKeyMutationEntryStatus string
+
+// SSHKeyMutationResponse defines model for SSHKeyMutationResponse.
+type SSHKeyMutationResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID   `json:"job_id,omitempty"`
+	Results []SSHKeyMutationEntry `json:"results"`
 }
 
 // UserCollectionResponse defines model for UserCollectionResponse.
@@ -265,6 +347,9 @@ type GroupName = string
 // Hostname defines model for Hostname.
 type Hostname = string
 
+// SSHKeyFingerprint defines model for SSHKeyFingerprint.
+type SSHKeyFingerprint = string
+
 // UserName defines model for UserName.
 type UserName = string
 
@@ -282,6 +367,9 @@ type PutNodeUserJSONRequestBody = UserUpdateRequest
 
 // PostNodeUserPasswordJSONRequestBody defines body for PostNodeUserPassword for application/json ContentType.
 type PostNodeUserPasswordJSONRequestBody = UserPasswordRequest
+
+// PostNodeUserSshKeyJSONRequestBody defines body for PostNodeUserSshKey for application/json ContentType.
+type PostNodeUserSshKeyJSONRequestBody = SSHKeyAddRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -318,6 +406,15 @@ type ServerInterface interface {
 	// Change user password
 	// (POST /node/{hostname}/user/{name}/password)
 	PostNodeUserPassword(ctx echo.Context, hostname Hostname, name UserName) error
+	// List SSH authorized keys
+	// (GET /node/{hostname}/user/{name}/ssh-key)
+	GetNodeUserSshKey(ctx echo.Context, hostname Hostname, name UserName) error
+	// Add SSH authorized key
+	// (POST /node/{hostname}/user/{name}/ssh-key)
+	PostNodeUserSshKey(ctx echo.Context, hostname Hostname, name UserName) error
+	// Remove SSH authorized key
+	// (DELETE /node/{hostname}/user/{name}/ssh-key/{fingerprint})
+	DeleteNodeUserSshKey(ctx echo.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -579,6 +676,92 @@ func (w *ServerInterfaceWrapper) PostNodeUserPassword(ctx echo.Context) error {
 	return err
 }
 
+// GetNodeUserSshKey converts echo context to params.
+func (w *ServerInterfaceWrapper) GetNodeUserSshKey(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	// ------------- Path parameter "name" -------------
+	var name UserName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", ctx.Param("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter name: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"user:read"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetNodeUserSshKey(ctx, hostname, name)
+	return err
+}
+
+// PostNodeUserSshKey converts echo context to params.
+func (w *ServerInterfaceWrapper) PostNodeUserSshKey(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	// ------------- Path parameter "name" -------------
+	var name UserName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", ctx.Param("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter name: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"user:write"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostNodeUserSshKey(ctx, hostname, name)
+	return err
+}
+
+// DeleteNodeUserSshKey converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteNodeUserSshKey(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	// ------------- Path parameter "name" -------------
+	var name UserName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", ctx.Param("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter name: %s", err))
+	}
+
+	// ------------- Path parameter "fingerprint" -------------
+	var fingerprint SSHKeyFingerprint
+
+	err = runtime.BindStyledParameterWithOptions("simple", "fingerprint", ctx.Param("fingerprint"), &fingerprint, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter fingerprint: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"user:write"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteNodeUserSshKey(ctx, hostname, name, fingerprint)
+	return err
+}
+
 // This is a simple interface which specifies echo.Route addition functions which
 // are present on both echo.Echo and echo.Group, since we want to allow using
 // either of them for path registration
@@ -618,6 +801,9 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/node/:hostname/user/:name", wrapper.GetNodeUserByName)
 	router.PUT(baseURL+"/node/:hostname/user/:name", wrapper.PutNodeUser)
 	router.POST(baseURL+"/node/:hostname/user/:name/password", wrapper.PostNodeUserPassword)
+	router.GET(baseURL+"/node/:hostname/user/:name/ssh-key", wrapper.GetNodeUserSshKey)
+	router.POST(baseURL+"/node/:hostname/user/:name/ssh-key", wrapper.PostNodeUserSshKey)
+	router.DELETE(baseURL+"/node/:hostname/user/:name/ssh-key/:fingerprint", wrapper.DeleteNodeUserSshKey)
 
 }
 
@@ -1225,6 +1411,152 @@ func (response PostNodeUserPassword500JSONResponse) VisitPostNodeUserPasswordRes
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetNodeUserSshKeyRequestObject struct {
+	Hostname Hostname `json:"hostname"`
+	Name     UserName `json:"name"`
+}
+
+type GetNodeUserSshKeyResponseObject interface {
+	VisitGetNodeUserSshKeyResponse(w http.ResponseWriter) error
+}
+
+type GetNodeUserSshKey200JSONResponse SSHKeyCollectionResponse
+
+func (response GetNodeUserSshKey200JSONResponse) VisitGetNodeUserSshKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeUserSshKey401JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeUserSshKey401JSONResponse) VisitGetNodeUserSshKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeUserSshKey403JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeUserSshKey403JSONResponse) VisitGetNodeUserSshKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeUserSshKey500JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeUserSshKey500JSONResponse) VisitGetNodeUserSshKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeUserSshKeyRequestObject struct {
+	Hostname Hostname `json:"hostname"`
+	Name     UserName `json:"name"`
+	Body     *PostNodeUserSshKeyJSONRequestBody
+}
+
+type PostNodeUserSshKeyResponseObject interface {
+	VisitPostNodeUserSshKeyResponse(w http.ResponseWriter) error
+}
+
+type PostNodeUserSshKey200JSONResponse SSHKeyMutationResponse
+
+func (response PostNodeUserSshKey200JSONResponse) VisitPostNodeUserSshKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeUserSshKey400JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeUserSshKey400JSONResponse) VisitPostNodeUserSshKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeUserSshKey401JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeUserSshKey401JSONResponse) VisitPostNodeUserSshKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeUserSshKey403JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeUserSshKey403JSONResponse) VisitPostNodeUserSshKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeUserSshKey500JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeUserSshKey500JSONResponse) VisitPostNodeUserSshKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNodeUserSshKeyRequestObject struct {
+	Hostname    Hostname          `json:"hostname"`
+	Name        UserName          `json:"name"`
+	Fingerprint SSHKeyFingerprint `json:"fingerprint"`
+}
+
+type DeleteNodeUserSshKeyResponseObject interface {
+	VisitDeleteNodeUserSshKeyResponse(w http.ResponseWriter) error
+}
+
+type DeleteNodeUserSshKey200JSONResponse SSHKeyMutationResponse
+
+func (response DeleteNodeUserSshKey200JSONResponse) VisitDeleteNodeUserSshKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNodeUserSshKey401JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeUserSshKey401JSONResponse) VisitDeleteNodeUserSshKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNodeUserSshKey403JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeUserSshKey403JSONResponse) VisitDeleteNodeUserSshKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNodeUserSshKey500JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeUserSshKey500JSONResponse) VisitDeleteNodeUserSshKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List all groups
@@ -1260,6 +1592,15 @@ type StrictServerInterface interface {
 	// Change user password
 	// (POST /node/{hostname}/user/{name}/password)
 	PostNodeUserPassword(ctx context.Context, request PostNodeUserPasswordRequestObject) (PostNodeUserPasswordResponseObject, error)
+	// List SSH authorized keys
+	// (GET /node/{hostname}/user/{name}/ssh-key)
+	GetNodeUserSshKey(ctx context.Context, request GetNodeUserSshKeyRequestObject) (GetNodeUserSshKeyResponseObject, error)
+	// Add SSH authorized key
+	// (POST /node/{hostname}/user/{name}/ssh-key)
+	PostNodeUserSshKey(ctx context.Context, request PostNodeUserSshKeyRequestObject) (PostNodeUserSshKeyResponseObject, error)
+	// Remove SSH authorized key
+	// (DELETE /node/{hostname}/user/{name}/ssh-key/{fingerprint})
+	DeleteNodeUserSshKey(ctx context.Context, request DeleteNodeUserSshKeyRequestObject) (DeleteNodeUserSshKeyResponseObject, error)
 }
 
 type StrictHandlerFunc = strictecho.StrictEchoHandlerFunc
@@ -1580,6 +1921,91 @@ func (sh *strictHandler) PostNodeUserPassword(ctx echo.Context, hostname Hostnam
 		return err
 	} else if validResponse, ok := response.(PostNodeUserPasswordResponseObject); ok {
 		return validResponse.VisitPostNodeUserPasswordResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetNodeUserSshKey operation middleware
+func (sh *strictHandler) GetNodeUserSshKey(ctx echo.Context, hostname Hostname, name UserName) error {
+	var request GetNodeUserSshKeyRequestObject
+
+	request.Hostname = hostname
+	request.Name = name
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetNodeUserSshKey(ctx.Request().Context(), request.(GetNodeUserSshKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetNodeUserSshKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetNodeUserSshKeyResponseObject); ok {
+		return validResponse.VisitGetNodeUserSshKeyResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// PostNodeUserSshKey operation middleware
+func (sh *strictHandler) PostNodeUserSshKey(ctx echo.Context, hostname Hostname, name UserName) error {
+	var request PostNodeUserSshKeyRequestObject
+
+	request.Hostname = hostname
+	request.Name = name
+
+	var body PostNodeUserSshKeyJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostNodeUserSshKey(ctx.Request().Context(), request.(PostNodeUserSshKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostNodeUserSshKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(PostNodeUserSshKeyResponseObject); ok {
+		return validResponse.VisitPostNodeUserSshKeyResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DeleteNodeUserSshKey operation middleware
+func (sh *strictHandler) DeleteNodeUserSshKey(ctx echo.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint) error {
+	var request DeleteNodeUserSshKeyRequestObject
+
+	request.Hostname = hostname
+	request.Name = name
+	request.Fingerprint = fingerprint
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteNodeUserSshKey(ctx.Request().Context(), request.(DeleteNodeUserSshKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteNodeUserSshKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(DeleteNodeUserSshKeyResponseObject); ok {
+		return validResponse.VisitDeleteNodeUserSshKeyResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

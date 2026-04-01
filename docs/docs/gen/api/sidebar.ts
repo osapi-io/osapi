@@ -784,6 +784,24 @@ const sidebar: SidebarsConfig = {
           label: "Change user password",
           className: "api-method post",
         },
+        {
+          type: "doc",
+          id: "gen/api/get-node-user-ssh-key",
+          label: "List SSH authorized keys",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-user-ssh-key",
+          label: "Add SSH authorized key",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-user-ssh-key",
+          label: "Remove SSH authorized key",
+          className: "api-method delete",
+        },
       ],
     },
     {
