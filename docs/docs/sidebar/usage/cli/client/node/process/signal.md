@@ -23,7 +23,7 @@ $ osapi client node process signal --target _all \
   HOSTNAME  STATUS   PID   SIGNAL  CHANGED  ERROR
   web-01    ok       1234  HUP     true
   web-02    ok       1234  HUP     true
-  mac-01    skipped                          unsupported platform
+  mac-01    skipped                         unsupported platform
 ```
 
 ## JSON Output

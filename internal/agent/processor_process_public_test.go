@@ -110,6 +110,7 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessOperation() {
 				nil, nil, nil, nil,
 				processProvider,
 				nil,
+				nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -199,6 +200,7 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessList() {
 				nil, nil, nil, nil,
 				nil, nil, nil, nil,
 				tt.setupMock(),
+				nil,
 				nil,
 				config.Config{},
 				slog.Default(),
@@ -296,6 +298,7 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessGet() {
 				nil, nil, nil, nil,
 				tt.setupMock(),
 				nil,
+				nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -391,6 +394,7 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessSignal() {
 				nil, nil, nil, nil,
 				nil, nil, nil, nil,
 				tt.setupMock(),
+				nil,
 				nil,
 				config.Config{},
 				slog.Default(),

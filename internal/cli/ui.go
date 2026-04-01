@@ -92,7 +92,23 @@ func BuildBroadcastTable(
 		}
 	}
 
-	headers := []string{"HOSTNAME"}
+	// Hide HOSTNAME when all results come from the same host
+	// (single target like _any or a specific hostname).
+	multiHost := false
+	if len(results) > 1 {
+		first := results[0].Hostname
+		for _, r := range results[1:] {
+			if r.Hostname != first {
+				multiHost = true
+				break
+			}
+		}
+	}
+
+	var headers []string
+	if multiHost || hasErrors {
+		headers = append(headers, "HOSTNAME")
+	}
 	if hasErrors {
 		headers = append(headers, "STATUS", "ERROR")
 	}
@@ -103,7 +119,10 @@ func BuildBroadcastTable(
 
 	rows := make([][]string, 0, len(results))
 	for _, r := range results {
-		row := []string{r.Hostname}
+		var row []string
+		if multiHost || hasErrors {
+			row = append(row, r.Hostname)
+		}
 		if hasErrors {
 			status := r.Status
 			if status == "" {
@@ -145,8 +164,23 @@ func BuildMutationTable(
 	results []MutationResultRow,
 	fieldHeaders []string,
 ) ([]string, [][]string) {
+	// Hide HOSTNAME when all results come from the same host.
+	multiHost := false
+	if len(results) > 1 {
+		first := results[0].Hostname
+		for _, r := range results[1:] {
+			if r.Hostname != first {
+				multiHost = true
+				break
+			}
+		}
+	}
+
 	headers := make([]string, 0, 4+len(fieldHeaders))
-	headers = append(headers, "HOSTNAME", "STATUS", "CHANGED", "ERROR")
+	if multiHost {
+		headers = append(headers, "HOSTNAME")
+	}
+	headers = append(headers, "STATUS", "CHANGED", "ERROR")
 	headers = append(headers, fieldHeaders...)
 
 	rows := make([][]string, 0, len(results))
@@ -160,7 +194,10 @@ func BuildMutationTable(
 			changedStr = fmt.Sprintf("%v", *r.Changed)
 		}
 		row := make([]string, 0, 4+len(r.Fields))
-		row = append(row, r.Hostname, r.Status, changedStr, errMsg)
+		if multiHost {
+			row = append(row, r.Hostname)
+		}
+		row = append(row, r.Status, changedStr, errMsg)
 		row = append(row, r.Fields...)
 		rows = append(rows, row)
 	}
@@ -491,7 +528,7 @@ func IntToSafeString(
 	return "N/A"
 }
 
-// HandleError logs the appropriate error message based on the SDK error type.
+// HandleError logs the error and exits with code 1.
 func HandleError(
 	err error,
 	logger *slog.Logger,
@@ -503,11 +540,11 @@ func HandleError(
 			slog.Int("code", apiErr.StatusCode),
 			slog.String("error", apiErr.Message),
 		)
-
-		return
+		osExit(1)
 	}
 
 	logger.Error("unexpected error", slog.String("error", err.Error()))
+	osExit(1)
 }
 
 // DisplayJobDetail displays detailed job information from domain types.

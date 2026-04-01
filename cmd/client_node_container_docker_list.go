@@ -59,36 +59,47 @@ var clientContainerDockerListCmd = &cobra.Command{
 		if resp.Data.JobID != "" {
 			fmt.Println()
 			cli.PrintKV("Job ID", resp.Data.JobID)
-			fmt.Println()
 		}
 
+		results := make([]cli.ResultRow, 0)
 		for _, r := range resp.Data.Results {
 			if r.Error != "" {
-				cli.PrintKV("Hostname", r.Hostname, "Error", r.Error)
+				var errPtr *string
+				e := r.Error
+				errPtr = &e
+				results = append(results, cli.ResultRow{
+					Hostname: r.Hostname,
+					Status:   r.Status,
+					Error:    errPtr,
+				})
+
 				continue
 			}
 
-			rows := make([][]string, 0, len(r.Containers))
 			for _, c := range r.Containers {
 				shortID := c.ID
 				if len(shortID) > 12 {
 					shortID = shortID[:12]
 				}
-				rows = append(rows, []string{
-					shortID,
-					c.Name,
-					c.Image,
-					c.State,
-					c.Created,
+
+				results = append(results, cli.ResultRow{
+					Hostname: r.Hostname,
+					Status:   r.Status,
+					Fields: []string{
+						shortID,
+						c.Name,
+						c.Image,
+						c.State,
+						c.Created,
+					},
 				})
 			}
-
-			cli.PrintCompactTable([]cli.Section{{
-				Title:   r.Hostname,
-				Headers: []string{"ID", "NAME", "IMAGE", "STATE", "CREATED"},
-				Rows:    rows,
-			}})
 		}
+		headers, rows := cli.BuildBroadcastTable(
+			results,
+			[]string{"ID", "NAME", "IMAGE", "STATE", "CREATED"},
+		)
+		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 

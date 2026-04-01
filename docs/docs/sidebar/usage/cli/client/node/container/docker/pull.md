@@ -5,12 +5,10 @@ Pull a container image on the target node:
 ```bash
 $ osapi client node container docker pull --image nginx:latest
 
-  Job ID:   550e8400-e29b-41d4-a716-446655440000
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  Hostname: server1
-  Image ID: sha256:a1b2c3d4...
-  Tag:      latest
-  Size:     187.8 MiB
+  STATUS  CHANGED  ERROR  IMAGE ID            TAG     SIZE
+  ok      true            sha256:a1b2c3d4...  latest  187.8 MiB
 ```
 
 Pull a specific image version:

@@ -482,6 +482,52 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Node/Package",
+      link: {
+        type: "doc",
+        id: "gen/api/package-management-api-package-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-package",
+          label: "List installed packages",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-package",
+          label: "Install a package",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-package-by-name",
+          label: "Get a package",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-package",
+          label: "Remove a package",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-package-update",
+          label: "Update package sources",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-package-update",
+          label: "List available updates",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Node/Power",
       link: {
         type: "doc",

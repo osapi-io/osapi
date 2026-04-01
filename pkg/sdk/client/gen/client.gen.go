@@ -251,6 +251,20 @@ const (
 	OSInfoResultItemStatusSkipped OSInfoResultItemStatus = "skipped"
 )
 
+// Defines values for PackageEntryStatus.
+const (
+	PackageEntryStatusFailed  PackageEntryStatus = "failed"
+	PackageEntryStatusOk      PackageEntryStatus = "ok"
+	PackageEntryStatusSkipped PackageEntryStatus = "skipped"
+)
+
+// Defines values for PackageMutationResultStatus.
+const (
+	PackageMutationResultStatusFailed  PackageMutationResultStatus = "failed"
+	PackageMutationResultStatusOk      PackageMutationResultStatus = "ok"
+	PackageMutationResultStatusSkipped PackageMutationResultStatus = "skipped"
+)
+
 // Defines values for PingResponseStatus.
 const (
 	PingResponseStatusFailed  PingResponseStatus = "failed"
@@ -324,6 +338,13 @@ const (
 	TimezoneMutationResultStatusSkipped TimezoneMutationResultStatus = "skipped"
 )
 
+// Defines values for UpdateEntryStatus.
+const (
+	UpdateEntryStatusFailed  UpdateEntryStatus = "failed"
+	UpdateEntryStatusOk      UpdateEntryStatus = "ok"
+	UpdateEntryStatusSkipped UpdateEntryStatus = "skipped"
+)
+
 // Defines values for UptimeResponseStatus.
 const (
 	UptimeResponseStatusFailed  UptimeResponseStatus = "failed"
@@ -353,11 +374,11 @@ const (
 
 // Defines values for GetJobParamsStatus.
 const (
-	Completed      GetJobParamsStatus = "completed"
-	Failed         GetJobParamsStatus = "failed"
-	PartialFailure GetJobParamsStatus = "partial_failure"
-	Processing     GetJobParamsStatus = "processing"
-	Submitted      GetJobParamsStatus = "submitted"
+	GetJobParamsStatusCompleted      GetJobParamsStatus = "completed"
+	GetJobParamsStatusFailed         GetJobParamsStatus = "failed"
+	GetJobParamsStatusPartialFailure GetJobParamsStatus = "partial_failure"
+	GetJobParamsStatusProcessing     GetJobParamsStatus = "processing"
+	GetJobParamsStatusSubmitted      GetJobParamsStatus = "submitted"
 )
 
 // Defines values for GetNodeContainerDockerParamsState.
@@ -1954,6 +1975,83 @@ type ObjectStoreInfo struct {
 	Size int `json:"size"`
 }
 
+// PackageCollectionResponse defines model for PackageCollectionResponse.
+type PackageCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []PackageEntry      `json:"results"`
+}
+
+// PackageEntry A package list result for one host.
+type PackageEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that reported this entry.
+	Hostname string `json:"hostname"`
+
+	// Packages List of packages.
+	Packages *[]PackageInfo `json:"packages,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status PackageEntryStatus `json:"status"`
+}
+
+// PackageEntryStatus The status of the operation for this host.
+type PackageEntryStatus string
+
+// PackageInfo Information about an installed package.
+type PackageInfo struct {
+	// Description Package description.
+	Description *string `json:"description,omitempty"`
+
+	// Name Package name.
+	Name *string `json:"name,omitempty"`
+
+	// Size Installed size in bytes.
+	Size *int64 `json:"size,omitempty"`
+
+	// Status Package status (e.g., installed).
+	Status *string `json:"status,omitempty"`
+
+	// Version Installed version.
+	Version *string `json:"version,omitempty"`
+}
+
+// PackageInstallRequest defines model for PackageInstallRequest.
+type PackageInstallRequest struct {
+	// Name Name of the package to install.
+	Name string `json:"name" validate:"required,min=1"`
+}
+
+// PackageMutationResponse defines model for PackageMutationResponse.
+type PackageMutationResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID     `json:"job_id,omitempty"`
+	Results []PackageMutationResult `json:"results"`
+}
+
+// PackageMutationResult Result of a package install, remove, or update operation for one host.
+type PackageMutationResult struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that processed this operation.
+	Hostname string `json:"hostname"`
+
+	// Name Package name.
+	Name *string `json:"name,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status PackageMutationResultStatus `json:"status"`
+}
+
+// PackageMutationResultStatus The status of the operation for this host.
+type PackageMutationResultStatus string
+
 // PingCollectionResponse defines model for PingCollectionResponse.
 type PingCollectionResponse struct {
 	// JobId The job ID used to process this request.
@@ -2410,6 +2508,43 @@ type TimezoneUpdateResponse struct {
 	Results []TimezoneMutationResult `json:"results"`
 }
 
+// UpdateCollectionResponse defines model for UpdateCollectionResponse.
+type UpdateCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []UpdateEntry       `json:"results"`
+}
+
+// UpdateEntry An update list result for one host.
+type UpdateEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that reported this entry.
+	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status UpdateEntryStatus `json:"status"`
+
+	// Updates List of available updates.
+	Updates *[]UpdateInfo `json:"updates,omitempty"`
+}
+
+// UpdateEntryStatus The status of the operation for this host.
+type UpdateEntryStatus string
+
+// UpdateInfo Information about an available package update.
+type UpdateInfo struct {
+	// CurrentVersion Currently installed version.
+	CurrentVersion *string `json:"current_version,omitempty"`
+
+	// Name Package name.
+	Name *string `json:"name,omitempty"`
+
+	// NewVersion Available version.
+	NewVersion *string `json:"new_version,omitempty"`
+}
+
 // UptimeCollectionResponse defines model for UptimeCollectionResponse.
 type UptimeCollectionResponse struct {
 	// JobId The job ID used to process this request.
@@ -2578,6 +2713,9 @@ type GroupName = string
 // Hostname defines model for Hostname.
 type Hostname = string
 
+// PackageName defines model for PackageName.
+type PackageName = string
+
 // Pid defines model for Pid.
 type Pid = int
 
@@ -2714,6 +2852,9 @@ type PostNodeNtpJSONRequestBody = NtpCreateRequest
 
 // PutNodeNtpJSONRequestBody defines body for PutNodeNtp for application/json ContentType.
 type PutNodeNtpJSONRequestBody = NtpUpdateRequest
+
+// PostNodePackageJSONRequestBody defines body for PostNodePackage for application/json ContentType.
+type PostNodePackageJSONRequestBody = PackageInstallRequest
 
 // PostNodePowerRebootJSONRequestBody defines body for PostNodePowerReboot for application/json ContentType.
 type PostNodePowerRebootJSONRequestBody = PowerRequest
@@ -3010,6 +3151,26 @@ type ClientInterface interface {
 
 	// GetNodeOS request
 	GetNodeOS(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodePackage request
+	GetNodePackage(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodePackageWithBody request with any body
+	PostNodePackageWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodePackage(ctx context.Context, hostname Hostname, body PostNodePackageJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodePackageUpdate request
+	GetNodePackageUpdate(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodePackageUpdate request
+	PostNodePackageUpdate(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteNodePackage request
+	DeleteNodePackage(ctx context.Context, hostname Hostname, name PackageName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodePackageByName request
+	GetNodePackageByName(ctx context.Context, hostname Hostname, name PackageName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostNodePowerRebootWithBody request with any body
 	PostNodePowerRebootWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -3927,6 +4088,90 @@ func (c *Client) PutNodeNtp(ctx context.Context, hostname Hostname, body PutNode
 
 func (c *Client) GetNodeOS(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNodeOSRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodePackage(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodePackageRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodePackageWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodePackageRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodePackage(ctx context.Context, hostname Hostname, body PostNodePackageJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodePackageRequest(c.Server, hostname, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodePackageUpdate(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodePackageUpdateRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodePackageUpdate(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodePackageUpdateRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteNodePackage(ctx context.Context, hostname Hostname, name PackageName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodePackageRequest(c.Server, hostname, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodePackageByName(ctx context.Context, hostname Hostname, name PackageName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodePackageByNameRequest(c.Server, hostname, name)
 	if err != nil {
 		return nil, err
 	}
@@ -6556,6 +6801,237 @@ func NewGetNodeOSRequest(server string, hostname Hostname) (*http.Request, error
 	return req, nil
 }
 
+// NewGetNodePackageRequest generates requests for GetNodePackage
+func NewGetNodePackageRequest(server string, hostname Hostname) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/package", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostNodePackageRequest calls the generic PostNodePackage builder with application/json body
+func NewPostNodePackageRequest(server string, hostname Hostname, body PostNodePackageJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostNodePackageRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPostNodePackageRequestWithBody generates requests for PostNodePackage with any type of body
+func NewPostNodePackageRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/package", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetNodePackageUpdateRequest generates requests for GetNodePackageUpdate
+func NewGetNodePackageUpdateRequest(server string, hostname Hostname) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/package/update", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostNodePackageUpdateRequest generates requests for PostNodePackageUpdate
+func NewPostNodePackageUpdateRequest(server string, hostname Hostname) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/package/update", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeleteNodePackageRequest generates requests for DeleteNodePackage
+func NewDeleteNodePackageRequest(server string, hostname Hostname, name PackageName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/package/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetNodePackageByNameRequest generates requests for GetNodePackageByName
+func NewGetNodePackageByNameRequest(server string, hostname Hostname, name PackageName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/package/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewPostNodePowerRebootRequest calls the generic PostNodePowerReboot builder with application/json body
 func NewPostNodePowerRebootRequest(server string, hostname Hostname, body PostNodePowerRebootJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -7858,6 +8334,26 @@ type ClientWithResponsesInterface interface {
 
 	// GetNodeOSWithResponse request
 	GetNodeOSWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeOSResponse, error)
+
+	// GetNodePackageWithResponse request
+	GetNodePackageWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodePackageResponse, error)
+
+	// PostNodePackageWithBodyWithResponse request with any body
+	PostNodePackageWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodePackageResponse, error)
+
+	PostNodePackageWithResponse(ctx context.Context, hostname Hostname, body PostNodePackageJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodePackageResponse, error)
+
+	// GetNodePackageUpdateWithResponse request
+	GetNodePackageUpdateWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodePackageUpdateResponse, error)
+
+	// PostNodePackageUpdateWithResponse request
+	PostNodePackageUpdateWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*PostNodePackageUpdateResponse, error)
+
+	// DeleteNodePackageWithResponse request
+	DeleteNodePackageWithResponse(ctx context.Context, hostname Hostname, name PackageName, reqEditors ...RequestEditorFn) (*DeleteNodePackageResponse, error)
+
+	// GetNodePackageByNameWithResponse request
+	GetNodePackageByNameWithResponse(ctx context.Context, hostname Hostname, name PackageName, reqEditors ...RequestEditorFn) (*GetNodePackageByNameResponse, error)
 
 	// PostNodePowerRebootWithBodyWithResponse request with any body
 	PostNodePowerRebootWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodePowerRebootResponse, error)
@@ -9314,6 +9810,159 @@ func (r GetNodeOSResponse) StatusCode() int {
 	return 0
 }
 
+type GetNodePackageResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PackageCollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodePackageResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodePackageResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodePackageResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PackageMutationResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodePackageResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodePackageResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetNodePackageUpdateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UpdateCollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodePackageUpdateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodePackageUpdateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodePackageUpdateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PackageMutationResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodePackageUpdateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodePackageUpdateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteNodePackageResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PackageMutationResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteNodePackageResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteNodePackageResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetNodePackageByNameResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PackageCollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodePackageByNameResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodePackageByNameResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type PostNodePowerRebootResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -10562,6 +11211,68 @@ func (c *ClientWithResponses) GetNodeOSWithResponse(ctx context.Context, hostnam
 		return nil, err
 	}
 	return ParseGetNodeOSResponse(rsp)
+}
+
+// GetNodePackageWithResponse request returning *GetNodePackageResponse
+func (c *ClientWithResponses) GetNodePackageWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodePackageResponse, error) {
+	rsp, err := c.GetNodePackage(ctx, hostname, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodePackageResponse(rsp)
+}
+
+// PostNodePackageWithBodyWithResponse request with arbitrary body returning *PostNodePackageResponse
+func (c *ClientWithResponses) PostNodePackageWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodePackageResponse, error) {
+	rsp, err := c.PostNodePackageWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodePackageResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodePackageWithResponse(ctx context.Context, hostname Hostname, body PostNodePackageJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodePackageResponse, error) {
+	rsp, err := c.PostNodePackage(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodePackageResponse(rsp)
+}
+
+// GetNodePackageUpdateWithResponse request returning *GetNodePackageUpdateResponse
+func (c *ClientWithResponses) GetNodePackageUpdateWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodePackageUpdateResponse, error) {
+	rsp, err := c.GetNodePackageUpdate(ctx, hostname, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodePackageUpdateResponse(rsp)
+}
+
+// PostNodePackageUpdateWithResponse request returning *PostNodePackageUpdateResponse
+func (c *ClientWithResponses) PostNodePackageUpdateWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*PostNodePackageUpdateResponse, error) {
+	rsp, err := c.PostNodePackageUpdate(ctx, hostname, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodePackageUpdateResponse(rsp)
+}
+
+// DeleteNodePackageWithResponse request returning *DeleteNodePackageResponse
+func (c *ClientWithResponses) DeleteNodePackageWithResponse(ctx context.Context, hostname Hostname, name PackageName, reqEditors ...RequestEditorFn) (*DeleteNodePackageResponse, error) {
+	rsp, err := c.DeleteNodePackage(ctx, hostname, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNodePackageResponse(rsp)
+}
+
+// GetNodePackageByNameWithResponse request returning *GetNodePackageByNameResponse
+func (c *ClientWithResponses) GetNodePackageByNameWithResponse(ctx context.Context, hostname Hostname, name PackageName, reqEditors ...RequestEditorFn) (*GetNodePackageByNameResponse, error) {
+	rsp, err := c.GetNodePackageByName(ctx, hostname, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodePackageByNameResponse(rsp)
 }
 
 // PostNodePowerRebootWithBodyWithResponse request with arbitrary body returning *PostNodePowerRebootResponse
@@ -13683,6 +14394,309 @@ func ParseGetNodeOSResponse(rsp *http.Response) (*GetNodeOSResponse, error) {
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodePackageResponse parses an HTTP response from a GetNodePackageWithResponse call
+func ParseGetNodePackageResponse(rsp *http.Response) (*GetNodePackageResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodePackageResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PackageCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodePackageResponse parses an HTTP response from a PostNodePackageWithResponse call
+func ParsePostNodePackageResponse(rsp *http.Response) (*PostNodePackageResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodePackageResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PackageMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodePackageUpdateResponse parses an HTTP response from a GetNodePackageUpdateWithResponse call
+func ParseGetNodePackageUpdateResponse(rsp *http.Response) (*GetNodePackageUpdateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodePackageUpdateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UpdateCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodePackageUpdateResponse parses an HTTP response from a PostNodePackageUpdateWithResponse call
+func ParsePostNodePackageUpdateResponse(rsp *http.Response) (*PostNodePackageUpdateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodePackageUpdateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PackageMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteNodePackageResponse parses an HTTP response from a DeleteNodePackageWithResponse call
+func ParseDeleteNodePackageResponse(rsp *http.Response) (*DeleteNodePackageResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteNodePackageResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PackageMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodePackageByNameResponse parses an HTTP response from a GetNodePackageByNameWithResponse call
+func ParseGetNodePackageByNameResponse(rsp *http.Response) (*GetNodePackageByNameResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodePackageByNameResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PackageCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

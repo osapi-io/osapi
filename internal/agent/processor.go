@@ -28,6 +28,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider/node/apt"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
@@ -64,6 +65,7 @@ func NewNodeProcessor(
 	powerProvider power.Provider,
 	processProvider processProv.Provider,
 	userProvider user.Provider,
+	packageProvider apt.Provider,
 	appConfig config.Config,
 	logger *slog.Logger,
 ) ProcessorFunc {
@@ -103,6 +105,8 @@ func NewNodeProcessor(
 			return processUserOperation(userProvider, logger, req)
 		case "group":
 			return processGroupOperation(userProvider, logger, req)
+		case "package":
+			return processPackageOperation(packageProvider, logger, req)
 		default:
 			return nil, fmt.Errorf("unsupported node operation: %s", req.Operation)
 		}

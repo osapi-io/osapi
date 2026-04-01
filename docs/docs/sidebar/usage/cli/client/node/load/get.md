@@ -7,8 +7,8 @@ $ osapi client node load get
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  LOAD (1m)  LOAD (5m)  LOAD (15m)
-  server1   ok      1.83       1.96       2.02
+  LOAD (1m)  LOAD (5m)  LOAD (15m)
+  1.83       1.96       2.02
 ```
 
 When targeting all hosts:
@@ -18,9 +18,9 @@ $ osapi client node load get --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  LOAD (1m)  LOAD (5m)  LOAD (15m)
-  server1   ok      1.83       1.96       2.02
-  server2   ok      0.45       0.52       0.61
+  HOSTNAME  LOAD (1m)  LOAD (5m)  LOAD (15m)
+  server1   1.83       1.96       2.02
+  server2   0.45       0.52       0.61
 ```
 
 When some hosts fail or are skipped:

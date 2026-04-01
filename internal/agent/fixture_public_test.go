@@ -103,6 +103,7 @@ func newTestAgent(p newTestAgentParams) *agent.Agent {
 			p.powerProvider,
 			nil,
 			nil,
+			nil,
 			p.appConfig,
 			logger,
 		),

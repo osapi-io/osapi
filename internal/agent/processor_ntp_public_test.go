@@ -113,6 +113,7 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpOperation() {
 				ntpProvider, nil, nil,
 				nil,
 				nil,
+				nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -193,6 +194,7 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpGet() {
 			processor := agent.NewNodeProcessor(
 				nil, nil, nil, nil, nil,
 				tt.setupMock(), nil, nil,
+				nil,
 				nil,
 				nil,
 				config.Config{},
@@ -289,6 +291,7 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpCreate() {
 				tt.setupMock(), nil, nil,
 				nil,
 				nil,
+				nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -383,6 +386,7 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpUpdate() {
 				tt.setupMock(), nil, nil,
 				nil,
 				nil,
+				nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -457,6 +461,7 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpDelete() {
 			processor := agent.NewNodeProcessor(
 				nil, nil, nil, nil, nil,
 				tt.setupMock(), nil, nil,
+				nil,
 				nil,
 				nil,
 				config.Config{},

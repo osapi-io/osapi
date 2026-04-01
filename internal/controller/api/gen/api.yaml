@@ -57,6 +57,9 @@ tags:
   - name: NTP_Management_API_ntp_operations
     x-displayName: Node/NTP
     description: NTP server configuration management on a target node.
+  - name: Package_Management_API_package_operations
+    x-displayName: Node/Package
+    description: Package management on a target node.
   - name: Power_Management_API_power_operations
     x-displayName: Node/Power
     description: Power management operations (reboot, shutdown) on a target node.
@@ -2552,6 +2555,261 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Error deleting NTP configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/package:
+    servers: []
+    get:
+      summary: List installed packages
+      description: |
+        List all installed packages on the target node.
+      tags:
+        - Package_Management_API_package_operations
+      operationId: GetNodePackage
+      security:
+        - BearerAuth:
+            - package:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: List of installed packages.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing packages.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Install a package
+      description: |
+        Install a package on the target node.
+      tags:
+        - Package_Management_API_package_operations
+      operationId: PostNodePackage
+      security:
+        - BearerAuth:
+            - package:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        description: Package install parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PackageInstallRequest'
+      responses:
+        '200':
+          description: Package installed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error installing package.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/package/{name}:
+    servers: []
+    get:
+      summary: Get a package
+      description: |
+        Get details for a specific installed package by name on the target node.
+      tags:
+        - Package_Management_API_package_operations
+      operationId: GetNodePackageByName
+      security:
+        - BearerAuth:
+            - package:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/PackageName'
+      responses:
+        '200':
+          description: Package detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Package not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving package.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Remove a package
+      description: |
+        Remove a package from the target node.
+      tags:
+        - Package_Management_API_package_operations
+      operationId: DeleteNodePackage
+      security:
+        - BearerAuth:
+            - package:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/PackageName'
+      responses:
+        '200':
+          description: Package removed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageMutationResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Package not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error removing package.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/package/update:
+    servers: []
+    post:
+      summary: Update package sources
+      description: |
+        Refresh package sources (apt update) on the target node.
+      tags:
+        - Package_Management_API_package_operations
+      operationId: PostNodePackageUpdate
+      security:
+        - BearerAuth:
+            - package:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: Package sources updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageMutationResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error updating package sources.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: List available updates
+      description: |
+        List packages with available updates on the target node.
+      tags:
+        - Package_Management_API_package_operations
+      operationId: GetNodePackageUpdate
+      security:
+        - BearerAuth:
+            - package:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: List of available updates.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing available updates.
           content:
             application/json:
               schema:
@@ -6247,6 +6505,168 @@ components:
             $ref: '#/components/schemas/NtpMutationResult'
       required:
         - results
+    PackageInstallRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: |
+            Name of the package to install.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+    PackageEntry:
+      type: object
+      description: A package list result for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageInfo'
+          description: List of packages.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+    PackageInfo:
+      type: object
+      description: Information about an installed package.
+      properties:
+        name:
+          type: string
+          description: Package name.
+        version:
+          type: string
+          description: Installed version.
+        description:
+          type: string
+          description: Package description.
+        status:
+          type: string
+          description: Package status (e.g., installed).
+        size:
+          type: integer
+          format: int64
+          description: Installed size in bytes.
+    PackageCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageEntry'
+      required:
+        - results
+    PackageMutationResult:
+      type: object
+      description: Result of a package install, remove, or update operation for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that processed this operation.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
+        name:
+          type: string
+          description: Package name.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+    PackageMutationResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageMutationResult'
+      required:
+        - results
+    UpdateEntry:
+      type: object
+      description: An update list result for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
+        updates:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateInfo'
+          description: List of available updates.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+    UpdateInfo:
+      type: object
+      description: Information about an available package update.
+      properties:
+        name:
+          type: string
+          description: Package name.
+        current_version:
+          type: string
+          description: Currently installed version.
+        new_version:
+          type: string
+          description: Available version.
+    UpdateCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateEntry'
+      required:
+        - results
     PowerRequest:
       type: object
       properties:
@@ -7310,6 +7730,17 @@ components:
         type: string
         minLength: 1
         pattern: ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$
+    PackageName:
+      name: name
+      in: path
+      required: true
+      description: |
+        Package name.
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1
+      schema:
+        type: string
+        minLength: 1
     Pid:
       name: pid
       in: path
@@ -7415,6 +7846,9 @@ x-tagGroups:
   - name: NTP Management API
     tags:
       - NTP_Management_API_ntp_operations
+  - name: Package Management API
+    tags:
+      - Package_Management_API_package_operations
   - name: Power Management API
     tags:
       - Power_Management_API_power_operations

@@ -5,14 +5,10 @@ Execute a command inside a running container on the target node:
 ```bash
 $ osapi client node container docker exec --id my-nginx --command "ls,-la,/"
 
-  Job ID:    550e8400-e29b-41d4-a716-446655440000
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  Hostname:  server1
-  Exit Code: 0
-  Stdout:    total 80
-             drwxr-xr-x   1 root root 4096 Jan 15 10:30 .
-             drwxr-xr-x   1 root root 4096 Jan 15 10:30 ..
-             ...
+  EXIT CODE  STDOUT     STDERR
+  0          total 80…
 ```
 
 Execute with environment variables and a working directory:

@@ -1,0 +1,505 @@
+# Copyright (c) 2026 John Dewey
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+---
+openapi: 3.0.0
+info:
+  title: Package Management API
+  version: 1.0.0
+tags:
+  - name: package_operations
+    x-displayName: Node/Package
+    description: Package management on a target node.
+
+paths:
+  # -- Package collection ---------------------------------------------------
+
+  /node/{hostname}/package:
+    get:
+      summary: List installed packages
+      description: >
+        List all installed packages on the target node.
+      tags:
+        - package_operations
+      operationId: GetNodePackage
+      security:
+        - BearerAuth:
+            - package:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: List of installed packages.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing packages.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Install a package
+      description: >
+        Install a package on the target node.
+      tags:
+        - package_operations
+      operationId: PostNodePackage
+      security:
+        - BearerAuth:
+            - package:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        description: Package install parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PackageInstallRequest'
+      responses:
+        '200':
+          description: Package installed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error installing package.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # -- Package by name ------------------------------------------------------
+
+  /node/{hostname}/package/{name}:
+    get:
+      summary: Get a package
+      description: >
+        Get details for a specific installed package by name on the target node.
+      tags:
+        - package_operations
+      operationId: GetNodePackageByName
+      security:
+        - BearerAuth:
+            - package:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/PackageName'
+      responses:
+        '200':
+          description: Package detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Package not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving package.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Remove a package
+      description: >
+        Remove a package from the target node.
+      tags:
+        - package_operations
+      operationId: DeleteNodePackage
+      security:
+        - BearerAuth:
+            - package:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/PackageName'
+      responses:
+        '200':
+          description: Package removed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageMutationResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Package not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error removing package.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # -- Package update -------------------------------------------------------
+
+  /node/{hostname}/package/update:
+    post:
+      summary: Update package sources
+      description: >
+        Refresh package sources (apt update) on the target node.
+      tags:
+        - package_operations
+      operationId: PostNodePackageUpdate
+      security:
+        - BearerAuth:
+            - package:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: Package sources updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageMutationResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error updating package sources.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    get:
+      summary: List available updates
+      description: >
+        List packages with available updates on the target node.
+      tags:
+        - package_operations
+      operationId: GetNodePackageUpdate
+      security:
+        - BearerAuth:
+            - package:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: List of available updates.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing available updates.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+# -- Reusable components ------------------------------------------------
+
+components:
+  parameters:
+    Hostname:
+      name: hostname
+      in: path
+      required: true
+      description: >
+        Target agent hostname, reserved routing value (_any, _all),
+        or label selector (key:value).
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in handlers via validateHostname().
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1,valid_target
+      schema:
+        type: string
+        minLength: 1
+
+    PackageName:
+      name: name
+      in: path
+      required: true
+      description: >
+        Package name.
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in the handler.
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1
+      schema:
+        type: string
+        minLength: 1
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    # -- Request schemas -------------------------------------------------
+
+    PackageInstallRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: >
+            Name of the package to install.
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+
+    # -- Response schemas ------------------------------------------------
+
+    PackageEntry:
+      type: object
+      description: A package list result for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageInfo'
+          description: List of packages.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    PackageInfo:
+      type: object
+      description: Information about an installed package.
+      properties:
+        name:
+          type: string
+          description: Package name.
+        version:
+          type: string
+          description: Installed version.
+        description:
+          type: string
+          description: Package description.
+        status:
+          type: string
+          description: Package status (e.g., installed).
+        size:
+          type: integer
+          format: int64
+          description: Installed size in bytes.
+
+    PackageCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageEntry'
+      required:
+        - results
+
+    PackageMutationResult:
+      type: object
+      description: Result of a package install, remove, or update operation for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that processed this operation.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        name:
+          type: string
+          description: Package name.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    PackageMutationResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageMutationResult'
+      required:
+        - results
+
+    UpdateEntry:
+      type: object
+      description: An update list result for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        updates:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateInfo'
+          description: List of available updates.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    UpdateInfo:
+      type: object
+      description: Information about an available package update.
+      properties:
+        name:
+          type: string
+          description: Package name.
+        current_version:
+          type: string
+          description: Currently installed version.
+        new_version:
+          type: string
+          description: Available version.
+
+    UpdateCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateEntry'
+      required:
+        - results

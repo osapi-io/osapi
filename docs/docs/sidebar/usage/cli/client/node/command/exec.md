@@ -8,8 +8,8 @@ $ osapi client node command exec --command ls --args "-la,/tmp"
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  CHANGED  STDOUT                          STDERR  EXIT CODE  DURATION
-  server1   false    total 8 drwxrwxrwt 10 root r…           0          12ms
+  CHANGED  STDOUT                          STDERR  EXIT CODE  DURATION
+  false    total 8 drwxrwxrwt 10 root r…           0          12ms
 ```
 
 Long output is truncated in the table view. Use `--json` for the full response

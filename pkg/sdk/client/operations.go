@@ -145,6 +145,16 @@ const (
 	OpGroupDelete JobOperation = "node.group.delete"
 )
 
+// Package operations.
+const (
+	OpPackageList        JobOperation = "node.package.list"
+	OpPackageGet         JobOperation = "node.package.get"
+	OpPackageInstall     JobOperation = "node.package.install"
+	OpPackageRemove      JobOperation = "node.package.remove"
+	OpPackageUpdate      JobOperation = "node.package.update"
+	OpPackageListUpdates JobOperation = "node.package.listUpdates"
+)
+
 // Target constants for job routing.
 const (
 	// TargetAny routes to any available agent (load-balanced).

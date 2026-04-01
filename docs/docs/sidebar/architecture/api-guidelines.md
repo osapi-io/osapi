@@ -61,6 +61,10 @@ Sub-resources represent distinct capabilities of the node:
 | `/node/{hostname}/user/{name}/password`        | User     |
 | `/node/{hostname}/group`                       | Group    |
 | `/node/{hostname}/group/{name}`                | Group    |
+| `/node/{hostname}/package`                     | Package  |
+| `/node/{hostname}/package/{name}`              | Package  |
+| `/node/{hostname}/package/update`              | Package  |
+| `/node/{hostname}/package/updates`             | Package  |
 
 6. **Path Parameters Over Query Parameters**
 

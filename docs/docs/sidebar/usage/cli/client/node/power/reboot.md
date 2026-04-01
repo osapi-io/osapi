@@ -8,8 +8,8 @@ $ osapi client node power reboot --target web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  CHANGED  ERROR  ACTION  DELAY
-  web-01    ok      true            reboot  0
+  STATUS  CHANGED  ERROR  ACTION  DELAY
+  ok      true            reboot  0
 ```
 
 Reboot with a 60-second delay and a broadcast message:
@@ -20,8 +20,8 @@ $ osapi client node power reboot --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  CHANGED  ERROR  ACTION  DELAY
-  web-01    ok      true            reboot  60
+  STATUS  CHANGED  ERROR  ACTION  DELAY
+  ok      true            reboot  60
 ```
 
 Broadcast reboot to all hosts at once:

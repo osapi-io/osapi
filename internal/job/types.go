@@ -209,6 +209,16 @@ const (
 	OperationGroupDelete = client.OpGroupDelete
 )
 
+// Package operations.
+const (
+	OperationPackageList        = client.OpPackageList
+	OperationPackageGet         = client.OpPackageGet
+	OperationPackageInstall     = client.OpPackageInstall
+	OperationPackageRemove      = client.OpPackageRemove
+	OperationPackageUpdate      = client.OpPackageUpdate
+	OperationPackageListUpdates = client.OpPackageListUpdates
+)
+
 // Operation represents an operation in the new hierarchical format
 type Operation struct {
 	// Type specifies the type of operation using hierarchical format

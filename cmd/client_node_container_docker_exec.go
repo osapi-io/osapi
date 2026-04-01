@@ -63,23 +63,38 @@ var clientContainerDockerExecCmd = &cobra.Command{
 		if resp.Data.JobID != "" {
 			fmt.Println()
 			cli.PrintKV("Job ID", resp.Data.JobID)
-			fmt.Println()
 		}
 
+		results := make([]cli.ResultRow, 0)
 		for _, r := range resp.Data.Results {
-			cli.PrintKV("Hostname", r.Hostname)
 			if r.Error != "" {
-				cli.PrintKV("Error", r.Error)
+				var errPtr *string
+				e := r.Error
+				errPtr = &e
+				results = append(results, cli.ResultRow{
+					Hostname: r.Hostname,
+					Status:   r.Status,
+					Error:    errPtr,
+				})
+
 				continue
 			}
-			cli.PrintKV("Exit Code", strconv.Itoa(r.ExitCode))
-			if r.Stdout != "" {
-				cli.PrintKV("Stdout", r.Stdout)
-			}
-			if r.Stderr != "" {
-				cli.PrintKV("Stderr", r.Stderr)
-			}
+
+			results = append(results, cli.ResultRow{
+				Hostname: r.Hostname,
+				Status:   r.Status,
+				Fields: []string{
+					strconv.Itoa(r.ExitCode),
+					r.Stdout,
+					r.Stderr,
+				},
+			})
 		}
+		headers, rows := cli.BuildBroadcastTable(
+			results,
+			[]string{"EXIT CODE", "STDOUT", "STDERR"},
+		)
+		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 

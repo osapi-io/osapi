@@ -57,18 +57,33 @@ var clientContainerDockerPullCmd = &cobra.Command{
 		if resp.Data.JobID != "" {
 			fmt.Println()
 			cli.PrintKV("Job ID", resp.Data.JobID)
-			fmt.Println()
 		}
 
+		results := make([]cli.MutationResultRow, 0)
 		for _, r := range resp.Data.Results {
-			cli.PrintKV("Hostname", r.Hostname)
+			var errPtr *string
 			if r.Error != "" {
-				cli.PrintKV("Error", r.Error)
-				continue
+				e := r.Error
+				errPtr = &e
 			}
-			cli.PrintKV("Image ID", r.ImageID, "Tag", r.Tag)
-			cli.PrintKV("Size", cli.FormatBytes(int(r.Size)))
+			changed := r.Changed
+			results = append(results, cli.MutationResultRow{
+				Hostname: r.Hostname,
+				Status:   r.Status,
+				Changed:  &changed,
+				Error:    errPtr,
+				Fields: []string{
+					r.ImageID,
+					r.Tag,
+					cli.FormatBytes(int(r.Size)),
+				},
+			})
 		}
+		headers, rows := cli.BuildMutationTable(
+			results,
+			[]string{"IMAGE ID", "TAG", "SIZE"},
+		)
+		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 

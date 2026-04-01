@@ -39,6 +39,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
+	aptProv "github.com/retr0h/osapi/internal/provider/node/apt"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
@@ -201,6 +202,9 @@ func setupAgent(
 	// --- User provider ---
 	userProvider := createUserProvider(log, appFs, execManager)
 
+	// --- Package provider ---
+	packageProvider := createPackageProvider(log, execManager)
+
 	// --- Build registry ---
 	registry := agent.NewProviderRegistry()
 
@@ -217,6 +221,7 @@ func setupAgent(
 			powerProvider,
 			processProvider,
 			userProvider,
+			packageProvider,
 			appConfig,
 			log,
 		),
@@ -230,6 +235,7 @@ func setupAgent(
 		powerProvider,
 		processProvider,
 		userProvider,
+		packageProvider,
 	)
 
 	registry.Register("network",
@@ -453,10 +459,6 @@ func createProcessProvider(
 
 	switch plat {
 	case "debian":
-		if platform.IsContainer() {
-			log.Info("running in container, process operations disabled")
-			return processProv.NewLinuxProvider()
-		}
 		return processProv.NewDebianProvider(
 			log,
 			processProv.NewGopsutilLister(),
@@ -507,14 +509,30 @@ func createUserProvider(
 
 	switch plat {
 	case "debian":
-		if platform.IsContainer() {
-			log.Info("running in container, user operations disabled")
-			return userProv.NewLinuxProvider()
-		}
 		return userProv.NewDebianProvider(log, fs, execManager)
 	case "darwin":
 		return userProv.NewDarwinProvider()
 	default:
 		return userProv.NewLinuxProvider()
+	}
+}
+
+// createPackageProvider creates a platform-specific package provider. On Debian,
+// the package provider manages apt packages. In containers, apt operations are
+// disabled because package management is not meaningful. On other platforms, all
+// operations return ErrUnsupported.
+func createPackageProvider(
+	log *slog.Logger,
+	execManager exec.Manager,
+) aptProv.Provider {
+	plat := platform.Detect()
+
+	switch plat {
+	case "debian":
+		return aptProv.NewDebianProvider(log, execManager)
+	case "darwin":
+		return aptProv.NewDarwinProvider()
+	default:
+		return aptProv.NewLinuxProvider()
 	}
 }

@@ -45,6 +45,7 @@ resp, err := client.Hostname.Get(ctx, "_any")
 | [Sysctl](system-config/sysctl.md)     | Kernel parameter management |
 | [NTP](system-config/ntp.md)           | NTP server configuration    |
 | [Timezone](system-config/timezone.md) | System timezone             |
+| [Package](system-config/package.md)   | Package management          |
 
 ### Operations
 

@@ -52,6 +52,7 @@ import (
 	hostnameAPI "github.com/retr0h/osapi/internal/controller/api/node/hostname"
 	networkAPI "github.com/retr0h/osapi/internal/controller/api/node/network"
 	ntpAPI "github.com/retr0h/osapi/internal/controller/api/node/ntp"
+	packageAPI "github.com/retr0h/osapi/internal/controller/api/node/package"
 	powerAPI "github.com/retr0h/osapi/internal/controller/api/node/power"
 	processAPI "github.com/retr0h/osapi/internal/controller/api/node/process"
 	scheduleAPI "github.com/retr0h/osapi/internal/controller/api/node/schedule"
@@ -730,6 +731,7 @@ func registerControllerHandlers(
 	handlers = append(handlers, commandAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, processAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, userAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, packageAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, nodeFileAPI.Handler(log, jc, signingKey, customRoles)...)
 	if auditStore != nil {
 		handlers = append(handlers, auditAPI.Handler(log, auditStore, signingKey, customRoles)...)
