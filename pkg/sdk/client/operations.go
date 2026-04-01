@@ -145,6 +145,13 @@ const (
 	OpGroupDelete JobOperation = "node.group.delete"
 )
 
+// SSH Key operations.
+const (
+	OpSSHKeyList   JobOperation = "node.sshKey.list"
+	OpSSHKeyAdd    JobOperation = "node.sshKey.add"
+	OpSSHKeyRemove JobOperation = "node.sshKey.remove"
+)
+
 // Package operations.
 const (
 	OpPackageList        JobOperation = "node.package.list"
