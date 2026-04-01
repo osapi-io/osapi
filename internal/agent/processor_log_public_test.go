@@ -207,6 +207,20 @@ func (s *ProcessorLogPublicTestSuite) TestProcessLogQuery() {
 			},
 		},
 		{
+			name: "query unmarshal error",
+			jobRequest: job.Request{
+				Type:      job.TypeQuery,
+				Category:  "node",
+				Operation: "log.query",
+				Data:      json.RawMessage(`invalid json`),
+			},
+			setupMock: func() log.Provider {
+				return logMocks.NewMockProvider(s.mockCtrl)
+			},
+			expectError: true,
+			errorMsg:    "unmarshal log query data",
+		},
+		{
 			name: "query provider error",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
@@ -338,22 +352,6 @@ func (s *ProcessorLogPublicTestSuite) TestProcessLogQueryUnit() {
 			}
 		})
 	}
-}
-
-func (s *ProcessorLogPublicTestSuite) TestProcessLogQueryUnmarshalError() {
-	m := logMocks.NewMockProvider(s.mockCtrl)
-	processor := s.newProcessor(m)
-
-	result, err := processor(job.Request{
-		Type:      job.TypeQuery,
-		Category:  "node",
-		Operation: "log.query",
-		Data:      json.RawMessage(`invalid json`),
-	})
-
-	s.Error(err)
-	s.Contains(err.Error(), "unmarshal log query data")
-	s.Nil(result)
 }
 
 func (s *ProcessorLogPublicTestSuite) TestProcessLogSources() {
