@@ -5,13 +5,10 @@ Create a new container on the target node from the specified image:
 ```bash
 $ osapi client node container docker create --image nginx:latest
 
-  Job ID:       550e8400-e29b-41d4-a716-446655440000
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  Hostname:     server1
-  Container ID: a1b2c3d4e5f6
-  Name:         eager_turing
-  Image:        nginx:latest
-  State:        running
+  STATUS  CHANGED  ERROR  ID            NAME          IMAGE         STATE
+  ok      true            a1b2c3d4e5f6  eager_turing  nginx:latest  running
 ```
 
 Create a named container with environment variables, port mappings, and volume

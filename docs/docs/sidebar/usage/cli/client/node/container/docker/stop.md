@@ -5,10 +5,10 @@ Stop a running container on the target node:
 ```bash
 $ osapi client node container docker stop --id a1b2c3d4e5f6
 
-  Job ID:   550e8400-e29b-41d4-a716-446655440000
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  Hostname: server1
-  Message:  container stopped
+  STATUS  CHANGED  ERROR  MESSAGE
+  ok      true            container stopped
 ```
 
 Stop with a custom timeout (seconds to wait before killing):

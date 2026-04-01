@@ -5,10 +5,10 @@ Start a stopped container on the target node:
 ```bash
 $ osapi client node container docker start --id a1b2c3d4e5f6
 
-  Job ID:   550e8400-e29b-41d4-a716-446655440000
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  Hostname: server1
-  Message:  container started
+  STATUS  CHANGED  ERROR  MESSAGE
+  ok      true            container started
 ```
 
 Start a container by name:
