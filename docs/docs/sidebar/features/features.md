@@ -30,7 +30,7 @@ OSAPI provides a comprehensive set of features for managing Linux systems.
 | 🔍  | [Distributed Tracing](distributed-tracing.md)  | OpenTelemetry with trace context propagation                                                  |
 | ⚡  | [Power Management](power-management.md)        | Reboot and shutdown target hosts with optional delay                                          |
 | 📡  | [Process Management](process-management.md)    | List, inspect, and signal running processes                                                   |
-| 👤  | [User & Group Management](user-management.md)  | Local user account and group management                                                       |
+| 👤  | [User & Group Management](user-management.md)  | Local user account, group, and SSH key management                                             |
 | 📦  | [Package Management](package-management.md)    | System package install, remove, update, and query                                             |
 | 📄  | [Log Management](log-management.md)            | Query systemd journal entries by host, unit, or source                                        |
 | 🔒  | [Certificate Management](certificate-management.md) | CA certificate trust store management                                                    |

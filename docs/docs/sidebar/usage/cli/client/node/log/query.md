@@ -32,13 +32,22 @@ $ osapi client node log query --target _all --lines 5
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  web-01
-  TIMESTAMP                  PRIORITY  UNIT           MESSAGE
-  2026-01-01T00:00:01+00:00  info      sshd.service   Accepted publickey for ...
+  HOSTNAME  TIMESTAMP                  PRIORITY  UNIT           MESSAGE
+  web-01    2026-01-01T00:00:01+00:00  info      sshd.service   Accepted publickey for ...
+  web-02    2026-01-01T00:00:02+00:00  notice    kernel         Linux version 6.1.0 ...
+```
 
-  web-02
-  TIMESTAMP                  PRIORITY  UNIT           MESSAGE
-  2026-01-01T00:00:02+00:00  notice    kernel         Linux version 6.1.0 ...
+When some hosts are skipped, STATUS and ERROR columns appear alongside data
+columns:
+
+```bash
+$ osapi client node log query --target _all --lines 5
+
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  HOSTNAME  STATUS   ERROR                 TIMESTAMP                  PRIORITY  UNIT           MESSAGE
+  web-01    ok                              2026-01-01T00:00:01+00:00  info      sshd.service   Accepted publickey for ...
+  mac-01    skipped  unsupported platform
 ```
 
 ## JSON Output

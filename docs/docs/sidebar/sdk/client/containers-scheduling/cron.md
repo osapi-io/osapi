@@ -19,10 +19,11 @@ hosts. Access via `client.Cron.List()`, `client.Cron.Create()`, etc.
 
 ## Request Types
 
-| Type             | Fields                                                        |
-| ---------------- | ------------------------------------------------------------- |
-| `CronCreateOpts` | Name, Schedule\*, Interval\*, Command, User (\* one required) |
-| `CronUpdateOpts` | Schedule, Command, User (all optional)                        |
+| Type             | Fields                                                                      |
+| ---------------- | --------------------------------------------------------------------------- |
+| `CronCreateOpts` | Name, Object, Schedule\*, Interval\*, User, ContentType, Vars              |
+|                  | (\* Schedule and Interval are mutually exclusive; one required)             |
+| `CronUpdateOpts` | Object, Schedule, User, ContentType, Vars (all optional)                    |
 
 ## Usage
 
@@ -35,17 +36,18 @@ c := client.New("http://localhost:8080", token)
 resp, err := c.Cron.List(ctx, "web-01")
 for _, entry := range resp.Data.Results {
     fmt.Printf("%s: %s %s %s\n",
-        entry.Name, entry.Schedule, entry.User, entry.Command)
+        entry.Name, entry.Schedule, entry.User, entry.Object)
 }
 
 // Get a specific entry
 resp, err := c.Cron.Get(ctx, "web-01", "backup-daily")
 
 // Create with custom schedule (/etc/cron.d/)
+// Object references an uploaded file in the Object Store.
 resp, err := c.Cron.Create(ctx, "web-01", client.CronCreateOpts{
     Name:     "backup-daily",
     Schedule: "0 2 * * *",
-    Command:  "/usr/local/bin/backup.sh",
+    Object:   "backup-script",
     User:     "root",
 })
 
@@ -53,13 +55,24 @@ resp, err := c.Cron.Create(ctx, "web-01", client.CronCreateOpts{
 resp, err := c.Cron.Create(ctx, "web-01", client.CronCreateOpts{
     Name:     "logrotate",
     Interval: "daily",
-    Command:  "/usr/sbin/logrotate /etc/logrotate.conf",
+    Object:   "logrotate-script",
 })
 
-// Update the schedule
+// Create with template rendering
+resp, err := c.Cron.Create(ctx, "web-01", client.CronCreateOpts{
+    Name:        "db-backup",
+    Schedule:    "0 4 * * *",
+    Object:      "db-backup-template",
+    User:        "postgres",
+    ContentType: "template",
+    Vars:        map[string]any{"db_name": "production"},
+})
+
+// Update the schedule and object
 resp, err := c.Cron.Update(ctx, "web-01", "backup-daily",
     client.CronUpdateOpts{
         Schedule: "0 3 * * *",
+        Object:   "backup-script-v2",
     })
 
 // Delete an entry

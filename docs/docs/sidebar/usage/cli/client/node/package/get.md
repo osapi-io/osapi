@@ -18,13 +18,22 @@ $ osapi client node package get --target _all --name nginx
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  web-01
-  NAME    VERSION    STATUS      SIZE
-  nginx   1.24.0-2   installed   1.2 MB
+  HOSTNAME  NAME    VERSION    STATUS      SIZE
+  web-01    nginx   1.24.0-2   installed   1.2 MB
+  web-02    nginx   1.24.0-2   installed   1.2 MB
+```
 
-  web-02
-  NAME    VERSION    STATUS      SIZE
-  nginx   1.24.0-2   installed   1.2 MB
+When some hosts are skipped, STATUS and ERROR columns appear alongside data
+columns:
+
+```bash
+$ osapi client node package get --target _all --name nginx
+
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  HOSTNAME  STATUS   ERROR                 NAME    VERSION    STATUS      SIZE
+  web-01    ok                              nginx   1.24.0-2   installed   1.2 MB
+  mac-01    skipped  unsupported platform
 ```
 
 ## JSON Output
@@ -33,7 +42,9 @@ Use `--json` to get the full API response:
 
 ```bash
 $ osapi client node package get --target web-01 --name nginx --json
-{"results":[{"hostname":"web-01","packages":[{"name":"nginx","version":"1.24.0-2","status":"installed","size":1258291}],"status":"ok"}],"job_id":"..."}
+{"results":[{"hostname":"web-01","packages":[{"name":"nginx","version":
+"1.24.0-2","status":"installed","size":1258291}],"status":"ok"}],
+"job_id":"..."}
 ```
 
 ## Flags

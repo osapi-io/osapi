@@ -18,17 +18,13 @@ $ osapi client node sysctl get --target _all --key vm.swappiness
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  web-01
-  KEY            VALUE
-  vm.swappiness  10
-
-  web-02
-  KEY            VALUE
-  vm.swappiness  10
+  HOSTNAME  KEY            VALUE
+  web-01    vm.swappiness  10
+  web-02    vm.swappiness  10
 ```
 
-When some hosts are skipped, HOSTNAME, STATUS, and ERROR columns appear
-alongside data columns:
+When some hosts are skipped, STATUS and ERROR columns appear alongside data
+columns:
 
 ```bash
 $ osapi client node sysctl get --target _all --key vm.swappiness
@@ -46,7 +42,8 @@ Use `--json` to get the full API response:
 
 ```bash
 $ osapi client node sysctl get --target web-01 --key vm.swappiness --json
-{"results":[{"hostname":"web-01","key":"vm.swappiness","value":"10","status":"ok"}],"job_id":"..."}
+{"results":[{"hostname":"web-01","key":"vm.swappiness","value":"10",
+"status":"ok"}],"job_id":"..."}
 ```
 
 ## Flags

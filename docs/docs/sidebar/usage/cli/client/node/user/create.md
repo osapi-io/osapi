@@ -8,8 +8,22 @@ $ osapi client node user create --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME     CHANGED
-  deploy   true
+  STATUS  CHANGED  ERROR  NAME
+  ok      true            deploy
+```
+
+Broadcast to all hosts:
+
+```bash
+$ osapi client node user create --target _all \
+    --name deploy --shell /bin/bash --groups sudo,docker
+
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  HOSTNAME  STATUS  CHANGED  ERROR                 NAME
+  web-01    ok      true                            deploy
+  web-02    ok      true                            deploy
+  mac-01    skipped false    unsupported platform
 ```
 
 ## Flags
