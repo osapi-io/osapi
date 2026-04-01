@@ -237,6 +237,106 @@ func (s *UserService) Delete(
 	return NewResponse(userMutationCollectionFromDelete(resp.JSON200), resp.Body), nil
 }
 
+// ListKeys returns SSH authorized keys for a user on the target host.
+func (s *UserService) ListKeys(
+	ctx context.Context,
+	hostname string,
+	username string,
+) (*Response[Collection[SSHKeyInfoResult]], error) {
+	resp, err := s.client.GetNodeUserSshKeyWithResponse(ctx, hostname, username)
+	if err != nil {
+		return nil, fmt.Errorf("user list keys: %w", err)
+	}
+
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(sshKeyCollectionFromGen(resp.JSON200), resp.Body), nil
+}
+
+// AddKey adds an SSH authorized key for a user on the target host.
+func (s *UserService) AddKey(
+	ctx context.Context,
+	hostname string,
+	username string,
+	opts SSHKeyAddOpts,
+) (*Response[Collection[SSHKeyMutationResult]], error) {
+	body := gen.SSHKeyAddRequest{
+		Key: opts.Key,
+	}
+
+	resp, err := s.client.PostNodeUserSshKeyWithResponse(ctx, hostname, username, body)
+	if err != nil {
+		return nil, fmt.Errorf("user add key: %w", err)
+	}
+
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(sshKeyMutationCollectionFromGen(resp.JSON200), resp.Body), nil
+}
+
+// RemoveKey removes an SSH authorized key by fingerprint for a user on the
+// target host.
+func (s *UserService) RemoveKey(
+	ctx context.Context,
+	hostname string,
+	username string,
+	fingerprint string,
+) (*Response[Collection[SSHKeyMutationResult]], error) {
+	resp, err := s.client.DeleteNodeUserSshKeyWithResponse(
+		ctx, hostname, username, fingerprint,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("user remove key: %w", err)
+	}
+
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(sshKeyMutationCollectionFromGen(resp.JSON200), resp.Body), nil
+}
+
 // ChangePassword changes a user's password on the target host.
 func (s *UserService) ChangePassword(
 	ctx context.Context,
