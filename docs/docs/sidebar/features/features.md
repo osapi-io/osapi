@@ -32,5 +32,6 @@ OSAPI provides a comprehensive set of features for managing Linux systems.
 | 📡  | [Process Management](process-management.md)    | List, inspect, and signal running processes                                                   |
 | 👤  | [User & Group Management](user-management.md)  | Local user account and group management                                                       |
 | 📦  | [Package Management](package-management.md)    | System package install, remove, update, and query                                             |
+| 📄  | [Log Management](log-management.md)            | Query systemd journal entries by host or unit                                                 |
 
 <!-- prettier-ignore-end -->
