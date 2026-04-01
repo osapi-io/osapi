@@ -35,6 +35,26 @@ const (
 	AgentInfoStatusReady    AgentInfoStatus = "Ready"
 )
 
+// Defines values for CertificateCAEntryStatus.
+const (
+	CertificateCAEntryStatusFailed  CertificateCAEntryStatus = "failed"
+	CertificateCAEntryStatusOk      CertificateCAEntryStatus = "ok"
+	CertificateCAEntryStatusSkipped CertificateCAEntryStatus = "skipped"
+)
+
+// Defines values for CertificateCAInfoSource.
+const (
+	Custom CertificateCAInfoSource = "custom"
+	System CertificateCAInfoSource = "system"
+)
+
+// Defines values for CertificateCAMutationEntryStatus.
+const (
+	CertificateCAMutationEntryStatusFailed  CertificateCAMutationEntryStatus = "failed"
+	CertificateCAMutationEntryStatusOk      CertificateCAMutationEntryStatus = "ok"
+	CertificateCAMutationEntryStatusSkipped CertificateCAMutationEntryStatus = "skipped"
+)
+
 // Defines values for CommandResultItemStatus.
 const (
 	CommandResultItemStatusFailed  CommandResultItemStatus = "failed"
@@ -535,6 +555,89 @@ type AuditEntry struct {
 // AuditEntryResponse defines model for AuditEntryResponse.
 type AuditEntryResponse struct {
 	Entry AuditEntry `json:"entry"`
+}
+
+// CertificateCACollectionResponse defines model for CertificateCACollectionResponse.
+type CertificateCACollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
+	Results []CertificateCAEntry `json:"results"`
+}
+
+// CertificateCACreateRequest defines model for CertificateCACreateRequest.
+type CertificateCACreateRequest struct {
+	// Name Certificate name (used as filename).
+	Name string `json:"name" validate:"required,min=1"`
+
+	// Object Object Store reference for the PEM file.
+	Object string `json:"object" validate:"required,min=1"`
+}
+
+// CertificateCAEntry List result for CA certificates on one host.
+type CertificateCAEntry struct {
+	// Certificates List of CA certificates on this host.
+	Certificates *[]CertificateCAInfo `json:"certificates,omitempty"`
+
+	// Error Error message if the agent failed to retrieve certificates.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that reported this entry.
+	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status CertificateCAEntryStatus `json:"status"`
+}
+
+// CertificateCAEntryStatus The status of the operation for this host.
+type CertificateCAEntryStatus string
+
+// CertificateCAInfo A CA certificate entry.
+type CertificateCAInfo struct {
+	// Name Certificate name.
+	Name *string `json:"name,omitempty"`
+
+	// Object Object store name for the deployed content.
+	Object *string `json:"object,omitempty"`
+
+	// Source Where the certificate originated: "system" for distribution-provided, "custom" for user-installed.
+	Source *CertificateCAInfoSource `json:"source,omitempty"`
+}
+
+// CertificateCAInfoSource Where the certificate originated: "system" for distribution-provided, "custom" for user-installed.
+type CertificateCAInfoSource string
+
+// CertificateCAMutationEntry Result of a CA certificate create, update, or delete operation for one host.
+type CertificateCAMutationEntry struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that processed this operation.
+	Hostname string `json:"hostname"`
+
+	// Name Certificate name.
+	Name *string `json:"name,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status CertificateCAMutationEntryStatus `json:"status"`
+}
+
+// CertificateCAMutationEntryStatus The status of the operation for this host.
+type CertificateCAMutationEntryStatus string
+
+// CertificateCAMutationResponse defines model for CertificateCAMutationResponse.
+type CertificateCAMutationResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID          `json:"job_id,omitempty"`
+	Results []CertificateCAMutationEntry `json:"results"`
+}
+
+// CertificateCAUpdateRequest defines model for CertificateCAUpdateRequest.
+type CertificateCAUpdateRequest struct {
+	// Object Object Store reference for the new PEM file.
+	Object string `json:"object" validate:"required,min=1"`
 }
 
 // CommandExecRequest defines model for CommandExecRequest.
@@ -2783,6 +2886,9 @@ type UserUpdateRequest struct {
 	Shell *string `json:"shell,omitempty"`
 }
 
+// CertName defines model for CertName.
+type CertName = string
+
 // CronName defines model for CronName.
 type CronName = string
 
@@ -2916,6 +3022,12 @@ type PostFileMultipartRequestBody PostFileMultipartBody
 
 // RetryJobByIDJSONRequestBody defines body for RetryJobByID for application/json ContentType.
 type RetryJobByIDJSONRequestBody = RetryJobRequest
+
+// PostNodeCertificateCaJSONRequestBody defines body for PostNodeCertificateCa for application/json ContentType.
+type PostNodeCertificateCaJSONRequestBody = CertificateCACreateRequest
+
+// PutNodeCertificateCaJSONRequestBody defines body for PutNodeCertificateCa for application/json ContentType.
+type PutNodeCertificateCaJSONRequestBody = CertificateCAUpdateRequest
 
 // PostNodeCommandExecJSONRequestBody defines body for PostNodeCommandExec for application/json ContentType.
 type PostNodeCommandExecJSONRequestBody = CommandExecRequest
@@ -3135,6 +3247,22 @@ type ClientInterface interface {
 
 	// GetNodeStatus request
 	GetNodeStatus(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeCertificateCa request
+	GetNodeCertificateCa(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeCertificateCaWithBody request with any body
+	PostNodeCertificateCaWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodeCertificateCa(ctx context.Context, hostname Hostname, body PostNodeCertificateCaJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteNodeCertificateCa request
+	DeleteNodeCertificateCa(ctx context.Context, hostname Hostname, name CertName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutNodeCertificateCaWithBody request with any body
+	PutNodeCertificateCaWithBody(ctx context.Context, hostname Hostname, name CertName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutNodeCertificateCa(ctx context.Context, hostname Hostname, name CertName, body PutNodeCertificateCaJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostNodeCommandExecWithBody request with any body
 	PostNodeCommandExecWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -3633,6 +3761,78 @@ func (c *Client) RetryJobByID(ctx context.Context, id openapi_types.UUID, body R
 
 func (c *Client) GetNodeStatus(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNodeStatusRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeCertificateCa(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeCertificateCaRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeCertificateCaWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeCertificateCaRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeCertificateCa(ctx context.Context, hostname Hostname, body PostNodeCertificateCaJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeCertificateCaRequest(c.Server, hostname, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteNodeCertificateCa(ctx context.Context, hostname Hostname, name CertName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeCertificateCaRequest(c.Server, hostname, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeCertificateCaWithBody(ctx context.Context, hostname Hostname, name CertName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeCertificateCaRequestWithBody(c.Server, hostname, name, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeCertificateCa(ctx context.Context, hostname Hostname, name CertName, body PutNodeCertificateCaJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeCertificateCaRequest(c.Server, hostname, name, body)
 	if err != nil {
 		return nil, err
 	}
@@ -5506,6 +5706,182 @@ func NewGetNodeStatusRequest(server string, hostname Hostname) (*http.Request, e
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewGetNodeCertificateCaRequest generates requests for GetNodeCertificateCa
+func NewGetNodeCertificateCaRequest(server string, hostname Hostname) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/certificate/ca", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostNodeCertificateCaRequest calls the generic PostNodeCertificateCa builder with application/json body
+func NewPostNodeCertificateCaRequest(server string, hostname Hostname, body PostNodeCertificateCaJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostNodeCertificateCaRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPostNodeCertificateCaRequestWithBody generates requests for PostNodeCertificateCa with any type of body
+func NewPostNodeCertificateCaRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/certificate/ca", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteNodeCertificateCaRequest generates requests for DeleteNodeCertificateCa
+func NewDeleteNodeCertificateCaRequest(server string, hostname Hostname, name CertName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/certificate/ca/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutNodeCertificateCaRequest calls the generic PutNodeCertificateCa builder with application/json body
+func NewPutNodeCertificateCaRequest(server string, hostname Hostname, name CertName, body PutNodeCertificateCaJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutNodeCertificateCaRequestWithBody(server, hostname, name, "application/json", bodyReader)
+}
+
+// NewPutNodeCertificateCaRequestWithBody generates requests for PutNodeCertificateCa with any type of body
+func NewPutNodeCertificateCaRequestWithBody(server string, hostname Hostname, name CertName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/certificate/ca/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -8581,6 +8957,22 @@ type ClientWithResponsesInterface interface {
 	// GetNodeStatusWithResponse request
 	GetNodeStatusWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeStatusResponse, error)
 
+	// GetNodeCertificateCaWithResponse request
+	GetNodeCertificateCaWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeCertificateCaResponse, error)
+
+	// PostNodeCertificateCaWithBodyWithResponse request with any body
+	PostNodeCertificateCaWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeCertificateCaResponse, error)
+
+	PostNodeCertificateCaWithResponse(ctx context.Context, hostname Hostname, body PostNodeCertificateCaJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeCertificateCaResponse, error)
+
+	// DeleteNodeCertificateCaWithResponse request
+	DeleteNodeCertificateCaWithResponse(ctx context.Context, hostname Hostname, name CertName, reqEditors ...RequestEditorFn) (*DeleteNodeCertificateCaResponse, error)
+
+	// PutNodeCertificateCaWithBodyWithResponse request with any body
+	PutNodeCertificateCaWithBodyWithResponse(ctx context.Context, hostname Hostname, name CertName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeCertificateCaResponse, error)
+
+	PutNodeCertificateCaWithResponse(ctx context.Context, hostname Hostname, name CertName, body PutNodeCertificateCaJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeCertificateCaResponse, error)
+
 	// PostNodeCommandExecWithBodyWithResponse request with any body
 	PostNodeCommandExecWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeCommandExecResponse, error)
 
@@ -9350,6 +9742,109 @@ func (r GetNodeStatusResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetNodeStatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetNodeCertificateCaResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *CertificateCACollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeCertificateCaResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeCertificateCaResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodeCertificateCaResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *CertificateCAMutationResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeCertificateCaResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeCertificateCaResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteNodeCertificateCaResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *CertificateCAMutationResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteNodeCertificateCaResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteNodeCertificateCaResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutNodeCertificateCaResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *CertificateCAMutationResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutNodeCertificateCaResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutNodeCertificateCaResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -11255,6 +11750,58 @@ func (c *ClientWithResponses) GetNodeStatusWithResponse(ctx context.Context, hos
 	return ParseGetNodeStatusResponse(rsp)
 }
 
+// GetNodeCertificateCaWithResponse request returning *GetNodeCertificateCaResponse
+func (c *ClientWithResponses) GetNodeCertificateCaWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeCertificateCaResponse, error) {
+	rsp, err := c.GetNodeCertificateCa(ctx, hostname, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeCertificateCaResponse(rsp)
+}
+
+// PostNodeCertificateCaWithBodyWithResponse request with arbitrary body returning *PostNodeCertificateCaResponse
+func (c *ClientWithResponses) PostNodeCertificateCaWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeCertificateCaResponse, error) {
+	rsp, err := c.PostNodeCertificateCaWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeCertificateCaResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodeCertificateCaWithResponse(ctx context.Context, hostname Hostname, body PostNodeCertificateCaJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeCertificateCaResponse, error) {
+	rsp, err := c.PostNodeCertificateCa(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeCertificateCaResponse(rsp)
+}
+
+// DeleteNodeCertificateCaWithResponse request returning *DeleteNodeCertificateCaResponse
+func (c *ClientWithResponses) DeleteNodeCertificateCaWithResponse(ctx context.Context, hostname Hostname, name CertName, reqEditors ...RequestEditorFn) (*DeleteNodeCertificateCaResponse, error) {
+	rsp, err := c.DeleteNodeCertificateCa(ctx, hostname, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNodeCertificateCaResponse(rsp)
+}
+
+// PutNodeCertificateCaWithBodyWithResponse request with arbitrary body returning *PutNodeCertificateCaResponse
+func (c *ClientWithResponses) PutNodeCertificateCaWithBodyWithResponse(ctx context.Context, hostname Hostname, name CertName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeCertificateCaResponse, error) {
+	rsp, err := c.PutNodeCertificateCaWithBody(ctx, hostname, name, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeCertificateCaResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutNodeCertificateCaWithResponse(ctx context.Context, hostname Hostname, name CertName, body PutNodeCertificateCaJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeCertificateCaResponse, error) {
+	rsp, err := c.PutNodeCertificateCa(ctx, hostname, name, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeCertificateCaResponse(rsp)
+}
+
 // PostNodeCommandExecWithBodyWithResponse request with arbitrary body returning *PostNodeCommandExecResponse
 func (c *ClientWithResponses) PostNodeCommandExecWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeCommandExecResponse, error) {
 	rsp, err := c.PostNodeCommandExecWithBody(ctx, hostname, contentType, body, reqEditors...)
@@ -13116,6 +13663,215 @@ func ParseGetNodeStatusResponse(rsp *http.Response) (*GetNodeStatusResponse, err
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeCertificateCaResponse parses an HTTP response from a GetNodeCertificateCaWithResponse call
+func ParseGetNodeCertificateCaResponse(rsp *http.Response) (*GetNodeCertificateCaResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeCertificateCaResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CertificateCACollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeCertificateCaResponse parses an HTTP response from a PostNodeCertificateCaWithResponse call
+func ParsePostNodeCertificateCaResponse(rsp *http.Response) (*PostNodeCertificateCaResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeCertificateCaResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CertificateCAMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteNodeCertificateCaResponse parses an HTTP response from a DeleteNodeCertificateCaWithResponse call
+func ParseDeleteNodeCertificateCaResponse(rsp *http.Response) (*DeleteNodeCertificateCaResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteNodeCertificateCaResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CertificateCAMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutNodeCertificateCaResponse parses an HTTP response from a PutNodeCertificateCaWithResponse call
+func ParsePutNodeCertificateCaResponse(rsp *http.Response) (*PutNodeCertificateCaResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutNodeCertificateCaResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CertificateCAMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

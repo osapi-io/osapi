@@ -226,6 +226,14 @@ const (
 	OperationLogSources   = client.OpLogSources
 )
 
+// Certificate operations.
+const (
+	OperationCertificateCAList   = client.OpCertificateCAList
+	OperationCertificateCACreate = client.OpCertificateCACreate
+	OperationCertificateCAUpdate = client.OpCertificateCAUpdate
+	OperationCertificateCADelete = client.OpCertificateCADelete
+)
+
 // Operation represents an operation in the new hierarchical format
 type Operation struct {
 	// Type specifies the type of operation using hierarchical format

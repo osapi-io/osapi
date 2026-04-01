@@ -38,36 +38,38 @@ selectors (`key:value`).
 
 Sub-resources represent distinct capabilities of the node:
 
-| Path Pattern                                   | Domain   |
-| ---------------------------------------------- | -------- |
-| `/node/{hostname}`                             | Status   |
-| `/node/{hostname}/disk`                        | Node     |
-| `/node/{hostname}/memory`                      | Node     |
-| `/node/{hostname}/network/dns/{interfaceName}` | Network  |
-| `/node/{hostname}/command/exec`                | Command  |
-| `/node/{hostname}/schedule/cron`               | Schedule |
-| `/node/{hostname}/schedule/cron/{name}`        | Schedule |
-| `/node/{hostname}/sysctl`                      | Sysctl   |
-| `/node/{hostname}/sysctl/{key}`                | Sysctl   |
-| `/node/{hostname}/ntp`                         | NTP      |
-| `/node/{hostname}/timezone`                    | Timezone |
-| `/node/{hostname}/power/reboot`                | Power    |
-| `/node/{hostname}/power/shutdown`              | Power    |
-| `/node/{hostname}/process`                     | Process  |
-| `/node/{hostname}/process/{pid}`               | Process  |
-| `/node/{hostname}/process/{pid}/signal`        | Process  |
-| `/node/{hostname}/user`                        | User     |
-| `/node/{hostname}/user/{name}`                 | User     |
-| `/node/{hostname}/user/{name}/password`        | User     |
-| `/node/{hostname}/group`                       | Group    |
-| `/node/{hostname}/group/{name}`                | Group    |
-| `/node/{hostname}/package`                     | Package  |
-| `/node/{hostname}/package/{name}`              | Package  |
-| `/node/{hostname}/package/update`              | Package  |
-| `/node/{hostname}/package/updates`             | Package  |
-| `/node/{hostname}/log`                         | Log      |
-| `/node/{hostname}/log/source`                  | Log      |
-| `/node/{hostname}/log/unit/{name}`             | Log      |
+| Path Pattern                                   | Domain      |
+| ---------------------------------------------- | ----------- |
+| `/node/{hostname}`                             | Status      |
+| `/node/{hostname}/disk`                        | Node        |
+| `/node/{hostname}/memory`                      | Node        |
+| `/node/{hostname}/network/dns/{interfaceName}` | Network     |
+| `/node/{hostname}/command/exec`                | Command     |
+| `/node/{hostname}/schedule/cron`               | Schedule    |
+| `/node/{hostname}/schedule/cron/{name}`        | Schedule    |
+| `/node/{hostname}/sysctl`                      | Sysctl      |
+| `/node/{hostname}/sysctl/{key}`                | Sysctl      |
+| `/node/{hostname}/ntp`                         | NTP         |
+| `/node/{hostname}/timezone`                    | Timezone    |
+| `/node/{hostname}/power/reboot`                | Power       |
+| `/node/{hostname}/power/shutdown`              | Power       |
+| `/node/{hostname}/process`                     | Process     |
+| `/node/{hostname}/process/{pid}`               | Process     |
+| `/node/{hostname}/process/{pid}/signal`        | Process     |
+| `/node/{hostname}/user`                        | User        |
+| `/node/{hostname}/user/{name}`                 | User        |
+| `/node/{hostname}/user/{name}/password`        | User        |
+| `/node/{hostname}/group`                       | Group       |
+| `/node/{hostname}/group/{name}`                | Group       |
+| `/node/{hostname}/package`                     | Package     |
+| `/node/{hostname}/package/{name}`              | Package     |
+| `/node/{hostname}/package/update`              | Package     |
+| `/node/{hostname}/package/updates`             | Package     |
+| `/node/{hostname}/log`                         | Log         |
+| `/node/{hostname}/log/source`                  | Log         |
+| `/node/{hostname}/log/unit/{name}`             | Log         |
+| `/node/{hostname}/certificate/ca`              | Certificate |
+| `/node/{hostname}/certificate/ca/{name}`       | Certificate |
 
 6. **Path Parameters Over Query Parameters**
 

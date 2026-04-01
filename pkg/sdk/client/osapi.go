@@ -128,6 +128,10 @@ type Client struct {
 	// install, remove, update, list updates).
 	Package *PackageService
 
+	// Certificate provides CA certificate management operations
+	// (list, create, update, delete).
+	Certificate *CertificateService
+
 	// Log provides log viewing operations (query journal entries).
 	Log *LogService
 
@@ -216,6 +220,7 @@ func New(
 	c.User = &UserService{client: httpClient}
 	c.Group = &GroupService{client: httpClient}
 	c.Package = &PackageService{client: httpClient}
+	c.Certificate = &CertificateService{client: httpClient}
 	c.Log = &LogService{client: httpClient}
 
 	return c

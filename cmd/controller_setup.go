@@ -46,6 +46,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api/health"
 	jobAPI "github.com/retr0h/osapi/internal/controller/api/job"
 	nodeAPI "github.com/retr0h/osapi/internal/controller/api/node"
+	certificateAPI "github.com/retr0h/osapi/internal/controller/api/node/certificate"
 	commandAPI "github.com/retr0h/osapi/internal/controller/api/node/command"
 	dockerAPI "github.com/retr0h/osapi/internal/controller/api/node/docker"
 	nodeFileAPI "github.com/retr0h/osapi/internal/controller/api/node/file"
@@ -733,6 +734,7 @@ func registerControllerHandlers(
 	handlers = append(handlers, processAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, userAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, packageAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, certificateAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, logAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, nodeFileAPI.Handler(log, jc, signingKey, customRoles)...)
 	if auditStore != nil {
