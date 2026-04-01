@@ -7,8 +7,8 @@ $ osapi client node memory get
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  MEMORY
-  server1   ok      19 GB used / 31 GB total / 10 GB free
+  MEMORY
+  19 GB used / 31 GB total / 10 GB free
 ```
 
 When targeting all hosts:
@@ -18,9 +18,9 @@ $ osapi client node memory get --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  MEMORY
-  server1   ok      19 GB used / 31 GB total / 10 GB free
-  server2   ok      8 GB used / 16 GB total / 7 GB free
+  HOSTNAME  MEMORY
+  server1   19 GB used / 31 GB total / 10 GB free
+  server2   8 GB used / 16 GB total / 7 GB free
 ```
 
 When some hosts fail or are skipped:

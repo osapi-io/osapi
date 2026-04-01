@@ -10,12 +10,12 @@ $ osapi client node network dns update \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  CHANGED  ERROR
-  server1   ok      true
+  STATUS  CHANGED  ERROR
+  ok      true
 ```
 
-When targeting all hosts, STATUS and ERROR columns appear when any host has an
-error or is skipped:
+When targeting all hosts, HOSTNAME is shown. STATUS and ERROR columns appear when
+any host has an error or is skipped:
 
 ```bash
 $ osapi client node network dns update \

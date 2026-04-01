@@ -7,8 +7,8 @@ $ osapi client node os get
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  DISTRIBUTION  VERSION
-  server1   ok      Ubuntu        24.04
+  DISTRIBUTION  VERSION
+  Ubuntu        24.04
 ```
 
 When targeting all hosts:
@@ -18,9 +18,9 @@ $ osapi client node os get --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  DISTRIBUTION  VERSION
-  server1   ok      Ubuntu        24.04
-  server2   ok      Debian        12
+  HOSTNAME  DISTRIBUTION  VERSION
+  server1   Ubuntu        24.04
+  server2   Debian        12
 ```
 
 When some hosts fail or are skipped:

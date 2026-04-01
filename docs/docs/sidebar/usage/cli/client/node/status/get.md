@@ -24,9 +24,9 @@ $ osapi client node status get --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  UPTIME                          LOAD (1m)  MEMORY USED
-  server1   ok      64 days, 11 hours, 20 minutes   1.83       19 GB / 31 GB
-  server2   ok      12 days, 3 hours, 45 minutes    0.45       8 GB / 16 GB
+  HOSTNAME  UPTIME                          LOAD (1m)  MEMORY USED
+  server1   64 days, 11 hours, 20 minutes   1.83       19 GB / 31 GB
+  server2   12 days, 3 hours, 45 minutes    0.45       8 GB / 16 GB
 ```
 
 When some hosts fail or are skipped, STATUS and ERROR columns are shown:
