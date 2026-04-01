@@ -654,6 +654,30 @@ func ExportUpdateInfosFromGen(
 	return updateInfosFromGen(input)
 }
 
+// CertificateCACollectionFromGen exposes the private
+// certificateCACollectionFromGen for testing.
+func CertificateCACollectionFromGen(
+	input *gen.CertificateCACollectionResponse,
+) Collection[CertificateCAResult] {
+	return certificateCACollectionFromGen(input)
+}
+
+// CertificateCAInfoFromGen exposes the private
+// certificateCAInfoFromGen for testing.
+func CertificateCAInfoFromGen(
+	input gen.CertificateCAInfo,
+) CertificateCA {
+	return certificateCAInfoFromGen(input)
+}
+
+// CertificateCAMutationCollectionFromGen exposes the private
+// certificateCAMutationCollectionFromGen for testing.
+func CertificateCAMutationCollectionFromGen(
+	input *gen.CertificateCAMutationResponse,
+) Collection[CertificateCAMutationResult] {
+	return certificateCAMutationCollectionFromGen(input)
+}
+
 // LogCollectionFromGen exposes the private logCollectionFromGen for testing.
 func LogCollectionFromGen(
 	input *gen.LogCollectionResponse,
