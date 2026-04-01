@@ -14,8 +14,8 @@ $ osapi client node network dns update \
   ok      true
 ```
 
-When targeting all hosts, HOSTNAME is shown. STATUS and ERROR columns appear when
-any host has an error or is skipped:
+When targeting all hosts, HOSTNAME is shown. STATUS and ERROR columns appear
+when any host has an error or is skipped:
 
 ```bash
 $ osapi client node network dns update \

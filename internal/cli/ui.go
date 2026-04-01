@@ -528,7 +528,7 @@ func IntToSafeString(
 	return "N/A"
 }
 
-// HandleError logs the appropriate error message based on the SDK error type.
+// HandleError logs the error and exits with code 1.
 func HandleError(
 	err error,
 	logger *slog.Logger,
@@ -540,11 +540,11 @@ func HandleError(
 			slog.Int("code", apiErr.StatusCode),
 			slog.String("error", apiErr.Message),
 		)
-
-		return
+		osExit(1)
 	}
 
 	logger.Error("unexpected error", slog.String("error", err.Error()))
+	osExit(1)
 }
 
 // DisplayJobDetail displays detailed job information from domain types.

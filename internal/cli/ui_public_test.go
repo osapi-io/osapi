@@ -649,12 +649,18 @@ func (suite *UIPublicTestSuite) TestHandleError() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
+			// Prevent os.Exit from killing the test process.
+			var exitCode int
+			cli.SetOsExit(func(code int) { exitCode = code })
+			defer cli.ResetOsExit()
+
 			var buf bytes.Buffer
 			logger := slog.New(slog.NewTextHandler(&buf, nil))
 
 			cli.HandleError(tc.err, logger)
 
 			assert.Contains(suite.T(), buf.String(), tc.wantInLog)
+			assert.Equal(suite.T(), 1, exitCode)
 		})
 	}
 }
