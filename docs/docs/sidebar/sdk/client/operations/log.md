@@ -5,7 +5,7 @@ sidebar_position: 4
 # Log
 
 The `Log` service provides methods for querying the systemd journal on target
-hosts. Access via `client.Log.Query()` and `client.Log.QueryUnit()`.
+hosts. Access via `client.Log`.
 
 ## Methods
 
@@ -13,6 +13,7 @@ hosts. Access via `client.Log.Query()` and `client.Log.QueryUnit()`.
 | -------------------------------------- | ----------------------------------------- |
 | `Query(ctx, hostname, opts)`           | Query journal entries for the host        |
 | `QueryUnit(ctx, hostname, unit, opts)` | Query journal entries for a specific unit |
+| `Sources(ctx, hostname)`               | List available log sources (syslog IDs)   |
 
 ## Request Types
 
@@ -57,6 +58,14 @@ for _, r := range resp.Data.Results {
     }
 }
 
+// List available log sources on the host
+srcResp, err := c.Log.Sources(ctx, "web-01")
+for _, r := range srcResp.Data.Results {
+    for _, src := range r.Sources {
+        fmt.Println(src)
+    }
+}
+
 // Broadcast log query to all hosts
 resp, err := c.Log.Query(ctx, "_all", client.LogQueryOpts{})
 ```
@@ -83,15 +92,24 @@ resp, err := c.Log.Query(ctx, "_all", client.LogQueryOpts{})
 | `PID`       | `int`    | Process ID that generated the entry |
 | `Hostname`  | `string` | Hostname from the journal entry     |
 
+`LogSourceResult` is returned per host for the `Sources` method:
+
+| Field      | Type       | Description                      |
+| ---------- | ---------- | -------------------------------- |
+| `Hostname` | `string`   | Target host                      |
+| `Status`   | `string`   | `ok`, `skipped`, or `failed`     |
+| `Sources`  | `[]string` | Syslog identifiers (sorted)      |
+| `Error`    | `string`   | Error message if the call failed |
+
 ## Example
 
 - [`examples/sdk/client/log.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/log.go)
 
 ## Permissions
 
-| Operation        | Permission |
-| ---------------- | ---------- |
-| Query, QueryUnit | `log:read` |
+| Operation                 | Permission |
+| ------------------------- | ---------- |
+| Query, QueryUnit, Sources | `log:read` |
 
 Log management is supported on the Debian OS family (Ubuntu, Debian, Raspbian).
 On unsupported platforms (Darwin, generic Linux) and inside containers,

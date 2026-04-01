@@ -78,6 +78,27 @@ func logExample() {
 		}
 	}
 
+	// List available log sources on the host.
+	fmt.Println("\n=== Listing log sources ===")
+	srcResp, err := c.Log.Sources(ctx, hostname)
+	if err != nil {
+		log.Fatalf("log sources failed: %v", err)
+	}
+
+	for _, r := range srcResp.Data.Results {
+		if r.Error != "" {
+			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
+			continue
+		}
+		fmt.Printf("  %s: %d sources\n", r.Hostname, len(r.Sources))
+		for _, src := range r.Sources[:min(10, len(r.Sources))] {
+			fmt.Printf("    %s\n", src)
+		}
+		if len(r.Sources) > 10 {
+			fmt.Printf("    ... and %d more\n", len(r.Sources)-10)
+		}
+	}
+
 	// Query entries for the sshd systemd unit.
 	fmt.Println("\n=== Querying sshd.service entries ===")
 	unitResp, err := c.Log.QueryUnit(ctx, hostname, "sshd.service",

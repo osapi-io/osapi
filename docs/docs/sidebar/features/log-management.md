@@ -26,12 +26,19 @@ Returns journal log entries scoped to a specific systemd unit. The agent adds
 the `-u <unit>` flag to the journalctl invocation alongside the same optional
 filters.
 
+### Sources
+
+Returns a sorted list of unique syslog identifiers (log sources) available in
+the journal. The agent runs `journalctl --field=SYSLOG_IDENTIFIER`. Use this to
+discover what unit names are available before querying.
+
 ## Operations
 
 | Operation | Description                                    |
 | --------- | ---------------------------------------------- |
 | Query     | Query journal entries for the host             |
 | QueryUnit | Query journal entries for a specific unit name |
+| Sources   | List available log sources (syslog IDs)        |
 
 ## CLI Usage
 
@@ -45,6 +52,9 @@ osapi client node log query --target web-01 \
 
 # Query journal entries for the sshd unit
 osapi client node log unit --target web-01 --name sshd.service
+
+# List available log sources
+osapi client node log source --target web-01
 
 # Broadcast log query to all hosts
 osapi client node log query --target _all --lines 20
@@ -91,9 +101,9 @@ environments.
 
 ## Permissions
 
-| Operation        | Permission |
-| ---------------- | ---------- |
-| Query, QueryUnit | `log:read` |
+| Operation                 | Permission |
+| ------------------------- | ---------- |
+| Query, QueryUnit, Sources | `log:read` |
 
 Log querying requires `log:read`, included in all built-in roles (`admin`,
 `write`, `read`).
