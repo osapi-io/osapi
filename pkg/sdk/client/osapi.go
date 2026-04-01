@@ -128,6 +128,9 @@ type Client struct {
 	// install, remove, update, list updates).
 	Package *PackageService
 
+	// Log provides log viewing operations (query journal entries).
+	Log *LogService
+
 	httpClient    *gen.ClientWithResponses
 	baseURL       string
 	logger        *slog.Logger
@@ -213,6 +216,7 @@ func New(
 	c.User = &UserService{client: httpClient}
 	c.Group = &GroupService{client: httpClient}
 	c.Package = &PackageService{client: httpClient}
+	c.Log = &LogService{client: httpClient}
 
 	return c
 }
