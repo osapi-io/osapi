@@ -45,4 +45,6 @@ type Entry struct {
 	ResponseCode int `json:"response_code"`
 	// DurationMs is the request processing time in milliseconds.
 	DurationMs int64 `json:"duration_ms"`
+	// TraceID is the OpenTelemetry trace ID for correlation.
+	TraceID string `json:"trace_id,omitempty"`
 }

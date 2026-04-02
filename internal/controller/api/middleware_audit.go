@@ -28,6 +28,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/retr0h/osapi/internal/audit"
 )
@@ -76,6 +77,13 @@ func auditMiddleware(
 				SourceIP:     c.RealIP(),
 				ResponseCode: c.Response().Status,
 				DurationMs:   time.Since(start).Milliseconds(),
+			}
+
+			spanCtx := trace.SpanContextFromContext(
+				c.Request().Context(),
+			)
+			if spanCtx.HasTraceID() {
+				entry.TraceID = spanCtx.TraceID().String()
 			}
 
 			// Use Background context because this goroutine runs after the HTTP

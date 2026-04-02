@@ -90,5 +90,8 @@ func mapEntryToGen(
 	if e.OperationID != "" {
 		entry.OperationId = &e.OperationID
 	}
+	if e.TraceID != "" {
+		entry.TraceId = &e.TraceID
+	}
 	return entry
 }

@@ -235,6 +235,10 @@ components:
           format: int64
           description: Request duration in milliseconds.
           example: 42
+        trace_id:
+          type: string
+          description: OpenTelemetry trace ID for correlation.
+          example: "4bf92f3577b34da6a3ce929d0e0e4736"
       required:
         - id
         - timestamp
