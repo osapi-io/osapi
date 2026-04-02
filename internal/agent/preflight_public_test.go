@@ -194,6 +194,30 @@ func (s *PreflightPublicTestSuite) TestCheckCapabilities() {
 			},
 		},
 		{
+			name: "when scanner encounters read error",
+			setup: func() {
+				// Write a line longer than bufio.MaxScanTokenSize
+				// (64 KiB) to trigger a scanner error before
+				// reaching the CapEff line.
+				path := filepath.Join(s.tmpDir, "status_long_line")
+				longLine := make([]byte, 70000)
+				for i := range longLine {
+					longLine[i] = 'x'
+				}
+				content := string(longLine) + "\nCapEff:\t000000000000003f\n"
+				err := os.WriteFile(path, []byte(content), 0o644)
+				s.Require().NoError(err)
+				agent.SetProcStatusPath(path)
+			},
+			validateFunc: func(results []agent.PreflightResult) {
+				s.NotEmpty(results)
+				for _, r := range results {
+					s.False(r.Passed, "expected %s to fail", r.Name)
+					s.Contains(r.Error, "failed to read capabilities")
+				}
+			},
+		},
+		{
 			name: "when CapEff line not present",
 			setup: func() {
 				path := filepath.Join(s.tmpDir, "status_no_capeff")
