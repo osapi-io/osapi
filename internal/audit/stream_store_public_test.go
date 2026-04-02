@@ -170,7 +170,7 @@ func (s *StreamStorePublicTestSuite) TestGet() {
 		name      string
 		id        string
 		setupMock func()
-		validate  func(*audit.Entry, error)
+		validateFunc func(*audit.Entry, error)
 	}{
 		{
 			name: "successfully gets entry",
@@ -180,7 +180,7 @@ func (s *StreamStorePublicTestSuite) TestGet() {
 					GetLastMsgForSubject(gomock.Any(), "audit.log.entry-1").
 					Return(&jetstream.RawStreamMsg{Data: data}, nil)
 			},
-			validate: func(e *audit.Entry, err error) {
+			validateFunc: func(e *audit.Entry, err error) {
 				s.NoError(err)
 				s.Require().NotNil(e)
 				s.Equal("entry-1", e.ID)
@@ -196,7 +196,7 @@ func (s *StreamStorePublicTestSuite) TestGet() {
 					GetLastMsgForSubject(gomock.Any(), "audit.log.missing").
 					Return(nil, jetstream.ErrMsgNotFound)
 			},
-			validate: func(e *audit.Entry, err error) {
+			validateFunc: func(e *audit.Entry, err error) {
 				s.Error(err)
 				s.Nil(e)
 				s.Contains(err.Error(), "not found")
@@ -210,7 +210,7 @@ func (s *StreamStorePublicTestSuite) TestGet() {
 					GetLastMsgForSubject(gomock.Any(), "audit.log.bad-json").
 					Return(&jetstream.RawStreamMsg{Data: []byte("not-json")}, nil)
 			},
-			validate: func(e *audit.Entry, err error) {
+			validateFunc: func(e *audit.Entry, err error) {
 				s.Error(err)
 				s.Nil(e)
 				s.Contains(err.Error(), "unmarshal audit entry")
@@ -222,7 +222,7 @@ func (s *StreamStorePublicTestSuite) TestGet() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 			result, err := s.store.Get(context.Background(), tt.id)
-			tt.validate(result, err)
+			tt.validateFunc(result, err)
 		})
 	}
 }
@@ -240,7 +240,7 @@ func (s *StreamStorePublicTestSuite) TestList() {
 		limit     int
 		offset    int
 		setupMock func()
-		validate  func([]audit.Entry, int, error)
+		validateFunc func([]audit.Entry, int, error)
 	}{
 		{
 			name:   "returns entries newest-first within limit",
@@ -274,7 +274,7 @@ func (s *StreamStorePublicTestSuite) TestList() {
 					Fetch(3, gomock.Any()).
 					Return(mockBatch, nil)
 			},
-			validate: func(entries []audit.Entry, total int, err error) {
+			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
 				s.Equal(3, total)
 				s.Len(entries, 3)
@@ -313,7 +313,7 @@ func (s *StreamStorePublicTestSuite) TestList() {
 					Fetch(1, gomock.Any()).
 					Return(mockBatch, nil)
 			},
-			validate: func(entries []audit.Entry, total int, err error) {
+			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
 				s.Equal(3, total)
 				s.Len(entries, 1)
@@ -329,7 +329,7 @@ func (s *StreamStorePublicTestSuite) TestList() {
 					Info(gomock.Any()).
 					Return(s.newStreamInfo(3, 1), nil)
 			},
-			validate: func(entries []audit.Entry, total int, err error) {
+			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
 				s.Equal(3, total)
 				s.Empty(entries)
@@ -344,7 +344,7 @@ func (s *StreamStorePublicTestSuite) TestList() {
 					Info(gomock.Any()).
 					Return(s.newStreamInfo(0, 0), nil)
 			},
-			validate: func(entries []audit.Entry, total int, err error) {
+			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
 				s.Equal(0, total)
 				s.Empty(entries)
@@ -359,7 +359,7 @@ func (s *StreamStorePublicTestSuite) TestList() {
 					Info(gomock.Any()).
 					Return(nil, fmt.Errorf("connection error"))
 			},
-			validate: func(entries []audit.Entry, total int, err error) {
+			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.Error(err)
 				s.Nil(entries)
 				s.Equal(0, total)
@@ -378,7 +378,7 @@ func (s *StreamStorePublicTestSuite) TestList() {
 					OrderedConsumer(gomock.Any(), gomock.Any()).
 					Return(nil, fmt.Errorf("consumer error"))
 			},
-			validate: func(entries []audit.Entry, total int, err error) {
+			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.Error(err)
 				s.Nil(entries)
 				s.Equal(0, total)
@@ -402,7 +402,7 @@ func (s *StreamStorePublicTestSuite) TestList() {
 					Fetch(3, gomock.Any()).
 					Return(nil, fmt.Errorf("fetch error"))
 			},
-			validate: func(entries []audit.Entry, total int, err error) {
+			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.Error(err)
 				s.Nil(entries)
 				s.Equal(0, total)
@@ -436,7 +436,7 @@ func (s *StreamStorePublicTestSuite) TestList() {
 					Fetch(2, gomock.Any()).
 					Return(mockBatch, nil)
 			},
-			validate: func(entries []audit.Entry, total int, err error) {
+			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
 				s.Equal(2, total)
 				s.Len(entries, 1)
@@ -468,7 +468,7 @@ func (s *StreamStorePublicTestSuite) TestList() {
 					Fetch(1, gomock.Any()).
 					Return(mockBatch, nil)
 			},
-			validate: func(entries []audit.Entry, total int, err error) {
+			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
 				s.Equal(1, total)
 				s.Len(entries, 1)
@@ -480,7 +480,7 @@ func (s *StreamStorePublicTestSuite) TestList() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 			entries, total, err := s.store.List(context.Background(), tt.limit, tt.offset)
-			tt.validate(entries, total, err)
+			tt.validateFunc(entries, total, err)
 		})
 	}
 }
@@ -496,7 +496,7 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 	tests := []struct {
 		name      string
 		setupMock func()
-		validate  func([]audit.Entry, error)
+		validateFunc func([]audit.Entry, error)
 	}{
 		{
 			name: "returns all entries newest-first",
@@ -527,7 +527,7 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 					Fetch(3, gomock.Any()).
 					Return(mockBatch, nil)
 			},
-			validate: func(entries []audit.Entry, err error) {
+			validateFunc: func(entries []audit.Entry, err error) {
 				s.NoError(err)
 				s.Len(entries, 3)
 				// Reversed: newest first
@@ -543,7 +543,7 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 					Info(gomock.Any()).
 					Return(s.newStreamInfo(0, 0), nil)
 			},
-			validate: func(entries []audit.Entry, err error) {
+			validateFunc: func(entries []audit.Entry, err error) {
 				s.NoError(err)
 				s.Empty(entries)
 			},
@@ -555,7 +555,7 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 					Info(gomock.Any()).
 					Return(nil, fmt.Errorf("connection error"))
 			},
-			validate: func(entries []audit.Entry, err error) {
+			validateFunc: func(entries []audit.Entry, err error) {
 				s.Error(err)
 				s.Nil(entries)
 				s.Contains(err.Error(), "get stream info")
@@ -571,7 +571,7 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 					OrderedConsumer(gomock.Any(), gomock.Any()).
 					Return(nil, fmt.Errorf("consumer error"))
 			},
-			validate: func(entries []audit.Entry, err error) {
+			validateFunc: func(entries []audit.Entry, err error) {
 				s.Error(err)
 				s.Nil(entries)
 				s.Contains(err.Error(), "create ordered consumer")
@@ -592,7 +592,7 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 					Fetch(3, gomock.Any()).
 					Return(nil, fmt.Errorf("fetch error"))
 			},
-			validate: func(entries []audit.Entry, err error) {
+			validateFunc: func(entries []audit.Entry, err error) {
 				s.Error(err)
 				s.Nil(entries)
 				s.Contains(err.Error(), "fetch audit entries")
@@ -623,7 +623,7 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 					Fetch(2, gomock.Any()).
 					Return(mockBatch, nil)
 			},
-			validate: func(entries []audit.Entry, err error) {
+			validateFunc: func(entries []audit.Entry, err error) {
 				s.NoError(err)
 				s.Len(entries, 1)
 				s.Equal("aaa", entries[0].ID)
@@ -652,7 +652,7 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 					Fetch(1, gomock.Any()).
 					Return(mockBatch, nil)
 			},
-			validate: func(entries []audit.Entry, err error) {
+			validateFunc: func(entries []audit.Entry, err error) {
 				s.NoError(err)
 				s.Len(entries, 1)
 			},
@@ -663,7 +663,7 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 			entries, err := s.store.ListAll(context.Background())
-			tt.validate(entries, err)
+			tt.validateFunc(entries, err)
 		})
 	}
 }
