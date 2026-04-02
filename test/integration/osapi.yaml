@@ -121,5 +121,4 @@ agent:
   privilege_escalation:
     sudo: false
     capabilities: false
-    preflight: false
 

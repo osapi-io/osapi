@@ -47,9 +47,9 @@ func (a *Agent) Start() {
 		slog.Any("labels", a.appConfig.Agent.Labels),
 	)
 
-	// Run preflight checks if configured.
+	// Run preflight checks when privilege escalation is enabled.
 	pe := a.appConfig.Agent.PrivilegeEscalation
-	if pe.Preflight {
+	if pe.Sudo || pe.Capabilities {
 		results, ok := RunPreflight(a.logger, a.execManager, pe.Sudo, pe.Capabilities)
 		if !ok {
 			for _, r := range results {

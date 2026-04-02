@@ -356,8 +356,6 @@ type PrivilegeEscalation struct {
 	Sudo bool `mapstructure:"sudo"`
 	// Capabilities verifies Linux capabilities at startup when true.
 	Capabilities bool `mapstructure:"capabilities"`
-	// Preflight runs privilege checks before accepting jobs when true.
-	Preflight bool `mapstructure:"preflight"`
 }
 
 // AgentConfig configuration settings.

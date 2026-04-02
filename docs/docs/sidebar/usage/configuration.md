@@ -92,7 +92,6 @@ uppercased:
 | `agent.metrics.port`                             | `OSAPI_AGENT_METRICS_PORT`                             |
 | `agent.privilege_escalation.sudo`                | `OSAPI_AGENT_PRIVILEGE_ESCALATION_SUDO`                |
 | `agent.privilege_escalation.capabilities`        | `OSAPI_AGENT_PRIVILEGE_ESCALATION_CAPABILITIES`        |
-| `agent.privilege_escalation.preflight`           | `OSAPI_AGENT_PRIVILEGE_ESCALATION_PREFLIGHT`           |
 
 Environment variables take precedence over file values.
 
@@ -513,8 +512,6 @@ agent:
     sudo: false
     # Verify Linux capabilities at startup.
     capabilities: false
-    # Run privilege checks before accepting jobs.
-    preflight: false
 ```
 
 ## Section Reference
@@ -708,7 +705,6 @@ When enabled, the port also serves `/health` (liveness) and `/health/ready`
 | `metrics.port`                             | int               | Port the metrics server listens on (default: 9091)         |
 | `privilege_escalation.sudo`                | bool              | Prepend sudo to write commands (default false)             |
 | `privilege_escalation.capabilities`        | bool              | Verify Linux capabilities at startup (default false)       |
-| `privilege_escalation.preflight`           | bool              | Run privilege checks before accepting jobs (default false) |
 
 When `metrics.enabled` is true, the port also serves `/health` (liveness) and
 `/health/ready` (readiness) probes without authentication.

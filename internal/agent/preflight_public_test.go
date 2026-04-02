@@ -247,16 +247,6 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 				s.NotEmpty(results)
 			},
 		},
-		{
-			name:      "when both disabled",
-			checkSudo: false,
-			checkCaps: false,
-			setup:     func() {},
-			validateFunc: func(results []agent.PreflightResult, allPassed bool) {
-				s.True(allPassed)
-				s.Empty(results)
-			},
-		},
 	}
 
 	for _, tc := range tests {

@@ -8,9 +8,9 @@ sidebar_label: Agent Hardening
 OSAPI supports running the agent as an unprivileged user with config-driven
 privilege escalation for write operations. Reads run as the agent's own
 user. Writes use `sudo` when configured. Linux capabilities provide an
-alternative for file-level access without a full sudo setup. A preflight
-check verifies the configuration at startup before the agent accepts any
-jobs.
+alternative for file-level access without a full sudo setup. When either
+option is enabled, the agent automatically verifies the configuration at
+startup before accepting any jobs.
 
 When none of these options are enabled, the agent behaves as before —
 commands run as the current user, root or otherwise.
@@ -24,15 +24,12 @@ agent:
     sudo: false
     # Verify Linux capabilities at startup.
     capabilities: false
-    # Run privilege checks before accepting jobs.
-    preflight: false
 ```
 
-| Field          | Type | Default | Description                               |
-| -------------- | ---- | ------- | ----------------------------------------- |
-| `sudo`         | bool | false   | Prepend `sudo` to write commands          |
-| `capabilities` | bool | false   | Verify Linux capabilities at startup      |
-| `preflight`    | bool | false   | Run privilege checks before accepting jobs |
+| Field          | Type | Default | Description                          |
+| -------------- | ---- | ------- | ------------------------------------ |
+| `sudo`         | bool | false   | Prepend `sudo` to write commands     |
+| `capabilities` | bool | false   | Verify Linux capabilities at startup |
 
 ## How It Works
 
@@ -168,10 +165,10 @@ that `sudo` (if also used) can elevate correctly.
 
 ## Preflight Checks
 
-When `privilege_escalation.preflight: true`, the agent runs a verification
-pass during `agent start` before subscribing to NATS. Checks are
-sequential: sudo first, then capabilities. If any check fails, the agent
-logs the failure and exits with a non-zero status.
+When `sudo` or `capabilities` is enabled, the agent automatically runs a
+verification pass during `agent start` before subscribing to NATS. Checks
+are sequential: sudo first, then capabilities. If any check fails, the
+agent logs the failure and exits with a non-zero status.
 
 The sudo check runs `sudo -n <command> --version` (or `sudo -n which
 <command>` for commands that do not support `--version`). The `-n` flag
