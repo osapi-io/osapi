@@ -241,7 +241,7 @@ func (suite *DebianPublicTestSuite) TestInstall() {
 			pkgName: "vim",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("apt-get", []string{"install", "-y", "vim"}).
+					RunPrivilegedCmd("apt-get", []string{"install", "-y", "vim"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *apt.Result) {
@@ -255,7 +255,7 @@ func (suite *DebianPublicTestSuite) TestInstall() {
 			pkgName: "badpkg",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("apt-get", []string{"install", "-y", "badpkg"}).
+					RunPrivilegedCmd("apt-get", []string{"install", "-y", "badpkg"}).
 					Return("", fmt.Errorf("E: Unable to locate package badpkg"))
 			},
 			wantErr:     true,
@@ -296,7 +296,7 @@ func (suite *DebianPublicTestSuite) TestRemove() {
 			pkgName: "vim",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("apt-get", []string{"remove", "-y", "vim"}).
+					RunPrivilegedCmd("apt-get", []string{"remove", "-y", "vim"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *apt.Result) {
@@ -310,7 +310,7 @@ func (suite *DebianPublicTestSuite) TestRemove() {
 			pkgName: "vim",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("apt-get", []string{"remove", "-y", "vim"}).
+					RunPrivilegedCmd("apt-get", []string{"remove", "-y", "vim"}).
 					Return("", fmt.Errorf("permission denied"))
 			},
 			wantErr:     true,
@@ -349,7 +349,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			name: "when update succeeds",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("apt-get", []string{"update"}).
+					RunPrivilegedCmd("apt-get", []string{"update"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *apt.Result) {
@@ -361,7 +361,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			name: "when exec error",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("apt-get", []string{"update"}).
+					RunPrivilegedCmd("apt-get", []string{"update"}).
 					Return("", fmt.Errorf("permission denied"))
 			},
 			wantErr:     true,

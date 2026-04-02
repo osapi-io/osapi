@@ -102,7 +102,7 @@ func (d *Debian) executePowerAction(
 		args = append(args, opts.Message)
 	}
 
-	if _, err := d.execManager.RunCmd("shutdown", args); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd("shutdown", args); err != nil {
 		return nil, fmt.Errorf("power: %s: %w", action, err)
 	}
 

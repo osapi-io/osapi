@@ -91,7 +91,7 @@ func (u *Debian) UpdateResolvConfByInterface(
 	if len(servers) > 0 {
 		cmd := "resolvectl"
 		args := append([]string{"dns", interfaceName}, servers...)
-		output, err := u.execManager.RunCmd(cmd, args)
+		output, err := u.execManager.RunPrivilegedCmd(cmd, args)
 		if err != nil {
 			return nil, fmt.Errorf(
 				"failed to set DNS servers with resolvectl: %w - %s",
@@ -110,7 +110,7 @@ func (u *Debian) UpdateResolvConfByInterface(
 	if len(filteredDomains) > 0 {
 		cmd := "resolvectl"
 		args := append([]string{"domain", interfaceName}, filteredDomains...)
-		output, err := u.execManager.RunCmd(cmd, args)
+		output, err := u.execManager.RunPrivilegedCmd(cmd, args)
 		if err != nil {
 			return nil, fmt.Errorf(
 				"failed to set search domains with resolvectl: %w - %s",
