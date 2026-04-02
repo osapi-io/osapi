@@ -210,7 +210,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			setupFs: func() {},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("chronyc", []string{"reload", "sources"}).
+					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
 					Return("", nil)
 			},
 			validateFunc: func(r *ntp.CreateResult) {
@@ -306,7 +306,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			setupFs: func() {},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("chronyc", []string{"reload", "sources"}).
+					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
 					Return("", errors.New("chronyc not running"))
 			},
 			validateFunc: func(r *ntp.CreateResult) {
@@ -365,7 +365,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("chronyc", []string{"reload", "sources"}).
+					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
 					Return("", nil)
 			},
 			validateFunc: func(r *ntp.UpdateResult) {
@@ -464,7 +464,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("chronyc", []string{"reload", "sources"}).
+					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
 					Return("", errors.New("chronyc not running"))
 			},
 			validateFunc: func(r *ntp.UpdateResult) {
@@ -519,7 +519,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("chronyc", []string{"reload", "sources"}).
+					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
 					Return("", nil)
 			},
 			validateFunc: func(r *ntp.DeleteResult) {
@@ -577,7 +577,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("chronyc", []string{"reload", "sources"}).
+					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
 					Return("", errors.New("chronyc not running"))
 			},
 			validateFunc: func(r *ntp.DeleteResult) {

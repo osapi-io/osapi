@@ -40,7 +40,7 @@ func (u *Debian) UpdateHostname(
 		return &UpdateHostnameResult{Changed: false}, nil
 	}
 
-	if _, err := u.execManager.RunCmd("hostnamectl", []string{"set-hostname", name}); err != nil {
+	if _, err := u.execManager.RunPrivilegedCmd("hostnamectl", []string{"set-hostname", name}); err != nil {
 		return nil, fmt.Errorf("failed to set hostname: %w", err)
 	}
 

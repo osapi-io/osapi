@@ -147,7 +147,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					RunCmd("timedatectl", []string{"show", "-p", "Timezone", "--value"}).
 					Return("America/New_York\n", nil)
 				suite.mockExec.EXPECT().
-					RunCmd("timedatectl", []string{"set-timezone", "Europe/London"}).
+					RunPrivilegedCmd("timedatectl", []string{"set-timezone", "Europe/London"}).
 					Return("", nil)
 			},
 			validateFunc: func(r *timezone.UpdateResult) {
@@ -187,7 +187,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					RunCmd("timedatectl", []string{"show", "-p", "Timezone", "--value"}).
 					Return("America/New_York\n", nil)
 				suite.mockExec.EXPECT().
-					RunCmd("timedatectl", []string{"set-timezone", "Europe/London"}).
+					RunPrivilegedCmd("timedatectl", []string{"set-timezone", "Europe/London"}).
 					Return("", errors.New("permission denied"))
 			},
 			wantErr:    true,

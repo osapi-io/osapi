@@ -127,7 +127,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunCmd("sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
+					RunPrivilegedCmd("sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -237,7 +237,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunCmd("sysctl", gomock.Any()).
+					RunPrivilegedCmd("sysctl", gomock.Any()).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -311,7 +311,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunCmd("sysctl", gomock.Any()).
+					RunPrivilegedCmd("sysctl", gomock.Any()).
 					Return("", errors.New("sysctl failed"))
 			},
 			validateFunc: func(
@@ -366,7 +366,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunCmd("sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
+					RunPrivilegedCmd("sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -656,7 +656,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunCmd("sysctl", []string{"--system"}).
+					RunPrivilegedCmd("sysctl", []string{"--system"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -911,7 +911,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunCmd("sysctl", []string{"--system"}).
+					RunPrivilegedCmd("sysctl", []string{"--system"}).
 					Return("", errors.New("sysctl failed"))
 			},
 			validateFunc: func(
