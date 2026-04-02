@@ -23,6 +23,7 @@ package validation
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -120,6 +121,44 @@ func formatErrors(
 	}
 
 	return strings.Join(msgs, "; ")
+}
+
+// AtLeastOneField checks that at least one exported pointer, slice, or map
+// field in the struct is non-nil, or that at least one non-pointer field is
+// non-zero. Returns an error message and false if all fields are nil/zero
+// (i.e., the update body is empty).
+func AtLeastOneField(
+	v any,
+) (string, bool) {
+	rv := reflect.ValueOf(v)
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
+	}
+
+	if rv.Kind() != reflect.Struct {
+		return "expected struct", false
+	}
+
+	rt := rv.Type()
+	for i := range rt.NumField() {
+		field := rv.Field(i)
+		if !rt.Field(i).IsExported() {
+			continue
+		}
+
+		switch field.Kind() {
+		case reflect.Ptr, reflect.Slice, reflect.Map:
+			if !field.IsNil() {
+				return "", true
+			}
+		default:
+			if !field.IsZero() {
+				return "", true
+			}
+		}
+	}
+
+	return "at least one field must be provided", false
 }
 
 // Instance returns the shared validator for registering custom validators.

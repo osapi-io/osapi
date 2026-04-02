@@ -120,10 +120,10 @@ type GetNodeLogParams struct {
 	Lines *int `form:"lines,omitempty" json:"lines,omitempty" validate:"omitempty,min=1,max=10000"`
 
 	// Since Return log entries since this time. Accepts systemd time specifications (e.g., "1h", "2026-01-01 00:00:00").
-	Since *string `form:"since,omitempty" json:"since,omitempty"`
+	Since *string `form:"since,omitempty" json:"since,omitempty" validate:"omitempty"`
 
 	// Priority Filter by log priority level (e.g., "err", "warning", "info", "debug").
-	Priority *string `form:"priority,omitempty" json:"priority,omitempty"`
+	Priority *string `form:"priority,omitempty" json:"priority,omitempty" validate:"omitempty,oneof=emerg alert crit err warning notice info debug"`
 }
 
 // GetNodeLogUnitParams defines parameters for GetNodeLogUnit.
@@ -132,10 +132,10 @@ type GetNodeLogUnitParams struct {
 	Lines *int `form:"lines,omitempty" json:"lines,omitempty" validate:"omitempty,min=1,max=10000"`
 
 	// Since Return log entries since this time. Accepts systemd time specifications (e.g., "1h", "2026-01-01 00:00:00").
-	Since *string `form:"since,omitempty" json:"since,omitempty"`
+	Since *string `form:"since,omitempty" json:"since,omitempty" validate:"omitempty"`
 
 	// Priority Filter by log priority level (e.g., "err", "warning", "info", "debug").
-	Priority *string `form:"priority,omitempty" json:"priority,omitempty"`
+	Priority *string `form:"priority,omitempty" json:"priority,omitempty" validate:"omitempty,oneof=emerg alert crit err warning notice info debug"`
 }
 
 // ServerInterface represents all server handlers.
@@ -316,6 +316,15 @@ func (response GetNodeLog200JSONResponse) VisitGetNodeLogResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetNodeLog400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeLog400JSONResponse) VisitGetNodeLogResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetNodeLog401JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodeLog401JSONResponse) VisitGetNodeLogResponse(w http.ResponseWriter) error {
@@ -356,6 +365,15 @@ type GetNodeLogSource200JSONResponse LogSourceCollectionResponse
 func (response GetNodeLogSource200JSONResponse) VisitGetNodeLogSourceResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeLogSource400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeLogSource400JSONResponse) VisitGetNodeLogSourceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -402,6 +420,15 @@ type GetNodeLogUnit200JSONResponse LogCollectionResponse
 func (response GetNodeLogUnit200JSONResponse) VisitGetNodeLogUnitResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeLogUnit400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeLogUnit400JSONResponse) VisitGetNodeLogUnitResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }

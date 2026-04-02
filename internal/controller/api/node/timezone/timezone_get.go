@@ -38,7 +38,7 @@ func (s *Timezone) GetNodeTimezone(
 	request gen.GetNodeTimezoneRequestObject,
 ) (gen.GetNodeTimezoneResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetNodeTimezone500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeTimezone400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

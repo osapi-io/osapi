@@ -38,7 +38,7 @@ func (s *Certificate) GetNodeCertificateCa(
 	request gen.GetNodeCertificateCaRequestObject,
 ) (gen.GetNodeCertificateCaResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetNodeCertificateCa500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeCertificateCa400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

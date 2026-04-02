@@ -38,7 +38,7 @@ func (p *Package) GetNodePackageUpdate(
 	request gen.GetNodePackageUpdateRequestObject,
 ) (gen.GetNodePackageUpdateResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetNodePackageUpdate500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodePackageUpdate400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

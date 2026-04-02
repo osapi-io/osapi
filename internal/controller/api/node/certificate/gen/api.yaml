@@ -51,6 +51,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CertificateCACollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -202,6 +208,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CertificateCAMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:

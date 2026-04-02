@@ -633,6 +633,8 @@ components:
           type: string
           description: Optional name for the container.
           example: "my-nginx"
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,min=1"
         command:
           type: array
           description: Command to run in the container.
@@ -665,6 +667,8 @@ components:
             Whether to start the container immediately after creation.
             Defaults to true.
           default: true
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty"
       required:
         - image
 
@@ -702,6 +706,8 @@ components:
           type: string
           description: Working directory inside the container.
           example: "/app"
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty"
       required:
         - command
 

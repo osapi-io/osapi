@@ -386,6 +386,126 @@ func (s *ValidationPublicTestSuite) TestCronSchedule() {
 	}
 }
 
+func (s *ValidationPublicTestSuite) TestAtLeastOneField() {
+	type allPointers struct {
+		Shell  *string
+		Home   *string
+		Groups *[]string
+	}
+
+	type withNonPointer struct {
+		Name    string
+		Shell   *string
+		Enabled bool
+	}
+
+	type withSlice struct {
+		Items []string
+		Shell *string
+	}
+
+	type withMap struct {
+		Labels map[string]string
+		Shell  *string
+	}
+
+	type unexportedOnly struct {
+		hidden *string //nolint:unused
+	}
+
+	str := "bash"
+	groups := []string{"admin"}
+
+	tests := []struct {
+		name       string
+		input      any
+		wantOK     bool
+		wantErrMsg string
+	}{
+		{
+			name:   "when one pointer field is non-nil",
+			input:  allPointers{Shell: &str},
+			wantOK: true,
+		},
+		{
+			name:   "when slice pointer field is non-nil",
+			input:  allPointers{Groups: &groups},
+			wantOK: true,
+		},
+		{
+			name:       "when all pointer fields are nil",
+			input:      allPointers{},
+			wantOK:     false,
+			wantErrMsg: "at least one field must be provided",
+		},
+		{
+			name:   "when non-pointer field is non-zero",
+			input:  withNonPointer{Name: "test"},
+			wantOK: true,
+		},
+		{
+			name:   "when bool field is true",
+			input:  withNonPointer{Enabled: true},
+			wantOK: true,
+		},
+		{
+			name:       "when all fields are zero",
+			input:      withNonPointer{},
+			wantOK:     false,
+			wantErrMsg: "at least one field must be provided",
+		},
+		{
+			name:   "when slice field is non-nil",
+			input:  withSlice{Items: []string{"a"}},
+			wantOK: true,
+		},
+		{
+			name:       "when slice field is nil",
+			input:      withSlice{},
+			wantOK:     false,
+			wantErrMsg: "at least one field must be provided",
+		},
+		{
+			name:   "when map field is non-nil",
+			input:  withMap{Labels: map[string]string{"env": "dev"}},
+			wantOK: true,
+		},
+		{
+			name:       "when map field is nil",
+			input:      withMap{},
+			wantOK:     false,
+			wantErrMsg: "at least one field must be provided",
+		},
+		{
+			name:       "when only unexported fields",
+			input:      unexportedOnly{},
+			wantOK:     false,
+			wantErrMsg: "at least one field must be provided",
+		},
+		{
+			name:   "when pointer to struct is passed",
+			input:  &allPointers{Shell: &str},
+			wantOK: true,
+		},
+		{
+			name:       "when non-struct is passed",
+			input:      "not a struct",
+			wantOK:     false,
+			wantErrMsg: "expected struct",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			errMsg, ok := validation.AtLeastOneField(tt.input)
+			s.Equal(tt.wantOK, ok)
+			if !ok {
+				s.Equal(tt.wantErrMsg, errMsg)
+			}
+		})
+	}
+}
+
 func (s *ValidationPublicTestSuite) TestInstance() {
 	tests := []struct {
 		name string

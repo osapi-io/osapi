@@ -279,6 +279,15 @@ func (response DeleteNodeNtp200JSONResponse) VisitDeleteNodeNtpResponse(w http.R
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DeleteNodeNtp400JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeNtp400JSONResponse) VisitDeleteNodeNtpResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type DeleteNodeNtp401JSONResponse externalRef0.ErrorResponse
 
 func (response DeleteNodeNtp401JSONResponse) VisitDeleteNodeNtpResponse(w http.ResponseWriter) error {
@@ -328,6 +337,15 @@ type GetNodeNtp200JSONResponse NtpCollectionResponse
 func (response GetNodeNtp200JSONResponse) VisitGetNodeNtpResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeNtp400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeNtp400JSONResponse) VisitGetNodeNtpResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }

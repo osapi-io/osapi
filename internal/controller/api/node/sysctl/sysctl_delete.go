@@ -39,7 +39,7 @@ func (s *Sysctl) DeleteNodeSysctl(
 	request gen.DeleteNodeSysctlRequestObject,
 ) (gen.DeleteNodeSysctlResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.DeleteNodeSysctl500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeSysctl400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

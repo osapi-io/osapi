@@ -164,7 +164,7 @@ func (s *ServiceGetPublicTestSuite) TestGetNodeServiceByName() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeServiceByNameResponseObject) {
-				_, ok := resp.(gen.GetNodeServiceByName500JSONResponse)
+				_, ok := resp.(gen.GetNodeServiceByName400JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -451,7 +451,7 @@ func (s *ServiceGetPublicTestSuite) TestGetNodeServiceByNameValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target"},
 		},
 	}

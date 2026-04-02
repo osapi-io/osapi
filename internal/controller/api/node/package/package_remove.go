@@ -39,7 +39,7 @@ func (p *Package) DeleteNodePackage(
 	request gen.DeleteNodePackageRequestObject,
 ) (gen.DeleteNodePackageResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.DeleteNodePackage500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodePackage400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

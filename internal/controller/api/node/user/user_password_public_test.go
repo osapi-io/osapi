@@ -289,6 +289,65 @@ func (s *UserPasswordPublicTestSuite) TestPostNodeUserPassword() {
 	}
 }
 
+func (s *UserPasswordPublicTestSuite) TestPostNodeUserPasswordValidationHTTP() {
+	tests := []struct {
+		name     string
+		path     string
+		body     string
+		wantCode int
+	}{
+		{
+			name:     "when valid request",
+			path:     "/node/server1/user/testuser/password",
+			body:     `{"password":"newpass123"}`,
+			wantCode: http.StatusOK,
+		},
+		{
+			name:     "when missing password",
+			path:     "/node/server1/user/testuser/password",
+			body:     `{}`,
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:     "when invalid hostname",
+			path:     "/node/nonexistent/user/testuser/password",
+			body:     `{"password":"newpass123"}`,
+			wantCode: http.StatusBadRequest,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			jobMock := jobmocks.NewMockJobClient(s.mockCtrl)
+			if tc.wantCode == http.StatusOK {
+				jobMock.EXPECT().
+					Modify(gomock.Any(), "server1", "user", job.OperationUserChangePassword, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Changed:  boolPtr(true),
+						Data:     json.RawMessage(`{"name":"testuser","changed":true}`),
+					}, nil)
+			}
+
+			userHandler := apiuser.New(s.logger, jobMock)
+			strictHandler := gen.NewStrictHandler(userHandler, nil)
+			a := api.New(s.appConfig, s.logger)
+			gen.RegisterHandlers(a.Echo, strictHandler)
+
+			req := httptest.NewRequest(
+				http.MethodPost,
+				tc.path,
+				strings.NewReader(tc.body),
+			)
+			req.Header.Set("Content-Type", "application/json")
+			rec := httptest.NewRecorder()
+			a.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+		})
+	}
+}
+
 const rbacUserPasswordTestSigningKey = "test-signing-key-for-rbac-user-password"
 
 func (s *UserPasswordPublicTestSuite) TestPostNodeUserPasswordRBACHTTP() {

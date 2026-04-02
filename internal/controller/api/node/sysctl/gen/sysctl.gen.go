@@ -332,6 +332,15 @@ func (response GetNodeSysctl200JSONResponse) VisitGetNodeSysctlResponse(w http.R
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetNodeSysctl400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeSysctl400JSONResponse) VisitGetNodeSysctlResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetNodeSysctl401JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodeSysctl401JSONResponse) VisitGetNodeSysctlResponse(w http.ResponseWriter) error {
@@ -431,6 +440,15 @@ func (response DeleteNodeSysctl200JSONResponse) VisitDeleteNodeSysctlResponse(w 
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DeleteNodeSysctl400JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeSysctl400JSONResponse) VisitDeleteNodeSysctlResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type DeleteNodeSysctl401JSONResponse externalRef0.ErrorResponse
 
 func (response DeleteNodeSysctl401JSONResponse) VisitDeleteNodeSysctlResponse(w http.ResponseWriter) error {
@@ -481,6 +499,15 @@ type GetNodeSysctlByKey200JSONResponse SysctlGetResponse
 func (response GetNodeSysctlByKey200JSONResponse) VisitGetNodeSysctlByKeyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeSysctlByKey400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeSysctlByKey400JSONResponse) VisitGetNodeSysctlByKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }

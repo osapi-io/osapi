@@ -408,6 +408,16 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeServiceValidationHTTP() {
 			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target"},
 		},
+		{
+			name: "when invalid body empty object",
+			path: "/node/server1/service/my-app.service",
+			body: `{}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
 	}
 
 	for _, tc := range tests {

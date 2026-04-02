@@ -39,7 +39,7 @@ func (s *Ntp) DeleteNodeNtp(
 	request gen.DeleteNodeNtpRequestObject,
 ) (gen.DeleteNodeNtpResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.DeleteNodeNtp500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeNtp400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

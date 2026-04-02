@@ -114,7 +114,7 @@ func (s *UserDeletePublicTestSuite) TestDeleteNodeUser() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.DeleteNodeUserResponseObject) {
-				_, ok := resp.(gen.DeleteNodeUser500JSONResponse)
+				_, ok := resp.(gen.DeleteNodeUser400JSONResponse)
 				s.True(ok)
 			},
 		},

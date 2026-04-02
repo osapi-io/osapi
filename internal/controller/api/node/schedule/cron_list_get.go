@@ -38,7 +38,7 @@ func (s *Schedule) GetNodeScheduleCron(
 	request gen.GetNodeScheduleCronRequestObject,
 ) (gen.GetNodeScheduleCronResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeScheduleCron400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

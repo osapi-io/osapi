@@ -532,6 +532,16 @@ func (s *CAUpdatePutPublicTestSuite) TestPutNodeCertificateCaValidationHTTP() {
 			wantContains: []string{`"job_id"`, `"results"`},
 		},
 		{
+			name: "when missing object",
+			path: "/node/server1/certificate/ca/my-ca",
+			body: `{}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "Object", "required"},
+		},
+		{
 			name: "when target agent not found",
 			path: "/node/nonexistent/certificate/ca/my-ca",
 			body: `{"object":"my-ca-object-v2"}`,

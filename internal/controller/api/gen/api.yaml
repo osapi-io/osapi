@@ -555,6 +555,8 @@ paths:
                   type: string
                   description: The name of the file in the Object Store.
                   example: nginx.conf
+                  x-oapi-codegen-extra-tags:
+                    validate: required,min=1,max=255
                 content_type:
                   type: string
                   description: >
@@ -565,6 +567,8 @@ paths:
                   enum:
                     - raw
                     - template
+                  x-oapi-codegen-extra-tags:
+                    validate: omitempty,oneof=raw template
                 file:
                   type: string
                   format: binary
@@ -1360,6 +1364,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CertificateCACollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -1507,6 +1517,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CertificateCAMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -2426,6 +2442,8 @@ paths:
           description: >
             Return log entries since this time. Accepts systemd time
             specifications (e.g., "1h", "2026-01-01 00:00:00").
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
           schema:
             type: string
         - name: priority
@@ -2434,6 +2452,8 @@ paths:
           description: >
             Filter by log priority level (e.g., "err", "warning", "info",
             "debug").
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,oneof=emerg alert crit err warning notice info debug
           schema:
             type: string
       responses:
@@ -2443,6 +2463,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LogCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -2483,6 +2509,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LogSourceCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -2534,6 +2566,8 @@ paths:
           description: >
             Return log entries since this time. Accepts systemd time
             specifications (e.g., "1h", "2026-01-01 00:00:00").
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
           schema:
             type: string
         - name: priority
@@ -2542,6 +2576,8 @@ paths:
           description: >
             Filter by log priority level (e.g., "err", "warning", "info",
             "debug").
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,oneof=emerg alert crit err warning notice info debug
           schema:
             type: string
       responses:
@@ -2551,6 +2587,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LogCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -2760,6 +2802,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NtpCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -2905,6 +2953,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NtpDeleteResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -2950,6 +3004,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackageCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -3040,6 +3100,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackageCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -3084,6 +3150,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackageMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -3129,6 +3201,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackageMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -3166,6 +3244,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UpdateCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -3311,6 +3395,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProcessCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -3351,6 +3441,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProcessGetResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -3455,6 +3551,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CronCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -3545,6 +3647,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CronGetResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -3646,6 +3754,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CronDeleteResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -3691,6 +3805,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceListResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -3781,6 +3901,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceGetResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -3882,6 +4008,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -3922,6 +4054,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -3962,6 +4100,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -4002,6 +4146,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -4042,6 +4192,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -4083,6 +4239,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -4122,6 +4284,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SysctlCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -4214,6 +4382,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SysctlGetResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -4317,6 +4491,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SysctlDeleteResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -4362,6 +4542,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TimezoneCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -4452,6 +4638,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -4542,6 +4734,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -4643,6 +4841,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -4748,6 +4952,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SSHKeyCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -4841,6 +5051,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SSHKeyMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -4880,6 +5096,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GroupCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -4970,6 +5192,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GroupCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -5071,6 +5299,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GroupMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -6564,6 +6798,8 @@ components:
           type: string
           description: Optional name for the container.
           example: my-nginx
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
         command:
           type: array
           description: Command to run in the container.
@@ -6604,6 +6840,8 @@ components:
             Whether to start the container immediately after creation. Defaults
             to true.
           default: true
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
       required:
         - image
     DockerStopRequest:
@@ -6641,6 +6879,8 @@ components:
           type: string
           description: Working directory inside the container.
           example: /app
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
       required:
         - command
     DockerPullRequest:
@@ -8755,17 +8995,25 @@ components:
         uid:
           type: integer
           description: Numeric user ID. If omitted, the system assigns one.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0
         gid:
           type: integer
           description: >-
             Primary group ID. If omitted, a group matching the username is
             created.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0
         home:
           type: string
           description: Home directory path.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
         shell:
           type: string
           description: Login shell path.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
         groups:
           type: array
           items:
@@ -8774,18 +9022,26 @@ components:
         password:
           type: string
           description: Initial password (plaintext, hashed by the agent).
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
         system:
           type: boolean
           description: Create a system account.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
     UserUpdateRequest:
       type: object
       properties:
         shell:
           type: string
           description: New login shell path.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
         home:
           type: string
           description: New home directory path.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
         groups:
           type: array
           items:
@@ -8794,6 +9050,8 @@ components:
         lock:
           type: boolean
           description: Lock or unlock the account.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
     UserPasswordRequest:
       type: object
       required:
@@ -8817,9 +9075,13 @@ components:
         gid:
           type: integer
           description: Numeric group ID. If omitted, the system assigns one.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0
         system:
           type: boolean
           description: Create a system group.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
     GroupUpdateRequest:
       type: object
       properties:

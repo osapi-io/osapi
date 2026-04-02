@@ -54,6 +54,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -147,6 +153,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -250,6 +262,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -359,6 +377,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SSHKeyCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -453,6 +477,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SSHKeyMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -494,6 +524,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GroupCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -587,6 +623,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GroupCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -690,6 +732,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GroupMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -805,15 +853,23 @@ components:
         uid:
           type: integer
           description: Numeric user ID. If omitted, the system assigns one.
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,min=0"
         gid:
           type: integer
           description: Primary group ID. If omitted, a group matching the username is created.
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,min=0"
         home:
           type: string
           description: Home directory path.
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,min=1"
         shell:
           type: string
           description: Login shell path.
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,min=1"
         groups:
           type: array
           items:
@@ -822,9 +878,13 @@ components:
         password:
           type: string
           description: Initial password (plaintext, hashed by the agent).
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,min=1"
         system:
           type: boolean
           description: Create a system account.
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty"
 
     UserUpdateRequest:
       type: object
@@ -832,9 +892,13 @@ components:
         shell:
           type: string
           description: New login shell path.
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,min=1"
         home:
           type: string
           description: New home directory path.
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,min=1"
         groups:
           type: array
           items:
@@ -843,6 +907,8 @@ components:
         lock:
           type: boolean
           description: Lock or unlock the account.
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty"
 
     UserPasswordRequest:
       type: object
@@ -868,9 +934,13 @@ components:
         gid:
           type: integer
           description: Numeric group ID. If omitted, the system assigns one.
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,min=0"
         system:
           type: boolean
           description: Create a system group.
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty"
 
     GroupUpdateRequest:
       type: object

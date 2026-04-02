@@ -37,7 +37,7 @@ func (u *User) DeleteNodeUserSSHKey(
 	request gen.DeleteNodeUserSSHKeyRequestObject,
 ) (gen.DeleteNodeUserSSHKeyResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.DeleteNodeUserSSHKey500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

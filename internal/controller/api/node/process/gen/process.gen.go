@@ -322,6 +322,15 @@ func (response GetNodeProcess200JSONResponse) VisitGetNodeProcessResponse(w http
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetNodeProcess400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeProcess400JSONResponse) VisitGetNodeProcessResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetNodeProcess401JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodeProcess401JSONResponse) VisitGetNodeProcessResponse(w http.ResponseWriter) error {
@@ -363,6 +372,15 @@ type GetNodeProcessByPid200JSONResponse ProcessGetResponse
 func (response GetNodeProcessByPid200JSONResponse) VisitGetNodeProcessByPidResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeProcessByPid400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeProcessByPid400JSONResponse) VisitGetNodeProcessByPidResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }

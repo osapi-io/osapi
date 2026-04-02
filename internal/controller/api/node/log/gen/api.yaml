@@ -60,6 +60,8 @@ paths:
           description: >
             Return log entries since this time. Accepts systemd time
             specifications (e.g., "1h", "2026-01-01 00:00:00").
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty"
           schema:
             type: string
         - name: priority
@@ -68,6 +70,8 @@ paths:
           description: >
             Filter by log priority level (e.g., "err", "warning", "info",
             "debug").
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,oneof=emerg alert crit err warning notice info debug"
           schema:
             type: string
       responses:
@@ -77,6 +81,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LogCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -117,6 +127,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LogSourceCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -168,6 +184,8 @@ paths:
           description: >
             Return log entries since this time. Accepts systemd time
             specifications (e.g., "1h", "2026-01-01 00:00:00").
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty"
           schema:
             type: string
         - name: priority
@@ -176,6 +194,8 @@ paths:
           description: >
             Filter by log priority level (e.g., "err", "warning", "info",
             "debug").
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,oneof=emerg alert crit err warning notice info debug"
           schema:
             type: string
       responses:
@@ -185,6 +205,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LogCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:

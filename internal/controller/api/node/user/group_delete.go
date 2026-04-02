@@ -39,7 +39,7 @@ func (u *User) DeleteNodeGroup(
 	request gen.DeleteNodeGroupRequestObject,
 ) (gen.DeleteNodeGroupResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.DeleteNodeGroup500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeGroup400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

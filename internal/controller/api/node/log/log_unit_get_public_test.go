@@ -149,10 +149,27 @@ func (s *LogUnitPublicTestSuite) TestGetNodeLogUnit() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeLogUnitResponseObject) {
-				r, ok := resp.(gen.GetNodeLogUnit500JSONResponse)
+				r, ok := resp.(gen.GetNodeLogUnit400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
+			},
+		},
+		{
+			name: "validation error invalid priority",
+			request: gen.GetNodeLogUnitRequestObject{
+				Hostname: "server1",
+				Name:     "sshd.service",
+				Params: gen.GetNodeLogUnitParams{
+					Priority: stringPtr("bogus"),
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.GetNodeLogUnitResponseObject) {
+				r, ok := resp.(gen.GetNodeLogUnit400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "oneof")
 			},
 		},
 		{
@@ -377,8 +394,17 @@ func (s *LogUnitPublicTestSuite) TestGetNodeLogUnitHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target", "not found"},
+		},
+		{
+			name: "when invalid priority returns 400",
+			path: "/node/server1/log/unit/sshd.service?priority=bogus",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "oneof"},
 		},
 	}
 

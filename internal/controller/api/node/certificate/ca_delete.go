@@ -38,7 +38,7 @@ func (s *Certificate) DeleteNodeCertificateCa(
 	request gen.DeleteNodeCertificateCaRequestObject,
 ) (gen.DeleteNodeCertificateCaResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.DeleteNodeCertificateCa500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeCertificateCa400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

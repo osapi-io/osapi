@@ -177,7 +177,7 @@ func (s *PackageGetPublicTestSuite) TestGetNodePackageByName() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodePackageByNameResponseObject) {
-				r, ok := resp.(gen.GetNodePackageByName500JSONResponse)
+				r, ok := resp.(gen.GetNodePackageByName400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -364,7 +364,7 @@ func (s *PackageGetPublicTestSuite) TestGetNodePackageByNameValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target"},
 		},
 	}

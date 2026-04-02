@@ -265,7 +265,7 @@ func (s *TimezoneGetPublicTestSuite) TestGetNodeTimezone() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeTimezoneResponseObject) {
-				r, ok := resp.(gen.GetNodeTimezone500JSONResponse)
+				r, ok := resp.(gen.GetNodeTimezone400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -372,7 +372,7 @@ func (s *TimezoneGetPublicTestSuite) TestGetNodeTimezoneValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target"},
 		},
 	}

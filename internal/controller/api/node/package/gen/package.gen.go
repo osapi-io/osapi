@@ -372,6 +372,15 @@ func (response GetNodePackage200JSONResponse) VisitGetNodePackageResponse(w http
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetNodePackage400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodePackage400JSONResponse) VisitGetNodePackageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetNodePackage401JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodePackage401JSONResponse) VisitGetNodePackageResponse(w http.ResponseWriter) error {
@@ -470,6 +479,15 @@ func (response GetNodePackageUpdate200JSONResponse) VisitGetNodePackageUpdateRes
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetNodePackageUpdate400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodePackageUpdate400JSONResponse) VisitGetNodePackageUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetNodePackageUpdate401JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodePackageUpdate401JSONResponse) VisitGetNodePackageUpdateResponse(w http.ResponseWriter) error {
@@ -510,6 +528,15 @@ type PostNodePackageUpdate200JSONResponse PackageMutationResponse
 func (response PostNodePackageUpdate200JSONResponse) VisitPostNodePackageUpdateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodePackageUpdate400JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodePackageUpdate400JSONResponse) VisitPostNodePackageUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -555,6 +582,15 @@ type DeleteNodePackage200JSONResponse PackageMutationResponse
 func (response DeleteNodePackage200JSONResponse) VisitDeleteNodePackageResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNodePackage400JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodePackage400JSONResponse) VisitDeleteNodePackageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -609,6 +645,15 @@ type GetNodePackageByName200JSONResponse PackageCollectionResponse
 func (response GetNodePackageByName200JSONResponse) VisitGetNodePackageByNameResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodePackageByName400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodePackageByName400JSONResponse) VisitGetNodePackageByNameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }

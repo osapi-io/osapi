@@ -31,6 +31,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api/node/user/gen"
 	"github.com/retr0h/osapi/internal/job"
 	userProv "github.com/retr0h/osapi/internal/provider/node/user"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 // PutNodeUser updates a user on a target node.
@@ -39,6 +40,14 @@ func (u *User) PutNodeUser(
 	request gen.PutNodeUserRequestObject,
 ) (gen.PutNodeUserResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
+		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
+	}
+
+	if errMsg, ok := validation.Struct(request.Body); !ok {
+		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
+	}
+
+	if errMsg, ok := validation.AtLeastOneField(request.Body); !ok {
 		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
 	}
 

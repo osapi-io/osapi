@@ -110,6 +110,21 @@ func (s *GroupUpdatePublicTestSuite) TestPutNodeGroup() {
 			},
 		},
 		{
+			name: "when empty body returns 400",
+			request: gen.PutNodeGroupRequestObject{
+				Hostname: "server1",
+				Name:     "devops",
+				Body:     &gen.GroupUpdateRequest{},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNodeGroupResponseObject) {
+				r, ok := resp.(gen.PutNodeGroup400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "at least one field")
+			},
+		},
+		{
 			name: "validation error empty hostname",
 			request: gen.PutNodeGroupRequestObject{
 				Hostname: "",
@@ -273,6 +288,65 @@ func (s *GroupUpdatePublicTestSuite) TestPutNodeGroup() {
 			resp, err := s.handler.PutNodeGroup(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
+		})
+	}
+}
+
+func (s *GroupUpdatePublicTestSuite) TestPutNodeGroupValidationHTTP() {
+	tests := []struct {
+		name     string
+		path     string
+		body     string
+		wantCode int
+	}{
+		{
+			name:     "when valid request",
+			path:     "/node/server1/group/devops",
+			body:     `{"members":["user1"]}`,
+			wantCode: http.StatusOK,
+		},
+		{
+			name:     "when empty body returns 400",
+			path:     "/node/server1/group/devops",
+			body:     `{}`,
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:     "when invalid hostname",
+			path:     "/node/nonexistent/group/devops",
+			body:     `{"members":["user1"]}`,
+			wantCode: http.StatusBadRequest,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			jobMock := jobmocks.NewMockJobClient(s.mockCtrl)
+			if tc.wantCode == http.StatusOK {
+				jobMock.EXPECT().
+					Modify(gomock.Any(), "server1", "group", job.OperationGroupUpdate, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Changed:  boolPtr(true),
+						Data:     json.RawMessage(`{"name":"devops","changed":true}`),
+					}, nil)
+			}
+
+			userHandler := apiuser.New(s.logger, jobMock)
+			strictHandler := gen.NewStrictHandler(userHandler, nil)
+			a := api.New(s.appConfig, s.logger)
+			gen.RegisterHandlers(a.Echo, strictHandler)
+
+			req := httptest.NewRequest(
+				http.MethodPut,
+				tc.path,
+				strings.NewReader(tc.body),
+			)
+			req.Header.Set("Content-Type", "application/json")
+			rec := httptest.NewRecorder()
+			a.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
 		})
 	}
 }

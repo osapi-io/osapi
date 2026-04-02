@@ -236,7 +236,7 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSSHKey() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeUserSSHKeyResponseObject) {
-				r, ok := resp.(gen.GetNodeUserSSHKey500JSONResponse)
+				r, ok := resp.(gen.GetNodeUserSSHKey400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -394,7 +394,7 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSSHKeyValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target"},
 		},
 	}

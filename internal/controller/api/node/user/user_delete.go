@@ -39,7 +39,7 @@ func (u *User) DeleteNodeUser(
 	request gen.DeleteNodeUserRequestObject,
 ) (gen.DeleteNodeUserResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.DeleteNodeUser500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeUser400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

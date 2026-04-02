@@ -38,7 +38,7 @@ func (u *User) GetNodeUser(
 	request gen.GetNodeUserRequestObject,
 ) (gen.GetNodeUserResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetNodeUser500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeUser400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

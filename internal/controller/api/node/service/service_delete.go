@@ -38,7 +38,7 @@ func (s *Service) DeleteNodeService(
 	request gen.DeleteNodeServiceRequestObject,
 ) (gen.DeleteNodeServiceResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.DeleteNodeService500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeService400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

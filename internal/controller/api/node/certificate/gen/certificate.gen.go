@@ -299,6 +299,15 @@ func (response GetNodeCertificateCa200JSONResponse) VisitGetNodeCertificateCaRes
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetNodeCertificateCa400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeCertificateCa400JSONResponse) VisitGetNodeCertificateCaResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetNodeCertificateCa401JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodeCertificateCa401JSONResponse) VisitGetNodeCertificateCaResponse(w http.ResponseWriter) error {
@@ -394,6 +403,15 @@ type DeleteNodeCertificateCa200JSONResponse CertificateCAMutationResponse
 func (response DeleteNodeCertificateCa200JSONResponse) VisitDeleteNodeCertificateCaResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNodeCertificateCa400JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeCertificateCa400JSONResponse) VisitDeleteNodeCertificateCaResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }

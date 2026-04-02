@@ -38,7 +38,7 @@ func (u *User) GetNodeGroup(
 	request gen.GetNodeGroupRequestObject,
 ) (gen.GetNodeGroupResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetNodeGroup500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeGroup400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

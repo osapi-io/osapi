@@ -38,7 +38,7 @@ func (p *Package) PostNodePackageUpdate(
 	request gen.PostNodePackageUpdateRequestObject,
 ) (gen.PostNodePackageUpdateResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.PostNodePackageUpdate500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodePackageUpdate400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

@@ -206,6 +206,15 @@ func (response GetNodeTimezone200JSONResponse) VisitGetNodeTimezoneResponse(w ht
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetNodeTimezone400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeTimezone400JSONResponse) VisitGetNodeTimezoneResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetNodeTimezone401JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodeTimezone401JSONResponse) VisitGetNodeTimezoneResponse(w http.ResponseWriter) error {

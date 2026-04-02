@@ -193,7 +193,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeScheduleCronResponseObject) {
-				r, ok := resp.(gen.GetNodeScheduleCron500JSONResponse)
+				r, ok := resp.(gen.GetNodeScheduleCron400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -454,7 +454,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCronValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target"},
 		},
 	}
