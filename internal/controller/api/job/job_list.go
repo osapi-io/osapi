@@ -36,8 +36,6 @@ func (j *Job) GetJob(
 	ctx context.Context,
 	request gen.GetJobRequestObject,
 ) (gen.GetJobResponseObject, error) {
-	// Defense in depth: current params cannot fail validation, but
-	// guards against future parameter additions.
 	if errMsg, ok := validation.Struct(request.Params); !ok {
 		return gen.GetJob400JSONResponse{Error: &errMsg}, nil
 	}
@@ -50,12 +48,6 @@ func (j *Job) GetJob(
 	limit := client.DefaultPageSize
 	if request.Params.Limit != nil {
 		limit = *request.Params.Limit
-	}
-	// Defense-in-depth: the OpenAPI validator rejects out-of-range limits
-	// before the handler runs, but we cap here too in case validation is
-	// ever misconfigured. ListJobs also caps internally.
-	if limit <= 0 || limit > client.MaxPageSize {
-		limit = client.DefaultPageSize
 	}
 
 	offset := 0

@@ -43,8 +43,6 @@ func (u *User) PutNodeUser(
 		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
 	}
 
-	// Defense in depth: current fields use omitempty so validation
-	// always passes, but guards against future field additions.
 	if errMsg, ok := validation.Struct(request.Body); !ok {
 		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
 	}
