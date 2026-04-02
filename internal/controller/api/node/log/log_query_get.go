@@ -30,6 +30,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api/node/log/gen"
 	"github.com/retr0h/osapi/internal/job"
 	logProv "github.com/retr0h/osapi/internal/provider/node/log"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 // GetNodeLog returns system log entries from a target node.
@@ -38,6 +39,10 @@ func (s *Log) GetNodeLog(
 	request gen.GetNodeLogRequestObject,
 ) (gen.GetNodeLogResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
+		return gen.GetNodeLog400JSONResponse{Error: &errMsg}, nil
+	}
+
+	if errMsg, ok := validation.Struct(request.Params); !ok {
 		return gen.GetNodeLog400JSONResponse{Error: &errMsg}, nil
 	}
 

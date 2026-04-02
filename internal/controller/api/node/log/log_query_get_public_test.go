@@ -165,6 +165,22 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 			},
 		},
 		{
+			name: "validation error invalid priority",
+			request: gen.GetNodeLogRequestObject{
+				Hostname: "server1",
+				Params: gen.GetNodeLogParams{
+					Priority: stringPtr("bogus"),
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.GetNodeLogResponseObject) {
+				r, ok := resp.(gen.GetNodeLog400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "oneof")
+			},
+		},
+		{
 			name: "success with nil response data",
 			request: gen.GetNodeLogRequestObject{
 				Hostname: "server1",
@@ -383,6 +399,15 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogHTTP() {
 			},
 			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target", "not found"},
+		},
+		{
+			name: "when invalid priority returns 400",
+			path: "/node/server1/log?priority=bogus",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "oneof"},
 		},
 	}
 

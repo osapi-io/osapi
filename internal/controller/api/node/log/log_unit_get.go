@@ -30,6 +30,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api/node/log/gen"
 	"github.com/retr0h/osapi/internal/job"
 	logProv "github.com/retr0h/osapi/internal/provider/node/log"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 // unitQueryPayload is the JSON payload sent to the agent for unit log queries.
@@ -46,6 +47,10 @@ func (s *Log) GetNodeLogUnit(
 	request gen.GetNodeLogUnitRequestObject,
 ) (gen.GetNodeLogUnitResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
+		return gen.GetNodeLogUnit400JSONResponse{Error: &errMsg}, nil
+	}
+
+	if errMsg, ok := validation.Struct(request.Params); !ok {
 		return gen.GetNodeLogUnit400JSONResponse{Error: &errMsg}, nil
 	}
 

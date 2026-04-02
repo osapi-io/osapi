@@ -1102,7 +1102,7 @@ type DockerActionResultItemStatus string
 // DockerCreateRequest defines model for DockerCreateRequest.
 type DockerCreateRequest struct {
 	// AutoStart Whether to start the container immediately after creation. Defaults to true.
-	AutoStart *bool `json:"auto_start,omitempty"`
+	AutoStart *bool `json:"auto_start,omitempty" validate:"omitempty"`
 
 	// Command Command to run in the container.
 	Command *[]string `json:"command,omitempty"`
@@ -1114,7 +1114,7 @@ type DockerCreateRequest struct {
 	Image string `json:"image" validate:"required,min=1"`
 
 	// Name Optional name for the container.
-	Name *string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty" validate:"omitempty,min=1"`
 
 	// Ports Port mappings in host_port:container_port format.
 	Ports *[]string `json:"ports,omitempty"`
@@ -1194,7 +1194,7 @@ type DockerExecRequest struct {
 	Env *[]string `json:"env,omitempty"`
 
 	// WorkingDir Working directory inside the container.
-	WorkingDir *string `json:"working_dir,omitempty"`
+	WorkingDir *string `json:"working_dir,omitempty" validate:"omitempty"`
 }
 
 // DockerExecResultItem Result of a command execution inside a container.
@@ -1582,13 +1582,13 @@ type GroupCollectionResponse struct {
 // GroupCreateRequest defines model for GroupCreateRequest.
 type GroupCreateRequest struct {
 	// Gid Numeric group ID. If omitted, the system assigns one.
-	Gid *int `json:"gid,omitempty"`
+	Gid *int `json:"gid,omitempty" validate:"omitempty,min=0"`
 
 	// Name Group name.
 	Name string `json:"name" validate:"required,min=1,max=32"`
 
 	// System Create a system group.
-	System *bool `json:"system,omitempty"`
+	System *bool `json:"system,omitempty" validate:"omitempty"`
 }
 
 // GroupEntry Group listing result for one host.
@@ -2988,28 +2988,28 @@ type UserCollectionResponse struct {
 // UserCreateRequest defines model for UserCreateRequest.
 type UserCreateRequest struct {
 	// Gid Primary group ID. If omitted, a group matching the username is created.
-	Gid *int `json:"gid,omitempty"`
+	Gid *int `json:"gid,omitempty" validate:"omitempty,min=0"`
 
 	// Groups Supplementary group names.
 	Groups *[]string `json:"groups,omitempty"`
 
 	// Home Home directory path.
-	Home *string `json:"home,omitempty"`
+	Home *string `json:"home,omitempty" validate:"omitempty,min=1"`
 
 	// Name Username for the new account.
 	Name string `json:"name" validate:"required,min=1,max=32"`
 
 	// Password Initial password (plaintext, hashed by the agent).
-	Password *string `json:"password,omitempty"`
+	Password *string `json:"password,omitempty" validate:"omitempty,min=1"`
 
 	// Shell Login shell path.
-	Shell *string `json:"shell,omitempty"`
+	Shell *string `json:"shell,omitempty" validate:"omitempty,min=1"`
 
 	// System Create a system account.
-	System *bool `json:"system,omitempty"`
+	System *bool `json:"system,omitempty" validate:"omitempty"`
 
 	// Uid Numeric user ID. If omitted, the system assigns one.
-	Uid *int `json:"uid,omitempty"`
+	Uid *int `json:"uid,omitempty" validate:"omitempty,min=0"`
 }
 
 // UserEntry User listing result for one host.
@@ -3094,13 +3094,13 @@ type UserUpdateRequest struct {
 	Groups *[]string `json:"groups,omitempty"`
 
 	// Home New home directory path.
-	Home *string `json:"home,omitempty"`
+	Home *string `json:"home,omitempty" validate:"omitempty,min=1"`
 
 	// Lock Lock or unlock the account.
-	Lock *bool `json:"lock,omitempty"`
+	Lock *bool `json:"lock,omitempty" validate:"omitempty"`
 
 	// Shell New login shell path.
-	Shell *string `json:"shell,omitempty"`
+	Shell *string `json:"shell,omitempty" validate:"omitempty,min=1"`
 }
 
 // CertName defines model for CertName.
@@ -3154,13 +3154,13 @@ type GetAuditLogsParams struct {
 // PostFileMultipartBody defines parameters for PostFile.
 type PostFileMultipartBody struct {
 	// ContentType How the file should be treated during deploy. "raw" writes bytes as-is; "template" renders with Go text/template and agent facts.
-	ContentType *PostFileMultipartBodyContentType `json:"content_type,omitempty"`
+	ContentType *PostFileMultipartBodyContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
 
 	// File The file content.
 	File openapi_types.File `json:"file"`
 
 	// Name The name of the file in the Object Store.
-	Name string `json:"name"`
+	Name string `json:"name" validate:"required,min=1,max=255"`
 }
 
 // PostFileParams defines parameters for PostFile.
@@ -3216,10 +3216,10 @@ type GetNodeLogParams struct {
 	Lines *int `form:"lines,omitempty" json:"lines,omitempty" validate:"omitempty,min=1,max=10000"`
 
 	// Since Return log entries since this time. Accepts systemd time specifications (e.g., "1h", "2026-01-01 00:00:00").
-	Since *string `form:"since,omitempty" json:"since,omitempty"`
+	Since *string `form:"since,omitempty" json:"since,omitempty" validate:"omitempty"`
 
 	// Priority Filter by log priority level (e.g., "err", "warning", "info", "debug").
-	Priority *string `form:"priority,omitempty" json:"priority,omitempty"`
+	Priority *string `form:"priority,omitempty" json:"priority,omitempty" validate:"omitempty,oneof=emerg alert crit err warning notice info debug"`
 }
 
 // GetNodeLogUnitParams defines parameters for GetNodeLogUnit.
@@ -3228,10 +3228,10 @@ type GetNodeLogUnitParams struct {
 	Lines *int `form:"lines,omitempty" json:"lines,omitempty" validate:"omitempty,min=1,max=10000"`
 
 	// Since Return log entries since this time. Accepts systemd time specifications (e.g., "1h", "2026-01-01 00:00:00").
-	Since *string `form:"since,omitempty" json:"since,omitempty"`
+	Since *string `form:"since,omitempty" json:"since,omitempty" validate:"omitempty"`
 
 	// Priority Filter by log priority level (e.g., "err", "warning", "info", "debug").
-	Priority *string `form:"priority,omitempty" json:"priority,omitempty"`
+	Priority *string `form:"priority,omitempty" json:"priority,omitempty" validate:"omitempty,oneof=emerg alert crit err warning notice info debug"`
 }
 
 // PostNodeNetworkPingJSONBody defines parameters for PostNodeNetworkPing.

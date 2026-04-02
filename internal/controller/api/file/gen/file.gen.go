@@ -105,13 +105,13 @@ type FileName = string
 // PostFileMultipartBody defines parameters for PostFile.
 type PostFileMultipartBody struct {
 	// ContentType How the file should be treated during deploy. "raw" writes bytes as-is; "template" renders with Go text/template and agent facts.
-	ContentType *PostFileMultipartBodyContentType `json:"content_type,omitempty"`
+	ContentType *PostFileMultipartBodyContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
 
 	// File The file content.
 	File openapi_types.File `json:"file"`
 
 	// Name The name of the file in the Object Store.
-	Name string `json:"name"`
+	Name string `json:"name" validate:"required,min=1,max=255"`
 }
 
 // PostFileParams defines parameters for PostFile.

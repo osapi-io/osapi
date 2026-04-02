@@ -103,7 +103,7 @@ type DockerActionResultItemStatus string
 // DockerCreateRequest defines model for DockerCreateRequest.
 type DockerCreateRequest struct {
 	// AutoStart Whether to start the container immediately after creation. Defaults to true.
-	AutoStart *bool `json:"auto_start,omitempty"`
+	AutoStart *bool `json:"auto_start,omitempty" validate:"omitempty"`
 
 	// Command Command to run in the container.
 	Command *[]string `json:"command,omitempty"`
@@ -115,7 +115,7 @@ type DockerCreateRequest struct {
 	Image string `json:"image" validate:"required,min=1"`
 
 	// Name Optional name for the container.
-	Name *string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty" validate:"omitempty,min=1"`
 
 	// Ports Port mappings in host_port:container_port format.
 	Ports *[]string `json:"ports,omitempty"`
@@ -195,7 +195,7 @@ type DockerExecRequest struct {
 	Env *[]string `json:"env,omitempty"`
 
 	// WorkingDir Working directory inside the container.
-	WorkingDir *string `json:"working_dir,omitempty"`
+	WorkingDir *string `json:"working_dir,omitempty" validate:"omitempty"`
 }
 
 // DockerExecResultItem Result of a command execution inside a container.

@@ -120,10 +120,10 @@ type GetNodeLogParams struct {
 	Lines *int `form:"lines,omitempty" json:"lines,omitempty" validate:"omitempty,min=1,max=10000"`
 
 	// Since Return log entries since this time. Accepts systemd time specifications (e.g., "1h", "2026-01-01 00:00:00").
-	Since *string `form:"since,omitempty" json:"since,omitempty"`
+	Since *string `form:"since,omitempty" json:"since,omitempty" validate:"omitempty"`
 
 	// Priority Filter by log priority level (e.g., "err", "warning", "info", "debug").
-	Priority *string `form:"priority,omitempty" json:"priority,omitempty"`
+	Priority *string `form:"priority,omitempty" json:"priority,omitempty" validate:"omitempty,oneof=emerg alert crit err warning notice info debug"`
 }
 
 // GetNodeLogUnitParams defines parameters for GetNodeLogUnit.
@@ -132,10 +132,10 @@ type GetNodeLogUnitParams struct {
 	Lines *int `form:"lines,omitempty" json:"lines,omitempty" validate:"omitempty,min=1,max=10000"`
 
 	// Since Return log entries since this time. Accepts systemd time specifications (e.g., "1h", "2026-01-01 00:00:00").
-	Since *string `form:"since,omitempty" json:"since,omitempty"`
+	Since *string `form:"since,omitempty" json:"since,omitempty" validate:"omitempty"`
 
 	// Priority Filter by log priority level (e.g., "err", "warning", "info", "debug").
-	Priority *string `form:"priority,omitempty" json:"priority,omitempty"`
+	Priority *string `form:"priority,omitempty" json:"priority,omitempty" validate:"omitempty,oneof=emerg alert crit err warning notice info debug"`
 }
 
 // ServerInterface represents all server handlers.

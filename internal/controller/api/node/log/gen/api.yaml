@@ -60,6 +60,8 @@ paths:
           description: >
             Return log entries since this time. Accepts systemd time
             specifications (e.g., "1h", "2026-01-01 00:00:00").
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty"
           schema:
             type: string
         - name: priority
@@ -68,6 +70,8 @@ paths:
           description: >
             Filter by log priority level (e.g., "err", "warning", "info",
             "debug").
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,oneof=emerg alert crit err warning notice info debug"
           schema:
             type: string
       responses:
@@ -180,6 +184,8 @@ paths:
           description: >
             Return log entries since this time. Accepts systemd time
             specifications (e.g., "1h", "2026-01-01 00:00:00").
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty"
           schema:
             type: string
         - name: priority
@@ -188,6 +194,8 @@ paths:
           description: >
             Filter by log priority level (e.g., "err", "warning", "info",
             "debug").
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,oneof=emerg alert crit err warning notice info debug"
           schema:
             type: string
       responses:

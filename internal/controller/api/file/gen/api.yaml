@@ -64,6 +64,10 @@ paths:
                   type: string
                   description: The name of the file in the Object Store.
                   example: "nginx.conf"
+                  # NOTE: multipart form fields are parsed manually in
+                  # the handler; these tags are for documentation only.
+                  x-oapi-codegen-extra-tags:
+                    validate: "required,min=1,max=255"
                 content_type:
                   type: string
                   description: >
@@ -74,6 +78,10 @@ paths:
                   enum:
                     - raw
                     - template
+                  # NOTE: multipart form fields are parsed manually in
+                  # the handler; these tags are for documentation only.
+                  x-oapi-codegen-extra-tags:
+                    validate: "omitempty,oneof=raw template"
                 file:
                   type: string
                   format: binary

@@ -75,13 +75,13 @@ type GroupCollectionResponse struct {
 // GroupCreateRequest defines model for GroupCreateRequest.
 type GroupCreateRequest struct {
 	// Gid Numeric group ID. If omitted, the system assigns one.
-	Gid *int `json:"gid,omitempty"`
+	Gid *int `json:"gid,omitempty" validate:"omitempty,min=0"`
 
 	// Name Group name.
 	Name string `json:"name" validate:"required,min=1,max=32"`
 
 	// System Create a system group.
-	System *bool `json:"system,omitempty"`
+	System *bool `json:"system,omitempty" validate:"omitempty"`
 }
 
 // GroupEntry Group listing result for one host.
@@ -226,28 +226,28 @@ type UserCollectionResponse struct {
 // UserCreateRequest defines model for UserCreateRequest.
 type UserCreateRequest struct {
 	// Gid Primary group ID. If omitted, a group matching the username is created.
-	Gid *int `json:"gid,omitempty"`
+	Gid *int `json:"gid,omitempty" validate:"omitempty,min=0"`
 
 	// Groups Supplementary group names.
 	Groups *[]string `json:"groups,omitempty"`
 
 	// Home Home directory path.
-	Home *string `json:"home,omitempty"`
+	Home *string `json:"home,omitempty" validate:"omitempty,min=1"`
 
 	// Name Username for the new account.
 	Name string `json:"name" validate:"required,min=1,max=32"`
 
 	// Password Initial password (plaintext, hashed by the agent).
-	Password *string `json:"password,omitempty"`
+	Password *string `json:"password,omitempty" validate:"omitempty,min=1"`
 
 	// Shell Login shell path.
-	Shell *string `json:"shell,omitempty"`
+	Shell *string `json:"shell,omitempty" validate:"omitempty,min=1"`
 
 	// System Create a system account.
-	System *bool `json:"system,omitempty"`
+	System *bool `json:"system,omitempty" validate:"omitempty"`
 
 	// Uid Numeric user ID. If omitted, the system assigns one.
-	Uid *int `json:"uid,omitempty"`
+	Uid *int `json:"uid,omitempty" validate:"omitempty,min=0"`
 }
 
 // UserEntry User listing result for one host.
@@ -332,13 +332,13 @@ type UserUpdateRequest struct {
 	Groups *[]string `json:"groups,omitempty"`
 
 	// Home New home directory path.
-	Home *string `json:"home,omitempty"`
+	Home *string `json:"home,omitempty" validate:"omitempty,min=1"`
 
 	// Lock Lock or unlock the account.
-	Lock *bool `json:"lock,omitempty"`
+	Lock *bool `json:"lock,omitempty" validate:"omitempty"`
 
 	// Shell New login shell path.
-	Shell *string `json:"shell,omitempty"`
+	Shell *string `json:"shell,omitempty" validate:"omitempty,min=1"`
 }
 
 // GroupName defines model for GroupName.
