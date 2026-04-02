@@ -71,6 +71,9 @@ Requires audit:read permission.
 		if entry.OperationID != "" {
 			cli.PrintKV("Operation", entry.OperationID)
 		}
+		if entry.TraceID != "" {
+			cli.PrintKV("Trace ID", entry.TraceID)
+		}
 	},
 }
 

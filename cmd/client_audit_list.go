@@ -66,6 +66,11 @@ response status, and duration. Requires audit:read permission.
 
 		rows := make([][]string, 0, len(resp.Data.Items))
 		for _, entry := range resp.Data.Items {
+			traceID := ""
+			if entry.TraceID != "" {
+				traceID = entry.TraceID[:16] + "…"
+			}
+
 			rows = append(rows, []string{
 				entry.ID,
 				entry.Timestamp.Format("2006-01-02 15:04:05"),
@@ -74,6 +79,7 @@ response status, and duration. Requires audit:read permission.
 				entry.Path,
 				strconv.Itoa(entry.ResponseCode),
 				strconv.FormatInt(entry.DurationMs, 10) + "ms",
+				traceID,
 			})
 		}
 
@@ -88,6 +94,7 @@ response status, and duration. Requires audit:read permission.
 					"PATH",
 					"STATUS",
 					"DURATION",
+					"TRACE ID",
 				},
 				Rows: rows,
 			},
