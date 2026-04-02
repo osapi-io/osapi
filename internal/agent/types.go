@@ -32,6 +32,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 
 	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
@@ -44,11 +45,12 @@ import (
 
 // Agent implements job processing with clean lifecycle management.
 type Agent struct {
-	logger     *slog.Logger
-	appConfig  config.Config
-	appFs      avfs.VFS
-	jobClient  client.JobClient
-	streamName string
+	logger      *slog.Logger
+	appConfig   config.Config
+	appFs       avfs.VFS
+	jobClient   client.JobClient
+	streamName  string
+	execManager exec.Manager
 
 	// registry dispatches job requests to the appropriate processor.
 	registry *ProviderRegistry

@@ -152,5 +152,6 @@ func newTestAgent(p newTestAgentParams) *agent.Agent {
 		registry,
 		p.registryKV,
 		p.factsKV,
+		nil,
 	)
 }

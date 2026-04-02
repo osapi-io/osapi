@@ -31,6 +31,7 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/provider"
@@ -58,6 +59,7 @@ func New(
 	registry *ProviderRegistry,
 	registryKV jetstream.KeyValue,
 	factsKV jetstream.KeyValue,
+	execManager exec.Manager,
 ) *Agent {
 	logger = logger.With(slog.String("subsystem", "agent"))
 
@@ -76,6 +78,7 @@ func New(
 		registry:        registry,
 		registryKV:      registryKV,
 		factsKV:         factsKV,
+		execManager:     execManager,
 		heartbeatLogger: logger.With(slog.String("subsystem", "heartbeat")),
 		factsLogger:     logger.With(slog.String("subsystem", "facts")),
 	}
