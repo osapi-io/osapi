@@ -358,6 +358,27 @@ const (
 	SSHKeyMutationEntryStatusSkipped SSHKeyMutationEntryStatus = "skipped"
 )
 
+// Defines values for ServiceGetEntryStatus.
+const (
+	ServiceGetEntryStatusFailed  ServiceGetEntryStatus = "failed"
+	ServiceGetEntryStatusOk      ServiceGetEntryStatus = "ok"
+	ServiceGetEntryStatusSkipped ServiceGetEntryStatus = "skipped"
+)
+
+// Defines values for ServiceListEntryStatus.
+const (
+	ServiceListEntryStatusFailed  ServiceListEntryStatus = "failed"
+	ServiceListEntryStatusOk      ServiceListEntryStatus = "ok"
+	ServiceListEntryStatusSkipped ServiceListEntryStatus = "skipped"
+)
+
+// Defines values for ServiceMutationEntryStatus.
+const (
+	ServiceMutationEntryStatusFailed  ServiceMutationEntryStatus = "failed"
+	ServiceMutationEntryStatusOk      ServiceMutationEntryStatus = "ok"
+	ServiceMutationEntryStatusSkipped ServiceMutationEntryStatus = "skipped"
+)
+
 // Defines values for SysctlEntryStatus.
 const (
 	SysctlEntryStatusFailed  SysctlEntryStatus = "failed"
@@ -422,11 +443,11 @@ const (
 
 // Defines values for GetJobParamsStatus.
 const (
-	GetJobParamsStatusCompleted      GetJobParamsStatus = "completed"
-	GetJobParamsStatusFailed         GetJobParamsStatus = "failed"
-	GetJobParamsStatusPartialFailure GetJobParamsStatus = "partial_failure"
-	GetJobParamsStatusProcessing     GetJobParamsStatus = "processing"
-	GetJobParamsStatusSubmitted      GetJobParamsStatus = "submitted"
+	Completed      GetJobParamsStatus = "completed"
+	Failed         GetJobParamsStatus = "failed"
+	PartialFailure GetJobParamsStatus = "partial_failure"
+	Processing     GetJobParamsStatus = "processing"
+	Submitted      GetJobParamsStatus = "submitted"
 )
 
 // Defines values for GetNodeContainerDockerParamsState.
@@ -2568,6 +2589,117 @@ type SSHKeyMutationResponse struct {
 	Results []SSHKeyMutationEntry `json:"results"`
 }
 
+// ServiceCreateRequest defines model for ServiceCreateRequest.
+type ServiceCreateRequest struct {
+	// Name Service unit name.
+	Name string `json:"name" validate:"required,min=1"`
+
+	// Object Object Store reference for the unit file.
+	Object string `json:"object" validate:"required,min=1"`
+}
+
+// ServiceGetEntry Service get result for a single agent.
+type ServiceGetEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that reported this entry.
+	Hostname string `json:"hostname"`
+
+	// Service Information about a systemd service.
+	Service *ServiceInfo `json:"service,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status ServiceGetEntryStatus `json:"status"`
+}
+
+// ServiceGetEntryStatus The status of the operation for this host.
+type ServiceGetEntryStatus string
+
+// ServiceGetResponse defines model for ServiceGetResponse.
+type ServiceGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []ServiceGetEntry   `json:"results"`
+}
+
+// ServiceInfo Information about a systemd service.
+type ServiceInfo struct {
+	// Description Service description from the unit file.
+	Description *string `json:"description,omitempty"`
+
+	// Enabled Whether the service is enabled to start on boot.
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// Name Service unit name.
+	Name *string `json:"name,omitempty"`
+
+	// Pid Main process ID of the service.
+	Pid *int `json:"pid,omitempty"`
+
+	// Status Active status of the service.
+	Status *string `json:"status,omitempty"`
+}
+
+// ServiceListEntry Service list result for a single agent.
+type ServiceListEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that reported this entry.
+	Hostname string `json:"hostname"`
+
+	// Services List of services on this host.
+	Services *[]ServiceInfo `json:"services,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status ServiceListEntryStatus `json:"status"`
+}
+
+// ServiceListEntryStatus The status of the operation for this host.
+type ServiceListEntryStatus string
+
+// ServiceListResponse defines model for ServiceListResponse.
+type ServiceListResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []ServiceListEntry  `json:"results"`
+}
+
+// ServiceMutationEntry Result of a service mutation or action operation for one host.
+type ServiceMutationEntry struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that processed this operation.
+	Hostname string `json:"hostname"`
+
+	// Name Service unit name.
+	Name *string `json:"name,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status ServiceMutationEntryStatus `json:"status"`
+}
+
+// ServiceMutationEntryStatus The status of the operation for this host.
+type ServiceMutationEntryStatus string
+
+// ServiceMutationResponse defines model for ServiceMutationResponse.
+type ServiceMutationResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID    `json:"job_id,omitempty"`
+	Results []ServiceMutationEntry `json:"results"`
+}
+
+// ServiceUpdateRequest defines model for ServiceUpdateRequest.
+type ServiceUpdateRequest struct {
+	// Object Object Store reference for the new unit file.
+	Object string `json:"object" validate:"required,min=1"`
+}
+
 // StatusResponse defines model for StatusResponse.
 type StatusResponse struct {
 	Agents *AgentStats `json:"agents,omitempty"`
@@ -2995,6 +3127,9 @@ type Pid = int
 // SSHKeyFingerprint defines model for SSHKeyFingerprint.
 type SSHKeyFingerprint = string
 
+// ServiceName defines model for ServiceName.
+type ServiceName = string
+
 // SysctlKey defines model for SysctlKey.
 type SysctlKey = string
 
@@ -3179,6 +3314,12 @@ type PostNodeScheduleCronJSONRequestBody = CronCreateRequest
 
 // PutNodeScheduleCronJSONRequestBody defines body for PutNodeScheduleCron for application/json ContentType.
 type PutNodeScheduleCronJSONRequestBody = CronUpdateRequest
+
+// PostNodeServiceJSONRequestBody defines body for PostNodeService for application/json ContentType.
+type PostNodeServiceJSONRequestBody = ServiceCreateRequest
+
+// PutNodeServiceJSONRequestBody defines body for PutNodeService for application/json ContentType.
+type PutNodeServiceJSONRequestBody = ServiceUpdateRequest
 
 // PostNodeSysctlJSONRequestBody defines body for PostNodeSysctl for application/json ContentType.
 type PostNodeSysctlJSONRequestBody = SysctlCreateRequest
@@ -3548,6 +3689,40 @@ type ClientInterface interface {
 	PutNodeScheduleCronWithBody(ctx context.Context, hostname Hostname, name CronName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PutNodeScheduleCron(ctx context.Context, hostname Hostname, name CronName, body PutNodeScheduleCronJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeService request
+	GetNodeService(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeServiceWithBody request with any body
+	PostNodeServiceWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodeService(ctx context.Context, hostname Hostname, body PostNodeServiceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteNodeService request
+	DeleteNodeService(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeServiceByName request
+	GetNodeServiceByName(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutNodeServiceWithBody request with any body
+	PutNodeServiceWithBody(ctx context.Context, hostname Hostname, name ServiceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutNodeService(ctx context.Context, hostname Hostname, name ServiceName, body PutNodeServiceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeServiceDisable request
+	PostNodeServiceDisable(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeServiceEnable request
+	PostNodeServiceEnable(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeServiceRestart request
+	PostNodeServiceRestart(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeServiceStart request
+	PostNodeServiceStart(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeServiceStop request
+	PostNodeServiceStop(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeSysctl request
 	GetNodeSysctl(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4808,6 +4983,150 @@ func (c *Client) PutNodeScheduleCronWithBody(ctx context.Context, hostname Hostn
 
 func (c *Client) PutNodeScheduleCron(ctx context.Context, hostname Hostname, name CronName, body PutNodeScheduleCronJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutNodeScheduleCronRequest(c.Server, hostname, name, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeService(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeServiceRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeServiceWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeServiceRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeService(ctx context.Context, hostname Hostname, body PostNodeServiceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeServiceRequest(c.Server, hostname, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteNodeService(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeServiceRequest(c.Server, hostname, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeServiceByName(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeServiceByNameRequest(c.Server, hostname, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeServiceWithBody(ctx context.Context, hostname Hostname, name ServiceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeServiceRequestWithBody(c.Server, hostname, name, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeService(ctx context.Context, hostname Hostname, name ServiceName, body PutNodeServiceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeServiceRequest(c.Server, hostname, name, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeServiceDisable(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeServiceDisableRequest(c.Server, hostname, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeServiceEnable(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeServiceEnableRequest(c.Server, hostname, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeServiceRestart(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeServiceRestartRequest(c.Server, hostname, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeServiceStart(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeServiceStartRequest(c.Server, hostname, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeServiceStop(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeServiceStopRequest(c.Server, hostname, name)
 	if err != nil {
 		return nil, err
 	}
@@ -8369,6 +8688,428 @@ func NewPutNodeScheduleCronRequestWithBody(server string, hostname Hostname, nam
 	return req, nil
 }
 
+// NewGetNodeServiceRequest generates requests for GetNodeService
+func NewGetNodeServiceRequest(server string, hostname Hostname) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/service", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostNodeServiceRequest calls the generic PostNodeService builder with application/json body
+func NewPostNodeServiceRequest(server string, hostname Hostname, body PostNodeServiceJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostNodeServiceRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPostNodeServiceRequestWithBody generates requests for PostNodeService with any type of body
+func NewPostNodeServiceRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/service", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteNodeServiceRequest generates requests for DeleteNodeService
+func NewDeleteNodeServiceRequest(server string, hostname Hostname, name ServiceName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/service/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetNodeServiceByNameRequest generates requests for GetNodeServiceByName
+func NewGetNodeServiceByNameRequest(server string, hostname Hostname, name ServiceName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/service/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutNodeServiceRequest calls the generic PutNodeService builder with application/json body
+func NewPutNodeServiceRequest(server string, hostname Hostname, name ServiceName, body PutNodeServiceJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutNodeServiceRequestWithBody(server, hostname, name, "application/json", bodyReader)
+}
+
+// NewPutNodeServiceRequestWithBody generates requests for PutNodeService with any type of body
+func NewPutNodeServiceRequestWithBody(server string, hostname Hostname, name ServiceName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/service/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostNodeServiceDisableRequest generates requests for PostNodeServiceDisable
+func NewPostNodeServiceDisableRequest(server string, hostname Hostname, name ServiceName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/service/%s/disable", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostNodeServiceEnableRequest generates requests for PostNodeServiceEnable
+func NewPostNodeServiceEnableRequest(server string, hostname Hostname, name ServiceName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/service/%s/enable", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostNodeServiceRestartRequest generates requests for PostNodeServiceRestart
+func NewPostNodeServiceRestartRequest(server string, hostname Hostname, name ServiceName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/service/%s/restart", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostNodeServiceStartRequest generates requests for PostNodeServiceStart
+func NewPostNodeServiceStartRequest(server string, hostname Hostname, name ServiceName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/service/%s/start", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostNodeServiceStopRequest generates requests for PostNodeServiceStop
+func NewPostNodeServiceStopRequest(server string, hostname Hostname, name ServiceName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/service/%s/stop", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetNodeSysctlRequest generates requests for GetNodeSysctl
 func NewGetNodeSysctlRequest(server string, hostname Hostname) (*http.Request, error) {
 	var err error
@@ -9459,6 +10200,40 @@ type ClientWithResponsesInterface interface {
 	PutNodeScheduleCronWithBodyWithResponse(ctx context.Context, hostname Hostname, name CronName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeScheduleCronResponse, error)
 
 	PutNodeScheduleCronWithResponse(ctx context.Context, hostname Hostname, name CronName, body PutNodeScheduleCronJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeScheduleCronResponse, error)
+
+	// GetNodeServiceWithResponse request
+	GetNodeServiceWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeServiceResponse, error)
+
+	// PostNodeServiceWithBodyWithResponse request with any body
+	PostNodeServiceWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeServiceResponse, error)
+
+	PostNodeServiceWithResponse(ctx context.Context, hostname Hostname, body PostNodeServiceJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeServiceResponse, error)
+
+	// DeleteNodeServiceWithResponse request
+	DeleteNodeServiceWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*DeleteNodeServiceResponse, error)
+
+	// GetNodeServiceByNameWithResponse request
+	GetNodeServiceByNameWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*GetNodeServiceByNameResponse, error)
+
+	// PutNodeServiceWithBodyWithResponse request with any body
+	PutNodeServiceWithBodyWithResponse(ctx context.Context, hostname Hostname, name ServiceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeServiceResponse, error)
+
+	PutNodeServiceWithResponse(ctx context.Context, hostname Hostname, name ServiceName, body PutNodeServiceJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeServiceResponse, error)
+
+	// PostNodeServiceDisableWithResponse request
+	PostNodeServiceDisableWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*PostNodeServiceDisableResponse, error)
+
+	// PostNodeServiceEnableWithResponse request
+	PostNodeServiceEnableWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*PostNodeServiceEnableResponse, error)
+
+	// PostNodeServiceRestartWithResponse request
+	PostNodeServiceRestartWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*PostNodeServiceRestartResponse, error)
+
+	// PostNodeServiceStartWithResponse request
+	PostNodeServiceStartWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*PostNodeServiceStartResponse, error)
+
+	// PostNodeServiceStopWithResponse request
+	PostNodeServiceStopWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*PostNodeServiceStopResponse, error)
 
 	// GetNodeSysctlWithResponse request
 	GetNodeSysctlWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeSysctlResponse, error)
@@ -11477,6 +12252,260 @@ func (r PutNodeScheduleCronResponse) StatusCode() int {
 	return 0
 }
 
+type GetNodeServiceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ServiceListResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeServiceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeServiceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodeServiceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ServiceMutationResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeServiceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeServiceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteNodeServiceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ServiceMutationResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteNodeServiceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteNodeServiceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetNodeServiceByNameResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ServiceGetResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeServiceByNameResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeServiceByNameResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutNodeServiceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ServiceMutationResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutNodeServiceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutNodeServiceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodeServiceDisableResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ServiceMutationResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeServiceDisableResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeServiceDisableResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodeServiceEnableResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ServiceMutationResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeServiceEnableResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeServiceEnableResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodeServiceRestartResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ServiceMutationResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeServiceRestartResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeServiceRestartResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodeServiceStartResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ServiceMutationResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeServiceStartResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeServiceStartResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodeServiceStopResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ServiceMutationResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeServiceStopResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeServiceStopResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetNodeSysctlResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -12812,6 +13841,112 @@ func (c *ClientWithResponses) PutNodeScheduleCronWithResponse(ctx context.Contex
 		return nil, err
 	}
 	return ParsePutNodeScheduleCronResponse(rsp)
+}
+
+// GetNodeServiceWithResponse request returning *GetNodeServiceResponse
+func (c *ClientWithResponses) GetNodeServiceWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeServiceResponse, error) {
+	rsp, err := c.GetNodeService(ctx, hostname, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeServiceResponse(rsp)
+}
+
+// PostNodeServiceWithBodyWithResponse request with arbitrary body returning *PostNodeServiceResponse
+func (c *ClientWithResponses) PostNodeServiceWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeServiceResponse, error) {
+	rsp, err := c.PostNodeServiceWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeServiceResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodeServiceWithResponse(ctx context.Context, hostname Hostname, body PostNodeServiceJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeServiceResponse, error) {
+	rsp, err := c.PostNodeService(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeServiceResponse(rsp)
+}
+
+// DeleteNodeServiceWithResponse request returning *DeleteNodeServiceResponse
+func (c *ClientWithResponses) DeleteNodeServiceWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*DeleteNodeServiceResponse, error) {
+	rsp, err := c.DeleteNodeService(ctx, hostname, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNodeServiceResponse(rsp)
+}
+
+// GetNodeServiceByNameWithResponse request returning *GetNodeServiceByNameResponse
+func (c *ClientWithResponses) GetNodeServiceByNameWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*GetNodeServiceByNameResponse, error) {
+	rsp, err := c.GetNodeServiceByName(ctx, hostname, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeServiceByNameResponse(rsp)
+}
+
+// PutNodeServiceWithBodyWithResponse request with arbitrary body returning *PutNodeServiceResponse
+func (c *ClientWithResponses) PutNodeServiceWithBodyWithResponse(ctx context.Context, hostname Hostname, name ServiceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeServiceResponse, error) {
+	rsp, err := c.PutNodeServiceWithBody(ctx, hostname, name, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeServiceResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutNodeServiceWithResponse(ctx context.Context, hostname Hostname, name ServiceName, body PutNodeServiceJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeServiceResponse, error) {
+	rsp, err := c.PutNodeService(ctx, hostname, name, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeServiceResponse(rsp)
+}
+
+// PostNodeServiceDisableWithResponse request returning *PostNodeServiceDisableResponse
+func (c *ClientWithResponses) PostNodeServiceDisableWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*PostNodeServiceDisableResponse, error) {
+	rsp, err := c.PostNodeServiceDisable(ctx, hostname, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeServiceDisableResponse(rsp)
+}
+
+// PostNodeServiceEnableWithResponse request returning *PostNodeServiceEnableResponse
+func (c *ClientWithResponses) PostNodeServiceEnableWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*PostNodeServiceEnableResponse, error) {
+	rsp, err := c.PostNodeServiceEnable(ctx, hostname, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeServiceEnableResponse(rsp)
+}
+
+// PostNodeServiceRestartWithResponse request returning *PostNodeServiceRestartResponse
+func (c *ClientWithResponses) PostNodeServiceRestartWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*PostNodeServiceRestartResponse, error) {
+	rsp, err := c.PostNodeServiceRestart(ctx, hostname, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeServiceRestartResponse(rsp)
+}
+
+// PostNodeServiceStartWithResponse request returning *PostNodeServiceStartResponse
+func (c *ClientWithResponses) PostNodeServiceStartWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*PostNodeServiceStartResponse, error) {
+	rsp, err := c.PostNodeServiceStart(ctx, hostname, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeServiceStartResponse(rsp)
+}
+
+// PostNodeServiceStopWithResponse request returning *PostNodeServiceStopResponse
+func (c *ClientWithResponses) PostNodeServiceStopWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*PostNodeServiceStopResponse, error) {
+	rsp, err := c.PostNodeServiceStop(ctx, hostname, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeServiceStopResponse(rsp)
 }
 
 // GetNodeSysctlWithResponse request returning *GetNodeSysctlResponse
@@ -17031,6 +18166,504 @@ func ParsePutNodeScheduleCronResponse(rsp *http.Response) (*PutNodeScheduleCronR
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeServiceResponse parses an HTTP response from a GetNodeServiceWithResponse call
+func ParseGetNodeServiceResponse(rsp *http.Response) (*GetNodeServiceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeServiceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ServiceListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeServiceResponse parses an HTTP response from a PostNodeServiceWithResponse call
+func ParsePostNodeServiceResponse(rsp *http.Response) (*PostNodeServiceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeServiceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ServiceMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteNodeServiceResponse parses an HTTP response from a DeleteNodeServiceWithResponse call
+func ParseDeleteNodeServiceResponse(rsp *http.Response) (*DeleteNodeServiceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteNodeServiceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ServiceMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeServiceByNameResponse parses an HTTP response from a GetNodeServiceByNameWithResponse call
+func ParseGetNodeServiceByNameResponse(rsp *http.Response) (*GetNodeServiceByNameResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeServiceByNameResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ServiceGetResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutNodeServiceResponse parses an HTTP response from a PutNodeServiceWithResponse call
+func ParsePutNodeServiceResponse(rsp *http.Response) (*PutNodeServiceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutNodeServiceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ServiceMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeServiceDisableResponse parses an HTTP response from a PostNodeServiceDisableWithResponse call
+func ParsePostNodeServiceDisableResponse(rsp *http.Response) (*PostNodeServiceDisableResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeServiceDisableResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ServiceMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeServiceEnableResponse parses an HTTP response from a PostNodeServiceEnableWithResponse call
+func ParsePostNodeServiceEnableResponse(rsp *http.Response) (*PostNodeServiceEnableResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeServiceEnableResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ServiceMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeServiceRestartResponse parses an HTTP response from a PostNodeServiceRestartWithResponse call
+func ParsePostNodeServiceRestartResponse(rsp *http.Response) (*PostNodeServiceRestartResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeServiceRestartResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ServiceMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeServiceStartResponse parses an HTTP response from a PostNodeServiceStartWithResponse call
+func ParsePostNodeServiceStartResponse(rsp *http.Response) (*PostNodeServiceStartResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeServiceStartResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ServiceMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeServiceStopResponse parses an HTTP response from a PostNodeServiceStopWithResponse call
+func ParsePostNodeServiceStopResponse(rsp *http.Response) (*PostNodeServiceStopResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeServiceStopResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ServiceMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

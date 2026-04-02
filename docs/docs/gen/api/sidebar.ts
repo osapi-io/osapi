@@ -680,6 +680,76 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Node/Service",
+      link: {
+        type: "doc",
+        id: "gen/api/service-management-api-service-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-service",
+          label: "List all services",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-service",
+          label: "Create a service unit file",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-service-by-name",
+          label: "Get service details",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-service",
+          label: "Update a service unit file",
+          className: "api-method put",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-service",
+          label: "Delete a service unit file",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-service-start",
+          label: "Start a service",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-service-stop",
+          label: "Stop a service",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-service-restart",
+          label: "Restart a service",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-service-enable",
+          label: "Enable a service",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-service-disable",
+          label: "Disable a service",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Node/Sysctl",
       link: {
         type: "doc",

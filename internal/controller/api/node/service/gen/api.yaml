@@ -1,0 +1,686 @@
+# Copyright (c) 2026 John Dewey
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+---
+openapi: 3.0.0
+info:
+  title: Service Management API
+  version: 1.0.0
+tags:
+  - name: service_operations
+    x-displayName: Node/Service
+    description: Systemd service management on a target node.
+
+paths:
+  # -- Service collection ------------------------------------------------------
+
+  /node/{hostname}/service:
+    get:
+      summary: List all services
+      description: >
+        List all systemd services on the target node.
+      tags:
+        - service_operations
+      operationId: GetNodeService
+      security:
+        - BearerAuth:
+            - service:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: List of services.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceListResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing services.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create a service unit file
+      description: >
+        Create a new systemd service unit file on the target node.
+      tags:
+        - service_operations
+      operationId: PostNodeService
+      security:
+        - BearerAuth:
+            - service:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        description: Service creation parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceCreateRequest'
+      responses:
+        '200':
+          description: Service unit file created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error creating service unit file.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # -- Service individual entry ------------------------------------------------
+
+  /node/{hostname}/service/{name}:
+    get:
+      summary: Get service details
+      description: >
+        Get detailed information about a specific service on the target node.
+      tags:
+        - service_operations
+      operationId: GetNodeServiceByName
+      security:
+        - BearerAuth:
+            - service:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/ServiceName'
+      responses:
+        '200':
+          description: Service detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceGetResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Service not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error getting service.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update a service unit file
+      description: >
+        Update an existing systemd service unit file on the target node.
+      tags:
+        - service_operations
+      operationId: PutNodeService
+      security:
+        - BearerAuth:
+            - service:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/ServiceName'
+      requestBody:
+        description: Service update parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceUpdateRequest'
+      responses:
+        '200':
+          description: Service unit file updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Service not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error updating service unit file.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete a service unit file
+      description: >
+        Delete a systemd service unit file from the target node.
+      tags:
+        - service_operations
+      operationId: DeleteNodeService
+      security:
+        - BearerAuth:
+            - service:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/ServiceName'
+      responses:
+        '200':
+          description: Service unit file deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceMutationResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error deleting service unit file.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # -- Service actions ---------------------------------------------------------
+
+  /node/{hostname}/service/{name}/start:
+    post:
+      summary: Start a service
+      description: >
+        Start a systemd service on the target node.
+      tags:
+        - service_operations
+      operationId: PostNodeServiceStart
+      security:
+        - BearerAuth:
+            - service:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/ServiceName'
+      responses:
+        '200':
+          description: Service started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceMutationResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error starting service.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/service/{name}/stop:
+    post:
+      summary: Stop a service
+      description: >
+        Stop a systemd service on the target node.
+      tags:
+        - service_operations
+      operationId: PostNodeServiceStop
+      security:
+        - BearerAuth:
+            - service:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/ServiceName'
+      responses:
+        '200':
+          description: Service stopped.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceMutationResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error stopping service.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/service/{name}/restart:
+    post:
+      summary: Restart a service
+      description: >
+        Restart a systemd service on the target node.
+      tags:
+        - service_operations
+      operationId: PostNodeServiceRestart
+      security:
+        - BearerAuth:
+            - service:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/ServiceName'
+      responses:
+        '200':
+          description: Service restarted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceMutationResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error restarting service.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/service/{name}/enable:
+    post:
+      summary: Enable a service
+      description: >
+        Enable a systemd service on the target node so it starts on boot.
+      tags:
+        - service_operations
+      operationId: PostNodeServiceEnable
+      security:
+        - BearerAuth:
+            - service:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/ServiceName'
+      responses:
+        '200':
+          description: Service enabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceMutationResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error enabling service.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/service/{name}/disable:
+    post:
+      summary: Disable a service
+      description: >
+        Disable a systemd service on the target node so it does not start
+        on boot.
+      tags:
+        - service_operations
+      operationId: PostNodeServiceDisable
+      security:
+        - BearerAuth:
+            - service:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/ServiceName'
+      responses:
+        '200':
+          description: Service disabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceMutationResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error disabling service.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+# -- Reusable components ------------------------------------------------------
+
+components:
+  parameters:
+    Hostname:
+      name: hostname
+      in: path
+      required: true
+      description: >
+        Target agent hostname, reserved routing value (_any, _all),
+        or label selector (key:value).
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in handlers via validateHostname().
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1,valid_target
+      schema:
+        type: string
+        minLength: 1
+
+    ServiceName:
+      name: name
+      in: path
+      required: true
+      description: >
+        Service unit name (e.g., nginx, sshd).
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in the handler.
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1
+      schema:
+        type: string
+        minLength: 1
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    # -- Request schemas -------------------------------------------------------
+
+    ServiceCreateRequest:
+      type: object
+      required:
+        - name
+        - object
+      properties:
+        name:
+          type: string
+          description: Service unit name.
+          example: "my-app"
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+        object:
+          type: string
+          description: Object Store reference for the unit file.
+          example: "my-app.service"
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+
+    ServiceUpdateRequest:
+      type: object
+      required:
+        - object
+      properties:
+        object:
+          type: string
+          description: Object Store reference for the new unit file.
+          example: "my-app-v2.service"
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+
+    # -- Response schemas ------------------------------------------------------
+
+    ServiceInfo:
+      type: object
+      description: Information about a systemd service.
+      properties:
+        name:
+          type: string
+          description: Service unit name.
+          example: "nginx"
+        status:
+          type: string
+          description: Active status of the service.
+          example: "active"
+        enabled:
+          type: boolean
+          description: Whether the service is enabled to start on boot.
+        description:
+          type: string
+          description: Service description from the unit file.
+          example: "A high performance web server"
+        pid:
+          type: integer
+          description: Main process ID of the service.
+          example: 1234
+
+    ServiceListEntry:
+      type: object
+      description: Service list result for a single agent.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceInfo'
+          description: List of services on this host.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    ServiceGetEntry:
+      type: object
+      description: Service get result for a single agent.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        service:
+          $ref: '#/components/schemas/ServiceInfo'
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    ServiceMutationEntry:
+      type: object
+      description: Result of a service mutation or action operation for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that processed this operation.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        name:
+          type: string
+          description: Service unit name.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    ServiceListResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceListEntry'
+      required:
+        - results
+
+    ServiceGetResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceGetEntry'
+      required:
+        - results
+
+    ServiceMutationResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceMutationEntry'
+      required:
+        - results
