@@ -548,6 +548,16 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronValidationHTTP() {
 			wantContains: []string{`"job_id"`, `"results"`},
 		},
 		{
+			name: "when invalid cron schedule",
+			path: "/node/server1/schedule/cron/backup",
+			body: `{"schedule":"not-a-cron"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "Schedule"},
+		},
+		{
 			name: "when target agent not found",
 			path: "/node/nonexistent/schedule/cron/backup",
 			body: `{"schedule":"0 3 * * *"}`,
