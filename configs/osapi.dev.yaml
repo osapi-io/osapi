@@ -48,6 +48,12 @@ agent:
   metrics:
     enabled: true
     port: 9091
+  # Least-privilege mode. When enabled, the agent runs as an
+  # unprivileged user and uses sudo for write operations.
+  # privilege_escalation:
+  #   sudo: false
+  #   capabilities: false
+  #   preflight: false
 
 nats:
   stream:
