@@ -118,4 +118,8 @@ agent:
   max_jobs: 10
   metrics:
     enabled: false
+  privilege_escalation:
+    sudo: false
+    capabilities: false
+    preflight: false
 
