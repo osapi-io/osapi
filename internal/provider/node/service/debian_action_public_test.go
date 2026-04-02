@@ -82,7 +82,7 @@ func (suite *DebianActionPublicTestSuite) TestStart() {
 					RunCmd("systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("inactive\n", errors.New("exit status 3"))
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"start", "osapi-nginx.service"}).
+					RunPrivilegedCmd("systemctl", []string{"start", "osapi-nginx.service"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -121,7 +121,7 @@ func (suite *DebianActionPublicTestSuite) TestStart() {
 					RunCmd("systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("inactive\n", errors.New("exit status 3"))
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"start", "osapi-nginx.service"}).
+					RunPrivilegedCmd("systemctl", []string{"start", "osapi-nginx.service"}).
 					Return("", errors.New("start failed"))
 			},
 			validateFunc: func(
@@ -174,7 +174,7 @@ func (suite *DebianActionPublicTestSuite) TestStop() {
 					RunCmd("systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("active\n", nil)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"stop", "osapi-nginx.service"}).
+					RunPrivilegedCmd("systemctl", []string{"stop", "osapi-nginx.service"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -213,7 +213,7 @@ func (suite *DebianActionPublicTestSuite) TestStop() {
 					RunCmd("systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("active\n", nil)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"stop", "osapi-nginx.service"}).
+					RunPrivilegedCmd("systemctl", []string{"stop", "osapi-nginx.service"}).
 					Return("", errors.New("stop failed"))
 			},
 			validateFunc: func(
@@ -263,7 +263,7 @@ func (suite *DebianActionPublicTestSuite) TestRestart() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"restart", "osapi-nginx.service"}).
+					RunPrivilegedCmd("systemctl", []string{"restart", "osapi-nginx.service"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -281,7 +281,7 @@ func (suite *DebianActionPublicTestSuite) TestRestart() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"restart", "osapi-nginx.service"}).
+					RunPrivilegedCmd("systemctl", []string{"restart", "osapi-nginx.service"}).
 					Return("", errors.New("restart failed"))
 			},
 			validateFunc: func(
@@ -334,7 +334,7 @@ func (suite *DebianActionPublicTestSuite) TestEnable() {
 					RunCmd("systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("disabled\n", errors.New("exit status 1"))
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"enable", "osapi-nginx.service"}).
+					RunPrivilegedCmd("systemctl", []string{"enable", "osapi-nginx.service"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -373,7 +373,7 @@ func (suite *DebianActionPublicTestSuite) TestEnable() {
 					RunCmd("systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("disabled\n", errors.New("exit status 1"))
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"enable", "osapi-nginx.service"}).
+					RunPrivilegedCmd("systemctl", []string{"enable", "osapi-nginx.service"}).
 					Return("", errors.New("enable failed"))
 			},
 			validateFunc: func(
@@ -426,7 +426,7 @@ func (suite *DebianActionPublicTestSuite) TestDisable() {
 					RunCmd("systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("enabled\n", nil)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"disable", "osapi-nginx.service"}).
+					RunPrivilegedCmd("systemctl", []string{"disable", "osapi-nginx.service"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -465,7 +465,7 @@ func (suite *DebianActionPublicTestSuite) TestDisable() {
 					RunCmd("systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("enabled\n", nil)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"disable", "osapi-nginx.service"}).
+					RunPrivilegedCmd("systemctl", []string{"disable", "osapi-nginx.service"}).
 					Return("", errors.New("disable failed"))
 			},
 			validateFunc: func(
