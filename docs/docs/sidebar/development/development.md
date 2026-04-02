@@ -108,6 +108,58 @@ single table — never split into separate `TestFoo`, `TestFooError`,
 Avoid generic file names like `helpers.go` or `utils.go`. Name files after what
 they contain.
 
+## Input Validation
+
+All user input is validated through the `internal/validation` package, which
+wraps `go-playground/validator`. Validation rules are declared in OpenAPI specs
+via `x-oapi-codegen-extra-tags` and enforced at runtime by handler calls to
+`validation.Struct()` or `validation.Var()`.
+
+### Validation rules
+
+- **Required fields** use `validate: "required,..."` — the field must be present
+  and non-zero.
+- **Optional fields** use `validate: "omitempty,..."` — validation is skipped
+  when the field is absent or zero-valued.
+- **Enum constraints** use `validate: "oneof=a b c"` to restrict values.
+- **Cross-field validation** uses `required_without` / `excluded_with` for
+  mutually exclusive fields (e.g., cron `schedule` vs `interval`).
+
+### Update endpoints with all-optional fields
+
+When a PUT endpoint has all optional fields (e.g., user update, group update,
+cron update), use `validation.AtLeastOneField(request.Body)` to reject empty
+bodies with a 400. This prevents clients from sending meaningless no-op updates
+or, worse, triggering destructive defaults. Place this call after
+`validation.Struct()`:
+
+```go
+if errMsg, ok := validation.Struct(request.Body); !ok {
+    return gen.PutXxx400JSONResponse{Error: &errMsg}, nil
+}
+
+if errMsg, ok := validation.AtLeastOneField(request.Body); !ok {
+    return gen.PutXxx400JSONResponse{Error: &errMsg}, nil
+}
+```
+
+### Defense-in-depth pattern
+
+When `validation.Struct()` cannot currently fail (all fields use `omitempty`),
+keep the call with a comment explaining why. This guards against future field
+additions breaking validation silently:
+
+```go
+// Defense in depth: current fields use omitempty so validation
+// always passes, but guards against future field additions.
+if errMsg, ok := validation.Struct(request.Body); !ok {
+    return gen.PostXxx400JSONResponse{Error: &errMsg}, nil
+}
+```
+
+This pattern applies to action endpoints (power, docker stop) where an empty
+body is valid — unlike update endpoints which must use `AtLeastOneField`.
+
 ## Before committing
 
 Run `just ready` before committing to ensure generated code, package docs,

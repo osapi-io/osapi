@@ -31,6 +31,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api/node/user/gen"
 	"github.com/retr0h/osapi/internal/job"
 	userProv "github.com/retr0h/osapi/internal/provider/node/user"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 // PutNodeGroup updates a group on a target node.
@@ -42,8 +43,7 @@ func (u *User) PutNodeGroup(
 		return gen.PutNodeGroup400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if request.Body.Members == nil {
-		errMsg := "at least one field must be provided"
+	if errMsg, ok := validation.AtLeastOneField(request.Body); !ok {
 		return gen.PutNodeGroup400JSONResponse{Error: &errMsg}, nil
 	}
 

@@ -49,9 +49,7 @@ func (u *User) PutNodeUser(
 		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
 	}
 
-	b := request.Body
-	if b.Shell == nil && b.Home == nil && b.Groups == nil && b.Lock == nil {
-		errMsg := "at least one field must be provided"
+	if errMsg, ok := validation.AtLeastOneField(request.Body); !ok {
 		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
 	}
 
