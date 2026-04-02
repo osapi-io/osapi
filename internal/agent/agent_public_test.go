@@ -218,7 +218,11 @@ func (s *AgentPublicTestSuite) TestStart() {
 				// Write a fake proc status file with all capabilities set.
 				tmpDir := s.T().TempDir()
 				path := filepath.Join(tmpDir, "status")
-				err := os.WriteFile(path, []byte("Name:\tosapi\nCapEff:\t000000000000003f\n"), 0o644)
+				err := os.WriteFile(
+					path,
+					[]byte("Name:\tosapi\nCapEff:\t000000000000003f\n"),
+					0o644,
+				)
 				s.Require().NoError(err)
 				agent.SetProcStatusPath(path)
 				s.T().Cleanup(func() {
