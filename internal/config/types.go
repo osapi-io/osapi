@@ -124,7 +124,7 @@ type NATS struct {
 // NATSAudit configuration for the audit log stream.
 type NATSAudit struct {
 	// Stream is the JetStream stream name for audit log entries.
-	Stream   string `mapstructure:"stream"`
+	Stream string `mapstructure:"stream"`
 	// Subject is the base subject prefix for audit messages.
 	Subject  string `mapstructure:"subject"`
 	MaxAge   string `mapstructure:"max_age"` // e.g. "720h" (30 days)
