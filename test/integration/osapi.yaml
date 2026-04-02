@@ -119,6 +119,5 @@ agent:
   metrics:
     enabled: false
   privilege_escalation:
-    sudo: false
-    capabilities: false
+    enabled: false
 

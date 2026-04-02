@@ -351,11 +351,12 @@ type ProcessConditions struct {
 }
 
 // PrivilegeEscalation configuration for least-privilege agent mode.
+// When enabled, write commands use sudo and Linux capabilities are
+// verified at startup.
 type PrivilegeEscalation struct {
-	// Sudo prepends "sudo" to write commands when true.
-	Sudo bool `mapstructure:"sudo"`
-	// Capabilities verifies Linux capabilities at startup when true.
-	Capabilities bool `mapstructure:"capabilities"`
+	// Enabled activates least-privilege mode: sudo for write commands
+	// and capability verification at startup.
+	Enabled bool `mapstructure:"enabled"`
 }
 
 // AgentConfig configuration settings.

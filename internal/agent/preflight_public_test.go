@@ -190,15 +190,11 @@ func (s *PreflightPublicTestSuite) TestCheckCapabilities() {
 func (s *PreflightPublicTestSuite) TestRunPreflight() {
 	tests := []struct {
 		name         string
-		checkSudo    bool
-		checkCaps    bool
 		setup        func()
 		validateFunc func([]agent.PreflightResult, bool)
 	}{
 		{
-			name:      "when both checks pass",
-			checkSudo: true,
-			checkCaps: true,
+			name: "when both checks pass",
 			setup: func() {
 				s.mockExecMgr.EXPECT().
 					RunCmd("sudo", gomock.Any()).
@@ -217,14 +213,18 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 			},
 		},
 		{
-			name:      "when sudo check fails",
-			checkSudo: true,
-			checkCaps: false,
+			name: "when sudo check fails",
 			setup: func() {
 				s.mockExecMgr.EXPECT().
 					RunCmd("sudo", gomock.Any()).
 					Return("", fmt.Errorf("sudo failed")).
 					AnyTimes()
+
+				path := filepath.Join(s.tmpDir, "status_sudo_fail")
+				content := "Name:\tosapi\nCapEff:\t000000000000003f\n"
+				err := os.WriteFile(path, []byte(content), 0o644)
+				s.Require().NoError(err)
+				agent.SetProcStatusPath(path)
 			},
 			validateFunc: func(results []agent.PreflightResult, allPassed bool) {
 				s.False(allPassed)
@@ -232,10 +232,13 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 			},
 		},
 		{
-			name:      "when caps check fails",
-			checkSudo: false,
-			checkCaps: true,
+			name: "when caps check fails",
 			setup: func() {
+				s.mockExecMgr.EXPECT().
+					RunCmd("sudo", gomock.Any()).
+					Return("/usr/bin/something", nil).
+					AnyTimes()
+
 				path := filepath.Join(s.tmpDir, "status_fail")
 				content := "Name:\tosapi\nCapEff:\t0000000000000000\n"
 				err := os.WriteFile(path, []byte(content), 0o644)
@@ -255,8 +258,6 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 			results, allPassed := agent.RunPreflight(
 				s.logger,
 				s.mockExecMgr,
-				tc.checkSudo,
-				tc.checkCaps,
 			)
 			tc.validateFunc(results, allPassed)
 		})

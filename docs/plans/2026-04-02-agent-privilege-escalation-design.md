@@ -28,11 +28,11 @@ agent:
     preflight: true
 ```
 
-| Field          | Type | Default | Description                              |
-| -------------- | ---- | ------- | ---------------------------------------- |
-| `sudo`         | bool | false   | Prepend `sudo` to write commands         |
-| `capabilities` | bool | false   | Verify Linux capabilities at startup     |
-| `preflight`    | bool | false   | Run privilege checks before accepting jobs|
+| Field          | Type | Default | Description                                |
+| -------------- | ---- | ------- | ------------------------------------------ |
+| `sudo`         | bool | false   | Prepend `sudo` to write commands           |
+| `capabilities` | bool | false   | Verify Linux capabilities at startup       |
+| `preflight`    | bool | false   | Run privilege checks before accepting jobs |
 
 When all fields are false (or the section is absent), the agent behaves as
 before — commands run as the current user.
@@ -68,9 +68,9 @@ When `sudo` is false, `RunPrivilegedCmd` is identical to `RunCmd`.
 
 ## Provider Changes
 
-Every provider write operation changes from `RunCmd` to `RunPrivilegedCmd`.
-Read operations stay on `RunCmd`. The providers themselves don't know or care
-whether sudo is enabled — the exec manager handles it.
+Every provider write operation changes from `RunCmd` to `RunPrivilegedCmd`. Read
+operations stay on `RunCmd`. The providers themselves don't know or care whether
+sudo is enabled — the exec manager handles it.
 
 ```go
 // Read — always unprivileged
@@ -92,8 +92,8 @@ calls `RunCmd` instead of `RunPrivilegedCmd`, the mock expectation fails.
 | `systemctl start/stop/…`   | Service     |
 | `systemctl daemon-reload`  | Service     |
 | `sysctl -p`, `--system`    | Sysctl      |
-| `timedatectl set-timezone`  | Timezone   |
-| `hostnamectl set-hostname`  | Hostname   |
+| `timedatectl set-timezone` | Timezone    |
+| `hostnamectl set-hostname` | Hostname    |
 | `chronyc reload sources`   | NTP         |
 | `useradd`, `usermod`       | User        |
 | `userdel -r`               | User        |
@@ -137,20 +137,20 @@ the failure and exits with a non-zero status.
 
 For each write command, run `sudo -n <command> --version` (or equivalent no-op
 flag). The `-n` flag makes sudo fail immediately if a password would be
-required. If the command doesn't support `--version`, use `sudo -n which
-<command>` as a fallback.
+required. If the command doesn't support `--version`, use
+`sudo -n which <command>` as a fallback.
 
 ### Capability verification
 
-Read `/proc/self/status`, parse the `CapEff` hexadecimal bitmask, and check
-that required capability bits are set:
+Read `/proc/self/status`, parse the `CapEff` hexadecimal bitmask, and check that
+required capability bits are set:
 
-| Capability            | Bit | Purpose                      |
-| --------------------- | --- | ---------------------------- |
-| `CAP_DAC_READ_SEARCH` | 2   | Read restricted files        |
+| Capability            | Bit | Purpose                         |
+| --------------------- | --- | ------------------------------- |
+| `CAP_DAC_READ_SEARCH` | 2   | Read restricted files           |
 | `CAP_DAC_OVERRIDE`    | 1   | Write files regardless of owner |
-| `CAP_FOWNER`          | 3   | Change file ownership        |
-| `CAP_KILL`            | 5   | Signal any process           |
+| `CAP_FOWNER`          | 3   | Change file ownership           |
+| `CAP_KILL`            | 5   | Signal any process              |
 
 ### Output format
 
@@ -274,8 +274,8 @@ WantedBy=multi-user.target
 - `internal/agent/preflight_public_test.go` — tests
 - `internal/agent/agent.go` — call preflight during `Start()`
 - `cmd/agent_setup.go` — pass `sudo` bool to exec manager
-- Every provider `debian*.go` file — change write `RunCmd` to
-  `RunPrivilegedCmd` (~37 call sites)
+- Every provider `debian*.go` file — change write `RunCmd` to `RunPrivilegedCmd`
+  (~37 call sites)
 - Every provider `debian*_public_test.go` — update mock expectations
 - `docs/docs/sidebar/usage/configuration.md` — add config reference
 - `docs/docs/sidebar/features/` — add agent hardening feature page

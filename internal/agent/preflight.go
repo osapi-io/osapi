@@ -71,36 +71,32 @@ var requiredCapabilities = map[string]int{
 // Overridable in tests via export_test.go.
 var procStatusPath = "/proc/self/status"
 
-// RunPreflight runs sudo and capability checks based on the provided flags.
-// Returns the combined results and whether all checks passed.
+// RunPreflight runs sudo and capability checks. When called, it always
+// checks both sudo access and Linux capabilities. Returns the combined
+// results and whether all checks passed.
 func RunPreflight(
 	logger *slog.Logger,
 	execManager exec.Manager,
-	checkSudo bool,
-	checkCaps bool,
 ) ([]PreflightResult, bool) {
-	var results []PreflightResult
 	allPassed := true
 
-	if checkSudo {
-		sudoResults := checkSudoAccess(logger, execManager)
-		results = append(results, sudoResults...)
+	sudoResults := checkSudoAccess(logger, execManager)
+	capResults := checkCapabilities(logger)
 
-		for _, r := range sudoResults {
-			if !r.Passed {
-				allPassed = false
-			}
+	results := make([]PreflightResult, 0, len(sudoResults)+len(capResults))
+	results = append(results, sudoResults...)
+
+	for _, r := range sudoResults {
+		if !r.Passed {
+			allPassed = false
 		}
 	}
 
-	if checkCaps {
-		capResults := checkCapabilities(logger)
-		results = append(results, capResults...)
+	results = append(results, capResults...)
 
-		for _, r := range capResults {
-			if !r.Passed {
-				allPassed = false
-			}
+	for _, r := range capResults {
+		if !r.Passed {
+			allPassed = false
 		}
 	}
 

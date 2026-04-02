@@ -2,17 +2,17 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use
 > superpowers:subagent-driven-development (recommended) or
-> superpowers:executing-plans to implement this plan task-by-task. Steps
-> use checkbox (`- [ ]`) syntax for tracking.
+> superpowers:executing-plans to implement this plan task-by-task. Steps use
+> checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add config-driven sudo escalation for write commands, Linux
-capability verification, and startup preflight checks to the OSAPI
-agent so it can run as an unprivileged user.
+**Goal:** Add config-driven sudo escalation for write commands, Linux capability
+verification, and startup preflight checks to the OSAPI agent so it can run as
+an unprivileged user.
 
-**Architecture:** The exec `Manager` interface gains `RunPrivilegedCmd`
-which prepends `sudo` when configured. Providers call it for write
-operations. At startup, the agent runs preflight checks to verify
-sudo and capabilities before accepting jobs.
+**Architecture:** The exec `Manager` interface gains `RunPrivilegedCmd` which
+prepends `sudo` when configured. Providers call it for write operations. At
+startup, the agent runs preflight checks to verify sudo and capabilities before
+accepting jobs.
 
 **Tech Stack:** Go, Linux capabilities (`/proc/self/status`), sudo
 
@@ -21,6 +21,7 @@ sudo and capabilities before accepting jobs.
 ### Task 1: Add privilege escalation config
 
 **Files:**
+
 - Modify: `internal/config/types.go:353-374`
 - Modify: `configs/osapi.yaml`
 - Modify: `configs/osapi.nerd.yaml`
@@ -55,16 +56,15 @@ type AgentConfig struct {
 - [ ] **Step 2: Add config to YAML files**
 
 In `configs/osapi.yaml`, `configs/osapi.nerd.yaml`, and
-`configs/osapi.local.yaml`, add to the `agent:` section (disabled by
-default):
+`configs/osapi.local.yaml`, add to the `agent:` section (disabled by default):
 
 ```yaml
-  # Least-privilege mode. When enabled, the agent runs as an
-  # unprivileged user and uses sudo for write operations.
-  # privilege_escalation:
-  #   sudo: false
-  #   capabilities: false
-  #   preflight: false
+# Least-privilege mode. When enabled, the agent runs as an
+# unprivileged user and uses sudo for write operations.
+# privilege_escalation:
+#   sudo: false
+#   capabilities: false
+#   preflight: false
 ```
 
 - [ ] **Step 3: Verify build**
@@ -82,6 +82,7 @@ feat(agent): add privilege escalation config
 ### Task 2: Add RunPrivilegedCmd to exec manager
 
 **Files:**
+
 - Modify: `internal/exec/manager.go`
 - Modify: `internal/exec/types.go`
 - Modify: `internal/exec/exec.go`
@@ -174,15 +175,14 @@ func (e *Exec) RunPrivilegedCmd(
 
 Create `internal/exec/run_privileged_cmd_public_test.go`. Test:
 
-- When sudo is false, RunPrivilegedCmd behaves like RunCmd (runs
-  the command directly)
-- When sudo is true, the command is prefixed with sudo (verify
-  the actual args passed to the underlying exec)
+- When sudo is false, RunPrivilegedCmd behaves like RunCmd (runs the command
+  directly)
+- When sudo is true, the command is prefixed with sudo (verify the actual args
+  passed to the underlying exec)
 
-Since `RunCmdImpl` calls `os/exec.Command`, use a test helper
-pattern: override the command execution to capture what would be
-run. Look at how `run_cmd_public_test.go` tests `RunCmd` and follow
-the same pattern.
+Since `RunCmdImpl` calls `os/exec.Command`, use a test helper pattern: override
+the command execution to capture what would be run. Look at how
+`run_cmd_public_test.go` tests `RunCmd` and follow the same pattern.
 
 - [ ] **Step 5: Update agent_setup.go to pass sudo config**
 
@@ -205,14 +205,13 @@ Run: `go generate ./internal/exec/mocks/...`
 
 - [ ] **Step 7: Fix compilation errors**
 
-The mock `Manager` now requires `RunPrivilegedCmd`. Any existing test
-that constructs a mock `Manager` may need updating. Run
-`go build ./...` and fix any compile errors.
+The mock `Manager` now requires `RunPrivilegedCmd`. Any existing test that
+constructs a mock `Manager` may need updating. Run `go build ./...` and fix any
+compile errors.
 
 - [ ] **Step 8: Run tests**
 
-Run: `go test ./internal/exec/... -count=1`
-Run: `go build ./...`
+Run: `go test ./internal/exec/... -count=1` Run: `go build ./...`
 
 - [ ] **Step 9: Commit**
 
@@ -225,6 +224,7 @@ feat(exec): add RunPrivilegedCmd with config-driven sudo
 ### Task 3: Add preflight checks
 
 **Files:**
+
 - Create: `internal/agent/preflight.go`
 - Create: `internal/agent/preflight_public_test.go`
 - Modify: `internal/agent/server.go`
@@ -437,28 +437,31 @@ func readCapEff() (uint64, error) {
 
 - [ ] **Step 2: Write preflight tests**
 
-Create `internal/agent/preflight_public_test.go`. Use testify/suite
-with table-driven tests. Test:
+Create `internal/agent/preflight_public_test.go`. Use testify/suite with
+table-driven tests. Test:
 
 **TestCheckSudoAccess:**
+
 - All commands pass (mock RunCmd returns nil for all sudo -n which calls)
 - One command fails (mock RunCmd returns error for one)
 - Multiple commands fail
 
 **TestCheckCapabilities:**
-- All capabilities present (write a fake /proc/self/status file with
-  full CapEff, override `procStatusPath` via export_test.go)
+
+- All capabilities present (write a fake /proc/self/status file with full
+  CapEff, override `procStatusPath` via export_test.go)
 - Missing capability (write CapEff without a required bit)
 - Cannot read file (set procStatusPath to nonexistent path)
 
 **TestRunPreflight:**
+
 - Both sudo and caps enabled and pass → allPassed true
 - Sudo fails → allPassed false
 - Caps fails → allPassed false
 - Both disabled → empty results, allPassed true
 
-Create `internal/agent/export_test.go` (or add to existing) to
-expose `procStatusPath` for testing:
+Create `internal/agent/export_test.go` (or add to existing) to expose
+`procStatusPath` for testing:
 
 ```go
 package agent
@@ -469,8 +472,8 @@ func ResetProcStatusPath()       { procStatusPath = "/proc/self/status" }
 
 - [ ] **Step 3: Wire preflight into agent Start()**
 
-In `internal/agent/server.go`, add preflight check after hostname
-determination but before starting heartbeat:
+In `internal/agent/server.go`, add preflight check after hostname determination
+but before starting heartbeat:
 
 ```go
 func (a *Agent) Start() {
@@ -511,14 +514,13 @@ func (a *Agent) Start() {
 	// ... rest of Start() unchanged ...
 ```
 
-The agent needs access to the exec manager. Check if it's already on
-the `Agent` struct. If not, add an `execManager exec.Manager` field
-and pass it from `agent_setup.go`.
+The agent needs access to the exec manager. Check if it's already on the `Agent`
+struct. If not, add an `execManager exec.Manager` field and pass it from
+`agent_setup.go`.
 
 - [ ] **Step 4: Run tests**
 
-Run: `go test ./internal/agent/... -count=1`
-Run: `go build ./...`
+Run: `go test ./internal/agent/... -count=1` Run: `go build ./...`
 
 - [ ] **Step 5: Commit**
 
@@ -531,6 +533,7 @@ feat(agent): add preflight checks for sudo and capabilities
 ### Task 4: Migrate service provider to RunPrivilegedCmd
 
 **Files:**
+
 - Modify: `internal/provider/node/service/debian_action.go`
 - Modify: `internal/provider/node/service/debian_unit.go`
 - Modify: `internal/provider/node/service/debian_action_public_test.go`
@@ -558,6 +561,7 @@ d.execManager.RunPrivilegedCmd("systemctl", []string{"disable", unitName})
 ```
 
 Keep these as `RunCmd` (reads):
+
 - `systemctl is-active` (Start, Stop)
 - `systemctl is-enabled` (Enable, Disable)
 
@@ -574,13 +578,13 @@ d.execManager.RunPrivilegedCmd("systemctl", []string{"daemon-reload"})
 
 - [ ] **Step 3: Update test mock expectations**
 
-In `debian_action_public_test.go`, change all mock expectations for
-write commands from `RunCmd` to `RunPrivilegedCmd`. Keep read command
-expectations on `RunCmd`.
+In `debian_action_public_test.go`, change all mock expectations for write
+commands from `RunCmd` to `RunPrivilegedCmd`. Keep read command expectations on
+`RunCmd`.
 
-In `debian_unit_public_test.go`, change mock expectations for
-`systemctl stop`, `systemctl disable`, `systemctl daemon-reload`
-from `RunCmd` to `RunPrivilegedCmd`.
+In `debian_unit_public_test.go`, change mock expectations for `systemctl stop`,
+`systemctl disable`, `systemctl daemon-reload` from `RunCmd` to
+`RunPrivilegedCmd`.
 
 - [ ] **Step 4: Run tests**
 
@@ -597,16 +601,19 @@ refactor(service): use RunPrivilegedCmd for write operations
 ### Task 5: Migrate sysctl provider
 
 **Files:**
+
 - Modify: `internal/provider/node/sysctl/debian.go`
 - Modify: `internal/provider/node/sysctl/debian_public_test.go`
 
 - [ ] **Step 1: Update write calls**
 
 Change to `RunPrivilegedCmd`:
+
 - `sysctl -p <confPath>` (apply config)
 - `sysctl --system` (reload all)
 
 Keep as `RunCmd`:
+
 - `sysctl -n <key>` (read parameter)
 
 - [ ] **Step 2: Update test mock expectations**
@@ -626,15 +633,18 @@ refactor(sysctl): use RunPrivilegedCmd for write operations
 ### Task 6: Migrate hostname provider
 
 **Files:**
+
 - Modify: `internal/provider/node/host/debian_update_hostname.go`
 - Modify: `internal/provider/node/host/debian_update_hostname_public_test.go`
 
 - [ ] **Step 1: Update write calls**
 
 Change to `RunPrivilegedCmd`:
+
 - `hostnamectl set-hostname <name>`
 
 Keep as `RunCmd` (in other host files):
+
 - `hostnamectl hostname` (read)
 
 - [ ] **Step 2: Update test mock expectations**
@@ -654,15 +664,18 @@ refactor(host): use RunPrivilegedCmd for write operations
 ### Task 7: Migrate timezone provider
 
 **Files:**
+
 - Modify: `internal/provider/node/timezone/debian.go`
 - Modify: `internal/provider/node/timezone/debian_public_test.go`
 
 - [ ] **Step 1: Update write calls**
 
 Change to `RunPrivilegedCmd`:
+
 - `timedatectl set-timezone <timezone>`
 
 Keep as `RunCmd`:
+
 - `timedatectl show -p Timezone --value` (read)
 - `date +%:z` (read)
 
@@ -683,15 +696,18 @@ refactor(timezone): use RunPrivilegedCmd for write operations
 ### Task 8: Migrate NTP provider
 
 **Files:**
+
 - Modify: `internal/provider/node/ntp/debian.go`
 - Modify: `internal/provider/node/ntp/debian_public_test.go`
 
 - [ ] **Step 1: Update write calls**
 
 Change to `RunPrivilegedCmd`:
+
 - `chronyc reload sources`
 
 Keep as `RunCmd`:
+
 - `chronyc tracking` (read)
 - `chronyc sources -c` (read)
 
@@ -712,6 +728,7 @@ refactor(ntp): use RunPrivilegedCmd for write operations
 ### Task 9: Migrate user provider
 
 **Files:**
+
 - Modify: `internal/provider/node/user/debian_user.go`
 - Modify: `internal/provider/node/user/debian_group.go`
 - Modify: `internal/provider/node/user/debian_ssh_key.go`
@@ -722,18 +739,21 @@ refactor(ntp): use RunPrivilegedCmd for write operations
 - [ ] **Step 1: Update write calls in debian_user.go**
 
 Change to `RunPrivilegedCmd`:
+
 - `useradd --create-home ...`
 - `usermod ...` (all variants)
 - `userdel -r ...`
 - `sh -c "echo ... | chpasswd"`
 
 Keep as `RunCmd`:
+
 - `id -Gn <username>` (read)
 - `passwd -S <username>` (read)
 
 - [ ] **Step 2: Update write calls in debian_group.go**
 
 Change to `RunPrivilegedCmd`:
+
 - `groupadd ...`
 - `groupdel ...`
 - `gpasswd -M ...`
@@ -741,6 +761,7 @@ Change to `RunPrivilegedCmd`:
 - [ ] **Step 3: Update write calls in debian_ssh_key.go**
 
 Change to `RunPrivilegedCmd`:
+
 - `chown -R ...`
 
 - [ ] **Step 4: Update all test mock expectations**
@@ -760,17 +781,20 @@ refactor(user): use RunPrivilegedCmd for write operations
 ### Task 10: Migrate package provider
 
 **Files:**
+
 - Modify: `internal/provider/node/apt/debian.go`
 - Modify: `internal/provider/node/apt/debian_public_test.go`
 
 - [ ] **Step 1: Update write calls**
 
 Change to `RunPrivilegedCmd`:
+
 - `apt-get install -y ...`
 - `apt-get remove -y ...`
 - `apt-get update`
 
 Keep as `RunCmd`:
+
 - `dpkg-query ...` (read)
 - `apt list --upgradable` (read)
 
@@ -791,12 +815,14 @@ refactor(apt): use RunPrivilegedCmd for write operations
 ### Task 11: Migrate power provider
 
 **Files:**
+
 - Modify: `internal/provider/node/power/debian.go`
 - Modify: `internal/provider/node/power/debian_public_test.go`
 
 - [ ] **Step 1: Update write calls**
 
 Change to `RunPrivilegedCmd`:
+
 - `shutdown -r ...` (reboot)
 - `shutdown -h ...` (halt)
 
@@ -817,12 +843,14 @@ refactor(power): use RunPrivilegedCmd for write operations
 ### Task 12: Migrate certificate provider
 
 **Files:**
+
 - Modify: `internal/provider/node/certificate/debian.go`
 - Modify: `internal/provider/node/certificate/debian_public_test.go`
 
 - [ ] **Step 1: Update write calls**
 
 Change to `RunPrivilegedCmd`:
+
 - `update-ca-certificates`
 
 - [ ] **Step 2: Update test mock expectations**
@@ -842,17 +870,18 @@ refactor(certificate): use RunPrivilegedCmd for write operations
 ### Task 13: Migrate DNS provider
 
 **Files:**
-- Modify: `internal/provider/network/dns/debian_update_resolv_conf_by_interface.go`
-  (or equivalent write file)
+
+- Modify:
+  `internal/provider/network/dns/debian_update_resolv_conf_by_interface.go` (or
+  equivalent write file)
 - Modify: corresponding test file
 
 - [ ] **Step 1: Check if DNS uses exec for writes**
 
-Read the DNS provider to determine if it executes commands for
-writes. The DNS provider may use `resolvectl` or write files
-directly. If it uses `RunCmd` for writes, change to
-`RunPrivilegedCmd`. If it only writes files via `avfs`, no changes
-needed (file writes are covered by capabilities).
+Read the DNS provider to determine if it executes commands for writes. The DNS
+provider may use `resolvectl` or write files directly. If it uses `RunCmd` for
+writes, change to `RunPrivilegedCmd`. If it only writes files via `avfs`, no
+changes needed (file writes are covered by capabilities).
 
 - [ ] **Step 2: Update if needed and run tests**
 
@@ -869,6 +898,7 @@ refactor(dns): use RunPrivilegedCmd for write operations
 ### Task 14: Update documentation
 
 **Files:**
+
 - Modify: `docs/docs/sidebar/usage/configuration.md`
 - Create: `docs/docs/sidebar/features/agent-hardening.md`
 
@@ -877,27 +907,28 @@ refactor(dns): use RunPrivilegedCmd for write operations
 In the agent section of configuration.md, add:
 
 ```yaml
-  # Least-privilege mode for running the agent as an unprivileged user.
-  privilege_escalation:
-    # Prepend "sudo" to write commands.
-    sudo: false
-    # Verify Linux capabilities at startup.
-    capabilities: false
-    # Run privilege checks before accepting jobs.
-    preflight: false
+# Least-privilege mode for running the agent as an unprivileged user.
+privilege_escalation:
+  # Prepend "sudo" to write commands.
+  sudo: false
+  # Verify Linux capabilities at startup.
+  capabilities: false
+  # Run privilege checks before accepting jobs.
+  preflight: false
 ```
 
 Add the environment variable mappings:
 
-| Config Key | Environment Variable |
-|---|---|
-| `agent.privilege_escalation.sudo` | `OSAPI_AGENT_PRIVILEGE_ESCALATION_SUDO` |
+| Config Key                                | Environment Variable                            |
+| ----------------------------------------- | ----------------------------------------------- |
+| `agent.privilege_escalation.sudo`         | `OSAPI_AGENT_PRIVILEGE_ESCALATION_SUDO`         |
 | `agent.privilege_escalation.capabilities` | `OSAPI_AGENT_PRIVILEGE_ESCALATION_CAPABILITIES` |
-| `agent.privilege_escalation.preflight` | `OSAPI_AGENT_PRIVILEGE_ESCALATION_PREFLIGHT` |
+| `agent.privilege_escalation.preflight`    | `OSAPI_AGENT_PRIVILEGE_ESCALATION_PREFLIGHT`    |
 
 - [ ] **Step 2: Create agent hardening feature page**
 
 Create `docs/docs/sidebar/features/agent-hardening.md` with:
+
 - Overview of least-privilege mode
 - Configuration reference
 - Sudoers drop-in (copy from spec)
@@ -937,16 +968,16 @@ just go::vet
 
 - [ ] **Step 3: Verify no stray RunCmd calls for write operations**
 
-Check each write command from the spec against the codebase to
-confirm it uses `RunPrivilegedCmd`:
+Check each write command from the spec against the codebase to confirm it uses
+`RunPrivilegedCmd`:
 
 ```bash
 grep -rn 'RunCmd.*"systemctl".*"start\|stop\|restart\|enable\|disable\|daemon-reload"' \
   internal/provider/ --include="*.go" | grep -v _test.go | grep -v RunPrivilegedCmd
 ```
 
-Repeat for other write commands (`useradd`, `usermod`, `apt-get`,
-`shutdown`, `sysctl -p`, etc.). Expect: no matches.
+Repeat for other write commands (`useradd`, `usermod`, `apt-get`, `shutdown`,
+`sysctl -p`, etc.). Expect: no matches.
 
 - [ ] **Step 4: Verify read commands stayed on RunCmd**
 

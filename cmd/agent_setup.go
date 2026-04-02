@@ -82,7 +82,7 @@ func setupAgent(
 		log.Info("running on darwin")
 	}
 
-	execManager := exec.New(log, appConfig.Agent.PrivilegeEscalation.Sudo)
+	execManager := exec.New(log, appConfig.Agent.PrivilegeEscalation.Enabled)
 
 	// --- Node providers ---
 	var hostProvider nodeHost.Provider

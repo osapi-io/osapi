@@ -49,8 +49,8 @@ func (a *Agent) Start() {
 
 	// Run preflight checks when privilege escalation is enabled.
 	pe := a.appConfig.Agent.PrivilegeEscalation
-	if pe.Sudo || pe.Capabilities {
-		results, ok := RunPreflight(a.logger, a.execManager, pe.Sudo, pe.Capabilities)
+	if pe.Enabled {
+		results, ok := RunPreflight(a.logger, a.execManager)
 		if !ok {
 			for _, r := range results {
 				if !r.Passed {

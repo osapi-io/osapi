@@ -171,9 +171,8 @@ agent:
     enabled: true
     host: '0.0.0.0'
     port: 9091
-  # Least-privilege mode. Use sudo for write commands and verify
-  # Linux capabilities at startup. See Agent Hardening docs.
+  # Least-privilege mode. When enabled, write commands use sudo and
+  # Linux capabilities are verified at startup. See Agent Hardening docs.
   privilege_escalation:
-    sudo: false
-    capabilities: false
+    enabled: false
 

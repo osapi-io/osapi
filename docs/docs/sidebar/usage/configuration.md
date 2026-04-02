@@ -90,8 +90,7 @@ uppercased:
 | `agent.process_conditions.high_cpu_percent`      | `OSAPI_AGENT_PROCESS_CONDITIONS_HIGH_CPU_PERCENT`      |
 | `agent.metrics.enabled`                          | `OSAPI_AGENT_METRICS_ENABLED`                          |
 | `agent.metrics.port`                             | `OSAPI_AGENT_METRICS_PORT`                             |
-| `agent.privilege_escalation.sudo`                | `OSAPI_AGENT_PRIVILEGE_ESCALATION_SUDO`                |
-| `agent.privilege_escalation.capabilities`        | `OSAPI_AGENT_PRIVILEGE_ESCALATION_CAPABILITIES`        |
+| `agent.privilege_escalation.enabled`             | `OSAPI_AGENT_PRIVILEGE_ESCALATION_ENABLED`             |
 
 Environment variables take precedence over file values.
 
@@ -506,12 +505,10 @@ agent:
     enabled: true
     # Port the metrics server listens on.
     port: 9091
-  # Least-privilege mode for running the agent as an unprivileged user.
+  # Least-privilege mode. When enabled, write commands use sudo and
+  # Linux capabilities are verified at startup.
   privilege_escalation:
-    # Prepend "sudo" to write commands.
-    sudo: false
-    # Verify Linux capabilities at startup.
-    capabilities: false
+    enabled: false
 ```
 
 ## Section Reference
@@ -703,8 +700,7 @@ When enabled, the port also serves `/health` (liveness) and `/health/ready`
 | `labels`                                   | map[string]string | Key-value pairs for label-based routing                    |
 | `metrics.enabled`                          | bool              | Enable the metrics server (default: true)                  |
 | `metrics.port`                             | int               | Port the metrics server listens on (default: 9091)         |
-| `privilege_escalation.sudo`                | bool              | Prepend sudo to write commands (default false)             |
-| `privilege_escalation.capabilities`        | bool              | Verify Linux capabilities at startup (default false)       |
+| `privilege_escalation.enabled`             | bool              | Activate sudo and capability checks (default false)        |
 
 When `metrics.enabled` is true, the port also serves `/health` (liveness) and
 `/health/ready` (readiness) probes without authentication.
