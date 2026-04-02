@@ -203,6 +203,11 @@ const config: Config = {
               type: 'doc',
               label: 'Service Management',
               docId: 'sidebar/features/service-management'
+            },
+            {
+              type: 'doc',
+              label: 'Agent Hardening',
+              docId: 'sidebar/features/agent-hardening'
             }
           ]
         },
