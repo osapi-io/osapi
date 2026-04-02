@@ -1,21 +1,20 @@
 # Audit Stream Migration
 
-Migrate the audit store from NATS KV to a JetStream stream for
-chronological ordering and efficient pagination.
+Migrate the audit store from NATS KV to a JetStream stream for chronological
+ordering and efficient pagination.
 
 ## Problem
 
-Audit entries are stored in a NATS KV bucket keyed by random UUID v4.
-`List()` fetches all keys into memory, sorts them (incorrectly — UUIDs
-don't sort chronologically), then paginates. With 1400+ entries and a
-30-day TTL, this gets progressively slower and returns entries in
-random order.
+Audit entries are stored in a NATS KV bucket keyed by random UUID v4. `List()`
+fetches all keys into memory, sorts them (incorrectly — UUIDs don't sort
+chronologically), then paginates. With 1400+ entries and a 30-day TTL, this gets
+progressively slower and returns entries in random order.
 
 ## Solution
 
-Replace the KV bucket with a JetStream stream. Use ULIDs as message
-subjects for chronological ordering and direct lookup. Add `trace_id`
-to audit entries for OpenTelemetry correlation.
+Replace the KV bucket with a JetStream stream. Use ULIDs as message subjects for
+chronological ordering and direct lookup. Add `trace_id` to audit entries for
+OpenTelemetry correlation.
 
 ## Design
 
@@ -42,8 +41,8 @@ nats:
     replicas: 1
 ```
 
-Fields renamed: `bucket` -> `stream`, `ttl` -> `max_age`. New field:
-`subject` (base subject for audit messages). Drop `bucket` entirely.
+Fields renamed: `bucket` -> `stream`, `ttl` -> `max_age`. New field: `subject`
+(base subject for audit messages). Drop `bucket` entirely.
 
 ### Audit Entry
 
@@ -65,8 +64,8 @@ type Entry struct {
 }
 ```
 
-The `ID` field changes from UUID to ULID. This is the only breaking
-change — no backward compatibility needed.
+The `ID` field changes from UUID to ULID. This is the only breaking change — no
+backward compatibility needed.
 
 ### Store Interface
 
@@ -83,18 +82,17 @@ type Store interface {
 
 ### Stream Store Operations
 
-| Operation | Implementation |
-|-----------|---------------|
-| Write | `js.Publish("audit.{ulid}", data)` |
-| Get | `stream.GetMsg(ctx, &GetMsgRequest{NextFor: "audit.{id}"})` |
-| List | `stream.Info()` for total count; ordered consumer with `DeliverByStartSequence` for pagination; read newest-first by computing start sequence from total - offset |
-| ListAll | Ordered consumer from sequence 1, read all messages forward |
-| Count | `stream.Info().State.Msgs` |
+| Operation | Implementation                                                                                                                                                    |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Write     | `js.Publish("audit.{ulid}", data)`                                                                                                                                |
+| Get       | `stream.GetMsg(ctx, &GetMsgRequest{NextFor: "audit.{id}"})`                                                                                                       |
+| List      | `stream.Info()` for total count; ordered consumer with `DeliverByStartSequence` for pagination; read newest-first by computing start sequence from total - offset |
+| ListAll   | Ordered consumer from sequence 1, read all messages forward                                                                                                       |
+| Count     | `stream.Info().State.Msgs`                                                                                                                                        |
 
 ### Middleware Change
 
-Extract trace ID from OpenTelemetry span context in the audit
-middleware:
+Extract trace ID from OpenTelemetry span context in the audit middleware:
 
 ```go
 spanCtx := trace.SpanContextFromContext(c.Request().Context())
@@ -106,6 +104,7 @@ if spanCtx.HasTraceID() {
 ### Files Changed
 
 Production code:
+
 - `internal/audit/types.go` — add `TraceID` field to `Entry`
 - `internal/audit/stream_store.go` — new stream-based `Store` impl
 - `internal/audit/kv_store.go` — delete
@@ -121,6 +120,7 @@ Production code:
 - `docs/docs/sidebar/usage/configuration.md` — update config reference
 
 Test code:
+
 - `internal/audit/stream_store_public_test.go` — new, 100% coverage
 - `internal/audit/kv_store_test.go` — delete
 - `internal/audit/kv_store_public_test.go` — delete
@@ -129,24 +129,24 @@ Test code:
 
 ### Coverage Baseline
 
-All files below are currently at 100% coverage. The new
-implementation must maintain 100%:
+All files below are currently at 100% coverage. The new implementation must
+maintain 100%:
 
-| File | Current |
-|------|---------|
-| `internal/audit/kv_store.go` | 100% -> new `stream_store.go` |
-| `internal/audit/export/` | 100% |
-| `internal/controller/api/audit/` | 100% |
-| `internal/controller/api/middleware_audit.go` | 100% |
-| `pkg/sdk/client/audit.go` | 100% |
-| `pkg/sdk/client/audit_types.go` | 100% |
+| File                                          | Current                       |
+| --------------------------------------------- | ----------------------------- |
+| `internal/audit/kv_store.go`                  | 100% -> new `stream_store.go` |
+| `internal/audit/export/`                      | 100%                          |
+| `internal/controller/api/audit/`              | 100%                          |
+| `internal/controller/api/middleware_audit.go` | 100%                          |
+| `pkg/sdk/client/audit.go`                     | 100%                          |
+| `pkg/sdk/client/audit_types.go`               | 100%                          |
 
 ### Not Changing
 
-- `internal/audit/export/` — export uses `ListAll()` via the `Store`
-  interface, no changes needed
-- OpenAPI spec for audit list/get/export — response shapes stay the
-  same, just add `trace_id` field
-- CLI commands — they consume SDK types, pick up `trace_id` via
-  `--json` automatically
+- `internal/audit/export/` — export uses `ListAll()` via the `Store` interface,
+  no changes needed
+- OpenAPI spec for audit list/get/export — response shapes stay the same, just
+  add `trace_id` field
+- CLI commands — they consume SDK types, pick up `trace_id` via `--json`
+  automatically
 - Job KV, registry KV, state KV, facts KV — no changes

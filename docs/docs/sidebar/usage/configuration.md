@@ -45,8 +45,9 @@ uppercased:
 | `nats.stream.name`                               | `OSAPI_NATS_STREAM_NAME`                               |
 | `nats.kv.bucket`                                 | `OSAPI_NATS_KV_BUCKET`                                 |
 | `nats.kv.response_bucket`                        | `OSAPI_NATS_KV_RESPONSE_BUCKET`                        |
-| `nats.audit.bucket`                              | `OSAPI_NATS_AUDIT_BUCKET`                              |
-| `nats.audit.ttl`                                 | `OSAPI_NATS_AUDIT_TTL`                                 |
+| `nats.audit.stream`                              | `OSAPI_NATS_AUDIT_STREAM`                              |
+| `nats.audit.subject`                             | `OSAPI_NATS_AUDIT_SUBJECT`                             |
+| `nats.audit.max_age`                             | `OSAPI_NATS_AUDIT_MAX_AGE`                             |
 | `nats.audit.max_bytes`                           | `OSAPI_NATS_AUDIT_MAX_BYTES`                           |
 | `nats.audit.storage`                             | `OSAPI_NATS_AUDIT_STORAGE`                             |
 | `nats.audit.replicas`                            | `OSAPI_NATS_AUDIT_REPLICAS`                            |
@@ -345,17 +346,19 @@ nats:
     # Number of KV replicas.
     replicas: 1
 
-  # ── Audit log KV bucket ──────────────────────────────────
+  # ── Audit log stream ──────────────────────────────────────
   audit:
-    # KV bucket for audit log entries.
-    bucket: 'audit-log'
-    # TTL for audit entries (Go duration). Default 30 days.
-    ttl: '720h'
-    # Maximum total size of the audit bucket in bytes.
+    # JetStream stream name for audit log entries.
+    stream: 'AUDIT'
+    # Base subject prefix for audit messages.
+    subject: 'audit'
+    # Maximum age of audit entries (Go duration). Default 30 days.
+    max_age: '720h'
+    # Maximum total size of the audit stream in bytes.
     max_bytes: 52428800 # 50 MiB
     # Storage backend: "file" or "memory".
     storage: 'file'
-    # Number of KV replicas.
+    # Number of stream replicas.
     replicas: 1
 
   # ── Agent registry KV bucket ──────────────────────────────
@@ -585,13 +588,14 @@ When enabled, the port also serves `/health` (liveness) and `/health/ready`
 
 ### `nats.audit`
 
-| Key         | Type   | Description                      |
-| ----------- | ------ | -------------------------------- |
-| `bucket`    | string | KV bucket for audit log entries  |
-| `ttl`       | string | Entry time-to-live (Go duration) |
-| `max_bytes` | int    | Maximum bucket size in bytes     |
-| `storage`   | string | `"file"` or `"memory"`           |
-| `replicas`  | int    | Number of KV replicas            |
+| Key         | Type   | Description                                 |
+| ----------- | ------ | ------------------------------------------- |
+| `stream`    | string | JetStream stream name for audit log entries |
+| `subject`   | string | Base subject prefix for audit messages      |
+| `max_age`   | string | Maximum entry age (Go duration)             |
+| `max_bytes` | int    | Maximum stream size in bytes                |
+| `storage`   | string | `"file"` or `"memory"`                      |
+| `replicas`  | int    | Number of stream replicas                   |
 
 ### `nats.registry`
 
