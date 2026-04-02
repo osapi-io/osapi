@@ -37,14 +37,16 @@ func (d *Debian) Start(
 		return nil, fmt.Errorf("service: start: %w", err)
 	}
 
-	d.logger.Debug("executing service.Start", slog.String("name", name))
+	unitName := managedPrefix + name + ".service"
 
-	output, _ := d.execManager.RunCmd("systemctl", []string{"is-active", name})
+	d.logger.Debug("executing service.Start", slog.String("name", unitName))
+
+	output, _ := d.execManager.RunCmd("systemctl", []string{"is-active", unitName})
 	if strings.TrimSpace(output) == "active" {
 		return &ActionResult{Name: name, Changed: false}, nil
 	}
 
-	if _, err := d.execManager.RunCmd("systemctl", []string{"start", name}); err != nil {
+	if _, err := d.execManager.RunCmd("systemctl", []string{"start", unitName}); err != nil {
 		return nil, fmt.Errorf("service: start: %w", err)
 	}
 
@@ -61,14 +63,16 @@ func (d *Debian) Stop(
 		return nil, fmt.Errorf("service: stop: %w", err)
 	}
 
-	d.logger.Debug("executing service.Stop", slog.String("name", name))
+	unitName := managedPrefix + name + ".service"
 
-	output, _ := d.execManager.RunCmd("systemctl", []string{"is-active", name})
+	d.logger.Debug("executing service.Stop", slog.String("name", unitName))
+
+	output, _ := d.execManager.RunCmd("systemctl", []string{"is-active", unitName})
 	if strings.TrimSpace(output) != "active" {
 		return &ActionResult{Name: name, Changed: false}, nil
 	}
 
-	if _, err := d.execManager.RunCmd("systemctl", []string{"stop", name}); err != nil {
+	if _, err := d.execManager.RunCmd("systemctl", []string{"stop", unitName}); err != nil {
 		return nil, fmt.Errorf("service: stop: %w", err)
 	}
 
@@ -84,9 +88,11 @@ func (d *Debian) Restart(
 		return nil, fmt.Errorf("service: restart: %w", err)
 	}
 
-	d.logger.Debug("executing service.Restart", slog.String("name", name))
+	unitName := managedPrefix + name + ".service"
 
-	if _, err := d.execManager.RunCmd("systemctl", []string{"restart", name}); err != nil {
+	d.logger.Debug("executing service.Restart", slog.String("name", unitName))
+
+	if _, err := d.execManager.RunCmd("systemctl", []string{"restart", unitName}); err != nil {
 		return nil, fmt.Errorf("service: restart: %w", err)
 	}
 
@@ -103,14 +109,16 @@ func (d *Debian) Enable(
 		return nil, fmt.Errorf("service: enable: %w", err)
 	}
 
-	d.logger.Debug("executing service.Enable", slog.String("name", name))
+	unitName := managedPrefix + name + ".service"
 
-	output, _ := d.execManager.RunCmd("systemctl", []string{"is-enabled", name})
+	d.logger.Debug("executing service.Enable", slog.String("name", unitName))
+
+	output, _ := d.execManager.RunCmd("systemctl", []string{"is-enabled", unitName})
 	if strings.TrimSpace(output) == "enabled" {
 		return &ActionResult{Name: name, Changed: false}, nil
 	}
 
-	if _, err := d.execManager.RunCmd("systemctl", []string{"enable", name}); err != nil {
+	if _, err := d.execManager.RunCmd("systemctl", []string{"enable", unitName}); err != nil {
 		return nil, fmt.Errorf("service: enable: %w", err)
 	}
 
@@ -127,14 +135,16 @@ func (d *Debian) Disable(
 		return nil, fmt.Errorf("service: disable: %w", err)
 	}
 
-	d.logger.Debug("executing service.Disable", slog.String("name", name))
+	unitName := managedPrefix + name + ".service"
 
-	output, _ := d.execManager.RunCmd("systemctl", []string{"is-enabled", name})
+	d.logger.Debug("executing service.Disable", slog.String("name", unitName))
+
+	output, _ := d.execManager.RunCmd("systemctl", []string{"is-enabled", unitName})
 	if strings.TrimSpace(output) != "enabled" {
 		return &ActionResult{Name: name, Changed: false}, nil
 	}
 
-	if _, err := d.execManager.RunCmd("systemctl", []string{"disable", name}); err != nil {
+	if _, err := d.execManager.RunCmd("systemctl", []string{"disable", unitName}); err != nil {
 		return nil, fmt.Errorf("service: disable: %w", err)
 	}
 
