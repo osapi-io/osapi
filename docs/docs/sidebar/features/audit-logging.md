@@ -31,18 +31,18 @@ sequenceDiagram
 
 Each audit entry contains:
 
-| Field           | Description                             |
-| --------------- | --------------------------------------- |
-| `id`            | Unique entry identifier (UUID)          |
-| `timestamp`     | When the request was made               |
-| `user`          | Identity from the JWT `sub` claim       |
-| `roles`         | Roles from the JWT token                |
-| `method`        | HTTP method (`GET`, `POST`, etc.)       |
-| `path`          | Request path (e.g., `/node/hostname`)   |
-| `operation_id`  | OpenAPI operation ID (if available)     |
-| `source_ip`     | Client IP address                       |
-| `response_code` | HTTP response status code               |
-| `duration_ms`   | Request processing time in milliseconds |
+| Field           | Description                                      |
+| --------------- | ------------------------------------------------ |
+| `id`            | Unique entry identifier (UUID)                   |
+| `timestamp`     | When the request was made                        |
+| `user`          | Identity from the JWT `sub` claim                |
+| `roles`         | Roles from the JWT token                         |
+| `method`        | HTTP method (`GET`, `POST`, etc.)                |
+| `path`          | Request path (e.g., `/node/hostname`)            |
+| `operation_id`  | OpenAPI operation ID (if available)              |
+| `source_ip`     | Client IP address                                |
+| `response_code` | HTTP response status code                        |
+| `duration_ms`   | Request processing time in milliseconds          |
 | `trace_id`      | OpenTelemetry trace ID (when tracing is enabled) |
 
 ## Viewing Audit Logs

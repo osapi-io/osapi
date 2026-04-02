@@ -2,28 +2,26 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use
 > superpowers:subagent-driven-development (recommended) or
-> superpowers:executing-plans to implement this plan task-by-task. Steps
-> use checkbox (`- [ ]`) syntax for tracking.
+> superpowers:executing-plans to implement this plan task-by-task. Steps use
+> checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the audit KV store with a JetStream stream for
-chronological ordering and efficient pagination, add `trace_id` to
-audit entries.
+**Goal:** Replace the audit KV store with a JetStream stream for chronological
+ordering and efficient pagination, add `trace_id` to audit entries.
 
-**Architecture:** The audit `StreamStore` receives a `jetstream.Stream`
-handle (for reads: `GetLastMsgForSubject`, `OrderedConsumer`, `Info`)
-and uses `nc.Publish()` (via a `Publisher` interface) for writes. The
-`Store` interface is unchanged — all consumers (handlers, middleware,
-export) work without modification. Config changes from KV bucket
-fields to stream fields.
+**Architecture:** The audit `StreamStore` receives a `jetstream.Stream` handle
+(for reads: `GetLastMsgForSubject`, `OrderedConsumer`, `Info`) and uses
+`nc.Publish()` (via a `Publisher` interface) for writes. The `Store` interface
+is unchanged — all consumers (handlers, middleware, export) work without
+modification. Config changes from KV bucket fields to stream fields.
 
-**Tech Stack:** Go, NATS JetStream streams, OpenTelemetry trace
-context
+**Tech Stack:** Go, NATS JetStream streams, OpenTelemetry trace context
 
 ---
 
 ### Task 1: Update config types and YAML
 
 **Files:**
+
 - Modify: `internal/config/types.go:124-132`
 - Modify: `configs/osapi.yaml` (default config)
 - Modify: `configs/osapi.nerd.yaml` (dev config)
@@ -80,9 +78,9 @@ chore(config): rename audit config from KV bucket to stream
 ### Task 2: Update CLI config builder and NATS setup
 
 **Files:**
+
 - Modify: `internal/cli/nats.go:128-142`
-- Modify: `internal/cli/nats_public_test.go` (update test for renamed
-  function)
+- Modify: `internal/cli/nats_public_test.go` (update test for renamed function)
 - Modify: `cmd/nats_setup.go:150-155`
 
 - [ ] **Step 1: Replace BuildAuditKVConfig with BuildAuditStreamConfig**
@@ -121,9 +119,9 @@ func BuildAuditStreamConfig(
 - [ ] **Step 2: Update the test for the renamed function**
 
 In `internal/cli/nats_public_test.go`, update the test that exercises
-`BuildAuditKVConfig` to test `BuildAuditStreamConfig` instead. The
-test should verify stream name, subjects with `.>` suffix, max age,
-storage type, and replicas.
+`BuildAuditKVConfig` to test `BuildAuditStreamConfig` instead. The test should
+verify stream name, subjects with `.>` suffix, max age, storage type, and
+replicas.
 
 - [ ] **Step 3: Update nats_setup.go to create stream instead of KV**
 
@@ -150,11 +148,10 @@ if appConfig.NATS.Audit.Stream != "" {
 
 - [ ] **Step 4: Run tests and verify build**
 
-Run: `go test ./internal/cli/... -count=1`
-Run: `go build ./...`
+Run: `go test ./internal/cli/... -count=1` Run: `go build ./...`
 
-Expect: cli tests pass, build still has errors in controller_setup.go
-(expected — fixed in Task 4).
+Expect: cli tests pass, build still has errors in controller_setup.go (expected
+— fixed in Task 4).
 
 - [ ] **Step 5: Commit**
 
@@ -167,10 +164,10 @@ feat(audit): replace KV bucket setup with stream creation
 ### Task 3: Add TraceID to audit entry and OpenAPI spec
 
 **Files:**
+
 - Modify: `internal/audit/types.go:27-48`
 - Modify: `internal/controller/api/audit/gen/api.yaml:190-247`
-- Modify: `internal/controller/api/audit/audit_list.go:75-94`
-  (mapEntryToGen)
+- Modify: `internal/controller/api/audit/audit_list.go:75-94` (mapEntryToGen)
 - Modify: `internal/controller/api/middleware_audit.go`
 - Modify: `internal/controller/api/export_test.go` (if needed)
 - Modify: `pkg/sdk/client/audit_types.go`
@@ -201,14 +198,13 @@ In `internal/controller/api/audit/gen/api.yaml`, add `trace_id` to the
 `AuditEntry` schema properties (after `duration_ms`):
 
 ```yaml
-        trace_id:
-          type: string
-          description: OpenTelemetry trace ID for correlation.
-          example: "4bf92f3577b34da6a3ce929d0e0e4736"
+trace_id:
+  type: string
+  description: OpenTelemetry trace ID for correlation.
+  example: '4bf92f3577b34da6a3ce929d0e0e4736'
 ```
 
-Do NOT add it to `required` — it's optional (empty when tracing is
-disabled).
+Do NOT add it to `required` — it's optional (empty when tracing is disabled).
 
 - [ ] **Step 3: Regenerate OpenAPI code**
 
@@ -238,8 +234,8 @@ if spanCtx.HasTraceID() {
 }
 ```
 
-Add this after building the `entry` struct and before the goroutine
-that writes it.
+Add this after building the `entry` struct and before the goroutine that writes
+it.
 
 - [ ] **Step 6: Add TraceID to SDK audit types**
 
@@ -259,14 +255,13 @@ if g.TraceId != nil {
 
 - [ ] **Step 7: Run tests**
 
-Run: `go test ./internal/controller/api/audit/... -count=1`
-Run: `go test ./internal/controller/api/ -run Audit -count=1`
-Run: `go test ./pkg/sdk/client/ -run Audit -count=1`
+Run: `go test ./internal/controller/api/audit/... -count=1` Run:
+`go test ./internal/controller/api/ -run Audit -count=1` Run:
+`go test ./pkg/sdk/client/ -run Audit -count=1`
 
-Expect: all pass. The middleware test uses a hand-written spy that
-already accepts the new field (it stores the full `Entry`). The
-trace ID will be empty in tests since there's no OTel span — that's
-correct.
+Expect: all pass. The middleware test uses a hand-written spy that already
+accepts the new field (it stores the full `Entry`). The trace ID will be empty
+in tests since there's no OTel span — that's correct.
 
 - [ ] **Step 8: Commit**
 
@@ -279,6 +274,7 @@ feat(audit): add trace_id field for OpenTelemetry correlation
 ### Task 4: Implement the stream store
 
 **Files:**
+
 - Create: `internal/audit/stream_store.go`
 - Create: `internal/audit/stream_store_public_test.go`
 - Modify: `internal/audit/export_test.go` (keep marshalJSON export)
@@ -541,28 +537,31 @@ And add `"time"` to the imports.
 
 The `export_test.go` file currently exports `SetMarshalJSON` /
 `ResetMarshalJSON` for the `marshalJSON` var in `kv_store.go`. Since
-`stream_store.go` declares the same `marshalJSON` var, the export
-test file works unchanged. Verify it still compiles.
+`stream_store.go` declares the same `marshalJSON` var, the export test file
+works unchanged. Verify it still compiles.
 
 - [ ] **Step 3: Write the stream store tests**
 
-Create `internal/audit/stream_store_public_test.go`. Use gomock to
-mock `jetstream.Stream` and the `Publisher` interface. Follow the
-exact same test structure as `kv_store_public_test.go`:
+Create `internal/audit/stream_store_public_test.go`. Use gomock to mock
+`jetstream.Stream` and the `Publisher` interface. Follow the exact same test
+structure as `kv_store_public_test.go`:
 
 Test `Write`:
+
 - successfully publishes entry (mock publisher expects
   `Publish(ctx, "audit.{id}", data)`)
 - returns error when publish fails
 - returns error when marshal fails (via `SetMarshalJSON`)
 
 Test `Get`:
+
 - successfully gets entry (mock stream `GetLastMsgForSubject` returns
   `RawStreamMsg` with valid JSON data)
 - returns error containing "not found" when subject not found
 - returns error when unmarshal fails (bad JSON data)
 
 Test `List`:
+
 - returns all entries newest-first when within limit
 - applies pagination correctly (offset + limit)
 - returns empty when offset exceeds total
@@ -571,35 +570,37 @@ Test `List`:
 - skips entries when unmarshal fails (bad JSON in batch)
 
 Test `ListAll`:
+
 - returns all entries newest-first
 - returns empty for empty stream
 - returns error when stream info fails
 - skips entries when unmarshal fails
 
 For mocking `jetstream.Stream`: create a mock interface in
-`internal/audit/mocks/` using `go:generate mockgen`. The mock needs
-`Info`, `GetLastMsgForSubject`, and `OrderedConsumer` methods.
+`internal/audit/mocks/` using `go:generate mockgen`. The mock needs `Info`,
+`GetLastMsgForSubject`, and `OrderedConsumer` methods.
 
-For mocking the `Publisher` interface: add a `go:generate mockgen`
-directive for the `Publisher` interface defined in `stream_store.go`.
+For mocking the `Publisher` interface: add a `go:generate mockgen` directive for
+the `Publisher` interface defined in `stream_store.go`.
 
-For mocking `jetstream.Consumer` (returned by `OrderedConsumer`): mock
-its `Fetch` method which returns `MessageBatch`. Mock `MessageBatch`
-for its `Messages()` channel and `Error()` method.
+For mocking `jetstream.Consumer` (returned by `OrderedConsumer`): mock its
+`Fetch` method which returns `MessageBatch`. Mock `MessageBatch` for its
+`Messages()` channel and `Error()` method.
 
 Target: **100% coverage** on `stream_store.go`.
 
 - [ ] **Step 4: Delete old KV store files**
 
 Delete:
+
 - `internal/audit/kv_store.go`
 - `internal/audit/kv_store_test.go`
 - `internal/audit/kv_store_public_test.go`
 
 - [ ] **Step 5: Regenerate mocks**
 
-Update `internal/audit/mocks/generate.go` to generate mocks for the
-new interfaces:
+Update `internal/audit/mocks/generate.go` to generate mocks for the new
+interfaces:
 
 ```go
 //go:generate go tool github.com/golang/mock/mockgen -source=../store.go -destination=store.gen.go -package=mocks
@@ -608,17 +609,16 @@ new interfaces:
 
 Run: `go generate ./internal/audit/mocks/...`
 
-Also generate mocks for the `jetstream.Stream` and
-`jetstream.Consumer` interfaces used in tests. These can live in
-`internal/audit/mocks/` or use `gomock`'s reflect mode for the
-`jetstream` package interfaces. Check how existing tests in the
-codebase mock `jetstream` interfaces (e.g., the `job/mocks` package)
-and follow the same pattern.
+Also generate mocks for the `jetstream.Stream` and `jetstream.Consumer`
+interfaces used in tests. These can live in `internal/audit/mocks/` or use
+`gomock`'s reflect mode for the `jetstream` package interfaces. Check how
+existing tests in the codebase mock `jetstream` interfaces (e.g., the
+`job/mocks` package) and follow the same pattern.
 
 - [ ] **Step 6: Run tests and check coverage**
 
-Run: `go test ./internal/audit/... -count=1 -coverprofile=/tmp/audit.out`
-Run: `go tool cover -func=/tmp/audit.out | grep stream_store`
+Run: `go test ./internal/audit/... -count=1 -coverprofile=/tmp/audit.out` Run:
+`go tool cover -func=/tmp/audit.out | grep stream_store`
 
 Expect: 100% coverage on `stream_store.go`.
 
@@ -633,6 +633,7 @@ feat(audit): implement stream-based audit store
 ### Task 5: Wire stream store in controller setup
 
 **Files:**
+
 - Modify: `cmd/controller_setup.go:640-658`
 
 - [ ] **Step 1: Replace createAuditStore to use stream**
@@ -681,11 +682,10 @@ func createAuditStore(
 }
 ```
 
-Note: `nc` (the `NATSClient`) satisfies `audit.Publisher` since it
-has a `Publish(ctx, subject, data) error` method. Verify the method
-signature matches. If the `NATSClient` interface's `Publish` method
-signature matches `audit.Publisher`, pass it directly. If not, create
-a thin adapter.
+Note: `nc` (the `NATSClient`) satisfies `audit.Publisher` since it has a
+`Publish(ctx, subject, data) error` method. Verify the method signature matches.
+If the `NATSClient` interface's `Publish` method signature matches
+`audit.Publisher`, pass it directly. If not, create a thin adapter.
 
 - [ ] **Step 2: Verify build**
 
@@ -710,6 +710,7 @@ feat(audit): wire stream store in controller setup
 ### Task 6: Update documentation
 
 **Files:**
+
 - Modify: `docs/docs/sidebar/usage/configuration.md`
 - Modify: `docs/docs/sidebar/features/audit-logging.md`
 
@@ -718,41 +719,41 @@ feat(audit): wire stream store in controller setup
 Replace the `nats.audit` section in the full reference YAML:
 
 ```yaml
-  audit:
-    # JetStream stream name for audit log entries.
-    stream: 'AUDIT'
-    # Base subject prefix for audit messages.
-    subject: 'audit'
-    # Maximum age of audit entries (Go duration). Default 30 days.
-    max_age: '720h'
-    # Maximum total size of the audit stream in bytes.
-    max_bytes: 52428800 # 50 MiB
-    # Storage backend: "file" or "memory".
-    storage: 'file'
-    # Number of stream replicas.
-    replicas: 1
+audit:
+  # JetStream stream name for audit log entries.
+  stream: 'AUDIT'
+  # Base subject prefix for audit messages.
+  subject: 'audit'
+  # Maximum age of audit entries (Go duration). Default 30 days.
+  max_age: '720h'
+  # Maximum total size of the audit stream in bytes.
+  max_bytes: 52428800 # 50 MiB
+  # Storage backend: "file" or "memory".
+  storage: 'file'
+  # Number of stream replicas.
+  replicas: 1
 ```
 
 Update the `nats.audit` section reference table:
 
-| Key         | Type   | Description                           |
-| ----------- | ------ | ------------------------------------- |
-| `stream`    | string | JetStream stream name for audit logs  |
-| `subject`   | string | Base subject prefix for audit msgs    |
-| `max_age`   | string | Maximum entry age (Go duration)       |
-| `max_bytes` | int    | Maximum stream size in bytes          |
-| `storage`   | string | `"file"` or `"memory"`                |
-| `replicas`  | int    | Number of stream replicas             |
+| Key         | Type   | Description                          |
+| ----------- | ------ | ------------------------------------ |
+| `stream`    | string | JetStream stream name for audit logs |
+| `subject`   | string | Base subject prefix for audit msgs   |
+| `max_age`   | string | Maximum entry age (Go duration)      |
+| `max_bytes` | int    | Maximum stream size in bytes         |
+| `storage`   | string | `"file"` or `"memory"`               |
+| `replicas`  | int    | Number of stream replicas            |
 
-Update the environment variable table — replace `OSAPI_NATS_AUDIT_BUCKET`
-and `OSAPI_NATS_AUDIT_TTL` with `OSAPI_NATS_AUDIT_STREAM`,
+Update the environment variable table — replace `OSAPI_NATS_AUDIT_BUCKET` and
+`OSAPI_NATS_AUDIT_TTL` with `OSAPI_NATS_AUDIT_STREAM`,
 `OSAPI_NATS_AUDIT_SUBJECT`, and `OSAPI_NATS_AUDIT_MAX_AGE`.
 
 - [ ] **Step 2: Update audit-logging.md if it mentions KV**
 
-Check `docs/docs/sidebar/features/audit-logging.md` for references to
-"KV bucket" or "bucket" and update to "stream". Add a note about the
-`trace_id` field.
+Check `docs/docs/sidebar/features/audit-logging.md` for references to "KV
+bucket" or "bucket" and update to "stream". Add a note about the `trace_id`
+field.
 
 - [ ] **Step 3: Commit**
 
