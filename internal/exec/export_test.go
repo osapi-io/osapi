@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -20,37 +20,8 @@
 
 package exec
 
-import (
-	"log/slog"
-)
-
-// CommandExecutor executes OS commands. The default implementation
-// runs real commands via os/exec. Tests inject a mock to assert
-// commands without executing them.
-type CommandExecutor interface {
-	Execute(
-		name string,
-		args []string,
-		cwd string,
-	) (string, error)
-}
-
-// Exec disk implementation.
-type Exec struct {
-	logger   *slog.Logger
-	sudo     bool
-	executor CommandExecutor
-}
-
-// CmdResult contains the full result of a command execution
-// with separate stdout and stderr streams.
-type CmdResult struct {
-	// Stdout contains the standard output of the command.
-	Stdout string
-	// Stderr contains the standard error output of the command.
-	Stderr string
-	// ExitCode is the exit code of the command.
-	ExitCode int
-	// DurationMs is the execution time in milliseconds.
-	DurationMs int64
+// SetExecutor replaces the CommandExecutor on an Exec instance.
+// Used by tests to inject a mock executor.
+func SetExecutor(e *Exec, executor CommandExecutor) {
+	e.executor = executor
 }

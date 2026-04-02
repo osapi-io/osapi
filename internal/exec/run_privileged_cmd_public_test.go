@@ -21,96 +21,120 @@
 package exec_test
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/exec"
+	"github.com/retr0h/osapi/internal/exec/mocks"
 )
 
 type RunPrivilegedCmdPublicTestSuite struct {
 	suite.Suite
 
-	logger *slog.Logger
+	ctrl         *gomock.Controller
+	mockExecutor *mocks.MockCommandExecutor
+	logger       *slog.Logger
 }
 
-func (suite *RunPrivilegedCmdPublicTestSuite) SetupTest() {
-	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+func (s *RunPrivilegedCmdPublicTestSuite) SetupTest() {
+	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (suite *RunPrivilegedCmdPublicTestSuite) TearDownTest() {}
+func (s *RunPrivilegedCmdPublicTestSuite) SetupSubTest() {
+	s.ctrl = gomock.NewController(s.T())
+	s.mockExecutor = mocks.NewMockCommandExecutor(s.ctrl)
+}
 
-func (suite *RunPrivilegedCmdPublicTestSuite) TestRunPrivilegedCmd() {
+func (s *RunPrivilegedCmdPublicTestSuite) TearDownSubTest() {
+	s.ctrl.Finish()
+}
+
+func (s *RunPrivilegedCmdPublicTestSuite) TestRunPrivilegedCmd() {
 	tests := []struct {
 		name         string
 		sudo         bool
 		command      string
 		args         []string
-		expectError  bool
+		setupMock    func()
 		validateFunc func(string, error)
 	}{
 		{
-			name:        "without sudo runs command directly",
-			sudo:        false,
-			command:     "echo",
-			args:        []string{"-n", "hello"},
-			expectError: false,
-			validateFunc: func(output string, _ error) {
-				suite.Require().Equal("hello", output)
+			name:    "without sudo runs command directly",
+			sudo:    false,
+			command: "echo",
+			args:    []string{"-n", "hello"},
+			setupMock: func() {
+				s.mockExecutor.EXPECT().
+					Execute("echo", []string{"-n", "hello"}, "").
+					Return("hello", nil)
+			},
+			validateFunc: func(output string, err error) {
+				s.NoError(err)
+				s.Equal("hello", output)
 			},
 		},
 		{
-			name:        "without sudo invalid command returns error",
-			sudo:        false,
-			command:     "nonexistent-command-xyz",
-			args:        []string{},
-			expectError: true,
-			validateFunc: func(_ string, err error) {
-				suite.Require().Contains(err.Error(), "not found")
+			name:    "with sudo prepends sudo to args",
+			sudo:    true,
+			command: "echo",
+			args:    []string{"-n", "hello"},
+			setupMock: func() {
+				s.mockExecutor.EXPECT().
+					Execute("sudo", []string{"echo", "-n", "hello"}, "").
+					Return("hello", nil)
+			},
+			validateFunc: func(output string, err error) {
+				s.NoError(err)
+				s.Equal("hello", output)
 			},
 		},
 		{
-			name:        "with sudo prepends sudo to command",
-			sudo:        true,
-			command:     "nonexistent-command-xyz",
-			args:        []string{"arg1"},
-			expectError: true,
-			validateFunc: func(_ string, err error) {
-				// When sudo=true, the exec manager prepends "sudo" to the
-				// command. The error varies by environment (sudo may not be
-				// installed, or may prompt for a password), but the attempt
-				// to run sudo confirms the prepend behavior.
-				suite.Require().Error(err)
+			name:    "with sudo no args",
+			sudo:    true,
+			command: "systemctl",
+			args:    nil,
+			setupMock: func() {
+				s.mockExecutor.EXPECT().
+					Execute("sudo", []string{"systemctl"}, "").
+					Return("", nil)
+			},
+			validateFunc: func(output string, err error) {
+				s.NoError(err)
+				s.Equal("", output)
 			},
 		},
 		{
-			name:        "with sudo and no args",
-			sudo:        true,
-			command:     "nonexistent-command-xyz",
-			args:        []string{},
-			expectError: true,
+			name:    "executor error propagates",
+			sudo:    false,
+			command: "nonexistent",
+			args:    []string{},
+			setupMock: func() {
+				s.mockExecutor.EXPECT().
+					Execute("nonexistent", []string{}, "").
+					Return("", fmt.Errorf("command not found"))
+			},
 			validateFunc: func(_ string, err error) {
-				suite.Require().Error(err)
+				s.Error(err)
+				s.Contains(err.Error(), "command not found")
 			},
 		},
 	}
 
 	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			em := exec.New(suite.logger, tc.sudo)
+		s.Run(tc.name, func() {
+			tc.setupMock()
+
+			em := exec.New(s.logger, tc.sudo)
+			exec.SetExecutor(em, s.mockExecutor)
 
 			output, err := em.RunPrivilegedCmd(tc.command, tc.args)
 
-			if tc.expectError {
-				suite.Require().Error(err)
-			} else {
-				suite.Require().NoError(err)
-			}
-			if tc.validateFunc != nil {
-				tc.validateFunc(output, err)
-			}
+			tc.validateFunc(output, err)
 		})
 	}
 }
