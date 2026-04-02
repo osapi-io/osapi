@@ -180,6 +180,8 @@ configure them — see the Features section:
 - [Distributed Tracing](../features/distributed-tracing.md) — OpenTelemetry
   integration
 - [Metrics](../features/metrics.md) — Prometheus endpoint
+- [Agent Hardening](../features/agent-hardening.md) — least-privilege mode with
+  sudo and capabilities
 
 ## Deep Dives
 

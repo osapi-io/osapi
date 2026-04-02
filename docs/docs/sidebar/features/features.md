@@ -19,6 +19,7 @@ OSAPI provides a comprehensive set of features for managing Linux systems.
 | ⚡  | [Job System](job-system.md)                    | NATS JetStream with KV-first architecture -- broadcast, load-balanced, and label-based routing |
 | 💚  | [Health Checks](health-checks.md)              | Liveness, readiness, system status endpoints                                                  |
 | 📈  | [Metrics](metrics.md)                          | Prometheus `/metrics` endpoint                                                                |
+| 🔒  | [Agent Hardening](agent-hardening.md)          | Least-privilege mode with sudo escalation and capability verification                         |
 | 📋  | [Audit Logging](audit-logging.md)              | Structured API audit trail with 30-day retention                                              |
 | 🔐  | [Authentication & RBAC](authentication.md)     | JWT with fine-grained `resource:verb` permissions                                             |
 | 📦  | [Container Management](container-management.md) | Docker lifecycle, exec, and pull through pluggable runtime drivers                             |
