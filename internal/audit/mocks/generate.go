@@ -22,3 +22,8 @@
 package mocks
 
 //go:generate go tool github.com/golang/mock/mockgen -source=../store.go -destination=store.gen.go -package=mocks
+//go:generate go tool github.com/golang/mock/mockgen -source=../stream_store.go -destination=publisher.gen.go -package=mocks
+//go:generate go tool github.com/golang/mock/mockgen -destination=stream.gen.go -package=mocks github.com/nats-io/nats.go/jetstream Stream
+//go:generate go tool github.com/golang/mock/mockgen -destination=consumer.gen.go -package=mocks github.com/nats-io/nats.go/jetstream Consumer
+//go:generate go tool github.com/golang/mock/mockgen -destination=message_batch.gen.go -package=mocks github.com/nats-io/nats.go/jetstream MessageBatch
+//go:generate go tool github.com/golang/mock/mockgen -destination=msg.gen.go -package=mocks github.com/nats-io/nats.go/jetstream Msg
