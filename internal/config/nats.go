@@ -28,7 +28,6 @@ func (n NATS) AllKVBuckets() []KVBucketInfo {
 	return []KVBucketInfo{
 		{Name: "job-queue", Bucket: n.KV.Bucket},
 		{Name: "job-responses", Bucket: n.KV.ResponseBucket},
-		{Name: "audit", Bucket: n.Audit.Bucket},
 		{Name: "registry", Bucket: n.Registry.Bucket},
 		{Name: "facts", Bucket: n.Facts.Bucket},
 		{Name: "state", Bucket: n.State.Bucket},

@@ -121,11 +121,13 @@ type NATS struct {
 	FileState NATSFileState `mapstructure:"file_state,omitempty"`
 }
 
-// NATSAudit configuration for the audit log KV bucket.
+// NATSAudit configuration for the audit log stream.
 type NATSAudit struct {
-	// Bucket is the KV bucket name for audit log entries.
-	Bucket   string `mapstructure:"bucket"`
-	TTL      string `mapstructure:"ttl"` // e.g. "720h" (30 days)
+	// Stream is the JetStream stream name for audit log entries.
+	Stream   string `mapstructure:"stream"`
+	// Subject is the base subject prefix for audit messages.
+	Subject  string `mapstructure:"subject"`
+	MaxAge   string `mapstructure:"max_age"` // e.g. "720h" (30 days)
 	MaxBytes int64  `mapstructure:"max_bytes"`
 	Storage  string `mapstructure:"storage"` // "file" or "memory"
 	Replicas int    `mapstructure:"replicas"`

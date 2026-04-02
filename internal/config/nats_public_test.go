@@ -46,7 +46,6 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 					Bucket:         "job-queue",
 					ResponseBucket: "job-responses",
 				},
-				Audit:     config.NATSAudit{Bucket: "audit-log"},
 				Registry:  config.NATSRegistry{Bucket: "agent-registry"},
 				Facts:     config.NATSFacts{Bucket: "agent-facts"},
 				State:     config.NATSState{Bucket: "agent-state"},
@@ -55,7 +54,6 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 			expectedNames: []string{
 				"job-queue",
 				"job-responses",
-				"audit",
 				"registry",
 				"facts",
 				"state",
@@ -64,7 +62,6 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 			expectedBuckets: []string{
 				"job-queue",
 				"job-responses",
-				"audit-log",
 				"agent-registry",
 				"agent-facts",
 				"agent-state",
@@ -77,13 +74,12 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 			expectedNames: []string{
 				"job-queue",
 				"job-responses",
-				"audit",
 				"registry",
 				"facts",
 				"state",
 				"file-state",
 			},
-			expectedBuckets: []string{"", "", "", "", "", "", ""},
+			expectedBuckets: []string{"", "", "", "", "", ""},
 		},
 		{
 			name: "partial config — only KV buckets set",
@@ -96,7 +92,6 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 			expectedNames: []string{
 				"job-queue",
 				"job-responses",
-				"audit",
 				"registry",
 				"facts",
 				"state",
@@ -105,7 +100,6 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 			expectedBuckets: []string{
 				"job-queue",
 				"job-responses",
-				"",
 				"",
 				"",
 				"",
