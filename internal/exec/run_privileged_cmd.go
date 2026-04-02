@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -20,25 +20,16 @@
 
 package exec
 
-import (
-	"log/slog"
-)
+// RunPrivilegedCmd executes the provided command with arguments. When sudo is
+// enabled, the original command is passed as an argument to "sudo".
+func (e *Exec) RunPrivilegedCmd(
+	name string,
+	args []string,
+) (string, error) {
+	if e.sudo {
+		args = append([]string{name}, args...)
+		name = "sudo"
+	}
 
-// Exec disk implementation.
-type Exec struct {
-	logger *slog.Logger
-	sudo   bool
-}
-
-// CmdResult contains the full result of a command execution
-// with separate stdout and stderr streams.
-type CmdResult struct {
-	// Stdout contains the standard output of the command.
-	Stdout string
-	// Stderr contains the standard error output of the command.
-	Stderr string
-	// ExitCode is the exit code of the command.
-	ExitCode int
-	// DurationMs is the execution time in milliseconds.
-	DurationMs int64
+	return e.RunCmdImpl(name, args, "")
 }

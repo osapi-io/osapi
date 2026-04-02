@@ -79,7 +79,7 @@ func (suite *RunCmdPublicTestSuite) TestRunCmd() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			em := exec.New(suite.logger)
+			em := exec.New(suite.logger, false)
 
 			output, err := em.RunCmd(tc.command, tc.args)
 

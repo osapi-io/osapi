@@ -197,7 +197,7 @@ func readCapEff() (uint64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("open %s: %w", procStatusPath, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {

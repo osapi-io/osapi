@@ -33,9 +33,11 @@ const maxLogOutputLen = 200
 // New factory to create a new Exec instance.
 func New(
 	logger *slog.Logger,
+	sudo bool,
 ) *Exec {
 	return &Exec{
 		logger: logger.With(slog.String("subsystem", "exec")),
+		sudo:   sudo,
 	}
 }
 

@@ -89,7 +89,7 @@ func (s *PreflightPublicTestSuite) TestCheckSudoAccess() {
 			setupMock: func() {
 				s.mockExecMgr.EXPECT().
 					RunCmd("sudo", gomock.Any()).
-					DoAndReturn(func(name string, args []string) (string, error) {
+					DoAndReturn(func(_ string, args []string) (string, error) {
 						if len(args) == 3 && args[2] == "systemctl" {
 							return "", fmt.Errorf("sudo: a password is required")
 						}

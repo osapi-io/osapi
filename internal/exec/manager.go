@@ -29,6 +29,13 @@ type Manager interface {
 		args []string,
 	) (string, error)
 
+	// RunPrivilegedCmd executes the provided command with arguments.
+	// When sudo is enabled, the command is prepended with "sudo".
+	RunPrivilegedCmd(
+		name string,
+		args []string,
+	) (string, error)
+
 	// RunCmdFull executes a command with separate stdout/stderr capture,
 	// an optional working directory, and a timeout in seconds.
 	RunCmdFull(
