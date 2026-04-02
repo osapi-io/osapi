@@ -167,9 +167,9 @@ func (s *StreamStorePublicTestSuite) TestGet() {
 	data, _ := json.Marshal(entry)
 
 	tests := []struct {
-		name      string
-		id        string
-		setupMock func()
+		name         string
+		id           string
+		setupMock    func()
 		validateFunc func(*audit.Entry, error)
 	}{
 		{
@@ -236,10 +236,10 @@ func (s *StreamStorePublicTestSuite) TestList() {
 	data3, _ := json.Marshal(entry3)
 
 	tests := []struct {
-		name      string
-		limit     int
-		offset    int
-		setupMock func()
+		name         string
+		limit        int
+		offset       int
+		setupMock    func()
 		validateFunc func([]audit.Entry, int, error)
 	}{
 		{
@@ -494,8 +494,8 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 	data3, _ := json.Marshal(entry3)
 
 	tests := []struct {
-		name      string
-		setupMock func()
+		name         string
+		setupMock    func()
 		validateFunc func([]audit.Entry, error)
 	}{
 		{
