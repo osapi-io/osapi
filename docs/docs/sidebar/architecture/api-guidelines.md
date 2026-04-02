@@ -72,6 +72,13 @@ Sub-resources represent distinct capabilities of the node:
 | `/node/{hostname}/log/unit/{name}`                   | Log         |
 | `/node/{hostname}/certificate/ca`                    | Certificate |
 | `/node/{hostname}/certificate/ca/{name}`             | Certificate |
+| `/node/{hostname}/service`                           | Service     |
+| `/node/{hostname}/service/{name}`                    | Service     |
+| `/node/{hostname}/service/{name}/start`              | Service     |
+| `/node/{hostname}/service/{name}/stop`               | Service     |
+| `/node/{hostname}/service/{name}/restart`            | Service     |
+| `/node/{hostname}/service/{name}/enable`             | Service     |
+| `/node/{hostname}/service/{name}/disable`            | Service     |
 
 6. **Path Parameters Over Query Parameters**
 

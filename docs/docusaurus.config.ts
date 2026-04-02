@@ -198,6 +198,11 @@ const config: Config = {
               type: 'doc',
               label: 'Certificate Management',
               docId: 'sidebar/features/certificate-management'
+            },
+            {
+              type: 'doc',
+              label: 'Service Management',
+              docId: 'sidebar/features/service-management'
             }
           ]
         },
@@ -331,6 +336,11 @@ const config: Config = {
               type: 'doc',
               label: 'Log',
               docId: 'sidebar/sdk/client/operations/log'
+            },
+            {
+              type: 'doc',
+              label: 'Service',
+              docId: 'sidebar/sdk/client/operations/service'
             },
             {
               type: 'html',
