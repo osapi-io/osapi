@@ -94,11 +94,10 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			setup: func() {
 				suite.mockDeployer.EXPECT().
 					Deploy(gomock.Any(), file.DeployRequest{
-						ObjectName:  "my-ca-cert",
-						Path:        "/usr/local/share/ca-certificates/osapi-my-ca.crt",
-						Mode:        "0644",
-						ContentType: "raw",
-						Metadata:    map[string]string{"source": "custom"},
+						ObjectName: "my-ca-cert",
+						Path:       "/usr/local/share/ca-certificates/osapi-my-ca.crt",
+						Mode:       "0644",
+						Metadata:   map[string]string{"source": "custom"},
 					}).
 					Return(&file.DeployResult{
 						Changed: true,
@@ -419,11 +418,10 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					Return(mockEntry, nil)
 				suite.mockDeployer.EXPECT().
 					Deploy(gomock.Any(), file.DeployRequest{
-						ObjectName:  "original-cert",
-						Path:        "/usr/local/share/ca-certificates/osapi-my-ca.crt",
-						Mode:        "0644",
-						ContentType: "raw",
-						Metadata:    map[string]string{"source": "custom"},
+						ObjectName: "original-cert",
+						Path:       "/usr/local/share/ca-certificates/osapi-my-ca.crt",
+						Mode:       "0644",
+						Metadata:   map[string]string{"source": "custom"},
 					}).
 					Return(&file.DeployResult{Changed: true}, nil)
 				suite.mockExecManager.EXPECT().

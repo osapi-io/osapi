@@ -55,11 +55,10 @@ func (d *Debian) Create(
 	)
 
 	result, err := d.fileDeployer.Deploy(ctx, file.DeployRequest{
-		ObjectName:  entry.Object,
-		Path:        filePath,
-		Mode:        "0644",
-		ContentType: "raw",
-		Metadata:    map[string]string{"source": "custom"},
+		ObjectName: entry.Object,
+		Path:       filePath,
+		Mode:       "0644",
+		Metadata:   map[string]string{"source": "custom"},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("service: create: %w", err)
@@ -109,11 +108,10 @@ func (d *Debian) Update(
 	)
 
 	result, err := d.fileDeployer.Deploy(ctx, file.DeployRequest{
-		ObjectName:  entry.Object,
-		Path:        filePath,
-		Mode:        "0644",
-		ContentType: "raw",
-		Metadata:    map[string]string{"source": "custom"},
+		ObjectName: entry.Object,
+		Path:       filePath,
+		Mode:       "0644",
+		Metadata:   map[string]string{"source": "custom"},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("service: update: %w", err)

@@ -112,11 +112,10 @@ func (suite *DebianUnitPublicTestSuite) TestCreate() {
 			setup: func() {
 				suite.mockDeployer.EXPECT().
 					Deploy(gomock.Any(), file.DeployRequest{
-						ObjectName:  "myapp-unit",
-						Path:        "/etc/systemd/system/osapi-myapp.service",
-						Mode:        "0644",
-						ContentType: "raw",
-						Metadata:    map[string]string{"source": "custom"},
+						ObjectName: "myapp-unit",
+						Path:       "/etc/systemd/system/osapi-myapp.service",
+						Mode:       "0644",
+						Metadata:   map[string]string{"source": "custom"},
 					}).
 					Return(&file.DeployResult{
 						Changed: true,
@@ -421,11 +420,10 @@ func (suite *DebianUnitPublicTestSuite) TestUpdate() {
 					Return(mockEntry, nil)
 				suite.mockDeployer.EXPECT().
 					Deploy(gomock.Any(), file.DeployRequest{
-						ObjectName:  "original-unit",
-						Path:        "/etc/systemd/system/osapi-myapp.service",
-						Mode:        "0644",
-						ContentType: "raw",
-						Metadata:    map[string]string{"source": "custom"},
+						ObjectName: "original-unit",
+						Path:       "/etc/systemd/system/osapi-myapp.service",
+						Mode:       "0644",
+						Metadata:   map[string]string{"source": "custom"},
 					}).
 					Return(&file.DeployResult{Changed: true}, nil)
 				suite.mockExecManager.EXPECT().
