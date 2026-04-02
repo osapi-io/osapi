@@ -150,14 +150,14 @@ func (d *Debian) Delete(
 	unitName := managedPrefix + name + ".service"
 
 	// Best-effort stop and disable before removing the unit file.
-	if _, err := d.execManager.RunCmd("systemctl", []string{"stop", unitName}); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd("systemctl", []string{"stop", unitName}); err != nil {
 		d.logger.Warn("failed to stop service before delete",
 			slog.String("name", name),
 			slog.String("error", err.Error()),
 		)
 	}
 
-	if _, err := d.execManager.RunCmd("systemctl", []string{"disable", unitName}); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd("systemctl", []string{"disable", unitName}); err != nil {
 		d.logger.Warn("failed to disable service before delete",
 			slog.String("name", name),
 			slog.String("error", err.Error()),
@@ -196,7 +196,7 @@ func unitFilePath(
 
 // daemonReload runs systemctl daemon-reload to pick up unit file changes.
 func (d *Debian) daemonReload() error {
-	_, err := d.execManager.RunCmd("systemctl", []string{"daemon-reload"})
+	_, err := d.execManager.RunPrivilegedCmd("systemctl", []string{"daemon-reload"})
 	if err != nil {
 		return fmt.Errorf("daemon-reload: %w", err)
 	}

@@ -350,6 +350,15 @@ type ProcessConditions struct {
 	HighCPUPercent float64 `mapstructure:"high_cpu_percent"`
 }
 
+// PrivilegeEscalation configuration for least-privilege agent mode.
+// When enabled, write commands use sudo and Linux capabilities are
+// verified at startup.
+type PrivilegeEscalation struct {
+	// Enabled activates least-privilege mode: sudo for write commands
+	// and capability verification at startup.
+	Enabled bool `mapstructure:"enabled"`
+}
+
 // AgentConfig configuration settings.
 type AgentConfig struct {
 	// NATS connection settings for the agent.
@@ -370,5 +379,7 @@ type AgentConfig struct {
 	Conditions AgentConditions `mapstructure:"conditions,omitempty"`
 	// ProcessConditions holds threshold settings for process-level condition evaluation.
 	ProcessConditions ProcessConditions `mapstructure:"process_conditions,omitempty"`
-	Metrics           MetricsServer     `mapstructure:"metrics"`
+	// PrivilegeEscalation configures least-privilege agent mode.
+	PrivilegeEscalation PrivilegeEscalation `mapstructure:"privilege_escalation,omitempty"`
+	Metrics             MetricsServer       `mapstructure:"metrics"`
 }

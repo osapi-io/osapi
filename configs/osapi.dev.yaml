@@ -48,6 +48,10 @@ agent:
   metrics:
     enabled: true
     port: 9091
+  # Least-privilege mode. When enabled, write commands use sudo and
+  # Linux capabilities are verified at startup. See Agent Hardening docs.
+  privilege_escalation:
+    enabled: false
 
 nats:
   stream:

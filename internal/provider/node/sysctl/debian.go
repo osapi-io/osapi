@@ -227,7 +227,7 @@ func (d *Debian) deploy(
 	}
 
 	// Apply the sysctl conf file.
-	if _, execErr := d.execManager.RunCmd("sysctl", []string{"-p", confPath}); execErr != nil {
+	if _, execErr := d.execManager.RunPrivilegedCmd("sysctl", []string{"-p", confPath}); execErr != nil {
 		d.logger.Warn(
 			"sysctl apply failed after deploy",
 			slog.String("key", entry.Key),
@@ -310,7 +310,7 @@ func (d *Debian) Delete(
 
 	// Reload sysctl defaults.
 	if changed {
-		if _, execErr := d.execManager.RunCmd("sysctl", []string{"--system"}); execErr != nil {
+		if _, execErr := d.execManager.RunPrivilegedCmd("sysctl", []string{"--system"}); execErr != nil {
 			d.logger.Warn(
 				"sysctl reload failed after delete",
 				slog.String("key", key),

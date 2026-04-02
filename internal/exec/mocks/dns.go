@@ -258,18 +258,18 @@ func mockRunCmdStatus(mock *MockManager, output string) {
 		AnyTimes()
 }
 
-// mockRunCmdDNS sets up a mock for the "dns" RunCmd call.
+// mockRunCmdDNS sets up a mock for the "dns" RunPrivilegedCmd call.
 func mockRunCmdDNS(mock *MockManager, dnsServers []string, err error) {
 	mock.EXPECT().
-		RunCmd(ResolveCommand, append([]string{"dns", NetworkInterfaceName}, dnsServers...)).
+		RunPrivilegedCmd(ResolveCommand, append([]string{"dns", NetworkInterfaceName}, dnsServers...)).
 		Return("", err).
 		AnyTimes()
 }
 
-// mockRunCmdDomain sets up a mock for the "domain" RunCmd call.
+// mockRunCmdDomain sets up a mock for the "domain" RunPrivilegedCmd call.
 func mockRunCmdDomain(mock *MockManager, domains []string, err error) {
 	mock.EXPECT().
-		RunCmd(ResolveCommand, append([]string{"domain", NetworkInterfaceName}, domains...)).
+		RunPrivilegedCmd(ResolveCommand, append([]string{"domain", NetworkInterfaceName}, domains...)).
 		Return("", err).
 		AnyTimes()
 }

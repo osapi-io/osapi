@@ -122,7 +122,7 @@ func (suite *DebianUnitPublicTestSuite) TestCreate() {
 						Path:    "/etc/systemd/system/osapi-myapp.service",
 					}, nil)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"daemon-reload"}).
+					RunPrivilegedCmd("systemctl", []string{"daemon-reload"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -187,7 +187,7 @@ func (suite *DebianUnitPublicTestSuite) TestCreate() {
 					Deploy(gomock.Any(), gomock.Any()).
 					Return(&file.DeployResult{Changed: true}, nil)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"daemon-reload"}).
+					RunPrivilegedCmd("systemctl", []string{"daemon-reload"}).
 					Return("", errors.New("exec error"))
 			},
 			validateFunc: func(
@@ -275,7 +275,7 @@ func (suite *DebianUnitPublicTestSuite) TestUpdate() {
 						Path:    "/etc/systemd/system/osapi-myapp.service",
 					}, nil)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"daemon-reload"}).
+					RunPrivilegedCmd("systemctl", []string{"daemon-reload"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -370,7 +370,7 @@ func (suite *DebianUnitPublicTestSuite) TestUpdate() {
 					Deploy(gomock.Any(), gomock.Any()).
 					Return(&file.DeployResult{Changed: true}, nil)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"daemon-reload"}).
+					RunPrivilegedCmd("systemctl", []string{"daemon-reload"}).
 					Return("", errors.New("exec error"))
 			},
 			validateFunc: func(
@@ -427,7 +427,7 @@ func (suite *DebianUnitPublicTestSuite) TestUpdate() {
 					}).
 					Return(&file.DeployResult{Changed: true}, nil)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"daemon-reload"}).
+					RunPrivilegedCmd("systemctl", []string{"daemon-reload"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -519,10 +519,10 @@ func (suite *DebianUnitPublicTestSuite) TestDelete() {
 					0o644,
 				)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"stop", "osapi-myapp.service"}).
+					RunPrivilegedCmd("systemctl", []string{"stop", "osapi-myapp.service"}).
 					Return("", nil)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"disable", "osapi-myapp.service"}).
+					RunPrivilegedCmd("systemctl", []string{"disable", "osapi-myapp.service"}).
 					Return("", nil)
 				suite.mockDeployer.EXPECT().
 					Undeploy(gomock.Any(), file.UndeployRequest{
@@ -533,7 +533,7 @@ func (suite *DebianUnitPublicTestSuite) TestDelete() {
 						Path:    "/etc/systemd/system/osapi-myapp.service",
 					}, nil)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"daemon-reload"}).
+					RunPrivilegedCmd("systemctl", []string{"daemon-reload"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -568,10 +568,10 @@ func (suite *DebianUnitPublicTestSuite) TestDelete() {
 					0o644,
 				)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"stop", "osapi-myapp.service"}).
+					RunPrivilegedCmd("systemctl", []string{"stop", "osapi-myapp.service"}).
 					Return("", nil)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"disable", "osapi-myapp.service"}).
+					RunPrivilegedCmd("systemctl", []string{"disable", "osapi-myapp.service"}).
 					Return("", nil)
 				suite.mockDeployer.EXPECT().
 					Undeploy(gomock.Any(), gomock.Any()).
@@ -596,16 +596,16 @@ func (suite *DebianUnitPublicTestSuite) TestDelete() {
 					0o644,
 				)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"stop", "osapi-myapp.service"}).
+					RunPrivilegedCmd("systemctl", []string{"stop", "osapi-myapp.service"}).
 					Return("", nil)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"disable", "osapi-myapp.service"}).
+					RunPrivilegedCmd("systemctl", []string{"disable", "osapi-myapp.service"}).
 					Return("", nil)
 				suite.mockDeployer.EXPECT().
 					Undeploy(gomock.Any(), gomock.Any()).
 					Return(&file.UndeployResult{Changed: true}, nil)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"daemon-reload"}).
+					RunPrivilegedCmd("systemctl", []string{"daemon-reload"}).
 					Return("", errors.New("exec error"))
 			},
 			validateFunc: func(
@@ -627,10 +627,10 @@ func (suite *DebianUnitPublicTestSuite) TestDelete() {
 					0o644,
 				)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"stop", "osapi-myapp.service"}).
+					RunPrivilegedCmd("systemctl", []string{"stop", "osapi-myapp.service"}).
 					Return("", errors.New("stop error"))
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"disable", "osapi-myapp.service"}).
+					RunPrivilegedCmd("systemctl", []string{"disable", "osapi-myapp.service"}).
 					Return("", errors.New("disable error"))
 				suite.mockDeployer.EXPECT().
 					Undeploy(gomock.Any(), file.UndeployRequest{
@@ -641,7 +641,7 @@ func (suite *DebianUnitPublicTestSuite) TestDelete() {
 						Path:    "/etc/systemd/system/osapi-myapp.service",
 					}, nil)
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"daemon-reload"}).
+					RunPrivilegedCmd("systemctl", []string{"daemon-reload"}).
 					Return("", nil)
 			},
 			validateFunc: func(

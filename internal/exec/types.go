@@ -24,9 +24,22 @@ import (
 	"log/slog"
 )
 
+// CommandExecutor executes OS commands. The default implementation
+// runs real commands via os/exec. Tests inject a mock to assert
+// commands without executing them.
+type CommandExecutor interface {
+	Execute(
+		name string,
+		args []string,
+		cwd string,
+	) (string, error)
+}
+
 // Exec disk implementation.
 type Exec struct {
-	logger *slog.Logger
+	logger   *slog.Logger
+	sudo     bool
+	executor CommandExecutor
 }
 
 // CmdResult contains the full result of a command execution

@@ -123,7 +123,7 @@ func (suite *RunCmdFullPublicTestSuite) TestRunCmdFull() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			em := exec.New(suite.logger)
+			em := exec.New(suite.logger, false)
 
 			result, err := em.RunCmdFull(tc.command, tc.args, tc.cwd, tc.timeout)
 

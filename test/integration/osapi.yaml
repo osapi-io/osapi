@@ -118,4 +118,6 @@ agent:
   max_jobs: 10
   metrics:
     enabled: false
+  privilege_escalation:
+    enabled: false
 

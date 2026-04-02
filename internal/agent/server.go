@@ -47,6 +47,29 @@ func (a *Agent) Start() {
 		slog.Any("labels", a.appConfig.Agent.Labels),
 	)
 
+	// Run preflight checks when privilege escalation is enabled.
+	pe := a.appConfig.Agent.PrivilegeEscalation
+	if pe.Enabled {
+		results, ok := RunPreflight(a.logger, a.execManager)
+		if !ok {
+			for _, r := range results {
+				if !r.Passed {
+					a.logger.Error("preflight check failed",
+						slog.String("check", r.Name),
+						slog.String("error", r.Error),
+					)
+				}
+			}
+
+			a.logger.Error("preflight failed, agent cannot start")
+			a.cancel()
+
+			return
+		}
+
+		a.logger.Info("preflight checks passed")
+	}
+
 	// Register in agent registry and start heartbeat keepalive.
 	a.startHeartbeat(a.ctx, a.hostname)
 

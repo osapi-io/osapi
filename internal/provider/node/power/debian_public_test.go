@@ -72,7 +72,7 @@ func (suite *DebianPublicTestSuite) TestReboot() {
 			opts: power.Opts{},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("shutdown", []string{"-r", "+1"}).
+					RunPrivilegedCmd("shutdown", []string{"-r", "+1"}).
 					Return("", nil)
 			},
 			validateFunc: func(r *power.Result) {
@@ -86,7 +86,7 @@ func (suite *DebianPublicTestSuite) TestReboot() {
 			opts: power.Opts{Delay: 180},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("shutdown", []string{"-r", "+3"}).
+					RunPrivilegedCmd("shutdown", []string{"-r", "+3"}).
 					Return("", nil)
 			},
 			validateFunc: func(r *power.Result) {
@@ -100,7 +100,7 @@ func (suite *DebianPublicTestSuite) TestReboot() {
 			opts: power.Opts{Delay: 30},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("shutdown", []string{"-r", "+1"}).
+					RunPrivilegedCmd("shutdown", []string{"-r", "+1"}).
 					Return("", nil)
 			},
 			validateFunc: func(r *power.Result) {
@@ -114,7 +114,7 @@ func (suite *DebianPublicTestSuite) TestReboot() {
 			opts: power.Opts{Message: "maintenance reboot"},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("shutdown", []string{"-r", "+1", "maintenance reboot"}).
+					RunPrivilegedCmd("shutdown", []string{"-r", "+1", "maintenance reboot"}).
 					Return("", nil)
 			},
 			validateFunc: func(r *power.Result) {
@@ -128,7 +128,7 @@ func (suite *DebianPublicTestSuite) TestReboot() {
 			opts: power.Opts{Delay: 300, Message: "scheduled reboot"},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("shutdown", []string{"-r", "+5", "scheduled reboot"}).
+					RunPrivilegedCmd("shutdown", []string{"-r", "+5", "scheduled reboot"}).
 					Return("", nil)
 			},
 			validateFunc: func(r *power.Result) {
@@ -142,7 +142,7 @@ func (suite *DebianPublicTestSuite) TestReboot() {
 			opts: power.Opts{},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("shutdown", []string{"-r", "+1"}).
+					RunPrivilegedCmd("shutdown", []string{"-r", "+1"}).
 					Return("", errors.New("permission denied"))
 			},
 			wantErr:    true,
@@ -185,7 +185,7 @@ func (suite *DebianPublicTestSuite) TestShutdown() {
 			opts: power.Opts{},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("shutdown", []string{"-h", "+1"}).
+					RunPrivilegedCmd("shutdown", []string{"-h", "+1"}).
 					Return("", nil)
 			},
 			validateFunc: func(r *power.Result) {
@@ -199,7 +199,7 @@ func (suite *DebianPublicTestSuite) TestShutdown() {
 			opts: power.Opts{Delay: 180},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("shutdown", []string{"-h", "+3"}).
+					RunPrivilegedCmd("shutdown", []string{"-h", "+3"}).
 					Return("", nil)
 			},
 			validateFunc: func(r *power.Result) {
@@ -213,7 +213,7 @@ func (suite *DebianPublicTestSuite) TestShutdown() {
 			opts: power.Opts{Delay: 30},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("shutdown", []string{"-h", "+1"}).
+					RunPrivilegedCmd("shutdown", []string{"-h", "+1"}).
 					Return("", nil)
 			},
 			validateFunc: func(r *power.Result) {
@@ -227,7 +227,7 @@ func (suite *DebianPublicTestSuite) TestShutdown() {
 			opts: power.Opts{Message: "maintenance shutdown"},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("shutdown", []string{"-h", "+1", "maintenance shutdown"}).
+					RunPrivilegedCmd("shutdown", []string{"-h", "+1", "maintenance shutdown"}).
 					Return("", nil)
 			},
 			validateFunc: func(r *power.Result) {
@@ -241,7 +241,7 @@ func (suite *DebianPublicTestSuite) TestShutdown() {
 			opts: power.Opts{Delay: 300, Message: "scheduled shutdown"},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("shutdown", []string{"-h", "+5", "scheduled shutdown"}).
+					RunPrivilegedCmd("shutdown", []string{"-h", "+5", "scheduled shutdown"}).
 					Return("", nil)
 			},
 			validateFunc: func(r *power.Result) {
@@ -255,7 +255,7 @@ func (suite *DebianPublicTestSuite) TestShutdown() {
 			opts: power.Opts{},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("shutdown", []string{"-h", "+1"}).
+					RunPrivilegedCmd("shutdown", []string{"-h", "+1"}).
 					Return("", errors.New("permission denied"))
 			},
 			wantErr:    true,

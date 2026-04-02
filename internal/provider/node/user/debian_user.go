@@ -111,7 +111,7 @@ func (d *Debian) CreateUser(
 
 	args := d.buildUseraddArgs(opts)
 
-	_, err := d.execManager.RunCmd("useradd", args)
+	_, err := d.execManager.RunPrivilegedCmd("useradd", args)
 	if err != nil {
 		return nil, fmt.Errorf("user: useradd failed: %w", err)
 	}
@@ -148,7 +148,7 @@ func (d *Debian) UpdateUser(
 		}, nil
 	}
 
-	_, err := d.execManager.RunCmd("usermod", args)
+	_, err := d.execManager.RunPrivilegedCmd("usermod", args)
 	if err != nil {
 		return nil, fmt.Errorf("user: usermod failed: %w", err)
 	}
@@ -170,7 +170,7 @@ func (d *Debian) DeleteUser(
 ) (*Result, error) {
 	_ = ctx
 
-	_, err := d.execManager.RunCmd("userdel", []string{"-r", name})
+	_, err := d.execManager.RunPrivilegedCmd("userdel", []string{"-r", name})
 	if err != nil {
 		return nil, fmt.Errorf("user: userdel failed: %w", err)
 	}
@@ -358,7 +358,7 @@ func (d *Debian) setPassword(
 ) error {
 	input := fmt.Sprintf("%s:%s", name, password)
 
-	_, err := d.execManager.RunCmd(
+	_, err := d.execManager.RunPrivilegedCmd(
 		"sh",
 		[]string{"-c", fmt.Sprintf("echo '%s' | chpasswd", input)},
 	)

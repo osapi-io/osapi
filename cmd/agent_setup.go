@@ -82,7 +82,7 @@ func setupAgent(
 		log.Info("running on darwin")
 	}
 
-	execManager := exec.New(log)
+	execManager := exec.New(log, appConfig.Agent.PrivilegeEscalation.Enabled)
 
 	// --- Node providers ---
 	var hostProvider nodeHost.Provider
@@ -303,6 +303,7 @@ func setupAgent(
 		registry,
 		b.registryKV,
 		b.factsKV,
+		execManager,
 	)
 
 	enabledOrDisabled := func(enabled bool) string {

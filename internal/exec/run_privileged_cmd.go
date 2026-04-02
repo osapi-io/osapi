@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -20,28 +20,16 @@
 
 package exec
 
-// Manager manager responsible for exec operations.
-type Manager interface {
-	// RunCmd executes the provided command with arguments, using the current
-	// working directory.
-	RunCmd(
-		name string,
-		args []string,
-	) (string, error)
+// RunPrivilegedCmd executes the provided command with arguments. When sudo is
+// enabled, the original command is passed as an argument to "sudo".
+func (e *Exec) RunPrivilegedCmd(
+	name string,
+	args []string,
+) (string, error) {
+	if e.sudo {
+		args = append([]string{name}, args...)
+		name = "sudo"
+	}
 
-	// RunPrivilegedCmd executes the provided command with arguments.
-	// When sudo is enabled, the command is prepended with "sudo".
-	RunPrivilegedCmd(
-		name string,
-		args []string,
-	) (string, error)
-
-	// RunCmdFull executes a command with separate stdout/stderr capture,
-	// an optional working directory, and a timeout in seconds.
-	RunCmdFull(
-		name string,
-		args []string,
-		cwd string,
-		timeout int,
-	) (*CmdResult, error)
+	return e.RunCmdImpl(name, args, "")
 }

@@ -215,7 +215,7 @@ func certFilePath(
 
 // updateCACertificates runs update-ca-certificates to rebuild the trust store.
 func (d *Debian) updateCACertificates() error {
-	_, err := d.execManager.RunCmd("update-ca-certificates", nil)
+	_, err := d.execManager.RunPrivilegedCmd("update-ca-certificates", nil)
 	if err != nil {
 		return fmt.Errorf("update-ca-certificates: %w", err)
 	}

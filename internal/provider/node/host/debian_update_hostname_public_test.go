@@ -67,7 +67,7 @@ func (suite *DebianUpdateHostnamePublicTestSuite) TestUpdateHostname() {
 						RunCmd("hostnamectl", []string{"hostname"}).
 						Return("old-host", nil),
 					mock.EXPECT().
-						RunCmd("hostnamectl", []string{"set-hostname", "new-host"}).
+						RunPrivilegedCmd("hostnamectl", []string{"set-hostname", "new-host"}).
 						Return("", nil),
 				)
 				return mock
@@ -124,7 +124,7 @@ func (suite *DebianUpdateHostnamePublicTestSuite) TestUpdateHostname() {
 						RunCmd("hostnamectl", []string{"hostname"}).
 						Return("old-host", nil),
 					mock.EXPECT().
-						RunCmd("hostnamectl", []string{"set-hostname", "new-host"}).
+						RunPrivilegedCmd("hostnamectl", []string{"set-hostname", "new-host"}).
 						Return("", assert.AnError),
 				)
 				return mock

@@ -188,7 +188,7 @@ func (d *Debian) Delete(
 // reloadSources runs chronyc reload sources. Failures are logged as
 // warnings but do not fail the operation.
 func (d *Debian) reloadSources() {
-	if _, err := d.execManager.RunCmd("chronyc", []string{"reload", "sources"}); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd("chronyc", []string{"reload", "sources"}); err != nil {
 		d.logger.Warn(
 			"chronyc reload sources failed",
 			slog.String("error", err.Error()),

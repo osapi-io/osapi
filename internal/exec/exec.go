@@ -30,19 +30,14 @@ import (
 
 const maxLogOutputLen = 200
 
-// New factory to create a new Exec instance.
-func New(
-	logger *slog.Logger,
-) *Exec {
-	return &Exec{
-		logger: logger.With(slog.String("subsystem", "exec")),
-	}
+// defaultExecutor implements CommandExecutor by running real OS commands
+// via os/exec.
+type defaultExecutor struct {
+	logger *slog.Logger
 }
 
-// RunCmdImpl executes the provided command with the specified arguments and
-// an optional working directory. It captures and logs the combined output
-// (stdout and stderr) of the command.
-func (e *Exec) RunCmdImpl(
+// Execute runs the command and returns its combined output.
+func (d *defaultExecutor) Execute(
 	name string,
 	args []string,
 	cwd string,
@@ -58,7 +53,7 @@ func (e *Exec) RunCmdImpl(
 		logOutput = logOutput[:maxLogOutputLen] + fmt.Sprintf("... (%d bytes total)", len(out))
 	}
 
-	e.logger.Debug(
+	d.logger.Debug(
 		"exec",
 		slog.String("command", strings.Join(cmd.Args, " ")),
 		slog.String("cwd", cwd),
@@ -70,4 +65,28 @@ func (e *Exec) RunCmdImpl(
 	}
 
 	return string(out), nil
+}
+
+// New factory to create a new Exec instance.
+func New(
+	logger *slog.Logger,
+	sudo bool,
+) *Exec {
+	l := logger.With(slog.String("subsystem", "exec"))
+
+	return &Exec{
+		logger:   l,
+		sudo:     sudo,
+		executor: &defaultExecutor{logger: l},
+	}
+}
+
+// RunCmdImpl executes the provided command with the specified arguments and
+// an optional working directory. It delegates to the CommandExecutor.
+func (e *Exec) RunCmdImpl(
+	name string,
+	args []string,
+	cwd string,
+) (string, error) {
+	return e.executor.Execute(name, args, cwd)
 }

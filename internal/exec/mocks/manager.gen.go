@@ -63,3 +63,18 @@ func (mr *MockManagerMockRecorder) RunCmdFull(name, args, cwd, timeout interface
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunCmdFull", reflect.TypeOf((*MockManager)(nil).RunCmdFull), name, args, cwd, timeout)
 }
+
+// RunPrivilegedCmd mocks base method.
+func (m *MockManager) RunPrivilegedCmd(name string, args []string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RunPrivilegedCmd", name, args)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RunPrivilegedCmd indicates an expected call of RunPrivilegedCmd.
+func (mr *MockManagerMockRecorder) RunPrivilegedCmd(name, args interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunPrivilegedCmd", reflect.TypeOf((*MockManager)(nil).RunPrivilegedCmd), name, args)
+}

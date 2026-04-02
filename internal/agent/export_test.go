@@ -24,11 +24,13 @@ import (
 	"context"
 	"encoding/json"
 	"io/fs"
+	"log/slog"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/command"
 	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
@@ -331,6 +333,31 @@ func SetDockerNewFn(fn func() (*dockerProv.Client, error)) {
 
 // ResetDockerNewFn is a no-op kept for backward compat with test suites.
 func ResetDockerNewFn() {}
+
+// SetProcStatusPath overrides the procStatusPath for testing.
+func SetProcStatusPath(p string) {
+	procStatusPath = p
+}
+
+// ResetProcStatusPath restores the default procStatusPath.
+func ResetProcStatusPath() {
+	procStatusPath = "/proc/self/status"
+}
+
+// ExportCheckSudoAccess exposes the private checkSudoAccess function for testing.
+func ExportCheckSudoAccess(
+	logger *slog.Logger,
+	execManager exec.Manager,
+) []PreflightResult {
+	return checkSudoAccess(logger, execManager)
+}
+
+// ExportCheckCapabilities exposes the private checkCapabilities function for testing.
+func ExportCheckCapabilities(
+	logger *slog.Logger,
+) []PreflightResult {
+	return checkCapabilities(logger)
+}
 
 // --- Field accessors for Agent struct ---
 

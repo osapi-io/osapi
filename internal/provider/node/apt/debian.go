@@ -100,7 +100,7 @@ func (d *Debian) Install(
 	_ context.Context,
 	name string,
 ) (*Result, error) {
-	_, err := d.execManager.RunCmd(
+	_, err := d.execManager.RunPrivilegedCmd(
 		"apt-get",
 		[]string{"install", "-y", name},
 	)
@@ -124,7 +124,7 @@ func (d *Debian) Remove(
 	_ context.Context,
 	name string,
 ) (*Result, error) {
-	_, err := d.execManager.RunCmd(
+	_, err := d.execManager.RunPrivilegedCmd(
 		"apt-get",
 		[]string{"remove", "-y", name},
 	)
@@ -147,7 +147,7 @@ func (d *Debian) Remove(
 func (d *Debian) Update(
 	_ context.Context,
 ) (*Result, error) {
-	_, err := d.execManager.RunCmd(
+	_, err := d.execManager.RunPrivilegedCmd(
 		"apt-get",
 		[]string{"update"},
 	)
