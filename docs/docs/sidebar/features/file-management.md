@@ -154,18 +154,18 @@ Facts are exposed as a flat map via JSON round-tripping of the agent's
 `FactsRegistration`. Use dot-syntax (`.Facts.key`) for keys that are valid Go
 identifiers:
 
-| Key                  | Type     | Description                    | Example          |
-| -------------------- | -------- | ------------------------------ | ---------------- |
-| `architecture`       | string   | CPU architecture               | `amd64`, `arm64` |
-| `kernel_version`     | string   | OS kernel version              | `6.8.0-51`       |
-| `cpu_count`          | number   | Logical CPU count              | `8`              |
-| `fqdn`              | string   | Fully qualified domain name    | `web-01.lan`     |
-| `service_mgr`       | string   | Init system                    | `systemd`        |
-| `package_mgr`       | string   | System package manager         | `apt`            |
-| `containerized`     | boolean  | Running inside a container     | `true`           |
-| `primary_interface` | string   | Default route interface name   | `eth0`           |
-| `interfaces`        | []object | Network interfaces             | _(see below)_    |
-| `routes`            | []object | IP routing table               | _(see below)_    |
+| Key                 | Type     | Description                  | Example          |
+| ------------------- | -------- | ---------------------------- | ---------------- |
+| `architecture`      | string   | CPU architecture             | `amd64`, `arm64` |
+| `kernel_version`    | string   | OS kernel version            | `6.8.0-51`       |
+| `cpu_count`         | number   | Logical CPU count            | `8`              |
+| `fqdn`              | string   | Fully qualified domain name  | `web-01.lan`     |
+| `service_mgr`       | string   | Init system                  | `systemd`        |
+| `package_mgr`       | string   | System package manager       | `apt`            |
+| `containerized`     | boolean  | Running inside a container   | `true`           |
+| `primary_interface` | string   | Default route interface name | `eth0`           |
+| `interfaces`        | []object | Network interfaces           | _(see below)_    |
+| `routes`            | []object | IP routing table             | _(see below)_    |
 
 Access scalar facts with dot-syntax:
 
@@ -181,7 +181,8 @@ For keys with underscores, both `{{ .Facts.kernel_version }}` and
 
 Templates use Go's `missingkey=error` option. Accessing a key that doesn't exist
 via **dot-syntax** (e.g., `{{ .Vars.missing }}` or `{{ .Facts.bogus }}`) causes
-the deploy to **fail with an error** rather than silently rendering `<no value>`.
+the deploy to **fail with an error** rather than silently rendering
+`<no value>`.
 
 However, `{{ index .Facts "nonexistent" }}` uses Go's built-in `index` function,
 which returns the zero value for the map's value type — rendering `<no value>`

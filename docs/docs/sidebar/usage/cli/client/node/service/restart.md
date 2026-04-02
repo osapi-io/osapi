@@ -52,8 +52,8 @@ $ osapi client node service restart --target web-01 \
 
 ## Flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
+| Flag           | Description                                              | Default  |
+| -------------- | -------------------------------------------------------- | -------- |
 | `--name`       | Service name to restart                                  | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
+| `-j, --json`   | Output raw JSON response                                 |          |

@@ -1,7 +1,7 @@
 # Create
 
-Deploy a new service unit file to a target host. The unit file content must first
-be uploaded to the Object Store. The file is written to
+Deploy a new service unit file to a target host. The unit file content must
+first be uploaded to the Object Store. The file is written to
 `/etc/systemd/system/{name}` and `systemctl daemon-reload` is run. Fails if the
 name already exists -- use `update` to replace:
 

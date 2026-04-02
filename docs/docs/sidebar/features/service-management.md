@@ -72,18 +72,18 @@ runs `systemctl daemon-reload`.
 
 ## Operations
 
-| Operation | Description                                   |
-| --------- | --------------------------------------------- |
-| List      | List all systemd services                     |
-| Get       | Get details for a specific service            |
-| Start     | Start a service                               |
-| Stop      | Stop a service                                |
-| Restart   | Restart a service                             |
-| Enable    | Enable a service to start on boot             |
-| Disable   | Disable a service from starting on boot       |
-| Create    | Deploy a service unit file from Object Store  |
-| Update    | Redeploy an existing service unit file        |
-| Delete    | Remove a service unit file and stop the unit  |
+| Operation | Description                                  |
+| --------- | -------------------------------------------- |
+| List      | List all systemd services                    |
+| Get       | Get details for a specific service           |
+| Start     | Start a service                              |
+| Stop      | Stop a service                               |
+| Restart   | Restart a service                            |
+| Enable    | Enable a service to start on boot            |
+| Disable   | Disable a service from starting on boot      |
+| Create    | Deploy a service unit file from Object Store |
+| Update    | Redeploy an existing service unit file       |
+| Delete    | Remove a service unit file and stop the unit |
 
 ## CLI Usage
 
@@ -160,14 +160,14 @@ OS family detection.
 ## Container Behavior
 
 Service operations return `status: skipped` inside containers. The provider
-returns `ErrUnsupported` because `systemctl` requires systemd as PID 1, which
-is not available in standard container environments.
+returns `ErrUnsupported` because `systemctl` requires systemd as PID 1, which is
+not available in standard container environments.
 
 ## Permissions
 
-| Operation                                            | Permission      |
-| ---------------------------------------------------- | --------------- |
-| List, Get                                            | `service:read`  |
+| Operation                                                     | Permission      |
+| ------------------------------------------------------------- | --------------- |
+| List, Get                                                     | `service:read`  |
 | Start, Stop, Restart, Enable, Disable, Create, Update, Delete | `service:write` |
 
 Service listing and inspection require `service:read`, included in all built-in

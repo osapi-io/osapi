@@ -9,18 +9,18 @@ enable, disable services, and manage unit files via the Object Store.
 
 ## Methods
 
-| Method                              | Description                          |
-| ----------------------------------- | ------------------------------------ |
-| `List(ctx, hostname)`               | List all services                    |
-| `Get(ctx, hostname, name)`          | Get details for a specific service   |
-| `Start(ctx, hostname, name)`        | Start a service                      |
-| `Stop(ctx, hostname, name)`         | Stop a service                       |
-| `Restart(ctx, hostname, name)`      | Restart a service                    |
-| `Enable(ctx, hostname, name)`       | Enable a service to start on boot    |
-| `Disable(ctx, hostname, name)`      | Disable a service from boot          |
-| `Create(ctx, hostname, opts)`       | Deploy a new unit file               |
-| `Update(ctx, hostname, name, opts)` | Update an existing unit file         |
-| `Delete(ctx, hostname, name)`       | Delete a unit file                   |
+| Method                              | Description                        |
+| ----------------------------------- | ---------------------------------- |
+| `List(ctx, hostname)`               | List all services                  |
+| `Get(ctx, hostname, name)`          | Get details for a specific service |
+| `Start(ctx, hostname, name)`        | Start a service                    |
+| `Stop(ctx, hostname, name)`         | Stop a service                     |
+| `Restart(ctx, hostname, name)`      | Restart a service                  |
+| `Enable(ctx, hostname, name)`       | Enable a service to start on boot  |
+| `Disable(ctx, hostname, name)`      | Disable a service from boot        |
+| `Create(ctx, hostname, opts)`       | Deploy a new unit file             |
+| `Update(ctx, hostname, name, opts)` | Update an existing unit file       |
+| `Delete(ctx, hostname, name)`       | Delete a unit file                 |
 
 ## Request Types
 
@@ -33,41 +33,41 @@ enable, disable services, and manage unit files via the Object Store.
 
 ### ServiceInfoResult (List)
 
-| Field      | Type            | Description                       |
-| ---------- | --------------- | --------------------------------- |
-| `Hostname` | `string`        | Agent hostname                    |
-| `Status`   | `string`        | Result status (`ok`, `skipped`)   |
-| `Services` | `[]ServiceInfo` | List of services on the host      |
-| `Error`    | `string`        | Error message (if any)            |
+| Field      | Type            | Description                     |
+| ---------- | --------------- | ------------------------------- |
+| `Hostname` | `string`        | Agent hostname                  |
+| `Status`   | `string`        | Result status (`ok`, `skipped`) |
+| `Services` | `[]ServiceInfo` | List of services on the host    |
+| `Error`    | `string`        | Error message (if any)          |
 
 ### ServiceInfo
 
-| Field         | Type     | Description                       |
-| ------------- | -------- | --------------------------------- |
-| `Name`        | `string` | Service unit name                 |
-| `Status`      | `string` | Active status (active, inactive)  |
+| Field         | Type     | Description                        |
+| ------------- | -------- | ---------------------------------- |
+| `Name`        | `string` | Service unit name                  |
+| `Status`      | `string` | Active status (active, inactive)   |
 | `Enabled`     | `bool`   | Whether the service starts on boot |
-| `Description` | `string` | Service description               |
-| `PID`         | `int`    | Process ID (if running)           |
+| `Description` | `string` | Service description                |
+| `PID`         | `int`    | Process ID (if running)            |
 
 ### ServiceGetResult (Get)
 
-| Field      | Type           | Description                       |
-| ---------- | -------------- | --------------------------------- |
-| `Hostname` | `string`       | Agent hostname                    |
-| `Status`   | `string`       | Result status (`ok`, `skipped`)   |
-| `Service`  | `*ServiceInfo` | Service details                   |
-| `Error`    | `string`       | Error message (if any)            |
+| Field      | Type           | Description                     |
+| ---------- | -------------- | ------------------------------- |
+| `Hostname` | `string`       | Agent hostname                  |
+| `Status`   | `string`       | Result status (`ok`, `skipped`) |
+| `Service`  | `*ServiceInfo` | Service details                 |
+| `Error`    | `string`       | Error message (if any)          |
 
 ### ServiceMutationResult (mutations and actions)
 
-| Field      | Type     | Description                       |
-| ---------- | -------- | --------------------------------- |
-| `Hostname` | `string` | Agent hostname                    |
-| `Status`   | `string` | Result status (`ok`, `skipped`)   |
-| `Name`     | `string` | Service unit name                 |
-| `Changed`  | `bool`   | Whether a change was made         |
-| `Error`    | `string` | Error message (if any)            |
+| Field      | Type     | Description                     |
+| ---------- | -------- | ------------------------------- |
+| `Hostname` | `string` | Agent hostname                  |
+| `Status`   | `string` | Result status (`ok`, `skipped`) |
+| `Name`     | `string` | Service unit name               |
+| `Changed`  | `bool`   | Whether a change was made       |
+| `Error`    | `string` | Error message (if any)          |
 
 ## Usage
 

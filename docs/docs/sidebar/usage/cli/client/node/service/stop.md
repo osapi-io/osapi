@@ -50,8 +50,8 @@ $ osapi client node service stop --target web-01 \
 
 ## Flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
+| Flag           | Description                                              | Default  |
+| -------------- | -------------------------------------------------------- | -------- |
 | `--name`       | Service name to stop                                     | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
+| `-j, --json`   | Output raw JSON response                                 |          |

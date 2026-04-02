@@ -50,8 +50,8 @@ $ osapi client node service start --target web-01 \
 
 ## Flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
+| Flag           | Description                                              | Default  |
+| -------------- | -------------------------------------------------------- | -------- |
 | `--name`       | Service name to start                                    | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
+| `-j, --json`   | Output raw JSON response                                 |          |
