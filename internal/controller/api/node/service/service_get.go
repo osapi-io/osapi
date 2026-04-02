@@ -39,7 +39,7 @@ func (s *Service) GetNodeServiceByName(
 	request gen.GetNodeServiceByNameRequestObject,
 ) (gen.GetNodeServiceByNameResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetNodeServiceByName500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeServiceByName400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

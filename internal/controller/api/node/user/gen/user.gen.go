@@ -824,6 +824,15 @@ func (response GetNodeGroup200JSONResponse) VisitGetNodeGroupResponse(w http.Res
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetNodeGroup400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeGroup400JSONResponse) VisitGetNodeGroupResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetNodeGroup401JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodeGroup401JSONResponse) VisitGetNodeGroupResponse(w http.ResponseWriter) error {
@@ -923,6 +932,15 @@ func (response DeleteNodeGroup200JSONResponse) VisitDeleteNodeGroupResponse(w ht
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DeleteNodeGroup400JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeGroup400JSONResponse) VisitDeleteNodeGroupResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type DeleteNodeGroup401JSONResponse externalRef0.ErrorResponse
 
 func (response DeleteNodeGroup401JSONResponse) VisitDeleteNodeGroupResponse(w http.ResponseWriter) error {
@@ -973,6 +991,15 @@ type GetNodeGroupByName200JSONResponse GroupCollectionResponse
 func (response GetNodeGroupByName200JSONResponse) VisitGetNodeGroupByNameResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeGroupByName400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeGroupByName400JSONResponse) VisitGetNodeGroupByNameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -1094,6 +1121,15 @@ func (response GetNodeUser200JSONResponse) VisitGetNodeUserResponse(w http.Respo
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetNodeUser400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeUser400JSONResponse) VisitGetNodeUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetNodeUser401JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodeUser401JSONResponse) VisitGetNodeUserResponse(w http.ResponseWriter) error {
@@ -1193,6 +1229,15 @@ func (response DeleteNodeUser200JSONResponse) VisitDeleteNodeUserResponse(w http
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DeleteNodeUser400JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeUser400JSONResponse) VisitDeleteNodeUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type DeleteNodeUser401JSONResponse externalRef0.ErrorResponse
 
 func (response DeleteNodeUser401JSONResponse) VisitDeleteNodeUserResponse(w http.ResponseWriter) error {
@@ -1243,6 +1288,15 @@ type GetNodeUserByName200JSONResponse UserCollectionResponse
 func (response GetNodeUserByName200JSONResponse) VisitGetNodeUserByNameResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeUserByName400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeUserByName400JSONResponse) VisitGetNodeUserByNameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -1429,6 +1483,15 @@ func (response GetNodeUserSSHKey200JSONResponse) VisitGetNodeUserSSHKeyResponse(
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetNodeUserSSHKey400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeUserSSHKey400JSONResponse) VisitGetNodeUserSSHKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetNodeUserSSHKey401JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodeUserSSHKey401JSONResponse) VisitGetNodeUserSSHKeyResponse(w http.ResponseWriter) error {
@@ -1526,6 +1589,15 @@ type DeleteNodeUserSSHKey200JSONResponse SSHKeyMutationResponse
 func (response DeleteNodeUserSSHKey200JSONResponse) VisitDeleteNodeUserSSHKeyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNodeUserSSHKey400JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeUserSSHKey400JSONResponse) VisitDeleteNodeUserSSHKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }

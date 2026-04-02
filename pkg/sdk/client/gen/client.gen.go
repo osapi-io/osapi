@@ -10831,6 +10831,7 @@ type GetNodeCertificateCaResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *CertificateCACollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -10882,6 +10883,7 @@ type DeleteNodeCertificateCaResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *CertificateCAMutationResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -11329,6 +11331,7 @@ type GetNodeGroupResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *GroupCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -11380,6 +11383,7 @@ type DeleteNodeGroupResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *GroupMutationResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
@@ -11406,6 +11410,7 @@ type GetNodeGroupByNameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *GroupCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
@@ -11537,6 +11542,7 @@ type GetNodeLogResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *LogCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -11562,6 +11568,7 @@ type GetNodeLogSourceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *LogSourceCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -11587,6 +11594,7 @@ type GetNodeLogUnitResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *LogCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -11716,6 +11724,7 @@ type DeleteNodeNtpResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *NtpDeleteResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
@@ -11742,6 +11751,7 @@ type GetNodeNtpResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *NtpCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -11846,6 +11856,7 @@ type GetNodePackageResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PackageCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -11897,6 +11908,7 @@ type GetNodePackageUpdateResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *UpdateCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -11922,6 +11934,7 @@ type PostNodePackageUpdateResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PackageMutationResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -11947,6 +11960,7 @@ type DeleteNodePackageResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PackageMutationResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
@@ -11973,6 +11987,7 @@ type GetNodePackageByNameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PackageCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
@@ -12051,6 +12066,7 @@ type GetNodeProcessResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ProcessCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -12076,6 +12092,7 @@ type GetNodeProcessByPidResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ProcessGetResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
@@ -12129,6 +12146,7 @@ type GetNodeScheduleCronResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *CronCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -12180,6 +12198,7 @@ type DeleteNodeScheduleCronResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *CronDeleteResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
@@ -12206,6 +12225,7 @@ type GetNodeScheduleCronByNameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *CronGetResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
@@ -12259,6 +12279,7 @@ type GetNodeServiceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ServiceListResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -12310,6 +12331,7 @@ type DeleteNodeServiceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ServiceMutationResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -12335,6 +12357,7 @@ type GetNodeServiceByNameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ServiceGetResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
@@ -12388,6 +12411,7 @@ type PostNodeServiceDisableResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ServiceMutationResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -12413,6 +12437,7 @@ type PostNodeServiceEnableResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ServiceMutationResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -12438,6 +12463,7 @@ type PostNodeServiceRestartResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ServiceMutationResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -12463,6 +12489,7 @@ type PostNodeServiceStartResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ServiceMutationResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -12488,6 +12515,7 @@ type PostNodeServiceStopResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ServiceMutationResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -12513,6 +12541,7 @@ type GetNodeSysctlResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *SysctlCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -12564,6 +12593,7 @@ type DeleteNodeSysctlResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *SysctlDeleteResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
@@ -12590,6 +12620,7 @@ type GetNodeSysctlByKeyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *SysctlGetResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
@@ -12643,6 +12674,7 @@ type GetNodeTimezoneResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *TimezoneCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -12720,6 +12752,7 @@ type GetNodeUserResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *UserCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -12771,6 +12804,7 @@ type DeleteNodeUserResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *UserMutationResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
@@ -12797,6 +12831,7 @@ type GetNodeUserByNameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *UserCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
@@ -12877,6 +12912,7 @@ type GetNodeUserSSHKeyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *SSHKeyCollectionResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -12928,6 +12964,7 @@ type DeleteNodeUserSSHKeyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *SSHKeyMutationResponse
+	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -15247,6 +15284,13 @@ func ParseGetNodeCertificateCaResponse(rsp *http.Response) (*GetNodeCertificateC
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -15347,6 +15391,13 @@ func ParseDeleteNodeCertificateCaResponse(rsp *http.Response) (*DeleteNodeCertif
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -16301,6 +16352,13 @@ func ParseGetNodeGroupResponse(rsp *http.Response) (*GetNodeGroupResponse, error
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -16402,6 +16460,13 @@ func ParseDeleteNodeGroupResponse(rsp *http.Response) (*DeleteNodeGroupResponse,
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -16455,6 +16520,13 @@ func ParseGetNodeGroupByNameResponse(rsp *http.Response) (*GetNodeGroupByNameRes
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -16733,6 +16805,13 @@ func ParseGetNodeLogResponse(rsp *http.Response) (*GetNodeLogResponse, error) {
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -16780,6 +16859,13 @@ func ParseGetNodeLogSourceResponse(rsp *http.Response) (*GetNodeLogSourceRespons
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -16826,6 +16912,13 @@ func ParseGetNodeLogUnitResponse(rsp *http.Response) (*GetNodeLogUnitResponse, e
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -17090,6 +17183,13 @@ func ParseDeleteNodeNtpResponse(rsp *http.Response) (*DeleteNodeNtpResponse, err
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -17143,6 +17243,13 @@ func ParseGetNodeNtpResponse(rsp *http.Response) (*GetNodeNtpResponse, error) {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -17360,6 +17467,13 @@ func ParseGetNodePackageResponse(rsp *http.Response) (*GetNodePackageResponse, e
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -17461,6 +17575,13 @@ func ParseGetNodePackageUpdateResponse(rsp *http.Response) (*GetNodePackageUpdat
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -17508,6 +17629,13 @@ func ParsePostNodePackageUpdateResponse(rsp *http.Response) (*PostNodePackageUpd
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -17554,6 +17682,13 @@ func ParseDeleteNodePackageResponse(rsp *http.Response) (*DeleteNodePackageRespo
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -17608,6 +17743,13 @@ func ParseGetNodePackageByNameResponse(rsp *http.Response) (*GetNodePackageByNam
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -17771,6 +17913,13 @@ func ParseGetNodeProcessResponse(rsp *http.Response) (*GetNodeProcessResponse, e
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -17817,6 +17966,13 @@ func ParseGetNodeProcessByPidResponse(rsp *http.Response) (*GetNodeProcessByPidR
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -17933,6 +18089,13 @@ func ParseGetNodeScheduleCronResponse(rsp *http.Response) (*GetNodeScheduleCronR
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -18034,6 +18197,13 @@ func ParseDeleteNodeScheduleCronResponse(rsp *http.Response) (*DeleteNodeSchedul
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -18087,6 +18257,13 @@ func ParseGetNodeScheduleCronByNameResponse(rsp *http.Response) (*GetNodeSchedul
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -18203,6 +18380,13 @@ func ParseGetNodeServiceResponse(rsp *http.Response) (*GetNodeServiceResponse, e
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -18304,6 +18488,13 @@ func ParseDeleteNodeServiceResponse(rsp *http.Response) (*DeleteNodeServiceRespo
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -18350,6 +18541,13 @@ func ParseGetNodeServiceByNameResponse(rsp *http.Response) (*GetNodeServiceByNam
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -18466,6 +18664,13 @@ func ParsePostNodeServiceDisableResponse(rsp *http.Response) (*PostNodeServiceDi
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -18512,6 +18717,13 @@ func ParsePostNodeServiceEnableResponse(rsp *http.Response) (*PostNodeServiceEna
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -18560,6 +18772,13 @@ func ParsePostNodeServiceRestartResponse(rsp *http.Response) (*PostNodeServiceRe
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -18606,6 +18825,13 @@ func ParsePostNodeServiceStartResponse(rsp *http.Response) (*PostNodeServiceStar
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -18654,6 +18880,13 @@ func ParsePostNodeServiceStopResponse(rsp *http.Response) (*PostNodeServiceStopR
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -18700,6 +18933,13 @@ func ParseGetNodeSysctlResponse(rsp *http.Response) (*GetNodeSysctlResponse, err
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -18802,6 +19042,13 @@ func ParseDeleteNodeSysctlResponse(rsp *http.Response) (*DeleteNodeSysctlRespons
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -18855,6 +19102,13 @@ func ParseGetNodeSysctlByKeyResponse(rsp *http.Response) (*GetNodeSysctlByKeyRes
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -18970,6 +19224,13 @@ func ParseGetNodeTimezoneResponse(rsp *http.Response) (*GetNodeTimezoneResponse,
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -19126,6 +19387,13 @@ func ParseGetNodeUserResponse(rsp *http.Response) (*GetNodeUserResponse, error) 
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -19227,6 +19495,13 @@ func ParseDeleteNodeUserResponse(rsp *http.Response) (*DeleteNodeUserResponse, e
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -19280,6 +19555,13 @@ func ParseGetNodeUserByNameResponse(rsp *http.Response) (*GetNodeUserByNameRespo
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -19457,6 +19739,13 @@ func ParseGetNodeUserSSHKeyResponse(rsp *http.Response) (*GetNodeUserSSHKeyRespo
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -19557,6 +19846,13 @@ func ParseDeleteNodeUserSSHKeyResponse(rsp *http.Response) (*DeleteNodeUserSSHKe
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse

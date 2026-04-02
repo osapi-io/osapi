@@ -164,7 +164,7 @@ func (s *CADeletePublicTestSuite) TestDeleteNodeCertificateCa() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.DeleteNodeCertificateCaResponseObject) {
-				r, ok := resp.(gen.DeleteNodeCertificateCa500JSONResponse)
+				r, ok := resp.(gen.DeleteNodeCertificateCa400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -437,7 +437,7 @@ func (s *CADeletePublicTestSuite) TestDeleteNodeCertificateCaValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target"},
 		},
 	}

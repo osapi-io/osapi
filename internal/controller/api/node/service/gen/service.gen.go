@@ -508,6 +508,15 @@ func (response GetNodeService200JSONResponse) VisitGetNodeServiceResponse(w http
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetNodeService400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeService400JSONResponse) VisitGetNodeServiceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetNodeService401JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodeService401JSONResponse) VisitGetNodeServiceResponse(w http.ResponseWriter) error {
@@ -607,6 +616,15 @@ func (response DeleteNodeService200JSONResponse) VisitDeleteNodeServiceResponse(
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DeleteNodeService400JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeService400JSONResponse) VisitDeleteNodeServiceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type DeleteNodeService401JSONResponse externalRef0.ErrorResponse
 
 func (response DeleteNodeService401JSONResponse) VisitDeleteNodeServiceResponse(w http.ResponseWriter) error {
@@ -648,6 +666,15 @@ type GetNodeServiceByName200JSONResponse ServiceGetResponse
 func (response GetNodeServiceByName200JSONResponse) VisitGetNodeServiceByNameResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeServiceByName400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeServiceByName400JSONResponse) VisitGetNodeServiceByNameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -770,6 +797,15 @@ func (response PostNodeServiceDisable200JSONResponse) VisitPostNodeServiceDisabl
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PostNodeServiceDisable400JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeServiceDisable400JSONResponse) VisitPostNodeServiceDisableResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type PostNodeServiceDisable401JSONResponse externalRef0.ErrorResponse
 
 func (response PostNodeServiceDisable401JSONResponse) VisitPostNodeServiceDisableResponse(w http.ResponseWriter) error {
@@ -811,6 +847,15 @@ type PostNodeServiceEnable200JSONResponse ServiceMutationResponse
 func (response PostNodeServiceEnable200JSONResponse) VisitPostNodeServiceEnableResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeServiceEnable400JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeServiceEnable400JSONResponse) VisitPostNodeServiceEnableResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -860,6 +905,15 @@ func (response PostNodeServiceRestart200JSONResponse) VisitPostNodeServiceRestar
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PostNodeServiceRestart400JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeServiceRestart400JSONResponse) VisitPostNodeServiceRestartResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type PostNodeServiceRestart401JSONResponse externalRef0.ErrorResponse
 
 func (response PostNodeServiceRestart401JSONResponse) VisitPostNodeServiceRestartResponse(w http.ResponseWriter) error {
@@ -905,6 +959,15 @@ func (response PostNodeServiceStart200JSONResponse) VisitPostNodeServiceStartRes
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PostNodeServiceStart400JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeServiceStart400JSONResponse) VisitPostNodeServiceStartResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type PostNodeServiceStart401JSONResponse externalRef0.ErrorResponse
 
 func (response PostNodeServiceStart401JSONResponse) VisitPostNodeServiceStartResponse(w http.ResponseWriter) error {
@@ -946,6 +1009,15 @@ type PostNodeServiceStop200JSONResponse ServiceMutationResponse
 func (response PostNodeServiceStop200JSONResponse) VisitPostNodeServiceStopResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeServiceStop400JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeServiceStop400JSONResponse) VisitPostNodeServiceStopResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }

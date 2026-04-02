@@ -114,7 +114,7 @@ func (s *GroupListGetPublicTestSuite) TestGetNodeGroup() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeGroupResponseObject) {
-				_, ok := resp.(gen.GetNodeGroup500JSONResponse)
+				_, ok := resp.(gen.GetNodeGroup400JSONResponse)
 				s.True(ok)
 			},
 		},

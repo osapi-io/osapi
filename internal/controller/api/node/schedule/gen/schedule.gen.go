@@ -411,6 +411,15 @@ func (response GetNodeScheduleCron200JSONResponse) VisitGetNodeScheduleCronRespo
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetNodeScheduleCron400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeScheduleCron400JSONResponse) VisitGetNodeScheduleCronResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetNodeScheduleCron401JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodeScheduleCron401JSONResponse) VisitGetNodeScheduleCronResponse(w http.ResponseWriter) error {
@@ -510,6 +519,15 @@ func (response DeleteNodeScheduleCron200JSONResponse) VisitDeleteNodeScheduleCro
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DeleteNodeScheduleCron400JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeScheduleCron400JSONResponse) VisitDeleteNodeScheduleCronResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type DeleteNodeScheduleCron401JSONResponse externalRef0.ErrorResponse
 
 func (response DeleteNodeScheduleCron401JSONResponse) VisitDeleteNodeScheduleCronResponse(w http.ResponseWriter) error {
@@ -560,6 +578,15 @@ type GetNodeScheduleCronByName200JSONResponse CronGetResponse
 func (response GetNodeScheduleCronByName200JSONResponse) VisitGetNodeScheduleCronByNameResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeScheduleCronByName400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeScheduleCronByName400JSONResponse) VisitGetNodeScheduleCronByNameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }

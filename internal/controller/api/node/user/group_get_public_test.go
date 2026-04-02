@@ -120,7 +120,7 @@ func (s *GroupGetPublicTestSuite) TestGetNodeGroupByName() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeGroupByNameResponseObject) {
-				_, ok := resp.(gen.GetNodeGroupByName500JSONResponse)
+				_, ok := resp.(gen.GetNodeGroupByName400JSONResponse)
 				s.True(ok)
 			},
 		},

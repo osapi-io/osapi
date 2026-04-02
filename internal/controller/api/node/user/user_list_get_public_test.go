@@ -166,7 +166,7 @@ func (s *UserListGetPublicTestSuite) TestGetNodeUser() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeUserResponseObject) {
-				r, ok := resp.(gen.GetNodeUser500JSONResponse)
+				r, ok := resp.(gen.GetNodeUser400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -338,7 +338,7 @@ func (s *UserListGetPublicTestSuite) TestGetNodeUserValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target"},
 		},
 	}

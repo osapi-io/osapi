@@ -114,7 +114,7 @@ func (s *GroupDeletePublicTestSuite) TestDeleteNodeGroup() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.DeleteNodeGroupResponseObject) {
-				_, ok := resp.(gen.DeleteNodeGroup500JSONResponse)
+				_, ok := resp.(gen.DeleteNodeGroup400JSONResponse)
 				s.True(ok)
 			},
 		},

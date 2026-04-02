@@ -120,7 +120,7 @@ func (s *UserGetPublicTestSuite) TestGetNodeUserByName() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeUserByNameResponseObject) {
-				_, ok := resp.(gen.GetNodeUserByName500JSONResponse)
+				_, ok := resp.(gen.GetNodeUserByName400JSONResponse)
 				s.True(ok)
 			},
 		},

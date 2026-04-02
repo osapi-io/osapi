@@ -39,7 +39,7 @@ func (s *Sysctl) GetNodeSysctlByKey(
 	request gen.GetNodeSysctlByKeyRequestObject,
 ) (gen.GetNodeSysctlByKeyResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetNodeSysctlByKey500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeSysctlByKey400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

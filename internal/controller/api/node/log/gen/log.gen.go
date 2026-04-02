@@ -316,6 +316,15 @@ func (response GetNodeLog200JSONResponse) VisitGetNodeLogResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetNodeLog400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeLog400JSONResponse) VisitGetNodeLogResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetNodeLog401JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodeLog401JSONResponse) VisitGetNodeLogResponse(w http.ResponseWriter) error {
@@ -356,6 +365,15 @@ type GetNodeLogSource200JSONResponse LogSourceCollectionResponse
 func (response GetNodeLogSource200JSONResponse) VisitGetNodeLogSourceResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeLogSource400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeLogSource400JSONResponse) VisitGetNodeLogSourceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -402,6 +420,15 @@ type GetNodeLogUnit200JSONResponse LogCollectionResponse
 func (response GetNodeLogUnit200JSONResponse) VisitGetNodeLogUnitResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeLogUnit400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeLogUnit400JSONResponse) VisitGetNodeLogUnitResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }

@@ -133,7 +133,7 @@ func (s *ServiceDeletePublicTestSuite) TestDeleteNodeService() {
 			request:   gen.DeleteNodeServiceRequestObject{Hostname: "", Name: "my-app.service"},
 			setupMock: func() {},
 			validateFunc: func(resp gen.DeleteNodeServiceResponseObject) {
-				_, ok := resp.(gen.DeleteNodeService500JSONResponse)
+				_, ok := resp.(gen.DeleteNodeService400JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -315,7 +315,7 @@ func (s *ServiceDeletePublicTestSuite) TestDeleteNodeServiceValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target"},
 		},
 	}

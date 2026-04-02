@@ -151,7 +151,7 @@ func (s *SysctlListGetPublicTestSuite) TestGetNodeSysctl() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeSysctlResponseObject) {
-				r, ok := resp.(gen.GetNodeSysctl500JSONResponse)
+				r, ok := resp.(gen.GetNodeSysctl400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -412,7 +412,7 @@ func (s *SysctlListGetPublicTestSuite) TestGetNodeSysctlValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target"},
 		},
 	}

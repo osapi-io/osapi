@@ -39,7 +39,7 @@ func (s *Schedule) DeleteNodeScheduleCron(
 	request gen.DeleteNodeScheduleCronRequestObject,
 ) (gen.DeleteNodeScheduleCronResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.DeleteNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeScheduleCron400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

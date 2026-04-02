@@ -158,7 +158,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeLogResponseObject) {
-				r, ok := resp.(gen.GetNodeLog500JSONResponse)
+				r, ok := resp.(gen.GetNodeLog400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -381,7 +381,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target", "not found"},
 		},
 	}

@@ -39,7 +39,7 @@ func (u *User) GetNodeGroupByName(
 	request gen.GetNodeGroupByNameRequestObject,
 ) (gen.GetNodeGroupByNameResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetNodeGroupByName500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeGroupByName400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

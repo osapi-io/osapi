@@ -46,7 +46,7 @@ func (s *Log) GetNodeLogUnit(
 	request gen.GetNodeLogUnitRequestObject,
 ) (gen.GetNodeLogUnitResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetNodeLogUnit500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeLogUnit400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

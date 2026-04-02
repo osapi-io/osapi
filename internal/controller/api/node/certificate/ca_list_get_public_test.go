@@ -156,7 +156,7 @@ func (s *CAListGetPublicTestSuite) TestGetNodeCertificateCa() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeCertificateCaResponseObject) {
-				r, ok := resp.(gen.GetNodeCertificateCa500JSONResponse)
+				r, ok := resp.(gen.GetNodeCertificateCa400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -418,7 +418,7 @@ func (s *CAListGetPublicTestSuite) TestGetNodeCertificateCaValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target"},
 		},
 	}

@@ -133,7 +133,7 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnable() {
 			request:   gen.PostNodeServiceEnableRequestObject{Hostname: "", Name: "nginx.service"},
 			setupMock: func() {},
 			validateFunc: func(resp gen.PostNodeServiceEnableResponseObject) {
-				_, ok := resp.(gen.PostNodeServiceEnable500JSONResponse)
+				_, ok := resp.(gen.PostNodeServiceEnable400JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -330,7 +330,7 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnableValidationHT
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target"},
 		},
 	}

@@ -149,7 +149,7 @@ func (s *LogUnitPublicTestSuite) TestGetNodeLogUnit() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeLogUnitResponseObject) {
-				r, ok := resp.(gen.GetNodeLogUnit500JSONResponse)
+				r, ok := resp.(gen.GetNodeLogUnit400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -377,7 +377,7 @@ func (s *LogUnitPublicTestSuite) TestGetNodeLogUnitHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target", "not found"},
 		},
 	}

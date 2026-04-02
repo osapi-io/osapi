@@ -176,7 +176,7 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSSHKey() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.DeleteNodeUserSSHKeyResponseObject) {
-				r, ok := resp.(gen.DeleteNodeUserSSHKey500JSONResponse)
+				r, ok := resp.(gen.DeleteNodeUserSSHKey400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -338,7 +338,7 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSSHKeyValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target"},
 		},
 	}

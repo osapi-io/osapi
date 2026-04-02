@@ -38,7 +38,7 @@ func (s *Service) PostNodeServiceRestart(
 	request gen.PostNodeServiceRestartRequestObject,
 ) (gen.PostNodeServiceRestartResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.PostNodeServiceRestart500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeServiceRestart400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname

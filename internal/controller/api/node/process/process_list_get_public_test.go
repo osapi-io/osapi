@@ -127,7 +127,7 @@ func (s *ProcessListPublicTestSuite) TestGetNodeProcess() {
 			},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeProcessResponseObject) {
-				r, ok := resp.(gen.GetNodeProcess500JSONResponse)
+				r, ok := resp.(gen.GetNodeProcess400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -377,7 +377,7 @@ func (s *ProcessListPublicTestSuite) TestGetNodeProcessValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusInternalServerError,
+			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target", "not found"},
 		},
 	}

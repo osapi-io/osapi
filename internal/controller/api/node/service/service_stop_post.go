@@ -38,7 +38,7 @@ func (s *Service) PostNodeServiceStop(
 	request gen.PostNodeServiceStopRequestObject,
 ) (gen.PostNodeServiceStopResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.PostNodeServiceStop500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeServiceStop400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname
