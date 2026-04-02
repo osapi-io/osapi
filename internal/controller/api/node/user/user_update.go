@@ -49,6 +49,12 @@ func (u *User) PutNodeUser(
 		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
 	}
 
+	b := request.Body
+	if b.Shell == nil && b.Home == nil && b.Groups == nil && b.Lock == nil {
+		errMsg := "at least one field must be provided"
+		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
+	}
+
 	opts := userProv.UpdateUserOpts{}
 	if request.Body.Shell != nil {
 		opts.Shell = *request.Body.Shell

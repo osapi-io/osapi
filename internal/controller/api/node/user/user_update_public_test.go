@@ -111,6 +111,21 @@ func (s *UserUpdatePublicTestSuite) TestPutNodeUser() {
 			},
 		},
 		{
+			name: "when empty body returns 400",
+			request: gen.PutNodeUserRequestObject{
+				Hostname: "server1",
+				Name:     "testuser",
+				Body:     &gen.UserUpdateRequest{},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNodeUserResponseObject) {
+				r, ok := resp.(gen.PutNodeUser400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "at least one field")
+			},
+		},
+		{
 			name: "validation error empty hostname",
 			request: gen.PutNodeUserRequestObject{
 				Hostname: "",
@@ -321,10 +336,10 @@ func (s *UserUpdatePublicTestSuite) TestPutNodeUserValidationHTTP() {
 			wantCode: http.StatusOK,
 		},
 		{
-			name:     "when empty body all optional passes validation",
+			name:     "when empty body returns 400",
 			path:     "/node/server1/user/testuser",
 			body:     `{}`,
-			wantCode: http.StatusOK,
+			wantCode: http.StatusBadRequest,
 		},
 		{
 			name:     "when invalid hostname",

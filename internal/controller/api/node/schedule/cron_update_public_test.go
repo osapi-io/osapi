@@ -131,38 +131,18 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 			},
 		},
 		{
-			name: "success with nil optional fields",
+			name: "when empty body returns 400",
 			request: gen.PutNodeScheduleCronRequestObject{
 				Hostname: "server1",
 				Name:     "backup",
 				Body:     &gen.PutNodeScheduleCronJSONRequestBody{},
 			},
-			setupMock: func() {
-				s.mockJobClient.EXPECT().
-					Modify(
-						gomock.Any(),
-						"server1",
-						"schedule",
-						job.OperationCronUpdate,
-						gomock.Any(),
-					).
-					Return(
-						"550e8400-e29b-41d4-a716-446655440000",
-						&job.Response{
-							JobID:    "550e8400-e29b-41d4-a716-446655440000",
-							Hostname: "agent1",
-							Changed:  boolPtr(false),
-							Data:     json.RawMessage(`{"name":"backup","changed":false}`),
-						},
-						nil,
-					)
-			},
+			setupMock: func() {},
 			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
-				r, ok := resp.(gen.PutNodeScheduleCron200JSONResponse)
+				r, ok := resp.(gen.PutNodeScheduleCron400JSONResponse)
 				s.True(ok)
-				s.Require().Len(r.Results, 1)
-				s.Require().NotNil(r.Results[0].Changed)
-				s.False(*r.Results[0].Changed)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "at least one field")
 			},
 		},
 		{
@@ -546,6 +526,16 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronValidationHTTP() {
 			},
 			wantCode:     http.StatusOK,
 			wantContains: []string{`"job_id"`, `"results"`},
+		},
+		{
+			name: "when empty body returns 400",
+			path: "/node/server1/schedule/cron/backup",
+			body: `{}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "at least one field"},
 		},
 		{
 			name: "when invalid cron schedule",

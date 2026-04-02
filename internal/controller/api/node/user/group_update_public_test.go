@@ -110,6 +110,21 @@ func (s *GroupUpdatePublicTestSuite) TestPutNodeGroup() {
 			},
 		},
 		{
+			name: "when empty body returns 400",
+			request: gen.PutNodeGroupRequestObject{
+				Hostname: "server1",
+				Name:     "devops",
+				Body:     &gen.GroupUpdateRequest{},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNodeGroupResponseObject) {
+				r, ok := resp.(gen.PutNodeGroup400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "at least one field")
+			},
+		},
+		{
 			name: "validation error empty hostname",
 			request: gen.PutNodeGroupRequestObject{
 				Hostname: "",
@@ -291,10 +306,10 @@ func (s *GroupUpdatePublicTestSuite) TestPutNodeGroupValidationHTTP() {
 			wantCode: http.StatusOK,
 		},
 		{
-			name:     "when empty body all optional passes validation",
+			name:     "when empty body returns 400",
 			path:     "/node/server1/group/devops",
 			body:     `{}`,
-			wantCode: http.StatusOK,
+			wantCode: http.StatusBadRequest,
 		},
 		{
 			name:     "when invalid hostname",

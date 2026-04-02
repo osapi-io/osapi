@@ -47,6 +47,12 @@ func (s *Schedule) PutNodeScheduleCron(
 		return gen.PutNodeScheduleCron400JSONResponse{Error: &errMsg}, nil
 	}
 
+	b := request.Body
+	if b.Object == nil && b.Schedule == nil && b.User == nil && b.ContentType == nil && b.Vars == nil {
+		errMsg := "at least one field must be provided"
+		return gen.PutNodeScheduleCron400JSONResponse{Error: &errMsg}, nil
+	}
+
 	entry := cronProv.Entry{
 		Name: request.Name,
 	}

@@ -42,6 +42,11 @@ func (u *User) PutNodeGroup(
 		return gen.PutNodeGroup400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if request.Body.Members == nil {
+		errMsg := "at least one field must be provided"
+		return gen.PutNodeGroup400JSONResponse{Error: &errMsg}, nil
+	}
+
 	opts := userProv.UpdateGroupOpts{}
 	if request.Body.Members != nil {
 		opts.Members = *request.Body.Members
