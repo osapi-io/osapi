@@ -108,11 +108,10 @@ func (s *StreamStorePublicTestSuite) newStreamInfo(
 
 func (s *StreamStorePublicTestSuite) TestWrite() {
 	tests := []struct {
-		name      string
-		entry     audit.Entry
-		setupMock func()
-		wantErr   bool
-		errMsg    string
+		name         string
+		entry        audit.Entry
+		setupMock    func()
+		validateFunc func(error)
 	}{
 		{
 			name:  "successfully publishes entry",
@@ -122,7 +121,9 @@ func (s *StreamStorePublicTestSuite) TestWrite() {
 					Publish(gomock.Any(), "audit.log.entry-1", gomock.Any()).
 					Return(nil)
 			},
-			wantErr: false,
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
 		},
 		{
 			name:  "returns error when publish fails",
@@ -132,8 +133,10 @@ func (s *StreamStorePublicTestSuite) TestWrite() {
 					Publish(gomock.Any(), "audit.log.entry-2", gomock.Any()).
 					Return(fmt.Errorf("publish error"))
 			},
-			wantErr: true,
-			errMsg:  "publish audit entry",
+			validateFunc: func(err error) {
+				s.Error(err)
+				s.Contains(err.Error(), "publish audit entry")
+			},
 		},
 		{
 			name:  "returns error when marshal fails",
@@ -143,8 +146,10 @@ func (s *StreamStorePublicTestSuite) TestWrite() {
 					return nil, fmt.Errorf("marshal failure")
 				})
 			},
-			wantErr: true,
-			errMsg:  "marshal audit entry",
+			validateFunc: func(err error) {
+				s.Error(err)
+				s.Contains(err.Error(), "marshal audit entry")
+			},
 		},
 	}
 
@@ -152,12 +157,7 @@ func (s *StreamStorePublicTestSuite) TestWrite() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 			err := s.store.Write(context.Background(), tt.entry)
-			if tt.wantErr {
-				s.Error(err)
-				s.Contains(err.Error(), tt.errMsg)
-			} else {
-				s.NoError(err)
-			}
+			tt.validateFunc(err)
 		})
 	}
 }
