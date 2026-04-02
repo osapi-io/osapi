@@ -42,7 +42,6 @@ import (
 	aptProv "github.com/retr0h/osapi/internal/provider/node/apt"
 	certProv "github.com/retr0h/osapi/internal/provider/node/certificate"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
-	serviceProv "github.com/retr0h/osapi/internal/provider/node/service"
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	logProv "github.com/retr0h/osapi/internal/provider/node/log"
@@ -50,6 +49,7 @@ import (
 	ntpProv "github.com/retr0h/osapi/internal/provider/node/ntp"
 	powerProv "github.com/retr0h/osapi/internal/provider/node/power"
 	processProv "github.com/retr0h/osapi/internal/provider/node/process"
+	serviceProv "github.com/retr0h/osapi/internal/provider/node/service"
 	sysctlProv "github.com/retr0h/osapi/internal/provider/node/sysctl"
 	timezoneProv "github.com/retr0h/osapi/internal/provider/node/timezone"
 	userProv "github.com/retr0h/osapi/internal/provider/node/user"
@@ -637,7 +637,14 @@ func createServiceProvider(
 			log.Warn("file provider not available, service operations disabled")
 			return serviceProv.NewLinuxProvider()
 		}
-		return serviceProv.NewDebianProvider(log, fs, fileProvider, fileStateKV, execManager, hostname)
+		return serviceProv.NewDebianProvider(
+			log,
+			fs,
+			fileProvider,
+			fileStateKV,
+			execManager,
+			hostname,
+		)
 	case "darwin":
 		return serviceProv.NewDarwinProvider()
 	default:

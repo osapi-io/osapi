@@ -255,8 +255,16 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeService() {
 				s.mockJobClient.EXPECT().
 					ModifyBroadcast(gomock.Any(), "_all", "node", job.OperationServiceUpdate, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
-						"server1": {Hostname: "server1", Changed: boolPtr(true), Data: json.RawMessage(`{"name":"my-app.service","changed":true}`)},
-						"server2": {Hostname: "server2", Changed: boolPtr(true), Data: json.RawMessage(`{"name":"my-app.service","changed":true}`)},
+						"server1": {
+							Hostname: "server1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"name":"my-app.service","changed":true}`),
+						},
+						"server2": {
+							Hostname: "server2",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"name":"my-app.service","changed":true}`),
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.PutNodeServiceResponseObject) {
@@ -296,7 +304,11 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeService() {
 				s.mockJobClient.EXPECT().
 					ModifyBroadcast(gomock.Any(), "_all", "node", job.OperationServiceUpdate, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
-						"server1": {Status: job.StatusFailed, Error: "agent unreachable", Hostname: "server1"},
+						"server1": {
+							Status:   job.StatusFailed,
+							Error:    "agent unreachable",
+							Hostname: "server1",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.PutNodeServiceResponseObject) {
@@ -317,7 +329,11 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeService() {
 				s.mockJobClient.EXPECT().
 					ModifyBroadcast(gomock.Any(), "_all", "node", job.OperationServiceUpdate, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
-						"server1": {Status: job.StatusSkipped, Error: "service: operation not supported on this OS family", Hostname: "server1"},
+						"server1": {
+							Status:   job.StatusSkipped,
+							Error:    "service: operation not supported on this OS family",
+							Hostname: "server1",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.PutNodeServiceResponseObject) {
@@ -436,7 +452,12 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeServiceRBACHTTP() {
 		{
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
-				token, err := tokenManager.Generate(rbacServiceUpdateTestSigningKey, []string{"read"}, "test-user", []string{"docker:write"})
+				token, err := tokenManager.Generate(
+					rbacServiceUpdateTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"docker:write"},
+				)
 				s.Require().NoError(err)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
@@ -449,7 +470,12 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeServiceRBACHTTP() {
 		{
 			name: "when valid admin token returns 200",
 			setupAuth: func(req *http.Request) {
-				token, err := tokenManager.Generate(rbacServiceUpdateTestSigningKey, []string{"admin"}, "test-user", nil)
+				token, err := tokenManager.Generate(
+					rbacServiceUpdateTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
 				s.Require().NoError(err)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
@@ -471,11 +497,28 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeServiceRBACHTTP() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
-			appConfig := config.Config{Controller: config.Controller{API: config.APIServer{Security: config.ServerSecurity{SigningKey: rbacServiceUpdateTestSigningKey}}}}
+			appConfig := config.Config{
+				Controller: config.Controller{
+					API: config.APIServer{
+						Security: config.ServerSecurity{
+							SigningKey: rbacServiceUpdateTestSigningKey,
+						},
+					},
+				},
+			}
 			server := api.New(appConfig, s.logger)
-			handlers := apiservice.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apiservice.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
-			req := httptest.NewRequest(http.MethodPut, "/node/server1/service/my-app.service", strings.NewReader(`{"object":"my-app-unit-object-v2"}`))
+			req := httptest.NewRequest(
+				http.MethodPut,
+				"/node/server1/service/my-app.service",
+				strings.NewReader(`{"object":"my-app-unit-object-v2"}`),
+			)
 			req.Header.Set("Content-Type", "application/json")
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()

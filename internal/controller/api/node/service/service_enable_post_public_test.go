@@ -85,8 +85,11 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnable() {
 		validateFunc func(resp gen.PostNodeServiceEnableResponseObject)
 	}{
 		{
-			name:    "success",
-			request: gen.PostNodeServiceEnableRequestObject{Hostname: "server1", Name: "nginx.service"},
+			name: "success",
+			request: gen.PostNodeServiceEnableRequestObject{
+				Hostname: "server1",
+				Name:     "nginx.service",
+			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					Modify(gomock.Any(), "server1", "node", job.OperationServiceEnable, gomock.Any()).
@@ -106,8 +109,11 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnable() {
 			},
 		},
 		{
-			name:    "success with nil response data",
-			request: gen.PostNodeServiceEnableRequestObject{Hostname: "server1", Name: "nginx.service"},
+			name: "success with nil response data",
+			request: gen.PostNodeServiceEnableRequestObject{
+				Hostname: "server1",
+				Name:     "nginx.service",
+			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					Modify(gomock.Any(), "server1", "node", job.OperationServiceEnable, gomock.Any()).
@@ -132,8 +138,11 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnable() {
 			},
 		},
 		{
-			name:    "when job skipped",
-			request: gen.PostNodeServiceEnableRequestObject{Hostname: "server1", Name: "nginx.service"},
+			name: "when job skipped",
+			request: gen.PostNodeServiceEnableRequestObject{
+				Hostname: "server1",
+				Name:     "nginx.service",
+			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					Modify(gomock.Any(), "server1", "node", job.OperationServiceEnable, gomock.Any()).
@@ -150,8 +159,11 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnable() {
 			},
 		},
 		{
-			name:    "job client error",
-			request: gen.PostNodeServiceEnableRequestObject{Hostname: "server1", Name: "nginx.service"},
+			name: "job client error",
+			request: gen.PostNodeServiceEnableRequestObject{
+				Hostname: "server1",
+				Name:     "nginx.service",
+			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					Modify(gomock.Any(), "server1", "node", job.OperationServiceEnable, gomock.Any()).
@@ -163,14 +175,25 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnable() {
 			},
 		},
 		{
-			name:    "broadcast success",
-			request: gen.PostNodeServiceEnableRequestObject{Hostname: "_all", Name: "nginx.service"},
+			name: "broadcast success",
+			request: gen.PostNodeServiceEnableRequestObject{
+				Hostname: "_all",
+				Name:     "nginx.service",
+			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					ModifyBroadcast(gomock.Any(), "_all", "node", job.OperationServiceEnable, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
-						"server1": {Hostname: "server1", Changed: boolPtr(true), Data: json.RawMessage(`{"name":"nginx.service","changed":true}`)},
-						"server2": {Hostname: "server2", Changed: boolPtr(true), Data: json.RawMessage(`{"name":"nginx.service","changed":true}`)},
+						"server1": {
+							Hostname: "server1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"name":"nginx.service","changed":true}`),
+						},
+						"server2": {
+							Hostname: "server2",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"name":"nginx.service","changed":true}`),
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeServiceEnableResponseObject) {
@@ -180,8 +203,11 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnable() {
 			},
 		},
 		{
-			name:    "broadcast with nil response data",
-			request: gen.PostNodeServiceEnableRequestObject{Hostname: "_all", Name: "nginx.service"},
+			name: "broadcast with nil response data",
+			request: gen.PostNodeServiceEnableRequestObject{
+				Hostname: "_all",
+				Name:     "nginx.service",
+			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					ModifyBroadcast(gomock.Any(), "_all", "node", job.OperationServiceEnable, gomock.Any()).
@@ -197,13 +223,20 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnable() {
 			},
 		},
 		{
-			name:    "broadcast with failed host",
-			request: gen.PostNodeServiceEnableRequestObject{Hostname: "_all", Name: "nginx.service"},
+			name: "broadcast with failed host",
+			request: gen.PostNodeServiceEnableRequestObject{
+				Hostname: "_all",
+				Name:     "nginx.service",
+			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					ModifyBroadcast(gomock.Any(), "_all", "node", job.OperationServiceEnable, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
-						"server1": {Status: job.StatusFailed, Error: "agent unreachable", Hostname: "server1"},
+						"server1": {
+							Status:   job.StatusFailed,
+							Error:    "agent unreachable",
+							Hostname: "server1",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeServiceEnableResponseObject) {
@@ -215,13 +248,20 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnable() {
 			},
 		},
 		{
-			name:    "broadcast with skipped host",
-			request: gen.PostNodeServiceEnableRequestObject{Hostname: "_all", Name: "nginx.service"},
+			name: "broadcast with skipped host",
+			request: gen.PostNodeServiceEnableRequestObject{
+				Hostname: "_all",
+				Name:     "nginx.service",
+			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					ModifyBroadcast(gomock.Any(), "_all", "node", job.OperationServiceEnable, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
-						"server1": {Status: job.StatusSkipped, Error: "service: operation not supported on this OS family", Hostname: "server1"},
+						"server1": {
+							Status:   job.StatusSkipped,
+							Error:    "service: operation not supported on this OS family",
+							Hostname: "server1",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeServiceEnableResponseObject) {
@@ -233,8 +273,11 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnable() {
 			},
 		},
 		{
-			name:    "broadcast error collecting responses",
-			request: gen.PostNodeServiceEnableRequestObject{Hostname: "_all", Name: "nginx.service"},
+			name: "broadcast error collecting responses",
+			request: gen.PostNodeServiceEnableRequestObject{
+				Hostname: "_all",
+				Name:     "nginx.service",
+			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					ModifyBroadcast(gomock.Any(), "_all", "node", job.OperationServiceEnable, gomock.Any()).
@@ -324,22 +367,32 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnableRBACHTTP() {
 		{
 			name: "when no token returns 401", setupAuth: func(_ *http.Request) {},
 			setupJobMock: func() *jobmocks.MockJobClient { return jobmocks.NewMockJobClient(s.mockCtrl) },
-			wantCode: http.StatusUnauthorized, wantContains: []string{"Bearer token required"},
+			wantCode:     http.StatusUnauthorized, wantContains: []string{"Bearer token required"},
 		},
 		{
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
-				token, err := tokenManager.Generate(rbacServiceEnableTestSigningKey, []string{"read"}, "test-user", []string{"docker:write"})
+				token, err := tokenManager.Generate(
+					rbacServiceEnableTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"docker:write"},
+				)
 				s.Require().NoError(err)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient { return jobmocks.NewMockJobClient(s.mockCtrl) },
-			wantCode: http.StatusForbidden, wantContains: []string{"Insufficient permissions"},
+			wantCode:     http.StatusForbidden, wantContains: []string{"Insufficient permissions"},
 		},
 		{
 			name: "when valid admin token returns 200",
 			setupAuth: func(req *http.Request) {
-				token, err := tokenManager.Generate(rbacServiceEnableTestSigningKey, []string{"admin"}, "test-user", nil)
+				token, err := tokenManager.Generate(
+					rbacServiceEnableTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
 				s.Require().NoError(err)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
@@ -360,11 +413,28 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnableRBACHTTP() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
-			appConfig := config.Config{Controller: config.Controller{API: config.APIServer{Security: config.ServerSecurity{SigningKey: rbacServiceEnableTestSigningKey}}}}
+			appConfig := config.Config{
+				Controller: config.Controller{
+					API: config.APIServer{
+						Security: config.ServerSecurity{
+							SigningKey: rbacServiceEnableTestSigningKey,
+						},
+					},
+				},
+			}
 			server := api.New(appConfig, s.logger)
-			handlers := apiservice.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apiservice.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
-			req := httptest.NewRequest(http.MethodPost, "/node/server1/service/nginx.service/enable", nil)
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/node/server1/service/nginx.service/enable",
+				nil,
+			)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 			server.Echo.ServeHTTP(rec, req)

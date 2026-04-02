@@ -105,7 +105,9 @@ func (s *ServiceGetPublicTestSuite) TestGetNodeServiceByName() {
 						&job.Response{
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "agent1",
-							Data:     json.RawMessage(`{"name":"nginx.service","status":"active","enabled":true,"description":"A high performance web server","pid":1234}`),
+							Data: json.RawMessage(
+								`{"name":"nginx.service","status":"active","enabled":true,"description":"A high performance web server","pid":1234}`,
+							),
 						},
 						nil,
 					)
@@ -291,12 +293,16 @@ func (s *ServiceGetPublicTestSuite) TestGetNodeServiceByName() {
 						"server1": {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server1",
-							Data:     json.RawMessage(`{"name":"nginx.service","status":"active","enabled":true}`),
+							Data: json.RawMessage(
+								`{"name":"nginx.service","status":"active","enabled":true}`,
+							),
 						},
 						"server2": {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server2",
-							Data:     json.RawMessage(`{"name":"nginx.service","status":"inactive","enabled":false}`),
+							Data: json.RawMessage(
+								`{"name":"nginx.service","status":"inactive","enabled":false}`,
+							),
 						},
 					}, nil)
 			},
@@ -428,7 +434,9 @@ func (s *ServiceGetPublicTestSuite) TestGetNodeServiceByNameValidationHTTP() {
 						&job.Response{
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "agent1",
-							Data:     json.RawMessage(`{"name":"nginx.service","status":"active","enabled":true}`),
+							Data: json.RawMessage(
+								`{"name":"nginx.service","status":"active","enabled":true}`,
+							),
 						},
 						nil,
 					)
@@ -536,7 +544,9 @@ func (s *ServiceGetPublicTestSuite) TestGetNodeServiceByNameRBACHTTP() {
 						&job.Response{
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "agent1",
-							Data:     json.RawMessage(`{"name":"nginx.service","status":"active","enabled":true}`),
+							Data: json.RawMessage(
+								`{"name":"nginx.service","status":"active","enabled":true}`,
+							),
 						},
 						nil,
 					)

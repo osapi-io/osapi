@@ -30,7 +30,7 @@ import (
 // Start starts a systemd service. If the service is already active, it
 // returns Changed: false without taking action.
 func (d *Debian) Start(
-	ctx context.Context,
+	_ context.Context,
 	name string,
 ) (*ActionResult, error) {
 	if err := validateName(name); err != nil {
@@ -54,7 +54,7 @@ func (d *Debian) Start(
 // Stop stops a systemd service. If the service is already inactive, it
 // returns Changed: false without taking action.
 func (d *Debian) Stop(
-	ctx context.Context,
+	_ context.Context,
 	name string,
 ) (*ActionResult, error) {
 	if err := validateName(name); err != nil {
@@ -96,7 +96,7 @@ func (d *Debian) Restart(
 // Enable enables a systemd service. If the service is already enabled, it
 // returns Changed: false without taking action.
 func (d *Debian) Enable(
-	ctx context.Context,
+	_ context.Context,
 	name string,
 ) (*ActionResult, error) {
 	if err := validateName(name); err != nil {
@@ -120,7 +120,7 @@ func (d *Debian) Enable(
 // Disable disables a systemd service. If the service is already disabled, it
 // returns Changed: false without taking action.
 func (d *Debian) Disable(
-	ctx context.Context,
+	_ context.Context,
 	name string,
 ) (*ActionResult, error) {
 	if err := validateName(name); err != nil {
