@@ -22,8 +22,11 @@ package agent_test
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -34,6 +37,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/config"
+	execmocks "github.com/retr0h/osapi/internal/exec/mocks"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
@@ -156,6 +160,103 @@ func (s *AgentPublicTestSuite) TestStart() {
 					Times(6)
 
 				return s.buildAgent()
+			},
+			stopFunc: func(a *agent.Agent) {
+				stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+
+				a.Stop(stopCtx)
+			},
+		},
+		{
+			name: "returns early when preflight fails",
+			setupFunc: func() *agent.Agent {
+				mockExecMgr := execmocks.NewMockManager(s.mockCtrl)
+				mockExecMgr.EXPECT().
+					RunCmd("sudo", gomock.Any()).
+					Return("", fmt.Errorf("sudo: a password is required")).
+					AnyTimes()
+
+				cfg := s.appConfig
+				cfg.Agent.PrivilegeEscalation = config.PrivilegeEscalation{
+					Enabled: true,
+				}
+
+				return newTestAgent(newTestAgentParams{
+					appFs:           s.appFs,
+					appConfig:       cfg,
+					logger:          s.logger,
+					jobClient:       s.mockJobClient,
+					streamName:      "test-stream",
+					hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
+					diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
+					memProvider:     memMocks.NewDefaultMockProvider(s.mockCtrl),
+					loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
+					dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+					pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
+					processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+					execManager:     mockExecMgr,
+				})
+			},
+			stopFunc: func(a *agent.Agent) {
+				// Agent should not have started consumers, so IsReady fails.
+				err := a.IsReady()
+				s.Error(err)
+			},
+		},
+		{
+			name: "starts when preflight passes",
+			setupFunc: func() *agent.Agent {
+				mockExecMgr := execmocks.NewMockManager(s.mockCtrl)
+				mockExecMgr.EXPECT().
+					RunCmd("sudo", gomock.Any()).
+					Return("/usr/bin/something", nil).
+					AnyTimes()
+
+				// Write a fake proc status file with all capabilities set.
+				tmpDir := s.T().TempDir()
+				path := filepath.Join(tmpDir, "status")
+				err := os.WriteFile(path, []byte("Name:\tosapi\nCapEff:\t000000000000003f\n"), 0o644)
+				s.Require().NoError(err)
+				agent.SetProcStatusPath(path)
+				s.T().Cleanup(func() {
+					agent.ResetProcStatusPath()
+				})
+
+				cfg := s.appConfig
+				cfg.Agent.PrivilegeEscalation = config.PrivilegeEscalation{
+					Enabled: true,
+				}
+
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+					Return(nil).
+					Times(6)
+
+				s.mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(context.Canceled).
+					Times(6)
+
+				return newTestAgent(newTestAgentParams{
+					appFs:           s.appFs,
+					appConfig:       cfg,
+					logger:          s.logger,
+					jobClient:       s.mockJobClient,
+					streamName:      "test-stream",
+					hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
+					diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
+					memProvider:     memMocks.NewDefaultMockProvider(s.mockCtrl),
+					loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
+					dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+					pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
+					processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+					execManager:     mockExecMgr,
+				})
 			},
 			stopFunc: func(a *agent.Agent) {
 				stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

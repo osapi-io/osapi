@@ -176,6 +176,40 @@ func (s *PreflightPublicTestSuite) TestCheckCapabilities() {
 				}
 			},
 		},
+		{
+			name: "when CapEff line has invalid hex",
+			setup: func() {
+				path := filepath.Join(s.tmpDir, "status_bad_hex")
+				content := "Name:\tosapi\nCapEff:\tNOTHEX\n"
+				err := os.WriteFile(path, []byte(content), 0o644)
+				s.Require().NoError(err)
+				agent.SetProcStatusPath(path)
+			},
+			validateFunc: func(results []agent.PreflightResult) {
+				s.NotEmpty(results)
+				for _, r := range results {
+					s.False(r.Passed, "expected %s to fail", r.Name)
+					s.Contains(r.Error, "failed to read capabilities")
+				}
+			},
+		},
+		{
+			name: "when CapEff line not present",
+			setup: func() {
+				path := filepath.Join(s.tmpDir, "status_no_capeff")
+				content := "Name:\tosapi\nCapInh:\t0000000000000000\n"
+				err := os.WriteFile(path, []byte(content), 0o644)
+				s.Require().NoError(err)
+				agent.SetProcStatusPath(path)
+			},
+			validateFunc: func(results []agent.PreflightResult) {
+				s.NotEmpty(results)
+				for _, r := range results {
+					s.False(r.Passed, "expected %s to fail", r.Name)
+					s.Contains(r.Error, "failed to read capabilities")
+				}
+			},
+		},
 	}
 
 	for _, tc := range tests {

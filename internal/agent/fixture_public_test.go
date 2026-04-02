@@ -28,6 +28,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/provider/command"
 	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
@@ -71,6 +72,7 @@ type newTestAgentParams struct {
 	timezoneProvider timezoneProv.Provider
 	powerProvider    powerProv.Provider
 	processProvider  process.Provider
+	execManager      exec.Manager
 	registryKV       jetstream.KeyValue
 	factsKV          jetstream.KeyValue
 }
@@ -152,6 +154,6 @@ func newTestAgent(p newTestAgentParams) *agent.Agent {
 		registry,
 		p.registryKV,
 		p.factsKV,
-		nil,
+		p.execManager,
 	)
 }
