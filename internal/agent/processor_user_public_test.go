@@ -60,6 +60,7 @@ func (s *ProcessorUserPublicTestSuite) newProcessor(
 		userProvider,
 		nil,
 		nil,
+		nil,
 		config.Config{},
 		slog.Default(),
 	)

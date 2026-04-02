@@ -105,6 +105,7 @@ func newTestAgent(p newTestAgentParams) *agent.Agent {
 			nil,
 			nil,
 			nil,
+			nil,
 			p.appConfig,
 			logger,
 		),

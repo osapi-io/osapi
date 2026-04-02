@@ -42,6 +42,7 @@ import (
 	aptProv "github.com/retr0h/osapi/internal/provider/node/apt"
 	certProv "github.com/retr0h/osapi/internal/provider/node/certificate"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
+	serviceProv "github.com/retr0h/osapi/internal/provider/node/service"
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	logProv "github.com/retr0h/osapi/internal/provider/node/log"
@@ -215,6 +216,11 @@ func setupAgent(
 		log, appFs, fileProvider, fileStateKV, execManager, hostname,
 	)
 
+	// --- Service provider ---
+	serviceProvider := createServiceProvider(
+		log, appFs, fileProvider, fileStateKV, execManager, hostname,
+	)
+
 	// --- Build registry ---
 	registry := agent.NewProviderRegistry()
 
@@ -233,6 +239,7 @@ func setupAgent(
 			userProvider,
 			packageProvider,
 			logProvider,
+			serviceProvider,
 			appConfig,
 			log,
 		),
@@ -248,6 +255,7 @@ func setupAgent(
 		userProvider,
 		packageProvider,
 		logProvider,
+		serviceProvider,
 	)
 
 	registry.Register("network",
@@ -602,5 +610,37 @@ func createCertificateProvider(
 		return certProv.NewDarwinProvider()
 	default:
 		return certProv.NewLinuxProvider()
+	}
+}
+
+// createServiceProvider creates a platform-specific service provider. On Debian,
+// the service provider delegates unit file writes to the file provider for SHA
+// tracking and idempotency. In containers, systemd is not available — returns
+// ErrUnsupported. On other platforms, all operations return ErrUnsupported.
+func createServiceProvider(
+	log *slog.Logger,
+	fs avfs.VFS,
+	fileProvider fileProv.Provider,
+	fileStateKV jetstream.KeyValue,
+	execManager exec.Manager,
+	hostname string,
+) serviceProv.Provider {
+	plat := platform.Detect()
+
+	switch plat {
+	case "debian":
+		if platform.IsContainer() {
+			log.Info("running in container, service operations disabled")
+			return serviceProv.NewLinuxProvider()
+		}
+		if fileProvider == nil {
+			log.Warn("file provider not available, service operations disabled")
+			return serviceProv.NewLinuxProvider()
+		}
+		return serviceProv.NewDebianProvider(log, fs, fileProvider, fileStateKV, execManager, hostname)
+	case "darwin":
+		return serviceProv.NewDarwinProvider()
+	default:
+		return serviceProv.NewLinuxProvider()
 	}
 }
