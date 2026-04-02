@@ -116,9 +116,8 @@ sudo setcap \
   /usr/local/bin/osapi
 ```
 
-When `privilege_escalation.enabled: true`, the agent reads
-`/proc/self/status` at startup and checks the `CapEff` bitmask for the required
-bits:
+When `privilege_escalation.enabled: true`, the agent reads `/proc/self/status`
+at startup and checks the `CapEff` bitmask for the required bits:
 
 | Capability            | Bit | Purpose                         |
 | --------------------- | --- | ------------------------------- |
