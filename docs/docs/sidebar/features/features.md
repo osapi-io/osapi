@@ -34,5 +34,6 @@ OSAPI provides a comprehensive set of features for managing Linux systems.
 | 📦  | [Package Management](package-management.md)    | System package install, remove, update, and query                                             |
 | 📄  | [Log Management](log-management.md)            | Query systemd journal entries by host, unit, or source                                        |
 | 🔒  | [Certificate Management](certificate-management.md) | CA certificate trust store management                                                    |
+| 🔧  | [Service Management](service-management.md)  | Systemd service lifecycle and unit file management                                            |
 
 <!-- prettier-ignore-end -->

@@ -177,6 +177,20 @@ const (
 	OpCertificateCADelete JobOperation = "certificate.ca.delete"
 )
 
+// Service operations.
+const (
+	OpServiceList    JobOperation = "node.service.list"
+	OpServiceGet     JobOperation = "node.service.get"
+	OpServiceCreate  JobOperation = "node.service.create"
+	OpServiceUpdate  JobOperation = "node.service.update"
+	OpServiceDelete  JobOperation = "node.service.delete"
+	OpServiceStart   JobOperation = "node.service.start"
+	OpServiceStop    JobOperation = "node.service.stop"
+	OpServiceRestart JobOperation = "node.service.restart"
+	OpServiceEnable  JobOperation = "node.service.enable"
+	OpServiceDisable JobOperation = "node.service.disable"
+)
+
 // Target constants for job routing.
 const (
 	// TargetAny routes to any available agent (load-balanced).

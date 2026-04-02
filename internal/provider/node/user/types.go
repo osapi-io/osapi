@@ -19,6 +19,13 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Package user provides user and group management operations.
+//
+// Password and SSH key operations accept values inline in the request
+// body rather than via Object Store + file.Deployer (which cron and
+// certificate providers use). These are small values attached to a
+// user account, not file deployments — Object Store would add
+// unnecessary ceremony. SSH key fingerprints serve as the natural
+// identity, so no SHA state tracking is needed.
 package user
 
 import "context"

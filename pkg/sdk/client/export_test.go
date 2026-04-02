@@ -718,6 +718,37 @@ func CertificateCAMutationCollectionFromGen(
 	return certificateCAMutationCollectionFromGen(input)
 }
 
+// ServiceListCollectionFromGen exposes the private
+// serviceListCollectionFromGen for testing.
+func ServiceListCollectionFromGen(
+	input *gen.ServiceListResponse,
+) Collection[ServiceInfoResult] {
+	return serviceListCollectionFromGen(input)
+}
+
+// ServiceInfoFromGen exposes the private serviceInfoFromGen for testing.
+func ServiceInfoFromGen(
+	input gen.ServiceInfo,
+) ServiceInfo {
+	return serviceInfoFromGen(input)
+}
+
+// ServiceGetCollectionFromGen exposes the private
+// serviceGetCollectionFromGen for testing.
+func ServiceGetCollectionFromGen(
+	input *gen.ServiceGetResponse,
+) Collection[ServiceGetResult] {
+	return serviceGetCollectionFromGen(input)
+}
+
+// ServiceMutationCollectionFromGen exposes the private
+// serviceMutationCollectionFromGen for testing.
+func ServiceMutationCollectionFromGen(
+	input *gen.ServiceMutationResponse,
+) Collection[ServiceMutationResult] {
+	return serviceMutationCollectionFromGen(input)
+}
+
 // LogCollectionFromGen exposes the private logCollectionFromGen for testing.
 func LogCollectionFromGen(
 	input *gen.LogCollectionResponse,

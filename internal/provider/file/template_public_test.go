@@ -128,11 +128,21 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 			wantErrMsg: "failed to render template",
 		},
 		{
-			name:        "when missing var key renders no value",
-			template:    "val={{ .Vars.missing }}",
-			vars:        map[string]any{},
+			name:       "when missing var key returns error",
+			template:   "val={{ .Vars.missing }}",
+			vars:       map[string]any{},
+			hostname:   "web-01",
+			wantErr:    true,
+			wantErrMsg: "failed to render template",
+		},
+		{
+			name:     "when missing fact key via index renders no value",
+			template: `os={{ index .Facts "os_family" }}`,
+			factsFn: func() map[string]any {
+				return map[string]any{"architecture": "amd64"}
+			},
 			hostname:    "web-01",
-			wantContent: "val=<no value>",
+			wantContent: "os=<no value>",
 			wantChanged: true,
 		},
 		{

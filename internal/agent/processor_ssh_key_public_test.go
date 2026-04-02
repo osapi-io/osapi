@@ -60,6 +60,7 @@ func (s *ProcessorSSHKeyPublicTestSuite) newProcessor(
 		userProvider,
 		nil,
 		nil,
+		nil,
 		config.Config{},
 		slog.Default(),
 	)

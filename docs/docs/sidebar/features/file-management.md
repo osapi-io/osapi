@@ -148,6 +148,76 @@ osapi client node file deploy \
 Each agent renders the template with its own facts and hostname, so the same
 template produces host-specific configuration across a fleet.
 
+### Available Fact Keys
+
+Facts are exposed as a flat map via JSON round-tripping of the agent's
+`FactsRegistration`. Use dot-syntax (`.Facts.key`) for keys that are valid Go
+identifiers:
+
+| Key                 | Type     | Description                  | Example          |
+| ------------------- | -------- | ---------------------------- | ---------------- |
+| `architecture`      | string   | CPU architecture             | `amd64`, `arm64` |
+| `kernel_version`    | string   | OS kernel version            | `6.8.0-51`       |
+| `cpu_count`         | number   | Logical CPU count            | `8`              |
+| `fqdn`              | string   | Fully qualified domain name  | `web-01.lan`     |
+| `service_mgr`       | string   | Init system                  | `systemd`        |
+| `package_mgr`       | string   | System package manager       | `apt`            |
+| `containerized`     | boolean  | Running inside a container   | `true`           |
+| `primary_interface` | string   | Default route interface name | `eth0`           |
+| `interfaces`        | []object | Network interfaces           | _(see below)_    |
+| `routes`            | []object | IP routing table             | _(see below)_    |
+
+Access scalar facts with dot-syntax:
+
+```text
+arch = {{ .Facts.architecture }}
+cpus = {{ .Facts.cpu_count }}
+```
+
+For keys with underscores, both `{{ .Facts.kernel_version }}` and
+`{{ index .Facts "kernel_version" }}` work.
+
+:::caution Missing key behavior
+
+Templates use Go's `missingkey=error` option. Accessing a key that doesn't exist
+via **dot-syntax** (e.g., `{{ .Vars.missing }}` or `{{ .Facts.bogus }}`) causes
+the deploy to **fail with an error** rather than silently rendering
+`<no value>`.
+
+However, `{{ index .Facts "nonexistent" }}` uses Go's built-in `index` function,
+which returns the zero value for the map's value type — rendering `<no value>`
+without an error. **Prefer dot-syntax over `index`** for fact access so that
+typos are caught at deploy time.
+
+:::
+
+### Meta Provider Templates
+
+Domains that use file deployment (service management, certificate management)
+inherit template support automatically. When the uploaded object has
+`content_type: template`, the file provider renders it at deploy time — the meta
+provider does not need to specify the content type.
+
+For example, a systemd unit file template:
+
+```text
+[Unit]
+Description=App on {{ .Hostname }}
+
+[Service]
+ExecStart=/usr/bin/app --cpus {{ .Facts.cpu_count }}
+```
+
+Upload as a template, then deploy via the service API:
+
+```bash
+osapi client file upload \
+    --name my-unit --file app.service --content-type template
+
+osapi client node service create \
+    --target web-01 --name my-app --object my-unit
+```
+
 ## Configuration
 
 File management uses two NATS infrastructure components in addition to the

@@ -55,6 +55,7 @@ resp, err := client.Hostname.Get(ctx, "_any")
 | [Power](operations/power.md)     | Power management (reboot, shutdown)    |
 | [Process](operations/process.md) | Process management (list, get, signal) |
 | [Log](operations/log.md)         | Log query (journal entries, by unit)   |
+| [Service](operations/service.md) | Service management (systemd lifecycle) |
 
 ### Containers & Scheduling
 

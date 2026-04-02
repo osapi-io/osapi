@@ -241,6 +241,20 @@ const (
 	OperationCertificateCADelete = client.OpCertificateCADelete
 )
 
+// Service operations.
+const (
+	OperationServiceList    = client.OpServiceList
+	OperationServiceGet     = client.OpServiceGet
+	OperationServiceCreate  = client.OpServiceCreate
+	OperationServiceUpdate  = client.OpServiceUpdate
+	OperationServiceDelete  = client.OpServiceDelete
+	OperationServiceStart   = client.OpServiceStart
+	OperationServiceStop    = client.OpServiceStop
+	OperationServiceRestart = client.OpServiceRestart
+	OperationServiceEnable  = client.OpServiceEnable
+	OperationServiceDisable = client.OpServiceDisable
+)
+
 // Operation represents an operation in the new hierarchical format
 type Operation struct {
 	// Type specifies the type of operation using hierarchical format

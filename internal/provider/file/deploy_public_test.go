@@ -33,6 +33,8 @@ import (
 	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
@@ -328,6 +330,88 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				data, err := appFs.ReadFile("/etc/nginx/nginx.conf")
 				suite.Require().NoError(err)
 				suite.Equal("server 10.0.0.1", string(data))
+			},
+		},
+		{
+			name: "when content type is empty resolves template from object header",
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				_ *avfs.VFS,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return([]byte("server {{ .Vars.host }}"), nil)
+
+				mockObj.EXPECT().
+					GetInfo(gomock.Any(), gomock.Any()).
+					Return(&jetstream.ObjectInfo{
+						ObjectMeta: jetstream.ObjectMeta{
+							Name: "nginx.conf",
+							Headers: nats.Header{
+								"Osapi-Content-Type": []string{"template"},
+							},
+						},
+					}, nil)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
+
+				mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+			},
+			req: file.DeployRequest{
+				ObjectName: "nginx.conf",
+				Path:       "/etc/nginx/nginx.conf",
+				Vars:       map[string]any{"host": "10.0.0.1"},
+			},
+			want: &file.DeployResult{
+				Changed: true,
+				SHA256:  computeTestSHA256([]byte("server 10.0.0.1")),
+				Path:    "/etc/nginx/nginx.conf",
+			},
+			validateFunc: func(appFs avfs.VFS) {
+				data, err := appFs.ReadFile("/etc/nginx/nginx.conf")
+				suite.Require().NoError(err)
+				suite.Equal("server 10.0.0.1", string(data))
+			},
+		},
+		{
+			name: "when content type is empty and GetInfo fails defaults to raw",
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				_ *avfs.VFS,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
+
+				mockObj.EXPECT().
+					GetInfo(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("info error"))
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
+
+				mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+			},
+			req: file.DeployRequest{
+				ObjectName: "nginx.conf",
+				Path:       "/etc/nginx/nginx.conf",
+				Mode:       "0644",
+			},
+			want: &file.DeployResult{
+				Changed: true,
+				SHA256:  existingSHA,
+				Path:    "/etc/nginx/nginx.conf",
 			},
 		},
 		{

@@ -50,7 +50,22 @@ func (p *Service) Deploy(
 		return nil, fmt.Errorf("failed to get object %q: %w", req.ObjectName, err)
 	}
 
-	if req.ContentType == "template" {
+	// When ContentType is not explicitly set, resolve it from the object's
+	// metadata header. This allows meta providers (service, certificate) to
+	// omit ContentType and have the file provider respect the uploader's intent.
+	contentType := req.ContentType
+	if contentType == "" {
+		contentType = "raw"
+
+		info, infoErr := p.objStore.GetInfo(ctx, req.ObjectName)
+		if infoErr == nil && info.Headers != nil {
+			if ct := info.Headers.Get("Osapi-Content-Type"); ct != "" {
+				contentType = ct
+			}
+		}
+	}
+
+	if contentType == "template" {
 		content, err = p.renderTemplate(content, req.Vars)
 		if err != nil {
 			return nil, fmt.Errorf("failed to render template: %w", err)
@@ -107,7 +122,7 @@ func (p *Service) Deploy(
 		Owner:       req.Owner,
 		Group:       req.Group,
 		DeployedAt:  time.Now().UTC().Format(time.RFC3339),
-		ContentType: req.ContentType,
+		ContentType: contentType,
 		Metadata:    req.Metadata,
 	}
 
