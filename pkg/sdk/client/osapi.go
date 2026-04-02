@@ -135,6 +135,10 @@ type Client struct {
 	// Log provides log viewing operations (query journal entries).
 	Log *LogService
 
+	// Service provides systemd service management operations (list, get,
+	// create, update, delete, start, stop, restart, enable, disable).
+	Service *ServiceService
+
 	httpClient    *gen.ClientWithResponses
 	baseURL       string
 	logger        *slog.Logger
@@ -222,6 +226,7 @@ func New(
 	c.Package = &PackageService{client: httpClient}
 	c.Certificate = &CertificateService{client: httpClient}
 	c.Log = &LogService{client: httpClient}
+	c.Service = &ServiceService{client: httpClient}
 
 	return c
 }
