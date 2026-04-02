@@ -50,6 +50,9 @@ type AuditEntry struct {
 	// Timestamp When the request was processed.
 	Timestamp time.Time `json:"timestamp"`
 
+	// TraceId OpenTelemetry trace ID for correlation.
+	TraceId *string `json:"trace_id,omitempty"`
+
 	// User Authenticated user (JWT subject).
 	User string `json:"user"`
 }

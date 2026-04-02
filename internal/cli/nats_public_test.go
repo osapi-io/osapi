@@ -321,68 +321,75 @@ func (suite *NATSPublicTestSuite) TestBuildStateKVConfig() {
 	}
 }
 
-func (suite *NATSPublicTestSuite) TestBuildAuditKVConfig() {
+func (suite *NATSPublicTestSuite) TestBuildAuditStreamConfig() {
 	tests := []struct {
 		name       string
 		namespace  string
 		auditCfg   config.NATSAudit
-		validateFn func(jetstream.KeyValueConfig)
+		validateFn func(jetstream.StreamConfig)
 	}{
 		{
 			name:      "when namespace is set",
 			namespace: "osapi",
 			auditCfg: config.NATSAudit{
-				Bucket:   "audit-log",
-				TTL:      "720h",
+				Stream:   "AUDIT",
+				Subject:  "audit",
+				MaxAge:   "720h",
 				MaxBytes: 52428800,
 				Storage:  "file",
 				Replicas: 1,
 			},
-			validateFn: func(cfg jetstream.KeyValueConfig) {
-				assert.Equal(suite.T(), "osapi-audit-log", cfg.Bucket)
-				assert.Equal(suite.T(), 720*time.Hour, cfg.TTL)
+			validateFn: func(cfg jetstream.StreamConfig) {
+				assert.Equal(suite.T(), "osapi-AUDIT", cfg.Name)
+				assert.Equal(suite.T(), []string{"osapi.audit.>"}, cfg.Subjects)
+				assert.Equal(suite.T(), 720*time.Hour, cfg.MaxAge)
 				assert.Equal(suite.T(), int64(52428800), cfg.MaxBytes)
 				assert.Equal(suite.T(), jetstream.FileStorage, cfg.Storage)
 				assert.Equal(suite.T(), 1, cfg.Replicas)
+				assert.Equal(suite.T(), jetstream.DiscardOld, cfg.Discard)
 			},
 		},
 		{
 			name:      "when namespace is empty",
 			namespace: "",
 			auditCfg: config.NATSAudit{
-				Bucket:   "audit-log",
-				TTL:      "24h",
+				Stream:   "AUDIT",
+				Subject:  "audit",
+				MaxAge:   "24h",
 				MaxBytes: 1048576,
 				Storage:  "memory",
 				Replicas: 3,
 			},
-			validateFn: func(cfg jetstream.KeyValueConfig) {
-				assert.Equal(suite.T(), "audit-log", cfg.Bucket)
-				assert.Equal(suite.T(), 24*time.Hour, cfg.TTL)
+			validateFn: func(cfg jetstream.StreamConfig) {
+				assert.Equal(suite.T(), "AUDIT", cfg.Name)
+				assert.Equal(suite.T(), []string{"audit.>"}, cfg.Subjects)
+				assert.Equal(suite.T(), 24*time.Hour, cfg.MaxAge)
 				assert.Equal(suite.T(), int64(1048576), cfg.MaxBytes)
 				assert.Equal(suite.T(), jetstream.MemoryStorage, cfg.Storage)
 				assert.Equal(suite.T(), 3, cfg.Replicas)
+				assert.Equal(suite.T(), jetstream.DiscardOld, cfg.Discard)
 			},
 		},
 		{
-			name:      "when TTL is invalid defaults to zero",
+			name:      "when MaxAge is invalid defaults to zero",
 			namespace: "",
 			auditCfg: config.NATSAudit{
-				Bucket:   "audit-log",
-				TTL:      "invalid",
+				Stream:   "AUDIT",
+				Subject:  "audit",
+				MaxAge:   "invalid",
 				MaxBytes: 0,
 				Storage:  "file",
 				Replicas: 1,
 			},
-			validateFn: func(cfg jetstream.KeyValueConfig) {
-				assert.Equal(suite.T(), time.Duration(0), cfg.TTL)
+			validateFn: func(cfg jetstream.StreamConfig) {
+				assert.Equal(suite.T(), time.Duration(0), cfg.MaxAge)
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got := cli.BuildAuditKVConfig(tc.namespace, tc.auditCfg)
+			got := cli.BuildAuditStreamConfig(tc.namespace, tc.auditCfg)
 
 			tc.validateFn(got)
 		})

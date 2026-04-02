@@ -12,37 +12,38 @@ accountability and supports compliance requirements.
 
 The API server records audit entries automatically via middleware. Every
 authenticated request generates an audit entry that is stored in a dedicated
-NATS KV bucket. No application code needs to explicitly log audit events -- the
-middleware handles it transparently.
+NATS JetStream stream. No application code needs to explicitly log audit events
+-- the middleware handles it transparently.
 
 ```mermaid
 sequenceDiagram
     participant Client
     participant Middleware as Audit Middleware
     participant Handler
-    participant KV as NATS KV
+    participant Stream as NATS Stream
 
     Client->>Middleware: API request
     Middleware->>Handler: forward request
     Handler-->>Middleware: response
-    Middleware->>KV: write audit entry
+    Middleware->>Stream: write audit entry
     Middleware-->>Client: response
 ```
 
 Each audit entry contains:
 
-| Field           | Description                             |
-| --------------- | --------------------------------------- |
-| `id`            | Unique entry identifier (UUID)          |
-| `timestamp`     | When the request was made               |
-| `user`          | Identity from the JWT `sub` claim       |
-| `roles`         | Roles from the JWT token                |
-| `method`        | HTTP method (`GET`, `POST`, etc.)       |
-| `path`          | Request path (e.g., `/node/hostname`)   |
-| `operation_id`  | OpenAPI operation ID (if available)     |
-| `source_ip`     | Client IP address                       |
-| `response_code` | HTTP response status code               |
-| `duration_ms`   | Request processing time in milliseconds |
+| Field           | Description                                      |
+| --------------- | ------------------------------------------------ |
+| `id`            | Unique entry identifier (UUID)                   |
+| `timestamp`     | When the request was made                        |
+| `user`          | Identity from the JWT `sub` claim                |
+| `roles`         | Roles from the JWT token                         |
+| `method`        | HTTP method (`GET`, `POST`, etc.)                |
+| `path`          | Request path (e.g., `/node/hostname`)            |
+| `operation_id`  | OpenAPI operation ID (if available)              |
+| `source_ip`     | Client IP address                                |
+| `response_code` | HTTP response status code                        |
+| `duration_ms`   | Request processing time in milliseconds          |
+| `trace_id`      | OpenTelemetry trace ID (when tracing is enabled) |
 
 ## Viewing Audit Logs
 
@@ -55,8 +56,8 @@ the [API Reference](/gen/api/audit-log-api-audit) for the REST endpoints.
 
 The export feature retrieves all audit entries and writes them to a local file
 in JSONL format (one JSON object per line). This is designed for long-term
-retention -- since audit entries in NATS KV have a configurable TTL (default 30
-days), exporting preserves them before they expire.
+retention -- since audit entries in the NATS stream have a configurable
+`max_age` (default 30 days), exporting preserves them before they expire.
 
 The `GET /audit/export` endpoint returns all entries in a single response. The
 CLI writes each entry as a JSON line to the output file. JSONL files are easy to
@@ -75,22 +76,26 @@ cat audit.jsonl | jq .
 
 ## Retention
 
-Audit entries are stored in a NATS KV bucket with configurable retention
-settings. When entries exceed the TTL or the bucket reaches its size limit,
-older entries are automatically removed. Export entries before they expire if
-you need long-term retention.
+Audit entries are stored in a NATS JetStream stream with configurable retention
+settings. When entries exceed the `max_age` or the stream reaches its size
+limit, older entries are automatically removed. Export entries before they
+expire if you need long-term retention.
 
 ## Configuration
 
 ```yaml
 nats:
   audit:
-    bucket: 'audit-log' # KV bucket name
-    ttl: '720h' # 30-day retention (default)
-    max_bytes: 52428800 # 50 MiB max bucket size
+    stream: 'AUDIT' # JetStream stream name
+    subject: 'audit' # Base subject prefix
+    max_age: '720h' # 30-day retention (default)
+    max_bytes: 52428800 # 50 MiB max stream size
     storage: 'file' # "file" or "memory"
-    replicas: 1 # Number of KV replicas
+    replicas: 1 # Number of stream replicas
 ```
+
+Each audit entry includes a `trace_id` field when distributed tracing is
+enabled, allowing correlation with OpenTelemetry traces.
 
 See [Configuration](../usage/configuration.md#natsaudit) for the full reference.
 

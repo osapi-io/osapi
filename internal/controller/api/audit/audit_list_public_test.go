@@ -105,6 +105,63 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogs() {
 			},
 		},
 		{
+			name:   "returns entry with trace ID",
+			params: gen.GetAuditLogsParams{Limit: &limit, Offset: &offset},
+			setupStore: func() {
+				s.mockStore.EXPECT().
+					List(gomock.Any(), limit, offset).
+					Return([]auditstore.Entry{
+						{
+							ID:           "550e8400-e29b-41d4-a716-446655440000",
+							Timestamp:    time.Now(),
+							User:         "user@example.com",
+							Roles:        []string{"admin"},
+							Method:       "GET",
+							Path:         "/node/hostname",
+							SourceIP:     "127.0.0.1",
+							ResponseCode: 200,
+							DurationMs:   42,
+							TraceID:      "4bf92f3577b34da6a3ce929d0e0e4736",
+						},
+					}, 1, nil)
+			},
+			validateFunc: func(resp gen.GetAuditLogsResponseObject) {
+				r, ok := resp.(gen.GetAuditLogs200JSONResponse)
+				s.True(ok)
+				s.Len(r.Items, 1)
+				s.Require().NotNil(r.Items[0].TraceId)
+				s.Equal("4bf92f3577b34da6a3ce929d0e0e4736", *r.Items[0].TraceId)
+			},
+		},
+		{
+			name:   "returns entry with empty trace ID as nil",
+			params: gen.GetAuditLogsParams{Limit: &limit, Offset: &offset},
+			setupStore: func() {
+				s.mockStore.EXPECT().
+					List(gomock.Any(), limit, offset).
+					Return([]auditstore.Entry{
+						{
+							ID:           "550e8400-e29b-41d4-a716-446655440000",
+							Timestamp:    time.Now(),
+							User:         "user@example.com",
+							Roles:        []string{"admin"},
+							Method:       "GET",
+							Path:         "/node/hostname",
+							SourceIP:     "127.0.0.1",
+							ResponseCode: 200,
+							DurationMs:   42,
+							TraceID:      "",
+						},
+					}, 1, nil)
+			},
+			validateFunc: func(resp gen.GetAuditLogsResponseObject) {
+				r, ok := resp.(gen.GetAuditLogs200JSONResponse)
+				s.True(ok)
+				s.Len(r.Items, 1)
+				s.Nil(r.Items[0].TraceId)
+			},
+		},
+		{
 			name:   "returns entry with operation ID",
 			params: gen.GetAuditLogsParams{Limit: &limit, Offset: &offset},
 			setupStore: func() {
@@ -219,8 +276,7 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsValidationHTTP() {
 		name         string
 		query        string
 		setupStore   func(mock *auditmocks.MockStore)
-		wantCode     int
-		wantContains []string
+		validateFunc func(rec *httptest.ResponseRecorder)
 	}{
 		{
 			name:  "when valid request returns entries",
@@ -242,8 +298,10 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsValidationHTTP() {
 						},
 					}, 1, nil)
 			},
-			wantCode:     http.StatusOK,
-			wantContains: []string{`"total_items":1`},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusOK, rec.Code)
+				s.Contains(rec.Body.String(), `"total_items":1`)
+			},
 		},
 		{
 			name:  "when valid limit and offset params",
@@ -253,36 +311,42 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsValidationHTTP() {
 					List(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return([]auditstore.Entry{}, 0, nil)
 			},
-			wantCode:     http.StatusOK,
-			wantContains: []string{`"total_items":0`},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusOK, rec.Code)
+				s.Contains(rec.Body.String(), `"total_items":0`)
+			},
 		},
 		{
-			name:         "when limit is zero returns 400",
-			query:        "?limit=0",
-			setupStore:   func(_ *auditmocks.MockStore) {},
-			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`},
+			name:       "when limit is zero returns 400",
+			query:      "?limit=0",
+			setupStore: func(_ *auditmocks.MockStore) {},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), `"error"`)
+			},
 		},
 		{
-			name:         "when limit exceeds maximum returns 400",
-			query:        "?limit=200",
-			setupStore:   func(_ *auditmocks.MockStore) {},
-			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`},
+			name:       "when limit exceeds maximum returns 400",
+			query:      "?limit=200",
+			setupStore: func(_ *auditmocks.MockStore) {},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), `"error"`)
+			},
 		},
 		{
-			name:         "when offset is negative returns 400",
-			query:        "?offset=-1",
-			setupStore:   func(_ *auditmocks.MockStore) {},
-			wantCode:     http.StatusBadRequest,
-			wantContains: []string{},
+			name:       "when offset is negative returns 400",
+			query:      "?offset=-1",
+			setupStore: func(_ *auditmocks.MockStore) {},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			ctrl := gomock.NewController(s.T())
-			defer ctrl.Finish()
 
 			mock := auditmocks.NewMockStore(ctrl)
 			tc.setupStore(mock)
@@ -302,10 +366,8 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsValidationHTTP() {
 
 			a.Echo.ServeHTTP(rec, req)
 
-			s.Equal(tc.wantCode, rec.Code)
-			for _, str := range tc.wantContains {
-				s.Contains(rec.Body.String(), str)
-			}
+			tc.validateFunc(rec)
+			ctrl.Finish()
 		})
 	}
 }
@@ -319,17 +381,18 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsRBACHTTP() {
 		name         string
 		setupAuth    func(req *http.Request)
 		setupStore   func(mock *auditmocks.MockStore)
-		wantCode     int
-		wantContains []string
+		validateFunc func(rec *httptest.ResponseRecorder)
 	}{
 		{
 			name: "when no token returns 401",
 			setupAuth: func(_ *http.Request) {
 				// No auth header set
 			},
-			setupStore:   func(_ *auditmocks.MockStore) {},
-			wantCode:     http.StatusUnauthorized,
-			wantContains: []string{"Bearer token required"},
+			setupStore: func(_ *auditmocks.MockStore) {},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusUnauthorized, rec.Code)
+				s.Contains(rec.Body.String(), "Bearer token required")
+			},
 		},
 		{
 			name: "when insufficient permissions returns 403",
@@ -343,9 +406,11 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsRBACHTTP() {
 				s.Require().NoError(err)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
-			setupStore:   func(_ *auditmocks.MockStore) {},
-			wantCode:     http.StatusForbidden,
-			wantContains: []string{"Insufficient permissions"},
+			setupStore: func(_ *auditmocks.MockStore) {},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusForbidden, rec.Code)
+				s.Contains(rec.Body.String(), "Insufficient permissions")
+			},
 		},
 		{
 			name: "when valid token with audit:read returns 200",
@@ -364,15 +429,16 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsRBACHTTP() {
 					List(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return([]auditstore.Entry{}, 0, nil)
 			},
-			wantCode:     http.StatusOK,
-			wantContains: []string{`"total_items":0`},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusOK, rec.Code)
+				s.Contains(rec.Body.String(), `"total_items":0`)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			ctrl := gomock.NewController(s.T())
-			defer ctrl.Finish()
 
 			mock := auditmocks.NewMockStore(ctrl)
 			tc.setupStore(mock)
@@ -406,10 +472,8 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsRBACHTTP() {
 
 			server.Echo.ServeHTTP(rec, req)
 
-			s.Equal(tc.wantCode, rec.Code)
-			for _, str := range tc.wantContains {
-				s.Contains(rec.Body.String(), str)
-			}
+			tc.validateFunc(rec)
+			ctrl.Finish()
 		})
 	}
 }

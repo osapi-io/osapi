@@ -38,6 +38,7 @@ type AuditEntry struct {
 	DurationMs   int64     `json:"duration_ms"`
 	SourceIP     string    `json:"source_ip"`
 	OperationID  string    `json:"operation_id,omitempty"`
+	TraceID      string    `json:"trace_id,omitempty"`
 }
 
 // AuditList is a paginated list of audit entries.
@@ -64,6 +65,10 @@ func auditEntryFromGen(
 
 	if g.OperationId != nil {
 		a.OperationID = *g.OperationId
+	}
+
+	if g.TraceId != nil {
+		a.TraceID = *g.TraceId
 	}
 
 	return a

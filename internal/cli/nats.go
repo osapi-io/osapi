@@ -124,20 +124,30 @@ func BuildStateKVConfig(
 	}
 }
 
-// BuildAuditKVConfig builds a jetstream.KeyValueConfig from audit config values.
-func BuildAuditKVConfig(
+// BuildAuditStreamConfig builds a jetstream.StreamConfig from audit
+// config values.
+func BuildAuditStreamConfig(
 	namespace string,
 	auditCfg config.NATSAudit,
-) jetstream.KeyValueConfig {
-	auditBucket := job.ApplyNamespaceToInfraName(namespace, auditCfg.Bucket)
-	auditTTL, _ := time.ParseDuration(auditCfg.TTL)
+) jetstream.StreamConfig {
+	streamName := job.ApplyNamespaceToInfraName(
+		namespace,
+		auditCfg.Stream,
+	)
+	subject := job.ApplyNamespaceToSubjects(
+		namespace,
+		auditCfg.Subject,
+	)
+	maxAge, _ := time.ParseDuration(auditCfg.MaxAge)
 
-	return jetstream.KeyValueConfig{
-		Bucket:   auditBucket,
-		TTL:      auditTTL,
+	return jetstream.StreamConfig{
+		Name:     streamName,
+		Subjects: []string{subject + ".>"},
+		MaxAge:   maxAge,
 		MaxBytes: auditCfg.MaxBytes,
 		Storage:  ParseJetstreamStorageType(auditCfg.Storage),
 		Replicas: auditCfg.Replicas,
+		Discard:  jetstream.DiscardOld,
 	}
 }
 

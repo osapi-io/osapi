@@ -643,17 +643,36 @@ func createAuditStore(
 	nc NATSClient,
 	namespace string,
 ) (audit.Store, []api.Option) {
-	if appConfig.NATS.Audit.Bucket == "" {
+	if appConfig.NATS.Audit.Stream == "" {
 		return nil, nil
 	}
 
-	auditKVConfig := cli.BuildAuditKVConfig(namespace, appConfig.NATS.Audit)
-	auditKV, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, auditKVConfig)
-	if err != nil {
-		cli.LogFatal(log, "failed to create audit KV bucket", err)
+	auditStreamConfig := cli.BuildAuditStreamConfig(
+		namespace,
+		appConfig.NATS.Audit,
+	)
+	if err := nc.CreateOrUpdateStreamWithConfig(
+		ctx,
+		auditStreamConfig,
+	); err != nil {
+		cli.LogFatal(log, "failed to create audit stream", err)
 	}
 
-	store := audit.NewKVStore(log, auditKV)
+	streamName := job.ApplyNamespaceToInfraName(
+		namespace,
+		appConfig.NATS.Audit.Stream,
+	)
+	stream, err := nc.Stream(ctx, streamName)
+	if err != nil {
+		cli.LogFatal(log, "failed to get audit stream", err)
+	}
+
+	subject := job.ApplyNamespaceToSubjects(
+		namespace,
+		appConfig.NATS.Audit.Subject,
+	)
+
+	store := audit.NewStreamStore(log, stream, nc, subject)
 
 	return store, []api.Option{api.WithAuditStore(store)}
 }

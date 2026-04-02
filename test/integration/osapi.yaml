@@ -51,8 +51,9 @@ nats:
     replicas: 1
 
   audit:
-    bucket: audit-log
-    ttl: 720h
+    stream: AUDIT
+    subject: audit
+    max_age: 720h
     max_bytes: 52428800
     storage: memory
     replicas: 1
