@@ -32,6 +32,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/controller/api"
@@ -103,6 +104,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 		subject      string
 		roles        []string
 		storeErr     error
+		setupReq     func(req *http.Request) *http.Request
 		validateFunc func(store *captureStore)
 	}{
 		{
@@ -163,6 +165,35 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 			},
 		},
 		{
+			name:    "authenticated request with trace context captures trace ID",
+			path:    "/node/hostname",
+			subject: "user@example.com",
+			roles:   []string{"admin"},
+			setupReq: func(req *http.Request) *http.Request {
+				traceID, _ := trace.TraceIDFromHex(
+					"4bf92f3577b34da6a3ce929d0e0e4736",
+				)
+				spanCtx := trace.NewSpanContext(trace.SpanContextConfig{
+					TraceID:    traceID,
+					SpanID:     trace.SpanID{1},
+					TraceFlags: trace.FlagsSampled,
+				})
+				ctx := trace.ContextWithSpanContext(
+					req.Context(), spanCtx,
+				)
+				return req.WithContext(ctx)
+			},
+			validateFunc: func(store *captureStore) {
+				time.Sleep(50 * time.Millisecond)
+				entries := store.getEntries()
+				s.Len(entries, 1)
+				s.Equal(
+					"4bf92f3577b34da6a3ce929d0e0e4736",
+					entries[0].TraceID,
+				)
+			},
+		},
+		{
 			name:     "store error is handled gracefully",
 			path:     "/node/hostname",
 			subject:  "user@example.com",
@@ -194,6 +225,9 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 			})
 
 			req := httptest.NewRequest(http.MethodGet, tt.path, nil)
+			if tt.setupReq != nil {
+				req = tt.setupReq(req)
+			}
 			rec := httptest.NewRecorder()
 			e.ServeHTTP(rec, req)
 

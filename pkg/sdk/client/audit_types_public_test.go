@@ -56,6 +56,7 @@ func (suite *AuditTypesPublicTestSuite) TestAuditEntryFromGen() {
 		0x00,
 	}
 	operationID := "getNodeHostname"
+	traceID := "4bf92f3577b34da6a3ce929d0e0e4736"
 
 	tests := []struct {
 		name         string
@@ -87,6 +88,45 @@ func (suite *AuditTypesPublicTestSuite) TestAuditEntryFromGen() {
 				suite.Equal(int64(42), a.DurationMs)
 				suite.Equal("192.168.1.100", a.SourceIP)
 				suite.Equal("getNodeHostname", a.OperationID)
+			},
+		},
+		{
+			name: "when TraceId is populated",
+			input: gen.AuditEntry{
+				Id:           testUUID,
+				Timestamp:    now,
+				User:         "admin@example.com",
+				Roles:        []string{"admin"},
+				Method:       "GET",
+				Path:         "/api/v1/node/web-01",
+				ResponseCode: 200,
+				DurationMs:   42,
+				SourceIp:     "192.168.1.100",
+				TraceId:      &traceID,
+			},
+			validateFunc: func(a client.AuditEntry) {
+				suite.Equal(
+					"4bf92f3577b34da6a3ce929d0e0e4736",
+					a.TraceID,
+				)
+			},
+		},
+		{
+			name: "when TraceId is nil",
+			input: gen.AuditEntry{
+				Id:           testUUID,
+				Timestamp:    now,
+				User:         "user@example.com",
+				Roles:        []string{"read"},
+				Method:       "GET",
+				Path:         "/api/v1/health",
+				ResponseCode: 200,
+				DurationMs:   5,
+				SourceIp:     "10.0.0.1",
+				TraceId:      nil,
+			},
+			validateFunc: func(a client.AuditEntry) {
+				suite.Empty(a.TraceID)
 			},
 		},
 		{
