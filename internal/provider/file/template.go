@@ -42,7 +42,7 @@ func (p *Service) renderTemplate(
 	rawTemplate []byte,
 	vars map[string]any,
 ) ([]byte, error) {
-	tmpl, err := template.New("file").Parse(string(rawTemplate))
+	tmpl, err := template.New("file").Option("missingkey=error").Parse(string(rawTemplate))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse template: %w", err)
 	}
