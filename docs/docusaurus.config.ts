@@ -91,6 +91,11 @@ const config: Config = {
             },
             {
               type: 'doc',
+              label: 'Network Interface Management',
+              docId: 'sidebar/features/network-interface-management'
+            },
+            {
+              type: 'doc',
               label: 'System Facts',
               docId: 'sidebar/features/system-facts'
             },
@@ -289,6 +294,16 @@ const config: Config = {
               type: 'doc',
               label: 'Ping',
               docId: 'sidebar/sdk/client/network/ping'
+            },
+            {
+              type: 'doc',
+              label: 'Interface',
+              docId: 'sidebar/sdk/client/network/interface'
+            },
+            {
+              type: 'doc',
+              label: 'Route',
+              docId: 'sidebar/sdk/client/network/route'
             },
             {
               type: 'html',
