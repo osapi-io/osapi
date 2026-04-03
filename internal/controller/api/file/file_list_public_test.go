@@ -57,7 +57,7 @@ type FileListPublicTestSuite struct {
 func (s *FileListPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockObjStore = mocks.NewMockObjectStoreManager(s.mockCtrl)
-	s.handler = apifile.New(slog.Default(), s.mockObjStore)
+	s.handler = apifile.New(slog.Default(), s.mockObjStore, nil)
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -252,7 +252,7 @@ func (s *FileListPublicTestSuite) TestGetFilesHTTP() {
 		s.Run(tc.name, func() {
 			objMock := tc.setupMock()
 
-			fileHandler := apifile.New(s.logger, objMock)
+			fileHandler := apifile.New(s.logger, objMock, nil)
 			strictHandler := gen.NewStrictHandler(fileHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
@@ -354,6 +354,7 @@ func (s *FileListPublicTestSuite) TestGetFilesRBACHTTP() {
 			handlers := apifile.Handler(
 				s.logger,
 				objMock,
+				nil,
 				appConfig.Controller.API.Security.SigningKey,
 				nil,
 			)

@@ -167,6 +167,7 @@ type natsBundle struct {
 	jobsKV        jetstream.KeyValue
 	registryKV    jetstream.KeyValue
 	factsKV       jetstream.KeyValue
+	fileStateKV   jetstream.KeyValue
 	objStore      file.ObjectStoreManager
 	checker       health.Checker
 	subComponents map[string]job.SubComponentInfo
@@ -223,7 +224,7 @@ func setupController(
 	sm := api.New(appConfig, log, serverOpts...)
 	registerControllerHandlers(
 		log, sm, b.jobClient, checker, metricsProvider,
-		auditStore, b.objStore,
+		auditStore, b.objStore, b.fileStateKV,
 	)
 
 	b.subComponents = buildControllerSubComponents()
@@ -294,6 +295,21 @@ func connectNATSBundle(
 		}
 	}
 
+	// Look up the file-state KV bucket for stale deployment checks.
+	var fileStateKV jetstream.KeyValue
+	if appConfig.NATS.FileState.Bucket != "" {
+		fileStateBucket := job.ApplyNamespaceToInfraName(
+			namespace,
+			appConfig.NATS.FileState.Bucket,
+		)
+		var kvErr error
+		fileStateKV, kvErr = nc.KeyValue(ctx, fileStateBucket)
+		if kvErr != nil {
+			log.Warn("file state KV not available",
+				slog.String("error", kvErr.Error()))
+		}
+	}
+
 	jc, err := jobclient.New(log, nc, &jobclient.Options{
 		Timeout:    30 * time.Second,
 		KVBucket:   jobsKV,
@@ -307,12 +323,13 @@ func connectNATSBundle(
 	}
 
 	return &natsBundle{
-		nc:         nc,
-		jobClient:  jc,
-		jobsKV:     jobsKV,
-		registryKV: registryKV,
-		factsKV:    factsKV,
-		objStore:   objStore,
+		nc:          nc,
+		jobClient:   jc,
+		jobsKV:      jobsKV,
+		registryKV:  registryKV,
+		factsKV:     factsKV,
+		fileStateKV: fileStateKV,
+		objStore:    objStore,
 	}
 }
 
@@ -685,6 +702,7 @@ func registerControllerHandlers(
 	metricsProvider health.MetricsProvider,
 	auditStore audit.Store,
 	objStore file.ObjectStoreManager,
+	fileStateKV file.StateKeyValue,
 ) {
 	startTime := time.Now()
 	signingKey := appConfig.Controller.API.Security.SigningKey
@@ -762,7 +780,7 @@ func registerControllerHandlers(
 		handlers = append(handlers, auditAPI.Handler(log, auditStore, signingKey, customRoles)...)
 	}
 	if objStore != nil {
-		handlers = append(handlers, file.Handler(log, objStore, signingKey, customRoles)...)
+		handlers = append(handlers, file.Handler(log, objStore, fileStateKV, signingKey, customRoles)...)
 	}
 	handlers = append(handlers, factsAPI.Handler(log, signingKey, customRoles)...)
 
