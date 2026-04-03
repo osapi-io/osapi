@@ -11,13 +11,13 @@ and delete files that can be deployed to agents via `Node.FileDeploy`.
 
 ### Object Store
 
-| Method                          | Description                                     |
-| ------------------------------- | ----------------------------------------------- |
-| `Upload(ctx, name, ct, r, ...)` | Upload file content to Object Store             |
-| `Changed(ctx, name, r)`         | Check if local content differs from stored file |
-| `List(ctx)`                     | List all stored files                           |
-| `Get(ctx, name)`                | Get file metadata by name                       |
-| `Delete(ctx, name)`             | Delete a file from Object Store                 |
+| Method                          | Description                                          |
+| ------------------------------- | ---------------------------------------------------- |
+| `Upload(ctx, name, ct, r, ...)` | Upload file content to Object Store                  |
+| `Changed(ctx, name, r)`         | Check if local content differs from stored file      |
+| `List(ctx)`                     | List all stored files                                |
+| `Get(ctx, name)`                | Get file metadata by name                            |
+| `Delete(ctx, name)`             | Delete a file from Object Store                      |
 | `Stale(ctx)`                    | List stale deployments (object updated since deploy) |
 
 ### Node File Operations

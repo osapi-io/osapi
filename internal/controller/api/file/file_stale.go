@@ -27,6 +27,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"strings"
 
 	"github.com/nats-io/nats.go/jetstream"
 
@@ -97,12 +98,15 @@ func (f *File) GetFileStale(
 
 		hostname := extractHostname(key)
 
+		provider := providerFromPath(state.Path)
+
 		currentContent, err := f.objStore.GetBytes(ctx, state.ObjectName)
 		if err != nil {
 			// Object was deleted — include as stale with empty current_sha.
 			stale = append(stale, gen.StaleDeployment{
 				ObjectName:  state.ObjectName,
 				Hostname:    hostname,
+				Provider:    provider,
 				Path:        state.Path,
 				DeployedSha: state.SHA256,
 				CurrentSha:  "",
@@ -117,6 +121,7 @@ func (f *File) GetFileStale(
 			stale = append(stale, gen.StaleDeployment{
 				ObjectName:  state.ObjectName,
 				Hostname:    hostname,
+				Provider:    provider,
 				Path:        state.Path,
 				DeployedSha: state.SHA256,
 				CurrentSha:  currentSHA,
@@ -152,4 +157,24 @@ func computeSHA256(data []byte) string {
 	h := sha256.Sum256(data)
 
 	return hex.EncodeToString(h[:])
+}
+
+// providerFromPath derives the provider name from the deployment path.
+func providerFromPath(
+	path string,
+) string {
+	switch {
+	case strings.HasPrefix(path, "/etc/systemd/system/"):
+		return "service"
+	case strings.HasPrefix(path, "/usr/local/share/ca-certificates/"):
+		return "certificate"
+	case strings.HasPrefix(path, "/etc/cron.d/") ||
+		strings.HasPrefix(path, "/etc/cron.hourly/") ||
+		strings.HasPrefix(path, "/etc/cron.daily/") ||
+		strings.HasPrefix(path, "/etc/cron.weekly/") ||
+		strings.HasPrefix(path, "/etc/cron.monthly/"):
+		return "cron"
+	default:
+		return "file"
+	}
 }

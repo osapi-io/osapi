@@ -780,7 +780,9 @@ func registerControllerHandlers(
 		handlers = append(handlers, auditAPI.Handler(log, auditStore, signingKey, customRoles)...)
 	}
 	if objStore != nil {
-		handlers = append(handlers, file.Handler(log, objStore, fileStateKV, signingKey, customRoles)...)
+		handlers = append(
+			handlers,
+			file.Handler(log, objStore, fileStateKV, signingKey, customRoles)...)
 	}
 	handlers = append(handlers, factsAPI.Handler(log, signingKey, customRoles)...)
 

@@ -118,6 +118,9 @@ type StaleDeployment struct {
 
 	// Path Deployment path on the target host.
 	Path string `json:"path"`
+
+	// Provider Provider that manages this deployment.
+	Provider string `json:"provider"`
 }
 
 // StaleDeploymentsResponse defines model for StaleDeploymentsResponse.

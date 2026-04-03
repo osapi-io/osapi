@@ -77,7 +77,7 @@ Requires file:read permission.
 			rows = append(rows, []string{
 				s.ObjectName,
 				s.Hostname,
-				s.Path,
+				s.Provider,
 				s.DeployedAt,
 				deployedSHA,
 				currentSHA,
@@ -90,7 +90,7 @@ Requires file:read permission.
 				Headers: []string{
 					"OBJECT",
 					"HOSTNAME",
-					"PATH",
+					"PROVIDER",
 					"DEPLOYED",
 					"DEPLOYED SHA",
 					"CURRENT SHA",

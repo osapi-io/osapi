@@ -101,6 +101,7 @@ type FileStatusResult struct {
 type StaleDeployment struct {
 	ObjectName  string `json:"object_name"`
 	Hostname    string `json:"hostname"`
+	Provider    string `json:"provider"`
 	Path        string `json:"path"`
 	DeployedSHA string `json:"deployed_sha"`
 	CurrentSHA  string `json:"current_sha"`
@@ -252,6 +253,7 @@ func staleDeploymentFromGen(
 	return StaleDeployment{
 		ObjectName:  g.ObjectName,
 		Hostname:    g.Hostname,
+		Provider:    g.Provider,
 		Path:        g.Path,
 		DeployedSHA: g.DeployedSha,
 		CurrentSHA:  g.CurrentSha,

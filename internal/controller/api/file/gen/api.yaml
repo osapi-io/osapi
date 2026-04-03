@@ -469,6 +469,10 @@ components:
           type: string
           description: Host where the file is deployed.
           example: "web-01"
+        provider:
+          type: string
+          description: Provider that manages this deployment.
+          example: "service"
         path:
           type: string
           description: Deployment path on the target host.
@@ -488,6 +492,7 @@ components:
       required:
         - object_name
         - hostname
+        - provider
         - path
         - deployed_sha
         - current_sha

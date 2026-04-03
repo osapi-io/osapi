@@ -166,6 +166,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				s.Require().Len(r.Stale, 1)
 				s.Equal("hello-echo", r.Stale[0].ObjectName)
 				s.Equal("web-01", r.Stale[0].Hostname)
+				s.Equal("service", r.Stale[0].Provider)
 				s.Equal("/etc/systemd/system/osapi-hello.service", r.Stale[0].Path)
 				s.Equal(oldSHA, r.Stale[0].DeployedSha)
 				s.Equal(newSHA, r.Stale[0].CurrentSha)
@@ -269,6 +270,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				s.True(ok)
 				s.Equal(1, r.Total)
 				s.Require().Len(r.Stale, 1)
+				s.Equal("service", r.Stale[0].Provider)
 				s.Equal("", r.Stale[0].CurrentSha)
 				s.Equal(oldSHA, r.Stale[0].DeployedSha)
 			},
