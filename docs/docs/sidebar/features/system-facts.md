@@ -120,11 +120,29 @@ which reference could not be resolved.
 
 ### Supported Contexts
 
-Fact references work in any string value within job request data:
+Fact references work in **any string value** in any API request that reaches
+an agent. The agent resolves all `@fact.*` tokens before passing data to the
+provider — no special handling is needed per endpoint. If a field accepts a
+string, it accepts a fact reference.
 
-- **Command arguments** — `--args "@fact.hostname"`
-- **DNS interface name** — `--interface-name @fact.interface.primary`
-- **Nested values** — references inside maps and arrays are resolved recursively
+This includes:
+
+- **Standalone strings** — `--interface-name @fact.interface.primary`
+- **Arrays** — `--servers "1.1.1.1,@fact.custom.dns_server"` resolves the
+  fact while keeping the literal IP
+- **Nested maps** — references inside JSON objects are resolved recursively
+- **Any domain** — commands, DNS, sysctl, services, packages, etc.
+
+```bash
+# Fact reference in an array field
+osapi client node network dns update \
+  --servers 1.1.1.1 --servers @fact.custom.backup_dns \
+  --interface-name @fact.interface.primary
+
+# Each agent resolves its own facts, so broadcast works:
+# web-01 might resolve @fact.interface.primary to "eth0"
+# web-02 might resolve it to "ens3"
+```
 
 Non-string values (numbers, booleans) are not modified.
 
