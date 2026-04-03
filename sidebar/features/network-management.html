@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.5.2">
 <title data-rh="true">Network Management | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/network-management"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Network Management | OSAPI"><meta data-rh="true" name="description" content="OSAPI can query and update network configuration on managed hosts. Network"><meta data-rh="true" property="og:description" content="OSAPI can query and update network configuration on managed hosts. Network"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/network-management"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/network-management" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/network-management" hreflang="x-default"><link rel="stylesheet" href="/osapi/assets/css/styles.bdb8d009.css">
-<script src="/osapi/assets/js/runtime~main.c675e74d.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.c3fa8198.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.f14a698a.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -36,8 +36,10 @@ unprivileged while agents execute the actual changes.</p>
 <table><thead><tr><th>Resource</th><th>Operations</th><th>Description</th></tr></thead><tbody><tr><td>DNS</td><td>Read, Update</td><td>Nameservers and search domains per interface</td></tr><tr><td>Ping</td><td>Read</td><td>ICMP connectivity check to a target host</td></tr></tbody></table>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="how-it-works">How It Works<a href="#how-it-works" class="hash-link" aria-label="Direct link to How It Works" title="Direct link to How It Works">​</a></h2>
 <p><strong>DNS</strong> -- queries read the current nameserver configuration for a network
-interface. Updates modify the nameservers and search domains, applying changes
-through the host&#x27;s network manager. The <code>--interface-name</code> parameter supports
+interface via <code>resolvectl</code>. Updates generate a persistent Netplan configuration
+file (<code>/etc/netplan/osapi-dns.yaml</code>) targeting the primary interface, validate
+with <code>netplan generate</code>, and apply with <code>netplan apply</code>. This ensures DNS
+changes survive reboots. The <code>--interface-name</code> parameter supports
 <a href="/osapi/sidebar/features/system-facts">fact references</a> — use <code>@fact.interface.primary</code> to
 automatically target the default route interface.</p>
 <p><strong>Ping</strong> -- sends ICMP echo requests to a target host and reports the results.</p>

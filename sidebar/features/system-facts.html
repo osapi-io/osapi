@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.5.2">
 <title data-rh="true">System Facts | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/system-facts"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="System Facts | OSAPI"><meta data-rh="true" name="description" content="Agents automatically collect system facts — typed properties about the host"><meta data-rh="true" property="og:description" content="Agents automatically collect system facts — typed properties about the host"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/system-facts"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/system-facts" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/system-facts" hreflang="x-default"><link rel="stylesheet" href="/osapi/assets/css/styles.bdb8d009.css">
-<script src="/osapi/assets/js/runtime~main.c675e74d.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.c3fa8198.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.f14a698a.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -166,12 +166,19 @@ and <code>en0</code> on another.</p>
 yet, or the fact key doesn&#x27;t exist), the job fails with an error describing
 which reference could not be resolved.</p>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="supported-contexts">Supported Contexts<a href="#supported-contexts" class="hash-link" aria-label="Direct link to Supported Contexts" title="Direct link to Supported Contexts">​</a></h3>
-<p>Fact references work in any string value within job request data:</p>
+<p>Fact references work in <strong>any string value</strong> in any API request that reaches an
+agent. The agent resolves all <code>@fact.*</code> tokens before passing data to the
+provider — no special handling is needed per endpoint. If a field accepts a
+string, it accepts a fact reference.</p>
+<p>This includes:</p>
 <ul>
-<li><strong>Command arguments</strong> — <code>--args &quot;@fact.hostname&quot;</code></li>
-<li><strong>DNS interface name</strong> — <code>--interface-name @fact.interface.primary</code></li>
-<li><strong>Nested values</strong> — references inside maps and arrays are resolved recursively</li>
+<li><strong>Standalone strings</strong> — <code>--interface-name @fact.interface.primary</code></li>
+<li><strong>Arrays</strong> — <code>--servers &quot;1.1.1.1,@fact.custom.dns_server&quot;</code> resolves the fact
+while keeping the literal IP</li>
+<li><strong>Nested maps</strong> — references inside JSON objects are resolved recursively</li>
+<li><strong>Any domain</strong> — commands, DNS, sysctl, services, packages, etc.</li>
 </ul>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain"># Fact reference in an array field</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node network dns update \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  --servers 1.1.1.1 --servers @fact.custom.backup_dns \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  --interface-name @fact.interface.primary</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain"># Each agent resolves its own facts, so broadcast works:</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain"># web-01 might resolve @fact.interface.primary to &quot;eth0&quot;</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain"># web-02 might resolve it to &quot;ens3&quot;</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
 <p>Non-string values (numbers, booleans) are not modified.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="viewing-facts">Viewing Facts<a href="#viewing-facts" class="hash-link" aria-label="Direct link to Viewing Facts" title="Direct link to Viewing Facts">​</a></h2>
 <p>Use <code>agent get</code> to see the full facts for a specific agent:</p>
