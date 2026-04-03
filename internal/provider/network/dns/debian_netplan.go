@@ -44,20 +44,20 @@ func generateDNSNetplanYAML(
 	b.WriteString("network:\n")
 	b.WriteString("  version: 2\n")
 	b.WriteString("  ethernets:\n")
-	b.WriteString(fmt.Sprintf("    %s:\n", interfaceName))
+	fmt.Fprintf(&b, "    %s:\n", interfaceName)
 	b.WriteString("      nameservers:\n")
 
 	if len(servers) > 0 {
 		b.WriteString("        addresses:\n")
 		for _, s := range servers {
-			b.WriteString(fmt.Sprintf("          - %s\n", s))
+			fmt.Fprintf(&b, "          - %s\n", s)
 		}
 	}
 
 	if len(searchDomains) > 0 {
 		b.WriteString("        search:\n")
 		for _, d := range searchDomains {
-			b.WriteString(fmt.Sprintf("          - %s\n", d))
+			fmt.Fprintf(&b, "          - %s\n", d)
 		}
 	}
 
