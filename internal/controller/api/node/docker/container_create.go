@@ -55,6 +55,12 @@ func (s *Container) PostNodeContainerDocker(
 	if request.Body.Name != nil {
 		data.Name = *request.Body.Name
 	}
+	if request.Body.Hostname != nil {
+		data.Hostname = *request.Body.Hostname
+	}
+	if request.Body.Dns != nil {
+		data.DNS = *request.Body.Dns
+	}
 	if request.Body.AutoStart != nil {
 		data.AutoStart = *request.Body.AutoStart
 	} else {

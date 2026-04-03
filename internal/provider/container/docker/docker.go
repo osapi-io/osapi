@@ -73,6 +73,10 @@ func (d *Client) Create(
 		Image: params.Image,
 	}
 
+	if params.Hostname != "" {
+		config.Hostname = params.Hostname
+	}
+
 	if len(params.Command) > 0 {
 		config.Cmd = params.Command
 	}
@@ -87,6 +91,10 @@ func (d *Client) Create(
 
 	// Build host configuration
 	hostConfig := &container.HostConfig{}
+
+	if len(params.DNS) > 0 {
+		hostConfig.DNS = params.DNS
+	}
 
 	// Convert port mappings
 	if len(params.Ports) > 0 {

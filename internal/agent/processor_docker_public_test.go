@@ -144,6 +144,40 @@ func (s *ProcessorDockerPublicTestSuite) TestProcessDockerOperation() {
 			},
 		},
 		{
+			name: "successful container create with hostname and dns",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "docker",
+				Operation: "create.execute",
+				Data: json.RawMessage(
+					`{"image":"nginx:latest","name":"web","hostname":"web-01","dns":["8.8.8.8","8.8.4.4"]}`,
+				),
+			},
+			setupMock: func(m *dockerMocks.MockProvider) {
+				m.EXPECT().
+					Create(gomock.Any(), dockerProv.CreateParams{
+						Image:    "nginx:latest",
+						Name:     "web",
+						Hostname: "web-01",
+						DNS:      []string{"8.8.8.8", "8.8.4.4"},
+					}).
+					Return(&dockerProv.Container{
+						ID:      "ghi789",
+						Name:    "web",
+						Image:   "nginx:latest",
+						State:   "created",
+						Changed: true,
+					}, nil)
+			},
+			validate: func(result json.RawMessage) {
+				var r map[string]interface{}
+				err := json.Unmarshal(result, &r)
+				s.NoError(err)
+				s.Equal("ghi789", r["id"])
+				s.Equal(true, r["changed"])
+			},
+		},
+		{
 			name: "unsupported docker operation",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,

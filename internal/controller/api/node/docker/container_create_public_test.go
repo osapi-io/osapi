@@ -153,6 +153,53 @@ func (s *ContainerCreatePublicTestSuite) TestPostNodeContainerDocker() {
 			},
 		},
 		{
+			name: "success with hostname and dns",
+			request: gen.PostNodeContainerDockerRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeContainerDockerJSONRequestBody{
+					Image:    "nginx:latest",
+					Hostname: strPtr("web-01"),
+					Dns:      &[]string{"8.8.8.8", "8.8.4.4"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"docker",
+						job.OperationDockerCreate,
+						gomock.Any(),
+					).
+					DoAndReturn(func(
+						_ interface{},
+						_ string,
+						_ string,
+						_ job.OperationType,
+						data interface{},
+					) (string, *job.Response, error) {
+						d, ok := data.(*job.DockerCreateData)
+						s.True(ok)
+						s.Equal("web-01", d.Hostname)
+						s.Equal([]string{"8.8.8.8", "8.8.4.4"}, d.DNS)
+						return "550e8400-e29b-41d4-a716-446655440000", &job.Response{
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "agent1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"id":"abc123"}`),
+						}, nil
+					})
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDocker202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Id)
+				s.Equal("abc123", *r.Results[0].Id)
+			},
+		},
+		{
 			name: "success with explicit auto_start false",
 			request: gen.PostNodeContainerDockerRequestObject{
 				Hostname: "server1",
@@ -464,6 +511,26 @@ func (s *ContainerCreatePublicTestSuite) TestPostNodeContainerDockerValidationHT
 			},
 			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "Image", "required"},
+		},
+		{
+			name: "when hostname exceeds max length",
+			path: "/node/server1/container/docker",
+			body: `{"image":"nginx:latest","hostname":"` + strings.Repeat("a", 254) + `"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "Hostname", "max"},
+		},
+		{
+			name: "when dns contains invalid ip",
+			path: "/node/server1/container/docker",
+			body: `{"image":"nginx:latest","dns":["not-an-ip"]}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "Dns", "ip"},
 		},
 		{
 			name: "when target agent not found",

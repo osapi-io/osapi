@@ -433,6 +433,134 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 			},
 		},
 		{
+			name: "with hostname",
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockAPIClient {
+				m := dockermocks.NewMockAPIClient(ctrl)
+				m.EXPECT().
+					ContainerCreate(
+						gomock.Any(),
+						gomock.AssignableToTypeOf(&container.Config{}),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+					).
+					DoAndReturn(func(
+						_ context.Context,
+						config *container.Config,
+						_ *container.HostConfig,
+						_ *network.NetworkingConfig,
+						_ *ocispec.Platform,
+						_ string,
+					) (container.CreateResponse, error) {
+						s.Equal("web-01", config.Hostname)
+						return container.CreateResponse{ID: "hostname-id"}, nil
+					})
+				return m
+			},
+			params: dockerprov.CreateParams{
+				Image:    "nginx:latest",
+				Name:     "test-hostname",
+				Hostname: "web-01",
+			},
+			validateFunc: func(
+				c *dockerprov.Container,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(c)
+				s.Equal("hostname-id", c.ID)
+			},
+		},
+		{
+			name: "with dns",
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockAPIClient {
+				m := dockermocks.NewMockAPIClient(ctrl)
+				m.EXPECT().
+					ContainerCreate(
+						gomock.Any(),
+						gomock.Any(),
+						gomock.AssignableToTypeOf(&container.HostConfig{}),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+					).
+					DoAndReturn(func(
+						_ context.Context,
+						_ *container.Config,
+						hostConfig *container.HostConfig,
+						_ *network.NetworkingConfig,
+						_ *ocispec.Platform,
+						_ string,
+					) (container.CreateResponse, error) {
+						s.Equal([]string{"8.8.8.8", "8.8.4.4"}, hostConfig.DNS)
+						return container.CreateResponse{ID: "dns-id"}, nil
+					})
+				return m
+			},
+			params: dockerprov.CreateParams{
+				Image: "nginx:latest",
+				Name:  "test-dns",
+				DNS:   []string{"8.8.8.8", "8.8.4.4"},
+			},
+			validateFunc: func(
+				c *dockerprov.Container,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(c)
+				s.Equal("dns-id", c.ID)
+			},
+		},
+		{
+			name: "with hostname and dns",
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockAPIClient {
+				m := dockermocks.NewMockAPIClient(ctrl)
+				m.EXPECT().
+					ContainerCreate(
+						gomock.Any(),
+						gomock.AssignableToTypeOf(&container.Config{}),
+						gomock.AssignableToTypeOf(&container.HostConfig{}),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+					).
+					DoAndReturn(func(
+						_ context.Context,
+						config *container.Config,
+						hostConfig *container.HostConfig,
+						_ *network.NetworkingConfig,
+						_ *ocispec.Platform,
+						_ string,
+					) (container.CreateResponse, error) {
+						s.Equal("web-01", config.Hostname)
+						s.Equal([]string{"1.1.1.1"}, hostConfig.DNS)
+						return container.CreateResponse{ID: "both-id"}, nil
+					})
+				return m
+			},
+			params: dockerprov.CreateParams{
+				Image:    "nginx:latest",
+				Name:     "test-both",
+				Hostname: "web-01",
+				DNS:      []string{"1.1.1.1"},
+			},
+			validateFunc: func(
+				c *dockerprov.Container,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(c)
+				s.Equal("both-id", c.ID)
+			},
+		},
+		{
 			name: "returns error when container create fails",
 			setupMock: func(
 				ctrl *gomock.Controller,

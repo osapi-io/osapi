@@ -70,6 +70,10 @@ type CreateParams struct {
 	Image string `json:"image"`
 	// Name is an optional container name.
 	Name string `json:"name,omitempty"`
+	// Hostname sets the container hostname.
+	Hostname string `json:"hostname,omitempty"`
+	// DNS sets custom DNS servers for the container.
+	DNS []string `json:"dns,omitempty"`
 	// Command overrides the image's default command.
 	Command []string `json:"command,omitempty"`
 	// Env sets environment variables.

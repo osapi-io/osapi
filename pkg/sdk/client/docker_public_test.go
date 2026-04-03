@@ -118,6 +118,35 @@ func (suite *DockerPublicTestSuite) TestCreate() {
 			},
 		},
 		{
+			name: "when creating container with hostname and dns returns result",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000003","results":[{"hostname":"web-01","id":"ghi789","name":"my-dns","image":"nginx:latest","state":"running","created":"2026-01-01T00:00:00Z","changed":true}]}`,
+					),
+				)
+			},
+			opts: client.DockerCreateOpts{
+				Image:    "nginx:latest",
+				Name:     "my-dns",
+				Hostname: "web-01",
+				DNS:      []string{"8.8.8.8", "8.8.4.4"},
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.DockerResult]],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal("00000000-0000-0000-0000-000000000003", resp.Data.JobID)
+				suite.Len(resp.Data.Results, 1)
+				suite.Equal("ghi789", resp.Data.Results[0].ID)
+				suite.Equal("my-dns", resp.Data.Results[0].Name)
+			},
+		},
+		{
 			name: "when server returns 403 returns AuthError",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
