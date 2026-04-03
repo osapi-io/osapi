@@ -31,3 +31,8 @@ func SetMarshalJSON(fn func(interface{}) ([]byte, error)) {
 func ResetMarshalJSON() {
 	marshalJSON = json.Marshal
 }
+
+// GenerateInterfaceYAML exposes generateInterfaceYAML for testing.
+func GenerateInterfaceYAML(entry InterfaceEntry) []byte {
+	return generateInterfaceYAML(entry)
+}
