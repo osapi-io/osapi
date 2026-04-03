@@ -2703,6 +2703,35 @@ type ServiceUpdateRequest struct {
 	Object string `json:"object" validate:"required,min=1"`
 }
 
+// StaleDeployment defines model for StaleDeployment.
+type StaleDeployment struct {
+	// CurrentSha SHA-256 hash of the current object store content.
+	CurrentSha string `json:"current_sha"`
+
+	// DeployedAt When the file was last deployed.
+	DeployedAt string `json:"deployed_at"`
+
+	// DeployedSha SHA-256 hash of the currently deployed content.
+	DeployedSha string `json:"deployed_sha"`
+
+	// Hostname Host where the file is deployed.
+	Hostname string `json:"hostname"`
+
+	// ObjectName Name of the object in the Object Store.
+	ObjectName string `json:"object_name"`
+
+	// Path Deployment path on the target host.
+	Path string `json:"path"`
+}
+
+// StaleDeploymentsResponse defines model for StaleDeploymentsResponse.
+type StaleDeploymentsResponse struct {
+	Stale []StaleDeployment `json:"stale"`
+
+	// Total Total number of stale deployments.
+	Total int `json:"total"`
+}
+
 // StatusResponse defines model for StatusResponse.
 type StatusResponse struct {
 	Agents *AgentStats `json:"agents,omitempty"`
@@ -3448,6 +3477,9 @@ type ClientInterface interface {
 	// PostFileWithBody request with any body
 	PostFileWithBody(ctx context.Context, params *PostFileParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetFileStale request
+	GetFileStale(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DeleteFileByName request
 	DeleteFileByName(ctx context.Context, name FileName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -3906,6 +3938,18 @@ func (c *Client) GetFiles(ctx context.Context, reqEditors ...RequestEditorFn) (*
 
 func (c *Client) PostFileWithBody(ctx context.Context, params *PostFileParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostFileRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetFileStale(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetFileStaleRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -5796,6 +5840,33 @@ func NewPostFileRequestWithBody(server string, params *PostFileParams, contentTy
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetFileStaleRequest generates requests for GetFileStale
+func NewGetFileStaleRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/file/stale")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -9959,6 +10030,9 @@ type ClientWithResponsesInterface interface {
 	// PostFileWithBodyWithResponse request with any body
 	PostFileWithBodyWithResponse(ctx context.Context, params *PostFileParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostFileResponse, error)
 
+	// GetFileStaleWithResponse request
+	GetFileStaleWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFileStaleResponse, error)
+
 	// DeleteFileByNameWithResponse request
 	DeleteFileByNameWithResponse(ctx context.Context, name FileName, reqEditors ...RequestEditorFn) (*DeleteFileByNameResponse, error)
 
@@ -10565,6 +10639,31 @@ func (r PostFileResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostFileResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetFileStaleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *StaleDeploymentsResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetFileStaleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetFileStaleResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -13098,6 +13197,15 @@ func (c *ClientWithResponses) PostFileWithBodyWithResponse(ctx context.Context, 
 	return ParsePostFileResponse(rsp)
 }
 
+// GetFileStaleWithResponse request returning *GetFileStaleResponse
+func (c *ClientWithResponses) GetFileStaleWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFileStaleResponse, error) {
+	rsp, err := c.GetFileStale(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetFileStaleResponse(rsp)
+}
+
 // DeleteFileByNameWithResponse request returning *DeleteFileByNameResponse
 func (c *ClientWithResponses) DeleteFileByNameWithResponse(ctx context.Context, name FileName, reqEditors ...RequestEditorFn) (*DeleteFileByNameResponse, error) {
 	rsp, err := c.DeleteFileByName(ctx, name, reqEditors...)
@@ -14738,6 +14846,53 @@ func ParsePostFileResponse(rsp *http.Response) (*PostFileResponse, error) {
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetFileStaleResponse parses an HTTP response from a GetFileStaleWithResponse call
+func ParseGetFileStaleResponse(rsp *http.Response) (*GetFileStaleResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetFileStaleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest StaleDeploymentsResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

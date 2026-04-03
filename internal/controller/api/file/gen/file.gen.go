@@ -99,6 +99,35 @@ type FileUploadResponse struct {
 	Size int `json:"size"`
 }
 
+// StaleDeployment defines model for StaleDeployment.
+type StaleDeployment struct {
+	// CurrentSha SHA-256 hash of the current object store content.
+	CurrentSha string `json:"current_sha"`
+
+	// DeployedAt When the file was last deployed.
+	DeployedAt string `json:"deployed_at"`
+
+	// DeployedSha SHA-256 hash of the currently deployed content.
+	DeployedSha string `json:"deployed_sha"`
+
+	// Hostname Host where the file is deployed.
+	Hostname string `json:"hostname"`
+
+	// ObjectName Name of the object in the Object Store.
+	ObjectName string `json:"object_name"`
+
+	// Path Deployment path on the target host.
+	Path string `json:"path"`
+}
+
+// StaleDeploymentsResponse defines model for StaleDeploymentsResponse.
+type StaleDeploymentsResponse struct {
+	Stale []StaleDeployment `json:"stale"`
+
+	// Total Total number of stale deployments.
+	Total int `json:"total"`
+}
+
 // FileName defines model for FileName.
 type FileName = string
 
@@ -134,6 +163,9 @@ type ServerInterface interface {
 	// Upload a file
 	// (POST /file)
 	PostFile(ctx echo.Context, params PostFileParams) error
+	// List stale file deployments
+	// (GET /file/stale)
+	GetFileStale(ctx echo.Context) error
 	// Delete a file
 	// (DELETE /file/{name})
 	DeleteFileByName(ctx echo.Context, name FileName) error
@@ -175,6 +207,17 @@ func (w *ServerInterfaceWrapper) PostFile(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PostFile(ctx, params)
+	return err
+}
+
+// GetFileStale converts echo context to params.
+func (w *ServerInterfaceWrapper) GetFileStale(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(BearerAuthScopes, []string{"file:read"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetFileStale(ctx)
 	return err
 }
 
@@ -244,6 +287,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 
 	router.GET(baseURL+"/file", wrapper.GetFiles)
 	router.POST(baseURL+"/file", wrapper.PostFile)
+	router.GET(baseURL+"/file/stale", wrapper.GetFileStale)
 	router.DELETE(baseURL+"/file/:name", wrapper.DeleteFileByName)
 	router.GET(baseURL+"/file/:name", wrapper.GetFileByName)
 
@@ -349,6 +393,49 @@ func (response PostFile409JSONResponse) VisitPostFileResponse(w http.ResponseWri
 type PostFile500JSONResponse externalRef0.ErrorResponse
 
 func (response PostFile500JSONResponse) VisitPostFileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFileStaleRequestObject struct {
+}
+
+type GetFileStaleResponseObject interface {
+	VisitGetFileStaleResponse(w http.ResponseWriter) error
+}
+
+type GetFileStale200JSONResponse StaleDeploymentsResponse
+
+func (response GetFileStale200JSONResponse) VisitGetFileStaleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFileStale401JSONResponse externalRef0.ErrorResponse
+
+func (response GetFileStale401JSONResponse) VisitGetFileStaleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFileStale403JSONResponse externalRef0.ErrorResponse
+
+func (response GetFileStale403JSONResponse) VisitGetFileStaleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFileStale500JSONResponse externalRef0.ErrorResponse
+
+func (response GetFileStale500JSONResponse) VisitGetFileStaleResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -487,6 +574,9 @@ type StrictServerInterface interface {
 	// Upload a file
 	// (POST /file)
 	PostFile(ctx context.Context, request PostFileRequestObject) (PostFileResponseObject, error)
+	// List stale file deployments
+	// (GET /file/stale)
+	GetFileStale(ctx context.Context, request GetFileStaleRequestObject) (GetFileStaleResponseObject, error)
 	// Delete a file
 	// (DELETE /file/{name})
 	DeleteFileByName(ctx context.Context, request DeleteFileByNameRequestObject) (DeleteFileByNameResponseObject, error)
@@ -555,6 +645,29 @@ func (sh *strictHandler) PostFile(ctx echo.Context, params PostFileParams) error
 		return err
 	} else if validResponse, ok := response.(PostFileResponseObject); ok {
 		return validResponse.VisitPostFileResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetFileStale operation middleware
+func (sh *strictHandler) GetFileStale(ctx echo.Context) error {
+	var request GetFileStaleRequestObject
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetFileStale(ctx.Request().Context(), request.(GetFileStaleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetFileStale")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetFileStaleResponseObject); ok {
+		return validResponse.VisitGetFileStaleResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

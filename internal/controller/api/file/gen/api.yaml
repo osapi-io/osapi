@@ -164,6 +164,45 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
+  /file/stale:
+    get:
+      summary: List stale file deployments
+      description: >
+        Returns deployments where the source object in the Object Store has
+        been updated since the file was last deployed. Controller-only check
+        that compares state KV SHA-256 hashes against current object content.
+      tags:
+        - file_operations
+      operationId: GetFileStale
+      security:
+        - BearerAuth:
+            - file:read
+      responses:
+        '200':
+          description: Stale deployments found (may be empty).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaleDeploymentsResponse'
+        '401':
+          description: Unauthorized - API key required.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
   /file/{name}:
     get:
       summary: Get file metadata
@@ -418,3 +457,52 @@ components:
       required:
         - name
         - deleted
+
+    StaleDeployment:
+      type: object
+      properties:
+        object_name:
+          type: string
+          description: Name of the object in the Object Store.
+          example: "hello-echo"
+        hostname:
+          type: string
+          description: Host where the file is deployed.
+          example: "web-01"
+        path:
+          type: string
+          description: Deployment path on the target host.
+          example: "/etc/systemd/system/osapi-hello-echo.service"
+        deployed_sha:
+          type: string
+          description: SHA-256 hash of the currently deployed content.
+          example: "abc123def456"
+        current_sha:
+          type: string
+          description: SHA-256 hash of the current object store content.
+          example: "789abc012def"
+        deployed_at:
+          type: string
+          description: When the file was last deployed.
+          example: "2026-04-01T18:00:00Z"
+      required:
+        - object_name
+        - hostname
+        - path
+        - deployed_sha
+        - current_sha
+        - deployed_at
+
+    StaleDeploymentsResponse:
+      type: object
+      properties:
+        stale:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaleDeployment'
+        total:
+          type: integer
+          description: Total number of stale deployments.
+      required:
+        - stale
+        - total

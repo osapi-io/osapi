@@ -122,6 +122,12 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
+          id: "gen/api/get-file-stale",
+          label: "List stale file deployments",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
           id: "gen/api/get-file-by-name",
           label: "Get file metadata",
           className: "api-method get",
