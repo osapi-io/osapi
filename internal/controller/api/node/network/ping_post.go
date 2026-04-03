@@ -86,7 +86,7 @@ func (s *Network) PostNodeNetworkPing(
 			Results: []gen.PingResponse{
 				{
 					Hostname: rawResp.Hostname,
-					Status:   gen.Skipped,
+					Status:   gen.PingResponseStatusSkipped,
 					Error:    &e,
 				},
 			},
@@ -135,15 +135,15 @@ func (s *Network) postNodeNetworkPingBroadcast(
 		}
 		switch resp.Status {
 		case job.StatusFailed:
-			item.Status = gen.Failed
+			item.Status = gen.PingResponseStatusFailed
 			e := resp.Error
 			item.Error = &e
 		case job.StatusSkipped:
-			item.Status = gen.Skipped
+			item.Status = gen.PingResponseStatusSkipped
 			e := resp.Error
 			item.Error = &e
 		default:
-			item.Status = gen.Ok
+			item.Status = gen.PingResponseStatusOk
 			var pingResult ping.Result
 			if resp.Data != nil {
 				_ = json.Unmarshal(resp.Data, &pingResult)
@@ -176,7 +176,7 @@ func buildPingResponse(
 
 	return gen.PingResponse{
 		Hostname:        hostname,
-		Status:          gen.Ok,
+		Status:          gen.PingResponseStatusOk,
 		AvgRtt:          durationToString(&r.AvgRTT),
 		MaxRtt:          durationToString(&r.MaxRTT),
 		MinRtt:          durationToString(&r.MinRTT),
