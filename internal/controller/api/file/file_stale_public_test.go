@@ -319,7 +319,9 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 		{
 			name: "when certificate path returns certificate provider",
 			setupMock: func() {
-				certPathHash := sha256Hex([]byte("/usr/local/share/ca-certificates/osapi-my-ca.crt"))
+				certPathHash := sha256Hex(
+					[]byte("/usr/local/share/ca-certificates/osapi-my-ca.crt"),
+				)
 				certKey := "web-02." + certPathHash
 
 				s.mockStateKV.EXPECT().
