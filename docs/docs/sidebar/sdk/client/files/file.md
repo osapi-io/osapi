@@ -18,6 +18,7 @@ and delete files that can be deployed to agents via `Node.FileDeploy`.
 | `List(ctx)`                     | List all stored files                           |
 | `Get(ctx, name)`                | Get file metadata by name                       |
 | `Delete(ctx, name)`             | Delete a file from Object Store                 |
+| `Stale(ctx)`                    | List stale deployments (object updated since deploy) |
 
 ### Node File Operations
 
@@ -105,6 +106,12 @@ resp, err := client.FileDeploy.Deploy(ctx, client.FileDeployOpts{
 resp, err := client.FileDeploy.Status(
     ctx, "web-01", "/etc/nginx/nginx.conf",
 )
+
+// List stale deployments (objects updated since deploy).
+stale, err := client.File.Stale(ctx)
+for _, s := range stale.Data.Stale {
+    fmt.Printf("%s on %s is stale\n", s.ObjectName, s.Hostname)
+}
 ```
 
 ## Targeting
