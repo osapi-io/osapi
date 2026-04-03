@@ -316,6 +316,157 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				s.Empty(r.Stale)
 			},
 		},
+		{
+			name: "when certificate path returns certificate provider",
+			setupMock: func() {
+				certPathHash := sha256Hex([]byte("/usr/local/share/ca-certificates/osapi-my-ca.crt"))
+				certKey := "web-02." + certPathHash
+
+				s.mockStateKV.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{certKey}, nil)
+
+				state := job.FileState{
+					ObjectName: "my-ca",
+					Path:       "/usr/local/share/ca-certificates/osapi-my-ca.crt",
+					SHA256:     oldSHA,
+					DeployedAt: "2026-04-01T18:00:00Z",
+				}
+				stateBytes, _ := json.Marshal(state)
+
+				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(stateBytes)
+
+				s.mockStateKV.EXPECT().
+					Get(gomock.Any(), certKey).
+					Return(entry, nil)
+
+				s.mockObjStore.EXPECT().
+					GetBytes(gomock.Any(), "my-ca").
+					Return(contentNew, nil)
+			},
+			setupHandler: func() *apifile.File { return s.handler },
+			validateFunc: func(resp gen.GetFileStaleResponseObject) {
+				r, ok := resp.(gen.GetFileStale200JSONResponse)
+				s.True(ok)
+				s.Equal(1, r.Total)
+				s.Require().Len(r.Stale, 1)
+				s.Equal("certificate", r.Stale[0].Provider)
+			},
+		},
+		{
+			name: "when cron path returns cron provider",
+			setupMock: func() {
+				cronPathHash := sha256Hex([]byte("/etc/cron.d/osapi-backup"))
+				cronKey := "web-03." + cronPathHash
+
+				s.mockStateKV.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{cronKey}, nil)
+
+				state := job.FileState{
+					ObjectName: "backup-cron",
+					Path:       "/etc/cron.d/osapi-backup",
+					SHA256:     oldSHA,
+					DeployedAt: "2026-04-01T18:00:00Z",
+				}
+				stateBytes, _ := json.Marshal(state)
+
+				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(stateBytes)
+
+				s.mockStateKV.EXPECT().
+					Get(gomock.Any(), cronKey).
+					Return(entry, nil)
+
+				s.mockObjStore.EXPECT().
+					GetBytes(gomock.Any(), "backup-cron").
+					Return(contentNew, nil)
+			},
+			setupHandler: func() *apifile.File { return s.handler },
+			validateFunc: func(resp gen.GetFileStaleResponseObject) {
+				r, ok := resp.(gen.GetFileStale200JSONResponse)
+				s.True(ok)
+				s.Equal(1, r.Total)
+				s.Require().Len(r.Stale, 1)
+				s.Equal("cron", r.Stale[0].Provider)
+			},
+		},
+		{
+			name: "when unknown path returns file provider",
+			setupMock: func() {
+				filePathHash := sha256Hex([]byte("/tmp/app.conf"))
+				fileKey := "web-04." + filePathHash
+
+				s.mockStateKV.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{fileKey}, nil)
+
+				state := job.FileState{
+					ObjectName: "app-conf",
+					Path:       "/tmp/app.conf",
+					SHA256:     oldSHA,
+					DeployedAt: "2026-04-01T18:00:00Z",
+				}
+				stateBytes, _ := json.Marshal(state)
+
+				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(stateBytes)
+
+				s.mockStateKV.EXPECT().
+					Get(gomock.Any(), fileKey).
+					Return(entry, nil)
+
+				s.mockObjStore.EXPECT().
+					GetBytes(gomock.Any(), "app-conf").
+					Return(contentNew, nil)
+			},
+			setupHandler: func() *apifile.File { return s.handler },
+			validateFunc: func(resp gen.GetFileStaleResponseObject) {
+				r, ok := resp.(gen.GetFileStale200JSONResponse)
+				s.True(ok)
+				s.Equal(1, r.Total)
+				s.Require().Len(r.Stale, 1)
+				s.Equal("file", r.Stale[0].Provider)
+			},
+		},
+		{
+			name: "when key is too short extractHostname returns full key",
+			setupMock: func() {
+				shortKey := "short"
+
+				s.mockStateKV.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{shortKey}, nil)
+
+				state := job.FileState{
+					ObjectName: "test",
+					Path:       "/tmp/test",
+					SHA256:     oldSHA,
+					DeployedAt: "2026-04-01T18:00:00Z",
+				}
+				stateBytes, _ := json.Marshal(state)
+
+				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(stateBytes)
+
+				s.mockStateKV.EXPECT().
+					Get(gomock.Any(), shortKey).
+					Return(entry, nil)
+
+				s.mockObjStore.EXPECT().
+					GetBytes(gomock.Any(), "test").
+					Return(contentNew, nil)
+			},
+			setupHandler: func() *apifile.File { return s.handler },
+			validateFunc: func(resp gen.GetFileStaleResponseObject) {
+				r, ok := resp.(gen.GetFileStale200JSONResponse)
+				s.True(ok)
+				s.Equal(1, r.Total)
+				s.Require().Len(r.Stale, 1)
+				s.Equal("short", r.Stale[0].Hostname)
+			},
+		},
 	}
 
 	for _, tt := range tests {
