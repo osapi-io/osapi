@@ -179,7 +179,7 @@ func buildInterfaceMutationResults(
 	responses map[string]*job.Response,
 	name string,
 ) []gen.InterfaceMutationEntry {
-	var apiResponses []gen.InterfaceMutationEntry
+	apiResponses := make([]gen.InterfaceMutationEntry, 0, len(responses))
 	for host, resp := range responses {
 		item := gen.InterfaceMutationEntry{
 			Hostname: host,

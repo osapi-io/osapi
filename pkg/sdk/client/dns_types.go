@@ -42,6 +42,14 @@ type DNSUpdateResult struct {
 	Changed  bool   `json:"changed"`
 }
 
+// DNSDeleteResult represents DNS delete result from a single agent.
+type DNSDeleteResult struct {
+	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
+	Error    string `json:"error,omitempty"`
+	Changed  bool   `json:"changed"`
+}
+
 // dnsConfigCollectionFromGen converts a gen.DNSConfigCollectionResponse to a Collection[DNSConfig].
 func dnsConfigCollectionFromGen(
 	g *gen.DNSConfigCollectionResponse,
@@ -87,6 +95,27 @@ func dnsUpdateCollectionFromGen(
 	}
 
 	return Collection[DNSUpdateResult]{
+		Results: results,
+		JobID:   jobIDFromGen(g.JobId),
+	}
+}
+
+// dnsDeleteCollectionFromGen converts a gen.DNSDeleteCollectionResponse
+// to a Collection[DNSDeleteResult].
+func dnsDeleteCollectionFromGen(
+	g *gen.DNSDeleteCollectionResponse,
+) Collection[DNSDeleteResult] {
+	results := make([]DNSDeleteResult, 0, len(g.Results))
+	for _, r := range g.Results {
+		results = append(results, DNSDeleteResult{
+			Hostname: r.Hostname,
+			Status:   string(r.Status),
+			Error:    derefString(r.Error),
+			Changed:  derefBool(r.Changed),
+		})
+	}
+
+	return Collection[DNSDeleteResult]{
 		Results: results,
 		JobID:   jobIDFromGen(g.JobId),
 	}

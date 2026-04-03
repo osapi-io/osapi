@@ -36,3 +36,23 @@ func ResetMarshalJSON() {
 func GenerateInterfaceYAML(entry InterfaceEntry) []byte {
 	return generateInterfaceYAML(entry)
 }
+
+// GenerateRouteYAML exposes generateRouteYAML for testing.
+func GenerateRouteYAML(entry RouteEntry) []byte {
+	return generateRouteYAML(entry)
+}
+
+// ContainsDefaultRoute exposes containsDefaultRoute for testing.
+func ContainsDefaultRoute(routes []Route) bool {
+	return containsDefaultRoute(routes)
+}
+
+// BuildRouteMetadata exposes buildRouteMetadata for testing.
+func BuildRouteMetadata(entry RouteEntry) (map[string]string, error) {
+	return buildRouteMetadata(entry)
+}
+
+// RouteFilePath exposes routeFilePath for testing.
+func RouteFilePath(interfaceName string) string {
+	return routeFilePath(interfaceName)
+}
