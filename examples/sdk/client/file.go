@@ -135,6 +135,18 @@ func main() {
 		fmt.Printf("  %s: path=%s status=%s\n", r.Hostname, r.Path, r.Status)
 	}
 
+	// Check for stale deployments (objects updated since deploy).
+	stale, err := c.File.Stale(ctx)
+	if err != nil {
+		log.Fatalf("stale: %v", err)
+	}
+
+	fmt.Printf("\nStale deployments: %d\n", stale.Data.Total)
+	for _, s := range stale.Data.Stale {
+		fmt.Printf("  %s on %s: deployed=%s current=%s\n",
+			s.ObjectName, s.Hostname, s.DeployedSHA[:12], s.CurrentSHA[:12])
+	}
+
 	// Clean up — delete the file from the Object Store.
 	del, err := c.File.Delete(ctx, "app.conf")
 	if err != nil {

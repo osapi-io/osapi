@@ -230,6 +230,35 @@ func (s *FileService) Delete(
 	return NewResponse(fileDeleteFromGen(resp.JSON200), resp.Body), nil
 }
 
+// Stale lists deployments where the deployed file content no longer
+// matches the current object store content.
+func (s *FileService) Stale(
+	ctx context.Context,
+) (*Response[StaleList], error) {
+	resp, err := s.client.GetFileStaleWithResponse(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list stale deployments: %w", err)
+	}
+
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(staleListFromGen(resp.JSON200), resp.Body), nil
+}
+
 // Changed computes the SHA-256 of the provided content and compares
 // it against the stored hash in the Object Store. Returns true if
 // the content differs or the file does not exist yet.

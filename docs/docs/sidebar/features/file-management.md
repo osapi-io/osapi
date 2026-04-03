@@ -218,6 +218,29 @@ osapi client node service create \
     --target web-01 --name my-app --object my-unit
 ```
 
+## Staleness Detection
+
+When an object is re-uploaded to the Object Store with new content, existing
+deployments become stale — the deployed file no longer matches the source. The
+`file stale` command detects this by comparing the SHA-256 hash of each
+deployment against the current object content.
+
+```bash
+osapi client file stale
+```
+
+This is a controller-side check that does not contact agents. It compares the
+file-state KV (which tracks what was deployed) against the Object Store (which
+has the current content). Use `file deploy` to bring stale deployments up to
+date.
+
+Stale detection covers all providers that use the file provider:
+
+- Service unit files
+- CA certificates
+- Cron scripts
+- Direct file deployments
+
 ## Configuration
 
 File management uses two NATS infrastructure components in addition to the

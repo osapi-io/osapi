@@ -643,6 +643,162 @@ func (suite *FilePublicTestSuite) TestDelete() {
 	}
 }
 
+func (suite *FilePublicTestSuite) TestStale() {
+	tests := []struct {
+		name         string
+		handler      http.HandlerFunc
+		serverURL    string
+		validateFunc func(*client.Response[client.StaleList], error)
+	}{
+		{
+			name: "when stale entries exist returns results",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(`{
+					"stale": [
+						{
+							"object_name": "nginx.conf",
+							"hostname": "web-01",
+							"path": "/etc/nginx/nginx.conf",
+							"deployed_sha": "aaa111",
+							"current_sha": "bbb222",
+							"deployed_at": "2026-01-15T10:30:00Z"
+						}
+					],
+					"total": 1
+				}`))
+			},
+			validateFunc: func(resp *client.Response[client.StaleList], err error) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal(1, resp.Data.Total)
+				suite.Len(resp.Data.Stale, 1)
+				suite.Equal("nginx.conf", resp.Data.Stale[0].ObjectName)
+				suite.Equal("web-01", resp.Data.Stale[0].Hostname)
+				suite.Equal("/etc/nginx/nginx.conf", resp.Data.Stale[0].Path)
+				suite.Equal("aaa111", resp.Data.Stale[0].DeployedSHA)
+				suite.Equal("bbb222", resp.Data.Stale[0].CurrentSHA)
+				suite.Equal("2026-01-15T10:30:00Z", resp.Data.Stale[0].DeployedAt)
+			},
+		},
+		{
+			name: "when no stale entries returns empty list",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(`{"stale":[],"total":0}`))
+			},
+			validateFunc: func(resp *client.Response[client.StaleList], err error) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal(0, resp.Data.Total)
+				suite.Empty(resp.Data.Stale)
+			},
+		},
+		{
+			name: "when server returns 401 returns AuthError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			},
+			validateFunc: func(resp *client.Response[client.StaleList], err error) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.AuthError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusUnauthorized, target.StatusCode)
+			},
+		},
+		{
+			name: "when server returns 403 returns AuthError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
+			},
+			validateFunc: func(resp *client.Response[client.StaleList], err error) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.AuthError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusForbidden, target.StatusCode)
+			},
+		},
+		{
+			name: "when server returns 500 returns ServerError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"internal server error"}`))
+			},
+			validateFunc: func(resp *client.Response[client.StaleList], err error) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.ServerError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusInternalServerError, target.StatusCode)
+			},
+		},
+		{
+			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			validateFunc: func(resp *client.Response[client.StaleList], err error) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.UnexpectedStatusError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusOK, target.StatusCode)
+				suite.Equal("nil response body", target.Message)
+			},
+		},
+		{
+			name:      "when client HTTP call fails returns error",
+			serverURL: "http://127.0.0.1:0",
+			validateFunc: func(resp *client.Response[client.StaleList], err error) {
+				suite.Error(err)
+				suite.Nil(resp)
+				suite.Contains(err.Error(), "list stale deployments")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var (
+				serverURL string
+				cleanup   func()
+			)
+
+			if tc.serverURL != "" {
+				serverURL = tc.serverURL
+				cleanup = func() {}
+			} else {
+				server := httptest.NewServer(tc.handler)
+				serverURL = server.URL
+				cleanup = server.Close
+			}
+			defer cleanup()
+
+			sut := client.New(
+				serverURL,
+				"test-token",
+				client.WithLogger(slog.Default()),
+			)
+
+			resp, err := sut.File.Stale(suite.ctx)
+			tc.validateFunc(resp, err)
+		})
+	}
+}
+
 func (suite *FilePublicTestSuite) TestChanged() {
 	fileContent := []byte("content")
 	hash := sha256.Sum256(fileContent)

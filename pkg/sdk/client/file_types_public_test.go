@@ -171,6 +171,100 @@ func (suite *FileTypesPublicTestSuite) TestFileDeleteFromGen() {
 	}
 }
 
+func (suite *FileTypesPublicTestSuite) TestStaleDeploymentFromGen() {
+	tests := []struct {
+		name         string
+		input        gen.StaleDeployment
+		validateFunc func(client.StaleDeployment)
+	}{
+		{
+			name: "when all fields populated returns StaleDeployment",
+			input: gen.StaleDeployment{
+				ObjectName:  "nginx.conf",
+				Hostname:    "web-01",
+				Path:        "/etc/nginx/nginx.conf",
+				DeployedSha: "aaa111",
+				CurrentSha:  "bbb222",
+				DeployedAt:  "2026-01-15T10:30:00Z",
+			},
+			validateFunc: func(result client.StaleDeployment) {
+				suite.Equal("nginx.conf", result.ObjectName)
+				suite.Equal("web-01", result.Hostname)
+				suite.Equal("/etc/nginx/nginx.conf", result.Path)
+				suite.Equal("aaa111", result.DeployedSHA)
+				suite.Equal("bbb222", result.CurrentSHA)
+				suite.Equal("2026-01-15T10:30:00Z", result.DeployedAt)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result := client.ExportStaleDeploymentFromGen(tc.input)
+			tc.validateFunc(result)
+		})
+	}
+}
+
+func (suite *FileTypesPublicTestSuite) TestStaleListFromGen() {
+	tests := []struct {
+		name         string
+		input        *gen.StaleDeploymentsResponse
+		validateFunc func(client.StaleList)
+	}{
+		{
+			name: "when stale entries exist returns StaleList with items",
+			input: &gen.StaleDeploymentsResponse{
+				Stale: []gen.StaleDeployment{
+					{
+						ObjectName:  "nginx.conf",
+						Hostname:    "web-01",
+						Path:        "/etc/nginx/nginx.conf",
+						DeployedSha: "aaa",
+						CurrentSha:  "bbb",
+						DeployedAt:  "2026-01-15T10:30:00Z",
+					},
+					{
+						ObjectName:  "app.conf",
+						Hostname:    "web-02",
+						Path:        "/etc/app/app.conf",
+						DeployedSha: "ccc",
+						CurrentSha:  "ddd",
+						DeployedAt:  "2026-01-16T11:00:00Z",
+					},
+				},
+				Total: 2,
+			},
+			validateFunc: func(result client.StaleList) {
+				suite.Len(result.Stale, 2)
+				suite.Equal(2, result.Total)
+				suite.Equal("nginx.conf", result.Stale[0].ObjectName)
+				suite.Equal("web-01", result.Stale[0].Hostname)
+				suite.Equal("app.conf", result.Stale[1].ObjectName)
+				suite.Equal("web-02", result.Stale[1].Hostname)
+			},
+		},
+		{
+			name: "when no stale entries returns empty StaleList",
+			input: &gen.StaleDeploymentsResponse{
+				Stale: []gen.StaleDeployment{},
+				Total: 0,
+			},
+			validateFunc: func(result client.StaleList) {
+				suite.Empty(result.Stale)
+				suite.Equal(0, result.Total)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result := client.ExportStaleListFromGen(tc.input)
+			tc.validateFunc(result)
+		})
+	}
+}
+
 func (suite *FileTypesPublicTestSuite) TestFileDeployCollectionFromGen() {
 	trueVal := true
 	falseVal := false
