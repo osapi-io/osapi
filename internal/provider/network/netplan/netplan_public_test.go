@@ -47,7 +47,9 @@ const (
 	testPath     = "/etc/netplan/99-osapi-dns.yaml"
 )
 
-var testContent = []byte("network:\n  ethernets:\n    eth0:\n      nameservers:\n        addresses:\n          - 8.8.8.8\n")
+var testContent = []byte(
+	"network:\n  ethernets:\n    eth0:\n      nameservers:\n        addresses:\n          - 8.8.8.8\n",
+)
 
 func testSHA() string {
 	h := sha256.Sum256(testContent)
