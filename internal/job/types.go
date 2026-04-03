@@ -241,6 +241,24 @@ const (
 	OperationCertificateCADelete = client.OpCertificateCADelete
 )
 
+// Network interface operations.
+const (
+	OperationNetworkInterfaceList   = client.OpNetworkInterfaceList
+	OperationNetworkInterfaceGet    = client.OpNetworkInterfaceGet
+	OperationNetworkInterfaceCreate = client.OpNetworkInterfaceCreate
+	OperationNetworkInterfaceUpdate = client.OpNetworkInterfaceUpdate
+	OperationNetworkInterfaceDelete = client.OpNetworkInterfaceDelete
+)
+
+// Network route operations.
+const (
+	OperationNetworkRouteList   = client.OpNetworkRouteList
+	OperationNetworkRouteGet    = client.OpNetworkRouteGet
+	OperationNetworkRouteCreate = client.OpNetworkRouteCreate
+	OperationNetworkRouteUpdate = client.OpNetworkRouteUpdate
+	OperationNetworkRouteDelete = client.OpNetworkRouteDelete
+)
+
 // Service operations.
 const (
 	OperationServiceList    = client.OpServiceList

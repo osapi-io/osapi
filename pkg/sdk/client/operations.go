@@ -177,6 +177,24 @@ const (
 	OpCertificateCADelete JobOperation = "certificate.ca.delete"
 )
 
+// Network interface operations.
+const (
+	OpNetworkInterfaceList   JobOperation = "interface.list"
+	OpNetworkInterfaceGet    JobOperation = "interface.get"
+	OpNetworkInterfaceCreate JobOperation = "interface.create"
+	OpNetworkInterfaceUpdate JobOperation = "interface.update"
+	OpNetworkInterfaceDelete JobOperation = "interface.delete"
+)
+
+// Network route operations.
+const (
+	OpNetworkRouteList   JobOperation = "route.list"
+	OpNetworkRouteGet    JobOperation = "route.get"
+	OpNetworkRouteCreate JobOperation = "route.create"
+	OpNetworkRouteUpdate JobOperation = "route.update"
+	OpNetworkRouteDelete JobOperation = "route.delete"
+)
+
 // Service operations.
 const (
 	OpServiceList    JobOperation = "node.service.list"

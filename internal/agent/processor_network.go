@@ -28,6 +28,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/netplan"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 )
 
@@ -35,6 +36,8 @@ import (
 func NewNetworkProcessor(
 	dnsProvider dns.Provider,
 	pingProvider ping.Provider,
+	interfaceProvider netplan.InterfaceProvider,
+	routeProvider netplan.RouteProvider,
 	logger *slog.Logger,
 ) ProcessorFunc {
 	return func(req job.Request) (json.RawMessage, error) {
@@ -46,6 +49,10 @@ func NewNetworkProcessor(
 			return processNetworkDNS(dnsProvider, logger, req)
 		case "ping":
 			return processNetworkPing(pingProvider, logger, req)
+		case "interface":
+			return processInterfaceOperation(interfaceProvider, logger, req)
+		case "route":
+			return processRouteOperation(routeProvider, logger, req)
 		default:
 			return nil, fmt.Errorf("unsupported network operation: %s", req.Operation)
 		}

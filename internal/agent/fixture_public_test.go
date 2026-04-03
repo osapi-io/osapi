@@ -115,7 +115,7 @@ func newTestAgent(p newTestAgentParams) *agent.Agent {
 	)
 
 	registry.Register("network",
-		agent.NewNetworkProcessor(p.dnsProvider, p.pingProvider, logger),
+		agent.NewNetworkProcessor(p.dnsProvider, p.pingProvider, nil, nil, logger),
 		p.dnsProvider, p.pingProvider, p.netinfoProvider,
 	)
 
