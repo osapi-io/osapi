@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -20,43 +20,23 @@
 
 package dns
 
-import (
-	"log/slog"
-
-	"github.com/avfs/avfs"
-	"github.com/nats-io/nats.go/jetstream"
-
-	"github.com/retr0h/osapi/internal/exec"
-	"github.com/retr0h/osapi/internal/provider"
-)
-
-// Compile-time check: Debian must satisfy FactsSetter.
-var _ provider.FactsSetter = (*Debian)(nil)
-
-// Debian implements the DNS interface for Debian.
-type Debian struct {
-	provider.FactsAware
-
-	logger      *slog.Logger
-	fs          avfs.VFS
-	stateKV     jetstream.KeyValue
-	execManager exec.Manager
-	hostname    string
+// ExportGenerateDNSNetplanYAML exposes generateDNSNetplanYAML for testing.
+func ExportGenerateDNSNetplanYAML(
+	interfaceName string,
+	servers []string,
+	searchDomains []string,
+) []byte {
+	return generateDNSNetplanYAML(interfaceName, servers, searchDomains)
 }
 
-// NewDebianProvider factory to create a new Debian instance.
-func NewDebianProvider(
-	logger *slog.Logger,
-	fs avfs.VFS,
-	stateKV jetstream.KeyValue,
-	em exec.Manager,
-	hostname string,
-) *Debian {
-	return &Debian{
-		logger:      logger.With(slog.String("subsystem", "provider.dns")),
-		fs:          fs,
-		stateKV:     stateKV,
-		execManager: em,
-		hostname:    hostname,
-	}
+// ExportDNSNetplanPath exposes dnsNetplanPath for testing.
+func ExportDNSNetplanPath() string {
+	return dnsNetplanPath()
+}
+
+// ExportResolvePrimaryInterface exposes resolvePrimaryInterface for testing.
+func (d *Debian) ExportResolvePrimaryInterface(
+	interfaceName string,
+) string {
+	return d.resolvePrimaryInterface(interfaceName)
 }

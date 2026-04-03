@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,45 +18,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package dns
+package netplan
 
-import (
-	"log/slog"
+import "encoding/json"
 
-	"github.com/avfs/avfs"
-	"github.com/nats-io/nats.go/jetstream"
-
-	"github.com/retr0h/osapi/internal/exec"
-	"github.com/retr0h/osapi/internal/provider"
-)
-
-// Compile-time check: Debian must satisfy FactsSetter.
-var _ provider.FactsSetter = (*Debian)(nil)
-
-// Debian implements the DNS interface for Debian.
-type Debian struct {
-	provider.FactsAware
-
-	logger      *slog.Logger
-	fs          avfs.VFS
-	stateKV     jetstream.KeyValue
-	execManager exec.Manager
-	hostname    string
+// SetMarshalJSON overrides the marshal function for testing.
+func SetMarshalJSON(fn func(interface{}) ([]byte, error)) {
+	marshalJSON = fn
 }
 
-// NewDebianProvider factory to create a new Debian instance.
-func NewDebianProvider(
-	logger *slog.Logger,
-	fs avfs.VFS,
-	stateKV jetstream.KeyValue,
-	em exec.Manager,
-	hostname string,
-) *Debian {
-	return &Debian{
-		logger:      logger.With(slog.String("subsystem", "provider.dns")),
-		fs:          fs,
-		stateKV:     stateKV,
-		execManager: em,
-		hostname:    hostname,
-	}
+// ResetMarshalJSON restores the default marshal function.
+func ResetMarshalJSON() {
+	marshalJSON = json.Marshal
 }

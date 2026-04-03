@@ -18,8 +18,10 @@ unprivileged while agents execute the actual changes.
 ## How It Works
 
 **DNS** -- queries read the current nameserver configuration for a network
-interface. Updates modify the nameservers and search domains, applying changes
-through the host's network manager. The `--interface-name` parameter supports
+interface via `resolvectl`. Updates generate a persistent Netplan configuration
+file (`/etc/netplan/osapi-dns.yaml`) targeting the primary interface, validate
+with `netplan generate`, and apply with `netplan apply`. This ensures DNS
+changes survive reboots. The `--interface-name` parameter supports
 [fact references](system-facts.md) — use `@fact.interface.primary` to
 automatically target the default route interface.
 
