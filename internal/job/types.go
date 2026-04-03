@@ -116,6 +116,7 @@ const (
 const (
 	OperationNetworkDNSGet    = client.OpNetworkDNSGet
 	OperationNetworkDNSUpdate = client.OpNetworkDNSUpdate
+	OperationNetworkDNSDelete = client.OpNetworkDNSDelete
 	OperationNetworkPingDo    = client.OpNetworkPingDo
 )
 

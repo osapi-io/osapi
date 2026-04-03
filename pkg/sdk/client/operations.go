@@ -52,6 +52,7 @@ const (
 const (
 	OpNetworkDNSGet    JobOperation = "network.dns.get"
 	OpNetworkDNSUpdate JobOperation = "network.dns.update"
+	OpNetworkDNSDelete JobOperation = "network.dns.delete"
 	OpNetworkPingDo    JobOperation = "network.ping.do"
 )
 
