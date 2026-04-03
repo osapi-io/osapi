@@ -21,44 +21,29 @@
 package dns
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
-	"slices"
 	"strings"
+
+	"github.com/retr0h/osapi/internal/provider/network/netplan"
 )
 
-// UpdateResolvConfByInterface updates the DNS configuration for a specific network interface
-// using the `resolvectl` command. It applies new DNS servers and search domains
-// if provided, while preserving existing settings for values that are not specified.
-// The function returns an error if the operation fails.
+// UpdateResolvConfByInterface updates the DNS configuration for a specific
+// network interface by generating a Netplan drop-in file and applying it.
+// The function preserves existing settings for values that are not specified
+// and delegates idempotency to the Netplan state tracker.
 //
-// Cross-platform considerations:
-//   - This function is designed specifically for Linux systems that utilize
-//     `systemd-resolved` for managing DNS configurations.
-//   - It relies on the `resolvectl` command, which is available on systems with
-//     `systemd` version 237 or later. On non-systemd systems or older versions of
-//     Linux, this functionality may not be available.
-//
-// Notes about the implementation:
-//   - This function queries DNS information dynamically using `resolvectl`, which
-//     supports per-interface configurations and reflects the live state of DNS
-//     settings managed by `systemd-resolved`.
-//   - If no search domains are configured for the interface, the function defaults
-//     to returning `["."]` to indicate the root domain.
-//
-// Requirements:
-//   - The `resolvectl` command must be installed and available in the system path.
-//   - The caller must have sufficient privileges to query network settings for the
-//     specified interface.
-//
-// See `systemd-resolved.service(8)` manual page for further information.
+// The read path still uses resolvectl to query current DNS state. The write
+// path generates a Netplan YAML file under /etc/netplan/osapi-dns.yaml and
+// applies it via `netplan generate` + `netplan apply`.
 func (u *Debian) UpdateResolvConfByInterface(
 	servers []string,
 	searchDomains []string,
 	interfaceName string,
 ) (*UpdateResult, error) {
 	u.logger.Info(
-		"setting resolvectl configuration",
+		"setting dns configuration via netplan",
 		slog.String("servers", strings.Join(servers, ", ")),
 		slog.String("search_domains", strings.Join(searchDomains, ", ")),
 	)
@@ -72,7 +57,7 @@ func (u *Debian) UpdateResolvConfByInterface(
 		return nil, fmt.Errorf("failed to get current resolvectl configuration: %w", err)
 	}
 
-	// Use existing values if new values are not provided
+	// Use existing values if new values are not provided.
 	if len(servers) == 0 {
 		servers = existingConfig.DNSServers
 	}
@@ -80,45 +65,39 @@ func (u *Debian) UpdateResolvConfByInterface(
 		searchDomains = existingConfig.SearchDomains
 	}
 
-	// Compare desired config against existing to detect no-op
-	if slices.Equal(servers, existingConfig.DNSServers) &&
-		slices.Equal(searchDomains, existingConfig.SearchDomains) {
-		u.logger.Info("dns configuration unchanged, skipping update")
-		return &UpdateResult{Changed: false}, nil
-	}
-
-	// Set DNS servers
-	if len(servers) > 0 {
-		cmd := "resolvectl"
-		args := append([]string{"dns", interfaceName}, servers...)
-		output, err := u.execManager.RunPrivilegedCmd(cmd, args)
-		if err != nil {
-			return nil, fmt.Errorf(
-				"failed to set DNS servers with resolvectl: %w - %s",
-				err,
-				output,
-			)
-		}
-	}
-
-	filteredDomains := []string{}
+	// Filter out root domain marker before generating YAML.
+	filteredDomains := make([]string, 0, len(searchDomains))
 	for _, domain := range searchDomains {
 		if domain != "." {
 			filteredDomains = append(filteredDomains, domain)
 		}
 	}
-	if len(filteredDomains) > 0 {
-		cmd := "resolvectl"
-		args := append([]string{"domain", interfaceName}, filteredDomains...)
-		output, err := u.execManager.RunPrivilegedCmd(cmd, args)
-		if err != nil {
-			return nil, fmt.Errorf(
-				"failed to set search domains with resolvectl: %w - %s",
-				err,
-				output,
-			)
-		}
+
+	// Resolve the interface name for the Netplan config.
+	resolvedInterface := u.resolvePrimaryInterface(interfaceName)
+
+	// Generate the Netplan YAML content.
+	content := generateDNSNetplanYAML(resolvedInterface, servers, filteredDomains)
+
+	// Apply via the shared Netplan helper (handles write, validate,
+	// apply, and KV state tracking with SHA-based idempotency).
+	changed, applyErr := netplan.ApplyConfig(
+		context.TODO(),
+		u.logger,
+		u.fs,
+		u.stateKV,
+		u.execManager,
+		u.hostname,
+		dnsNetplanPath(),
+		content,
+		map[string]string{
+			"domain":    "dns",
+			"interface": resolvedInterface,
+		},
+	)
+	if applyErr != nil {
+		return nil, fmt.Errorf("dns update via netplan: %w", applyErr)
 	}
 
-	return &UpdateResult{Changed: true}, nil
+	return &UpdateResult{Changed: changed}, nil
 }

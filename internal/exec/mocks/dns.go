@@ -23,7 +23,6 @@ package mocks
 
 import (
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -32,6 +31,9 @@ const (
 
 	// ResolveCommand represents the `resolvectl` command used for resolving network settings.
 	ResolveCommand = "resolvectl"
+
+	// NetplanCommand represents the `netplan` command used for applying network configuration.
+	NetplanCommand = "netplan"
 )
 
 // NewPlainMockManager creates a Mock without defaults.
@@ -81,29 +83,29 @@ DNS Servers: 192.168.1.1 8.8.8.8 8.8.4.4 2001:4860:4860::8888 2001:4860:4860::88
 	return mock
 }
 
-// NewSetResolvConfMockManager creates a DNS Mock for SetResolvConf.
+// NewSetResolvConfMockManager creates a DNS Mock for UpdateResolvConfByInterface
+// with new servers and domains that differ from the existing config.
 func NewSetResolvConfMockManager(ctrl *gomock.Controller) *MockManager {
 	output := `
 Current Scopes: DNS
 Protocols: +DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
-Current DNS Server: 8.8.8.8
-DNS Servers: 8.8.8.8 9.9.9.9
-DNS Domain: foo.local bar.local
+Current DNS Server: 1.1.1.1
+DNS Servers: 1.1.1.1 2.2.2.2
+DNS Domain: old.local
 `
 
 	mock := NewMockManager(ctrl)
 
 	mockRunCmdStatus(mock, output)
-	mockRunCmdDNS(mock, []string{"8.8.8.8", "9.9.9.9"}, nil)
-	mockRunCmdDomain(mock, []string{"foo.local", "bar.local"}, nil)
+	mockNetplanApply(mock, nil, nil)
 
 	return mock
 }
 
-// NewSetResolvConfPreserveDNSServersMockManager creates a DNS Mock for SetResolvConf
-// with existing DNS Servers.
+// NewSetResolvConfPreserveDNSServersMockManager creates a DNS Mock for
+// UpdateResolvConfByInterface with existing DNS Servers preserved.
 func NewSetResolvConfPreserveDNSServersMockManager(ctrl *gomock.Controller) *MockManager {
-	initialOutput := `
+	output := `
 Current Scopes: DNS
 Protocols: +DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
 Current DNS Server: 192.168.1.1
@@ -111,36 +113,18 @@ DNS Servers: 1.1.1.1 2.2.2.2
 DNS Domain: example.com local.lan
 `
 
-	subsequentOutput := `
-Current Scopes: DNS
-Protocols: +DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
-Current DNS Server: 1.1.1.1
-DNS Servers: 1.1.1.1 2.2.2.2
-DNS Domain: foo.local bar.local
-`
-
 	mock := NewMockManager(ctrl)
 
-	gomock.InOrder(
-		mock.EXPECT().
-			RunCmd(ResolveCommand, []string{"status", NetworkInterfaceName}).
-			Return(initialOutput, nil),
-
-		mock.EXPECT().
-			RunCmd(ResolveCommand, []string{"status", NetworkInterfaceName}).
-			Return(subsequentOutput, nil),
-	)
-
-	mockRunCmdDNS(mock, []string{"1.1.1.1", "2.2.2.2"}, nil)
-	mockRunCmdDomain(mock, []string{"foo.local", "bar.local"}, nil)
+	mockRunCmdStatus(mock, output)
+	mockNetplanApply(mock, nil, nil)
 
 	return mock
 }
 
-// NewSetResolvConfPreserveDNSDomainMockManager creates a DNS Mock for SetResolvConf
-// with existing DNS Domain.
+// NewSetResolvConfPreserveDNSDomainMockManager creates a DNS Mock for
+// UpdateResolvConfByInterface with existing DNS Domain preserved.
 func NewSetResolvConfPreserveDNSDomainMockManager(ctrl *gomock.Controller) *MockManager {
-	initialOutput := `
+	output := `
 Current Scopes: DNS
 Protocols: +DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
 Current DNS Server: 192.168.1.1
@@ -148,106 +132,63 @@ DNS Servers: 1.1.1.1 2.2.2.2
 DNS Domain: foo.example.com bar.example.com
 `
 
-	subsequentOutput := `
-Current Scopes: DNS
-Protocols: +DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
-Current DNS Server: 1.1.1.1
-DNS Servers: 8.8.8.8 9.9.9.9
-DNS Domain: foo.example.com bar.example.com
-`
-
 	mock := NewMockManager(ctrl)
 
-	gomock.InOrder(
-		mock.EXPECT().
-			RunCmd(ResolveCommand, []string{"status", NetworkInterfaceName}).
-			Return(initialOutput, nil),
-
-		mock.EXPECT().
-			RunCmd(ResolveCommand, []string{"status", NetworkInterfaceName}).
-			Return(subsequentOutput, nil),
-	)
-
-	mockRunCmdDNS(mock, []string{"8.8.8.8", "9.9.9.9"}, nil)
-	mockRunCmdDomain(mock, []string{"foo.example.com", "bar.example.com"}, nil)
+	mockRunCmdStatus(mock, output)
+	mockNetplanApply(mock, nil, nil)
 
 	return mock
 }
 
-// NewSetResolvConfFiltersRootDNSDomainMockManager creates a DNS Mock for SetResolvConf
-// with no DNS Domain.
+// NewSetResolvConfFiltersRootDNSDomainMockManager creates a DNS Mock for
+// UpdateResolvConfByInterface with no DNS Domain (only root ".").
 func NewSetResolvConfFiltersRootDNSDomainMockManager(ctrl *gomock.Controller) *MockManager {
-	initialOutput := `
+	output := `
 Current Scopes: DNS
 Protocols: +DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
 Current DNS Server: 192.168.1.1
 DNS Servers: 1.1.1.1 2.2.2.2
 `
 
-	subsequentOutput := `
-Current Scopes: DNS
-Protocols: +DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
-Current DNS Server: 1.1.1.1
-DNS Servers: 8.8.8.8 9.9.9.9
-`
-
 	mock := NewMockManager(ctrl)
 
-	gomock.InOrder(
-		mock.EXPECT().
-			RunCmd(ResolveCommand, []string{"status", NetworkInterfaceName}).
-			Return(initialOutput, nil),
-
-		mock.EXPECT().
-			RunCmd(ResolveCommand, []string{"status", NetworkInterfaceName}).
-			Return(subsequentOutput, nil),
-	)
-
-	mockRunCmdDNS(mock, []string{"8.8.8.8", "9.9.9.9"}, nil)
-	mockRunCmdDomain(mock, []string{"foo.example.com", "bar.example.com"}, nil)
+	mockRunCmdStatus(mock, output)
+	mockNetplanApply(mock, nil, nil)
 
 	return mock
 }
 
-// NewSetResolvConfSetDNSDomainErrorMockManager creates a DNS Mock for SetResolvConf
-// when exec.RunCmd errors setting DNS Domain.
+// NewSetResolvConfNetplanGenerateErrorMockManager creates a DNS Mock for
+// UpdateResolvConfByInterface when `netplan generate` fails.
+func NewSetResolvConfNetplanGenerateErrorMockManager(ctrl *gomock.Controller) *MockManager {
+	// Initial state must differ from desired so the update proceeds.
+	output := `
+Current Scopes: DNS
+Protocols: +DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
+Current DNS Server: 1.1.1.1
+DNS Servers: 1.1.1.1 2.2.2.2
+DNS Domain: old.local
+`
+
+	mock := NewMockManager(ctrl)
+
+	mockRunCmdStatus(mock, output)
+
+	return mock
+}
+
+// NewSetResolvConfSetDNSDomainErrorMockManager creates a DNS Mock for
+// UpdateResolvConfByInterface when the write path fails. Kept for
+// backwards compatibility with existing test names.
 func NewSetResolvConfSetDNSDomainErrorMockManager(ctrl *gomock.Controller) *MockManager {
-	// Initial state must differ from desired so the no-op check does not skip the update.
-	output := `
-Current Scopes: DNS
-Protocols: +DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
-Current DNS Server: 1.1.1.1
-DNS Servers: 1.1.1.1 2.2.2.2
-DNS Domain: old.local
-`
-
-	mock := NewMockManager(ctrl)
-
-	mockRunCmdStatus(mock, output)
-	mockRunCmdDNS(mock, []string{"8.8.8.8", "9.9.9.9"}, nil)
-	mockRunCmdDomain(mock, []string{"foo.local", "bar.local"}, assert.AnError)
-
-	return mock
+	return NewSetResolvConfNetplanGenerateErrorMockManager(ctrl)
 }
 
-// NewSetResolvConfSetDNSServersErrorMockManager creates a DNS Mock for SetResolvConf
-// when exec.RunCmd errors setting DNS Servers.
+// NewSetResolvConfSetDNSServersErrorMockManager creates a DNS Mock for
+// UpdateResolvConfByInterface when the write path fails. Kept for
+// backwards compatibility with existing test names.
 func NewSetResolvConfSetDNSServersErrorMockManager(ctrl *gomock.Controller) *MockManager {
-	// Initial state must differ from desired so the no-op check does not skip the update.
-	output := `
-Current Scopes: DNS
-Protocols: +DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
-Current DNS Server: 1.1.1.1
-DNS Servers: 1.1.1.1 2.2.2.2
-DNS Domain: old.local
-`
-
-	mock := NewMockManager(ctrl)
-
-	mockRunCmdStatus(mock, output)
-	mockRunCmdDNS(mock, []string{"8.8.8.8", "9.9.9.9"}, assert.AnError)
-
-	return mock
+	return NewSetResolvConfNetplanGenerateErrorMockManager(ctrl)
 }
 
 // mockRunCmdStatus sets up a mock for the "status" RunCmd call.
@@ -258,18 +199,17 @@ func mockRunCmdStatus(mock *MockManager, output string) {
 		AnyTimes()
 }
 
-// mockRunCmdDNS sets up a mock for the "dns" RunPrivilegedCmd call.
-func mockRunCmdDNS(mock *MockManager, dnsServers []string, err error) {
+// mockNetplanApply sets up mocks for `netplan generate` and `netplan apply`.
+func mockNetplanApply(mock *MockManager, genErr error, applyErr error) {
 	mock.EXPECT().
-		RunPrivilegedCmd(ResolveCommand, append([]string{"dns", NetworkInterfaceName}, dnsServers...)).
-		Return("", err).
+		RunPrivilegedCmd(NetplanCommand, []string{"generate"}).
+		Return("", genErr).
 		AnyTimes()
-}
 
-// mockRunCmdDomain sets up a mock for the "domain" RunPrivilegedCmd call.
-func mockRunCmdDomain(mock *MockManager, domains []string, err error) {
-	mock.EXPECT().
-		RunPrivilegedCmd(ResolveCommand, append([]string{"domain", NetworkInterfaceName}, domains...)).
-		Return("", err).
-		AnyTimes()
+	if genErr == nil {
+		mock.EXPECT().
+			RunPrivilegedCmd(NetplanCommand, []string{"apply"}).
+			Return("", applyErr).
+			AnyTimes()
+	}
 }

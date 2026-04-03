@@ -21,7 +21,7 @@
 package dns_test
 
 import (
-	"fmt"
+	"errors"
 	"log/slog"
 	"os"
 	"testing"
@@ -31,7 +31,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/exec/mocks"
+	execmocks "github.com/retr0h/osapi/internal/exec/mocks"
+	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 )
 
@@ -59,20 +60,31 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TearDownTest() {
 func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvConfByInterface() {
 	tests := []struct {
 		name          string
-		setupMock     func() *mocks.MockManager
+		setupMock     func() (*execmocks.MockManager, *jobmocks.MockKeyValue)
 		servers       []string
 		searchDomains []string
 		interfaceName string
-		want          *dns.GetResult
+		wantChanged   bool
 		wantErr       bool
-		wantErrType   error
+		wantErrMsg    string
 	}{
 		{
 			name: "when SetResolvConf Ok",
-			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewSetResolvConfMockManager(suite.ctrl)
+			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+				mock := execmocks.NewSetResolvConfMockManager(suite.ctrl)
+				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
-				return mock
+				// KV Get returns not found (new file).
+				kv.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found"))
+
+				// KV Put succeeds.
+				kv.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+
+				return mock, kv
 			},
 			interfaceName: "wlp0s20f3",
 			servers: []string{
@@ -83,114 +95,105 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				"foo.local",
 				"bar.local",
 			},
-			want: &dns.GetResult{
-				DNSServers: []string{
-					"8.8.8.8",
-					"9.9.9.9",
-				},
-				SearchDomains: []string{
-					"foo.local",
-					"bar.local",
-				},
-			},
-			wantErr: false,
+			wantChanged: true,
+			wantErr:     false,
 		},
 		{
 			name: "when SetResolvConf preserves existing servers Ok",
-			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewSetResolvConfPreserveDNSServersMockManager(suite.ctrl)
+			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+				mock := execmocks.NewSetResolvConfPreserveDNSServersMockManager(suite.ctrl)
+				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
-				return mock
+				kv.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found"))
+
+				kv.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+
+				return mock, kv
 			},
 			interfaceName: "wlp0s20f3",
 			searchDomains: []string{
 				"foo.local",
 				"bar.local",
 			},
-			want: &dns.GetResult{
-				DNSServers: []string{
-					"1.1.1.1",
-					"2.2.2.2",
-				},
-				SearchDomains: []string{
-					"foo.local",
-					"bar.local",
-				},
-			},
-			wantErr: false,
+			wantChanged: true,
+			wantErr:     false,
 		},
 		{
 			name: "when SetResolvConf preserves existing search domains Ok",
-			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewSetResolvConfPreserveDNSDomainMockManager(suite.ctrl)
+			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+				mock := execmocks.NewSetResolvConfPreserveDNSDomainMockManager(suite.ctrl)
+				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
-				return mock
+				kv.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found"))
+
+				kv.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+
+				return mock, kv
 			},
 			interfaceName: "wlp0s20f3",
 			servers: []string{
 				"8.8.8.8",
 				"9.9.9.9",
 			},
-			want: &dns.GetResult{
-				DNSServers: []string{
-					"8.8.8.8",
-					"9.9.9.9",
-				},
-				SearchDomains: []string{
-					"foo.example.com",
-					"bar.example.com",
-				},
-			},
-			wantErr: false,
+			wantChanged: true,
+			wantErr:     false,
 		},
-		// dewey
 		{
 			name: "when SetResolvConf filters root domain Ok",
-			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewSetResolvConfFiltersRootDNSDomainMockManager(suite.ctrl)
+			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+				mock := execmocks.NewSetResolvConfFiltersRootDNSDomainMockManager(suite.ctrl)
+				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
-				return mock
+				kv.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found"))
+
+				kv.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+
+				return mock, kv
 			},
 			interfaceName: "wlp0s20f3",
 			servers: []string{
 				"8.8.8.8",
 				"9.9.9.9",
 			},
-			want: &dns.GetResult{
-				DNSServers: []string{
-					"8.8.8.8",
-					"9.9.9.9",
-				},
-				SearchDomains: []string{
-					".",
-				},
-			},
-			wantErr: false,
+			wantChanged: true,
+			wantErr:     false,
 		},
 		{
 			name:    "when SetResolvConf missing args errors",
 			wantErr: true,
-			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewPlainMockManager(suite.ctrl)
+			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+				mock := execmocks.NewPlainMockManager(suite.ctrl)
+				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
-				return mock
+				return mock, kv
 			},
 			interfaceName: "wlp0s20f3",
-			wantErrType: fmt.Errorf(
-				"no DNS servers or search domains provided; nothing to update",
-			),
+			wantErrMsg:    "no DNS servers or search domains provided; nothing to update",
 		},
 		{
 			name: "when GetResolvConfByInterface errors",
-			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewPlainMockManager(suite.ctrl)
+			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+				mock := execmocks.NewPlainMockManager(suite.ctrl)
+				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
 				mock.EXPECT().
-					RunCmd(mocks.ResolveCommand, []string{"status", mocks.NetworkInterfaceName}).
+					RunCmd(execmocks.ResolveCommand, []string{"status", execmocks.NetworkInterfaceName}).
 					Return("", assert.AnError).
 					AnyTimes()
 
-				return mock
+				return mock, kv
 			},
 			interfaceName: "wlp0s20f3",
 			servers: []string{
@@ -201,15 +204,24 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				"foo.local",
 				"bar.local",
 			},
-			wantErr:     true,
-			wantErrType: assert.AnError,
+			wantErr:    true,
+			wantErrMsg: assert.AnError.Error(),
 		},
 		{
-			name: "when exec.RunCmd setting DNS Domain errors",
-			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewSetResolvConfSetDNSDomainErrorMockManager(suite.ctrl)
+			name: "when netplan generate fails",
+			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+				mock := execmocks.NewSetResolvConfNetplanGenerateErrorMockManager(suite.ctrl)
+				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
-				return mock
+				kv.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found"))
+
+				mock.EXPECT().
+					RunPrivilegedCmd("netplan", []string{"generate"}).
+					Return("", errors.New("invalid YAML"))
+
+				return mock, kv
 			},
 			interfaceName: "wlp0s20f3",
 			servers: []string{
@@ -220,15 +232,28 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				"foo.local",
 				"bar.local",
 			},
-			wantErr:     true,
-			wantErrType: assert.AnError,
+			wantErr:    true,
+			wantErrMsg: "netplan validate failed (file rolled back)",
 		},
 		{
-			name: "when exec.RunCmd setting DNS Servers errors",
-			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewSetResolvConfSetDNSServersErrorMockManager(suite.ctrl)
+			name: "when netplan apply fails",
+			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+				mock := execmocks.NewSetResolvConfNetplanGenerateErrorMockManager(suite.ctrl)
+				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
-				return mock
+				kv.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found"))
+
+				mock.EXPECT().
+					RunPrivilegedCmd("netplan", []string{"generate"}).
+					Return("", nil)
+
+				mock.EXPECT().
+					RunPrivilegedCmd("netplan", []string{"apply"}).
+					Return("", errors.New("apply failed"))
+
+				return mock, kv
 			},
 			interfaceName: "wlp0s20f3",
 			servers: []string{
@@ -239,16 +264,43 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				"foo.local",
 				"bar.local",
 			},
-			wantErr:     true,
-			wantErrType: assert.AnError,
+			wantErr:    true,
+			wantErrMsg: "netplan apply:",
+		},
+		{
+			name: "when interface resolved from facts",
+			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+				mock := execmocks.NewPlainMockManager(suite.ctrl)
+				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+
+				// Read path uses empty interface name, but resolvectl
+				// still needs the interface. The handler passes the
+				// resolved interface to GetResolvConfByInterface before
+				// calling update. For this test the read path errors
+				// since we pass empty interface to resolvectl.
+				mock.EXPECT().
+					RunCmd(execmocks.ResolveCommand, []string{"status", ""}).
+					Return("", assert.AnError).
+					AnyTimes()
+
+				return mock, kv
+			},
+			interfaceName: "",
+			servers: []string{
+				"8.8.8.8",
+			},
+			wantErr:    true,
+			wantErrMsg: "failed to get current resolvectl configuration",
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			mock := tc.setupMock()
+			mock, kv := tc.setupMock()
+			fs := memfs.New()
+			_ = fs.MkdirAll("/etc/netplan", 0o755)
 
-			net := dns.NewDebianProvider(suite.logger, memfs.New(), nil, mock, "test-host")
+			net := dns.NewDebianProvider(suite.logger, fs, kv, mock, "test-host")
 			result, err := net.UpdateResolvConfByInterface(
 				tc.servers,
 				tc.searchDomains,
@@ -258,14 +310,11 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 			if tc.wantErr {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), tc.wantErrType.Error())
+				suite.Contains(err.Error(), tc.wantErrMsg)
 			} else {
 				suite.NoError(err)
 				suite.NotNil(result)
-
-				got, err := net.GetResolvConfByInterface(tc.interfaceName)
-				suite.Equal(tc.want, got)
-				suite.NoError(err)
+				suite.Equal(tc.wantChanged, result.Changed)
 			}
 		})
 	}
