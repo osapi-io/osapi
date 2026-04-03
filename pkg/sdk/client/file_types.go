@@ -96,6 +96,23 @@ type FileStatusResult struct {
 	Error    string `json:"error,omitempty"`
 }
 
+// StaleDeployment represents a deployment that is out of sync
+// with the current object store content.
+type StaleDeployment struct {
+	ObjectName  string `json:"object_name"`
+	Hostname    string `json:"hostname"`
+	Path        string `json:"path"`
+	DeployedSHA string `json:"deployed_sha"`
+	CurrentSHA  string `json:"current_sha"`
+	DeployedAt  string `json:"deployed_at"`
+}
+
+// StaleList is a list of stale deployments.
+type StaleList struct {
+	Stale []StaleDeployment `json:"stale"`
+	Total int               `json:"total"`
+}
+
 // fileUploadFromGen converts a gen.FileUploadResponse to a FileUpload.
 func fileUploadFromGen(
 	g *gen.FileUploadResponse,
@@ -226,4 +243,30 @@ func fileStatusCollectionFromGen(
 	}
 
 	return c
+}
+
+// staleDeploymentFromGen converts a gen.StaleDeployment to a StaleDeployment.
+func staleDeploymentFromGen(
+	g gen.StaleDeployment,
+) StaleDeployment {
+	return StaleDeployment{
+		ObjectName:  g.ObjectName,
+		Hostname:    g.Hostname,
+		Path:        g.Path,
+		DeployedSHA: g.DeployedSha,
+		CurrentSHA:  g.CurrentSha,
+		DeployedAt:  g.DeployedAt,
+	}
+}
+
+// staleListFromGen converts a gen.StaleDeploymentsResponse to a StaleList.
+func staleListFromGen(
+	g *gen.StaleDeploymentsResponse,
+) StaleList {
+	items := make([]StaleDeployment, 0, len(g.Stale))
+	for _, s := range g.Stale {
+		items = append(items, staleDeploymentFromGen(s))
+	}
+
+	return StaleList{Stale: items, Total: g.Total}
 }

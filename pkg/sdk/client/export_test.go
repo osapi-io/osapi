@@ -297,6 +297,21 @@ func ExportFileDeleteFromGen(
 	return fileDeleteFromGen(input)
 }
 
+// ExportStaleDeploymentFromGen exposes the private staleDeploymentFromGen for
+// testing.
+func ExportStaleDeploymentFromGen(
+	input gen.StaleDeployment,
+) StaleDeployment {
+	return staleDeploymentFromGen(input)
+}
+
+// ExportStaleListFromGen exposes the private staleListFromGen for testing.
+func ExportStaleListFromGen(
+	input *gen.StaleDeploymentsResponse,
+) StaleList {
+	return staleListFromGen(input)
+}
+
 // ExportFileDeployCollectionFromGen exposes the private
 // fileDeployCollectionFromGen for testing.
 func ExportFileDeployCollectionFromGen(
