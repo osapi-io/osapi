@@ -126,7 +126,7 @@ func (s *Network) getNodeNetworkInterfaceByNameBroadcast(
 		}, nil
 	}
 
-	var apiResponses []gen.InterfaceGetEntry
+	apiResponses := make([]gen.InterfaceGetEntry, 0, len(responses))
 	for host, resp := range responses {
 		item := gen.InterfaceGetEntry{
 			Hostname: host,

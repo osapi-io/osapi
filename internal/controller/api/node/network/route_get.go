@@ -126,7 +126,7 @@ func (s *Network) getNodeNetworkRouteByInterfaceBroadcast(
 		}, nil
 	}
 
-	var apiResponses []gen.RouteGetEntry
+	apiResponses := make([]gen.RouteGetEntry, 0, len(responses))
 	for host, resp := range responses {
 		item := gen.RouteGetEntry{
 			Hostname: host,
@@ -163,7 +163,7 @@ func (s *Network) getNodeNetworkRouteByInterfaceBroadcast(
 func convertRouteEntryRoutes(
 	routes []netplan.Route,
 ) []gen.RouteInfo {
-	var result []gen.RouteInfo
+	result := make([]gen.RouteInfo, 0, len(routes))
 	for _, r := range routes {
 		info := gen.RouteInfo{
 			Destination: strPtrOrNil(r.To),

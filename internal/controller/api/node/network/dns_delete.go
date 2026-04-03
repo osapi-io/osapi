@@ -123,7 +123,7 @@ func (s *Network) deleteNodeNetworkDNSBroadcast(
 		}, nil
 	}
 
-	var apiResponses []gen.DNSDeleteResultItem
+	apiResponses := make([]gen.DNSDeleteResultItem, 0, len(responses))
 	for host, resp := range responses {
 		item := gen.DNSDeleteResultItem{
 			Hostname: host,

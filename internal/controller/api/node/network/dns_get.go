@@ -131,7 +131,7 @@ func (s *Network) getNodeNetworkDNSBroadcast(
 		}, nil
 	}
 
-	var apiResponses []gen.DNSConfigResponse
+	apiResponses := make([]gen.DNSConfigResponse, 0, len(responses))
 	for host, resp := range responses {
 		item := gen.DNSConfigResponse{
 			Hostname: host,

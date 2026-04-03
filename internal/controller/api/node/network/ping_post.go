@@ -128,7 +128,7 @@ func (s *Network) postNodeNetworkPingBroadcast(
 		}, nil
 	}
 
-	var apiResponses []gen.PingResponse
+	apiResponses := make([]gen.PingResponse, 0, len(responses))
 	for host, resp := range responses {
 		item := gen.PingResponse{
 			Hostname: host,

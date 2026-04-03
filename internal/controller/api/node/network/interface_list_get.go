@@ -118,7 +118,7 @@ func (s *Network) getNodeNetworkInterfaceListBroadcast(
 		}, nil
 	}
 
-	var apiResponses []gen.InterfaceListEntry
+	apiResponses := make([]gen.InterfaceListEntry, 0, len(responses))
 	for host, resp := range responses {
 		item := gen.InterfaceListEntry{
 			Hostname: host,
@@ -155,7 +155,7 @@ func (s *Network) getNodeNetworkInterfaceListBroadcast(
 func convertInterfaceEntries(
 	entries []netplan.InterfaceEntry,
 ) []gen.InterfaceInfo {
-	var result []gen.InterfaceInfo
+	result := make([]gen.InterfaceInfo, 0, len(entries))
 	for _, e := range entries {
 		info := gen.InterfaceInfo{
 			Name:       &e.Name,

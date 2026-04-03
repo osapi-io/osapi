@@ -97,3 +97,33 @@ func (s *DNSService) Update(
 
 	return NewResponse(dnsUpdateCollectionFromGen(resp.JSON202), resp.Body), nil
 }
+
+// Delete removes DNS configuration for a network interface on the
+// target host.
+func (s *DNSService) Delete(
+	ctx context.Context,
+	target string,
+	interfaceName string,
+) (*Response[Collection[DNSDeleteResult]], error) {
+	body := gen.DNSDeleteRequest{
+		InterfaceName: interfaceName,
+	}
+
+	resp, err := s.client.DeleteNodeNetworkDNSWithResponse(ctx, target, body)
+	if err != nil {
+		return nil, fmt.Errorf("delete dns: %w", err)
+	}
+
+	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON500); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(dnsDeleteCollectionFromGen(resp.JSON200), resp.Body), nil
+}

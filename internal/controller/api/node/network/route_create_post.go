@@ -143,7 +143,7 @@ func buildRouteData(
 	interfaceName string,
 	body *gen.RouteConfigRequest,
 ) map[string]any {
-	var routes []map[string]any
+	routes := make([]map[string]any, 0, len(body.Routes))
 	for _, r := range body.Routes {
 		route := map[string]any{
 			"to":  r.To,
@@ -165,7 +165,7 @@ func buildRouteMutationResults(
 	responses map[string]*job.Response,
 	iface string,
 ) []gen.RouteMutationEntry {
-	var apiResponses []gen.RouteMutationEntry
+	apiResponses := make([]gen.RouteMutationEntry, 0, len(responses))
 	for host, resp := range responses {
 		item := gen.RouteMutationEntry{
 			Hostname: host,

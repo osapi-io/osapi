@@ -149,7 +149,7 @@ func (s *Network) putNodeNetworkDNSBroadcast(
 		}, nil
 	}
 
-	var apiResponses []gen.DNSUpdateResultItem
+	apiResponses := make([]gen.DNSUpdateResultItem, 0, len(responses))
 	for host, resp := range responses {
 		item := gen.DNSUpdateResultItem{
 			Hostname: host,
