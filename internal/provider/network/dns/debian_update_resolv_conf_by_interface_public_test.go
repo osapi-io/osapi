@@ -26,6 +26,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -247,7 +248,7 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 		suite.Run(tc.name, func() {
 			mock := tc.setupMock()
 
-			net := dns.NewDebianProvider(suite.logger, mock)
+			net := dns.NewDebianProvider(suite.logger, memfs.New(), nil, mock, "test-host")
 			result, err := net.UpdateResolvConfByInterface(
 				tc.servers,
 				tc.searchDomains,

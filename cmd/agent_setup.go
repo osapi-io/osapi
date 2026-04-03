@@ -84,6 +84,10 @@ func setupAgent(
 
 	execManager := exec.New(log, appConfig.Agent.PrivilegeEscalation.Enabled)
 
+	// --- File provider (created early — DNS, sysctl, cron, etc. depend on it) ---
+	hostname, _ := job.GetAgentHostname(appConfig.Agent.Hostname)
+	fileProvider, fileStateKV := createFileProvider(ctx, log, b, namespace, hostname)
+
 	// --- Node providers ---
 	var hostProvider nodeHost.Provider
 	switch plat {
@@ -136,7 +140,7 @@ func setupAgent(
 		if platform.IsContainer() {
 			dnsProvider = dns.NewDebianDockerProvider(log, appFs)
 		} else {
-			dnsProvider = dns.NewDebianProvider(log, execManager)
+			dnsProvider = dns.NewDebianProvider(log, appFs, fileStateKV, execManager, hostname)
 		}
 	case "darwin":
 		dnsProvider = dns.NewDarwinProvider(log, execManager)
@@ -179,10 +183,6 @@ func setupAgent(
 		log.Info("Docker client creation failed, docker operations disabled",
 			slog.String("error", err.Error()))
 	}
-
-	// --- File provider ---
-	hostname, _ := job.GetAgentHostname(appConfig.Agent.Hostname)
-	fileProvider, fileStateKV := createFileProvider(ctx, log, b, namespace, hostname)
 
 	// --- Cron provider ---
 	cronProvider := createCronProvider(log, fileProvider, fileStateKV, hostname)
