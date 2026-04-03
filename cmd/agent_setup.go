@@ -38,6 +38,7 @@ import (
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
+	netplanProv "github.com/retr0h/osapi/internal/provider/network/netplan"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	aptProv "github.com/retr0h/osapi/internal/provider/node/apt"
 	certProv "github.com/retr0h/osapi/internal/provider/node/certificate"
@@ -221,6 +222,11 @@ func setupAgent(
 		log, appFs, fileProvider, fileStateKV, execManager, hostname,
 	)
 
+	// --- Netplan providers (interface + route) ---
+	interfaceProvider, routeProvider := createNetplanProviders(
+		log, appFs, fileStateKV, execManager, hostname, netinfoProvider,
+	)
+
 	// --- Build registry ---
 	registry := agent.NewProviderRegistry()
 
@@ -259,8 +265,13 @@ func setupAgent(
 	)
 
 	registry.Register("network",
-		agent.NewNetworkProcessor(dnsProvider, pingProvider, log),
+		agent.NewNetworkProcessor(
+			dnsProvider, pingProvider,
+			interfaceProvider, routeProvider,
+			log,
+		),
 		dnsProvider, pingProvider, netinfoProvider,
+		interfaceProvider, routeProvider,
 	)
 
 	registry.Register("command",
@@ -650,5 +661,37 @@ func createServiceProvider(
 		return serviceProv.NewDarwinProvider()
 	default:
 		return serviceProv.NewLinuxProvider()
+	}
+}
+
+// createNetplanProviders creates platform-specific Netplan interface and route
+// providers. On Debian, the providers manage /etc/netplan/ configuration files
+// and track state in the file-state KV. On other platforms, all operations
+// return ErrUnsupported.
+func createNetplanProviders(
+	log *slog.Logger,
+	fs avfs.VFS,
+	fileStateKV jetstream.KeyValue,
+	execManager exec.Manager,
+	hostname string,
+	netinfoProvider netinfo.Provider,
+) (netplanProv.InterfaceProvider, netplanProv.RouteProvider) {
+	plat := platform.Detect()
+
+	switch plat {
+	case "debian":
+		if fileStateKV == nil {
+			log.Warn("file state KV not available, netplan operations disabled")
+			return netplanProv.NewLinuxProvider(), netplanProv.NewLinuxRouteProvider()
+		}
+		return netplanProv.NewDebianProvider(
+				log, fs, fileStateKV, execManager, hostname, netinfoProvider,
+			), netplanProv.NewDebianRouteProvider(
+				log, fs, fileStateKV, execManager, hostname, netinfoProvider,
+			)
+	case "darwin":
+		return netplanProv.NewDarwinProvider(), netplanProv.NewDarwinRouteProvider()
+	default:
+		return netplanProv.NewLinuxProvider(), netplanProv.NewLinuxRouteProvider()
 	}
 }
