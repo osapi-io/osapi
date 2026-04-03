@@ -44,6 +44,12 @@ func (s *DockerService) Create(
 	if opts.Name != "" {
 		body.Name = &opts.Name
 	}
+	if opts.Hostname != "" {
+		body.Hostname = &opts.Hostname
+	}
+	if len(opts.DNS) > 0 {
+		body.Dns = &opts.DNS
+	}
 	if len(opts.Command) > 0 {
 		body.Command = &opts.Command
 	}

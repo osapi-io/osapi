@@ -375,6 +375,8 @@ type CommandShellData struct {
 type DockerCreateData struct {
 	Image     string            `json:"image"`
 	Name      string            `json:"name,omitempty"`
+	Hostname  string            `json:"hostname,omitempty"`
+	DNS       []string          `json:"dns,omitempty"`
 	Command   []string          `json:"command,omitempty"`
 	Env       map[string]string `json:"env,omitempty"`
 	Ports     []PortMapping     `json:"ports,omitempty"`

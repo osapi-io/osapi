@@ -108,8 +108,14 @@ type DockerCreateRequest struct {
 	// Command Command to run in the container.
 	Command *[]string `json:"command,omitempty"`
 
+	// Dns Custom DNS servers for the container.
+	Dns *[]string `json:"dns,omitempty" validate:"omitempty,dive,ip"`
+
 	// Env Environment variables in KEY=VALUE format.
 	Env *[]string `json:"env,omitempty"`
+
+	// Hostname Container hostname.
+	Hostname *string `json:"hostname,omitempty" validate:"omitempty,min=1,max=253"`
 
 	// Image Container image reference (e.g., "nginx:latest").
 	Image string `json:"image" validate:"required,min=1"`

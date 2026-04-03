@@ -30,6 +30,10 @@ type DockerCreateOpts struct {
 	Image string
 	// Name is an optional container name.
 	Name string
+	// Hostname sets the container hostname.
+	Hostname string
+	// DNS sets custom DNS servers for the container.
+	DNS []string
 	// Command overrides the image's default command.
 	Command []string
 	// Env is environment variables in KEY=VALUE format.

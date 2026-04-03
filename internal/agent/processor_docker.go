@@ -97,6 +97,8 @@ func processDockerCreate(
 	result, err := dockerProvider.Create(ctx, dockerProv.CreateParams{
 		Image:     data.Image,
 		Name:      data.Name,
+		Hostname:  data.Hostname,
+		DNS:       data.DNS,
 		Command:   data.Command,
 		Env:       data.Env,
 		Ports:     ports,
