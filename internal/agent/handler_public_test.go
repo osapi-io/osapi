@@ -87,7 +87,7 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 		SearchDomains: []string{"example.com"},
 	}, nil).AnyTimes()
 	dnsMock.EXPECT().
-		UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any()).
+		UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(&dns.UpdateResult{Changed: true}, nil).
 		AnyTimes()
 

@@ -28,10 +28,13 @@ type Provider interface {
 	) (*GetResult, error)
 	// UpdateResolvConfByInterface updates the DNS configuration.
 	// Returns an UpdateResult indicating whether the configuration was changed.
+	// When overrideDHCP is true, DHCP-provided DNS servers are disabled so
+	// only the configured servers are used.
 	UpdateResolvConfByInterface(
 		servers []string,
 		searchDomains []string,
 		interfaceName string,
+		overrideDHCP bool,
 	) (*UpdateResult, error)
 }
 

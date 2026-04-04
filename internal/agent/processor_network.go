@@ -94,6 +94,7 @@ func processNetworkDNS(
 	servers, _ := dnsData["servers"].([]interface{})
 	searchDomains, _ := dnsData["search_domains"].([]interface{})
 	interfaceName, _ := dnsData["interface"].(string)
+	overrideDHCP, _ := dnsData["override_dhcp"].(bool)
 
 	var serverStrings []string
 	for _, s := range servers {
@@ -118,6 +119,7 @@ func processNetworkDNS(
 		serverStrings,
 		searchStrings,
 		interfaceName,
+		overrideDHCP,
 	)
 	if err != nil {
 		return nil, err

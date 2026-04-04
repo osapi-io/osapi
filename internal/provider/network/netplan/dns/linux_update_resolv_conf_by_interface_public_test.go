@@ -54,7 +54,7 @@ func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvCo
 			servers := []string{}
 			searchDomains := []string{}
 			interfaceName := ""
-			result, err := linux.UpdateResolvConfByInterface(servers, searchDomains, interfaceName)
+			result, err := linux.UpdateResolvConfByInterface(servers, searchDomains, interfaceName, false)
 
 			suite.Nil(result)
 			suite.ErrorIs(err, provider.ErrUnsupported)

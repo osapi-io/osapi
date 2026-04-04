@@ -50,16 +50,16 @@ func (mr *MockProviderMockRecorder) GetResolvConfByInterface(interfaceName inter
 }
 
 // UpdateResolvConfByInterface mocks base method.
-func (m *MockProvider) UpdateResolvConfByInterface(servers, searchDomains []string, interfaceName string) (*dns.UpdateResult, error) {
+func (m *MockProvider) UpdateResolvConfByInterface(servers, searchDomains []string, interfaceName string, overrideDHCP bool) (*dns.UpdateResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateResolvConfByInterface", servers, searchDomains, interfaceName)
+	ret := m.ctrl.Call(m, "UpdateResolvConfByInterface", servers, searchDomains, interfaceName, overrideDHCP)
 	ret0, _ := ret[0].(*dns.UpdateResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateResolvConfByInterface indicates an expected call of UpdateResolvConfByInterface.
-func (mr *MockProviderMockRecorder) UpdateResolvConfByInterface(servers, searchDomains, interfaceName interface{}) *gomock.Call {
+func (mr *MockProviderMockRecorder) UpdateResolvConfByInterface(servers, searchDomains, interfaceName, overrideDHCP interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateResolvConfByInterface", reflect.TypeOf((*MockProvider)(nil).UpdateResolvConfByInterface), servers, searchDomains, interfaceName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateResolvConfByInterface", reflect.TypeOf((*MockProvider)(nil).UpdateResolvConfByInterface), servers, searchDomains, interfaceName, overrideDHCP)
 }

@@ -305,6 +305,7 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				tc.servers,
 				tc.searchDomains,
 				tc.interfaceName,
+				false,
 			)
 
 			if tc.wantErr {

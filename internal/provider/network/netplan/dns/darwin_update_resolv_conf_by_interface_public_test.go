@@ -72,6 +72,7 @@ func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				[]string{"8.8.8.8"},
 				[]string{"example.com"},
 				"en0",
+				false,
 			)
 
 			suite.Error(err)
