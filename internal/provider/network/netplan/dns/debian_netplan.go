@@ -62,6 +62,14 @@ func generateDNSNetplanYAML(
 		}
 	}
 
+	// Override DHCP-provided DNS so only our configured servers are
+	// used. Without this, DHCP DNS servers are merged in alongside
+	// the explicitly configured ones.
+	b.WriteString("      dhcp4-overrides:\n")
+	b.WriteString("        use-dns: false\n")
+	b.WriteString("      dhcp6-overrides:\n")
+	b.WriteString("        use-dns: false\n")
+
 	return []byte(b.String())
 }
 
