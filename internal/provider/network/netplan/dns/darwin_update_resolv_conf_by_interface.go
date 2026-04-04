@@ -30,6 +30,7 @@ func (d *Darwin) UpdateResolvConfByInterface(
 	_ []string,
 	_ []string,
 	_ string,
+	_ bool,
 ) (*UpdateResult, error) {
 	return nil, provider.ErrUnsupported
 }

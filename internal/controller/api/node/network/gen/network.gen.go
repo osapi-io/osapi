@@ -126,6 +126,9 @@ type DNSConfigUpdateRequest struct {
 	// InterfaceName The name of the network interface to apply DNS configuration to. Accepts alphanumeric names or @fact. references.
 	InterfaceName string `json:"interface_name" validate:"required,alphanum_or_fact"`
 
+	// OverrideDhcp When true, disables DHCP-provided DNS servers so only the configured servers are used. When false or omitted, DHCP DNS servers are merged alongside the configured ones (default Netplan behavior).
+	OverrideDhcp *bool `json:"override_dhcp,omitempty" validate:"omitempty"`
+
 	// SearchDomains New list of search domains to configure.
 	SearchDomains *[]string `json:"search_domains,omitempty" validate:"required_without=Servers,omitempty,dive,hostname,min=1"`
 

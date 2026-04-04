@@ -8442,6 +8442,14 @@ components:
           description: >
             The name of the network interface to apply DNS configuration to.
             Accepts alphanumeric names or @fact. references.
+        override_dhcp:
+          type: boolean
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
+          description: >
+            When true, disables DHCP-provided DNS servers so only the configured
+            servers are used. When false or omitted, DHCP DNS servers are merged
+            alongside the configured ones (default Netplan behavior).
       required:
         - interface_name
     DNSDeleteRequest:

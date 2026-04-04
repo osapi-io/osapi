@@ -98,7 +98,7 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 		SearchDomains: []string{"example.com"},
 	}, nil).AnyTimes()
 	dnsMock.EXPECT().
-		UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any()).
+		UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(&dns.UpdateResult{Changed: true}, nil).
 		AnyTimes()
 
@@ -969,7 +969,7 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperationErrors() {
 			createAgent: func() *agent.Agent {
 				dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
 				dnsMock.EXPECT().
-					UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any()).
+					UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("DNS update failed"))
 				return newTestAgent(newTestAgentParams{
 					appFs:           memfs.New(),

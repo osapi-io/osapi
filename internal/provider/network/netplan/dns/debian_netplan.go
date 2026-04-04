@@ -39,6 +39,7 @@ func generateDNSNetplanYAML(
 	ifaceSection string,
 	servers []string,
 	searchDomains []string,
+	overrideDHCP bool,
 ) []byte {
 	var b strings.Builder
 
@@ -62,13 +63,16 @@ func generateDNSNetplanYAML(
 		}
 	}
 
-	// Override DHCP-provided DNS so only our configured servers are
-	// used. Without this, DHCP DNS servers are merged in alongside
-	// the explicitly configured ones.
-	b.WriteString("      dhcp4-overrides:\n")
-	b.WriteString("        use-dns: false\n")
-	b.WriteString("      dhcp6-overrides:\n")
-	b.WriteString("        use-dns: false\n")
+	// When overrideDHCP is true, disable DHCP-provided DNS so only
+	// the explicitly configured servers are used. When false, DHCP
+	// DNS servers are merged alongside the configured ones (default
+	// Netplan behavior).
+	if overrideDHCP {
+		b.WriteString("      dhcp4-overrides:\n")
+		b.WriteString("        use-dns: false\n")
+		b.WriteString("      dhcp6-overrides:\n")
+		b.WriteString("        use-dns: false\n")
+	}
 
 	return []byte(b.String())
 }

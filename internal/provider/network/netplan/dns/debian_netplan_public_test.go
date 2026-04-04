@@ -131,6 +131,7 @@ func (suite *DebianNetplanPublicTestSuite) TestGenerateDNSNetplanYAML() {
 				"ethernets",
 				tc.servers,
 				tc.searchDomains,
+				false,
 			)
 
 			tc.validateFunc(got)

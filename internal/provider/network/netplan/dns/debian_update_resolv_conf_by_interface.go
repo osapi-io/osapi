@@ -41,6 +41,7 @@ func (u *Debian) UpdateResolvConfByInterface(
 	servers []string,
 	searchDomains []string,
 	interfaceName string,
+	overrideDHCP bool,
 ) (*UpdateResult, error) {
 	u.logger.Info(
 		"setting dns configuration via netplan",
@@ -93,6 +94,7 @@ func (u *Debian) UpdateResolvConfByInterface(
 		ifaceType,
 		servers,
 		filteredDomains,
+		overrideDHCP,
 	)
 
 	// Apply via the shared Netplan helper (handles write, validate,

@@ -70,6 +70,7 @@ func (s *LinuxPublicTestSuite) TestUpdateResolvConfByInterface() {
 				[]string{"8.8.8.8"},
 				[]string{"example.com"},
 				"eth0",
+				false,
 			)
 
 			s.Error(err)
