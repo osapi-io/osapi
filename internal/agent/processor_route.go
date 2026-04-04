@@ -28,12 +28,12 @@ import (
 	"strings"
 
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/netplan"
+	"github.com/retr0h/osapi/internal/provider/network/route"
 )
 
 // processRouteOperation dispatches network route sub-operations.
 func processRouteOperation(
-	provider netplan.RouteProvider,
+	provider route.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
@@ -69,7 +69,7 @@ func processRouteOperation(
 // processRouteList lists all routes from the system routing table.
 func processRouteList(
 	ctx context.Context,
-	provider netplan.RouteProvider,
+	provider route.Provider,
 	logger *slog.Logger,
 ) (json.RawMessage, error) {
 	logger.Debug("executing route.List")
@@ -85,7 +85,7 @@ func processRouteList(
 // processRouteGet gets the managed routes for a specific interface.
 func processRouteGet(
 	ctx context.Context,
-	provider netplan.RouteProvider,
+	provider route.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
@@ -111,11 +111,11 @@ func processRouteGet(
 // processRouteCreate deploys new routes for an interface via Netplan.
 func processRouteCreate(
 	ctx context.Context,
-	provider netplan.RouteProvider,
+	provider route.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
-	var entry netplan.RouteEntry
+	var entry route.Entry
 	if err := json.Unmarshal(jobRequest.Data, &entry); err != nil {
 		return nil, fmt.Errorf("unmarshal route create data: %w", err)
 	}
@@ -135,11 +135,11 @@ func processRouteCreate(
 // processRouteUpdate redeploys routes for an existing interface via Netplan.
 func processRouteUpdate(
 	ctx context.Context,
-	provider netplan.RouteProvider,
+	provider route.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
-	var entry netplan.RouteEntry
+	var entry route.Entry
 	if err := json.Unmarshal(jobRequest.Data, &entry); err != nil {
 		return nil, fmt.Errorf("unmarshal route update data: %w", err)
 	}
@@ -159,7 +159,7 @@ func processRouteUpdate(
 // processRouteDelete removes managed routes for an interface via Netplan.
 func processRouteDelete(
 	ctx context.Context,
-	provider netplan.RouteProvider,
+	provider route.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {

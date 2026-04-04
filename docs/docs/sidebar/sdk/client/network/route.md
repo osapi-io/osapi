@@ -18,10 +18,10 @@ Static network route management via Netplan.
 
 ## Request Types
 
-| Type              | Fields                  |
-| ----------------- | ----------------------- |
-| `RouteConfigOpts` | Routes ([]RouteItem)    |
-| `RouteItem`       | To, Via, Metric         |
+| Type              | Fields               |
+| ----------------- | -------------------- |
+| `RouteConfigOpts` | Routes ([]RouteItem) |
+| `RouteItem`       | To, Via, Metric      |
 
 ## Result Types
 
@@ -36,13 +36,13 @@ Static network route management via Netplan.
 
 ### RouteInfo
 
-| Field         | Type     | Description                    |
-| ------------- | -------- | ------------------------------ |
-| `Destination` | `string` | Destination in CIDR notation   |
-| `Gateway`     | `string` | Gateway IP address             |
-| `Interface`   | `string` | Network interface name         |
-| `Metric`      | `int`    | Route metric (priority)        |
-| `Scope`       | `string` | Route scope                    |
+| Field         | Type     | Description                  |
+| ------------- | -------- | ---------------------------- |
+| `Destination` | `string` | Destination in CIDR notation |
+| `Gateway`     | `string` | Gateway IP address           |
+| `Interface`   | `string` | Network interface name       |
+| `Metric`      | `int`    | Route metric (priority)      |
+| `Scope`       | `string` | Route scope                  |
 
 ### RouteGetResult (Get)
 

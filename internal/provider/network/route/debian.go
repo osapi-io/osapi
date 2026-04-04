@@ -18,9 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package netplan
+package route
 
 import (
+	"encoding/json"
 	"log/slog"
 
 	"github.com/avfs/avfs"
@@ -31,14 +32,18 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 )
 
+// marshalJSON is a package-level variable for testing the marshal
+// error path in route metadata serialization.
+var marshalJSON = json.Marshal
+
 // Compile-time checks.
 var (
-	_ InterfaceProvider    = (*Debian)(nil)
+	_ Provider             = (*Debian)(nil)
 	_ provider.FactsSetter = (*Debian)(nil)
 )
 
-// Debian implements the InterfaceProvider interface for Debian-family
-// systems. It writes Netplan YAML files to /etc/netplan/ with an
+// Debian implements the Provider interface for Debian-family
+// systems. It writes Netplan YAML route files to /etc/netplan/ with an
 // osapi- prefix and tracks state in the file-state KV for idempotency.
 type Debian struct {
 	provider.FactsAware
@@ -60,7 +65,7 @@ func NewDebianProvider(
 	netinfo netinfo.Provider,
 ) *Debian {
 	return &Debian{
-		logger:      logger.With(slog.String("subsystem", "provider.netplan")),
+		logger:      logger.With(slog.String("subsystem", "provider.netplan.route")),
 		fs:          fs,
 		stateKV:     stateKV,
 		execManager: execManager,

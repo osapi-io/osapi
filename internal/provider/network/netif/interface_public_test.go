@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package netplan_test
+package netif_test
 
 import (
 	"context"
@@ -34,10 +34,12 @@ import (
 
 	execmocks "github.com/retr0h/osapi/internal/exec/mocks"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/provider/network/netif"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 	netinfomocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
-	"github.com/retr0h/osapi/internal/provider/network/netplan"
 )
+
+const testHostname = "test-host"
 
 type InterfacePublicTestSuite struct {
 	suite.Suite
@@ -49,7 +51,7 @@ type InterfacePublicTestSuite struct {
 	mockStateKV *jobmocks.MockKeyValue
 	mockExec    *execmocks.MockManager
 	mockNetinfo *netinfomocks.MockProvider
-	provider    *netplan.Debian
+	provider    *netif.Debian
 }
 
 func (suite *InterfacePublicTestSuite) SetupTest() {
@@ -63,7 +65,7 @@ func (suite *InterfacePublicTestSuite) SetupTest() {
 
 	_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
 
-	suite.provider = netplan.NewDebianProvider(
+	suite.provider = netif.NewDebianProvider(
 		suite.logger,
 		suite.memFs,
 		suite.mockStateKV,
@@ -77,15 +79,13 @@ func (suite *InterfacePublicTestSuite) SetupSubTest() {
 	suite.SetupTest()
 }
 
-func (suite *InterfacePublicTestSuite) TearDownSubTest() {
-	netplan.ResetMarshalJSON()
-}
+func (suite *InterfacePublicTestSuite) TearDownSubTest() {}
 
 func (suite *InterfacePublicTestSuite) TestList() {
 	tests := []struct {
 		name         string
 		setup        func()
-		validateFunc func([]netplan.InterfaceEntry, error)
+		validateFunc func([]netif.InterfaceEntry, error)
 	}{
 		{
 			name: "when interfaces exist with managed files",
@@ -104,7 +104,7 @@ func (suite *InterfacePublicTestSuite) TestList() {
 					0o644,
 				)
 			},
-			validateFunc: func(result []netplan.InterfaceEntry, err error) {
+			validateFunc: func(result []netif.InterfaceEntry, err error) {
 				suite.Require().NoError(err)
 				suite.Require().Len(result, 2)
 
@@ -124,7 +124,7 @@ func (suite *InterfacePublicTestSuite) TestList() {
 						{Name: "eth0"},
 					}, nil)
 			},
-			validateFunc: func(result []netplan.InterfaceEntry, err error) {
+			validateFunc: func(result []netif.InterfaceEntry, err error) {
 				suite.Require().NoError(err)
 				suite.Require().Len(result, 1)
 
@@ -139,7 +139,7 @@ func (suite *InterfacePublicTestSuite) TestList() {
 					GetInterfaces().
 					Return([]netinfo.InterfaceResult{}, nil)
 			},
-			validateFunc: func(result []netplan.InterfaceEntry, err error) {
+			validateFunc: func(result []netif.InterfaceEntry, err error) {
 				suite.Require().NoError(err)
 				suite.Empty(result)
 			},
@@ -151,7 +151,7 @@ func (suite *InterfacePublicTestSuite) TestList() {
 					GetInterfaces().
 					Return(nil, errors.New("netinfo error"))
 			},
-			validateFunc: func(result []netplan.InterfaceEntry, err error) {
+			validateFunc: func(result []netif.InterfaceEntry, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "netplan interface list:")
@@ -175,7 +175,7 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 		name         string
 		interfaceNm  string
 		setup        func()
-		validateFunc func(*netplan.InterfaceEntry, error)
+		validateFunc func(*netif.InterfaceEntry, error)
 	}{
 		{
 			name:        "when interface found and managed",
@@ -193,7 +193,7 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 					0o644,
 				)
 			},
-			validateFunc: func(result *netplan.InterfaceEntry, err error) {
+			validateFunc: func(result *netif.InterfaceEntry, err error) {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("eth0", result.Name)
@@ -210,7 +210,7 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 						{Name: "eth0"},
 					}, nil)
 			},
-			validateFunc: func(result *netplan.InterfaceEntry, err error) {
+			validateFunc: func(result *netif.InterfaceEntry, err error) {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("eth0", result.Name)
@@ -227,7 +227,7 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 						{Name: "eth0"},
 					}, nil)
 			},
-			validateFunc: func(result *netplan.InterfaceEntry, err error) {
+			validateFunc: func(result *netif.InterfaceEntry, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "not found")
@@ -237,7 +237,7 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 			name:        "when name is empty",
 			interfaceNm: "",
 			setup:       func() {},
-			validateFunc: func(result *netplan.InterfaceEntry, err error) {
+			validateFunc: func(result *netif.InterfaceEntry, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "name must not be empty")
@@ -251,7 +251,7 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 					GetInterfaces().
 					Return(nil, errors.New("netinfo error"))
 			},
-			validateFunc: func(result *netplan.InterfaceEntry, err error) {
+			validateFunc: func(result *netif.InterfaceEntry, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "netplan interface get:")
@@ -275,13 +275,13 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 
 	tests := []struct {
 		name         string
-		entry        netplan.InterfaceEntry
+		entry        netif.InterfaceEntry
 		setup        func()
-		validateFunc func(*netplan.InterfaceResult, error)
+		validateFunc func(*netif.InterfaceResult, error)
 	}{
 		{
 			name: "when new interface deploys successfully",
-			entry: netplan.InterfaceEntry{
+			entry: netif.InterfaceEntry{
 				Name:      "eth0",
 				DHCP4:     &dhcp4True,
 				Addresses: []string{"10.0.0.5/24"},
@@ -309,7 +309,7 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
-			validateFunc: func(result *netplan.InterfaceResult, err error) {
+			validateFunc: func(result *netif.InterfaceResult, err error) {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("eth0", result.Name)
@@ -329,7 +329,7 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when interface already managed",
-			entry: netplan.InterfaceEntry{
+			entry: netif.InterfaceEntry{
 				Name:  "eth0",
 				DHCP4: &dhcp4True,
 			},
@@ -341,7 +341,7 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 					0o644,
 				)
 			},
-			validateFunc: func(result *netplan.InterfaceResult, err error) {
+			validateFunc: func(result *netif.InterfaceResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "already managed")
@@ -349,11 +349,11 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when name is empty",
-			entry: netplan.InterfaceEntry{
+			entry: netif.InterfaceEntry{
 				Name: "",
 			},
 			setup: func() {},
-			validateFunc: func(result *netplan.InterfaceResult, err error) {
+			validateFunc: func(result *netif.InterfaceResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "name must not be empty")
@@ -361,11 +361,11 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when name has invalid characters",
-			entry: netplan.InterfaceEntry{
+			entry: netif.InterfaceEntry{
 				Name: "eth 0!",
 			},
 			setup: func() {},
-			validateFunc: func(result *netplan.InterfaceResult, err error) {
+			validateFunc: func(result *netif.InterfaceResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "invalid characters")
@@ -373,7 +373,7 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when ApplyConfig fails",
-			entry: netplan.InterfaceEntry{
+			entry: netif.InterfaceEntry{
 				Name:  "eth0",
 				DHCP4: &dhcp4True,
 			},
@@ -388,7 +388,7 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 					RunPrivilegedCmd("netplan", []string{"generate"}).
 					Return("", errors.New("invalid YAML"))
 			},
-			validateFunc: func(result *netplan.InterfaceResult, err error) {
+			validateFunc: func(result *netif.InterfaceResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "netplan interface create:")
@@ -412,13 +412,13 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 
 	tests := []struct {
 		name         string
-		entry        netplan.InterfaceEntry
+		entry        netif.InterfaceEntry
 		setup        func()
-		validateFunc func(*netplan.InterfaceResult, error)
+		validateFunc func(*netif.InterfaceResult, error)
 	}{
 		{
 			name: "when update succeeds",
-			entry: netplan.InterfaceEntry{
+			entry: netif.InterfaceEntry{
 				Name:      "eth0",
 				DHCP4:     &dhcp4False,
 				Addresses: []string{"10.0.0.10/24"},
@@ -451,7 +451,7 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
-			validateFunc: func(result *netplan.InterfaceResult, err error) {
+			validateFunc: func(result *netif.InterfaceResult, err error) {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("eth0", result.Name)
@@ -460,14 +460,14 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 		},
 		{
 			name: "when interface not managed",
-			entry: netplan.InterfaceEntry{
+			entry: netif.InterfaceEntry{
 				Name:  "eth0",
 				DHCP4: &dhcp4False,
 			},
 			setup: func() {
 				// No file on disk.
 			},
-			validateFunc: func(result *netplan.InterfaceResult, err error) {
+			validateFunc: func(result *netif.InterfaceResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "not managed")
@@ -475,11 +475,11 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 		},
 		{
 			name: "when name is empty",
-			entry: netplan.InterfaceEntry{
+			entry: netif.InterfaceEntry{
 				Name: "",
 			},
 			setup: func() {},
-			validateFunc: func(result *netplan.InterfaceResult, err error) {
+			validateFunc: func(result *netif.InterfaceResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "name must not be empty")
@@ -487,7 +487,7 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 		},
 		{
 			name: "when ApplyConfig fails",
-			entry: netplan.InterfaceEntry{
+			entry: netif.InterfaceEntry{
 				Name:  "eth0",
 				DHCP4: &dhcp4False,
 			},
@@ -506,7 +506,7 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 					RunPrivilegedCmd("netplan", []string{"generate"}).
 					Return("", errors.New("validation error"))
 			},
-			validateFunc: func(result *netplan.InterfaceResult, err error) {
+			validateFunc: func(result *netif.InterfaceResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "netplan interface update:")
@@ -530,7 +530,7 @@ func (suite *InterfacePublicTestSuite) TestDelete() {
 		name         string
 		interfaceNm  string
 		setup        func()
-		validateFunc func(*netplan.InterfaceResult, error)
+		validateFunc func(*netif.InterfaceResult, error)
 	}{
 		{
 			name:        "when file exists and removal succeeds",
@@ -553,7 +553,7 @@ func (suite *InterfacePublicTestSuite) TestDelete() {
 					Get(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("not found"))
 			},
-			validateFunc: func(result *netplan.InterfaceResult, err error) {
+			validateFunc: func(result *netif.InterfaceResult, err error) {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("eth0", result.Name)
@@ -570,7 +570,7 @@ func (suite *InterfacePublicTestSuite) TestDelete() {
 			name:        "when file does not exist",
 			interfaceNm: "eth0",
 			setup:       func() {},
-			validateFunc: func(result *netplan.InterfaceResult, err error) {
+			validateFunc: func(result *netif.InterfaceResult, err error) {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("eth0", result.Name)
@@ -581,7 +581,7 @@ func (suite *InterfacePublicTestSuite) TestDelete() {
 			name:        "when name is empty",
 			interfaceNm: "",
 			setup:       func() {},
-			validateFunc: func(result *netplan.InterfaceResult, err error) {
+			validateFunc: func(result *netif.InterfaceResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "name must not be empty")
@@ -601,7 +601,7 @@ func (suite *InterfacePublicTestSuite) TestDelete() {
 					RunPrivilegedCmd("netplan", []string{"apply"}).
 					Return("", errors.New("apply failed"))
 			},
-			validateFunc: func(result *netplan.InterfaceResult, err error) {
+			validateFunc: func(result *netif.InterfaceResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "netplan interface delete:")
@@ -628,12 +628,12 @@ func (suite *InterfacePublicTestSuite) TestGenerateInterfaceYAML() {
 
 	tests := []struct {
 		name         string
-		entry        netplan.InterfaceEntry
+		entry        netif.InterfaceEntry
 		validateFunc func(string)
 	}{
 		{
 			name: "when all fields set",
-			entry: netplan.InterfaceEntry{
+			entry: netif.InterfaceEntry{
 				Name:       "eth0",
 				DHCP4:      &dhcp4False,
 				DHCP6:      &dhcp6True,
@@ -663,7 +663,7 @@ func (suite *InterfacePublicTestSuite) TestGenerateInterfaceYAML() {
 		},
 		{
 			name: "when only DHCP4 set",
-			entry: netplan.InterfaceEntry{
+			entry: netif.InterfaceEntry{
 				Name:  "eth0",
 				DHCP4: &dhcp4True,
 			},
@@ -681,7 +681,7 @@ func (suite *InterfacePublicTestSuite) TestGenerateInterfaceYAML() {
 		},
 		{
 			name: "when only addresses set",
-			entry: netplan.InterfaceEntry{
+			entry: netif.InterfaceEntry{
 				Name:      "ens3",
 				Addresses: []string{"192.168.1.10/24"},
 			},
@@ -696,7 +696,7 @@ func (suite *InterfacePublicTestSuite) TestGenerateInterfaceYAML() {
 		},
 		{
 			name: "when IPv6 gateway set",
-			entry: netplan.InterfaceEntry{
+			entry: netif.InterfaceEntry{
 				Name:      "eth0",
 				Addresses: []string{"fd00::5/64"},
 				Gateway6:  "fd00::1",
@@ -711,7 +711,7 @@ func (suite *InterfacePublicTestSuite) TestGenerateInterfaceYAML() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := netplan.GenerateInterfaceYAML(tc.entry)
+			result := netif.GenerateInterfaceYAML(tc.entry)
 
 			tc.validateFunc(string(result))
 		})

@@ -31,8 +31,8 @@ import (
 
 	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/netplan"
-	netplanMocks "github.com/retr0h/osapi/internal/provider/network/netplan/mocks"
+	"github.com/retr0h/osapi/internal/provider/network/route"
+	routeMocks "github.com/retr0h/osapi/internal/provider/network/route/mocks"
 )
 
 type ProcessorRoutePublicTestSuite struct {
@@ -53,7 +53,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteOperation() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netplan.RouteProvider
+		setupMock   func() route.Provider
 		expectError bool
 		errorMsg    string
 	}{
@@ -77,8 +77,8 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteOperation() {
 				Operation: "route",
 				Data:      json.RawMessage(`{}`),
 			},
-			setupMock: func() netplan.RouteProvider {
-				return netplanMocks.NewMockRouteProvider(s.mockCtrl)
+			setupMock: func() route.Provider {
+				return routeMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
 			errorMsg:    "invalid route operation: route",
@@ -91,8 +91,8 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteOperation() {
 				Operation: "route.unknown",
 				Data:      json.RawMessage(`{}`),
 			},
-			setupMock: func() netplan.RouteProvider {
-				return netplanMocks.NewMockRouteProvider(s.mockCtrl)
+			setupMock: func() route.Provider {
+				return routeMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
 			errorMsg:    "unsupported route operation: route.unknown",
@@ -101,7 +101,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteOperation() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			var routeProvider netplan.RouteProvider
+			var routeProvider route.Provider
 			if tt.setupMock != nil {
 				routeProvider = tt.setupMock()
 			}
@@ -130,7 +130,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteList() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netplan.RouteProvider
+		setupMock   func() route.Provider
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -143,16 +143,16 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteList() {
 				Operation: "route.list",
 				Data:      json.RawMessage(`{}`),
 			},
-			setupMock: func() netplan.RouteProvider {
-				m := netplanMocks.NewMockRouteProvider(s.mockCtrl)
-				m.EXPECT().List(gomock.Any()).Return([]netplan.RouteListEntry{
+			setupMock: func() route.Provider {
+				m := routeMocks.NewMockProvider(s.mockCtrl)
+				m.EXPECT().List(gomock.Any()).Return([]route.ListEntry{
 					{Destination: "10.0.0.0/24", Gateway: "10.0.0.1", Interface: "eth0"},
 					{Destination: "192.168.1.0/24", Gateway: "192.168.1.1", Interface: "eth1"},
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var entries []netplan.RouteListEntry
+				var entries []route.ListEntry
 				err := json.Unmarshal(result, &entries)
 				s.NoError(err)
 				s.Len(entries, 2)
@@ -167,8 +167,8 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteList() {
 				Operation: "route.list",
 				Data:      json.RawMessage(`{}`),
 			},
-			setupMock: func() netplan.RouteProvider {
-				m := netplanMocks.NewMockRouteProvider(s.mockCtrl)
+			setupMock: func() route.Provider {
+				m := routeMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().List(gomock.Any()).Return(nil, errors.New("permission denied"))
 				return m
 			},
@@ -206,7 +206,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteGet() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netplan.RouteProvider
+		setupMock   func() route.Provider
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -219,18 +219,18 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteGet() {
 				Operation: "route.get",
 				Data:      json.RawMessage(`{"interface":"eth0"}`),
 			},
-			setupMock: func() netplan.RouteProvider {
-				m := netplanMocks.NewMockRouteProvider(s.mockCtrl)
-				m.EXPECT().Get(gomock.Any(), "eth0").Return(&netplan.RouteEntry{
+			setupMock: func() route.Provider {
+				m := routeMocks.NewMockProvider(s.mockCtrl)
+				m.EXPECT().Get(gomock.Any(), "eth0").Return(&route.Entry{
 					Interface: "eth0",
-					Routes: []netplan.Route{
+					Routes: []route.Route{
 						{To: "10.0.0.0/24", Via: "10.0.0.1"},
 					},
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var entry netplan.RouteEntry
+				var entry route.Entry
 				err := json.Unmarshal(result, &entry)
 				s.NoError(err)
 				s.Equal("eth0", entry.Interface)
@@ -245,8 +245,8 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteGet() {
 				Operation: "route.get",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock: func() netplan.RouteProvider {
-				return netplanMocks.NewMockRouteProvider(s.mockCtrl)
+			setupMock: func() route.Provider {
+				return routeMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
 			errorMsg:    "unmarshal route get data",
@@ -259,8 +259,8 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteGet() {
 				Operation: "route.get",
 				Data:      json.RawMessage(`{"interface":"missing"}`),
 			},
-			setupMock: func() netplan.RouteProvider {
-				m := netplanMocks.NewMockRouteProvider(s.mockCtrl)
+			setupMock: func() route.Provider {
+				m := routeMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().Get(gomock.Any(), "missing").Return(nil, errors.New("not found"))
 				return m
 			},
@@ -298,7 +298,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteCreate() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netplan.RouteProvider
+		setupMock   func() route.Provider
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -309,23 +309,25 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteCreate() {
 				Type:      job.TypeModify,
 				Category:  "network",
 				Operation: "route.create",
-				Data:      json.RawMessage(`{"interface":"eth0","routes":[{"to":"10.0.0.0/24","via":"10.0.0.1"}]}`),
+				Data: json.RawMessage(
+					`{"interface":"eth0","routes":[{"to":"10.0.0.0/24","via":"10.0.0.1"}]}`,
+				),
 			},
-			setupMock: func() netplan.RouteProvider {
-				m := netplanMocks.NewMockRouteProvider(s.mockCtrl)
-				m.EXPECT().Create(gomock.Any(), netplan.RouteEntry{
+			setupMock: func() route.Provider {
+				m := routeMocks.NewMockProvider(s.mockCtrl)
+				m.EXPECT().Create(gomock.Any(), route.Entry{
 					Interface: "eth0",
-					Routes: []netplan.Route{
+					Routes: []route.Route{
 						{To: "10.0.0.0/24", Via: "10.0.0.1"},
 					},
-				}).Return(&netplan.RouteResult{
+				}).Return(&route.Result{
 					Interface: "eth0",
 					Changed:   true,
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var r netplan.RouteResult
+				var r route.Result
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("eth0", r.Interface)
@@ -340,8 +342,8 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteCreate() {
 				Operation: "route.create",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock: func() netplan.RouteProvider {
-				return netplanMocks.NewMockRouteProvider(s.mockCtrl)
+			setupMock: func() route.Provider {
+				return routeMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
 			errorMsg:    "unmarshal route create data",
@@ -352,10 +354,12 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteCreate() {
 				Type:      job.TypeModify,
 				Category:  "network",
 				Operation: "route.create",
-				Data:      json.RawMessage(`{"interface":"eth0","routes":[{"to":"10.0.0.0/24","via":"10.0.0.1"}]}`),
+				Data: json.RawMessage(
+					`{"interface":"eth0","routes":[{"to":"10.0.0.0/24","via":"10.0.0.1"}]}`,
+				),
 			},
-			setupMock: func() netplan.RouteProvider {
-				m := netplanMocks.NewMockRouteProvider(s.mockCtrl)
+			setupMock: func() route.Provider {
+				m := routeMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().
 					Create(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("already managed"))
@@ -395,7 +399,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteUpdate() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netplan.RouteProvider
+		setupMock   func() route.Provider
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -406,23 +410,25 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteUpdate() {
 				Type:      job.TypeModify,
 				Category:  "network",
 				Operation: "route.update",
-				Data:      json.RawMessage(`{"interface":"eth0","routes":[{"to":"10.0.0.0/24","via":"10.0.0.2"}]}`),
+				Data: json.RawMessage(
+					`{"interface":"eth0","routes":[{"to":"10.0.0.0/24","via":"10.0.0.2"}]}`,
+				),
 			},
-			setupMock: func() netplan.RouteProvider {
-				m := netplanMocks.NewMockRouteProvider(s.mockCtrl)
-				m.EXPECT().Update(gomock.Any(), netplan.RouteEntry{
+			setupMock: func() route.Provider {
+				m := routeMocks.NewMockProvider(s.mockCtrl)
+				m.EXPECT().Update(gomock.Any(), route.Entry{
 					Interface: "eth0",
-					Routes: []netplan.Route{
+					Routes: []route.Route{
 						{To: "10.0.0.0/24", Via: "10.0.0.2"},
 					},
-				}).Return(&netplan.RouteResult{
+				}).Return(&route.Result{
 					Interface: "eth0",
 					Changed:   true,
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var r netplan.RouteResult
+				var r route.Result
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("eth0", r.Interface)
@@ -437,8 +443,8 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteUpdate() {
 				Operation: "route.update",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock: func() netplan.RouteProvider {
-				return netplanMocks.NewMockRouteProvider(s.mockCtrl)
+			setupMock: func() route.Provider {
+				return routeMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
 			errorMsg:    "unmarshal route update data",
@@ -449,10 +455,12 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteUpdate() {
 				Type:      job.TypeModify,
 				Category:  "network",
 				Operation: "route.update",
-				Data:      json.RawMessage(`{"interface":"eth0","routes":[{"to":"10.0.0.0/24","via":"10.0.0.2"}]}`),
+				Data: json.RawMessage(
+					`{"interface":"eth0","routes":[{"to":"10.0.0.0/24","via":"10.0.0.2"}]}`,
+				),
 			},
-			setupMock: func() netplan.RouteProvider {
-				m := netplanMocks.NewMockRouteProvider(s.mockCtrl)
+			setupMock: func() route.Provider {
+				m := routeMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().
 					Update(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("not managed"))
@@ -492,7 +500,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteDelete() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netplan.RouteProvider
+		setupMock   func() route.Provider
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -505,16 +513,16 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteDelete() {
 				Operation: "route.delete",
 				Data:      json.RawMessage(`{"interface":"eth0"}`),
 			},
-			setupMock: func() netplan.RouteProvider {
-				m := netplanMocks.NewMockRouteProvider(s.mockCtrl)
-				m.EXPECT().Delete(gomock.Any(), "eth0").Return(&netplan.RouteResult{
+			setupMock: func() route.Provider {
+				m := routeMocks.NewMockProvider(s.mockCtrl)
+				m.EXPECT().Delete(gomock.Any(), "eth0").Return(&route.Result{
 					Interface: "eth0",
 					Changed:   true,
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var r netplan.RouteResult
+				var r route.Result
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("eth0", r.Interface)
@@ -529,8 +537,8 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteDelete() {
 				Operation: "route.delete",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock: func() netplan.RouteProvider {
-				return netplanMocks.NewMockRouteProvider(s.mockCtrl)
+			setupMock: func() route.Provider {
+				return routeMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
 			errorMsg:    "unmarshal route delete data",
@@ -543,8 +551,8 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteDelete() {
 				Operation: "route.delete",
 				Data:      json.RawMessage(`{"interface":"missing"}`),
 			},
-			setupMock: func() netplan.RouteProvider {
-				m := netplanMocks.NewMockRouteProvider(s.mockCtrl)
+			setupMock: func() route.Provider {
+				m := routeMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().Delete(gomock.Any(), "missing").Return(nil, errors.New("not found"))
 				return m
 			},

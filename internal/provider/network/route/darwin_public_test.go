@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package netplan_test
+package route_test
 
 import (
 	"context"
@@ -27,17 +27,17 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/network/netplan"
+	"github.com/retr0h/osapi/internal/provider/network/route"
 )
 
 type DarwinRoutePublicTestSuite struct {
 	suite.Suite
 
-	provider *netplan.DarwinRoute
+	provider *route.Darwin
 }
 
 func (suite *DarwinRoutePublicTestSuite) SetupTest() {
-	suite.provider = netplan.NewDarwinRouteProvider()
+	suite.provider = route.NewDarwinProvider()
 }
 
 func (suite *DarwinRoutePublicTestSuite) TestList() {
@@ -89,7 +89,7 @@ func (suite *DarwinRoutePublicTestSuite) TestCreate() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Create(context.Background(), netplan.RouteEntry{})
+			got, err := suite.provider.Create(context.Background(), route.Entry{})
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)
@@ -108,7 +108,7 @@ func (suite *DarwinRoutePublicTestSuite) TestUpdate() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Update(context.Background(), netplan.RouteEntry{})
+			got, err := suite.provider.Update(context.Background(), route.Entry{})
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)

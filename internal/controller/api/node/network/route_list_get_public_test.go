@@ -41,7 +41,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api/node/network/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/provider/network/netplan"
+	"github.com/retr0h/osapi/internal/provider/network/route"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
@@ -79,7 +79,7 @@ func (s *NetworkRouteListGetPublicTestSuite) TearDownTest() {
 }
 
 func (s *NetworkRouteListGetPublicTestSuite) TestGetNodeNetworkRoute() {
-	entries := []netplan.RouteListEntry{
+	entries := []route.ListEntry{
 		{Destination: "10.0.0.0/8", Gateway: "192.168.1.1", Interface: "eth0"},
 	}
 	entryData, _ := json.Marshal(entries)
@@ -191,7 +191,7 @@ func (s *NetworkRouteListGetPublicTestSuite) TestGetNodeNetworkRoute() {
 }
 
 func (s *NetworkRouteListGetPublicTestSuite) TestGetNetworkRouteListValidationHTTP() {
-	entries := []netplan.RouteListEntry{
+	entries := []route.ListEntry{
 		{Destination: "10.0.0.0/8", Gateway: "192.168.1.1", Interface: "eth0"},
 	}
 	entryData, _ := json.Marshal(entries)
@@ -253,7 +253,7 @@ const rbacRouteListGetTestSigningKey = "test-signing-key-for-route-list-get-rbac
 
 func (s *NetworkRouteListGetPublicTestSuite) TestGetNetworkRouteListRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
-	entries := []netplan.RouteListEntry{
+	entries := []route.ListEntry{
 		{Destination: "10.0.0.0/8", Gateway: "192.168.1.1", Interface: "eth0"},
 	}
 	entryData, _ := json.Marshal(entries)
@@ -277,7 +277,12 @@ func (s *NetworkRouteListGetPublicTestSuite) TestGetNetworkRouteListRBACHTTP() {
 		{
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacRouteListGetTestSigningKey, []string{"read"}, "test-user", []string{"node:write"})
+				token, _ := tokenManager.Generate(
+					rbacRouteListGetTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"node:write"},
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -289,7 +294,12 @@ func (s *NetworkRouteListGetPublicTestSuite) TestGetNetworkRouteListRBACHTTP() {
 		{
 			name: "when valid token returns 200",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacRouteListGetTestSigningKey, []string{"admin"}, "test-user", nil)
+				token, _ := tokenManager.Generate(
+					rbacRouteListGetTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -309,9 +319,20 @@ func (s *NetworkRouteListGetPublicTestSuite) TestGetNetworkRouteListRBACHTTP() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
-			appConfig := config.Config{Controller: config.Controller{API: config.APIServer{Security: config.ServerSecurity{SigningKey: rbacRouteListGetTestSigningKey}}}}
+			appConfig := config.Config{
+				Controller: config.Controller{
+					API: config.APIServer{
+						Security: config.ServerSecurity{SigningKey: rbacRouteListGetTestSigningKey},
+					},
+				},
+			}
 			server := api.New(appConfig, s.logger)
-			handlers := apinetwork.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apinetwork.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(http.MethodGet, "/node/server1/network/route", nil)

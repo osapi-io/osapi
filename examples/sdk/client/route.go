@@ -100,8 +100,10 @@ func main() {
 		client.RouteConfigOpts{
 			Routes: []client.RouteItem{
 				{To: "10.0.0.0/8", Via: "192.168.1.1"},
-				{To: "172.16.0.0/12", Via: "192.168.1.1",
-					Metric: &metric},
+				{
+					To: "172.16.0.0/12", Via: "192.168.1.1",
+					Metric: &metric,
+				},
 			},
 		})
 	if err != nil {

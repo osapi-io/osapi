@@ -28,12 +28,12 @@ import (
 	"strings"
 
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/netplan"
+	"github.com/retr0h/osapi/internal/provider/network/netif"
 )
 
 // processInterfaceOperation dispatches network interface sub-operations.
 func processInterfaceOperation(
-	provider netplan.InterfaceProvider,
+	provider netif.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
@@ -69,7 +69,7 @@ func processInterfaceOperation(
 // processInterfaceList lists all managed network interface configurations.
 func processInterfaceList(
 	ctx context.Context,
-	provider netplan.InterfaceProvider,
+	provider netif.Provider,
 	logger *slog.Logger,
 ) (json.RawMessage, error) {
 	logger.Debug("executing interface.List")
@@ -85,7 +85,7 @@ func processInterfaceList(
 // processInterfaceGet gets a single interface configuration by name.
 func processInterfaceGet(
 	ctx context.Context,
-	provider netplan.InterfaceProvider,
+	provider netif.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
@@ -111,11 +111,11 @@ func processInterfaceGet(
 // processInterfaceCreate creates a new interface configuration via Netplan.
 func processInterfaceCreate(
 	ctx context.Context,
-	provider netplan.InterfaceProvider,
+	provider netif.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
-	var entry netplan.InterfaceEntry
+	var entry netif.InterfaceEntry
 	if err := json.Unmarshal(jobRequest.Data, &entry); err != nil {
 		return nil, fmt.Errorf("unmarshal interface create data: %w", err)
 	}
@@ -135,11 +135,11 @@ func processInterfaceCreate(
 // processInterfaceUpdate redeploys an existing interface configuration via Netplan.
 func processInterfaceUpdate(
 	ctx context.Context,
-	provider netplan.InterfaceProvider,
+	provider netif.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
-	var entry netplan.InterfaceEntry
+	var entry netif.InterfaceEntry
 	if err := json.Unmarshal(jobRequest.Data, &entry); err != nil {
 		return nil, fmt.Errorf("unmarshal interface update data: %w", err)
 	}
@@ -159,7 +159,7 @@ func processInterfaceUpdate(
 // processInterfaceDelete removes an interface configuration via Netplan.
 func processInterfaceDelete(
 	ctx context.Context,
-	provider netplan.InterfaceProvider,
+	provider netif.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {

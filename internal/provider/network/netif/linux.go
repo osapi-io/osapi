@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package netplan
+package netif
 
 import (
 	"context"
@@ -27,7 +27,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 )
 
-// Linux implements the InterfaceProvider interface for generic Linux.
+// Linux implements the Provider interface for generic Linux.
 // All methods return ErrUnsupported as this is a generic Linux stub.
 type Linux struct{}
 

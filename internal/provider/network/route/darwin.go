@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package netplan
+package route
 
 import (
 	"context"
@@ -27,50 +27,50 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 )
 
-// DarwinRoute implements the RouteProvider interface for Darwin (macOS).
+// Darwin implements the Provider interface for Darwin (macOS).
 // All methods return ErrUnsupported as Netplan is not available on macOS.
-type DarwinRoute struct{}
+type Darwin struct{}
 
-// NewDarwinRouteProvider factory to create a new DarwinRoute instance.
-func NewDarwinRouteProvider() *DarwinRoute {
-	return &DarwinRoute{}
+// NewDarwinProvider factory to create a new Darwin instance.
+func NewDarwinProvider() *Darwin {
+	return &Darwin{}
 }
 
 // List returns ErrUnsupported on Darwin.
-func (d *DarwinRoute) List(
+func (d *Darwin) List(
 	_ context.Context,
-) ([]RouteListEntry, error) {
+) ([]ListEntry, error) {
 	return nil, fmt.Errorf("netplan route: %w", provider.ErrUnsupported)
 }
 
 // Get returns ErrUnsupported on Darwin.
-func (d *DarwinRoute) Get(
+func (d *Darwin) Get(
 	_ context.Context,
 	_ string,
-) (*RouteEntry, error) {
+) (*Entry, error) {
 	return nil, fmt.Errorf("netplan route: %w", provider.ErrUnsupported)
 }
 
 // Create returns ErrUnsupported on Darwin.
-func (d *DarwinRoute) Create(
+func (d *Darwin) Create(
 	_ context.Context,
-	_ RouteEntry,
-) (*RouteResult, error) {
+	_ Entry,
+) (*Result, error) {
 	return nil, fmt.Errorf("netplan route: %w", provider.ErrUnsupported)
 }
 
 // Update returns ErrUnsupported on Darwin.
-func (d *DarwinRoute) Update(
+func (d *Darwin) Update(
 	_ context.Context,
-	_ RouteEntry,
-) (*RouteResult, error) {
+	_ Entry,
+) (*Result, error) {
 	return nil, fmt.Errorf("netplan route: %w", provider.ErrUnsupported)
 }
 
 // Delete returns ErrUnsupported on Darwin.
-func (d *DarwinRoute) Delete(
+func (d *Darwin) Delete(
 	_ context.Context,
 	_ string,
-) (*RouteResult, error) {
+) (*Result, error) {
 	return nil, fmt.Errorf("netplan route: %w", provider.ErrUnsupported)
 }

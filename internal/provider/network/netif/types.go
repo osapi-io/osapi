@@ -18,12 +18,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package netplan
+// Package netif provides network interface configuration management via Netplan.
+package netif
 
 import "context"
 
-// InterfaceProvider manages network interface configuration via Netplan.
-type InterfaceProvider interface {
+// Provider manages network interface configuration via Netplan.
+type Provider interface {
 	// List returns all managed network interface configurations.
 	List(ctx context.Context) ([]InterfaceEntry, error)
 	// Get returns a single interface configuration by name.
@@ -34,20 +35,6 @@ type InterfaceProvider interface {
 	Update(ctx context.Context, entry InterfaceEntry) (*InterfaceResult, error)
 	// Delete removes an interface configuration via Netplan.
 	Delete(ctx context.Context, name string) (*InterfaceResult, error)
-}
-
-// RouteProvider manages route configuration via Netplan.
-type RouteProvider interface {
-	// List returns all routes from the system routing table.
-	List(ctx context.Context) ([]RouteListEntry, error)
-	// Get returns the managed routes for a specific interface.
-	Get(ctx context.Context, interfaceName string) (*RouteEntry, error)
-	// Create deploys new routes for an interface via Netplan.
-	Create(ctx context.Context, entry RouteEntry) (*RouteResult, error)
-	// Update redeploys routes for an existing interface via Netplan.
-	Update(ctx context.Context, entry RouteEntry) (*RouteResult, error)
-	// Delete removes managed routes for an interface via Netplan.
-	Delete(ctx context.Context, interfaceName string) (*RouteResult, error)
 }
 
 // InterfaceEntry represents a managed interface configuration.
@@ -69,34 +56,4 @@ type InterfaceResult struct {
 	Name    string `json:"name"`
 	Changed bool   `json:"changed"`
 	Error   string `json:"error,omitempty"`
-}
-
-// RouteEntry represents managed routes for an interface.
-type RouteEntry struct {
-	Interface string  `json:"interface"`
-	Routes    []Route `json:"routes"`
-}
-
-// Route is a single route definition.
-type Route struct {
-	To     string `json:"to"`
-	Via    string `json:"via"`
-	Metric int    `json:"metric,omitempty"`
-}
-
-// RouteListEntry is a route from the system routing table.
-type RouteListEntry struct {
-	Destination string `json:"destination"`
-	Gateway     string `json:"gateway"`
-	Interface   string `json:"interface"`
-	Mask        string `json:"mask,omitempty"`
-	Metric      int    `json:"metric,omitempty"`
-	Flags       string `json:"flags,omitempty"`
-}
-
-// RouteResult is the outcome of a route create/update/delete operation.
-type RouteResult struct {
-	Interface string `json:"interface"`
-	Changed   bool   `json:"changed"`
-	Error     string `json:"error,omitempty"`
 }

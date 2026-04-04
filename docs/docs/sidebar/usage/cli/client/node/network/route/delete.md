@@ -52,8 +52,8 @@ $ osapi client node network route delete \
 
 ## Flags
 
-| Flag            | Description                                              | Default  |
-| --------------- | -------------------------------------------------------- | -------- |
-| `--interface`   | Interface name                                           | required |
-| `-T, --target`  | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`    | Output raw JSON response                                 |          |
+| Flag           | Description                                              | Default  |
+| -------------- | -------------------------------------------------------- | -------- |
+| `--interface`  | Interface name                                           | required |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
+| `-j, --json`   | Output raw JSON response                                 |          |

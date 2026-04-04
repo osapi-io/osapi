@@ -1,7 +1,7 @@
 # Delete
 
-Delete the OSAPI-managed DNS configuration for a network interface. Removes
-the `/etc/netplan/osapi-dns.yaml` file and runs `netplan apply`:
+Delete the OSAPI-managed DNS configuration for a network interface. Removes the
+`/etc/netplan/osapi-dns.yaml` file and runs `netplan apply`:
 
 ```bash
 $ osapi client node network dns delete \

@@ -306,7 +306,12 @@ func (s *NetworkRouteUpdatePutPublicTestSuite) TestPutNetworkRouteRBACHTTP() {
 		{
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacRouteUpdateTestSigningKey, []string{"read"}, "test-user", []string{"network:read"})
+				token, _ := tokenManager.Generate(
+					rbacRouteUpdateTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"network:read"},
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -318,7 +323,12 @@ func (s *NetworkRouteUpdatePutPublicTestSuite) TestPutNetworkRouteRBACHTTP() {
 		{
 			name: "when valid token returns 200",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacRouteUpdateTestSigningKey, []string{"admin"}, "test-user", nil)
+				token, _ := tokenManager.Generate(
+					rbacRouteUpdateTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -336,12 +346,27 @@ func (s *NetworkRouteUpdatePutPublicTestSuite) TestPutNetworkRouteRBACHTTP() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
-			appConfig := config.Config{Controller: config.Controller{API: config.APIServer{Security: config.ServerSecurity{SigningKey: rbacRouteUpdateTestSigningKey}}}}
+			appConfig := config.Config{
+				Controller: config.Controller{
+					API: config.APIServer{
+						Security: config.ServerSecurity{SigningKey: rbacRouteUpdateTestSigningKey},
+					},
+				},
+			}
 			server := api.New(appConfig, s.logger)
-			handlers := apinetwork.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apinetwork.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodPut, "/node/server1/network/route/eth0", strings.NewReader(`{"routes":[{"to":"10.0.0.0/8","via":"192.168.1.1"}]}`))
+			req := httptest.NewRequest(
+				http.MethodPut,
+				"/node/server1/network/route/eth0",
+				strings.NewReader(`{"routes":[{"to":"10.0.0.0/8","via":"192.168.1.1"}]}`),
+			)
 			req.Header.Set("Content-Type", "application/json")
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()

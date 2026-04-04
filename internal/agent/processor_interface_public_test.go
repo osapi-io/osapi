@@ -31,8 +31,8 @@ import (
 
 	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/netplan"
-	netplanMocks "github.com/retr0h/osapi/internal/provider/network/netplan/mocks"
+	"github.com/retr0h/osapi/internal/provider/network/netif"
+	netifMocks "github.com/retr0h/osapi/internal/provider/network/netif/mocks"
 )
 
 type ProcessorInterfacePublicTestSuite struct {
@@ -53,7 +53,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceOperation() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netplan.InterfaceProvider
+		setupMock   func() netif.Provider
 		expectError bool
 		errorMsg    string
 	}{
@@ -77,8 +77,8 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceOperation() {
 				Operation: "interface",
 				Data:      json.RawMessage(`{}`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				return netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
+			setupMock: func() netif.Provider {
+				return netifMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
 			errorMsg:    "invalid interface operation: interface",
@@ -91,8 +91,8 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceOperation() {
 				Operation: "interface.unknown",
 				Data:      json.RawMessage(`{}`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				return netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
+			setupMock: func() netif.Provider {
+				return netifMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
 			errorMsg:    "unsupported interface operation: interface.unknown",
@@ -101,7 +101,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceOperation() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			var ifaceProvider netplan.InterfaceProvider
+			var ifaceProvider netif.Provider
 			if tt.setupMock != nil {
 				ifaceProvider = tt.setupMock()
 			}
@@ -130,7 +130,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceList() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netplan.InterfaceProvider
+		setupMock   func() netif.Provider
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -143,16 +143,16 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceList() {
 				Operation: "interface.list",
 				Data:      json.RawMessage(`{}`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				m := netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
-				m.EXPECT().List(gomock.Any()).Return([]netplan.InterfaceEntry{
+			setupMock: func() netif.Provider {
+				m := netifMocks.NewMockProvider(s.mockCtrl)
+				m.EXPECT().List(gomock.Any()).Return([]netif.InterfaceEntry{
 					{Name: "eth0", Managed: true},
 					{Name: "eth1", Managed: true},
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var entries []netplan.InterfaceEntry
+				var entries []netif.InterfaceEntry
 				err := json.Unmarshal(result, &entries)
 				s.NoError(err)
 				s.Len(entries, 2)
@@ -167,8 +167,8 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceList() {
 				Operation: "interface.list",
 				Data:      json.RawMessage(`{}`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				m := netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
+			setupMock: func() netif.Provider {
+				m := netifMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().List(gomock.Any()).Return(nil, errors.New("permission denied"))
 				return m
 			},
@@ -206,7 +206,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceGet() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netplan.InterfaceProvider
+		setupMock   func() netif.Provider
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -219,16 +219,16 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceGet() {
 				Operation: "interface.get",
 				Data:      json.RawMessage(`{"name":"eth0"}`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				m := netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
-				m.EXPECT().Get(gomock.Any(), "eth0").Return(&netplan.InterfaceEntry{
+			setupMock: func() netif.Provider {
+				m := netifMocks.NewMockProvider(s.mockCtrl)
+				m.EXPECT().Get(gomock.Any(), "eth0").Return(&netif.InterfaceEntry{
 					Name:    "eth0",
 					Managed: true,
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var entry netplan.InterfaceEntry
+				var entry netif.InterfaceEntry
 				err := json.Unmarshal(result, &entry)
 				s.NoError(err)
 				s.Equal("eth0", entry.Name)
@@ -242,8 +242,8 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceGet() {
 				Operation: "interface.get",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				return netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
+			setupMock: func() netif.Provider {
+				return netifMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
 			errorMsg:    "unmarshal interface get data",
@@ -256,8 +256,8 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceGet() {
 				Operation: "interface.get",
 				Data:      json.RawMessage(`{"name":"missing"}`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				m := netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
+			setupMock: func() netif.Provider {
+				m := netifMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().Get(gomock.Any(), "missing").Return(nil, errors.New("not found"))
 				return m
 			},
@@ -295,7 +295,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceCreate() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netplan.InterfaceProvider
+		setupMock   func() netif.Provider
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -308,19 +308,19 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceCreate() {
 				Operation: "interface.create",
 				Data:      json.RawMessage(`{"name":"eth1","addresses":["10.0.0.5/24"]}`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				m := netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
-				m.EXPECT().Create(gomock.Any(), netplan.InterfaceEntry{
+			setupMock: func() netif.Provider {
+				m := netifMocks.NewMockProvider(s.mockCtrl)
+				m.EXPECT().Create(gomock.Any(), netif.InterfaceEntry{
 					Name:      "eth1",
 					Addresses: []string{"10.0.0.5/24"},
-				}).Return(&netplan.InterfaceResult{
+				}).Return(&netif.InterfaceResult{
 					Name:    "eth1",
 					Changed: true,
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var r netplan.InterfaceResult
+				var r netif.InterfaceResult
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("eth1", r.Name)
@@ -335,8 +335,8 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceCreate() {
 				Operation: "interface.create",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				return netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
+			setupMock: func() netif.Provider {
+				return netifMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
 			errorMsg:    "unmarshal interface create data",
@@ -349,8 +349,8 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceCreate() {
 				Operation: "interface.create",
 				Data:      json.RawMessage(`{"name":"eth1"}`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				m := netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
+			setupMock: func() netif.Provider {
+				m := netifMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().
 					Create(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("already managed"))
@@ -390,7 +390,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceUpdate() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netplan.InterfaceProvider
+		setupMock   func() netif.Provider
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -403,19 +403,19 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceUpdate() {
 				Operation: "interface.update",
 				Data:      json.RawMessage(`{"name":"eth1","addresses":["10.0.0.10/24"]}`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				m := netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
-				m.EXPECT().Update(gomock.Any(), netplan.InterfaceEntry{
+			setupMock: func() netif.Provider {
+				m := netifMocks.NewMockProvider(s.mockCtrl)
+				m.EXPECT().Update(gomock.Any(), netif.InterfaceEntry{
 					Name:      "eth1",
 					Addresses: []string{"10.0.0.10/24"},
-				}).Return(&netplan.InterfaceResult{
+				}).Return(&netif.InterfaceResult{
 					Name:    "eth1",
 					Changed: true,
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var r netplan.InterfaceResult
+				var r netif.InterfaceResult
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("eth1", r.Name)
@@ -430,8 +430,8 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceUpdate() {
 				Operation: "interface.update",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				return netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
+			setupMock: func() netif.Provider {
+				return netifMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
 			errorMsg:    "unmarshal interface update data",
@@ -444,8 +444,8 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceUpdate() {
 				Operation: "interface.update",
 				Data:      json.RawMessage(`{"name":"eth1"}`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				m := netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
+			setupMock: func() netif.Provider {
+				m := netifMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().
 					Update(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("not managed"))
@@ -485,7 +485,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceDelete() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netplan.InterfaceProvider
+		setupMock   func() netif.Provider
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -498,16 +498,16 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceDelete() {
 				Operation: "interface.delete",
 				Data:      json.RawMessage(`{"name":"eth1"}`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				m := netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
-				m.EXPECT().Delete(gomock.Any(), "eth1").Return(&netplan.InterfaceResult{
+			setupMock: func() netif.Provider {
+				m := netifMocks.NewMockProvider(s.mockCtrl)
+				m.EXPECT().Delete(gomock.Any(), "eth1").Return(&netif.InterfaceResult{
 					Name:    "eth1",
 					Changed: true,
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var r netplan.InterfaceResult
+				var r netif.InterfaceResult
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("eth1", r.Name)
@@ -522,8 +522,8 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceDelete() {
 				Operation: "interface.delete",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				return netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
+			setupMock: func() netif.Provider {
+				return netifMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
 			errorMsg:    "unmarshal interface delete data",
@@ -536,8 +536,8 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceDelete() {
 				Operation: "interface.delete",
 				Data:      json.RawMessage(`{"name":"missing"}`),
 			},
-			setupMock: func() netplan.InterfaceProvider {
-				m := netplanMocks.NewMockInterfaceProvider(s.mockCtrl)
+			setupMock: func() netif.Provider {
+				m := netifMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().Delete(gomock.Any(), "missing").Return(nil, errors.New("not found"))
 				return m
 			},

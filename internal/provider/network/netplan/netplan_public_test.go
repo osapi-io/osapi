@@ -83,10 +83,6 @@ func (suite *NetplanPublicTestSuite) SetupSubTest() {
 	suite.SetupTest()
 }
 
-func (suite *NetplanPublicTestSuite) TearDownSubTest() {
-	netplan.ResetMarshalJSON()
-}
-
 func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 	tests := []struct {
 		name         string
@@ -314,31 +310,6 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 				suite.Require().Error(err)
 				suite.False(changed)
 				suite.Contains(err.Error(), "netplan apply: update state:")
-			},
-		},
-		{
-			name: "when marshal state fails",
-			setup: func() {
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-
-				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
-					Return("", nil)
-
-				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
-					Return("", nil)
-
-				netplan.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
-					return nil, errors.New("marshal failed")
-				})
-			},
-			validateFunc: func(changed bool, err error) {
-				suite.Require().Error(err)
-				suite.False(changed)
-				suite.Contains(err.Error(), "netplan apply: marshal state:")
 			},
 		},
 	}

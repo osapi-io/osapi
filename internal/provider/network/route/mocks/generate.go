@@ -18,41 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package netplan
+// Package mocks provides mock implementations for testing.
+package mocks
 
-import "encoding/json"
-
-// SetMarshalJSON overrides the marshal function for testing.
-func SetMarshalJSON(fn func(interface{}) ([]byte, error)) {
-	marshalJSON = fn
-}
-
-// ResetMarshalJSON restores the default marshal function.
-func ResetMarshalJSON() {
-	marshalJSON = json.Marshal
-}
-
-// GenerateInterfaceYAML exposes generateInterfaceYAML for testing.
-func GenerateInterfaceYAML(entry InterfaceEntry) []byte {
-	return generateInterfaceYAML(entry)
-}
-
-// GenerateRouteYAML exposes generateRouteYAML for testing.
-func GenerateRouteYAML(entry RouteEntry) []byte {
-	return generateRouteYAML(entry)
-}
-
-// ContainsDefaultRoute exposes containsDefaultRoute for testing.
-func ContainsDefaultRoute(routes []Route) bool {
-	return containsDefaultRoute(routes)
-}
-
-// BuildRouteMetadata exposes buildRouteMetadata for testing.
-func BuildRouteMetadata(entry RouteEntry) (map[string]string, error) {
-	return buildRouteMetadata(entry)
-}
-
-// RouteFilePath exposes routeFilePath for testing.
-func RouteFilePath(interfaceName string) string {
-	return routeFilePath(interfaceName)
-}
+//go:generate go tool github.com/golang/mock/mockgen -source=../types.go -destination=provider.gen.go -package=mocks

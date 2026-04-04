@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package netplan
+package route
 
 import (
 	"context"
@@ -27,52 +27,15 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/avfs/avfs"
-	"github.com/nats-io/nats.go/jetstream"
-
-	"github.com/retr0h/osapi/internal/exec"
-	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/file"
-	"github.com/retr0h/osapi/internal/provider/network/netinfo"
+	"github.com/retr0h/osapi/internal/provider/network/netif"
+	"github.com/retr0h/osapi/internal/provider/network/netplan"
 )
 
-// Compile-time checks.
-var (
-	_ RouteProvider        = (*DebianRoute)(nil)
-	_ provider.FactsSetter = (*DebianRoute)(nil)
+const (
+	netplanDir      = "/etc/netplan"
+	interfacePrefix = "osapi-"
 )
-
-// DebianRoute implements the RouteProvider interface for Debian-family
-// systems. It writes Netplan YAML route files to /etc/netplan/ with an
-// osapi- prefix and tracks state in the file-state KV for idempotency.
-type DebianRoute struct {
-	provider.FactsAware
-	logger      *slog.Logger
-	fs          avfs.VFS
-	stateKV     jetstream.KeyValue
-	execManager exec.Manager
-	hostname    string
-	netinfo     netinfo.Provider
-}
-
-// NewDebianRouteProvider factory to create a new DebianRoute instance.
-func NewDebianRouteProvider(
-	logger *slog.Logger,
-	fs avfs.VFS,
-	stateKV jetstream.KeyValue,
-	execManager exec.Manager,
-	hostname string,
-	netinfo netinfo.Provider,
-) *DebianRoute {
-	return &DebianRoute{
-		logger:      logger.With(slog.String("subsystem", "provider.netplan.route")),
-		fs:          fs,
-		stateKV:     stateKV,
-		execManager: execManager,
-		hostname:    hostname,
-		netinfo:     netinfo,
-	}
-}
 
 // routeFilePath returns the Netplan route config file path for an interface.
 func routeFilePath(
@@ -82,18 +45,18 @@ func routeFilePath(
 }
 
 // List returns all routes from the system routing table.
-func (d *DebianRoute) List(
+func (d *Debian) List(
 	_ context.Context,
-) ([]RouteListEntry, error) {
+) ([]ListEntry, error) {
 	routes, err := d.netinfo.GetRoutes()
 	if err != nil {
 		return nil, fmt.Errorf("netplan route list: %w", err)
 	}
 
-	result := make([]RouteListEntry, 0, len(routes))
+	result := make([]ListEntry, 0, len(routes))
 
 	for _, r := range routes {
-		result = append(result, RouteListEntry{
+		result = append(result, ListEntry{
 			Destination: r.Destination,
 			Gateway:     r.Gateway,
 			Interface:   r.Interface,
@@ -108,10 +71,10 @@ func (d *DebianRoute) List(
 
 // Get returns the managed routes for a specific interface by reading
 // the route metadata from the file-state KV store.
-func (d *DebianRoute) Get(
+func (d *Debian) Get(
 	ctx context.Context,
 	interfaceName string,
-) (*RouteEntry, error) {
+) (*Entry, error) {
 	if interfaceName == "" {
 		return nil, fmt.Errorf("netplan route get: interface name must not be empty")
 	}
@@ -148,7 +111,7 @@ func (d *DebianRoute) Get(
 		return nil, fmt.Errorf("netplan route get: unmarshal routes: %w", unmarshalErr)
 	}
 
-	return &RouteEntry{
+	return &Entry{
 		Interface: interfaceName,
 		Routes:    routes,
 	}, nil
@@ -157,11 +120,11 @@ func (d *DebianRoute) Get(
 // Create deploys new routes for an interface via Netplan. Fails if a
 // managed route file already exists for the interface, or if any route
 // targets the default gateway.
-func (d *DebianRoute) Create(
+func (d *Debian) Create(
 	ctx context.Context,
-	entry RouteEntry,
-) (*RouteResult, error) {
-	if err := validateInterfaceName(entry.Interface); err != nil {
+	entry Entry,
+) (*Result, error) {
+	if err := netif.ValidateInterfaceName(entry.Interface); err != nil {
 		return nil, fmt.Errorf("netplan route create: %w", err)
 	}
 
@@ -188,7 +151,7 @@ func (d *DebianRoute) Create(
 		return nil, fmt.Errorf("netplan route create: %w", err)
 	}
 
-	changed, applyErr := ApplyConfig(
+	changed, applyErr := netplan.ApplyConfig(
 		ctx,
 		d.logger,
 		d.fs,
@@ -209,7 +172,7 @@ func (d *DebianRoute) Create(
 		slog.Bool("changed", changed),
 	)
 
-	return &RouteResult{
+	return &Result{
 		Interface: entry.Interface,
 		Changed:   changed,
 	}, nil
@@ -218,11 +181,11 @@ func (d *DebianRoute) Create(
 // Update redeploys routes for an existing interface via Netplan. Fails
 // if no managed route file exists for the interface, or if any route
 // targets the default gateway.
-func (d *DebianRoute) Update(
+func (d *Debian) Update(
 	ctx context.Context,
-	entry RouteEntry,
-) (*RouteResult, error) {
-	if err := validateInterfaceName(entry.Interface); err != nil {
+	entry Entry,
+) (*Result, error) {
+	if err := netif.ValidateInterfaceName(entry.Interface); err != nil {
 		return nil, fmt.Errorf("netplan route update: %w", err)
 	}
 
@@ -249,7 +212,7 @@ func (d *DebianRoute) Update(
 		return nil, fmt.Errorf("netplan route update: %w", err)
 	}
 
-	changed, applyErr := ApplyConfig(
+	changed, applyErr := netplan.ApplyConfig(
 		ctx,
 		d.logger,
 		d.fs,
@@ -270,24 +233,24 @@ func (d *DebianRoute) Update(
 		slog.Bool("changed", changed),
 	)
 
-	return &RouteResult{
+	return &Result{
 		Interface: entry.Interface,
 		Changed:   changed,
 	}, nil
 }
 
 // Delete removes managed routes for an interface via Netplan.
-func (d *DebianRoute) Delete(
+func (d *Debian) Delete(
 	ctx context.Context,
 	interfaceName string,
-) (*RouteResult, error) {
+) (*Result, error) {
 	if interfaceName == "" {
 		return nil, fmt.Errorf("netplan route delete: interface name must not be empty")
 	}
 
 	path := routeFilePath(interfaceName)
 
-	changed, err := RemoveConfig(
+	changed, err := netplan.RemoveConfig(
 		ctx,
 		d.logger,
 		d.fs,
@@ -307,7 +270,7 @@ func (d *DebianRoute) Delete(
 		)
 	}
 
-	return &RouteResult{
+	return &Result{
 		Interface: interfaceName,
 		Changed:   changed,
 	}, nil
@@ -330,7 +293,7 @@ func containsDefaultRoute(
 // generateRouteYAML builds a Netplan YAML configuration for the given
 // route entry.
 func generateRouteYAML(
-	entry RouteEntry,
+	entry Entry,
 ) []byte {
 	var b strings.Builder
 
@@ -355,7 +318,7 @@ func generateRouteYAML(
 // buildRouteMetadata serializes route data into the metadata map for
 // storage in the file-state KV.
 func buildRouteMetadata(
-	entry RouteEntry,
+	entry Entry,
 ) (map[string]string, error) {
 	routesJSON, err := marshalJSON(entry.Routes)
 	if err != nil {

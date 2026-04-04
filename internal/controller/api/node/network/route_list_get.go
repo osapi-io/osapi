@@ -29,7 +29,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/controller/api/node/network/gen"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/netplan"
+	"github.com/retr0h/osapi/internal/provider/network/route"
 )
 
 // GetNodeNetworkRoute get the node network route list API endpoint.
@@ -80,7 +80,7 @@ func (s *Network) GetNodeNetworkRoute(
 		}, nil
 	}
 
-	var entries []netplan.RouteListEntry
+	var entries []route.ListEntry
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &entries)
 	}
@@ -134,7 +134,7 @@ func (s *Network) getNodeNetworkRouteListBroadcast(
 			item.Error = &e
 		default:
 			item.Status = gen.RouteListEntryStatusOk
-			var entries []netplan.RouteListEntry
+			var entries []route.ListEntry
 			if resp.Data != nil {
 				_ = json.Unmarshal(resp.Data, &entries)
 			}
@@ -153,7 +153,7 @@ func (s *Network) getNodeNetworkRouteListBroadcast(
 
 // convertRouteListEntries converts provider route list entries to API RouteInfo.
 func convertRouteListEntries(
-	entries []netplan.RouteListEntry,
+	entries []route.ListEntry,
 ) []gen.RouteInfo {
 	result := make([]gen.RouteInfo, 0, len(entries))
 	for _, e := range entries {
