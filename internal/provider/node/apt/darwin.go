@@ -22,7 +22,6 @@ package apt
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
 )
@@ -40,7 +39,7 @@ func NewDarwinProvider() *Darwin {
 func (d *Darwin) List(
 	_ context.Context,
 ) ([]Package, error) {
-	return nil, fmt.Errorf("package: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Get returns ErrUnsupported on Darwin.
@@ -48,7 +47,7 @@ func (d *Darwin) Get(
 	_ context.Context,
 	_ string,
 ) (*Package, error) {
-	return nil, fmt.Errorf("package: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Install returns ErrUnsupported on Darwin.
@@ -56,7 +55,7 @@ func (d *Darwin) Install(
 	_ context.Context,
 	_ string,
 ) (*Result, error) {
-	return nil, fmt.Errorf("package: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Remove returns ErrUnsupported on Darwin.
@@ -64,19 +63,19 @@ func (d *Darwin) Remove(
 	_ context.Context,
 	_ string,
 ) (*Result, error) {
-	return nil, fmt.Errorf("package: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Update returns ErrUnsupported on Darwin.
 func (d *Darwin) Update(
 	_ context.Context,
 ) (*Result, error) {
-	return nil, fmt.Errorf("package: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // ListUpdates returns ErrUnsupported on Darwin.
 func (d *Darwin) ListUpdates(
 	_ context.Context,
 ) ([]Update, error) {
-	return nil, fmt.Errorf("package: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

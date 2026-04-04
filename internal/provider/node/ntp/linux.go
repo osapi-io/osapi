@@ -22,7 +22,6 @@ package ntp
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
 )
@@ -40,7 +39,7 @@ func NewLinuxProvider() *Linux {
 func (l *Linux) Get(
 	_ context.Context,
 ) (*Status, error) {
-	return nil, fmt.Errorf("ntp: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Create returns ErrUnsupported on generic Linux.
@@ -48,7 +47,7 @@ func (l *Linux) Create(
 	_ context.Context,
 	_ Config,
 ) (*CreateResult, error) {
-	return nil, fmt.Errorf("ntp: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Update returns ErrUnsupported on generic Linux.
@@ -56,12 +55,12 @@ func (l *Linux) Update(
 	_ context.Context,
 	_ Config,
 ) (*UpdateResult, error) {
-	return nil, fmt.Errorf("ntp: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Delete returns ErrUnsupported on generic Linux.
 func (l *Linux) Delete(
 	_ context.Context,
 ) (*DeleteResult, error) {
-	return nil, fmt.Errorf("ntp: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

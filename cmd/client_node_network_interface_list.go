@@ -85,7 +85,6 @@ var clientNodeNetworkInterfaceListCmd = &cobra.Command{
 					Fields: []string{
 						iface.Name,
 						iface.IPv4,
-						iface.MAC,
 						dhcp,
 						primary,
 						fmt.Sprintf("%t", iface.Managed),
@@ -95,7 +94,7 @@ var clientNodeNetworkInterfaceListCmd = &cobra.Command{
 		}
 		headers, rows := cli.BuildBroadcastTable(
 			results,
-			[]string{"NAME", "IPV4", "MAC", "DHCP", "PRIMARY", "MANAGED"},
+			[]string{"NAME", "IPV4", "DHCP", "PRIMARY", "MANAGED"},
 		)
 		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},

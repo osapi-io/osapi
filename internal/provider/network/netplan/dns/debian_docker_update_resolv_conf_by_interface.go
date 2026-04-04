@@ -21,8 +21,6 @@
 package dns
 
 import (
-	"fmt"
-
 	"github.com/retr0h/osapi/internal/provider"
 )
 
@@ -34,5 +32,5 @@ func (d *DebianDocker) UpdateResolvConfByInterface(
 	_ []string,
 	_ string,
 ) (*UpdateResult, error) {
-	return nil, fmt.Errorf("dns (container): %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

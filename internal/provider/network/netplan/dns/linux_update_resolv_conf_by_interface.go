@@ -21,8 +21,6 @@
 package dns
 
 import (
-	"fmt"
-
 	"github.com/retr0h/osapi/internal/provider"
 )
 
@@ -35,5 +33,5 @@ func (l *Linux) UpdateResolvConfByInterface(
 	_ []string,
 	_ string,
 ) (*UpdateResult, error) {
-	return nil, fmt.Errorf("linux: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

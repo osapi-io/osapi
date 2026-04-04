@@ -22,7 +22,6 @@ package power
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
 )
@@ -41,7 +40,7 @@ func (l *Linux) Reboot(
 	_ context.Context,
 	_ Opts,
 ) (*Result, error) {
-	return nil, fmt.Errorf("power: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Shutdown returns ErrUnsupported on generic Linux.
@@ -49,5 +48,5 @@ func (l *Linux) Shutdown(
 	_ context.Context,
 	_ Opts,
 ) (*Result, error) {
-	return nil, fmt.Errorf("power: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

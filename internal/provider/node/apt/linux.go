@@ -22,7 +22,6 @@ package apt
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
 )
@@ -41,7 +40,7 @@ func NewLinuxProvider() *Linux {
 func (l *Linux) List(
 	_ context.Context,
 ) ([]Package, error) {
-	return nil, fmt.Errorf("package: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Get returns ErrUnsupported on generic Linux.
@@ -49,7 +48,7 @@ func (l *Linux) Get(
 	_ context.Context,
 	_ string,
 ) (*Package, error) {
-	return nil, fmt.Errorf("package: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Install returns ErrUnsupported on generic Linux.
@@ -57,7 +56,7 @@ func (l *Linux) Install(
 	_ context.Context,
 	_ string,
 ) (*Result, error) {
-	return nil, fmt.Errorf("package: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Remove returns ErrUnsupported on generic Linux.
@@ -65,19 +64,19 @@ func (l *Linux) Remove(
 	_ context.Context,
 	_ string,
 ) (*Result, error) {
-	return nil, fmt.Errorf("package: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Update returns ErrUnsupported on generic Linux.
 func (l *Linux) Update(
 	_ context.Context,
 ) (*Result, error) {
-	return nil, fmt.Errorf("package: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // ListUpdates returns ErrUnsupported on generic Linux.
 func (l *Linux) ListUpdates(
 	_ context.Context,
 ) ([]Update, error) {
-	return nil, fmt.Errorf("package: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

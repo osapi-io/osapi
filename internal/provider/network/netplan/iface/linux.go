@@ -22,7 +22,6 @@ package iface
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
 )
@@ -40,7 +39,7 @@ func NewLinuxProvider() *Linux {
 func (l *Linux) List(
 	_ context.Context,
 ) ([]InterfaceEntry, error) {
-	return nil, fmt.Errorf("netplan interface: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Get returns ErrUnsupported on generic Linux.
@@ -48,7 +47,7 @@ func (l *Linux) Get(
 	_ context.Context,
 	_ string,
 ) (*InterfaceEntry, error) {
-	return nil, fmt.Errorf("netplan interface: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Create returns ErrUnsupported on generic Linux.
@@ -56,7 +55,7 @@ func (l *Linux) Create(
 	_ context.Context,
 	_ InterfaceEntry,
 ) (*InterfaceResult, error) {
-	return nil, fmt.Errorf("netplan interface: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Update returns ErrUnsupported on generic Linux.
@@ -64,7 +63,7 @@ func (l *Linux) Update(
 	_ context.Context,
 	_ InterfaceEntry,
 ) (*InterfaceResult, error) {
-	return nil, fmt.Errorf("netplan interface: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Delete returns ErrUnsupported on generic Linux.
@@ -72,5 +71,5 @@ func (l *Linux) Delete(
 	_ context.Context,
 	_ string,
 ) (*InterfaceResult, error) {
-	return nil, fmt.Errorf("netplan interface: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
