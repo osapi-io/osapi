@@ -1,15 +1,15 @@
-// Copyright (c) 2024 John Dewey
-
+// Copyright (c) 2026 John Dewey
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,64 +21,66 @@
 package dns_test
 
 import (
+	"log/slog"
+	"os"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	execMocks "github.com/retr0h/osapi/internal/exec/mocks"
 	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/dns"
 )
 
-type LinuxPublicTestSuite struct {
+type DarwinUpdateResolvConfByInterfacePublicTestSuite struct {
 	suite.Suite
+	ctrl *gomock.Controller
+
+	logger *slog.Logger
 }
 
-func (s *LinuxPublicTestSuite) TestGetResolvConfByInterface() {
+func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) SetupTest() {
+	suite.ctrl = gomock.NewController(suite.T())
+
+	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+}
+
+func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) SetupSubTest() {
+	suite.SetupTest()
+}
+
+func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TearDownTest() {
+	suite.ctrl.Finish()
+}
+
+func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvConfByInterface() {
 	tests := []struct {
 		name string
 	}{
 		{
-			name: "returns error for linux stub",
+			name: "returns ErrUnsupported on Darwin",
 		},
 	}
 
 	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			l := &dns.Linux{}
-			result, err := l.GetResolvConfByInterface("eth0")
+		suite.Run(tt.name, func() {
+			mock := execMocks.NewPlainMockManager(suite.ctrl)
 
-			s.Error(err)
-			s.Nil(result)
-			s.ErrorIs(err, provider.ErrUnsupported)
-		})
-	}
-}
-
-func (s *LinuxPublicTestSuite) TestUpdateResolvConfByInterface() {
-	tests := []struct {
-		name string
-	}{
-		{
-			name: "returns error for linux stub",
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			l := &dns.Linux{}
-			result, err := l.UpdateResolvConfByInterface(
+			darwin := dns.NewDarwinProvider(suite.logger, mock)
+			result, err := darwin.UpdateResolvConfByInterface(
 				[]string{"8.8.8.8"},
 				[]string{"example.com"},
-				"eth0",
+				"en0",
 			)
 
-			s.Error(err)
-			s.Nil(result)
-			s.ErrorIs(err, provider.ErrUnsupported)
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }
 
-func TestLinuxPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(LinuxPublicTestSuite))
+func TestDarwinUpdateResolvConfByInterfacePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DarwinUpdateResolvConfByInterfacePublicTestSuite))
 }

@@ -33,7 +33,7 @@ import (
 
 	execmocks "github.com/retr0h/osapi/internal/exec/mocks"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/dns"
 )
 
 type DebianUpdateResolvConfByInterfacePublicTestSuite struct {

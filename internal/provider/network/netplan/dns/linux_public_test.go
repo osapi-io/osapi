@@ -26,44 +26,59 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/dns"
 )
 
-type LinuxUpdateResolvConfByInterfacePublicTestSuite struct {
+type LinuxPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) SetupTest() {
-}
-
-func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TearDownTest() {}
-
-func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvConfByInterface() {
+func (s *LinuxPublicTestSuite) TestGetResolvConfByInterface() {
 	tests := []struct {
 		name string
 	}{
 		{
-			name: "returns not implemented error",
+			name: "returns error for linux stub",
 		},
 	}
 
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			linux := dns.NewLinuxProvider()
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			l := &dns.Linux{}
+			result, err := l.GetResolvConfByInterface("eth0")
 
-			servers := []string{}
-			searchDomains := []string{}
-			interfaceName := ""
-			result, err := linux.UpdateResolvConfByInterface(servers, searchDomains, interfaceName)
-
-			suite.Nil(result)
-			suite.ErrorIs(err, provider.ErrUnsupported)
+			s.Error(err)
+			s.Nil(result)
+			s.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }
 
-// In order for `go test` to run this suite, we need to create
-// a normal test function and pass our suite to suite.Run.
-func TestLinuxUpdateResolvConfByInterfacePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(LinuxUpdateResolvConfByInterfacePublicTestSuite))
+func (s *LinuxPublicTestSuite) TestUpdateResolvConfByInterface() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns error for linux stub",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			l := &dns.Linux{}
+			result, err := l.UpdateResolvConfByInterface(
+				[]string{"8.8.8.8"},
+				[]string{"example.com"},
+				"eth0",
+			)
+
+			s.Error(err)
+			s.Nil(result)
+			s.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func TestLinuxPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(LinuxPublicTestSuite))
 }
