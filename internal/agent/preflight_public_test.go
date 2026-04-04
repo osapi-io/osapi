@@ -133,7 +133,7 @@ func (s *PreflightPublicTestSuite) TestCheckCapabilities() {
 			name: "when all caps present",
 			setup: func() {
 				path := filepath.Join(s.tmpDir, "status_all_caps")
-				content := "Name:\tosapi\nCapEff:\t000000000000003f\n"
+				content := "Name:\tosapi\nCapEff:\t000000000000102f\n"
 				err := os.WriteFile(path, []byte(content), 0o644)
 				s.Require().NoError(err)
 				agent.SetProcStatusPath(path)
@@ -204,7 +204,7 @@ func (s *PreflightPublicTestSuite) TestCheckCapabilities() {
 				for i := range longLine {
 					longLine[i] = 'x'
 				}
-				content := string(longLine) + "\nCapEff:\t000000000000003f\n"
+				content := string(longLine) + "\nCapEff:\t000000000000102f\n"
 				err := os.WriteFile(path, []byte(content), 0o644)
 				s.Require().NoError(err)
 				agent.SetProcStatusPath(path)
@@ -260,7 +260,7 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 					AnyTimes()
 
 				path := filepath.Join(s.tmpDir, "status_pass")
-				content := "Name:\tosapi\nCapEff:\t000000000000003f\n"
+				content := "Name:\tosapi\nCapEff:\t000000000000102f\n"
 				err := os.WriteFile(path, []byte(content), 0o644)
 				s.Require().NoError(err)
 				agent.SetProcStatusPath(path)
@@ -279,7 +279,7 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 					AnyTimes()
 
 				path := filepath.Join(s.tmpDir, "status_sudo_fail")
-				content := "Name:\tosapi\nCapEff:\t000000000000003f\n"
+				content := "Name:\tosapi\nCapEff:\t000000000000102f\n"
 				err := os.WriteFile(path, []byte(content), 0o644)
 				s.Require().NoError(err)
 				agent.SetProcStatusPath(path)

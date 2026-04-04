@@ -112,19 +112,21 @@ specific Linux capabilities:
 
 ```bash
 sudo setcap \
-  'cap_dac_read_search+ep cap_dac_override+ep cap_fowner+ep cap_kill+ep' \
+  'cap_dac_read_search+ep cap_dac_override+ep cap_chown+ep cap_fowner+ep cap_kill+ep cap_net_admin+ep' \
   /usr/local/bin/osapi
 ```
 
 When `privilege_escalation.enabled: true`, the agent reads `/proc/self/status`
 at startup and checks the `CapEff` bitmask for the required bits:
 
-| Capability            | Bit | Purpose                         |
-| --------------------- | --- | ------------------------------- |
-| `CAP_DAC_READ_SEARCH` | 2   | Read restricted files           |
-| `CAP_DAC_OVERRIDE`    | 1   | Write files regardless of owner |
-| `CAP_FOWNER`          | 3   | Change file ownership           |
-| `CAP_KILL`            | 5   | Signal any process              |
+| Capability            | Bit | Purpose                                          |
+| --------------------- | --- | ------------------------------------------------ |
+| `CAP_DAC_READ_SEARCH` | 2   | Read restricted files (`/etc/shadow`, proc, etc) |
+| `CAP_DAC_OVERRIDE`    | 1   | Write files regardless of owner (netplan, sysctl)|
+| `CAP_CHOWN`           | 0   | Set file ownership to root:root (netplan configs)|
+| `CAP_FOWNER`          | 3   | Bypass permission checks on owned files          |
+| `CAP_KILL`            | 5   | Signal any process                               |
+| `CAP_NET_ADMIN`       | 12  | Network configuration (interface, routes, DNS)   |
 
 If any required capability is missing the agent logs the failure and exits with
 a non-zero status.
@@ -146,8 +148,8 @@ Group=osapi
 ExecStart=/usr/local/bin/osapi agent start
 Restart=always
 RestartSec=5
-AmbientCapabilities=CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE CAP_FOWNER CAP_KILL
-CapabilityBoundingSet=CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE CAP_FOWNER CAP_KILL
+AmbientCapabilities=CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE CAP_CHOWN CAP_FOWNER CAP_KILL CAP_NET_ADMIN
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE CAP_CHOWN CAP_FOWNER CAP_KILL CAP_NET_ADMIN
 SecureBits=keep-caps
 NoNewPrivileges=no
 PrivateTmp=true
@@ -187,7 +189,8 @@ Sudo access:
 
 Capabilities:
   ✓ CAP_DAC_READ_SEARCH   ✓ CAP_DAC_OVERRIDE
-  ✓ CAP_FOWNER            ✓ CAP_KILL
+  ✓ CAP_CHOWN             ✓ CAP_FOWNER
+  ✓ CAP_KILL              ✓ CAP_NET_ADMIN
 
 Result: FAILED (1 error)
   - sudo: sh not configured in /etc/sudoers.d/osapi-agent
