@@ -159,6 +159,11 @@ func convertInterfaceEntries(
 	for _, e := range entries {
 		info := gen.InterfaceInfo{
 			Name:       &e.Name,
+			Ipv4:       strPtrOrNil(e.IPv4),
+			Ipv6:       strPtrOrNil(e.IPv6),
+			Mac:        strPtrOrNil(e.MAC),
+			Family:     strPtrOrNil(e.Family),
+			Primary:    &e.Primary,
 			Dhcp4:      e.DHCP4,
 			Dhcp6:      e.DHCP6,
 			Wakeonlan:  e.WakeOnLAN,

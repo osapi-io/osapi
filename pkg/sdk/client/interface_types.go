@@ -27,6 +27,11 @@ import (
 // InterfaceInfo represents a network interface's configuration.
 type InterfaceInfo struct {
 	Name       string   `json:"name,omitempty"`
+	IPv4       string   `json:"ipv4,omitempty"`
+	IPv6       string   `json:"ipv6,omitempty"`
+	MAC        string   `json:"mac,omitempty"`
+	Family     string   `json:"family,omitempty"`
+	Primary    bool     `json:"primary"`
 	DHCP4      bool     `json:"dhcp4"`
 	DHCP6      bool     `json:"dhcp6"`
 	Addresses  []string `json:"addresses,omitempty"`
@@ -92,6 +97,11 @@ func interfaceInfoFromGen(
 ) InterfaceInfo {
 	info := InterfaceInfo{
 		Name:       derefString(g.Name),
+		IPv4:       derefString(g.Ipv4),
+		IPv6:       derefString(g.Ipv6),
+		MAC:        derefString(g.Mac),
+		Family:     derefString(g.Family),
+		Primary:    derefBool(g.Primary),
 		DHCP4:      derefBool(g.Dhcp4),
 		DHCP6:      derefBool(g.Dhcp6),
 		Gateway4:   derefString(g.Gateway4),

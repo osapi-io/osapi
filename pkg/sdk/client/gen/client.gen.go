@@ -1841,7 +1841,7 @@ type InterfaceGetResponse struct {
 
 // InterfaceInfo Information about a network interface.
 type InterfaceInfo struct {
-	// Addresses IP addresses assigned to the interface.
+	// Addresses IP addresses assigned to the interface (CIDR).
 	Addresses *[]string `json:"addresses,omitempty"`
 
 	// Dhcp4 Whether DHCPv4 is enabled.
@@ -1850,13 +1850,25 @@ type InterfaceInfo struct {
 	// Dhcp6 Whether DHCPv6 is enabled.
 	Dhcp6 *bool `json:"dhcp6,omitempty"`
 
+	// Family Address family (inet, inet6, dual).
+	Family *string `json:"family,omitempty"`
+
 	// Gateway4 IPv4 gateway address.
 	Gateway4 *string `json:"gateway4,omitempty"`
 
 	// Gateway6 IPv6 gateway address.
 	Gateway6 *string `json:"gateway6,omitempty"`
 
-	// MacAddress Hardware MAC address.
+	// Ipv4 Primary IPv4 address.
+	Ipv4 *string `json:"ipv4,omitempty"`
+
+	// Ipv6 Primary IPv6 address.
+	Ipv6 *string `json:"ipv6,omitempty"`
+
+	// Mac Hardware MAC address.
+	Mac *string `json:"mac,omitempty"`
+
+	// MacAddress Configured MAC address override.
 	MacAddress *string `json:"mac_address,omitempty"`
 
 	// Managed Whether the interface is managed by OSAPI.
@@ -1867,6 +1879,9 @@ type InterfaceInfo struct {
 
 	// Name Interface name.
 	Name *string `json:"name,omitempty"`
+
+	// Primary Whether this is the primary (default route) interface.
+	Primary *bool `json:"primary,omitempty"`
 
 	// State Operational state of the interface.
 	State *string `json:"state,omitempty"`

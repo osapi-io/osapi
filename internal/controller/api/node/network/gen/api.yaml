@@ -1077,16 +1077,32 @@ components:
           type: string
           description: Interface name.
           example: "eth0"
+        ipv4:
+          type: string
+          description: Primary IPv4 address.
+          example: "192.168.1.10"
+        ipv6:
+          type: string
+          description: Primary IPv6 address.
+          example: "fd00::5"
+        mac:
+          type: string
+          description: Hardware MAC address.
+          example: "00:1a:2b:3c:4d:5e"
+        family:
+          type: string
+          description: Address family (inet, inet6, dual).
+          example: "dual"
         addresses:
           type: array
-          description: IP addresses assigned to the interface.
+          description: IP addresses assigned to the interface (CIDR).
           items:
             type: string
           example: ["192.168.1.10/24"]
         mac_address:
           type: string
-          description: Hardware MAC address.
-          example: "00:1a:2b:3c:4d:5e"
+          description: Configured MAC address override.
+          example: "02:42:ac:11:00:02"
         mtu:
           type: integer
           description: Maximum transmission unit.
@@ -1111,6 +1127,9 @@ components:
         wakeonlan:
           type: boolean
           description: Whether Wake-on-LAN is enabled.
+        primary:
+          type: boolean
+          description: Whether this is the primary (default route) interface.
         managed:
           type: boolean
           description: Whether the interface is managed by OSAPI.
