@@ -28,7 +28,10 @@ file (`/etc/netplan/osapi-dns.yaml`) targeting the primary interface, validate
 with `netplan generate`, and apply with `netplan apply`. This ensures DNS
 changes survive reboots. The `--interface-name` parameter supports
 [fact references](system-facts.md) — use `@fact.interface.primary` to
-automatically target the default route interface.
+automatically target the default route interface. Use `--override-dhcp` to
+disable DHCP-provided DNS servers so only the explicitly configured servers are
+used; when omitted, DHCP DNS servers are merged alongside configured ones
+(default Netplan behavior).
 
 **Ping** -- sends ICMP echo requests to a target host and reports the results.
 

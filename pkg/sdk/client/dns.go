@@ -66,6 +66,7 @@ func (s *DNSService) Update(
 	interfaceName string,
 	servers []string,
 	searchDomains []string,
+	overrideDHCP bool,
 ) (*Response[Collection[DNSUpdateResult]], error) {
 	body := gen.DNSConfigUpdateRequest{
 		InterfaceName: interfaceName,
@@ -77,6 +78,10 @@ func (s *DNSService) Update(
 
 	if len(searchDomains) > 0 {
 		body.SearchDomains = &searchDomains
+	}
+
+	if overrideDHCP {
+		body.OverrideDhcp = &overrideDHCP
 	}
 
 	resp, err := s.client.PutNodeNetworkDNSWithResponse(ctx, target, body)

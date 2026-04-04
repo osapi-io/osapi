@@ -157,6 +157,7 @@ func (suite *DNSPublicTestSuite) TestUpdate() {
 		iface         string
 		servers       []string
 		searchDomains []string
+		overrideDHCP  bool
 		validateFunc  func(*client.Response[client.Collection[client.DNSUpdateResult]], error)
 	}{
 		{
@@ -209,6 +210,26 @@ func (suite *DNSPublicTestSuite) TestUpdate() {
 			iface:         "eth0",
 			servers:       []string{"8.8.8.8"},
 			searchDomains: []string{"example.com"},
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"dns-host","status":"completed","changed":true}]}`,
+					),
+				)
+			},
+			validateFunc: func(resp *client.Response[client.Collection[client.DNSUpdateResult]], err error) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+			},
+		},
+		{
+			name:         "when override DHCP provided sets override_dhcp",
+			target:       "_any",
+			iface:        "eth0",
+			servers:      []string{"8.8.8.8"},
+			overrideDHCP: true,
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusAccepted)
@@ -323,6 +344,7 @@ func (suite *DNSPublicTestSuite) TestUpdate() {
 				tc.iface,
 				tc.servers,
 				tc.searchDomains,
+				tc.overrideDHCP,
 			)
 			tc.validateFunc(resp, err)
 		})
