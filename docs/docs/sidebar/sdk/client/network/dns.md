@@ -8,10 +8,10 @@ DNS configuration query and update operations.
 
 ## Methods
 
-| Method                                        | Description        |
-| --------------------------------------------- | ------------------ |
-| `Get(ctx, target, iface)`                     | Get DNS config     |
-| `Update(ctx, target, iface, servers, search)` | Update DNS servers |
+| Method                                                       | Description        |
+| ------------------------------------------------------------ | ------------------ |
+| `Get(ctx, target, iface)`                                    | Get DNS config     |
+| `Update(ctx, target, iface, servers, search, overrideDHCP)`  | Update DNS servers |
 
 ## Usage
 
@@ -31,7 +31,16 @@ for _, r := range resp.Data.Results {
 resp, err := c.DNS.Update(
     ctx, "web-01", "eth0",
     []string{"8.8.8.8", "8.8.4.4"},
+    nil,   // search domains
+    false, // override DHCP
+)
+
+// Update DNS servers and override DHCP-provided servers
+resp, err = c.DNS.Update(
+    ctx, "web-01", "eth0",
+    []string{"1.1.1.1"},
     nil,
+    true, // only use configured servers, ignore DHCP
 )
 ```
 
