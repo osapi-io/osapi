@@ -523,6 +523,25 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 				suite.Contains(err.Error(), "netplan route create:")
 			},
 		},
+		{
+			name: "when buildRouteMetadata fails",
+			entry: route.Entry{
+				Interface: "eth0",
+				Routes: []route.Route{
+					{To: "10.1.0.0/16", Via: "10.0.0.1"},
+				},
+			},
+			setup: func() {
+				route.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
+					return nil, errors.New("marshal error")
+				})
+			},
+			validateFunc: func(result *route.Result, err error) {
+				suite.Require().Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "netplan route create:")
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -655,6 +674,31 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd("netplan", []string{"generate"}).
 					Return("", errors.New("validation error"))
+			},
+			validateFunc: func(result *route.Result, err error) {
+				suite.Require().Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "netplan route update:")
+			},
+		},
+		{
+			name: "when buildRouteMetadata fails",
+			entry: route.Entry{
+				Interface: "eth0",
+				Routes: []route.Route{
+					{To: "10.1.0.0/16", Via: "10.0.0.1"},
+				},
+			},
+			setup: func() {
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/osapi-eth0-routes.yaml",
+					[]byte("old"),
+					0o644,
+				)
+
+				route.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
+					return nil, errors.New("marshal error")
+				})
 			},
 			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)

@@ -438,6 +438,41 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 				suite.Equal("nil response body", target.Message)
 			},
 		},
+		{
+			name: "when creating with all fields populates request",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"eth0","changed":true}]}`,
+					),
+				)
+			},
+			opts: func() client.InterfaceConfigOpts {
+				dhcp4 := true
+				dhcp6 := false
+				mtu := 9000
+				wol := true
+				return client.InterfaceConfigOpts{
+					DHCP4:      &dhcp4,
+					DHCP6:      &dhcp6,
+					Addresses:  []string{"10.0.0.5/24", "fd00::5/64"},
+					Gateway4:   "10.0.0.1",
+					Gateway6:   "fd00::1",
+					MTU:        &mtu,
+					MACAddress: "02:42:ac:11:00:02",
+					WakeOnLAN:  &wol,
+				}
+			}(),
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.Require().NotNil(resp)
+			},
+		},
 	}
 
 	for _, tc := range tests {
