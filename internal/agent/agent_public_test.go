@@ -220,7 +220,7 @@ func (s *AgentPublicTestSuite) TestStart() {
 				path := filepath.Join(tmpDir, "status")
 				err := os.WriteFile(
 					path,
-					[]byte("Name:\tosapi\nCapEff:\t000000000000003f\n"),
+					[]byte("Name:\tosapi\nCapEff:\t000000000000102f\n"),
 					0o644,
 				)
 				s.Require().NoError(err)
