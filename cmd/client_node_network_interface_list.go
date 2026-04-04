@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -68,23 +67,19 @@ var clientNodeNetworkInterfaceListCmd = &cobra.Command{
 			}
 
 			for _, iface := range r.Interfaces {
-				var ipv4, ipv6 []string
-				for _, addr := range iface.Addresses {
-					if strings.Contains(addr, ":") {
-						ipv6 = append(ipv6, addr)
-					} else {
-						ipv4 = append(ipv4, addr)
-					}
+				primary := ""
+				if iface.Primary {
+					primary = "*"
 				}
 
 				results = append(results, cli.ResultRow{
 					Hostname: r.Hostname,
 					Status:   r.Status,
 					Fields: []string{
-						iface.Name,
-						cli.FormatList(ipv4),
-						cli.FormatList(ipv6),
-						iface.MACAddress,
+						iface.Name + primary,
+						iface.IPv4,
+						iface.IPv6,
+						iface.MAC,
 						fmt.Sprintf("%t", iface.Managed),
 					},
 				})
