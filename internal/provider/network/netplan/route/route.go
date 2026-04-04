@@ -240,6 +240,7 @@ func (d *Debian) Update(
 }
 
 // Delete removes managed routes for an interface via Netplan.
+// Returns an error if the routes are not managed by OSAPI.
 func (d *Debian) Delete(
 	ctx context.Context,
 	interfaceName string,
@@ -249,6 +250,13 @@ func (d *Debian) Delete(
 	}
 
 	path := routeFilePath(interfaceName)
+
+	if _, err := d.fs.Stat(path); err != nil {
+		return nil, fmt.Errorf(
+			"netplan route delete: %q not managed",
+			interfaceName,
+		)
+	}
 
 	changed, err := netplan.RemoveConfig(
 		ctx,

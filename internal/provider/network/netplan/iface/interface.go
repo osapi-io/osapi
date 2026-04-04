@@ -241,6 +241,7 @@ func (d *Debian) Update(
 }
 
 // Delete removes a managed Netplan interface configuration file.
+// Returns an error if the interface is not managed by OSAPI.
 func (d *Debian) Delete(
 	ctx context.Context,
 	name string,
@@ -250,6 +251,13 @@ func (d *Debian) Delete(
 	}
 
 	path := interfaceFilePath(name)
+
+	if _, err := d.fs.Stat(path); err != nil {
+		return nil, fmt.Errorf(
+			"netplan interface delete: %q not managed",
+			name,
+		)
+	}
 
 	changed, err := netplan.RemoveConfig(
 		ctx,
