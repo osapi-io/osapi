@@ -211,6 +211,34 @@ func (s *NetworkDNSDeletePublicTestSuite) TestDeleteNodeNetworkDNS() {
 			},
 		},
 		{
+			name: "when broadcast with skipped host",
+			request: gen.DeleteNodeNetworkDNSRequestObject{
+				Hostname: "_all",
+				Body:     &gen.DNSDeleteRequest{InterfaceName: "eth0"},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkDNSDelete, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusSkipped,
+							Error:    "unsupported",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.DeleteNodeNetworkDNSResponseObject) {
+				r, ok := resp.(gen.DeleteNodeNetworkDNS200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.DNSDeleteResultItemStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("unsupported", *r.Results[0].Error)
+				s.Require().NotNil(r.Results[0].Changed)
+				s.False(*r.Results[0].Changed)
+			},
+		},
+		{
 			name: "when broadcast error",
 			request: gen.DeleteNodeNetworkDNSRequestObject{
 				Hostname: "_all",

@@ -255,6 +255,118 @@ func (s *NetworkInterfaceCreatePostPublicTestSuite) TestPostNodeNetworkInterface
 				s.True(ok)
 			},
 		},
+		{
+			name: "when broadcast with failed and skipped hosts",
+			request: gen.PostNodeNetworkInterfaceRequestObject{
+				Hostname: "_all",
+				Name:     "eth0",
+				Body:     &gen.InterfaceConfigRequest{Dhcp4: &trueVal},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"network",
+						job.OperationNetworkInterfaceCreate,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "server1",
+							},
+							"server2": {
+								Status:   job.StatusSkipped,
+								Error:    "unsupported",
+								Hostname: "server2",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeNetworkInterfaceResponseObject) {
+				r, ok := resp.(gen.PostNodeNetworkInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 2)
+				statuses := map[gen.InterfaceMutationEntryStatus]bool{}
+				for _, item := range r.Results {
+					statuses[item.Status] = true
+					s.Require().NotNil(item.Error)
+					s.Require().NotNil(item.Changed)
+					s.False(*item.Changed)
+				}
+				s.True(statuses[gen.InterfaceMutationEntryStatusFailed])
+				s.True(statuses[gen.InterfaceMutationEntryStatusSkipped])
+			},
+		},
+		{
+			name: "when all optional fields provided",
+			request: gen.PostNodeNetworkInterfaceRequestObject{
+				Hostname: "server1",
+				Name:     "eth0",
+				Body: func() *gen.InterfaceConfigRequest {
+					dhcp6 := false
+					addrs := []string{"10.0.0.1/24"}
+					gw4 := "10.0.0.1"
+					gw6 := "fe80::1"
+					mtu := 1500
+					mac := "00:11:22:33:44:55"
+					wol := true
+					return &gen.InterfaceConfigRequest{
+						Dhcp4:      &trueVal,
+						Dhcp6:      &dhcp6,
+						Addresses:  &addrs,
+						Gateway4:   &gw4,
+						Gateway6:   &gw6,
+						Mtu:        &mtu,
+						MacAddress: &mac,
+						Wakeonlan:  &wol,
+					}
+				}(),
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"network",
+						job.OperationNetworkInterfaceCreate,
+						gomock.Any(),
+					).
+					DoAndReturn(func(
+						_ context.Context,
+						_ string,
+						_ string,
+						_ string,
+						data interface{},
+					) (string, *job.Response, error) {
+						d := data.(map[string]any)
+						s.Equal("eth0", d["name"])
+						s.Equal(true, d["dhcp4"])
+						s.Equal(false, d["dhcp6"])
+						s.Equal([]string{"10.0.0.1/24"}, d["addresses"])
+						s.Equal("10.0.0.1", d["gateway4"])
+						s.Equal("fe80::1", d["gateway6"])
+						s.Equal(1500, d["mtu"])
+						s.Equal("00:11:22:33:44:55", d["mac_address"])
+						s.Equal(true, d["wakeonlan"])
+						return "550e8400-e29b-41d4-a716-446655440000", &job.Response{
+							Hostname: "server1",
+							Changed:  &trueVal,
+						}, nil
+					})
+			},
+			validateFunc: func(resp gen.PostNodeNetworkInterfaceResponseObject) {
+				r, ok := resp.(gen.PostNodeNetworkInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.InterfaceMutationEntryStatusOk, r.Results[0].Status)
+			},
+		},
 	}
 
 	for _, tt := range tests {

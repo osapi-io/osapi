@@ -139,6 +139,37 @@ func (s *NetworkInterfaceUpdatePutPublicTestSuite) TestPutNodeNetworkInterface()
 			},
 		},
 		{
+			name: "when validation error empty name",
+			request: gen.PutNodeNetworkInterfaceRequestObject{
+				Hostname: "server1",
+				Name:     "",
+				Body:     &gen.InterfaceConfigRequest{Dhcp4: &trueVal},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNodeNetworkInterfaceResponseObject) {
+				r, ok := resp.(gen.PutNodeNetworkInterface400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+			},
+		},
+		{
+			name: "when body struct validation error invalid address",
+			request: gen.PutNodeNetworkInterfaceRequestObject{
+				Hostname: "server1",
+				Name:     "eth0",
+				Body: &gen.InterfaceConfigRequest{
+					Addresses: &[]string{"not-a-cidr"},
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNodeNetworkInterfaceResponseObject) {
+				r, ok := resp.(gen.PutNodeNetworkInterface400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "Addresses")
+			},
+		},
+		{
 			name: "when at least one field error empty body",
 			request: gen.PutNodeNetworkInterfaceRequestObject{
 				Hostname: "server1",

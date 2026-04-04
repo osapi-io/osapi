@@ -83,6 +83,19 @@ func (s *NetworkInterfaceGetPublicTestSuite) TestGetNodeNetworkInterfaceByName()
 	entry := iface.InterfaceEntry{Name: "eth0", DHCP4: &trueVal, Managed: true}
 	entryData, _ := json.Marshal(entry)
 
+	fullEntry := iface.InterfaceEntry{
+		Name:       "eth0",
+		DHCP4:      &trueVal,
+		Addresses:  []string{"10.0.0.1/24"},
+		Gateway4:   "10.0.0.1",
+		Gateway6:   "fe80::1",
+		MTU:        1500,
+		MACAddress: "00:11:22:33:44:55",
+		WakeOnLAN:  &trueVal,
+		Managed:    true,
+	}
+	fullEntryData, _ := json.Marshal(fullEntry)
+
 	tests := []struct {
 		name         string
 		request      gen.GetNodeNetworkInterfaceByNameRequestObject
@@ -120,6 +133,49 @@ func (s *NetworkInterfaceGetPublicTestSuite) TestGetNodeNetworkInterfaceByName()
 				s.Equal("server1", r.Results[0].Hostname)
 				s.Equal(gen.InterfaceGetEntryStatusOk, r.Results[0].Status)
 				s.Require().NotNil(r.Results[0].Interface)
+			},
+		},
+		{
+			name: "when success with all interface fields",
+			request: gen.GetNodeNetworkInterfaceByNameRequestObject{
+				Hostname: "server1",
+				Name:     "eth0",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(
+						gomock.Any(),
+						"server1",
+						"network",
+						job.OperationNetworkInterfaceGet,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							Hostname: "server1",
+							Data:     fullEntryData,
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkInterfaceByNameResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkInterfaceByName200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				ifc := r.Results[0].Interface
+				s.Require().NotNil(ifc)
+				s.Equal("eth0", *ifc.Name)
+				s.Require().NotNil(ifc.Addresses)
+				s.Equal([]string{"10.0.0.1/24"}, *ifc.Addresses)
+				s.Require().NotNil(ifc.Mtu)
+				s.Equal(1500, *ifc.Mtu)
+				s.Require().NotNil(ifc.Gateway4)
+				s.Equal("10.0.0.1", *ifc.Gateway4)
+				s.Require().NotNil(ifc.Gateway6)
+				s.Equal("fe80::1", *ifc.Gateway6)
+				s.Require().NotNil(ifc.MacAddress)
+				s.Equal("00:11:22:33:44:55", *ifc.MacAddress)
 			},
 		},
 		{
@@ -248,6 +304,109 @@ func (s *NetworkInterfaceGetPublicTestSuite) TestGetNodeNetworkInterfaceByName()
 			validateFunc: func(resp gen.GetNodeNetworkInterfaceByNameResponseObject) {
 				_, ok := resp.(gen.GetNodeNetworkInterfaceByName500JSONResponse)
 				s.True(ok)
+			},
+		},
+		{
+			name: "when broadcast with failed host",
+			request: gen.GetNodeNetworkInterfaceByNameRequestObject{
+				Hostname: "_all",
+				Name:     "eth0",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"network",
+						job.OperationNetworkInterfaceGet,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "server1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkInterfaceByNameResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkInterfaceByName200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.InterfaceGetEntryStatusFailed, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("permission denied", *r.Results[0].Error)
+			},
+		},
+		{
+			name: "when broadcast with skipped host",
+			request: gen.GetNodeNetworkInterfaceByNameRequestObject{
+				Hostname: "_all",
+				Name:     "eth0",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"network",
+						job.OperationNetworkInterfaceGet,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusSkipped,
+								Error:    "unsupported",
+								Hostname: "server1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkInterfaceByNameResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkInterfaceByName200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.InterfaceGetEntryStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("unsupported", *r.Results[0].Error)
+			},
+		},
+		{
+			name: "when broadcast success with nil data",
+			request: gen.GetNodeNetworkInterfaceByNameRequestObject{
+				Hostname: "_all",
+				Name:     "eth0",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"network",
+						job.OperationNetworkInterfaceGet,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {Hostname: "server1", Data: nil},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkInterfaceByNameResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkInterfaceByName200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.InterfaceGetEntryStatusOk, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Interface)
 			},
 		},
 	}
