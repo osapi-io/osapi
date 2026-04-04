@@ -24,8 +24,11 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/avfs/avfs"
 
 	"github.com/retr0h/osapi/internal/provider/network/netplan"
 )
@@ -72,6 +75,7 @@ func (d *Debian) List(
 			MAC:     iface.MAC,
 			Family:  iface.Family,
 			Primary: iface.Name == primaryIface,
+			DHCP4:   detectDHCP(d.fs, iface.Name),
 		}
 
 		path := interfaceFilePath(iface.Name)
@@ -118,6 +122,7 @@ func (d *Debian) Get(
 			MAC:     iface.MAC,
 			Family:  iface.Family,
 			Primary: iface.Name == primaryIface,
+			DHCP4:   detectDHCP(d.fs, iface.Name),
 		}
 
 		path := interfaceFilePath(name)
@@ -337,4 +342,40 @@ func generateInterfaceYAML(
 	}
 
 	return []byte(b.String())
+}
+
+// detectDHCP scans all Netplan YAML files to determine if an interface
+// uses DHCP. Returns a pointer to true if dhcp4: true is found for the
+// interface, false if the interface is found without dhcp4: true, or
+// nil if the interface is not found in any config file.
+func detectDHCP(
+	fs avfs.VFS,
+	ifaceName string,
+) *bool {
+	matches, err := fs.Glob(filepath.Join(netplanDir, "*.yaml"))
+	if err != nil {
+		return nil
+	}
+
+	ymlMatches, _ := fs.Glob(filepath.Join(netplanDir, "*.yml"))
+	matches = append(matches, ymlMatches...)
+
+	for _, path := range matches {
+		data, readErr := fs.ReadFile(path)
+		if readErr != nil {
+			continue
+		}
+
+		content := string(data)
+		if !strings.Contains(content, ifaceName+":") {
+			continue
+		}
+
+		// Found the interface in this file. Check for dhcp4.
+		dhcp := strings.Contains(content, "dhcp4: true") ||
+			strings.Contains(content, "dhcp4: yes")
+		return &dhcp
+	}
+
+	return nil
 }

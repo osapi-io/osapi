@@ -28,6 +28,7 @@ import (
 	"testing"
 
 	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
@@ -714,6 +715,186 @@ func (suite *InterfacePublicTestSuite) TestGenerateInterfaceYAML() {
 			result := iface.GenerateInterfaceYAML(tc.entry)
 
 			tc.validateFunc(string(result))
+		})
+	}
+}
+
+func (suite *InterfacePublicTestSuite) TestDetectDHCP() {
+	tests := []struct {
+		name         string
+		setup        func()
+		ifaceName    string
+		validateFunc func(*bool)
+	}{
+		{
+			name:      "when wifi interface has dhcp4 true",
+			ifaceName: "wlp0s20f3",
+			setup: func() {
+				_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/00-installer-config-wifi.yaml",
+					[]byte("# This is the network config written by 'subiquity'\nnetwork:\n  version: 2\n  wifis:\n    wlp0s20f3:\n      access-points:\n        Yikes:\n          password: foo\n      dhcp4: true\n"),
+					0o644,
+				)
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/00-installer-config.yaml",
+					[]byte("# This is the network config written by 'subiquity'\nnetwork:\n  ethernets:\n    eno1:\n      dhcp4: true\n  version: 2\n"),
+					0o644,
+				)
+			},
+			validateFunc: func(result *bool) {
+				suite.Require().NotNil(result)
+				suite.True(*result)
+			},
+		},
+		{
+			name:      "when ethernet interface has dhcp4 true",
+			ifaceName: "eno1",
+			setup: func() {
+				_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/00-installer-config.yaml",
+					[]byte("network:\n  ethernets:\n    eno1:\n      dhcp4: true\n  version: 2\n"),
+					0o644,
+				)
+			},
+			validateFunc: func(result *bool) {
+				suite.Require().NotNil(result)
+				suite.True(*result)
+			},
+		},
+		{
+			name:      "when interface has static config no dhcp4",
+			ifaceName: "eth0",
+			setup: func() {
+				_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/01-config.yaml",
+					[]byte("network:\n  ethernets:\n    eth0:\n      addresses:\n        - 10.0.0.5/24\n      gateway4: 10.0.0.1\n"),
+					0o644,
+				)
+			},
+			validateFunc: func(result *bool) {
+				suite.Require().NotNil(result)
+				suite.False(*result)
+			},
+		},
+		{
+			name:      "when interface not found in any file",
+			ifaceName: "eth99",
+			setup: func() {
+				_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/01-config.yaml",
+					[]byte("network:\n  ethernets:\n    eth0:\n      dhcp4: true\n"),
+					0o644,
+				)
+			},
+			validateFunc: func(result *bool) {
+				suite.Nil(result)
+			},
+		},
+		{
+			name:      "when netplan dir does not exist",
+			ifaceName: "eth0",
+			setup:     func() {},
+			validateFunc: func(result *bool) {
+				suite.Nil(result)
+			},
+		},
+		{
+			name:      "when dhcp4 yes is used",
+			ifaceName: "eth0",
+			setup: func() {
+				_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/01-config.yaml",
+					[]byte("network:\n  ethernets:\n    eth0:\n      dhcp4: yes\n"),
+					0o644,
+				)
+			},
+			validateFunc: func(result *bool) {
+				suite.Require().NotNil(result)
+				suite.True(*result)
+			},
+		},
+		{
+			name:      "when yml extension is supported",
+			ifaceName: "eth0",
+			setup: func() {
+				_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/01-config.yml",
+					[]byte("network:\n  ethernets:\n    eth0:\n      dhcp4: true\n"),
+					0o644,
+				)
+			},
+			validateFunc: func(result *bool) {
+				suite.Require().NotNil(result)
+				suite.True(*result)
+			},
+		},
+		{
+			name:      "when file read fails skips to next",
+			ifaceName: "eth0",
+			setup: func() {
+				base := memfs.New()
+				_ = base.MkdirAll("/etc/netplan", 0o755)
+				_ = base.WriteFile(
+					"/etc/netplan/01-bad.yaml",
+					[]byte("network:\n  ethernets:\n    eth0:\n      dhcp4: true\n"),
+					0o644,
+				)
+
+				ffs := failfs.New(base)
+				_ = ffs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					if fn == avfs.FnReadFile {
+						return errors.New("read error")
+					}
+
+					return nil
+				})
+
+				suite.memFs = ffs
+			},
+			validateFunc: func(result *bool) {
+				suite.Nil(result)
+			},
+		},
+		{
+			name:      "when multiple files exist finds correct one",
+			ifaceName: "eth1",
+			setup: func() {
+				_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/01-eth0.yaml",
+					[]byte("network:\n  ethernets:\n    eth0:\n      dhcp4: true\n"),
+					0o644,
+				)
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/02-eth1.yaml",
+					[]byte("network:\n  ethernets:\n    eth1:\n      addresses:\n        - 10.0.1.5/24\n"),
+					0o644,
+				)
+			},
+			validateFunc: func(result *bool) {
+				suite.Require().NotNil(result)
+				suite.False(*result)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			tc.setup()
+
+			result := iface.DetectDHCP(suite.memFs, tc.ifaceName)
+
+			tc.validateFunc(result)
 		})
 	}
 }
