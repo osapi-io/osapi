@@ -72,6 +72,13 @@ var clientNodeNetworkInterfaceListCmd = &cobra.Command{
 					primary = "yes"
 				}
 
+				dhcp := ""
+				if iface.DHCP4 {
+					dhcp = "dhcp"
+				} else if iface.IPv4 != "" {
+					dhcp = "static"
+				}
+
 				results = append(results, cli.ResultRow{
 					Hostname: r.Hostname,
 					Status:   r.Status,
@@ -79,6 +86,7 @@ var clientNodeNetworkInterfaceListCmd = &cobra.Command{
 						iface.Name,
 						iface.IPv4,
 						iface.MAC,
+						dhcp,
 						primary,
 						fmt.Sprintf("%t", iface.Managed),
 					},
@@ -87,7 +95,7 @@ var clientNodeNetworkInterfaceListCmd = &cobra.Command{
 		}
 		headers, rows := cli.BuildBroadcastTable(
 			results,
-			[]string{"NAME", "IPV4", "MAC", "PRIMARY", "MANAGED"},
+			[]string{"NAME", "IPV4", "MAC", "DHCP", "PRIMARY", "MANAGED"},
 		)
 		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
