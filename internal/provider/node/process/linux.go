@@ -22,7 +22,6 @@ package process
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
 )
@@ -40,7 +39,7 @@ func NewLinuxProvider() *Linux {
 func (l *Linux) List(
 	_ context.Context,
 ) ([]Info, error) {
-	return nil, fmt.Errorf("process: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Get returns ErrUnsupported on generic Linux.
@@ -48,7 +47,7 @@ func (l *Linux) Get(
 	_ context.Context,
 	_ int,
 ) (*Info, error) {
-	return nil, fmt.Errorf("process: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Signal returns ErrUnsupported on generic Linux.
@@ -57,5 +56,5 @@ func (l *Linux) Signal(
 	_ int,
 	_ string,
 ) (*SignalResult, error) {
-	return nil, fmt.Errorf("process: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

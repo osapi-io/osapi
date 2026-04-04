@@ -22,7 +22,6 @@ package log
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
 )
@@ -41,7 +40,7 @@ func (d *Darwin) Query(
 	_ context.Context,
 	_ QueryOpts,
 ) ([]Entry, error) {
-	return nil, fmt.Errorf("log: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // QueryUnit returns ErrUnsupported on Darwin.
@@ -50,12 +49,12 @@ func (d *Darwin) QueryUnit(
 	_ string,
 	_ QueryOpts,
 ) ([]Entry, error) {
-	return nil, fmt.Errorf("log: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // ListSources returns ErrUnsupported on Darwin.
 func (d *Darwin) ListSources(
 	_ context.Context,
 ) ([]string, error) {
-	return nil, fmt.Errorf("log: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

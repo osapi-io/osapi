@@ -22,7 +22,6 @@ package ntp
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
 )
@@ -40,7 +39,7 @@ func NewDarwinProvider() *Darwin {
 func (d *Darwin) Get(
 	_ context.Context,
 ) (*Status, error) {
-	return nil, fmt.Errorf("ntp: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Create returns ErrUnsupported on Darwin.
@@ -48,7 +47,7 @@ func (d *Darwin) Create(
 	_ context.Context,
 	_ Config,
 ) (*CreateResult, error) {
-	return nil, fmt.Errorf("ntp: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Update returns ErrUnsupported on Darwin.
@@ -56,12 +55,12 @@ func (d *Darwin) Update(
 	_ context.Context,
 	_ Config,
 ) (*UpdateResult, error) {
-	return nil, fmt.Errorf("ntp: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Delete returns ErrUnsupported on Darwin.
 func (d *Darwin) Delete(
 	_ context.Context,
 ) (*DeleteResult, error) {
-	return nil, fmt.Errorf("ntp: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
