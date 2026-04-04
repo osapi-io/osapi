@@ -27,20 +27,20 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/network/route"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/route"
 )
 
-type LinuxRoutePublicTestSuite struct {
+type DarwinRoutePublicTestSuite struct {
 	suite.Suite
 
-	provider *route.Linux
+	provider *route.Darwin
 }
 
-func (suite *LinuxRoutePublicTestSuite) SetupTest() {
-	suite.provider = route.NewLinuxProvider()
+func (suite *DarwinRoutePublicTestSuite) SetupTest() {
+	suite.provider = route.NewDarwinProvider()
 }
 
-func (suite *LinuxRoutePublicTestSuite) TestList() {
+func (suite *DarwinRoutePublicTestSuite) TestList() {
 	tests := []struct {
 		name string
 	}{
@@ -59,7 +59,7 @@ func (suite *LinuxRoutePublicTestSuite) TestList() {
 	}
 }
 
-func (suite *LinuxRoutePublicTestSuite) TestGet() {
+func (suite *DarwinRoutePublicTestSuite) TestGet() {
 	tests := []struct {
 		name string
 	}{
@@ -78,7 +78,7 @@ func (suite *LinuxRoutePublicTestSuite) TestGet() {
 	}
 }
 
-func (suite *LinuxRoutePublicTestSuite) TestCreate() {
+func (suite *DarwinRoutePublicTestSuite) TestCreate() {
 	tests := []struct {
 		name string
 	}{
@@ -97,7 +97,7 @@ func (suite *LinuxRoutePublicTestSuite) TestCreate() {
 	}
 }
 
-func (suite *LinuxRoutePublicTestSuite) TestUpdate() {
+func (suite *DarwinRoutePublicTestSuite) TestUpdate() {
 	tests := []struct {
 		name string
 	}{
@@ -116,7 +116,7 @@ func (suite *LinuxRoutePublicTestSuite) TestUpdate() {
 	}
 }
 
-func (suite *LinuxRoutePublicTestSuite) TestDelete() {
+func (suite *DarwinRoutePublicTestSuite) TestDelete() {
 	tests := []struct {
 		name string
 	}{
@@ -135,8 +135,8 @@ func (suite *LinuxRoutePublicTestSuite) TestDelete() {
 	}
 }
 
-func TestLinuxRoutePublicTestSuite(t *testing.T) {
+func TestDarwinRoutePublicTestSuite(t *testing.T) {
 	t.Parallel()
 
-	suite.Run(t, new(LinuxRoutePublicTestSuite))
+	suite.Run(t, new(DarwinRoutePublicTestSuite))
 }

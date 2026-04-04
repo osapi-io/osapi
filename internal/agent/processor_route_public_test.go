@@ -31,8 +31,8 @@ import (
 
 	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/route"
-	routeMocks "github.com/retr0h/osapi/internal/provider/network/route/mocks"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/route"
+	routeMocks "github.com/retr0h/osapi/internal/provider/network/netplan/route/mocks"
 )
 
 type ProcessorRoutePublicTestSuite struct {

@@ -28,8 +28,8 @@ import (
 	"strings"
 
 	"github.com/retr0h/osapi/internal/provider/file"
-	"github.com/retr0h/osapi/internal/provider/network/netif"
 	"github.com/retr0h/osapi/internal/provider/network/netplan"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/iface"
 )
 
 const (
@@ -124,7 +124,7 @@ func (d *Debian) Create(
 	ctx context.Context,
 	entry Entry,
 ) (*Result, error) {
-	if err := netif.ValidateInterfaceName(entry.Interface); err != nil {
+	if err := iface.ValidateInterfaceName(entry.Interface); err != nil {
 		return nil, fmt.Errorf("netplan route create: %w", err)
 	}
 
@@ -185,7 +185,7 @@ func (d *Debian) Update(
 	ctx context.Context,
 	entry Entry,
 ) (*Result, error) {
-	if err := netif.ValidateInterfaceName(entry.Interface); err != nil {
+	if err := iface.ValidateInterfaceName(entry.Interface); err != nil {
 		return nil, fmt.Errorf("netplan route update: %w", err)
 	}
 

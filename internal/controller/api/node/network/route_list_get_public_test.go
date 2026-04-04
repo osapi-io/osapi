@@ -41,7 +41,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api/node/network/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/provider/network/route"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/route"
 	"github.com/retr0h/osapi/internal/validation"
 )
 

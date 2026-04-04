@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package netif_test
+package iface_test
 
 import (
 	"context"
@@ -27,17 +27,17 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/network/netif"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/iface"
 )
 
 type LinuxPublicTestSuite struct {
 	suite.Suite
 
-	provider *netif.Linux
+	provider *iface.Linux
 }
 
 func (suite *LinuxPublicTestSuite) SetupTest() {
-	suite.provider = netif.NewLinuxProvider()
+	suite.provider = iface.NewLinuxProvider()
 }
 
 func (suite *LinuxPublicTestSuite) TestList() {
@@ -89,7 +89,7 @@ func (suite *LinuxPublicTestSuite) TestCreate() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Create(context.Background(), netif.InterfaceEntry{})
+			got, err := suite.provider.Create(context.Background(), iface.InterfaceEntry{})
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)
@@ -108,7 +108,7 @@ func (suite *LinuxPublicTestSuite) TestUpdate() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Update(context.Background(), netif.InterfaceEntry{})
+			got, err := suite.provider.Update(context.Background(), iface.InterfaceEntry{})
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)

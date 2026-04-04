@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package route_test
+package iface_test
 
 import (
 	"context"
@@ -27,20 +27,20 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/network/route"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/iface"
 )
 
-type DarwinRoutePublicTestSuite struct {
+type DarwinPublicTestSuite struct {
 	suite.Suite
 
-	provider *route.Darwin
+	provider *iface.Darwin
 }
 
-func (suite *DarwinRoutePublicTestSuite) SetupTest() {
-	suite.provider = route.NewDarwinProvider()
+func (suite *DarwinPublicTestSuite) SetupTest() {
+	suite.provider = iface.NewDarwinProvider()
 }
 
-func (suite *DarwinRoutePublicTestSuite) TestList() {
+func (suite *DarwinPublicTestSuite) TestList() {
 	tests := []struct {
 		name string
 	}{
@@ -59,7 +59,7 @@ func (suite *DarwinRoutePublicTestSuite) TestList() {
 	}
 }
 
-func (suite *DarwinRoutePublicTestSuite) TestGet() {
+func (suite *DarwinPublicTestSuite) TestGet() {
 	tests := []struct {
 		name string
 	}{
@@ -78,7 +78,7 @@ func (suite *DarwinRoutePublicTestSuite) TestGet() {
 	}
 }
 
-func (suite *DarwinRoutePublicTestSuite) TestCreate() {
+func (suite *DarwinPublicTestSuite) TestCreate() {
 	tests := []struct {
 		name string
 	}{
@@ -89,7 +89,7 @@ func (suite *DarwinRoutePublicTestSuite) TestCreate() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Create(context.Background(), route.Entry{})
+			got, err := suite.provider.Create(context.Background(), iface.InterfaceEntry{})
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)
@@ -97,7 +97,7 @@ func (suite *DarwinRoutePublicTestSuite) TestCreate() {
 	}
 }
 
-func (suite *DarwinRoutePublicTestSuite) TestUpdate() {
+func (suite *DarwinPublicTestSuite) TestUpdate() {
 	tests := []struct {
 		name string
 	}{
@@ -108,7 +108,7 @@ func (suite *DarwinRoutePublicTestSuite) TestUpdate() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Update(context.Background(), route.Entry{})
+			got, err := suite.provider.Update(context.Background(), iface.InterfaceEntry{})
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)
@@ -116,7 +116,7 @@ func (suite *DarwinRoutePublicTestSuite) TestUpdate() {
 	}
 }
 
-func (suite *DarwinRoutePublicTestSuite) TestDelete() {
+func (suite *DarwinPublicTestSuite) TestDelete() {
 	tests := []struct {
 		name string
 	}{
@@ -135,8 +135,8 @@ func (suite *DarwinRoutePublicTestSuite) TestDelete() {
 	}
 }
 
-func TestDarwinRoutePublicTestSuite(t *testing.T) {
+func TestDarwinPublicTestSuite(t *testing.T) {
 	t.Parallel()
 
-	suite.Run(t, new(DarwinRoutePublicTestSuite))
+	suite.Run(t, new(DarwinPublicTestSuite))
 }

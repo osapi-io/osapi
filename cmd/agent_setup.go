@@ -37,10 +37,10 @@ import (
 	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
-	netifProv "github.com/retr0h/osapi/internal/provider/network/netif"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
+	ifaceProv "github.com/retr0h/osapi/internal/provider/network/netplan/iface"
+	routeProv "github.com/retr0h/osapi/internal/provider/network/netplan/route"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
-	routeProv "github.com/retr0h/osapi/internal/provider/network/route"
 	aptProv "github.com/retr0h/osapi/internal/provider/node/apt"
 	certProv "github.com/retr0h/osapi/internal/provider/node/certificate"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
@@ -676,23 +676,23 @@ func createNetplanProviders(
 	execManager exec.Manager,
 	hostname string,
 	netinfoProvider netinfo.Provider,
-) (netifProv.Provider, routeProv.Provider) {
+) (ifaceProv.Provider, routeProv.Provider) {
 	plat := platform.Detect()
 
 	switch plat {
 	case "debian":
 		if fileStateKV == nil {
 			log.Warn("file state KV not available, netplan operations disabled")
-			return netifProv.NewLinuxProvider(), routeProv.NewLinuxProvider()
+			return ifaceProv.NewLinuxProvider(), routeProv.NewLinuxProvider()
 		}
-		return netifProv.NewDebianProvider(
+		return ifaceProv.NewDebianProvider(
 				log, fs, fileStateKV, execManager, hostname, netinfoProvider,
 			), routeProv.NewDebianProvider(
 				log, fs, fileStateKV, execManager, hostname, netinfoProvider,
 			)
 	case "darwin":
-		return netifProv.NewDarwinProvider(), routeProv.NewDarwinProvider()
+		return ifaceProv.NewDarwinProvider(), routeProv.NewDarwinProvider()
 	default:
-		return netifProv.NewLinuxProvider(), routeProv.NewLinuxProvider()
+		return ifaceProv.NewLinuxProvider(), routeProv.NewLinuxProvider()
 	}
 }

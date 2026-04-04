@@ -28,7 +28,7 @@ import (
 	"strings"
 
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/route"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/route"
 )
 
 // processRouteOperation dispatches network route sub-operations.
