@@ -52,7 +52,6 @@ var clientNodeNetworkInterfaceListCmd = &cobra.Command{
 		if resp.Data.JobID != "" {
 			fmt.Println()
 			cli.PrintKV("Job ID", resp.Data.JobID)
-			fmt.Println()
 		}
 
 		results := make([]cli.ResultRow, 0)

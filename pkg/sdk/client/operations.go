@@ -180,20 +180,20 @@ const (
 
 // Network interface operations.
 const (
-	OpNetworkInterfaceList   JobOperation = "interface.list"
-	OpNetworkInterfaceGet    JobOperation = "interface.get"
-	OpNetworkInterfaceCreate JobOperation = "interface.create"
-	OpNetworkInterfaceUpdate JobOperation = "interface.update"
-	OpNetworkInterfaceDelete JobOperation = "interface.delete"
+	OpNetworkInterfaceList   JobOperation = "network.interface.list"
+	OpNetworkInterfaceGet    JobOperation = "network.interface.get"
+	OpNetworkInterfaceCreate JobOperation = "network.interface.create"
+	OpNetworkInterfaceUpdate JobOperation = "network.interface.update"
+	OpNetworkInterfaceDelete JobOperation = "network.interface.delete"
 )
 
 // Network route operations.
 const (
-	OpNetworkRouteList   JobOperation = "route.list"
-	OpNetworkRouteGet    JobOperation = "route.get"
-	OpNetworkRouteCreate JobOperation = "route.create"
-	OpNetworkRouteUpdate JobOperation = "route.update"
-	OpNetworkRouteDelete JobOperation = "route.delete"
+	OpNetworkRouteList   JobOperation = "network.route.list"
+	OpNetworkRouteGet    JobOperation = "network.route.get"
+	OpNetworkRouteCreate JobOperation = "network.route.create"
+	OpNetworkRouteUpdate JobOperation = "network.route.update"
+	OpNetworkRouteDelete JobOperation = "network.route.delete"
 )
 
 // Service operations.
