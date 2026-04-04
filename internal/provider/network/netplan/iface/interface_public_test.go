@@ -568,14 +568,13 @@ func (suite *InterfacePublicTestSuite) TestDelete() {
 			},
 		},
 		{
-			name:        "when file does not exist",
+			name:        "when interface not managed returns error",
 			interfaceNm: "eth0",
 			setup:       func() {},
 			validateFunc: func(result *iface.InterfaceResult, err error) {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(result)
-				suite.Equal("eth0", result.Name)
-				suite.False(result.Changed)
+				suite.Require().Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "not managed")
 			},
 		},
 		{

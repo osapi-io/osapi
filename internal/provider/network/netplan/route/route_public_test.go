@@ -761,14 +761,13 @@ func (suite *RoutePublicTestSuite) TestDelete() {
 			},
 		},
 		{
-			name:        "when file does not exist",
+			name:        "when routes not managed returns error",
 			interfaceNm: "eth0",
 			setup:       func() {},
 			validateFunc: func(result *route.Result, err error) {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(result)
-				suite.Equal("eth0", result.Interface)
-				suite.False(result.Changed)
+				suite.Require().Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "not managed")
 			},
 		},
 		{
