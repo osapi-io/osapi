@@ -69,17 +69,17 @@ var clientNodeNetworkInterfaceListCmd = &cobra.Command{
 			for _, iface := range r.Interfaces {
 				primary := ""
 				if iface.Primary {
-					primary = "*"
+					primary = "yes"
 				}
 
 				results = append(results, cli.ResultRow{
 					Hostname: r.Hostname,
 					Status:   r.Status,
 					Fields: []string{
-						iface.Name + primary,
+						iface.Name,
 						iface.IPv4,
-						iface.IPv6,
 						iface.MAC,
+						primary,
 						fmt.Sprintf("%t", iface.Managed),
 					},
 				})
@@ -87,7 +87,7 @@ var clientNodeNetworkInterfaceListCmd = &cobra.Command{
 		}
 		headers, rows := cli.BuildBroadcastTable(
 			results,
-			[]string{"NAME", "IPv4", "IPv6", "MAC", "MANAGED"},
+			[]string{"NAME", "IPV4", "MAC", "PRIMARY", "MANAGED"},
 		)
 		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
