@@ -24,11 +24,9 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
-
-	"github.com/avfs/avfs"
 
 	"github.com/retr0h/osapi/internal/provider/network/netplan"
 )
@@ -53,38 +51,45 @@ func interfaceFilePath(
 func (d *Debian) List(
 	_ context.Context,
 ) ([]InterfaceEntry, error) {
-	ifaces, err := d.netinfo.GetInterfaces()
+	status, err := netplan.GetStatus(d.execManager)
 	if err != nil {
 		return nil, fmt.Errorf("netplan interface list: %w", err)
 	}
 
-	var primaryIface string
-	if facts := d.Facts(); facts != nil {
-		if p, ok := facts["primary_interface"].(string); ok {
-			primaryIface = p
-		}
-	}
-
 	var result []InterfaceEntry
 
-	for _, iface := range ifaces {
-		entry := InterfaceEntry{
-			Name:    iface.Name,
-			IPv4:    iface.IPv4,
-			IPv6:    iface.IPv6,
-			MAC:     iface.MAC,
-			Family:  iface.Family,
-			Primary: iface.Name == primaryIface,
-			DHCP4:   detectDHCP(d.fs, iface.Name),
+	for name, iface := range status {
+		if name == "lo" {
+			continue
 		}
 
-		path := interfaceFilePath(iface.Name)
+		dhcp := iface.IsDHCP()
+
+		entry := InterfaceEntry{
+			Name:    name,
+			IPv4:    iface.IPv4(),
+			IPv6:    iface.IPv6(),
+			MAC:     iface.MACAddress,
+			Family:  iface.AddressFamily(),
+			Primary: iface.HasDefaultRoute(),
+			DHCP4:   &dhcp,
+		}
+
+		path := interfaceFilePath(name)
 		if _, statErr := d.fs.Stat(path); statErr == nil {
 			entry.Managed = true
 		}
 
 		result = append(result, entry)
 	}
+
+	// Sort by interface index for stable ordering.
+	sort.Slice(result, func(i, j int) bool {
+		iIdx := status[result[i].Name].Index
+		jIdx := status[result[j].Name].Index
+
+		return iIdx < jIdx
+	})
 
 	return result, nil
 }
@@ -98,42 +103,34 @@ func (d *Debian) Get(
 		return nil, fmt.Errorf("netplan interface get: name must not be empty")
 	}
 
-	ifaces, err := d.netinfo.GetInterfaces()
+	status, err := netplan.GetStatus(d.execManager)
 	if err != nil {
 		return nil, fmt.Errorf("netplan interface get: %w", err)
 	}
 
-	var primaryIface string
-	if facts := d.Facts(); facts != nil {
-		if p, ok := facts["primary_interface"].(string); ok {
-			primaryIface = p
-		}
+	iface, ok := status[name]
+	if !ok {
+		return nil, fmt.Errorf("netplan interface %q: not found", name)
 	}
 
-	for _, iface := range ifaces {
-		if iface.Name != name {
-			continue
-		}
+	dhcp := iface.IsDHCP()
 
-		entry := &InterfaceEntry{
-			Name:    iface.Name,
-			IPv4:    iface.IPv4,
-			IPv6:    iface.IPv6,
-			MAC:     iface.MAC,
-			Family:  iface.Family,
-			Primary: iface.Name == primaryIface,
-			DHCP4:   detectDHCP(d.fs, iface.Name),
-		}
-
-		path := interfaceFilePath(name)
-		if _, statErr := d.fs.Stat(path); statErr == nil {
-			entry.Managed = true
-		}
-
-		return entry, nil
+	entry := &InterfaceEntry{
+		Name:    name,
+		IPv4:    iface.IPv4(),
+		IPv6:    iface.IPv6(),
+		MAC:     iface.MACAddress,
+		Family:  iface.AddressFamily(),
+		Primary: iface.HasDefaultRoute(),
+		DHCP4:   &dhcp,
 	}
 
-	return nil, fmt.Errorf("netplan interface %q: not found", name)
+	path := interfaceFilePath(name)
+	if _, statErr := d.fs.Stat(path); statErr == nil {
+		entry.Managed = true
+	}
+
+	return entry, nil
 }
 
 // Create deploys a new Netplan interface configuration file. Fails if
@@ -350,40 +347,4 @@ func generateInterfaceYAML(
 	}
 
 	return []byte(b.String())
-}
-
-// detectDHCP scans all Netplan YAML files to determine if an interface
-// uses DHCP. Returns a pointer to true if dhcp4: true is found for the
-// interface, false if the interface is found without dhcp4: true, or
-// nil if the interface is not found in any config file.
-func detectDHCP(
-	fs avfs.VFS,
-	ifaceName string,
-) *bool {
-	matches, err := fs.Glob(filepath.Join(netplanDir, "*.yaml"))
-	if err != nil {
-		return nil
-	}
-
-	ymlMatches, _ := fs.Glob(filepath.Join(netplanDir, "*.yml"))
-	matches = append(matches, ymlMatches...)
-
-	for _, path := range matches {
-		data, readErr := fs.ReadFile(path)
-		if readErr != nil {
-			continue
-		}
-
-		content := string(data)
-		if !strings.Contains(content, ifaceName+":") {
-			continue
-		}
-
-		// Found the interface in this file. Check for dhcp4.
-		dhcp := strings.Contains(content, "dhcp4: true") ||
-			strings.Contains(content, "dhcp4: yes")
-		return &dhcp
-	}
-
-	return nil
 }

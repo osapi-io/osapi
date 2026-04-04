@@ -28,19 +28,87 @@ import (
 	"testing"
 
 	"github.com/avfs/avfs"
-	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	execmocks "github.com/retr0h/osapi/internal/exec/mocks"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/provider/network/netinfo"
-	netinfomocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/netplan/iface"
 )
 
 const testHostname = "test-host"
+
+// netplanStatusTwoIfaces is a netplan status JSON fixture with two
+// interfaces: eth0 (DHCP, default route) and eth1 (static, no default).
+const netplanStatusTwoIfaces = `{
+  "netplan-global-state": {"online": true},
+  "lo": {
+    "index": 1,
+    "adminstate": "UP",
+    "operstate": "UNKNOWN",
+    "type": "ethernet",
+    "macaddress": "00:00:00:00:00:00",
+    "addresses": [{"127.0.0.1": {"prefix": 8}}],
+    "routes": []
+  },
+  "eth0": {
+    "index": 2,
+    "adminstate": "UP",
+    "operstate": "UP",
+    "type": "ethernet",
+    "macaddress": "aa:bb:cc:dd:ee:f0",
+    "addresses": [
+      {"10.0.0.5": {"prefix": 24, "flags": ["dhcp"]}}
+    ],
+    "routes": [
+      {"to": "default", "via": "10.0.0.1", "family": 2, "metric": 100, "type": "unicast", "scope": "global", "protocol": "dhcp", "table": "main"}
+    ]
+  },
+  "eth1": {
+    "index": 3,
+    "adminstate": "UP",
+    "operstate": "UP",
+    "type": "ethernet",
+    "macaddress": "aa:bb:cc:dd:ee:f1",
+    "addresses": [
+      {"10.0.1.5": {"prefix": 24}}
+    ],
+    "routes": [
+      {"to": "10.0.1.0/24", "family": 2, "type": "unicast", "scope": "link", "protocol": "kernel", "table": "main"}
+    ]
+  }
+}`
+
+// netplanStatusSingleIface is a netplan status with one interface.
+const netplanStatusSingleIface = `{
+  "netplan-global-state": {"online": true},
+  "eth0": {
+    "index": 2,
+    "adminstate": "UP",
+    "operstate": "UP",
+    "type": "ethernet",
+    "macaddress": "aa:bb:cc:dd:ee:f0",
+    "addresses": [
+      {"10.0.0.5": {"prefix": 24}}
+    ],
+    "routes": []
+  }
+}`
+
+// netplanStatusEmpty has only global state and loopback.
+const netplanStatusEmpty = `{
+  "netplan-global-state": {"online": true},
+  "lo": {
+    "index": 1,
+    "adminstate": "UP",
+    "operstate": "UNKNOWN",
+    "type": "ethernet",
+    "macaddress": "00:00:00:00:00:00",
+    "addresses": [{"127.0.0.1": {"prefix": 8}}],
+    "routes": []
+  }
+}`
 
 type InterfacePublicTestSuite struct {
 	suite.Suite
@@ -51,7 +119,6 @@ type InterfacePublicTestSuite struct {
 	memFs       avfs.VFS
 	mockStateKV *jobmocks.MockKeyValue
 	mockExec    *execmocks.MockManager
-	mockNetinfo *netinfomocks.MockProvider
 	provider    *iface.Debian
 }
 
@@ -62,7 +129,6 @@ func (suite *InterfacePublicTestSuite) SetupTest() {
 	suite.memFs = memfs.New()
 	suite.mockStateKV = jobmocks.NewMockKeyValue(suite.ctrl)
 	suite.mockExec = execmocks.NewMockManager(suite.ctrl)
-	suite.mockNetinfo = netinfomocks.NewMockProvider(suite.ctrl)
 
 	_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
 
@@ -72,7 +138,6 @@ func (suite *InterfacePublicTestSuite) SetupTest() {
 		suite.mockStateKV,
 		suite.mockExec,
 		testHostname,
-		suite.mockNetinfo,
 	)
 }
 
@@ -91,12 +156,9 @@ func (suite *InterfacePublicTestSuite) TestList() {
 		{
 			name: "when interfaces exist with managed files",
 			setup: func() {
-				suite.mockNetinfo.EXPECT().
-					GetInterfaces().
-					Return([]netinfo.InterfaceResult{
-						{Name: "eth0", IPv4: "10.0.0.5"},
-						{Name: "eth1", IPv4: "10.0.1.5"},
-					}, nil)
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusTwoIfaces, nil)
 
 				// Create a managed file for eth0 only.
 				_ = suite.memFs.WriteFile(
@@ -107,23 +169,32 @@ func (suite *InterfacePublicTestSuite) TestList() {
 			},
 			validateFunc: func(result []iface.InterfaceEntry, err error) {
 				suite.Require().NoError(err)
+				// lo is filtered, so 2 interfaces.
 				suite.Require().Len(result, 2)
 
+				// Sorted by index: eth0 (index 2) first, eth1 (index 3) second.
 				suite.Equal("eth0", result[0].Name)
+				suite.Equal("10.0.0.5", result[0].IPv4)
+				suite.Equal("aa:bb:cc:dd:ee:f0", result[0].MAC)
 				suite.True(result[0].Managed)
+				suite.True(result[0].Primary)
+				suite.Require().NotNil(result[0].DHCP4)
+				suite.True(*result[0].DHCP4)
 
 				suite.Equal("eth1", result[1].Name)
+				suite.Equal("10.0.1.5", result[1].IPv4)
 				suite.False(result[1].Managed)
+				suite.False(result[1].Primary)
+				suite.Require().NotNil(result[1].DHCP4)
+				suite.False(*result[1].DHCP4)
 			},
 		},
 		{
 			name: "when no managed files exist",
 			setup: func() {
-				suite.mockNetinfo.EXPECT().
-					GetInterfaces().
-					Return([]netinfo.InterfaceResult{
-						{Name: "eth0"},
-					}, nil)
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusSingleIface, nil)
 			},
 			validateFunc: func(result []iface.InterfaceEntry, err error) {
 				suite.Require().NoError(err)
@@ -134,11 +205,11 @@ func (suite *InterfacePublicTestSuite) TestList() {
 			},
 		},
 		{
-			name: "when no interfaces exist",
+			name: "when only loopback exists",
 			setup: func() {
-				suite.mockNetinfo.EXPECT().
-					GetInterfaces().
-					Return([]netinfo.InterfaceResult{}, nil)
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusEmpty, nil)
 			},
 			validateFunc: func(result []iface.InterfaceEntry, err error) {
 				suite.Require().NoError(err)
@@ -146,11 +217,11 @@ func (suite *InterfacePublicTestSuite) TestList() {
 			},
 		},
 		{
-			name: "when GetInterfaces fails",
+			name: "when netplan status fails",
 			setup: func() {
-				suite.mockNetinfo.EXPECT().
-					GetInterfaces().
-					Return(nil, errors.New("netinfo error"))
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return("", errors.New("command not found"))
 			},
 			validateFunc: func(result []iface.InterfaceEntry, err error) {
 				suite.Require().Error(err)
@@ -182,11 +253,9 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 			name:        "when interface found and managed",
 			interfaceNm: "eth0",
 			setup: func() {
-				suite.mockNetinfo.EXPECT().
-					GetInterfaces().
-					Return([]netinfo.InterfaceResult{
-						{Name: "eth0", IPv4: "10.0.0.5"},
-					}, nil)
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusTwoIfaces, nil)
 
 				_ = suite.memFs.WriteFile(
 					"/etc/netplan/osapi-eth0.yaml",
@@ -198,18 +267,21 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("eth0", result.Name)
+				suite.Equal("10.0.0.5", result.IPv4)
+				suite.Equal("aa:bb:cc:dd:ee:f0", result.MAC)
 				suite.True(result.Managed)
+				suite.True(result.Primary)
+				suite.Require().NotNil(result.DHCP4)
+				suite.True(*result.DHCP4)
 			},
 		},
 		{
 			name:        "when interface found and not managed",
 			interfaceNm: "eth0",
 			setup: func() {
-				suite.mockNetinfo.EXPECT().
-					GetInterfaces().
-					Return([]netinfo.InterfaceResult{
-						{Name: "eth0"},
-					}, nil)
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusSingleIface, nil)
 			},
 			validateFunc: func(result *iface.InterfaceEntry, err error) {
 				suite.Require().NoError(err)
@@ -222,11 +294,9 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 			name:        "when interface not found",
 			interfaceNm: "eth99",
 			setup: func() {
-				suite.mockNetinfo.EXPECT().
-					GetInterfaces().
-					Return([]netinfo.InterfaceResult{
-						{Name: "eth0"},
-					}, nil)
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusSingleIface, nil)
 			},
 			validateFunc: func(result *iface.InterfaceEntry, err error) {
 				suite.Require().Error(err)
@@ -245,12 +315,12 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 			},
 		},
 		{
-			name:        "when GetInterfaces fails",
+			name:        "when netplan status fails",
 			interfaceNm: "eth0",
 			setup: func() {
-				suite.mockNetinfo.EXPECT().
-					GetInterfaces().
-					Return(nil, errors.New("netinfo error"))
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return("", errors.New("command not found"))
 			},
 			validateFunc: func(result *iface.InterfaceEntry, err error) {
 				suite.Require().Error(err)
@@ -714,186 +784,6 @@ func (suite *InterfacePublicTestSuite) TestGenerateInterfaceYAML() {
 			result := iface.GenerateInterfaceYAML(tc.entry)
 
 			tc.validateFunc(string(result))
-		})
-	}
-}
-
-func (suite *InterfacePublicTestSuite) TestDetectDHCP() {
-	tests := []struct {
-		name         string
-		setup        func()
-		ifaceName    string
-		validateFunc func(*bool)
-	}{
-		{
-			name:      "when wifi interface has dhcp4 true",
-			ifaceName: "wlp0s20f3",
-			setup: func() {
-				_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/00-installer-config-wifi.yaml",
-					[]byte("# This is the network config written by 'subiquity'\nnetwork:\n  version: 2\n  wifis:\n    wlp0s20f3:\n      access-points:\n        Yikes:\n          password: foo\n      dhcp4: true\n"),
-					0o644,
-				)
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/00-installer-config.yaml",
-					[]byte("# This is the network config written by 'subiquity'\nnetwork:\n  ethernets:\n    eno1:\n      dhcp4: true\n  version: 2\n"),
-					0o644,
-				)
-			},
-			validateFunc: func(result *bool) {
-				suite.Require().NotNil(result)
-				suite.True(*result)
-			},
-		},
-		{
-			name:      "when ethernet interface has dhcp4 true",
-			ifaceName: "eno1",
-			setup: func() {
-				_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/00-installer-config.yaml",
-					[]byte("network:\n  ethernets:\n    eno1:\n      dhcp4: true\n  version: 2\n"),
-					0o644,
-				)
-			},
-			validateFunc: func(result *bool) {
-				suite.Require().NotNil(result)
-				suite.True(*result)
-			},
-		},
-		{
-			name:      "when interface has static config no dhcp4",
-			ifaceName: "eth0",
-			setup: func() {
-				_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/01-config.yaml",
-					[]byte("network:\n  ethernets:\n    eth0:\n      addresses:\n        - 10.0.0.5/24\n      gateway4: 10.0.0.1\n"),
-					0o644,
-				)
-			},
-			validateFunc: func(result *bool) {
-				suite.Require().NotNil(result)
-				suite.False(*result)
-			},
-		},
-		{
-			name:      "when interface not found in any file",
-			ifaceName: "eth99",
-			setup: func() {
-				_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/01-config.yaml",
-					[]byte("network:\n  ethernets:\n    eth0:\n      dhcp4: true\n"),
-					0o644,
-				)
-			},
-			validateFunc: func(result *bool) {
-				suite.Nil(result)
-			},
-		},
-		{
-			name:      "when netplan dir does not exist",
-			ifaceName: "eth0",
-			setup:     func() {},
-			validateFunc: func(result *bool) {
-				suite.Nil(result)
-			},
-		},
-		{
-			name:      "when dhcp4 yes is used",
-			ifaceName: "eth0",
-			setup: func() {
-				_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/01-config.yaml",
-					[]byte("network:\n  ethernets:\n    eth0:\n      dhcp4: yes\n"),
-					0o644,
-				)
-			},
-			validateFunc: func(result *bool) {
-				suite.Require().NotNil(result)
-				suite.True(*result)
-			},
-		},
-		{
-			name:      "when yml extension is supported",
-			ifaceName: "eth0",
-			setup: func() {
-				_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/01-config.yml",
-					[]byte("network:\n  ethernets:\n    eth0:\n      dhcp4: true\n"),
-					0o644,
-				)
-			},
-			validateFunc: func(result *bool) {
-				suite.Require().NotNil(result)
-				suite.True(*result)
-			},
-		},
-		{
-			name:      "when file read fails skips to next",
-			ifaceName: "eth0",
-			setup: func() {
-				base := memfs.New()
-				_ = base.MkdirAll("/etc/netplan", 0o755)
-				_ = base.WriteFile(
-					"/etc/netplan/01-bad.yaml",
-					[]byte("network:\n  ethernets:\n    eth0:\n      dhcp4: true\n"),
-					0o644,
-				)
-
-				ffs := failfs.New(base)
-				_ = ffs.SetFailFunc(func(
-					_ avfs.VFSBase,
-					fn avfs.FnVFS,
-					_ *failfs.FailParam,
-				) error {
-					if fn == avfs.FnReadFile {
-						return errors.New("read error")
-					}
-
-					return nil
-				})
-
-				suite.memFs = ffs
-			},
-			validateFunc: func(result *bool) {
-				suite.Nil(result)
-			},
-		},
-		{
-			name:      "when multiple files exist finds correct one",
-			ifaceName: "eth1",
-			setup: func() {
-				_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/01-eth0.yaml",
-					[]byte("network:\n  ethernets:\n    eth0:\n      dhcp4: true\n"),
-					0o644,
-				)
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/02-eth1.yaml",
-					[]byte("network:\n  ethernets:\n    eth1:\n      addresses:\n        - 10.0.1.5/24\n"),
-					0o644,
-				)
-			},
-			validateFunc: func(result *bool) {
-				suite.Require().NotNil(result)
-				suite.False(*result)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			tc.setup()
-
-			result := iface.DetectDHCP(suite.memFs, tc.ifaceName)
-
-			tc.validateFunc(result)
 		})
 	}
 }

@@ -20,17 +20,7 @@
 
 package iface
 
-import "github.com/avfs/avfs"
-
 // GenerateInterfaceYAML exposes generateInterfaceYAML for testing.
 func GenerateInterfaceYAML(entry InterfaceEntry) []byte {
 	return generateInterfaceYAML(entry)
-}
-
-// DetectDHCP exposes detectDHCP for testing.
-func DetectDHCP(
-	fs avfs.VFS,
-	ifaceName string,
-) *bool {
-	return detectDHCP(fs, ifaceName)
 }

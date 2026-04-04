@@ -225,7 +225,7 @@ func setupAgent(
 
 	// --- Netplan providers (interface + route) ---
 	interfaceProvider, routeProvider := createNetplanProviders(
-		log, appFs, fileStateKV, execManager, hostname, netinfoProvider,
+		log, appFs, fileStateKV, execManager, hostname,
 	)
 
 	// --- Build registry ---
@@ -675,7 +675,6 @@ func createNetplanProviders(
 	fileStateKV jetstream.KeyValue,
 	execManager exec.Manager,
 	hostname string,
-	netinfoProvider netinfo.Provider,
 ) (ifaceProv.Provider, routeProv.Provider) {
 	plat := platform.Detect()
 
@@ -686,9 +685,9 @@ func createNetplanProviders(
 			return ifaceProv.NewLinuxProvider(), routeProv.NewLinuxProvider()
 		}
 		return ifaceProv.NewDebianProvider(
-				log, fs, fileStateKV, execManager, hostname, netinfoProvider,
+				log, fs, fileStateKV, execManager, hostname,
 			), routeProv.NewDebianProvider(
-				log, fs, fileStateKV, execManager, hostname, netinfoProvider,
+				log, fs, fileStateKV, execManager, hostname,
 			)
 	case "darwin":
 		return ifaceProv.NewDarwinProvider(), routeProv.NewDarwinProvider()
