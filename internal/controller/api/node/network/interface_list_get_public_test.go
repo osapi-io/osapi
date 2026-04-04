@@ -269,6 +269,151 @@ func (s *NetworkInterfaceListGetPublicTestSuite) TestGetNodeNetworkInterface() {
 				s.Equal(gen.InterfaceListEntryStatusFailed, r.Results[0].Status)
 			},
 		},
+		{
+			name: "when broadcast with skipped host",
+			request: gen.GetNodeNetworkInterfaceRequestObject{
+				Hostname: "_all",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"network",
+						job.OperationNetworkInterfaceList,
+						nil,
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusSkipped,
+								Error:    "unsupported",
+								Hostname: "server1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.InterfaceListEntryStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("unsupported", *r.Results[0].Error)
+			},
+		},
+		{
+			name: "when broadcast success with nil data",
+			request: gen.GetNodeNetworkInterfaceRequestObject{
+				Hostname: "_all",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"network",
+						job.OperationNetworkInterfaceList,
+						nil,
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {Hostname: "server1", Data: nil},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.InterfaceListEntryStatusOk, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Interfaces)
+				s.Empty(*r.Results[0].Interfaces)
+			},
+		},
+		{
+			name: "when success with full interface entry fields",
+			request: gen.GetNodeNetworkInterfaceRequestObject{
+				Hostname: "server1",
+			},
+			setupMock: func() {
+				fullEntries := []iface.InterfaceEntry{
+					{
+						Name:       "eth0",
+						DHCP4:      &trueVal,
+						DHCP6:      &trueVal,
+						Addresses:  []string{"10.0.0.1/24"},
+						Gateway4:   "10.0.0.1",
+						Gateway6:   "fe80::1",
+						MTU:        1500,
+						MACAddress: "00:11:22:33:44:55",
+						WakeOnLAN:  &trueVal,
+						Managed:    true,
+					},
+					{
+						Name:    "lo",
+						Managed: false,
+					},
+				}
+				data, _ := json.Marshal(fullEntries)
+				s.mockJobClient.EXPECT().
+					Query(
+						gomock.Any(),
+						"server1",
+						"network",
+						job.OperationNetworkInterfaceList,
+						nil,
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							Hostname: "server1",
+							Data:     data,
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Require().NotNil(r.Results[0].Interfaces)
+				ifaces := *r.Results[0].Interfaces
+				s.Len(ifaces, 2)
+
+				// First entry has all optional fields populated.
+				s.Equal("eth0", *ifaces[0].Name)
+				s.Require().NotNil(ifaces[0].Dhcp4)
+				s.True(*ifaces[0].Dhcp4)
+				s.Require().NotNil(ifaces[0].Dhcp6)
+				s.True(*ifaces[0].Dhcp6)
+				s.Require().NotNil(ifaces[0].Addresses)
+				s.Equal([]string{"10.0.0.1/24"}, *ifaces[0].Addresses)
+				s.Require().NotNil(ifaces[0].Gateway4)
+				s.Equal("10.0.0.1", *ifaces[0].Gateway4)
+				s.Require().NotNil(ifaces[0].Gateway6)
+				s.Equal("fe80::1", *ifaces[0].Gateway6)
+				s.Require().NotNil(ifaces[0].Mtu)
+				s.Equal(1500, *ifaces[0].Mtu)
+				s.Require().NotNil(ifaces[0].MacAddress)
+				s.Equal("00:11:22:33:44:55", *ifaces[0].MacAddress)
+				s.Require().NotNil(ifaces[0].Wakeonlan)
+				s.True(*ifaces[0].Wakeonlan)
+				s.True(*ifaces[0].Managed)
+
+				// Second entry has no optional fields.
+				s.Equal("lo", *ifaces[1].Name)
+				s.Nil(ifaces[1].Addresses)
+				s.Nil(ifaces[1].Gateway4)
+				s.Nil(ifaces[1].Gateway6)
+				s.Nil(ifaces[1].Mtu)
+				s.Nil(ifaces[1].MacAddress)
+			},
+		},
 	}
 
 	for _, tt := range tests {

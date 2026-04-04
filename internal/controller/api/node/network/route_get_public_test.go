@@ -199,6 +199,116 @@ func (s *NetworkRouteGetPublicTestSuite) TestGetNodeNetworkRouteByInterface() {
 				s.True(ok)
 			},
 		},
+		{
+			name: "when broadcast with failed host",
+			request: gen.GetNodeNetworkRouteByInterfaceRequestObject{
+				Hostname: "_all", InterfaceName: "eth0",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkRouteGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusFailed,
+							Error:    "permission denied",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkRouteByInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkRouteByInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.RouteGetEntryStatusFailed, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("permission denied", *r.Results[0].Error)
+			},
+		},
+		{
+			name: "when broadcast with skipped host",
+			request: gen.GetNodeNetworkRouteByInterfaceRequestObject{
+				Hostname: "_all", InterfaceName: "eth0",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkRouteGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusSkipped,
+							Error:    "unsupported",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkRouteByInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkRouteByInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.RouteGetEntryStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("unsupported", *r.Results[0].Error)
+			},
+		},
+		{
+			name: "when broadcast success with nil data",
+			request: gen.GetNodeNetworkRouteByInterfaceRequestObject{
+				Hostname: "_all", InterfaceName: "eth0",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkRouteGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: nil},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkRouteByInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkRouteByInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.RouteGetEntryStatusOk, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Routes)
+				s.Empty(*r.Results[0].Routes)
+			},
+		},
+		{
+			name: "when success with route metric",
+			request: gen.GetNodeNetworkRouteByInterfaceRequestObject{
+				Hostname: "server1", InterfaceName: "eth0",
+			},
+			setupMock: func() {
+				entryWithMetric := route.Entry{
+					Interface: "eth0",
+					Routes: []route.Route{
+						{To: "10.0.0.0/8", Via: "192.168.1.1", Metric: 100},
+						{To: "", Via: ""},
+					},
+				}
+				data, _ := json.Marshal(entryWithMetric)
+				s.mockJobClient.EXPECT().
+					Query(gomock.Any(), "server1", "network", job.OperationNetworkRouteGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "server1", Data: data,
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkRouteByInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkRouteByInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				routes := *r.Results[0].Routes
+				s.Len(routes, 2)
+				// First route: has destination, gateway, metric.
+				s.Require().NotNil(routes[0].Destination)
+				s.Equal("10.0.0.0/8", *routes[0].Destination)
+				s.Require().NotNil(routes[0].Gateway)
+				s.Equal("192.168.1.1", *routes[0].Gateway)
+				s.Require().NotNil(routes[0].Metric)
+				s.Equal(100, *routes[0].Metric)
+				// Second route: empty strings become nil.
+				s.Nil(routes[1].Destination)
+				s.Nil(routes[1].Gateway)
+				s.Nil(routes[1].Metric)
+			},
+		},
 	}
 
 	for _, tt := range tests {

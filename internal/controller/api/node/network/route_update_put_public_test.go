@@ -124,6 +124,20 @@ func (s *NetworkRouteUpdatePutPublicTestSuite) TestPutNodeNetworkRoute() {
 			},
 		},
 		{
+			name: "when validation error empty interface name",
+			request: gen.PutNodeNetworkRouteRequestObject{
+				Hostname: "server1", InterfaceName: "",
+				Body: &gen.RouteConfigRequest{
+					Routes: []gen.RouteItem{{To: "10.0.0.0/8", Via: "192.168.1.1"}},
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNodeNetworkRouteResponseObject) {
+				_, ok := resp.(gen.PutNodeNetworkRoute400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "when body validation error",
 			request: gen.PutNodeNetworkRouteRequestObject{
 				Hostname: "server1", InterfaceName: "eth0",
@@ -191,6 +205,45 @@ func (s *NetworkRouteUpdatePutPublicTestSuite) TestPutNodeNetworkRoute() {
 			},
 			validateFunc: func(resp gen.PutNodeNetworkRouteResponseObject) {
 				s.NotNil(resp)
+			},
+		},
+		{
+			name: "when broadcast with failed and skipped hosts",
+			request: gen.PutNodeNetworkRouteRequestObject{
+				Hostname: "_all", InterfaceName: "eth0",
+				Body: &gen.RouteConfigRequest{
+					Routes: []gen.RouteItem{{To: "10.0.0.0/8", Via: "192.168.1.1"}},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkRouteUpdate, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusFailed,
+							Error:    "permission denied",
+							Hostname: "server1",
+						},
+						"server2": {
+							Status:   job.StatusSkipped,
+							Error:    "unsupported",
+							Hostname: "server2",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.PutNodeNetworkRouteResponseObject) {
+				r, ok := resp.(gen.PutNodeNetworkRoute200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 2)
+				statuses := map[gen.RouteMutationEntryStatus]bool{}
+				for _, item := range r.Results {
+					statuses[item.Status] = true
+					s.Require().NotNil(item.Error)
+					s.Require().NotNil(item.Changed)
+					s.False(*item.Changed)
+				}
+				s.True(statuses[gen.RouteMutationEntryStatusFailed])
+				s.True(statuses[gen.RouteMutationEntryStatusSkipped])
 			},
 		},
 		{
