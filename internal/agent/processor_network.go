@@ -27,7 +27,7 @@ import (
 	"strings"
 
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netplan/iface"
 	"github.com/retr0h/osapi/internal/provider/network/netplan/route"
 	"github.com/retr0h/osapi/internal/provider/network/ping"

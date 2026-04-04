@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	dns "github.com/retr0h/osapi/internal/provider/network/dns"
+	dns "github.com/retr0h/osapi/internal/provider/network/netplan/dns"
 )
 
 // MockProvider is a mock of Provider interface.

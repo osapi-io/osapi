@@ -23,7 +23,7 @@ package mocks
 import (
 	"github.com/golang/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/dns"
 )
 
 // NewPlainMockProvider creates a Mock without defaults.
