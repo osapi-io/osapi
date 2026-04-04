@@ -5,17 +5,17 @@
 > superpowers:executing-plans to implement this plan task-by-task. Steps use
 > checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add full CRUD for network interface configuration and route
-management via Netplan drop-in files, following the direct-write provider
-pattern established by sysctl and DNS.
+**Goal:** Add full CRUD for network interface configuration and route management
+via Netplan drop-in files, following the direct-write provider pattern
+established by sysctl and DNS.
 
 **Architecture:** A new `netplan` provider in
 `internal/provider/network/netplan/` handles interface and route CRUD. It
 generates Netplan YAML, writes drop-in files with `osapi-` prefix, validates
 with `netplan generate`, and applies with `netplan apply`. List/get for
-interfaces reuses the existing `netinfo` provider for system state. The
-shared `netplan.ApplyConfig` helper (from DNS migration) handles the write →
-validate → apply flow.
+interfaces reuses the existing `netinfo` provider for system state. The shared
+`netplan.ApplyConfig` helper (from DNS migration) handles the write → validate →
+apply flow.
 
 **Tech Stack:** Go, Netplan YAML, NATS JetStream KV, avfs
 
@@ -26,6 +26,7 @@ validate → apply flow.
 ### Task 1: Interface and route provider types
 
 **Files:**
+
 - Create: `internal/provider/network/netplan/types.go`
 - Create: `internal/provider/network/netplan/mocks/generate.go`
 
@@ -135,6 +136,7 @@ feat(netplan): add interface and route provider types
 ### Task 2: Interface provider implementation
 
 **Files:**
+
 - Create: `internal/provider/network/netplan/interface.go`
 - Create: `internal/provider/network/netplan/interface_public_test.go`
 - Create: `internal/provider/network/netplan/debian.go`
@@ -176,17 +178,17 @@ Create `darwin.go` and `linux.go` stubs returning `ErrUnsupported`.
 
 Create `internal/provider/network/netplan/interface.go`:
 
-**List** — delegates to `netinfo.GetInterfaces()`. For each interface,
-check if an `osapi-{name}.yaml` file exists to set `Managed: true`.
+**List** — delegates to `netinfo.GetInterfaces()`. For each interface, check if
+an `osapi-{name}.yaml` file exists to set `Managed: true`.
 
-**Get** — delegates to `netinfo.GetInterfaces()`, filters by name.
-Checks managed status.
+**Get** — delegates to `netinfo.GetInterfaces()`, filters by name. Checks
+managed status.
 
-**Create** — validates name, checks file doesn't exist, generates
-Netplan YAML, calls `ApplyConfig`.
-
-**Update** — validates name, checks file exists, generates Netplan YAML,
+**Create** — validates name, checks file doesn't exist, generates Netplan YAML,
 calls `ApplyConfig`.
+
+**Update** — validates name, checks file exists, generates Netplan YAML, calls
+`ApplyConfig`.
 
 **Delete** — calls `RemoveConfig`.
 
@@ -209,13 +211,12 @@ File path: `/etc/netplan/osapi-{name}.yaml`
 
 - [ ] **Step 3: Write interface tests**
 
-Create `internal/provider/network/netplan/interface_public_test.go`.
-Use testify/suite, table-driven, validateFunc. Use `memfs`, gomock.
+Create `internal/provider/network/netplan/interface_public_test.go`. Use
+testify/suite, table-driven, validateFunc. Use `memfs`, gomock.
 
-Test each method: List (with managed + unmanaged), Get (found, not
-found), Create (success, already exists, generate fails), Update
-(success, not found), Delete (success, not found). YAML generation
-tests for each field combination.
+Test each method: List (with managed + unmanaged), Get (found, not found),
+Create (success, already exists, generate fails), Update (success, not found),
+Delete (success, not found). YAML generation tests for each field combination.
 
 Target: 100% coverage on `interface.go`.
 
@@ -234,6 +235,7 @@ feat(netplan): implement interface CRUD with Netplan
 ### Task 3: Route provider implementation
 
 **Files:**
+
 - Create: `internal/provider/network/netplan/route.go`
 - Create: `internal/provider/network/netplan/route_public_test.go`
 
@@ -241,19 +243,18 @@ feat(netplan): implement interface CRUD with Netplan
 
 Create `internal/provider/network/netplan/route.go`:
 
-**List** — delegates to `netinfo.GetRoutes()`. Converts `RouteResult`
-to `RouteListEntry`.
+**List** — delegates to `netinfo.GetRoutes()`. Converts `RouteResult` to
+`RouteListEntry`.
 
-**Get** — reads the managed route file from state KV or disk for the
-given interface. Parses the YAML to extract routes.
+**Get** — reads the managed route file from state KV or disk for the given
+interface. Parses the YAML to extract routes.
 
-**Create** — validates interface name, checks file doesn't exist,
-validates no default route in list, generates YAML, calls `ApplyConfig`.
+**Create** — validates interface name, checks file doesn't exist, validates no
+default route in list, generates YAML, calls `ApplyConfig`.
 
 **Update** — same as create but file must exist.
 
-**Delete** — validates no default route in managed routes, calls
-`RemoveConfig`.
+**Delete** — validates no default route in managed routes, calls `RemoveConfig`.
 
 YAML generation function `generateRouteYAML(entry RouteEntry)`:
 
@@ -270,15 +271,15 @@ network:
 
 File path: `/etc/netplan/osapi-{interface}-routes.yaml`
 
-Default route protection: reject create/update if any route has
-`To` of `0.0.0.0/0`, `::/0`, or `default`.
+Default route protection: reject create/update if any route has `To` of
+`0.0.0.0/0`, `::/0`, or `default`.
 
 - [ ] **Step 2: Write route tests**
 
 Create `internal/provider/network/netplan/route_public_test.go`.
 
-Test each method. Include default route protection tests (reject
-`0.0.0.0/0`). YAML generation tests.
+Test each method. Include default route protection tests (reject `0.0.0.0/0`).
+YAML generation tests.
 
 Target: 100% coverage on `route.go`.
 
@@ -297,6 +298,7 @@ feat(netplan): implement route CRUD with default route protection
 ### Task 4: Job operations and agent processor
 
 **Files:**
+
 - Modify: `pkg/sdk/client/operations.go`
 - Modify: `internal/job/types.go`
 - Create: `internal/agent/processor_interface.go`
@@ -333,21 +335,20 @@ Mirror in `internal/job/types.go`.
 
 - [ ] **Step 2: Create interface processor**
 
-Create `internal/agent/processor_interface.go` with
-`processInterfaceOperation` that dispatches list/get/create/update/delete
-to the provider. Follow existing processor patterns (e.g.,
-`processor_sysctl.go`).
+Create `internal/agent/processor_interface.go` with `processInterfaceOperation`
+that dispatches list/get/create/update/delete to the provider. Follow existing
+processor patterns (e.g., `processor_sysctl.go`).
 
 - [ ] **Step 3: Create route processor**
 
-Create `internal/agent/processor_route.go` with
-`processRouteOperation`. Same pattern.
+Create `internal/agent/processor_route.go` with `processRouteOperation`. Same
+pattern.
 
 - [ ] **Step 4: Wire into network processor**
 
-In `internal/agent/processor_network.go`, update
-`NewNetworkProcessor` to accept `InterfaceProvider` and `RouteProvider`.
-Add `case "interface"` and `case "route"` to the switch.
+In `internal/agent/processor_network.go`, update `NewNetworkProcessor` to accept
+`InterfaceProvider` and `RouteProvider`. Add `case "interface"` and
+`case "route"` to the switch.
 
 - [ ] **Step 5: Write processor tests**
 
@@ -355,8 +356,7 @@ Create test files for both processors. Follow existing patterns.
 
 - [ ] **Step 6: Run tests**
 
-Run: `go test ./internal/agent/... -count=1`
-Run: `go build ./...`
+Run: `go test ./internal/agent/... -count=1` Run: `go build ./...`
 
 - [ ] **Step 7: Commit**
 
@@ -369,16 +369,17 @@ feat(network): add interface and route agent processors
 ### Task 5: Agent wiring
 
 **Files:**
+
 - Modify: `cmd/agent_setup.go`
 
 - [ ] **Step 1: Create and register providers**
 
 In `cmd/agent_setup.go`, create the Netplan provider (Debian only,
-ErrUnsupported on other platforms) and pass it to
-`NewNetworkProcessor` alongside the existing DNS and ping providers.
+ErrUnsupported on other platforms) and pass it to `NewNetworkProcessor`
+alongside the existing DNS and ping providers.
 
-The Netplan provider needs `fs`, `stateKV`, `execManager`, `hostname`,
-and `netinfoProvider` — all already available in agent setup.
+The Netplan provider needs `fs`, `stateKV`, `execManager`, `hostname`, and
+`netinfoProvider` — all already available in agent setup.
 
 - [ ] **Step 2: Verify build**
 
@@ -395,6 +396,7 @@ feat(network): wire interface and route providers in agent
 ### Task 6: OpenAPI spec and code generation
 
 **Files:**
+
 - Modify: `internal/controller/api/node/network/gen/api.yaml`
 
 - [ ] **Step 1: Add interface endpoints to the OpenAPI spec**
@@ -410,6 +412,7 @@ DELETE /node/{hostname}/network/interface/{name}
 ```
 
 Request body for POST/PUT (`InterfaceConfigRequest`):
+
 - `dhcp4` (bool, omitempty)
 - `dhcp6` (bool, omitempty)
 - `addresses` ([]string, omitempty, dive, cidr)
@@ -432,15 +435,16 @@ DELETE /node/{hostname}/network/route/{interface}
 ```
 
 Request body for POST/PUT (`RouteConfigRequest`):
+
 - `routes` ([]RouteItem, required, min=1)
+
   - `to` (string, required, cidr)
   - `via` (string, required, ip)
   - `metric` (int, omitempty, min=0)
 
 - [ ] **Step 3: Add DELETE for DNS**
 
-Add `DELETE /node/{hostname}/network/dns` endpoint to remove managed
-DNS config.
+Add `DELETE /node/{hostname}/network/dns` endpoint to remove managed DNS config.
 
 - [ ] **Step 4: Regenerate code**
 
@@ -457,6 +461,7 @@ feat(network): add interface, route, and DNS delete to OpenAPI spec
 ### Task 7: API handlers
 
 **Files:**
+
 - Create: `internal/controller/api/node/network/interface_list_get.go`
 - Create: `internal/controller/api/node/network/interface_get.go`
 - Create: `internal/controller/api/node/network/interface_create_post.go`
@@ -473,6 +478,7 @@ feat(network): add interface, route, and DNS delete to OpenAPI spec
 - [ ] **Step 1: Implement interface handlers**
 
 Follow existing handler patterns (e.g., `sysctl` domain). Each handler:
+
 - Validates hostname
 - Validates request body (for POST/PUT)
 - Calls `JobClient.Query`/`Modify` or broadcast variants
@@ -488,19 +494,18 @@ Calls `JobClient.Modify` with the delete operation.
 
 - [ ] **Step 4: Write handler tests**
 
-Unit tests + HTTP wiring tests + RBAC tests for each endpoint.
-Follow existing test patterns in the network package.
+Unit tests + HTTP wiring tests + RBAC tests for each endpoint. Follow existing
+test patterns in the network package.
 
 - [ ] **Step 5: Update handler.go**
 
-Update `Handler()` function — it should already pick up new endpoints
-from the regenerated `StrictServerInterface`. Verify the compile-time
-check passes.
+Update `Handler()` function — it should already pick up new endpoints from the
+regenerated `StrictServerInterface`. Verify the compile-time check passes.
 
 - [ ] **Step 6: Run tests**
 
-Run: `go test ./internal/controller/api/node/network/... -count=1`
-Run: `go build ./...`
+Run: `go test ./internal/controller/api/node/network/... -count=1` Run:
+`go build ./...`
 
 - [ ] **Step 7: Commit**
 
@@ -513,6 +518,7 @@ feat(network): add interface, route, and DNS delete handlers
 ### Task 8: SDK service
 
 **Files:**
+
 - Create: `pkg/sdk/client/interface.go`
 - Create: `pkg/sdk/client/interface_types.go`
 - Create: `pkg/sdk/client/interface_public_test.go`
@@ -526,8 +532,8 @@ feat(network): add interface, route, and DNS delete handlers
 
 - [ ] **Step 1: Create interface SDK service**
 
-`InterfaceService` with List, Get, Create, Update, Delete methods.
-Follow existing SDK patterns (e.g., `SysctlService`).
+`InterfaceService` with List, Get, Create, Update, Delete methods. Follow
+existing SDK patterns (e.g., `SysctlService`).
 
 - [ ] **Step 2: Create route SDK service**
 
@@ -539,8 +545,8 @@ Add `Delete(ctx, target)` method to `DNSService`.
 
 - [ ] **Step 4: Wire into Client**
 
-Add `Interface *InterfaceService` and `Route *RouteService` fields to
-the `Client` struct in `osapi.go`.
+Add `Interface *InterfaceService` and `Route *RouteService` fields to the
+`Client` struct in `osapi.go`.
 
 - [ ] **Step 5: Regenerate SDK client**
 
@@ -561,6 +567,7 @@ feat(sdk): add Interface and Route services
 ### Task 9: CLI commands
 
 **Files:**
+
 - Create: `cmd/client_node_network_interface.go`
 - Create: `cmd/client_node_network_interface_list.go`
 - Create: `cmd/client_node_network_interface_get.go`
@@ -577,9 +584,9 @@ feat(sdk): add Interface and Route services
 
 - [ ] **Step 1: Create interface CLI commands**
 
-Parent `interface` command under `client node network`. Subcommands:
-list, get, create, update, delete. Follow existing CLI patterns (flags
-for each field, `--json` support, `printKV`/`printStyledTable`).
+Parent `interface` command under `client node network`. Subcommands: list, get,
+create, update, delete. Follow existing CLI patterns (flags for each field,
+`--json` support, `printKV`/`printStyledTable`).
 
 - [ ] **Step 2: Create route CLI commands**
 
@@ -605,6 +612,7 @@ feat(cli): add interface, route, and DNS delete commands
 ### Task 10: Documentation
 
 **Files:**
+
 - Create: `docs/docs/sidebar/features/network-interface-management.md`
 - Create: `docs/docs/sidebar/usage/cli/client/node/network/interface/`
 - Create: `docs/docs/sidebar/usage/cli/client/node/network/route/`
@@ -618,6 +626,7 @@ feat(cli): add interface, route, and DNS delete commands
 - [ ] **Step 1: Create feature page**
 
 Network interface and route management feature page with:
+
 - Overview, how it works, Netplan drop-in pattern
 - CLI examples for each operation
 - Safety rules (default route protection)
@@ -668,6 +677,6 @@ Must be >= 99.9%.
 
 - [ ] **Step 4: Cross-layer consistency check**
 
-Verify the interface and route domains appear in all the same places
-as existing domains (grep for "sysctl" across the codebase and confirm
-"interface" and "route" appear in the same files).
+Verify the interface and route domains appear in all the same places as existing
+domains (grep for "sysctl" across the codebase and confirm "interface" and
+"route" appear in the same files).

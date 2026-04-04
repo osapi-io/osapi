@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package netplan
+package route
 
 import (
 	"context"
@@ -27,50 +27,50 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 )
 
-// LinuxRoute implements the RouteProvider interface for generic Linux.
+// Linux implements the Provider interface for generic Linux.
 // All methods return ErrUnsupported as this is a generic Linux stub.
-type LinuxRoute struct{}
+type Linux struct{}
 
-// NewLinuxRouteProvider factory to create a new LinuxRoute instance.
-func NewLinuxRouteProvider() *LinuxRoute {
-	return &LinuxRoute{}
+// NewLinuxProvider factory to create a new Linux instance.
+func NewLinuxProvider() *Linux {
+	return &Linux{}
 }
 
 // List returns ErrUnsupported on generic Linux.
-func (l *LinuxRoute) List(
+func (l *Linux) List(
 	_ context.Context,
-) ([]RouteListEntry, error) {
+) ([]ListEntry, error) {
 	return nil, fmt.Errorf("netplan route: %w", provider.ErrUnsupported)
 }
 
 // Get returns ErrUnsupported on generic Linux.
-func (l *LinuxRoute) Get(
+func (l *Linux) Get(
 	_ context.Context,
 	_ string,
-) (*RouteEntry, error) {
+) (*Entry, error) {
 	return nil, fmt.Errorf("netplan route: %w", provider.ErrUnsupported)
 }
 
 // Create returns ErrUnsupported on generic Linux.
-func (l *LinuxRoute) Create(
+func (l *Linux) Create(
 	_ context.Context,
-	_ RouteEntry,
-) (*RouteResult, error) {
+	_ Entry,
+) (*Result, error) {
 	return nil, fmt.Errorf("netplan route: %w", provider.ErrUnsupported)
 }
 
 // Update returns ErrUnsupported on generic Linux.
-func (l *LinuxRoute) Update(
+func (l *Linux) Update(
 	_ context.Context,
-	_ RouteEntry,
-) (*RouteResult, error) {
+	_ Entry,
+) (*Result, error) {
 	return nil, fmt.Errorf("netplan route: %w", provider.ErrUnsupported)
 }
 
 // Delete returns ErrUnsupported on generic Linux.
-func (l *LinuxRoute) Delete(
+func (l *Linux) Delete(
 	_ context.Context,
 	_ string,
-) (*RouteResult, error) {
+) (*Result, error) {
 	return nil, fmt.Errorf("netplan route: %w", provider.ErrUnsupported)
 }

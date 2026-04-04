@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package netplan
+package netif
 
 import (
 	"context"
@@ -26,6 +26,8 @@ import (
 	"log/slog"
 	"regexp"
 	"strings"
+
+	"github.com/retr0h/osapi/internal/provider/network/netplan"
 )
 
 const (
@@ -33,8 +35,8 @@ const (
 	interfacePrefix = "osapi-"
 )
 
-// validName matches alphanumeric characters and dashes.
-var validName = regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$`)
+// ValidName matches alphanumeric characters and dashes.
+var ValidName = regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$`)
 
 // interfaceFilePath returns the Netplan config file path for an interface.
 func interfaceFilePath(
@@ -111,7 +113,7 @@ func (d *Debian) Create(
 	ctx context.Context,
 	entry InterfaceEntry,
 ) (*InterfaceResult, error) {
-	if err := validateInterfaceName(entry.Name); err != nil {
+	if err := ValidateInterfaceName(entry.Name); err != nil {
 		return nil, fmt.Errorf("netplan interface create: %w", err)
 	}
 
@@ -130,7 +132,7 @@ func (d *Debian) Create(
 		"interface": entry.Name,
 	}
 
-	changed, err := ApplyConfig(
+	changed, err := netplan.ApplyConfig(
 		ctx,
 		d.logger,
 		d.fs,
@@ -163,7 +165,7 @@ func (d *Debian) Update(
 	ctx context.Context,
 	entry InterfaceEntry,
 ) (*InterfaceResult, error) {
-	if err := validateInterfaceName(entry.Name); err != nil {
+	if err := ValidateInterfaceName(entry.Name); err != nil {
 		return nil, fmt.Errorf("netplan interface update: %w", err)
 	}
 
@@ -182,7 +184,7 @@ func (d *Debian) Update(
 		"interface": entry.Name,
 	}
 
-	changed, err := ApplyConfig(
+	changed, err := netplan.ApplyConfig(
 		ctx,
 		d.logger,
 		d.fs,
@@ -220,7 +222,7 @@ func (d *Debian) Delete(
 
 	path := interfaceFilePath(name)
 
-	changed, err := RemoveConfig(
+	changed, err := netplan.RemoveConfig(
 		ctx,
 		d.logger,
 		d.fs,
@@ -246,16 +248,16 @@ func (d *Debian) Delete(
 	}, nil
 }
 
-// validateInterfaceName checks that the interface name is non-empty and
+// ValidateInterfaceName checks that the interface name is non-empty and
 // matches the allowed pattern (alphanumeric and dashes).
-func validateInterfaceName(
+func ValidateInterfaceName(
 	name string,
 ) error {
 	if name == "" {
 		return fmt.Errorf("name must not be empty")
 	}
 
-	if !validName.MatchString(name) {
+	if !ValidName.MatchString(name) {
 		return fmt.Errorf("name %q contains invalid characters", name)
 	}
 

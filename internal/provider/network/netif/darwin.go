@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package netplan
+package netif
 
 import (
 	"context"
@@ -27,7 +27,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 )
 
-// Darwin implements the InterfaceProvider interface for Darwin (macOS).
+// Darwin implements the Provider interface for Darwin (macOS).
 // All methods return ErrUnsupported as Netplan is not available on macOS.
 type Darwin struct{}
 

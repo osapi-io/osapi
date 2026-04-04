@@ -10,12 +10,12 @@ unprivileged while agents execute the actual changes.
 
 ## What It Manages
 
-| Resource  | Operations          | Description                                  |
-| --------- | ------------------- | -------------------------------------------- |
-| DNS       | Read, Update, Delete| Nameservers and search domains per interface |
-| Ping      | Read                | ICMP connectivity check to a target host     |
-| Interface | Full CRUD           | Netplan interface configuration              |
-| Route     | Full CRUD           | Netplan static route configuration           |
+| Resource  | Operations           | Description                                  |
+| --------- | -------------------- | -------------------------------------------- |
+| DNS       | Read, Update, Delete | Nameservers and search domains per interface |
+| Ping      | Read                 | ICMP connectivity check to a target host     |
+| Interface | Full CRUD            | Netplan interface configuration              |
+| Route     | Full CRUD            | Netplan static route configuration           |
 
 For interface and route management details, see
 [Network Interface Management](network-interface-management.md).

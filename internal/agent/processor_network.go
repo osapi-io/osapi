@@ -28,16 +28,17 @@ import (
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
-	"github.com/retr0h/osapi/internal/provider/network/netplan"
+	"github.com/retr0h/osapi/internal/provider/network/netif"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
+	"github.com/retr0h/osapi/internal/provider/network/route"
 )
 
 // NewNetworkProcessor returns a ProcessorFunc that handles network-related operations.
 func NewNetworkProcessor(
 	dnsProvider dns.Provider,
 	pingProvider ping.Provider,
-	interfaceProvider netplan.InterfaceProvider,
-	routeProvider netplan.RouteProvider,
+	interfaceProvider netif.Provider,
+	routeProvider route.Provider,
 	logger *slog.Logger,
 ) ProcessorFunc {
 	return func(req job.Request) (json.RawMessage, error) {

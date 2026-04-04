@@ -282,7 +282,12 @@ func (s *NetworkRouteDeletePublicTestSuite) TestDeleteNetworkRouteRBACHTTP() {
 		{
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacRouteDeleteTestSigningKey, []string{"read"}, "test-user", []string{"network:read"})
+				token, _ := tokenManager.Generate(
+					rbacRouteDeleteTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"network:read"},
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -294,7 +299,12 @@ func (s *NetworkRouteDeletePublicTestSuite) TestDeleteNetworkRouteRBACHTTP() {
 		{
 			name: "when valid token returns 200",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacRouteDeleteTestSigningKey, []string{"admin"}, "test-user", nil)
+				token, _ := tokenManager.Generate(
+					rbacRouteDeleteTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -312,9 +322,20 @@ func (s *NetworkRouteDeletePublicTestSuite) TestDeleteNetworkRouteRBACHTTP() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
-			appConfig := config.Config{Controller: config.Controller{API: config.APIServer{Security: config.ServerSecurity{SigningKey: rbacRouteDeleteTestSigningKey}}}}
+			appConfig := config.Config{
+				Controller: config.Controller{
+					API: config.APIServer{
+						Security: config.ServerSecurity{SigningKey: rbacRouteDeleteTestSigningKey},
+					},
+				},
+			}
 			server := api.New(appConfig, s.logger)
-			handlers := apinetwork.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apinetwork.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(http.MethodDelete, "/node/server1/network/route/eth0", nil)

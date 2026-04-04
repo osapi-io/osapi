@@ -47,10 +47,10 @@ $ osapi client node network route update \
 
 Routes are specified as `TO:VIA` or `TO:VIA:METRIC`:
 
-| Format             | Example                          |
-| ------------------ | -------------------------------- |
-| `TO:VIA`           | `10.0.0.0/8:192.168.1.1`        |
-| `TO:VIA:METRIC`    | `10.0.0.0/8:192.168.1.1:100`    |
+| Format          | Example                      |
+| --------------- | ---------------------------- |
+| `TO:VIA`        | `10.0.0.0/8:192.168.1.1`     |
+| `TO:VIA:METRIC` | `10.0.0.0/8:192.168.1.1:100` |
 
 ## JSON Output
 
@@ -66,9 +66,9 @@ $ osapi client node network route update \
 
 ## Flags
 
-| Flag            | Description                                              | Default  |
-| --------------- | -------------------------------------------------------- | -------- |
-| `--interface`   | Interface name                                           | required |
-| `--route`       | Route in `TO:VIA` or `TO:VIA:METRIC` format (repeatable) | required |
-| `-T, --target`  | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`    | Output raw JSON response                                 |          |
+| Flag           | Description                                              | Default  |
+| -------------- | -------------------------------------------------------- | -------- |
+| `--interface`  | Interface name                                           | required |
+| `--route`      | Route in `TO:VIA` or `TO:VIA:METRIC` format (repeatable) | required |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
+| `-j, --json`   | Output raw JSON response                                 |          |

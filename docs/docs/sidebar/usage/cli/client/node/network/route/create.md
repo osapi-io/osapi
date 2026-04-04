@@ -1,7 +1,7 @@
 # Create
 
-Create static routes for an interface on a target host. Routes are specified
-in `TO:VIA` or `TO:VIA:METRIC` format. Fails if an OSAPI-managed routes
+Create static routes for an interface on a target host. Routes are specified in
+`TO:VIA` or `TO:VIA:METRIC` format. Fails if an OSAPI-managed routes
 configuration for that interface already exists -- use `update` to replace it:
 
 ```bash
@@ -55,10 +55,10 @@ When some hosts are skipped, STATUS and ERROR columns are added:
 
 Routes are specified as `TO:VIA` or `TO:VIA:METRIC`:
 
-| Format             | Example                          |
-| ------------------ | -------------------------------- |
-| `TO:VIA`           | `10.0.0.0/8:192.168.1.1`        |
-| `TO:VIA:METRIC`    | `10.0.0.0/8:192.168.1.1:100`    |
+| Format          | Example                      |
+| --------------- | ---------------------------- |
+| `TO:VIA`        | `10.0.0.0/8:192.168.1.1`     |
+| `TO:VIA:METRIC` | `10.0.0.0/8:192.168.1.1:100` |
 
 `TO` is the destination in CIDR notation. `VIA` is the gateway IP address.
 `METRIC` is the route priority (lower is preferred).
@@ -77,9 +77,9 @@ $ osapi client node network route create \
 
 ## Flags
 
-| Flag            | Description                                              | Default  |
-| --------------- | -------------------------------------------------------- | -------- |
-| `--interface`   | Interface name                                           | required |
-| `--route`       | Route in `TO:VIA` or `TO:VIA:METRIC` format (repeatable) | required |
-| `-T, --target`  | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`    | Output raw JSON response                                 |          |
+| Flag           | Description                                              | Default  |
+| -------------- | -------------------------------------------------------- | -------- |
+| `--interface`  | Interface name                                           | required |
+| `--route`      | Route in `TO:VIA` or `TO:VIA:METRIC` format (repeatable) | required |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
+| `-j, --json`   | Output raw JSON response                                 |          |

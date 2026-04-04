@@ -12,8 +12,8 @@ with Ubuntu's network management stack.
 ## How It Works
 
 The interface and route providers write Netplan drop-in configuration files to
-`/etc/netplan/` on Debian-family systems. Each managed resource uses an
-`osapi-` filename prefix to identify OSAPI-owned files:
+`/etc/netplan/` on Debian-family systems. Each managed resource uses an `osapi-`
+filename prefix to identify OSAPI-owned files:
 
 - **Interfaces**: `osapi-{name}.yaml` — configures addresses, DHCP, gateway,
   MTU, MAC, and Wake-on-LAN for the named interface.
@@ -29,25 +29,25 @@ connectivity.
 
 **List** — Returns all interfaces known to Netplan on the host. Each entry
 includes the interface name, DHCP settings, IP addresses, gateway, MTU, MAC
-address, Wake-on-LAN state, managed flag (whether OSAPI manages the
-interface), and state.
+address, Wake-on-LAN state, managed flag (whether OSAPI manages the interface),
+and state.
 
 **Get** — Returns the configuration of a single interface by name.
 
 **Create** — Writes a new Netplan drop-in file for the interface. Fails if an
-OSAPI-managed configuration for that interface already exists — use `update`
-to replace it. Runs `netplan generate` to validate, then `netplan apply` to
+OSAPI-managed configuration for that interface already exists — use `update` to
+replace it. Runs `netplan generate` to validate, then `netplan apply` to
 activate. Returns `changed: true` if the file was created.
 
 **Update** — Replaces an existing Netplan drop-in file for the interface. Runs
-`netplan generate` and `netplan apply`. Returns `changed: false` if the
-content has not changed (same SHA). Fails if no OSAPI-managed configuration
-exists for that interface — use `create` first.
+`netplan generate` and `netplan apply`. Returns `changed: false` if the content
+has not changed (same SHA). Fails if no OSAPI-managed configuration exists for
+that interface — use `create` first.
 
 **Delete** — Removes the OSAPI-managed Netplan drop-in file for the interface
-and runs `netplan apply` to remove the configuration. Returns `changed: true`
-if the file existed. Only OSAPI-managed files (with the `osapi-` prefix) can
-be deleted.
+and runs `netplan apply` to remove the configuration. Returns `changed: true` if
+the file existed. Only OSAPI-managed files (with the `osapi-` prefix) can be
+deleted.
 
 ### Route Operations
 
@@ -59,8 +59,8 @@ OSAPI-managed Netplan routes file).
 
 **Create** — Writes a new Netplan drop-in routes file for the interface. Each
 route specifies a destination in CIDR notation, a gateway IP, and an optional
-metric. Fails if an OSAPI-managed routes file for that interface already
-exists — use `update` to replace it. Runs `netplan generate` to validate.
+metric. Fails if an OSAPI-managed routes file for that interface already exists
+— use `update` to replace it. Runs `netplan generate` to validate.
 
 **Update** — Replaces an existing OSAPI-managed routes file for the interface.
 Returns `changed: false` if the content is unchanged.
@@ -77,8 +77,8 @@ Returns `changed: true` if the file existed.
 ## Safety Features
 
 - **Netplan generate validation** — all writes run `netplan generate` before
-  applying. If the generated config is invalid, the file is rolled back and
-  the job returns an error. The previous configuration is preserved.
+  applying. If the generated config is invalid, the file is rolled back and the
+  job returns an error. The previous configuration is preserved.
 - **Default route protection** — the route provider refuses to delete routes
   that would remove the default gateway, preventing loss of connectivity.
 - **OSAPI prefix** — only files with the `osapi-` prefix are managed. System
@@ -88,19 +88,19 @@ Returns `changed: true` if the file existed.
 
 ## Operations
 
-| Operation           | Description                                     |
-| ------------------- | ----------------------------------------------- |
-| Interface List      | List all interfaces on the host                 |
-| Interface Get       | Get configuration for a specific interface      |
-| Interface Create    | Create a new Netplan interface config            |
-| Interface Update    | Replace an existing Netplan interface config     |
-| Interface Delete    | Remove an OSAPI-managed interface config         |
-| Route List          | List all routes in the kernel routing table      |
-| Route Get           | Get managed routes for a specific interface      |
-| Route Create        | Create new static routes for an interface        |
-| Route Update        | Replace static routes for an interface           |
-| Route Delete        | Remove OSAPI-managed routes for an interface     |
-| DNS Delete          | Remove OSAPI-managed DNS config for an interface |
+| Operation        | Description                                      |
+| ---------------- | ------------------------------------------------ |
+| Interface List   | List all interfaces on the host                  |
+| Interface Get    | Get configuration for a specific interface       |
+| Interface Create | Create a new Netplan interface config            |
+| Interface Update | Replace an existing Netplan interface config     |
+| Interface Delete | Remove an OSAPI-managed interface config         |
+| Route List       | List all routes in the kernel routing table      |
+| Route Get        | Get managed routes for a specific interface      |
+| Route Create     | Create new static routes for an interface        |
+| Route Update     | Replace static routes for an interface           |
+| Route Delete     | Remove OSAPI-managed routes for an interface     |
+| DNS Delete       | Remove OSAPI-managed DNS config for an interface |
 
 ## CLI Usage
 
@@ -200,14 +200,14 @@ environments.
 
 ## Permissions
 
-| Operation                                                       | Permission       |
-| --------------------------------------------------------------- | ---------------- |
-| Interface List, Get                                             | `network:read`   |
-| Interface Create, Update, Delete                                | `network:write`  |
-| Route List, Get                                                 | `network:read`   |
-| Route Create, Update, Delete                                    | `network:write`  |
-| DNS Get                                                         | `network:read`   |
-| DNS Update, Delete                                              | `network:write`  |
+| Operation                        | Permission      |
+| -------------------------------- | --------------- |
+| Interface List, Get              | `network:read`  |
+| Interface Create, Update, Delete | `network:write` |
+| Route List, Get                  | `network:read`  |
+| Route Create, Update, Delete     | `network:write` |
+| DNS Get                          | `network:read`  |
+| DNS Update, Delete               | `network:write` |
 
 Network read operations require `network:read`, included in all built-in roles
 (`admin`, `write`, `read`). Mutation operations require `network:write`,

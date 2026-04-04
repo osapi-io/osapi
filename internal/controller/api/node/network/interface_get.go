@@ -29,7 +29,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/controller/api/node/network/gen"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/netplan"
+	"github.com/retr0h/osapi/internal/provider/network/netif"
 )
 
 // GetNodeNetworkInterfaceByName get the node network interface by name API endpoint.
@@ -86,7 +86,7 @@ func (s *Network) GetNodeNetworkInterfaceByName(
 		}, nil
 	}
 
-	var entry netplan.InterfaceEntry
+	var entry netif.InterfaceEntry
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &entry)
 	}
@@ -142,7 +142,7 @@ func (s *Network) getNodeNetworkInterfaceByNameBroadcast(
 			item.Error = &e
 		default:
 			item.Status = gen.InterfaceGetEntryStatusOk
-			var entry netplan.InterfaceEntry
+			var entry netif.InterfaceEntry
 			if resp.Data != nil {
 				_ = json.Unmarshal(resp.Data, &entry)
 			}
@@ -161,7 +161,7 @@ func (s *Network) getNodeNetworkInterfaceByNameBroadcast(
 
 // convertInterfaceEntry converts a provider entry to API InterfaceInfo.
 func convertInterfaceEntry(
-	e netplan.InterfaceEntry,
+	e netif.InterfaceEntry,
 ) gen.InterfaceInfo {
 	info := gen.InterfaceInfo{
 		Name:       &e.Name,

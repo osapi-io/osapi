@@ -1,8 +1,8 @@
 # Create
 
 Create a new Netplan interface configuration on a target host. Fails if an
-OSAPI-managed configuration for that interface already exists -- use `update`
-to replace it:
+OSAPI-managed configuration for that interface already exists -- use `update` to
+replace it:
 
 ```bash
 $ osapi client node network interface create \
@@ -70,16 +70,16 @@ $ osapi client node network interface create \
 
 ## Flags
 
-| Flag              | Description                                              | Default  |
-| ----------------- | -------------------------------------------------------- | -------- |
-| `--name`          | Interface name                                           | required |
-| `--dhcp4`         | Enable DHCPv4                                            |          |
-| `--dhcp6`         | Enable DHCPv6                                            |          |
-| `--address`       | IP address in CIDR notation (repeatable)                 |          |
-| `--gateway4`      | IPv4 gateway address                                     |          |
-| `--gateway6`      | IPv6 gateway address                                     |          |
-| `--mtu`           | Maximum transmission unit                                |          |
-| `--mac-address`   | Hardware MAC address                                     |          |
-| `--wakeonlan`     | Enable Wake-on-LAN                                       |          |
-| `-T, --target`    | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`      | Output raw JSON response                                 |          |
+| Flag            | Description                                              | Default  |
+| --------------- | -------------------------------------------------------- | -------- |
+| `--name`        | Interface name                                           | required |
+| `--dhcp4`       | Enable DHCPv4                                            |          |
+| `--dhcp6`       | Enable DHCPv6                                            |          |
+| `--address`     | IP address in CIDR notation (repeatable)                 |          |
+| `--gateway4`    | IPv4 gateway address                                     |          |
+| `--gateway6`    | IPv6 gateway address                                     |          |
+| `--mtu`         | Maximum transmission unit                                |          |
+| `--mac-address` | Hardware MAC address                                     |          |
+| `--wakeonlan`   | Enable Wake-on-LAN                                       |          |
+| `-T, --target`  | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
+| `-j, --json`    | Output raw JSON response                                 |          |

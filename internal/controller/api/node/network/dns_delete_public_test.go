@@ -197,7 +197,11 @@ func (s *NetworkDNSDeletePublicTestSuite) TestDeleteNodeNetworkDNS() {
 				s.mockJobClient.EXPECT().
 					ModifyBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkDNSDelete, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
-						"server1": {Status: job.StatusFailed, Error: "permission denied", Hostname: "server1"},
+						"server1": {
+							Status:   job.StatusFailed,
+							Error:    "permission denied",
+							Hostname: "server1",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.DeleteNodeNetworkDNSResponseObject) {
@@ -329,7 +333,12 @@ func (s *NetworkDNSDeletePublicTestSuite) TestDeleteNetworkDNSRBACHTTP() {
 		{
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacDNSDeleteTestSigningKey, []string{"read"}, "test-user", []string{"network:read"})
+				token, _ := tokenManager.Generate(
+					rbacDNSDeleteTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"network:read"},
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -341,7 +350,12 @@ func (s *NetworkDNSDeletePublicTestSuite) TestDeleteNetworkDNSRBACHTTP() {
 		{
 			name: "when valid token with network:write returns 200",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacDNSDeleteTestSigningKey, []string{"admin"}, "test-user", nil)
+				token, _ := tokenManager.Generate(
+					rbacDNSDeleteTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -359,12 +373,27 @@ func (s *NetworkDNSDeletePublicTestSuite) TestDeleteNetworkDNSRBACHTTP() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
-			appConfig := config.Config{Controller: config.Controller{API: config.APIServer{Security: config.ServerSecurity{SigningKey: rbacDNSDeleteTestSigningKey}}}}
+			appConfig := config.Config{
+				Controller: config.Controller{
+					API: config.APIServer{
+						Security: config.ServerSecurity{SigningKey: rbacDNSDeleteTestSigningKey},
+					},
+				},
+			}
 			server := api.New(appConfig, s.logger)
-			handlers := apinetwork.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apinetwork.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodDelete, "/node/server1/network/dns", strings.NewReader(`{"interface_name":"eth0"}`))
+			req := httptest.NewRequest(
+				http.MethodDelete,
+				"/node/server1/network/dns",
+				strings.NewReader(`{"interface_name":"eth0"}`),
+			)
 			req.Header.Set("Content-Type", "application/json")
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()

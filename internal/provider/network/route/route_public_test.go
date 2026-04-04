@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package netplan_test
+package route_test
 
 import (
 	"context"
@@ -37,8 +37,10 @@ import (
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 	netinfomocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
-	"github.com/retr0h/osapi/internal/provider/network/netplan"
+	"github.com/retr0h/osapi/internal/provider/network/route"
 )
+
+const testHostname = "test-host"
 
 type RoutePublicTestSuite struct {
 	suite.Suite
@@ -50,7 +52,7 @@ type RoutePublicTestSuite struct {
 	mockStateKV *jobmocks.MockKeyValue
 	mockExec    *execmocks.MockManager
 	mockNetinfo *netinfomocks.MockProvider
-	provider    *netplan.DebianRoute
+	provider    *route.Debian
 }
 
 func (suite *RoutePublicTestSuite) SetupTest() {
@@ -64,7 +66,7 @@ func (suite *RoutePublicTestSuite) SetupTest() {
 
 	_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
 
-	suite.provider = netplan.NewDebianRouteProvider(
+	suite.provider = route.NewDebianProvider(
 		suite.logger,
 		suite.memFs,
 		suite.mockStateKV,
@@ -79,14 +81,14 @@ func (suite *RoutePublicTestSuite) SetupSubTest() {
 }
 
 func (suite *RoutePublicTestSuite) TearDownSubTest() {
-	netplan.ResetMarshalJSON()
+	route.ResetMarshalJSON()
 }
 
 func (suite *RoutePublicTestSuite) TestList() {
 	tests := []struct {
 		name         string
 		setup        func()
-		validateFunc func([]netplan.RouteListEntry, error)
+		validateFunc func([]route.ListEntry, error)
 	}{
 		{
 			name: "when routes exist",
@@ -109,7 +111,7 @@ func (suite *RoutePublicTestSuite) TestList() {
 						},
 					}, nil)
 			},
-			validateFunc: func(result []netplan.RouteListEntry, err error) {
+			validateFunc: func(result []route.ListEntry, err error) {
 				suite.Require().NoError(err)
 				suite.Require().Len(result, 2)
 
@@ -132,7 +134,7 @@ func (suite *RoutePublicTestSuite) TestList() {
 					GetRoutes().
 					Return([]netinfo.RouteResult{}, nil)
 			},
-			validateFunc: func(result []netplan.RouteListEntry, err error) {
+			validateFunc: func(result []route.ListEntry, err error) {
 				suite.Require().NoError(err)
 				suite.Empty(result)
 			},
@@ -144,7 +146,7 @@ func (suite *RoutePublicTestSuite) TestList() {
 					GetRoutes().
 					Return(nil, errors.New("netinfo error"))
 			},
-			validateFunc: func(result []netplan.RouteListEntry, err error) {
+			validateFunc: func(result []route.ListEntry, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "netplan route list:")
@@ -168,13 +170,13 @@ func (suite *RoutePublicTestSuite) TestGet() {
 		name         string
 		interfaceNm  string
 		setup        func()
-		validateFunc func(*netplan.RouteEntry, error)
+		validateFunc func(*route.Entry, error)
 	}{
 		{
 			name:        "when routes found in state KV",
 			interfaceNm: "eth0",
 			setup: func() {
-				routes := []netplan.Route{
+				routes := []route.Route{
 					{To: "10.1.0.0/16", Via: "10.0.0.1", Metric: 100},
 				}
 				routesJSON, _ := json.Marshal(routes)
@@ -196,7 +198,7 @@ func (suite *RoutePublicTestSuite) TestGet() {
 					Get(gomock.Any(), gomock.Any()).
 					Return(mockEntry, nil)
 			},
-			validateFunc: func(result *netplan.RouteEntry, err error) {
+			validateFunc: func(result *route.Entry, err error) {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("eth0", result.Interface)
@@ -214,7 +216,7 @@ func (suite *RoutePublicTestSuite) TestGet() {
 					Get(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("not found"))
 			},
-			validateFunc: func(result *netplan.RouteEntry, err error) {
+			validateFunc: func(result *route.Entry, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "not found")
@@ -243,7 +245,7 @@ func (suite *RoutePublicTestSuite) TestGet() {
 					Get(gomock.Any(), gomock.Any()).
 					Return(mockEntry, nil)
 			},
-			validateFunc: func(result *netplan.RouteEntry, err error) {
+			validateFunc: func(result *route.Entry, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "not found")
@@ -270,7 +272,7 @@ func (suite *RoutePublicTestSuite) TestGet() {
 					Get(gomock.Any(), gomock.Any()).
 					Return(mockEntry, nil)
 			},
-			validateFunc: func(result *netplan.RouteEntry, err error) {
+			validateFunc: func(result *route.Entry, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "no route metadata")
@@ -298,7 +300,7 @@ func (suite *RoutePublicTestSuite) TestGet() {
 					Get(gomock.Any(), gomock.Any()).
 					Return(mockEntry, nil)
 			},
-			validateFunc: func(result *netplan.RouteEntry, err error) {
+			validateFunc: func(result *route.Entry, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "unmarshal routes")
@@ -315,7 +317,7 @@ func (suite *RoutePublicTestSuite) TestGet() {
 					Get(gomock.Any(), gomock.Any()).
 					Return(mockEntry, nil)
 			},
-			validateFunc: func(result *netplan.RouteEntry, err error) {
+			validateFunc: func(result *route.Entry, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "unmarshal state")
@@ -325,7 +327,7 @@ func (suite *RoutePublicTestSuite) TestGet() {
 			name:        "when interface name is empty",
 			interfaceNm: "",
 			setup:       func() {},
-			validateFunc: func(result *netplan.RouteEntry, err error) {
+			validateFunc: func(result *route.Entry, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "interface name must not be empty")
@@ -347,15 +349,15 @@ func (suite *RoutePublicTestSuite) TestGet() {
 func (suite *RoutePublicTestSuite) TestCreate() {
 	tests := []struct {
 		name         string
-		entry        netplan.RouteEntry
+		entry        route.Entry
 		setup        func()
-		validateFunc func(*netplan.RouteResult, error)
+		validateFunc func(*route.Result, error)
 	}{
 		{
 			name: "when new routes deploy successfully",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "eth0",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "10.1.0.0/16", Via: "10.0.0.1", Metric: 100},
 					{To: "172.16.0.0/12", Via: "10.0.0.1"},
 				},
@@ -381,7 +383,7 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("eth0", result.Interface)
@@ -401,9 +403,9 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when route file already exists",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "eth0",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "10.1.0.0/16", Via: "10.0.0.1"},
 				},
 			},
@@ -415,7 +417,7 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 					0o644,
 				)
 			},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "already managed")
@@ -423,14 +425,14 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when routes contain default route IPv4",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "eth0",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "0.0.0.0/0", Via: "10.0.0.1"},
 				},
 			},
 			setup: func() {},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "default route")
@@ -438,14 +440,14 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when routes contain default route IPv6",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "eth0",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "::/0", Via: "fe80::1"},
 				},
 			},
 			setup: func() {},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "default route")
@@ -453,14 +455,14 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when routes contain default keyword",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "eth0",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "default", Via: "10.0.0.1"},
 				},
 			},
 			setup: func() {},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "default route")
@@ -468,14 +470,14 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when interface name is empty",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "10.1.0.0/16", Via: "10.0.0.1"},
 				},
 			},
 			setup: func() {},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "name must not be empty")
@@ -483,14 +485,14 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when interface name has invalid characters",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "eth 0!",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "10.1.0.0/16", Via: "10.0.0.1"},
 				},
 			},
 			setup: func() {},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "invalid characters")
@@ -498,9 +500,9 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when ApplyConfig fails",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "eth0",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "10.1.0.0/16", Via: "10.0.0.1"},
 				},
 			},
@@ -515,7 +517,7 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 					RunPrivilegedCmd("netplan", []string{"generate"}).
 					Return("", errors.New("invalid YAML"))
 			},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "netplan route create:")
@@ -537,15 +539,15 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 func (suite *RoutePublicTestSuite) TestUpdate() {
 	tests := []struct {
 		name         string
-		entry        netplan.RouteEntry
+		entry        route.Entry
 		setup        func()
-		validateFunc func(*netplan.RouteResult, error)
+		validateFunc func(*route.Result, error)
 	}{
 		{
 			name: "when update succeeds",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "eth0",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "10.2.0.0/16", Via: "10.0.0.1"},
 				},
 			},
@@ -577,7 +579,7 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("eth0", result.Interface)
@@ -586,16 +588,16 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 		},
 		{
 			name: "when route file not managed",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "eth0",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "10.1.0.0/16", Via: "10.0.0.1"},
 				},
 			},
 			setup: func() {
 				// No file on disk.
 			},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "not managed")
@@ -603,14 +605,14 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 		},
 		{
 			name: "when routes contain default route",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "eth0",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "0.0.0.0/0", Via: "10.0.0.1"},
 				},
 			},
 			setup: func() {},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "default route")
@@ -618,14 +620,14 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 		},
 		{
 			name: "when interface name is empty",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "10.1.0.0/16", Via: "10.0.0.1"},
 				},
 			},
 			setup: func() {},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "name must not be empty")
@@ -633,9 +635,9 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 		},
 		{
 			name: "when ApplyConfig fails",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "eth0",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "10.1.0.0/16", Via: "10.0.0.1"},
 				},
 			},
@@ -654,7 +656,7 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 					RunPrivilegedCmd("netplan", []string{"generate"}).
 					Return("", errors.New("validation error"))
 			},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "netplan route update:")
@@ -678,7 +680,7 @@ func (suite *RoutePublicTestSuite) TestDelete() {
 		name         string
 		interfaceNm  string
 		setup        func()
-		validateFunc func(*netplan.RouteResult, error)
+		validateFunc func(*route.Result, error)
 	}{
 		{
 			name:        "when file exists and removal succeeds",
@@ -701,7 +703,7 @@ func (suite *RoutePublicTestSuite) TestDelete() {
 					Get(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("not found"))
 			},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("eth0", result.Interface)
@@ -718,7 +720,7 @@ func (suite *RoutePublicTestSuite) TestDelete() {
 			name:        "when file does not exist",
 			interfaceNm: "eth0",
 			setup:       func() {},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("eth0", result.Interface)
@@ -729,7 +731,7 @@ func (suite *RoutePublicTestSuite) TestDelete() {
 			name:        "when interface name is empty",
 			interfaceNm: "",
 			setup:       func() {},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "interface name must not be empty")
@@ -749,7 +751,7 @@ func (suite *RoutePublicTestSuite) TestDelete() {
 					RunPrivilegedCmd("netplan", []string{"apply"}).
 					Return("", errors.New("apply failed"))
 			},
-			validateFunc: func(result *netplan.RouteResult, err error) {
+			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "netplan route delete:")
@@ -771,14 +773,14 @@ func (suite *RoutePublicTestSuite) TestDelete() {
 func (suite *RoutePublicTestSuite) TestGenerateRouteYAML() {
 	tests := []struct {
 		name         string
-		entry        netplan.RouteEntry
+		entry        route.Entry
 		validateFunc func(string)
 	}{
 		{
 			name: "when single route with metric",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "eth0",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "10.1.0.0/16", Via: "10.0.0.1", Metric: 100},
 				},
 			},
@@ -795,9 +797,9 @@ func (suite *RoutePublicTestSuite) TestGenerateRouteYAML() {
 		},
 		{
 			name: "when multiple routes without metric",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "ens3",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "10.1.0.0/16", Via: "10.0.0.1"},
 					{To: "172.16.0.0/12", Via: "10.0.0.1"},
 				},
@@ -812,9 +814,9 @@ func (suite *RoutePublicTestSuite) TestGenerateRouteYAML() {
 		},
 		{
 			name: "when route with zero metric omits metric",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "eth0",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "10.1.0.0/16", Via: "10.0.0.1", Metric: 0},
 				},
 			},
@@ -828,7 +830,7 @@ func (suite *RoutePublicTestSuite) TestGenerateRouteYAML() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := netplan.GenerateRouteYAML(tc.entry)
+			result := route.GenerateRouteYAML(tc.entry)
 
 			tc.validateFunc(string(result))
 		})
@@ -838,12 +840,12 @@ func (suite *RoutePublicTestSuite) TestGenerateRouteYAML() {
 func (suite *RoutePublicTestSuite) TestContainsDefaultRoute() {
 	tests := []struct {
 		name         string
-		routes       []netplan.Route
+		routes       []route.Route
 		validateFunc func(bool)
 	}{
 		{
 			name: "when contains IPv4 default route",
-			routes: []netplan.Route{
+			routes: []route.Route{
 				{To: "10.1.0.0/16", Via: "10.0.0.1"},
 				{To: "0.0.0.0/0", Via: "10.0.0.1"},
 			},
@@ -853,7 +855,7 @@ func (suite *RoutePublicTestSuite) TestContainsDefaultRoute() {
 		},
 		{
 			name: "when contains IPv6 default route",
-			routes: []netplan.Route{
+			routes: []route.Route{
 				{To: "::/0", Via: "fe80::1"},
 			},
 			validateFunc: func(result bool) {
@@ -862,7 +864,7 @@ func (suite *RoutePublicTestSuite) TestContainsDefaultRoute() {
 		},
 		{
 			name: "when contains default keyword",
-			routes: []netplan.Route{
+			routes: []route.Route{
 				{To: "default", Via: "10.0.0.1"},
 			},
 			validateFunc: func(result bool) {
@@ -871,7 +873,7 @@ func (suite *RoutePublicTestSuite) TestContainsDefaultRoute() {
 		},
 		{
 			name: "when no default routes",
-			routes: []netplan.Route{
+			routes: []route.Route{
 				{To: "10.1.0.0/16", Via: "10.0.0.1"},
 				{To: "172.16.0.0/12", Via: "10.0.0.1"},
 			},
@@ -881,7 +883,7 @@ func (suite *RoutePublicTestSuite) TestContainsDefaultRoute() {
 		},
 		{
 			name:   "when empty routes",
-			routes: []netplan.Route{},
+			routes: []route.Route{},
 			validateFunc: func(result bool) {
 				suite.False(result)
 			},
@@ -890,7 +892,7 @@ func (suite *RoutePublicTestSuite) TestContainsDefaultRoute() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := netplan.ContainsDefaultRoute(tc.routes)
+			result := route.ContainsDefaultRoute(tc.routes)
 
 			tc.validateFunc(result)
 		})
@@ -900,15 +902,15 @@ func (suite *RoutePublicTestSuite) TestContainsDefaultRoute() {
 func (suite *RoutePublicTestSuite) TestBuildRouteMetadata() {
 	tests := []struct {
 		name         string
-		entry        netplan.RouteEntry
+		entry        route.Entry
 		setup        func()
 		validateFunc func(map[string]string, error)
 	}{
 		{
 			name: "when routes serialize successfully",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "eth0",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "10.1.0.0/16", Via: "10.0.0.1", Metric: 100},
 				},
 			},
@@ -917,7 +919,7 @@ func (suite *RoutePublicTestSuite) TestBuildRouteMetadata() {
 				suite.Require().NoError(err)
 				suite.Equal("eth0", result["interface"])
 
-				var routes []netplan.Route
+				var routes []route.Route
 				unmarshalErr := json.Unmarshal([]byte(result["routes"]), &routes)
 				suite.Require().NoError(unmarshalErr)
 				suite.Require().Len(routes, 1)
@@ -928,14 +930,14 @@ func (suite *RoutePublicTestSuite) TestBuildRouteMetadata() {
 		},
 		{
 			name: "when marshalJSON fails",
-			entry: netplan.RouteEntry{
+			entry: route.Entry{
 				Interface: "eth0",
-				Routes: []netplan.Route{
+				Routes: []route.Route{
 					{To: "10.1.0.0/16", Via: "10.0.0.1"},
 				},
 			},
 			setup: func() {
-				netplan.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
+				route.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
 					return nil, errors.New("marshal error")
 				})
 			},
@@ -951,7 +953,7 @@ func (suite *RoutePublicTestSuite) TestBuildRouteMetadata() {
 		suite.Run(tc.name, func() {
 			tc.setup()
 
-			result, err := netplan.BuildRouteMetadata(tc.entry)
+			result, err := route.BuildRouteMetadata(tc.entry)
 
 			tc.validateFunc(result, err)
 		})
@@ -982,7 +984,7 @@ func (suite *RoutePublicTestSuite) TestRouteFilePath() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := netplan.RouteFilePath(tc.interfaceNm)
+			result := route.RouteFilePath(tc.interfaceNm)
 
 			tc.validateFunc(result)
 		})

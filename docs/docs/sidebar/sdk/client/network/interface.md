@@ -8,18 +8,18 @@ Network interface configuration management via Netplan.
 
 ## Methods
 
-| Method                                | Description                        |
-| ------------------------------------- | ---------------------------------- |
-| `List(ctx, target)`                   | List all interfaces                |
-| `Get(ctx, target, name)`              | Get a specific interface           |
-| `Create(ctx, target, name, opts)`     | Create a new interface config      |
-| `Update(ctx, target, name, opts)`     | Update an existing interface config |
-| `Delete(ctx, target, name)`           | Delete an interface config         |
+| Method                            | Description                         |
+| --------------------------------- | ----------------------------------- |
+| `List(ctx, target)`               | List all interfaces                 |
+| `Get(ctx, target, name)`          | Get a specific interface            |
+| `Create(ctx, target, name, opts)` | Create a new interface config       |
+| `Update(ctx, target, name, opts)` | Update an existing interface config |
+| `Delete(ctx, target, name)`       | Delete an interface config          |
 
 ## Request Types
 
-| Type                  | Fields                                                    |
-| --------------------- | --------------------------------------------------------- |
+| Type                  | Fields                                                                  |
+| --------------------- | ----------------------------------------------------------------------- |
 | `InterfaceConfigOpts` | DHCP4, DHCP6, Addresses, Gateway4, Gateway6, MTU, MACAddress, WakeOnLAN |
 
 ## Result Types
@@ -51,12 +51,12 @@ Network interface configuration management via Netplan.
 
 ### InterfaceGetResult (Get)
 
-| Field       | Type            | Description                     |
-| ----------- | --------------- | ------------------------------- |
-| `Hostname`  | `string`        | Agent hostname                  |
-| `Status`    | `string`        | Result status (`ok`, `skipped`) |
-| `Interface` | `*InterfaceInfo`| Interface configuration         |
-| `Error`     | `string`        | Error message (if any)          |
+| Field       | Type             | Description                     |
+| ----------- | ---------------- | ------------------------------- |
+| `Hostname`  | `string`         | Agent hostname                  |
+| `Status`    | `string`         | Result status (`ok`, `skipped`) |
+| `Interface` | `*InterfaceInfo` | Interface configuration         |
+| `Error`     | `string`         | Error message (if any)          |
 
 ### InterfaceMutationResult (Create, Update, Delete)
 
@@ -127,9 +127,9 @@ for a complete working example.
 
 ## Permissions
 
-| Operation             | Permission      |
-| --------------------- | --------------- |
-| List, Get             | `network:read`  |
+| Operation              | Permission      |
+| ---------------------- | --------------- |
+| List, Get              | `network:read`  |
 | Create, Update, Delete | `network:write` |
 
 Interface management is supported on the Debian OS family (Ubuntu, Debian,

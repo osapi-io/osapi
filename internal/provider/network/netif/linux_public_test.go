@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package netplan_test
+package netif_test
 
 import (
 	"context"
@@ -27,17 +27,17 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/network/netplan"
+	"github.com/retr0h/osapi/internal/provider/network/netif"
 )
 
 type LinuxPublicTestSuite struct {
 	suite.Suite
 
-	provider *netplan.Linux
+	provider *netif.Linux
 }
 
 func (suite *LinuxPublicTestSuite) SetupTest() {
-	suite.provider = netplan.NewLinuxProvider()
+	suite.provider = netif.NewLinuxProvider()
 }
 
 func (suite *LinuxPublicTestSuite) TestList() {
@@ -89,7 +89,7 @@ func (suite *LinuxPublicTestSuite) TestCreate() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Create(context.Background(), netplan.InterfaceEntry{})
+			got, err := suite.provider.Create(context.Background(), netif.InterfaceEntry{})
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)
@@ -108,7 +108,7 @@ func (suite *LinuxPublicTestSuite) TestUpdate() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Update(context.Background(), netplan.InterfaceEntry{})
+			got, err := suite.provider.Update(context.Background(), netif.InterfaceEntry{})
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)

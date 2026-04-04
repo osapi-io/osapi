@@ -1,7 +1,7 @@
 # Delete
 
-Remove an OSAPI-managed Netplan interface configuration from a target host.
-Only files with the `osapi-` prefix are managed and can be deleted:
+Remove an OSAPI-managed Netplan interface configuration from a target host. Only
+files with the `osapi-` prefix are managed and can be deleted:
 
 ```bash
 $ osapi client node network interface delete \
