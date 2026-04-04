@@ -29,7 +29,6 @@ import (
 
 	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 )
 
 // marshalJSON is a package-level variable for testing the marshal
@@ -52,7 +51,6 @@ type Debian struct {
 	stateKV     jetstream.KeyValue
 	execManager exec.Manager
 	hostname    string
-	netinfo     netinfo.Provider
 }
 
 // NewDebianProvider factory to create a new Debian instance.
@@ -62,7 +60,6 @@ func NewDebianProvider(
 	stateKV jetstream.KeyValue,
 	execManager exec.Manager,
 	hostname string,
-	netinfo netinfo.Provider,
 ) *Debian {
 	return &Debian{
 		logger:      logger.With(slog.String("subsystem", "provider.netplan.route")),
@@ -70,6 +67,5 @@ func NewDebianProvider(
 		stateKV:     stateKV,
 		execManager: execManager,
 		hostname:    hostname,
-		netinfo:     netinfo,
 	}
 }

@@ -35,12 +35,59 @@ import (
 
 	execmocks "github.com/retr0h/osapi/internal/exec/mocks"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/provider/network/netinfo"
-	netinfomocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/netplan/route"
 )
 
 const testHostname = "test-host"
+
+// netplanStatusWithRoutes is a netplan status JSON fixture with user-visible
+// and kernel-internal routes to verify filtering.
+const netplanStatusWithRoutes = `{
+  "netplan-global-state": {"online": true},
+  "eth0": {
+    "index": 2,
+    "adminstate": "UP",
+    "operstate": "UP",
+    "type": "ethernet",
+    "macaddress": "aa:bb:cc:dd:ee:f0",
+    "addresses": [{"10.0.0.5": {"prefix": 24, "flags": ["dhcp"]}}],
+    "routes": [
+      {"to": "default", "via": "10.0.0.1", "family": 2, "metric": 100, "type": "unicast", "scope": "global", "protocol": "dhcp", "table": "main"},
+      {"to": "10.0.0.0/24", "family": 2, "metric": 100, "type": "unicast", "scope": "link", "protocol": "kernel", "table": "main"},
+      {"to": "10.0.0.5", "family": 2, "type": "local", "scope": "host", "protocol": "kernel", "table": "local"},
+      {"to": "10.0.0.255", "family": 2, "type": "broadcast", "scope": "link", "protocol": "kernel", "table": "local"},
+      {"to": "ff00::/8", "family": 10, "type": "multicast", "scope": "global", "protocol": "kernel", "table": "local"},
+      {"to": "2600:6c50::", "family": 10, "type": "anycast", "scope": "global", "protocol": "kernel", "table": "local"}
+    ]
+  },
+  "eth1": {
+    "index": 3,
+    "adminstate": "UP",
+    "operstate": "UP",
+    "type": "ethernet",
+    "macaddress": "aa:bb:cc:dd:ee:f1",
+    "addresses": [{"10.0.1.5": {"prefix": 24}}],
+    "routes": [
+      {"to": "10.1.0.0/16", "via": "10.0.1.1", "family": 2, "metric": 200, "type": "unicast", "scope": "global", "protocol": "static", "table": "main"}
+    ]
+  }
+}`
+
+// netplanStatusNoRoutes has only kernel-internal routes.
+const netplanStatusNoRoutes = `{
+  "netplan-global-state": {"online": true},
+  "lo": {
+    "index": 1,
+    "adminstate": "UP",
+    "operstate": "UNKNOWN",
+    "type": "ethernet",
+    "macaddress": "00:00:00:00:00:00",
+    "addresses": [{"127.0.0.1": {"prefix": 8}}],
+    "routes": [
+      {"to": "127.0.0.0/8", "family": 2, "type": "local", "scope": "host", "protocol": "kernel", "table": "local"}
+    ]
+  }
+}`
 
 type RoutePublicTestSuite struct {
 	suite.Suite
@@ -51,7 +98,6 @@ type RoutePublicTestSuite struct {
 	memFs       avfs.VFS
 	mockStateKV *jobmocks.MockKeyValue
 	mockExec    *execmocks.MockManager
-	mockNetinfo *netinfomocks.MockProvider
 	provider    *route.Debian
 }
 
@@ -62,7 +108,6 @@ func (suite *RoutePublicTestSuite) SetupTest() {
 	suite.memFs = memfs.New()
 	suite.mockStateKV = jobmocks.NewMockKeyValue(suite.ctrl)
 	suite.mockExec = execmocks.NewMockManager(suite.ctrl)
-	suite.mockNetinfo = netinfomocks.NewMockProvider(suite.ctrl)
 
 	_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
 
@@ -72,7 +117,6 @@ func (suite *RoutePublicTestSuite) SetupTest() {
 		suite.mockStateKV,
 		suite.mockExec,
 		testHostname,
-		suite.mockNetinfo,
 	)
 }
 
@@ -91,48 +135,42 @@ func (suite *RoutePublicTestSuite) TestList() {
 		validateFunc func([]route.ListEntry, error)
 	}{
 		{
-			name: "when routes exist",
+			name: "when routes exist and kernel routes are filtered",
 			setup: func() {
-				suite.mockNetinfo.EXPECT().
-					GetRoutes().
-					Return([]netinfo.RouteResult{
-						{
-							Destination: "10.1.0.0",
-							Gateway:     "10.0.0.1",
-							Interface:   "eth0",
-							Mask:        "255.255.0.0",
-							Metric:      100,
-							Flags:       "UG",
-						},
-						{
-							Destination: "192.168.1.0",
-							Gateway:     "192.168.0.1",
-							Interface:   "eth1",
-						},
-					}, nil)
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusWithRoutes, nil)
 			},
 			validateFunc: func(result []route.ListEntry, err error) {
 				suite.Require().NoError(err)
-				suite.Require().Len(result, 2)
+				// From eth0: default + 10.0.0.0/24 (unicast, non-host scope)
+				// local/broadcast/multicast/anycast are filtered.
+				// From eth1: 10.1.0.0/16
+				// Total: 3 user-visible routes.
+				suite.Require().Len(result, 3)
 
-				suite.Equal("10.1.0.0", result[0].Destination)
-				suite.Equal("10.0.0.1", result[0].Gateway)
-				suite.Equal("eth0", result[0].Interface)
-				suite.Equal("255.255.0.0", result[0].Mask)
-				suite.Equal(100, result[0].Metric)
-				suite.Equal("UG", result[0].Flags)
+				// Verify we have the expected routes (order may vary).
+				destinations := make(map[string]bool)
+				for _, r := range result {
+					destinations[r.Destination] = true
+				}
+				suite.True(destinations["default"])
+				suite.True(destinations["10.0.0.0/24"])
+				suite.True(destinations["10.1.0.0/16"])
 
-				suite.Equal("192.168.1.0", result[1].Destination)
-				suite.Equal("192.168.0.1", result[1].Gateway)
-				suite.Equal("eth1", result[1].Interface)
+				// Verify no filtered routes leaked through.
+				for _, r := range result {
+					suite.NotEqual("local", r.Destination)
+					suite.NotEqual("broadcast", r.Destination)
+				}
 			},
 		},
 		{
-			name: "when no routes exist",
+			name: "when only kernel routes exist",
 			setup: func() {
-				suite.mockNetinfo.EXPECT().
-					GetRoutes().
-					Return([]netinfo.RouteResult{}, nil)
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusNoRoutes, nil)
 			},
 			validateFunc: func(result []route.ListEntry, err error) {
 				suite.Require().NoError(err)
@@ -140,16 +178,41 @@ func (suite *RoutePublicTestSuite) TestList() {
 			},
 		},
 		{
-			name: "when GetRoutes fails",
+			name: "when netplan status fails",
 			setup: func() {
-				suite.mockNetinfo.EXPECT().
-					GetRoutes().
-					Return(nil, errors.New("netinfo error"))
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return("", errors.New("command not found"))
 			},
 			validateFunc: func(result []route.ListEntry, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "netplan route list:")
+			},
+		},
+		{
+			name: "when route has gateway and metric",
+			setup: func() {
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusWithRoutes, nil)
+			},
+			validateFunc: func(result []route.ListEntry, err error) {
+				suite.Require().NoError(err)
+
+				// Find the default route.
+				var defaultRoute *route.ListEntry
+				for idx := range result {
+					if result[idx].Destination == "default" {
+						defaultRoute = &result[idx]
+
+						break
+					}
+				}
+				suite.Require().NotNil(defaultRoute)
+				suite.Equal("10.0.0.1", defaultRoute.Gateway)
+				suite.Equal("eth0", defaultRoute.Interface)
+				suite.Equal(100, defaultRoute.Metric)
 			},
 		},
 	}

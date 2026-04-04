@@ -32,6 +32,20 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/netplan/iface"
 )
 
+// filteredRouteTypes are route types that represent kernel-internal
+// entries and should be excluded from the user-visible route list.
+var filteredRouteTypes = map[string]bool{
+	"local":     true,
+	"broadcast": true,
+	"anycast":   true,
+	"multicast": true,
+}
+
+// filteredRouteScopes are route scopes for kernel-internal entries.
+var filteredRouteScopes = map[string]bool{
+	"host": true,
+}
+
 const (
 	netplanDir      = "/etc/netplan"
 	interfacePrefix = "osapi-"
@@ -44,26 +58,32 @@ func routeFilePath(
 	return netplanDir + "/" + interfacePrefix + interfaceName + "-routes.yaml"
 }
 
-// List returns all routes from the system routing table.
+// List returns all routes from the system routing table, excluding
+// kernel-internal entries (local, broadcast, anycast, multicast types
+// and host-scoped routes).
 func (d *Debian) List(
 	_ context.Context,
 ) ([]ListEntry, error) {
-	routes, err := d.netinfo.GetRoutes()
+	status, err := netplan.GetStatus(d.execManager)
 	if err != nil {
 		return nil, fmt.Errorf("netplan route list: %w", err)
 	}
 
-	result := make([]ListEntry, 0, len(routes))
+	var result []ListEntry
 
-	for _, r := range routes {
-		result = append(result, ListEntry{
-			Destination: r.Destination,
-			Gateway:     r.Gateway,
-			Interface:   r.Interface,
-			Mask:        r.Mask,
-			Metric:      r.Metric,
-			Flags:       r.Flags,
-		})
+	for ifaceName, iface := range status {
+		for _, r := range iface.Routes {
+			if filteredRouteTypes[r.Type] || filteredRouteScopes[r.Scope] {
+				continue
+			}
+
+			result = append(result, ListEntry{
+				Destination: r.To,
+				Gateway:     r.Via,
+				Interface:   ifaceName,
+				Metric:      r.Metric,
+			})
+		}
 	}
 
 	return result, nil
