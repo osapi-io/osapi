@@ -128,6 +128,7 @@ func (suite *DebianNetplanPublicTestSuite) TestGenerateDNSNetplanYAML() {
 		suite.Run(tc.name, func() {
 			got := dns.ExportGenerateDNSNetplanYAML(
 				tc.interfaceName,
+				"ethernets",
 				tc.servers,
 				tc.searchDomains,
 			)
