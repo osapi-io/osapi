@@ -41,7 +41,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api/node/network/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/provider/network/netif"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/iface"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
@@ -80,7 +80,7 @@ func (s *NetworkInterfaceGetPublicTestSuite) TearDownTest() {
 
 func (s *NetworkInterfaceGetPublicTestSuite) TestGetNodeNetworkInterfaceByName() {
 	trueVal := true
-	entry := netif.InterfaceEntry{Name: "eth0", DHCP4: &trueVal, Managed: true}
+	entry := iface.InterfaceEntry{Name: "eth0", DHCP4: &trueVal, Managed: true}
 	entryData, _ := json.Marshal(entry)
 
 	tests := []struct {
@@ -265,7 +265,7 @@ func (s *NetworkInterfaceGetPublicTestSuite) TestGetNodeNetworkInterfaceByName()
 
 func (s *NetworkInterfaceGetPublicTestSuite) TestGetNetworkInterfaceByNameValidationHTTP() {
 	trueVal := true
-	entry := netif.InterfaceEntry{Name: "eth0", DHCP4: &trueVal, Managed: true}
+	entry := iface.InterfaceEntry{Name: "eth0", DHCP4: &trueVal, Managed: true}
 	entryData, _ := json.Marshal(entry)
 
 	tests := []struct {
@@ -330,7 +330,7 @@ const rbacInterfaceGetTestSigningKey = "test-signing-key-for-interface-get-rbac"
 func (s *NetworkInterfaceGetPublicTestSuite) TestGetNetworkInterfaceByNameRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
 	trueVal := true
-	entry := netif.InterfaceEntry{Name: "eth0", DHCP4: &trueVal, Managed: true}
+	entry := iface.InterfaceEntry{Name: "eth0", DHCP4: &trueVal, Managed: true}
 	entryData, _ := json.Marshal(entry)
 
 	tests := []struct {

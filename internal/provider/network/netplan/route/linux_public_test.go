@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package netif_test
+package route_test
 
 import (
 	"context"
@@ -27,20 +27,20 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/network/netif"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/route"
 )
 
-type DarwinPublicTestSuite struct {
+type LinuxRoutePublicTestSuite struct {
 	suite.Suite
 
-	provider *netif.Darwin
+	provider *route.Linux
 }
 
-func (suite *DarwinPublicTestSuite) SetupTest() {
-	suite.provider = netif.NewDarwinProvider()
+func (suite *LinuxRoutePublicTestSuite) SetupTest() {
+	suite.provider = route.NewLinuxProvider()
 }
 
-func (suite *DarwinPublicTestSuite) TestList() {
+func (suite *LinuxRoutePublicTestSuite) TestList() {
 	tests := []struct {
 		name string
 	}{
@@ -59,7 +59,7 @@ func (suite *DarwinPublicTestSuite) TestList() {
 	}
 }
 
-func (suite *DarwinPublicTestSuite) TestGet() {
+func (suite *LinuxRoutePublicTestSuite) TestGet() {
 	tests := []struct {
 		name string
 	}{
@@ -78,7 +78,7 @@ func (suite *DarwinPublicTestSuite) TestGet() {
 	}
 }
 
-func (suite *DarwinPublicTestSuite) TestCreate() {
+func (suite *LinuxRoutePublicTestSuite) TestCreate() {
 	tests := []struct {
 		name string
 	}{
@@ -89,7 +89,7 @@ func (suite *DarwinPublicTestSuite) TestCreate() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Create(context.Background(), netif.InterfaceEntry{})
+			got, err := suite.provider.Create(context.Background(), route.Entry{})
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)
@@ -97,7 +97,7 @@ func (suite *DarwinPublicTestSuite) TestCreate() {
 	}
 }
 
-func (suite *DarwinPublicTestSuite) TestUpdate() {
+func (suite *LinuxRoutePublicTestSuite) TestUpdate() {
 	tests := []struct {
 		name string
 	}{
@@ -108,7 +108,7 @@ func (suite *DarwinPublicTestSuite) TestUpdate() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Update(context.Background(), netif.InterfaceEntry{})
+			got, err := suite.provider.Update(context.Background(), route.Entry{})
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)
@@ -116,7 +116,7 @@ func (suite *DarwinPublicTestSuite) TestUpdate() {
 	}
 }
 
-func (suite *DarwinPublicTestSuite) TestDelete() {
+func (suite *LinuxRoutePublicTestSuite) TestDelete() {
 	tests := []struct {
 		name string
 	}{
@@ -135,8 +135,8 @@ func (suite *DarwinPublicTestSuite) TestDelete() {
 	}
 }
 
-func TestDarwinPublicTestSuite(t *testing.T) {
+func TestLinuxRoutePublicTestSuite(t *testing.T) {
 	t.Parallel()
 
-	suite.Run(t, new(DarwinPublicTestSuite))
+	suite.Run(t, new(LinuxRoutePublicTestSuite))
 }

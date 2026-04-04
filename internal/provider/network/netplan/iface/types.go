@@ -18,8 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package netif provides network interface configuration management via Netplan.
-package netif
+// Package iface provides network interface configuration management via Netplan.
+package iface
 
 import "context"
 

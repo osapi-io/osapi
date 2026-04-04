@@ -9,7 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	route "github.com/retr0h/osapi/internal/provider/network/route"
+	route "github.com/retr0h/osapi/internal/provider/network/netplan/route"
 )
 
 // MockProvider is a mock of Provider interface.

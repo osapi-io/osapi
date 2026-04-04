@@ -9,7 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	netif "github.com/retr0h/osapi/internal/provider/network/netif"
+	iface "github.com/retr0h/osapi/internal/provider/network/netplan/iface"
 )
 
 // MockProvider is a mock of Provider interface.
@@ -36,10 +36,10 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockProvider) Create(ctx context.Context, entry netif.InterfaceEntry) (*netif.InterfaceResult, error) {
+func (m *MockProvider) Create(ctx context.Context, entry iface.InterfaceEntry) (*iface.InterfaceResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, entry)
-	ret0, _ := ret[0].(*netif.InterfaceResult)
+	ret0, _ := ret[0].(*iface.InterfaceResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -51,10 +51,10 @@ func (mr *MockProviderMockRecorder) Create(ctx, entry interface{}) *gomock.Call 
 }
 
 // Delete mocks base method.
-func (m *MockProvider) Delete(ctx context.Context, name string) (*netif.InterfaceResult, error) {
+func (m *MockProvider) Delete(ctx context.Context, name string) (*iface.InterfaceResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, name)
-	ret0, _ := ret[0].(*netif.InterfaceResult)
+	ret0, _ := ret[0].(*iface.InterfaceResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -66,10 +66,10 @@ func (mr *MockProviderMockRecorder) Delete(ctx, name interface{}) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MockProvider) Get(ctx context.Context, name string) (*netif.InterfaceEntry, error) {
+func (m *MockProvider) Get(ctx context.Context, name string) (*iface.InterfaceEntry, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, name)
-	ret0, _ := ret[0].(*netif.InterfaceEntry)
+	ret0, _ := ret[0].(*iface.InterfaceEntry)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -81,10 +81,10 @@ func (mr *MockProviderMockRecorder) Get(ctx, name interface{}) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockProvider) List(ctx context.Context) ([]netif.InterfaceEntry, error) {
+func (m *MockProvider) List(ctx context.Context) ([]iface.InterfaceEntry, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx)
-	ret0, _ := ret[0].([]netif.InterfaceEntry)
+	ret0, _ := ret[0].([]iface.InterfaceEntry)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -96,10 +96,10 @@ func (mr *MockProviderMockRecorder) List(ctx interface{}) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockProvider) Update(ctx context.Context, entry netif.InterfaceEntry) (*netif.InterfaceResult, error) {
+func (m *MockProvider) Update(ctx context.Context, entry iface.InterfaceEntry) (*iface.InterfaceResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, entry)
-	ret0, _ := ret[0].(*netif.InterfaceResult)
+	ret0, _ := ret[0].(*iface.InterfaceResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

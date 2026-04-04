@@ -29,7 +29,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/controller/api/node/network/gen"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/route"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/route"
 )
 
 // GetNodeNetworkRoute get the node network route list API endpoint.

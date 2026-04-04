@@ -31,8 +31,8 @@ import (
 
 	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/netif"
-	netifMocks "github.com/retr0h/osapi/internal/provider/network/netif/mocks"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/iface"
+	netifMocks "github.com/retr0h/osapi/internal/provider/network/netplan/iface/mocks"
 )
 
 type ProcessorInterfacePublicTestSuite struct {
@@ -53,7 +53,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceOperation() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netif.Provider
+		setupMock   func() iface.Provider
 		expectError bool
 		errorMsg    string
 	}{
@@ -77,7 +77,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceOperation() {
 				Operation: "interface",
 				Data:      json.RawMessage(`{}`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				return netifMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
@@ -91,7 +91,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceOperation() {
 				Operation: "interface.unknown",
 				Data:      json.RawMessage(`{}`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				return netifMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
@@ -101,7 +101,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceOperation() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			var ifaceProvider netif.Provider
+			var ifaceProvider iface.Provider
 			if tt.setupMock != nil {
 				ifaceProvider = tt.setupMock()
 			}
@@ -130,7 +130,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceList() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netif.Provider
+		setupMock   func() iface.Provider
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -143,16 +143,16 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceList() {
 				Operation: "interface.list",
 				Data:      json.RawMessage(`{}`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				m := netifMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().List(gomock.Any()).Return([]netif.InterfaceEntry{
+				m.EXPECT().List(gomock.Any()).Return([]iface.InterfaceEntry{
 					{Name: "eth0", Managed: true},
 					{Name: "eth1", Managed: true},
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var entries []netif.InterfaceEntry
+				var entries []iface.InterfaceEntry
 				err := json.Unmarshal(result, &entries)
 				s.NoError(err)
 				s.Len(entries, 2)
@@ -167,7 +167,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceList() {
 				Operation: "interface.list",
 				Data:      json.RawMessage(`{}`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				m := netifMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().List(gomock.Any()).Return(nil, errors.New("permission denied"))
 				return m
@@ -206,7 +206,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceGet() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netif.Provider
+		setupMock   func() iface.Provider
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -219,16 +219,16 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceGet() {
 				Operation: "interface.get",
 				Data:      json.RawMessage(`{"name":"eth0"}`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				m := netifMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().Get(gomock.Any(), "eth0").Return(&netif.InterfaceEntry{
+				m.EXPECT().Get(gomock.Any(), "eth0").Return(&iface.InterfaceEntry{
 					Name:    "eth0",
 					Managed: true,
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var entry netif.InterfaceEntry
+				var entry iface.InterfaceEntry
 				err := json.Unmarshal(result, &entry)
 				s.NoError(err)
 				s.Equal("eth0", entry.Name)
@@ -242,7 +242,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceGet() {
 				Operation: "interface.get",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				return netifMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
@@ -256,7 +256,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceGet() {
 				Operation: "interface.get",
 				Data:      json.RawMessage(`{"name":"missing"}`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				m := netifMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().Get(gomock.Any(), "missing").Return(nil, errors.New("not found"))
 				return m
@@ -295,7 +295,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceCreate() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netif.Provider
+		setupMock   func() iface.Provider
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -308,19 +308,19 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceCreate() {
 				Operation: "interface.create",
 				Data:      json.RawMessage(`{"name":"eth1","addresses":["10.0.0.5/24"]}`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				m := netifMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().Create(gomock.Any(), netif.InterfaceEntry{
+				m.EXPECT().Create(gomock.Any(), iface.InterfaceEntry{
 					Name:      "eth1",
 					Addresses: []string{"10.0.0.5/24"},
-				}).Return(&netif.InterfaceResult{
+				}).Return(&iface.InterfaceResult{
 					Name:    "eth1",
 					Changed: true,
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var r netif.InterfaceResult
+				var r iface.InterfaceResult
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("eth1", r.Name)
@@ -335,7 +335,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceCreate() {
 				Operation: "interface.create",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				return netifMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
@@ -349,7 +349,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceCreate() {
 				Operation: "interface.create",
 				Data:      json.RawMessage(`{"name":"eth1"}`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				m := netifMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().
 					Create(gomock.Any(), gomock.Any()).
@@ -390,7 +390,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceUpdate() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netif.Provider
+		setupMock   func() iface.Provider
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -403,19 +403,19 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceUpdate() {
 				Operation: "interface.update",
 				Data:      json.RawMessage(`{"name":"eth1","addresses":["10.0.0.10/24"]}`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				m := netifMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().Update(gomock.Any(), netif.InterfaceEntry{
+				m.EXPECT().Update(gomock.Any(), iface.InterfaceEntry{
 					Name:      "eth1",
 					Addresses: []string{"10.0.0.10/24"},
-				}).Return(&netif.InterfaceResult{
+				}).Return(&iface.InterfaceResult{
 					Name:    "eth1",
 					Changed: true,
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var r netif.InterfaceResult
+				var r iface.InterfaceResult
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("eth1", r.Name)
@@ -430,7 +430,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceUpdate() {
 				Operation: "interface.update",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				return netifMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
@@ -444,7 +444,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceUpdate() {
 				Operation: "interface.update",
 				Data:      json.RawMessage(`{"name":"eth1"}`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				m := netifMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().
 					Update(gomock.Any(), gomock.Any()).
@@ -485,7 +485,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceDelete() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func() netif.Provider
+		setupMock   func() iface.Provider
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -498,16 +498,16 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceDelete() {
 				Operation: "interface.delete",
 				Data:      json.RawMessage(`{"name":"eth1"}`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				m := netifMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().Delete(gomock.Any(), "eth1").Return(&netif.InterfaceResult{
+				m.EXPECT().Delete(gomock.Any(), "eth1").Return(&iface.InterfaceResult{
 					Name:    "eth1",
 					Changed: true,
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var r netif.InterfaceResult
+				var r iface.InterfaceResult
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("eth1", r.Name)
@@ -522,7 +522,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceDelete() {
 				Operation: "interface.delete",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				return netifMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
@@ -536,7 +536,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceDelete() {
 				Operation: "interface.delete",
 				Data:      json.RawMessage(`{"name":"missing"}`),
 			},
-			setupMock: func() netif.Provider {
+			setupMock: func() iface.Provider {
 				m := netifMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().Delete(gomock.Any(), "missing").Return(nil, errors.New("not found"))
 				return m

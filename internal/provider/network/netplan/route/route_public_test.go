@@ -37,7 +37,7 @@ import (
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 	netinfomocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
-	"github.com/retr0h/osapi/internal/provider/network/route"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/route"
 )
 
 const testHostname = "test-host"
