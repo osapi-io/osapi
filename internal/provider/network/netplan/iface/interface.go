@@ -55,11 +55,23 @@ func (d *Debian) List(
 		return nil, fmt.Errorf("netplan interface list: %w", err)
 	}
 
+	var primaryIface string
+	if facts := d.Facts(); facts != nil {
+		if p, ok := facts["primary_interface"].(string); ok {
+			primaryIface = p
+		}
+	}
+
 	var result []InterfaceEntry
 
 	for _, iface := range ifaces {
 		entry := InterfaceEntry{
-			Name: iface.Name,
+			Name:    iface.Name,
+			IPv4:    iface.IPv4,
+			IPv6:    iface.IPv6,
+			MAC:     iface.MAC,
+			Family:  iface.Family,
+			Primary: iface.Name == primaryIface,
 		}
 
 		path := interfaceFilePath(iface.Name)
@@ -87,13 +99,25 @@ func (d *Debian) Get(
 		return nil, fmt.Errorf("netplan interface get: %w", err)
 	}
 
+	var primaryIface string
+	if facts := d.Facts(); facts != nil {
+		if p, ok := facts["primary_interface"].(string); ok {
+			primaryIface = p
+		}
+	}
+
 	for _, iface := range ifaces {
 		if iface.Name != name {
 			continue
 		}
 
 		entry := &InterfaceEntry{
-			Name: iface.Name,
+			Name:    iface.Name,
+			IPv4:    iface.IPv4,
+			IPv6:    iface.IPv6,
+			MAC:     iface.MAC,
+			Family:  iface.Family,
+			Primary: iface.Name == primaryIface,
 		}
 
 		path := interfaceFilePath(name)

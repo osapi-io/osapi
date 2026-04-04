@@ -37,9 +37,16 @@ type Provider interface {
 	Delete(ctx context.Context, name string) (*InterfaceResult, error)
 }
 
-// InterfaceEntry represents a managed interface configuration.
+// InterfaceEntry represents a network interface. For list/get operations,
+// the read-only fields (IPv4, IPv6, MAC, Family) are populated from the
+// system. For create/update, the config fields (DHCP, Addresses, Gateway,
+// etc.) are used to generate Netplan YAML.
 type InterfaceEntry struct {
 	Name       string   `json:"name"`
+	IPv4       string   `json:"ipv4,omitempty"`
+	IPv6       string   `json:"ipv6,omitempty"`
+	MAC        string   `json:"mac,omitempty"`
+	Family     string   `json:"family,omitempty"`
 	DHCP4      *bool    `json:"dhcp4,omitempty"`
 	DHCP6      *bool    `json:"dhcp6,omitempty"`
 	Addresses  []string `json:"addresses,omitempty"`
@@ -48,6 +55,7 @@ type InterfaceEntry struct {
 	MTU        int      `json:"mtu,omitempty"`
 	MACAddress string   `json:"mac_address,omitempty"`
 	WakeOnLAN  *bool    `json:"wakeonlan,omitempty"`
+	Primary    bool     `json:"primary,omitempty"`
 	Managed    bool     `json:"managed,omitempty"`
 }
 
