@@ -40,6 +40,9 @@ import (
 	"github.com/retr0h/osapi/internal/provider/file"
 )
 
+// marshalJSON is a package-level variable for testing the marshal error path.
+var marshalJSON = json.Marshal
+
 // ApplyConfig writes a Netplan configuration file to disk, validates it
 // with `netplan generate`, applies it with `netplan apply`, and tracks
 // the file state in the KV store. Returns (true, nil) when the file was
@@ -112,7 +115,7 @@ func ApplyConfig(
 		Metadata:   metadata,
 	}
 
-	stateBytes, marshalErr := json.Marshal(state)
+	stateBytes, marshalErr := marshalJSON(state)
 	if marshalErr != nil {
 		return false, fmt.Errorf("netplan apply: marshal state: %w", marshalErr)
 	}
@@ -167,7 +170,7 @@ func RemoveConfig(
 		if unmarshalErr := json.Unmarshal(kvEntry.Value(), &state); unmarshalErr == nil {
 			state.UndeployedAt = time.Now().UTC().Format(time.RFC3339)
 
-			stateBytes, marshalErr := json.Marshal(state)
+			stateBytes, marshalErr := marshalJSON(state)
 			if marshalErr == nil {
 				if _, putErr := stateKV.Put(ctx, stateKey, stateBytes); putErr != nil {
 					logger.Warn(
