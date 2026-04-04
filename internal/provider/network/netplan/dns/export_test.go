@@ -23,10 +23,18 @@ package dns
 // ExportGenerateDNSNetplanYAML exposes generateDNSNetplanYAML for testing.
 func ExportGenerateDNSNetplanYAML(
 	interfaceName string,
+	ifaceSection string,
 	servers []string,
 	searchDomains []string,
 ) []byte {
-	return generateDNSNetplanYAML(interfaceName, servers, searchDomains)
+	return generateDNSNetplanYAML(interfaceName, ifaceSection, servers, searchDomains)
+}
+
+// ExportNetplanSectionForType exposes netplanSectionForType for testing.
+func ExportNetplanSectionForType(
+	ifaceType string,
+) string {
+	return netplanSectionForType(ifaceType)
 }
 
 // ExportDNSNetplanPath exposes dnsNetplanPath for testing.

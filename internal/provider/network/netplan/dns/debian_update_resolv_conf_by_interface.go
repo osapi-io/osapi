@@ -76,8 +76,24 @@ func (u *Debian) UpdateResolvConfByInterface(
 	// Resolve the interface name for the Netplan config.
 	resolvedInterface := u.resolvePrimaryInterface(interfaceName)
 
+	// Detect the interface type from netplan status to use the
+	// correct YAML section (ethernets, wifis, bridges, etc.).
+	ifaceType := "ethernets"
+
+	status, statusErr := netplan.GetStatus(u.execManager)
+	if statusErr == nil {
+		if iface, ok := status[resolvedInterface]; ok {
+			ifaceType = netplanSectionForType(iface.Type)
+		}
+	}
+
 	// Generate the Netplan YAML content.
-	content := generateDNSNetplanYAML(resolvedInterface, servers, filteredDomains)
+	content := generateDNSNetplanYAML(
+		resolvedInterface,
+		ifaceType,
+		servers,
+		filteredDomains,
+	)
 
 	// Apply via the shared Netplan helper (handles write, validate,
 	// apply, and KV state tracking with SHA-based idempotency).
