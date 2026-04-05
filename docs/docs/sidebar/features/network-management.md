@@ -62,6 +62,7 @@ NATS, agent, and authentication settings.
 | ---------- | --------------- |
 | DNS get    | `network:read`  |
 | DNS update | `network:write` |
+| DNS delete | `network:write` |
 | Ping       | `network:read`  |
 
 The `admin` and `write` roles include both `network:read` and `network:write`.

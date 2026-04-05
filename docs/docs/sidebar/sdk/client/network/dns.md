@@ -8,10 +8,11 @@ DNS configuration query and update operations.
 
 ## Methods
 
-| Method                                                      | Description        |
-| ----------------------------------------------------------- | ------------------ |
-| `Get(ctx, target, iface)`                                   | Get DNS config     |
-| `Update(ctx, target, iface, servers, search, overrideDHCP)` | Update DNS servers |
+| Method                                                      | Description                |
+| ----------------------------------------------------------- | -------------------------- |
+| `Get(ctx, target, iface)`                                   | Get DNS config             |
+| `Update(ctx, target, iface, servers, search, overrideDHCP)` | Update DNS servers         |
+| `Delete(ctx, target, iface)`                                | Remove managed DNS config  |
 
 ## Usage
 
@@ -42,6 +43,9 @@ resp, err = c.DNS.Update(
     nil,
     true, // only use configured servers, ignore DHCP
 )
+
+// Delete managed DNS configuration
+resp, err := c.DNS.Delete(ctx, "web-01", "eth0")
 ```
 
 ## Example
@@ -52,4 +56,4 @@ for a complete working example.
 
 ## Permissions
 
-Get requires `network:read`. Update requires `network:write`.
+Get requires `network:read`. Update and Delete require `network:write`.
