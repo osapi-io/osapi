@@ -67,6 +67,15 @@ func generateDNSNetplanYAML(
 	// the explicitly configured servers are used. When false, DHCP
 	// DNS servers are merged alongside the configured ones (default
 	// Netplan behavior).
+	//
+	// Note: this disables DNS from DHCPv4 and DHCPv6 but does NOT
+	// disable DNS from IPv6 Router Advertisements (RA/SLAAC). RA
+	// is intentionally left enabled because disabling it via
+	// accept-ra: false would break IPv6 connectivity entirely —
+	// the host would lose its IPv6 default route, global address
+	// assignments, and prefix information. IPv6 RA-provided DNS
+	// servers may still appear in resolvectl output alongside the
+	// configured servers.
 	if overrideDHCP {
 		b.WriteString("      dhcp4-overrides:\n")
 		b.WriteString("        use-dns: false\n")
