@@ -22,7 +22,6 @@ package user
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
 )
@@ -41,7 +40,7 @@ func NewDarwinProvider() *Darwin {
 func (d *Darwin) ListUsers(
 	_ context.Context,
 ) ([]User, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // GetUser returns ErrUnsupported on Darwin.
@@ -49,7 +48,7 @@ func (d *Darwin) GetUser(
 	_ context.Context,
 	_ string,
 ) (*User, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // CreateUser returns ErrUnsupported on Darwin.
@@ -57,7 +56,7 @@ func (d *Darwin) CreateUser(
 	_ context.Context,
 	_ CreateUserOpts,
 ) (*Result, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // UpdateUser returns ErrUnsupported on Darwin.
@@ -66,7 +65,7 @@ func (d *Darwin) UpdateUser(
 	_ string,
 	_ UpdateUserOpts,
 ) (*Result, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // DeleteUser returns ErrUnsupported on Darwin.
@@ -74,7 +73,7 @@ func (d *Darwin) DeleteUser(
 	_ context.Context,
 	_ string,
 ) (*Result, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // ChangePassword returns ErrUnsupported on Darwin.
@@ -83,14 +82,14 @@ func (d *Darwin) ChangePassword(
 	_ string,
 	_ string,
 ) (*Result, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // ListGroups returns ErrUnsupported on Darwin.
 func (d *Darwin) ListGroups(
 	_ context.Context,
 ) ([]Group, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // GetGroup returns ErrUnsupported on Darwin.
@@ -98,7 +97,7 @@ func (d *Darwin) GetGroup(
 	_ context.Context,
 	_ string,
 ) (*Group, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // CreateGroup returns ErrUnsupported on Darwin.
@@ -106,7 +105,7 @@ func (d *Darwin) CreateGroup(
 	_ context.Context,
 	_ CreateGroupOpts,
 ) (*GroupResult, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // UpdateGroup returns ErrUnsupported on Darwin.
@@ -115,7 +114,7 @@ func (d *Darwin) UpdateGroup(
 	_ string,
 	_ UpdateGroupOpts,
 ) (*GroupResult, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // DeleteGroup returns ErrUnsupported on Darwin.
@@ -123,7 +122,7 @@ func (d *Darwin) DeleteGroup(
 	_ context.Context,
 	_ string,
 ) (*GroupResult, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // ListKeys returns ErrUnsupported on Darwin.
@@ -131,7 +130,7 @@ func (d *Darwin) ListKeys(
 	_ context.Context,
 	_ string,
 ) ([]SSHKey, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // AddKey returns ErrUnsupported on Darwin.
@@ -140,7 +139,7 @@ func (d *Darwin) AddKey(
 	_ string,
 	_ SSHKey,
 ) (*SSHKeyResult, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // RemoveKey returns ErrUnsupported on Darwin.
@@ -149,5 +148,5 @@ func (d *Darwin) RemoveKey(
 	_ string,
 	_ string,
 ) (*SSHKeyResult, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

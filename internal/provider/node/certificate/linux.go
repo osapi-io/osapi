@@ -22,7 +22,6 @@ package certificate
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
 )
@@ -40,7 +39,7 @@ func NewLinuxProvider() *Linux {
 func (l *Linux) List(
 	_ context.Context,
 ) ([]Entry, error) {
-	return nil, fmt.Errorf("certificate: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Create returns ErrUnsupported on generic Linux.
@@ -48,7 +47,7 @@ func (l *Linux) Create(
 	_ context.Context,
 	_ Entry,
 ) (*CreateResult, error) {
-	return nil, fmt.Errorf("certificate: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Update returns ErrUnsupported on generic Linux.
@@ -56,7 +55,7 @@ func (l *Linux) Update(
 	_ context.Context,
 	_ Entry,
 ) (*UpdateResult, error) {
-	return nil, fmt.Errorf("certificate: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Delete returns ErrUnsupported on generic Linux.
@@ -64,5 +63,5 @@ func (l *Linux) Delete(
 	_ context.Context,
 	_ string,
 ) (*DeleteResult, error) {
-	return nil, fmt.Errorf("certificate: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

@@ -30,8 +30,16 @@ tags:
   - name: dns_operations
     x-displayName: Node/Network/DNS
     description: DNS configuration operations on a target node.
+  - name: interface_operations
+    x-displayName: Node/Network/Interface
+    description: Network interface configuration on a target node.
+  - name: route_operations
+    x-displayName: Node/Network/Route
+    description: Network route configuration on a target node.
 
 paths:
+  # -- Ping -------------------------------------------------------------------
+
   /node/{hostname}/network/ping:
     post:
       summary: Ping a remote server
@@ -95,6 +103,8 @@ paths:
             application/json:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # -- DNS --------------------------------------------------------------------
 
   /node/{hostname}/network/dns/{interfaceName}:
     get:
@@ -205,6 +215,577 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
+    delete:
+      summary: Delete DNS configuration
+      description: >
+        Delete the managed DNS configuration from the target node,
+        restoring the system default.
+      tags:
+        - dns_operations
+      operationId: DeleteNodeNetworkDNS
+      security:
+        - BearerAuth:
+            - network:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DNSDeleteRequest'
+      responses:
+        '200':
+          description: DNS configuration deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DNSDeleteCollectionResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error deleting DNS configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # -- Interface collection ---------------------------------------------------
+
+  /node/{hostname}/network/interface:
+    get:
+      summary: List network interfaces
+      description: >
+        List all network interfaces on the target node.
+      tags:
+        - interface_operations
+      operationId: GetNodeNetworkInterface
+      security:
+        - BearerAuth:
+            - network:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: List of network interfaces.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterfaceListResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing network interfaces.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # -- Interface individual entry ---------------------------------------------
+
+  /node/{hostname}/network/interface/{name}:
+    get:
+      summary: Get network interface details
+      description: >
+        Get detailed configuration for a specific network interface
+        on the target node.
+      tags:
+        - interface_operations
+      operationId: GetNodeNetworkInterfaceByName
+      security:
+        - BearerAuth:
+            - network:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/InterfaceName'
+      responses:
+        '200':
+          description: Interface detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterfaceGetResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Interface not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error getting network interface.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create interface configuration
+      description: >
+        Create a managed Netplan configuration for a network interface
+        on the target node.
+      tags:
+        - interface_operations
+      operationId: PostNodeNetworkInterface
+      security:
+        - BearerAuth:
+            - network:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/InterfaceName'
+      requestBody:
+        description: Interface configuration parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterfaceConfigRequest'
+      responses:
+        '200':
+          description: Interface configuration created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterfaceMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error creating interface configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update interface configuration
+      description: >
+        Update the managed Netplan configuration for a network
+        interface on the target node.
+      tags:
+        - interface_operations
+      operationId: PutNodeNetworkInterface
+      security:
+        - BearerAuth:
+            - network:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/InterfaceName'
+      requestBody:
+        description: Interface configuration parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterfaceConfigRequest'
+      responses:
+        '200':
+          description: Interface configuration updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterfaceMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Interface configuration not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error updating interface configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete interface configuration
+      description: >
+        Delete the managed Netplan configuration for a network
+        interface on the target node.
+      tags:
+        - interface_operations
+      operationId: DeleteNodeNetworkInterface
+      security:
+        - BearerAuth:
+            - network:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/InterfaceName'
+      responses:
+        '200':
+          description: Interface configuration deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterfaceMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error deleting interface configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # -- Route collection -------------------------------------------------------
+
+  /node/{hostname}/network/route:
+    get:
+      summary: List network routes
+      description: >
+        List all network routes on the target node.
+      tags:
+        - route_operations
+      operationId: GetNodeNetworkRoute
+      security:
+        - BearerAuth:
+            - network:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: List of network routes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteListResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing network routes.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # -- Route by interface -----------------------------------------------------
+
+  /node/{hostname}/network/route/{interfaceName}:
+    get:
+      summary: Get routes for an interface
+      description: >
+        Get routes associated with a specific network interface on
+        the target node.
+      tags:
+        - route_operations
+      operationId: GetNodeNetworkRouteByInterface
+      security:
+        - BearerAuth:
+            - network:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/RouteInterfaceName'
+      responses:
+        '200':
+          description: Routes for the interface.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteGetResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Interface not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error getting routes for interface.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create routes for an interface
+      description: >
+        Create managed route configuration for a network interface
+        on the target node.
+      tags:
+        - route_operations
+      operationId: PostNodeNetworkRoute
+      security:
+        - BearerAuth:
+            - network:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/RouteInterfaceName'
+      requestBody:
+        description: Route configuration parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteConfigRequest'
+      responses:
+        '200':
+          description: Route configuration created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error creating route configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update routes for an interface
+      description: >
+        Update the managed route configuration for a network
+        interface on the target node.
+      tags:
+        - route_operations
+      operationId: PutNodeNetworkRoute
+      security:
+        - BearerAuth:
+            - network:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/RouteInterfaceName'
+      requestBody:
+        description: Route configuration parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteConfigRequest'
+      responses:
+        '200':
+          description: Route configuration updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Route configuration not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error updating route configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete routes for an interface
+      description: >
+        Delete the managed route configuration for a network
+        interface on the target node.
+      tags:
+        - route_operations
+      operationId: DeleteNodeNetworkRoute
+      security:
+        - BearerAuth:
+            - network:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/RouteInterfaceName'
+      responses:
+        '200':
+          description: Route configuration deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteMutationResponse'
+        '400':
+          description: Bad request - validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error deleting route configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
 # -- Reusable components ---------------------------------------------------
 
 components:
@@ -225,6 +806,36 @@ components:
         type: string
         minLength: 1
 
+    InterfaceName:
+      name: name
+      in: path
+      required: true
+      description: >
+        Network interface name (e.g., eth0, ens33).
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in the handler.
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1
+      schema:
+        type: string
+        minLength: 1
+
+    RouteInterfaceName:
+      name: interfaceName
+      in: path
+      required: true
+      description: >
+        Network interface name for route operations (e.g., eth0, ens33).
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in the handler.
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1
+      schema:
+        type: string
+        minLength: 1
+
   securitySchemes:
     BearerAuth:
       type: http
@@ -234,6 +845,8 @@ components:
   schemas:
     ErrorResponse:
       $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    # -- Ping schemas ----------------------------------------------------------
 
     PingResponse:
       type: object
@@ -297,6 +910,8 @@ components:
             $ref: '#/components/schemas/PingResponse'
       required:
         - results
+
+    # -- DNS schemas -----------------------------------------------------------
 
     DNSConfigResponse:
       type: object
@@ -401,5 +1016,454 @@ components:
           description: >
             The name of the network interface to apply DNS configuration
             to. Accepts alphanumeric names or @fact. references.
+        override_dhcp:
+          type: boolean
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
+          description: >
+            When true, disables DHCP-provided DNS servers so only the
+            configured servers are used. When false or omitted, DHCP DNS
+            servers are merged alongside the configured ones (default
+            Netplan behavior).
       required:
         - interface_name
+
+    DNSDeleteRequest:
+      type: object
+      properties:
+        interface_name:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,alphanum_or_fact
+          description: >
+            The name of the network interface to delete DNS
+            configuration from.
+      required:
+        - interface_name
+
+    DNSDeleteResultItem:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that processed this operation.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        changed:
+          type: boolean
+          description: Whether the DNS configuration was actually modified.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    DNSDeleteCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DNSDeleteResultItem'
+      required:
+        - results
+
+    # -- Interface schemas -----------------------------------------------------
+
+    InterfaceInfo:
+      type: object
+      description: Information about a network interface.
+      properties:
+        name:
+          type: string
+          description: Interface name.
+          example: "eth0"
+        ipv4:
+          type: string
+          description: Primary IPv4 address.
+          example: "192.168.1.10"
+        ipv6:
+          type: string
+          description: Primary IPv6 address.
+          example: "fd00::5"
+        mac:
+          type: string
+          description: Hardware MAC address.
+          example: "00:1a:2b:3c:4d:5e"
+        family:
+          type: string
+          description: Address family (inet, inet6, dual).
+          example: "dual"
+        addresses:
+          type: array
+          description: IP addresses assigned to the interface (CIDR).
+          items:
+            type: string
+          example: ["192.168.1.10/24"]
+        mac_address:
+          type: string
+          description: Configured MAC address override.
+          example: "02:42:ac:11:00:02"
+        mtu:
+          type: integer
+          description: Maximum transmission unit.
+          example: 1500
+        state:
+          type: string
+          description: Operational state of the interface.
+          example: "up"
+        dhcp4:
+          type: boolean
+          description: Whether DHCPv4 is enabled.
+        dhcp6:
+          type: boolean
+          description: Whether DHCPv6 is enabled.
+        gateway4:
+          type: string
+          description: IPv4 gateway address.
+          example: "192.168.1.1"
+        gateway6:
+          type: string
+          description: IPv6 gateway address.
+        wakeonlan:
+          type: boolean
+          description: Whether Wake-on-LAN is enabled.
+        primary:
+          type: boolean
+          description: Whether this is the primary (default route) interface.
+        managed:
+          type: boolean
+          description: Whether the interface is managed by OSAPI.
+
+    InterfaceListEntry:
+      type: object
+      description: Interface list result for a single agent.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/InterfaceInfo'
+          description: List of network interfaces on this host.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    InterfaceGetEntry:
+      type: object
+      description: Interface get result for a single agent.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        interface:
+          $ref: '#/components/schemas/InterfaceInfo'
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    InterfaceMutationEntry:
+      type: object
+      description: >
+        Result of an interface mutation operation for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that processed this operation.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        name:
+          type: string
+          description: Interface name.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    InterfaceListResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/InterfaceListEntry'
+      required:
+        - results
+
+    InterfaceGetResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/InterfaceGetEntry'
+      required:
+        - results
+
+    InterfaceMutationResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/InterfaceMutationEntry'
+      required:
+        - results
+
+    InterfaceConfigRequest:
+      type: object
+      properties:
+        dhcp4:
+          type: boolean
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty"
+        dhcp6:
+          type: boolean
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty"
+        addresses:
+          type: array
+          items:
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,dive,cidr"
+        gateway4:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,ipv4"
+        gateway6:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,ipv6"
+        mtu:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,min=68,max=9000"
+        mac_address:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty"
+        wakeonlan:
+          type: boolean
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty"
+
+    # -- Route schemas ---------------------------------------------------------
+
+    RouteInfo:
+      type: object
+      description: Information about a network route.
+      properties:
+        destination:
+          type: string
+          description: Route destination in CIDR notation.
+          example: "10.0.0.0/8"
+        gateway:
+          type: string
+          description: Gateway IP address.
+          example: "192.168.1.1"
+        interface:
+          type: string
+          description: Network interface name.
+          example: "eth0"
+        metric:
+          type: integer
+          description: Route metric (priority).
+          example: 100
+        scope:
+          type: string
+          description: Route scope.
+          example: "link"
+
+    RouteListEntry:
+      type: object
+      description: Route list result for a single agent.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        routes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteInfo'
+          description: List of network routes on this host.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    RouteGetEntry:
+      type: object
+      description: Route get result for a single agent.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        routes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteInfo'
+          description: Routes for the specified interface.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    RouteMutationEntry:
+      type: object
+      description: >
+        Result of a route mutation operation for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that processed this operation.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        interface:
+          type: string
+          description: Interface name the routes are associated with.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    RouteListResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteListEntry'
+      required:
+        - results
+
+    RouteGetResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteGetEntry'
+      required:
+        - results
+
+    RouteMutationResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteMutationEntry'
+      required:
+        - results
+
+    RouteConfigRequest:
+      type: object
+      properties:
+        routes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteItem'
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1,dive"
+      required:
+        - routes
+
+    RouteItem:
+      type: object
+      properties:
+        to:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: "required,cidr"
+        via:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: "required,ip"
+        metric:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,min=0"
+      required:
+        - to
+        - via

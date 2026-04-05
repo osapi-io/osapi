@@ -39,9 +39,9 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	fileMocks "github.com/retr0h/osapi/internal/provider/file/mocks"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
-	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
 	netinfoMocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/dns"
+	dnsMocks "github.com/retr0h/osapi/internal/provider/network/netplan/dns/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/retr0h/osapi/internal/provider/node/disk/mocks"
@@ -98,7 +98,7 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 		SearchDomains: []string{"example.com"},
 	}, nil).AnyTimes()
 	dnsMock.EXPECT().
-		UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any()).
+		UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(&dns.UpdateResult{Changed: true}, nil).
 		AnyTimes()
 
@@ -969,7 +969,7 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperationErrors() {
 			createAgent: func() *agent.Agent {
 				dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
 				dnsMock.EXPECT().
-					UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any()).
+					UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("DNS update failed"))
 				return newTestAgent(newTestAgentParams{
 					appFs:           memfs.New(),

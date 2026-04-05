@@ -21,8 +21,6 @@
 package mem
 
 import (
-	"fmt"
-
 	"github.com/retr0h/osapi/internal/provider"
 )
 
@@ -30,5 +28,5 @@ import (
 // It returns a Stats struct with total, free, and cached memory in
 // bytes, and an error if something goes wrong.
 func (l *Linux) GetStats() (*Result, error) {
-	return nil, fmt.Errorf("linux: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

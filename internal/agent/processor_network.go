@@ -27,7 +27,9 @@ import (
 	"strings"
 
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/dns"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/iface"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/route"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 )
 
@@ -35,6 +37,8 @@ import (
 func NewNetworkProcessor(
 	dnsProvider dns.Provider,
 	pingProvider ping.Provider,
+	interfaceProvider iface.Provider,
+	routeProvider route.Provider,
 	logger *slog.Logger,
 ) ProcessorFunc {
 	return func(req job.Request) (json.RawMessage, error) {
@@ -46,6 +50,10 @@ func NewNetworkProcessor(
 			return processNetworkDNS(dnsProvider, logger, req)
 		case "ping":
 			return processNetworkPing(pingProvider, logger, req)
+		case "interface":
+			return processInterfaceOperation(interfaceProvider, logger, req)
+		case "route":
+			return processRouteOperation(routeProvider, logger, req)
 		default:
 			return nil, fmt.Errorf("unsupported network operation: %s", req.Operation)
 		}
@@ -61,6 +69,13 @@ func processNetworkDNS(
 	var dnsData map[string]interface{}
 	if err := json.Unmarshal(jobRequest.Data, &dnsData); err != nil {
 		return nil, fmt.Errorf("failed to parse DNS data: %w", err)
+	}
+
+	// Extract sub-operation: "dns.delete" -> "delete"
+	parts := strings.Split(jobRequest.Operation, ".")
+	subOp := ""
+	if len(parts) >= 2 {
+		subOp = parts[1]
 	}
 
 	if jobRequest.Type == job.TypeQuery {
@@ -82,10 +97,33 @@ func processNetworkDNS(
 		return json.Marshal(config)
 	}
 
+	// Delete DNS configuration
+	if subOp == "delete" {
+		interfaceName, _ := dnsData["interface"].(string)
+
+		logger.Debug("executing dns.DeleteResolvConf",
+			slog.String("interface", interfaceName),
+		)
+
+		changed, err := dnsProvider.DeleteNetplanConfig(interfaceName)
+		if err != nil {
+			return nil, err
+		}
+
+		result := map[string]interface{}{
+			"success": true,
+			"changed": changed,
+			"message": "DNS configuration deleted",
+		}
+
+		return json.Marshal(result)
+	}
+
 	// Set DNS configuration
 	servers, _ := dnsData["servers"].([]interface{})
 	searchDomains, _ := dnsData["search_domains"].([]interface{})
 	interfaceName, _ := dnsData["interface"].(string)
+	overrideDHCP, _ := dnsData["override_dhcp"].(bool)
 
 	var serverStrings []string
 	for _, s := range servers {
@@ -110,6 +148,7 @@ func processNetworkDNS(
 		serverStrings,
 		searchStrings,
 		interfaceName,
+		overrideDHCP,
 	)
 	if err != nil {
 		return nil, err

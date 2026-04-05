@@ -33,8 +33,8 @@ import (
 	"github.com/retr0h/osapi/internal/provider/command"
 	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/dns"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
@@ -115,7 +115,7 @@ func newTestAgent(p newTestAgentParams) *agent.Agent {
 	)
 
 	registry.Register("network",
-		agent.NewNetworkProcessor(p.dnsProvider, p.pingProvider, logger),
+		agent.NewNetworkProcessor(p.dnsProvider, p.pingProvider, nil, nil, logger),
 		p.dnsProvider, p.pingProvider, p.netinfoProvider,
 	)
 

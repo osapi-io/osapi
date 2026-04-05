@@ -21,13 +21,11 @@
 package host
 
 import (
-	"fmt"
-
 	"github.com/retr0h/osapi/internal/provider"
 )
 
 // GetArchitecture retrieves the system CPU architecture.
 // It returns an error because it is not implemented for LinuxProvider.
 func (l *Linux) GetArchitecture() (string, error) {
-	return "", fmt.Errorf("linux: %w", provider.ErrUnsupported)
+	return "", provider.ErrUnsupported
 }

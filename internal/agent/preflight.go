@@ -61,10 +61,12 @@ var sudoCommands = []string{
 // requiredCapabilities maps Linux capability names to their bit positions
 // in the CapEff bitmask.
 var requiredCapabilities = map[string]int{
+	"CAP_CHOWN":           0,
 	"CAP_DAC_OVERRIDE":    1,
 	"CAP_DAC_READ_SEARCH": 2,
 	"CAP_FOWNER":          3,
 	"CAP_KILL":            5,
+	"CAP_NET_ADMIN":       12,
 }
 
 // procStatusPath is the path to the proc status file for reading capabilities.

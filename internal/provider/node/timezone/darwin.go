@@ -22,7 +22,6 @@ package timezone
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
 )
@@ -40,7 +39,7 @@ func NewDarwinProvider() *Darwin {
 func (d *Darwin) Get(
 	_ context.Context,
 ) (*Info, error) {
-	return nil, fmt.Errorf("timezone: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Update returns ErrUnsupported on Darwin.
@@ -48,5 +47,5 @@ func (d *Darwin) Update(
 	_ context.Context,
 	_ string,
 ) (*UpdateResult, error) {
-	return nil, fmt.Errorf("timezone: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

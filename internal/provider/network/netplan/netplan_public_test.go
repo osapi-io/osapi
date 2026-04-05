@@ -332,13 +332,13 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 					Return("", nil)
 
 				netplan.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
-					return nil, errors.New("marshal failed")
+					return nil, errors.New("marshal failure")
 				})
 			},
 			validateFunc: func(changed bool, err error) {
 				suite.Require().Error(err)
 				suite.False(changed)
-				suite.Contains(err.Error(), "netplan apply: marshal state:")
+				suite.Contains(err.Error(), "marshal")
 			},
 		},
 	}

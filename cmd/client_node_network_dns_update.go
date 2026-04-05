@@ -40,6 +40,7 @@ var clientNodeNetworkDNSUpdateCmd = &cobra.Command{
 		servers, _ := cmd.Flags().GetStringSlice("servers")
 		searchDomains, _ := cmd.Flags().GetStringSlice("search-domains")
 		interfaceName, _ := cmd.Flags().GetString("interface-name")
+		overrideDHCP, _ := cmd.Flags().GetBool("override-dhcp")
 
 		resp, err := sdkClient.DNS.Update(
 			ctx,
@@ -47,6 +48,7 @@ var clientNodeNetworkDNSUpdateCmd = &cobra.Command{
 			interfaceName,
 			servers,
 			searchDomains,
+			overrideDHCP,
 		)
 		if err != nil {
 			cli.HandleError(err, logger)
@@ -91,6 +93,9 @@ func init() {
 		StringSlice("search-domains", []string{}, "List of DNS search domains (comma-separated)")
 	clientNodeNetworkDNSUpdateCmd.PersistentFlags().
 		String("interface-name", "", "Name of the network interface to retrieve DNS server configurations (required)")
+
+	clientNodeNetworkDNSUpdateCmd.PersistentFlags().
+		Bool("override-dhcp", false, "When true, disables DHCP-provided DNS servers so only the configured servers are used")
 
 	clientNodeNetworkDNSUpdateCmd.MarkFlagsOneRequired("servers", "search-domains")
 	_ = clientNodeNetworkDNSUpdateCmd.MarkPersistentFlagRequired("interface-name")

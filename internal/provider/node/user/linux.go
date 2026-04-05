@@ -22,7 +22,6 @@ package user
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
 )
@@ -41,7 +40,7 @@ func NewLinuxProvider() *Linux {
 func (l *Linux) ListUsers(
 	_ context.Context,
 ) ([]User, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // GetUser returns ErrUnsupported on generic Linux.
@@ -49,7 +48,7 @@ func (l *Linux) GetUser(
 	_ context.Context,
 	_ string,
 ) (*User, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // CreateUser returns ErrUnsupported on generic Linux.
@@ -57,7 +56,7 @@ func (l *Linux) CreateUser(
 	_ context.Context,
 	_ CreateUserOpts,
 ) (*Result, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // UpdateUser returns ErrUnsupported on generic Linux.
@@ -66,7 +65,7 @@ func (l *Linux) UpdateUser(
 	_ string,
 	_ UpdateUserOpts,
 ) (*Result, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // DeleteUser returns ErrUnsupported on generic Linux.
@@ -74,7 +73,7 @@ func (l *Linux) DeleteUser(
 	_ context.Context,
 	_ string,
 ) (*Result, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // ChangePassword returns ErrUnsupported on generic Linux.
@@ -83,14 +82,14 @@ func (l *Linux) ChangePassword(
 	_ string,
 	_ string,
 ) (*Result, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // ListGroups returns ErrUnsupported on generic Linux.
 func (l *Linux) ListGroups(
 	_ context.Context,
 ) ([]Group, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // GetGroup returns ErrUnsupported on generic Linux.
@@ -98,7 +97,7 @@ func (l *Linux) GetGroup(
 	_ context.Context,
 	_ string,
 ) (*Group, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // CreateGroup returns ErrUnsupported on generic Linux.
@@ -106,7 +105,7 @@ func (l *Linux) CreateGroup(
 	_ context.Context,
 	_ CreateGroupOpts,
 ) (*GroupResult, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // UpdateGroup returns ErrUnsupported on generic Linux.
@@ -115,7 +114,7 @@ func (l *Linux) UpdateGroup(
 	_ string,
 	_ UpdateGroupOpts,
 ) (*GroupResult, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // DeleteGroup returns ErrUnsupported on generic Linux.
@@ -123,7 +122,7 @@ func (l *Linux) DeleteGroup(
 	_ context.Context,
 	_ string,
 ) (*GroupResult, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // ListKeys returns ErrUnsupported on generic Linux.
@@ -131,7 +130,7 @@ func (l *Linux) ListKeys(
 	_ context.Context,
 	_ string,
 ) ([]SSHKey, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // AddKey returns ErrUnsupported on generic Linux.
@@ -140,7 +139,7 @@ func (l *Linux) AddKey(
 	_ string,
 	_ SSHKey,
 ) (*SSHKeyResult, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // RemoveKey returns ErrUnsupported on generic Linux.
@@ -149,5 +148,5 @@ func (l *Linux) RemoveKey(
 	_ string,
 	_ string,
 ) (*SSHKeyResult, error) {
-	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

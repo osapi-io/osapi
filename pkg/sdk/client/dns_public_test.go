@@ -157,6 +157,7 @@ func (suite *DNSPublicTestSuite) TestUpdate() {
 		iface         string
 		servers       []string
 		searchDomains []string
+		overrideDHCP  bool
 		validateFunc  func(*client.Response[client.Collection[client.DNSUpdateResult]], error)
 	}{
 		{
@@ -209,6 +210,26 @@ func (suite *DNSPublicTestSuite) TestUpdate() {
 			iface:         "eth0",
 			servers:       []string{"8.8.8.8"},
 			searchDomains: []string{"example.com"},
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"dns-host","status":"completed","changed":true}]}`,
+					),
+				)
+			},
+			validateFunc: func(resp *client.Response[client.Collection[client.DNSUpdateResult]], err error) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+			},
+		},
+		{
+			name:         "when override DHCP provided sets override_dhcp",
+			target:       "_any",
+			iface:        "eth0",
+			servers:      []string{"8.8.8.8"},
+			overrideDHCP: true,
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusAccepted)
@@ -323,7 +344,149 @@ func (suite *DNSPublicTestSuite) TestUpdate() {
 				tc.iface,
 				tc.servers,
 				tc.searchDomains,
+				tc.overrideDHCP,
 			)
+			tc.validateFunc(resp, err)
+		})
+	}
+}
+
+func (suite *DNSPublicTestSuite) TestDelete() {
+	tests := []struct {
+		name          string
+		handler       http.HandlerFunc
+		serverURL     string
+		target        string
+		interfaceName string
+		validateFunc  func(*client.Response[client.Collection[client.DNSDeleteResult]], error)
+	}{
+		{
+			name:          "when deleting DNS returns results",
+			target:        "_any",
+			interfaceName: "eth0",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"dns-host","status":"ok","changed":true}]}`,
+					),
+				)
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.DNSDeleteResult]],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Len(resp.Data.Results, 1)
+				suite.Equal("dns-host", resp.Data.Results[0].Hostname)
+				suite.Equal("ok", resp.Data.Results[0].Status)
+				suite.True(resp.Data.Results[0].Changed)
+			},
+		},
+		{
+			name:          "when server returns 403 returns AuthError",
+			target:        "_any",
+			interfaceName: "eth0",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.DNSDeleteResult]],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.AuthError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusForbidden, target.StatusCode)
+			},
+		},
+		{
+			name:          "when server returns 400 returns ValidationError",
+			target:        "_any",
+			interfaceName: "eth0",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(`{"error":"invalid"}`))
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.DNSDeleteResult]],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.ValidationError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusBadRequest, target.StatusCode)
+			},
+		},
+		{
+			name:          "when client HTTP call fails returns error",
+			target:        "_any",
+			interfaceName: "eth0",
+			serverURL:     "http://127.0.0.1:0",
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.DNSDeleteResult]],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+				suite.Contains(err.Error(), "delete dns")
+			},
+		},
+		{
+			name:          "when server returns 200 with no JSON body returns UnexpectedStatusError",
+			target:        "_any",
+			interfaceName: "eth0",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.DNSDeleteResult]],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.UnexpectedStatusError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusOK, target.StatusCode)
+				suite.Equal("nil response body", target.Message)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var (
+				serverURL string
+				cleanup   func()
+			)
+
+			if tc.serverURL != "" {
+				serverURL = tc.serverURL
+				cleanup = func() {}
+			} else {
+				server := httptest.NewServer(tc.handler)
+				serverURL = server.URL
+				cleanup = server.Close
+			}
+			defer cleanup()
+
+			sut := client.New(
+				serverURL,
+				"test-token",
+				client.WithLogger(slog.Default()),
+			)
+
+			resp, err := sut.DNS.Delete(suite.ctx, tc.target, tc.interfaceName)
 			tc.validateFunc(resp, err)
 		})
 	}

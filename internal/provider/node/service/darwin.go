@@ -22,7 +22,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
 )
@@ -40,7 +39,7 @@ func NewDarwinProvider() *Darwin {
 func (d *Darwin) List(
 	_ context.Context,
 ) ([]Info, error) {
-	return nil, fmt.Errorf("service: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Get returns ErrUnsupported on Darwin.
@@ -48,7 +47,7 @@ func (d *Darwin) Get(
 	_ context.Context,
 	_ string,
 ) (*Info, error) {
-	return nil, fmt.Errorf("service: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Create returns ErrUnsupported on Darwin.
@@ -56,7 +55,7 @@ func (d *Darwin) Create(
 	_ context.Context,
 	_ Entry,
 ) (*CreateResult, error) {
-	return nil, fmt.Errorf("service: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Update returns ErrUnsupported on Darwin.
@@ -64,7 +63,7 @@ func (d *Darwin) Update(
 	_ context.Context,
 	_ Entry,
 ) (*UpdateResult, error) {
-	return nil, fmt.Errorf("service: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Delete returns ErrUnsupported on Darwin.
@@ -72,7 +71,7 @@ func (d *Darwin) Delete(
 	_ context.Context,
 	_ string,
 ) (*DeleteResult, error) {
-	return nil, fmt.Errorf("service: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Start returns ErrUnsupported on Darwin.
@@ -80,7 +79,7 @@ func (d *Darwin) Start(
 	_ context.Context,
 	_ string,
 ) (*ActionResult, error) {
-	return nil, fmt.Errorf("service: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Stop returns ErrUnsupported on Darwin.
@@ -88,7 +87,7 @@ func (d *Darwin) Stop(
 	_ context.Context,
 	_ string,
 ) (*ActionResult, error) {
-	return nil, fmt.Errorf("service: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Restart returns ErrUnsupported on Darwin.
@@ -96,7 +95,7 @@ func (d *Darwin) Restart(
 	_ context.Context,
 	_ string,
 ) (*ActionResult, error) {
-	return nil, fmt.Errorf("service: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Enable returns ErrUnsupported on Darwin.
@@ -104,7 +103,7 @@ func (d *Darwin) Enable(
 	_ context.Context,
 	_ string,
 ) (*ActionResult, error) {
-	return nil, fmt.Errorf("service: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Disable returns ErrUnsupported on Darwin.
@@ -112,5 +111,5 @@ func (d *Darwin) Disable(
 	_ context.Context,
 	_ string,
 ) (*ActionResult, error) {
-	return nil, fmt.Errorf("service: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

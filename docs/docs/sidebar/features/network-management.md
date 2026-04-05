@@ -10,10 +10,15 @@ unprivileged while agents execute the actual changes.
 
 ## What It Manages
 
-| Resource | Operations   | Description                                  |
-| -------- | ------------ | -------------------------------------------- |
-| DNS      | Read, Update | Nameservers and search domains per interface |
-| Ping     | Read         | ICMP connectivity check to a target host     |
+| Resource  | Operations           | Description                                  |
+| --------- | -------------------- | -------------------------------------------- |
+| DNS       | Read, Update, Delete | Nameservers and search domains per interface |
+| Ping      | Read                 | ICMP connectivity check to a target host     |
+| Interface | Full CRUD            | Netplan interface configuration              |
+| Route     | Full CRUD            | Netplan static route configuration           |
+
+For interface and route management details, see
+[Network Interface Management](network-interface-management.md).
 
 ## How It Works
 
@@ -23,7 +28,20 @@ file (`/etc/netplan/osapi-dns.yaml`) targeting the primary interface, validate
 with `netplan generate`, and apply with `netplan apply`. This ensures DNS
 changes survive reboots. The `--interface-name` parameter supports
 [fact references](system-facts.md) — use `@fact.interface.primary` to
-automatically target the default route interface.
+automatically target the default route interface. Use `--override-dhcp` to
+disable DHCP-provided DNS servers so only the explicitly configured servers are
+used; when omitted, DHCP DNS servers are merged alongside configured ones
+(default Netplan behavior).
+
+:::note IPv6 Router Advertisement DNS
+
+`--override-dhcp` disables DNS from DHCPv4 and DHCPv6 but does **not** disable
+DNS from IPv6 Router Advertisements (RA/SLAAC). Disabling RA would break IPv6
+connectivity — the host would lose its default route, global address
+assignments, and prefix information. IPv6 RA-provided DNS servers may still
+appear in `resolvectl` output alongside the configured servers.
+
+:::
 
 **Ping** -- sends ICMP echo requests to a target host and reports the results.
 
@@ -44,6 +62,7 @@ NATS, agent, and authentication settings.
 | ---------- | --------------- |
 | DNS get    | `network:read`  |
 | DNS update | `network:write` |
+| DNS delete | `network:write` |
 | Ping       | `network:read`  |
 
 The `admin` and `write` roles include both `network:read` and `network:write`.

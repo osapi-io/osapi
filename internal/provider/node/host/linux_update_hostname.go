@@ -21,8 +21,6 @@
 package host
 
 import (
-	"fmt"
-
 	"github.com/retr0h/osapi/internal/provider"
 )
 
@@ -30,5 +28,5 @@ import (
 func (l *Linux) UpdateHostname(
 	_ string,
 ) (*UpdateHostnameResult, error) {
-	return nil, fmt.Errorf("host: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
