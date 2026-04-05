@@ -2774,6 +2774,9 @@ type RouteInfo struct {
 	// Interface Network interface name.
 	Interface *string `json:"interface,omitempty"`
 
+	// Managed Whether this route is managed by OSAPI.
+	Managed *bool `json:"managed,omitempty"`
+
 	// Metric Route metric (priority).
 	Metric *int `json:"metric,omitempty"`
 

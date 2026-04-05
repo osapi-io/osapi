@@ -107,7 +107,7 @@ func (u *Debian) UpdateResolvConfByInterface(
 		},
 	)
 	if applyErr != nil {
-		return nil, fmt.Errorf("dns update via netplan: %w", applyErr)
+		return nil, fmt.Errorf("dns update: %w", applyErr)
 	}
 
 	return &UpdateResult{Changed: changed}, nil

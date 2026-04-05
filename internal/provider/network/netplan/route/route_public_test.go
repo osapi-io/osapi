@@ -140,6 +140,10 @@ func (suite *RoutePublicTestSuite) TestList() {
 				suite.mockExec.EXPECT().
 					RunCmd("netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusWithRoutes, nil)
+				suite.mockStateKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("no keys")).
+					AnyTimes()
 			},
 			validateFunc: func(result []route.ListEntry, err error) {
 				suite.Require().NoError(err)
@@ -171,6 +175,10 @@ func (suite *RoutePublicTestSuite) TestList() {
 				suite.mockExec.EXPECT().
 					RunCmd("netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusNoRoutes, nil)
+				suite.mockStateKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("no keys")).
+					AnyTimes()
 			},
 			validateFunc: func(result []route.ListEntry, err error) {
 				suite.Require().NoError(err)
@@ -187,7 +195,7 @@ func (suite *RoutePublicTestSuite) TestList() {
 			validateFunc: func(result []route.ListEntry, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "netplan route list:")
+				suite.Contains(err.Error(), "route list:")
 			},
 		},
 		{
@@ -196,6 +204,10 @@ func (suite *RoutePublicTestSuite) TestList() {
 				suite.mockExec.EXPECT().
 					RunCmd("netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusWithRoutes, nil)
+				suite.mockStateKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("no keys")).
+					AnyTimes()
 			},
 			validateFunc: func(result []route.ListEntry, err error) {
 				suite.Require().NoError(err)
@@ -595,7 +607,7 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "netplan route create:")
+				suite.Contains(err.Error(), "route create:")
 			},
 		},
 		{
@@ -620,7 +632,7 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "netplan route create:")
+				suite.Contains(err.Error(), "route create:")
 			},
 		},
 	}
@@ -771,7 +783,7 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "netplan route update:")
+				suite.Contains(err.Error(), "route update:")
 			},
 		},
 		{
@@ -802,7 +814,7 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "netplan route update:")
+				suite.Contains(err.Error(), "route update:")
 			},
 		},
 	}
@@ -896,7 +908,7 @@ func (suite *RoutePublicTestSuite) TestDelete() {
 			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "netplan route delete:")
+				suite.Contains(err.Error(), "route delete:")
 			},
 		},
 	}

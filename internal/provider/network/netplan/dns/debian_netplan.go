@@ -86,7 +86,6 @@ func generateDNSNetplanYAML(
 	return []byte(b.String())
 }
 
-
 // resolvePrimaryInterface returns the network interface to use for
 // Netplan configuration. It prefers the explicitly provided interface
 // name, falls back to the primary_interface from agent facts, and

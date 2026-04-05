@@ -1316,6 +1316,9 @@ components:
           type: integer
           description: Route metric (priority).
           example: 100
+        managed:
+          type: boolean
+          description: Whether this route is managed by OSAPI.
         scope:
           type: string
           description: Route scope.

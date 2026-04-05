@@ -67,6 +67,11 @@ var clientNodeNetworkRouteListCmd = &cobra.Command{
 			}
 
 			for _, rt := range r.Routes {
+				managed := ""
+				if rt.Managed {
+					managed = "true"
+				}
+
 				results = append(results, cli.ResultRow{
 					Hostname: r.Hostname,
 					Status:   r.Status,
@@ -75,13 +80,14 @@ var clientNodeNetworkRouteListCmd = &cobra.Command{
 						rt.Gateway,
 						rt.Interface,
 						fmt.Sprintf("%d", rt.Metric),
+						managed,
 					},
 				})
 			}
 		}
 		headers, rows := cli.BuildBroadcastTable(
 			results,
-			[]string{"DESTINATION", "GATEWAY", "INTERFACE", "METRIC"},
+			[]string{"DESTINATION", "GATEWAY", "INTERFACE", "METRIC", "MANAGED"},
 		)
 		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},

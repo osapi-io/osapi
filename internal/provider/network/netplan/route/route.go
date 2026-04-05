@@ -27,6 +27,7 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/provider/network/netplan"
 	"github.com/retr0h/osapi/internal/provider/network/netplan/iface"
@@ -62,12 +63,14 @@ func routeFilePath(
 // kernel-internal entries (local, broadcast, anycast, multicast types
 // and host-scoped routes).
 func (d *Debian) List(
-	_ context.Context,
+	ctx context.Context,
 ) ([]ListEntry, error) {
 	status, err := netplan.GetStatus(d.execManager)
 	if err != nil {
-		return nil, fmt.Errorf("netplan route list: %w", err)
+		return nil, fmt.Errorf("route list: %w", err)
 	}
+
+	managedRoutes := d.loadManagedRoutes(ctx)
 
 	var result []ListEntry
 
@@ -77,16 +80,81 @@ func (d *Debian) List(
 				continue
 			}
 
+			managed := false
+			if routes, ok := managedRoutes[ifaceName]; ok {
+				for _, mr := range routes {
+					if mr.To == r.To {
+						managed = true
+
+						break
+					}
+				}
+			}
+
 			result = append(result, ListEntry{
 				Destination: r.To,
 				Gateway:     r.Via,
 				Interface:   ifaceName,
 				Metric:      r.Metric,
+				Managed:     managed,
 			})
 		}
 	}
 
 	return result, nil
+}
+
+// loadManagedRoutes reads managed route entries from the state KV.
+func (d *Debian) loadManagedRoutes(
+	ctx context.Context,
+) map[string][]Route {
+	result := make(map[string][]Route)
+
+	keys, err := d.stateKV.Keys(ctx)
+	if err != nil {
+		return result
+	}
+
+	for _, key := range keys {
+		entry, getErr := d.stateKV.Get(ctx, key)
+		if getErr != nil {
+			continue
+		}
+
+		var state job.FileState
+		if unmarshalErr := json.Unmarshal(
+			entry.Value(),
+			&state,
+		); unmarshalErr != nil {
+			continue
+		}
+
+		if state.UndeployedAt != "" {
+			continue
+		}
+
+		ifaceName, ok := state.Metadata["interface"]
+		if !ok {
+			continue
+		}
+
+		routesJSON, ok := state.Metadata["routes"]
+		if !ok {
+			continue
+		}
+
+		var routes []Route
+		if unmarshalErr := json.Unmarshal(
+			[]byte(routesJSON),
+			&routes,
+		); unmarshalErr != nil {
+			continue
+		}
+
+		result[ifaceName] = routes
+	}
+
+	return result
 }
 
 // Get returns the managed routes for a specific interface by reading
@@ -96,7 +164,7 @@ func (d *Debian) Get(
 	interfaceName string,
 ) (*Entry, error) {
 	if interfaceName == "" {
-		return nil, fmt.Errorf("netplan route get: interface name must not be empty")
+		return nil, fmt.Errorf("route get: interface name must not be empty")
 	}
 
 	path := routeFilePath(interfaceName)
@@ -105,7 +173,7 @@ func (d *Debian) Get(
 
 	kvEntry, err := d.stateKV.Get(ctx, stateKey)
 	if err != nil {
-		return nil, fmt.Errorf("netplan route %q: not found", interfaceName)
+		return nil, fmt.Errorf("route %q: not found", interfaceName)
 	}
 
 	var state struct {
@@ -114,21 +182,21 @@ func (d *Debian) Get(
 	}
 
 	if unmarshalErr := json.Unmarshal(kvEntry.Value(), &state); unmarshalErr != nil {
-		return nil, fmt.Errorf("netplan route get: unmarshal state: %w", unmarshalErr)
+		return nil, fmt.Errorf("route get: unmarshal state: %w", unmarshalErr)
 	}
 
 	if state.UndeployedAt != "" {
-		return nil, fmt.Errorf("netplan route %q: not found", interfaceName)
+		return nil, fmt.Errorf("route %q: not found", interfaceName)
 	}
 
 	routesJSON, ok := state.Metadata["routes"]
 	if !ok {
-		return nil, fmt.Errorf("netplan route get: no route metadata for %q", interfaceName)
+		return nil, fmt.Errorf("route get: no route metadata for %q", interfaceName)
 	}
 
 	var routes []Route
 	if unmarshalErr := json.Unmarshal([]byte(routesJSON), &routes); unmarshalErr != nil {
-		return nil, fmt.Errorf("netplan route get: unmarshal routes: %w", unmarshalErr)
+		return nil, fmt.Errorf("route get: unmarshal routes: %w", unmarshalErr)
 	}
 
 	return &Entry{
@@ -145,12 +213,12 @@ func (d *Debian) Create(
 	entry Entry,
 ) (*Result, error) {
 	if err := iface.ValidateInterfaceName(entry.Interface); err != nil {
-		return nil, fmt.Errorf("netplan route create: %w", err)
+		return nil, fmt.Errorf("route create: %w", err)
 	}
 
 	if containsDefaultRoute(entry.Routes) {
 		return nil, fmt.Errorf(
-			"netplan route create: default route (0.0.0.0/0, ::/0, default) not allowed",
+			"route create: default route (0.0.0.0/0, ::/0, default) not allowed",
 		)
 	}
 
@@ -159,7 +227,7 @@ func (d *Debian) Create(
 	// Fail if the managed file already exists on disk.
 	if _, statErr := d.fs.Stat(path); statErr == nil {
 		return nil, fmt.Errorf(
-			"netplan route create: %q already managed",
+			"route create: %q already managed",
 			entry.Interface,
 		)
 	}
@@ -169,7 +237,7 @@ func (d *Debian) Create(
 
 	metadata, err := buildRouteMetadata(entry)
 	if err != nil {
-		return nil, fmt.Errorf("netplan route create: %w", err)
+		return nil, fmt.Errorf("route create: %w", err)
 	}
 
 	changed, applyErr := netplan.ApplyConfig(
@@ -184,11 +252,11 @@ func (d *Debian) Create(
 		metadata,
 	)
 	if applyErr != nil {
-		return nil, fmt.Errorf("netplan route create: %w", applyErr)
+		return nil, fmt.Errorf("route create: %w", applyErr)
 	}
 
 	d.logger.Info(
-		"netplan route created",
+		"route created",
 		slog.String("interface", entry.Interface),
 		slog.Bool("changed", changed),
 	)
@@ -207,12 +275,12 @@ func (d *Debian) Update(
 	entry Entry,
 ) (*Result, error) {
 	if err := iface.ValidateInterfaceName(entry.Interface); err != nil {
-		return nil, fmt.Errorf("netplan route update: %w", err)
+		return nil, fmt.Errorf("route update: %w", err)
 	}
 
 	if containsDefaultRoute(entry.Routes) {
 		return nil, fmt.Errorf(
-			"netplan route update: default route (0.0.0.0/0, ::/0, default) not allowed",
+			"route update: default route (0.0.0.0/0, ::/0, default) not allowed",
 		)
 	}
 
@@ -221,7 +289,7 @@ func (d *Debian) Update(
 	// Fail if the managed file does not exist on disk.
 	if _, statErr := d.fs.Stat(path); statErr != nil {
 		return nil, fmt.Errorf(
-			"netplan route update: %q not managed",
+			"route update: %q not managed",
 			entry.Interface,
 		)
 	}
@@ -231,7 +299,7 @@ func (d *Debian) Update(
 
 	metadata, err := buildRouteMetadata(entry)
 	if err != nil {
-		return nil, fmt.Errorf("netplan route update: %w", err)
+		return nil, fmt.Errorf("route update: %w", err)
 	}
 
 	changed, applyErr := netplan.ApplyConfig(
@@ -246,11 +314,11 @@ func (d *Debian) Update(
 		metadata,
 	)
 	if applyErr != nil {
-		return nil, fmt.Errorf("netplan route update: %w", applyErr)
+		return nil, fmt.Errorf("route update: %w", applyErr)
 	}
 
 	d.logger.Info(
-		"netplan route updated",
+		"route updated",
 		slog.String("interface", entry.Interface),
 		slog.Bool("changed", changed),
 	)
@@ -268,14 +336,14 @@ func (d *Debian) Delete(
 	interfaceName string,
 ) (*Result, error) {
 	if interfaceName == "" {
-		return nil, fmt.Errorf("netplan route delete: interface name must not be empty")
+		return nil, fmt.Errorf("route delete: interface name must not be empty")
 	}
 
 	path := routeFilePath(interfaceName)
 
 	if _, err := d.fs.Stat(path); err != nil {
 		return nil, fmt.Errorf(
-			"netplan route delete: %q not managed",
+			"route delete: %q not managed",
 			interfaceName,
 		)
 	}
@@ -290,12 +358,12 @@ func (d *Debian) Delete(
 		path,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("netplan route delete: %w", err)
+		return nil, fmt.Errorf("route delete: %w", err)
 	}
 
 	if changed {
 		d.logger.Info(
-			"netplan route deleted",
+			"route deleted",
 			slog.String("interface", interfaceName),
 		)
 	}
@@ -361,4 +429,3 @@ func buildRouteMetadata(
 		"routes":    string(routesJSON),
 	}, nil
 }
-
