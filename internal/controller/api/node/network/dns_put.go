@@ -74,7 +74,14 @@ func (s *Network) PutNodeNetworkDNS(
 	}
 
 	if job.IsBroadcastTarget(hostname) {
-		return s.putNodeNetworkDNSBroadcast(ctx, hostname, servers, searchDomains, interfaceName, overrideDHCP)
+		return s.putNodeNetworkDNSBroadcast(
+			ctx,
+			hostname,
+			servers,
+			searchDomains,
+			interfaceName,
+			overrideDHCP,
+		)
 	}
 
 	data := map[string]any{

@@ -71,11 +71,11 @@ func processNetworkDNS(
 		return nil, fmt.Errorf("failed to parse DNS data: %w", err)
 	}
 
-	// Extract sub-operation: "network.dns.delete" -> "delete"
+	// Extract sub-operation: "dns.delete" -> "delete"
 	parts := strings.Split(jobRequest.Operation, ".")
 	subOp := ""
-	if len(parts) >= 3 {
-		subOp = parts[2]
+	if len(parts) >= 2 {
+		subOp = parts[1]
 	}
 
 	if jobRequest.Type == job.TypeQuery {
