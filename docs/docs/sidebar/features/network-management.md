@@ -33,6 +33,16 @@ disable DHCP-provided DNS servers so only the explicitly configured servers are
 used; when omitted, DHCP DNS servers are merged alongside configured ones
 (default Netplan behavior).
 
+:::note IPv6 Router Advertisement DNS
+
+`--override-dhcp` disables DNS from DHCPv4 and DHCPv6 but does **not** disable
+DNS from IPv6 Router Advertisements (RA/SLAAC). Disabling RA would break IPv6
+connectivity — the host would lose its default route, global address
+assignments, and prefix information. IPv6 RA-provided DNS servers may still
+appear in `resolvectl` output alongside the configured servers.
+
+:::
+
 **Ping** -- sends ICMP echo requests to a target host and reports the results.
 
 See [CLI Reference](../usage/cli/client/node/network/network.mdx) for usage and
