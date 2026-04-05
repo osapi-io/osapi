@@ -34,6 +34,21 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 	return m.recorder
 }
 
+// DeleteNetplanConfig mocks base method.
+func (m *MockProvider) DeleteNetplanConfig(interfaceName string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteNetplanConfig", interfaceName)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteNetplanConfig indicates an expected call of DeleteNetplanConfig.
+func (mr *MockProviderMockRecorder) DeleteNetplanConfig(interfaceName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNetplanConfig", reflect.TypeOf((*MockProvider)(nil).DeleteNetplanConfig), interfaceName)
+}
+
 // GetResolvConfByInterface mocks base method.
 func (m *MockProvider) GetResolvConfByInterface(interfaceName string) (*dns.GetResult, error) {
 	m.ctrl.T.Helper()

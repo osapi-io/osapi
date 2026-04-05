@@ -119,14 +119,14 @@ sudo setcap \
 When `privilege_escalation.enabled: true`, the agent reads `/proc/self/status`
 at startup and checks the `CapEff` bitmask for the required bits:
 
-| Capability            | Bit | Purpose                                          |
-| --------------------- | --- | ------------------------------------------------ |
-| `CAP_DAC_READ_SEARCH` | 2   | Read restricted files (`/etc/shadow`, proc, etc) |
-| `CAP_DAC_OVERRIDE`    | 1   | Write files regardless of owner (netplan, sysctl)|
-| `CAP_CHOWN`           | 0   | Set file ownership to root:root (netplan configs)|
-| `CAP_FOWNER`          | 3   | Bypass permission checks on owned files          |
-| `CAP_KILL`            | 5   | Signal any process                               |
-| `CAP_NET_ADMIN`       | 12  | Network configuration (interface, routes, DNS)   |
+| Capability            | Bit | Purpose                                           |
+| --------------------- | --- | ------------------------------------------------- |
+| `CAP_DAC_READ_SEARCH` | 2   | Read restricted files (`/etc/shadow`, proc, etc)  |
+| `CAP_DAC_OVERRIDE`    | 1   | Write files regardless of owner (netplan, sysctl) |
+| `CAP_CHOWN`           | 0   | Set file ownership to root:root (netplan configs) |
+| `CAP_FOWNER`          | 3   | Bypass permission checks on owned files           |
+| `CAP_KILL`            | 5   | Signal any process                                |
+| `CAP_NET_ADMIN`       | 12  | Network configuration (interface, routes, DNS)    |
 
 If any required capability is missing the agent logs the failure and exits with
 a non-zero status.
