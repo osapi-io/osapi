@@ -36,3 +36,10 @@ func (l *Linux) UpdateResolvConfByInterface(
 ) (*UpdateResult, error) {
 	return nil, provider.ErrUnsupported
 }
+
+// DeleteNetplanConfig returns ErrUnsupported on generic Linux.
+func (l *Linux) DeleteNetplanConfig(
+	_ string,
+) (bool, error) {
+	return false, provider.ErrUnsupported
+}

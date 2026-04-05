@@ -34,3 +34,10 @@ func (d *Darwin) UpdateResolvConfByInterface(
 ) (*UpdateResult, error) {
 	return nil, provider.ErrUnsupported
 }
+
+// DeleteNetplanConfig returns ErrUnsupported on Darwin.
+func (d *Darwin) DeleteNetplanConfig(
+	_ string,
+) (bool, error) {
+	return false, provider.ErrUnsupported
+}

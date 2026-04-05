@@ -119,3 +119,25 @@ func (u *Debian) UpdateResolvConfByInterface(
 
 	return &UpdateResult{Changed: changed}, nil
 }
+
+// DeleteNetplanConfig removes the managed DNS Netplan config file.
+func (u *Debian) DeleteNetplanConfig(
+	_ string,
+) (bool, error) {
+	path := dnsNetplanPath()
+
+	changed, err := netplan.RemoveConfig(
+		context.TODO(),
+		u.logger,
+		u.fs,
+		u.stateKV,
+		u.execManager,
+		u.hostname,
+		path,
+	)
+	if err != nil {
+		return false, fmt.Errorf("dns delete via netplan: %w", err)
+	}
+
+	return changed, nil
+}

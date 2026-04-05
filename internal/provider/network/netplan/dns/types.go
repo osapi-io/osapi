@@ -36,6 +36,10 @@ type Provider interface {
 		interfaceName string,
 		overrideDHCP bool,
 	) (*UpdateResult, error)
+	// DeleteNetplanConfig removes the managed DNS Netplan config file.
+	DeleteNetplanConfig(
+		interfaceName string,
+	) (bool, error)
 }
 
 // GetResult represents the DNS configuration with servers and search domains.

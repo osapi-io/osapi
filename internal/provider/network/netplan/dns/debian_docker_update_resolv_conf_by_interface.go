@@ -35,3 +35,10 @@ func (d *DebianDocker) UpdateResolvConfByInterface(
 ) (*UpdateResult, error) {
 	return nil, provider.ErrUnsupported
 }
+
+// DeleteNetplanConfig returns ErrUnsupported in containers.
+func (d *DebianDocker) DeleteNetplanConfig(
+	_ string,
+) (bool, error) {
+	return false, provider.ErrUnsupported
+}

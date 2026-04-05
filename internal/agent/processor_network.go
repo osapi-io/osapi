@@ -71,6 +71,13 @@ func processNetworkDNS(
 		return nil, fmt.Errorf("failed to parse DNS data: %w", err)
 	}
 
+	// Extract sub-operation: "network.dns.delete" -> "delete"
+	parts := strings.Split(jobRequest.Operation, ".")
+	subOp := ""
+	if len(parts) >= 3 {
+		subOp = parts[2]
+	}
+
 	if jobRequest.Type == job.TypeQuery {
 		// Get DNS configuration
 		interfaceName, _ := dnsData["interface"].(string)
@@ -88,6 +95,28 @@ func processNetworkDNS(
 		}
 
 		return json.Marshal(config)
+	}
+
+	// Delete DNS configuration
+	if subOp == "delete" {
+		interfaceName, _ := dnsData["interface"].(string)
+
+		logger.Debug("executing dns.DeleteResolvConf",
+			slog.String("interface", interfaceName),
+		)
+
+		changed, err := dnsProvider.DeleteNetplanConfig(interfaceName)
+		if err != nil {
+			return nil, err
+		}
+
+		result := map[string]interface{}{
+			"success": true,
+			"changed": changed,
+			"message": "DNS configuration deleted",
+		}
+
+		return json.Marshal(result)
 	}
 
 	// Set DNS configuration
