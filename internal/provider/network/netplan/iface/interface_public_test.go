@@ -781,7 +781,7 @@ func (suite *InterfacePublicTestSuite) TestGenerateInterfaceYAML() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := iface.GenerateInterfaceYAML(tc.entry)
+			result := iface.GenerateInterfaceYAML(tc.entry, "ethernets")
 
 			tc.validateFunc(string(result))
 		})

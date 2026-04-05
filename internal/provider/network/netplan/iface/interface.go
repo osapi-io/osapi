@@ -153,7 +153,8 @@ func (d *Debian) Create(
 		)
 	}
 
-	content := generateInterfaceYAML(entry)
+	ifaceSection := netplan.SectionForInterface(d.execManager, entry.Name)
+	content := generateInterfaceYAML(entry, ifaceSection)
 	metadata := map[string]string{
 		"interface": entry.Name,
 	}
@@ -205,7 +206,8 @@ func (d *Debian) Update(
 		)
 	}
 
-	content := generateInterfaceYAML(entry)
+	ifaceSection := netplan.SectionForInterface(d.execManager, entry.Name)
+	content := generateInterfaceYAML(entry, ifaceSection)
 	metadata := map[string]string{
 		"interface": entry.Name,
 	}
@@ -299,15 +301,17 @@ func ValidateInterfaceName(
 }
 
 // generateInterfaceYAML builds a Netplan YAML configuration for the
-// given interface entry. Only non-zero fields are included.
+// given interface entry. Only non-zero fields are included. The
+// ifaceSection parameter specifies the YAML section (ethernets, wifis, etc.).
 func generateInterfaceYAML(
 	entry InterfaceEntry,
+	ifaceSection string,
 ) []byte {
 	var b strings.Builder
 
 	fmt.Fprintf(&b, "network:\n")
 	fmt.Fprintf(&b, "  version: 2\n")
-	fmt.Fprintf(&b, "  ethernets:\n")
+	fmt.Fprintf(&b, "  %s:\n", ifaceSection)
 	fmt.Fprintf(&b, "    %s:\n", entry.Name)
 
 	if entry.DHCP4 != nil {

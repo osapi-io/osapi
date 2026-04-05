@@ -936,7 +936,7 @@ func (suite *RoutePublicTestSuite) TestGenerateRouteYAML() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := route.GenerateRouteYAML(tc.entry)
+			result := route.GenerateRouteYAML(tc.entry, "ethernets")
 
 			tc.validateFunc(string(result))
 		})

@@ -31,13 +31,6 @@ func ExportGenerateDNSNetplanYAML(
 	return generateDNSNetplanYAML(interfaceName, ifaceSection, servers, searchDomains, overrideDHCP)
 }
 
-// ExportNetplanSectionForType exposes netplanSectionForType for testing.
-func ExportNetplanSectionForType(
-	ifaceType string,
-) string {
-	return netplanSectionForType(ifaceType)
-}
-
 // ExportDNSNetplanPath exposes dnsNetplanPath for testing.
 func ExportDNSNetplanPath() string {
 	return dnsNetplanPath()

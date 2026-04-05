@@ -86,24 +86,6 @@ func generateDNSNetplanYAML(
 	return []byte(b.String())
 }
 
-// netplanSectionForType maps a netplan status interface type to the
-// correct YAML section name.
-func netplanSectionForType(
-	ifaceType string,
-) string {
-	switch ifaceType {
-	case "wifi":
-		return "wifis"
-	case "bridge":
-		return "bridges"
-	case "bond":
-		return "bonds"
-	case "tunnel", "vxlan":
-		return "tunnels"
-	default:
-		return "ethernets"
-	}
-}
 
 // resolvePrimaryInterface returns the network interface to use for
 // Netplan configuration. It prefers the explicitly provided interface

@@ -187,3 +187,41 @@ func (s InterfaceStatus) AddressFamily() string {
 
 	return "inet"
 }
+
+// SectionForInterface returns the Netplan YAML section name for an
+// interface by querying netplan status. Falls back to "ethernets" if
+// the interface type cannot be determined.
+func SectionForInterface(
+	execManager exec.Manager,
+	interfaceName string,
+) string {
+	status, err := GetStatus(execManager)
+	if err != nil {
+		return "ethernets"
+	}
+
+	iface, ok := status[interfaceName]
+	if !ok {
+		return "ethernets"
+	}
+
+	return SectionForType(iface.Type)
+}
+
+// SectionForType maps a netplan interface type to its YAML section name.
+func SectionForType(
+	ifaceType string,
+) string {
+	switch ifaceType {
+	case "wifi":
+		return "wifis"
+	case "bridge":
+		return "bridges"
+	case "bond":
+		return "bonds"
+	case "tunnel", "vxlan":
+		return "tunnels"
+	default:
+		return "ethernets"
+	}
+}

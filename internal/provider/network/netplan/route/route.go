@@ -164,7 +164,8 @@ func (d *Debian) Create(
 		)
 	}
 
-	content := generateRouteYAML(entry)
+	ifaceSection := netplan.SectionForInterface(d.execManager, entry.Interface)
+	content := generateRouteYAML(entry, ifaceSection)
 
 	metadata, err := buildRouteMetadata(entry)
 	if err != nil {
@@ -225,7 +226,8 @@ func (d *Debian) Update(
 		)
 	}
 
-	content := generateRouteYAML(entry)
+	ifaceSection := netplan.SectionForInterface(d.execManager, entry.Interface)
+	content := generateRouteYAML(entry, ifaceSection)
 
 	metadata, err := buildRouteMetadata(entry)
 	if err != nil {
@@ -322,12 +324,13 @@ func containsDefaultRoute(
 // route entry.
 func generateRouteYAML(
 	entry Entry,
+	ifaceSection string,
 ) []byte {
 	var b strings.Builder
 
 	fmt.Fprintf(&b, "network:\n")
 	fmt.Fprintf(&b, "  version: 2\n")
-	fmt.Fprintf(&b, "  ethernets:\n")
+	fmt.Fprintf(&b, "  %s:\n", ifaceSection)
 	fmt.Fprintf(&b, "    %s:\n", entry.Interface)
 	fmt.Fprintf(&b, "      routes:\n")
 
@@ -358,3 +361,4 @@ func buildRouteMetadata(
 		"routes":    string(routesJSON),
 	}, nil
 }
+

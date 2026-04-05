@@ -21,6 +21,6 @@
 package iface
 
 // GenerateInterfaceYAML exposes generateInterfaceYAML for testing.
-func GenerateInterfaceYAML(entry InterfaceEntry) []byte {
-	return generateInterfaceYAML(entry)
+func GenerateInterfaceYAML(entry InterfaceEntry, ifaceSection string) []byte {
+	return generateInterfaceYAML(entry, ifaceSection)
 }

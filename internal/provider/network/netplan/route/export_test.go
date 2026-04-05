@@ -33,8 +33,8 @@ func ResetMarshalJSON() {
 }
 
 // GenerateRouteYAML exposes generateRouteYAML for testing.
-func GenerateRouteYAML(entry Entry) []byte {
-	return generateRouteYAML(entry)
+func GenerateRouteYAML(entry Entry, ifaceSection string) []byte {
+	return generateRouteYAML(entry, ifaceSection)
 }
 
 // ContainsDefaultRoute exposes containsDefaultRoute for testing.
