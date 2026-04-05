@@ -426,6 +426,12 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 				},
 			},
 			setup: func() {
+				// SectionForInterface calls netplan status.
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(`{"eth0": {"type": "ethernet"}}`, nil).
+					AnyTimes()
+
 				// KV Get returns not found (new file).
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -570,6 +576,12 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 				},
 			},
 			setup: func() {
+				// SectionForInterface calls netplan status.
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(`{"eth0": {"type": "ethernet"}}`, nil).
+					AnyTimes()
+
 				// KV Get returns not found.
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -595,6 +607,12 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 				},
 			},
 			setup: func() {
+				// SectionForInterface calls netplan status.
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(`{"eth0": {"type": "ethernet"}}`, nil).
+					AnyTimes()
+
 				route.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
 					return nil, errors.New("marshal error")
 				})
@@ -640,6 +658,12 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 					[]byte("old content"),
 					0o644,
 				)
+
+				// SectionForInterface calls netplan status.
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(`{"eth0": {"type": "ethernet"}}`, nil).
+					AnyTimes()
 
 				// KV Get returns not found (different SHA).
 				suite.mockStateKV.EXPECT().
@@ -730,6 +754,12 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 					0o644,
 				)
 
+				// SectionForInterface calls netplan status.
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(`{"eth0": {"type": "ethernet"}}`, nil).
+					AnyTimes()
+
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("not found"))
@@ -758,6 +788,12 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 					[]byte("old"),
 					0o644,
 				)
+
+				// SectionForInterface calls netplan status.
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(`{"eth0": {"type": "ethernet"}}`, nil).
+					AnyTimes()
 
 				route.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
 					return nil, errors.New("marshal error")

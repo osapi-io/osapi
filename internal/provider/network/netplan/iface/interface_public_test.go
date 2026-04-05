@@ -360,6 +360,12 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 				MTU:       1500,
 			},
 			setup: func() {
+				// SectionForInterface calls netplan status.
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(`{"eth0": {"type": "ethernet"}}`, nil).
+					AnyTimes()
+
 				// KV Get returns not found (new file).
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -449,6 +455,12 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 				DHCP4: &dhcp4True,
 			},
 			setup: func() {
+				// SectionForInterface calls netplan status.
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(`{"eth0": {"type": "ethernet"}}`, nil).
+					AnyTimes()
+
 				// KV Get returns not found.
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -501,6 +513,12 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 					[]byte("old content"),
 					0o644,
 				)
+
+				// SectionForInterface calls netplan status.
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(`{"eth0": {"type": "ethernet"}}`, nil).
+					AnyTimes()
 
 				// KV Get returns not found (different SHA).
 				suite.mockStateKV.EXPECT().
@@ -568,6 +586,12 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 					[]byte("old"),
 					0o644,
 				)
+
+				// SectionForInterface calls netplan status.
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(`{"eth0": {"type": "ethernet"}}`, nil).
+					AnyTimes()
 
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
