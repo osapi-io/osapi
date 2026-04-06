@@ -126,6 +126,89 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 		},
 		{
+			name: "when override_dhcp true passes to job data",
+			request: gen.PutNodeNetworkDNSRequestObject{
+				Hostname: "_any",
+				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
+					InterfaceName: "eth0",
+					Servers:       &[]string{"1.1.1.1"},
+					OverrideDhcp:  &trueVal,
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"_any",
+						"network",
+						job.OperationNetworkDNSUpdate,
+						gomock.AssignableToTypeOf(map[string]any{}),
+					).
+					DoAndReturn(func(
+						_ context.Context,
+						_ string,
+						_ string,
+						_ string,
+						data map[string]any,
+					) (string, *job.Response, error) {
+						s.Equal(true, data["override_dhcp"])
+						return "550e8400-e29b-41d4-a716-446655440000",
+							&job.Response{
+								Hostname: "agent1",
+								Changed:  &trueVal,
+							}, nil
+					})
+			},
+			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
+				r, ok := resp.(gen.PutNodeNetworkDNS202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.True(*r.Results[0].Changed)
+			},
+		},
+		{
+			name: "when override_dhcp false passes false to job data",
+			request: gen.PutNodeNetworkDNSRequestObject{
+				Hostname: "_any",
+				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
+					InterfaceName: "eth0",
+					Servers:       &[]string{"1.1.1.1"},
+					OverrideDhcp:  &falseVal,
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"_any",
+						"network",
+						job.OperationNetworkDNSUpdate,
+						gomock.AssignableToTypeOf(map[string]any{}),
+					).
+					DoAndReturn(func(
+						_ context.Context,
+						_ string,
+						_ string,
+						_ string,
+						data map[string]any,
+					) (string, *job.Response, error) {
+						s.Equal(false, data["override_dhcp"])
+						return "550e8400-e29b-41d4-a716-446655440000",
+							&job.Response{
+								Hostname: "agent1",
+								Changed:  &trueVal,
+							}, nil
+					})
+			},
+			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
+				r, ok := resp.(gen.PutNodeNetworkDNS202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+			},
+		},
+		{
 			name: "when validation error empty hostname",
 			request: gen.PutNodeNetworkDNSRequestObject{
 				Hostname: "",
@@ -528,6 +611,23 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 			},
 			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "valid_target", "not found"},
+		},
+		{
+			name: "when override_dhcp true in HTTP request",
+			path: "/node/server1/network/dns",
+			body: `{"servers":["1.1.1.1"],"interface_name":"eth0","override_dhcp":true}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					Modify(gomock.Any(), "server1", "network", job.OperationNetworkDNSUpdate, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Changed:  &trueVal,
+					}, nil)
+				return mock
+			},
+			wantCode:     http.StatusAccepted,
+			wantContains: []string{`"results"`, `"agent1"`, `"changed":true`},
 		},
 		{
 			name: "when broadcast all",

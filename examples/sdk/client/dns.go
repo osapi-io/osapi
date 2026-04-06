@@ -64,4 +64,14 @@ func main() {
 		fmt.Printf("  Servers: %v\n", r.Servers)
 		fmt.Printf("  Search:  %v\n", r.SearchDomains)
 	}
+
+	// Delete managed DNS configuration.
+	delResp, err := c.DNS.Delete(ctx, target, iface)
+	if err != nil {
+		log.Fatalf("delete dns: %v", err)
+	}
+
+	for _, r := range delResp.Data.Results {
+		fmt.Printf("Delete DNS (%s): changed=%v\n", r.Hostname, r.Changed)
+	}
 }

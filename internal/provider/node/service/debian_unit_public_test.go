@@ -135,7 +135,7 @@ func (suite *DebianUnitPublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when service unit already exists",
+			name: "when service unit already managed returns unchanged",
 			entry: service.Entry{
 				Name:   "myapp",
 				Object: "myapp-unit",
@@ -151,9 +151,10 @@ func (suite *DebianUnitPublicTestSuite) TestCreate() {
 				result *service.CreateResult,
 				err error,
 			) {
-				suite.Error(err)
-				suite.Nil(result)
-				suite.Contains(err.Error(), "already exists")
+				suite.NoError(err)
+				suite.NotNil(result)
+				suite.Equal("myapp", result.Name)
+				suite.False(result.Changed)
 			},
 		},
 		{
@@ -300,7 +301,7 @@ func (suite *DebianUnitPublicTestSuite) TestUpdate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "does not exist")
+				suite.Contains(err.Error(), "not managed")
 			},
 		},
 		{

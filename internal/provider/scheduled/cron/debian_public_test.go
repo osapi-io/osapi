@@ -143,7 +143,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when entry already exists",
+			name: "when entry already managed returns unchanged",
 			entry: cron.Entry{
 				Name:   "backup",
 				Object: "backup-script",
@@ -159,9 +159,10 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				result *cron.CreateResult,
 				err error,
 			) {
-				suite.Error(err)
-				suite.Nil(result)
-				suite.Contains(err.Error(), "already exists")
+				suite.NoError(err)
+				suite.NotNil(result)
+				suite.Equal("backup", result.Name)
+				suite.False(result.Changed)
 			},
 		},
 		{
@@ -371,7 +372,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "does not exist")
+				suite.Contains(err.Error(), "not managed")
 			},
 		},
 		{

@@ -56,7 +56,7 @@ key from the same KV bucket.
 | --------- | ------------------------------------------------------ |
 | List      | List all OSAPI-managed sysctl parameters               |
 | Get       | Get a specific parameter by key                        |
-| Create    | Create a new drop-in file and apply (fails if exists)  |
+| Create    | Create a new drop-in file and apply (idempotent)       |
 | Update    | Update an existing drop-in file (fails if not managed) |
 | Delete    | Remove the drop-in file                                |
 
@@ -70,7 +70,7 @@ osapi client node sysctl list --target web-01
 osapi client node sysctl get --target web-01 \
   --key net.ipv4.ip_forward
 
-# Create a parameter (fails if already managed)
+# Create a parameter (idempotent: returns unchanged if already managed)
 osapi client node sysctl create --target web-01 \
   --key net.ipv4.ip_forward --value 1
 

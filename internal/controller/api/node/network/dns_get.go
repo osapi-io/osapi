@@ -29,7 +29,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/controller/api/node/network/gen"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/dns"
 )
 
 // GetNodeNetworkDNSByInterface get the node network dns get API endpoint.
@@ -131,7 +131,7 @@ func (s *Network) getNodeNetworkDNSBroadcast(
 		}, nil
 	}
 
-	var apiResponses []gen.DNSConfigResponse
+	apiResponses := make([]gen.DNSConfigResponse, 0, len(responses))
 	for host, resp := range responses {
 		item := gen.DNSConfigResponse{
 			Hostname: host,

@@ -512,6 +512,92 @@ const sidebar: SidebarsConfig = {
           label: "Update DNS servers",
           className: "api-method put",
         },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-network-dns",
+          label: "Delete DNS configuration",
+          className: "api-method delete",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Network/Interface",
+      link: {
+        type: "doc",
+        id: "gen/api/network-management-api-interface-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-network-interface",
+          label: "List network interfaces",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-network-interface-by-name",
+          label: "Get network interface details",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-network-interface",
+          label: "Create interface configuration",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-network-interface",
+          label: "Update interface configuration",
+          className: "api-method put",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-network-interface",
+          label: "Delete interface configuration",
+          className: "api-method delete",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Network/Route",
+      link: {
+        type: "doc",
+        id: "gen/api/network-management-api-route-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-network-route",
+          label: "List network routes",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-network-route-by-interface",
+          label: "Get routes for an interface",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-network-route",
+          label: "Create routes for an interface",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-network-route",
+          label: "Update routes for an interface",
+          className: "api-method put",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-network-route",
+          label: "Delete routes for an interface",
+          className: "api-method delete",
+        },
       ],
     },
     {

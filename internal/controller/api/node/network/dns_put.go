@@ -68,14 +68,27 @@ func (s *Network) PutNodeNetworkDNS(
 		slog.String("target", hostname),
 	)
 
+	overrideDHCP := false
+	if request.Body.OverrideDhcp != nil {
+		overrideDHCP = *request.Body.OverrideDhcp
+	}
+
 	if job.IsBroadcastTarget(hostname) {
-		return s.putNodeNetworkDNSBroadcast(ctx, hostname, servers, searchDomains, interfaceName)
+		return s.putNodeNetworkDNSBroadcast(
+			ctx,
+			hostname,
+			servers,
+			searchDomains,
+			interfaceName,
+			overrideDHCP,
+		)
 	}
 
 	data := map[string]any{
 		"servers":        servers,
 		"search_domains": searchDomains,
 		"interface":      interfaceName,
+		"override_dhcp":  overrideDHCP,
 	}
 	jobID, rawResp, err := s.JobClient.Modify(
 		ctx,
@@ -129,11 +142,13 @@ func (s *Network) putNodeNetworkDNSBroadcast(
 	servers []string,
 	searchDomains []string,
 	interfaceName string,
+	overrideDHCP bool,
 ) (gen.PutNodeNetworkDNSResponseObject, error) {
 	data := map[string]any{
 		"servers":        servers,
 		"search_domains": searchDomains,
 		"interface":      interfaceName,
+		"override_dhcp":  overrideDHCP,
 	}
 	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
@@ -149,7 +164,7 @@ func (s *Network) putNodeNetworkDNSBroadcast(
 		}, nil
 	}
 
-	var apiResponses []gen.DNSUpdateResultItem
+	apiResponses := make([]gen.DNSUpdateResultItem, 0, len(responses))
 	for host, resp := range responses {
 		item := gen.DNSUpdateResultItem{
 			Hostname: host,

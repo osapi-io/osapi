@@ -202,7 +202,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 				s.Equal("server1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Error)
 				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
-				s.Equal(gen.Skipped, r.Results[0].Status)
+				s.Equal(gen.PingResponseStatusSkipped, r.Results[0].Status)
 			},
 		},
 		{
@@ -318,7 +318,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 				s.Equal("server1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Error)
 				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
-				s.Equal(gen.Skipped, r.Results[0].Status)
+				s.Equal(gen.PingResponseStatusSkipped, r.Results[0].Status)
 			},
 		},
 		{
@@ -347,7 +347,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 				s.Equal("server1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Error)
 				s.Equal("permission denied", *r.Results[0].Error)
-				s.Equal(gen.Failed, r.Results[0].Status)
+				s.Equal(gen.PingResponseStatusFailed, r.Results[0].Status)
 			},
 		},
 		{

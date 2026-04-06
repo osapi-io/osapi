@@ -21,8 +21,6 @@
 package load
 
 import (
-	"fmt"
-
 	"github.com/retr0h/osapi/internal/provider"
 )
 
@@ -30,5 +28,5 @@ import (
 // It returns a AverageStats struct with load over 1, 5, and 15 minutes,
 // and an error if something goes wrong.
 func (l *Linux) GetAverageStats() (*Result, error) {
-	return nil, fmt.Errorf("linux: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

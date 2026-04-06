@@ -31,7 +31,7 @@ type Provider interface {
 	List(ctx context.Context) ([]Entry, error)
 	// Get returns a single sysctl entry by key with current runtime value.
 	Get(ctx context.Context, key string) (*Entry, error)
-	// Create deploys a new sysctl conf file and applies it. Fails if already managed.
+	// Create deploys a new sysctl conf file and applies it. Idempotent: returns Changed: false if already managed.
 	Create(ctx context.Context, entry Entry) (*CreateResult, error)
 	// Update redeploys an existing sysctl conf file. Fails if not managed.
 	Update(ctx context.Context, entry Entry) (*UpdateResult, error)

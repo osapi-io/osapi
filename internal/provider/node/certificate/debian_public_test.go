@@ -117,7 +117,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when certificate already exists",
+			name: "when certificate already managed returns unchanged",
 			entry: certificate.Entry{
 				Name:   "my-ca",
 				Object: "my-ca-cert",
@@ -133,9 +133,10 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				result *certificate.CreateResult,
 				err error,
 			) {
-				suite.Error(err)
-				suite.Nil(result)
-				suite.Contains(err.Error(), "already exists")
+				suite.NoError(err)
+				suite.NotNil(result)
+				suite.Equal("my-ca", result.Name)
+				suite.False(result.Changed)
 			},
 		},
 		{

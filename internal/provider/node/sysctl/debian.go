@@ -81,9 +81,8 @@ func NewDebianProvider(
 	}
 }
 
-// Create deploys a new sysctl conf file and applies it. Fails if the
-// key is already managed. Idempotent: if the content hasn't changed
-// since the last deploy, the file is not rewritten and Changed is false.
+// Create deploys a new sysctl conf file and applies it. Idempotent:
+// returns Changed: false if the key is already managed.
 func (d *Debian) Create(
 	ctx context.Context,
 	entry Entry,
@@ -99,16 +98,16 @@ func (d *Debian) Create(
 	confPath := confPath(entry.Key)
 	stateKey := file.BuildStateKey(d.hostname, confPath)
 
-	// Check if already managed: fail if exists and not undeployed.
+	// Already managed — nothing to do.
 	kvEntry, err := d.stateKV.Get(ctx, stateKey)
 	if err == nil {
 		var state job.FileState
 		if unmarshalErr := json.Unmarshal(kvEntry.Value(), &state); unmarshalErr == nil {
 			if state.UndeployedAt == "" {
-				return nil, fmt.Errorf(
-					"sysctl create: key %q already managed",
-					entry.Key,
-				)
+				return &CreateResult{
+					Key:     entry.Key,
+					Changed: false,
+				}, nil
 			}
 		}
 	}

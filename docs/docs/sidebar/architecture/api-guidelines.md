@@ -44,6 +44,9 @@ Sub-resources represent distinct capabilities of the node:
 | `/node/{hostname}/disk`                              | Node        |
 | `/node/{hostname}/memory`                            | Node        |
 | `/node/{hostname}/network/dns/{interfaceName}`       | Network     |
+| `/node/{hostname}/network/interface`                 | Network     |
+| `/node/{hostname}/network/interface/{name}`          | Network     |
+| `/node/{hostname}/network/interface/{name}/route`    | Network     |
 | `/node/{hostname}/command/exec`                      | Command     |
 | `/node/{hostname}/schedule/cron`                     | Schedule    |
 | `/node/{hostname}/schedule/cron/{name}`              | Schedule    |

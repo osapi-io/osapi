@@ -149,6 +149,8 @@ configure them — see the Features section:
 - [Node Management](../features/node-management.md) — hostname, disk, memory,
   load
 - [Network Management](../features/network-management.md) — DNS, ping
+- [Network Interface Management](../features/network-interface-management.md) —
+  interface and route configuration via Netplan
 - [Command Execution](../features/command-execution.md) — exec, shell
 - [File Management](../features/file-management.md) — upload, deploy, templates
 - [Container Management](../features/container-management.md) — Docker

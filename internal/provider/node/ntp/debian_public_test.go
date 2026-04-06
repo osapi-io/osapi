@@ -90,9 +90,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 	tests := []struct {
 		name         string
 		setupMock    func()
-		wantErr      bool
-		wantErrMsg   string
-		validateFunc func(*ntp.Status)
+		validateFunc func(*ntp.Status, error)
 	}{
 		{
 			name: "when successful returns status with servers",
@@ -104,12 +102,14 @@ func (suite *DebianPublicTestSuite) TestGet() {
 					RunCmd("chronyc", []string{"sources", "-c"}).
 					Return(sourcesOutput, nil)
 			},
-			validateFunc: func(s *ntp.Status) {
-				suite.True(s.Synchronized)
-				suite.Equal(3, s.Stratum)
-				suite.Equal("-0.000001834s", s.Offset)
-				suite.Equal("time.cloudflare.com", s.CurrentSource)
-				suite.Equal([]string{"time.cloudflare.com", "ntp.ubuntu.com"}, s.Servers)
+			validateFunc: func(got *ntp.Status, err error) {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(got)
+				suite.True(got.Synchronized)
+				suite.Equal(3, got.Stratum)
+				suite.Equal("-0.000001834s", got.Offset)
+				suite.Equal("time.cloudflare.com", got.CurrentSource)
+				suite.Equal([]string{"time.cloudflare.com", "ntp.ubuntu.com"}, got.Servers)
 			},
 		},
 		{
@@ -135,12 +135,14 @@ Leap status     : Not synchronised`
 					RunCmd("chronyc", []string{"sources", "-c"}).
 					Return("", nil)
 			},
-			validateFunc: func(s *ntp.Status) {
-				suite.False(s.Synchronized)
-				suite.Equal(0, s.Stratum)
-				suite.Equal("+0.000000000s", s.Offset)
-				suite.Empty(s.CurrentSource)
-				suite.Empty(s.Servers)
+			validateFunc: func(got *ntp.Status, err error) {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(got)
+				suite.False(got.Synchronized)
+				suite.Equal(0, got.Stratum)
+				suite.Equal("+0.000000000s", got.Offset)
+				suite.Empty(got.CurrentSource)
+				suite.Empty(got.Servers)
 			},
 		},
 		{
@@ -150,8 +152,11 @@ Leap status     : Not synchronised`
 					RunCmd("chronyc", []string{"tracking"}).
 					Return("", errors.New("command not found"))
 			},
-			wantErr:    true,
-			wantErrMsg: "ntp: chronyc tracking: command not found",
+			validateFunc: func(got *ntp.Status, err error) {
+				suite.Require().Error(err)
+				suite.Nil(got)
+				suite.Contains(err.Error(), "ntp: chronyc tracking: command not found")
+			},
 		},
 		{
 			name: "when chronyc sources fails returns error",
@@ -163,8 +168,11 @@ Leap status     : Not synchronised`
 					RunCmd("chronyc", []string{"sources", "-c"}).
 					Return("", errors.New("connection refused"))
 			},
-			wantErr:    true,
-			wantErrMsg: "ntp: chronyc sources: connection refused",
+			validateFunc: func(got *ntp.Status, err error) {
+				suite.Require().Error(err)
+				suite.Nil(got)
+				suite.Contains(err.Error(), "ntp: chronyc sources: connection refused")
+			},
 		},
 	}
 
@@ -173,21 +181,7 @@ Leap status     : Not synchronised`
 			tc.setupMock()
 
 			got, err := suite.provider.Get(context.Background())
-
-			if tc.wantErr {
-				suite.Error(err)
-				suite.Contains(err.Error(), tc.wantErrMsg)
-				suite.Nil(got)
-
-				return
-			}
-
-			suite.NoError(err)
-			suite.NotNil(got)
-
-			if tc.validateFunc != nil {
-				tc.validateFunc(got)
-			}
+			tc.validateFunc(got, err)
 		})
 	}
 }
@@ -198,9 +192,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 		config       ntp.Config
 		setupFs      func()
 		setupMock    func()
-		wantErr      bool
-		wantErrMsg   string
-		validateFunc func(*ntp.CreateResult)
+		validateFunc func(*ntp.CreateResult, error)
 	}{
 		{
 			name: "when successful creates config file",
@@ -213,11 +205,13 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
 					Return("", nil)
 			},
-			validateFunc: func(r *ntp.CreateResult) {
-				suite.True(r.Changed)
+			validateFunc: func(got *ntp.CreateResult, err error) {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(got)
+				suite.True(got.Changed)
 
-				content, err := suite.memFs.ReadFile(sourcesFile)
-				suite.NoError(err)
+				content, readErr := suite.memFs.ReadFile(sourcesFile)
+				suite.NoError(readErr)
 				suite.Equal(
 					"server 0.pool.ntp.org iburst\nserver 1.pool.ntp.org iburst\n",
 					string(content),
@@ -225,7 +219,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when config already exists returns error",
+			name: "when config already managed returns unchanged",
 			config: ntp.Config{
 				Servers: []string{"0.pool.ntp.org"},
 			},
@@ -233,9 +227,12 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				_ = suite.memFs.MkdirAll(sourcesDir, 0o755)
 				_ = suite.memFs.WriteFile(sourcesFile, []byte("existing"), 0o644)
 			},
-			setupMock:  func() {},
-			wantErr:    true,
-			wantErrMsg: "ntp: config already managed",
+			setupMock: func() {},
+			validateFunc: func(got *ntp.CreateResult, err error) {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(got)
+				suite.False(got.Changed)
+			},
 		},
 		{
 			name: "when mkdir fails returns error",
@@ -263,9 +260,12 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					suite.mockExec,
 				)
 			},
-			setupMock:  func() {},
-			wantErr:    true,
-			wantErrMsg: "ntp: create directory: permission denied",
+			setupMock: func() {},
+			validateFunc: func(got *ntp.CreateResult, err error) {
+				suite.Require().Error(err)
+				suite.Nil(got)
+				suite.Contains(err.Error(), "ntp: create directory: permission denied")
+			},
 		},
 		{
 			name: "when write fails returns error",
@@ -294,9 +294,12 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					suite.mockExec,
 				)
 			},
-			setupMock:  func() {},
-			wantErr:    true,
-			wantErrMsg: "ntp: write file: disk full",
+			setupMock: func() {},
+			validateFunc: func(got *ntp.CreateResult, err error) {
+				suite.Require().Error(err)
+				suite.Nil(got)
+				suite.Contains(err.Error(), "ntp: write file: disk full")
+			},
 		},
 		{
 			name: "when reload fails logs warning but succeeds",
@@ -309,8 +312,10 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
 					Return("", errors.New("chronyc not running"))
 			},
-			validateFunc: func(r *ntp.CreateResult) {
-				suite.True(r.Changed)
+			validateFunc: func(got *ntp.CreateResult, err error) {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(got)
+				suite.True(got.Changed)
 			},
 		},
 	}
@@ -321,21 +326,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			tc.setupMock()
 
 			got, err := suite.provider.Create(context.Background(), tc.config)
-
-			if tc.wantErr {
-				suite.Error(err)
-				suite.Contains(err.Error(), tc.wantErrMsg)
-				suite.Nil(got)
-
-				return
-			}
-
-			suite.NoError(err)
-			suite.NotNil(got)
-
-			if tc.validateFunc != nil {
-				tc.validateFunc(got)
-			}
+			tc.validateFunc(got, err)
 		})
 	}
 }
@@ -346,9 +337,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 		config       ntp.Config
 		setupFs      func()
 		setupMock    func()
-		wantErr      bool
-		wantErrMsg   string
-		validateFunc func(*ntp.UpdateResult)
+		validateFunc func(*ntp.UpdateResult, error)
 	}{
 		{
 			name: "when content changed updates file",
@@ -368,11 +357,13 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
 					Return("", nil)
 			},
-			validateFunc: func(r *ntp.UpdateResult) {
-				suite.True(r.Changed)
+			validateFunc: func(got *ntp.UpdateResult, err error) {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(got)
+				suite.True(got.Changed)
 
-				content, err := suite.memFs.ReadFile(sourcesFile)
-				suite.NoError(err)
+				content, readErr := suite.memFs.ReadFile(sourcesFile)
+				suite.NoError(readErr)
 				suite.Equal(
 					"server time.google.com iburst\nserver time.cloudflare.com iburst\n",
 					string(content),
@@ -393,8 +384,10 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 				)
 			},
 			setupMock: func() {},
-			validateFunc: func(r *ntp.UpdateResult) {
-				suite.False(r.Changed)
+			validateFunc: func(got *ntp.UpdateResult, err error) {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(got)
+				suite.False(got.Changed)
 			},
 		},
 		{
@@ -402,10 +395,13 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			config: ntp.Config{
 				Servers: []string{"0.pool.ntp.org"},
 			},
-			setupFs:    func() {},
-			setupMock:  func() {},
-			wantErr:    true,
-			wantErrMsg: "ntp: config not managed",
+			setupFs:   func() {},
+			setupMock: func() {},
+			validateFunc: func(got *ntp.UpdateResult, err error) {
+				suite.Require().Error(err)
+				suite.Nil(got)
+				suite.Contains(err.Error(), "ntp: config not managed")
+			},
 		},
 		{
 			name: "when write fails returns error",
@@ -445,9 +441,12 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					suite.mockExec,
 				)
 			},
-			setupMock:  func() {},
-			wantErr:    true,
-			wantErrMsg: "ntp: write file: disk full",
+			setupMock: func() {},
+			validateFunc: func(got *ntp.UpdateResult, err error) {
+				suite.Require().Error(err)
+				suite.Nil(got)
+				suite.Contains(err.Error(), "ntp: write file: disk full")
+			},
 		},
 		{
 			name: "when reload fails logs warning but succeeds",
@@ -467,8 +466,10 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
 					Return("", errors.New("chronyc not running"))
 			},
-			validateFunc: func(r *ntp.UpdateResult) {
-				suite.True(r.Changed)
+			validateFunc: func(got *ntp.UpdateResult, err error) {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(got)
+				suite.True(got.Changed)
 			},
 		},
 	}
@@ -479,21 +480,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			tc.setupMock()
 
 			got, err := suite.provider.Update(context.Background(), tc.config)
-
-			if tc.wantErr {
-				suite.Error(err)
-				suite.Contains(err.Error(), tc.wantErrMsg)
-				suite.Nil(got)
-
-				return
-			}
-
-			suite.NoError(err)
-			suite.NotNil(got)
-
-			if tc.validateFunc != nil {
-				tc.validateFunc(got)
-			}
+			tc.validateFunc(got, err)
 		})
 	}
 }
@@ -503,9 +490,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 		name         string
 		setupFs      func()
 		setupMock    func()
-		wantErr      bool
-		wantErrMsg   string
-		validateFunc func(*ntp.DeleteResult)
+		validateFunc func(*ntp.DeleteResult, error)
 	}{
 		{
 			name: "when successful removes config file",
@@ -522,19 +507,24 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
 					Return("", nil)
 			},
-			validateFunc: func(r *ntp.DeleteResult) {
-				suite.True(r.Changed)
+			validateFunc: func(got *ntp.DeleteResult, err error) {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(got)
+				suite.True(got.Changed)
 
-				_, err := suite.memFs.Stat(sourcesFile)
-				suite.Error(err)
+				_, statErr := suite.memFs.Stat(sourcesFile)
+				suite.Error(statErr)
 			},
 		},
 		{
-			name:       "when config not managed returns error",
-			setupFs:    func() {},
-			setupMock:  func() {},
-			wantErr:    true,
-			wantErrMsg: "ntp: config not managed",
+			name:      "when config not managed returns error",
+			setupFs:   func() {},
+			setupMock: func() {},
+			validateFunc: func(got *ntp.DeleteResult, err error) {
+				suite.Require().Error(err)
+				suite.Nil(got)
+				suite.Contains(err.Error(), "ntp: config not managed")
+			},
 		},
 		{
 			name: "when remove fails returns error",
@@ -561,9 +551,12 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 					suite.mockExec,
 				)
 			},
-			setupMock:  func() {},
-			wantErr:    true,
-			wantErrMsg: "ntp: remove file: permission denied",
+			setupMock: func() {},
+			validateFunc: func(got *ntp.DeleteResult, err error) {
+				suite.Require().Error(err)
+				suite.Nil(got)
+				suite.Contains(err.Error(), "ntp: remove file: permission denied")
+			},
 		},
 		{
 			name: "when reload fails logs warning but succeeds",
@@ -580,8 +573,10 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
 					Return("", errors.New("chronyc not running"))
 			},
-			validateFunc: func(r *ntp.DeleteResult) {
-				suite.True(r.Changed)
+			validateFunc: func(got *ntp.DeleteResult, err error) {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(got)
+				suite.True(got.Changed)
 			},
 		},
 	}
@@ -592,21 +587,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			tc.setupMock()
 
 			got, err := suite.provider.Delete(context.Background())
-
-			if tc.wantErr {
-				suite.Error(err)
-				suite.Contains(err.Error(), tc.wantErrMsg)
-				suite.Nil(got)
-
-				return
-			}
-
-			suite.NoError(err)
-			suite.NotNil(got)
-
-			if tc.validateFunc != nil {
-				tc.validateFunc(got)
-			}
+			tc.validateFunc(got, err)
 		})
 	}
 }

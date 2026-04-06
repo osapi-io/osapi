@@ -147,7 +147,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when key already managed returns error",
+			name: "when key already managed returns unchanged",
 			entry: sysctl.Entry{
 				Key:   "net.ipv4.ip_forward",
 				Value: "1",
@@ -169,9 +169,10 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				result *sysctl.CreateResult,
 				err error,
 			) {
-				suite.Error(err)
-				suite.Nil(result)
-				suite.Contains(err.Error(), "already managed")
+				suite.NoError(err)
+				suite.NotNil(result)
+				suite.Equal("net.ipv4.ip_forward", result.Key)
+				suite.False(result.Changed)
 			},
 		},
 		{

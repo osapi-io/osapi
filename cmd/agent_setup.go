@@ -36,8 +36,10 @@ import (
 	"github.com/retr0h/osapi/internal/provider/command"
 	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
+	"github.com/retr0h/osapi/internal/provider/network/netplan/dns"
+	ifaceProv "github.com/retr0h/osapi/internal/provider/network/netplan/iface"
+	routeProv "github.com/retr0h/osapi/internal/provider/network/netplan/route"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	aptProv "github.com/retr0h/osapi/internal/provider/node/apt"
 	certProv "github.com/retr0h/osapi/internal/provider/node/certificate"
@@ -221,6 +223,11 @@ func setupAgent(
 		log, appFs, fileProvider, fileStateKV, execManager, hostname,
 	)
 
+	// --- Netplan providers (interface + route) ---
+	interfaceProvider, routeProvider := createNetplanProviders(
+		log, appFs, fileStateKV, execManager, hostname,
+	)
+
 	// --- Build registry ---
 	registry := agent.NewProviderRegistry()
 
@@ -259,8 +266,13 @@ func setupAgent(
 	)
 
 	registry.Register("network",
-		agent.NewNetworkProcessor(dnsProvider, pingProvider, log),
+		agent.NewNetworkProcessor(
+			dnsProvider, pingProvider,
+			interfaceProvider, routeProvider,
+			log,
+		),
 		dnsProvider, pingProvider, netinfoProvider,
+		interfaceProvider, routeProvider,
 	)
 
 	registry.Register("command",
@@ -650,5 +662,36 @@ func createServiceProvider(
 		return serviceProv.NewDarwinProvider()
 	default:
 		return serviceProv.NewLinuxProvider()
+	}
+}
+
+// createNetplanProviders creates platform-specific Netplan interface and route
+// providers. On Debian, the providers manage /etc/netplan/ configuration files
+// and track state in the file-state KV. On other platforms, all operations
+// return ErrUnsupported.
+func createNetplanProviders(
+	log *slog.Logger,
+	fs avfs.VFS,
+	fileStateKV jetstream.KeyValue,
+	execManager exec.Manager,
+	hostname string,
+) (ifaceProv.Provider, routeProv.Provider) {
+	plat := platform.Detect()
+
+	switch plat {
+	case "debian":
+		if fileStateKV == nil {
+			log.Warn("file state KV not available, netplan operations disabled")
+			return ifaceProv.NewLinuxProvider(), routeProv.NewLinuxProvider()
+		}
+		return ifaceProv.NewDebianProvider(
+				log, fs, fileStateKV, execManager, hostname,
+			), routeProv.NewDebianProvider(
+				log, fs, fileStateKV, execManager, hostname,
+			)
+	case "darwin":
+		return ifaceProv.NewDarwinProvider(), routeProv.NewDarwinProvider()
+	default:
+		return ifaceProv.NewLinuxProvider(), routeProv.NewLinuxProvider()
 	}
 }

@@ -52,6 +52,7 @@ const (
 const (
 	OpNetworkDNSGet    JobOperation = "network.dns.get"
 	OpNetworkDNSUpdate JobOperation = "network.dns.update"
+	OpNetworkDNSDelete JobOperation = "network.dns.delete"
 	OpNetworkPingDo    JobOperation = "network.ping.do"
 )
 
@@ -175,6 +176,24 @@ const (
 	OpCertificateCACreate JobOperation = "certificate.ca.create"
 	OpCertificateCAUpdate JobOperation = "certificate.ca.update"
 	OpCertificateCADelete JobOperation = "certificate.ca.delete"
+)
+
+// Network interface operations.
+const (
+	OpNetworkInterfaceList   JobOperation = "network.interface.list"
+	OpNetworkInterfaceGet    JobOperation = "network.interface.get"
+	OpNetworkInterfaceCreate JobOperation = "network.interface.create"
+	OpNetworkInterfaceUpdate JobOperation = "network.interface.update"
+	OpNetworkInterfaceDelete JobOperation = "network.interface.delete"
+)
+
+// Network route operations.
+const (
+	OpNetworkRouteList   JobOperation = "network.route.list"
+	OpNetworkRouteGet    JobOperation = "network.route.get"
+	OpNetworkRouteCreate JobOperation = "network.route.create"
+	OpNetworkRouteUpdate JobOperation = "network.route.update"
+	OpNetworkRouteDelete JobOperation = "network.route.delete"
 )
 
 // Service operations.

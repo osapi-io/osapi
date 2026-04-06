@@ -54,7 +54,7 @@ Disables a service from starting on boot using `systemctl disable`. Returns
 Deploys a new service unit file to the host. The unit file content must first be
 uploaded to the Object Store. The agent writes the file to
 `/etc/systemd/system/{name}` and runs `systemctl daemon-reload` to pick up the
-new unit. Fails if a unit file with the same name already exists -- use `update`
+new unit. Idempotent: returns `changed: false` if already managed. Use `update`
 to replace it.
 
 ### Update

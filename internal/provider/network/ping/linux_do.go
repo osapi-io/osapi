@@ -21,8 +21,6 @@
 package ping
 
 import (
-	"fmt"
-
 	"github.com/retr0h/osapi/internal/provider"
 )
 
@@ -30,5 +28,5 @@ import (
 func (l *Linux) Do(
 	_ string,
 ) (*Result, error) {
-	return nil, fmt.Errorf("linux: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

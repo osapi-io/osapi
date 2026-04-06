@@ -22,7 +22,6 @@ package process
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
 )
@@ -40,7 +39,7 @@ func NewDarwinProvider() *Darwin {
 func (d *Darwin) List(
 	_ context.Context,
 ) ([]Info, error) {
-	return nil, fmt.Errorf("process: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Get returns ErrUnsupported on Darwin.
@@ -48,7 +47,7 @@ func (d *Darwin) Get(
 	_ context.Context,
 	_ int,
 ) (*Info, error) {
-	return nil, fmt.Errorf("process: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }
 
 // Signal returns ErrUnsupported on Darwin.
@@ -57,5 +56,5 @@ func (d *Darwin) Signal(
 	_ int,
 	_ string,
 ) (*SignalResult, error) {
-	return nil, fmt.Errorf("process: %w", provider.ErrUnsupported)
+	return nil, provider.ErrUnsupported
 }

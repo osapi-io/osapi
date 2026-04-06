@@ -33,10 +33,12 @@ resp, err := client.Hostname.Get(ctx, "_any")
 
 ### Network
 
-| Service                 | Description                        |
-| ----------------------- | ---------------------------------- |
-| [DNS](network/dns.md)   | DNS configuration query and update |
-| [Ping](network/ping.md) | Network ping                       |
+| Service                           | Description                        |
+| --------------------------------- | ---------------------------------- |
+| [DNS](network/dns.md)             | DNS configuration query and update |
+| [Ping](network/ping.md)           | Network ping                       |
+| [Interface](network/interface.md) | Network interface configuration    |
+| [Route](network/route.md)         | Static route configuration         |
 
 ### System Config
 

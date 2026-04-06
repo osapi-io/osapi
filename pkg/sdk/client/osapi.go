@@ -139,6 +139,14 @@ type Client struct {
 	// create, update, delete, start, stop, restart, enable, disable).
 	Service *ServiceService
 
+	// Interface provides network interface management operations (list, get,
+	// create, update, delete).
+	Interface *InterfaceService
+
+	// Route provides network route management operations (list, get,
+	// create, update, delete).
+	Route *RouteService
+
 	httpClient    *gen.ClientWithResponses
 	baseURL       string
 	logger        *slog.Logger
@@ -227,6 +235,8 @@ func New(
 	c.Certificate = &CertificateService{client: httpClient}
 	c.Log = &LogService{client: httpClient}
 	c.Service = &ServiceService{client: httpClient}
+	c.Interface = &InterfaceService{client: httpClient}
+	c.Route = &RouteService{client: httpClient}
 
 	return c
 }

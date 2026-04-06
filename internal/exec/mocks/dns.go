@@ -97,6 +97,7 @@ DNS Domain: old.local
 	mock := NewMockManager(ctrl)
 
 	mockRunCmdStatus(mock, output)
+	mockNetplanStatus(mock)
 	mockNetplanApply(mock, nil, nil)
 
 	return mock
@@ -116,6 +117,7 @@ DNS Domain: example.com local.lan
 	mock := NewMockManager(ctrl)
 
 	mockRunCmdStatus(mock, output)
+	mockNetplanStatus(mock)
 	mockNetplanApply(mock, nil, nil)
 
 	return mock
@@ -135,6 +137,7 @@ DNS Domain: foo.example.com bar.example.com
 	mock := NewMockManager(ctrl)
 
 	mockRunCmdStatus(mock, output)
+	mockNetplanStatus(mock)
 	mockNetplanApply(mock, nil, nil)
 
 	return mock
@@ -153,6 +156,7 @@ DNS Servers: 1.1.1.1 2.2.2.2
 	mock := NewMockManager(ctrl)
 
 	mockRunCmdStatus(mock, output)
+	mockNetplanStatus(mock)
 	mockNetplanApply(mock, nil, nil)
 
 	return mock
@@ -173,6 +177,7 @@ DNS Domain: old.local
 	mock := NewMockManager(ctrl)
 
 	mockRunCmdStatus(mock, output)
+	mockNetplanStatus(mock)
 
 	return mock
 }
@@ -196,6 +201,15 @@ func mockRunCmdStatus(mock *MockManager, output string) {
 	mock.EXPECT().
 		RunCmd(ResolveCommand, []string{"status", NetworkInterfaceName}).
 		Return(output, nil).
+		AnyTimes()
+}
+
+// mockNetplanStatus sets up a mock for `netplan status --format json`.
+func mockNetplanStatus(mock *MockManager) {
+	statusJSON := `{"` + NetworkInterfaceName + `": {"type": "wifi", "macaddress": "b0:a4:60:17:cb:90"}}`
+	mock.EXPECT().
+		RunCmd(NetplanCommand, []string{"status", "--format", "json"}).
+		Return(statusJSON, nil).
 		AnyTimes()
 }
 

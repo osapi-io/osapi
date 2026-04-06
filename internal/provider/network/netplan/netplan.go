@@ -86,7 +86,7 @@ func ApplyConfig(
 	}
 
 	// Write the config file.
-	if writeErr := fs.WriteFile(path, content, 0o644); writeErr != nil {
+	if writeErr := fs.WriteFile(path, content, 0o600); writeErr != nil {
 		return false, fmt.Errorf("netplan apply: write file: %w", writeErr)
 	}
 
@@ -110,7 +110,7 @@ func ApplyConfig(
 	state := job.FileState{
 		Path:       path,
 		SHA256:     sha,
-		Mode:       "0644",
+		Mode:       "0600",
 		DeployedAt: time.Now().UTC().Format(time.RFC3339),
 		Metadata:   metadata,
 	}

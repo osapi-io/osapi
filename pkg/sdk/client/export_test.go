@@ -777,3 +777,105 @@ func LogEntryInfoFromGen(
 ) LogEntry {
 	return logEntryInfoFromGen(input)
 }
+
+// ExportDNSDeleteCollectionFromGen exposes the private
+// dnsDeleteCollectionFromGen for testing.
+func ExportDNSDeleteCollectionFromGen(
+	input *gen.DNSDeleteCollectionResponse,
+) Collection[DNSDeleteResult] {
+	return dnsDeleteCollectionFromGen(input)
+}
+
+// InterfaceInfoFromGen exposes the private interfaceInfoFromGen for testing.
+func InterfaceInfoFromGen(
+	input gen.InterfaceInfo,
+) InterfaceInfo {
+	return interfaceInfoFromGen(input)
+}
+
+// InterfaceListCollectionFromGen exposes the private
+// interfaceListCollectionFromGen for testing.
+func InterfaceListCollectionFromGen(
+	input *gen.InterfaceListResponse,
+) Collection[InterfaceListResult] {
+	return interfaceListCollectionFromGen(input)
+}
+
+// InterfaceGetCollectionFromGen exposes the private
+// interfaceGetCollectionFromGen for testing.
+func InterfaceGetCollectionFromGen(
+	input *gen.InterfaceGetResponse,
+) Collection[InterfaceGetResult] {
+	return interfaceGetCollectionFromGen(input)
+}
+
+// InterfaceMutationCollectionFromCreate exposes the private
+// interfaceMutationCollectionFromCreate for testing.
+func InterfaceMutationCollectionFromCreate(
+	input *gen.InterfaceMutationResponse,
+) Collection[InterfaceMutationResult] {
+	return interfaceMutationCollectionFromCreate(input)
+}
+
+// InterfaceMutationCollectionFromUpdate exposes the private
+// interfaceMutationCollectionFromUpdate for testing.
+func InterfaceMutationCollectionFromUpdate(
+	input *gen.InterfaceMutationResponse,
+) Collection[InterfaceMutationResult] {
+	return interfaceMutationCollectionFromUpdate(input)
+}
+
+// InterfaceMutationCollectionFromDelete exposes the private
+// interfaceMutationCollectionFromDelete for testing.
+func InterfaceMutationCollectionFromDelete(
+	input *gen.InterfaceMutationResponse,
+) Collection[InterfaceMutationResult] {
+	return interfaceMutationCollectionFromDelete(input)
+}
+
+// RouteInfoFromGen exposes the private routeInfoFromGen for testing.
+func RouteInfoFromGen(
+	input gen.RouteInfo,
+) RouteInfo {
+	return routeInfoFromGen(input)
+}
+
+// RouteListCollectionFromGen exposes the private
+// routeListCollectionFromGen for testing.
+func RouteListCollectionFromGen(
+	input *gen.RouteListResponse,
+) Collection[RouteListResult] {
+	return routeListCollectionFromGen(input)
+}
+
+// RouteGetCollectionFromGen exposes the private
+// routeGetCollectionFromGen for testing.
+func RouteGetCollectionFromGen(
+	input *gen.RouteGetResponse,
+) Collection[RouteGetResult] {
+	return routeGetCollectionFromGen(input)
+}
+
+// RouteMutationCollectionFromCreate exposes the private
+// routeMutationCollectionFromCreate for testing.
+func RouteMutationCollectionFromCreate(
+	input *gen.RouteMutationResponse,
+) Collection[RouteMutationResult] {
+	return routeMutationCollectionFromCreate(input)
+}
+
+// RouteMutationCollectionFromUpdate exposes the private
+// routeMutationCollectionFromUpdate for testing.
+func RouteMutationCollectionFromUpdate(
+	input *gen.RouteMutationResponse,
+) Collection[RouteMutationResult] {
+	return routeMutationCollectionFromUpdate(input)
+}
+
+// RouteMutationCollectionFromDelete exposes the private
+// routeMutationCollectionFromDelete for testing.
+func RouteMutationCollectionFromDelete(
+	input *gen.RouteMutationResponse,
+) Collection[RouteMutationResult] {
+	return routeMutationCollectionFromDelete(input)
+}
