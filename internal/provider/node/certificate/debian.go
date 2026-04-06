@@ -95,7 +95,7 @@ func (d *Debian) Create(
 	filePath := certFilePath(entry.Name)
 
 	if _, err := d.fs.Stat(filePath); err == nil {
-		return nil, fmt.Errorf("certificate %q already exists", entry.Name)
+		return nil, fmt.Errorf("certificate %q already managed", entry.Name)
 	}
 
 	result, err := d.fileDeployer.Deploy(ctx, file.DeployRequest{

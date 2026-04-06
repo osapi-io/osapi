@@ -226,7 +226,7 @@ func (suite *InterfacePublicTestSuite) TestList() {
 			validateFunc: func(result []iface.InterfaceEntry, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "netplan interface list:")
+				suite.Contains(err.Error(), "interface list:")
 			},
 		},
 	}
@@ -325,7 +325,7 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 			validateFunc: func(result *iface.InterfaceEntry, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "netplan interface get:")
+				suite.Contains(err.Error(), "interface get:")
 			},
 		},
 	}
@@ -474,7 +474,7 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 			validateFunc: func(result *iface.InterfaceResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "netplan interface create:")
+				suite.Contains(err.Error(), "interface create:")
 			},
 		},
 	}
@@ -604,7 +604,7 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 			validateFunc: func(result *iface.InterfaceResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "netplan interface update:")
+				suite.Contains(err.Error(), "interface update:")
 			},
 		},
 	}
@@ -698,7 +698,7 @@ func (suite *InterfacePublicTestSuite) TestDelete() {
 			validateFunc: func(result *iface.InterfaceResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "netplan interface delete:")
+				suite.Contains(err.Error(), "interface delete:")
 			},
 		},
 	}

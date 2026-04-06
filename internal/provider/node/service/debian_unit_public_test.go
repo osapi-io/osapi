@@ -153,7 +153,7 @@ func (suite *DebianUnitPublicTestSuite) TestCreate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "already exists")
+				suite.Contains(err.Error(), "already managed")
 			},
 		},
 		{
@@ -300,7 +300,7 @@ func (suite *DebianUnitPublicTestSuite) TestUpdate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "does not exist")
+				suite.Contains(err.Error(), "not managed")
 			},
 		},
 		{

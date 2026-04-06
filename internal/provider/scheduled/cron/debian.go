@@ -180,7 +180,7 @@ func (d *Debian) Create(
 
 	// Check ALL directories — name must be unique across cron.d and periodic dirs.
 	if existingPath, _ := d.findEntryPath(entry.Name); existingPath != "" {
-		return nil, fmt.Errorf("cron entry %q already exists", entry.Name)
+		return nil, fmt.Errorf("cron entry %q already managed", entry.Name)
 	}
 
 	filePath, perm := d.entryFilePath(entry)
@@ -214,7 +214,7 @@ func (d *Debian) Update(
 
 	filePath, perm := d.findEntryPath(entry.Name)
 	if filePath == "" {
-		return nil, fmt.Errorf("cron entry %q does not exist", entry.Name)
+		return nil, fmt.Errorf("cron entry %q not managed", entry.Name)
 	}
 
 	// If no new object was specified, preserve the current one.

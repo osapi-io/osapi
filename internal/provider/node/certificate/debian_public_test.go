@@ -135,7 +135,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "already exists")
+				suite.Contains(err.Error(), "already managed")
 			},
 		},
 		{

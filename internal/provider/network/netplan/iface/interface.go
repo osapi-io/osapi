@@ -53,7 +53,7 @@ func (d *Debian) List(
 ) ([]InterfaceEntry, error) {
 	status, err := netplan.GetStatus(d.execManager)
 	if err != nil {
-		return nil, fmt.Errorf("netplan interface list: %w", err)
+		return nil, fmt.Errorf("interface list: %w", err)
 	}
 
 	var result []InterfaceEntry
@@ -100,17 +100,17 @@ func (d *Debian) Get(
 	name string,
 ) (*InterfaceEntry, error) {
 	if name == "" {
-		return nil, fmt.Errorf("netplan interface get: name must not be empty")
+		return nil, fmt.Errorf("interface get: name must not be empty")
 	}
 
 	status, err := netplan.GetStatus(d.execManager)
 	if err != nil {
-		return nil, fmt.Errorf("netplan interface get: %w", err)
+		return nil, fmt.Errorf("interface get: %w", err)
 	}
 
 	iface, ok := status[name]
 	if !ok {
-		return nil, fmt.Errorf("netplan interface %q: not found", name)
+		return nil, fmt.Errorf("interface %q: not found", name)
 	}
 
 	dhcp := iface.IsDHCP()
@@ -140,7 +140,7 @@ func (d *Debian) Create(
 	entry InterfaceEntry,
 ) (*InterfaceResult, error) {
 	if err := ValidateInterfaceName(entry.Name); err != nil {
-		return nil, fmt.Errorf("netplan interface create: %w", err)
+		return nil, fmt.Errorf("interface create: %w", err)
 	}
 
 	path := interfaceFilePath(entry.Name)
@@ -148,7 +148,7 @@ func (d *Debian) Create(
 	// Fail if the managed file already exists on disk.
 	if _, statErr := d.fs.Stat(path); statErr == nil {
 		return nil, fmt.Errorf(
-			"netplan interface create: %q already managed",
+			"interface create: %q already managed",
 			entry.Name,
 		)
 	}
@@ -171,11 +171,11 @@ func (d *Debian) Create(
 		metadata,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("netplan interface create: %w", err)
+		return nil, fmt.Errorf("interface create: %w", err)
 	}
 
 	d.logger.Info(
-		"netplan interface created",
+		"interface created",
 		slog.String("name", entry.Name),
 		slog.Bool("changed", changed),
 	)
@@ -193,7 +193,7 @@ func (d *Debian) Update(
 	entry InterfaceEntry,
 ) (*InterfaceResult, error) {
 	if err := ValidateInterfaceName(entry.Name); err != nil {
-		return nil, fmt.Errorf("netplan interface update: %w", err)
+		return nil, fmt.Errorf("interface update: %w", err)
 	}
 
 	path := interfaceFilePath(entry.Name)
@@ -201,7 +201,7 @@ func (d *Debian) Update(
 	// Fail if the managed file does not exist on disk.
 	if _, statErr := d.fs.Stat(path); statErr != nil {
 		return nil, fmt.Errorf(
-			"netplan interface update: %q not managed",
+			"interface update: %q not managed",
 			entry.Name,
 		)
 	}
@@ -224,11 +224,11 @@ func (d *Debian) Update(
 		metadata,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("netplan interface update: %w", err)
+		return nil, fmt.Errorf("interface update: %w", err)
 	}
 
 	d.logger.Info(
-		"netplan interface updated",
+		"interface updated",
 		slog.String("name", entry.Name),
 		slog.Bool("changed", changed),
 	)
@@ -246,14 +246,14 @@ func (d *Debian) Delete(
 	name string,
 ) (*InterfaceResult, error) {
 	if name == "" {
-		return nil, fmt.Errorf("netplan interface delete: name must not be empty")
+		return nil, fmt.Errorf("interface delete: name must not be empty")
 	}
 
 	path := interfaceFilePath(name)
 
 	if _, err := d.fs.Stat(path); err != nil {
 		return nil, fmt.Errorf(
-			"netplan interface delete: %q not managed",
+			"interface delete: %q not managed",
 			name,
 		)
 	}
@@ -268,12 +268,12 @@ func (d *Debian) Delete(
 		path,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("netplan interface delete: %w", err)
+		return nil, fmt.Errorf("interface delete: %w", err)
 	}
 
 	if changed {
 		d.logger.Info(
-			"netplan interface deleted",
+			"interface deleted",
 			slog.String("name", name),
 		)
 	}

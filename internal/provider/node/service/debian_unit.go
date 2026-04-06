@@ -47,7 +47,7 @@ func (d *Debian) Create(
 	filePath := unitFilePath(entry.Name)
 
 	if _, err := d.fs.Stat(filePath); err == nil {
-		return nil, fmt.Errorf("service unit %q already exists", entry.Name)
+		return nil, fmt.Errorf("service unit %q already managed", entry.Name)
 	}
 
 	d.logger.Debug("creating service unit file",
@@ -88,7 +88,7 @@ func (d *Debian) Update(
 	filePath := unitFilePath(entry.Name)
 
 	if _, err := d.fs.Stat(filePath); err != nil {
-		return nil, fmt.Errorf("service unit %q does not exist", entry.Name)
+		return nil, fmt.Errorf("service unit %q not managed", entry.Name)
 	}
 
 	// If no new object was specified, preserve the current one.
