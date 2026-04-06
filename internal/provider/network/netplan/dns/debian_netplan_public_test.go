@@ -122,16 +122,29 @@ func (suite *DebianNetplanPublicTestSuite) TestGenerateDNSNetplanYAML() {
 				suite.Contains(content, "- 2001:4860:4860::8844")
 			},
 		},
+		{
+			name:          "when overrideDHCP is true adds DHCP overrides",
+			interfaceName: "eth0",
+			servers:       []string{"8.8.8.8"},
+			searchDomains: nil,
+			validateFunc: func(got []byte) {
+				content := string(got)
+				suite.Contains(content, "dhcp4-overrides:")
+				suite.Contains(content, "use-dns: false")
+				suite.Contains(content, "dhcp6-overrides:")
+			},
+		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
+			overrideDHCP := tc.name == "when overrideDHCP is true adds DHCP overrides"
 			got := dns.ExportGenerateDNSNetplanYAML(
 				tc.interfaceName,
 				"ethernets",
 				tc.servers,
 				tc.searchDomains,
-				false,
+				overrideDHCP,
 			)
 
 			tc.validateFunc(got)

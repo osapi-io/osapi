@@ -198,6 +198,27 @@ func (s *DebianDockerPublicTestSuite) TestUpdateResolvConfByInterface() {
 	}
 }
 
+func (s *DebianDockerPublicTestSuite) TestDeleteNetplanConfig() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported for container",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			p := dns.NewDebianDockerProvider(s.logger, s.fs)
+			changed, err := p.DeleteNetplanConfig("eth0")
+
+			s.Error(err)
+			s.False(changed)
+			s.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
 func TestDebianDockerPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(DebianDockerPublicTestSuite))
 }

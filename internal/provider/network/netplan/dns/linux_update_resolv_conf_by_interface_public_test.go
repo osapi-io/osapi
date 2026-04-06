@@ -67,6 +67,27 @@ func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvCo
 	}
 }
 
+func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TestDeleteNetplanConfig() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported on generic Linux",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			linux := dns.NewLinuxProvider()
+
+			changed, err := linux.DeleteNetplanConfig("eth0")
+
+			suite.False(changed)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
 func TestLinuxUpdateResolvConfByInterfacePublicTestSuite(t *testing.T) {

@@ -564,6 +564,140 @@ func (suite *StatusPublicTestSuite) TestInterfaceStatusAddressFamily() {
 	}
 }
 
+func (suite *StatusPublicTestSuite) TestSectionForInterface() {
+	tests := []struct {
+		name         string
+		setup        func()
+		ifaceName    string
+		validateFunc func(string)
+	}{
+		{
+			name: "when interface found returns correct section",
+			setup: func() {
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusJSON, nil)
+			},
+			ifaceName: "wlp0s20f3",
+			validateFunc: func(result string) {
+				suite.Equal("wifis", result)
+			},
+		},
+		{
+			name: "when interface found returns bridges section",
+			setup: func() {
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusJSON, nil)
+			},
+			ifaceName: "cni0",
+			validateFunc: func(result string) {
+				suite.Equal("bridges", result)
+			},
+		},
+		{
+			name: "when interface not found falls back to ethernets",
+			setup: func() {
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusJSON, nil)
+			},
+			ifaceName: "nonexistent0",
+			validateFunc: func(result string) {
+				suite.Equal("ethernets", result)
+			},
+		},
+		{
+			name: "when exec error falls back to ethernets",
+			setup: func() {
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return("", errors.New("command not found"))
+			},
+			ifaceName: "eth0",
+			validateFunc: func(result string) {
+				suite.Equal("ethernets", result)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			tc.setup()
+
+			result := netplan.SectionForInterface(suite.mockExec, tc.ifaceName)
+
+			tc.validateFunc(result)
+		})
+	}
+}
+
+func (suite *StatusPublicTestSuite) TestSectionForType() {
+	tests := []struct {
+		name         string
+		ifaceType    string
+		validateFunc func(string)
+	}{
+		{
+			name:      "when type is wifi returns wifis",
+			ifaceType: "wifi",
+			validateFunc: func(result string) {
+				suite.Equal("wifis", result)
+			},
+		},
+		{
+			name:      "when type is bridge returns bridges",
+			ifaceType: "bridge",
+			validateFunc: func(result string) {
+				suite.Equal("bridges", result)
+			},
+		},
+		{
+			name:      "when type is bond returns bonds",
+			ifaceType: "bond",
+			validateFunc: func(result string) {
+				suite.Equal("bonds", result)
+			},
+		},
+		{
+			name:      "when type is tunnel returns tunnels",
+			ifaceType: "tunnel",
+			validateFunc: func(result string) {
+				suite.Equal("tunnels", result)
+			},
+		},
+		{
+			name:      "when type is vxlan returns tunnels",
+			ifaceType: "vxlan",
+			validateFunc: func(result string) {
+				suite.Equal("tunnels", result)
+			},
+		},
+		{
+			name:      "when type is empty returns ethernets",
+			ifaceType: "",
+			validateFunc: func(result string) {
+				suite.Equal("ethernets", result)
+			},
+		},
+		{
+			name:      "when type is ethernet returns ethernets",
+			ifaceType: "ethernet",
+			validateFunc: func(result string) {
+				suite.Equal("ethernets", result)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result := netplan.SectionForType(tc.ifaceType)
+
+			tc.validateFunc(result)
+		})
+	}
+}
+
 func TestStatusPublicTestSuite(t *testing.T) {
 	t.Parallel()
 

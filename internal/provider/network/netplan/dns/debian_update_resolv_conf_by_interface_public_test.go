@@ -26,6 +26,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -316,6 +317,101 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				suite.NoError(err)
 				suite.NotNil(result)
 				suite.Equal(tc.wantChanged, result.Changed)
+			}
+		})
+	}
+}
+
+func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestDeleteNetplanConfig() {
+	tests := []struct {
+		name        string
+		setupMock   func() (*execmocks.MockManager, *jobmocks.MockKeyValue)
+		setupFS     func(avfs.VFS)
+		wantChanged bool
+		wantErr     bool
+		wantErrMsg  string
+	}{
+		{
+			name: "when file exists and remove succeeds",
+			setupFS: func(fs avfs.VFS) {
+				_ = fs.MkdirAll("/etc/netplan", 0o755)
+				_ = fs.WriteFile(
+					"/etc/netplan/osapi-dns.yaml",
+					[]byte("network:\n  version: 2\n"),
+					0o600,
+				)
+			},
+			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+				mock := execmocks.NewPlainMockManager(suite.ctrl)
+				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+
+				mock.EXPECT().
+					RunPrivilegedCmd("netplan", []string{"apply"}).
+					Return("", nil)
+
+				// KV Get for state cleanup — return not found so
+				// the cleanup branch is skipped cleanly.
+				kv.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found"))
+
+				return mock, kv
+			},
+			wantChanged: true,
+		},
+		{
+			name: "when file does not exist returns not changed",
+			setupFS: func(fs avfs.VFS) {
+				_ = fs.MkdirAll("/etc/netplan", 0o755)
+			},
+			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+				mock := execmocks.NewPlainMockManager(suite.ctrl)
+				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+
+				return mock, kv
+			},
+			wantChanged: false,
+		},
+		{
+			name: "when netplan apply fails",
+			setupFS: func(fs avfs.VFS) {
+				_ = fs.MkdirAll("/etc/netplan", 0o755)
+				_ = fs.WriteFile(
+					"/etc/netplan/osapi-dns.yaml",
+					[]byte("network:\n  version: 2\n"),
+					0o600,
+				)
+			},
+			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+				mock := execmocks.NewPlainMockManager(suite.ctrl)
+				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+
+				mock.EXPECT().
+					RunPrivilegedCmd("netplan", []string{"apply"}).
+					Return("", errors.New("apply failed"))
+
+				return mock, kv
+			},
+			wantErr:    true,
+			wantErrMsg: "dns delete via netplan:",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			mock, kv := tc.setupMock()
+			fs := memfs.New()
+			tc.setupFS(fs)
+
+			net := dns.NewDebianProvider(suite.logger, fs, kv, mock, "test-host")
+			changed, err := net.DeleteNetplanConfig("eth0")
+
+			if tc.wantErr {
+				suite.Error(err)
+				suite.Contains(err.Error(), tc.wantErrMsg)
+			} else {
+				suite.NoError(err)
+				suite.Equal(tc.wantChanged, changed)
 			}
 		})
 	}
