@@ -3430,8 +3430,8 @@ paths:
     post:
       summary: Create NTP configuration
       description: >
-        Deploy a managed NTP server configuration on the target node. Fails if
-        already managed.
+        Deploy a managed NTP server configuration on the target node.
+        Idempotent: returns changed=false if already managed.
       tags:
         - NTP_Management_API_ntp_operations
       operationId: PostNodeNtp
@@ -4912,9 +4912,8 @@ paths:
     post:
       summary: Create a sysctl parameter
       description: >
-        Create a new sysctl kernel parameter on the target node. Fails if the
-        key is already managed. This operation is idempotent — creating the same
-        key and value again results in no change.
+        Create a new sysctl kernel parameter on the target node. Idempotent:
+        returns changed=false if the key is already managed.
       tags:
         - Sysctl_Management_API_sysctl_operations
       operationId: PostNodeSysctl

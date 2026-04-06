@@ -353,11 +353,11 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceCreate() {
 				m := netifMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().
 					Create(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("already managed"))
+					Return(nil, errors.New("deploy failed"))
 				return m
 			},
 			expectError: true,
-			errorMsg:    "already managed",
+			errorMsg:    "deploy failed",
 		},
 	}
 

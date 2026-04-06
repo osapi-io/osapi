@@ -78,7 +78,7 @@ paths:
       summary: Create NTP configuration
       description: >
         Deploy a managed NTP server configuration on the target node.
-        Fails if already managed.
+        Idempotent: returns changed=false if already managed.
       tags:
         - ntp_operations
       operationId: PostNodeNtp

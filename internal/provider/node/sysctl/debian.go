@@ -81,9 +81,8 @@ func NewDebianProvider(
 	}
 }
 
-// Create deploys a new sysctl conf file and applies it. Fails if the
-// key is already managed. Idempotent: if the content hasn't changed
-// since the last deploy, the file is not rewritten and Changed is false.
+// Create deploys a new sysctl conf file and applies it. Idempotent:
+// returns Changed: false if the key is already managed.
 func (d *Debian) Create(
 	ctx context.Context,
 	entry Entry,

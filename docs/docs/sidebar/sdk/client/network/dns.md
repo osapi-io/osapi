@@ -8,11 +8,11 @@ DNS configuration query and update operations.
 
 ## Methods
 
-| Method                                                      | Description                |
-| ----------------------------------------------------------- | -------------------------- |
-| `Get(ctx, target, iface)`                                   | Get DNS config             |
-| `Update(ctx, target, iface, servers, search, overrideDHCP)` | Update DNS servers         |
-| `Delete(ctx, target, iface)`                                | Remove managed DNS config  |
+| Method                                                      | Description               |
+| ----------------------------------------------------------- | ------------------------- |
+| `Get(ctx, target, iface)`                                   | Get DNS config            |
+| `Update(ctx, target, iface, servers, search, overrideDHCP)` | Update DNS servers        |
+| `Delete(ctx, target, iface)`                                | Remove managed DNS config |
 
 ## Usage
 

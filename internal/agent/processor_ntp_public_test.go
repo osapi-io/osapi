@@ -280,11 +280,11 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpCreate() {
 				m := ntpMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().
 					Create(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("config already managed"))
+					Return(nil, errors.New("deploy failed"))
 				return m
 			},
 			expectError: true,
-			errorMsg:    "config already managed",
+			errorMsg:    "deploy failed",
 		},
 	}
 

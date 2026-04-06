@@ -92,7 +92,7 @@ func (d *Debian) Get(
 }
 
 // Create deploys a managed NTP server configuration via a chrony
-// drop-in file. Fails if the config file already exists.
+// drop-in file. Idempotent: returns Changed: false if already managed.
 func (d *Debian) Create(
 	_ context.Context,
 	config Config,

@@ -42,12 +42,12 @@ distribution default.
 
 ## Operations
 
-| Operation | Description                                           |
-| --------- | ----------------------------------------------------- |
-| Get       | Get NTP sync status, stratum, offset, and server list |
-| Create    | Deploy the drop-in file (fails if already managed)    |
-| Update    | Replace the drop-in file (fails if not managed)       |
-| Delete    | Remove the drop-in file and reload chrony             |
+| Operation | Description                                             |
+| --------- | ------------------------------------------------------- |
+| Get       | Get NTP sync status, stratum, offset, and server list   |
+| Create    | Deploy the drop-in file (idempotent if already managed) |
+| Update    | Replace the drop-in file (fails if not managed)         |
+| Delete    | Remove the drop-in file and reload chrony               |
 
 ## CLI Usage
 

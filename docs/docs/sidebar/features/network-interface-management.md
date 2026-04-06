@@ -34,9 +34,9 @@ and state.
 
 **Get** — Returns the configuration of a single interface by name.
 
-**Create** — Writes a new Netplan drop-in file for the interface. Fails if an
-OSAPI-managed configuration for that interface already exists — use `update` to
-replace it. Runs `netplan generate` to validate, then `netplan apply` to
+**Create** — Writes a new Netplan drop-in file for the interface. Idempotent:
+returns `changed: false` if already managed. Use `update` to replace the
+configuration. Runs `netplan generate` to validate, then `netplan apply` to
 activate. Returns `changed: true` if the file was created.
 
 **Update** — Replaces an existing Netplan drop-in file for the interface. Runs
@@ -59,8 +59,8 @@ OSAPI-managed Netplan routes file).
 
 **Create** — Writes a new Netplan drop-in routes file for the interface. Each
 route specifies a destination in CIDR notation, a gateway IP, and an optional
-metric. Fails if an OSAPI-managed routes file for that interface already exists
-— use `update` to replace it. Runs `netplan generate` to validate.
+metric. Idempotent: returns `changed: false` if already managed. Use `update` to
+replace it. Runs `netplan generate` to validate.
 
 **Update** — Replaces an existing OSAPI-managed routes file for the interface.
 Returns `changed: false` if the content is unchanged.

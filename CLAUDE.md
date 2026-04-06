@@ -157,6 +157,26 @@ Every method takes `context.Context` as the first parameter.
 Result types include `Changed bool` for mutations and `Error string`
 for per-operation error reporting.
 
+#### Idempotency (MANDATORY)
+
+All provider mutations follow Ansible-style desired-state semantics.
+Operations MUST be idempotent:
+
+| Operation  | Resource exists       | Resource absent        |
+| ---------- | --------------------- | ---------------------- |
+| **Create** | `Changed: false`, nil | Creates it             |
+| **Update** | Updates it            | Error (not found)      |
+| **Delete** | Removes it            | `Changed: false`, nil  |
+
+- **Create** when the resource already exists returns success with
+  `Changed: false` — the desired state (present) is already met.
+- **Delete** when the resource doesn't exist returns success with
+  `Changed: false` — the desired state (absent) is already met.
+- **Update** when the resource doesn't exist returns an error —
+  there is nothing to update.
+- `ErrUnsupported` (wrong OS family) maps to `StatusSkipped` at
+  the agent layer, which is distinct from `Changed: false`.
+
 Every concrete provider struct MUST embed `provider.FactsAware` and
 include a compile-time check:
 

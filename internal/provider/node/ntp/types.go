@@ -27,7 +27,7 @@ import "context"
 type Provider interface {
 	// Get returns current NTP sync status and configured servers.
 	Get(ctx context.Context) (*Status, error)
-	// Create deploys a managed NTP server configuration. Fails if already managed.
+	// Create deploys a managed NTP server configuration. Idempotent: returns Changed: false if already managed.
 	Create(ctx context.Context, config Config) (*CreateResult, error)
 	// Update replaces the managed NTP server configuration. Fails if not managed.
 	Update(ctx context.Context, config Config) (*UpdateResult, error)
