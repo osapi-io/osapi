@@ -217,6 +217,67 @@ func (suite *InterfacePublicTestSuite) TestList() {
 			},
 		},
 		{
+			name: "when managed interface not in status (down/unlinked)",
+			setup: func() {
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusSingleIface, nil)
+
+				// osapi-eno1.yaml exists but eno1 is not in netplan status.
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/osapi-eno1.yaml",
+					[]byte("network:\n"),
+					0o600,
+				)
+			},
+			validateFunc: func(result []iface.InterfaceEntry, err error) {
+				suite.Require().NoError(err)
+				// eth0 from status + eno1 from managed scan.
+				suite.Require().Len(result, 2)
+
+				// eth0 (index 2) sorts first; eno1 (no index) sorts after.
+				suite.Equal("eth0", result[0].Name)
+				suite.False(result[0].Managed)
+
+				suite.Equal("eno1", result[1].Name)
+				suite.True(result[1].Managed)
+				// Down interfaces have minimal info.
+				suite.Empty(result[1].IPv4)
+				suite.Empty(result[1].MAC)
+			},
+		},
+		{
+			name: "when scan skips route and DNS files",
+			setup: func() {
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusEmpty, nil)
+
+				// Route file should be ignored.
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/osapi-eth0-routes.yaml",
+					[]byte("network:\n"),
+					0o600,
+				)
+				// DNS file should be ignored.
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/osapi-dns.yaml",
+					[]byte("network:\n"),
+					0o600,
+				)
+				// Non-osapi file should be ignored.
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/01-network.yaml",
+					[]byte("network:\n"),
+					0o644,
+				)
+			},
+			validateFunc: func(result []iface.InterfaceEntry, err error) {
+				suite.Require().NoError(err)
+				suite.Empty(result)
+			},
+		},
+		{
 			name: "when netplan status fails",
 			setup: func() {
 				suite.mockExec.EXPECT().
@@ -405,7 +466,7 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when interface already managed",
+			name: "when interface already managed returns unchanged",
 			entry: iface.InterfaceEntry{
 				Name:  "eth0",
 				DHCP4: &dhcp4True,
@@ -419,9 +480,10 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 				)
 			},
 			validateFunc: func(result *iface.InterfaceResult, err error) {
-				suite.Require().Error(err)
-				suite.Nil(result)
-				suite.Contains(err.Error(), "already managed")
+				suite.Require().NoError(err)
+				suite.NotNil(result)
+				suite.Equal("eth0", result.Name)
+				suite.False(result.Changed)
 			},
 		},
 		{
@@ -662,13 +724,14 @@ func (suite *InterfacePublicTestSuite) TestDelete() {
 			},
 		},
 		{
-			name:        "when interface not managed returns error",
+			name:        "when interface not managed returns unchanged",
 			interfaceNm: "eth0",
 			setup:       func() {},
 			validateFunc: func(result *iface.InterfaceResult, err error) {
-				suite.Require().Error(err)
-				suite.Nil(result)
-				suite.Contains(err.Error(), "not managed")
+				suite.Require().NoError(err)
+				suite.Require().NotNil(result)
+				suite.Equal("eth0", result.Name)
+				suite.False(result.Changed)
 			},
 		},
 		{

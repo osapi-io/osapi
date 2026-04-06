@@ -225,7 +225,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when config already exists returns error",
+			name: "when config already managed returns unchanged",
 			config: ntp.Config{
 				Servers: []string{"0.pool.ntp.org"},
 			},
@@ -233,9 +233,10 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				_ = suite.memFs.MkdirAll(sourcesDir, 0o755)
 				_ = suite.memFs.WriteFile(sourcesFile, []byte("existing"), 0o644)
 			},
-			setupMock:  func() {},
-			wantErr:    true,
-			wantErrMsg: "ntp: config already managed",
+			setupMock: func() {},
+			validateFunc: func(r *ntp.CreateResult) {
+				suite.False(r.Changed)
+			},
 		},
 		{
 			name: "when mkdir fails returns error",

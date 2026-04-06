@@ -47,7 +47,10 @@ func (d *Debian) Create(
 	filePath := unitFilePath(entry.Name)
 
 	if _, err := d.fs.Stat(filePath); err == nil {
-		return nil, fmt.Errorf("service unit %q already managed", entry.Name)
+		return &CreateResult{
+			Name:    entry.Name,
+			Changed: false,
+		}, nil
 	}
 
 	d.logger.Debug("creating service unit file",

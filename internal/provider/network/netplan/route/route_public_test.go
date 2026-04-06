@@ -483,7 +483,7 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when route file already exists",
+			name: "when route file already managed returns unchanged",
 			entry: route.Entry{
 				Interface: "eth0",
 				Routes: []route.Route{
@@ -499,9 +499,10 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 				)
 			},
 			validateFunc: func(result *route.Result, err error) {
-				suite.Require().Error(err)
-				suite.Nil(result)
-				suite.Contains(err.Error(), "already managed")
+				suite.Require().NoError(err)
+				suite.NotNil(result)
+				suite.Equal("eth0", result.Interface)
+				suite.False(result.Changed)
 			},
 		},
 		{
@@ -872,13 +873,14 @@ func (suite *RoutePublicTestSuite) TestDelete() {
 			},
 		},
 		{
-			name:        "when routes not managed returns error",
+			name:        "when routes not managed returns unchanged",
 			interfaceNm: "eth0",
 			setup:       func() {},
 			validateFunc: func(result *route.Result, err error) {
-				suite.Require().Error(err)
-				suite.Nil(result)
-				suite.Contains(err.Error(), "not managed")
+				suite.Require().NoError(err)
+				suite.Require().NotNil(result)
+				suite.Equal("eth0", result.Interface)
+				suite.False(result.Changed)
 			},
 		},
 		{

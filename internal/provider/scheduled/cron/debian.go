@@ -178,9 +178,12 @@ func (d *Debian) Create(
 		return nil, err
 	}
 
-	// Check ALL directories — name must be unique across cron.d and periodic dirs.
+	// Already managed — nothing to do.
 	if existingPath, _ := d.findEntryPath(entry.Name); existingPath != "" {
-		return nil, fmt.Errorf("cron entry %q already managed", entry.Name)
+		return &CreateResult{
+			Name:    entry.Name,
+			Changed: false,
+		}, nil
 	}
 
 	filePath, perm := d.entryFilePath(entry)

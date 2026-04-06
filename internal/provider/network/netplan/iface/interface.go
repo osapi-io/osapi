@@ -48,6 +48,9 @@ func interfaceFilePath(
 
 // List returns all network interfaces with a managed flag indicating
 // whether an osapi Netplan config file exists for each interface.
+// Interfaces from netplan status are always included. Additionally,
+// any interface with an osapi-*.yaml file that is not in the status
+// output (e.g., down/unlinked interfaces) is included as managed.
 func (d *Debian) List(
 	_ context.Context,
 ) ([]InterfaceEntry, error) {
@@ -56,6 +59,7 @@ func (d *Debian) List(
 		return nil, fmt.Errorf("interface list: %w", err)
 	}
 
+	seen := make(map[string]bool)
 	var result []InterfaceEntry
 
 	for name, iface := range status {
@@ -63,6 +67,7 @@ func (d *Debian) List(
 			continue
 		}
 
+		seen[name] = true
 		dhcp := iface.IsDHCP()
 
 		entry := InterfaceEntry{
@@ -83,15 +88,85 @@ func (d *Debian) List(
 		result = append(result, entry)
 	}
 
-	// Sort by interface index for stable ordering.
-	sort.Slice(result, func(i, j int) bool {
-		iIdx := status[result[i].Name].Index
-		jIdx := status[result[j].Name].Index
+	// Include managed interfaces that are not in netplan status
+	// (e.g., down or unlinked interfaces with osapi config files).
+	managed := d.scanManagedInterfaces()
+	for _, name := range managed {
+		if seen[name] {
+			continue
+		}
 
-		return iIdx < jIdx
+		result = append(result, InterfaceEntry{
+			Name:    name,
+			Managed: true,
+		})
+	}
+
+	// Sort by interface index for stable ordering. Managed-only
+	// interfaces (not in status) have no index and sort after
+	// status interfaces, ordered by name.
+	sort.Slice(result, func(i, j int) bool {
+		iInStatus := status[result[i].Name].Index > 0
+		jInStatus := status[result[j].Name].Index > 0
+
+		if iInStatus != jInStatus {
+			return iInStatus
+		}
+
+		if iInStatus && jInStatus {
+			return status[result[i].Name].Index < status[result[j].Name].Index
+		}
+
+		return result[i].Name < result[j].Name
 	})
 
 	return result, nil
+}
+
+// scanManagedInterfaces reads /etc/netplan/ for osapi-*.yaml files
+// and returns the interface names extracted from the filenames.
+func (d *Debian) scanManagedInterfaces() []string {
+	dirEntries, err := d.fs.ReadDir(netplanDir)
+	if err != nil {
+		return nil
+	}
+
+	var names []string
+
+	for _, entry := range dirEntries {
+		if entry.IsDir() {
+			continue
+		}
+
+		name := entry.Name()
+		if !strings.HasPrefix(name, interfacePrefix) {
+			continue
+		}
+
+		if !strings.HasSuffix(name, ".yaml") {
+			continue
+		}
+
+		// Extract interface name: "osapi-eno1.yaml" → "eno1"
+		ifaceName := strings.TrimPrefix(name, interfacePrefix)
+		ifaceName = strings.TrimSuffix(ifaceName, ".yaml")
+
+		// Skip non-interface osapi files that share /etc/netplan/:
+		// route files (osapi-{name}-routes.yaml) and DNS
+		// (osapi-dns.yaml).
+		if strings.HasSuffix(ifaceName, "-routes") {
+			continue
+		}
+		if ifaceName == "dns" {
+			continue
+		}
+
+		if ifaceName != "" {
+			names = append(names, ifaceName)
+		}
+	}
+
+	return names
 }
 
 // Get returns a single interface by name with managed status.
@@ -145,12 +220,12 @@ func (d *Debian) Create(
 
 	path := interfaceFilePath(entry.Name)
 
-	// Fail if the managed file already exists on disk.
+	// Already managed — nothing to do.
 	if _, statErr := d.fs.Stat(path); statErr == nil {
-		return nil, fmt.Errorf(
-			"interface create: %q already managed",
-			entry.Name,
-		)
+		return &InterfaceResult{
+			Name:    entry.Name,
+			Changed: false,
+		}, nil
 	}
 
 	ifaceSection := netplan.SectionForInterface(d.execManager, entry.Name)
@@ -240,7 +315,7 @@ func (d *Debian) Update(
 }
 
 // Delete removes a managed Netplan interface configuration file.
-// Returns an error if the interface is not managed by OSAPI.
+// If no managed file exists, returns Changed: false (idempotent).
 func (d *Debian) Delete(
 	ctx context.Context,
 	name string,
@@ -252,10 +327,10 @@ func (d *Debian) Delete(
 	path := interfaceFilePath(name)
 
 	if _, err := d.fs.Stat(path); err != nil {
-		return nil, fmt.Errorf(
-			"interface delete: %q not managed",
-			name,
-		)
+		return &InterfaceResult{
+			Name:    name,
+			Changed: false,
+		}, nil
 	}
 
 	changed, err := netplan.RemoveConfig(

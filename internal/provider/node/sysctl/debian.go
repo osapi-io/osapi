@@ -99,16 +99,16 @@ func (d *Debian) Create(
 	confPath := confPath(entry.Key)
 	stateKey := file.BuildStateKey(d.hostname, confPath)
 
-	// Check if already managed: fail if exists and not undeployed.
+	// Already managed — nothing to do.
 	kvEntry, err := d.stateKV.Get(ctx, stateKey)
 	if err == nil {
 		var state job.FileState
 		if unmarshalErr := json.Unmarshal(kvEntry.Value(), &state); unmarshalErr == nil {
 			if state.UndeployedAt == "" {
-				return nil, fmt.Errorf(
-					"sysctl create: key %q already managed",
-					entry.Key,
-				)
+				return &CreateResult{
+					Key:     entry.Key,
+					Changed: false,
+				}, nil
 			}
 		}
 	}

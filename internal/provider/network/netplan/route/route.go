@@ -224,12 +224,12 @@ func (d *Debian) Create(
 
 	path := routeFilePath(entry.Interface)
 
-	// Fail if the managed file already exists on disk.
+	// Already managed — nothing to do.
 	if _, statErr := d.fs.Stat(path); statErr == nil {
-		return nil, fmt.Errorf(
-			"route create: %q already managed",
-			entry.Interface,
-		)
+		return &Result{
+			Interface: entry.Interface,
+			Changed:   false,
+		}, nil
 	}
 
 	ifaceSection := netplan.SectionForInterface(d.execManager, entry.Interface)
@@ -330,7 +330,7 @@ func (d *Debian) Update(
 }
 
 // Delete removes managed routes for an interface via Netplan.
-// Returns an error if the routes are not managed by OSAPI.
+// If no managed route file exists, returns Changed: false (idempotent).
 func (d *Debian) Delete(
 	ctx context.Context,
 	interfaceName string,
@@ -342,10 +342,10 @@ func (d *Debian) Delete(
 	path := routeFilePath(interfaceName)
 
 	if _, err := d.fs.Stat(path); err != nil {
-		return nil, fmt.Errorf(
-			"route delete: %q not managed",
-			interfaceName,
-		)
+		return &Result{
+			Interface: interfaceName,
+			Changed:   false,
+		}, nil
 	}
 
 	changed, err := netplan.RemoveConfig(

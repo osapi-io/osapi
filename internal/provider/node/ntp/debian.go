@@ -98,7 +98,7 @@ func (d *Debian) Create(
 	config Config,
 ) (*CreateResult, error) {
 	if _, err := d.fs.Stat(sourcesFile); err == nil {
-		return nil, fmt.Errorf("ntp: config already managed")
+		return &CreateResult{Changed: false}, nil
 	}
 
 	content := generateContent(config.Servers)
