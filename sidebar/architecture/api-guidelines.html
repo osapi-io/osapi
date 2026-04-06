@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.5.2">
 <title data-rh="true">API Design Guidelines | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/api-guidelines"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="API Design Guidelines | OSAPI"><meta data-rh="true" name="description" content="1. Top-Level Categories"><meta data-rh="true" property="og:description" content="1. Top-Level Categories"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/api-guidelines"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/api-guidelines" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/api-guidelines" hreflang="x-default"><link rel="stylesheet" href="/osapi/assets/css/styles.bdb8d009.css">
-<script src="/osapi/assets/js/runtime~main.dde7ea18.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.21b047a3.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.a4383c98.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -43,7 +43,8 @@ today. This avoids clutter and keeps each domain cohesive.</p>
 <code>/node/{hostname}</code>. The <code>{hostname}</code> path segment identifies the target and
 accepts literal hostnames, reserved routing values (<code>_any</code>, <code>_all</code>), or label
 selectors (<code>key:value</code>).</p>
-<p>Sub-resources represent distinct capabilities of the node:</p>
+<p>Sub-resources represent distinct capabilities of the node. Examples of the
+nesting patterns used:</p>
 
 
 
@@ -77,151 +78,9 @@ selectors (<code>key:value</code>).</p>
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>Path Pattern</th><th>Domain</th></tr></thead><tbody><tr><td><code>/node/{hostname}</code></td><td>Status</td></tr><tr><td><code>/node/{hostname}/disk</code></td><td>Node</td></tr><tr><td><code>/node/{hostname}/memory</code></td><td>Node</td></tr><tr><td><code>/node/{hostname}/network/dns/{interfaceName}</code></td><td>Network</td></tr><tr><td><code>/node/{hostname}/network/interface</code></td><td>Network</td></tr><tr><td><code>/node/{hostname}/network/interface/{name}</code></td><td>Network</td></tr><tr><td><code>/node/{hostname}/network/interface/{name}/route</code></td><td>Network</td></tr><tr><td><code>/node/{hostname}/command/exec</code></td><td>Command</td></tr><tr><td><code>/node/{hostname}/schedule/cron</code></td><td>Schedule</td></tr><tr><td><code>/node/{hostname}/schedule/cron/{name}</code></td><td>Schedule</td></tr><tr><td><code>/node/{hostname}/sysctl</code></td><td>Sysctl</td></tr><tr><td><code>/node/{hostname}/sysctl/{key}</code></td><td>Sysctl</td></tr><tr><td><code>/node/{hostname}/ntp</code></td><td>NTP</td></tr><tr><td><code>/node/{hostname}/timezone</code></td><td>Timezone</td></tr><tr><td><code>/node/{hostname}/power/reboot</code></td><td>Power</td></tr><tr><td><code>/node/{hostname}/power/shutdown</code></td><td>Power</td></tr><tr><td><code>/node/{hostname}/process</code></td><td>Process</td></tr><tr><td><code>/node/{hostname}/process/{pid}</code></td><td>Process</td></tr><tr><td><code>/node/{hostname}/process/{pid}/signal</code></td><td>Process</td></tr><tr><td><code>/node/{hostname}/user</code></td><td>User</td></tr><tr><td><code>/node/{hostname}/user/{name}</code></td><td>User</td></tr><tr><td><code>/node/{hostname}/user/{name}/password</code></td><td>User</td></tr><tr><td><code>/node/{hostname}/user/{name}/ssh-key</code></td><td>User</td></tr><tr><td><code>/node/{hostname}/user/{name}/ssh-key/{fingerprint}</code></td><td>User</td></tr><tr><td><code>/node/{hostname}/group</code></td><td>Group</td></tr><tr><td><code>/node/{hostname}/group/{name}</code></td><td>Group</td></tr><tr><td><code>/node/{hostname}/package</code></td><td>Package</td></tr><tr><td><code>/node/{hostname}/package/{name}</code></td><td>Package</td></tr><tr><td><code>/node/{hostname}/package/update</code></td><td>Package</td></tr><tr><td><code>/node/{hostname}/package/updates</code></td><td>Package</td></tr><tr><td><code>/node/{hostname}/log</code></td><td>Log</td></tr><tr><td><code>/node/{hostname}/log/source</code></td><td>Log</td></tr><tr><td><code>/node/{hostname}/log/unit/{name}</code></td><td>Log</td></tr><tr><td><code>/node/{hostname}/certificate/ca</code></td><td>Certificate</td></tr><tr><td><code>/node/{hostname}/certificate/ca/{name}</code></td><td>Certificate</td></tr><tr><td><code>/node/{hostname}/service</code></td><td>Service</td></tr><tr><td><code>/node/{hostname}/service/{name}</code></td><td>Service</td></tr><tr><td><code>/node/{hostname}/service/{name}/start</code></td><td>Service</td></tr><tr><td><code>/node/{hostname}/service/{name}/stop</code></td><td>Service</td></tr><tr><td><code>/node/{hostname}/service/{name}/restart</code></td><td>Service</td></tr><tr><td><code>/node/{hostname}/service/{name}/enable</code></td><td>Service</td></tr><tr><td><code>/node/{hostname}/service/{name}/disable</code></td><td>Service</td></tr></tbody></table>
+<table><thead><tr><th>Pattern</th><th>Example</th></tr></thead><tbody><tr><td><code>/node/{hostname}</code></td><td>Node status</td></tr><tr><td><code>/node/{hostname}/{resource}</code></td><td><code>disk</code>, <code>ntp</code></td></tr><tr><td><code>/node/{hostname}/{resource}/{id}</code></td><td><code>sysctl/{key}</code></td></tr><tr><td><code>/node/{hostname}/{domain}/{resource}</code></td><td><code>network/dns</code></td></tr><tr><td><code>/node/{hostname}/{domain}/{resource}/{id}</code></td><td><code>user/{name}</code></td></tr><tr><td><code>/node/{hostname}/{domain}/{resource}/{id}/{action}</code></td><td><code>service/{name}/start</code></td></tr></tbody></table>
+<p>Browse the combined OpenAPI spec (<code>internal/controller/api/gen/api.yaml</code>) or the
+Docusaurus API reference for the full endpoint list.</p>
 <ol start="6">
 <li><strong>Path Parameters Over Query Parameters</strong></li>
 </ol>
