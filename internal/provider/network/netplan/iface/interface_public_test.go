@@ -278,6 +278,77 @@ func (suite *InterfacePublicTestSuite) TestList() {
 			},
 		},
 		{
+			name: "when two managed interfaces not in status sorts by name",
+			setup: func() {
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusEmpty, nil)
+
+				// Create two osapi files out of alphabetical order.
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/osapi-eno2.yaml",
+					[]byte("network:\n"),
+					0o600,
+				)
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/osapi-eno1.yaml",
+					[]byte("network:\n"),
+					0o600,
+				)
+			},
+			validateFunc: func(result []iface.InterfaceEntry, err error) {
+				suite.Require().NoError(err)
+				suite.Require().Len(result, 2)
+
+				// Sorted by name since neither is in status.
+				suite.Equal("eno1", result[0].Name)
+				suite.True(result[0].Managed)
+				suite.Equal("eno2", result[1].Name)
+				suite.True(result[1].Managed)
+			},
+		},
+		{
+			name: "when scan skips directories and non-yaml files",
+			setup: func() {
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusEmpty, nil)
+
+				// Create a directory with osapi prefix.
+				_ = suite.memFs.MkdirAll(
+					"/etc/netplan/osapi-subdir.yaml",
+					0o755,
+				)
+				// Create a non-yaml file with osapi prefix.
+				_ = suite.memFs.WriteFile(
+					"/etc/netplan/osapi-test.txt",
+					[]byte("data"),
+					0o600,
+				)
+			},
+			validateFunc: func(result []iface.InterfaceEntry, err error) {
+				suite.Require().NoError(err)
+				suite.Empty(result)
+			},
+		},
+		{
+			name: "when ReadDir fails still returns status interfaces",
+			setup: func() {
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusSingleIface, nil)
+
+				// Remove the netplan directory so ReadDir fails.
+				_ = suite.memFs.Remove("/etc/netplan")
+			},
+			validateFunc: func(result []iface.InterfaceEntry, err error) {
+				suite.Require().NoError(err)
+				suite.Require().Len(result, 1)
+				suite.Equal("eth0", result[0].Name)
+				suite.False(result[0].Managed)
+			},
+		},
+		{
 			name: "when netplan status fails",
 			setup: func() {
 				suite.mockExec.EXPECT().
