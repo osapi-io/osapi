@@ -36,52 +36,20 @@ All operations that target a managed machine are nested under
 accepts literal hostnames, reserved routing values (`_any`, `_all`), or label
 selectors (`key:value`).
 
-Sub-resources represent distinct capabilities of the node:
+Sub-resources represent distinct capabilities of the node. Examples of the
+nesting patterns used:
 
-| Path Pattern                                         | Domain      |
-| ---------------------------------------------------- | ----------- |
-| `/node/{hostname}`                                   | Status      |
-| `/node/{hostname}/disk`                              | Node        |
-| `/node/{hostname}/memory`                            | Node        |
-| `/node/{hostname}/network/dns/{interfaceName}`       | Network     |
-| `/node/{hostname}/network/interface`                 | Network     |
-| `/node/{hostname}/network/interface/{name}`          | Network     |
-| `/node/{hostname}/network/interface/{name}/route`    | Network     |
-| `/node/{hostname}/command/exec`                      | Command     |
-| `/node/{hostname}/schedule/cron`                     | Schedule    |
-| `/node/{hostname}/schedule/cron/{name}`              | Schedule    |
-| `/node/{hostname}/sysctl`                            | Sysctl      |
-| `/node/{hostname}/sysctl/{key}`                      | Sysctl      |
-| `/node/{hostname}/ntp`                               | NTP         |
-| `/node/{hostname}/timezone`                          | Timezone    |
-| `/node/{hostname}/power/reboot`                      | Power       |
-| `/node/{hostname}/power/shutdown`                    | Power       |
-| `/node/{hostname}/process`                           | Process     |
-| `/node/{hostname}/process/{pid}`                     | Process     |
-| `/node/{hostname}/process/{pid}/signal`              | Process     |
-| `/node/{hostname}/user`                              | User        |
-| `/node/{hostname}/user/{name}`                       | User        |
-| `/node/{hostname}/user/{name}/password`              | User        |
-| `/node/{hostname}/user/{name}/ssh-key`               | User        |
-| `/node/{hostname}/user/{name}/ssh-key/{fingerprint}` | User        |
-| `/node/{hostname}/group`                             | Group       |
-| `/node/{hostname}/group/{name}`                      | Group       |
-| `/node/{hostname}/package`                           | Package     |
-| `/node/{hostname}/package/{name}`                    | Package     |
-| `/node/{hostname}/package/update`                    | Package     |
-| `/node/{hostname}/package/updates`                   | Package     |
-| `/node/{hostname}/log`                               | Log         |
-| `/node/{hostname}/log/source`                        | Log         |
-| `/node/{hostname}/log/unit/{name}`                   | Log         |
-| `/node/{hostname}/certificate/ca`                    | Certificate |
-| `/node/{hostname}/certificate/ca/{name}`             | Certificate |
-| `/node/{hostname}/service`                           | Service     |
-| `/node/{hostname}/service/{name}`                    | Service     |
-| `/node/{hostname}/service/{name}/start`              | Service     |
-| `/node/{hostname}/service/{name}/stop`               | Service     |
-| `/node/{hostname}/service/{name}/restart`            | Service     |
-| `/node/{hostname}/service/{name}/enable`             | Service     |
-| `/node/{hostname}/service/{name}/disable`            | Service     |
+| Pattern                                              | Example                |
+| ---------------------------------------------------- | ---------------------- |
+| `/node/{hostname}`                                   | Node status            |
+| `/node/{hostname}/{resource}`                        | `disk`, `ntp`          |
+| `/node/{hostname}/{resource}/{id}`                   | `sysctl/{key}`         |
+| `/node/{hostname}/{domain}/{resource}`               | `network/dns`          |
+| `/node/{hostname}/{domain}/{resource}/{id}`          | `user/{name}`          |
+| `/node/{hostname}/{domain}/{resource}/{id}/{action}` | `service/{name}/start` |
+
+Browse the combined OpenAPI spec (`internal/controller/api/gen/api.yaml`) or the
+Docusaurus API reference for the full endpoint list.
 
 6. **Path Parameters Over Query Parameters**
 
