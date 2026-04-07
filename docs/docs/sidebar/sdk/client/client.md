@@ -19,52 +19,62 @@ resp, err := client.Hostname.Get(ctx, "_any")
 
 ## Services
 
-### Node Info
+### Services
 
-| Service                           | Description               |
-| --------------------------------- | ------------------------- |
-| [Status](node-info/status.md)     | Full node status          |
-| [Hostname](node-info/hostname.md) | Hostname query and update |
-| [Disk](node-info/disk.md)         | Disk usage                |
-| [Memory](node-info/memory.md)     | Memory statistics         |
-| [Load](node-info/load.md)         | Load averages             |
-| [Uptime](node-info/uptime.md)     | System uptime             |
-| [OS](node-info/os.md)             | Operating system info     |
+| Service                        | Description                  |
+| ------------------------------ | ---------------------------- |
+| [Service](services/service.md) | Service management (systemd) |
+| [Cron](services/cron.md)       | Cron schedule management     |
 
-### Network
+### Software
 
-| Service                           | Description                        |
-| --------------------------------- | ---------------------------------- |
-| [DNS](network/dns.md)             | DNS configuration query and update |
-| [Ping](network/ping.md)           | Network ping                       |
-| [Interface](network/interface.md) | Network interface configuration    |
-| [Route](network/route.md)         | Static route configuration         |
+| Service                        | Description        |
+| ------------------------------ | ------------------ |
+| [Package](software/package.md) | Package management |
 
-### System Config
+### Config
 
-| Service                               | Description                 |
-| ------------------------------------- | --------------------------- |
-| [Sysctl](system-config/sysctl.md)     | Kernel parameter management |
-| [NTP](system-config/ntp.md)           | NTP server configuration    |
-| [Timezone](system-config/timezone.md) | System timezone             |
-| [Package](system-config/package.md)   | Package management          |
+| Service                        | Description                 |
+| ------------------------------ | --------------------------- |
+| [Hostname](config/hostname.md) | Hostname query and update   |
+| [Sysctl](config/sysctl.md)     | Kernel parameter management |
+| [NTP](config/ntp.md)           | NTP server configuration    |
+| [Timezone](config/timezone.md) | System timezone             |
 
-### Operations
+### Node
 
-| Service                          | Description                            |
-| -------------------------------- | -------------------------------------- |
-| [Command](operations/command.md) | Command execution (exec, shell)        |
-| [Power](operations/power.md)     | Power management (reboot, shutdown)    |
-| [Process](operations/process.md) | Process management (list, get, signal) |
-| [Log](operations/log.md)         | Log query (journal entries, by unit)   |
-| [Service](operations/service.md) | Service management (systemd lifecycle) |
+| Service                    | Description                            |
+| -------------------------- | -------------------------------------- |
+| [Power](node/power.md)     | Power management (reboot, shutdown)    |
+| [Process](node/process.md) | Process management (list, get, signal) |
+| [Log](node/log.md)         | Log query (journal entries, by unit)   |
+| [Status](node/status.md)   | Full node status                       |
+| [Load](node/load.md)       | Load averages                          |
+| [Uptime](node/uptime.md)   | System uptime                          |
+| [OS](node/os.md)           | Operating system info                  |
 
-### Containers & Scheduling
+### Networking
 
-| Service                                   | Description              |
-| ----------------------------------------- | ------------------------ |
-| [Docker](containers-scheduling/docker.md) | Container lifecycle      |
-| [Cron](containers-scheduling/cron.md)     | Cron schedule management |
+| Service                              | Description                        |
+| ------------------------------------ | ---------------------------------- |
+| [DNS](networking/dns.md)             | DNS configuration query and update |
+| [Ping](networking/ping.md)           | Network ping                       |
+| [Interface](networking/interface.md) | Network interface configuration    |
+| [Route](networking/route.md)         | Static route configuration         |
+
+### Security
+
+| Service                                | Description               |
+| -------------------------------------- | ------------------------- |
+| [User](security/user.md)               | User account management   |
+| [Group](security/group.md)             | Group management          |
+| [Certificate](security/certificate.md) | CA certificate management |
+
+### Containers
+
+| Service                        | Description         |
+| ------------------------------ | ------------------- |
+| [Docker](containers/docker.md) | Container lifecycle |
 
 ### Files
 
@@ -73,17 +83,42 @@ resp, err := client.Hostname.Get(ctx, "_any")
 | [File](files/file.md)              | File management (Object Store) |
 | [FileDeploy](files/file_deploy.md) | File deployment to agents      |
 
-### Management
+### Command
 
-| Service                                  | Description                    |
-| ---------------------------------------- | ------------------------------ |
-| [Agent](management/agent.md)             | Agent discovery, drain/undrain |
-| [Job](management/job.md)                 | Async job queue operations     |
-| [Health](management/health.md)           | Health check operations        |
-| [Audit](management/audit.md)             | Audit log operations           |
-| [User](management/user.md)               | User account management        |
-| [Group](management/group.md)             | Group management               |
-| [Certificate](management/certificate.md) | CA certificate management      |
+| Service                       | Description                     |
+| ----------------------------- | ------------------------------- |
+| [Command](command/command.md) | Command execution (exec, shell) |
+
+### Hardware
+
+| Service                      | Description       |
+| ---------------------------- | ----------------- |
+| [Disk](hardware/disk.md)     | Disk usage        |
+| [Memory](hardware/memory.md) | Memory statistics |
+
+### Audit
+
+| Service                 | Description          |
+| ----------------------- | -------------------- |
+| [Audit](audit/audit.md) | Audit log operations |
+
+### Jobs
+
+| Service            | Description                |
+| ------------------ | -------------------------- |
+| [Job](jobs/job.md) | Async job queue operations |
+
+### Agent
+
+| Service                 | Description                    |
+| ----------------------- | ------------------------------ |
+| [Agent](agent/agent.md) | Agent discovery, drain/undrain |
+
+### Health
+
+| Service                    | Description             |
+| -------------------------- | ----------------------- |
+| [Health](health/health.md) | Health check operations |
 
 ## Client Options
 

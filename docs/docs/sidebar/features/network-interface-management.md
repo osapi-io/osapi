@@ -219,8 +219,8 @@ included in the `admin` and `write` roles.
   interface commands
 - [CLI Reference](../usage/cli/client/node/network/route/route.md) -- route
   commands
-- [SDK Reference](../sdk/client/network/interface.md) -- Interface service
-- [SDK Reference](../sdk/client/network/route.md) -- Route service
+- [SDK Reference](../sdk/client/networking/interface.md) -- Interface service
+- [SDK Reference](../sdk/client/networking/route.md) -- Route service
 - [Network Management](network-management.md) -- DNS and ping
 - [Platform Detection](../sdk/platform/detection.md) -- OS family detection
 - [Configuration](../usage/configuration.md) -- full configuration reference

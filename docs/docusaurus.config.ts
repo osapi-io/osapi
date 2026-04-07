@@ -241,142 +241,154 @@ const config: Config = {
             {
               type: 'html',
               value:
-                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Node Info</small>',
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Services</small>',
               className: 'dropdown-header'
             },
             {
               type: 'doc',
-              label: 'Status',
-              docId: 'sidebar/sdk/client/node-info/status'
+              label: 'Service',
+              docId: 'sidebar/sdk/client/services/service'
             },
             {
               type: 'doc',
-              label: 'Hostname',
-              docId: 'sidebar/sdk/client/node-info/hostname'
-            },
-            {
-              type: 'doc',
-              label: 'Disk',
-              docId: 'sidebar/sdk/client/node-info/disk'
-            },
-            {
-              type: 'doc',
-              label: 'Memory',
-              docId: 'sidebar/sdk/client/node-info/memory'
-            },
-            {
-              type: 'doc',
-              label: 'Load',
-              docId: 'sidebar/sdk/client/node-info/load'
-            },
-            {
-              type: 'doc',
-              label: 'Uptime',
-              docId: 'sidebar/sdk/client/node-info/uptime'
-            },
-            {
-              type: 'doc',
-              label: 'OS',
-              docId: 'sidebar/sdk/client/node-info/os'
+              label: 'Cron',
+              docId: 'sidebar/sdk/client/services/cron'
             },
             {
               type: 'html',
               value:
-                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Network</small>',
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Software</small>',
+              className: 'dropdown-header'
+            },
+            {
+              type: 'doc',
+              label: 'Package',
+              docId: 'sidebar/sdk/client/software/package'
+            },
+            {
+              type: 'html',
+              value:
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Config</small>',
+              className: 'dropdown-header'
+            },
+            {
+              type: 'doc',
+              label: 'Hostname',
+              docId: 'sidebar/sdk/client/config/hostname'
+            },
+            {
+              type: 'doc',
+              label: 'Sysctl',
+              docId: 'sidebar/sdk/client/config/sysctl'
+            },
+            {
+              type: 'doc',
+              label: 'NTP',
+              docId: 'sidebar/sdk/client/config/ntp'
+            },
+            {
+              type: 'doc',
+              label: 'Timezone',
+              docId: 'sidebar/sdk/client/config/timezone'
+            },
+            {
+              type: 'html',
+              value:
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Node</small>',
+              className: 'dropdown-header'
+            },
+            {
+              type: 'doc',
+              label: 'Power',
+              docId: 'sidebar/sdk/client/node/power'
+            },
+            {
+              type: 'doc',
+              label: 'Process',
+              docId: 'sidebar/sdk/client/node/process'
+            },
+            {
+              type: 'doc',
+              label: 'Log',
+              docId: 'sidebar/sdk/client/node/log'
+            },
+            {
+              type: 'doc',
+              label: 'Status',
+              docId: 'sidebar/sdk/client/node/status'
+            },
+            {
+              type: 'doc',
+              label: 'Load',
+              docId: 'sidebar/sdk/client/node/load'
+            },
+            {
+              type: 'doc',
+              label: 'Uptime',
+              docId: 'sidebar/sdk/client/node/uptime'
+            },
+            {
+              type: 'doc',
+              label: 'OS',
+              docId: 'sidebar/sdk/client/node/os'
+            },
+            {
+              type: 'html',
+              value:
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Networking</small>',
               className: 'dropdown-header'
             },
             {
               type: 'doc',
               label: 'DNS',
-              docId: 'sidebar/sdk/client/network/dns'
+              docId: 'sidebar/sdk/client/networking/dns'
             },
             {
               type: 'doc',
               label: 'Ping',
-              docId: 'sidebar/sdk/client/network/ping'
+              docId: 'sidebar/sdk/client/networking/ping'
             },
             {
               type: 'doc',
               label: 'Interface',
-              docId: 'sidebar/sdk/client/network/interface'
+              docId: 'sidebar/sdk/client/networking/interface'
             },
             {
               type: 'doc',
               label: 'Route',
-              docId: 'sidebar/sdk/client/network/route'
+              docId: 'sidebar/sdk/client/networking/route'
             },
             {
               type: 'html',
               value:
-                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">System Config</small>',
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Security</small>',
               className: 'dropdown-header'
             },
             {
               type: 'doc',
-              label: 'Sysctl',
-              docId: 'sidebar/sdk/client/system-config/sysctl'
+              label: 'User',
+              docId: 'sidebar/sdk/client/security/user'
             },
             {
               type: 'doc',
-              label: 'NTP',
-              docId: 'sidebar/sdk/client/system-config/ntp'
+              label: 'Group',
+              docId: 'sidebar/sdk/client/security/group'
             },
             {
               type: 'doc',
-              label: 'Timezone',
-              docId: 'sidebar/sdk/client/system-config/timezone'
-            },
-            {
-              type: 'doc',
-              label: 'Package',
-              docId: 'sidebar/sdk/client/system-config/package'
+              label: 'Certificate',
+              docId: 'sidebar/sdk/client/security/certificate'
             },
             {
               type: 'html',
               value:
-                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Operations</small>',
-              className: 'dropdown-header'
-            },
-            {
-              type: 'doc',
-              label: 'Command',
-              docId: 'sidebar/sdk/client/operations/command'
-            },
-            {
-              type: 'doc',
-              label: 'Power',
-              docId: 'sidebar/sdk/client/operations/power'
-            },
-            {
-              type: 'doc',
-              label: 'Process',
-              docId: 'sidebar/sdk/client/operations/process'
-            },
-            {
-              type: 'doc',
-              label: 'Log',
-              docId: 'sidebar/sdk/client/operations/log'
-            },
-            {
-              type: 'doc',
-              label: 'Service',
-              docId: 'sidebar/sdk/client/operations/service'
-            },
-            {
-              type: 'html',
-              value:
-                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Containers & Scheduling</small>',
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Containers</small>',
               className: 'dropdown-header'
             },
             {
               type: 'doc',
               label: 'Docker',
-              docId: 'sidebar/sdk/client/containers-scheduling/docker'
-            },
-            {
-              type: 'doc',
-              label: 'Cron',
-              docId: 'sidebar/sdk/client/containers-scheduling/cron'
+              docId: 'sidebar/sdk/client/containers/docker'
             },
             {
               type: 'html',
@@ -397,43 +409,73 @@ const config: Config = {
             {
               type: 'html',
               value:
-                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Management</small>',
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Command</small>',
+              className: 'dropdown-header'
+            },
+            {
+              type: 'doc',
+              label: 'Command',
+              docId: 'sidebar/sdk/client/command/command'
+            },
+            {
+              type: 'html',
+              value:
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Hardware</small>',
+              className: 'dropdown-header'
+            },
+            {
+              type: 'doc',
+              label: 'Disk',
+              docId: 'sidebar/sdk/client/hardware/disk'
+            },
+            {
+              type: 'doc',
+              label: 'Memory',
+              docId: 'sidebar/sdk/client/hardware/memory'
+            },
+            {
+              type: 'html',
+              value:
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Audit</small>',
+              className: 'dropdown-header'
+            },
+            {
+              type: 'doc',
+              label: 'Audit',
+              docId: 'sidebar/sdk/client/audit/audit'
+            },
+            {
+              type: 'html',
+              value:
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Jobs</small>',
+              className: 'dropdown-header'
+            },
+            {
+              type: 'doc',
+              label: 'Job',
+              docId: 'sidebar/sdk/client/jobs/job'
+            },
+            {
+              type: 'html',
+              value:
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Agent</small>',
               className: 'dropdown-header'
             },
             {
               type: 'doc',
               label: 'Agent',
-              docId: 'sidebar/sdk/client/management/agent'
+              docId: 'sidebar/sdk/client/agent/agent'
             },
             {
-              type: 'doc',
-              label: 'Job',
-              docId: 'sidebar/sdk/client/management/job'
+              type: 'html',
+              value:
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Health</small>',
+              className: 'dropdown-header'
             },
             {
               type: 'doc',
               label: 'Health',
-              docId: 'sidebar/sdk/client/management/health'
-            },
-            {
-              type: 'doc',
-              label: 'Audit',
-              docId: 'sidebar/sdk/client/management/audit'
-            },
-            {
-              type: 'doc',
-              label: 'User',
-              docId: 'sidebar/sdk/client/management/user'
-            },
-            {
-              type: 'doc',
-              label: 'Group',
-              docId: 'sidebar/sdk/client/management/group'
-            },
-            {
-              type: 'doc',
-              label: 'Certificate',
-              docId: 'sidebar/sdk/client/management/certificate'
+              docId: 'sidebar/sdk/client/health/health'
             },
             {
               type: 'html',

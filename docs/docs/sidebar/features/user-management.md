@@ -153,5 +153,5 @@ message.
 - [CLI Reference -- User](../usage/cli/client/node/user/user.md)
 - [CLI Reference -- SSH Key](../usage/cli/client/node/user/ssh-key.md)
 - [CLI Reference -- Group](../usage/cli/client/node/group/group.md)
-- [SDK -- User](../sdk/client/management/user.md)
-- [SDK -- Group](../sdk/client/management/group.md)
+- [SDK -- User](../sdk/client/security/user.md)
+- [SDK -- Group](../sdk/client/security/group.md)

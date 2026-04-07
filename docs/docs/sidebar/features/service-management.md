@@ -178,6 +178,6 @@ roles (`admin`, `write`, `read`). Mutation and action operations require
 
 - [CLI Reference](../usage/cli/client/node/service/service.md) -- service
   commands
-- [SDK Reference](../sdk/client/operations/service.md) -- Service service
+- [SDK Reference](../sdk/client/services/service.md) -- Service service
 - [Platform Detection](../sdk/platform/detection.md) -- OS family detection
 - [Configuration](../usage/configuration.md) -- full configuration reference
