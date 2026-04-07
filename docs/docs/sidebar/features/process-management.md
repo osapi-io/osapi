@@ -104,6 +104,6 @@ role by default.
 
 - [CLI Reference](../usage/cli/client/node/process/process.md) -- process
   commands
-- [SDK Reference](../sdk/client/operations/process.md) -- Process service
+- [SDK Reference](../sdk/client/node/process.md) -- Process service
 - [Platform Detection](../sdk/platform/detection.md) -- OS family detection
 - [Configuration](../usage/configuration.md) -- full configuration reference

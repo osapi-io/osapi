@@ -111,6 +111,6 @@ Log querying requires `log:read`, included in all built-in roles (`admin`,
 ## Related
 
 - [CLI Reference](../usage/cli/client/node/log/log.md) -- log commands
-- [SDK Reference](../sdk/client/operations/log.md) -- Log service
+- [SDK Reference](../sdk/client/node/log.md) -- Log service
 - [Platform Detection](../sdk/platform/detection.md) -- OS family detection
 - [Configuration](../usage/configuration.md) -- full configuration reference
