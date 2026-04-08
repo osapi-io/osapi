@@ -8,14 +8,13 @@ controller:
       bearer_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJvc2FwaSIsInN1YiI6ImpvaG5AZGV3ZXkud3MiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiLCJodHRwOi8vbG9jYWxob3N0Il0sImV4cCI6MTc3ODk2MjI3MiwiaWF0IjoxNzcxMjc2MjcyfQ.G_Ezc7J1lGPQdAtWumObuCFMMi4zPIErNk7dD__66Rk
   api:
     port: 8080
+    ui:
+      enabled: true
     security:
       # openssl rand -hex 32
       signing_key: 111fdb0cfd9788fa6af8815f856a0374bf7a0174ad62fa8b98ec07a55f68d8d8
       cors:
-        allow_origins:
-          - http://localhost:3001
-          - https://osapi-io.github.io
-          - http://localhost:5173
+        allow_origins: []
       # Custom roles with fine-grained permissions.
       # Built-in roles (admin, write, read) expand to default permissions
       # unless overridden here. Permissions use resource:verb format.
