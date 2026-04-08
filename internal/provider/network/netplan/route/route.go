@@ -27,7 +27,6 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/provider/network/netplan"
 	"github.com/retr0h/osapi/internal/provider/network/netplan/iface"
@@ -63,14 +62,12 @@ func routeFilePath(
 // kernel-internal entries (local, broadcast, anycast, multicast types
 // and host-scoped routes).
 func (d *Debian) List(
-	ctx context.Context,
+	_ context.Context,
 ) ([]ListEntry, error) {
 	status, err := netplan.GetStatus(d.execManager)
 	if err != nil {
 		return nil, fmt.Errorf("route list: %w", err)
 	}
-
-	managedRoutes := d.loadManagedRoutes(ctx)
 
 	var result []ListEntry
 
@@ -80,81 +77,16 @@ func (d *Debian) List(
 				continue
 			}
 
-			managed := false
-			if routes, ok := managedRoutes[ifaceName]; ok {
-				for _, mr := range routes {
-					if mr.To == r.To {
-						managed = true
-
-						break
-					}
-				}
-			}
-
 			result = append(result, ListEntry{
 				Destination: r.To,
 				Gateway:     r.Via,
 				Interface:   ifaceName,
 				Metric:      r.Metric,
-				Managed:     managed,
 			})
 		}
 	}
 
 	return result, nil
-}
-
-// loadManagedRoutes reads managed route entries from the state KV.
-func (d *Debian) loadManagedRoutes(
-	ctx context.Context,
-) map[string][]Route {
-	result := make(map[string][]Route)
-
-	keys, err := d.stateKV.Keys(ctx)
-	if err != nil {
-		return result
-	}
-
-	for _, key := range keys {
-		entry, getErr := d.stateKV.Get(ctx, key)
-		if getErr != nil {
-			continue
-		}
-
-		var state job.FileState
-		if unmarshalErr := json.Unmarshal(
-			entry.Value(),
-			&state,
-		); unmarshalErr != nil {
-			continue
-		}
-
-		if state.UndeployedAt != "" {
-			continue
-		}
-
-		ifaceName, ok := state.Metadata["interface"]
-		if !ok {
-			continue
-		}
-
-		routesJSON, ok := state.Metadata["routes"]
-		if !ok {
-			continue
-		}
-
-		var routes []Route
-		if unmarshalErr := json.Unmarshal(
-			[]byte(routesJSON),
-			&routes,
-		); unmarshalErr != nil {
-			continue
-		}
-
-		result[ifaceName] = routes
-	}
-
-	return result
 }
 
 // Get returns the managed routes for a specific interface by reading

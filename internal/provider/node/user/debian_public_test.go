@@ -119,6 +119,18 @@ func (suite *DebianPublicTestSuite) TestListUsers() {
 			passwd: passwdContent,
 			setup: func() {
 				suite.mockExec.EXPECT().
+					RunCmd("id", []string{"-Gn", "root"}).
+					Return("root", nil)
+				suite.mockExec.EXPECT().
+					RunCmd("passwd", []string{"-S", "root"}).
+					Return("root P 01/01/2026 0 99999 7 -1", nil)
+				suite.mockExec.EXPECT().
+					RunCmd("id", []string{"-Gn", "daemon"}).
+					Return("daemon", nil)
+				suite.mockExec.EXPECT().
+					RunCmd("passwd", []string{"-S", "daemon"}).
+					Return("daemon L 01/01/2026 0 99999 7 -1", nil)
+				suite.mockExec.EXPECT().
 					RunCmd("id", []string{"-Gn", "john"}).
 					Return("john sudo docker", nil)
 				suite.mockExec.EXPECT().
@@ -133,19 +145,31 @@ func (suite *DebianPublicTestSuite) TestListUsers() {
 			},
 			validateFunc: func(result []user.User, err error) {
 				suite.NoError(err)
-				suite.Require().Len(result, 2)
+				suite.Require().Len(result, 4)
 
-				suite.Equal("john", result[0].Name)
-				suite.Equal(1000, result[0].UID)
-				suite.Equal(1000, result[0].GID)
-				suite.Equal("/home/john", result[0].Home)
+				suite.Equal("root", result[0].Name)
+				suite.Equal(0, result[0].UID)
+				suite.Equal(0, result[0].GID)
+				suite.Equal("/root", result[0].Home)
 				suite.Equal("/bin/bash", result[0].Shell)
-				suite.Equal([]string{"john", "sudo", "docker"}, result[0].Groups)
+				suite.Equal([]string{"root"}, result[0].Groups)
 				suite.False(result[0].Locked)
 
-				suite.Equal("jane", result[1].Name)
-				suite.Equal(1001, result[1].UID)
+				suite.Equal("daemon", result[1].Name)
+				suite.Equal(1, result[1].UID)
 				suite.True(result[1].Locked)
+
+				suite.Equal("john", result[2].Name)
+				suite.Equal(1000, result[2].UID)
+				suite.Equal(1000, result[2].GID)
+				suite.Equal("/home/john", result[2].Home)
+				suite.Equal("/bin/bash", result[2].Shell)
+				suite.Equal([]string{"john", "sudo", "docker"}, result[2].Groups)
+				suite.False(result[2].Locked)
+
+				suite.Equal("jane", result[3].Name)
+				suite.Equal(1001, result[3].UID)
+				suite.True(result[3].Locked)
 			},
 		},
 		{
@@ -159,12 +183,21 @@ func (suite *DebianPublicTestSuite) TestListUsers() {
 			},
 		},
 		{
-			name:   "when no non-system users",
+			name:   "when only root exists",
 			passwd: "root:x:0:0:root:/root:/bin/bash\n",
-			setup:  func() {},
+			setup: func() {
+				suite.mockExec.EXPECT().
+					RunCmd("id", []string{"-Gn", "root"}).
+					Return("root", nil)
+				suite.mockExec.EXPECT().
+					RunCmd("passwd", []string{"-S", "root"}).
+					Return("root P 01/01/2026 0 99999 7 -1", nil)
+			},
 			validateFunc: func(result []user.User, err error) {
 				suite.NoError(err)
-				suite.Empty(result)
+				suite.Require().Len(result, 1)
+				suite.Equal("root", result[0].Name)
+				suite.Equal(0, result[0].UID)
 			},
 		},
 		{

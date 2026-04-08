@@ -1874,9 +1874,6 @@ type InterfaceInfo struct {
 	// MacAddress Configured MAC address override.
 	MacAddress *string `json:"mac_address,omitempty"`
 
-	// Managed Whether the interface is managed by OSAPI.
-	Managed *bool `json:"managed,omitempty"`
-
 	// Mtu Maximum transmission unit.
 	Mtu *int `json:"mtu,omitempty"`
 
@@ -2773,9 +2770,6 @@ type RouteInfo struct {
 
 	// Interface Network interface name.
 	Interface *string `json:"interface,omitempty"`
-
-	// Managed Whether this route is managed by OSAPI.
-	Managed *bool `json:"managed,omitempty"`
 
 	// Metric Route metric (priority).
 	Metric *int `json:"metric,omitempty"`

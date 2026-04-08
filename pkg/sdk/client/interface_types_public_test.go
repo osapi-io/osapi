@@ -51,7 +51,6 @@ func (suite *InterfaceTypesPublicTestSuite) TestInterfaceInfoFromGen() {
 				mtu := 1500
 				mac := "00:11:22:33:44:55"
 				wol := true
-				managed := true
 				state := "up"
 				addrs := []string{"192.168.1.10/24", "10.0.0.1/8"}
 
@@ -64,7 +63,6 @@ func (suite *InterfaceTypesPublicTestSuite) TestInterfaceInfoFromGen() {
 					Mtu:        &mtu,
 					MacAddress: &mac,
 					Wakeonlan:  &wol,
-					Managed:    &managed,
 					State:      &state,
 					Addresses:  &addrs,
 				}
@@ -78,7 +76,6 @@ func (suite *InterfaceTypesPublicTestSuite) TestInterfaceInfoFromGen() {
 				suite.Equal(1500, info.MTU)
 				suite.Equal("00:11:22:33:44:55", info.MACAddress)
 				suite.True(info.WakeOnLAN)
-				suite.True(info.Managed)
 				suite.Equal("up", info.State)
 				suite.Equal([]string{"192.168.1.10/24", "10.0.0.1/8"}, info.Addresses)
 			},
@@ -95,7 +92,6 @@ func (suite *InterfaceTypesPublicTestSuite) TestInterfaceInfoFromGen() {
 				suite.Zero(info.MTU)
 				suite.Empty(info.MACAddress)
 				suite.False(info.WakeOnLAN)
-				suite.False(info.Managed)
 				suite.Empty(info.State)
 				suite.Nil(info.Addresses)
 			},

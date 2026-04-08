@@ -8560,9 +8560,6 @@ components:
         primary:
           type: boolean
           description: Whether this is the primary (default route) interface.
-        managed:
-          type: boolean
-          description: Whether the interface is managed by OSAPI.
     InterfaceListEntry:
       type: object
       description: Interface list result for a single agent.
@@ -8736,9 +8733,6 @@ components:
           type: integer
           description: Route metric (priority).
           example: 100
-        managed:
-          type: boolean
-          description: Whether this route is managed by OSAPI.
         scope:
           type: string
           description: Route scope.

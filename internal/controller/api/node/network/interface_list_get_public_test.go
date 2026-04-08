@@ -81,7 +81,7 @@ func (s *NetworkInterfaceListGetPublicTestSuite) TearDownTest() {
 func (s *NetworkInterfaceListGetPublicTestSuite) TestGetNodeNetworkInterface() {
 	trueVal := true
 	entries := []iface.InterfaceEntry{
-		{Name: "eth0", DHCP4: &trueVal, Managed: true},
+		{Name: "eth0", DHCP4: &trueVal},
 	}
 	entryData, _ := json.Marshal(entries)
 
@@ -352,11 +352,9 @@ func (s *NetworkInterfaceListGetPublicTestSuite) TestGetNodeNetworkInterface() {
 						MTU:        1500,
 						MACAddress: "00:11:22:33:44:55",
 						WakeOnLAN:  &trueVal,
-						Managed:    true,
 					},
 					{
-						Name:    "lo",
-						Managed: false,
+						Name: "lo",
 					},
 				}
 				data, _ := json.Marshal(fullEntries)
@@ -403,7 +401,6 @@ func (s *NetworkInterfaceListGetPublicTestSuite) TestGetNodeNetworkInterface() {
 				s.Equal("00:11:22:33:44:55", *ifaces[0].MacAddress)
 				s.Require().NotNil(ifaces[0].Wakeonlan)
 				s.True(*ifaces[0].Wakeonlan)
-				s.True(*ifaces[0].Managed)
 
 				// Second entry has no optional fields.
 				s.Equal("lo", *ifaces[1].Name)
@@ -430,7 +427,7 @@ func (s *NetworkInterfaceListGetPublicTestSuite) TestGetNodeNetworkInterface() {
 func (s *NetworkInterfaceListGetPublicTestSuite) TestGetNetworkInterfaceListValidationHTTP() {
 	trueVal := true
 	entries := []iface.InterfaceEntry{
-		{Name: "eth0", DHCP4: &trueVal, Managed: true},
+		{Name: "eth0", DHCP4: &trueVal},
 	}
 	entryData, _ := json.Marshal(entries)
 
@@ -501,7 +498,7 @@ func (s *NetworkInterfaceListGetPublicTestSuite) TestGetNetworkInterfaceListRBAC
 	tokenManager := authtoken.New(s.logger)
 	trueVal := true
 	entries := []iface.InterfaceEntry{
-		{Name: "eth0", DHCP4: &trueVal, Managed: true},
+		{Name: "eth0", DHCP4: &trueVal},
 	}
 	entryData, _ := json.Marshal(entries)
 

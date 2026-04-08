@@ -63,8 +63,8 @@ func main() {
 			continue
 		}
 		for _, iface := range r.Interfaces {
-			fmt.Printf("  %s: %s managed=%v state=%s\n",
-				r.Hostname, iface.Name, iface.Managed, iface.State)
+			fmt.Printf("  %s: %s state=%s\n",
+				r.Hostname, iface.Name, iface.State)
 		}
 	}
 

@@ -74,7 +74,6 @@ var clientNodeNetworkInterfaceGetCmd = &cobra.Command{
 				cli.PrintKV("MTU", fmt.Sprintf("%d", iface.MTU))
 				cli.PrintKV("MAC Address", iface.MACAddress)
 				cli.PrintKV("Wake-on-LAN", fmt.Sprintf("%t", iface.WakeOnLAN))
-				cli.PrintKV("Managed", fmt.Sprintf("%t", iface.Managed))
 				cli.PrintKV("State", iface.State)
 			}
 		}

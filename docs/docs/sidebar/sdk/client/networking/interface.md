@@ -35,19 +35,18 @@ Network interface configuration management via Netplan.
 
 ### InterfaceInfo
 
-| Field        | Type       | Description                          |
-| ------------ | ---------- | ------------------------------------ |
-| `Name`       | `string`   | Interface name                       |
-| `DHCP4`      | `bool`     | Whether DHCPv4 is enabled            |
-| `DHCP6`      | `bool`     | Whether DHCPv6 is enabled            |
-| `Addresses`  | `[]string` | IP addresses in CIDR notation        |
-| `Gateway4`   | `string`   | IPv4 gateway address                 |
-| `Gateway6`   | `string`   | IPv6 gateway address                 |
-| `MTU`        | `int`      | Maximum transmission unit            |
-| `MACAddress` | `string`   | Hardware MAC address                 |
-| `WakeOnLAN`  | `bool`     | Whether Wake-on-LAN is enabled       |
-| `Managed`    | `bool`     | Whether OSAPI manages this interface |
-| `State`      | `string`   | Interface state (up, down)           |
+| Field        | Type       | Description                    |
+| ------------ | ---------- | ------------------------------ |
+| `Name`       | `string`   | Interface name                 |
+| `DHCP4`      | `bool`     | Whether DHCPv4 is enabled      |
+| `DHCP6`      | `bool`     | Whether DHCPv6 is enabled      |
+| `Addresses`  | `[]string` | IP addresses in CIDR notation  |
+| `Gateway4`   | `string`   | IPv4 gateway address           |
+| `Gateway6`   | `string`   | IPv6 gateway address           |
+| `MTU`        | `int`      | Maximum transmission unit      |
+| `MACAddress` | `string`   | Hardware MAC address           |
+| `WakeOnLAN`  | `bool`     | Whether Wake-on-LAN is enabled |
+| `State`      | `string`   | Interface state (up, down)     |
 
 ### InterfaceGetResult (Get)
 
@@ -79,8 +78,8 @@ c := client.New("http://localhost:8080", token)
 resp, err := c.Interface.List(ctx, "web-01")
 for _, r := range resp.Data.Results {
     for _, iface := range r.Interfaces {
-        fmt.Printf("%s: managed=%v state=%s\n",
-            iface.Name, iface.Managed, iface.State)
+        fmt.Printf("%s: state=%s\n",
+            iface.Name, iface.State)
     }
 }
 

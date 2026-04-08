@@ -40,7 +40,6 @@ type InterfaceInfo struct {
 	MTU        int      `json:"mtu,omitempty"`
 	MACAddress string   `json:"mac_address,omitempty"`
 	WakeOnLAN  bool     `json:"wakeonlan"`
-	Managed    bool     `json:"managed"`
 	State      string   `json:"state,omitempty"`
 }
 
@@ -109,7 +108,6 @@ func interfaceInfoFromGen(
 		MTU:        derefInt(g.Mtu),
 		MACAddress: derefString(g.MacAddress),
 		WakeOnLAN:  derefBool(g.Wakeonlan),
-		Managed:    derefBool(g.Managed),
 		State:      derefString(g.State),
 	}
 

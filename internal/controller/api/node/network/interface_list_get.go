@@ -167,7 +167,6 @@ func convertInterfaceEntries(
 			Dhcp4:      e.DHCP4,
 			Dhcp6:      e.DHCP6,
 			Wakeonlan:  e.WakeOnLAN,
-			Managed:    &e.Managed,
 			MacAddress: strPtrOrNil(e.MACAddress),
 			Gateway4:   strPtrOrNil(e.Gateway4),
 			Gateway6:   strPtrOrNil(e.Gateway6),
