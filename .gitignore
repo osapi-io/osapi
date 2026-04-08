@@ -14,6 +14,12 @@ tmp/
 
 /osapi
 
+# UI
+ui/dist/
+ui/node_modules/
+ui/bun.lock
+ui/.just/remote/
+
 # Compiled example binaries
 examples/**
 !examples/**/
