@@ -343,7 +343,7 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStartValidati
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/container/docker/abc123/start",
+			path: "/api/node/server1/container/docker/abc123/start",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -359,7 +359,7 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStartValidati
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/container/docker/abc123/start",
+			path: "/api/node/nonexistent/container/docker/abc123/start",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -484,7 +484,7 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStartRBACHTTP
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/container/docker/abc123/start",
+				"/api/node/server1/container/docker/abc123/start",
 				nil,
 			)
 			tc.setupAuth(req)

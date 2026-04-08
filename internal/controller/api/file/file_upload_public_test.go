@@ -516,7 +516,7 @@ func (s *FileUploadPublicTestSuite) TestPostFileValidationHTTP() {
 		},
 		{
 			name: "when force upload bypasses digest check",
-			path: "/file?force=true",
+			path: "/api/file?force=true",
 			buildBody: func() (*bytes.Buffer, string) {
 				return makeMultipartBody("nginx.conf", "raw", fileContent)
 			},
@@ -535,7 +535,7 @@ func (s *FileUploadPublicTestSuite) TestPostFileValidationHTTP() {
 		},
 		{
 			name: "when invalid force param returns 400",
-			path: "/file?force=notabool",
+			path: "/api/file?force=notabool",
 			buildBody: func() (*bytes.Buffer, string) {
 				return makeMultipartBody("nginx.conf", "raw", fileContent)
 			},
@@ -579,7 +579,7 @@ func (s *FileUploadPublicTestSuite) TestPostFileValidationHTTP() {
 
 			path := tc.path
 			if path == "" {
-				path = "/file"
+				path = "/api/file"
 			}
 
 			req := httptest.NewRequest(
@@ -699,7 +699,7 @@ func (s *FileUploadPublicTestSuite) TestPostFileRBACHTTP() {
 			body, ct := makeMultipartBody("nginx.conf", "raw", fileContent)
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/file",
+				"/api/file",
 				body,
 			)
 			req.Header.Set("Content-Type", ct)

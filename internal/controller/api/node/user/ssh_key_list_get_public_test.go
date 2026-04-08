@@ -368,7 +368,7 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSSHKeyValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/user/testuser/ssh-key",
+			path: "/api/node/server1/user/testuser/ssh-key",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -390,7 +390,7 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSSHKeyValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/user/testuser/ssh-key",
+			path: "/api/node/nonexistent/user/testuser/ssh-key",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -520,7 +520,7 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSSHKeyRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/user/testuser/ssh-key",
+				"/api/node/server1/user/testuser/ssh-key",
 				nil,
 			)
 			tc.setupAuth(req)

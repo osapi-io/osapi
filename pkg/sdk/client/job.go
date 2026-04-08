@@ -103,10 +103,10 @@ func (s *JobService) List(
 	ctx context.Context,
 	params ListParams,
 ) (*Response[JobList], error) {
-	p := &gen.GetJobParams{}
+	p := &gen.GetApiJobParams{}
 
 	if params.Status != "" {
-		status := gen.GetJobParamsStatus(params.Status)
+		status := gen.GetApiJobParamsStatus(params.Status)
 		p.Status = &status
 	}
 
@@ -118,7 +118,7 @@ func (s *JobService) List(
 		p.Offset = &params.Offset
 	}
 
-	resp, err := s.client.GetJobWithResponse(ctx, p)
+	resp, err := s.client.GetApiJobWithResponse(ctx, p)
 	if err != nil {
 		return nil, fmt.Errorf("list jobs: %w", err)
 	}

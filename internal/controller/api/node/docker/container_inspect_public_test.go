@@ -358,7 +358,7 @@ func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerDockerByIDValidati
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/container/docker/abc123",
+			path: "/api/node/server1/container/docker/abc123",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -377,7 +377,7 @@ func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerDockerByIDValidati
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/container/docker/abc123",
+			path: "/api/node/nonexistent/container/docker/abc123",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -505,7 +505,7 @@ func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerDockerByIDRBACHTTP
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/container/docker/abc123",
+				"/api/node/server1/container/docker/abc123",
 				nil,
 			)
 			tc.setupAuth(req)

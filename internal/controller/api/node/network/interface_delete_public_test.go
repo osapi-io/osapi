@@ -270,7 +270,7 @@ func (s *NetworkInterfaceDeletePublicTestSuite) TestDeleteNetworkInterfaceValida
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/network/interface/eth0",
+			path: "/api/node/server1/network/interface/eth0",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -286,7 +286,7 @@ func (s *NetworkInterfaceDeletePublicTestSuite) TestDeleteNetworkInterfaceValida
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/network/interface/eth0",
+			path: "/api/node/nonexistent/network/interface/eth0",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -411,7 +411,7 @@ func (s *NetworkInterfaceDeletePublicTestSuite) TestDeleteNetworkInterfaceRBACHT
 
 			req := httptest.NewRequest(
 				http.MethodDelete,
-				"/node/server1/network/interface/eth0",
+				"/api/node/server1/network/interface/eth0",
 				nil,
 			)
 			tc.setupAuth(req)

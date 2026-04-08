@@ -31,7 +31,7 @@ tags:
 paths:
   # -- Package collection ---------------------------------------------------
 
-  /node/{hostname}/package:
+  /api/node/{hostname}/package:
     get:
       summary: List installed packages
       description: >
@@ -129,7 +129,7 @@ paths:
 
   # -- Package by name ------------------------------------------------------
 
-  /node/{hostname}/package/{name}:
+  /api/node/{hostname}/package/{name}:
     get:
       summary: Get a package
       description: >
@@ -234,7 +234,7 @@ paths:
 
   # -- Package update -------------------------------------------------------
 
-  /node/{hostname}/package/update:
+  /api/node/{hostname}/package/update:
     post:
       summary: Update package sources
       description: >

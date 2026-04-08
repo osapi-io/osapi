@@ -97,7 +97,7 @@ tags:
     x-displayName: Node/Group
     description: Group management on a target node.
 paths:
-  /agent:
+  /api/agent:
     servers: []
     get:
       summary: List active agents
@@ -132,7 +132,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /agent/{hostname}:
+  /api/agent/{hostname}:
     servers: []
     get:
       summary: Get agent details
@@ -191,7 +191,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /agent/{hostname}/drain:
+  /api/agent/{hostname}/drain:
     servers: []
     post:
       operationId: drainAgent
@@ -257,7 +257,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /agent/{hostname}/undrain:
+  /api/agent/{hostname}/undrain:
     servers: []
     post:
       operationId: undrainAgent
@@ -321,7 +321,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /audit:
+  /api/audit:
     servers: []
     get:
       operationId: GetAuditLogs
@@ -385,7 +385,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /audit/export:
+  /api/audit/export:
     servers: []
     get:
       operationId: GetAuditExport
@@ -421,7 +421,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /audit/{id}:
+  /api/audit/{id}:
     servers: []
     get:
       operationId: GetAuditLogByID
@@ -471,7 +471,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /version:
+  /api/version:
     servers:
       - url: http://127.0.0.1:8080
         description: Mock API (local).
@@ -487,7 +487,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /facts/keys:
+  /api/facts/keys:
     servers: []
     get:
       summary: List available fact keys
@@ -525,7 +525,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /file:
+  /api/file:
     servers: []
     post:
       summary: Upload a file
@@ -655,7 +655,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /file/stale:
+  /api/file/stale:
     servers: []
     get:
       summary: List stale file deployments
@@ -694,7 +694,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /file/{name}:
+  /api/file/{name}:
     servers: []
     get:
       summary: Get file metadata
@@ -792,7 +792,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /health:
+  /api/health:
     servers: []
     get:
       operationId: GetHealth
@@ -807,7 +807,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
-  /health/ready:
+  /api/health/ready:
     servers: []
     get:
       operationId: GetHealthReady
@@ -828,7 +828,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReadyResponse'
-  /health/status:
+  /api/health/status:
     servers: []
     get:
       operationId: GetHealthStatus
@@ -866,7 +866,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StatusResponse'
-  /job:
+  /api/job:
     servers: []
     get:
       summary: List jobs
@@ -945,7 +945,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /job/{id}:
+  /api/job/{id}:
     servers: []
     get:
       summary: Get job detail
@@ -1055,7 +1055,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /job/{id}/retry:
+  /api/job/{id}/retry:
     servers: []
     post:
       summary: Retry a job
@@ -1121,7 +1121,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}:
+  /api/node/{hostname}:
     servers: []
     get:
       summary: Retrieve node status
@@ -1168,7 +1168,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/disk:
+  /api/node/{hostname}/disk:
     servers: []
     get:
       summary: Retrieve disk usage
@@ -1212,7 +1212,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/memory:
+  /api/node/{hostname}/memory:
     servers: []
     get:
       summary: Retrieve memory stats
@@ -1256,7 +1256,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/load:
+  /api/node/{hostname}/load:
     servers: []
     get:
       summary: Retrieve load averages
@@ -1300,7 +1300,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/os:
+  /api/node/{hostname}/os:
     servers: []
     get:
       summary: Retrieve OS info
@@ -1344,7 +1344,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/uptime:
+  /api/node/{hostname}/uptime:
     servers: []
     get:
       summary: Retrieve uptime
@@ -1388,7 +1388,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/certificate/ca:
+  /api/node/{hostname}/certificate/ca:
     servers: []
     get:
       summary: List all CA certificates
@@ -1483,7 +1483,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/certificate/ca/{name}:
+  /api/node/{hostname}/certificate/ca/{name}:
     servers: []
     put:
       summary: Update a CA certificate
@@ -1586,7 +1586,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/command/exec:
+  /api/node/{hostname}/command/exec:
     servers: []
     post:
       summary: Execute a command
@@ -1639,7 +1639,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/command/shell:
+  /api/node/{hostname}/command/shell:
     servers: []
     post:
       summary: Execute a shell command
@@ -1692,7 +1692,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/container/docker:
+  /api/node/{hostname}/container/docker:
     servers: []
     post:
       summary: Create a container
@@ -1814,7 +1814,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/container/docker/{id}:
+  /api/node/{hostname}/container/docker/{id}:
     servers: []
     get:
       summary: Inspect a container
@@ -1927,7 +1927,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/container/docker/{id}/start:
+  /api/node/{hostname}/container/docker/{id}/start:
     servers: []
     post:
       summary: Start a container
@@ -1979,7 +1979,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/container/docker/{id}/stop:
+  /api/node/{hostname}/container/docker/{id}/stop:
     servers: []
     post:
       summary: Stop a container
@@ -2039,7 +2039,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/container/docker/{id}/exec:
+  /api/node/{hostname}/container/docker/{id}/exec:
     servers: []
     post:
       summary: Execute a command in a container
@@ -2098,7 +2098,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/container/docker/image/{image}:
+  /api/node/{hostname}/container/docker/image/{image}:
     servers: []
     delete:
       summary: Remove a container image
@@ -2164,7 +2164,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/container/docker/pull:
+  /api/node/{hostname}/container/docker/pull:
     servers: []
     post:
       summary: Pull a container image
@@ -2216,7 +2216,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/file/deploy:
+  /api/node/{hostname}/file/deploy:
     servers: []
     post:
       operationId: PostNodeFileDeploy
@@ -2265,7 +2265,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/file/undeploy:
+  /api/node/{hostname}/file/undeploy:
     servers: []
     post:
       operationId: PostNodeFileUndeploy
@@ -2314,7 +2314,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/file/status:
+  /api/node/{hostname}/file/status:
     servers: []
     post:
       operationId: PostNodeFileStatus
@@ -2363,7 +2363,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/hostname:
+  /api/node/{hostname}/hostname:
     servers: []
     get:
       summary: Retrieve node hostname
@@ -2455,7 +2455,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/log:
+  /api/node/{hostname}/log:
     servers: []
     get:
       summary: Get system log entries
@@ -2532,7 +2532,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/log/source:
+  /api/node/{hostname}/log/source:
     servers: []
     get:
       summary: List log sources
@@ -2578,7 +2578,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/log/unit/{name}:
+  /api/node/{hostname}/log/unit/{name}:
     servers: []
     get:
       summary: Get log entries for a systemd unit
@@ -2656,7 +2656,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/network/ping:
+  /api/node/{hostname}/network/ping:
     servers: []
     post:
       summary: Ping a remote server
@@ -2720,7 +2720,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/network/dns/{interfaceName}:
+  /api/node/{hostname}/network/dns/{interfaceName}:
     servers: []
     get:
       summary: List DNS servers
@@ -2776,7 +2776,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/network/dns:
+  /api/node/{hostname}/network/dns:
     servers: []
     put:
       summary: Update DNS servers
@@ -2876,7 +2876,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/network/interface:
+  /api/node/{hostname}/network/interface:
     servers: []
     get:
       summary: List network interfaces
@@ -2921,7 +2921,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/network/interface/{name}:
+  /api/node/{hostname}/network/interface/{name}:
     servers: []
     get:
       summary: Get network interface details
@@ -3129,7 +3129,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/network/route:
+  /api/node/{hostname}/network/route:
     servers: []
     get:
       summary: List network routes
@@ -3174,7 +3174,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/network/route/{interfaceName}:
+  /api/node/{hostname}/network/route/{interfaceName}:
     servers: []
     get:
       summary: Get routes for an interface
@@ -3382,7 +3382,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/ntp:
+  /api/node/{hostname}/ntp:
     servers: []
     get:
       summary: Get NTP status
@@ -3584,7 +3584,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/package:
+  /api/node/{hostname}/package:
     servers: []
     get:
       summary: List installed packages
@@ -3679,7 +3679,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/package/{name}:
+  /api/node/{hostname}/package/{name}:
     servers: []
     get:
       summary: Get a package
@@ -3781,7 +3781,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/package/update:
+  /api/node/{hostname}/package/update:
     servers: []
     post:
       summary: Update package sources
@@ -3869,7 +3869,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/power/reboot:
+  /api/node/{hostname}/power/reboot:
     servers: []
     post:
       summary: Reboot node
@@ -3922,7 +3922,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/power/shutdown:
+  /api/node/{hostname}/power/shutdown:
     servers: []
     post:
       summary: Shutdown node
@@ -3975,7 +3975,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/process:
+  /api/node/{hostname}/process:
     servers: []
     get:
       summary: List processes
@@ -4020,7 +4020,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/process/{pid}:
+  /api/node/{hostname}/process/{pid}:
     servers: []
     get:
       summary: Get process by PID
@@ -4072,7 +4072,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/process/{pid}/signal:
+  /api/node/{hostname}/process/{pid}/signal:
     servers: []
     post:
       summary: Send signal to process
@@ -4131,7 +4131,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/schedule/cron:
+  /api/node/{hostname}/schedule/cron:
     servers: []
     get:
       summary: List all cron entries
@@ -4226,7 +4226,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/schedule/cron/{name}:
+  /api/node/{hostname}/schedule/cron/{name}:
     servers: []
     get:
       summary: Get a cron entry
@@ -4385,7 +4385,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/service:
+  /api/node/{hostname}/service:
     servers: []
     get:
       summary: List all services
@@ -4480,7 +4480,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/service/{name}:
+  /api/node/{hostname}/service/{name}:
     servers: []
     get:
       summary: Get service details
@@ -4633,7 +4633,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/service/{name}/start:
+  /api/node/{hostname}/service/{name}/start:
     servers: []
     post:
       summary: Start a service
@@ -4679,7 +4679,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/service/{name}/stop:
+  /api/node/{hostname}/service/{name}/stop:
     servers: []
     post:
       summary: Stop a service
@@ -4725,7 +4725,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/service/{name}/restart:
+  /api/node/{hostname}/service/{name}/restart:
     servers: []
     post:
       summary: Restart a service
@@ -4771,7 +4771,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/service/{name}/enable:
+  /api/node/{hostname}/service/{name}/enable:
     servers: []
     post:
       summary: Enable a service
@@ -4817,7 +4817,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/service/{name}/disable:
+  /api/node/{hostname}/service/{name}/disable:
     servers: []
     post:
       summary: Disable a service
@@ -4864,7 +4864,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/sysctl:
+  /api/node/{hostname}/sysctl:
     servers: []
     get:
       summary: List all managed sysctl entries
@@ -4960,7 +4960,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/sysctl/{key}:
+  /api/node/{hostname}/sysctl/{key}:
     servers: []
     get:
       summary: Get a sysctl entry
@@ -5121,7 +5121,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/timezone:
+  /api/node/{hostname}/timezone:
     servers: []
     get:
       summary: Get system timezone
@@ -5217,7 +5217,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/user:
+  /api/node/{hostname}/user:
     servers: []
     get:
       summary: List all users
@@ -5312,7 +5312,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/user/{name}:
+  /api/node/{hostname}/user/{name}:
     servers: []
     get:
       summary: Get a user
@@ -5471,7 +5471,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/user/{name}/password:
+  /api/node/{hostname}/user/{name}/password:
     servers: []
     post:
       summary: Change user password
@@ -5530,7 +5530,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/user/{name}/ssh-key:
+  /api/node/{hostname}/user/{name}/ssh-key:
     servers: []
     get:
       summary: List SSH authorized keys
@@ -5627,7 +5627,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/user/{name}/ssh-key/{fingerprint}:
+  /api/node/{hostname}/user/{name}/ssh-key/{fingerprint}:
     servers: []
     delete:
       summary: Remove SSH authorized key
@@ -5675,7 +5675,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/group:
+  /api/node/{hostname}/group:
     servers: []
     get:
       summary: List all groups
@@ -5770,7 +5770,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /node/{hostname}/group/{name}:
+  /api/node/{hostname}/group/{name}:
     servers: []
     get:
       summary: Get a group

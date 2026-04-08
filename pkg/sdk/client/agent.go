@@ -41,7 +41,7 @@ type AgentService struct {
 func (s *AgentService) List(
 	ctx context.Context,
 ) (*Response[AgentList], error) {
-	resp, err := s.client.GetAgentWithResponse(ctx)
+	resp, err := s.client.GetApiAgentWithResponse(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("list agents: %w", err)
 	}

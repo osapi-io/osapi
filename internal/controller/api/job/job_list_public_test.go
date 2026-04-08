@@ -68,26 +68,26 @@ func (s *JobListPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *JobListPublicTestSuite) TestGetJob() {
+func (s *JobListPublicTestSuite) TestGetApiJob() {
 	completedStatus := gen.Completed
-	invalidStatus := gen.GetJobParamsStatus("bogus")
+	invalidStatus := gen.GetApiJobParamsStatus("bogus")
 
 	tests := []struct {
 		name         string
-		request      gen.GetJobRequestObject
+		request      gen.GetApiJobRequestObject
 		mockResult   *jobclient.ListJobsResult
 		mockError    error
 		expectMock   bool
-		validateFunc func(resp gen.GetJobResponseObject)
+		validateFunc func(resp gen.GetApiJobResponseObject)
 	}{
 		{
 			name: "validation error invalid status",
-			request: gen.GetJobRequestObject{
-				Params: gen.GetJobParams{Status: &invalidStatus},
+			request: gen.GetApiJobRequestObject{
+				Params: gen.GetApiJobParams{Status: &invalidStatus},
 			},
 			expectMock: false,
-			validateFunc: func(resp gen.GetJobResponseObject) {
-				r, ok := resp.(gen.GetJob400JSONResponse)
+			validateFunc: func(resp gen.GetApiJobResponseObject) {
+				r, ok := resp.(gen.GetApiJob400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "'oneof'")
@@ -95,68 +95,68 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 		},
 		{
 			name: "returns 400 when limit is negative",
-			request: func() gen.GetJobRequestObject {
+			request: func() gen.GetApiJobRequestObject {
 				l := -1
-				return gen.GetJobRequestObject{
-					Params: gen.GetJobParams{Limit: &l},
+				return gen.GetApiJobRequestObject{
+					Params: gen.GetApiJobParams{Limit: &l},
 				}
 			}(),
 			expectMock: false,
-			validateFunc: func(resp gen.GetJobResponseObject) {
-				r, ok := resp.(gen.GetJob400JSONResponse)
+			validateFunc: func(resp gen.GetApiJobResponseObject) {
+				r, ok := resp.(gen.GetApiJob400JSONResponse)
 				s.True(ok)
 				s.NotNil(r.Error)
 			},
 		},
 		{
 			name: "returns 400 when limit is zero",
-			request: func() gen.GetJobRequestObject {
+			request: func() gen.GetApiJobRequestObject {
 				l := 0
-				return gen.GetJobRequestObject{
-					Params: gen.GetJobParams{Limit: &l},
+				return gen.GetApiJobRequestObject{
+					Params: gen.GetApiJobParams{Limit: &l},
 				}
 			}(),
 			expectMock: false,
-			validateFunc: func(resp gen.GetJobResponseObject) {
-				r, ok := resp.(gen.GetJob400JSONResponse)
+			validateFunc: func(resp gen.GetApiJobResponseObject) {
+				r, ok := resp.(gen.GetApiJob400JSONResponse)
 				s.True(ok)
 				s.NotNil(r.Error)
 			},
 		},
 		{
 			name: "returns 400 when limit exceeds max",
-			request: func() gen.GetJobRequestObject {
+			request: func() gen.GetApiJobRequestObject {
 				l := 101
-				return gen.GetJobRequestObject{
-					Params: gen.GetJobParams{Limit: &l},
+				return gen.GetApiJobRequestObject{
+					Params: gen.GetApiJobParams{Limit: &l},
 				}
 			}(),
 			expectMock: false,
-			validateFunc: func(resp gen.GetJobResponseObject) {
-				r, ok := resp.(gen.GetJob400JSONResponse)
+			validateFunc: func(resp gen.GetApiJobResponseObject) {
+				r, ok := resp.(gen.GetApiJob400JSONResponse)
 				s.True(ok)
 				s.NotNil(r.Error)
 			},
 		},
 		{
 			name: "returns 400 when offset is negative",
-			request: func() gen.GetJobRequestObject {
+			request: func() gen.GetApiJobRequestObject {
 				o := -1
-				return gen.GetJobRequestObject{
-					Params: gen.GetJobParams{Offset: &o},
+				return gen.GetApiJobRequestObject{
+					Params: gen.GetApiJobParams{Offset: &o},
 				}
 			}(),
 			expectMock: false,
-			validateFunc: func(resp gen.GetJobResponseObject) {
-				r, ok := resp.(gen.GetJob400JSONResponse)
+			validateFunc: func(resp gen.GetApiJobResponseObject) {
+				r, ok := resp.(gen.GetApiJob400JSONResponse)
 				s.True(ok)
 				s.NotNil(r.Error)
 			},
 		},
 		{
 			name: "success with filter",
-			request: gen.GetJobRequestObject{
-				Params: gen.GetJobParams{Status: &completedStatus},
+			request: gen.GetApiJobRequestObject{
+				Params: gen.GetApiJobParams{Status: &completedStatus},
 			},
 			mockResult: &jobclient.ListJobsResult{
 				Jobs: []*jobtypes.QueuedJob{
@@ -168,8 +168,8 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 				TotalCount: 1,
 			},
 			expectMock: true,
-			validateFunc: func(resp gen.GetJobResponseObject) {
-				r, ok := resp.(gen.GetJob200JSONResponse)
+			validateFunc: func(resp gen.GetApiJobResponseObject) {
+				r, ok := resp.(gen.GetApiJob200JSONResponse)
 				s.True(ok)
 				s.Equal(1, *r.TotalItems)
 				s.Len(*r.Items, 1)
@@ -177,7 +177,7 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 		},
 		{
 			name:    "success without filter",
-			request: gen.GetJobRequestObject{},
+			request: gen.GetApiJobRequestObject{},
 			mockResult: &jobclient.ListJobsResult{
 				Jobs: []*jobtypes.QueuedJob{
 					{ID: "550e8400-e29b-41d4-a716-446655440000", Status: "completed"},
@@ -186,15 +186,15 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 				TotalCount: 2,
 			},
 			expectMock: true,
-			validateFunc: func(resp gen.GetJobResponseObject) {
-				r, ok := resp.(gen.GetJob200JSONResponse)
+			validateFunc: func(resp gen.GetApiJobResponseObject) {
+				r, ok := resp.(gen.GetApiJob200JSONResponse)
 				s.True(ok)
 				s.Equal(2, *r.TotalItems)
 			},
 		},
 		{
 			name:    "success with all optional fields",
-			request: gen.GetJobRequestObject{},
+			request: gen.GetApiJobRequestObject{},
 			mockResult: &jobclient.ListJobsResult{
 				Jobs: []*jobtypes.QueuedJob{
 					{
@@ -211,8 +211,8 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 				TotalCount: 1,
 			},
 			expectMock: true,
-			validateFunc: func(resp gen.GetJobResponseObject) {
-				r, ok := resp.(gen.GetJob200JSONResponse)
+			validateFunc: func(resp gen.GetApiJobResponseObject) {
+				r, ok := resp.(gen.GetApiJob200JSONResponse)
 				s.True(ok)
 				s.Equal(1, *r.TotalItems)
 				item := (*r.Items)[0]
@@ -228,11 +228,11 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 		},
 		{
 			name: "explicit limit and offset params",
-			request: func() gen.GetJobRequestObject {
+			request: func() gen.GetApiJobRequestObject {
 				limit := 5
 				offset := 20
-				return gen.GetJobRequestObject{
-					Params: gen.GetJobParams{Limit: &limit, Offset: &offset},
+				return gen.GetApiJobRequestObject{
+					Params: gen.GetApiJobParams{Limit: &limit, Offset: &offset},
 				}
 			}(),
 			mockResult: &jobclient.ListJobsResult{
@@ -240,25 +240,25 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 				TotalCount: 50,
 			},
 			expectMock: true,
-			validateFunc: func(resp gen.GetJobResponseObject) {
-				r, ok := resp.(gen.GetJob200JSONResponse)
+			validateFunc: func(resp gen.GetApiJobResponseObject) {
+				r, ok := resp.(gen.GetApiJob200JSONResponse)
 				s.True(ok)
 				s.Equal(50, *r.TotalItems)
 			},
 		},
 		{
 			name:       "job client error",
-			request:    gen.GetJobRequestObject{},
+			request:    gen.GetApiJobRequestObject{},
 			mockError:  assert.AnError,
 			expectMock: true,
-			validateFunc: func(resp gen.GetJobResponseObject) {
-				_, ok := resp.(gen.GetJob500JSONResponse)
+			validateFunc: func(resp gen.GetApiJobResponseObject) {
+				_, ok := resp.(gen.GetApiJob500JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
 			name:    "total items reflects total count not page size",
-			request: gen.GetJobRequestObject{},
+			request: gen.GetApiJobRequestObject{},
 			mockResult: &jobclient.ListJobsResult{
 				Jobs: []*jobtypes.QueuedJob{
 					{ID: "550e8400-e29b-41d4-a716-446655440000", Status: "completed"},
@@ -266,8 +266,8 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 				TotalCount: 50,
 			},
 			expectMock: true,
-			validateFunc: func(resp gen.GetJobResponseObject) {
-				r, ok := resp.(gen.GetJob200JSONResponse)
+			validateFunc: func(resp gen.GetApiJobResponseObject) {
+				r, ok := resp.(gen.GetApiJob200JSONResponse)
 				s.True(ok)
 				s.Equal(50, *r.TotalItems)
 				s.Len(*r.Items, 1)
@@ -295,7 +295,7 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 					Return(tt.mockResult, tt.mockError)
 			}
 
-			resp, err := s.handler.GetJob(s.ctx, tt.request)
+			resp, err := s.handler.GetApiJob(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
@@ -419,7 +419,7 @@ func (s *JobListPublicTestSuite) TestListJobsValidationHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/job"+tc.query,
+				"/api/job"+tc.query,
 				nil,
 			)
 			rec := httptest.NewRecorder()
@@ -529,7 +529,7 @@ func (s *JobListPublicTestSuite) TestListJobsRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/job",
+				"/api/job",
 				nil,
 			)
 			tc.setupAuth(req)

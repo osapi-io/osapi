@@ -289,7 +289,7 @@ func (s *NetworkRouteUpdatePutPublicTestSuite) TestPutNetworkRouteValidationHTTP
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/network/route/eth0",
+			path: "/api/node/server1/network/route/eth0",
 			body: `{"routes":[{"to":"10.0.0.0/8","via":"192.168.1.1"}]}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -303,7 +303,7 @@ func (s *NetworkRouteUpdatePutPublicTestSuite) TestPutNetworkRouteValidationHTTP
 		},
 		{
 			name: "when invalid route",
-			path: "/node/server1/network/route/eth0",
+			path: "/api/node/server1/network/route/eth0",
 			body: `{"routes":[{"to":"bad","via":"bad"}]}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -417,7 +417,7 @@ func (s *NetworkRouteUpdatePutPublicTestSuite) TestPutNetworkRouteRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPut,
-				"/node/server1/network/route/eth0",
+				"/api/node/server1/network/route/eth0",
 				strings.NewReader(`{"routes":[{"to":"10.0.0.0/8","via":"192.168.1.1"}]}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

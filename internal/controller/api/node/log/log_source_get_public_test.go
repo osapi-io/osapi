@@ -321,7 +321,7 @@ func (s *LogSourcePublicTestSuite) TestGetNodeLogSourceHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/log/source",
+			path: "/api/node/server1/log/source",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -338,7 +338,7 @@ func (s *LogSourcePublicTestSuite) TestGetNodeLogSourceHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/log/source",
+			path: "/api/node/nonexistent/log/source",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -464,7 +464,7 @@ func (s *LogSourcePublicTestSuite) TestGetNodeLogSourceRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/log/source",
+				"/api/node/server1/log/source",
 				nil,
 			)
 			tc.setupAuth(req)

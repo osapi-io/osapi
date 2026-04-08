@@ -331,19 +331,19 @@ func (s *UserUpdatePublicTestSuite) TestPutNodeUserValidationHTTP() {
 	}{
 		{
 			name:     "when valid request",
-			path:     "/node/server1/user/testuser",
+			path:     "/api/node/server1/user/testuser",
 			body:     `{"shell":"/bin/zsh"}`,
 			wantCode: http.StatusOK,
 		},
 		{
 			name:     "when empty body returns 400",
-			path:     "/node/server1/user/testuser",
+			path:     "/api/node/server1/user/testuser",
 			body:     `{}`,
 			wantCode: http.StatusBadRequest,
 		},
 		{
 			name:     "when invalid hostname",
-			path:     "/node/nonexistent/user/testuser",
+			path:     "/api/node/nonexistent/user/testuser",
 			body:     `{"shell":"/bin/zsh"}`,
 			wantCode: http.StatusBadRequest,
 		},
@@ -446,7 +446,7 @@ func (s *UserUpdatePublicTestSuite) TestPutNodeUserRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPut,
-				"/node/server1/user/testuser",
+				"/api/node/server1/user/testuser",
 				strings.NewReader(`{"shell":"/bin/zsh"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

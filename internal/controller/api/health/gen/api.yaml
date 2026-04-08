@@ -28,7 +28,7 @@ tags:
     x-displayName: Health
     description: Health check endpoints for liveness, readiness, and detailed status.
 paths:
-  /health:
+  /api/health:
     get:
       operationId: GetHealth
       summary: Liveness probe
@@ -42,7 +42,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
-  /health/ready:
+  /api/health/ready:
     get:
       operationId: GetHealthReady
       summary: Readiness probe
@@ -62,7 +62,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReadyResponse'
-  /health/status:
+  /api/health/status:
     get:
       operationId: GetHealthStatus
       summary: System status and component health

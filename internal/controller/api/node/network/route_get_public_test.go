@@ -337,7 +337,7 @@ func (s *NetworkRouteGetPublicTestSuite) TestGetNetworkRouteByInterfaceValidatio
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/network/route/eth0",
+			path: "/api/node/server1/network/route/eth0",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -352,7 +352,7 @@ func (s *NetworkRouteGetPublicTestSuite) TestGetNetworkRouteByInterfaceValidatio
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/network/route/eth0",
+			path: "/api/node/nonexistent/network/route/eth0",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -466,7 +466,7 @@ func (s *NetworkRouteGetPublicTestSuite) TestGetNetworkRouteByInterfaceRBACHTTP(
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/node/server1/network/route/eth0", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/node/server1/network/route/eth0", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 			server.Echo.ServeHTTP(rec, req)

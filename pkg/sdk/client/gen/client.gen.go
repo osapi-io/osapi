@@ -490,13 +490,13 @@ const (
 	PostFileMultipartBodyContentTypeTemplate PostFileMultipartBodyContentType = "template"
 )
 
-// Defines values for GetJobParamsStatus.
+// Defines values for GetApiJobParamsStatus.
 const (
-	GetJobParamsStatusCompleted      GetJobParamsStatus = "completed"
-	GetJobParamsStatusFailed         GetJobParamsStatus = "failed"
-	GetJobParamsStatusPartialFailure GetJobParamsStatus = "partial_failure"
-	GetJobParamsStatusProcessing     GetJobParamsStatus = "processing"
-	GetJobParamsStatusSubmitted      GetJobParamsStatus = "submitted"
+	GetApiJobParamsStatusCompleted      GetApiJobParamsStatus = "completed"
+	GetApiJobParamsStatusFailed         GetApiJobParamsStatus = "failed"
+	GetApiJobParamsStatusPartialFailure GetApiJobParamsStatus = "partial_failure"
+	GetApiJobParamsStatusProcessing     GetApiJobParamsStatus = "processing"
+	GetApiJobParamsStatusSubmitted      GetApiJobParamsStatus = "submitted"
 )
 
 // Defines values for GetNodeContainerDockerParamsState.
@@ -3545,10 +3545,10 @@ type PostFileParams struct {
 // PostFileMultipartBodyContentType defines parameters for PostFile.
 type PostFileMultipartBodyContentType string
 
-// GetJobParams defines parameters for GetJob.
-type GetJobParams struct {
+// GetApiJobParams defines parameters for GetApiJob.
+type GetApiJobParams struct {
 	// Status Filter jobs by status.
-	Status *GetJobParamsStatus `form:"status,omitempty" json:"status,omitempty" validate:"omitempty,oneof=submitted processing completed failed partial_failure"`
+	Status *GetApiJobParamsStatus `form:"status,omitempty" json:"status,omitempty" validate:"omitempty,oneof=submitted processing completed failed partial_failure"`
 
 	// Limit Maximum number of jobs per page (1-100).
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
@@ -3557,8 +3557,8 @@ type GetJobParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty" validate:"omitempty,min=0"`
 }
 
-// GetJobParamsStatus defines parameters for GetJob.
-type GetJobParamsStatus string
+// GetApiJobParamsStatus defines parameters for GetApiJob.
+type GetApiJobParamsStatus string
 
 // GetNodeContainerDockerParams defines parameters for GetNodeContainerDocker.
 type GetNodeContainerDockerParams struct {
@@ -3806,8 +3806,8 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// GetAgent request
-	GetAgent(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetApiAgent request
+	GetApiAgent(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetAgentDetails request
 	GetAgentDetails(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -3854,8 +3854,8 @@ type ClientInterface interface {
 	// GetHealthStatus request
 	GetHealthStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetJob request
-	GetJob(ctx context.Context, params *GetJobParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetApiJob request
+	GetApiJob(ctx context.Context, params *GetApiJobParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteJobByID request
 	DeleteJobByID(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4226,12 +4226,12 @@ type ClientInterface interface {
 	// DeleteNodeUserSSHKey request
 	DeleteNodeUserSSHKey(ctx context.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetVersion request
-	GetVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetApiVersion request
+	GetApiVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) GetAgent(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetAgentRequest(c.Server)
+func (c *Client) GetApiAgent(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiAgentRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -4422,8 +4422,8 @@ func (c *Client) GetHealthStatus(ctx context.Context, reqEditors ...RequestEdito
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetJob(ctx context.Context, params *GetJobParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetJobRequest(c.Server, params)
+func (c *Client) GetApiJob(ctx context.Context, params *GetApiJobParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiJobRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -6066,8 +6066,8 @@ func (c *Client) DeleteNodeUserSSHKey(ctx context.Context, hostname Hostname, na
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetVersionRequest(c.Server)
+func (c *Client) GetApiVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiVersionRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -6078,8 +6078,8 @@ func (c *Client) GetVersion(ctx context.Context, reqEditors ...RequestEditorFn) 
 	return c.Client.Do(req)
 }
 
-// NewGetAgentRequest generates requests for GetAgent
-func NewGetAgentRequest(server string) (*http.Request, error) {
+// NewGetApiAgentRequest generates requests for GetApiAgent
+func NewGetApiAgentRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -6087,7 +6087,7 @@ func NewGetAgentRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/agent")
+	operationPath := fmt.Sprintf("/api/agent")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6121,7 +6121,7 @@ func NewGetAgentDetailsRequest(server string, hostname string) (*http.Request, e
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/agent/%s", pathParam0)
+	operationPath := fmt.Sprintf("/api/agent/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6155,7 +6155,7 @@ func NewDrainAgentRequest(server string, hostname string) (*http.Request, error)
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/agent/%s/drain", pathParam0)
+	operationPath := fmt.Sprintf("/api/agent/%s/drain", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6189,7 +6189,7 @@ func NewUndrainAgentRequest(server string, hostname string) (*http.Request, erro
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/agent/%s/undrain", pathParam0)
+	operationPath := fmt.Sprintf("/api/agent/%s/undrain", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6216,7 +6216,7 @@ func NewGetAuditLogsRequest(server string, params *GetAuditLogsParams) (*http.Re
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/audit")
+	operationPath := fmt.Sprintf("/api/audit")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6281,7 +6281,7 @@ func NewGetAuditExportRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/audit/export")
+	operationPath := fmt.Sprintf("/api/audit/export")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6315,7 +6315,7 @@ func NewGetAuditLogByIDRequest(server string, id openapi_types.UUID) (*http.Requ
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/audit/%s", pathParam0)
+	operationPath := fmt.Sprintf("/api/audit/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6342,7 +6342,7 @@ func NewGetFactKeysRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/facts/keys")
+	operationPath := fmt.Sprintf("/api/facts/keys")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6369,7 +6369,7 @@ func NewGetFilesRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/file")
+	operationPath := fmt.Sprintf("/api/file")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6396,7 +6396,7 @@ func NewPostFileRequestWithBody(server string, params *PostFileParams, contentTy
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/file")
+	operationPath := fmt.Sprintf("/api/file")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6447,7 +6447,7 @@ func NewGetFileStaleRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/file/stale")
+	operationPath := fmt.Sprintf("/api/file/stale")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6481,7 +6481,7 @@ func NewDeleteFileByNameRequest(server string, name FileName) (*http.Request, er
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/file/%s", pathParam0)
+	operationPath := fmt.Sprintf("/api/file/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6515,7 +6515,7 @@ func NewGetFileByNameRequest(server string, name FileName) (*http.Request, error
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/file/%s", pathParam0)
+	operationPath := fmt.Sprintf("/api/file/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6542,7 +6542,7 @@ func NewGetHealthRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/health")
+	operationPath := fmt.Sprintf("/api/health")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6569,7 +6569,7 @@ func NewGetHealthReadyRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/health/ready")
+	operationPath := fmt.Sprintf("/api/health/ready")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6596,7 +6596,7 @@ func NewGetHealthStatusRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/health/status")
+	operationPath := fmt.Sprintf("/api/health/status")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6614,8 +6614,8 @@ func NewGetHealthStatusRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetJobRequest generates requests for GetJob
-func NewGetJobRequest(server string, params *GetJobParams) (*http.Request, error) {
+// NewGetApiJobRequest generates requests for GetApiJob
+func NewGetApiJobRequest(server string, params *GetApiJobParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -6623,7 +6623,7 @@ func NewGetJobRequest(server string, params *GetJobParams) (*http.Request, error
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/job")
+	operationPath := fmt.Sprintf("/api/job")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6711,7 +6711,7 @@ func NewDeleteJobByIDRequest(server string, id openapi_types.UUID) (*http.Reques
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/job/%s", pathParam0)
+	operationPath := fmt.Sprintf("/api/job/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6745,7 +6745,7 @@ func NewGetJobByIDRequest(server string, id openapi_types.UUID) (*http.Request, 
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/job/%s", pathParam0)
+	operationPath := fmt.Sprintf("/api/job/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6790,7 +6790,7 @@ func NewRetryJobByIDRequestWithBody(server string, id openapi_types.UUID, conten
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/job/%s/retry", pathParam0)
+	operationPath := fmt.Sprintf("/api/job/%s/retry", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6826,7 +6826,7 @@ func NewGetNodeStatusRequest(server string, hostname Hostname) (*http.Request, e
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6860,7 +6860,7 @@ func NewGetNodeCertificateCaRequest(server string, hostname Hostname) (*http.Req
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/certificate/ca", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/certificate/ca", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6905,7 +6905,7 @@ func NewPostNodeCertificateCaRequestWithBody(server string, hostname Hostname, c
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/certificate/ca", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/certificate/ca", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6948,7 +6948,7 @@ func NewDeleteNodeCertificateCaRequest(server string, hostname Hostname, name Ce
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/certificate/ca/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/certificate/ca/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7000,7 +7000,7 @@ func NewPutNodeCertificateCaRequestWithBody(server string, hostname Hostname, na
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/certificate/ca/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/certificate/ca/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7047,7 +7047,7 @@ func NewPostNodeCommandExecRequestWithBody(server string, hostname Hostname, con
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/command/exec", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/command/exec", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7094,7 +7094,7 @@ func NewPostNodeCommandShellRequestWithBody(server string, hostname Hostname, co
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/command/shell", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/command/shell", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7130,7 +7130,7 @@ func NewGetNodeContainerDockerRequest(server string, hostname Hostname, params *
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container/docker", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/container/docker", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7213,7 +7213,7 @@ func NewPostNodeContainerDockerRequestWithBody(server string, hostname Hostname,
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container/docker", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/container/docker", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7256,7 +7256,7 @@ func NewDeleteNodeContainerDockerImageRequest(server string, hostname Hostname, 
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container/docker/image/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/container/docker/image/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7323,7 +7323,7 @@ func NewPostNodeContainerDockerPullRequestWithBody(server string, hostname Hostn
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container/docker/pull", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/container/docker/pull", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7366,7 +7366,7 @@ func NewDeleteNodeContainerDockerByIDRequest(server string, hostname Hostname, i
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container/docker/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/container/docker/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7429,7 +7429,7 @@ func NewGetNodeContainerDockerByIDRequest(server string, hostname Hostname, id D
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container/docker/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/container/docker/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7481,7 +7481,7 @@ func NewPostNodeContainerDockerExecRequestWithBody(server string, hostname Hostn
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container/docker/%s/exec", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/container/docker/%s/exec", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7524,7 +7524,7 @@ func NewPostNodeContainerDockerStartRequest(server string, hostname Hostname, id
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container/docker/%s/start", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/container/docker/%s/start", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7576,7 +7576,7 @@ func NewPostNodeContainerDockerStopRequestWithBody(server string, hostname Hostn
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container/docker/%s/stop", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/container/docker/%s/stop", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7612,7 +7612,7 @@ func NewGetNodeDiskRequest(server string, hostname Hostname) (*http.Request, err
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/disk", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/disk", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7657,7 +7657,7 @@ func NewPostNodeFileDeployRequestWithBody(server string, hostname Hostname, cont
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/file/deploy", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/file/deploy", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7704,7 +7704,7 @@ func NewPostNodeFileStatusRequestWithBody(server string, hostname Hostname, cont
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/file/status", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/file/status", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7751,7 +7751,7 @@ func NewPostNodeFileUndeployRequestWithBody(server string, hostname Hostname, co
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/file/undeploy", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/file/undeploy", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7787,7 +7787,7 @@ func NewGetNodeGroupRequest(server string, hostname Hostname) (*http.Request, er
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/group", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/group", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7832,7 +7832,7 @@ func NewPostNodeGroupRequestWithBody(server string, hostname Hostname, contentTy
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/group", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/group", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7875,7 +7875,7 @@ func NewDeleteNodeGroupRequest(server string, hostname Hostname, name GroupName)
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/group/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/group/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7916,7 +7916,7 @@ func NewGetNodeGroupByNameRequest(server string, hostname Hostname, name GroupNa
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/group/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/group/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7968,7 +7968,7 @@ func NewPutNodeGroupRequestWithBody(server string, hostname Hostname, name Group
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/group/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/group/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8004,7 +8004,7 @@ func NewGetNodeHostnameRequest(server string, hostname Hostname) (*http.Request,
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/hostname", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/hostname", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8049,7 +8049,7 @@ func NewPutNodeHostnameRequestWithBody(server string, hostname Hostname, content
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/hostname", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/hostname", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8085,7 +8085,7 @@ func NewGetNodeLoadRequest(server string, hostname Hostname) (*http.Request, err
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/load", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/load", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8119,7 +8119,7 @@ func NewGetNodeLogRequest(server string, hostname Hostname, params *GetNodeLogPa
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/log", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/log", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8207,7 +8207,7 @@ func NewGetNodeLogSourceRequest(server string, hostname Hostname) (*http.Request
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/log/source", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/log/source", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8248,7 +8248,7 @@ func NewGetNodeLogUnitRequest(server string, hostname Hostname, name UnitName, p
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/log/unit/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/log/unit/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8336,7 +8336,7 @@ func NewGetNodeMemoryRequest(server string, hostname Hostname) (*http.Request, e
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/memory", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/memory", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8381,7 +8381,7 @@ func NewDeleteNodeNetworkDNSRequestWithBody(server string, hostname Hostname, co
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/network/dns", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/network/dns", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8428,7 +8428,7 @@ func NewPutNodeNetworkDNSRequestWithBody(server string, hostname Hostname, conte
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/network/dns", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/network/dns", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8471,7 +8471,7 @@ func NewGetNodeNetworkDNSByInterfaceRequest(server string, hostname Hostname, in
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/network/dns/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/network/dns/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8505,7 +8505,7 @@ func NewGetNodeNetworkInterfaceRequest(server string, hostname Hostname) (*http.
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/network/interface", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/network/interface", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8546,7 +8546,7 @@ func NewDeleteNodeNetworkInterfaceRequest(server string, hostname Hostname, name
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/network/interface/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/network/interface/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8587,7 +8587,7 @@ func NewGetNodeNetworkInterfaceByNameRequest(server string, hostname Hostname, n
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/network/interface/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/network/interface/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8639,7 +8639,7 @@ func NewPostNodeNetworkInterfaceRequestWithBody(server string, hostname Hostname
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/network/interface/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/network/interface/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8693,7 +8693,7 @@ func NewPutNodeNetworkInterfaceRequestWithBody(server string, hostname Hostname,
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/network/interface/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/network/interface/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8740,7 +8740,7 @@ func NewPostNodeNetworkPingRequestWithBody(server string, hostname Hostname, con
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/network/ping", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/network/ping", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8776,7 +8776,7 @@ func NewGetNodeNetworkRouteRequest(server string, hostname Hostname) (*http.Requ
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/network/route", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/network/route", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8817,7 +8817,7 @@ func NewDeleteNodeNetworkRouteRequest(server string, hostname Hostname, interfac
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/network/route/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/network/route/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8858,7 +8858,7 @@ func NewGetNodeNetworkRouteByInterfaceRequest(server string, hostname Hostname, 
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/network/route/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/network/route/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8910,7 +8910,7 @@ func NewPostNodeNetworkRouteRequestWithBody(server string, hostname Hostname, in
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/network/route/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/network/route/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8964,7 +8964,7 @@ func NewPutNodeNetworkRouteRequestWithBody(server string, hostname Hostname, int
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/network/route/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/network/route/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9000,7 +9000,7 @@ func NewDeleteNodeNtpRequest(server string, hostname Hostname) (*http.Request, e
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/ntp", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/ntp", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9034,7 +9034,7 @@ func NewGetNodeNtpRequest(server string, hostname Hostname) (*http.Request, erro
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/ntp", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/ntp", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9079,7 +9079,7 @@ func NewPostNodeNtpRequestWithBody(server string, hostname Hostname, contentType
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/ntp", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/ntp", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9126,7 +9126,7 @@ func NewPutNodeNtpRequestWithBody(server string, hostname Hostname, contentType 
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/ntp", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/ntp", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9162,7 +9162,7 @@ func NewGetNodeOSRequest(server string, hostname Hostname) (*http.Request, error
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/os", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/os", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9196,7 +9196,7 @@ func NewGetNodePackageRequest(server string, hostname Hostname) (*http.Request, 
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/package", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/package", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9241,7 +9241,7 @@ func NewPostNodePackageRequestWithBody(server string, hostname Hostname, content
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/package", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/package", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9277,7 +9277,7 @@ func NewGetNodePackageUpdateRequest(server string, hostname Hostname) (*http.Req
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/package/update", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/package/update", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9311,7 +9311,7 @@ func NewPostNodePackageUpdateRequest(server string, hostname Hostname) (*http.Re
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/package/update", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/package/update", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9352,7 +9352,7 @@ func NewDeleteNodePackageRequest(server string, hostname Hostname, name PackageN
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/package/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/package/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9393,7 +9393,7 @@ func NewGetNodePackageByNameRequest(server string, hostname Hostname, name Packa
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/package/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/package/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9438,7 +9438,7 @@ func NewPostNodePowerRebootRequestWithBody(server string, hostname Hostname, con
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/power/reboot", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/power/reboot", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9485,7 +9485,7 @@ func NewPostNodePowerShutdownRequestWithBody(server string, hostname Hostname, c
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/power/shutdown", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/power/shutdown", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9521,7 +9521,7 @@ func NewGetNodeProcessRequest(server string, hostname Hostname) (*http.Request, 
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/process", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/process", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9562,7 +9562,7 @@ func NewGetNodeProcessByPidRequest(server string, hostname Hostname, pid Pid) (*
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/process/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/process/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9614,7 +9614,7 @@ func NewPostNodeProcessSignalRequestWithBody(server string, hostname Hostname, p
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/process/%s/signal", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/process/%s/signal", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9650,7 +9650,7 @@ func NewGetNodeScheduleCronRequest(server string, hostname Hostname) (*http.Requ
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/schedule/cron", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/schedule/cron", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9695,7 +9695,7 @@ func NewPostNodeScheduleCronRequestWithBody(server string, hostname Hostname, co
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/schedule/cron", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/schedule/cron", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9738,7 +9738,7 @@ func NewDeleteNodeScheduleCronRequest(server string, hostname Hostname, name Cro
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/schedule/cron/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/schedule/cron/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9779,7 +9779,7 @@ func NewGetNodeScheduleCronByNameRequest(server string, hostname Hostname, name 
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/schedule/cron/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/schedule/cron/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9831,7 +9831,7 @@ func NewPutNodeScheduleCronRequestWithBody(server string, hostname Hostname, nam
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/schedule/cron/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/schedule/cron/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9867,7 +9867,7 @@ func NewGetNodeServiceRequest(server string, hostname Hostname) (*http.Request, 
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/service", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/service", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9912,7 +9912,7 @@ func NewPostNodeServiceRequestWithBody(server string, hostname Hostname, content
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/service", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/service", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9955,7 +9955,7 @@ func NewDeleteNodeServiceRequest(server string, hostname Hostname, name ServiceN
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/service/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/service/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9996,7 +9996,7 @@ func NewGetNodeServiceByNameRequest(server string, hostname Hostname, name Servi
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/service/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/service/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10048,7 +10048,7 @@ func NewPutNodeServiceRequestWithBody(server string, hostname Hostname, name Ser
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/service/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/service/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10091,7 +10091,7 @@ func NewPostNodeServiceDisableRequest(server string, hostname Hostname, name Ser
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/service/%s/disable", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/service/%s/disable", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10132,7 +10132,7 @@ func NewPostNodeServiceEnableRequest(server string, hostname Hostname, name Serv
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/service/%s/enable", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/service/%s/enable", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10173,7 +10173,7 @@ func NewPostNodeServiceRestartRequest(server string, hostname Hostname, name Ser
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/service/%s/restart", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/service/%s/restart", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10214,7 +10214,7 @@ func NewPostNodeServiceStartRequest(server string, hostname Hostname, name Servi
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/service/%s/start", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/service/%s/start", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10255,7 +10255,7 @@ func NewPostNodeServiceStopRequest(server string, hostname Hostname, name Servic
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/service/%s/stop", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/service/%s/stop", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10289,7 +10289,7 @@ func NewGetNodeSysctlRequest(server string, hostname Hostname) (*http.Request, e
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/sysctl", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/sysctl", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10334,7 +10334,7 @@ func NewPostNodeSysctlRequestWithBody(server string, hostname Hostname, contentT
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/sysctl", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/sysctl", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10377,7 +10377,7 @@ func NewDeleteNodeSysctlRequest(server string, hostname Hostname, key SysctlKey)
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/sysctl/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/sysctl/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10418,7 +10418,7 @@ func NewGetNodeSysctlByKeyRequest(server string, hostname Hostname, key SysctlKe
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/sysctl/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/sysctl/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10470,7 +10470,7 @@ func NewPutNodeSysctlRequestWithBody(server string, hostname Hostname, key Sysct
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/sysctl/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/sysctl/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10506,7 +10506,7 @@ func NewGetNodeTimezoneRequest(server string, hostname Hostname) (*http.Request,
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/timezone", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/timezone", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10551,7 +10551,7 @@ func NewPutNodeTimezoneRequestWithBody(server string, hostname Hostname, content
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/timezone", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/timezone", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10587,7 +10587,7 @@ func NewGetNodeUptimeRequest(server string, hostname Hostname) (*http.Request, e
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/uptime", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/uptime", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10621,7 +10621,7 @@ func NewGetNodeUserRequest(server string, hostname Hostname) (*http.Request, err
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/user", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/user", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10666,7 +10666,7 @@ func NewPostNodeUserRequestWithBody(server string, hostname Hostname, contentTyp
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/user", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/user", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10709,7 +10709,7 @@ func NewDeleteNodeUserRequest(server string, hostname Hostname, name UserName) (
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/user/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/user/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10750,7 +10750,7 @@ func NewGetNodeUserByNameRequest(server string, hostname Hostname, name UserName
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/user/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/user/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10802,7 +10802,7 @@ func NewPutNodeUserRequestWithBody(server string, hostname Hostname, name UserNa
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/user/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/user/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10856,7 +10856,7 @@ func NewPostNodeUserPasswordRequestWithBody(server string, hostname Hostname, na
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/user/%s/password", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/user/%s/password", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10899,7 +10899,7 @@ func NewGetNodeUserSSHKeyRequest(server string, hostname Hostname, name UserName
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/user/%s/ssh-key", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/user/%s/ssh-key", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10951,7 +10951,7 @@ func NewPostNodeUserSSHKeyRequestWithBody(server string, hostname Hostname, name
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/user/%s/ssh-key", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/user/%s/ssh-key", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -11001,7 +11001,7 @@ func NewDeleteNodeUserSSHKeyRequest(server string, hostname Hostname, name UserN
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/user/%s/ssh-key/%s", pathParam0, pathParam1, pathParam2)
+	operationPath := fmt.Sprintf("/api/node/%s/user/%s/ssh-key/%s", pathParam0, pathParam1, pathParam2)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -11019,8 +11019,8 @@ func NewDeleteNodeUserSSHKeyRequest(server string, hostname Hostname, name UserN
 	return req, nil
 }
 
-// NewGetVersionRequest generates requests for GetVersion
-func NewGetVersionRequest(server string) (*http.Request, error) {
+// NewGetApiVersionRequest generates requests for GetApiVersion
+func NewGetApiVersionRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -11028,7 +11028,7 @@ func NewGetVersionRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/version")
+	operationPath := fmt.Sprintf("/api/version")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -11089,8 +11089,8 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// GetAgentWithResponse request
-	GetAgentWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAgentResponse, error)
+	// GetApiAgentWithResponse request
+	GetApiAgentWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiAgentResponse, error)
 
 	// GetAgentDetailsWithResponse request
 	GetAgentDetailsWithResponse(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*GetAgentDetailsResponse, error)
@@ -11137,8 +11137,8 @@ type ClientWithResponsesInterface interface {
 	// GetHealthStatusWithResponse request
 	GetHealthStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthStatusResponse, error)
 
-	// GetJobWithResponse request
-	GetJobWithResponse(ctx context.Context, params *GetJobParams, reqEditors ...RequestEditorFn) (*GetJobResponse, error)
+	// GetApiJobWithResponse request
+	GetApiJobWithResponse(ctx context.Context, params *GetApiJobParams, reqEditors ...RequestEditorFn) (*GetApiJobResponse, error)
 
 	// DeleteJobByIDWithResponse request
 	DeleteJobByIDWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteJobByIDResponse, error)
@@ -11509,11 +11509,11 @@ type ClientWithResponsesInterface interface {
 	// DeleteNodeUserSSHKeyWithResponse request
 	DeleteNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*DeleteNodeUserSSHKeyResponse, error)
 
-	// GetVersionWithResponse request
-	GetVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetVersionResponse, error)
+	// GetApiVersionWithResponse request
+	GetApiVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiVersionResponse, error)
 }
 
-type GetAgentResponse struct {
+type GetApiAgentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ListAgentsResponse
@@ -11523,7 +11523,7 @@ type GetAgentResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetAgentResponse) Status() string {
+func (r GetApiAgentResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -11531,7 +11531,7 @@ func (r GetAgentResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetAgentResponse) StatusCode() int {
+func (r GetApiAgentResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -11926,7 +11926,7 @@ func (r GetHealthStatusResponse) StatusCode() int {
 	return 0
 }
 
-type GetJobResponse struct {
+type GetApiJobResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ListJobsResponse
@@ -11937,7 +11937,7 @@ type GetJobResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetJobResponse) Status() string {
+func (r GetApiJobResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -11945,7 +11945,7 @@ func (r GetJobResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetJobResponse) StatusCode() int {
+func (r GetApiJobResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -14507,14 +14507,14 @@ func (r DeleteNodeUserSSHKeyResponse) StatusCode() int {
 	return 0
 }
 
-type GetVersionResponse struct {
+type GetApiVersionResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON400      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r GetVersionResponse) Status() string {
+func (r GetApiVersionResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -14522,20 +14522,20 @@ func (r GetVersionResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetVersionResponse) StatusCode() int {
+func (r GetApiVersionResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-// GetAgentWithResponse request returning *GetAgentResponse
-func (c *ClientWithResponses) GetAgentWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAgentResponse, error) {
-	rsp, err := c.GetAgent(ctx, reqEditors...)
+// GetApiAgentWithResponse request returning *GetApiAgentResponse
+func (c *ClientWithResponses) GetApiAgentWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiAgentResponse, error) {
+	rsp, err := c.GetApiAgent(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetAgentResponse(rsp)
+	return ParseGetApiAgentResponse(rsp)
 }
 
 // GetAgentDetailsWithResponse request returning *GetAgentDetailsResponse
@@ -14673,13 +14673,13 @@ func (c *ClientWithResponses) GetHealthStatusWithResponse(ctx context.Context, r
 	return ParseGetHealthStatusResponse(rsp)
 }
 
-// GetJobWithResponse request returning *GetJobResponse
-func (c *ClientWithResponses) GetJobWithResponse(ctx context.Context, params *GetJobParams, reqEditors ...RequestEditorFn) (*GetJobResponse, error) {
-	rsp, err := c.GetJob(ctx, params, reqEditors...)
+// GetApiJobWithResponse request returning *GetApiJobResponse
+func (c *ClientWithResponses) GetApiJobWithResponse(ctx context.Context, params *GetApiJobParams, reqEditors ...RequestEditorFn) (*GetApiJobResponse, error) {
+	rsp, err := c.GetApiJob(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetJobResponse(rsp)
+	return ParseGetApiJobResponse(rsp)
 }
 
 // DeleteJobByIDWithResponse request returning *DeleteJobByIDResponse
@@ -15867,24 +15867,24 @@ func (c *ClientWithResponses) DeleteNodeUserSSHKeyWithResponse(ctx context.Conte
 	return ParseDeleteNodeUserSSHKeyResponse(rsp)
 }
 
-// GetVersionWithResponse request returning *GetVersionResponse
-func (c *ClientWithResponses) GetVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetVersionResponse, error) {
-	rsp, err := c.GetVersion(ctx, reqEditors...)
+// GetApiVersionWithResponse request returning *GetApiVersionResponse
+func (c *ClientWithResponses) GetApiVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiVersionResponse, error) {
+	rsp, err := c.GetApiVersion(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetVersionResponse(rsp)
+	return ParseGetApiVersionResponse(rsp)
 }
 
-// ParseGetAgentResponse parses an HTTP response from a GetAgentWithResponse call
-func ParseGetAgentResponse(rsp *http.Response) (*GetAgentResponse, error) {
+// ParseGetApiAgentResponse parses an HTTP response from a GetApiAgentWithResponse call
+func ParseGetApiAgentResponse(rsp *http.Response) (*GetApiAgentResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetAgentResponse{
+	response := &GetApiAgentResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -16695,15 +16695,15 @@ func ParseGetHealthStatusResponse(rsp *http.Response) (*GetHealthStatusResponse,
 	return response, nil
 }
 
-// ParseGetJobResponse parses an HTTP response from a GetJobWithResponse call
-func ParseGetJobResponse(rsp *http.Response) (*GetJobResponse, error) {
+// ParseGetApiJobResponse parses an HTTP response from a GetApiJobWithResponse call
+func ParseGetApiJobResponse(rsp *http.Response) (*GetApiJobResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetJobResponse{
+	response := &GetApiJobResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -22218,15 +22218,15 @@ func ParseDeleteNodeUserSSHKeyResponse(rsp *http.Response) (*DeleteNodeUserSSHKe
 	return response, nil
 }
 
-// ParseGetVersionResponse parses an HTTP response from a GetVersionWithResponse call
-func ParseGetVersionResponse(rsp *http.Response) (*GetVersionResponse, error) {
+// ParseGetApiVersionResponse parses an HTTP response from a GetApiVersionWithResponse call
+func ParseGetApiVersionResponse(rsp *http.Response) (*GetApiVersionResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetVersionResponse{
+	response := &GetApiVersionResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

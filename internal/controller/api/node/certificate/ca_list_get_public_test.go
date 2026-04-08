@@ -398,7 +398,7 @@ func (s *CAListGetPublicTestSuite) TestGetNodeCertificateCaValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/certificate/ca",
+			path: "/api/node/server1/certificate/ca",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -414,7 +414,7 @@ func (s *CAListGetPublicTestSuite) TestGetNodeCertificateCaValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/certificate/ca",
+			path: "/api/node/nonexistent/certificate/ca",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -539,7 +539,7 @@ func (s *CAListGetPublicTestSuite) TestGetNodeCertificateCaRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/certificate/ca",
+				"/api/node/server1/certificate/ca",
 				nil,
 			)
 			tc.setupAuth(req)

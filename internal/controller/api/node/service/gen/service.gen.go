@@ -170,34 +170,34 @@ type PutNodeServiceJSONRequestBody = ServiceUpdateRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List all services
-	// (GET /node/{hostname}/service)
+	// (GET /api/node/{hostname}/service)
 	GetNodeService(ctx echo.Context, hostname Hostname) error
 	// Create a service unit file
-	// (POST /node/{hostname}/service)
+	// (POST /api/node/{hostname}/service)
 	PostNodeService(ctx echo.Context, hostname Hostname) error
 	// Delete a service unit file
-	// (DELETE /node/{hostname}/service/{name})
+	// (DELETE /api/node/{hostname}/service/{name})
 	DeleteNodeService(ctx echo.Context, hostname Hostname, name ServiceName) error
 	// Get service details
-	// (GET /node/{hostname}/service/{name})
+	// (GET /api/node/{hostname}/service/{name})
 	GetNodeServiceByName(ctx echo.Context, hostname Hostname, name ServiceName) error
 	// Update a service unit file
-	// (PUT /node/{hostname}/service/{name})
+	// (PUT /api/node/{hostname}/service/{name})
 	PutNodeService(ctx echo.Context, hostname Hostname, name ServiceName) error
 	// Disable a service
-	// (POST /node/{hostname}/service/{name}/disable)
+	// (POST /api/node/{hostname}/service/{name}/disable)
 	PostNodeServiceDisable(ctx echo.Context, hostname Hostname, name ServiceName) error
 	// Enable a service
-	// (POST /node/{hostname}/service/{name}/enable)
+	// (POST /api/node/{hostname}/service/{name}/enable)
 	PostNodeServiceEnable(ctx echo.Context, hostname Hostname, name ServiceName) error
 	// Restart a service
-	// (POST /node/{hostname}/service/{name}/restart)
+	// (POST /api/node/{hostname}/service/{name}/restart)
 	PostNodeServiceRestart(ctx echo.Context, hostname Hostname, name ServiceName) error
 	// Start a service
-	// (POST /node/{hostname}/service/{name}/start)
+	// (POST /api/node/{hostname}/service/{name}/start)
 	PostNodeServiceStart(ctx echo.Context, hostname Hostname, name ServiceName) error
 	// Stop a service
-	// (POST /node/{hostname}/service/{name}/stop)
+	// (POST /api/node/{hostname}/service/{name}/stop)
 	PostNodeServiceStop(ctx echo.Context, hostname Hostname, name ServiceName) error
 }
 
@@ -478,16 +478,16 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/node/:hostname/service", wrapper.GetNodeService)
-	router.POST(baseURL+"/node/:hostname/service", wrapper.PostNodeService)
-	router.DELETE(baseURL+"/node/:hostname/service/:name", wrapper.DeleteNodeService)
-	router.GET(baseURL+"/node/:hostname/service/:name", wrapper.GetNodeServiceByName)
-	router.PUT(baseURL+"/node/:hostname/service/:name", wrapper.PutNodeService)
-	router.POST(baseURL+"/node/:hostname/service/:name/disable", wrapper.PostNodeServiceDisable)
-	router.POST(baseURL+"/node/:hostname/service/:name/enable", wrapper.PostNodeServiceEnable)
-	router.POST(baseURL+"/node/:hostname/service/:name/restart", wrapper.PostNodeServiceRestart)
-	router.POST(baseURL+"/node/:hostname/service/:name/start", wrapper.PostNodeServiceStart)
-	router.POST(baseURL+"/node/:hostname/service/:name/stop", wrapper.PostNodeServiceStop)
+	router.GET(baseURL+"/api/node/:hostname/service", wrapper.GetNodeService)
+	router.POST(baseURL+"/api/node/:hostname/service", wrapper.PostNodeService)
+	router.DELETE(baseURL+"/api/node/:hostname/service/:name", wrapper.DeleteNodeService)
+	router.GET(baseURL+"/api/node/:hostname/service/:name", wrapper.GetNodeServiceByName)
+	router.PUT(baseURL+"/api/node/:hostname/service/:name", wrapper.PutNodeService)
+	router.POST(baseURL+"/api/node/:hostname/service/:name/disable", wrapper.PostNodeServiceDisable)
+	router.POST(baseURL+"/api/node/:hostname/service/:name/enable", wrapper.PostNodeServiceEnable)
+	router.POST(baseURL+"/api/node/:hostname/service/:name/restart", wrapper.PostNodeServiceRestart)
+	router.POST(baseURL+"/api/node/:hostname/service/:name/start", wrapper.PostNodeServiceStart)
+	router.POST(baseURL+"/api/node/:hostname/service/:name/stop", wrapper.PostNodeServiceStop)
 
 }
 
@@ -1052,34 +1052,34 @@ func (response PostNodeServiceStop500JSONResponse) VisitPostNodeServiceStopRespo
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List all services
-	// (GET /node/{hostname}/service)
+	// (GET /api/node/{hostname}/service)
 	GetNodeService(ctx context.Context, request GetNodeServiceRequestObject) (GetNodeServiceResponseObject, error)
 	// Create a service unit file
-	// (POST /node/{hostname}/service)
+	// (POST /api/node/{hostname}/service)
 	PostNodeService(ctx context.Context, request PostNodeServiceRequestObject) (PostNodeServiceResponseObject, error)
 	// Delete a service unit file
-	// (DELETE /node/{hostname}/service/{name})
+	// (DELETE /api/node/{hostname}/service/{name})
 	DeleteNodeService(ctx context.Context, request DeleteNodeServiceRequestObject) (DeleteNodeServiceResponseObject, error)
 	// Get service details
-	// (GET /node/{hostname}/service/{name})
+	// (GET /api/node/{hostname}/service/{name})
 	GetNodeServiceByName(ctx context.Context, request GetNodeServiceByNameRequestObject) (GetNodeServiceByNameResponseObject, error)
 	// Update a service unit file
-	// (PUT /node/{hostname}/service/{name})
+	// (PUT /api/node/{hostname}/service/{name})
 	PutNodeService(ctx context.Context, request PutNodeServiceRequestObject) (PutNodeServiceResponseObject, error)
 	// Disable a service
-	// (POST /node/{hostname}/service/{name}/disable)
+	// (POST /api/node/{hostname}/service/{name}/disable)
 	PostNodeServiceDisable(ctx context.Context, request PostNodeServiceDisableRequestObject) (PostNodeServiceDisableResponseObject, error)
 	// Enable a service
-	// (POST /node/{hostname}/service/{name}/enable)
+	// (POST /api/node/{hostname}/service/{name}/enable)
 	PostNodeServiceEnable(ctx context.Context, request PostNodeServiceEnableRequestObject) (PostNodeServiceEnableResponseObject, error)
 	// Restart a service
-	// (POST /node/{hostname}/service/{name}/restart)
+	// (POST /api/node/{hostname}/service/{name}/restart)
 	PostNodeServiceRestart(ctx context.Context, request PostNodeServiceRestartRequestObject) (PostNodeServiceRestartResponseObject, error)
 	// Start a service
-	// (POST /node/{hostname}/service/{name}/start)
+	// (POST /api/node/{hostname}/service/{name}/start)
 	PostNodeServiceStart(ctx context.Context, request PostNodeServiceStartRequestObject) (PostNodeServiceStartResponseObject, error)
 	// Stop a service
-	// (POST /node/{hostname}/service/{name}/stop)
+	// (POST /api/node/{hostname}/service/{name}/stop)
 	PostNodeServiceStop(ctx context.Context, request PostNodeServiceStopRequestObject) (PostNodeServiceStopResponseObject, error)
 }
 

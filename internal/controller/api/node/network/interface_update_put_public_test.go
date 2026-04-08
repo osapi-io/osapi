@@ -313,7 +313,7 @@ func (s *NetworkInterfaceUpdatePutPublicTestSuite) TestPutNetworkInterfaceValida
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/network/interface/eth0",
+			path: "/api/node/server1/network/interface/eth0",
 			body: `{"dhcp4":true}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -330,7 +330,7 @@ func (s *NetworkInterfaceUpdatePutPublicTestSuite) TestPutNetworkInterfaceValida
 		},
 		{
 			name: "when empty body",
-			path: "/node/server1/network/interface/eth0",
+			path: "/api/node/server1/network/interface/eth0",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -340,7 +340,7 @@ func (s *NetworkInterfaceUpdatePutPublicTestSuite) TestPutNetworkInterfaceValida
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/network/interface/eth0",
+			path: "/api/node/nonexistent/network/interface/eth0",
 			body: `{"dhcp4":true}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -471,7 +471,7 @@ func (s *NetworkInterfaceUpdatePutPublicTestSuite) TestPutNetworkInterfaceRBACHT
 
 			req := httptest.NewRequest(
 				http.MethodPut,
-				"/node/server1/network/interface/eth0",
+				"/api/node/server1/network/interface/eth0",
 				strings.NewReader(`{"dhcp4":true}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

@@ -506,7 +506,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/schedule/cron/backup",
+			path: "/api/node/server1/schedule/cron/backup",
 			body: `{"schedule":"0 3 * * *"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -529,7 +529,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronValidationHTTP() {
 		},
 		{
 			name: "when empty body returns 400",
-			path: "/node/server1/schedule/cron/backup",
+			path: "/api/node/server1/schedule/cron/backup",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -539,7 +539,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronValidationHTTP() {
 		},
 		{
 			name: "when invalid cron schedule",
-			path: "/node/server1/schedule/cron/backup",
+			path: "/api/node/server1/schedule/cron/backup",
 			body: `{"schedule":"not-a-cron"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -549,7 +549,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/schedule/cron/backup",
+			path: "/api/node/nonexistent/schedule/cron/backup",
 			body: `{"schedule":"0 3 * * *"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -686,7 +686,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPut,
-				"/node/server1/schedule/cron/backup",
+				"/api/node/server1/schedule/cron/backup",
 				strings.NewReader(`{"schedule":"0 3 * * *"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

@@ -392,7 +392,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/network/ping",
+			path: "/api/node/server1/network/ping",
 			body: `{"address":"1.1.1.1"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -418,7 +418,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingValidationHTTP() {
 		},
 		{
 			name: "when missing address",
-			path: "/node/server1/network/ping",
+			path: "/api/node/server1/network/ping",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -428,7 +428,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingValidationHTTP() {
 		},
 		{
 			name: "when invalid address format",
-			path: "/node/server1/network/ping",
+			path: "/api/node/server1/network/ping",
 			body: `{"address":"not-an-ip"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -438,7 +438,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingValidationHTTP() {
 		},
 		{
 			name: "when fact reference passes validation",
-			path: "/node/server1/network/ping",
+			path: "/api/node/server1/network/ping",
 			body: `{"address":"@fact.custom.gateway"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -464,7 +464,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingValidationHTTP() {
 		},
 		{
 			name: "when partial fact reference rejected",
-			path: "/node/server1/network/ping",
+			path: "/api/node/server1/network/ping",
 			body: `{"address":"@fact"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -474,7 +474,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingValidationHTTP() {
 		},
 		{
 			name: "when unknown fact key rejected",
-			path: "/node/server1/network/ping",
+			path: "/api/node/server1/network/ping",
 			body: `{"address":"@fact.primary_interface"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -484,7 +484,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingValidationHTTP() {
 		},
 		{
 			name: "when broadcast all",
-			path: "/node/_all/network/ping",
+			path: "/api/node/_all/network/ping",
 			body: `{"address":"1.1.1.1"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -643,7 +643,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/network/ping",
+				"/api/node/server1/network/ping",
 				strings.NewReader(`{"address":"8.8.8.8"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

@@ -292,7 +292,7 @@ func (s *JobRetryPublicTestSuite) TestRetryJobByIDValidationHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/job/"+tc.jobID+"/retry",
+				"/api/job/"+tc.jobID+"/retry",
 				strings.NewReader(tc.body),
 			)
 			req.Header.Set("Content-Type", "application/json")
@@ -403,7 +403,7 @@ func (s *JobRetryPublicTestSuite) TestRetryJobByIDRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/job/550e8400-e29b-41d4-a716-446655440000/retry",
+				"/api/job/550e8400-e29b-41d4-a716-446655440000/retry",
 				strings.NewReader(`{"target_hostname":"_any"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

@@ -529,7 +529,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStaleHTTP() {
 			a := api.New(s.appConfig, s.logger)
 			gen.RegisterHandlers(a.Echo, strictHandler)
 
-			req := httptest.NewRequest(http.MethodGet, "/file/stale", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/file/stale", nil)
 			rec := httptest.NewRecorder()
 
 			a.Echo.ServeHTTP(rec, req)
@@ -634,7 +634,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStaleRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/file/stale", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/file/stale", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 

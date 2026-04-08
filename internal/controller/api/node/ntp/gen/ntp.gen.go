@@ -137,16 +137,16 @@ type PutNodeNtpJSONRequestBody = NtpUpdateRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Delete NTP configuration
-	// (DELETE /node/{hostname}/ntp)
+	// (DELETE /api/node/{hostname}/ntp)
 	DeleteNodeNtp(ctx echo.Context, hostname Hostname) error
 	// Get NTP status
-	// (GET /node/{hostname}/ntp)
+	// (GET /api/node/{hostname}/ntp)
 	GetNodeNtp(ctx echo.Context, hostname Hostname) error
 	// Create NTP configuration
-	// (POST /node/{hostname}/ntp)
+	// (POST /api/node/{hostname}/ntp)
 	PostNodeNtp(ctx echo.Context, hostname Hostname) error
 	// Update NTP configuration
-	// (PUT /node/{hostname}/ntp)
+	// (PUT /api/node/{hostname}/ntp)
 	PutNodeNtp(ctx echo.Context, hostname Hostname) error
 }
 
@@ -255,10 +255,10 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.DELETE(baseURL+"/node/:hostname/ntp", wrapper.DeleteNodeNtp)
-	router.GET(baseURL+"/node/:hostname/ntp", wrapper.GetNodeNtp)
-	router.POST(baseURL+"/node/:hostname/ntp", wrapper.PostNodeNtp)
-	router.PUT(baseURL+"/node/:hostname/ntp", wrapper.PutNodeNtp)
+	router.DELETE(baseURL+"/api/node/:hostname/ntp", wrapper.DeleteNodeNtp)
+	router.GET(baseURL+"/api/node/:hostname/ntp", wrapper.GetNodeNtp)
+	router.POST(baseURL+"/api/node/:hostname/ntp", wrapper.PostNodeNtp)
+	router.PUT(baseURL+"/api/node/:hostname/ntp", wrapper.PutNodeNtp)
 
 }
 
@@ -497,16 +497,16 @@ func (response PutNodeNtp500JSONResponse) VisitPutNodeNtpResponse(w http.Respons
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Delete NTP configuration
-	// (DELETE /node/{hostname}/ntp)
+	// (DELETE /api/node/{hostname}/ntp)
 	DeleteNodeNtp(ctx context.Context, request DeleteNodeNtpRequestObject) (DeleteNodeNtpResponseObject, error)
 	// Get NTP status
-	// (GET /node/{hostname}/ntp)
+	// (GET /api/node/{hostname}/ntp)
 	GetNodeNtp(ctx context.Context, request GetNodeNtpRequestObject) (GetNodeNtpResponseObject, error)
 	// Create NTP configuration
-	// (POST /node/{hostname}/ntp)
+	// (POST /api/node/{hostname}/ntp)
 	PostNodeNtp(ctx context.Context, request PostNodeNtpRequestObject) (PostNodeNtpResponseObject, error)
 	// Update NTP configuration
-	// (PUT /node/{hostname}/ntp)
+	// (PUT /api/node/{hostname}/ntp)
 	PutNodeNtp(ctx context.Context, request PutNodeNtpRequestObject) (PutNodeNtpResponseObject, error)
 }
 

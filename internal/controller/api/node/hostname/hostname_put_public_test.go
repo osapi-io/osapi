@@ -419,7 +419,7 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostnameHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/hostname",
+			path: "/api/node/server1/hostname",
 			body: `{"hostname":"new-hostname"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -436,7 +436,7 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostnameHTTP() {
 		},
 		{
 			name: "when missing hostname body returns 400",
-			path: "/node/server1/hostname",
+			path: "/api/node/server1/hostname",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -446,7 +446,7 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostnameHTTP() {
 		},
 		{
 			name: "when empty hostname path returns 400",
-			path: "/node/%20/hostname",
+			path: "/api/node/%20/hostname",
 			body: `{"hostname":"new-hostname"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -582,7 +582,7 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostnameRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPut,
-				"/node/server1/hostname",
+				"/api/node/server1/hostname",
 				strings.NewReader(`{"hostname":"new-hostname"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

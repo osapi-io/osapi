@@ -294,7 +294,7 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptimeValidationHTTP() {
 	}{
 		{
 			name: "when get Ok",
-			path: "/node/server1/uptime",
+			path: "/api/node/server1/uptime",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				uptimeResp := job.NodeUptimeResponse{Uptime: "3 days, 2 hours, 15 minutes"}
@@ -315,7 +315,7 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptimeValidationHTTP() {
 		},
 		{
 			name: "when empty hostname returns 400",
-			path: "/node/%20/uptime",
+			path: "/api/node/%20/uptime",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -324,7 +324,7 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptimeValidationHTTP() {
 		},
 		{
 			name: "when job client errors",
-			path: "/node/server1/uptime",
+			path: "/api/node/server1/uptime",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -456,7 +456,7 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptimeRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/node/server1/uptime", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/node/server1/uptime", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 

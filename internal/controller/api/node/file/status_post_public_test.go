@@ -482,7 +482,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/file/status",
+			path: "/api/node/server1/file/status",
 			body: `{"path":"/etc/nginx/nginx.conf"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -503,7 +503,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusValidationHTTP() {
 		},
 		{
 			name: "when missing path",
-			path: "/node/server1/file/status",
+			path: "/api/node/server1/file/status",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -513,7 +513,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/file/status",
+			path: "/api/node/nonexistent/file/status",
 			body: `{"path":"/etc/nginx/nginx.conf"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -652,7 +652,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/file/status",
+				"/api/node/server1/file/status",
 				strings.NewReader(`{"path":"/etc/nginx/nginx.conf"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

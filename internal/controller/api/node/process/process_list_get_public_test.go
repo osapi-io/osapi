@@ -356,7 +356,7 @@ func (s *ProcessListPublicTestSuite) TestGetNodeProcessValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/process",
+			path: "/api/node/server1/process",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -373,7 +373,7 @@ func (s *ProcessListPublicTestSuite) TestGetNodeProcessValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/process",
+			path: "/api/node/nonexistent/process",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -499,7 +499,7 @@ func (s *ProcessListPublicTestSuite) TestGetNodeProcessRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/process",
+				"/api/node/server1/process",
 				nil,
 			)
 			tc.setupAuth(req)

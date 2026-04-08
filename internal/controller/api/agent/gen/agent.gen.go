@@ -221,16 +221,16 @@ type TimelineEvent struct {
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List active agents
-	// (GET /agent)
-	GetAgent(ctx echo.Context) error
+	// (GET /api/agent)
+	GetApiAgent(ctx echo.Context) error
 	// Get agent details
-	// (GET /agent/{hostname})
+	// (GET /api/agent/{hostname})
 	GetAgentDetails(ctx echo.Context, hostname string) error
 	// Drain an agent
-	// (POST /agent/{hostname}/drain)
+	// (POST /api/agent/{hostname}/drain)
 	DrainAgent(ctx echo.Context, hostname string) error
 	// Undrain an agent
-	// (POST /agent/{hostname}/undrain)
+	// (POST /api/agent/{hostname}/undrain)
 	UndrainAgent(ctx echo.Context, hostname string) error
 }
 
@@ -239,14 +239,14 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
-// GetAgent converts echo context to params.
-func (w *ServerInterfaceWrapper) GetAgent(ctx echo.Context) error {
+// GetApiAgent converts echo context to params.
+func (w *ServerInterfaceWrapper) GetApiAgent(ctx echo.Context) error {
 	var err error
 
 	ctx.Set(BearerAuthScopes, []string{"agent:read"})
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetAgent(ctx)
+	err = w.Handler.GetApiAgent(ctx)
 	return err
 }
 
@@ -332,50 +332,50 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/agent", wrapper.GetAgent)
-	router.GET(baseURL+"/agent/:hostname", wrapper.GetAgentDetails)
-	router.POST(baseURL+"/agent/:hostname/drain", wrapper.DrainAgent)
-	router.POST(baseURL+"/agent/:hostname/undrain", wrapper.UndrainAgent)
+	router.GET(baseURL+"/api/agent", wrapper.GetApiAgent)
+	router.GET(baseURL+"/api/agent/:hostname", wrapper.GetAgentDetails)
+	router.POST(baseURL+"/api/agent/:hostname/drain", wrapper.DrainAgent)
+	router.POST(baseURL+"/api/agent/:hostname/undrain", wrapper.UndrainAgent)
 
 }
 
-type GetAgentRequestObject struct {
+type GetApiAgentRequestObject struct {
 }
 
-type GetAgentResponseObject interface {
-	VisitGetAgentResponse(w http.ResponseWriter) error
+type GetApiAgentResponseObject interface {
+	VisitGetApiAgentResponse(w http.ResponseWriter) error
 }
 
-type GetAgent200JSONResponse ListAgentsResponse
+type GetApiAgent200JSONResponse ListAgentsResponse
 
-func (response GetAgent200JSONResponse) VisitGetAgentResponse(w http.ResponseWriter) error {
+func (response GetApiAgent200JSONResponse) VisitGetApiAgentResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetAgent401JSONResponse externalRef0.ErrorResponse
+type GetApiAgent401JSONResponse externalRef0.ErrorResponse
 
-func (response GetAgent401JSONResponse) VisitGetAgentResponse(w http.ResponseWriter) error {
+func (response GetApiAgent401JSONResponse) VisitGetApiAgentResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetAgent403JSONResponse externalRef0.ErrorResponse
+type GetApiAgent403JSONResponse externalRef0.ErrorResponse
 
-func (response GetAgent403JSONResponse) VisitGetAgentResponse(w http.ResponseWriter) error {
+func (response GetApiAgent403JSONResponse) VisitGetApiAgentResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetAgent500JSONResponse externalRef0.ErrorResponse
+type GetApiAgent500JSONResponse externalRef0.ErrorResponse
 
-func (response GetAgent500JSONResponse) VisitGetAgentResponse(w http.ResponseWriter) error {
+func (response GetApiAgent500JSONResponse) VisitGetApiAgentResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -575,16 +575,16 @@ func (response UndrainAgent409JSONResponse) VisitUndrainAgentResponse(w http.Res
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List active agents
-	// (GET /agent)
-	GetAgent(ctx context.Context, request GetAgentRequestObject) (GetAgentResponseObject, error)
+	// (GET /api/agent)
+	GetApiAgent(ctx context.Context, request GetApiAgentRequestObject) (GetApiAgentResponseObject, error)
 	// Get agent details
-	// (GET /agent/{hostname})
+	// (GET /api/agent/{hostname})
 	GetAgentDetails(ctx context.Context, request GetAgentDetailsRequestObject) (GetAgentDetailsResponseObject, error)
 	// Drain an agent
-	// (POST /agent/{hostname}/drain)
+	// (POST /api/agent/{hostname}/drain)
 	DrainAgent(ctx context.Context, request DrainAgentRequestObject) (DrainAgentResponseObject, error)
 	// Undrain an agent
-	// (POST /agent/{hostname}/undrain)
+	// (POST /api/agent/{hostname}/undrain)
 	UndrainAgent(ctx context.Context, request UndrainAgentRequestObject) (UndrainAgentResponseObject, error)
 }
 
@@ -600,23 +600,23 @@ type strictHandler struct {
 	middlewares []StrictMiddlewareFunc
 }
 
-// GetAgent operation middleware
-func (sh *strictHandler) GetAgent(ctx echo.Context) error {
-	var request GetAgentRequestObject
+// GetApiAgent operation middleware
+func (sh *strictHandler) GetApiAgent(ctx echo.Context) error {
+	var request GetApiAgentRequestObject
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetAgent(ctx.Request().Context(), request.(GetAgentRequestObject))
+		return sh.ssi.GetApiAgent(ctx.Request().Context(), request.(GetApiAgentRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetAgent")
+		handler = middleware(handler, "GetApiAgent")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(GetAgentResponseObject); ok {
-		return validResponse.VisitGetAgentResponse(ctx.Response())
+	} else if validResponse, ok := response.(GetApiAgentResponseObject); ok {
+		return validResponse.VisitGetApiAgentResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

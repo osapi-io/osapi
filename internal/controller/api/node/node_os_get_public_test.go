@@ -296,7 +296,7 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOSValidationHTTP() {
 	}{
 		{
 			name: "when get Ok",
-			path: "/node/server1/os",
+			path: "/api/node/server1/os",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				osResult := host.Result{Distribution: "Ubuntu", Version: "22.04"}
@@ -317,7 +317,7 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOSValidationHTTP() {
 		},
 		{
 			name: "when empty hostname returns 400",
-			path: "/node/%20/os",
+			path: "/api/node/%20/os",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -326,7 +326,7 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOSValidationHTTP() {
 		},
 		{
 			name: "when job client errors",
-			path: "/node/server1/os",
+			path: "/api/node/server1/os",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -458,7 +458,7 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOSRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/node/server1/os", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/node/server1/os", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 

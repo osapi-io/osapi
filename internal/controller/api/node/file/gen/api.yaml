@@ -29,7 +29,7 @@ tags:
     description: File deploy, undeploy, and status operations on a target node.
 
 paths:
-  /node/{hostname}/file/deploy:
+  /api/node/{hostname}/file/deploy:
     post:
       operationId: PostNodeFileDeploy
       summary: Deploy a file from Object Store to the host
@@ -78,7 +78,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/file/undeploy:
+  /api/node/{hostname}/file/undeploy:
     post:
       operationId: PostNodeFileUndeploy
       summary: Remove a deployed file from the host filesystem
@@ -127,7 +127,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/file/status:
+  /api/node/{hostname}/file/status:
     post:
       operationId: PostNodeFileStatus
       summary: Check deployment status of a file on the host

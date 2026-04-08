@@ -341,7 +341,7 @@ func (s *GroupGetPublicTestSuite) TestGetNodeGroupByNameRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/node/server1/group/sudo", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/node/server1/group/sudo", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 			server.Echo.ServeHTTP(rec, req)

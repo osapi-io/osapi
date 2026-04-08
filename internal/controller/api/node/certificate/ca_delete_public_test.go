@@ -411,7 +411,7 @@ func (s *CADeletePublicTestSuite) TestDeleteNodeCertificateCaValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/certificate/ca/my-ca",
+			path: "/api/node/server1/certificate/ca/my-ca",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -433,7 +433,7 @@ func (s *CADeletePublicTestSuite) TestDeleteNodeCertificateCaValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/certificate/ca/my-ca",
+			path: "/api/node/nonexistent/certificate/ca/my-ca",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -564,7 +564,7 @@ func (s *CADeletePublicTestSuite) TestDeleteNodeCertificateCaRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodDelete,
-				"/node/server1/certificate/ca/my-ca",
+				"/api/node/server1/certificate/ca/my-ca",
 				nil,
 			)
 			tc.setupAuth(req)

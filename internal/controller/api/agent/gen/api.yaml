@@ -28,7 +28,7 @@ tags:
     x-displayName: Agent
     description: Operations related to agent discovery and details.
 paths:
-  /agent:
+  /api/agent:
     get:
       summary: List active agents
       description: Discover all active agents in the fleet.
@@ -62,7 +62,7 @@ paths:
             application/json:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-  /agent/{hostname}:
+  /api/agent/{hostname}:
     get:
       summary: Get agent details
       description: Get detailed information about a specific agent by hostname.
@@ -123,7 +123,7 @@ paths:
             application/json:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-  /agent/{hostname}/drain:
+  /api/agent/{hostname}/drain:
     post:
       operationId: drainAgent
       summary: Drain an agent
@@ -191,7 +191,7 @@ paths:
             application/json:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-  /agent/{hostname}/undrain:
+  /api/agent/{hostname}/undrain:
     post:
       operationId: undrainAgent
       summary: Undrain an agent

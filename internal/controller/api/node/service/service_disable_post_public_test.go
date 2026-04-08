@@ -310,7 +310,7 @@ func (s *ServiceDisablePostPublicTestSuite) TestPostNodeServiceDisableValidation
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/service/nginx.service/disable",
+			path: "/api/node/server1/service/nginx.service/disable",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -326,7 +326,7 @@ func (s *ServiceDisablePostPublicTestSuite) TestPostNodeServiceDisableValidation
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/service/nginx.service/disable",
+			path: "/api/node/nonexistent/service/nginx.service/disable",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -432,7 +432,7 @@ func (s *ServiceDisablePostPublicTestSuite) TestPostNodeServiceDisableRBACHTTP()
 			server.RegisterHandlers(handlers)
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/service/nginx.service/disable",
+				"/api/node/server1/service/nginx.service/disable",
 				nil,
 			)
 			tc.setupAuth(req)

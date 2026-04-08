@@ -141,16 +141,16 @@ type PutNodeCertificateCaJSONRequestBody = CertificateCAUpdateRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List all CA certificates
-	// (GET /node/{hostname}/certificate/ca)
+	// (GET /api/node/{hostname}/certificate/ca)
 	GetNodeCertificateCa(ctx echo.Context, hostname Hostname) error
 	// Create a CA certificate
-	// (POST /node/{hostname}/certificate/ca)
+	// (POST /api/node/{hostname}/certificate/ca)
 	PostNodeCertificateCa(ctx echo.Context, hostname Hostname) error
 	// Delete a CA certificate
-	// (DELETE /node/{hostname}/certificate/ca/{name})
+	// (DELETE /api/node/{hostname}/certificate/ca/{name})
 	DeleteNodeCertificateCa(ctx echo.Context, hostname Hostname, name CertName) error
 	// Update a CA certificate
-	// (PUT /node/{hostname}/certificate/ca/{name})
+	// (PUT /api/node/{hostname}/certificate/ca/{name})
 	PutNodeCertificateCa(ctx echo.Context, hostname Hostname, name CertName) error
 }
 
@@ -275,10 +275,10 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/node/:hostname/certificate/ca", wrapper.GetNodeCertificateCa)
-	router.POST(baseURL+"/node/:hostname/certificate/ca", wrapper.PostNodeCertificateCa)
-	router.DELETE(baseURL+"/node/:hostname/certificate/ca/:name", wrapper.DeleteNodeCertificateCa)
-	router.PUT(baseURL+"/node/:hostname/certificate/ca/:name", wrapper.PutNodeCertificateCa)
+	router.GET(baseURL+"/api/node/:hostname/certificate/ca", wrapper.GetNodeCertificateCa)
+	router.POST(baseURL+"/api/node/:hostname/certificate/ca", wrapper.PostNodeCertificateCa)
+	router.DELETE(baseURL+"/api/node/:hostname/certificate/ca/:name", wrapper.DeleteNodeCertificateCa)
+	router.PUT(baseURL+"/api/node/:hostname/certificate/ca/:name", wrapper.PutNodeCertificateCa)
 
 }
 
@@ -510,16 +510,16 @@ func (response PutNodeCertificateCa500JSONResponse) VisitPutNodeCertificateCaRes
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List all CA certificates
-	// (GET /node/{hostname}/certificate/ca)
+	// (GET /api/node/{hostname}/certificate/ca)
 	GetNodeCertificateCa(ctx context.Context, request GetNodeCertificateCaRequestObject) (GetNodeCertificateCaResponseObject, error)
 	// Create a CA certificate
-	// (POST /node/{hostname}/certificate/ca)
+	// (POST /api/node/{hostname}/certificate/ca)
 	PostNodeCertificateCa(ctx context.Context, request PostNodeCertificateCaRequestObject) (PostNodeCertificateCaResponseObject, error)
 	// Delete a CA certificate
-	// (DELETE /node/{hostname}/certificate/ca/{name})
+	// (DELETE /api/node/{hostname}/certificate/ca/{name})
 	DeleteNodeCertificateCa(ctx context.Context, request DeleteNodeCertificateCaRequestObject) (DeleteNodeCertificateCaResponseObject, error)
 	// Update a CA certificate
-	// (PUT /node/{hostname}/certificate/ca/{name})
+	// (PUT /api/node/{hostname}/certificate/ca/{name})
 	PutNodeCertificateCa(ctx context.Context, request PutNodeCertificateCaRequestObject) (PutNodeCertificateCaResponseObject, error)
 }
 

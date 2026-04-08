@@ -374,46 +374,46 @@ type PostNodeUserSSHKeyJSONRequestBody = SSHKeyAddRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List all groups
-	// (GET /node/{hostname}/group)
+	// (GET /api/node/{hostname}/group)
 	GetNodeGroup(ctx echo.Context, hostname Hostname) error
 	// Create a group
-	// (POST /node/{hostname}/group)
+	// (POST /api/node/{hostname}/group)
 	PostNodeGroup(ctx echo.Context, hostname Hostname) error
 	// Delete a group
-	// (DELETE /node/{hostname}/group/{name})
+	// (DELETE /api/node/{hostname}/group/{name})
 	DeleteNodeGroup(ctx echo.Context, hostname Hostname, name GroupName) error
 	// Get a group
-	// (GET /node/{hostname}/group/{name})
+	// (GET /api/node/{hostname}/group/{name})
 	GetNodeGroupByName(ctx echo.Context, hostname Hostname, name GroupName) error
 	// Update a group
-	// (PUT /node/{hostname}/group/{name})
+	// (PUT /api/node/{hostname}/group/{name})
 	PutNodeGroup(ctx echo.Context, hostname Hostname, name GroupName) error
 	// List all users
-	// (GET /node/{hostname}/user)
+	// (GET /api/node/{hostname}/user)
 	GetNodeUser(ctx echo.Context, hostname Hostname) error
 	// Create a user
-	// (POST /node/{hostname}/user)
+	// (POST /api/node/{hostname}/user)
 	PostNodeUser(ctx echo.Context, hostname Hostname) error
 	// Delete a user
-	// (DELETE /node/{hostname}/user/{name})
+	// (DELETE /api/node/{hostname}/user/{name})
 	DeleteNodeUser(ctx echo.Context, hostname Hostname, name UserName) error
 	// Get a user
-	// (GET /node/{hostname}/user/{name})
+	// (GET /api/node/{hostname}/user/{name})
 	GetNodeUserByName(ctx echo.Context, hostname Hostname, name UserName) error
 	// Update a user
-	// (PUT /node/{hostname}/user/{name})
+	// (PUT /api/node/{hostname}/user/{name})
 	PutNodeUser(ctx echo.Context, hostname Hostname, name UserName) error
 	// Change user password
-	// (POST /node/{hostname}/user/{name}/password)
+	// (POST /api/node/{hostname}/user/{name}/password)
 	PostNodeUserPassword(ctx echo.Context, hostname Hostname, name UserName) error
 	// List SSH authorized keys
-	// (GET /node/{hostname}/user/{name}/ssh-key)
+	// (GET /api/node/{hostname}/user/{name}/ssh-key)
 	GetNodeUserSSHKey(ctx echo.Context, hostname Hostname, name UserName) error
 	// Add SSH authorized key
-	// (POST /node/{hostname}/user/{name}/ssh-key)
+	// (POST /api/node/{hostname}/user/{name}/ssh-key)
 	PostNodeUserSSHKey(ctx echo.Context, hostname Hostname, name UserName) error
 	// Remove SSH authorized key
-	// (DELETE /node/{hostname}/user/{name}/ssh-key/{fingerprint})
+	// (DELETE /api/node/{hostname}/user/{name}/ssh-key/{fingerprint})
 	DeleteNodeUserSSHKey(ctx echo.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint) error
 }
 
@@ -790,20 +790,20 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/node/:hostname/group", wrapper.GetNodeGroup)
-	router.POST(baseURL+"/node/:hostname/group", wrapper.PostNodeGroup)
-	router.DELETE(baseURL+"/node/:hostname/group/:name", wrapper.DeleteNodeGroup)
-	router.GET(baseURL+"/node/:hostname/group/:name", wrapper.GetNodeGroupByName)
-	router.PUT(baseURL+"/node/:hostname/group/:name", wrapper.PutNodeGroup)
-	router.GET(baseURL+"/node/:hostname/user", wrapper.GetNodeUser)
-	router.POST(baseURL+"/node/:hostname/user", wrapper.PostNodeUser)
-	router.DELETE(baseURL+"/node/:hostname/user/:name", wrapper.DeleteNodeUser)
-	router.GET(baseURL+"/node/:hostname/user/:name", wrapper.GetNodeUserByName)
-	router.PUT(baseURL+"/node/:hostname/user/:name", wrapper.PutNodeUser)
-	router.POST(baseURL+"/node/:hostname/user/:name/password", wrapper.PostNodeUserPassword)
-	router.GET(baseURL+"/node/:hostname/user/:name/ssh-key", wrapper.GetNodeUserSSHKey)
-	router.POST(baseURL+"/node/:hostname/user/:name/ssh-key", wrapper.PostNodeUserSSHKey)
-	router.DELETE(baseURL+"/node/:hostname/user/:name/ssh-key/:fingerprint", wrapper.DeleteNodeUserSSHKey)
+	router.GET(baseURL+"/api/node/:hostname/group", wrapper.GetNodeGroup)
+	router.POST(baseURL+"/api/node/:hostname/group", wrapper.PostNodeGroup)
+	router.DELETE(baseURL+"/api/node/:hostname/group/:name", wrapper.DeleteNodeGroup)
+	router.GET(baseURL+"/api/node/:hostname/group/:name", wrapper.GetNodeGroupByName)
+	router.PUT(baseURL+"/api/node/:hostname/group/:name", wrapper.PutNodeGroup)
+	router.GET(baseURL+"/api/node/:hostname/user", wrapper.GetNodeUser)
+	router.POST(baseURL+"/api/node/:hostname/user", wrapper.PostNodeUser)
+	router.DELETE(baseURL+"/api/node/:hostname/user/:name", wrapper.DeleteNodeUser)
+	router.GET(baseURL+"/api/node/:hostname/user/:name", wrapper.GetNodeUserByName)
+	router.PUT(baseURL+"/api/node/:hostname/user/:name", wrapper.PutNodeUser)
+	router.POST(baseURL+"/api/node/:hostname/user/:name/password", wrapper.PostNodeUserPassword)
+	router.GET(baseURL+"/api/node/:hostname/user/:name/ssh-key", wrapper.GetNodeUserSSHKey)
+	router.POST(baseURL+"/api/node/:hostname/user/:name/ssh-key", wrapper.PostNodeUserSSHKey)
+	router.DELETE(baseURL+"/api/node/:hostname/user/:name/ssh-key/:fingerprint", wrapper.DeleteNodeUserSSHKey)
 
 }
 
@@ -1632,46 +1632,46 @@ func (response DeleteNodeUserSSHKey500JSONResponse) VisitDeleteNodeUserSSHKeyRes
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List all groups
-	// (GET /node/{hostname}/group)
+	// (GET /api/node/{hostname}/group)
 	GetNodeGroup(ctx context.Context, request GetNodeGroupRequestObject) (GetNodeGroupResponseObject, error)
 	// Create a group
-	// (POST /node/{hostname}/group)
+	// (POST /api/node/{hostname}/group)
 	PostNodeGroup(ctx context.Context, request PostNodeGroupRequestObject) (PostNodeGroupResponseObject, error)
 	// Delete a group
-	// (DELETE /node/{hostname}/group/{name})
+	// (DELETE /api/node/{hostname}/group/{name})
 	DeleteNodeGroup(ctx context.Context, request DeleteNodeGroupRequestObject) (DeleteNodeGroupResponseObject, error)
 	// Get a group
-	// (GET /node/{hostname}/group/{name})
+	// (GET /api/node/{hostname}/group/{name})
 	GetNodeGroupByName(ctx context.Context, request GetNodeGroupByNameRequestObject) (GetNodeGroupByNameResponseObject, error)
 	// Update a group
-	// (PUT /node/{hostname}/group/{name})
+	// (PUT /api/node/{hostname}/group/{name})
 	PutNodeGroup(ctx context.Context, request PutNodeGroupRequestObject) (PutNodeGroupResponseObject, error)
 	// List all users
-	// (GET /node/{hostname}/user)
+	// (GET /api/node/{hostname}/user)
 	GetNodeUser(ctx context.Context, request GetNodeUserRequestObject) (GetNodeUserResponseObject, error)
 	// Create a user
-	// (POST /node/{hostname}/user)
+	// (POST /api/node/{hostname}/user)
 	PostNodeUser(ctx context.Context, request PostNodeUserRequestObject) (PostNodeUserResponseObject, error)
 	// Delete a user
-	// (DELETE /node/{hostname}/user/{name})
+	// (DELETE /api/node/{hostname}/user/{name})
 	DeleteNodeUser(ctx context.Context, request DeleteNodeUserRequestObject) (DeleteNodeUserResponseObject, error)
 	// Get a user
-	// (GET /node/{hostname}/user/{name})
+	// (GET /api/node/{hostname}/user/{name})
 	GetNodeUserByName(ctx context.Context, request GetNodeUserByNameRequestObject) (GetNodeUserByNameResponseObject, error)
 	// Update a user
-	// (PUT /node/{hostname}/user/{name})
+	// (PUT /api/node/{hostname}/user/{name})
 	PutNodeUser(ctx context.Context, request PutNodeUserRequestObject) (PutNodeUserResponseObject, error)
 	// Change user password
-	// (POST /node/{hostname}/user/{name}/password)
+	// (POST /api/node/{hostname}/user/{name}/password)
 	PostNodeUserPassword(ctx context.Context, request PostNodeUserPasswordRequestObject) (PostNodeUserPasswordResponseObject, error)
 	// List SSH authorized keys
-	// (GET /node/{hostname}/user/{name}/ssh-key)
+	// (GET /api/node/{hostname}/user/{name}/ssh-key)
 	GetNodeUserSSHKey(ctx context.Context, request GetNodeUserSSHKeyRequestObject) (GetNodeUserSSHKeyResponseObject, error)
 	// Add SSH authorized key
-	// (POST /node/{hostname}/user/{name}/ssh-key)
+	// (POST /api/node/{hostname}/user/{name}/ssh-key)
 	PostNodeUserSSHKey(ctx context.Context, request PostNodeUserSSHKeyRequestObject) (PostNodeUserSSHKeyResponseObject, error)
 	// Remove SSH authorized key
-	// (DELETE /node/{hostname}/user/{name}/ssh-key/{fingerprint})
+	// (DELETE /api/node/{hostname}/user/{name}/ssh-key/{fingerprint})
 	DeleteNodeUserSSHKey(ctx context.Context, request DeleteNodeUserSSHKeyRequestObject) (DeleteNodeUserSSHKeyResponseObject, error)
 }
 

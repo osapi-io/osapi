@@ -371,7 +371,7 @@ func (s *UserGetPublicTestSuite) TestGetNodeUserByNameRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/node/server1/user/testuser", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/node/server1/user/testuser", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 			server.Echo.ServeHTTP(rec, req)

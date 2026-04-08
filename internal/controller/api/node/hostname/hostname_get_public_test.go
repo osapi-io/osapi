@@ -323,7 +323,7 @@ func (s *HostnameGetPublicTestSuite) TestGetNodeHostnameValidationHTTP() {
 	}{
 		{
 			name: "when empty hostname returns 400",
-			path: "/node/%20/hostname",
+			path: "/api/node/%20/hostname",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -332,7 +332,7 @@ func (s *HostnameGetPublicTestSuite) TestGetNodeHostnameValidationHTTP() {
 		},
 		{
 			name: "when get Ok",
-			path: "/node/server1/hostname",
+			path: "/api/node/server1/hostname",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				data, _ := json.Marshal(map[string]any{
@@ -351,7 +351,7 @@ func (s *HostnameGetPublicTestSuite) TestGetNodeHostnameValidationHTTP() {
 		},
 		{
 			name: "when job client errors",
-			path: "/node/server1/hostname",
+			path: "/api/node/server1/hostname",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -364,7 +364,7 @@ func (s *HostnameGetPublicTestSuite) TestGetNodeHostnameValidationHTTP() {
 		},
 		{
 			name: "when broadcast all",
-			path: "/node/_all/hostname",
+			path: "/api/node/_all/hostname",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				data1, _ := json.Marshal(map[string]any{"hostname": "host1"})
@@ -504,7 +504,7 @@ func (s *HostnameGetPublicTestSuite) TestGetNodeHostnameRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/node/server1/hostname", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/node/server1/hostname", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 

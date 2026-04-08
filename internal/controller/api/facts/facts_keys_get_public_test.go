@@ -207,7 +207,7 @@ func (s *FactsKeysGetPublicTestSuite) TestGetFactKeysRBACHTTP() {
 			handlers := facts.Handler(s.logger, appConfig.Controller.API.Security.SigningKey, nil)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/facts/keys", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/facts/keys", nil)
 			tt.setupAuth(req)
 			rec := httptest.NewRecorder()
 			server.Echo.ServeHTTP(rec, req)

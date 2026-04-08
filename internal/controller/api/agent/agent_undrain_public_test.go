@@ -321,7 +321,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgentHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				fmt.Sprintf("/agent/%s/undrain", tc.hostname),
+				fmt.Sprintf("/api/agent/%s/undrain", tc.hostname),
 				nil,
 			)
 			rec := httptest.NewRecorder()
@@ -435,7 +435,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgentRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/agent/server1/undrain",
+				"/api/agent/server1/undrain",
 				nil,
 			)
 			tc.setupAuth(req)

@@ -517,46 +517,46 @@ type PutNodeNetworkRouteJSONRequestBody = RouteConfigRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Delete DNS configuration
-	// (DELETE /node/{hostname}/network/dns)
+	// (DELETE /api/node/{hostname}/network/dns)
 	DeleteNodeNetworkDNS(ctx echo.Context, hostname Hostname) error
 	// Update DNS servers
-	// (PUT /node/{hostname}/network/dns)
+	// (PUT /api/node/{hostname}/network/dns)
 	PutNodeNetworkDNS(ctx echo.Context, hostname Hostname) error
 	// List DNS servers
-	// (GET /node/{hostname}/network/dns/{interfaceName})
+	// (GET /api/node/{hostname}/network/dns/{interfaceName})
 	GetNodeNetworkDNSByInterface(ctx echo.Context, hostname Hostname, interfaceName string) error
 	// List network interfaces
-	// (GET /node/{hostname}/network/interface)
+	// (GET /api/node/{hostname}/network/interface)
 	GetNodeNetworkInterface(ctx echo.Context, hostname Hostname) error
 	// Delete interface configuration
-	// (DELETE /node/{hostname}/network/interface/{name})
+	// (DELETE /api/node/{hostname}/network/interface/{name})
 	DeleteNodeNetworkInterface(ctx echo.Context, hostname Hostname, name InterfaceName) error
 	// Get network interface details
-	// (GET /node/{hostname}/network/interface/{name})
+	// (GET /api/node/{hostname}/network/interface/{name})
 	GetNodeNetworkInterfaceByName(ctx echo.Context, hostname Hostname, name InterfaceName) error
 	// Create interface configuration
-	// (POST /node/{hostname}/network/interface/{name})
+	// (POST /api/node/{hostname}/network/interface/{name})
 	PostNodeNetworkInterface(ctx echo.Context, hostname Hostname, name InterfaceName) error
 	// Update interface configuration
-	// (PUT /node/{hostname}/network/interface/{name})
+	// (PUT /api/node/{hostname}/network/interface/{name})
 	PutNodeNetworkInterface(ctx echo.Context, hostname Hostname, name InterfaceName) error
 	// Ping a remote server
-	// (POST /node/{hostname}/network/ping)
+	// (POST /api/node/{hostname}/network/ping)
 	PostNodeNetworkPing(ctx echo.Context, hostname Hostname) error
 	// List network routes
-	// (GET /node/{hostname}/network/route)
+	// (GET /api/node/{hostname}/network/route)
 	GetNodeNetworkRoute(ctx echo.Context, hostname Hostname) error
 	// Delete routes for an interface
-	// (DELETE /node/{hostname}/network/route/{interfaceName})
+	// (DELETE /api/node/{hostname}/network/route/{interfaceName})
 	DeleteNodeNetworkRoute(ctx echo.Context, hostname Hostname, interfaceName RouteInterfaceName) error
 	// Get routes for an interface
-	// (GET /node/{hostname}/network/route/{interfaceName})
+	// (GET /api/node/{hostname}/network/route/{interfaceName})
 	GetNodeNetworkRouteByInterface(ctx echo.Context, hostname Hostname, interfaceName RouteInterfaceName) error
 	// Create routes for an interface
-	// (POST /node/{hostname}/network/route/{interfaceName})
+	// (POST /api/node/{hostname}/network/route/{interfaceName})
 	PostNodeNetworkRoute(ctx echo.Context, hostname Hostname, interfaceName RouteInterfaceName) error
 	// Update routes for an interface
-	// (PUT /node/{hostname}/network/route/{interfaceName})
+	// (PUT /api/node/{hostname}/network/route/{interfaceName})
 	PutNodeNetworkRoute(ctx echo.Context, hostname Hostname, interfaceName RouteInterfaceName) error
 }
 
@@ -917,20 +917,20 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.DELETE(baseURL+"/node/:hostname/network/dns", wrapper.DeleteNodeNetworkDNS)
-	router.PUT(baseURL+"/node/:hostname/network/dns", wrapper.PutNodeNetworkDNS)
-	router.GET(baseURL+"/node/:hostname/network/dns/:interfaceName", wrapper.GetNodeNetworkDNSByInterface)
-	router.GET(baseURL+"/node/:hostname/network/interface", wrapper.GetNodeNetworkInterface)
-	router.DELETE(baseURL+"/node/:hostname/network/interface/:name", wrapper.DeleteNodeNetworkInterface)
-	router.GET(baseURL+"/node/:hostname/network/interface/:name", wrapper.GetNodeNetworkInterfaceByName)
-	router.POST(baseURL+"/node/:hostname/network/interface/:name", wrapper.PostNodeNetworkInterface)
-	router.PUT(baseURL+"/node/:hostname/network/interface/:name", wrapper.PutNodeNetworkInterface)
-	router.POST(baseURL+"/node/:hostname/network/ping", wrapper.PostNodeNetworkPing)
-	router.GET(baseURL+"/node/:hostname/network/route", wrapper.GetNodeNetworkRoute)
-	router.DELETE(baseURL+"/node/:hostname/network/route/:interfaceName", wrapper.DeleteNodeNetworkRoute)
-	router.GET(baseURL+"/node/:hostname/network/route/:interfaceName", wrapper.GetNodeNetworkRouteByInterface)
-	router.POST(baseURL+"/node/:hostname/network/route/:interfaceName", wrapper.PostNodeNetworkRoute)
-	router.PUT(baseURL+"/node/:hostname/network/route/:interfaceName", wrapper.PutNodeNetworkRoute)
+	router.DELETE(baseURL+"/api/node/:hostname/network/dns", wrapper.DeleteNodeNetworkDNS)
+	router.PUT(baseURL+"/api/node/:hostname/network/dns", wrapper.PutNodeNetworkDNS)
+	router.GET(baseURL+"/api/node/:hostname/network/dns/:interfaceName", wrapper.GetNodeNetworkDNSByInterface)
+	router.GET(baseURL+"/api/node/:hostname/network/interface", wrapper.GetNodeNetworkInterface)
+	router.DELETE(baseURL+"/api/node/:hostname/network/interface/:name", wrapper.DeleteNodeNetworkInterface)
+	router.GET(baseURL+"/api/node/:hostname/network/interface/:name", wrapper.GetNodeNetworkInterfaceByName)
+	router.POST(baseURL+"/api/node/:hostname/network/interface/:name", wrapper.PostNodeNetworkInterface)
+	router.PUT(baseURL+"/api/node/:hostname/network/interface/:name", wrapper.PutNodeNetworkInterface)
+	router.POST(baseURL+"/api/node/:hostname/network/ping", wrapper.PostNodeNetworkPing)
+	router.GET(baseURL+"/api/node/:hostname/network/route", wrapper.GetNodeNetworkRoute)
+	router.DELETE(baseURL+"/api/node/:hostname/network/route/:interfaceName", wrapper.DeleteNodeNetworkRoute)
+	router.GET(baseURL+"/api/node/:hostname/network/route/:interfaceName", wrapper.GetNodeNetworkRouteByInterface)
+	router.POST(baseURL+"/api/node/:hostname/network/route/:interfaceName", wrapper.PostNodeNetworkRoute)
+	router.PUT(baseURL+"/api/node/:hostname/network/route/:interfaceName", wrapper.PutNodeNetworkRoute)
 
 }
 
@@ -1731,46 +1731,46 @@ func (response PutNodeNetworkRoute500JSONResponse) VisitPutNodeNetworkRouteRespo
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Delete DNS configuration
-	// (DELETE /node/{hostname}/network/dns)
+	// (DELETE /api/node/{hostname}/network/dns)
 	DeleteNodeNetworkDNS(ctx context.Context, request DeleteNodeNetworkDNSRequestObject) (DeleteNodeNetworkDNSResponseObject, error)
 	// Update DNS servers
-	// (PUT /node/{hostname}/network/dns)
+	// (PUT /api/node/{hostname}/network/dns)
 	PutNodeNetworkDNS(ctx context.Context, request PutNodeNetworkDNSRequestObject) (PutNodeNetworkDNSResponseObject, error)
 	// List DNS servers
-	// (GET /node/{hostname}/network/dns/{interfaceName})
+	// (GET /api/node/{hostname}/network/dns/{interfaceName})
 	GetNodeNetworkDNSByInterface(ctx context.Context, request GetNodeNetworkDNSByInterfaceRequestObject) (GetNodeNetworkDNSByInterfaceResponseObject, error)
 	// List network interfaces
-	// (GET /node/{hostname}/network/interface)
+	// (GET /api/node/{hostname}/network/interface)
 	GetNodeNetworkInterface(ctx context.Context, request GetNodeNetworkInterfaceRequestObject) (GetNodeNetworkInterfaceResponseObject, error)
 	// Delete interface configuration
-	// (DELETE /node/{hostname}/network/interface/{name})
+	// (DELETE /api/node/{hostname}/network/interface/{name})
 	DeleteNodeNetworkInterface(ctx context.Context, request DeleteNodeNetworkInterfaceRequestObject) (DeleteNodeNetworkInterfaceResponseObject, error)
 	// Get network interface details
-	// (GET /node/{hostname}/network/interface/{name})
+	// (GET /api/node/{hostname}/network/interface/{name})
 	GetNodeNetworkInterfaceByName(ctx context.Context, request GetNodeNetworkInterfaceByNameRequestObject) (GetNodeNetworkInterfaceByNameResponseObject, error)
 	// Create interface configuration
-	// (POST /node/{hostname}/network/interface/{name})
+	// (POST /api/node/{hostname}/network/interface/{name})
 	PostNodeNetworkInterface(ctx context.Context, request PostNodeNetworkInterfaceRequestObject) (PostNodeNetworkInterfaceResponseObject, error)
 	// Update interface configuration
-	// (PUT /node/{hostname}/network/interface/{name})
+	// (PUT /api/node/{hostname}/network/interface/{name})
 	PutNodeNetworkInterface(ctx context.Context, request PutNodeNetworkInterfaceRequestObject) (PutNodeNetworkInterfaceResponseObject, error)
 	// Ping a remote server
-	// (POST /node/{hostname}/network/ping)
+	// (POST /api/node/{hostname}/network/ping)
 	PostNodeNetworkPing(ctx context.Context, request PostNodeNetworkPingRequestObject) (PostNodeNetworkPingResponseObject, error)
 	// List network routes
-	// (GET /node/{hostname}/network/route)
+	// (GET /api/node/{hostname}/network/route)
 	GetNodeNetworkRoute(ctx context.Context, request GetNodeNetworkRouteRequestObject) (GetNodeNetworkRouteResponseObject, error)
 	// Delete routes for an interface
-	// (DELETE /node/{hostname}/network/route/{interfaceName})
+	// (DELETE /api/node/{hostname}/network/route/{interfaceName})
 	DeleteNodeNetworkRoute(ctx context.Context, request DeleteNodeNetworkRouteRequestObject) (DeleteNodeNetworkRouteResponseObject, error)
 	// Get routes for an interface
-	// (GET /node/{hostname}/network/route/{interfaceName})
+	// (GET /api/node/{hostname}/network/route/{interfaceName})
 	GetNodeNetworkRouteByInterface(ctx context.Context, request GetNodeNetworkRouteByInterfaceRequestObject) (GetNodeNetworkRouteByInterfaceResponseObject, error)
 	// Create routes for an interface
-	// (POST /node/{hostname}/network/route/{interfaceName})
+	// (POST /api/node/{hostname}/network/route/{interfaceName})
 	PostNodeNetworkRoute(ctx context.Context, request PostNodeNetworkRouteRequestObject) (PostNodeNetworkRouteResponseObject, error)
 	// Update routes for an interface
-	// (PUT /node/{hostname}/network/route/{interfaceName})
+	// (PUT /api/node/{hostname}/network/route/{interfaceName})
 	PutNodeNetworkRoute(ctx context.Context, request PutNodeNetworkRouteRequestObject) (PutNodeNetworkRouteResponseObject, error)
 }
 

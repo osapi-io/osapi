@@ -239,7 +239,7 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				fmt.Sprintf("/agent/%s", tc.hostname),
+				fmt.Sprintf("/api/agent/%s", tc.hostname),
 				nil,
 			)
 			rec := httptest.NewRecorder()
@@ -346,7 +346,7 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/agent/server1",
+				"/api/agent/server1",
 				nil,
 			)
 			tc.setupAuth(req)

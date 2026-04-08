@@ -410,31 +410,31 @@ type PostNodeContainerDockerStopJSONRequestBody = DockerStopRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List containers
-	// (GET /node/{hostname}/container/docker)
+	// (GET /api/node/{hostname}/container/docker)
 	GetNodeContainerDocker(ctx echo.Context, hostname Hostname, params GetNodeContainerDockerParams) error
 	// Create a container
-	// (POST /node/{hostname}/container/docker)
+	// (POST /api/node/{hostname}/container/docker)
 	PostNodeContainerDocker(ctx echo.Context, hostname Hostname) error
 	// Remove a container image
-	// (DELETE /node/{hostname}/container/docker/image/{image})
+	// (DELETE /api/node/{hostname}/container/docker/image/{image})
 	DeleteNodeContainerDockerImage(ctx echo.Context, hostname Hostname, image string, params DeleteNodeContainerDockerImageParams) error
 	// Pull a container image
-	// (POST /node/{hostname}/container/docker/pull)
+	// (POST /api/node/{hostname}/container/docker/pull)
 	PostNodeContainerDockerPull(ctx echo.Context, hostname Hostname) error
 	// Remove a container
-	// (DELETE /node/{hostname}/container/docker/{id})
+	// (DELETE /api/node/{hostname}/container/docker/{id})
 	DeleteNodeContainerDockerByID(ctx echo.Context, hostname Hostname, id DockerId, params DeleteNodeContainerDockerByIDParams) error
 	// Inspect a container
-	// (GET /node/{hostname}/container/docker/{id})
+	// (GET /api/node/{hostname}/container/docker/{id})
 	GetNodeContainerDockerByID(ctx echo.Context, hostname Hostname, id DockerId) error
 	// Execute a command in a container
-	// (POST /node/{hostname}/container/docker/{id}/exec)
+	// (POST /api/node/{hostname}/container/docker/{id}/exec)
 	PostNodeContainerDockerExec(ctx echo.Context, hostname Hostname, id DockerId) error
 	// Start a container
-	// (POST /node/{hostname}/container/docker/{id}/start)
+	// (POST /api/node/{hostname}/container/docker/{id}/start)
 	PostNodeContainerDockerStart(ctx echo.Context, hostname Hostname, id DockerId) error
 	// Stop a container
-	// (POST /node/{hostname}/container/docker/{id}/stop)
+	// (POST /api/node/{hostname}/container/docker/{id}/stop)
 	PostNodeContainerDockerStop(ctx echo.Context, hostname Hostname, id DockerId) error
 }
 
@@ -715,15 +715,15 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/node/:hostname/container/docker", wrapper.GetNodeContainerDocker)
-	router.POST(baseURL+"/node/:hostname/container/docker", wrapper.PostNodeContainerDocker)
-	router.DELETE(baseURL+"/node/:hostname/container/docker/image/:image", wrapper.DeleteNodeContainerDockerImage)
-	router.POST(baseURL+"/node/:hostname/container/docker/pull", wrapper.PostNodeContainerDockerPull)
-	router.DELETE(baseURL+"/node/:hostname/container/docker/:id", wrapper.DeleteNodeContainerDockerByID)
-	router.GET(baseURL+"/node/:hostname/container/docker/:id", wrapper.GetNodeContainerDockerByID)
-	router.POST(baseURL+"/node/:hostname/container/docker/:id/exec", wrapper.PostNodeContainerDockerExec)
-	router.POST(baseURL+"/node/:hostname/container/docker/:id/start", wrapper.PostNodeContainerDockerStart)
-	router.POST(baseURL+"/node/:hostname/container/docker/:id/stop", wrapper.PostNodeContainerDockerStop)
+	router.GET(baseURL+"/api/node/:hostname/container/docker", wrapper.GetNodeContainerDocker)
+	router.POST(baseURL+"/api/node/:hostname/container/docker", wrapper.PostNodeContainerDocker)
+	router.DELETE(baseURL+"/api/node/:hostname/container/docker/image/:image", wrapper.DeleteNodeContainerDockerImage)
+	router.POST(baseURL+"/api/node/:hostname/container/docker/pull", wrapper.PostNodeContainerDockerPull)
+	router.DELETE(baseURL+"/api/node/:hostname/container/docker/:id", wrapper.DeleteNodeContainerDockerByID)
+	router.GET(baseURL+"/api/node/:hostname/container/docker/:id", wrapper.GetNodeContainerDockerByID)
+	router.POST(baseURL+"/api/node/:hostname/container/docker/:id/exec", wrapper.PostNodeContainerDockerExec)
+	router.POST(baseURL+"/api/node/:hostname/container/docker/:id/start", wrapper.PostNodeContainerDockerStart)
+	router.POST(baseURL+"/api/node/:hostname/container/docker/:id/stop", wrapper.PostNodeContainerDockerStop)
 
 }
 
@@ -1265,31 +1265,31 @@ func (response PostNodeContainerDockerStop500JSONResponse) VisitPostNodeContaine
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List containers
-	// (GET /node/{hostname}/container/docker)
+	// (GET /api/node/{hostname}/container/docker)
 	GetNodeContainerDocker(ctx context.Context, request GetNodeContainerDockerRequestObject) (GetNodeContainerDockerResponseObject, error)
 	// Create a container
-	// (POST /node/{hostname}/container/docker)
+	// (POST /api/node/{hostname}/container/docker)
 	PostNodeContainerDocker(ctx context.Context, request PostNodeContainerDockerRequestObject) (PostNodeContainerDockerResponseObject, error)
 	// Remove a container image
-	// (DELETE /node/{hostname}/container/docker/image/{image})
+	// (DELETE /api/node/{hostname}/container/docker/image/{image})
 	DeleteNodeContainerDockerImage(ctx context.Context, request DeleteNodeContainerDockerImageRequestObject) (DeleteNodeContainerDockerImageResponseObject, error)
 	// Pull a container image
-	// (POST /node/{hostname}/container/docker/pull)
+	// (POST /api/node/{hostname}/container/docker/pull)
 	PostNodeContainerDockerPull(ctx context.Context, request PostNodeContainerDockerPullRequestObject) (PostNodeContainerDockerPullResponseObject, error)
 	// Remove a container
-	// (DELETE /node/{hostname}/container/docker/{id})
+	// (DELETE /api/node/{hostname}/container/docker/{id})
 	DeleteNodeContainerDockerByID(ctx context.Context, request DeleteNodeContainerDockerByIDRequestObject) (DeleteNodeContainerDockerByIDResponseObject, error)
 	// Inspect a container
-	// (GET /node/{hostname}/container/docker/{id})
+	// (GET /api/node/{hostname}/container/docker/{id})
 	GetNodeContainerDockerByID(ctx context.Context, request GetNodeContainerDockerByIDRequestObject) (GetNodeContainerDockerByIDResponseObject, error)
 	// Execute a command in a container
-	// (POST /node/{hostname}/container/docker/{id}/exec)
+	// (POST /api/node/{hostname}/container/docker/{id}/exec)
 	PostNodeContainerDockerExec(ctx context.Context, request PostNodeContainerDockerExecRequestObject) (PostNodeContainerDockerExecResponseObject, error)
 	// Start a container
-	// (POST /node/{hostname}/container/docker/{id}/start)
+	// (POST /api/node/{hostname}/container/docker/{id}/start)
 	PostNodeContainerDockerStart(ctx context.Context, request PostNodeContainerDockerStartRequestObject) (PostNodeContainerDockerStartResponseObject, error)
 	// Stop a container
-	// (POST /node/{hostname}/container/docker/{id}/stop)
+	// (POST /api/node/{hostname}/container/docker/{id}/stop)
 	PostNodeContainerDockerStop(ctx context.Context, request PostNodeContainerDockerStopRequestObject) (PostNodeContainerDockerStopResponseObject, error)
 }
 

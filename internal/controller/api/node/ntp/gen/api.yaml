@@ -29,7 +29,7 @@ tags:
     description: NTP server configuration management on a target node.
 
 paths:
-  /node/{hostname}/ntp:
+  /api/node/{hostname}/ntp:
     get:
       summary: Get NTP status
       description: >

@@ -383,7 +383,7 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeServiceValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/service/my-app.service",
+			path: "/api/node/server1/service/my-app.service",
 			body: `{"object":"my-app-unit-object-v2"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -400,7 +400,7 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeServiceValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/service/my-app.service",
+			path: "/api/node/nonexistent/service/my-app.service",
 			body: `{"object":"my-app-unit-object-v2"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -410,7 +410,7 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeServiceValidationHTTP() {
 		},
 		{
 			name: "when invalid body empty object",
-			path: "/node/server1/service/my-app.service",
+			path: "/api/node/server1/service/my-app.service",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -526,7 +526,7 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeServiceRBACHTTP() {
 			server.RegisterHandlers(handlers)
 			req := httptest.NewRequest(
 				http.MethodPut,
-				"/node/server1/service/my-app.service",
+				"/api/node/server1/service/my-app.service",
 				strings.NewReader(`{"object":"my-app-unit-object-v2"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

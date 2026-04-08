@@ -56,7 +56,7 @@ func (s *HandlerPublicTestSuite) TestHandler() {
 				}
 				s.NotEmpty(e.Routes())
 
-				req := httptest.NewRequest(http.MethodGet, "/facts/keys", nil)
+				req := httptest.NewRequest(http.MethodGet, "/api/facts/keys", nil)
 				rec := httptest.NewRecorder()
 				e.ServeHTTP(rec, req)
 			},

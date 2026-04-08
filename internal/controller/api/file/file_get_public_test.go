@@ -166,7 +166,7 @@ func (s *FileGetPublicTestSuite) TestGetFileByNameValidationHTTP() {
 	}{
 		{
 			name: "when name too long returns 400",
-			path: "/file/" + strings.Repeat("a", 256),
+			path: "/api/file/" + strings.Repeat("a", 256),
 			setupMock: func() *mocks.MockObjectStoreManager {
 				return mocks.NewMockObjectStoreManager(s.mockCtrl)
 			},
@@ -175,7 +175,7 @@ func (s *FileGetPublicTestSuite) TestGetFileByNameValidationHTTP() {
 		},
 		{
 			name: "when get Ok",
-			path: "/file/nginx.conf",
+			path: "/api/file/nginx.conf",
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
@@ -202,7 +202,7 @@ func (s *FileGetPublicTestSuite) TestGetFileByNameValidationHTTP() {
 		},
 		{
 			name: "when not found",
-			path: "/file/missing.conf",
+			path: "/api/file/missing.conf",
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
@@ -215,7 +215,7 @@ func (s *FileGetPublicTestSuite) TestGetFileByNameValidationHTTP() {
 		},
 		{
 			name: "when object store error",
-			path: "/file/nginx.conf",
+			path: "/api/file/nginx.conf",
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
@@ -349,7 +349,7 @@ func (s *FileGetPublicTestSuite) TestGetFileByNameRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/file/nginx.conf", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/file/nginx.conf", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 

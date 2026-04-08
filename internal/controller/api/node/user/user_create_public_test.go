@@ -343,7 +343,7 @@ func (s *UserCreatePublicTestSuite) TestPostNodeUserValidationHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/user",
+				"/api/node/server1/user",
 				strings.NewReader(tc.body),
 			)
 			req.Header.Set("Content-Type", "application/json")
@@ -437,7 +437,7 @@ func (s *UserCreatePublicTestSuite) TestPostNodeUserRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/user",
+				"/api/node/server1/user",
 				strings.NewReader(`{"name":"newuser"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

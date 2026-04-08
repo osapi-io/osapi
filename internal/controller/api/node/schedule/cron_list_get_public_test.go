@@ -434,7 +434,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCronValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/schedule/cron",
+			path: "/api/node/server1/schedule/cron",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -450,7 +450,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCronValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/schedule/cron",
+			path: "/api/node/nonexistent/schedule/cron",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -575,7 +575,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCronRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/schedule/cron",
+				"/api/node/server1/schedule/cron",
 				nil,
 			)
 			tc.setupAuth(req)

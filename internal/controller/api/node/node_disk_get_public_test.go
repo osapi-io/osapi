@@ -309,7 +309,7 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDiskValidationHTTP() {
 	}{
 		{
 			name: "when get Ok",
-			path: "/node/server1/disk",
+			path: "/api/node/server1/disk",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				diskResp := job.NodeDiskResponse{
@@ -334,7 +334,7 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDiskValidationHTTP() {
 		},
 		{
 			name: "when empty hostname returns 400",
-			path: "/node/%20/disk",
+			path: "/api/node/%20/disk",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -343,7 +343,7 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDiskValidationHTTP() {
 		},
 		{
 			name: "when job client errors",
-			path: "/node/server1/disk",
+			path: "/api/node/server1/disk",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -479,7 +479,7 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDiskRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/node/server1/disk", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/node/server1/disk", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 

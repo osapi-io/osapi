@@ -295,7 +295,7 @@ func (s *ServiceDeletePublicTestSuite) TestDeleteNodeServiceValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/service/my-app.service",
+			path: "/api/node/server1/service/my-app.service",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -311,7 +311,7 @@ func (s *ServiceDeletePublicTestSuite) TestDeleteNodeServiceValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/service/my-app.service",
+			path: "/api/node/nonexistent/service/my-app.service",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -417,7 +417,7 @@ func (s *ServiceDeletePublicTestSuite) TestDeleteNodeServiceRBACHTTP() {
 			server.RegisterHandlers(handlers)
 			req := httptest.NewRequest(
 				http.MethodDelete,
-				"/node/server1/service/my-app.service",
+				"/api/node/server1/service/my-app.service",
 				nil,
 			)
 			tc.setupAuth(req)

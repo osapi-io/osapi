@@ -31,7 +31,7 @@ tags:
 paths:
   # -- Cron collection -------------------------------------------------
 
-  /node/{hostname}/schedule/cron:
+  /api/node/{hostname}/schedule/cron:
     get:
       summary: List all cron entries
       description: >
@@ -129,7 +129,7 @@ paths:
 
   # -- Cron individual entry -------------------------------------------
 
-  /node/{hostname}/schedule/cron/{name}:
+  /api/node/{hostname}/schedule/cron/{name}:
     get:
       summary: Get a cron entry
       description: >

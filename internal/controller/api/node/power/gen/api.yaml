@@ -29,7 +29,7 @@ tags:
     description: Power management operations (reboot, shutdown) on a target node.
 
 paths:
-  /node/{hostname}/power/reboot:
+  /api/node/{hostname}/power/reboot:
     post:
       summary: Reboot node
       description: >
@@ -82,7 +82,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/power/shutdown:
+  /api/node/{hostname}/power/shutdown:
     post:
       summary: Shutdown node
       description: >

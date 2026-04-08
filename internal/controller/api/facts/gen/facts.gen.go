@@ -39,7 +39,7 @@ type FactKeysResponse struct {
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List available fact keys
-	// (GET /facts/keys)
+	// (GET /api/facts/keys)
 	GetFactKeys(ctx echo.Context) error
 }
 
@@ -87,7 +87,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/facts/keys", wrapper.GetFactKeys)
+	router.GET(baseURL+"/api/facts/keys", wrapper.GetFactKeys)
 
 }
 
@@ -137,7 +137,7 @@ func (response GetFactKeys500JSONResponse) VisitGetFactKeysResponse(w http.Respo
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List available fact keys
-	// (GET /facts/keys)
+	// (GET /api/facts/keys)
 	GetFactKeys(ctx context.Context, request GetFactKeysRequestObject) (GetFactKeysResponseObject, error)
 }
 

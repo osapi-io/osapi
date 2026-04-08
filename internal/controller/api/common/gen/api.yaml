@@ -67,7 +67,7 @@ tags:
     description: Operations related to the info endpoint.
 
 paths:
-  /version:
+  /api/version:
     get:
       summary: Retrieve the software version
       description: Get the current version of the software running on the system.

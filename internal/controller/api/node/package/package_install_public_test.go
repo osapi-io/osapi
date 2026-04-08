@@ -298,7 +298,7 @@ func (s *PackageInstallPublicTestSuite) TestPostNodePackageValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/package",
+			path: "/api/node/server1/package",
 			body: `{"name":"curl"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				changeBool := true
@@ -318,7 +318,7 @@ func (s *PackageInstallPublicTestSuite) TestPostNodePackageValidationHTTP() {
 		},
 		{
 			name: "when empty name returns 400",
-			path: "/node/server1/package",
+			path: "/api/node/server1/package",
 			body: `{"name":""}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -448,7 +448,7 @@ func (s *PackageInstallPublicTestSuite) TestPostNodePackageRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/package",
+				"/api/node/server1/package",
 				bytes.NewBufferString(`{"name":"curl"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

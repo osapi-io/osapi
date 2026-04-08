@@ -408,7 +408,7 @@ func (s *NtpUpdatePublicTestSuite) TestPutNodeNtpValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/ntp",
+			path: "/api/node/server1/ntp",
 			body: `{"servers":["0.pool.ntp.org"]}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -428,7 +428,7 @@ func (s *NtpUpdatePublicTestSuite) TestPutNodeNtpValidationHTTP() {
 		},
 		{
 			name: "when missing servers returns 400",
-			path: "/node/server1/ntp",
+			path: "/api/node/server1/ntp",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -438,7 +438,7 @@ func (s *NtpUpdatePublicTestSuite) TestPutNodeNtpValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/ntp",
+			path: "/api/node/nonexistent/ntp",
 			body: `{"servers":["0.pool.ntp.org"]}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -573,7 +573,7 @@ func (s *NtpUpdatePublicTestSuite) TestPutNodeNtpRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPut,
-				"/node/server1/ntp",
+				"/api/node/server1/ntp",
 				strings.NewReader(`{"servers":["0.pool.ntp.org"]}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

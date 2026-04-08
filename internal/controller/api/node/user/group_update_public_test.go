@@ -301,19 +301,19 @@ func (s *GroupUpdatePublicTestSuite) TestPutNodeGroupValidationHTTP() {
 	}{
 		{
 			name:     "when valid request",
-			path:     "/node/server1/group/devops",
+			path:     "/api/node/server1/group/devops",
 			body:     `{"members":["user1"]}`,
 			wantCode: http.StatusOK,
 		},
 		{
 			name:     "when empty body returns 400",
-			path:     "/node/server1/group/devops",
+			path:     "/api/node/server1/group/devops",
 			body:     `{}`,
 			wantCode: http.StatusBadRequest,
 		},
 		{
 			name:     "when invalid hostname",
-			path:     "/node/nonexistent/group/devops",
+			path:     "/api/node/nonexistent/group/devops",
 			body:     `{"members":["user1"]}`,
 			wantCode: http.StatusBadRequest,
 		},
@@ -416,7 +416,7 @@ func (s *GroupUpdatePublicTestSuite) TestPutNodeGroupRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPut,
-				"/node/server1/group/devops",
+				"/api/node/server1/group/devops",
 				strings.NewReader(`{"members":["user1"]}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

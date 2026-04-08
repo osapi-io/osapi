@@ -376,7 +376,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/log",
+			path: "/api/node/server1/log",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -393,7 +393,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/log",
+			path: "/api/node/nonexistent/log",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -402,7 +402,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogHTTP() {
 		},
 		{
 			name: "when invalid priority returns 400",
-			path: "/node/server1/log?priority=bogus",
+			path: "/api/node/server1/log?priority=bogus",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -528,7 +528,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/log",
+				"/api/node/server1/log",
 				nil,
 			)
 			tc.setupAuth(req)

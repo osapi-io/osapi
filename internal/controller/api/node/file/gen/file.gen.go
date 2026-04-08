@@ -175,13 +175,13 @@ type PostNodeFileUndeployJSONRequestBody = FileUndeployRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Deploy a file from Object Store to the host
-	// (POST /node/{hostname}/file/deploy)
+	// (POST /api/node/{hostname}/file/deploy)
 	PostNodeFileDeploy(ctx echo.Context, hostname Hostname) error
 	// Check deployment status of a file on the host
-	// (POST /node/{hostname}/file/status)
+	// (POST /api/node/{hostname}/file/status)
 	PostNodeFileStatus(ctx echo.Context, hostname Hostname) error
 	// Remove a deployed file from the host filesystem
-	// (POST /node/{hostname}/file/undeploy)
+	// (POST /api/node/{hostname}/file/undeploy)
 	PostNodeFileUndeploy(ctx echo.Context, hostname Hostname) error
 }
 
@@ -272,9 +272,9 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.POST(baseURL+"/node/:hostname/file/deploy", wrapper.PostNodeFileDeploy)
-	router.POST(baseURL+"/node/:hostname/file/status", wrapper.PostNodeFileStatus)
-	router.POST(baseURL+"/node/:hostname/file/undeploy", wrapper.PostNodeFileUndeploy)
+	router.POST(baseURL+"/api/node/:hostname/file/deploy", wrapper.PostNodeFileDeploy)
+	router.POST(baseURL+"/api/node/:hostname/file/status", wrapper.PostNodeFileStatus)
+	router.POST(baseURL+"/api/node/:hostname/file/undeploy", wrapper.PostNodeFileUndeploy)
 
 }
 
@@ -443,13 +443,13 @@ func (response PostNodeFileUndeploy500JSONResponse) VisitPostNodeFileUndeployRes
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Deploy a file from Object Store to the host
-	// (POST /node/{hostname}/file/deploy)
+	// (POST /api/node/{hostname}/file/deploy)
 	PostNodeFileDeploy(ctx context.Context, request PostNodeFileDeployRequestObject) (PostNodeFileDeployResponseObject, error)
 	// Check deployment status of a file on the host
-	// (POST /node/{hostname}/file/status)
+	// (POST /api/node/{hostname}/file/status)
 	PostNodeFileStatus(ctx context.Context, request PostNodeFileStatusRequestObject) (PostNodeFileStatusResponseObject, error)
 	// Remove a deployed file from the host filesystem
-	// (POST /node/{hostname}/file/undeploy)
+	// (POST /api/node/{hostname}/file/undeploy)
 	PostNodeFileUndeploy(ctx context.Context, request PostNodeFileUndeployRequestObject) (PostNodeFileUndeployResponseObject, error)
 }
 

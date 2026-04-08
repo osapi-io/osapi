@@ -29,7 +29,7 @@ tags:
     description: System timezone management on a target node.
 
 paths:
-  /node/{hostname}/timezone:
+  /api/node/{hostname}/timezone:
     get:
       summary: Get system timezone
       description: >

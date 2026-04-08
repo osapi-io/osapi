@@ -366,7 +366,7 @@ func (s *TimezoneUpdatePublicTestSuite) TestPutNodeTimezoneValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/timezone",
+			path: "/api/node/server1/timezone",
 			body: `{"timezone":"America/New_York"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -386,7 +386,7 @@ func (s *TimezoneUpdatePublicTestSuite) TestPutNodeTimezoneValidationHTTP() {
 		},
 		{
 			name: "when missing timezone returns 400",
-			path: "/node/server1/timezone",
+			path: "/api/node/server1/timezone",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -396,7 +396,7 @@ func (s *TimezoneUpdatePublicTestSuite) TestPutNodeTimezoneValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/timezone",
+			path: "/api/node/nonexistent/timezone",
 			body: `{"timezone":"UTC"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -531,7 +531,7 @@ func (s *TimezoneUpdatePublicTestSuite) TestPutNodeTimezoneRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPut,
-				"/node/server1/timezone",
+				"/api/node/server1/timezone",
 				strings.NewReader(`{"timezone":"UTC"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

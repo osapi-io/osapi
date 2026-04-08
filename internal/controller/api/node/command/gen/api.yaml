@@ -29,7 +29,7 @@ tags:
     description: Command execution on a target node.
 
 paths:
-  /node/{hostname}/command/exec:
+  /api/node/{hostname}/command/exec:
     post:
       summary: Execute a command
       description: >
@@ -82,7 +82,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/command/shell:
+  /api/node/{hostname}/command/shell:
     post:
       summary: Execute a shell command
       description: >

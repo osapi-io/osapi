@@ -393,7 +393,7 @@ func (s *NetworkInterfaceCreatePostPublicTestSuite) TestPostNetworkInterfaceVali
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/network/interface/eth0",
+			path: "/api/node/server1/network/interface/eth0",
 			body: `{"dhcp4":true}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -410,7 +410,7 @@ func (s *NetworkInterfaceCreatePostPublicTestSuite) TestPostNetworkInterfaceVali
 		},
 		{
 			name: "when invalid address CIDR",
-			path: "/node/server1/network/interface/eth0",
+			path: "/api/node/server1/network/interface/eth0",
 			body: `{"addresses":["not-cidr"]}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -420,7 +420,7 @@ func (s *NetworkInterfaceCreatePostPublicTestSuite) TestPostNetworkInterfaceVali
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/network/interface/eth0",
+			path: "/api/node/nonexistent/network/interface/eth0",
 			body: `{"dhcp4":true}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -551,7 +551,7 @@ func (s *NetworkInterfaceCreatePostPublicTestSuite) TestPostNetworkInterfaceRBAC
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/network/interface/eth0",
+				"/api/node/server1/network/interface/eth0",
 				strings.NewReader(`{"dhcp4":true}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

@@ -295,7 +295,7 @@ func (s *ServiceStopPostPublicTestSuite) TestPostNodeServiceStopValidationHTTP()
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/service/nginx.service/stop",
+			path: "/api/node/server1/service/nginx.service/stop",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -311,7 +311,7 @@ func (s *ServiceStopPostPublicTestSuite) TestPostNodeServiceStopValidationHTTP()
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/service/nginx.service/stop",
+			path: "/api/node/nonexistent/service/nginx.service/stop",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -415,7 +415,7 @@ func (s *ServiceStopPostPublicTestSuite) TestPostNodeServiceStopRBACHTTP() {
 			server.RegisterHandlers(handlers)
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/service/nginx.service/stop",
+				"/api/node/server1/service/nginx.service/stop",
 				nil,
 			)
 			tc.setupAuth(req)

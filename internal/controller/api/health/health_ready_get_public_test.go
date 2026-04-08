@@ -168,7 +168,7 @@ func (s *HealthReadyGetPublicTestSuite) TestGetHealthReadyHTTP() {
 			a := api.New(s.appConfig, s.logger)
 			gen.RegisterHandlers(a.Echo, strictHandler)
 
-			req := httptest.NewRequest(http.MethodGet, "/health/ready", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/health/ready", nil)
 			rec := httptest.NewRecorder()
 
 			a.Echo.ServeHTTP(rec, req)

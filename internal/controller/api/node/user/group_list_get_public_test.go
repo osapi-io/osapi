@@ -328,7 +328,7 @@ func (s *GroupListGetPublicTestSuite) TestGetNodeGroupRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/node/server1/group", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/node/server1/group", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 			server.Echo.ServeHTTP(rec, req)

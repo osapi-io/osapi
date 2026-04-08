@@ -440,7 +440,7 @@ func (s *NetworkInterfaceListGetPublicTestSuite) TestGetNetworkInterfaceListVali
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/network/interface",
+			path: "/api/node/server1/network/interface",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -456,7 +456,7 @@ func (s *NetworkInterfaceListGetPublicTestSuite) TestGetNetworkInterfaceListVali
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/network/interface",
+			path: "/api/node/nonexistent/network/interface",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -589,7 +589,7 @@ func (s *NetworkInterfaceListGetPublicTestSuite) TestGetNetworkInterfaceListRBAC
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/network/interface",
+				"/api/node/server1/network/interface",
 				nil,
 			)
 			tc.setupAuth(req)

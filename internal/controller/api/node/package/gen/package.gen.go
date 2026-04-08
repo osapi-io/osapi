@@ -170,22 +170,22 @@ type PostNodePackageJSONRequestBody = PackageInstallRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List installed packages
-	// (GET /node/{hostname}/package)
+	// (GET /api/node/{hostname}/package)
 	GetNodePackage(ctx echo.Context, hostname Hostname) error
 	// Install a package
-	// (POST /node/{hostname}/package)
+	// (POST /api/node/{hostname}/package)
 	PostNodePackage(ctx echo.Context, hostname Hostname) error
 	// List available updates
-	// (GET /node/{hostname}/package/update)
+	// (GET /api/node/{hostname}/package/update)
 	GetNodePackageUpdate(ctx echo.Context, hostname Hostname) error
 	// Update package sources
-	// (POST /node/{hostname}/package/update)
+	// (POST /api/node/{hostname}/package/update)
 	PostNodePackageUpdate(ctx echo.Context, hostname Hostname) error
 	// Remove a package
-	// (DELETE /node/{hostname}/package/{name})
+	// (DELETE /api/node/{hostname}/package/{name})
 	DeleteNodePackage(ctx echo.Context, hostname Hostname, name PackageName) error
 	// Get a package
-	// (GET /node/{hostname}/package/{name})
+	// (GET /api/node/{hostname}/package/{name})
 	GetNodePackageByName(ctx echo.Context, hostname Hostname, name PackageName) error
 }
 
@@ -346,12 +346,12 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/node/:hostname/package", wrapper.GetNodePackage)
-	router.POST(baseURL+"/node/:hostname/package", wrapper.PostNodePackage)
-	router.GET(baseURL+"/node/:hostname/package/update", wrapper.GetNodePackageUpdate)
-	router.POST(baseURL+"/node/:hostname/package/update", wrapper.PostNodePackageUpdate)
-	router.DELETE(baseURL+"/node/:hostname/package/:name", wrapper.DeleteNodePackage)
-	router.GET(baseURL+"/node/:hostname/package/:name", wrapper.GetNodePackageByName)
+	router.GET(baseURL+"/api/node/:hostname/package", wrapper.GetNodePackage)
+	router.POST(baseURL+"/api/node/:hostname/package", wrapper.PostNodePackage)
+	router.GET(baseURL+"/api/node/:hostname/package/update", wrapper.GetNodePackageUpdate)
+	router.POST(baseURL+"/api/node/:hostname/package/update", wrapper.PostNodePackageUpdate)
+	router.DELETE(baseURL+"/api/node/:hostname/package/:name", wrapper.DeleteNodePackage)
+	router.GET(baseURL+"/api/node/:hostname/package/:name", wrapper.GetNodePackageByName)
 
 }
 
@@ -697,22 +697,22 @@ func (response GetNodePackageByName500JSONResponse) VisitGetNodePackageByNameRes
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List installed packages
-	// (GET /node/{hostname}/package)
+	// (GET /api/node/{hostname}/package)
 	GetNodePackage(ctx context.Context, request GetNodePackageRequestObject) (GetNodePackageResponseObject, error)
 	// Install a package
-	// (POST /node/{hostname}/package)
+	// (POST /api/node/{hostname}/package)
 	PostNodePackage(ctx context.Context, request PostNodePackageRequestObject) (PostNodePackageResponseObject, error)
 	// List available updates
-	// (GET /node/{hostname}/package/update)
+	// (GET /api/node/{hostname}/package/update)
 	GetNodePackageUpdate(ctx context.Context, request GetNodePackageUpdateRequestObject) (GetNodePackageUpdateResponseObject, error)
 	// Update package sources
-	// (POST /node/{hostname}/package/update)
+	// (POST /api/node/{hostname}/package/update)
 	PostNodePackageUpdate(ctx context.Context, request PostNodePackageUpdateRequestObject) (PostNodePackageUpdateResponseObject, error)
 	// Remove a package
-	// (DELETE /node/{hostname}/package/{name})
+	// (DELETE /api/node/{hostname}/package/{name})
 	DeleteNodePackage(ctx context.Context, request DeleteNodePackageRequestObject) (DeleteNodePackageResponseObject, error)
 	// Get a package
-	// (GET /node/{hostname}/package/{name})
+	// (GET /api/node/{hostname}/package/{name})
 	GetNodePackageByName(ctx context.Context, request GetNodePackageByNameRequestObject) (GetNodePackageByNameResponseObject, error)
 }
 

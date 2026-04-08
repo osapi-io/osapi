@@ -472,7 +472,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/command/shell",
+			path: "/api/node/server1/command/shell",
 			body: `{"command":"echo hello"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -496,7 +496,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellValidationHTTP() {
 		},
 		{
 			name: "when missing command",
-			path: "/node/server1/command/shell",
+			path: "/api/node/server1/command/shell",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -506,7 +506,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellValidationHTTP() {
 		},
 		{
 			name: "when invalid timeout",
-			path: "/node/server1/command/shell",
+			path: "/api/node/server1/command/shell",
 			body: `{"command":"echo hello","timeout":999}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -516,7 +516,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/command/shell",
+			path: "/api/node/nonexistent/command/shell",
 			body: `{"command":"echo hello"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -658,7 +658,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/command/shell",
+				"/api/node/server1/command/shell",
 				strings.NewReader(`{"command":"echo hello"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

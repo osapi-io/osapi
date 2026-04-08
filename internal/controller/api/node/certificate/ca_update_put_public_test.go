@@ -510,7 +510,7 @@ func (s *CAUpdatePutPublicTestSuite) TestPutNodeCertificateCaValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/certificate/ca/my-ca",
+			path: "/api/node/server1/certificate/ca/my-ca",
 			body: `{"object":"my-ca-object-v2"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -533,7 +533,7 @@ func (s *CAUpdatePutPublicTestSuite) TestPutNodeCertificateCaValidationHTTP() {
 		},
 		{
 			name: "when missing object",
-			path: "/node/server1/certificate/ca/my-ca",
+			path: "/api/node/server1/certificate/ca/my-ca",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -543,7 +543,7 @@ func (s *CAUpdatePutPublicTestSuite) TestPutNodeCertificateCaValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/certificate/ca/my-ca",
+			path: "/api/node/nonexistent/certificate/ca/my-ca",
 			body: `{"object":"my-ca-object-v2"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -680,7 +680,7 @@ func (s *CAUpdatePutPublicTestSuite) TestPutNodeCertificateCaRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPut,
-				"/node/server1/certificate/ca/my-ca",
+				"/api/node/server1/certificate/ca/my-ca",
 				strings.NewReader(`{"object":"my-ca-object-v2"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

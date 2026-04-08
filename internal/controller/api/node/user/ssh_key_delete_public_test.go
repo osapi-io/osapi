@@ -309,7 +309,7 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSSHKeyValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/user/testuser/ssh-key/SHA256:abc123",
+			path: "/api/node/server1/user/testuser/ssh-key/SHA256:abc123",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -334,7 +334,7 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSSHKeyValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/user/testuser/ssh-key/SHA256:abc123",
+			path: "/api/node/nonexistent/user/testuser/ssh-key/SHA256:abc123",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -456,7 +456,7 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSSHKeyRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodDelete,
-				"/node/server1/user/testuser/ssh-key/SHA256:abc123",
+				"/api/node/server1/user/testuser/ssh-key/SHA256:abc123",
 				nil,
 			)
 			tc.setupAuth(req)
