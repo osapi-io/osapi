@@ -154,18 +154,11 @@ func (suite *InterfacePublicTestSuite) TestList() {
 		validateFunc func([]iface.InterfaceEntry, error)
 	}{
 		{
-			name: "when interfaces exist with managed files",
+			name: "when interfaces exist",
 			setup: func() {
 				suite.mockExec.EXPECT().
 					RunCmd("netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusTwoIfaces, nil)
-
-				// Create a managed file for eth0 only.
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/osapi-eth0.yaml",
-					[]byte("network:\n"),
-					0o644,
-				)
 			},
 			validateFunc: func(result []iface.InterfaceEntry, err error) {
 				suite.Require().NoError(err)
@@ -176,21 +169,19 @@ func (suite *InterfacePublicTestSuite) TestList() {
 				suite.Equal("eth0", result[0].Name)
 				suite.Equal("10.0.0.5", result[0].IPv4)
 				suite.Equal("aa:bb:cc:dd:ee:f0", result[0].MAC)
-				suite.True(result[0].Managed)
 				suite.True(result[0].Primary)
 				suite.Require().NotNil(result[0].DHCP4)
 				suite.True(*result[0].DHCP4)
 
 				suite.Equal("eth1", result[1].Name)
 				suite.Equal("10.0.1.5", result[1].IPv4)
-				suite.False(result[1].Managed)
 				suite.False(result[1].Primary)
 				suite.Require().NotNil(result[1].DHCP4)
 				suite.False(*result[1].DHCP4)
 			},
 		},
 		{
-			name: "when no managed files exist",
+			name: "when single interface exists",
 			setup: func() {
 				suite.mockExec.EXPECT().
 					RunCmd("netplan", []string{"status", "--format", "json"}).
@@ -201,7 +192,6 @@ func (suite *InterfacePublicTestSuite) TestList() {
 				suite.Require().Len(result, 1)
 
 				suite.Equal("eth0", result[0].Name)
-				suite.False(result[0].Managed)
 			},
 		},
 		{
@@ -214,138 +204,6 @@ func (suite *InterfacePublicTestSuite) TestList() {
 			validateFunc: func(result []iface.InterfaceEntry, err error) {
 				suite.Require().NoError(err)
 				suite.Empty(result)
-			},
-		},
-		{
-			name: "when managed interface not in status (down/unlinked)",
-			setup: func() {
-				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
-					Return(netplanStatusSingleIface, nil)
-
-				// osapi-eno1.yaml exists but eno1 is not in netplan status.
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/osapi-eno1.yaml",
-					[]byte("network:\n"),
-					0o600,
-				)
-			},
-			validateFunc: func(result []iface.InterfaceEntry, err error) {
-				suite.Require().NoError(err)
-				// eth0 from status + eno1 from managed scan.
-				suite.Require().Len(result, 2)
-
-				// eth0 (index 2) sorts first; eno1 (no index) sorts after.
-				suite.Equal("eth0", result[0].Name)
-				suite.False(result[0].Managed)
-
-				suite.Equal("eno1", result[1].Name)
-				suite.True(result[1].Managed)
-				// Down interfaces have minimal info.
-				suite.Empty(result[1].IPv4)
-				suite.Empty(result[1].MAC)
-			},
-		},
-		{
-			name: "when scan skips route and DNS files",
-			setup: func() {
-				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
-					Return(netplanStatusEmpty, nil)
-
-				// Route file should be ignored.
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/osapi-eth0-routes.yaml",
-					[]byte("network:\n"),
-					0o600,
-				)
-				// DNS file should be ignored.
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/osapi-dns.yaml",
-					[]byte("network:\n"),
-					0o600,
-				)
-				// Non-osapi file should be ignored.
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/01-network.yaml",
-					[]byte("network:\n"),
-					0o644,
-				)
-			},
-			validateFunc: func(result []iface.InterfaceEntry, err error) {
-				suite.Require().NoError(err)
-				suite.Empty(result)
-			},
-		},
-		{
-			name: "when two managed interfaces not in status sorts by name",
-			setup: func() {
-				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
-					Return(netplanStatusEmpty, nil)
-
-				// Create two osapi files out of alphabetical order.
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/osapi-eno2.yaml",
-					[]byte("network:\n"),
-					0o600,
-				)
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/osapi-eno1.yaml",
-					[]byte("network:\n"),
-					0o600,
-				)
-			},
-			validateFunc: func(result []iface.InterfaceEntry, err error) {
-				suite.Require().NoError(err)
-				suite.Require().Len(result, 2)
-
-				// Sorted by name since neither is in status.
-				suite.Equal("eno1", result[0].Name)
-				suite.True(result[0].Managed)
-				suite.Equal("eno2", result[1].Name)
-				suite.True(result[1].Managed)
-			},
-		},
-		{
-			name: "when scan skips directories and non-yaml files",
-			setup: func() {
-				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
-					Return(netplanStatusEmpty, nil)
-
-				// Create a directory with osapi prefix.
-				_ = suite.memFs.MkdirAll(
-					"/etc/netplan/osapi-subdir.yaml",
-					0o755,
-				)
-				// Create a non-yaml file with osapi prefix.
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/osapi-test.txt",
-					[]byte("data"),
-					0o600,
-				)
-			},
-			validateFunc: func(result []iface.InterfaceEntry, err error) {
-				suite.Require().NoError(err)
-				suite.Empty(result)
-			},
-		},
-		{
-			name: "when ReadDir fails still returns status interfaces",
-			setup: func() {
-				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
-					Return(netplanStatusSingleIface, nil)
-
-				// Remove the netplan directory so ReadDir fails.
-				_ = suite.memFs.Remove("/etc/netplan")
-			},
-			validateFunc: func(result []iface.InterfaceEntry, err error) {
-				suite.Require().NoError(err)
-				suite.Require().Len(result, 1)
-				suite.Equal("eth0", result[0].Name)
-				suite.False(result[0].Managed)
 			},
 		},
 		{
@@ -382,18 +240,12 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 		validateFunc func(*iface.InterfaceEntry, error)
 	}{
 		{
-			name:        "when interface found and managed",
+			name:        "when interface found",
 			interfaceNm: "eth0",
 			setup: func() {
 				suite.mockExec.EXPECT().
 					RunCmd("netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusTwoIfaces, nil)
-
-				_ = suite.memFs.WriteFile(
-					"/etc/netplan/osapi-eth0.yaml",
-					[]byte("network:\n"),
-					0o644,
-				)
 			},
 			validateFunc: func(result *iface.InterfaceEntry, err error) {
 				suite.Require().NoError(err)
@@ -401,25 +253,9 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 				suite.Equal("eth0", result.Name)
 				suite.Equal("10.0.0.5", result.IPv4)
 				suite.Equal("aa:bb:cc:dd:ee:f0", result.MAC)
-				suite.True(result.Managed)
 				suite.True(result.Primary)
 				suite.Require().NotNil(result.DHCP4)
 				suite.True(*result.DHCP4)
-			},
-		},
-		{
-			name:        "when interface found and not managed",
-			interfaceNm: "eth0",
-			setup: func() {
-				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
-					Return(netplanStatusSingleIface, nil)
-			},
-			validateFunc: func(result *iface.InterfaceEntry, err error) {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(result)
-				suite.Equal("eth0", result.Name)
-				suite.False(result.Managed)
 			},
 		},
 		{

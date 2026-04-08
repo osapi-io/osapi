@@ -46,11 +46,7 @@ func interfaceFilePath(
 	return netplanDir + "/" + interfacePrefix + name + ".yaml"
 }
 
-// List returns all network interfaces with a managed flag indicating
-// whether an osapi Netplan config file exists for each interface.
-// Interfaces from netplan status are always included. Additionally,
-// any interface with an osapi-*.yaml file that is not in the status
-// output (e.g., down/unlinked interfaces) is included as managed.
+// List returns all network interfaces from netplan status.
 func (d *Debian) List(
 	_ context.Context,
 ) ([]InterfaceEntry, error) {
@@ -59,15 +55,12 @@ func (d *Debian) List(
 		return nil, fmt.Errorf("interface list: %w", err)
 	}
 
-	seen := make(map[string]bool)
 	var result []InterfaceEntry
 
 	for name, iface := range status {
 		if name == "lo" {
 			continue
 		}
-
-		seen[name] = true
 		dhcp := iface.IsDHCP()
 
 		entry := InterfaceEntry{
@@ -80,41 +73,17 @@ func (d *Debian) List(
 			DHCP4:   &dhcp,
 		}
 
-		path := interfaceFilePath(name)
-		if _, statErr := d.fs.Stat(path); statErr == nil {
-			entry.Managed = true
-		}
-
 		result = append(result, entry)
 	}
 
-	// Include managed interfaces that are not in netplan status
-	// (e.g., down or unlinked interfaces with osapi config files).
-	managed := d.scanManagedInterfaces()
-	for _, name := range managed {
-		if seen[name] {
-			continue
-		}
-
-		result = append(result, InterfaceEntry{
-			Name:    name,
-			Managed: true,
-		})
-	}
-
-	// Sort by interface index for stable ordering. Managed-only
-	// interfaces (not in status) have no index and sort after
-	// status interfaces, ordered by name.
+	// Sort by interface index for stable ordering. Interfaces
+	// without an index fall back to alphabetical name order.
 	sort.Slice(result, func(i, j int) bool {
-		iInStatus := status[result[i].Name].Index > 0
-		jInStatus := status[result[j].Name].Index > 0
+		iIdx := status[result[i].Name].Index
+		jIdx := status[result[j].Name].Index
 
-		if iInStatus != jInStatus {
-			return iInStatus
-		}
-
-		if iInStatus && jInStatus {
-			return status[result[i].Name].Index < status[result[j].Name].Index
+		if iIdx != jIdx {
+			return iIdx < jIdx
 		}
 
 		return result[i].Name < result[j].Name
@@ -123,53 +92,7 @@ func (d *Debian) List(
 	return result, nil
 }
 
-// scanManagedInterfaces reads /etc/netplan/ for osapi-*.yaml files
-// and returns the interface names extracted from the filenames.
-func (d *Debian) scanManagedInterfaces() []string {
-	dirEntries, err := d.fs.ReadDir(netplanDir)
-	if err != nil {
-		return nil
-	}
-
-	var names []string
-
-	for _, entry := range dirEntries {
-		if entry.IsDir() {
-			continue
-		}
-
-		name := entry.Name()
-		if !strings.HasPrefix(name, interfacePrefix) {
-			continue
-		}
-
-		if !strings.HasSuffix(name, ".yaml") {
-			continue
-		}
-
-		// Extract interface name: "osapi-eno1.yaml" → "eno1"
-		ifaceName := strings.TrimPrefix(name, interfacePrefix)
-		ifaceName = strings.TrimSuffix(ifaceName, ".yaml")
-
-		// Skip non-interface osapi files that share /etc/netplan/:
-		// route files (osapi-{name}-routes.yaml) and DNS
-		// (osapi-dns.yaml).
-		if strings.HasSuffix(ifaceName, "-routes") {
-			continue
-		}
-		if ifaceName == "dns" {
-			continue
-		}
-
-		if ifaceName != "" {
-			names = append(names, ifaceName)
-		}
-	}
-
-	return names
-}
-
-// Get returns a single interface by name with managed status.
+// Get returns a single interface by name.
 func (d *Debian) Get(
 	_ context.Context,
 	name string,
@@ -198,11 +121,6 @@ func (d *Debian) Get(
 		Family:  iface.AddressFamily(),
 		Primary: iface.HasDefaultRoute(),
 		DHCP4:   &dhcp,
-	}
-
-	path := interfaceFilePath(name)
-	if _, statErr := d.fs.Stat(path); statErr == nil {
-		entry.Managed = true
 	}
 
 	return entry, nil

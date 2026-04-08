@@ -31,7 +31,6 @@ type RouteInfo struct {
 	Interface   string `json:"interface,omitempty"`
 	Metric      int    `json:"metric,omitempty"`
 	Scope       string `json:"scope,omitempty"`
-	Managed     bool   `json:"managed"`
 }
 
 // RouteListResult represents a route list result from a single agent.
@@ -86,7 +85,6 @@ func routeInfoFromGen(
 		Interface:   derefString(g.Interface),
 		Metric:      derefInt(g.Metric),
 		Scope:       derefString(g.Scope),
-		Managed:     derefBool(g.Managed),
 	}
 }
 

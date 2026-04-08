@@ -146,8 +146,8 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceList() {
 			setupMock: func() iface.Provider {
 				m := netifMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().List(gomock.Any()).Return([]iface.InterfaceEntry{
-					{Name: "eth0", Managed: true},
-					{Name: "eth1", Managed: true},
+					{Name: "eth0"},
+					{Name: "eth1"},
 				}, nil)
 				return m
 			},
@@ -222,8 +222,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceGet() {
 			setupMock: func() iface.Provider {
 				m := netifMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().Get(gomock.Any(), "eth0").Return(&iface.InterfaceEntry{
-					Name:    "eth0",
-					Managed: true,
+					Name: "eth0",
 				}, nil)
 				return m
 			},

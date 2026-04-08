@@ -31,13 +31,12 @@ import (
 
 const (
 	passwdFile     = "/etc/passwd"
-	minNormalUID   = 1000
 	passwdFields   = 7
 	passwdLocked   = "L"
 	passwdStatusFn = 2
 )
 
-// ListUsers returns all non-system user accounts (UID >= 1000).
+// ListUsers returns all user accounts from /etc/passwd.
 func (d *Debian) ListUsers(
 	ctx context.Context,
 ) ([]User, error) {
@@ -50,10 +49,6 @@ func (d *Debian) ListUsers(
 
 	var users []User
 	for _, u := range entries {
-		if u.UID < minNormalUID {
-			continue
-		}
-
 		groups, locked, err := d.getUserDetails(u.Name)
 		if err != nil {
 			d.logger.Warn("failed to get user details",

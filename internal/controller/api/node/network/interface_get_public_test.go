@@ -80,7 +80,7 @@ func (s *NetworkInterfaceGetPublicTestSuite) TearDownTest() {
 
 func (s *NetworkInterfaceGetPublicTestSuite) TestGetNodeNetworkInterfaceByName() {
 	trueVal := true
-	entry := iface.InterfaceEntry{Name: "eth0", DHCP4: &trueVal, Managed: true}
+	entry := iface.InterfaceEntry{Name: "eth0", DHCP4: &trueVal}
 	entryData, _ := json.Marshal(entry)
 
 	fullEntry := iface.InterfaceEntry{
@@ -92,7 +92,6 @@ func (s *NetworkInterfaceGetPublicTestSuite) TestGetNodeNetworkInterfaceByName()
 		MTU:        1500,
 		MACAddress: "00:11:22:33:44:55",
 		WakeOnLAN:  &trueVal,
-		Managed:    true,
 	}
 	fullEntryData, _ := json.Marshal(fullEntry)
 
@@ -424,7 +423,7 @@ func (s *NetworkInterfaceGetPublicTestSuite) TestGetNodeNetworkInterfaceByName()
 
 func (s *NetworkInterfaceGetPublicTestSuite) TestGetNetworkInterfaceByNameValidationHTTP() {
 	trueVal := true
-	entry := iface.InterfaceEntry{Name: "eth0", DHCP4: &trueVal, Managed: true}
+	entry := iface.InterfaceEntry{Name: "eth0", DHCP4: &trueVal}
 	entryData, _ := json.Marshal(entry)
 
 	tests := []struct {
@@ -489,7 +488,7 @@ const rbacInterfaceGetTestSigningKey = "test-signing-key-for-interface-get-rbac"
 func (s *NetworkInterfaceGetPublicTestSuite) TestGetNetworkInterfaceByNameRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
 	trueVal := true
-	entry := iface.InterfaceEntry{Name: "eth0", DHCP4: &trueVal, Managed: true}
+	entry := iface.InterfaceEntry{Name: "eth0", DHCP4: &trueVal}
 	entryData, _ := json.Marshal(entry)
 
 	tests := []struct {

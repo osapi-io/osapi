@@ -56,7 +56,6 @@ type InterfaceEntry struct {
 	MACAddress string   `json:"mac_address,omitempty"`
 	WakeOnLAN  *bool    `json:"wakeonlan,omitempty"`
 	Primary    bool     `json:"primary,omitempty"`
-	Managed    bool     `json:"managed,omitempty"`
 }
 
 // InterfaceResult is the outcome of a create/update/delete operation.

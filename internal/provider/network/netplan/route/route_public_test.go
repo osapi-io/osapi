@@ -73,22 +73,6 @@ const netplanStatusWithRoutes = `{
   }
 }`
 
-// netplanStatusSingleRoute has one user-visible route on eth0.
-const netplanStatusSingleRoute = `{
-  "netplan-global-state": {"online": true},
-  "eth0": {
-    "index": 2,
-    "adminstate": "UP",
-    "operstate": "UP",
-    "type": "ethernet",
-    "macaddress": "aa:bb:cc:dd:ee:f0",
-    "addresses": [{"10.0.0.5": {"prefix": 24}}],
-    "routes": [
-      {"to": "10.1.0.0/16", "via": "10.0.0.1", "family": 2, "type": "unicast", "scope": "global", "protocol": "static", "table": "main", "metric": 100}
-    ]
-  }
-}`
-
 // netplanStatusNoRoutes has only kernel-internal routes.
 const netplanStatusNoRoutes = `{
   "netplan-global-state": {"online": true},
@@ -156,10 +140,6 @@ func (suite *RoutePublicTestSuite) TestList() {
 				suite.mockExec.EXPECT().
 					RunCmd("netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusWithRoutes, nil)
-				suite.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
-					Return(nil, errors.New("no keys")).
-					AnyTimes()
 			},
 			validateFunc: func(result []route.ListEntry, err error) {
 				suite.Require().NoError(err)
@@ -191,10 +171,6 @@ func (suite *RoutePublicTestSuite) TestList() {
 				suite.mockExec.EXPECT().
 					RunCmd("netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusNoRoutes, nil)
-				suite.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
-					Return(nil, errors.New("no keys")).
-					AnyTimes()
 			},
 			validateFunc: func(result []route.ListEntry, err error) {
 				suite.Require().NoError(err)
@@ -220,10 +196,6 @@ func (suite *RoutePublicTestSuite) TestList() {
 				suite.mockExec.EXPECT().
 					RunCmd("netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusWithRoutes, nil)
-				suite.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
-					Return(nil, errors.New("no keys")).
-					AnyTimes()
 			},
 			validateFunc: func(result []route.ListEntry, err error) {
 				suite.Require().NoError(err)
@@ -241,241 +213,6 @@ func (suite *RoutePublicTestSuite) TestList() {
 				suite.Equal("10.0.0.1", defaultRoute.Gateway)
 				suite.Equal("eth0", defaultRoute.Interface)
 				suite.Equal(100, defaultRoute.Metric)
-			},
-		},
-		{
-			name: "when managed routes exist shows managed flag",
-			setup: func() {
-				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
-					Return(netplanStatusSingleRoute, nil)
-
-				routes := []route.Route{
-					{To: "10.1.0.0/16", Via: "10.0.0.1"},
-				}
-				routesJSON, _ := json.Marshal(routes)
-				state := map[string]interface{}{
-					"path":        "/etc/netplan/osapi-eth0-routes.yaml",
-					"sha256":      "abc123",
-					"deployed_at": "2026-01-01T00:00:00Z",
-					"metadata": map[string]string{
-						"interface": "eth0",
-						"routes":    string(routesJSON),
-					},
-				}
-				stateBytes, _ := json.Marshal(state)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
-				mockEntry.EXPECT().Value().Return(stateBytes)
-
-				suite.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
-					Return([]string{"test-host:/etc/netplan/osapi-eth0-routes.yaml"}, nil)
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), "test-host:/etc/netplan/osapi-eth0-routes.yaml").
-					Return(mockEntry, nil)
-			},
-			validateFunc: func(result []route.ListEntry, err error) {
-				suite.Require().NoError(err)
-				suite.Require().Len(result, 1)
-				suite.Equal("10.1.0.0/16", result[0].Destination)
-				suite.True(result[0].Managed)
-			},
-		},
-		{
-			name: "when managed routes exist but undeployed shows unmanaged",
-			setup: func() {
-				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
-					Return(netplanStatusSingleRoute, nil)
-
-				state := map[string]interface{}{
-					"path":          "/etc/netplan/osapi-eth0-routes.yaml",
-					"sha256":        "abc123",
-					"deployed_at":   "2026-01-01T00:00:00Z",
-					"undeployed_at": "2026-01-01T00:00:00Z",
-					"metadata": map[string]string{
-						"interface": "eth0",
-						"routes":    `[{"to":"10.1.0.0/16","via":"10.0.0.1"}]`,
-					},
-				}
-				stateBytes, _ := json.Marshal(state)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
-				mockEntry.EXPECT().Value().Return(stateBytes)
-
-				suite.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
-					Return([]string{"test-host:/etc/netplan/osapi-eth0-routes.yaml"}, nil)
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), "test-host:/etc/netplan/osapi-eth0-routes.yaml").
-					Return(mockEntry, nil)
-			},
-			validateFunc: func(result []route.ListEntry, err error) {
-				suite.Require().NoError(err)
-				suite.Require().Len(result, 1)
-				suite.Equal("10.1.0.0/16", result[0].Destination)
-				suite.False(result[0].Managed)
-			},
-		},
-		{
-			name: "when stateKV.Keys fails still lists routes",
-			setup: func() {
-				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
-					Return(netplanStatusSingleRoute, nil)
-				suite.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
-					Return(nil, errors.New("kv unavailable"))
-			},
-			validateFunc: func(result []route.ListEntry, err error) {
-				suite.Require().NoError(err)
-				suite.Require().Len(result, 1)
-				suite.Equal("10.1.0.0/16", result[0].Destination)
-				suite.False(result[0].Managed)
-			},
-		},
-		{
-			name: "when stateKV.Get fails for a key skips that entry",
-			setup: func() {
-				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
-					Return(netplanStatusSingleRoute, nil)
-
-				suite.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
-					Return([]string{"bad-key"}, nil)
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), "bad-key").
-					Return(nil, errors.New("not found"))
-			},
-			validateFunc: func(result []route.ListEntry, err error) {
-				suite.Require().NoError(err)
-				suite.Require().Len(result, 1)
-				suite.False(result[0].Managed)
-			},
-		},
-		{
-			name: "when state value is invalid JSON skips that entry",
-			setup: func() {
-				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
-					Return(netplanStatusSingleRoute, nil)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
-				mockEntry.EXPECT().Value().Return([]byte("not-json"))
-
-				suite.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
-					Return([]string{"bad-json-key"}, nil)
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), "bad-json-key").
-					Return(mockEntry, nil)
-			},
-			validateFunc: func(result []route.ListEntry, err error) {
-				suite.Require().NoError(err)
-				suite.Require().Len(result, 1)
-				suite.False(result[0].Managed)
-			},
-		},
-		{
-			name: "when state metadata missing interface key skips entry",
-			setup: func() {
-				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
-					Return(netplanStatusSingleRoute, nil)
-
-				state := map[string]interface{}{
-					"path":        "/etc/netplan/osapi-eth0-routes.yaml",
-					"sha256":      "abc123",
-					"deployed_at": "2026-01-01T00:00:00Z",
-					"metadata": map[string]string{
-						"routes": `[{"to":"10.1.0.0/16","via":"10.0.0.1"}]`,
-					},
-				}
-				stateBytes, _ := json.Marshal(state)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
-				mockEntry.EXPECT().Value().Return(stateBytes)
-
-				suite.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
-					Return([]string{"no-iface-key"}, nil)
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), "no-iface-key").
-					Return(mockEntry, nil)
-			},
-			validateFunc: func(result []route.ListEntry, err error) {
-				suite.Require().NoError(err)
-				suite.Require().Len(result, 1)
-				suite.False(result[0].Managed)
-			},
-		},
-		{
-			name: "when state metadata missing routes key skips entry",
-			setup: func() {
-				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
-					Return(netplanStatusSingleRoute, nil)
-
-				state := map[string]interface{}{
-					"path":        "/etc/netplan/osapi-eth0-routes.yaml",
-					"sha256":      "abc123",
-					"deployed_at": "2026-01-01T00:00:00Z",
-					"metadata": map[string]string{
-						"interface": "eth0",
-					},
-				}
-				stateBytes, _ := json.Marshal(state)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
-				mockEntry.EXPECT().Value().Return(stateBytes)
-
-				suite.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
-					Return([]string{"no-routes-key"}, nil)
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), "no-routes-key").
-					Return(mockEntry, nil)
-			},
-			validateFunc: func(result []route.ListEntry, err error) {
-				suite.Require().NoError(err)
-				suite.Require().Len(result, 1)
-				suite.False(result[0].Managed)
-			},
-		},
-		{
-			name: "when state routes JSON is invalid skips entry",
-			setup: func() {
-				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
-					Return(netplanStatusSingleRoute, nil)
-
-				state := map[string]interface{}{
-					"path":        "/etc/netplan/osapi-eth0-routes.yaml",
-					"sha256":      "abc123",
-					"deployed_at": "2026-01-01T00:00:00Z",
-					"metadata": map[string]string{
-						"interface": "eth0",
-						"routes":    "not-valid-json",
-					},
-				}
-				stateBytes, _ := json.Marshal(state)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
-				mockEntry.EXPECT().Value().Return(stateBytes)
-
-				suite.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
-					Return([]string{"bad-routes-json"}, nil)
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), "bad-routes-json").
-					Return(mockEntry, nil)
-			},
-			validateFunc: func(result []route.ListEntry, err error) {
-				suite.Require().NoError(err)
-				suite.Require().Len(result, 1)
-				suite.False(result[0].Managed)
 			},
 		},
 	}

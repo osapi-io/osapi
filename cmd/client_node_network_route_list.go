@@ -75,14 +75,13 @@ var clientNodeNetworkRouteListCmd = &cobra.Command{
 						rt.Gateway,
 						rt.Interface,
 						fmt.Sprintf("%d", rt.Metric),
-						fmt.Sprintf("%t", rt.Managed),
 					},
 				})
 			}
 		}
 		headers, rows := cli.BuildBroadcastTable(
 			results,
-			[]string{"DESTINATION", "GATEWAY", "INTERFACE", "METRIC", "MANAGED"},
+			[]string{"DESTINATION", "GATEWAY", "INTERFACE", "METRIC"},
 		)
 		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},

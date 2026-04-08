@@ -18,7 +18,6 @@ $ osapi client node network interface get \
   MTU          1500
   MAC Address  52:54:00:ab:cd:ef
   Wake-on-LAN  false
-  Managed      true
   State        up
 ```
 
@@ -50,7 +49,7 @@ $ osapi client node network interface get \
 {"name":"eth0","dhcp4":false,"dhcp6":false,
 "addresses":["192.168.1.100/24"],"gateway4":"192.168.1.1",
 "mtu":1500,"mac_address":"52:54:00:ab:cd:ef",
-"managed":true,"state":"up"}}],"job_id":"..."}
+"state":"up"}}],"job_id":"..."}
 ```
 
 ## Flags

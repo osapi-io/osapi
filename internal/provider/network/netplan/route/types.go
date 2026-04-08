@@ -58,7 +58,6 @@ type ListEntry struct {
 	Mask        string `json:"mask,omitempty"`
 	Metric      int    `json:"metric,omitempty"`
 	Flags       string `json:"flags,omitempty"`
-	Managed     bool   `json:"managed,omitempty"`
 }
 
 // Result is the outcome of a route create/update/delete operation.

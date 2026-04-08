@@ -162,7 +162,6 @@ func convertRouteListEntries(
 			Gateway:     strPtrOrNil(e.Gateway),
 			Interface:   strPtrOrNil(e.Interface),
 			Scope:       strPtrOrNil(e.Flags),
-			Managed:     &e.Managed,
 		}
 		if e.Metric > 0 {
 			metric := e.Metric
