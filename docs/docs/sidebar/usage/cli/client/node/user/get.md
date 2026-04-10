@@ -5,8 +5,8 @@ Get a specific user account by name:
 ```bash
 $ osapi client node user get --target web-01 --name deploy
 
-  NAME     UID   GID   HOME            SHELL        GROUPS       LOCKED
-  deploy   1001  1001  /home/deploy    /bin/bash     sudo,docker  no
+  HOSTNAME  NAME     UID   GID   HOME            SHELL        GROUPS       LOCKED
+  web-01    deploy   1001  1001  /home/deploy    /bin/bash     sudo,docker  no
 ```
 
 ## JSON Output

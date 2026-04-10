@@ -7,10 +7,10 @@ $ osapi client node process list --target web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  PID   NAME      USER  STATE     CPU%  MEM%  COMMAND
-  1     systemd   root  sleeping  0.0%  0.1%  /sbin/init
-  245   sshd      root  sleeping  0.0%  0.2%  sshd: /usr/sbin/sshd -D
-  1234  nginx     www   sleeping  2.3%  1.5%  nginx: worker process
+  HOSTNAME  PID   NAME      USER  STATE     CPU%  MEM%  COMMAND
+  web-01    1     systemd   root  sleeping  0.0%  0.1%  /sbin/init
+  web-01    245   sshd      root  sleeping  0.0%  0.2%  sshd: /usr/sbin/sshd -D
+  web-01    1234  nginx     www   sleeping  2.3%  1.5%  nginx: worker process
 ```
 
 When targeting all hosts:
@@ -20,15 +20,11 @@ $ osapi client node process list --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  web-01
-  PID   NAME      USER  STATE     CPU%  MEM%  COMMAND
-  1     systemd   root  sleeping  0.0%  0.1%  /sbin/init
-  1234  nginx     www   sleeping  2.3%  1.5%  nginx: worker process
-
-  web-02
-  PID   NAME      USER  STATE     CPU%  MEM%  COMMAND
-  1     systemd   root  sleeping  0.0%  0.1%  /sbin/init
-  5678  postgres  pg    sleeping  1.1%  3.2%  postgres: writer process
+  HOSTNAME  PID   NAME      USER  STATE     CPU%  MEM%  COMMAND
+  web-01    1     systemd   root  sleeping  0.0%  0.1%  /sbin/init
+  web-01    1234  nginx     www   sleeping  2.3%  1.5%  nginx: worker process
+  web-02    1     systemd   root  sleeping  0.0%  0.1%  /sbin/init
+  web-02    5678  postgres  pg    sleeping  1.1%  3.2%  postgres: writer process
 ```
 
 ## JSON Output

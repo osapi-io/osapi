@@ -10,8 +10,8 @@ $ osapi client node ntp update --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  STATUS  CHANGED  ERROR
-  ok      true
+  HOSTNAME  STATUS  CHANGED  ERROR
+  web-01    ok      true
 ```
 
 If the server list is already identical, `changed: false` is returned and the
@@ -23,8 +23,8 @@ $ osapi client node ntp update --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  STATUS  CHANGED  ERROR
-  ok      false
+  HOSTNAME  STATUS  CHANGED  ERROR
+  web-01    ok      false
 ```
 
 Broadcast to all hosts at once:

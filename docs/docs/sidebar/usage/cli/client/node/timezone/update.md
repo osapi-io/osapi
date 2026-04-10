@@ -37,8 +37,8 @@ osapi client node timezone update --target web-01 \
 ```
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  STATUS  CHANGED  ERROR
-  ok      true
+  HOSTNAME  STATUS  CHANGED  ERROR
+  web-01    ok      true
 ```
 
 ## JSON Output

@@ -7,10 +7,10 @@ $ osapi client node network route list --target web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  DESTINATION     GATEWAY        INTERFACE  METRIC
-  0.0.0.0/0       192.168.1.1    eth0       100
-  10.0.0.0/8      192.168.1.1    eth0       0
-  192.168.1.0/24  0.0.0.0        eth0       0
+  HOSTNAME  DESTINATION     GATEWAY        INTERFACE  METRIC
+  web-01    0.0.0.0/0       192.168.1.1    eth0       100
+  web-01    10.0.0.0/8      192.168.1.1    eth0       0
+  web-01    192.168.1.0/24  0.0.0.0        eth0       0
 ```
 
 Target all hosts to list routes across the fleet:
@@ -20,15 +20,11 @@ $ osapi client node network route list --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  web-01
-  DESTINATION     GATEWAY        INTERFACE  METRIC
-  0.0.0.0/0       192.168.1.1    eth0       100
-  192.168.1.0/24  0.0.0.0        eth0       0
-
-  web-02
-  DESTINATION     GATEWAY        INTERFACE  METRIC
-  0.0.0.0/0       10.0.0.1       eth0       100
-  10.0.0.0/24     0.0.0.0        eth0       0
+  HOSTNAME  DESTINATION     GATEWAY        INTERFACE  METRIC
+  web-01    0.0.0.0/0       192.168.1.1    eth0       100
+  web-01    192.168.1.0/24  0.0.0.0        eth0       0
+  web-02    0.0.0.0/0       10.0.0.1       eth0       100
+  web-02    10.0.0.0/24     0.0.0.0        eth0       0
 ```
 
 ## JSON Output

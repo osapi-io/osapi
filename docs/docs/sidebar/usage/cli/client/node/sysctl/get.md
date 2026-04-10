@@ -7,8 +7,8 @@ $ osapi client node sysctl get --target web-01 --key net.ipv4.ip_forward
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  KEY                   VALUE
-  net.ipv4.ip_forward   1
+  HOSTNAME  KEY                   VALUE
+  web-01    net.ipv4.ip_forward   1
 ```
 
 When targeting all hosts:

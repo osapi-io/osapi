@@ -8,9 +8,9 @@ $ osapi client node network route get \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  DESTINATION   GATEWAY      INTERFACE  METRIC
-  10.0.0.0/8    192.168.1.1  eth0       0
-  172.16.0.0/12 192.168.1.1  eth0       100
+  HOSTNAME  DESTINATION   GATEWAY      INTERFACE  METRIC
+  web-01    10.0.0.0/8    192.168.1.1  eth0       0
+  web-01    172.16.0.0/12 192.168.1.1  eth0       100
 ```
 
 When targeting all hosts:
@@ -21,13 +21,9 @@ $ osapi client node network route get \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  web-01
-  DESTINATION   GATEWAY      INTERFACE  METRIC
-  10.0.0.0/8    192.168.1.1  eth0       0
-
-  web-02
-  DESTINATION   GATEWAY      INTERFACE  METRIC
-  10.0.0.0/8    192.168.1.1  eth0       0
+  HOSTNAME  DESTINATION   GATEWAY      INTERFACE  METRIC
+  web-01    10.0.0.0/8    192.168.1.1  eth0       0
+  web-02    10.0.0.0/8    192.168.1.1  eth0       0
 ```
 
 When some hosts fail or are skipped, STATUS and ERROR columns are shown:

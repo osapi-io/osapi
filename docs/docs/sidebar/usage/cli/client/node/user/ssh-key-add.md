@@ -8,8 +8,8 @@ $ osapi client node user ssh-key add --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  CHANGED
-  true
+  HOSTNAME  CHANGED
+  web-01    true
 ```
 
 The key is appended to the user's `~/.ssh/authorized_keys` file. If the file or

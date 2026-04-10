@@ -59,6 +59,20 @@ const (
 	StatusRetried        = client.JobStatusRetried
 )
 
+// StatusPriority maps each job status to a numeric priority used when
+// computing the overall status from append-only events. Higher values
+// take precedence — a "completed" event (4) is never overwritten by a
+// "started" event (2) that happens to sort later alphabetically in KV.
+var StatusPriority = map[string]int{
+	string(StatusSubmitted):    0,
+	string(StatusAcknowledged): 1,
+	string(StatusStarted):      2,
+	string(StatusFailed):       3,
+	string(StatusSkipped):      3,
+	string(StatusCompleted):    4,
+	string(StatusRetried):      4,
+}
+
 // Request represents a request to perform a job operation.
 type Request struct {
 	// JobID is a unique identifier for this job.

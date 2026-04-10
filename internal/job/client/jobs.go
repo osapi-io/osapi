@@ -502,7 +502,9 @@ func (c *Client) computeStatusFromEvents(
 		return result
 	}
 
-	// Track status by agent
+	// Track status by agent. Events are processed in alphabetical key
+	// order (e.g., "completed" before "started") so we use priority to
+	// ensure only higher-priority events overwrite lower ones.
 	agentStates := make(map[string]string)
 	agentStartTimes := make(map[string]time.Time)
 	agentEndTimes := make(map[string]time.Time)
@@ -584,9 +586,12 @@ func (c *Client) computeStatusFromEvents(
 
 		timeline = append(timeline, timelineEvent)
 
-		// Track agent state
+		// Track agent state — only upgrade to higher-priority events.
 		if hostname != "" && hostname != "_api" {
-			agentStates[hostname] = eventType
+			cur, exists := agentStates[hostname]
+			if !exists || job.StatusPriority[eventType] > job.StatusPriority[cur] {
+				agentStates[hostname] = eventType
+			}
 
 			// Track first start time for duration calculation
 			if eventType == string(job.StatusStarted) {
@@ -803,16 +808,6 @@ func computeStatusFromKeyNames(
 	}
 
 	// Parse status keys and track highest-priority event per (jobID, hostname)
-	statusPriority := map[string]int{
-		string(job.StatusSubmitted):    0,
-		string(job.StatusAcknowledged): 1,
-		string(job.StatusStarted):      2,
-		string(job.StatusFailed):       3,
-		string(job.StatusSkipped):      3,
-		string(job.StatusCompleted):    4,
-		string(job.StatusRetried):      4,
-	}
-
 	// agentStates[jobID][hostname] = highest-priority event
 	agentStates := make(map[string]map[string]string)
 
@@ -833,7 +828,7 @@ func computeStatusFromKeyNames(
 		}
 
 		cur, exists := agentStates[jobID][hostname]
-		if !exists || statusPriority[event] > statusPriority[cur] {
+		if !exists || job.StatusPriority[event] > job.StatusPriority[cur] {
 			agentStates[jobID][hostname] = event
 		}
 	}

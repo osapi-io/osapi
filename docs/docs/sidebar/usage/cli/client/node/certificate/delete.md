@@ -10,8 +10,8 @@ $ osapi client node certificate delete --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME         CHANGED
-  internal-ca  true
+  HOSTNAME  NAME         CHANGED
+  web-01    internal-ca  true
 ```
 
 If the certificate does not exist, `changed: false` is returned:
@@ -22,8 +22,8 @@ $ osapi client node certificate delete --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME         CHANGED
-  internal-ca  false
+  HOSTNAME  NAME         CHANGED
+  web-01    internal-ca  false
 ```
 
 Broadcast to all hosts:

@@ -13,9 +13,9 @@ List all osapi-managed cron entries:
 ```bash
 $ osapi client node schedule cron list --target web-01
 
-  NAME           SCHEDULE     USER  OBJECT
-  backup-daily   0 2 * * *    root  backup-script
-  log-rotate     0 0 * * 0    root  logrotate-conf
+  HOSTNAME  NAME           SCHEDULE     USER  OBJECT
+  web-01    backup-daily   0 2 * * *    root  backup-script
+  web-01    log-rotate     0 0 * * 0    root  logrotate-conf
 ```
 
 ## Get

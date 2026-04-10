@@ -10,8 +10,8 @@ $ osapi client node sysctl update --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  KEY                   CHANGED
-  net.ipv4.ip_forward   true
+  HOSTNAME  KEY                   CHANGED
+  web-01    net.ipv4.ip_forward   true
 ```
 
 If the parameter already has the requested value, `changed: false` is returned
@@ -23,8 +23,8 @@ $ osapi client node sysctl update --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  KEY                   CHANGED
-  net.ipv4.ip_forward   false
+  HOSTNAME  KEY                   CHANGED
+  web-01    net.ipv4.ip_forward   false
 ```
 
 Broadcast to all hosts at once:

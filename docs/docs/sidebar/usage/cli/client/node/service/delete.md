@@ -10,8 +10,8 @@ $ osapi client node service delete --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME             CHANGED
-  myapp.service    true
+  HOSTNAME  NAME             CHANGED
+  web-01    myapp.service    true
 ```
 
 If the unit file does not exist, `changed: false` is returned:
@@ -22,8 +22,8 @@ $ osapi client node service delete --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME             CHANGED
-  myapp.service    false
+  HOSTNAME  NAME             CHANGED
+  web-01    myapp.service    false
 ```
 
 Broadcast to all hosts:

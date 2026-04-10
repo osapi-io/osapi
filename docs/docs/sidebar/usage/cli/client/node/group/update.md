@@ -6,8 +6,8 @@ Update a group's member list:
 $ osapi client node group update --target web-01 \
     --name deploy --members alice,bob
 
-  NAME     CHANGED  STATUS
-  deploy   true     ok
+  HOSTNAME  NAME     CHANGED  STATUS
+  web-01    deploy   true     ok
 ```
 
 The `--members` flag replaces the existing member list entirely.

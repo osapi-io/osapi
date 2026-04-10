@@ -535,7 +535,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			responseCount:  0,
 		},
 		{
-			name:  "out-of-order timestamps triggers sort",
+			name:  "when events are out of order completed wins over started",
 			jobID: "job-1",
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -570,7 +570,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					Get(gomock.Any(), "status.job-1.started.agent1.100").
 					Return(startEntry, nil)
 			},
-			expectedStatus: "processing",
+			expectedStatus: "completed",
 			agentCount:     1,
 		},
 		{

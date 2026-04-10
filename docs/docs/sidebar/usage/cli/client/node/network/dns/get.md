@@ -7,8 +7,8 @@ $ osapi client node network dns get --interface-name eth0
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  SERVERS                              SEARCH DOMAINS
-  192.168.0.247, 2607:f428::1          example.com
+  HOSTNAME  SERVERS                              SEARCH DOMAINS
+  web-01    192.168.0.247, 2607:f428::1          example.com
 ```
 
 When targeting all hosts:

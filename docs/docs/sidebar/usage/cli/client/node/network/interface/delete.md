@@ -9,8 +9,8 @@ $ osapi client node network interface delete \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME    CHANGED
-  eth0    true
+  HOSTNAME  NAME    CHANGED
+  web-01    eth0    true
 ```
 
 Broadcast delete to all hosts:

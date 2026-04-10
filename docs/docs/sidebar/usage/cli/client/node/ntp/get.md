@@ -7,8 +7,8 @@ $ osapi client node ntp get --target web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  SYNCHRONIZED  STRATUM  OFFSET    SOURCE     SERVERS
-  yes           2        +0.000123  192.0.2.1  0.pool.ntp.org, 1.pool.ntp.org
+  HOSTNAME  SYNCHRONIZED  STRATUM  OFFSET    SOURCE     SERVERS
+  web-01    yes           2        +0.000123  192.0.2.1  0.pool.ntp.org, 1.pool.ntp.org
 ```
 
 When targeting all hosts:

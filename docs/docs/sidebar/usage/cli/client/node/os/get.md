@@ -7,8 +7,8 @@ $ osapi client node os get
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  DISTRIBUTION  VERSION
-  Ubuntu        24.04
+  HOSTNAME  DISTRIBUTION  VERSION
+  web-01    Ubuntu        24.04
 ```
 
 When targeting all hosts:

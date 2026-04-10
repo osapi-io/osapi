@@ -11,8 +11,8 @@ $ osapi client node sysctl create --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  KEY                   CHANGED
-  net.ipv4.ip_forward   true
+  HOSTNAME  KEY                   CHANGED
+  web-01    net.ipv4.ip_forward   true
 ```
 
 Broadcast to all hosts at once:

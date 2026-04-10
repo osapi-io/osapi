@@ -8,8 +8,8 @@ $ osapi client node process signal --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  PID   SIGNAL  CHANGED
-  1234  TERM    true
+  HOSTNAME  PID   SIGNAL  CHANGED
+  web-01    1234  TERM    true
 ```
 
 Broadcast a signal to a process on all hosts:
