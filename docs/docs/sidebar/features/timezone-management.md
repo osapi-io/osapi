@@ -97,3 +97,8 @@ on OS family detection.
 
 All built-in roles (`admin`, `write`, `read`) include `timezone:read`. The
 `admin` and `write` roles also include `timezone:write`.
+
+## Related
+
+- [NTP Management](ntp-management.md) -- NTP server configuration
+- [Configuration](../usage/configuration.md) -- full configuration reference

@@ -25,49 +25,6 @@ before applying. If validation fails, the file is rolled back and the job
 returns an error. This prevents bad configuration from breaking network
 connectivity.
 
-### Interface Operations
-
-**List** — Returns all interfaces known to Netplan on the host. Each entry
-includes the interface name, DHCP settings, IP addresses, gateway, MTU, MAC
-address, Wake-on-LAN state, managed flag (whether OSAPI manages the interface),
-and state.
-
-**Get** — Returns the configuration of a single interface by name.
-
-**Create** — Writes a new Netplan drop-in file for the interface. Idempotent:
-returns `changed: false` if already managed. Use `update` to replace the
-configuration. Runs `netplan generate` to validate, then `netplan apply` to
-activate. Returns `changed: true` if the file was created.
-
-**Update** — Replaces an existing Netplan drop-in file for the interface. Runs
-`netplan generate` and `netplan apply`. Returns `changed: false` if the content
-has not changed (same SHA). Fails if no OSAPI-managed configuration exists for
-that interface — use `create` first.
-
-**Delete** — Removes the OSAPI-managed Netplan drop-in file for the interface
-and runs `netplan apply` to remove the configuration. Returns `changed: true` if
-the file existed. Only OSAPI-managed files (with the `osapi-` prefix) can be
-deleted.
-
-### Route Operations
-
-**List** — Returns all routes visible in the kernel routing table on the host.
-Each entry includes the destination, gateway, interface, metric, and scope.
-
-**Get** — Returns the routes for a specific interface (reads from the
-OSAPI-managed Netplan routes file).
-
-**Create** — Writes a new Netplan drop-in routes file for the interface. Each
-route specifies a destination in CIDR notation, a gateway IP, and an optional
-metric. Idempotent: returns `changed: false` if already managed. Use `update` to
-replace it. Runs `netplan generate` to validate.
-
-**Update** — Replaces an existing OSAPI-managed routes file for the interface.
-Returns `changed: false` if the content is unchanged.
-
-**Delete** — Removes the OSAPI-managed routes file for the interface and runs
-`netplan apply`.
-
 ### DNS Delete
 
 The DNS provider also supports delete: removes the OSAPI-managed

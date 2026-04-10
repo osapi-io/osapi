@@ -28,7 +28,7 @@ hosts via `/etc/sysctl.d/` conf files. Access via `client.Sysctl.List()`,
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
@@ -59,7 +59,7 @@ resp, err := c.Sysctl.Delete(ctx, "web-01", "net.ipv4.ip_forward")
 
 ## Example
 
-- [`examples/sdk/client/sysctl.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/sysctl.go)
+- [`examples/sdk/client/sysctl.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/sysctl.go)
 
 ## Permissions
 

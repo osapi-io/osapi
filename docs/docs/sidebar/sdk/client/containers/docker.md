@@ -39,7 +39,7 @@ import `gen`.
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
@@ -85,7 +85,7 @@ resp, err := c.Docker.ImageRemove(ctx, "_any", "nginx:latest",
 
 ## Examples
 
-- [`examples/sdk/client/docker.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/docker.go)
+- [`examples/sdk/client/docker.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/docker.go)
 
 ## Permissions
 

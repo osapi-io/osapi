@@ -72,8 +72,8 @@ Define custom roles in the configuration to create new role names or override
 default permission mappings:
 
 ```yaml
-api:
-  server:
+controller:
+  api:
     security:
       roles:
         ops:
@@ -90,8 +90,8 @@ api:
 ## Configuration
 
 ```yaml
-api:
-  server:
+controller:
+  api:
     security:
       # HS256 signing key (REQUIRED)
       # Generate with: openssl rand -hex 32

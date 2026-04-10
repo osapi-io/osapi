@@ -21,7 +21,7 @@ hosts. Access via `client.Package.List()`, `client.Package.Install()`, etc.
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
@@ -59,7 +59,7 @@ for _, r := range resp.Data.Results {
 
 ## Example
 
-- [`examples/sdk/client/package.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/package.go)
+- [`examples/sdk/client/package.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/package.go)
 
 ## Permissions
 

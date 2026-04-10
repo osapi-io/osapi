@@ -24,7 +24,7 @@ via reboot and shutdown operations. Access via `client.Power.Reboot()` and
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
@@ -52,7 +52,7 @@ resp, err := c.Power.Shutdown(ctx, "_all", client.PowerOpts{
 
 ## Example
 
-- [`examples/sdk/client/power.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/power.go)
+- [`examples/sdk/client/power.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/power.go)
 
 ## Permissions
 

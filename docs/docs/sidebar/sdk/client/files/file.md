@@ -140,7 +140,7 @@ reports `Changed: false`.
 ## Example
 
 See
-[`examples/sdk/client/file.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/file.go)
+[`examples/sdk/client/file.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/file.go)
 for a complete working example.
 
 ## Permissions

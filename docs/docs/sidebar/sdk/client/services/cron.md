@@ -28,7 +28,7 @@ hosts. Access via `client.Cron.List()`, `client.Cron.Create()`, etc.
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
@@ -81,7 +81,7 @@ resp, err := c.Cron.Delete(ctx, "web-01", "backup-daily")
 
 ## Example
 
-- [`examples/sdk/client/cron.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/cron.go)
+- [`examples/sdk/client/cron.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/cron.go)
 
 ## Permissions
 

@@ -16,7 +16,7 @@ The system is organized into six layers, top to bottom:
 | Layer                      | Package                                 | Role                                                                                     |
 | -------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------- |
 | **CLI**                    | `cmd/`                                  | Cobra command tree (thin wiring)                                                         |
-| **SDK Client**             | `pkg/sdk/osapi`                         | OpenAPI-generated client used by CLI                                                     |
+| **SDK Client**             | `pkg/sdk/client`                        | OpenAPI-generated client used by CLI                                                     |
 | **REST API**               | `internal/controller/api/`              | Echo server with JWT middleware                                                          |
 | **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status                                                   |
 | **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses`, KV `agent-registry`                   |
@@ -25,7 +25,7 @@ The system is organized into six layers, top to bottom:
 
 ```mermaid
 graph TD
-    CLI["CLI (cmd/)"] --> SDK["SDK Client (pkg/sdk/osapi)"]
+    CLI["CLI (cmd/)"] --> SDK["SDK Client (pkg/sdk/client)"]
     SDK --> API["REST API (internal/controller/api/)"]
     API --> JobClient["Job Client (internal/job/client/)"]
     JobClient --> NATS["NATS JetStream"]
@@ -66,18 +66,10 @@ The controller is built on [Echo][] with handlers generated from an OpenAPI spec
 via [oapi-codegen][] (`*.gen.go` files). Domain handlers are organized into
 subpackages:
 
-| Package                             | Responsibility                                                                      |
-| ----------------------------------- | ----------------------------------------------------------------------------------- |
-| `internal/controller/api/node/`     | Node endpoints (hostname, status, disk, memory, load, dns, command, file deploy)    |
-| `internal/controller/api/file/`     | File Object Store endpoints (upload, list, get, delete)                             |
-| `internal/controller/api/docker/`   | Docker container endpoints (create, list, inspect, start, stop, remove, exec, pull) |
-| `internal/controller/api/schedule/` | Schedule endpoints (cron list, get, create, update, delete)                         |
-| `internal/controller/api/agent/`    | Agent endpoints (list, get, drain, undrain, timeline)                               |
-| `internal/controller/api/audit/`    | Audit log endpoints (list, get, export)                                             |
-| `internal/controller/api/job/`      | Job queue endpoints (get, list, delete, retry, status)                              |
-| `internal/controller/api/health/`   | Health check endpoints (liveness, readiness, status)                                |
-| `internal/controller/api/common/`   | Shared middleware, error handling, collection responses                             |
-| `internal/telemetry/metrics/`       | Per-component Prometheus metrics server with isolated registries                    |
+Browse `internal/controller/api/` for current domain handlers. Each domain has
+its own subpackage with generated OpenAPI code, handler implementations, and
+tests. Node-targeted domains live under `internal/controller/api/node/`,
+controller-only domains are top-level (e.g., `job/`, `health/`, `audit/`).
 
 All state-changing operations are dispatched as jobs through the job client
 layer rather than executed inline. Responses follow a uniform collection
@@ -104,20 +96,8 @@ For the full deep dive see [Job System Architecture](job-architecture.md).
 Providers implement the actual system operations behind a common interface. Each
 provider is selected at runtime through a platform-aware factory pattern.
 
-| Domain           | Providers                                                |
-| ---------------- | -------------------------------------------------------- |
-| `node/host`      | Hostname, uptime, OS info                                |
-| `node/disk`      | Disk usage statistics                                    |
-| `node/mem`       | Memory usage statistics                                  |
-| `node/load`      | Load average statistics                                  |
-| `network/dns`    | DNS configuration (get/update)                           |
-| `network/ping`   | Ping execution and statistics                            |
-| `command/exec`   | Direct command execution                                 |
-| `command/shell`  | Shell command execution                                  |
-| `file`           | File deploy, undeploy, status (SHA tracking, templates)  |
-| `docker/runtime` | Docker container lifecycle (create, start, stop, remove) |
-| `scheduled/cron` | Cron drop-in management (meta provider over file)        |
-| `process`        | Current process CPU, RSS, and goroutine metrics          |
+Browse `internal/provider/` for current providers. Each domain has its own
+subdirectory with platform-specific implementations (Debian, Darwin, Linux).
 
 Providers are stateless and OS-family-specific. OSAPI follows Ansible's OS
 family naming — the Debian family includes Ubuntu, Debian, and Raspbian. Darwin
@@ -189,47 +169,8 @@ Configuration is managed by [Viper][] and loaded from an `osapi.yaml` file.
 Environment variables override file values using the `OSAPI_` prefix with
 underscore-separated keys (e.g., `OSAPI_API_SERVER_PORT`).
 
-Minimal configuration skeleton (see [Configuration](../usage/configuration.md)
-for the full reference):
-
-```yaml
-api:
-  client:
-    url: 'http://localhost:8080'
-    security:
-      bearer_token: '<jwt>'
-  server:
-    port: 8080
-    nats:
-      host: 'localhost'
-      port: 4222
-      client_name: 'osapi-api'
-    security:
-      signing_key: '<secret>'
-      cors:
-        allow_origins: []
-
-nats:
-  server:
-    host: '0.0.0.0'
-    port: 4222
-    store_dir: '/tmp/nats-store'
-
-job:
-  stream_name: 'JOBS'
-  kv_bucket: 'job-queue'
-  kv_response_bucket: 'job-responses'
-  consumer_name: 'jobs-agent'
-
-agent:
-  nats:
-    host: 'localhost'
-    port: 4222
-    client_name: 'osapi-agent'
-  hostname: 'web-01'
-  labels:
-    group: 'web.dev'
-```
+See [Configuration](../usage/configuration.md) for the full `osapi.yaml`
+reference with every supported field.
 
 ## Health Checks (`internal/controller/api/health/`)
 
@@ -237,8 +178,9 @@ The controller exposes three health check endpoints following the Kubernetes
 liveness/readiness probe pattern. Liveness and readiness probes are
 unauthenticated and live outside the authenticated API surface because they
 serve infrastructure concerns rather than business operations. The detailed
-system status endpoint requires JWT authentication with the `read` role. See the
-[API reference](/category/api) for exact paths and response schemas.
+system status endpoint requires JWT authentication with the `health:read`
+permission. See the [API reference](/category/api) for exact paths and response
+schemas.
 
 ### Liveness
 
@@ -327,31 +269,29 @@ sequenceDiagram
 ### Authentication
 
 The API uses **JWT HS256** tokens signed with a shared secret
-(`security.signing_key`). Tokens carry a `role` claim that determines the
-caller's access level. The `osapi token generate` command creates tokens for a
-given role.
+(`security.signing_key`). Tokens carry a `roles` claim (array) that determines
+the caller's access level. The `osapi token generate` command creates tokens for
+a given role. Tokens can also carry a `permissions` claim that overrides
+role-based expansion.
 
 ### Authorization
 
-Access control is scope-based with a three-tier role hierarchy:
+Access control uses fine-grained `resource:verb` permissions. Each API endpoint
+declares a required permission (e.g., `node:read`, `cron:write`,
+`command:execute`). Built-in roles (`admin`, `write`, `read`) expand to default
+permission sets, and custom roles can be defined in config. See
+[Authentication & RBAC](../features/authentication.md) for the full permission
+model.
 
-| Role    | Scopes                   |
-| ------- | ------------------------ |
-| `admin` | `read`, `write`, `admin` |
-| `write` | `read`, `write`          |
-| `read`  | `read`                   |
-
-Each API endpoint declares a required scope. The JWT middleware checks that the
-caller's role includes that scope before allowing the request. The health
-endpoints `/health` and `/health/ready` are exceptions — they bypass JWT
-authentication so that load balancers and orchestrators can probe them without
-credentials.
+The health endpoints `/health` and `/health/ready` are exceptions — they bypass
+JWT authentication so that load balancers and orchestrators can probe them
+without credentials.
 
 ### CORS
 
 Cross-Origin Resource Sharing is configured per-server via
-`api.server.security.cors.allow_origins` in `osapi.yaml`. An empty list disables
-CORS headers entirely.
+`controller.api.security.cors.allow_origins` in `osapi.yaml`. An empty list
+disables CORS headers entirely.
 
 ## External Dependencies
 

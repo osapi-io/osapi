@@ -1,3 +1,7 @@
+---
+sidebar_position: 6
+---
+
 # Notifications
 
 OSAPI monitors component health through condition evaluation and notifies when
@@ -74,14 +78,6 @@ every 5 minutes until resolved. Uses Go duration format (`1m`, `5m`, `1h`). Set
 to `'0'` to disable re-notification.
 
 ## Configuration
-
-```yaml
-controller:
-  notifications:
-    enabled: true
-    notifier: 'log'
-    renotify_interval: '5m'
-```
 
 | Key                 | Env Variable                                       | Description                           |
 | ------------------- | -------------------------------------------------- | ------------------------------------- |

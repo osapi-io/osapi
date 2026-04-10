@@ -10,7 +10,7 @@ client with `New()` and use domain-specific services to interact with the API.
 ## Quick Start
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 client := client.New("http://localhost:8080", "your-jwt-token")
 
@@ -18,8 +18,6 @@ resp, err := client.Hostname.Get(ctx, "_any")
 ```
 
 ## Services
-
-### Services
 
 | Service                        | Description                  |
 | ------------------------------ | ---------------------------- |

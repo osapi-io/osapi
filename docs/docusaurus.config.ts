@@ -213,6 +213,11 @@ const config: Config = {
               type: 'doc',
               label: 'Agent Hardening',
               docId: 'sidebar/features/agent-hardening'
+            },
+            {
+              type: 'doc',
+              label: 'Management Dashboard',
+              docId: 'sidebar/features/management-dashboard'
             }
           ]
         },

@@ -17,7 +17,7 @@ DNS configuration query and update operations.
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
@@ -51,7 +51,7 @@ resp, err := c.DNS.Delete(ctx, "web-01", "eth0")
 ## Example
 
 See
-[`examples/sdk/client/dns.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/dns.go)
+[`examples/sdk/client/dns.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/dns.go)
 for a complete working example.
 
 ## Permissions

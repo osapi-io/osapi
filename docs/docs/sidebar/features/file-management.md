@@ -57,16 +57,11 @@ three states: `in-sync`, `drifted`, or `missing`.
 
 ### File Deploy Flow
 
-1. The CLI posts a deploy request specifying the Object Store file name, target
-   path, and optional permissions.
-2. The API server creates a job and publishes it to NATS.
-3. An agent picks up the job, fetches the file from Object Store, and computes
-   its SHA-256.
-4. The agent checks the file-state KV for a previous deploy. If the SHA matches,
-   the file is skipped (idempotent no-op).
-5. If the content differs, the agent writes the file to disk and updates the
-   file-state KV with the new SHA-256.
-6. The result (changed, SHA-256, path) is written back to NATS KV.
+Deploy follows the standard [job processing flow](job-system.md). The agent
+fetches the file from Object Store, computes its SHA-256, and checks the
+file-state KV for a previous deploy. If the SHA matches, the file is skipped
+(idempotent no-op). If the content differs, the agent writes the file to disk
+and updates the file-state KV with the new SHA-256.
 
 You can target a specific host, broadcast to all hosts with `_all`, or route by
 label.
@@ -77,16 +72,11 @@ label.
 osapi client node file undeploy --target HOST --path /etc/app/app.conf
 ```
 
-1. The CLI posts an undeploy request specifying the target path.
-2. The API server creates a job and publishes it to NATS.
-3. An agent picks up the job and removes the file from the filesystem.
-4. The file-state KV record is preserved -- it is not deleted. This keeps the
-   undeploy auditable and ensures a subsequent deploy will write the file even
-   if the content has not changed (since the file is now absent).
-5. The result (changed, path) is written back to NATS KV.
-
-If the file does not exist on disk when undeploy runs, the operation returns
-`changed: false`.
+Undeploy follows the standard [job processing flow](job-system.md). The agent
+removes the file from the filesystem but preserves the file-state KV record so
+the operation is auditable. A subsequent deploy will write the file even if the
+content has not changed (since the file is now absent). If the file does not
+exist on disk, the operation returns `changed: false`.
 
 ### SHA-Based Idempotency
 

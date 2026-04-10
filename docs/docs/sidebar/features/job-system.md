@@ -82,13 +82,12 @@ nats:
     ttl: '1h' # Entry time-to-live
     max_bytes: 104857600 # 100 MiB max bucket size
 
-node:
-  agent:
-    max_jobs: 10 # Max concurrent jobs
-    queue_group: 'job-agents' # Queue group for load balancing
-    hostname: '' # Defaults to OS hostname
-    labels: # Key-value labels for routing
-      group: 'web.dev.us-east'
+agent:
+  max_jobs: 10 # Max concurrent jobs
+  queue_group: 'job-agents' # Queue group for load balancing
+  hostname: '' # Defaults to OS hostname
+  labels: # Key-value labels for routing
+    group: 'web.dev.us-east'
 ```
 
 See [Configuration](../usage/configuration.md) for the full reference including

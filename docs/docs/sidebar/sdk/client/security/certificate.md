@@ -26,7 +26,7 @@ files from the Object Store and installed into the system trust store.
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
@@ -58,7 +58,7 @@ resp, err := c.Certificate.Delete(ctx, "web-01", "internal-ca")
 ## Example
 
 See
-[`examples/sdk/client/certificate.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/certificate.go)
+[`examples/sdk/client/certificate.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/certificate.go)
 for a complete working example.
 
 ## Permissions

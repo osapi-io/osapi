@@ -103,8 +103,8 @@ Container exec is a privileged operation similar to command execution. Only the
 tokens explicitly when needed:
 
 ```yaml
-api:
-  server:
+controller:
+  api:
     security:
       roles:
         docker-ops:

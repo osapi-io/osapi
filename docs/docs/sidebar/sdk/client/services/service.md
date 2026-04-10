@@ -72,7 +72,7 @@ enable, disable services, and manage unit files via the Object Store.
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
@@ -120,7 +120,7 @@ resp, err := c.Service.Delete(ctx, "web-01", "myapp.service")
 ## Example
 
 See
-[`examples/sdk/client/service.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/service.go)
+[`examples/sdk/client/service.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/service.go)
 for a complete working example.
 
 ## Permissions

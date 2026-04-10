@@ -19,7 +19,7 @@ Group management on target hosts.
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
@@ -51,7 +51,7 @@ resp, err := c.Group.Delete(ctx, "web-01", "deploy")
 ## Example
 
 See
-[`examples/sdk/client/group.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/group.go)
+[`examples/sdk/client/group.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/group.go)
 for a complete working example.
 
 ## Permissions

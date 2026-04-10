@@ -137,18 +137,18 @@ $ osapi client node user create --target group:web \
 | Group list/get     | `user:read`  |
 | Group mutations    | `user:write` |
 
-## Platform Support
+## Supported Platforms
 
-| Platform | Status      |
-| -------- | ----------- |
-| Debian   | Supported   |
-| macOS    | Unsupported |
-| Linux    | Unsupported |
+| OS Family | Support |
+| --------- | ------- |
+| Debian    | Full    |
+| Darwin    | Skipped |
+| Linux     | Skipped |
 
-Unsupported platforms return a `skipped` status with an `unsupported` error
-message.
+On unsupported platforms, user and group operations return `status: skipped`
+instead of failing.
 
-## Further Reading
+## Related
 
 - [CLI Reference -- User](../usage/cli/client/node/user/user.md)
 - [CLI Reference -- SSH Key](../usage/cli/client/node/user/ssh-key.md)

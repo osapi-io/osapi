@@ -102,8 +102,6 @@ osapi client health
 - [Configuration](sidebar/usage/configuration.md) — full `osapi.yaml` reference
 - [API](category/api) — OpenAPI documentation for all endpoints
 - [CLI Usage](sidebar/usage/usage.mdx) — command reference with examples
-- [Roadmap](sidebar/development/roadmap.md) — current capabilities and what's
-  next
 
 ## Alternatives
 

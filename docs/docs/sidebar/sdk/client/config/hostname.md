@@ -16,7 +16,7 @@ System hostname query and update operations.
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
@@ -36,7 +36,7 @@ for _, r := range resp.Data.Results {
 ## Example
 
 See
-[`examples/sdk/client/hostname.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/hostname.go)
+[`examples/sdk/client/hostname.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/hostname.go)
 for a complete working example.
 
 ## Permissions
