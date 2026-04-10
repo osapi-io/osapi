@@ -92,20 +92,11 @@ authentication settings.
 
 ## Permissions
 
-| Endpoint                                            | Permission       |
-| --------------------------------------------------- | ---------------- |
-| `POST /node/{hostname}/container/docker` (create)   | `docker:write`   |
-| `GET /node/{hostname}/container/docker` (list)      | `docker:read`    |
-| `GET /node/{hostname}/container/docker/{id}`        | `docker:read`    |
-| `POST /node/{hostname}/container/docker/{id}/start` | `docker:write`   |
-| `POST /node/{hostname}/container/docker/{id}/stop`  | `docker:write`   |
-| `DELETE /node/{hostname}/container/docker/{id}`     | `docker:write`   |
-| `POST /node/{hostname}/container/docker/{id}/exec`  | `docker:execute` |
-| `POST /node/{hostname}/container/docker/pull`       | `docker:write`   |
-
-The `admin` role includes `docker:read`, `docker:write`, and `docker:execute`.
-The `write` role includes `docker:read` and `docker:write`. The `read` role
-includes only `docker:read`.
+Container operations require `docker:*` permissions. The `admin` role includes
+`docker:read`, `docker:write`, and `docker:execute`. The `write` role includes
+`docker:read` and `docker:write`. The `read` role includes only `docker:read`.
+See the [API reference](/category/api) for the permission required by each
+endpoint.
 
 Container exec is a privileged operation similar to command execution. Only the
 `admin` role includes `docker:execute` by default. Grant it to other roles or

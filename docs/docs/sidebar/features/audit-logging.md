@@ -59,9 +59,9 @@ in JSONL format (one JSON object per line). This is designed for long-term
 retention -- since audit entries in the NATS stream have a configurable
 `max_age` (default 30 days), exporting preserves them before they expire.
 
-The `GET /audit/export` endpoint returns all entries in a single response. The
-CLI writes each entry as a JSON line to the output file. JSONL files are easy to
-process with standard tools:
+The export endpoint returns all entries in a single response. The CLI writes
+each entry as a JSON line to the output file. JSONL files are easy to process
+with standard tools:
 
 ```bash
 # Count entries

@@ -66,9 +66,8 @@ stateDiagram-v2
     Retryable --> Pending: retry
 ```
 
-Jobs are created implicitly when you call a domain endpoint (e.g.,
-`GET /node/{hostname}/hostname`). Once created, jobs can be listed, inspected,
-deleted, and retried through the job API and CLI. See
+Jobs are created implicitly when you call a domain endpoint. Once created, jobs
+can be listed, inspected, deleted, and retried through the job API and CLI. See
 [CLI Reference](../usage/cli/client/job/job.mdx) for usage and examples, or the
 [API Reference](/gen/api/job-management-api-job-operations) for the REST
 endpoints.

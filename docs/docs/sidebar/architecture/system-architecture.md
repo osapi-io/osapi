@@ -234,17 +234,13 @@ agent:
 ## Health Checks (`internal/controller/api/health/`)
 
 The controller exposes three health check endpoints following the Kubernetes
-liveness/readiness probe pattern. These endpoints live outside the `/api/v1/`
-prefix at `/health` because they serve infrastructure concerns rather than
-business operations.
+liveness/readiness probe pattern. Liveness and readiness probes are
+unauthenticated and live outside the authenticated API surface because they
+serve infrastructure concerns rather than business operations. The detailed
+system status endpoint requires JWT authentication with the `read` role. See the
+[API reference](/category/api) for exact paths and response schemas.
 
-| Endpoint             | Auth       | Purpose                                    |
-| -------------------- | ---------- | ------------------------------------------ |
-| `GET /health`        | None       | Liveness — returns 200 if the process runs |
-| `GET /health/ready`  | None       | Readiness — verifies dependencies          |
-| `GET /health/status` | JWT `read` | System status with metrics for operators   |
-
-### Liveness (`/health`)
+### Liveness
 
 Returns `{"status":"ok"}` unconditionally. No dependency checks are performed.
 If the HTTP server responds, the process is alive. This endpoint is deliberately
@@ -252,7 +248,7 @@ trivial — putting dependency checks here would cause orchestrators to restart
 the process during a transient NATS outage, creating a restart storm on top of
 the original problem.
 
-### Readiness (`/health/ready`)
+### Readiness
 
 Runs all checks registered with the `Checker` interface and returns 200
 (`ready`) or 503 (`not_ready`). The default checker (`NATSChecker`) verifies:
@@ -265,7 +261,7 @@ Load balancers should use this endpoint to decide whether to route traffic. When
 readiness fails, the server stays running but stops receiving requests until the
 dependency recovers.
 
-### Status (`/health/status`)
+### Status
 
 Breaks out each dependency as a named component with its own status and error
 message. Also reports NATS connection info, JetStream stream statistics, KV
