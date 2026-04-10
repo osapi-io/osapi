@@ -16,7 +16,7 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
-          id: "gen/api/list-agents",
+          id: "gen/api/get-agents",
           label: "List active agents",
           className: "api-method get",
         },
@@ -178,7 +178,7 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
-          id: "gen/api/list-jobs",
+          id: "gen/api/get-jobs",
           label: "List jobs",
           className: "api-method get",
         },

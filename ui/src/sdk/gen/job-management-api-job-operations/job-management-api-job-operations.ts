@@ -7,8 +7,8 @@
 import type {
   CreateJobResponse,
   ErrorResponse,
+  GetJobsParams,
   JobDetailResponse,
-  ListJobsParams,
   ListJobsResponse,
   RetryJobRequest
 } from '../schemas';
@@ -19,41 +19,41 @@ import { apiFetch } from '../../fetch';
  * Retrieve jobs, optionally filtered by status.
  * @summary List jobs
  */
-export type listJobsResponse200 = {
+export type getJobsResponse200 = {
   data: ListJobsResponse
   status: 200
 }
 
-export type listJobsResponse400 = {
+export type getJobsResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type listJobsResponse401 = {
+export type getJobsResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type listJobsResponse403 = {
+export type getJobsResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type listJobsResponse500 = {
+export type getJobsResponse500 = {
   data: ErrorResponse
   status: 500
 }
 
-export type listJobsResponseSuccess = (listJobsResponse200) & {
+export type getJobsResponseSuccess = (getJobsResponse200) & {
   headers: Headers;
 };
-export type listJobsResponseError = (listJobsResponse400 | listJobsResponse401 | listJobsResponse403 | listJobsResponse500) & {
+export type getJobsResponseError = (getJobsResponse400 | getJobsResponse401 | getJobsResponse403 | getJobsResponse500) & {
   headers: Headers;
 };
 
-export type listJobsResponse = (listJobsResponseSuccess | listJobsResponseError)
+export type getJobsResponse = (getJobsResponseSuccess | getJobsResponseError)
 
-export const getListJobsUrl = (params?: ListJobsParams,) => {
+export const getGetJobsUrl = (params?: GetJobsParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -68,9 +68,9 @@ export const getListJobsUrl = (params?: ListJobsParams,) => {
   return stringifiedParams.length > 0 ? `/api/job?${stringifiedParams}` : `/api/job`
 }
 
-export const listJobs = async (params?: ListJobsParams, options?: RequestInit): Promise<listJobsResponse> => {
+export const getJobs = async (params?: GetJobsParams, options?: RequestInit): Promise<getJobsResponse> => {
 
-  return apiFetch<listJobsResponse>(getListJobsUrl(params),
+  return apiFetch<getJobsResponse>(getGetJobsUrl(params),
   {
     ...options,
     method: 'GET'
