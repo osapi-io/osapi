@@ -19,7 +19,7 @@ require (
 	github.com/nats-io/nats.go v1.50.0
 	github.com/oapi-codegen/runtime v1.4.0
 	github.com/opencontainers/image-spec v1.1.1
-	github.com/osapi-io/nats-client v0.0.0-20260322200309-c8bab331f583
+	github.com/osapi-io/nats-client v0.0.0-20260410233618-11a6b360afb2
 	github.com/osapi-io/nats-server v0.0.0-20260216201410-1f33dfc63848
 	github.com/prometheus-community/pro-bing v0.8.0
 	github.com/prometheus/client_golang v1.23.2

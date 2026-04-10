@@ -254,8 +254,8 @@ func connectNATSBundle(
 		cli.LogFatal(log, "failed to connect to NATS", err)
 	}
 
-	kvBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.Bucket)
-	jobsKV, err := nc.CreateOrUpdateKVBucket(ctx, kvBucket)
+	jobKVConfig := cli.BuildJobKVConfig(namespace, appConfig.NATS.KV)
+	jobsKV, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, jobKVConfig)
 	if err != nil {
 		cli.LogFatal(log, "failed to create KV bucket", err)
 	}
