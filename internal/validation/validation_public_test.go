@@ -386,6 +386,82 @@ func (s *ValidationPublicTestSuite) TestCronSchedule() {
 	}
 }
 
+func (s *ValidationPublicTestSuite) TestGoDuration() {
+	tests := []struct {
+		name     string
+		field    string
+		wantOK   bool
+		contains []string
+	}{
+		{
+			name:   "when valid duration 30s passes",
+			field:  "30s",
+			wantOK: true,
+		},
+		{
+			name:   "when valid duration 5m passes",
+			field:  "5m",
+			wantOK: true,
+		},
+		{
+			name:   "when valid duration 1h passes",
+			field:  "1h",
+			wantOK: true,
+		},
+		{
+			name:   "when valid duration 720h passes",
+			field:  "720h",
+			wantOK: true,
+		},
+		{
+			name:   "when invalid duration 7d fails",
+			field:  "7d",
+			wantOK: false,
+		},
+		{
+			name:   "when invalid duration abc fails",
+			field:  "abc",
+			wantOK: false,
+		},
+		{
+			name:   "when empty string passes with omitempty",
+			field:  "",
+			wantOK: true,
+		},
+		{
+			name:  "when invalid duration shows hint in struct validation",
+			field: "7d",
+			contains: []string{
+				"go_duration",
+				"is not a valid Go duration",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			if len(tt.contains) > 0 {
+				// Test through Struct() to verify hint formatting.
+				type durationReq struct {
+					MaxAge string `validate:"required,go_duration"`
+				}
+				errMsg, ok := validation.Struct(durationReq{MaxAge: tt.field})
+				s.False(ok)
+				for _, c := range tt.contains {
+					s.Contains(errMsg, c)
+				}
+			} else if tt.field == "" {
+				// Test empty string with omitempty — validation should pass.
+				_, ok := validation.Var(tt.field, "omitempty,go_duration")
+				s.Equal(tt.wantOK, ok)
+			} else {
+				_, ok := validation.Var(tt.field, "go_duration")
+				s.Equal(tt.wantOK, ok)
+			}
+		})
+	}
+}
+
 func (s *ValidationPublicTestSuite) TestAtLeastOneField() {
 	type allPointers struct {
 		Shell  *string

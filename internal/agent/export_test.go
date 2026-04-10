@@ -153,6 +153,13 @@ func ExportCreateConsumer(
 	return a.createConsumer(ctx, streamName, consumerName, filterSubject)
 }
 
+// ExportConsumerNamePrefix exposes the private consumerNamePrefix method for testing.
+func ExportConsumerNamePrefix(
+	a *Agent,
+) string {
+	return a.consumerNamePrefix()
+}
+
 // ExportHandleJobMessageJS exposes the private handleJobMessageJS method for testing.
 func ExportHandleJobMessageJS(
 	a *Agent,
