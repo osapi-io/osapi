@@ -92,23 +92,8 @@ func BuildBroadcastTable(
 		}
 	}
 
-	// Hide HOSTNAME when all results come from the same host
-	// (single target like _any or a specific hostname).
-	multiHost := false
-	if len(results) > 1 {
-		first := results[0].Hostname
-		for _, r := range results[1:] {
-			if r.Hostname != first {
-				multiHost = true
-				break
-			}
-		}
-	}
-
 	var headers []string
-	if multiHost || hasErrors {
-		headers = append(headers, "HOSTNAME")
-	}
+	headers = append(headers, "HOSTNAME")
 	if hasErrors {
 		headers = append(headers, "STATUS", "ERROR")
 	}
@@ -120,9 +105,7 @@ func BuildBroadcastTable(
 	rows := make([][]string, 0, len(results))
 	for _, r := range results {
 		var row []string
-		if multiHost || hasErrors {
-			row = append(row, r.Hostname)
-		}
+		row = append(row, r.Hostname)
 		if hasErrors {
 			status := r.Status
 			if status == "" {
