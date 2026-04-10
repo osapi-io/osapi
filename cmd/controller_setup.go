@@ -62,7 +62,9 @@ import (
 	sysctlAPI "github.com/retr0h/osapi/internal/controller/api/node/sysctl"
 	timezoneAPI "github.com/retr0h/osapi/internal/controller/api/node/timezone"
 	userAPI "github.com/retr0h/osapi/internal/controller/api/node/user"
+	uihandler "github.com/retr0h/osapi/internal/controller/api/ui"
 	"github.com/retr0h/osapi/internal/controller/notify"
+	uiassets "github.com/retr0h/osapi/ui"
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/telemetry/metrics"
@@ -785,6 +787,11 @@ func registerControllerHandlers(
 			file.Handler(log, objStore, fileStateKV, signingKey, customRoles)...)
 	}
 	handlers = append(handlers, factsAPI.Handler(log, signingKey, customRoles)...)
+
+	if appConfig.Controller.API.UI.UIEnabled() {
+		handlers = append(handlers, uihandler.Handler(uiassets.Assets)...)
+		log.Info("embedded UI enabled", slog.String("path", "/"))
+	}
 
 	sm.RegisterHandlers(handlers)
 }

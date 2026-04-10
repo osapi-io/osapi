@@ -29,6 +29,16 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// Handler returns registration functions for the embedded UI. It follows
+// the same pattern as other domain handlers in this package.
+func Handler(assets fs.FS) []func(e *echo.Echo) {
+	return []func(e *echo.Echo){
+		func(e *echo.Echo) {
+			Register(e, assets)
+		},
+	}
+}
+
 // Register mounts the embedded UI assets on the Echo router. Static files
 // are served directly; all other non-/api paths fall back to index.html
 // so React Router can handle client-side routing.
