@@ -35,11 +35,8 @@ jobs:
       - name: Install just
         uses: extractions/setup-just@v4
 
-      - name: Build UI
-        run: |
-          just fetch
-          just react::deps
-          just react::build
+      - name: Fetch justfiles
+        run: just fetch
 
       - name: Build binaries with GoReleaser
         uses: goreleaser/goreleaser-action@v7

@@ -31,11 +31,8 @@ jobs:
         uses: oven-sh/setup-bun@v2
       - name: Install just
         uses: extractions/setup-just@v4
-      - name: Build UI
-        run: |
-          just fetch
-          just react::deps
-          just react::build
+      - name: Fetch justfiles
+        run: just fetch
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:

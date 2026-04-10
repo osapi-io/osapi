@@ -3,6 +3,8 @@ version: 2
 
 before:
   hooks:
+    - just react::deps
+    - just react::build
     - go mod tidy
 
 builds:
