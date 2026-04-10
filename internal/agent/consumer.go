@@ -44,6 +44,9 @@ func (a *Agent) consumeQueryJobs(
 	// Sanitize hostname for consumer names (alphanumeric and underscores only)
 	sanitizedHostname := job.SanitizeHostname(hostname)
 
+	// Use configured consumer name as prefix, falling back to empty string
+	consumerPrefix := a.consumerNamePrefix()
+
 	// Create consumers for different query patterns
 	consumers := []struct {
 		name       string
@@ -51,16 +54,16 @@ func (a *Agent) consumeQueryJobs(
 		queueGroup string
 	}{
 		{
-			name:       "query_any_" + sanitizedHostname,
+			name:       consumerPrefix + "query_any_" + sanitizedHostname,
 			filter:     job.JobsQueryPrefix + "._any",
 			queueGroup: a.appConfig.Agent.QueueGroup,
 		},
 		{
-			name:   "query_all_" + sanitizedHostname,
+			name:   consumerPrefix + "query_all_" + sanitizedHostname,
 			filter: job.JobsQueryPrefix + "._all",
 		},
 		{
-			name:   "query_direct_" + sanitizedHostname,
+			name:   consumerPrefix + "query_direct_" + sanitizedHostname,
 			filter: job.JobsQueryPrefix + ".host." + sanitizedHostname,
 		},
 	}
@@ -81,7 +84,8 @@ func (a *Agent) consumeQueryJobs(
 				queueGroup string
 			}{
 				name: fmt.Sprintf(
-					"query_label_%s_%s_%s",
+					"%squery_label_%s_%s_%s",
+					consumerPrefix,
 					key,
 					sanitizedPrefix,
 					sanitizedHostname,
@@ -140,6 +144,9 @@ func (a *Agent) consumeModifyJobs(
 	// Sanitize hostname for consumer names (alphanumeric and underscores only)
 	sanitizedHostname := job.SanitizeHostname(hostname)
 
+	// Use configured consumer name as prefix, falling back to empty string
+	consumerPrefix := a.consumerNamePrefix()
+
 	// Create consumers for different modify patterns
 	consumers := []struct {
 		name       string
@@ -147,16 +154,16 @@ func (a *Agent) consumeModifyJobs(
 		queueGroup string
 	}{
 		{
-			name:       "modify_any_" + sanitizedHostname,
+			name:       consumerPrefix + "modify_any_" + sanitizedHostname,
 			filter:     job.JobsModifyPrefix + "._any",
 			queueGroup: a.appConfig.Agent.QueueGroup,
 		},
 		{
-			name:   "modify_all_" + sanitizedHostname,
+			name:   consumerPrefix + "modify_all_" + sanitizedHostname,
 			filter: job.JobsModifyPrefix + "._all",
 		},
 		{
-			name:   "modify_direct_" + sanitizedHostname,
+			name:   consumerPrefix + "modify_direct_" + sanitizedHostname,
 			filter: job.JobsModifyPrefix + ".host." + sanitizedHostname,
 		},
 	}
@@ -173,7 +180,8 @@ func (a *Agent) consumeModifyJobs(
 				queueGroup string
 			}{
 				name: fmt.Sprintf(
-					"modify_label_%s_%s_%s",
+					"%smodify_label_%s_%s_%s",
+					consumerPrefix,
 					key,
 					sanitizedPrefix,
 					sanitizedHostname,
@@ -249,6 +257,17 @@ func (a *Agent) handleJobMessageJS(
 	}
 
 	return nil
+}
+
+// consumerNamePrefix returns the configured consumer name followed by an
+// underscore separator. When no consumer name is configured, an empty string
+// is returned so existing consumer names are unchanged.
+func (a *Agent) consumerNamePrefix() string {
+	if name := a.appConfig.Agent.Consumer.Name; name != "" {
+		return name + "_"
+	}
+
+	return ""
 }
 
 // createConsumer creates a durable JetStream consumer for the agent.

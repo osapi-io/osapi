@@ -17,6 +17,24 @@ By default OSAPI looks for `/etc/osapi/osapi.yaml`. Override the path with the
 osapi -f /path/to/osapi.yaml controller start
 ```
 
+## Validation
+
+Configuration is validated at startup. If any field has an invalid value, OSAPI
+exits with a clear error message before starting any component. Validation uses
+the same `go-playground/validator` library as the API handlers.
+
+- **Required fields** must be present and non-empty (e.g., `signing_key`,
+  `bearer_token`, stream and bucket names)
+- **Port fields** must be between 1 and 65535
+- **Duration fields** must be valid Go durations (e.g., `30s`, `5m`, `1h`,
+  `720h`). The `d` (day) suffix is not supported — use hours instead (e.g.,
+  `168h` for 7 days)
+- **Condition thresholds** must be within valid ranges (1–100 for percentages,
+  `>0` for load multiplier)
+
+Most fields have sensible defaults set via Viper and can be omitted from the
+config file.
+
 ## Environment Variables
 
 Every config key can be overridden with an environment variable using the
@@ -429,7 +447,7 @@ nats:
   # ── Dead Letter Queue ─────────────────────────────────────
   dlq:
     # Maximum age of messages in the DLQ.
-    max_age: '7d'
+    max_age: '168h' # 7 days
     # Maximum number of messages retained.
     max_msgs: 1000
     # Storage backend: "file" or "memory".

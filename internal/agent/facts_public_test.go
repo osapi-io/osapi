@@ -91,7 +91,7 @@ func (s *FactsPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 	agent.ResetMarshalJSON()
 	agent.ResetUnmarshalJSON()
-	agent.ResetFactsInterval()
+	agent.ResetDefaultFactsInterval()
 }
 
 func (s *FactsPublicTestSuite) TestWriteFacts() {
@@ -229,7 +229,7 @@ func (s *FactsPublicTestSuite) TestStartFactsRefresh() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			agent.SetFactsInterval(10 * time.Millisecond)
+			agent.SetDefaultFactsInterval(10 * time.Millisecond)
 
 			ctx, cancel := context.WithCancel(context.Background())
 			agent.ExportStartFacts(ctx, s.testAgent, "test-agent")

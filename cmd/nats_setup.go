@@ -110,8 +110,6 @@ func setupJetStream(
 	// Apply namespace to infrastructure names
 	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
 	streamSubjects := job.ApplyNamespaceToSubjects(namespace, appConfig.NATS.Stream.Subjects)
-	kvBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.Bucket)
-	kvResponseBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.ResponseBucket)
 
 	// Create JOBS stream
 	streamMaxAge, _ := time.ParseDuration(appConfig.NATS.Stream.MaxAge)
@@ -138,13 +136,15 @@ func setupJetStream(
 		return fmt.Errorf("create JOBS stream: %w", err)
 	}
 
-	// Create KV buckets
-	if _, err := nc.CreateOrUpdateKVBucket(ctx, kvBucket); err != nil {
-		return fmt.Errorf("create KV bucket %s: %w", kvBucket, err)
+	// Create KV buckets with configured settings
+	jobKVConfig := cli.BuildJobKVConfig(namespace, appConfig.NATS.KV)
+	if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, jobKVConfig); err != nil {
+		return fmt.Errorf("create KV bucket %s: %w", jobKVConfig.Bucket, err)
 	}
 
-	if _, err := nc.CreateOrUpdateKVBucket(ctx, kvResponseBucket); err != nil {
-		return fmt.Errorf("create KV bucket %s: %w", kvResponseBucket, err)
+	responseKVConfig := cli.BuildResponseKVConfig(namespace, appConfig.NATS.KV)
+	if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, responseKVConfig); err != nil {
+		return fmt.Errorf("create KV bucket %s: %w", responseKVConfig.Bucket, err)
 	}
 
 	// Create audit stream with configured settings

@@ -49,7 +49,7 @@ just react::fmt    # Format UI with Prettier
 - **`internal/provider/`** - Operation implementations organized by category then domain. Browse the directory to see current providers
 - **`internal/telemetry/process/`** - Agent self-metrics (CPU%, RSS, goroutines) and process condition evaluation for heartbeat
 - **`internal/controller/notify/`** - Pluggable condition notification system: watches registry KV for condition transitions, dispatches via `Notifier` interface (`log` backend)
-- **`internal/config/`** - Viper-based config from `osapi.yaml`
+- **`internal/config/`** - Viper-based config from `osapi.yaml`. Struct fields use `validate` tags (same validator as API handlers). Defaults are set via `viper.SetDefault()` in `cmd/root.go`
 - **`pkg/sdk/`** - Go SDK for programmatic REST API access (`client/` client library). See @docs/docs/sidebar/sdk/guidelines.md for SDK development rules
 - Shared `nats-client` and `nats-server` are sibling repos linked via `replace` in `go.mod`
 - **`github/`** - Temporary GitHub org config tooling (`repos.json` for declarative repo settings, `sync.sh` for drift detection via `gh` CLI). Untracked and intended to move to its own repo.

@@ -23,6 +23,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -40,6 +41,7 @@ import (
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/telemetry/tracing"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 var (
@@ -111,6 +113,42 @@ func initConfig() {
 	viper.SetConfigType("yaml")
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("osapi")
+
+	// Controller defaults
+	viper.SetDefault("controller.api.port", 8080)
+	viper.SetDefault("controller.api.job_timeout", "30s")
+	viper.SetDefault("controller.metrics.port", 9090)
+
+	// NATS server defaults
+	viper.SetDefault("nats.api.port", 4222)
+	viper.SetDefault("nats.api.host", "localhost")
+
+	// NATS connection defaults (controller + agent)
+	viper.SetDefault("controller.api.nats.port", 4222)
+	viper.SetDefault("controller.api.nats.host", "localhost")
+	viper.SetDefault("agent.nats.port", 4222)
+	viper.SetDefault("agent.nats.host", "localhost")
+
+	// NATS infrastructure defaults
+	viper.SetDefault("nats.stream.name", "JOBS")
+	viper.SetDefault("nats.stream.subjects", "jobs.>")
+	viper.SetDefault("nats.kv.bucket", "job-queue")
+	viper.SetDefault("nats.kv.response_bucket", "job-responses")
+	viper.SetDefault("nats.registry.bucket", "agent-registry")
+	viper.SetDefault("nats.registry.ttl", "30s")
+
+	// Agent defaults
+	viper.SetDefault("agent.max_jobs", 10)
+	viper.SetDefault("agent.queue_group", "job-agents")
+	viper.SetDefault("agent.facts.interval", "60s")
+	viper.SetDefault("agent.conditions.memory_pressure_threshold", 90)
+	viper.SetDefault("agent.conditions.high_load_multiplier", 2.0)
+	viper.SetDefault("agent.conditions.disk_pressure_threshold", 90)
+	viper.SetDefault("agent.consumer.max_deliver", 5)
+	viper.SetDefault("agent.consumer.ack_wait", "2m")
+	viper.SetDefault("agent.consumer.max_ack_pending", 1000)
+	viper.SetDefault("agent.consumer.replay_policy", "instant")
+
 	viper.SetConfigFile(viper.GetString("osapiFile"))
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -119,6 +157,16 @@ func initConfig() {
 
 	if err := viper.Unmarshal(&appConfig); err != nil {
 		cli.LogFatal(logger, "failed to unmarshal config", err, "osapiFile", viper.ConfigFileUsed())
+	}
+
+	if errMsg, ok := validation.Struct(appConfig); !ok {
+		cli.LogFatal(
+			logger,
+			"invalid config",
+			fmt.Errorf("%s", errMsg),
+			"osapiFile",
+			viper.ConfigFileUsed(),
+		)
 	}
 
 	// Auto-enable tracing in debug mode so trace_id appears in log lines.

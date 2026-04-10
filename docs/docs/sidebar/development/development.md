@@ -133,6 +133,14 @@ wraps `go-playground/validator`. Validation rules are declared in OpenAPI specs
 via `x-oapi-codegen-extra-tags` and enforced at runtime by handler calls to
 `validation.Struct()` or `validation.Var()`.
 
+### Config validation
+
+Config struct fields in `internal/config/types.go` use the same `validate` tags.
+Validation runs at startup after `viper.Unmarshal()` — invalid values cause an
+immediate exit with a clear error. Defaults are set via `viper.SetDefault()` in
+`cmd/root.go` so most fields can be omitted. Use `go_duration` for Go duration
+strings. Add `required` to fields with no sensible default.
+
 ### Validation rules
 
 - **Required fields** use `validate: "required,..."` — the field must be present

@@ -304,14 +304,14 @@ func ResetUnmarshalJSON() {
 	unmarshalJSON = json.Unmarshal
 }
 
-// SetFactsInterval overrides the factsInterval for testing.
-func SetFactsInterval(d time.Duration) {
-	factsInterval = d
+// SetDefaultFactsInterval overrides the defaultFactsInterval for testing.
+func SetDefaultFactsInterval(d time.Duration) {
+	defaultFactsInterval = d
 }
 
-// ResetFactsInterval restores the default factsInterval.
-func ResetFactsInterval() {
-	factsInterval = 60 * time.Second
+// ResetDefaultFactsInterval restores the default defaultFactsInterval.
+func ResetDefaultFactsInterval() {
+	defaultFactsInterval = 60 * time.Second
 }
 
 // SetHeartbeatInterval overrides the heartbeatInterval for testing.

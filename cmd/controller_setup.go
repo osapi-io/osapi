@@ -188,9 +188,8 @@ func setupController(
 ) (ServerManager, *natsBundle) {
 	namespace := connCfg.Namespace
 	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
-	kvBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.Bucket)
 
-	b := connectNATSBundle(ctx, log, connCfg, kvBucket, namespace, streamName)
+	b := connectNATSBundle(ctx, log, connCfg, namespace, streamName)
 
 	validation.RegisterTargetValidator(
 		func(ctx context.Context) ([]validation.AgentTarget, error) {
@@ -241,7 +240,6 @@ func connectNATSBundle(
 	ctx context.Context,
 	log *slog.Logger,
 	connCfg config.NATSConnection,
-	kvBucket string,
 	namespace string,
 	streamName string,
 ) *natsBundle {
@@ -256,7 +254,8 @@ func connectNATSBundle(
 		cli.LogFatal(log, "failed to connect to NATS", err)
 	}
 
-	jobsKV, err := nc.CreateOrUpdateKVBucket(ctx, kvBucket)
+	jobKVConfig := cli.BuildJobKVConfig(namespace, appConfig.NATS.KV)
+	jobsKV, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, jobKVConfig)
 	if err != nil {
 		cli.LogFatal(log, "failed to create KV bucket", err)
 	}
@@ -313,14 +312,7 @@ func connectNATSBundle(
 		}
 	}
 
-	jobTimeout := 30 * time.Second
-	if appConfig.Controller.API.JobTimeout != "" {
-		parsed, parseErr := time.ParseDuration(appConfig.Controller.API.JobTimeout)
-		if parseErr != nil {
-			cli.LogFatal(log, "invalid job_timeout", parseErr)
-		}
-		jobTimeout = parsed
-	}
+	jobTimeout, _ := time.ParseDuration(appConfig.Controller.API.JobTimeout)
 
 	jc, err := jobclient.New(log, nc, &jobclient.Options{
 		Timeout:    jobTimeout,

@@ -91,7 +91,7 @@ nats:
     replicas: 1
 
   dlq:
-    max_age: 7d
+    max_age: 168h # 7 days
     max_msgs: 1000
     storage: memory
     replicas: 1

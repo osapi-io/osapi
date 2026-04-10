@@ -7,7 +7,7 @@ import { Text } from "@/components/ui/text";
 import { LabelTag } from "@/components/ui/label-tag";
 import { ConditionAlert } from "@/components/ui/condition-alert";
 import { MetricValue } from "@/components/ui/metric-value";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Monitor,
   Clock,

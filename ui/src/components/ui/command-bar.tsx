@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/cn";
-import { useCommandRegistry } from "@/lib/command-registry";
+import { useCommandRegistry } from "@/hooks/use-commands";
 import { features } from "@/lib/features";
 import { Kbd } from "@/components/ui/kbd";
 

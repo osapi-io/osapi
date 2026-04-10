@@ -75,9 +75,8 @@ func setupAgent(
 ) (*agent.Agent, *natsBundle, map[string]job.SubComponentInfo) {
 	namespace := connCfg.Namespace
 	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
-	kvBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.Bucket)
 
-	b := connectNATSBundle(ctx, log, connCfg, kvBucket, namespace, streamName)
+	b := connectNATSBundle(ctx, log, connCfg, namespace, streamName)
 
 	plat := platform.Detect()
 	if plat == "darwin" {

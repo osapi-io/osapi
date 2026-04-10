@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { NetworkMapBackground } from "./network-map-background";
 import { Navbar } from "./navbar";
 import { CommandBar } from "@/components/ui/command-bar";
-import { useCommands } from "@/lib/command-registry";
+import { useCommands } from "@/hooks/use-commands";
 
 interface PageLayoutProps {
   children: ReactNode;
