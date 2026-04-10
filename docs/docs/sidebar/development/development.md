@@ -17,9 +17,11 @@ mise install
 
 - **[Go][]** - OSAPI is written in Go. We always support the latest two major Go
   versions, so make sure your version is recent enough.
-- **[Node.js][]** - Required as a runtime for tools like `@redocly/cli`.
-- **[Bun][]** - JavaScript package manager used for Docusaurus docs and
-  installing tooling.
+- **[Node.js][]** - Required as a runtime for tools like `@redocly/cli`, for
+  building the Docusaurus docs site, and for building the embedded React UI in
+  `ui/`.
+- **[Bun][]** - JavaScript package manager and script runner used for the
+  Docusaurus docs and the React UI.
 - **[just][]** - Task runner used for building, testing, formatting, and other
   development workflows. Install with `brew install just`.
 - **[NATS CLI][]** - Command-line tools for interacting with NATS. Useful for debugging
@@ -66,8 +68,24 @@ just go::vet         # Run linter
 To run OSAPI with working changes:
 
 ```bash
-go run main.go overlay
+just build     # Builds React UI + Go binary
+./osapi controller start -f configs/osapi.yaml
 ```
+
+:::important
+
+Use `just build` (not `go build` directly). The `//go:embed` directive for the
+UI assets requires `ui/dist/` to be populated at compile time — `just build`
+runs `just react::build` first to satisfy this. The same applies to tests: use
+`just test`, not `go test ./...`.
+
+:::
+
+## UI Development
+
+The embedded React management dashboard has its own development workflow. See
+the [UI Development](ui-development.md) guide for prerequisites, the development
+server (`just react::dev`), code style, and component conventions.
 
 ## Documentation
 
