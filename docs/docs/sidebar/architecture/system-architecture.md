@@ -179,8 +179,8 @@ liveness/readiness probe pattern. Liveness and readiness probes are
 unauthenticated and live outside the authenticated API surface because they
 serve infrastructure concerns rather than business operations. The detailed
 system status endpoint requires JWT authentication with the `health:read`
-permission. See the
-[API reference](/category/api) for exact paths and response schemas.
+permission. See the [API reference](/category/api) for exact paths and response
+schemas.
 
 ### Liveness
 

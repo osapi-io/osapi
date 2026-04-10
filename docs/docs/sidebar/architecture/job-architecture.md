@@ -201,9 +201,9 @@ same pattern.
 
 ## Supported Operations
 
-Browse `internal/agent/processor_*.go` for the current operation list. Operations
-follow naming conventions like `node.hostname.get`, `network.dns.update`,
-`cron.create`, `sysctl.delete`, etc.
+Browse `internal/agent/processor_*.go` for the current operation list.
+Operations follow naming conventions like `node.hostname.get`,
+`network.dns.update`, `cron.create`, `sysctl.delete`, etc.
 
 ## Job Lifecycle
 
@@ -548,4 +548,3 @@ Key metrics to track:
 - Agent availability
 - DLQ message count
 - Stream consumer lag
-

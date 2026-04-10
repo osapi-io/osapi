@@ -16,8 +16,8 @@ The dashboard provides a visual interface for fleet management:
   JetStream metrics, and node conditions
 - **Configure** — block-based operations builder for composing and applying
   changes across targets
-- **Admin** — audit log viewer with export, job queue browser with
-  retry/delete, and RBAC reference (admin-only)
+- **Admin** — audit log viewer with export, job queue browser with retry/delete,
+  and RBAC reference (admin-only)
 
 ## Enabling the UI
 
@@ -37,11 +37,11 @@ The UI uses the same JWT-based authentication as the CLI and API. Generate a
 token with `osapi token generate` and paste it on the sign-in page. The token's
 `roles` claim determines what the user can see and do:
 
-| Role     | Access                                            |
-| -------- | ------------------------------------------------- |
+| Role     | Access                                             |
+| -------- | -------------------------------------------------- |
 | Admin    | Full access including Audit, Jobs, and role switch |
-| Operator | Dashboard + Configure (block operations)          |
-| Viewer   | Dashboard only (read-only)                        |
+| Operator | Dashboard + Configure (block operations)           |
+| Viewer   | Dashboard only (read-only)                         |
 
 ## Architecture
 
