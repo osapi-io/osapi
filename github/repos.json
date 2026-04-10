@@ -7,9 +7,9 @@
       "topics": ["golang", "linux", "nats-jetstream", "openapi3", "osapi", "rest-api", "system-management"]
     },
     {
-      "name": "osapi-sdk",
-      "description": "Go SDK for OSAPI — client library and orchestration primitives.",
-      "topics": ["dag", "golang", "nats-jetstream", "openapi3", "orchestration", "osapi", "sdk"]
+      "name": ".github",
+      "description": "OSAPI organization profile and defaults.",
+      "topics": ["osapi"]
     },
     {
       "name": "nats-client",
@@ -32,9 +32,14 @@
       "topics": ["configuration-management", "dag", "golang", "orchestration", "osapi"]
     },
     {
+      "name": "osapi-sdk",
+      "description": "Go SDK for OSAPI (deprecated — merged into osapi/pkg/sdk).",
+      "topics": ["golang", "osapi", "sdk"]
+    },
+    {
       "name": "osapi-ui",
-      "description": "React management dashboard for OSAPI with health monitoring and runlist builder.",
-      "topics": ["dashboard", "osapi", "react", "tailwindcss", "typescript", "vite"]
+      "description": "React management dashboard (deprecated — merged into osapi/ui).",
+      "topics": ["osapi", "react"]
     }
   ],
   "security": {
