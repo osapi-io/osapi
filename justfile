@@ -32,9 +32,15 @@ deps:
     just docs::deps
     just react::deps
 
+# Build production binary (includes embedded UI)
+build:
+    just react::build
+    go build -o osapi .
+
 # Run all tests
 test: linux-tune
     just just::fmt-check
+    just react::build
     just go::test
 
 # Generate code

@@ -24,6 +24,7 @@ Quick reference for common commands:
 
 ```bash
 just deps          # Install all dependencies
+just build         # Build production binary (React UI + Go)
 just test          # Run all tests (lint + unit + coverage)
 just go::unit      # Run unit tests only
 just go::unit-int  # Run integration tests (requires running osapi)
@@ -66,6 +67,7 @@ just react::fmt    # Format UI with Prettier
 - **`ui/embed.go`** - `//go:embed dist/*` directive exposing `ui.Assets`.
 - **`internal/controller/api/ui/`** - SPA serving handler (static files + `index.html` fallback for client-side routing).
 - Config: `controller.api.ui.enabled` in `osapi.yaml` (default `true`).
+- `//go:embed dist/*` requires `ui/dist/` to have files at compile time. Always use `just build` / `just test` / `just ready` — these run `just react::build` first. Running `go build` / `go test` directly without a prior UI build will fail.
 
 ## UI Conventions (MANDATORY)
 

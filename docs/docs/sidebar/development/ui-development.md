@@ -66,13 +66,24 @@ page. If not set, users paste their token on the sign-in page.
 ## Production build
 
 ```bash
-just react::build
+just build
 ```
 
-This produces the static assets in `ui/dist/`, which are then embedded into the
-Go binary via the `//go:embed` directive in `ui/embed.go`. The controller API
-serves these assets at runtime from the embedded filesystem — no separate web
-server is required.
+This is the top-level build recipe. It runs `just react::build` first (to
+populate `ui/dist/` with static assets), then `just go::build` to produce the Go
+binary with the assets embedded via the `//go:embed` directive in `ui/embed.go`.
+The controller API serves these assets at runtime from the embedded filesystem
+— no separate web server is required.
+
+:::important
+
+`go build` directly (without building the UI first) will fail because
+`//go:embed dist/*` requires at least one file in `ui/dist/` at compile time.
+Always use `just build`, `just ready`, or `just test` — they all build the UI
+before compiling Go code. The same applies to `go test ./...` for the same
+reason.
+
+:::
 
 ## Environment variables
 
