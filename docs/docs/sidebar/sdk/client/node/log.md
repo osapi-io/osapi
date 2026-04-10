@@ -24,7 +24,7 @@ hosts. Access via `client.Log`.
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
@@ -103,7 +103,7 @@ resp, err := c.Log.Query(ctx, "_all", client.LogQueryOpts{})
 
 ## Example
 
-- [`examples/sdk/client/log.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/log.go)
+- [`examples/sdk/client/log.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/log.go)
 
 ## Permissions
 

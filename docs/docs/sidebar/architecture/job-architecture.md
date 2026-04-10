@@ -167,11 +167,10 @@ values use dot-separated segments, and agents automatically subscribe to every
 prefix level:
 
 ```yaml
-node:
-  agent:
-    hostname: web-01
-    labels:
-      group: web.dev.us-east
+agent:
+  hostname: web-01
+  labels:
+    group: web.dev.us-east
 ```
 
 An agent with the above config subscribes to these NATS subjects:
@@ -202,64 +201,9 @@ same pattern.
 
 ## Supported Operations
 
-### System Operations (Query)
-
-All system operations are routed to `jobs.query.*` subjects:
-
-- **`node.hostname.get`** - Get system hostname
-- **`node.status.get`** - Get comprehensive system status (all providers)
-- **`node.uptime.get`** - Get system uptime
-- **`node.os.get`** - Get operating system information
-- **`node.disk.get`** - Get disk usage statistics
-- **`node.memory.get`** - Get memory statistics
-- **`node.load.get`** - Get load average statistics
-
-### Network Operations
-
-**Query/Action Operations** (`jobs.query.*`):
-
-- **`network.dns.get`** - Get DNS configuration for interface
-- **`network.ping.do`** - Execute ping to target address
-
-**Modify Operations** (`jobs.modify.*`):
-
-- **`network.dns.update`** - Update DNS servers and search domains
-
-### Provider Mapping
-
-- **System Host**: hostname, uptime, OS info
-- **System Disk**: disk usage statistics
-- **System Memory**: memory usage statistics
-- **System Load**: load average statistics
-- **Network DNS**: DNS configuration (get/update)
-- **Network Ping**: ping execution and statistics
-
-### Operation Type Definitions
-
-```go
-// System operations - read-only
-const (
-    OperationNodeHostnameGet = "node.hostname.get"
-    OperationNodeStatusGet   = "node.status.get"
-    OperationNodeUptimeGet   = "node.uptime.get"
-    OperationNodeLoadGet     = "node.load.get"
-    OperationNodeMemoryGet   = "node.memory.get"
-    OperationNodeDiskGet     = "node.disk.get"
-)
-
-// Network operations
-const (
-    OperationNetworkDNSGet      = "network.dns.get"
-    OperationNetworkDNSUpdate   = "network.dns.update"
-    OperationNetworkPingExecute = "network.ping.execute"
-)
-
-// Node operations - state-changing
-const (
-    OperationNodeShutdown = "node.shutdown.execute"
-    OperationNodeReboot   = "node.reboot.execute"
-)
-```
+Browse `internal/agent/processor_*.go` for the current operation list. Operations
+follow naming conventions like `node.hostname.get`, `network.dns.update`,
+`cron.create`, `sysctl.delete`, etc.
 
 ## Job Lifecycle
 
@@ -433,20 +377,6 @@ Each agent creates JetStream consumers with these filter subjects:
   `jobs.query.label.{key}.{prefix}`, `jobs.modify.label.{key}.{prefix}` — all
   agents matching the label prefix receive the message
 
-### Provider Pattern
-
-Agents use platform-specific providers:
-
-```go
-// Provider selection based on platform
-switch platform {
-case "ubuntu":
-    provider = dns.NewUbuntuProvider()
-default:
-    provider = dns.NewLinuxProvider()
-}
-```
-
 ### Facts Collection
 
 Agents collect **system facts** independently from the job system. Facts are
@@ -468,140 +398,6 @@ Facts also power **fact references** (`@fact.*`) in job parameters. When an
 agent processes a job, it replaces `@fact.interface.primary`, `@fact.hostname`,
 and other tokens with live values from its cached facts. See
 [System Facts](../features/system-facts.md) for the full reference.
-
-## Operation Examples
-
-### System Operations
-
-```json
-// Get hostname
-{
-  "type": "node.hostname.get",
-  "data": {}
-}
-
-// Get system status
-{
-  "type": "node.status.get",
-  "data": {}
-}
-
-// Get uptime
-{
-  "type": "node.uptime.get",
-  "data": {}
-}
-```
-
-### Network Operations
-
-```json
-// Query DNS configuration
-{
-  "type": "network.dns.get",
-  "data": {"interface": "eth0"}
-}
-
-// Update DNS servers
-{
-  "type": "network.dns.update",
-  "data": {
-    "servers": ["8.8.8.8", "1.1.1.1"],
-    "interface": "eth0"
-  }
-}
-
-// Execute ping
-{
-  "type": "network.ping.do",
-  "data": {
-    "address": "google.com"
-  }
-}
-```
-
-## REST API Integration
-
-### Job Creation
-
-Jobs are created implicitly through typed domain endpoints. There is no generic
-`POST /api/jobs` endpoint. Each domain endpoint creates a job internally and
-returns a response that includes the `job_id`:
-
-```http
-GET /api/v1/node/{hostname}/hostname
-```
-
-**Response:**
-
-```json
-{
-  "job_id": "uuid-12345",
-  "hostname": "server-01",
-  "changed": false
-}
-```
-
-The caller can use the returned `job_id` to inspect the job later via
-`GET /api/v1/jobs/{job_id}`.
-
-### Job Retry Endpoint
-
-```http
-POST /api/jobs/{job_id}/retry
-Content-Type: application/json
-
-{
-  "target_hostname": "_any"
-}
-```
-
-**Response:**
-
-```json
-{
-  "job_id": "uuid-67890",
-  "status": "created",
-  "revision": 1
-}
-```
-
-### Job Status Endpoint
-
-```http
-GET /api/jobs/{job_id}
-```
-
-**Response (Processing):**
-
-```json
-{
-  "job_id": "uuid-12345",
-  "status": "processing",
-  "created": "2025-06-14T10:00:00Z",
-  "operation": {
-    "type": "node.hostname.get",
-    "data": {}
-  }
-}
-```
-
-**Response (Completed):**
-
-```json
-{
-  "job_id": "uuid-12345",
-  "status": "completed",
-  "created": "2025-06-14T10:00:00Z",
-  "operation": {
-    "type": "node.hostname.get",
-    "data": {}
-  },
-  "result": {
-    "hostname": "server-01"
-  }
-}
-```
 
 ## CLI Commands
 
@@ -667,82 +463,6 @@ The `internal/job/` package contains shared domain types and two subpackages:
 - **`internal/job/client/`**: High-level operations for API integration
 - **`internal/agent/`**: Job processing and agent lifecycle management
 - **No type duplication**: All packages use shared types from main job package
-
-## Architectural Benefits
-
-### Race Condition Elimination
-
-**Previous Issues:**
-
-- Multiple agents updating same job key simultaneously
-- Status transitions conflicting between agents
-- Response overwrites in multi-host scenarios
-- Timing issues with job state management
-
-**Solution:**
-
-- **Immutable jobs**: Never modified after creation
-- **Unique event keys**: Each event has nanosecond timestamp
-- **Append-only writes**: No conflicts, ever
-- **Computed status**: Derived from events, not stored
-
-### Multi-Host Distributed Processing
-
-**Supports True Broadcast:**
-
-```bash
-# Update DNS on ALL servers
-osapi client node network dns update --target _all \
-    --interface eth0 --servers 8.8.8.8,1.1.1.1
-
-# Results: Each server processes independently
-# - server1: completed (2.1s)
-# - server2: completed (1.8s)
-# - server3: failed (disk full)
-# Overall status: partial_failure
-```
-
-**Load Balancing with Failover:**
-
-```bash
-# Get hostname from ANY available server
-osapi client node hostname --target _any
-
-# Results: First available agent processes
-# Automatic failover if agent fails
-```
-
-### Observability & Debugging
-
-**Distributed Tracing:**
-
-Every job carries an OpenTelemetry trace context through NATS message headers.
-The nats-client `Publish` method automatically injects the W3C `traceparent`
-header, and the agent extracts it to continue the trace. This means a single
-`trace_id` follows a request from the API server through NATS to the agent.
-
-Enable tracing with `--debug` or `telemetry.tracing.enabled: true`, then filter
-logs by `trace_id` to see the complete flow of any job. See the
-[Distributed Tracing](../features/distributed-tracing.md) for setup details.
-
-**Complete Event Timeline:**
-
-- See exactly when each agent received job
-- Track processing duration per agent
-- Identify bottlenecks and failures
-- Historical audit trail for compliance
-
-### Direct Agent Testing
-
-```bash
-# Start an agent
-osapi agent start
-
-# Agent will:
-# - Connect to NATS
-# - Subscribe to job streams
-# - Process jobs based on platform capabilities
-```
 
 ## Security Considerations
 
@@ -829,20 +549,3 @@ Key metrics to track:
 - DLQ message count
 - Stream consumer lag
 
-## Migration Path
-
-1. **Phase 1**: Deploy job system alongside existing task system _(Complete)_
-2. **Phase 2**: Implement job client abstraction layer _(Complete)_
-3. **Phase 3**: Integrate job client into REST API _(Complete)_
-4. **Phase 4**: Migrate all endpoints to strict-server + job client _(Complete)_
-5. **Phase 5**: Delete legacy task system _(Complete)_
-6. **Phase 6**: Consistency pass and test coverage audit _(Complete)_
-
-## Future Enhancements
-
-1. **Job Dependencies**: Chain multiple operations
-2. **Scheduled Jobs**: Cron-like job scheduling
-3. **Job Priorities**: High/medium/low priority queues
-4. **Result Streaming**: Stream large results via NATS
-5. **Agent Autoscaling**: Dynamic agent pool sizing
-6. **Job Cancellation**: Ability to cancel running jobs

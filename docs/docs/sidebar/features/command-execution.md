@@ -75,8 +75,8 @@ includes this permission by default. The `write` and `read` roles do not.
 To grant command execution to a custom role:
 
 ```yaml
-api:
-  server:
+controller:
+  api:
     security:
       roles:
         ops:

@@ -23,7 +23,7 @@ Command execution operations -- direct exec and shell-interpreted commands.
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
@@ -44,7 +44,7 @@ resp, err := c.Command.Shell(ctx, client.ShellRequest{
 ## Example
 
 See
-[`examples/sdk/client/command.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/command.go)
+[`examples/sdk/client/command.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/command.go)
 for a complete working example.
 
 ## Permissions

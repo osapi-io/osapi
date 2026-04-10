@@ -27,7 +27,7 @@ hosts via chrony drop-in files. Access via `client.NTP.Get()`,
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
@@ -54,7 +54,7 @@ resp, err := c.NTP.Delete(ctx, "web-01")
 
 ## Example
 
-- [`examples/sdk/client/ntp.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/ntp.go)
+- [`examples/sdk/client/ntp.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/ntp.go)
 
 ## Permissions
 

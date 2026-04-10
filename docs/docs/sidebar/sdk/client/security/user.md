@@ -23,7 +23,7 @@ User account management on target hosts.
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
@@ -77,7 +77,7 @@ removeResp, err := c.User.RemoveKey(ctx, "web-01", "deploy", "SHA256:abc123...")
 ## Example
 
 See
-[`examples/sdk/client/user.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/user.go)
+[`examples/sdk/client/user.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/user.go)
 for a complete working example.
 
 ## SSH Key Types

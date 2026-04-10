@@ -25,7 +25,7 @@ details, and sending signals to processes on target hosts. Access via
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
@@ -61,7 +61,7 @@ resp, err := c.Process.List(ctx, "_all")
 
 ## Example
 
-- [`examples/sdk/client/process.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/process.go)
+- [`examples/sdk/client/process.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/process.go)
 
 ## Permissions
 

@@ -11,7 +11,7 @@ generic Linux). SDK consumers can use it to make platform-aware decisions.
 ## Usage
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/platform"
+import "github.com/osapi-io/osapi/pkg/sdk/platform"
 
 family := platform.Detect()
 // Returns: "debian", "darwin", or "" (unknown/unsupported)
