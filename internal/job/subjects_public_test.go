@@ -1011,6 +1011,104 @@ func (suite *SubjectsPublicTestSuite) TestCountExpectedAgents() {
 	}
 }
 
+func (suite *SubjectsPublicTestSuite) TestExpectedAgentHostnames() {
+	agents := []job.AgentInfo{
+		{Hostname: "web-01", Labels: map[string]string{"group": "web.dev.us-east"}},
+		{Hostname: "web-02", Labels: map[string]string{"group": "web.dev.us-west"}},
+		{Hostname: "db-01", Labels: map[string]string{"group": "db.prod"}},
+		{Hostname: "plain-01"},
+	}
+
+	tests := []struct {
+		name   string
+		agents []job.AgentInfo
+		target string
+		want   []string
+	}{
+		{
+			name:   "when target is _all returns all hostnames",
+			agents: agents,
+			target: "_all",
+			want:   []string{"web-01", "web-02", "db-01", "plain-01"},
+		},
+		{
+			name:   "when label exact match returns matching hostnames",
+			agents: agents,
+			target: "group:web.dev.us-east",
+			want:   []string{"web-01"},
+		},
+		{
+			name:   "when label prefix match returns matching hostnames",
+			agents: agents,
+			target: "group:web",
+			want:   []string{"web-01", "web-02"},
+		},
+		{
+			name:   "when no agents match label returns nil",
+			agents: agents,
+			target: "group:staging",
+			want:   nil,
+		},
+		{
+			name:   "when agent list is empty returns nil",
+			agents: []job.AgentInfo{},
+			target: "_all",
+			want:   nil,
+		},
+		{
+			name:   "when target is a hostname returns nil",
+			agents: agents,
+			target: "web-01",
+			want:   nil,
+		},
+		{
+			name:   "when target is _any returns nil",
+			agents: agents,
+			target: "_any",
+			want:   nil,
+		},
+		{
+			name: "when _all excludes cordoned agents",
+			agents: []job.AgentInfo{
+				{Hostname: "web-01"},
+				{Hostname: "web-02", State: job.AgentStateCordoned},
+				{Hostname: "web-03"},
+			},
+			target: "_all",
+			want:   []string{"web-01", "web-03"},
+		},
+		{
+			name: "when _all excludes draining agents",
+			agents: []job.AgentInfo{
+				{Hostname: "web-01"},
+				{Hostname: "web-02", State: job.AgentStateDraining},
+			},
+			target: "_all",
+			want:   []string{"web-01"},
+		},
+		{
+			name: "when label match excludes cordoned agents",
+			agents: []job.AgentInfo{
+				{
+					Hostname: "web-01",
+					Labels:   map[string]string{"group": "web.dev"},
+					State:    job.AgentStateCordoned,
+				},
+				{Hostname: "web-02", Labels: map[string]string{"group": "web.dev"}},
+			},
+			target: "group:web",
+			want:   []string{"web-02"},
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := job.ExpectedAgentHostnames(tt.agents, tt.target)
+			suite.Equal(tt.want, got)
+		})
+	}
+}
+
 func TestSubjectsPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(SubjectsPublicTestSuite))
 }
