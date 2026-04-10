@@ -13,8 +13,10 @@ For setup, building, testing, and contributing, see the Docusaurus docs:
 - @docs/docs/sidebar/development/development.md - Prerequisites, setup, code style, testing, commit conventions
 - @docs/docs/sidebar/development/contributing.md - PR workflow and contribution guidelines
 - @docs/docs/sidebar/development/testing.md - How to run tests and list just recipes
+- @docs/docs/sidebar/development/ui-development.md - UI prerequisites, setup, code style, components
 - @docs/docs/sidebar/architecture/principles.md - Guiding principles (simplicity, minimalism, design philosophy)
 - @docs/docs/sidebar/architecture/api-guidelines.md - API design guidelines (REST conventions, endpoint structure)
+- @docs/docs/sidebar/architecture/ui.md - UI architecture, embedding, component layers
 - @docs/docs/sidebar/usage/configuration.md - Configuration reference (osapi.yaml, env overrides)
 - @docs/docs/sidebar/architecture/architecture.md - Architecture overview (links to system and job architecture)
 
@@ -28,6 +30,11 @@ just go::unit-int  # Run integration tests (requires running osapi)
 just go::vet       # Run golangci-lint
 just go::fmt       # Auto-format (gofumpt + golines)
 go test -run TestName -v ./internal/job/...  # Run a single test
+
+just react::dev    # Start UI dev server (http://localhost:5173)
+just react::build  # Production UI build
+just react::lint   # Run ESLint on UI
+just react::fmt    # Format UI with Prettier
 ```
 
 ## Architecture (Quick Reference)
@@ -45,6 +52,31 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 - **`pkg/sdk/`** - Go SDK for programmatic REST API access (`client/` client library). See @docs/docs/sidebar/sdk/guidelines.md for SDK development rules
 - Shared `nats-client` and `nats-server` are sibling repos linked via `replace` in `go.mod`
 - **`github/`** - Temporary GitHub org config tooling (`repos.json` for declarative repo settings, `sync.sh` for drift detection via `gh` CLI). Untracked and intended to move to its own repo.
+
+## UI Architecture (Quick Reference)
+
+- **`ui/`** - React 19 + TypeScript + Vite + Tailwind CSS v4. Embedded into the Go binary at build time.
+- **`ui/src/sdk/gen/`** - Generated TypeScript SDK (orval) from the combined OpenAPI spec. DO NOT EDIT.
+- **`ui/src/sdk/fetch.ts`** - Hand-written fetch mutator: auth token + base URL wiring for orval.
+- **`ui/src/components/ui/`** - Reusable UI primitives. Every visual pattern is a component.
+- **`ui/src/components/layout/`** - Page structure (Navbar, PageLayout, ContentArea, NetworkMapBackground).
+- **`ui/src/components/domain/`** - Domain-specific components (blocks, cards, pickers).
+- **`ui/src/hooks/`** - Data fetching, state, keyboard navigation hooks.
+- **`ui/src/lib/`** - `cn.ts`, `auth.tsx`, `permissions.ts`, `features.ts`.
+- **`ui/embed.go`** - `//go:embed dist/*` directive exposing `ui.Assets`.
+- **`internal/controller/api/ui/`** - SPA serving handler (static files + `index.html` fallback for client-side routing).
+- Config: `controller.api.ui.enabled` in `osapi.yaml` (default `true`).
+
+## UI Conventions (MANDATORY)
+
+- One component per file. Use `cva` for variants, `cn()` for conditional classes.
+- Icons from lucide-react only. No inline styles — Tailwind only.
+- Always use the `Text` component for styled text. Always use `Dropdown` — never `<select>`.
+- Tailwind scale only (`text-xs`, `text-sm`). Never arbitrary pixel values.
+- File naming: components `kebab-case.tsx`, hooks `use-kebab-case.ts`, utilities `kebab-case.ts`.
+- Colors defined in `ui/src/index.css` via Tailwind v4 `@theme`. Never use raw hex values.
+- **Block** = single operation (command, file deploy, cron create, etc.); **Stack** = saved composition of one or more blocks with targets. Do NOT use "runlist" — that term has been replaced.
+- Regenerate the TypeScript SDK via `just generate` at the repository root (runs `redocly join`, `go generate`, copies the combined spec to `ui/src/sdk/gen/api.yaml`, and runs `orval`).
 
 ## Adding a New API Domain
 
