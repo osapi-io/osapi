@@ -3,7 +3,6 @@ import {
   useContext,
   useState,
   useCallback,
-  useEffect,
   type ReactNode,
 } from "react";
 import {
@@ -86,11 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return ENV_TOKEN || localStorage.getItem(STORAGE_KEY_TOKEN) || null;
   });
 
-  // Keep module-level token in sync for the fetch mutator
-  useEffect(() => {
-    setAuthTokenValue(token);
-  }, [token]);
-
   const tokenRoles = token ? extractRolesFromJwt(token) : [];
   const isAuthenticated = token !== null && tokenRoles.length > 0;
 
@@ -128,11 +122,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setToken = useCallback((t: string) => {
+    setAuthTokenValue(t);
     setTokenState(t);
     localStorage.setItem(STORAGE_KEY_TOKEN, t);
   }, []);
 
   const clearToken = useCallback(() => {
+    setAuthTokenValue(null);
     setTokenState(null);
     localStorage.removeItem(STORAGE_KEY_TOKEN);
   }, []);

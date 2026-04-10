@@ -107,10 +107,10 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 		wantRows     [][]string
 	}{
 		{
-			name:         "when no results returns empty",
+			name:         "when no results returns hostname header only",
 			results:      []cli.ResultRow{},
 			fieldHeaders: nil,
-			wantHeaders:  nil,
+			wantHeaders:  []string{"HOSTNAME"},
 			wantRows:     [][]string{},
 		},
 		{
@@ -166,14 +166,14 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 			},
 		},
 		{
-			name: "when single host hides hostname column",
+			name: "when single host shows hostname column",
 			results: []cli.ResultRow{
 				{Hostname: "web-01", Fields: []string{"val1"}},
 			},
 			fieldHeaders: []string{"DATA"},
-			wantHeaders:  []string{"DATA"},
+			wantHeaders:  []string{"HOSTNAME", "DATA"},
 			wantRows: [][]string{
-				{"val1"},
+				{"web-01", "val1"},
 			},
 		},
 		{
