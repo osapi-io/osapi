@@ -5,8 +5,8 @@ Delete a group:
 ```bash
 $ osapi client node group delete --target web-01 --name deploy
 
-  NAME     CHANGED  STATUS
-  deploy   true     ok
+  HOSTNAME  NAME     CHANGED  STATUS
+  web-01    deploy   true     ok
 ```
 
 ## Flags

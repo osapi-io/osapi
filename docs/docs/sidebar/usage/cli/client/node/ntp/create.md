@@ -11,8 +11,8 @@ $ osapi client node ntp create --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  STATUS  CHANGED  ERROR
-  ok      true
+  HOSTNAME  STATUS  CHANGED  ERROR
+  web-01    ok      true
 ```
 
 Broadcast to all hosts at once:

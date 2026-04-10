@@ -9,8 +9,8 @@ $ osapi client node network dns delete \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  STATUS  CHANGED  ERROR
-  ok      true
+  HOSTNAME  STATUS  CHANGED  ERROR
+  web-01    ok      true
 ```
 
 When targeting all hosts, HOSTNAME is shown. STATUS and ERROR columns appear

@@ -7,8 +7,8 @@ $ osapi client node service get --target web-01 --name nginx.service
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME             STATUS  ENABLED  DESCRIPTION                       PID
-  nginx.service    active  true     A high performance web server     1234
+  HOSTNAME  NAME             STATUS  ENABLED  DESCRIPTION                       PID
+  web-01    nginx.service    active  true     A high performance web server     1234
 ```
 
 Target all hosts to inspect the same service across the fleet:
@@ -18,13 +18,9 @@ $ osapi client node service get --target _all --name nginx.service
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  web-01
-  NAME             STATUS  ENABLED  DESCRIPTION                       PID
-  nginx.service    active  true     A high performance web server     1234
-
-  web-02
-  NAME             STATUS  ENABLED  DESCRIPTION                       PID
-  nginx.service    active  true     A high performance web server     5678
+  HOSTNAME  NAME             STATUS  ENABLED  DESCRIPTION                       PID
+  web-01    nginx.service    active  true     A high performance web server     1234
+  web-02    nginx.service    active  true     A high performance web server     5678
 ```
 
 ## JSON Output

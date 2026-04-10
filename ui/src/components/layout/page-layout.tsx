@@ -38,14 +38,36 @@ export function PageLayout({ children }: PageLayoutProps) {
             },
           ]
         : []),
-      ...(pathname !== "/roles"
+      ...(pathname !== "/admin/audit"
+        ? [
+            {
+              id: "nav:audit",
+              name: "admin audit",
+              description: "Go to Audit Log",
+              category: "admin",
+              action: () => navigate("/admin/audit"),
+            },
+          ]
+        : []),
+      ...(pathname !== "/admin/jobs"
+        ? [
+            {
+              id: "nav:jobs",
+              name: "admin jobs",
+              description: "Go to Jobs",
+              category: "admin",
+              action: () => navigate("/admin/jobs"),
+            },
+          ]
+        : []),
+      ...(pathname !== "/admin/roles"
         ? [
             {
               id: "nav:roles",
-              name: "roles",
+              name: "admin roles",
               description: "Go to Roles",
-              category: "navigate",
-              action: () => navigate("/roles"),
+              category: "admin",
+              action: () => navigate("/admin/roles"),
             },
           ]
         : []),

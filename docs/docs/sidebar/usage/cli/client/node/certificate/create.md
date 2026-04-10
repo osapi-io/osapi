@@ -12,8 +12,8 @@ $ osapi client node certificate create --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME         CHANGED
-  internal-ca  true
+  HOSTNAME  NAME         CHANGED
+  web-01    internal-ca  true
 ```
 
 Broadcast to all hosts at once:

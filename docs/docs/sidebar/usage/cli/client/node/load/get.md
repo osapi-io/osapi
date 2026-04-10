@@ -7,8 +7,8 @@ $ osapi client node load get
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  LOAD (1m)  LOAD (5m)  LOAD (15m)
-  1.83       1.96       2.02
+  HOSTNAME  LOAD (1m)  LOAD (5m)  LOAD (15m)
+  web-01    1.83       1.96       2.02
 ```
 
 When targeting all hosts:

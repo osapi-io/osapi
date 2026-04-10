@@ -146,7 +146,18 @@ export function CommandBar() {
                     )}
                   >
                     <span className="font-mono text-xs text-primary/70">:</span>
-                    <span className="font-mono text-sm">{cmd.name}</span>
+                    <span className="font-mono text-sm">
+                      {cmd.name.includes(" ") ? (
+                        <>
+                          <span className="text-text-muted/60">
+                            {cmd.name.split(" ")[0]}
+                          </span>{" "}
+                          {cmd.name.split(" ").slice(1).join(" ")}
+                        </>
+                      ) : (
+                        cmd.name
+                      )}
+                    </span>
                     <span className="ml-auto text-xs text-text-muted">
                       {cmd.description}
                     </span>

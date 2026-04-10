@@ -8,8 +8,8 @@ $ osapi client node user password --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  STATUS  CHANGED  ERROR  NAME
-  ok      true            deploy
+  HOSTNAME  STATUS  CHANGED  ERROR  NAME
+  web-01    ok      true            deploy
 ```
 
 The password is sent as plaintext and hashed by the agent using the system's

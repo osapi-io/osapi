@@ -7,8 +7,8 @@ $ osapi client node hostname get
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  LABELS
-  group:web
+  HOSTNAME  LABELS
+  web-01    group:web
 ```
 
 When targeting all hosts:

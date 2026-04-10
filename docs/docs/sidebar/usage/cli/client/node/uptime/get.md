@@ -7,8 +7,8 @@ $ osapi client node uptime get
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  UPTIME
-  64 days, 11 hours, 20 minutes
+  HOSTNAME  UPTIME
+  web-01    64 days, 11 hours, 20 minutes
 ```
 
 When targeting all hosts:

@@ -7,8 +7,8 @@ $ osapi client node container docker exec --id my-nginx --command "ls,-la,/"
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  EXIT CODE  STDOUT     STDERR
-  0          total 80…
+  HOSTNAME  EXIT CODE  STDOUT     STDERR
+  server1   0          total 80…
 ```
 
 Execute with environment variables and a working directory:

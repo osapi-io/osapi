@@ -7,8 +7,8 @@ $ osapi client node container docker inspect --id a1b2c3d4e5f6
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  ID            NAME      IMAGE         STATE    CREATED               HEALTH   PORTS             MOUNTS             NETWORK
-  a1b2c3d4e5f6  my-nginx  nginx:latest  running  2024-01-15T10:30:00Z           8080:80,8443:443  /data:/var/lib/data  172.17.0.2
+  HOSTNAME  ID            NAME      IMAGE         STATE    CREATED               HEALTH   PORTS             MOUNTS             NETWORK
+  server1   a1b2c3d4e5f6  my-nginx  nginx:latest  running  2024-01-15T10:30:00Z           8080:80,8443:443  /data:/var/lib/data  172.17.0.2
 ```
 
 Inspect a container by name:

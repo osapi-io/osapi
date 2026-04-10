@@ -9,8 +9,8 @@ $ osapi client node service stop --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME             CHANGED
-  nginx.service    true
+  HOSTNAME  NAME             CHANGED
+  web-01    nginx.service    true
 ```
 
 If the service is already stopped, `changed: false` is returned:
@@ -21,8 +21,8 @@ $ osapi client node service stop --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME             CHANGED
-  nginx.service    false
+  HOSTNAME  NAME             CHANGED
+  web-01    nginx.service    false
 ```
 
 Broadcast stop to all hosts:

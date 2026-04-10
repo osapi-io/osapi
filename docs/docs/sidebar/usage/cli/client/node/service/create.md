@@ -11,8 +11,8 @@ $ osapi client node service create --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME             CHANGED
-  myapp.service    true
+  HOSTNAME  NAME             CHANGED
+  web-01    myapp.service    true
 ```
 
 Broadcast to all hosts at once:

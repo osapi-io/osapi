@@ -12,8 +12,8 @@ $ osapi client node network route update \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  INTERFACE  CHANGED
-  eth0       true
+  HOSTNAME  INTERFACE  CHANGED
+  web-01    eth0       true
 ```
 
 When the configuration is unchanged, `changed` is false:
@@ -25,8 +25,8 @@ $ osapi client node network route update \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  INTERFACE  CHANGED
-  eth0       false
+  HOSTNAME  INTERFACE  CHANGED
+  web-01    eth0       false
 ```
 
 Broadcast an update to all hosts:

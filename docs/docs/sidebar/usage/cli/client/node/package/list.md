@@ -7,10 +7,10 @@ $ osapi client node package list --target web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME      VERSION      STATUS      SIZE
-  bash      5.2.21-2     installed   7.4 MB
-  nginx     1.24.0-2     installed   1.2 MB
-  curl      8.5.0-2      installed   512.0 KB
+  HOSTNAME  NAME      VERSION      STATUS      SIZE
+  web-01    bash      5.2.21-2     installed   7.4 MB
+  web-01    nginx     1.24.0-2     installed   1.2 MB
+  web-01    curl      8.5.0-2      installed   512.0 KB
 ```
 
 Target all hosts to list packages across the fleet:

@@ -7,8 +7,8 @@ $ osapi client node memory get
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  MEMORY
-  19 GB used / 31 GB total / 10 GB free
+  HOSTNAME  MEMORY
+  web-01    19 GB used / 31 GB total / 10 GB free
 ```
 
 When targeting all hosts:

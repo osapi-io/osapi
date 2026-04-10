@@ -7,12 +7,12 @@ $ osapi client node log source --target web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  SOURCE
-  cron
-  kernel
-  nginx
-  sshd
-  systemd
+  HOSTNAME  SOURCE
+  web-01    cron
+  web-01    kernel
+  web-01    nginx
+  web-01    sshd
+  web-01    systemd
 ```
 
 When targeting all hosts:
@@ -22,17 +22,13 @@ $ osapi client node log source --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  web-01
-  SOURCE
-  cron
-  kernel
-  nginx
-  sshd
-
-  web-02
-  SOURCE
-  kernel
-  systemd
+  HOSTNAME  SOURCE
+  web-01    cron
+  web-01    kernel
+  web-01    nginx
+  web-01    sshd
+  web-02    kernel
+  web-02    systemd
 ```
 
 ## JSON Output

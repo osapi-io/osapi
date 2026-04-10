@@ -9,8 +9,8 @@ $ osapi client node service restart --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME             CHANGED
-  nginx.service    true
+  HOSTNAME  NAME             CHANGED
+  web-01    nginx.service    true
 ```
 
 Broadcast restart to all hosts:

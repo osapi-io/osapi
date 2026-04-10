@@ -8,8 +8,8 @@ $ osapi client node network ping --address 8.8.8.8
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
   Ping Response:
-  AVG RTT       MAX RTT       MIN RTT       PACKET LOSS  PACKETS RECEIVED  PACKETS SENT
-  19.707031ms   25.066977ms   13.007048ms   0.000000     3                 3
+  HOSTNAME  AVG RTT       MAX RTT       MIN RTT       PACKET LOSS  PACKETS RECEIVED  PACKETS SENT
+  server1   19.707031ms   25.066977ms   13.007048ms   0.000000     3                 3
 ```
 
 When targeting all hosts:
