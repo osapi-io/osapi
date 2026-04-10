@@ -20,13 +20,13 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
-// Defines values for GetApiJobParamsStatus.
+// Defines values for GetJobsParamsStatus.
 const (
-	Completed      GetApiJobParamsStatus = "completed"
-	Failed         GetApiJobParamsStatus = "failed"
-	PartialFailure GetApiJobParamsStatus = "partial_failure"
-	Processing     GetApiJobParamsStatus = "processing"
-	Submitted      GetApiJobParamsStatus = "submitted"
+	Completed      GetJobsParamsStatus = "completed"
+	Failed         GetJobsParamsStatus = "failed"
+	PartialFailure GetJobsParamsStatus = "partial_failure"
+	Processing     GetJobsParamsStatus = "processing"
+	Submitted      GetJobsParamsStatus = "submitted"
 )
 
 // CreateJobResponse defines model for CreateJobResponse.
@@ -130,10 +130,10 @@ type RetryJobRequest struct {
 	TargetHostname *string `json:"target_hostname,omitempty" validate:"omitempty,min=1,valid_target"`
 }
 
-// GetApiJobParams defines parameters for GetApiJob.
-type GetApiJobParams struct {
+// GetJobsParams defines parameters for GetJobs.
+type GetJobsParams struct {
 	// Status Filter jobs by status.
-	Status *GetApiJobParamsStatus `form:"status,omitempty" json:"status,omitempty" validate:"omitempty,oneof=submitted processing completed failed partial_failure"`
+	Status *GetJobsParamsStatus `form:"status,omitempty" json:"status,omitempty" validate:"omitempty,oneof=submitted processing completed failed partial_failure"`
 
 	// Limit Maximum number of jobs per page (1-100).
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
@@ -142,8 +142,8 @@ type GetApiJobParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty" validate:"omitempty,min=0"`
 }
 
-// GetApiJobParamsStatus defines parameters for GetApiJob.
-type GetApiJobParamsStatus string
+// GetJobsParamsStatus defines parameters for GetJobs.
+type GetJobsParamsStatus string
 
 // RetryJobByIDJSONRequestBody defines body for RetryJobByID for application/json ContentType.
 type RetryJobByIDJSONRequestBody = RetryJobRequest
@@ -152,7 +152,7 @@ type RetryJobByIDJSONRequestBody = RetryJobRequest
 type ServerInterface interface {
 	// List jobs
 	// (GET /api/job)
-	GetApiJob(ctx echo.Context, params GetApiJobParams) error
+	GetJobs(ctx echo.Context, params GetJobsParams) error
 	// Delete a job
 	// (DELETE /api/job/{id})
 	DeleteJobByID(ctx echo.Context, id openapi_types.UUID) error
@@ -169,14 +169,14 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
-// GetApiJob converts echo context to params.
-func (w *ServerInterfaceWrapper) GetApiJob(ctx echo.Context) error {
+// GetJobs converts echo context to params.
+func (w *ServerInterfaceWrapper) GetJobs(ctx echo.Context) error {
 	var err error
 
 	ctx.Set(BearerAuthScopes, []string{"job:read"})
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params GetApiJobParams
+	var params GetJobsParams
 	// ------------- Optional query parameter "status" -------------
 
 	err = runtime.BindQueryParameter("form", true, false, "status", ctx.QueryParams(), &params.Status)
@@ -199,7 +199,7 @@ func (w *ServerInterfaceWrapper) GetApiJob(ctx echo.Context) error {
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetApiJob(ctx, params)
+	err = w.Handler.GetJobs(ctx, params)
 	return err
 }
 
@@ -285,60 +285,60 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/api/job", wrapper.GetApiJob)
+	router.GET(baseURL+"/api/job", wrapper.GetJobs)
 	router.DELETE(baseURL+"/api/job/:id", wrapper.DeleteJobByID)
 	router.GET(baseURL+"/api/job/:id", wrapper.GetJobByID)
 	router.POST(baseURL+"/api/job/:id/retry", wrapper.RetryJobByID)
 
 }
 
-type GetApiJobRequestObject struct {
-	Params GetApiJobParams
+type GetJobsRequestObject struct {
+	Params GetJobsParams
 }
 
-type GetApiJobResponseObject interface {
-	VisitGetApiJobResponse(w http.ResponseWriter) error
+type GetJobsResponseObject interface {
+	VisitGetJobsResponse(w http.ResponseWriter) error
 }
 
-type GetApiJob200JSONResponse ListJobsResponse
+type GetJobs200JSONResponse ListJobsResponse
 
-func (response GetApiJob200JSONResponse) VisitGetApiJobResponse(w http.ResponseWriter) error {
+func (response GetJobs200JSONResponse) VisitGetJobsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetApiJob400JSONResponse externalRef0.ErrorResponse
+type GetJobs400JSONResponse externalRef0.ErrorResponse
 
-func (response GetApiJob400JSONResponse) VisitGetApiJobResponse(w http.ResponseWriter) error {
+func (response GetJobs400JSONResponse) VisitGetJobsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetApiJob401JSONResponse externalRef0.ErrorResponse
+type GetJobs401JSONResponse externalRef0.ErrorResponse
 
-func (response GetApiJob401JSONResponse) VisitGetApiJobResponse(w http.ResponseWriter) error {
+func (response GetJobs401JSONResponse) VisitGetJobsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetApiJob403JSONResponse externalRef0.ErrorResponse
+type GetJobs403JSONResponse externalRef0.ErrorResponse
 
-func (response GetApiJob403JSONResponse) VisitGetApiJobResponse(w http.ResponseWriter) error {
+func (response GetJobs403JSONResponse) VisitGetJobsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetApiJob500JSONResponse externalRef0.ErrorResponse
+type GetJobs500JSONResponse externalRef0.ErrorResponse
 
-func (response GetApiJob500JSONResponse) VisitGetApiJobResponse(w http.ResponseWriter) error {
+func (response GetJobs500JSONResponse) VisitGetJobsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -535,7 +535,7 @@ func (response RetryJobByID500JSONResponse) VisitRetryJobByIDResponse(w http.Res
 type StrictServerInterface interface {
 	// List jobs
 	// (GET /api/job)
-	GetApiJob(ctx context.Context, request GetApiJobRequestObject) (GetApiJobResponseObject, error)
+	GetJobs(ctx context.Context, request GetJobsRequestObject) (GetJobsResponseObject, error)
 	// Delete a job
 	// (DELETE /api/job/{id})
 	DeleteJobByID(ctx context.Context, request DeleteJobByIDRequestObject) (DeleteJobByIDResponseObject, error)
@@ -559,25 +559,25 @@ type strictHandler struct {
 	middlewares []StrictMiddlewareFunc
 }
 
-// GetApiJob operation middleware
-func (sh *strictHandler) GetApiJob(ctx echo.Context, params GetApiJobParams) error {
-	var request GetApiJobRequestObject
+// GetJobs operation middleware
+func (sh *strictHandler) GetJobs(ctx echo.Context, params GetJobsParams) error {
+	var request GetJobsRequestObject
 
 	request.Params = params
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetApiJob(ctx.Request().Context(), request.(GetApiJobRequestObject))
+		return sh.ssi.GetJobs(ctx.Request().Context(), request.(GetJobsRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetApiJob")
+		handler = middleware(handler, "GetJobs")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(GetApiJobResponseObject); ok {
-		return validResponse.VisitGetApiJobResponse(ctx.Response())
+	} else if validResponse, ok := response.(GetJobsResponseObject); ok {
+		return validResponse.VisitGetJobsResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

@@ -7,8 +7,8 @@
 import type {
   CreateJobResponse,
   ErrorResponse,
-  GetApiJobParams,
   JobDetailResponse,
+  ListJobsParams,
   ListJobsResponse,
   RetryJobRequest
 } from '../schemas';
@@ -19,41 +19,41 @@ import { apiFetch } from '../../fetch';
  * Retrieve jobs, optionally filtered by status.
  * @summary List jobs
  */
-export type getApiJobResponse200 = {
+export type listJobsResponse200 = {
   data: ListJobsResponse
   status: 200
 }
 
-export type getApiJobResponse400 = {
+export type listJobsResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type getApiJobResponse401 = {
+export type listJobsResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type getApiJobResponse403 = {
+export type listJobsResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type getApiJobResponse500 = {
+export type listJobsResponse500 = {
   data: ErrorResponse
   status: 500
 }
 
-export type getApiJobResponseSuccess = (getApiJobResponse200) & {
+export type listJobsResponseSuccess = (listJobsResponse200) & {
   headers: Headers;
 };
-export type getApiJobResponseError = (getApiJobResponse400 | getApiJobResponse401 | getApiJobResponse403 | getApiJobResponse500) & {
+export type listJobsResponseError = (listJobsResponse400 | listJobsResponse401 | listJobsResponse403 | listJobsResponse500) & {
   headers: Headers;
 };
 
-export type getApiJobResponse = (getApiJobResponseSuccess | getApiJobResponseError)
+export type listJobsResponse = (listJobsResponseSuccess | listJobsResponseError)
 
-export const getGetApiJobUrl = (params?: GetApiJobParams,) => {
+export const getListJobsUrl = (params?: ListJobsParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -68,9 +68,9 @@ export const getGetApiJobUrl = (params?: GetApiJobParams,) => {
   return stringifiedParams.length > 0 ? `/api/job?${stringifiedParams}` : `/api/job`
 }
 
-export const getApiJob = async (params?: GetApiJobParams, options?: RequestInit): Promise<getApiJobResponse> => {
+export const listJobs = async (params?: ListJobsParams, options?: RequestInit): Promise<listJobsResponse> => {
 
-  return apiFetch<getApiJobResponse>(getGetApiJobUrl(params),
+  return apiFetch<listJobsResponse>(getListJobsUrl(params),
   {
     ...options,
     method: 'GET'

@@ -64,12 +64,12 @@ import (
 	userAPI "github.com/retr0h/osapi/internal/controller/api/node/user"
 	uihandler "github.com/retr0h/osapi/internal/controller/api/ui"
 	"github.com/retr0h/osapi/internal/controller/notify"
-	uiassets "github.com/retr0h/osapi/ui"
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/telemetry/metrics"
 	"github.com/retr0h/osapi/internal/telemetry/process"
 	"github.com/retr0h/osapi/internal/validation"
+	uiassets "github.com/retr0h/osapi/ui"
 )
 
 // ServerManager responsible for Server operations.

@@ -18,6 +18,8 @@ linters:
     - staticcheck
     - unused
   exclusions:
+    paths:
+      - ui/node_modules
     rules:
       - linters:
           - revive

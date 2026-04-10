@@ -490,13 +490,13 @@ const (
 	PostFileMultipartBodyContentTypeTemplate PostFileMultipartBodyContentType = "template"
 )
 
-// Defines values for GetApiJobParamsStatus.
+// Defines values for GetJobsParamsStatus.
 const (
-	GetApiJobParamsStatusCompleted      GetApiJobParamsStatus = "completed"
-	GetApiJobParamsStatusFailed         GetApiJobParamsStatus = "failed"
-	GetApiJobParamsStatusPartialFailure GetApiJobParamsStatus = "partial_failure"
-	GetApiJobParamsStatusProcessing     GetApiJobParamsStatus = "processing"
-	GetApiJobParamsStatusSubmitted      GetApiJobParamsStatus = "submitted"
+	GetJobsParamsStatusCompleted      GetJobsParamsStatus = "completed"
+	GetJobsParamsStatusFailed         GetJobsParamsStatus = "failed"
+	GetJobsParamsStatusPartialFailure GetJobsParamsStatus = "partial_failure"
+	GetJobsParamsStatusProcessing     GetJobsParamsStatus = "processing"
+	GetJobsParamsStatusSubmitted      GetJobsParamsStatus = "submitted"
 )
 
 // Defines values for GetNodeContainerDockerParamsState.
@@ -3545,10 +3545,10 @@ type PostFileParams struct {
 // PostFileMultipartBodyContentType defines parameters for PostFile.
 type PostFileMultipartBodyContentType string
 
-// GetApiJobParams defines parameters for GetApiJob.
-type GetApiJobParams struct {
+// GetJobsParams defines parameters for GetJobs.
+type GetJobsParams struct {
 	// Status Filter jobs by status.
-	Status *GetApiJobParamsStatus `form:"status,omitempty" json:"status,omitempty" validate:"omitempty,oneof=submitted processing completed failed partial_failure"`
+	Status *GetJobsParamsStatus `form:"status,omitempty" json:"status,omitempty" validate:"omitempty,oneof=submitted processing completed failed partial_failure"`
 
 	// Limit Maximum number of jobs per page (1-100).
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
@@ -3557,8 +3557,8 @@ type GetApiJobParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty" validate:"omitempty,min=0"`
 }
 
-// GetApiJobParamsStatus defines parameters for GetApiJob.
-type GetApiJobParamsStatus string
+// GetJobsParamsStatus defines parameters for GetJobs.
+type GetJobsParamsStatus string
 
 // GetNodeContainerDockerParams defines parameters for GetNodeContainerDocker.
 type GetNodeContainerDockerParams struct {
@@ -3806,8 +3806,8 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// GetApiAgent request
-	GetApiAgent(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetAgents request
+	GetAgents(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetAgentDetails request
 	GetAgentDetails(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -3854,8 +3854,8 @@ type ClientInterface interface {
 	// GetHealthStatus request
 	GetHealthStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiJob request
-	GetApiJob(ctx context.Context, params *GetApiJobParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetJobs request
+	GetJobs(ctx context.Context, params *GetJobsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteJobByID request
 	DeleteJobByID(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4230,8 +4230,8 @@ type ClientInterface interface {
 	GetApiVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) GetApiAgent(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiAgentRequest(c.Server)
+func (c *Client) GetAgents(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAgentsRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -4422,8 +4422,8 @@ func (c *Client) GetHealthStatus(ctx context.Context, reqEditors ...RequestEdito
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiJob(ctx context.Context, params *GetApiJobParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiJobRequest(c.Server, params)
+func (c *Client) GetJobs(ctx context.Context, params *GetJobsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetJobsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -6078,8 +6078,8 @@ func (c *Client) GetApiVersion(ctx context.Context, reqEditors ...RequestEditorF
 	return c.Client.Do(req)
 }
 
-// NewGetApiAgentRequest generates requests for GetApiAgent
-func NewGetApiAgentRequest(server string) (*http.Request, error) {
+// NewGetAgentsRequest generates requests for GetAgents
+func NewGetAgentsRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -6614,8 +6614,8 @@ func NewGetHealthStatusRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetApiJobRequest generates requests for GetApiJob
-func NewGetApiJobRequest(server string, params *GetApiJobParams) (*http.Request, error) {
+// NewGetJobsRequest generates requests for GetJobs
+func NewGetJobsRequest(server string, params *GetJobsParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -11089,8 +11089,8 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// GetApiAgentWithResponse request
-	GetApiAgentWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiAgentResponse, error)
+	// GetAgentsWithResponse request
+	GetAgentsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAgentsResponse, error)
 
 	// GetAgentDetailsWithResponse request
 	GetAgentDetailsWithResponse(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*GetAgentDetailsResponse, error)
@@ -11137,8 +11137,8 @@ type ClientWithResponsesInterface interface {
 	// GetHealthStatusWithResponse request
 	GetHealthStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthStatusResponse, error)
 
-	// GetApiJobWithResponse request
-	GetApiJobWithResponse(ctx context.Context, params *GetApiJobParams, reqEditors ...RequestEditorFn) (*GetApiJobResponse, error)
+	// GetJobsWithResponse request
+	GetJobsWithResponse(ctx context.Context, params *GetJobsParams, reqEditors ...RequestEditorFn) (*GetJobsResponse, error)
 
 	// DeleteJobByIDWithResponse request
 	DeleteJobByIDWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteJobByIDResponse, error)
@@ -11513,7 +11513,7 @@ type ClientWithResponsesInterface interface {
 	GetApiVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiVersionResponse, error)
 }
 
-type GetApiAgentResponse struct {
+type GetAgentsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ListAgentsResponse
@@ -11523,7 +11523,7 @@ type GetApiAgentResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiAgentResponse) Status() string {
+func (r GetAgentsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -11531,7 +11531,7 @@ func (r GetApiAgentResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiAgentResponse) StatusCode() int {
+func (r GetAgentsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -11926,7 +11926,7 @@ func (r GetHealthStatusResponse) StatusCode() int {
 	return 0
 }
 
-type GetApiJobResponse struct {
+type GetJobsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ListJobsResponse
@@ -11937,7 +11937,7 @@ type GetApiJobResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiJobResponse) Status() string {
+func (r GetJobsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -11945,7 +11945,7 @@ func (r GetApiJobResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiJobResponse) StatusCode() int {
+func (r GetJobsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -14529,13 +14529,13 @@ func (r GetApiVersionResponse) StatusCode() int {
 	return 0
 }
 
-// GetApiAgentWithResponse request returning *GetApiAgentResponse
-func (c *ClientWithResponses) GetApiAgentWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiAgentResponse, error) {
-	rsp, err := c.GetApiAgent(ctx, reqEditors...)
+// GetAgentsWithResponse request returning *GetAgentsResponse
+func (c *ClientWithResponses) GetAgentsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAgentsResponse, error) {
+	rsp, err := c.GetAgents(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiAgentResponse(rsp)
+	return ParseGetAgentsResponse(rsp)
 }
 
 // GetAgentDetailsWithResponse request returning *GetAgentDetailsResponse
@@ -14673,13 +14673,13 @@ func (c *ClientWithResponses) GetHealthStatusWithResponse(ctx context.Context, r
 	return ParseGetHealthStatusResponse(rsp)
 }
 
-// GetApiJobWithResponse request returning *GetApiJobResponse
-func (c *ClientWithResponses) GetApiJobWithResponse(ctx context.Context, params *GetApiJobParams, reqEditors ...RequestEditorFn) (*GetApiJobResponse, error) {
-	rsp, err := c.GetApiJob(ctx, params, reqEditors...)
+// GetJobsWithResponse request returning *GetJobsResponse
+func (c *ClientWithResponses) GetJobsWithResponse(ctx context.Context, params *GetJobsParams, reqEditors ...RequestEditorFn) (*GetJobsResponse, error) {
+	rsp, err := c.GetJobs(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiJobResponse(rsp)
+	return ParseGetJobsResponse(rsp)
 }
 
 // DeleteJobByIDWithResponse request returning *DeleteJobByIDResponse
@@ -15876,15 +15876,15 @@ func (c *ClientWithResponses) GetApiVersionWithResponse(ctx context.Context, req
 	return ParseGetApiVersionResponse(rsp)
 }
 
-// ParseGetApiAgentResponse parses an HTTP response from a GetApiAgentWithResponse call
-func ParseGetApiAgentResponse(rsp *http.Response) (*GetApiAgentResponse, error) {
+// ParseGetAgentsResponse parses an HTTP response from a GetAgentsWithResponse call
+func ParseGetAgentsResponse(rsp *http.Response) (*GetAgentsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiAgentResponse{
+	response := &GetAgentsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -16695,15 +16695,15 @@ func ParseGetHealthStatusResponse(rsp *http.Response) (*GetHealthStatusResponse,
 	return response, nil
 }
 
-// ParseGetApiJobResponse parses an HTTP response from a GetApiJobWithResponse call
-func ParseGetApiJobResponse(rsp *http.Response) (*GetApiJobResponse, error) {
+// ParseGetJobsResponse parses an HTTP response from a GetJobsWithResponse call
+func ParseGetJobsResponse(rsp *http.Response) (*GetJobsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiJobResponse{
+	response := &GetJobsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

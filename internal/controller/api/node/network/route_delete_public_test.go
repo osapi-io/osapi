@@ -338,7 +338,11 @@ func (s *NetworkRouteDeletePublicTestSuite) TestDeleteNetworkRouteRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodDelete, "/api/node/server1/network/route/eth0", nil)
+			req := httptest.NewRequest(
+				http.MethodDelete,
+				"/api/node/server1/network/route/eth0",
+				nil,
+			)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 			server.Echo.ServeHTTP(rec, req)

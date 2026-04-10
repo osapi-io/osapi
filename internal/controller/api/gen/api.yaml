@@ -100,6 +100,7 @@ paths:
   /api/agent:
     servers: []
     get:
+      operationId: getAgents
       summary: List active agents
       description: Discover all active agents in the fleet.
       tags:
@@ -869,6 +870,7 @@ paths:
   /api/job:
     servers: []
     get:
+      operationId: getJobs
       summary: List jobs
       description: Retrieve jobs, optionally filtered by status.
       tags:

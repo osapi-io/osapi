@@ -71,12 +71,12 @@ func (s *AgentListPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *AgentListPublicTestSuite) TestGetApiAgent() {
+func (s *AgentListPublicTestSuite) TestListAgents() {
 	tests := []struct {
 		name         string
 		mockAgents   []jobtypes.AgentInfo
 		mockError    error
-		validateFunc func(resp gen.GetApiAgentResponseObject)
+		validateFunc func(resp gen.GetAgentsResponseObject)
 	}{
 		{
 			name: "success with agents",
@@ -93,8 +93,8 @@ func (s *AgentListPublicTestSuite) TestGetApiAgent() {
 				},
 				{Hostname: "server2"},
 			},
-			validateFunc: func(resp gen.GetApiAgentResponseObject) {
-				r, ok := resp.(gen.GetApiAgent200JSONResponse)
+			validateFunc: func(resp gen.GetAgentsResponseObject) {
+				r, ok := resp.(gen.GetAgents200JSONResponse)
 				s.True(ok)
 				s.Equal(2, r.Total)
 				s.Len(r.Agents, 2)
@@ -136,8 +136,8 @@ func (s *AgentListPublicTestSuite) TestGetApiAgent() {
 					Facts: map[string]any{"env": "prod"},
 				},
 			},
-			validateFunc: func(resp gen.GetApiAgentResponseObject) {
-				r, ok := resp.(gen.GetApiAgent200JSONResponse)
+			validateFunc: func(resp gen.GetAgentsResponseObject) {
+				r, ok := resp.(gen.GetAgents200JSONResponse)
 				s.True(ok)
 				s.Equal(1, r.Total)
 
@@ -199,8 +199,8 @@ func (s *AgentListPublicTestSuite) TestGetApiAgent() {
 					},
 				},
 			},
-			validateFunc: func(resp gen.GetApiAgentResponseObject) {
-				r, ok := resp.(gen.GetApiAgent200JSONResponse)
+			validateFunc: func(resp gen.GetAgentsResponseObject) {
+				r, ok := resp.(gen.GetAgents200JSONResponse)
 				s.True(ok)
 				s.Equal(1, r.Total)
 
@@ -260,8 +260,8 @@ func (s *AgentListPublicTestSuite) TestGetApiAgent() {
 					},
 				},
 			},
-			validateFunc: func(resp gen.GetApiAgentResponseObject) {
-				r, ok := resp.(gen.GetApiAgent200JSONResponse)
+			validateFunc: func(resp gen.GetAgentsResponseObject) {
+				r, ok := resp.(gen.GetAgents200JSONResponse)
 				s.True(ok)
 				s.Equal(1, r.Total)
 
@@ -297,8 +297,8 @@ func (s *AgentListPublicTestSuite) TestGetApiAgent() {
 		{
 			name:       "success with no agents",
 			mockAgents: []jobtypes.AgentInfo{},
-			validateFunc: func(resp gen.GetApiAgentResponseObject) {
-				r, ok := resp.(gen.GetApiAgent200JSONResponse)
+			validateFunc: func(resp gen.GetAgentsResponseObject) {
+				r, ok := resp.(gen.GetAgents200JSONResponse)
 				s.True(ok)
 				s.Equal(0, r.Total)
 				s.Empty(r.Agents)
@@ -307,8 +307,8 @@ func (s *AgentListPublicTestSuite) TestGetApiAgent() {
 		{
 			name:      "job client error",
 			mockError: assert.AnError,
-			validateFunc: func(resp gen.GetApiAgentResponseObject) {
-				_, ok := resp.(gen.GetApiAgent500JSONResponse)
+			validateFunc: func(resp gen.GetAgentsResponseObject) {
+				_, ok := resp.(gen.GetAgents500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -320,14 +320,14 @@ func (s *AgentListPublicTestSuite) TestGetApiAgent() {
 				ListAgents(gomock.Any()).
 				Return(tt.mockAgents, tt.mockError)
 
-			resp, err := s.handler.GetApiAgent(s.ctx, gen.GetApiAgentRequestObject{})
+			resp, err := s.handler.GetAgents(s.ctx, gen.GetAgentsRequestObject{})
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *AgentListPublicTestSuite) TestGetApiAgentHTTP() {
+func (s *AgentListPublicTestSuite) TestListAgentsHTTP() {
 	tests := []struct {
 		name         string
 		setupJobMock func() *jobmocks.MockJobClient
@@ -400,7 +400,7 @@ func (s *AgentListPublicTestSuite) TestGetApiAgentHTTP() {
 
 const rbacAgentListTestSigningKey = "test-signing-key-for-rbac-agent-list"
 
-func (s *AgentListPublicTestSuite) TestGetApiAgentRBACHTTP() {
+func (s *AgentListPublicTestSuite) TestListAgentsRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
 
 	tests := []struct {

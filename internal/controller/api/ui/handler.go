@@ -57,7 +57,7 @@ func Register(e *echo.Echo, assets fs.FS) {
 			return
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Write(index)
+		_, _ = w.Write(index)
 	}
 
 	e.GET("/*", echo.WrapHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +77,7 @@ func Register(e *echo.Echo, assets fs.FS) {
 			serveIndex(w, r)
 			return
 		}
-		f.Close()
+		_ = f.Close()
 
 		fileServer.ServeHTTP(w, r)
 	})))

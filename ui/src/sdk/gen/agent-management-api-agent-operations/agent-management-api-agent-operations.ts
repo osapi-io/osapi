@@ -18,36 +18,36 @@ import { apiFetch } from '../../fetch';
  * Discover all active agents in the fleet.
  * @summary List active agents
  */
-export type getApiAgentResponse200 = {
+export type listAgentsResponse200 = {
   data: ListAgentsResponse
   status: 200
 }
 
-export type getApiAgentResponse401 = {
+export type listAgentsResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type getApiAgentResponse403 = {
+export type listAgentsResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type getApiAgentResponse500 = {
+export type listAgentsResponse500 = {
   data: ErrorResponse
   status: 500
 }
 
-export type getApiAgentResponseSuccess = (getApiAgentResponse200) & {
+export type listAgentsResponseSuccess = (listAgentsResponse200) & {
   headers: Headers;
 };
-export type getApiAgentResponseError = (getApiAgentResponse401 | getApiAgentResponse403 | getApiAgentResponse500) & {
+export type listAgentsResponseError = (listAgentsResponse401 | listAgentsResponse403 | listAgentsResponse500) & {
   headers: Headers;
 };
 
-export type getApiAgentResponse = (getApiAgentResponseSuccess | getApiAgentResponseError)
+export type listAgentsResponse = (listAgentsResponseSuccess | listAgentsResponseError)
 
-export const getGetApiAgentUrl = () => {
+export const getListAgentsUrl = () => {
 
 
 
@@ -55,9 +55,9 @@ export const getGetApiAgentUrl = () => {
   return `/api/agent`
 }
 
-export const getApiAgent = async ( options?: RequestInit): Promise<getApiAgentResponse> => {
+export const listAgents = async ( options?: RequestInit): Promise<listAgentsResponse> => {
 
-  return apiFetch<getApiAgentResponse>(getGetApiAgentUrl(),
+  return apiFetch<listAgentsResponse>(getListAgentsUrl(),
   {
     ...options,
     method: 'GET'

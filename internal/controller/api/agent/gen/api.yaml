@@ -30,6 +30,7 @@ tags:
 paths:
   /api/agent:
     get:
+      operationId: getAgents
       summary: List active agents
       description: Discover all active agents in the fleet.
       tags:

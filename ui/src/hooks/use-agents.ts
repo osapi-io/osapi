@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { getApiAgent } from "@/sdk/gen/agent-management-api-agent-operations/agent-management-api-agent-operations";
+import { listAgents } from "@/sdk/gen/agent-management-api-agent-operations/agent-management-api-agent-operations";
 import type { AgentInfo, ListAgentsResponse } from "@/sdk/gen/schemas";
 
 export type { AgentInfo };
@@ -14,7 +14,7 @@ export function useAgents(intervalMs = 10000) {
     let cancelled = false;
     const doFetch = async () => {
       try {
-        const result = await getApiAgent();
+        const result = await listAgents();
         if (cancelled) return;
         if (result.status === 200) {
           setAgents((result.data as ListAgentsResponse).agents);

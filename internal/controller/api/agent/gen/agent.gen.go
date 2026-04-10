@@ -222,7 +222,7 @@ type TimelineEvent struct {
 type ServerInterface interface {
 	// List active agents
 	// (GET /api/agent)
-	GetApiAgent(ctx echo.Context) error
+	GetAgents(ctx echo.Context) error
 	// Get agent details
 	// (GET /api/agent/{hostname})
 	GetAgentDetails(ctx echo.Context, hostname string) error
@@ -239,14 +239,14 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
-// GetApiAgent converts echo context to params.
-func (w *ServerInterfaceWrapper) GetApiAgent(ctx echo.Context) error {
+// GetAgents converts echo context to params.
+func (w *ServerInterfaceWrapper) GetAgents(ctx echo.Context) error {
 	var err error
 
 	ctx.Set(BearerAuthScopes, []string{"agent:read"})
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetApiAgent(ctx)
+	err = w.Handler.GetAgents(ctx)
 	return err
 }
 
@@ -332,50 +332,50 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/api/agent", wrapper.GetApiAgent)
+	router.GET(baseURL+"/api/agent", wrapper.GetAgents)
 	router.GET(baseURL+"/api/agent/:hostname", wrapper.GetAgentDetails)
 	router.POST(baseURL+"/api/agent/:hostname/drain", wrapper.DrainAgent)
 	router.POST(baseURL+"/api/agent/:hostname/undrain", wrapper.UndrainAgent)
 
 }
 
-type GetApiAgentRequestObject struct {
+type GetAgentsRequestObject struct {
 }
 
-type GetApiAgentResponseObject interface {
-	VisitGetApiAgentResponse(w http.ResponseWriter) error
+type GetAgentsResponseObject interface {
+	VisitGetAgentsResponse(w http.ResponseWriter) error
 }
 
-type GetApiAgent200JSONResponse ListAgentsResponse
+type GetAgents200JSONResponse ListAgentsResponse
 
-func (response GetApiAgent200JSONResponse) VisitGetApiAgentResponse(w http.ResponseWriter) error {
+func (response GetAgents200JSONResponse) VisitGetAgentsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetApiAgent401JSONResponse externalRef0.ErrorResponse
+type GetAgents401JSONResponse externalRef0.ErrorResponse
 
-func (response GetApiAgent401JSONResponse) VisitGetApiAgentResponse(w http.ResponseWriter) error {
+func (response GetAgents401JSONResponse) VisitGetAgentsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetApiAgent403JSONResponse externalRef0.ErrorResponse
+type GetAgents403JSONResponse externalRef0.ErrorResponse
 
-func (response GetApiAgent403JSONResponse) VisitGetApiAgentResponse(w http.ResponseWriter) error {
+func (response GetAgents403JSONResponse) VisitGetAgentsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetApiAgent500JSONResponse externalRef0.ErrorResponse
+type GetAgents500JSONResponse externalRef0.ErrorResponse
 
-func (response GetApiAgent500JSONResponse) VisitGetApiAgentResponse(w http.ResponseWriter) error {
+func (response GetAgents500JSONResponse) VisitGetAgentsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -576,7 +576,7 @@ func (response UndrainAgent409JSONResponse) VisitUndrainAgentResponse(w http.Res
 type StrictServerInterface interface {
 	// List active agents
 	// (GET /api/agent)
-	GetApiAgent(ctx context.Context, request GetApiAgentRequestObject) (GetApiAgentResponseObject, error)
+	GetAgents(ctx context.Context, request GetAgentsRequestObject) (GetAgentsResponseObject, error)
 	// Get agent details
 	// (GET /api/agent/{hostname})
 	GetAgentDetails(ctx context.Context, request GetAgentDetailsRequestObject) (GetAgentDetailsResponseObject, error)
@@ -600,23 +600,23 @@ type strictHandler struct {
 	middlewares []StrictMiddlewareFunc
 }
 
-// GetApiAgent operation middleware
-func (sh *strictHandler) GetApiAgent(ctx echo.Context) error {
-	var request GetApiAgentRequestObject
+// GetAgents operation middleware
+func (sh *strictHandler) GetAgents(ctx echo.Context) error {
+	var request GetAgentsRequestObject
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetApiAgent(ctx.Request().Context(), request.(GetApiAgentRequestObject))
+		return sh.ssi.GetAgents(ctx.Request().Context(), request.(GetAgentsRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetApiAgent")
+		handler = middleware(handler, "GetAgents")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(GetApiAgentResponseObject); ok {
-		return validResponse.VisitGetApiAgentResponse(ctx.Response())
+	} else if validResponse, ok := response.(GetAgentsResponseObject); ok {
+		return validResponse.VisitGetAgentsResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

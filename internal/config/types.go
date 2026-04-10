@@ -288,7 +288,7 @@ type APIServer struct {
 	// Port the server will bind to.
 	Port int `mapstructure:"port"`
 	// Security contains security-related configuration for the server, such as CORS and tokens.
-	Security ServerSecurity `mapstructure:"security" mask:"struct"`
+	Security ServerSecurity `mapstructure:"security"     mask:"struct"`
 	// UI holds settings for the embedded management UI.
 	UI UIConfig `mapstructure:"ui,omitempty"`
 }

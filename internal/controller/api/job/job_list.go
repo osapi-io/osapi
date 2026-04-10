@@ -31,13 +31,13 @@ import (
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-// GetApiJob lists jobs, optionally filtered by status.
-func (j *Job) GetApiJob(
+// GetJobs lists jobs, optionally filtered by status.
+func (j *Job) GetJobs(
 	ctx context.Context,
-	request gen.GetApiJobRequestObject,
-) (gen.GetApiJobResponseObject, error) {
+	request gen.GetJobsRequestObject,
+) (gen.GetJobsResponseObject, error) {
 	if errMsg, ok := validation.Struct(request.Params); !ok {
-		return gen.GetApiJob400JSONResponse{Error: &errMsg}, nil
+		return gen.GetJobs400JSONResponse{Error: &errMsg}, nil
 	}
 
 	var statusFilter string
@@ -58,7 +58,7 @@ func (j *Job) GetApiJob(
 	result, err := j.JobClient.ListJobs(ctx, statusFilter, limit, offset)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetApiJob500JSONResponse{
+		return gen.GetJobs500JSONResponse{
 			Error: &errMsg,
 		}, nil
 	}
@@ -95,7 +95,7 @@ func (j *Job) GetApiJob(
 
 	totalItems := result.TotalCount
 	statusCounts := result.StatusCounts
-	return gen.GetApiJob200JSONResponse{
+	return gen.GetJobs200JSONResponse{
 		TotalItems:   &totalItems,
 		StatusCounts: &statusCounts,
 		Items:        &items,

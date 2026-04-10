@@ -23,5 +23,7 @@ package ui
 
 import "embed"
 
+// Assets contains the embedded React management dashboard built assets.
+//
 //go:embed dist/*
 var Assets embed.FS

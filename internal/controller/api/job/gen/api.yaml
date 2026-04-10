@@ -30,6 +30,7 @@ tags:
 paths:
   /api/job:
     get:
+      operationId: getJobs
       summary: List jobs
       description: Retrieve jobs, optionally filtered by status.
       tags:
