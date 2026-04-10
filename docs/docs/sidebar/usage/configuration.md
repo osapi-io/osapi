@@ -32,6 +32,7 @@ uppercased:
 | `controller.api.nats.client_name`                | `OSAPI_CONTROLLER_API_NATS_CLIENT_NAME`                |
 | `controller.api.nats.namespace`                  | `OSAPI_CONTROLLER_API_NATS_NAMESPACE`                  |
 | `controller.api.nats.auth.type`                  | `OSAPI_CONTROLLER_API_NATS_AUTH_TYPE`                  |
+| `controller.api.job_timeout`                     | `OSAPI_CONTROLLER_API_JOB_TIMEOUT`                     |
 | `controller.api.security.signing_key`            | `OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY`            |
 | `controller.client.security.bearer_token`        | `OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN`        |
 | `controller.metrics.enabled`                     | `OSAPI_CONTROLLER_METRICS_ENABLED`                     |
@@ -229,12 +230,16 @@ controller:
       # Generate with: osapi token generate
       bearer_token: '<jwt>'
 
+  # Embedded management UI served at / (API at /api/).
+  ui:
+    enabled: true
+
   api:
     # Port the REST API server listens on.
     port: 8080
-    # Embedded management UI served at / (API at /api/).
-    ui:
-      enabled: true
+    # How long to wait for agent responses before returning partial
+    # results. Go duration format (default: 30s).
+    job_timeout: '30s'
     nats:
       # NATS server hostname for the API server.
       host: 'localhost'
@@ -523,22 +528,28 @@ agent:
 | `url`                   | string | Base URL the CLI client targets    |
 | `security.bearer_token` | string | JWT for client auth (**required**) |
 
+### `controller.ui`
+
+| Key       | Type | Description                               |
+| --------- | ---- | ----------------------------------------- |
+| `enabled` | bool | Serve embedded UI at `/` (default `true`) |
+
 ### `controller.api`
 
-| Key                           | Type     | Description                               |
-| ----------------------------- | -------- | ----------------------------------------- |
-| `port`                        | int      | Port the API server listens on            |
-| `nats.host`                   | string   | NATS server hostname                      |
-| `nats.port`                   | int      | NATS server port                          |
-| `nats.client_name`            | string   | NATS client identification name           |
-| `nats.namespace`              | string   | Subject namespace prefix                  |
-| `nats.auth.type`              | string   | Auth type: `none`, `user_pass`            |
-| `nats.auth.username`          | string   | Username for `user_pass` auth             |
-| `nats.auth.password`          | string   | Password for `user_pass` auth             |
-| `security.signing_key`        | string   | HS256 JWT signing key (**required**)      |
-| `security.cors.allow_origins` | []string | Allowed CORS origins                      |
-| `security.roles`              | map      | Custom roles with permissions lists       |
-| `ui.enabled`                  | bool     | Serve embedded UI at `/` (default `true`) |
+| Key                           | Type     | Description                            |
+| ----------------------------- | -------- | -------------------------------------- |
+| `port`                        | int      | Port the API server listens on         |
+| `nats.host`                   | string   | NATS server hostname                   |
+| `nats.port`                   | int      | NATS server port                       |
+| `nats.client_name`            | string   | NATS client identification name        |
+| `nats.namespace`              | string   | Subject namespace prefix               |
+| `nats.auth.type`              | string   | Auth type: `none`, `user_pass`         |
+| `nats.auth.username`          | string   | Username for `user_pass` auth          |
+| `nats.auth.password`          | string   | Password for `user_pass` auth          |
+| `security.signing_key`        | string   | HS256 JWT signing key (**required**)   |
+| `security.cors.allow_origins` | []string | Allowed CORS origins                   |
+| `security.roles`              | map      | Custom roles with permissions lists    |
+| `job_timeout`                 | string   | Agent response timeout (default `30s`) |
 
 ### `controller.metrics`
 

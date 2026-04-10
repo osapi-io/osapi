@@ -6,10 +6,14 @@ controller:
     url: http://0.0.0.0:8080
     security:
       bearer_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJvc2FwaSIsInN1YiI6ImpvaG5AZGV3ZXkud3MiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiLCJodHRwOi8vbG9jYWxob3N0Il0sImV4cCI6MTc3ODk2MjI3MiwiaWF0IjoxNzcxMjc2MjcyfQ.G_Ezc7J1lGPQdAtWumObuCFMMi4zPIErNk7dD__66Rk
+  # Embedded management UI served at / (API at /api/).
+  ui:
+    enabled: true
   api:
     port: 8080
-    ui:
-      enabled: true
+    # How long to wait for agent responses before returning partial
+    # results. Go duration format (default: 30s).
+    job_timeout: 30s
     security:
       # openssl rand -hex 32
       signing_key: 111fdb0cfd9788fa6af8815f856a0374bf7a0174ad62fa8b98ec07a55f68d8d8

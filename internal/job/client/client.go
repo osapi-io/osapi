@@ -360,19 +360,19 @@ func (c *Client) publishAndCollect(
 		return "", nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}
 
-	// Determine expected agent count from registry for early completion.
-	// If ListAgents fails, fall back to waiting for the full timeout.
-	expectedCount := 0
+	// Determine expected agents from registry for early completion and
+	// timeout reporting. If ListAgents fails, fall back to full timeout.
+	var expectedHostnames []string
 	agents, err := c.ListAgents(ctx)
 	if err != nil {
 		c.logger.WarnContext(ctx, "failed to list agents for broadcast count, using full timeout",
 			slog.String("error", err.Error()),
 		)
 	} else {
-		expectedCount = job.CountExpectedAgents(agents, target)
+		expectedHostnames = job.ExpectedAgentHostnames(agents, target)
 		c.logger.DebugContext(ctx, "broadcast expected agent count",
 			slog.String("target", target),
-			slog.Int("expected_count", expectedCount),
+			slog.Int("expected_count", len(expectedHostnames)),
 		)
 	}
 
@@ -416,6 +416,19 @@ func (c *Client) publishAndCollect(
 					"timeout waiting for broadcast responses: no agents responded",
 				)
 			}
+
+			// Inject timeout entries for agents that didn't respond.
+			for _, hostname := range expectedHostnames {
+				if _, ok := responses[hostname]; !ok {
+					responses[hostname] = &job.Response{
+						JobID:    jobID,
+						Hostname: hostname,
+						Status:   job.StatusFailed,
+						Error:    "timeout: agent did not respond",
+					}
+				}
+			}
+
 			return jobID, responses, nil
 		case entry := <-watcher.Updates():
 			if entry == nil {
@@ -445,7 +458,7 @@ func (c *Client) publishAndCollect(
 			responses[hostname] = &response
 
 			// Return early when all expected agents have responded.
-			if expectedCount > 0 && len(responses) >= expectedCount {
+			if len(expectedHostnames) > 0 && len(responses) >= len(expectedHostnames) {
 				return jobID, responses, nil
 			}
 		}

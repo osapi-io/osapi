@@ -367,6 +367,36 @@ func CountExpectedAgents(
 	}
 }
 
+// ExpectedAgentHostnames returns the hostnames of agents expected to respond
+// to a broadcast target. Uses the same filtering logic as CountExpectedAgents.
+func ExpectedAgentHostnames(
+	agents []AgentInfo,
+	target string,
+) []string {
+	routingType, key, value := ParseTarget(target)
+
+	var hostnames []string
+
+	for i := range agents {
+		if agents[i].State == AgentStateCordoned || agents[i].State == AgentStateDraining {
+			continue
+		}
+
+		switch routingType {
+		case BroadcastHost:
+			hostnames = append(hostnames, agents[i].Hostname)
+		case "label":
+			if agentVal, ok := agents[i].Labels[key]; ok {
+				if agentVal == value || strings.HasPrefix(agentVal, value+".") {
+					hostnames = append(hostnames, agents[i].Hostname)
+				}
+			}
+		}
+	}
+
+	return hostnames
+}
+
 // ApplyNamespaceToInfraName prefixes an infrastructure name (stream, KV bucket)
 // with the namespace. Returns the name unchanged if namespace is empty.
 //
