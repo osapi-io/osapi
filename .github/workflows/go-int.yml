@@ -16,10 +16,22 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: stable
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
       - name: Install just
         uses: extractions/setup-just@v4
       - name: Fetch justfiles
         run: just fetch
+      - name: Deps
+        run: |
+          just go::deps
+          just react::deps
+      - name: Build UI
+        run: just react::build
       - name: Linux tuning
         run: just linux-tune
       - name: Integration
