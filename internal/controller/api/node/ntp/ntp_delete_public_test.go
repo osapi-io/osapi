@@ -374,7 +374,7 @@ func (s *NtpDeletePublicTestSuite) TestDeleteNodeNtpValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/ntp",
+			path: "/api/node/server1/ntp",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -393,7 +393,7 @@ func (s *NtpDeletePublicTestSuite) TestDeleteNodeNtpValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/ntp",
+			path: "/api/node/nonexistent/ntp",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -522,7 +522,7 @@ func (s *NtpDeletePublicTestSuite) TestDeleteNodeNtpRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodDelete,
-				"/node/server1/ntp",
+				"/api/node/server1/ntp",
 				nil,
 			)
 			tc.setupAuth(req)

@@ -221,13 +221,13 @@ type StreamInfo struct {
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Liveness probe
-	// (GET /health)
+	// (GET /api/health)
 	GetHealth(ctx echo.Context) error
 	// Readiness probe
-	// (GET /health/ready)
+	// (GET /api/health/ready)
 	GetHealthReady(ctx echo.Context) error
 	// System status and component health
-	// (GET /health/status)
+	// (GET /api/health/status)
 	GetHealthStatus(ctx echo.Context) error
 }
 
@@ -293,9 +293,9 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/health", wrapper.GetHealth)
-	router.GET(baseURL+"/health/ready", wrapper.GetHealthReady)
-	router.GET(baseURL+"/health/status", wrapper.GetHealthStatus)
+	router.GET(baseURL+"/api/health", wrapper.GetHealth)
+	router.GET(baseURL+"/api/health/ready", wrapper.GetHealthReady)
+	router.GET(baseURL+"/api/health/status", wrapper.GetHealthStatus)
 
 }
 
@@ -386,13 +386,13 @@ func (response GetHealthStatus503JSONResponse) VisitGetHealthStatusResponse(w ht
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Liveness probe
-	// (GET /health)
+	// (GET /api/health)
 	GetHealth(ctx context.Context, request GetHealthRequestObject) (GetHealthResponseObject, error)
 	// Readiness probe
-	// (GET /health/ready)
+	// (GET /api/health/ready)
 	GetHealthReady(ctx context.Context, request GetHealthReadyRequestObject) (GetHealthReadyResponseObject, error)
 	// System status and component health
-	// (GET /health/status)
+	// (GET /api/health/status)
 	GetHealthStatus(ctx context.Context, request GetHealthStatusRequestObject) (GetHealthStatusResponseObject, error)
 }
 

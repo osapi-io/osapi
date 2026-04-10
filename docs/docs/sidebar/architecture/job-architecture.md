@@ -266,10 +266,9 @@ const (
 ### 1. Job Submission
 
 Jobs are created through typed domain endpoints rather than a generic job
-creation API. Each domain endpoint (e.g., `GET /node/{hostname}/hostname`,
-`PUT /node/{hostname}/network/dns/{interface}`) creates a job internally and
-returns the job ID. This ensures type safety and proper validation at the API
-layer.
+creation API. Each domain operation (such as retrieving a node's hostname or
+updating its DNS configuration) creates a job internally and returns the job ID.
+This ensures type safety and proper validation at the API layer.
 
 ```bash
 # Get hostname — creates a job internally, returns job_id
@@ -456,10 +455,10 @@ separate from the `agent-registry` heartbeat bucket. This keeps the heartbeat
 lightweight (status and metrics only) while facts carry richer, less frequently
 changing data.
 
-When the API serves an `AgentInfo` response (via `GET /node/{hostname}` or
-`GET /node`), it merges data from both KV buckets — registry for status, labels,
-and lightweight metrics, and facts for detailed system properties — into a
-single unified response.
+When the API serves an `AgentInfo` response for a single node or a list of
+nodes, it merges data from both KV buckets — registry for status, labels, and
+lightweight metrics, and facts for detailed system properties — into a single
+unified response.
 
 Facts also power **fact references** (`@fact.*`) in job parameters. When an
 agent processes a job, it replaces `@fact.interface.primary`, `@fact.hostname`,

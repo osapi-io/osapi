@@ -352,7 +352,7 @@ func (s *NtpGetPublicTestSuite) TestGetNodeNtpValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/ntp",
+			path: "/api/node/server1/ntp",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -370,7 +370,7 @@ func (s *NtpGetPublicTestSuite) TestGetNodeNtpValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/ntp",
+			path: "/api/node/nonexistent/ntp",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -497,7 +497,7 @@ func (s *NtpGetPublicTestSuite) TestGetNodeNtpRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/ntp",
+				"/api/node/server1/ntp",
 				nil,
 			)
 			tc.setupAuth(req)

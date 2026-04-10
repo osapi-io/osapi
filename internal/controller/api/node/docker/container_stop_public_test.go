@@ -398,7 +398,7 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStopValidation
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/container/docker/abc123/stop",
+			path: "/api/node/server1/container/docker/abc123/stop",
 			body: `{"timeout":10}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -415,7 +415,7 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStopValidation
 		},
 		{
 			name: "when invalid timeout",
-			path: "/node/server1/container/docker/abc123/stop",
+			path: "/api/node/server1/container/docker/abc123/stop",
 			body: `{"timeout":999}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -425,7 +425,7 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStopValidation
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/container/docker/abc123/stop",
+			path: "/api/node/nonexistent/container/docker/abc123/stop",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -556,7 +556,7 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStopRBACHTTP()
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/container/docker/abc123/stop",
+				"/api/node/server1/container/docker/abc123/stop",
 				strings.NewReader(`{"timeout":10}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

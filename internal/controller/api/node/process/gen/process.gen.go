@@ -186,13 +186,13 @@ type PostNodeProcessSignalJSONRequestBody = ProcessSignalRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List processes
-	// (GET /node/{hostname}/process)
+	// (GET /api/node/{hostname}/process)
 	GetNodeProcess(ctx echo.Context, hostname Hostname) error
 	// Get process by PID
-	// (GET /node/{hostname}/process/{pid})
+	// (GET /api/node/{hostname}/process/{pid})
 	GetNodeProcessByPid(ctx echo.Context, hostname Hostname, pid Pid) error
 	// Send signal to process
-	// (POST /node/{hostname}/process/{pid}/signal)
+	// (POST /api/node/{hostname}/process/{pid}/signal)
 	PostNodeProcessSignal(ctx echo.Context, hostname Hostname, pid Pid) error
 }
 
@@ -299,9 +299,9 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/node/:hostname/process", wrapper.GetNodeProcess)
-	router.GET(baseURL+"/node/:hostname/process/:pid", wrapper.GetNodeProcessByPid)
-	router.POST(baseURL+"/node/:hostname/process/:pid/signal", wrapper.PostNodeProcessSignal)
+	router.GET(baseURL+"/api/node/:hostname/process", wrapper.GetNodeProcess)
+	router.GET(baseURL+"/api/node/:hostname/process/:pid", wrapper.GetNodeProcessByPid)
+	router.POST(baseURL+"/api/node/:hostname/process/:pid/signal", wrapper.PostNodeProcessSignal)
 
 }
 
@@ -488,13 +488,13 @@ func (response PostNodeProcessSignal500JSONResponse) VisitPostNodeProcessSignalR
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List processes
-	// (GET /node/{hostname}/process)
+	// (GET /api/node/{hostname}/process)
 	GetNodeProcess(ctx context.Context, request GetNodeProcessRequestObject) (GetNodeProcessResponseObject, error)
 	// Get process by PID
-	// (GET /node/{hostname}/process/{pid})
+	// (GET /api/node/{hostname}/process/{pid})
 	GetNodeProcessByPid(ctx context.Context, request GetNodeProcessByPidRequestObject) (GetNodeProcessByPidResponseObject, error)
 	// Send signal to process
-	// (POST /node/{hostname}/process/{pid}/signal)
+	// (POST /api/node/{hostname}/process/{pid}/signal)
 	PostNodeProcessSignal(ctx context.Context, request PostNodeProcessSignalRequestObject) (PostNodeProcessSignalResponseObject, error)
 }
 

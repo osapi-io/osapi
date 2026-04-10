@@ -31,7 +31,7 @@ tags:
 paths:
   # -- Sysctl collection --------------------------------------------------
 
-  /node/{hostname}/sysctl:
+  /api/node/{hostname}/sysctl:
     get:
       summary: List all managed sysctl entries
       description: >
@@ -130,7 +130,7 @@ paths:
 
   # -- Sysctl individual entry --------------------------------------------
 
-  /node/{hostname}/sysctl/{key}:
+  /api/node/{hostname}/sysctl/{key}:
     get:
       summary: Get a sysctl entry
       description: >

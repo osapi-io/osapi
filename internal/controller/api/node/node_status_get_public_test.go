@@ -322,7 +322,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusValidationHTTP() {
 	}{
 		{
 			name: "when empty hostname returns 400",
-			path: "/node/%20",
+			path: "/api/node/%20",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -331,7 +331,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusValidationHTTP() {
 		},
 		{
 			name: "when get Ok",
-			path: "/node/server1",
+			path: "/api/node/server1",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				statusResp := job.NodeStatusResponse{
@@ -412,7 +412,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusValidationHTTP() {
 		},
 		{
 			name: "when job client errors",
-			path: "/node/server1",
+			path: "/api/node/server1",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -425,7 +425,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusValidationHTTP() {
 		},
 		{
 			name: "when broadcast all",
-			path: "/node/_all",
+			path: "/api/node/_all",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				status1 := job.NodeStatusResponse{Hostname: "server1", Uptime: time.Hour}
@@ -593,7 +593,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/node/server1", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/node/server1", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 

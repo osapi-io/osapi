@@ -269,12 +269,20 @@ type Controller struct {
 	Notifications NotificationsConfig `mapstructure:"notifications,omitempty"`
 }
 
+// UIConfig holds settings for the embedded management UI.
+type UIConfig struct {
+	// Enabled controls whether the embedded UI is served. Defaults to true.
+	Enabled *bool `mapstructure:"enabled"`
+}
+
 // APIServer holds the HTTP server config (port + security).
 type APIServer struct {
 	// Port the server will bind to.
 	Port int `mapstructure:"port"`
 	// Security contains security-related configuration for the server, such as CORS and tokens.
-	Security ServerSecurity `mapstructure:"security" mask:"struct"`
+	Security ServerSecurity `mapstructure:"security"     mask:"struct"`
+	// UI holds settings for the embedded management UI.
+	UI UIConfig `mapstructure:"ui,omitempty"`
 }
 
 // Client configuration settings.

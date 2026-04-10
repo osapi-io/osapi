@@ -428,7 +428,7 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCronValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/schedule/cron/backup",
+			path: "/api/node/server1/schedule/cron/backup",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -450,7 +450,7 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCronValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/schedule/cron/backup",
+			path: "/api/node/nonexistent/schedule/cron/backup",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -581,7 +581,7 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCronRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodDelete,
-				"/node/server1/schedule/cron/backup",
+				"/api/node/server1/schedule/cron/backup",
 				nil,
 			)
 			tc.setupAuth(req)

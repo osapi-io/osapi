@@ -398,7 +398,7 @@ func (s *ProcessSignalPublicTestSuite) TestPostNodeProcessSignalValidationHTTP()
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/process/1234/signal",
+			path: "/api/node/server1/process/1234/signal",
 			body: `{"signal":"TERM"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -417,7 +417,7 @@ func (s *ProcessSignalPublicTestSuite) TestPostNodeProcessSignalValidationHTTP()
 		},
 		{
 			name: "when invalid signal",
-			path: "/node/server1/process/1234/signal",
+			path: "/api/node/server1/process/1234/signal",
 			body: `{"signal":"INVALID"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -427,7 +427,7 @@ func (s *ProcessSignalPublicTestSuite) TestPostNodeProcessSignalValidationHTTP()
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/process/1234/signal",
+			path: "/api/node/nonexistent/process/1234/signal",
 			body: `{"signal":"TERM"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -560,7 +560,7 @@ func (s *ProcessSignalPublicTestSuite) TestPostNodeProcessSignalRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/process/1234/signal",
+				"/api/node/server1/process/1234/signal",
 				strings.NewReader(`{"signal":"TERM"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

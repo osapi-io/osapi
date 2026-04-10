@@ -101,10 +101,10 @@ type PutNodeHostnameJSONRequestBody = HostnameUpdateRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Retrieve node hostname
-	// (GET /node/{hostname}/hostname)
+	// (GET /api/node/{hostname}/hostname)
 	GetNodeHostname(ctx echo.Context, hostname Hostname) error
 	// Update node hostname
-	// (PUT /node/{hostname}/hostname)
+	// (PUT /api/node/{hostname}/hostname)
 	PutNodeHostname(ctx echo.Context, hostname Hostname) error
 }
 
@@ -177,8 +177,8 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/node/:hostname/hostname", wrapper.GetNodeHostname)
-	router.PUT(baseURL+"/node/:hostname/hostname", wrapper.PutNodeHostname)
+	router.GET(baseURL+"/api/node/:hostname/hostname", wrapper.GetNodeHostname)
+	router.PUT(baseURL+"/api/node/:hostname/hostname", wrapper.PutNodeHostname)
 
 }
 
@@ -292,10 +292,10 @@ func (response PutNodeHostname500JSONResponse) VisitPutNodeHostnameResponse(w ht
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Retrieve node hostname
-	// (GET /node/{hostname}/hostname)
+	// (GET /api/node/{hostname}/hostname)
 	GetNodeHostname(ctx context.Context, request GetNodeHostnameRequestObject) (GetNodeHostnameResponseObject, error)
 	// Update node hostname
-	// (PUT /node/{hostname}/hostname)
+	// (PUT /api/node/{hostname}/hostname)
 	PutNodeHostname(ctx context.Context, request PutNodeHostnameRequestObject) (PutNodeHostnameResponseObject, error)
 }
 

@@ -258,7 +258,7 @@ func (s *FileListPublicTestSuite) TestGetFilesHTTP() {
 			a := api.New(s.appConfig, s.logger)
 			gen.RegisterHandlers(a.Echo, strictHandler)
 
-			req := httptest.NewRequest(http.MethodGet, "/file", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/file", nil)
 			rec := httptest.NewRecorder()
 
 			a.Echo.ServeHTTP(rec, req)
@@ -360,7 +360,7 @@ func (s *FileListPublicTestSuite) TestGetFilesRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/file", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/file", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 

@@ -188,7 +188,7 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByNameValidationHTTP() {
 	}{
 		{
 			name: "when name too long returns 400",
-			path: "/file/" + strings.Repeat("a", 256),
+			path: "/api/file/" + strings.Repeat("a", 256),
 			setupMock: func() *mocks.MockObjectStoreManager {
 				return mocks.NewMockObjectStoreManager(s.mockCtrl)
 			},
@@ -197,7 +197,7 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByNameValidationHTTP() {
 		},
 		{
 			name: "when delete Ok",
-			path: "/file/nginx.conf",
+			path: "/api/file/nginx.conf",
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
@@ -216,7 +216,7 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByNameValidationHTTP() {
 		},
 		{
 			name: "when not found",
-			path: "/file/missing.conf",
+			path: "/api/file/missing.conf",
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
@@ -229,7 +229,7 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByNameValidationHTTP() {
 		},
 		{
 			name: "when delete error",
-			path: "/file/nginx.conf",
+			path: "/api/file/nginx.conf",
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
@@ -366,7 +366,7 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByNameRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodDelete, "/file/nginx.conf", nil)
+			req := httptest.NewRequest(http.MethodDelete, "/api/file/nginx.conf", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 

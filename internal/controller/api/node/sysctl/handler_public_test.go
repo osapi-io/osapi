@@ -70,7 +70,7 @@ func (s *HandlerPublicTestSuite) TestHandler() {
 				}
 				s.NotEmpty(e.Routes())
 
-				req := httptest.NewRequest(http.MethodGet, "/node/hostname/sysctl", nil)
+				req := httptest.NewRequest(http.MethodGet, "/api/node/hostname/sysctl", nil)
 				rec := httptest.NewRecorder()
 				e.ServeHTTP(rec, req)
 			},

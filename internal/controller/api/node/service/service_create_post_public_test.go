@@ -471,7 +471,7 @@ func (s *ServiceCreatePostPublicTestSuite) TestPostNodeServiceValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/service",
+			path: "/api/node/server1/service",
 			body: `{"name":"my-app.service","object":"my-app-unit-object"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -494,7 +494,7 @@ func (s *ServiceCreatePostPublicTestSuite) TestPostNodeServiceValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/service",
+			path: "/api/node/nonexistent/service",
 			body: `{"name":"my-app.service","object":"my-app-unit-object"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -504,7 +504,7 @@ func (s *ServiceCreatePostPublicTestSuite) TestPostNodeServiceValidationHTTP() {
 		},
 		{
 			name: "when invalid body empty name",
-			path: "/node/server1/service",
+			path: "/api/node/server1/service",
 			body: `{"name":"","object":"my-app-unit-object"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -640,7 +640,7 @@ func (s *ServiceCreatePostPublicTestSuite) TestPostNodeServiceRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/service",
+				"/api/node/server1/service",
 				strings.NewReader(`{"name":"my-app.service","object":"my-app-unit-object"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

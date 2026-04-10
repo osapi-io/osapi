@@ -385,7 +385,7 @@ func (s *SysctlDeletePublicTestSuite) TestDeleteNodeSysctlValidationHTTP() {
 	}{
 		{
 			name:   "when valid request",
-			path:   "/node/server1/sysctl/net.ipv4.ip_forward",
+			path:   "/api/node/server1/sysctl/net.ipv4.ip_forward",
 			method: http.MethodDelete,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -405,7 +405,7 @@ func (s *SysctlDeletePublicTestSuite) TestDeleteNodeSysctlValidationHTTP() {
 		},
 		{
 			name:   "when target agent not found",
-			path:   "/node/nonexistent/sysctl/net.ipv4.ip_forward",
+			path:   "/api/node/nonexistent/sysctl/net.ipv4.ip_forward",
 			method: http.MethodDelete,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -535,7 +535,7 @@ func (s *SysctlDeletePublicTestSuite) TestDeleteNodeSysctlRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodDelete,
-				"/node/server1/sysctl/net.ipv4.ip_forward",
+				"/api/node/server1/sysctl/net.ipv4.ip_forward",
 				nil,
 			)
 			tc.setupAuth(req)

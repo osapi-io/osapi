@@ -519,7 +519,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/file/deploy",
+			path: "/api/node/server1/file/deploy",
 			body: `{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf","content_type":"raw"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -536,7 +536,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployValidationHTTP() {
 		},
 		{
 			name: "when missing object_name",
-			path: "/node/server1/file/deploy",
+			path: "/api/node/server1/file/deploy",
 			body: `{"path":"/etc/nginx/nginx.conf","content_type":"raw"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -546,7 +546,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployValidationHTTP() {
 		},
 		{
 			name: "when invalid content_type",
-			path: "/node/server1/file/deploy",
+			path: "/api/node/server1/file/deploy",
 			body: `{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf","content_type":"invalid"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -556,7 +556,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployValidationHTTP() {
 		},
 		{
 			name: "when server error",
-			path: "/node/server1/file/deploy",
+			path: "/api/node/server1/file/deploy",
 			body: `{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf","content_type":"raw"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -570,7 +570,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/file/deploy",
+			path: "/api/node/nonexistent/file/deploy",
 			body: `{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf","content_type":"raw"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -706,7 +706,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/file/deploy",
+				"/api/node/server1/file/deploy",
 				strings.NewReader(
 					`{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf","content_type":"raw"}`,
 				),

@@ -161,19 +161,19 @@ type PostFileMultipartRequestBody PostFileMultipartBody
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List stored files
-	// (GET /file)
+	// (GET /api/file)
 	GetFiles(ctx echo.Context) error
 	// Upload a file
-	// (POST /file)
+	// (POST /api/file)
 	PostFile(ctx echo.Context, params PostFileParams) error
 	// List stale file deployments
-	// (GET /file/stale)
+	// (GET /api/file/stale)
 	GetFileStale(ctx echo.Context) error
 	// Delete a file
-	// (DELETE /file/{name})
+	// (DELETE /api/file/{name})
 	DeleteFileByName(ctx echo.Context, name FileName) error
 	// Get file metadata
-	// (GET /file/{name})
+	// (GET /api/file/{name})
 	GetFileByName(ctx echo.Context, name FileName) error
 }
 
@@ -288,11 +288,11 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/file", wrapper.GetFiles)
-	router.POST(baseURL+"/file", wrapper.PostFile)
-	router.GET(baseURL+"/file/stale", wrapper.GetFileStale)
-	router.DELETE(baseURL+"/file/:name", wrapper.DeleteFileByName)
-	router.GET(baseURL+"/file/:name", wrapper.GetFileByName)
+	router.GET(baseURL+"/api/file", wrapper.GetFiles)
+	router.POST(baseURL+"/api/file", wrapper.PostFile)
+	router.GET(baseURL+"/api/file/stale", wrapper.GetFileStale)
+	router.DELETE(baseURL+"/api/file/:name", wrapper.DeleteFileByName)
+	router.GET(baseURL+"/api/file/:name", wrapper.GetFileByName)
 
 }
 
@@ -572,19 +572,19 @@ func (response GetFileByName500JSONResponse) VisitGetFileByNameResponse(w http.R
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List stored files
-	// (GET /file)
+	// (GET /api/file)
 	GetFiles(ctx context.Context, request GetFilesRequestObject) (GetFilesResponseObject, error)
 	// Upload a file
-	// (POST /file)
+	// (POST /api/file)
 	PostFile(ctx context.Context, request PostFileRequestObject) (PostFileResponseObject, error)
 	// List stale file deployments
-	// (GET /file/stale)
+	// (GET /api/file/stale)
 	GetFileStale(ctx context.Context, request GetFileStaleRequestObject) (GetFileStaleResponseObject, error)
 	// Delete a file
-	// (DELETE /file/{name})
+	// (DELETE /api/file/{name})
 	DeleteFileByName(ctx context.Context, request DeleteFileByNameRequestObject) (DeleteFileByNameResponseObject, error)
 	// Get file metadata
-	// (GET /file/{name})
+	// (GET /api/file/{name})
 	GetFileByName(ctx context.Context, request GetFileByNameRequestObject) (GetFileByNameResponseObject, error)
 }
 

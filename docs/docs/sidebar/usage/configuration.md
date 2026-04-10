@@ -232,6 +232,9 @@ controller:
   api:
     # Port the REST API server listens on.
     port: 8080
+    # Embedded management UI served at / (API at /api/).
+    ui:
+      enabled: true
     nats:
       # NATS server hostname for the API server.
       host: 'localhost'
@@ -522,19 +525,20 @@ agent:
 
 ### `controller.api`
 
-| Key                           | Type     | Description                          |
-| ----------------------------- | -------- | ------------------------------------ |
-| `port`                        | int      | Port the API server listens on       |
-| `nats.host`                   | string   | NATS server hostname                 |
-| `nats.port`                   | int      | NATS server port                     |
-| `nats.client_name`            | string   | NATS client identification name      |
-| `nats.namespace`              | string   | Subject namespace prefix             |
-| `nats.auth.type`              | string   | Auth type: `none`, `user_pass`       |
-| `nats.auth.username`          | string   | Username for `user_pass` auth        |
-| `nats.auth.password`          | string   | Password for `user_pass` auth        |
-| `security.signing_key`        | string   | HS256 JWT signing key (**required**) |
-| `security.cors.allow_origins` | []string | Allowed CORS origins                 |
-| `security.roles`              | map      | Custom roles with permissions lists  |
+| Key                           | Type     | Description                               |
+| ----------------------------- | -------- | ----------------------------------------- |
+| `port`                        | int      | Port the API server listens on            |
+| `nats.host`                   | string   | NATS server hostname                      |
+| `nats.port`                   | int      | NATS server port                          |
+| `nats.client_name`            | string   | NATS client identification name           |
+| `nats.namespace`              | string   | Subject namespace prefix                  |
+| `nats.auth.type`              | string   | Auth type: `none`, `user_pass`            |
+| `nats.auth.username`          | string   | Username for `user_pass` auth             |
+| `nats.auth.password`          | string   | Password for `user_pass` auth             |
+| `security.signing_key`        | string   | HS256 JWT signing key (**required**)      |
+| `security.cors.allow_origins` | []string | Allowed CORS origins                      |
+| `security.roles`              | map      | Custom roles with permissions lists       |
+| `ui.enabled`                  | bool     | Serve embedded UI at `/` (default `true`) |
 
 ### `controller.metrics`
 

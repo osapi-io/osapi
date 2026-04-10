@@ -215,7 +215,7 @@ func (s *NetworkRouteDeletePublicTestSuite) TestDeleteNetworkRouteValidationHTTP
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/network/route/eth0",
+			path: "/api/node/server1/network/route/eth0",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -228,7 +228,7 @@ func (s *NetworkRouteDeletePublicTestSuite) TestDeleteNetworkRouteValidationHTTP
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/network/route/eth0",
+			path: "/api/node/nonexistent/network/route/eth0",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -338,7 +338,11 @@ func (s *NetworkRouteDeletePublicTestSuite) TestDeleteNetworkRouteRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodDelete, "/node/server1/network/route/eth0", nil)
+			req := httptest.NewRequest(
+				http.MethodDelete,
+				"/api/node/server1/network/route/eth0",
+				nil,
+			)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 			server.Echo.ServeHTTP(rec, req)

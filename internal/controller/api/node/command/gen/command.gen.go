@@ -106,10 +106,10 @@ type PostNodeCommandShellJSONRequestBody = CommandShellRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Execute a command
-	// (POST /node/{hostname}/command/exec)
+	// (POST /api/node/{hostname}/command/exec)
 	PostNodeCommandExec(ctx echo.Context, hostname Hostname) error
 	// Execute a shell command
-	// (POST /node/{hostname}/command/shell)
+	// (POST /api/node/{hostname}/command/shell)
 	PostNodeCommandShell(ctx echo.Context, hostname Hostname) error
 }
 
@@ -182,8 +182,8 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.POST(baseURL+"/node/:hostname/command/exec", wrapper.PostNodeCommandExec)
-	router.POST(baseURL+"/node/:hostname/command/shell", wrapper.PostNodeCommandShell)
+	router.POST(baseURL+"/api/node/:hostname/command/exec", wrapper.PostNodeCommandExec)
+	router.POST(baseURL+"/api/node/:hostname/command/shell", wrapper.PostNodeCommandShell)
 
 }
 
@@ -298,10 +298,10 @@ func (response PostNodeCommandShell500JSONResponse) VisitPostNodeCommandShellRes
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Execute a command
-	// (POST /node/{hostname}/command/exec)
+	// (POST /api/node/{hostname}/command/exec)
 	PostNodeCommandExec(ctx context.Context, request PostNodeCommandExecRequestObject) (PostNodeCommandExecResponseObject, error)
 	// Execute a shell command
-	// (POST /node/{hostname}/command/shell)
+	// (POST /api/node/{hostname}/command/shell)
 	PostNodeCommandShell(ctx context.Context, request PostNodeCommandShellRequestObject) (PostNodeCommandShellResponseObject, error)
 }
 

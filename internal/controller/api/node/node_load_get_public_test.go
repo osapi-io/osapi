@@ -297,7 +297,7 @@ func (s *NodeLoadGetPublicTestSuite) TestGetNodeLoadValidationHTTP() {
 	}{
 		{
 			name: "when get Ok",
-			path: "/node/server1/load",
+			path: "/api/node/server1/load",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				loadResult := load.Result{Load1: 1.5, Load5: 2.0, Load15: 1.8}
@@ -318,7 +318,7 @@ func (s *NodeLoadGetPublicTestSuite) TestGetNodeLoadValidationHTTP() {
 		},
 		{
 			name: "when empty hostname returns 400",
-			path: "/node/%20/load",
+			path: "/api/node/%20/load",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -327,7 +327,7 @@ func (s *NodeLoadGetPublicTestSuite) TestGetNodeLoadValidationHTTP() {
 		},
 		{
 			name: "when job client errors",
-			path: "/node/server1/load",
+			path: "/api/node/server1/load",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -459,7 +459,7 @@ func (s *NodeLoadGetPublicTestSuite) TestGetNodeLoadRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/node/server1/load", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/node/server1/load", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 

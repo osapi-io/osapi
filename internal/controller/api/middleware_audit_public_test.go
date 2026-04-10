@@ -109,7 +109,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 	}{
 		{
 			name:    "authenticated request is logged",
-			path:    "/node/hostname",
+			path:    "/api/node/hostname",
 			subject: "user@example.com",
 			roles:   []string{"admin"},
 			validateFunc: func(store *captureStore) {
@@ -119,14 +119,14 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 				s.Len(entries, 1)
 				s.Equal("user@example.com", entries[0].User)
 				s.Equal("GET", entries[0].Method)
-				s.Equal("/node/hostname", entries[0].Path)
+				s.Equal("/api/node/hostname", entries[0].Path)
 				s.Equal(http.StatusOK, entries[0].ResponseCode)
 				s.Equal([]string{"admin"}, entries[0].Roles)
 			},
 		},
 		{
 			name:    "unauthenticated request is skipped",
-			path:    "/node/hostname",
+			path:    "/api/node/hostname",
 			subject: "",
 			validateFunc: func(store *captureStore) {
 				time.Sleep(50 * time.Millisecond)
@@ -136,7 +136,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 		},
 		{
 			name:    "health path is excluded",
-			path:    "/health",
+			path:    "/api/health",
 			subject: "user@example.com",
 			validateFunc: func(store *captureStore) {
 				time.Sleep(50 * time.Millisecond)
@@ -146,7 +146,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 		},
 		{
 			name:    "health ready path is excluded",
-			path:    "/health/ready",
+			path:    "/api/health/ready",
 			subject: "user@example.com",
 			validateFunc: func(store *captureStore) {
 				time.Sleep(50 * time.Millisecond)
@@ -166,7 +166,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 		},
 		{
 			name:    "authenticated request with trace context captures trace ID",
-			path:    "/node/hostname",
+			path:    "/api/node/hostname",
 			subject: "user@example.com",
 			roles:   []string{"admin"},
 			setupReq: func(req *http.Request) *http.Request {
@@ -195,7 +195,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 		},
 		{
 			name:     "store error is handled gracefully",
-			path:     "/node/hostname",
+			path:     "/api/node/hostname",
 			subject:  "user@example.com",
 			roles:    []string{"admin"},
 			storeErr: fmt.Errorf("write failed"),

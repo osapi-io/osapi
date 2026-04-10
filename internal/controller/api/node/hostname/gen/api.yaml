@@ -29,7 +29,7 @@ tags:
     description: Hostname operations on a target node.
 
 paths:
-  /node/{hostname}/hostname:
+  /api/node/{hostname}/hostname:
     get:
       summary: Retrieve node hostname
       description: Get the current hostname and labels of the node.

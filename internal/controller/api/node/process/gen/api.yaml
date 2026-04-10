@@ -29,7 +29,7 @@ tags:
     description: Process management operations on a target node.
 
 paths:
-  /node/{hostname}/process:
+  /api/node/{hostname}/process:
     get:
       summary: List processes
       description: >
@@ -74,7 +74,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/process/{pid}:
+  /api/node/{hostname}/process/{pid}:
     get:
       summary: Get process by PID
       description: >
@@ -126,7 +126,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/process/{pid}/signal:
+  /api/node/{hostname}/process/{pid}/signal:
     post:
       summary: Send signal to process
       description: >

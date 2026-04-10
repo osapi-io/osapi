@@ -378,7 +378,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPullValidation
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/container/docker/pull",
+			path: "/api/node/server1/container/docker/pull",
 			body: `{"image":"nginx:latest"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -398,7 +398,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPullValidation
 		},
 		{
 			name: "when missing image",
-			path: "/node/server1/container/docker/pull",
+			path: "/api/node/server1/container/docker/pull",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -408,7 +408,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPullValidation
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/container/docker/pull",
+			path: "/api/node/nonexistent/container/docker/pull",
 			body: `{"image":"nginx:latest"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -542,7 +542,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPullRBACHTTP()
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/container/docker/pull",
+				"/api/node/server1/container/docker/pull",
 				strings.NewReader(`{"image":"nginx:latest"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

@@ -310,7 +310,7 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnableValidationHT
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/service/nginx.service/enable",
+			path: "/api/node/server1/service/nginx.service/enable",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -326,7 +326,7 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnableValidationHT
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/service/nginx.service/enable",
+			path: "/api/node/nonexistent/service/nginx.service/enable",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -432,7 +432,7 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnableRBACHTTP() {
 			server.RegisterHandlers(handlers)
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/service/nginx.service/enable",
+				"/api/node/server1/service/nginx.service/enable",
 				nil,
 			)
 			tc.setupAuth(req)

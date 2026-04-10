@@ -86,13 +86,13 @@ type GetAuditLogsParams struct {
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List audit log entries
-	// (GET /audit)
+	// (GET /api/audit)
 	GetAuditLogs(ctx echo.Context, params GetAuditLogsParams) error
 	// Export all audit log entries
-	// (GET /audit/export)
+	// (GET /api/audit/export)
 	GetAuditExport(ctx echo.Context) error
 	// Get a single audit log entry
-	// (GET /audit/{id})
+	// (GET /api/audit/{id})
 	GetAuditLogByID(ctx echo.Context, id openapi_types.UUID) error
 }
 
@@ -185,9 +185,9 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/audit", wrapper.GetAuditLogs)
-	router.GET(baseURL+"/audit/export", wrapper.GetAuditExport)
-	router.GET(baseURL+"/audit/:id", wrapper.GetAuditLogByID)
+	router.GET(baseURL+"/api/audit", wrapper.GetAuditLogs)
+	router.GET(baseURL+"/api/audit/export", wrapper.GetAuditExport)
+	router.GET(baseURL+"/api/audit/:id", wrapper.GetAuditLogByID)
 
 }
 
@@ -343,13 +343,13 @@ func (response GetAuditLogByID500JSONResponse) VisitGetAuditLogByIDResponse(w ht
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List audit log entries
-	// (GET /audit)
+	// (GET /api/audit)
 	GetAuditLogs(ctx context.Context, request GetAuditLogsRequestObject) (GetAuditLogsResponseObject, error)
 	// Export all audit log entries
-	// (GET /audit/export)
+	// (GET /api/audit/export)
 	GetAuditExport(ctx context.Context, request GetAuditExportRequestObject) (GetAuditExportResponseObject, error)
 	// Get a single audit log entry
-	// (GET /audit/{id})
+	// (GET /api/audit/{id})
 	GetAuditLogByID(ctx context.Context, request GetAuditLogByIDRequestObject) (GetAuditLogByIDResponseObject, error)
 }
 

@@ -378,7 +378,7 @@ func (s *RebootPostPublicTestSuite) TestPostNodePowerRebootValidationHTTP() {
 	}{
 		{
 			name: "when valid request with body",
-			path: "/node/server1/power/reboot",
+			path: "/api/node/server1/power/reboot",
 			body: `{"delay":5,"message":"maintenance"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -398,7 +398,7 @@ func (s *RebootPostPublicTestSuite) TestPostNodePowerRebootValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/power/reboot",
+			path: "/api/node/nonexistent/power/reboot",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -533,7 +533,7 @@ func (s *RebootPostPublicTestSuite) TestPostNodePowerRebootRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/power/reboot",
+				"/api/node/server1/power/reboot",
 				strings.NewReader(`{}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

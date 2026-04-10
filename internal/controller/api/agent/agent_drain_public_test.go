@@ -307,7 +307,7 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgentHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				fmt.Sprintf("/agent/%s/drain", tc.hostname),
+				fmt.Sprintf("/api/agent/%s/drain", tc.hostname),
 				nil,
 			)
 			rec := httptest.NewRecorder()
@@ -421,7 +421,7 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgentRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/agent/server1/drain",
+				"/api/agent/server1/drain",
 				nil,
 			)
 			tc.setupAuth(req)

@@ -422,7 +422,7 @@ func (s *SysctlUpdatePublicTestSuite) TestPutNodeSysctlValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/sysctl/net.ipv4.ip_forward",
+			path: "/api/node/server1/sysctl/net.ipv4.ip_forward",
 			body: `{"value":"0"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -442,7 +442,7 @@ func (s *SysctlUpdatePublicTestSuite) TestPutNodeSysctlValidationHTTP() {
 		},
 		{
 			name: "when missing value returns 400",
-			path: "/node/server1/sysctl/net.ipv4.ip_forward",
+			path: "/api/node/server1/sysctl/net.ipv4.ip_forward",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -452,7 +452,7 @@ func (s *SysctlUpdatePublicTestSuite) TestPutNodeSysctlValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/sysctl/net.ipv4.ip_forward",
+			path: "/api/node/nonexistent/sysctl/net.ipv4.ip_forward",
 			body: `{"value":"0"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -587,7 +587,7 @@ func (s *SysctlUpdatePublicTestSuite) TestPutNodeSysctlRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPut,
-				"/node/server1/sysctl/net.ipv4.ip_forward",
+				"/api/node/server1/sysctl/net.ipv4.ip_forward",
 				strings.NewReader(`{"value":"0"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

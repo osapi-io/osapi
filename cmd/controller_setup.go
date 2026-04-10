@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"os"
 	"sort"
@@ -62,12 +63,14 @@ import (
 	sysctlAPI "github.com/retr0h/osapi/internal/controller/api/node/sysctl"
 	timezoneAPI "github.com/retr0h/osapi/internal/controller/api/node/timezone"
 	userAPI "github.com/retr0h/osapi/internal/controller/api/node/user"
+	uihandler "github.com/retr0h/osapi/internal/controller/api/ui"
 	"github.com/retr0h/osapi/internal/controller/notify"
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/telemetry/metrics"
 	"github.com/retr0h/osapi/internal/telemetry/process"
 	"github.com/retr0h/osapi/internal/validation"
+	uiassets "github.com/retr0h/osapi/ui"
 )
 
 // ServerManager responsible for Server operations.
@@ -785,6 +788,22 @@ func registerControllerHandlers(
 			file.Handler(log, objStore, fileStateKV, signingKey, customRoles)...)
 	}
 	handlers = append(handlers, factsAPI.Handler(log, signingKey, customRoles)...)
+
+	if appConfig.Controller.API.UI.UIEnabled() {
+		// The embedded assets are rooted at dist/ inside the ui package.
+		// fs.Sub with a static valid path cannot fail in practice, but we
+		// propagate the error rather than panic to be safe.
+		distFS, err := fs.Sub(uiassets.Assets, "dist")
+		if err != nil {
+			log.Error(
+				"failed to open embedded UI assets",
+				slog.String("error", err.Error()),
+			)
+		} else {
+			handlers = append(handlers, uihandler.Handler(distFS)...)
+			log.Info("embedded UI enabled", slog.String("path", "/"))
+		}
+	}
 
 	sm.RegisterHandlers(handlers)
 }

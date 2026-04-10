@@ -453,7 +453,7 @@ func (s *SysctlGetPublicTestSuite) TestGetNodeSysctlByKeyValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/sysctl/net.ipv4.ip_forward",
+			path: "/api/node/server1/sysctl/net.ipv4.ip_forward",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -471,7 +471,7 @@ func (s *SysctlGetPublicTestSuite) TestGetNodeSysctlByKeyValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/sysctl/net.ipv4.ip_forward",
+			path: "/api/node/nonexistent/sysctl/net.ipv4.ip_forward",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -598,7 +598,7 @@ func (s *SysctlGetPublicTestSuite) TestGetNodeSysctlByKeyRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/sysctl/net.ipv4.ip_forward",
+				"/api/node/server1/sysctl/net.ipv4.ip_forward",
 				nil,
 			)
 			tc.setupAuth(req)

@@ -28,8 +28,9 @@ tags:
     x-displayName: Job
     description: Operations related to the job queue.
 paths:
-  /job:
+  /api/job:
     get:
+      operationId: getJobs
       summary: List jobs
       description: Retrieve jobs, optionally filtered by status.
       tags:
@@ -105,7 +106,7 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /job/{id}:
+  /api/job/{id}:
     get:
       summary: Get job detail
       description: Retrieve details of a specific job by its ID.
@@ -216,7 +217,7 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /job/{id}/retry:
+  /api/job/{id}/retry:
     post:
       summary: Retry a job
       description: >-

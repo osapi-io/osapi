@@ -223,19 +223,19 @@ type PutNodeScheduleCronJSONRequestBody = CronUpdateRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List all cron entries
-	// (GET /node/{hostname}/schedule/cron)
+	// (GET /api/node/{hostname}/schedule/cron)
 	GetNodeScheduleCron(ctx echo.Context, hostname Hostname) error
 	// Create a cron entry
-	// (POST /node/{hostname}/schedule/cron)
+	// (POST /api/node/{hostname}/schedule/cron)
 	PostNodeScheduleCron(ctx echo.Context, hostname Hostname) error
 	// Delete a cron entry
-	// (DELETE /node/{hostname}/schedule/cron/{name})
+	// (DELETE /api/node/{hostname}/schedule/cron/{name})
 	DeleteNodeScheduleCron(ctx echo.Context, hostname Hostname, name CronName) error
 	// Get a cron entry
-	// (GET /node/{hostname}/schedule/cron/{name})
+	// (GET /api/node/{hostname}/schedule/cron/{name})
 	GetNodeScheduleCronByName(ctx echo.Context, hostname Hostname, name CronName) error
 	// Update a cron entry
-	// (PUT /node/{hostname}/schedule/cron/{name})
+	// (PUT /api/node/{hostname}/schedule/cron/{name})
 	PutNodeScheduleCron(ctx echo.Context, hostname Hostname, name CronName) error
 }
 
@@ -386,11 +386,11 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/node/:hostname/schedule/cron", wrapper.GetNodeScheduleCron)
-	router.POST(baseURL+"/node/:hostname/schedule/cron", wrapper.PostNodeScheduleCron)
-	router.DELETE(baseURL+"/node/:hostname/schedule/cron/:name", wrapper.DeleteNodeScheduleCron)
-	router.GET(baseURL+"/node/:hostname/schedule/cron/:name", wrapper.GetNodeScheduleCronByName)
-	router.PUT(baseURL+"/node/:hostname/schedule/cron/:name", wrapper.PutNodeScheduleCron)
+	router.GET(baseURL+"/api/node/:hostname/schedule/cron", wrapper.GetNodeScheduleCron)
+	router.POST(baseURL+"/api/node/:hostname/schedule/cron", wrapper.PostNodeScheduleCron)
+	router.DELETE(baseURL+"/api/node/:hostname/schedule/cron/:name", wrapper.DeleteNodeScheduleCron)
+	router.GET(baseURL+"/api/node/:hostname/schedule/cron/:name", wrapper.GetNodeScheduleCronByName)
+	router.PUT(baseURL+"/api/node/:hostname/schedule/cron/:name", wrapper.PutNodeScheduleCron)
 
 }
 
@@ -694,19 +694,19 @@ func (response PutNodeScheduleCron500JSONResponse) VisitPutNodeScheduleCronRespo
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List all cron entries
-	// (GET /node/{hostname}/schedule/cron)
+	// (GET /api/node/{hostname}/schedule/cron)
 	GetNodeScheduleCron(ctx context.Context, request GetNodeScheduleCronRequestObject) (GetNodeScheduleCronResponseObject, error)
 	// Create a cron entry
-	// (POST /node/{hostname}/schedule/cron)
+	// (POST /api/node/{hostname}/schedule/cron)
 	PostNodeScheduleCron(ctx context.Context, request PostNodeScheduleCronRequestObject) (PostNodeScheduleCronResponseObject, error)
 	// Delete a cron entry
-	// (DELETE /node/{hostname}/schedule/cron/{name})
+	// (DELETE /api/node/{hostname}/schedule/cron/{name})
 	DeleteNodeScheduleCron(ctx context.Context, request DeleteNodeScheduleCronRequestObject) (DeleteNodeScheduleCronResponseObject, error)
 	// Get a cron entry
-	// (GET /node/{hostname}/schedule/cron/{name})
+	// (GET /api/node/{hostname}/schedule/cron/{name})
 	GetNodeScheduleCronByName(ctx context.Context, request GetNodeScheduleCronByNameRequestObject) (GetNodeScheduleCronByNameResponseObject, error)
 	// Update a cron entry
-	// (PUT /node/{hostname}/schedule/cron/{name})
+	// (PUT /api/node/{hostname}/schedule/cron/{name})
 	PutNodeScheduleCron(ctx context.Context, request PutNodeScheduleCronRequestObject) (PutNodeScheduleCronResponseObject, error)
 }
 

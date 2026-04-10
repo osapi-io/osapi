@@ -299,19 +299,19 @@ func (s *GroupCreatePublicTestSuite) TestPostNodeGroupValidationHTTP() {
 	}{
 		{
 			name:     "when valid request",
-			path:     "/node/server1/group",
+			path:     "/api/node/server1/group",
 			body:     `{"name":"devops"}`,
 			wantCode: http.StatusOK,
 		},
 		{
 			name:     "when missing name",
-			path:     "/node/server1/group",
+			path:     "/api/node/server1/group",
 			body:     `{}`,
 			wantCode: http.StatusBadRequest,
 		},
 		{
 			name:     "when invalid hostname",
-			path:     "/node/nonexistent/group",
+			path:     "/api/node/nonexistent/group",
 			body:     `{"name":"devops"}`,
 			wantCode: http.StatusBadRequest,
 		},
@@ -414,7 +414,7 @@ func (s *GroupCreatePublicTestSuite) TestPostNodeGroupRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/group",
+				"/api/node/server1/group",
 				strings.NewReader(`{"name":"devops"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

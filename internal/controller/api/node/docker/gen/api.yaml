@@ -37,7 +37,7 @@ tags:
 paths:
   # ── Docker lifecycle ──────────────────────────────────────
 
-  /node/{hostname}/container/docker:
+  /api/node/{hostname}/container/docker:
     post:
       summary: Create a container
       description: >
@@ -160,7 +160,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/container/docker/{id}:
+  /api/node/{hostname}/container/docker/{id}:
     get:
       summary: Inspect a container
       description: >
@@ -274,7 +274,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/container/docker/{id}/start:
+  /api/node/{hostname}/container/docker/{id}/start:
     post:
       summary: Start a container
       description: >
@@ -326,7 +326,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/container/docker/{id}/stop:
+  /api/node/{hostname}/container/docker/{id}/stop:
     post:
       summary: Stop a container
       description: >
@@ -388,7 +388,7 @@ paths:
 
   # ── Docker exec ────────────────────────────────────────────
 
-  /node/{hostname}/container/docker/{id}/exec:
+  /api/node/{hostname}/container/docker/{id}/exec:
     post:
       summary: Execute a command in a container
       description: >
@@ -449,7 +449,7 @@ paths:
 
   # ── Docker image ───────────────────────────────────────────
 
-  /node/{hostname}/container/docker/image/{image}:
+  /api/node/{hostname}/container/docker/image/{image}:
     delete:
       summary: Remove a container image
       description: >
@@ -518,7 +518,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/container/docker/pull:
+  /api/node/{hostname}/container/docker/pull:
     post:
       summary: Pull a container image
       description: >

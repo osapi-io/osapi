@@ -45,6 +45,39 @@ This document applies to the [OSAPI][] repository.
   are passing before submitting the PR. See
   [Development](development.md#testing) for how to run tests.
 
+## UI Contributions
+
+The React management dashboard lives in the `ui/` directory and is embedded into
+the Go binary at build time. See [UI Development](ui-development.md) for
+prerequisites, setup, and code style, and
+[UI Architecture](../architecture/ui.md) for the embedding mechanism, component
+layers, and SDK generation flow.
+
+### Adding new block types
+
+When adding a new operation to the Configure page:
+
+1. Add the `BlockType` entry to `ui/src/hooks/use-stack.ts` in `ALL_BLOCK_TYPES`
+   and the appropriate category.
+2. Add the required permission to `BLOCK_PERMISSIONS` in
+   `ui/src/lib/permissions.ts`.
+3. Create a block form component in `ui/src/components/domain/` if the block
+   needs input fields. Use `SingleInputBlock` for simple single-field blocks.
+4. Add the apply handler case in `ui/src/pages/configure.tsx`.
+5. Add result rendering in `ui/src/components/domain/result-card.tsx` if the
+   response shape isn't handled by existing patterns.
+6. Add the icon mapping in `blockIcons` in `configure.tsx`.
+
+### Adding new UI components
+
+When extracting a new shared component:
+
+1. Create it in `ui/src/components/ui/` with cva variants if applicable.
+2. Accept a `className` prop for escape-hatch styling.
+3. Replace all inline occurrences across the codebase.
+4. Update [UI Architecture](../architecture/ui.md) if the new component is part
+   of the core visual language.
+
 ## Submitting a PR
 
 - **Describe your changes** - Ensure that you provide a comprehensive

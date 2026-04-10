@@ -498,7 +498,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByIDHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/job/"+tc.jobID,
+				"/api/job/"+tc.jobID,
 				nil,
 			)
 			rec := httptest.NewRecorder()
@@ -607,7 +607,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByIDRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/job/550e8400-e29b-41d4-a716-446655440000",
+				"/api/job/550e8400-e29b-41d4-a716-446655440000",
 				nil,
 			)
 			tc.setupAuth(req)

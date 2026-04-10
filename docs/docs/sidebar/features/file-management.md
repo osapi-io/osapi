@@ -42,12 +42,11 @@ three states: `in-sync`, `drifted`, or `missing`.
 
 ### File Upload Flow
 
-1. The CLI (or SDK) computes a SHA-256 of the local file and calls
-   `GET /file/{name}` to check whether the Object Store already holds the same
-   content. If the SHA matches, the upload is skipped entirely (no bytes sent
-   over the network).
-2. If the file is new (404) or the SHA differs, the CLI sends the file via
-   multipart `POST /file`.
+1. The CLI (or SDK) computes a SHA-256 of the local file and queries the Object
+   Store to check whether it already holds the same content. If the SHA matches,
+   the upload is skipped entirely (no bytes sent over the network).
+2. If the file is new or the SHA differs, the CLI sends the file via a multipart
+   upload.
 3. On the server side, if a file with the same name already exists and the
    content differs, the server rejects the upload with **409 Conflict** unless
    `?force=true` is passed.
@@ -270,18 +269,10 @@ nats:
 
 ## Permissions
 
-| Endpoint                              | Permission   |
-| ------------------------------------- | ------------ |
-| `POST /file` (upload)                 | `file:write` |
-| `GET /file` (list)                    | `file:read`  |
-| `GET /file/{name}` (get)              | `file:read`  |
-| `DELETE /file/{name}` (delete)        | `file:write` |
-| `POST /node/{hostname}/file/deploy`   | `file:write` |
-| `POST /node/{hostname}/file/undeploy` | `file:write` |
-| `POST /node/{hostname}/file/status`   | `file:read`  |
-
-The `admin` and `write` roles include both `file:read` and `file:write`. The
-`read` role includes only `file:read`.
+File operations require `file:*` permissions. The `admin` and `write` roles
+include both `file:read` and `file:write`. The `read` role includes only
+`file:read`. See the [API reference](/category/api) for the permission required
+by each endpoint.
 
 ## Related
 

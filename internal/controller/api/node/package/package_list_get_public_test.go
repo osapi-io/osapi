@@ -364,7 +364,7 @@ func (s *PackageListGetPublicTestSuite) TestGetNodePackageValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/package",
+			path: "/api/node/server1/package",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -380,7 +380,7 @@ func (s *PackageListGetPublicTestSuite) TestGetNodePackageValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/package",
+			path: "/api/node/nonexistent/package",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -504,7 +504,7 @@ func (s *PackageListGetPublicTestSuite) TestGetNodePackageRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/package",
+				"/api/node/server1/package",
 				nil,
 			)
 			tc.setupAuth(req)

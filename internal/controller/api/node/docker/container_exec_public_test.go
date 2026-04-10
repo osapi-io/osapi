@@ -480,7 +480,7 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExecValidation
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/container/docker/abc123/exec",
+			path: "/api/node/server1/container/docker/abc123/exec",
 			body: `{"command":["ls","-la"]}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -498,7 +498,7 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExecValidation
 		},
 		{
 			name: "when missing command",
-			path: "/node/server1/container/docker/abc123/exec",
+			path: "/api/node/server1/container/docker/abc123/exec",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -508,7 +508,7 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExecValidation
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/container/docker/abc123/exec",
+			path: "/api/node/nonexistent/container/docker/abc123/exec",
 			body: `{"command":["ls"]}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -640,7 +640,7 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExecRBACHTTP()
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/container/docker/abc123/exec",
+				"/api/node/server1/container/docker/abc123/exec",
 				strings.NewReader(`{"command":["ls","-la"]}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

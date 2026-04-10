@@ -373,7 +373,7 @@ func (s *LogUnitPublicTestSuite) TestGetNodeLogUnitHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/log/unit/sshd.service",
+			path: "/api/node/server1/log/unit/sshd.service",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -390,7 +390,7 @@ func (s *LogUnitPublicTestSuite) TestGetNodeLogUnitHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/log/unit/sshd.service",
+			path: "/api/node/nonexistent/log/unit/sshd.service",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -399,7 +399,7 @@ func (s *LogUnitPublicTestSuite) TestGetNodeLogUnitHTTP() {
 		},
 		{
 			name: "when invalid priority returns 400",
-			path: "/node/server1/log/unit/sshd.service?priority=bogus",
+			path: "/api/node/server1/log/unit/sshd.service?priority=bogus",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -525,7 +525,7 @@ func (s *LogUnitPublicTestSuite) TestGetNodeLogUnitRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/log/unit/sshd.service",
+				"/api/node/server1/log/unit/sshd.service",
 				nil,
 			)
 			tc.setupAuth(req)

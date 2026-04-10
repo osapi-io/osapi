@@ -113,7 +113,7 @@ func (s *HealthGetPublicTestSuite) TestGetHealthHTTP() {
 			a := api.New(s.appConfig, s.logger)
 			gen.RegisterHandlers(a.Echo, strictHandler)
 
-			req := httptest.NewRequest(http.MethodGet, "/health", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/health", nil)
 			rec := httptest.NewRecorder()
 
 			a.Echo.ServeHTTP(rec, req)

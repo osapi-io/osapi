@@ -31,7 +31,7 @@ tags:
 paths:
   # -- Service collection ------------------------------------------------------
 
-  /node/{hostname}/service:
+  /api/node/{hostname}/service:
     get:
       summary: List all services
       description: >
@@ -129,7 +129,7 @@ paths:
 
   # -- Service individual entry ------------------------------------------------
 
-  /node/{hostname}/service/{name}:
+  /api/node/{hostname}/service/{name}:
     get:
       summary: Get service details
       description: >
@@ -286,7 +286,7 @@ paths:
 
   # -- Service actions ---------------------------------------------------------
 
-  /node/{hostname}/service/{name}/start:
+  /api/node/{hostname}/service/{name}/start:
     post:
       summary: Start a service
       description: >
@@ -332,7 +332,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/service/{name}/stop:
+  /api/node/{hostname}/service/{name}/stop:
     post:
       summary: Stop a service
       description: >
@@ -378,7 +378,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/service/{name}/restart:
+  /api/node/{hostname}/service/{name}/restart:
     post:
       summary: Restart a service
       description: >
@@ -424,7 +424,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/service/{name}/enable:
+  /api/node/{hostname}/service/{name}/enable:
     post:
       summary: Enable a service
       description: >
@@ -470,7 +470,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/service/{name}/disable:
+  /api/node/{hostname}/service/{name}/disable:
     post:
       summary: Disable a service
       description: >

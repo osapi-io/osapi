@@ -29,7 +29,7 @@ tags:
     description: Object Store file management operations.
 
 paths:
-  /file:
+  /api/file:
     post:
       summary: Upload a file
       description: Upload a file to the Object Store.
@@ -164,7 +164,7 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /file/stale:
+  /api/file/stale:
     get:
       summary: List stale file deployments
       description: >
@@ -203,7 +203,7 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /file/{name}:
+  /api/file/{name}:
     get:
       summary: Get file metadata
       description: Get metadata for a specific file in the Object Store.

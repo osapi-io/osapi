@@ -29,15 +29,15 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 )
 
-// GetAgent discovers all active agents in the fleet.
-func (a *Agent) GetAgent(
+// GetAgents discovers all active agents in the fleet.
+func (a *Agent) GetAgents(
 	ctx context.Context,
-	_ gen.GetAgentRequestObject,
-) (gen.GetAgentResponseObject, error) {
+	_ gen.GetAgentsRequestObject,
+) (gen.GetAgentsResponseObject, error) {
 	agents, err := a.JobClient.ListAgents(ctx)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetAgent500JSONResponse{
+		return gen.GetAgents500JSONResponse{
 			Error: &errMsg,
 		}, nil
 	}
@@ -49,7 +49,7 @@ func (a *Agent) GetAgent(
 
 	total := len(agentInfos)
 
-	return gen.GetAgent200JSONResponse{
+	return gen.GetAgents200JSONResponse{
 		Agents: agentInfos,
 		Total:  total,
 	}, nil

@@ -40,7 +40,7 @@ tags:
 paths:
   # -- Ping -------------------------------------------------------------------
 
-  /node/{hostname}/network/ping:
+  /api/node/{hostname}/network/ping:
     post:
       summary: Ping a remote server
       description: >
@@ -106,7 +106,7 @@ paths:
 
   # -- DNS --------------------------------------------------------------------
 
-  /node/{hostname}/network/dns/{interfaceName}:
+  /api/node/{hostname}/network/dns/{interfaceName}:
     get:
       summary: List DNS servers
       description: >
@@ -165,7 +165,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/network/dns:
+  /api/node/{hostname}/network/dns:
     put:
       summary: Update DNS servers
       description: Update the system's DNS server configuration.
@@ -268,7 +268,7 @@ paths:
 
   # -- Interface collection ---------------------------------------------------
 
-  /node/{hostname}/network/interface:
+  /api/node/{hostname}/network/interface:
     get:
       summary: List network interfaces
       description: >
@@ -315,7 +315,7 @@ paths:
 
   # -- Interface individual entry ---------------------------------------------
 
-  /node/{hostname}/network/interface/{name}:
+  /api/node/{hostname}/network/interface/{name}:
     get:
       summary: Get network interface details
       description: >
@@ -528,7 +528,7 @@ paths:
 
   # -- Route collection -------------------------------------------------------
 
-  /node/{hostname}/network/route:
+  /api/node/{hostname}/network/route:
     get:
       summary: List network routes
       description: >
@@ -575,7 +575,7 @@ paths:
 
   # -- Route by interface -----------------------------------------------------
 
-  /node/{hostname}/network/route/{interfaceName}:
+  /api/node/{hostname}/network/route/{interfaceName}:
     get:
       summary: Get routes for an interface
       description: >

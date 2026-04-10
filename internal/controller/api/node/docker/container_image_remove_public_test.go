@@ -408,7 +408,7 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/container/docker/image/nginx:latest",
+			path: "/api/node/server1/container/docker/image/nginx:latest",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -424,7 +424,7 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 		},
 		{
 			name: "when empty image returns 400",
-			path: "/node/server1/container/docker/image/",
+			path: "/api/node/server1/container/docker/image/",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -432,7 +432,7 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/container/docker/image/nginx:latest",
+			path: "/api/node/nonexistent/container/docker/image/nginx:latest",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -561,7 +561,7 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 
 			req := httptest.NewRequest(
 				http.MethodDelete,
-				"/node/server1/container/docker/image/nginx:latest",
+				"/api/node/server1/container/docker/image/nginx:latest",
 				nil,
 			)
 			tc.setupAuth(req)

@@ -318,7 +318,7 @@ func (s *UserListGetPublicTestSuite) TestGetNodeUserValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/user",
+			path: "/api/node/server1/user",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -334,7 +334,7 @@ func (s *UserListGetPublicTestSuite) TestGetNodeUserValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/user",
+			path: "/api/node/nonexistent/user",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -458,7 +458,7 @@ func (s *UserListGetPublicTestSuite) TestGetNodeUserRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/user",
+				"/api/node/server1/user",
 				nil,
 			)
 			tc.setupAuth(req)

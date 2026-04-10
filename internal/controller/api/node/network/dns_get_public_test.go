@@ -363,7 +363,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceVa
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/network/dns/eth0",
+			path: "/api/node/server1/network/dns/eth0",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				dnsResult := dns.GetResult{
@@ -390,7 +390,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceVa
 		},
 		{
 			name: "when fact reference interface name passes validation",
-			path: "/node/server1/network/dns/@fact.interface.primary",
+			path: "/api/node/server1/network/dns/@fact.interface.primary",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				dnsResult := dns.GetResult{
@@ -410,7 +410,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceVa
 		},
 		{
 			name: "when partial fact reference rejected",
-			path: "/node/server1/network/dns/@fact",
+			path: "/api/node/server1/network/dns/@fact",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -419,7 +419,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceVa
 		},
 		{
 			name: "when non-alphanum interface name",
-			path: "/node/server1/network/dns/eth-0!",
+			path: "/api/node/server1/network/dns/eth-0!",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -428,7 +428,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceVa
 		},
 		{
 			name: "when unknown fact key rejected",
-			path: "/node/server1/network/dns/@fact.primary_interface",
+			path: "/api/node/server1/network/dns/@fact.primary_interface",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -437,7 +437,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceVa
 		},
 		{
 			name: "when broadcast all",
-			path: "/node/_all/network/dns/eth0",
+			path: "/api/node/_all/network/dns/eth0",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				dnsResult := dns.GetResult{
@@ -580,7 +580,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceRB
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/node/server1/network/dns/eth0", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/node/server1/network/dns/eth0", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 

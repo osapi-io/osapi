@@ -485,7 +485,7 @@ func (s *ContainerCreatePublicTestSuite) TestPostNodeContainerDockerValidationHT
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/container/docker",
+			path: "/api/node/server1/container/docker",
 			body: `{"image":"nginx:latest"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -504,7 +504,7 @@ func (s *ContainerCreatePublicTestSuite) TestPostNodeContainerDockerValidationHT
 		},
 		{
 			name: "when missing image",
-			path: "/node/server1/container/docker",
+			path: "/api/node/server1/container/docker",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -514,7 +514,7 @@ func (s *ContainerCreatePublicTestSuite) TestPostNodeContainerDockerValidationHT
 		},
 		{
 			name: "when hostname exceeds max length",
-			path: "/node/server1/container/docker",
+			path: "/api/node/server1/container/docker",
 			body: `{"image":"nginx:latest","hostname":"` + strings.Repeat("a", 254) + `"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -524,7 +524,7 @@ func (s *ContainerCreatePublicTestSuite) TestPostNodeContainerDockerValidationHT
 		},
 		{
 			name: "when dns contains invalid ip",
-			path: "/node/server1/container/docker",
+			path: "/api/node/server1/container/docker",
 			body: `{"image":"nginx:latest","dns":["not-an-ip"]}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -534,7 +534,7 @@ func (s *ContainerCreatePublicTestSuite) TestPostNodeContainerDockerValidationHT
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/container/docker",
+			path: "/api/node/nonexistent/container/docker",
 			body: `{"image":"nginx:latest"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -667,7 +667,7 @@ func (s *ContainerCreatePublicTestSuite) TestPostNodeContainerDockerRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/container/docker",
+				"/api/node/server1/container/docker",
 				strings.NewReader(`{"image":"nginx:latest"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

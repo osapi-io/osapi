@@ -169,7 +169,7 @@ func (s *JobDeletePublicTestSuite) TestDeleteJobByIDHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodDelete,
-				"/job/"+tc.jobID,
+				"/api/job/"+tc.jobID,
 				nil,
 			)
 			rec := httptest.NewRecorder()
@@ -273,7 +273,7 @@ func (s *JobDeletePublicTestSuite) TestDeleteJobByIDRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodDelete,
-				"/job/550e8400-e29b-41d4-a716-446655440000",
+				"/api/job/550e8400-e29b-41d4-a716-446655440000",
 				nil,
 			)
 			tc.setupAuth(req)

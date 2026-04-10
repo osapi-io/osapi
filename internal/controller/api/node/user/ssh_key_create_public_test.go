@@ -375,7 +375,7 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSSHKeyValidationHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/user/testuser/ssh-key",
+				"/api/node/server1/user/testuser/ssh-key",
 				strings.NewReader(tc.body),
 			)
 			req.Header.Set("Content-Type", "application/json")
@@ -475,7 +475,7 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSSHKeyRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/user/testuser/ssh-key",
+				"/api/node/server1/user/testuser/ssh-key",
 				strings.NewReader(`{"key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAITest user@host"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

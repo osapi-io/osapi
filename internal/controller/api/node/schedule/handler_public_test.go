@@ -70,7 +70,7 @@ func (s *HandlerPublicTestSuite) TestHandler() {
 				}
 				s.NotEmpty(e.Routes())
 
-				req := httptest.NewRequest(http.MethodGet, "/node/hostname/schedule/cron", nil)
+				req := httptest.NewRequest(http.MethodGet, "/api/node/hostname/schedule/cron", nil)
 				rec := httptest.NewRecorder()
 				e.ServeHTTP(rec, req)
 			},

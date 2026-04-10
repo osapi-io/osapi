@@ -420,7 +420,7 @@ func (s *FileUndeployPostPublicTestSuite) TestPostNodeFileUndeployValidationHTTP
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/file/undeploy",
+			path: "/api/node/server1/file/undeploy",
 			body: `{"path":"/etc/cron.d/backup"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -437,7 +437,7 @@ func (s *FileUndeployPostPublicTestSuite) TestPostNodeFileUndeployValidationHTTP
 		},
 		{
 			name: "when missing path",
-			path: "/node/server1/file/undeploy",
+			path: "/api/node/server1/file/undeploy",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -447,7 +447,7 @@ func (s *FileUndeployPostPublicTestSuite) TestPostNodeFileUndeployValidationHTTP
 		},
 		{
 			name: "when server error",
-			path: "/node/server1/file/undeploy",
+			path: "/api/node/server1/file/undeploy",
 			body: `{"path":"/etc/cron.d/backup"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -461,7 +461,7 @@ func (s *FileUndeployPostPublicTestSuite) TestPostNodeFileUndeployValidationHTTP
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/file/undeploy",
+			path: "/api/node/nonexistent/file/undeploy",
 			body: `{"path":"/etc/cron.d/backup"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -597,7 +597,7 @@ func (s *FileUndeployPostPublicTestSuite) TestPostNodeFileUndeployRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/file/undeploy",
+				"/api/node/server1/file/undeploy",
 				strings.NewReader(`{"path":"/etc/cron.d/backup"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

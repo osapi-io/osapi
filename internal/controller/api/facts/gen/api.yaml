@@ -28,7 +28,7 @@ tags:
     x-displayName: Facts
     description: Fact key discovery for @fact. references.
 paths:
-  /facts/keys:
+  /api/facts/keys:
     get:
       summary: List available fact keys
       description: >

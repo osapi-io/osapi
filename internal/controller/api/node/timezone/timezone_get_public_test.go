@@ -350,7 +350,7 @@ func (s *TimezoneGetPublicTestSuite) TestGetNodeTimezoneValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/timezone",
+			path: "/api/node/server1/timezone",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -368,7 +368,7 @@ func (s *TimezoneGetPublicTestSuite) TestGetNodeTimezoneValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/timezone",
+			path: "/api/node/nonexistent/timezone",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -495,7 +495,7 @@ func (s *TimezoneGetPublicTestSuite) TestGetNodeTimezoneRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/timezone",
+				"/api/node/server1/timezone",
 				nil,
 			)
 			tc.setupAuth(req)

@@ -510,7 +510,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/network/dns",
+			path: "/api/node/server1/network/dns",
 			body: `{"servers":["1.1.1.1","8.8.8.8"],"search_domains":["foo.bar"],"interface_name":"eth0"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -527,7 +527,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 		},
 		{
 			name: "when missing interface name",
-			path: "/node/server1/network/dns",
+			path: "/api/node/server1/network/dns",
 			body: `{"servers":["1.1.1.1"]}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -537,7 +537,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 		},
 		{
 			name: "when fact reference interface name passes validation",
-			path: "/node/server1/network/dns",
+			path: "/api/node/server1/network/dns",
 			body: `{"servers":["1.1.1.1"],"interface_name":"@fact.interface.primary"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -554,7 +554,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 		},
 		{
 			name: "when partial fact reference rejected",
-			path: "/node/server1/network/dns",
+			path: "/api/node/server1/network/dns",
 			body: `{"servers":["1.1.1.1"],"interface_name":"@fact"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -564,7 +564,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 		},
 		{
 			name: "when non-alphanum interface name",
-			path: "/node/server1/network/dns",
+			path: "/api/node/server1/network/dns",
 			body: `{"servers":["1.1.1.1"],"interface_name":"eth-0!"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -574,7 +574,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 		},
 		{
 			name: "when invalid server IP",
-			path: "/node/server1/network/dns",
+			path: "/api/node/server1/network/dns",
 			body: `{"servers":["not-an-ip"],"interface_name":"eth0"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -584,7 +584,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 		},
 		{
 			name: "when invalid search domain",
-			path: "/node/server1/network/dns",
+			path: "/api/node/server1/network/dns",
 			body: `{"search_domains":["not a valid hostname!"],"interface_name":"eth0"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -594,7 +594,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 		},
 		{
 			name: "when unknown fact key interface rejected",
-			path: "/node/server1/network/dns",
+			path: "/api/node/server1/network/dns",
 			body: `{"servers":["1.1.1.1"],"interface_name":"@fact.primary_interface"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -604,7 +604,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/network/dns",
+			path: "/api/node/nonexistent/network/dns",
 			body: `{"servers":["1.1.1.1"],"interface_name":"eth0"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -614,7 +614,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 		},
 		{
 			name: "when override_dhcp true in HTTP request",
-			path: "/node/server1/network/dns",
+			path: "/api/node/server1/network/dns",
 			body: `{"servers":["1.1.1.1"],"interface_name":"eth0","override_dhcp":true}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -631,7 +631,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 		},
 		{
 			name: "when broadcast all",
-			path: "/node/_all/network/dns",
+			path: "/api/node/_all/network/dns",
 			body: `{"servers":["1.1.1.1"],"search_domains":["foo.bar"],"interface_name":"eth0"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -773,7 +773,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPut,
-				"/node/server1/network/dns",
+				"/api/node/server1/network/dns",
 				strings.NewReader(`{"servers":["8.8.8.8"],"interface_name":"eth0"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

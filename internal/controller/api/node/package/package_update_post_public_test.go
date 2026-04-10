@@ -275,7 +275,7 @@ func (s *PackageUpdatePostPublicTestSuite) TestPostNodePackageUpdateValidationHT
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/package/update",
+			path: "/api/node/server1/package/update",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				changeBool := true
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -293,7 +293,7 @@ func (s *PackageUpdatePostPublicTestSuite) TestPostNodePackageUpdateValidationHT
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/package/update",
+			path: "/api/node/nonexistent/package/update",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -419,7 +419,7 @@ func (s *PackageUpdatePostPublicTestSuite) TestPostNodePackageUpdateRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/package/update",
+				"/api/node/server1/package/update",
 				nil,
 			)
 			tc.setupAuth(req)

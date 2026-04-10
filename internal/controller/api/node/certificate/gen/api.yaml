@@ -31,7 +31,7 @@ tags:
 paths:
   # -- CA certificate collection ---------------------------------------------
 
-  /node/{hostname}/certificate/ca:
+  /api/node/{hostname}/certificate/ca:
     get:
       summary: List all CA certificates
       description: >
@@ -129,7 +129,7 @@ paths:
 
   # -- CA certificate individual entry ---------------------------------------
 
-  /node/{hostname}/certificate/ca/{name}:
+  /api/node/{hostname}/certificate/ca/{name}:
     put:
       summary: Update a CA certificate
       description: >

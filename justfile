@@ -6,6 +6,7 @@ mod? go '.just/remote/go.mod.just'
 mod? docs '.just/remote/docs.mod.just'
 mod? just '.just/remote/just.mod.just'
 mod? docker '.just/remote/docker.mod.just'
+mod? react '.just/remote/react.mod.just'
 
 # --- Fetch ---
 
@@ -20,6 +21,7 @@ fetch:
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/just.just -o .just/remote/just.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docker.mod.just -o .just/remote/docker.mod.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docker.just -o .just/remote/docker.just
+    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/react.just -o .just/remote/react.just
 
 # --- Top-level orchestration ---
 
@@ -28,10 +30,17 @@ deps:
     just go::deps
     just go::mod
     just docs::deps
+    just react::deps
+
+# Build production binary (includes embedded UI)
+build:
+    just react::build
+    go build -o osapi .
 
 # Run all tests
 test: linux-tune
     just just::fmt-check
+    just react::build
     just go::test
 
 # Generate code
@@ -39,6 +48,8 @@ generate:
     redocly join --prefix-tags-with-info-prop title -o internal/controller/api/gen/api.yaml internal/controller/api/*/gen/api.yaml internal/controller/api/node/*/gen/api.yaml
     just go::generate
     just docs::generate
+    cp internal/controller/api/gen/api.yaml ui/src/sdk/gen/api.yaml
+    just react::generate
 
 # Format, lint, and generate before committing
 ready:
@@ -47,6 +58,9 @@ ready:
     just docs::fmt
     just go::fmt
     just go::vet
+    just react::fmt
+    just react::lint
+    just react::build
 
 [linux]
 linux-tune:

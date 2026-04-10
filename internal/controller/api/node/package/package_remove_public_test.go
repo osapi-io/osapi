@@ -330,7 +330,7 @@ func (s *PackageRemovePublicTestSuite) TestDeleteNodePackageValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/package/curl",
+			path: "/api/node/server1/package/curl",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				changeBool := true
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -349,7 +349,7 @@ func (s *PackageRemovePublicTestSuite) TestDeleteNodePackageValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/package/curl",
+			path: "/api/node/nonexistent/package/curl",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -476,7 +476,7 @@ func (s *PackageRemovePublicTestSuite) TestDeleteNodePackageRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodDelete,
-				"/node/server1/package/curl",
+				"/api/node/server1/package/curl",
 				nil,
 			)
 			tc.setupAuth(req)

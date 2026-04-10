@@ -8,11 +8,18 @@ docs/node_modules/
 docs/bun.lock
 .nats/jetstream/
 result.xml
-.just/remote/
+.just/remote/*
+!.just/remote/react.mod.just
 test/vendor/
 tmp/
 
 /osapi
+
+# UI
+ui/dist/
+ui/node_modules/
+ui/bun.lock
+ui/.just/remote/
 
 # Compiled example binaries
 examples/**

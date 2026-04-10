@@ -330,7 +330,7 @@ func (s *UserDeletePublicTestSuite) TestDeleteNodeUserRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodDelete, "/node/server1/user/testuser", nil)
+			req := httptest.NewRequest(http.MethodDelete, "/api/node/server1/user/testuser", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 			server.Echo.ServeHTTP(rec, req)

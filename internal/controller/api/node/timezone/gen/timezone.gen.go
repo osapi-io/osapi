@@ -108,10 +108,10 @@ type PutNodeTimezoneJSONRequestBody = TimezoneUpdateRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Get system timezone
-	// (GET /node/{hostname}/timezone)
+	// (GET /api/node/{hostname}/timezone)
 	GetNodeTimezone(ctx echo.Context, hostname Hostname) error
 	// Update system timezone
-	// (PUT /node/{hostname}/timezone)
+	// (PUT /api/node/{hostname}/timezone)
 	PutNodeTimezone(ctx echo.Context, hostname Hostname) error
 }
 
@@ -184,8 +184,8 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/node/:hostname/timezone", wrapper.GetNodeTimezone)
-	router.PUT(baseURL+"/node/:hostname/timezone", wrapper.PutNodeTimezone)
+	router.GET(baseURL+"/api/node/:hostname/timezone", wrapper.GetNodeTimezone)
+	router.PUT(baseURL+"/api/node/:hostname/timezone", wrapper.PutNodeTimezone)
 
 }
 
@@ -299,10 +299,10 @@ func (response PutNodeTimezone500JSONResponse) VisitPutNodeTimezoneResponse(w ht
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Get system timezone
-	// (GET /node/{hostname}/timezone)
+	// (GET /api/node/{hostname}/timezone)
 	GetNodeTimezone(ctx context.Context, request GetNodeTimezoneRequestObject) (GetNodeTimezoneResponseObject, error)
 	// Update system timezone
-	// (PUT /node/{hostname}/timezone)
+	// (PUT /api/node/{hostname}/timezone)
 	PutNodeTimezone(ctx context.Context, request PutNodeTimezoneRequestObject) (PutNodeTimezoneResponseObject, error)
 }
 

@@ -279,7 +279,7 @@ func (s *NetworkDNSDeletePublicTestSuite) TestDeleteNetworkDNSValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/network/dns",
+			path: "/api/node/server1/network/dns",
 			body: `{"interface_name":"eth0"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -295,7 +295,7 @@ func (s *NetworkDNSDeletePublicTestSuite) TestDeleteNetworkDNSValidationHTTP() {
 		},
 		{
 			name: "when missing interface name",
-			path: "/node/server1/network/dns",
+			path: "/api/node/server1/network/dns",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -305,7 +305,7 @@ func (s *NetworkDNSDeletePublicTestSuite) TestDeleteNetworkDNSValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/network/dns",
+			path: "/api/node/nonexistent/network/dns",
 			body: `{"interface_name":"eth0"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -419,7 +419,7 @@ func (s *NetworkDNSDeletePublicTestSuite) TestDeleteNetworkDNSRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodDelete,
-				"/node/server1/network/dns",
+				"/api/node/server1/network/dns",
 				strings.NewReader(`{"interface_name":"eth0"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

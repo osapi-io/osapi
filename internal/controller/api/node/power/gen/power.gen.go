@@ -89,10 +89,10 @@ type PostNodePowerShutdownJSONRequestBody = PowerRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Reboot node
-	// (POST /node/{hostname}/power/reboot)
+	// (POST /api/node/{hostname}/power/reboot)
 	PostNodePowerReboot(ctx echo.Context, hostname Hostname) error
 	// Shutdown node
-	// (POST /node/{hostname}/power/shutdown)
+	// (POST /api/node/{hostname}/power/shutdown)
 	PostNodePowerShutdown(ctx echo.Context, hostname Hostname) error
 }
 
@@ -165,8 +165,8 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.POST(baseURL+"/node/:hostname/power/reboot", wrapper.PostNodePowerReboot)
-	router.POST(baseURL+"/node/:hostname/power/shutdown", wrapper.PostNodePowerShutdown)
+	router.POST(baseURL+"/api/node/:hostname/power/reboot", wrapper.PostNodePowerReboot)
+	router.POST(baseURL+"/api/node/:hostname/power/shutdown", wrapper.PostNodePowerShutdown)
 
 }
 
@@ -281,10 +281,10 @@ func (response PostNodePowerShutdown500JSONResponse) VisitPostNodePowerShutdownR
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Reboot node
-	// (POST /node/{hostname}/power/reboot)
+	// (POST /api/node/{hostname}/power/reboot)
 	PostNodePowerReboot(ctx context.Context, request PostNodePowerRebootRequestObject) (PostNodePowerRebootResponseObject, error)
 	// Shutdown node
-	// (POST /node/{hostname}/power/shutdown)
+	// (POST /api/node/{hostname}/power/shutdown)
 	PostNodePowerShutdown(ctx context.Context, request PostNodePowerShutdownRequestObject) (PostNodePowerShutdownResponseObject, error)
 }
 

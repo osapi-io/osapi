@@ -392,7 +392,7 @@ func (s *SysctlListGetPublicTestSuite) TestGetNodeSysctlValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/sysctl",
+			path: "/api/node/server1/sysctl",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -408,7 +408,7 @@ func (s *SysctlListGetPublicTestSuite) TestGetNodeSysctlValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/sysctl",
+			path: "/api/node/nonexistent/sysctl",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -533,7 +533,7 @@ func (s *SysctlListGetPublicTestSuite) TestGetNodeSysctlRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/sysctl",
+				"/api/node/server1/sysctl",
 				nil,
 			)
 			tc.setupAuth(req)

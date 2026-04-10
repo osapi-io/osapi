@@ -330,7 +330,7 @@ func (s *GroupDeletePublicTestSuite) TestDeleteNodeGroupRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodDelete, "/node/server1/group/devops", nil)
+			req := httptest.NewRequest(http.MethodDelete, "/api/node/server1/group/devops", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 			server.Echo.ServeHTTP(rec, req)

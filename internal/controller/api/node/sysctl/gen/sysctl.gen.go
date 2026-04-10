@@ -144,19 +144,19 @@ type PutNodeSysctlJSONRequestBody = SysctlUpdateRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List all managed sysctl entries
-	// (GET /node/{hostname}/sysctl)
+	// (GET /api/node/{hostname}/sysctl)
 	GetNodeSysctl(ctx echo.Context, hostname Hostname) error
 	// Create a sysctl parameter
-	// (POST /node/{hostname}/sysctl)
+	// (POST /api/node/{hostname}/sysctl)
 	PostNodeSysctl(ctx echo.Context, hostname Hostname) error
 	// Delete a managed sysctl entry
-	// (DELETE /node/{hostname}/sysctl/{key})
+	// (DELETE /api/node/{hostname}/sysctl/{key})
 	DeleteNodeSysctl(ctx echo.Context, hostname Hostname, key SysctlKey) error
 	// Get a sysctl entry
-	// (GET /node/{hostname}/sysctl/{key})
+	// (GET /api/node/{hostname}/sysctl/{key})
 	GetNodeSysctlByKey(ctx echo.Context, hostname Hostname, key SysctlKey) error
 	// Update a sysctl parameter
-	// (PUT /node/{hostname}/sysctl/{key})
+	// (PUT /api/node/{hostname}/sysctl/{key})
 	PutNodeSysctl(ctx echo.Context, hostname Hostname, key SysctlKey) error
 }
 
@@ -307,11 +307,11 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/node/:hostname/sysctl", wrapper.GetNodeSysctl)
-	router.POST(baseURL+"/node/:hostname/sysctl", wrapper.PostNodeSysctl)
-	router.DELETE(baseURL+"/node/:hostname/sysctl/:key", wrapper.DeleteNodeSysctl)
-	router.GET(baseURL+"/node/:hostname/sysctl/:key", wrapper.GetNodeSysctlByKey)
-	router.PUT(baseURL+"/node/:hostname/sysctl/:key", wrapper.PutNodeSysctl)
+	router.GET(baseURL+"/api/node/:hostname/sysctl", wrapper.GetNodeSysctl)
+	router.POST(baseURL+"/api/node/:hostname/sysctl", wrapper.PostNodeSysctl)
+	router.DELETE(baseURL+"/api/node/:hostname/sysctl/:key", wrapper.DeleteNodeSysctl)
+	router.GET(baseURL+"/api/node/:hostname/sysctl/:key", wrapper.GetNodeSysctlByKey)
+	router.PUT(baseURL+"/api/node/:hostname/sysctl/:key", wrapper.PutNodeSysctl)
 
 }
 
@@ -615,19 +615,19 @@ func (response PutNodeSysctl500JSONResponse) VisitPutNodeSysctlResponse(w http.R
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List all managed sysctl entries
-	// (GET /node/{hostname}/sysctl)
+	// (GET /api/node/{hostname}/sysctl)
 	GetNodeSysctl(ctx context.Context, request GetNodeSysctlRequestObject) (GetNodeSysctlResponseObject, error)
 	// Create a sysctl parameter
-	// (POST /node/{hostname}/sysctl)
+	// (POST /api/node/{hostname}/sysctl)
 	PostNodeSysctl(ctx context.Context, request PostNodeSysctlRequestObject) (PostNodeSysctlResponseObject, error)
 	// Delete a managed sysctl entry
-	// (DELETE /node/{hostname}/sysctl/{key})
+	// (DELETE /api/node/{hostname}/sysctl/{key})
 	DeleteNodeSysctl(ctx context.Context, request DeleteNodeSysctlRequestObject) (DeleteNodeSysctlResponseObject, error)
 	// Get a sysctl entry
-	// (GET /node/{hostname}/sysctl/{key})
+	// (GET /api/node/{hostname}/sysctl/{key})
 	GetNodeSysctlByKey(ctx context.Context, request GetNodeSysctlByKeyRequestObject) (GetNodeSysctlByKeyResponseObject, error)
 	// Update a sysctl parameter
-	// (PUT /node/{hostname}/sysctl/{key})
+	// (PUT /api/node/{hostname}/sysctl/{key})
 	PutNodeSysctl(ctx context.Context, request PutNodeSysctlRequestObject) (PutNodeSysctlResponseObject, error)
 }
 

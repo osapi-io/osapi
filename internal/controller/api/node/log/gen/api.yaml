@@ -29,7 +29,7 @@ tags:
     description: Log viewing operations on a target node.
 
 paths:
-  /node/{hostname}/log:
+  /api/node/{hostname}/log:
     get:
       summary: Get system log entries
       description: >
@@ -106,7 +106,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/log/source:
+  /api/node/{hostname}/log/source:
     get:
       summary: List log sources
       description: >
@@ -152,7 +152,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/log/unit/{name}:
+  /api/node/{hostname}/log/unit/{name}:
     get:
       summary: Get log entries for a systemd unit
       description: >

@@ -34,7 +34,7 @@ tags:
 paths:
   # -- User collection -----------------------------------------------------
 
-  /node/{hostname}/user:
+  /api/node/{hostname}/user:
     get:
       summary: List all users
       description: >
@@ -132,7 +132,7 @@ paths:
 
   # -- User individual entry -----------------------------------------------
 
-  /node/{hostname}/user/{name}:
+  /api/node/{hostname}/user/{name}:
     get:
       summary: Get a user
       description: >
@@ -295,7 +295,7 @@ paths:
 
   # -- User password -------------------------------------------------------
 
-  /node/{hostname}/user/{name}/password:
+  /api/node/{hostname}/user/{name}/password:
     post:
       summary: Change user password
       description: >
@@ -356,7 +356,7 @@ paths:
 
   # -- SSH Key management ------------------------------------------------
 
-  /node/{hostname}/user/{name}/ssh-key:
+  /api/node/{hostname}/user/{name}/ssh-key:
     get:
       summary: List SSH authorized keys
       description: >
@@ -454,7 +454,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/user/{name}/ssh-key/{fingerprint}:
+  /api/node/{hostname}/user/{name}/ssh-key/{fingerprint}:
     delete:
       summary: Remove SSH authorized key
       description: >
@@ -504,7 +504,7 @@ paths:
 
   # -- Group collection ----------------------------------------------------
 
-  /node/{hostname}/group:
+  /api/node/{hostname}/group:
     get:
       summary: List all groups
       description: >
@@ -602,7 +602,7 @@ paths:
 
   # -- Group individual entry ----------------------------------------------
 
-  /node/{hostname}/group/{name}:
+  /api/node/{hostname}/group/{name}:
     get:
       summary: Get a group
       description: >

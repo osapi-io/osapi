@@ -35,7 +35,7 @@ import (
 
 // excludedAuditPaths lists path prefixes that should not generate audit entries.
 var excludedAuditPaths = []string{
-	"/health",
+	"/api/health",
 	"/metrics",
 }
 

@@ -302,22 +302,22 @@ type Hostname = string
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Retrieve node status
-	// (GET /node/{hostname})
+	// (GET /api/node/{hostname})
 	GetNodeStatus(ctx echo.Context, hostname Hostname) error
 	// Retrieve disk usage
-	// (GET /node/{hostname}/disk)
+	// (GET /api/node/{hostname}/disk)
 	GetNodeDisk(ctx echo.Context, hostname Hostname) error
 	// Retrieve load averages
-	// (GET /node/{hostname}/load)
+	// (GET /api/node/{hostname}/load)
 	GetNodeLoad(ctx echo.Context, hostname Hostname) error
 	// Retrieve memory stats
-	// (GET /node/{hostname}/memory)
+	// (GET /api/node/{hostname}/memory)
 	GetNodeMemory(ctx echo.Context, hostname Hostname) error
 	// Retrieve OS info
-	// (GET /node/{hostname}/os)
+	// (GET /api/node/{hostname}/os)
 	GetNodeOS(ctx echo.Context, hostname Hostname) error
 	// Retrieve uptime
-	// (GET /node/{hostname}/uptime)
+	// (GET /api/node/{hostname}/uptime)
 	GetNodeUptime(ctx echo.Context, hostname Hostname) error
 }
 
@@ -462,12 +462,12 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/node/:hostname", wrapper.GetNodeStatus)
-	router.GET(baseURL+"/node/:hostname/disk", wrapper.GetNodeDisk)
-	router.GET(baseURL+"/node/:hostname/load", wrapper.GetNodeLoad)
-	router.GET(baseURL+"/node/:hostname/memory", wrapper.GetNodeMemory)
-	router.GET(baseURL+"/node/:hostname/os", wrapper.GetNodeOS)
-	router.GET(baseURL+"/node/:hostname/uptime", wrapper.GetNodeUptime)
+	router.GET(baseURL+"/api/node/:hostname", wrapper.GetNodeStatus)
+	router.GET(baseURL+"/api/node/:hostname/disk", wrapper.GetNodeDisk)
+	router.GET(baseURL+"/api/node/:hostname/load", wrapper.GetNodeLoad)
+	router.GET(baseURL+"/api/node/:hostname/memory", wrapper.GetNodeMemory)
+	router.GET(baseURL+"/api/node/:hostname/os", wrapper.GetNodeOS)
+	router.GET(baseURL+"/api/node/:hostname/uptime", wrapper.GetNodeUptime)
 
 }
 
@@ -792,22 +792,22 @@ func (response GetNodeUptime500JSONResponse) VisitGetNodeUptimeResponse(w http.R
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Retrieve node status
-	// (GET /node/{hostname})
+	// (GET /api/node/{hostname})
 	GetNodeStatus(ctx context.Context, request GetNodeStatusRequestObject) (GetNodeStatusResponseObject, error)
 	// Retrieve disk usage
-	// (GET /node/{hostname}/disk)
+	// (GET /api/node/{hostname}/disk)
 	GetNodeDisk(ctx context.Context, request GetNodeDiskRequestObject) (GetNodeDiskResponseObject, error)
 	// Retrieve load averages
-	// (GET /node/{hostname}/load)
+	// (GET /api/node/{hostname}/load)
 	GetNodeLoad(ctx context.Context, request GetNodeLoadRequestObject) (GetNodeLoadResponseObject, error)
 	// Retrieve memory stats
-	// (GET /node/{hostname}/memory)
+	// (GET /api/node/{hostname}/memory)
 	GetNodeMemory(ctx context.Context, request GetNodeMemoryRequestObject) (GetNodeMemoryResponseObject, error)
 	// Retrieve OS info
-	// (GET /node/{hostname}/os)
+	// (GET /api/node/{hostname}/os)
 	GetNodeOS(ctx context.Context, request GetNodeOSRequestObject) (GetNodeOSResponseObject, error)
 	// Retrieve uptime
-	// (GET /node/{hostname}/uptime)
+	// (GET /api/node/{hostname}/uptime)
 	GetNodeUptime(ctx context.Context, request GetNodeUptimeRequestObject) (GetNodeUptimeResponseObject, error)
 }
 

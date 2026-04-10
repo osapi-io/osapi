@@ -298,19 +298,19 @@ func (s *UserPasswordPublicTestSuite) TestPostNodeUserPasswordValidationHTTP() {
 	}{
 		{
 			name:     "when valid request",
-			path:     "/node/server1/user/testuser/password",
+			path:     "/api/node/server1/user/testuser/password",
 			body:     `{"password":"newpass123"}`,
 			wantCode: http.StatusOK,
 		},
 		{
 			name:     "when missing password",
-			path:     "/node/server1/user/testuser/password",
+			path:     "/api/node/server1/user/testuser/password",
 			body:     `{}`,
 			wantCode: http.StatusBadRequest,
 		},
 		{
 			name:     "when invalid hostname",
-			path:     "/node/nonexistent/user/testuser/password",
+			path:     "/api/node/nonexistent/user/testuser/password",
 			body:     `{"password":"newpass123"}`,
 			wantCode: http.StatusBadRequest,
 		},
@@ -413,7 +413,7 @@ func (s *UserPasswordPublicTestSuite) TestPostNodeUserPasswordRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/user/testuser/password",
+				"/api/node/server1/user/testuser/password",
 				strings.NewReader(`{"password":"newpass123"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

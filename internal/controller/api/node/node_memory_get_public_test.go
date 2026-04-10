@@ -297,7 +297,7 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemoryValidationHTTP() {
 	}{
 		{
 			name: "when get Ok",
-			path: "/node/server1/memory",
+			path: "/api/node/server1/memory",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				memResult := mem.Result{Total: 8192, Free: 4096, Cached: 2048}
@@ -318,7 +318,7 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemoryValidationHTTP() {
 		},
 		{
 			name: "when empty hostname returns 400",
-			path: "/node/%20/memory",
+			path: "/api/node/%20/memory",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -327,7 +327,7 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemoryValidationHTTP() {
 		},
 		{
 			name: "when job client errors",
-			path: "/node/server1/memory",
+			path: "/api/node/server1/memory",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -459,7 +459,7 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemoryRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/node/server1/memory", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/node/server1/memory", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 

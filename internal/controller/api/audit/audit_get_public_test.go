@@ -89,7 +89,7 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByID() {
 						User:         "user@example.com",
 						Roles:        []string{"admin"},
 						Method:       "GET",
-						Path:         "/node/hostname",
+						Path:         "/api/node/hostname",
 						SourceIP:     "127.0.0.1",
 						ResponseCode: 200,
 						DurationMs:   42,
@@ -151,7 +151,7 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByIDHTTP() {
 	}{
 		{
 			name: "when valid UUID returns entry",
-			path: "/audit/550e8400-e29b-41d4-a716-446655440000",
+			path: "/api/audit/550e8400-e29b-41d4-a716-446655440000",
 			setupStore: func(mock *auditmocks.MockStore) {
 				mock.EXPECT().
 					Get(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").
@@ -161,7 +161,7 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByIDHTTP() {
 						User:         "user@example.com",
 						Roles:        []string{"admin"},
 						Method:       "GET",
-						Path:         "/node/hostname",
+						Path:         "/api/node/hostname",
 						SourceIP:     "127.0.0.1",
 						ResponseCode: 200,
 						DurationMs:   42,
@@ -172,7 +172,7 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByIDHTTP() {
 		},
 		{
 			name:         "when invalid UUID returns 400",
-			path:         "/audit/not-a-uuid",
+			path:         "/api/audit/not-a-uuid",
 			setupStore:   func(_ *auditmocks.MockStore) {},
 			wantCode:     http.StatusBadRequest,
 			wantContains: []string{},
@@ -268,7 +268,7 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByIDRBACHTTP() {
 						User:         "user@example.com",
 						Roles:        []string{"admin"},
 						Method:       "GET",
-						Path:         "/node/hostname",
+						Path:         "/api/node/hostname",
 						SourceIP:     "127.0.0.1",
 						ResponseCode: 200,
 						DurationMs:   42,
@@ -308,7 +308,7 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByIDRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/audit/550e8400-e29b-41d4-a716-446655440000",
+				"/api/audit/550e8400-e29b-41d4-a716-446655440000",
 				nil,
 			)
 			tc.setupAuth(req)

@@ -28,7 +28,7 @@ tags:
     x-displayName: Audit
     description: Audit log endpoints for viewing API activity.
 paths:
-  /audit:
+  /api/audit:
     get:
       operationId: GetAuditLogs
       summary: List audit log entries
@@ -91,7 +91,7 @@ paths:
             application/json:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-  /audit/export:
+  /api/audit/export:
     get:
       operationId: GetAuditExport
       summary: Export all audit log entries
@@ -126,7 +126,7 @@ paths:
             application/json:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-  /audit/{id}:
+  /api/audit/{id}:
     get:
       operationId: GetAuditLogByID
       summary: Get a single audit log entry

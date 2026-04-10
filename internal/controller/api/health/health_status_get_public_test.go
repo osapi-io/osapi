@@ -828,7 +828,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusHTTP() {
 			a := api.New(s.appConfig, s.logger)
 			gen.RegisterHandlers(a.Echo, strictHandler)
 
-			req := httptest.NewRequest(http.MethodGet, "/health/status", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/health/status", nil)
 			rec := httptest.NewRecorder()
 
 			a.Echo.ServeHTTP(rec, req)
@@ -965,7 +965,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusRBACHTTP() {
 			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/health/status", nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/health/status", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 

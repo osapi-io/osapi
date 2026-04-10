@@ -582,7 +582,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCronValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/schedule/cron",
+			path: "/api/node/server1/schedule/cron",
 			body: `{"name":"backup","schedule":"0 2 * * *","object":"backup-script"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -605,7 +605,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCronValidationHTTP() {
 		},
 		{
 			name: "when missing name",
-			path: "/node/server1/schedule/cron",
+			path: "/api/node/server1/schedule/cron",
 			body: `{"schedule":"0 2 * * *","object":"backup-script"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -615,7 +615,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCronValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/schedule/cron",
+			path: "/api/node/nonexistent/schedule/cron",
 			body: `{"name":"backup","schedule":"0 2 * * *","object":"backup-script"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -752,7 +752,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCronRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/schedule/cron",
+				"/api/node/server1/schedule/cron",
 				strings.NewReader(
 					`{"name":"backup","schedule":"0 2 * * *","object":"backup-script"}`,
 				),

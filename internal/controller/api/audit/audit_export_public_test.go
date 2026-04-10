@@ -84,7 +84,7 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExport() {
 							User:         "user@example.com",
 							Roles:        []string{"admin"},
 							Method:       "GET",
-							Path:         "/node/hostname",
+							Path:         "/api/node/hostname",
 							SourceIP:     "127.0.0.1",
 							ResponseCode: 200,
 							DurationMs:   42,
@@ -125,7 +125,7 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExport() {
 							User:         "user@example.com",
 							Roles:        []string{"admin"},
 							Method:       "GET",
-							Path:         "/node/hostname",
+							Path:         "/api/node/hostname",
 							OperationID:  "getNodeHostname",
 							SourceIP:     "127.0.0.1",
 							ResponseCode: 200,
@@ -184,7 +184,7 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExportHTTP() {
 							User:         "user@example.com",
 							Roles:        []string{"admin"},
 							Method:       "GET",
-							Path:         "/node/hostname",
+							Path:         "/api/node/hostname",
 							SourceIP:     "127.0.0.1",
 							ResponseCode: 200,
 							DurationMs:   42,
@@ -212,7 +212,7 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExportHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/audit/export",
+				"/api/audit/export",
 				nil,
 			)
 			rec := httptest.NewRecorder()
@@ -315,7 +315,7 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExportRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/audit/export",
+				"/api/audit/export",
 				nil,
 			)
 			tc.setupAuth(req)

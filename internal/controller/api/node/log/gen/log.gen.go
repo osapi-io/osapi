@@ -141,13 +141,13 @@ type GetNodeLogUnitParams struct {
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Get system log entries
-	// (GET /node/{hostname}/log)
+	// (GET /api/node/{hostname}/log)
 	GetNodeLog(ctx echo.Context, hostname Hostname, params GetNodeLogParams) error
 	// List log sources
-	// (GET /node/{hostname}/log/source)
+	// (GET /api/node/{hostname}/log/source)
 	GetNodeLogSource(ctx echo.Context, hostname Hostname) error
 	// Get log entries for a systemd unit
-	// (GET /node/{hostname}/log/unit/{name})
+	// (GET /api/node/{hostname}/log/unit/{name})
 	GetNodeLogUnit(ctx echo.Context, hostname Hostname, name UnitName, params GetNodeLogUnitParams) error
 }
 
@@ -292,9 +292,9 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/node/:hostname/log", wrapper.GetNodeLog)
-	router.GET(baseURL+"/node/:hostname/log/source", wrapper.GetNodeLogSource)
-	router.GET(baseURL+"/node/:hostname/log/unit/:name", wrapper.GetNodeLogUnit)
+	router.GET(baseURL+"/api/node/:hostname/log", wrapper.GetNodeLog)
+	router.GET(baseURL+"/api/node/:hostname/log/source", wrapper.GetNodeLogSource)
+	router.GET(baseURL+"/api/node/:hostname/log/unit/:name", wrapper.GetNodeLogUnit)
 
 }
 
@@ -463,13 +463,13 @@ func (response GetNodeLogUnit500JSONResponse) VisitGetNodeLogUnitResponse(w http
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Get system log entries
-	// (GET /node/{hostname}/log)
+	// (GET /api/node/{hostname}/log)
 	GetNodeLog(ctx context.Context, request GetNodeLogRequestObject) (GetNodeLogResponseObject, error)
 	// List log sources
-	// (GET /node/{hostname}/log/source)
+	// (GET /api/node/{hostname}/log/source)
 	GetNodeLogSource(ctx context.Context, request GetNodeLogSourceRequestObject) (GetNodeLogSourceResponseObject, error)
 	// Get log entries for a systemd unit
-	// (GET /node/{hostname}/log/unit/{name})
+	// (GET /api/node/{hostname}/log/unit/{name})
 	GetNodeLogUnit(ctx context.Context, request GetNodeLogUnitRequestObject) (GetNodeLogUnitResponseObject, error)
 }
 

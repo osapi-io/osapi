@@ -89,7 +89,7 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogs() {
 							User:         "user@example.com",
 							Roles:        []string{"admin"},
 							Method:       "GET",
-							Path:         "/node/hostname",
+							Path:         "/api/node/hostname",
 							SourceIP:     "127.0.0.1",
 							ResponseCode: 200,
 							DurationMs:   42,
@@ -117,7 +117,7 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogs() {
 							User:         "user@example.com",
 							Roles:        []string{"admin"},
 							Method:       "GET",
-							Path:         "/node/hostname",
+							Path:         "/api/node/hostname",
 							SourceIP:     "127.0.0.1",
 							ResponseCode: 200,
 							DurationMs:   42,
@@ -146,7 +146,7 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogs() {
 							User:         "user@example.com",
 							Roles:        []string{"admin"},
 							Method:       "GET",
-							Path:         "/node/hostname",
+							Path:         "/api/node/hostname",
 							SourceIP:     "127.0.0.1",
 							ResponseCode: 200,
 							DurationMs:   42,
@@ -174,7 +174,7 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogs() {
 							User:         "user@example.com",
 							Roles:        []string{"admin"},
 							Method:       "GET",
-							Path:         "/node/hostname",
+							Path:         "/api/node/hostname",
 							OperationID:  "getNodeHostname",
 							SourceIP:     "127.0.0.1",
 							ResponseCode: 200,
@@ -291,7 +291,7 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsValidationHTTP() {
 							User:         "user@example.com",
 							Roles:        []string{"admin"},
 							Method:       "GET",
-							Path:         "/node/hostname",
+							Path:         "/api/node/hostname",
 							SourceIP:     "127.0.0.1",
 							ResponseCode: 200,
 							DurationMs:   42,
@@ -359,7 +359,7 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsValidationHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/audit"+tc.query,
+				"/api/audit"+tc.query,
 				nil,
 			)
 			rec := httptest.NewRecorder()
@@ -464,7 +464,7 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/audit",
+				"/api/audit",
 				nil,
 			)
 			tc.setupAuth(req)

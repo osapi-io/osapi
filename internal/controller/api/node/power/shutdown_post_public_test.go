@@ -378,7 +378,7 @@ func (s *ShutdownPostPublicTestSuite) TestPostNodePowerShutdownValidationHTTP() 
 	}{
 		{
 			name: "when valid request with body",
-			path: "/node/server1/power/shutdown",
+			path: "/api/node/server1/power/shutdown",
 			body: `{"delay":10,"message":"planned shutdown"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -398,7 +398,7 @@ func (s *ShutdownPostPublicTestSuite) TestPostNodePowerShutdownValidationHTTP() 
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/power/shutdown",
+			path: "/api/node/nonexistent/power/shutdown",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -533,7 +533,7 @@ func (s *ShutdownPostPublicTestSuite) TestPostNodePowerShutdownRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/power/shutdown",
+				"/api/node/server1/power/shutdown",
 				strings.NewReader(`{}`),
 			)
 			req.Header.Set("Content-Type", "application/json")

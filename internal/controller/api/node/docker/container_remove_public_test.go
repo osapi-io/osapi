@@ -379,7 +379,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByIDValida
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/container/docker/abc123",
+			path: "/api/node/server1/container/docker/abc123",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -395,7 +395,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByIDValida
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/container/docker/abc123",
+			path: "/api/node/nonexistent/container/docker/abc123",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -520,7 +520,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByIDRBACHT
 
 			req := httptest.NewRequest(
 				http.MethodDelete,
-				"/node/server1/container/docker/abc123",
+				"/api/node/server1/container/docker/abc123",
 				nil,
 			)
 			tc.setupAuth(req)

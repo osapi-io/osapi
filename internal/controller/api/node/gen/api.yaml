@@ -33,7 +33,7 @@ tags:
 paths:
   # ── Node status & sub-resources ──────────────────────────
 
-  /node/{hostname}:
+  /api/node/{hostname}:
     get:
       summary: Retrieve node status
       description: >
@@ -80,7 +80,7 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/disk:
+  /api/node/{hostname}/disk:
     get:
       summary: Retrieve disk usage
       description: Get disk usage information for the target node.
@@ -124,7 +124,7 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/memory:
+  /api/node/{hostname}/memory:
     get:
       summary: Retrieve memory stats
       description: Get memory usage information for the target node.
@@ -168,7 +168,7 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/load:
+  /api/node/{hostname}/load:
     get:
       summary: Retrieve load averages
       description: Get load average information for the target node.
@@ -212,7 +212,7 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/os:
+  /api/node/{hostname}/os:
     get:
       summary: Retrieve OS info
       description: Get operating system information for the target node.
@@ -256,7 +256,7 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/uptime:
+  /api/node/{hostname}/uptime:
     get:
       summary: Retrieve uptime
       description: Get uptime information for the target node.
