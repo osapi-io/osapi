@@ -267,6 +267,8 @@ type Controller struct {
 	NATS          NATSConnection      `mapstructure:"nats"`
 	Metrics       MetricsServer       `mapstructure:"metrics"`
 	Notifications NotificationsConfig `mapstructure:"notifications,omitempty"`
+	// UI holds settings for the embedded management UI.
+	UI UIConfig `mapstructure:"ui,omitempty"`
 }
 
 // UIConfig holds settings for the embedded management UI.
@@ -280,9 +282,11 @@ type APIServer struct {
 	// Port the server will bind to.
 	Port int `mapstructure:"port"`
 	// Security contains security-related configuration for the server, such as CORS and tokens.
-	Security ServerSecurity `mapstructure:"security"     mask:"struct"`
-	// UI holds settings for the embedded management UI.
-	UI UIConfig `mapstructure:"ui,omitempty"`
+	Security ServerSecurity `mapstructure:"security"    mask:"struct"`
+	// JobTimeout is how long the controller waits for agent responses
+	// before returning partial results. Uses Go duration format.
+	// Defaults to 30s when empty.
+	JobTimeout string `mapstructure:"job_timeout"`
 }
 
 // Client configuration settings.

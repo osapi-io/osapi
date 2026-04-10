@@ -66,7 +66,7 @@ just react::fmt    # Format UI with Prettier
 - **`ui/src/lib/`** - `cn.ts`, `auth.tsx`, `permissions.ts`, `features.ts`.
 - **`ui/embed.go`** - `//go:embed dist/*` directive exposing `ui.Assets`.
 - **`internal/controller/api/ui/`** - SPA serving handler (static files + `index.html` fallback for client-side routing).
-- Config: `controller.api.ui.enabled` in `osapi.yaml` (default `true`).
+- Config: `controller.ui.enabled` in `osapi.yaml` (default `true`).
 - `//go:embed dist/*` requires `ui/dist/` to have files at compile time. Always use `just build` / `just test` / `just ready` — these run `just react::build` first. Running `go build` / `go test` directly without a prior UI build will fail.
 
 ## UI Conventions (MANDATORY)

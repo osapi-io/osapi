@@ -407,6 +407,10 @@ The append-only architecture enables true broadcast job processing:
 - Each agent writes independent status events
 - No race conditions or key conflicts
 - Complete tracking of which hosts responded
+- Agents that do not respond within `job_timeout` appear in the result with
+  `status: failed` and `error: "timeout: agent did not respond"`
+- The controller returns partial results — responding agents are not blocked by
+  unresponsive ones
 
 **Status Computation:**
 

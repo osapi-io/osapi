@@ -6,8 +6,11 @@ controller:
     url: http://127.0.0.1:8080
     security:
       bearer_token: placeholder
+  ui:
+    enabled: true
   api:
     port: 8080
+    job_timeout: 30s
     security:
       signing_key: 111fdb0cfd9788fa6af8815f856a0374bf7a0174ad62fa8b98ec07a55f68d8d8
       cors:

@@ -53,15 +53,14 @@ configs, or container images to manage.
 
 ## Configuration
 
-The UI can be disabled by setting `controller.api.ui.enabled: false` in
+The UI can be disabled by setting `controller.ui.enabled: false` in
 `osapi.yaml`. When disabled, the controller skips registering the SPA handler
 and serves only the REST API.
 
 ```yaml
 controller:
-  api:
-    ui:
-      enabled: true # default: true
+  ui:
+    enabled: true # default: true
 ```
 
 The UI is served from the same host and port as the REST API

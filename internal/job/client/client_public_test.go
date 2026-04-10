@@ -699,6 +699,44 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			},
 		},
 		{
+			name: "when broadcast times out injects timeout entries for missing agents",
+			data: nil,
+			setupMocks: func() *client.Client {
+				// Registry reports 2 agents but only server1 responds.
+				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1", "server2"})
+				opts := &client.Options{
+					Timeout:    50 * time.Millisecond,
+					KVBucket:   s.mockKV,
+					StreamName: "JOBS",
+					RegistryKV: registryKV,
+				}
+				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+				s.Require().NoError(err)
+
+				setupPublishAndCollectMocks(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndCollectMockOpts{
+						responseEntries: []string{host1Resp},
+						mockError:       errors.New("partial"),
+						errorMode:       errorOnTimeoutWithPartialResponse,
+					},
+				)
+				return c
+			},
+			validateFunc: func(jobID string, results map[string]*job.Response) {
+				s.NotEmpty(jobID)
+				s.Len(results, 2)
+				s.Contains(results, "server1")
+				s.Equal(job.StatusCompleted, results["server1"].Status)
+				s.Contains(results, "server2")
+				s.Equal(job.StatusFailed, results["server2"].Status)
+				s.Equal("timeout: agent did not respond", results["server2"].Error)
+			},
+		},
+		{
 			name: "when broadcast times out with no responses returns error",
 			data: nil,
 			setupMocks: func() *client.Client {

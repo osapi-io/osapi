@@ -313,8 +313,17 @@ func connectNATSBundle(
 		}
 	}
 
+	jobTimeout := 30 * time.Second
+	if appConfig.Controller.API.JobTimeout != "" {
+		parsed, parseErr := time.ParseDuration(appConfig.Controller.API.JobTimeout)
+		if parseErr != nil {
+			cli.LogFatal(log, "invalid job_timeout", parseErr)
+		}
+		jobTimeout = parsed
+	}
+
 	jc, err := jobclient.New(log, nc, &jobclient.Options{
-		Timeout:    30 * time.Second,
+		Timeout:    jobTimeout,
 		KVBucket:   jobsKV,
 		RegistryKV: registryKV,
 		FactsKV:    factsKV,
@@ -789,7 +798,7 @@ func registerControllerHandlers(
 	}
 	handlers = append(handlers, factsAPI.Handler(log, signingKey, customRoles)...)
 
-	if appConfig.Controller.API.UI.UIEnabled() {
+	if appConfig.Controller.UI.UIEnabled() {
 		// The embedded assets are rooted at dist/ inside the ui package.
 		// fs.Sub with a static valid path cannot fail in practice, but we
 		// propagate the error rather than panic to be safe.
