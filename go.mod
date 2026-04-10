@@ -17,7 +17,7 @@ require (
 	github.com/lmittmann/tint v1.1.3
 	github.com/nats-io/nats-server/v2 v2.12.6
 	github.com/nats-io/nats.go v1.50.0
-	github.com/oapi-codegen/runtime v1.3.1
+	github.com/oapi-codegen/runtime v1.4.0
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/osapi-io/nats-client v0.0.0-20260322200309-c8bab331f583
 	github.com/osapi-io/nats-server v0.0.0-20260216201410-1f33dfc63848
