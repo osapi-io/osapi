@@ -110,6 +110,36 @@ const netplanStatusEmpty = `{
   }
 }`
 
+// netplanStatusSameIndexIfaces has two non-loopback interfaces that share
+// the same index, exercising the sort fallback to alphabetical name order.
+// Interfaces are listed in JSON with "zeth" before "aeth" so the sort has
+// to reorder them for the alphabetical fallback to be observable.
+const netplanStatusSameIndexIfaces = `{
+  "netplan-global-state": {"online": true},
+  "zeth": {
+    "index": 2,
+    "adminstate": "UP",
+    "operstate": "UP",
+    "type": "ethernet",
+    "macaddress": "aa:bb:cc:dd:ee:f2",
+    "addresses": [
+      {"10.0.2.5": {"prefix": 24}}
+    ],
+    "routes": []
+  },
+  "aeth": {
+    "index": 2,
+    "adminstate": "UP",
+    "operstate": "UP",
+    "type": "ethernet",
+    "macaddress": "aa:bb:cc:dd:ee:f3",
+    "addresses": [
+      {"10.0.3.5": {"prefix": 24}}
+    ],
+    "routes": []
+  }
+}`
+
 type InterfacePublicTestSuite struct {
 	suite.Suite
 
@@ -217,6 +247,23 @@ func (suite *InterfacePublicTestSuite) TestList() {
 				suite.Require().Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "interface list:")
+			},
+		},
+		{
+			name: "when two interfaces share the same index, sort falls back to alphabetical order",
+			setup: func() {
+				suite.mockExec.EXPECT().
+					RunCmd("netplan", []string{"status", "--format", "json"}).
+					Return(netplanStatusSameIndexIfaces, nil)
+			},
+			validateFunc: func(result []iface.InterfaceEntry, err error) {
+				suite.Require().NoError(err)
+				suite.Require().Len(result, 2)
+
+				// aeth should come before zeth by name despite
+				// both having index 2.
+				suite.Equal("aeth", result[0].Name)
+				suite.Equal("zeth", result[1].Name)
 			},
 		},
 	}

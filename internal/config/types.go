@@ -275,14 +275,6 @@ type UIConfig struct {
 	Enabled *bool `mapstructure:"enabled"`
 }
 
-// UIEnabled returns whether the UI is enabled, defaulting to true.
-func (c UIConfig) UIEnabled() bool {
-	if c.Enabled == nil {
-		return true
-	}
-	return *c.Enabled
-}
-
 // APIServer holds the HTTP server config (port + security).
 type APIServer struct {
 	// Port the server will bind to.

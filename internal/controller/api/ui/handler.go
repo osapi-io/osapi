@@ -30,24 +30,21 @@ import (
 )
 
 // Handler returns registration functions for the embedded UI. It follows
-// the same pattern as other domain handlers in this package.
-func Handler(assets fs.FS) []func(e *echo.Echo) {
+// the same pattern as other domain handlers in this package. distFS must
+// be rooted at the directory containing index.html (the caller is
+// responsible for any fs.Sub calls).
+func Handler(distFS fs.FS) []func(e *echo.Echo) {
 	return []func(e *echo.Echo){
 		func(e *echo.Echo) {
-			Register(e, assets)
+			Register(e, distFS)
 		},
 	}
 }
 
-// Register mounts the embedded UI assets on the Echo router. Static files
-// are served directly; all other non-/api paths fall back to index.html
-// so React Router can handle client-side routing.
-func Register(e *echo.Echo, assets fs.FS) {
-	distFS, err := fs.Sub(assets, "dist")
-	if err != nil {
-		panic("ui: embedded dist/ directory not found: " + err.Error())
-	}
-
+// Register mounts the UI assets on the Echo router. Static files are served
+// directly; all other non-/api paths fall back to index.html so React Router
+// can handle client-side routing.
+func Register(e *echo.Echo, distFS fs.FS) {
 	fileServer := http.FileServer(http.FS(distFS))
 
 	serveIndex := func(w http.ResponseWriter, _ *http.Request) {

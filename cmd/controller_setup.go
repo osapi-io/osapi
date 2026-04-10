@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"os"
 	"sort"
@@ -789,8 +790,19 @@ func registerControllerHandlers(
 	handlers = append(handlers, factsAPI.Handler(log, signingKey, customRoles)...)
 
 	if appConfig.Controller.API.UI.UIEnabled() {
-		handlers = append(handlers, uihandler.Handler(uiassets.Assets)...)
-		log.Info("embedded UI enabled", slog.String("path", "/"))
+		// The embedded assets are rooted at dist/ inside the ui package.
+		// fs.Sub with a static valid path cannot fail in practice, but we
+		// propagate the error rather than panic to be safe.
+		distFS, err := fs.Sub(uiassets.Assets, "dist")
+		if err != nil {
+			log.Error(
+				"failed to open embedded UI assets",
+				slog.String("error", err.Error()),
+			)
+		} else {
+			handlers = append(handlers, uihandler.Handler(distFS)...)
+			log.Info("embedded UI enabled", slog.String("path", "/"))
+		}
 	}
 
 	sm.RegisterHandlers(handlers)
