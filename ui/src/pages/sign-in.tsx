@@ -5,7 +5,7 @@ import { ErrorBanner } from "@/components/ui/error-banner";
 import { FormField } from "@/components/ui/form-field";
 import { Text } from "@/components/ui/text";
 import { InfoBox } from "@/components/ui/info-box";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { Key, LogIn } from "lucide-react";
 
 export function SignIn() {

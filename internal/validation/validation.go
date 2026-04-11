@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	cronparser "github.com/robfig/cron/v3"
@@ -55,6 +56,12 @@ func init() {
 		return instance.Var(v, "ip") == nil
 	})
 
+	// go_duration validates a Go time.Duration string (e.g., "30s", "5m", "1h", "720h").
+	_ = instance.RegisterValidation("go_duration", func(fl validator.FieldLevel) bool {
+		_, err := time.ParseDuration(fl.Field().String())
+		return err == nil
+	})
+
 	// cron_schedule validates a standard 5-field cron expression
 	// (minute hour day-of-month month day-of-week).
 	cronParser := cronparser.NewParser(
@@ -70,6 +77,12 @@ func init() {
 var customHints = map[string]func(fe validator.FieldError) string{
 	"valid_target": func(fe validator.FieldError) string {
 		return fmt.Sprintf("target agent %q not found", fe.Value())
+	},
+	"go_duration": func(fe validator.FieldError) string {
+		return fmt.Sprintf(
+			"%q is not a valid Go duration (e.g., 30s, 5m, 1h)",
+			fe.Value(),
+		)
 	},
 	"cron_schedule": func(fe validator.FieldError) string {
 		return fmt.Sprintf(

@@ -148,6 +148,131 @@ func (suite *NATSPublicTestSuite) TestBuildNATSAuthOptions() {
 	}
 }
 
+func (suite *NATSPublicTestSuite) TestBuildJobKVConfig() {
+	tests := []struct {
+		name       string
+		namespace  string
+		kvCfg      config.NATSKV
+		validateFn func(jetstream.KeyValueConfig)
+	}{
+		{
+			name:      "when namespace is set",
+			namespace: "osapi",
+			kvCfg: config.NATSKV{
+				Bucket:         "job-queue",
+				ResponseBucket: "job-responses",
+				TTL:            "1h",
+				MaxBytes:       104857600,
+				Storage:        "file",
+				Replicas:       1,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "osapi-job-queue", cfg.Bucket)
+				assert.Equal(suite.T(), 1*time.Hour, cfg.TTL)
+				assert.Equal(suite.T(), int64(104857600), cfg.MaxBytes)
+				assert.Equal(suite.T(), jetstream.FileStorage, cfg.Storage)
+				assert.Equal(suite.T(), 1, cfg.Replicas)
+			},
+		},
+		{
+			name:      "when namespace is empty",
+			namespace: "",
+			kvCfg: config.NATSKV{
+				Bucket:   "job-queue",
+				TTL:      "30m",
+				MaxBytes: 52428800,
+				Storage:  "memory",
+				Replicas: 3,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "job-queue", cfg.Bucket)
+				assert.Equal(suite.T(), 30*time.Minute, cfg.TTL)
+				assert.Equal(suite.T(), int64(52428800), cfg.MaxBytes)
+				assert.Equal(suite.T(), jetstream.MemoryStorage, cfg.Storage)
+				assert.Equal(suite.T(), 3, cfg.Replicas)
+			},
+		},
+		{
+			name:      "when TTL is invalid defaults to zero",
+			namespace: "",
+			kvCfg: config.NATSKV{
+				Bucket:   "job-queue",
+				TTL:      "invalid",
+				MaxBytes: 0,
+				Storage:  "file",
+				Replicas: 1,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), time.Duration(0), cfg.TTL)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got := cli.BuildJobKVConfig(tc.namespace, tc.kvCfg)
+
+			tc.validateFn(got)
+		})
+	}
+}
+
+func (suite *NATSPublicTestSuite) TestBuildResponseKVConfig() {
+	tests := []struct {
+		name       string
+		namespace  string
+		kvCfg      config.NATSKV
+		validateFn func(jetstream.KeyValueConfig)
+	}{
+		{
+			name:      "when namespace is set",
+			namespace: "osapi",
+			kvCfg: config.NATSKV{
+				Bucket:         "job-queue",
+				ResponseBucket: "job-responses",
+				TTL:            "1h",
+				MaxBytes:       104857600,
+				Storage:        "file",
+				Replicas:       1,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "osapi-job-responses", cfg.Bucket)
+				assert.Equal(suite.T(), 1*time.Hour, cfg.TTL)
+				assert.Equal(suite.T(), int64(104857600), cfg.MaxBytes)
+				assert.Equal(suite.T(), jetstream.FileStorage, cfg.Storage)
+				assert.Equal(suite.T(), 1, cfg.Replicas)
+			},
+		},
+		{
+			name:      "when namespace is empty",
+			namespace: "",
+			kvCfg: config.NATSKV{
+				Bucket:         "job-queue",
+				ResponseBucket: "job-responses",
+				TTL:            "30m",
+				MaxBytes:       52428800,
+				Storage:        "memory",
+				Replicas:       3,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "job-responses", cfg.Bucket)
+				assert.Equal(suite.T(), 30*time.Minute, cfg.TTL)
+				assert.Equal(suite.T(), int64(52428800), cfg.MaxBytes)
+				assert.Equal(suite.T(), jetstream.MemoryStorage, cfg.Storage)
+				assert.Equal(suite.T(), 3, cfg.Replicas)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got := cli.BuildResponseKVConfig(tc.namespace, tc.kvCfg)
+
+			tc.validateFn(got)
+		})
+	}
+}
+
 func (suite *NATSPublicTestSuite) TestBuildRegistryKVConfig() {
 	tests := []struct {
 		name        string

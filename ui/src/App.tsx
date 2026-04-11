@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { PageLayout } from "./components/layout/page-layout";
-import { AuthProvider, useAuth } from "./lib/auth";
+import { AuthProvider } from "./lib/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { CommandRegistryProvider } from "./lib/command-registry";
 import { Dashboard } from "./pages/dashboard";
 import { Configure } from "./pages/configure";

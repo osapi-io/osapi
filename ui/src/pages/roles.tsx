@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { SectionLabel } from "@/components/ui/section-label";
 import { DataTable } from "@/components/ui/data-table";
 import { Text } from "@/components/ui/text";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { ROLES, ALL_PERMISSIONS, BLOCK_PERMISSIONS } from "@/lib/permissions";
 import { Shield, Check, X } from "lucide-react";
 import { cn } from "@/lib/cn";

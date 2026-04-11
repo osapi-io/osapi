@@ -41,7 +41,7 @@ import {
   BLOCK_GROUPS,
   type BlockStatus,
 } from "@/hooks/use-stack";
-import { useCommands } from "@/lib/command-registry";
+import { useCommands } from "@/hooks/use-commands";
 import { useStacks } from "@/hooks/use-stacks";
 import { features } from "@/lib/features";
 import {
@@ -197,7 +197,7 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/cn";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { BLOCK_PERMISSIONS } from "@/lib/permissions";
 import {
   Calendar,

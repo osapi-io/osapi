@@ -1,20 +1,14 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  type ReactNode,
-} from "react";
+import { useState, useCallback, type ReactNode } from "react";
 import {
   ROLES,
   getRoleByName,
   getRoleByJwtRole,
   hasPermission,
   hasAllPermissions,
-  type RoleDefinition,
   type Permission,
 } from "@/lib/permissions";
 import { setAuthToken as setAuthTokenValue } from "@/lib/auth-token";
+import { AuthContext } from "@/lib/auth-context";
 
 // ---------------------------------------------------------------------------
 // JWT decoding (no verification — that's the server's job)
@@ -34,40 +28,14 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
 function extractRolesFromJwt(token: string): string[] {
   const payload = decodeJwtPayload(token);
   if (!payload) return [];
-  // osapi puts roles in the "roles" claim
   const roles = payload.roles;
   if (Array.isArray(roles)) return roles.map(String);
   return [];
 }
 
 // ---------------------------------------------------------------------------
-// Auth context
+// Auth provider
 // ---------------------------------------------------------------------------
-
-interface AuthState {
-  /** Whether the user has a valid token */
-  isAuthenticated: boolean;
-  /** Current effective role */
-  role: RoleDefinition;
-  /** Role override from dropdown (null = use token role) */
-  roleOverride: string | null;
-  /** JWT token if provided */
-  token: string | null;
-  /** Roles extracted from JWT */
-  tokenRoles: string[];
-  /** Check if current role has a permission */
-  can: (permission: Permission) => boolean;
-  /** Check if current role has all permissions */
-  canAll: (permissions: Permission[]) => boolean;
-  /** Set the role override (dropdown) */
-  setRoleOverride: (role: string | null) => void;
-  /** Set the JWT token */
-  setToken: (token: string) => void;
-  /** Clear the token */
-  clearToken: () => void;
-}
-
-const AuthContext = createContext<AuthState | null>(null);
 
 const STORAGE_KEY_ROLE = "osapi-role-override";
 const STORAGE_KEY_TOKEN = "osapi-token";
@@ -81,25 +49,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const [token, setTokenState] = useState<string | null>(() => {
-    // Env var takes priority, then localStorage, then null (show sign-in)
     return ENV_TOKEN || localStorage.getItem(STORAGE_KEY_TOKEN) || null;
   });
 
   const tokenRoles = token ? extractRolesFromJwt(token) : [];
   const isAuthenticated = token !== null && tokenRoles.length > 0;
 
-  // Resolve effective role: override > token > default to viewer
-  let role: RoleDefinition;
+  let role;
   if (roleOverride) {
     role = getRoleByName(roleOverride) ?? ROLES[ROLES.length - 1];
   } else if (tokenRoles.length > 0) {
-    // Use the highest-privilege role from the token
     role =
       getRoleByJwtRole(tokenRoles[0]) ??
       getRoleByName(tokenRoles[0]) ??
       ROLES[ROLES.length - 1];
   } else {
-    role = ROLES[ROLES.length - 1]; // viewer
+    role = ROLES[ROLES.length - 1];
   }
 
   const can = useCallback(
@@ -151,10 +116,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth(): AuthState {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
 }

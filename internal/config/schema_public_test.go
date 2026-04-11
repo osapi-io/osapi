@@ -51,9 +51,25 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 						},
 					},
 					API: config.APIServer{
+						Port: 8080,
 						Security: config.ServerSecurity{
 							SigningKey: "test-signing-key",
 						},
+					},
+					NATS: config.NATSConnection{Port: 4222},
+				},
+				NATS: config.NATS{
+					Stream:   config.NATSStream{Name: "JOBS", Subjects: "jobs.>"},
+					KV:       config.NATSKV{Bucket: "job-queue", ResponseBucket: "job-responses"},
+					Registry: config.NATSRegistry{Bucket: "agent-registry"},
+				},
+				Agent: config.AgentConfig{
+					NATS:    config.NATSConnection{Port: 4222},
+					MaxJobs: 10,
+					Conditions: config.AgentConditions{
+						MemoryPressureThreshold: 90,
+						HighLoadMultiplier:      2.0,
+						DiskPressureThreshold:   90,
 					},
 				},
 			},

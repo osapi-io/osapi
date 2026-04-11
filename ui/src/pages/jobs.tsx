@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { ContentArea } from "@/components/layout/content-area";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionLabel } from "@/components/ui/section-label";

@@ -91,7 +91,7 @@ func (s *FactsPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 	agent.ResetMarshalJSON()
 	agent.ResetUnmarshalJSON()
-	agent.ResetFactsInterval()
+	agent.ResetDefaultFactsInterval()
 }
 
 func (s *FactsPublicTestSuite) TestWriteFacts() {
@@ -229,7 +229,7 @@ func (s *FactsPublicTestSuite) TestStartFactsRefresh() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			agent.SetFactsInterval(10 * time.Millisecond)
+			agent.SetDefaultFactsInterval(10 * time.Millisecond)
 
 			ctx, cancel := context.WithCancel(context.Background())
 			agent.ExportStartFacts(ctx, s.testAgent, "test-agent")
@@ -240,6 +240,75 @@ func (s *FactsPublicTestSuite) TestStartFactsRefresh() {
 
 			// Wait for goroutine to finish
 			agent.WaitAgentWG(s.testAgent)
+		})
+	}
+}
+
+func (s *FactsPublicTestSuite) TestStartFactsInterval() {
+	tests := []struct {
+		name         string
+		interval     string
+		setupMock    func()
+		validateFunc func()
+	}{
+		{
+			name:     "when facts interval is configured uses configured value",
+			interval: "20ms",
+			setupMock: func() {
+				s.mockFactsKV.EXPECT().
+					Put(gomock.Any(), "facts.test_agent", gomock.Any()).
+					Return(uint64(1), nil).
+					AnyTimes()
+			},
+			validateFunc: func() {},
+		},
+		{
+			name:     "when facts interval is empty uses default",
+			interval: "",
+			setupMock: func() {
+				s.mockFactsKV.EXPECT().
+					Put(gomock.Any(), "facts.test_agent", gomock.Any()).
+					Return(uint64(1), nil).
+					AnyTimes()
+			},
+			validateFunc: func() {},
+		},
+		{
+			name:     "when facts interval is invalid uses default",
+			interval: "7d",
+			setupMock: func() {
+				s.mockFactsKV.EXPECT().
+					Put(gomock.Any(), "facts.test_agent", gomock.Any()).
+					Return(uint64(1), nil).
+					AnyTimes()
+			},
+			validateFunc: func() {},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupMock()
+
+			// Override the default to be very short so "empty" and "invalid"
+			// cases also tick quickly.
+			agent.SetDefaultFactsInterval(10 * time.Millisecond)
+
+			cfg := agent.GetAgentAppConfig(s.testAgent)
+			cfg.Agent.Facts.Interval = tt.interval
+			agent.SetAgentAppConfig(s.testAgent, cfg)
+
+			ctx, cancel := context.WithCancel(context.Background())
+			agent.ExportStartFacts(ctx, s.testAgent, "test-agent")
+
+			// Wait for at least one ticker refresh
+			time.Sleep(50 * time.Millisecond)
+			cancel()
+
+			// Wait for goroutine to finish
+			agent.WaitAgentWG(s.testAgent)
+
+			tt.validateFunc()
 		})
 	}
 }

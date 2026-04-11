@@ -97,6 +97,40 @@ func (s *ConsumerPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
+func (s *ConsumerPublicTestSuite) TestConsumerNamePrefix() {
+	tests := []struct {
+		name         string
+		consumerName string
+		validateFunc func(result string)
+	}{
+		{
+			name:         "when consumer name is configured returns name with underscore",
+			consumerName: "my-consumer",
+			validateFunc: func(result string) {
+				s.Equal("my-consumer_", result)
+			},
+		},
+		{
+			name:         "when consumer name is empty returns empty string",
+			consumerName: "",
+			validateFunc: func(result string) {
+				s.Equal("", result)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			cfg := agent.GetAgentAppConfig(s.testAgent)
+			cfg.Agent.Consumer.Name = tt.consumerName
+			agent.SetAgentAppConfig(s.testAgent, cfg)
+
+			result := agent.ExportConsumerNamePrefix(s.testAgent)
+			tt.validateFunc(result)
+		})
+	}
+}
+
 func (s *ConsumerPublicTestSuite) TestConsumeQueryJobs() {
 	tests := []struct {
 		name       string

@@ -5,6 +5,9 @@ import path from 'path'
 
 export default defineConfig({
   envPrefix: 'OSAPI_',
+  build: {
+    target: 'es2022',
+  },
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

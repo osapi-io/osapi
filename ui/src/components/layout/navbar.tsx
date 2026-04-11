@@ -10,7 +10,7 @@ import {
   Shield,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { ROLES } from "@/lib/permissions";
 import { Badge } from "@/components/ui/badge";
 import { Dropdown } from "@/components/ui/dropdown";

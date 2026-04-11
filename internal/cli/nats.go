@@ -77,6 +77,44 @@ func BuildNATSAuthOptions(
 	}
 }
 
+// BuildJobKVConfig builds a jetstream.KeyValueConfig from job KV config values.
+// The returned config includes TTL, MaxBytes, Storage, and Replicas from the
+// NATSKV configuration.
+func BuildJobKVConfig(
+	namespace string,
+	kvCfg config.NATSKV,
+) jetstream.KeyValueConfig {
+	bucket := job.ApplyNamespaceToInfraName(namespace, kvCfg.Bucket)
+	ttl, _ := time.ParseDuration(kvCfg.TTL)
+
+	return jetstream.KeyValueConfig{
+		Bucket:   bucket,
+		TTL:      ttl,
+		MaxBytes: kvCfg.MaxBytes,
+		Storage:  ParseJetstreamStorageType(kvCfg.Storage),
+		Replicas: kvCfg.Replicas,
+	}
+}
+
+// BuildResponseKVConfig builds a jetstream.KeyValueConfig for the job response
+// KV bucket. It shares TTL, MaxBytes, Storage, and Replicas settings from the
+// parent NATSKV configuration.
+func BuildResponseKVConfig(
+	namespace string,
+	kvCfg config.NATSKV,
+) jetstream.KeyValueConfig {
+	bucket := job.ApplyNamespaceToInfraName(namespace, kvCfg.ResponseBucket)
+	ttl, _ := time.ParseDuration(kvCfg.TTL)
+
+	return jetstream.KeyValueConfig{
+		Bucket:   bucket,
+		TTL:      ttl,
+		MaxBytes: kvCfg.MaxBytes,
+		Storage:  ParseJetstreamStorageType(kvCfg.Storage),
+		Replicas: kvCfg.Replicas,
+	}
+}
+
 // BuildRegistryKVConfig builds a jetstream.KeyValueConfig from registry config values.
 func BuildRegistryKVConfig(
 	namespace string,

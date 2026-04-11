@@ -41,20 +41,12 @@ type NotificationsConfig struct {
 	Notifier string `mapstructure:"notifier"`
 	// RenotifyInterval is how often to re-fire active conditions.
 	// Uses Go duration format (e.g., "1m", "5m", "1h"). Zero disables.
-	RenotifyInterval string `mapstructure:"renotify_interval"`
+	RenotifyInterval string `mapstructure:"renotify_interval" validate:"omitempty,go_duration"`
 }
 
 // Telemetry configuration settings.
 type Telemetry struct {
 	Tracing TracingConfig `mapstructure:"tracing,omitempty"`
-	Metrics MetricsConfig `mapstructure:"metrics,omitempty"`
-}
-
-// MetricsConfig configuration settings for Prometheus metrics.
-type MetricsConfig struct {
-	// Path is the HTTP path for the Prometheus scrape endpoint.
-	// Defaults to "/metrics" when empty.
-	Path string `mapstructure:"path"`
 }
 
 // MetricsServer configures the per-component metrics HTTP server.
@@ -64,7 +56,7 @@ type MetricsServer struct {
 	// Host the metrics server binds to.
 	Host string `mapstructure:"host"`
 	// Port the metrics server listens on.
-	Port int `mapstructure:"port"`
+	Port int `mapstructure:"port"    validate:"omitempty,min=1,max=65535"`
 }
 
 // TracingConfig configuration settings for distributed tracing.
@@ -127,7 +119,7 @@ type NATSAudit struct {
 	Stream string `mapstructure:"stream"`
 	// Subject is the base subject prefix for audit messages.
 	Subject  string `mapstructure:"subject"`
-	MaxAge   string `mapstructure:"max_age"` // e.g. "720h" (30 days)
+	MaxAge   string `mapstructure:"max_age"   validate:"omitempty,go_duration"` // e.g. "720h" (30 days)
 	MaxBytes int64  `mapstructure:"max_bytes"`
 	Storage  string `mapstructure:"storage"` // "file" or "memory"
 	Replicas int    `mapstructure:"replicas"`
@@ -136,9 +128,9 @@ type NATSAudit struct {
 // NATSRegistry configuration for the agent registry KV bucket.
 type NATSRegistry struct {
 	// Bucket is the KV bucket name for agent registration entries.
-	Bucket   string `mapstructure:"bucket"`
-	TTL      string `mapstructure:"ttl"`     // e.g. "30s"
-	Storage  string `mapstructure:"storage"` // "file" or "memory"
+	Bucket   string `mapstructure:"bucket"   validate:"required"`
+	TTL      string `mapstructure:"ttl"      validate:"omitempty,go_duration"` // e.g. "30s"
+	Storage  string `mapstructure:"storage"`                                   // "file" or "memory"
 	Replicas int    `mapstructure:"replicas"`
 }
 
@@ -146,8 +138,8 @@ type NATSRegistry struct {
 type NATSFacts struct {
 	// Bucket is the KV bucket name for agent facts entries.
 	Bucket   string `mapstructure:"bucket"`
-	TTL      string `mapstructure:"ttl"`     // e.g. "1h"
-	Storage  string `mapstructure:"storage"` // "file" or "memory"
+	TTL      string `mapstructure:"ttl"      validate:"omitempty,go_duration"` // e.g. "1h"
+	Storage  string `mapstructure:"storage"`                                   // "file" or "memory"
 	Replicas int    `mapstructure:"replicas"`
 }
 
@@ -195,10 +187,10 @@ type NATSServer struct {
 // NATSStream configuration for JetStream stream settings.
 type NATSStream struct {
 	// Name is the JetStream stream name.
-	Name string `mapstructure:"name"`
+	Name string `mapstructure:"name"     validate:"required"`
 	// Subjects is the subject filter for the stream.
-	Subjects string `mapstructure:"subjects"`
-	MaxAge   string `mapstructure:"max_age"` // e.g. "24h", "1h30m"
+	Subjects string `mapstructure:"subjects" validate:"required"`
+	MaxAge   string `mapstructure:"max_age"  validate:"omitempty,go_duration"` // e.g. "24h", "1h30m"
 	MaxMsgs  int64  `mapstructure:"max_msgs"`
 	Storage  string `mapstructure:"storage"` // "file" or "memory"
 	Replicas int    `mapstructure:"replicas"`
@@ -208,9 +200,9 @@ type NATSStream struct {
 // NATSKV configuration for KeyValue bucket settings.
 type NATSKV struct {
 	// Bucket is the KV bucket name for job definitions and status events.
-	Bucket string `mapstructure:"bucket"`
+	Bucket string `mapstructure:"bucket"          validate:"required"`
 	// ResponseBucket is the KV bucket name for agent result storage.
-	ResponseBucket string `mapstructure:"response_bucket"`
+	ResponseBucket string `mapstructure:"response_bucket" validate:"required"`
 	TTL            string `mapstructure:"ttl"` // e.g. "1h", "30m"
 	MaxBytes       int64  `mapstructure:"max_bytes"`
 	Storage        string `mapstructure:"storage"` // "file" or "memory"
@@ -240,7 +232,7 @@ type ObjectStoreBucketInfo struct {
 
 // NATSDLQ configuration for Dead Letter Queue stream settings.
 type NATSDLQ struct {
-	MaxAge   string `mapstructure:"max_age"` // e.g. "7d", "24h"
+	MaxAge   string `mapstructure:"max_age"  validate:"omitempty,go_duration"` // e.g. "7d", "24h"
 	MaxMsgs  int64  `mapstructure:"max_msgs"`
 	Storage  string `mapstructure:"storage"` // "file" or "memory"
 	Replicas int    `mapstructure:"replicas"`
@@ -251,7 +243,7 @@ type NATSConnection struct {
 	// Host the NATS server hostname.
 	Host string `mapstructure:"host"`
 	// Port the NATS server port.
-	Port int `mapstructure:"port"`
+	Port int `mapstructure:"port"           validate:"min=1,max=65535"`
 	// ClientName the NATS client name for identification.
 	ClientName string `mapstructure:"client_name"`
 	// Namespace is a prefix for all NATS subjects used by this client.
@@ -280,13 +272,13 @@ type UIConfig struct {
 // APIServer holds the HTTP server config (port + security).
 type APIServer struct {
 	// Port the server will bind to.
-	Port int `mapstructure:"port"`
+	Port int `mapstructure:"port"        validate:"min=1,max=65535"`
 	// Security contains security-related configuration for the server, such as CORS and tokens.
-	Security ServerSecurity `mapstructure:"security"    mask:"struct"`
+	Security ServerSecurity `mapstructure:"security"                                     mask:"struct"`
 	// JobTimeout is how long the controller waits for agent responses
 	// before returning partial results. Uses Go duration format.
 	// Defaults to 30s when empty.
-	JobTimeout string `mapstructure:"job_timeout"`
+	JobTimeout string `mapstructure:"job_timeout" validate:"omitempty,go_duration"`
 }
 
 // Client configuration settings.
@@ -332,7 +324,7 @@ type AgentConsumer struct {
 	// MaxDeliver is the maximum number of redelivery attempts before sending to DLQ.
 	MaxDeliver int `mapstructure:"max_deliver"`
 	// AckWait is the time to wait for an ACK before redelivering.
-	AckWait string `mapstructure:"ack_wait"` // e.g. "30s", "1m"
+	AckWait string `mapstructure:"ack_wait"        validate:"omitempty,go_duration"` // e.g. "30s", "1m"
 	// MaxAckPending is the maximum outstanding unacknowledged messages.
 	MaxAckPending int `mapstructure:"max_ack_pending"`
 	// ReplayPolicy is "instant" or "original".
@@ -344,14 +336,14 @@ type AgentConsumer struct {
 // AgentFacts configuration for the agent's facts collection settings.
 type AgentFacts struct {
 	// Interval is how often the agent collects and publishes facts.
-	Interval string `mapstructure:"interval"` // e.g. "5m", "1h"
+	Interval string `mapstructure:"interval" validate:"omitempty,go_duration"` // e.g. "5m", "1h"
 }
 
 // AgentConditions holds threshold configuration for node conditions.
 type AgentConditions struct {
-	MemoryPressureThreshold int     `mapstructure:"memory_pressure_threshold"`
-	HighLoadMultiplier      float64 `mapstructure:"high_load_multiplier"`
-	DiskPressureThreshold   int     `mapstructure:"disk_pressure_threshold"`
+	MemoryPressureThreshold int     `mapstructure:"memory_pressure_threshold" validate:"min=1,max=100"`
+	HighLoadMultiplier      float64 `mapstructure:"high_load_multiplier"      validate:"gt=0"`
+	DiskPressureThreshold   int     `mapstructure:"disk_pressure_threshold"   validate:"min=1,max=100"`
 }
 
 // ProcessConditions holds threshold configuration for process-level conditions.
@@ -384,7 +376,7 @@ type AgentConfig struct {
 	// Hostname identifies this agent instance for routing.
 	Hostname string `mapstructure:"hostname"`
 	// MaxJobs maximum number of concurrent jobs to process.
-	MaxJobs int `mapstructure:"max_jobs"`
+	MaxJobs int `mapstructure:"max_jobs"                       validate:"min=1"`
 	// Labels are key-value pairs for label-based routing (e.g., role: web, env: prod).
 	Labels map[string]string `mapstructure:"labels"`
 	// Conditions holds threshold settings for node condition evaluation.

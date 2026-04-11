@@ -29,8 +29,9 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/platform"
 )
 
-// factsInterval controls the fact refresh period.
-var factsInterval = 60 * time.Second
+// defaultFactsInterval is the fallback fact refresh period when no config
+// value is set or the configured value is unparseable.
+var defaultFactsInterval = 60 * time.Second
 
 // startFacts writes the initial facts, spawns a goroutine that
 // refreshes the entry on a ticker, and stops on ctx.Done().
@@ -44,11 +45,18 @@ func (a *Agent) startFacts(
 
 	a.writeFacts(ctx, hostname)
 
+	interval := defaultFactsInterval
+	if cfgInterval := a.appConfig.Agent.Facts.Interval; cfgInterval != "" {
+		if parsed, err := time.ParseDuration(cfgInterval); err == nil {
+			interval = parsed
+		}
+	}
+
 	a.wg.Add(1)
 	go func() {
 		defer a.wg.Done()
 
-		ticker := time.NewTicker(factsInterval)
+		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 
 		for {
