@@ -41,9 +41,9 @@ var (
 	Gray      = lipgloss.Color("245")
 	LightGray = lipgloss.Color("241")
 	White     = lipgloss.Color("15")
-	Red       = lipgloss.Color("196")
-	Yellow    = lipgloss.Color("226")
-	Green     = lipgloss.Color("82")
+	Red       = lipgloss.Color("#ef4444") // matches UI --color-status-error
+	Yellow    = lipgloss.Color("222")     // warm amber
+	Green     = lipgloss.Color("#67ea94") // matches UI --color-status-ready
 	Teal      = lipgloss.Color("#06ffa5")
 )
 
@@ -381,6 +381,14 @@ func PrintErrors(
 	skipStyle := lipgloss.NewStyle().Foreground(Yellow)
 	labelStyle := lipgloss.NewStyle().Bold(true).Foreground(Purple)
 
+	// Find longest hostname for alignment.
+	maxHost := 0
+	for _, e := range errors {
+		if len(e.Hostname) > maxHost {
+			maxHost = len(e.Hostname)
+		}
+	}
+
 	fmt.Printf("\n  %s\n", labelStyle.Render("Details:"))
 	for _, e := range errors {
 		style := errStyle
@@ -388,7 +396,7 @@ func PrintErrors(
 			style = skipStyle
 		}
 		fmt.Printf("  %s  %s\n",
-			style.Render(e.Hostname),
+			style.Render(fmt.Sprintf("%-*s", maxHost, e.Hostname)),
 			style.Render(e.Message),
 		)
 	}
