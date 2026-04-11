@@ -199,6 +199,17 @@ receive the message (broadcast within the label group). Label keys must match
 `[a-zA-Z0-9_-]+`, and each dot-separated segment of the value must match the
 same pattern.
 
+### Label Limits
+
+Agents support up to **5 labels**. Each label creates NATS JetStream consumers
+for every prefix level of its hierarchical value (query + modify). For example,
+one label `group: web.dev.us-east` creates 6 consumers (3 prefix levels × 2
+operation types). With 5 labels averaging 3 levels each, an agent creates ~36
+consumers total (30 label + 6 base).
+
+At fleet scale (1000+ agents), use an external NATS cluster rather than the
+embedded server to handle the consumer count efficiently.
+
 ## Supported Operations
 
 Browse `internal/agent/processor_*.go` for the current operation list.

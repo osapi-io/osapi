@@ -520,8 +520,9 @@ agent:
   hostname: ''
   # Maximum number of concurrent jobs to process.
   max_jobs: 10
-  # Key-value labels for label-based routing.
+  # Key-value labels for label-based routing (max 5).
   # Values can be hierarchical with dot separators.
+  # Each label creates NATS consumers for prefix matching.
   # See Job System Architecture for details.
   labels:
     group: 'web.dev.us-east'
@@ -730,7 +731,7 @@ When enabled, the port also serves `/health` (liveness) and `/health/ready`
 | `conditions.disk_pressure_threshold`       | int               | Disk pressure threshold percent (default 90)               |
 | `process_conditions.memory_pressure_bytes` | int64             | Process RSS threshold in bytes (0 = disabled)              |
 | `process_conditions.high_cpu_percent`      | float             | Process CPU usage threshold as a percentage (0 = disabled) |
-| `labels`                                   | map[string]string | Key-value pairs for label-based routing                    |
+| `labels`                                   | map[string]string | Key-value pairs for label-based routing (max 5)            |
 | `metrics.enabled`                          | bool              | Enable the metrics server (default: true)                  |
 | `metrics.port`                             | int               | Port the metrics server listens on (default: 9091)         |
 | `privilege_escalation.enabled`             | bool              | Activate sudo and capability checks (default false)        |
