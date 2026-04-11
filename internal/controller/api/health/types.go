@@ -178,16 +178,14 @@ func (h *Health) StartMetricsRefresh(
 		return
 	}
 
-	log := h.logger.With(slog.String("subsystem", "api.health.metrics"))
-
-	log.Info(
+	h.logger.Info(
 		"metrics cache refresh started",
 		slog.String("interval", metricsCacheTTL.String()),
 	)
 
 	go func() {
 		h.refreshMetricsCache(ctx)
-		log.Info(
+		h.logger.Info(
 			"metrics cache initialized",
 			slog.String("next_in", metricsCacheTTL.String()),
 		)
@@ -198,12 +196,12 @@ func (h *Health) StartMetricsRefresh(
 		for {
 			select {
 			case <-ctx.Done():
-				log.Info("metrics cache refresh stopped")
+				h.logger.Info("metrics cache refresh stopped")
 
 				return
 			case <-ticker.C:
 				h.refreshMetricsCache(ctx)
-				log.Debug(
+				h.logger.Debug(
 					"metrics cache refreshed",
 					slog.String("next_in", metricsCacheTTL.String()),
 				)
