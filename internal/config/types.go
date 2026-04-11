@@ -261,6 +261,8 @@ type Controller struct {
 	Notifications NotificationsConfig `mapstructure:"notifications,omitempty"`
 	// UI holds settings for the embedded management UI.
 	UI UIConfig `mapstructure:"ui,omitempty"`
+	// PKI holds PKI enrollment and signing settings.
+	PKI ControllerPKI `mapstructure:"pki,omitempty"`
 }
 
 // UIConfig holds settings for the embedded management UI.
@@ -363,6 +365,27 @@ type PrivilegeEscalation struct {
 	Enabled bool `mapstructure:"enabled"`
 }
 
+// AgentPKI holds PKI configuration for the agent.
+type AgentPKI struct {
+	// Enabled activates PKI enrollment and job signature verification.
+	Enabled bool `mapstructure:"enabled"`
+	// KeyDir is the directory for agent keypair storage.
+	KeyDir string `mapstructure:"key_dir"`
+}
+
+// ControllerPKI holds PKI configuration for the controller.
+type ControllerPKI struct {
+	// Enabled activates PKI enrollment and job signing.
+	Enabled bool `mapstructure:"enabled"`
+	// KeyDir is the directory for controller keypair storage.
+	KeyDir string `mapstructure:"key_dir"`
+	// AutoAccept automatically accepts all agent enrollment requests.
+	AutoAccept bool `mapstructure:"auto_accept"`
+	// RotationGracePeriod is how long both old and new keys are accepted
+	// during key rotation. Uses Go duration format.
+	RotationGracePeriod string `mapstructure:"rotation_grace_period" validate:"omitempty,go_duration"`
+}
+
 // AgentConfig configuration settings.
 type AgentConfig struct {
 	// NATS connection settings for the agent.
@@ -387,5 +410,7 @@ type AgentConfig struct {
 	ProcessConditions ProcessConditions `mapstructure:"process_conditions,omitempty"`
 	// PrivilegeEscalation configures least-privilege agent mode.
 	PrivilegeEscalation PrivilegeEscalation `mapstructure:"privilege_escalation,omitempty"`
-	Metrics             MetricsServer       `mapstructure:"metrics"`
+	// PKI holds PKI enrollment and signing settings.
+	PKI     AgentPKI      `mapstructure:"pki,omitempty"`
+	Metrics MetricsServer `mapstructure:"metrics"`
 }
