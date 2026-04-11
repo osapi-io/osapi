@@ -375,6 +375,14 @@ func ExportAgentListFromGen(
 	return agentListFromGen(input)
 }
 
+// ExportPendingAgentListFromGen exposes the private pendingAgentListFromGen
+// for testing.
+func ExportPendingAgentListFromGen(
+	input *gen.ListPendingAgentsResponse,
+) PendingAgentList {
+	return pendingAgentListFromGen(input)
+}
+
 // SysctlEntryCollectionFromGen exposes the private
 // sysctlEntryCollectionFromGen for testing.
 func SysctlEntryCollectionFromGen(
