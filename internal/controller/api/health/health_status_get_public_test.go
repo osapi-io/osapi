@@ -258,15 +258,10 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Equal("file-objects", (*r.ObjectStores)[0].Name)
 				s.Equal(5242880, (*r.ObjectStores)[0].Size)
 
+				// Consumer count is derived from stream info, not enumerated.
 				s.Require().NotNil(r.Consumers)
-				s.Equal(2, r.Consumers.Total)
-				s.Require().NotNil(r.Consumers.Consumers)
-				s.Len(*r.Consumers.Consumers, 2)
-				s.Equal("query_any_web_01", (*r.Consumers.Consumers)[0].Name)
-				s.Equal(0, (*r.Consumers.Consumers)[0].Pending)
-				s.Equal(3, (*r.Consumers.Consumers)[0].AckPending)
-				s.Equal(1, (*r.Consumers.Consumers)[1].Pending)
-				s.Equal(1, (*r.Consumers.Consumers)[1].Redelivered)
+				s.Equal(1, r.Consumers.Total)
+				s.Nil(r.Consumers.Consumers)
 
 				s.Require().NotNil(r.Jobs)
 				s.Equal(100, r.Jobs.Total)
@@ -792,7 +787,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusHTTP() {
 				`"agents"`,
 				`"web-01"`,
 				`"group=web.prod"`,
-				`"query_any_web_01"`,
+				`"total":1`,
 				`"file-objects"`,
 				`"registry"`,
 				`"api-server-01"`,
