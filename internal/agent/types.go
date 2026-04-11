@@ -91,6 +91,9 @@ type Agent struct {
 	// state is the agent's scheduling state (Ready, Draining, Cordoned).
 	state string
 
+	// machineID is the permanent host identifier resolved at startup.
+	machineID string
+
 	// hostname cached from Start for drain/undrain resubscribe.
 	hostname string
 

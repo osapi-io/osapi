@@ -72,11 +72,8 @@ func (a *Agent) writeStatusEvent(
 	event string,
 	data map[string]interface{},
 ) error {
-	// Get hostname for this agent (GetAgentHostname always succeeds)
-	hostname, _ := job.GetAgentHostname(a.appConfig.Agent.Hostname)
-
-	// Use job client to write status event
-	return a.jobClient.WriteStatusEvent(ctx, jobID, event, hostname, data)
+	// Use cached hostname resolved at startup.
+	return a.jobClient.WriteStatusEvent(ctx, jobID, event, a.hostname, data)
 }
 
 // handleJobMessage processes incoming job messages from NATS.
@@ -235,10 +232,8 @@ func (a *Agent) handleJobMessage(
 		a.jobsActive.Add(ctx, 1)
 	}
 
-	// Get agent hostname (GetAgentHostname always succeeds)
-	hostname, _ := job.GetAgentHostname(a.appConfig.Agent.Hostname)
-
-	// Create job response
+	// Create job response using cached hostname resolved at startup.
+	hostname := a.hostname
 	response := job.Response{
 		JobID:     jobRequest.JobID,
 		Status:    job.StatusProcessing,

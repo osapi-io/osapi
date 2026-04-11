@@ -25,6 +25,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/retr0h/osapi/internal/agent/identity"
 	"github.com/retr0h/osapi/internal/job"
 )
 
@@ -36,11 +37,22 @@ func (a *Agent) Start() {
 
 	a.logger.Info("starting node agent")
 
-	// Determine agent hostname (GetAgentHostname always succeeds)
-	a.hostname, _ = job.GetAgentHostname(a.appConfig.Agent.Hostname)
+	// Resolve agent identity (machine ID + hostname).
+	ident, err := identity.GetIdentity(a.appFs, a.appConfig.Agent.Hostname)
+	if err != nil {
+		a.logger.Error("failed to resolve agent identity",
+			slog.String("error", err.Error()),
+		)
+		a.cancel()
+
+		return
+	}
+	a.machineID = ident.MachineID
+	a.hostname = ident.Hostname
 
 	a.logger.Info(
 		"agent configuration",
+		slog.String("machine_id", a.machineID),
 		slog.String("hostname", a.hostname),
 		slog.String("queue_group", a.appConfig.Agent.QueueGroup),
 		slog.Int("max_jobs", a.appConfig.Agent.MaxJobs),
@@ -71,10 +83,10 @@ func (a *Agent) Start() {
 	}
 
 	// Register in agent registry and start heartbeat keepalive.
-	a.startHeartbeat(a.ctx, a.hostname)
+	a.startHeartbeat(a.ctx, a.machineID, a.hostname)
 
 	// Collect and publish system facts.
-	a.startFacts(a.ctx, a.hostname)
+	a.startFacts(a.ctx, a.machineID, a.hostname)
 
 	// Start consuming messages for different job types.
 	a.startConsumers()

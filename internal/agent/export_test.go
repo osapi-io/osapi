@@ -172,76 +172,96 @@ func ExportHandleJobMessageJS(
 func ExportCheckDrainFlag(
 	ctx context.Context,
 	a *Agent,
-	hostname string,
+	machineID string,
 ) bool {
-	return a.checkDrainFlag(ctx, hostname)
+	return a.checkDrainFlag(ctx, machineID)
 }
 
 // ExportHandleDrainDetection exposes the private handleDrainDetection method for testing.
 func ExportHandleDrainDetection(
 	ctx context.Context,
 	a *Agent,
+	machineID string,
 	hostname string,
 ) {
-	a.handleDrainDetection(ctx, hostname)
+	a.handleDrainDetection(ctx, machineID, hostname)
 }
 
 // ExportWriteFacts exposes the private writeFacts method for testing.
 func ExportWriteFacts(
 	ctx context.Context,
 	a *Agent,
+	machineID string,
 	hostname string,
 ) {
-	a.writeFacts(ctx, hostname)
+	a.writeFacts(ctx, machineID, hostname)
 }
 
 // ExportStartFacts exposes the private startFacts method for testing.
 func ExportStartFacts(
 	ctx context.Context,
 	a *Agent,
+	machineID string,
 	hostname string,
 ) {
-	a.startFacts(ctx, hostname)
+	a.startFacts(ctx, machineID, hostname)
 }
 
 // ExportFactsKey exposes the private factsKey function for testing.
 func ExportFactsKey(
-	hostname string,
+	machineID string,
 ) string {
-	return factsKey(hostname)
+	return factsKey(machineID)
 }
 
 // ExportWriteRegistration exposes the private writeRegistration method for testing.
 func ExportWriteRegistration(
 	ctx context.Context,
 	a *Agent,
+	machineID string,
 	hostname string,
 ) {
-	a.writeRegistration(ctx, hostname)
+	a.writeRegistration(ctx, machineID, hostname)
 }
 
 // ExportDeregister exposes the private deregister method for testing.
 func ExportDeregister(
 	a *Agent,
-	hostname string,
+	machineID string,
 ) {
-	a.deregister(hostname)
+	a.deregister(machineID)
 }
 
 // ExportStartHeartbeat exposes the private startHeartbeat method for testing.
 func ExportStartHeartbeat(
 	ctx context.Context,
 	a *Agent,
+	machineID string,
 	hostname string,
 ) {
-	a.startHeartbeat(ctx, hostname)
+	a.startHeartbeat(ctx, machineID, hostname)
 }
 
 // ExportRegistryKey exposes the private registryKey function for testing.
 func ExportRegistryKey(
-	hostname string,
+	machineID string,
 ) string {
-	return registryKey(hostname)
+	return registryKey(machineID)
+}
+
+// SetAgentMachineID sets the agent's machineID field for testing.
+func SetAgentMachineID(
+	a *Agent,
+	machineID string,
+) {
+	a.machineID = machineID
+}
+
+// GetAgentMachineID returns the agent's machineID field for testing.
+func GetAgentMachineID(
+	a *Agent,
+) string {
+	return a.machineID
 }
 
 // ExportFindPrevCondition exposes the private findPrevCondition function for testing.

@@ -37,13 +37,14 @@ var defaultFactsInterval = 60 * time.Second
 // refreshes the entry on a ticker, and stops on ctx.Done().
 func (a *Agent) startFacts(
 	ctx context.Context,
+	machineID string,
 	hostname string,
 ) {
 	if a.factsKV == nil {
 		return
 	}
 
-	a.writeFacts(ctx, hostname)
+	a.writeFacts(ctx, machineID, hostname)
 
 	interval := defaultFactsInterval
 	if cfgInterval := a.appConfig.Agent.Facts.Interval; cfgInterval != "" {
@@ -64,7 +65,7 @@ func (a *Agent) startFacts(
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				a.writeFacts(ctx, hostname)
+				a.writeFacts(ctx, machineID, hostname)
 			}
 		}
 	}()
@@ -75,6 +76,7 @@ func (a *Agent) startFacts(
 // written with whatever data was gathered.
 func (a *Agent) writeFacts(
 	ctx context.Context,
+	machineID string,
 	hostname string,
 ) {
 	reg := job.FactsRegistration{}
@@ -145,16 +147,18 @@ func (a *Agent) writeFacts(
 	if err != nil {
 		a.factsLogger.Warn(
 			"failed to marshal facts",
+			slog.String("machine_id", machineID),
 			slog.String("hostname", hostname),
 			slog.String("error", err.Error()),
 		)
 		return
 	}
 
-	key := factsKey(hostname)
+	key := factsKey(machineID)
 	if _, err := a.factsKV.Put(ctx, key, data); err != nil {
 		a.factsLogger.Warn(
 			"failed to write facts",
+			slog.String("machine_id", machineID),
 			slog.String("hostname", hostname),
 			slog.String("key", key),
 			slog.String("error", err.Error()),
@@ -185,8 +189,9 @@ func (a *Agent) GetFacts() map[string]any {
 }
 
 // factsKey returns the KV key for an agent's facts entry.
+// Uses machineID as the key component for stable identity across hostname changes.
 func factsKey(
-	hostname string,
+	machineID string,
 ) string {
-	return "facts." + job.SanitizeHostname(hostname)
+	return "facts." + job.SanitizeHostname(machineID)
 }

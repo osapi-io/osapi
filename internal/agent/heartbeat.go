@@ -46,6 +46,7 @@ var unmarshalJSON = json.Unmarshal
 // refreshes the entry on a ticker, and deregisters on ctx.Done().
 func (a *Agent) startHeartbeat(
 	ctx context.Context,
+	machineID string,
 	hostname string,
 ) {
 	if a.registryKV == nil {
@@ -53,12 +54,13 @@ func (a *Agent) startHeartbeat(
 	}
 
 	ttl := a.appConfig.NATS.Registry.TTL
-	key := registryKey(hostname)
+	key := registryKey(machineID)
 
-	a.writeRegistration(ctx, hostname)
+	a.writeRegistration(ctx, machineID, hostname)
 
 	a.heartbeatLogger.Info(
 		"registered in agent registry",
+		slog.String("machine_id", machineID),
 		slog.String("hostname", hostname),
 		slog.String("key", key),
 		slog.String("ttl", ttl),
@@ -74,13 +76,14 @@ func (a *Agent) startHeartbeat(
 		for {
 			select {
 			case <-ctx.Done():
-				a.deregister(hostname)
+				a.deregister(machineID)
 				return
 			case <-ticker.C:
-				a.writeRegistration(ctx, hostname)
+				a.writeRegistration(ctx, machineID, hostname)
 
 				a.heartbeatLogger.Info(
 					"heartbeat refreshed",
+					slog.String("machine_id", machineID),
 					slog.String("hostname", hostname),
 					slog.String("key", key),
 					slog.String("next_in", heartbeatInterval.String()),
@@ -94,11 +97,13 @@ func (a *Agent) startHeartbeat(
 // Provider errors are non-fatal; the heartbeat still writes with whatever data it gathered.
 func (a *Agent) writeRegistration(
 	ctx context.Context,
+	machineID string,
 	hostname string,
 ) {
-	a.handleDrainDetection(ctx, hostname)
+	a.handleDrainDetection(ctx, machineID, hostname)
 
 	reg := job.AgentRegistration{
+		MachineID:     machineID,
 		Hostname:      hostname,
 		Labels:        a.appConfig.Agent.Labels,
 		RegisteredAt:  time.Now(),
@@ -179,16 +184,18 @@ func (a *Agent) writeRegistration(
 	if err != nil {
 		a.heartbeatLogger.Warn(
 			"failed to marshal agent registration",
+			slog.String("machine_id", machineID),
 			slog.String("hostname", hostname),
 			slog.String("error", err.Error()),
 		)
 		return
 	}
 
-	key := registryKey(hostname)
+	key := registryKey(machineID)
 	if _, err := a.registryKV.Put(ctx, key, data); err != nil {
 		a.heartbeatLogger.Warn(
 			"failed to write agent registration",
+			slog.String("machine_id", machineID),
 			slog.String("hostname", hostname),
 			slog.String("key", key),
 			slog.String("error", err.Error()),
@@ -200,13 +207,13 @@ func (a *Agent) writeRegistration(
 
 // deregister deletes the agent's registration key on clean shutdown.
 func (a *Agent) deregister(
-	hostname string,
+	machineID string,
 ) {
-	key := registryKey(hostname)
+	key := registryKey(machineID)
 	if err := a.registryKV.Delete(context.Background(), key); err != nil {
 		a.heartbeatLogger.Warn(
 			"failed to deregister agent",
-			slog.String("hostname", hostname),
+			slog.String("machine_id", machineID),
 			slog.String("key", key),
 			slog.String("error", err.Error()),
 		)
@@ -215,14 +222,15 @@ func (a *Agent) deregister(
 
 	a.heartbeatLogger.Info(
 		"agent deregistered",
-		slog.String("hostname", hostname),
+		slog.String("machine_id", machineID),
 		slog.String("key", key),
 	)
 }
 
 // registryKey returns the KV key for an agent's registration entry.
+// Uses machineID as the key component for stable identity across hostname changes.
 func registryKey(
-	hostname string,
+	machineID string,
 ) string {
-	return "agents." + job.SanitizeHostname(hostname)
+	return "agents." + job.SanitizeHostname(machineID)
 }

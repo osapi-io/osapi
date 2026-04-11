@@ -588,6 +588,8 @@ type ComponentRegistration struct {
 
 // AgentRegistration represents an agent's registration entry in the KV registry.
 type AgentRegistration struct {
+	// MachineID is the permanent host identifier.
+	MachineID string `json:"machine_id"`
 	// Hostname is the hostname of the agent.
 	Hostname string `json:"hostname"`
 	// Labels are the key-value labels configured on the agent.
