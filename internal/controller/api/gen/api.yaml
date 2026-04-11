@@ -5969,6 +5969,9 @@ components:
     AgentInfo:
       type: object
       properties:
+        machine_id:
+          type: string
+          description: The permanent machine identifier.
         hostname:
           type: string
           description: The hostname of the agent.

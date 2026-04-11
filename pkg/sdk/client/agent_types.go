@@ -29,6 +29,7 @@ import (
 // Agent represents a registered OSAPI agent.
 type Agent struct {
 	Hostname         string             `json:"hostname"`
+	MachineId        string             `json:"machine_id,omitempty"`
 	Status           string             `json:"status"`
 	State            string             `json:"state,omitempty"`
 	Labels           map[string]string  `json:"labels,omitempty"`
@@ -112,6 +113,10 @@ func agentFromGen(
 	a := Agent{
 		Hostname: g.Hostname,
 		Status:   string(g.Status),
+	}
+
+	if g.MachineId != nil {
+		a.MachineId = *g.MachineId
 	}
 
 	if g.Labels != nil {

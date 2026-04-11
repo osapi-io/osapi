@@ -87,7 +87,15 @@ Shows each agent's hostname, status, labels, age, load, and OS.`,
 			if a.OSInfo != nil {
 				osStr = a.OSInfo.Distribution + " " + a.OSInfo.Version
 			}
+			machineID := ""
+			if a.MachineId != "" {
+				machineID = a.MachineId
+				if len(machineID) > 12 {
+					machineID = machineID[:12]
+				}
+			}
 			rows = append(rows, []string{
+				machineID,
 				a.Hostname,
 				status,
 				conditions,
@@ -102,6 +110,7 @@ Shows each agent's hostname, status, labels, age, load, and OS.`,
 			{
 				Title: fmt.Sprintf("Active Agents (%d)", resp.Data.Total),
 				Headers: []string{
+					"MACHINE ID",
 					"HOSTNAME",
 					"STATUS",
 					"CONDITIONS",
