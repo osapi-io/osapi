@@ -23,7 +23,10 @@ package health
 import (
 	"context"
 	"log/slog"
+	"sync"
 	"time"
+
+	"github.com/retr0h/osapi/internal/controller/api/health/gen"
 )
 
 // Checker checks the health of a dependency.
@@ -37,7 +40,6 @@ type MetricsProvider interface {
 	GetStreamInfo(ctx context.Context) ([]StreamMetrics, error)
 	GetKVInfo(ctx context.Context) ([]KVMetrics, error)
 	GetObjectStoreInfo(ctx context.Context) ([]ObjectStoreMetrics, error)
-	GetConsumerStats(ctx context.Context) (*ConsumerMetrics, error)
 	GetJobStats(ctx context.Context) (*JobMetrics, error)
 	GetAgentStats(ctx context.Context) (*AgentMetrics, error)
 	GetComponentRegistry(ctx context.Context) ([]ComponentEntry, error)
@@ -126,7 +128,6 @@ type ClosureMetricsProvider struct {
 	StreamInfoFn        func(ctx context.Context) ([]StreamMetrics, error)
 	KVInfoFn            func(ctx context.Context) ([]KVMetrics, error)
 	ObjectStoreInfoFn   func(ctx context.Context) ([]ObjectStoreMetrics, error)
-	ConsumerStatsFn     func(ctx context.Context) (*ConsumerMetrics, error)
 	JobStatsFn          func(ctx context.Context) (*JobMetrics, error)
 	AgentStatsFn        func(ctx context.Context) (*AgentMetrics, error)
 	ComponentRegistryFn func(ctx context.Context) ([]ComponentEntry, error)
@@ -151,4 +152,22 @@ type Health struct {
 	// SubComponents reports the status of internal services.
 	SubComponents map[string]SubComponentInfo
 	logger        *slog.Logger
+
+	// metricsCache holds the last populateMetrics result to avoid
+	// querying NATS on every poll cycle.
+	metricsCache   *cachedMetrics
+	metricsCacheMu sync.RWMutex
+
+	// MetricsRefreshInterval overrides the default metrics cache TTL
+	// for the background refresh goroutine. Zero uses metricsCacheTTL.
+	MetricsRefreshInterval time.Duration
 }
+
+// cachedMetrics holds a snapshot of metrics with a timestamp for TTL.
+type cachedMetrics struct {
+	resp      gen.StatusResponse
+	fetchedAt time.Time
+}
+
+// metricsCacheTTL is how long cached metrics are served before refreshing.
+const metricsCacheTTL = 15 * time.Second

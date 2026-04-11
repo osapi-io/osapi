@@ -208,15 +208,6 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 						{Name: "file-objects", Size: 5242880},
 					}, nil
 				},
-				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
-					return &health.ConsumerMetrics{
-						Total: 2,
-						Consumers: []health.ConsumerDetail{
-							{Name: "query_any_web_01", Pending: 0, AckPending: 3, Redelivered: 0},
-							{Name: "modify_any_web_01", Pending: 1, AckPending: 0, Redelivered: 1},
-						},
-					}, nil
-				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return &health.JobMetrics{
 						Total: 100, Unprocessed: 5, Processing: 2,
@@ -258,15 +249,10 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Equal("file-objects", (*r.ObjectStores)[0].Name)
 				s.Equal(5242880, (*r.ObjectStores)[0].Size)
 
+				// Consumer count is derived from stream info, not enumerated.
 				s.Require().NotNil(r.Consumers)
-				s.Equal(2, r.Consumers.Total)
-				s.Require().NotNil(r.Consumers.Consumers)
-				s.Len(*r.Consumers.Consumers, 2)
-				s.Equal("query_any_web_01", (*r.Consumers.Consumers)[0].Name)
-				s.Equal(0, (*r.Consumers.Consumers)[0].Pending)
-				s.Equal(3, (*r.Consumers.Consumers)[0].AckPending)
-				s.Equal(1, (*r.Consumers.Consumers)[1].Pending)
-				s.Equal(1, (*r.Consumers.Consumers)[1].Redelivered)
+				s.Equal(1, r.Consumers.Total)
+				s.Nil(r.Consumers.Consumers)
 
 				s.Require().NotNil(r.Jobs)
 				s.Equal(100, r.Jobs.Total)
@@ -305,9 +291,6 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				},
 				ObjectStoreInfoFn: func(_ context.Context) ([]health.ObjectStoreMetrics, error) {
 					return []health.ObjectStoreMetrics{}, nil
-				},
-				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
-					return &health.ConsumerMetrics{}, nil
 				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return &health.JobMetrics{}, nil
@@ -385,9 +368,6 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				},
 				ObjectStoreInfoFn: func(_ context.Context) ([]health.ObjectStoreMetrics, error) {
 					return []health.ObjectStoreMetrics{}, nil
-				},
-				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
-					return &health.ConsumerMetrics{}, nil
 				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return &health.JobMetrics{}, nil
@@ -467,9 +447,6 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				ObjectStoreInfoFn: func(_ context.Context) ([]health.ObjectStoreMetrics, error) {
 					return []health.ObjectStoreMetrics{}, nil
 				},
-				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
-					return &health.ConsumerMetrics{}, nil
-				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return &health.JobMetrics{}, nil
 				},
@@ -506,9 +483,6 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				ObjectStoreInfoFn: func(_ context.Context) ([]health.ObjectStoreMetrics, error) {
 					return []health.ObjectStoreMetrics{}, nil
 				},
-				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
-					return &health.ConsumerMetrics{}, nil
-				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return &health.JobMetrics{}, nil
 				},
@@ -544,9 +518,6 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				},
 				ObjectStoreInfoFn: func(_ context.Context) ([]health.ObjectStoreMetrics, error) {
 					return nil, fmt.Errorf("object store info unavailable")
-				},
-				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
-					return nil, fmt.Errorf("consumer stats unavailable")
 				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return nil, fmt.Errorf("job stats unavailable")
@@ -587,9 +558,6 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				},
 				ObjectStoreInfoFn: func(_ context.Context) ([]health.ObjectStoreMetrics, error) {
 					return nil, fmt.Errorf("object store info unavailable")
-				},
-				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
-					return nil, fmt.Errorf("consumer stats unavailable")
 				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return nil, fmt.Errorf("job stats unavailable")
@@ -736,16 +704,6 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusHTTP() {
 						{Name: "file-objects", Size: 5242880},
 					}, nil
 				},
-				ConsumerStatsFn: func(
-					_ context.Context,
-				) (*health.ConsumerMetrics, error) {
-					return &health.ConsumerMetrics{
-						Total: 2,
-						Consumers: []health.ConsumerDetail{
-							{Name: "query_any_web_01", Pending: 0, AckPending: 3, Redelivered: 0},
-						},
-					}, nil
-				},
 				JobStatsFn: func(
 					_ context.Context,
 				) (*health.JobMetrics, error) {
@@ -792,7 +750,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusHTTP() {
 				`"agents"`,
 				`"web-01"`,
 				`"group=web.prod"`,
-				`"query_any_web_01"`,
+				`"total":1`,
 				`"file-objects"`,
 				`"registry"`,
 				`"api-server-01"`,
@@ -925,11 +883,6 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusRBACHTTP() {
 				) (*health.JobMetrics, error) {
 					return &health.JobMetrics{}, nil
 				},
-				ConsumerStatsFn: func(
-					_ context.Context,
-				) (*health.ConsumerMetrics, error) {
-					return &health.ConsumerMetrics{}, nil
-				},
 				AgentStatsFn: func(
 					_ context.Context,
 				) (*health.AgentMetrics, error) {
@@ -975,6 +928,72 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusRBACHTTP() {
 			for _, want := range tc.wantContains {
 				s.Contains(rec.Body.String(), want)
 			}
+		})
+	}
+}
+
+func (s *HealthStatusGetPublicTestSuite) TestMetricsCache() {
+	tests := []struct {
+		name         string
+		validateFunc func(handler *health.Health)
+	}{
+		{
+			name: "when cache is fresh serves cached metrics",
+			validateFunc: func(handler *health.Health) {
+				// First call populates cache.
+				resp1, err := handler.GetHealthStatus(s.ctx, gen.GetHealthStatusRequestObject{})
+				s.NoError(err)
+				s.NotNil(resp1)
+
+				// Second call should serve from cache with identical data.
+				resp2, err := handler.GetHealthStatus(s.ctx, gen.GetHealthStatusRequestObject{})
+				s.NoError(err)
+				s.NotNil(resp2)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			checker := &health.NATSChecker{
+				NATSCheck: func() error { return nil },
+				KVCheck:   func() error { return nil },
+			}
+			metrics := &health.ClosureMetricsProvider{
+				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
+					return &health.NATSMetrics{URL: "nats://localhost:4222", Version: "2.10.0"}, nil
+				},
+				StreamInfoFn: func(_ context.Context) ([]health.StreamMetrics, error) {
+					return []health.StreamMetrics{{Name: "JOBS", Consumers: 5}}, nil
+				},
+				KVInfoFn: func(_ context.Context) ([]health.KVMetrics, error) {
+					return nil, nil
+				},
+				ObjectStoreInfoFn: func(_ context.Context) ([]health.ObjectStoreMetrics, error) {
+					return nil, nil
+				},
+				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
+					return nil, nil
+				},
+				AgentStatsFn: func(_ context.Context) (*health.AgentMetrics, error) {
+					return nil, nil
+				},
+				ComponentRegistryFn: func(_ context.Context) ([]health.ComponentEntry, error) {
+					return []health.ComponentEntry{
+						{
+							Type:     "agent",
+							Hostname: "web-01",
+							Status:   "Ready",
+							SubComponents: map[string]health.SubComponentInfo{
+								"agent.heartbeat": {Status: "ok"},
+							},
+						},
+					}, nil
+				},
+			}
+			handler := health.New(s.logger, checker, time.Now(), "0.1.0", metrics, nil)
+
+			tc.validateFunc(handler)
 		})
 	}
 }
