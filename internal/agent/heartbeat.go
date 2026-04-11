@@ -36,6 +36,9 @@ import (
 // heartbeatInterval is the interval between heartbeat refreshes.
 var heartbeatInterval = 10 * time.Second
 
+// getAgentHostnameFn is a package-level variable for testing hostname re-reads.
+var getAgentHostnameFn = job.GetAgentHostname
+
 // marshalJSON is a package-level variable for testing the marshal error path.
 var marshalJSON = json.Marshal
 
@@ -79,6 +82,20 @@ func (a *Agent) startHeartbeat(
 				a.deregister(machineID)
 				return
 			case <-ticker.C:
+				// Re-read current hostname for dynamic changes.
+				newHostname, _ := getAgentHostnameFn(a.appConfig.Agent.Hostname)
+				if newHostname != hostname {
+					a.heartbeatLogger.Info(
+						"hostname changed, resubscribing consumers",
+						slog.String("old_hostname", hostname),
+						slog.String("new_hostname", newHostname),
+					)
+					a.stopConsumers()
+					hostname = newHostname
+					a.hostname = newHostname
+					a.startConsumers()
+				}
+
 				a.writeRegistration(ctx, machineID, hostname)
 
 				a.heartbeatLogger.Info(

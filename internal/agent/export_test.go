@@ -351,6 +351,31 @@ func ResetHeartbeatInterval() {
 	heartbeatInterval = 10 * time.Second
 }
 
+// SetGetAgentHostnameFn overrides the getAgentHostnameFn for testing.
+func SetGetAgentHostnameFn(fn func(string) (string, error)) {
+	getAgentHostnameFn = fn
+}
+
+// ResetGetAgentHostnameFn restores the default getAgentHostnameFn.
+func ResetGetAgentHostnameFn() {
+	getAgentHostnameFn = job.GetAgentHostname
+}
+
+// GetAgentHostname returns the agent's hostname field for testing.
+func GetAgentHostname(
+	a *Agent,
+) string {
+	return a.hostname
+}
+
+// SetAgentHostname sets the agent's hostname field for testing.
+func SetAgentHostname(
+	a *Agent,
+	hostname string,
+) {
+	a.hostname = hostname
+}
+
 // SetDockerNewFn overrides the dockerNewFn used by the factory for testing.
 // NOTE: This overrides the package-level var in the agent package, not cmd.
 // For cmd-level tests, use the cmd package's own override.

@@ -399,6 +399,12 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatRefresh() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
+			// Return the same hostname to prevent hostname change detection.
+			agent.SetGetAgentHostnameFn(func(_ string) (string, error) {
+				return "test-agent", nil
+			})
+			defer agent.ResetGetAgentHostnameFn()
+
 			agent.SetHeartbeatInterval(10 * time.Millisecond)
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -410,6 +416,120 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatRefresh() {
 
 			// Wait for goroutine to finish
 			agent.WaitAgentWG(s.testAgent)
+		})
+	}
+}
+
+func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatHostnameChange() {
+	tests := []struct {
+		name            string
+		initialHostname string
+		hostnameReply   string
+		expectChanged   bool
+	}{
+		{
+			name:            "when hostname changes resubscribes consumers",
+			initialHostname: "old-host",
+			hostnameReply:   "new-host",
+			expectChanged:   true,
+		},
+		{
+			name:            "when hostname unchanged does not resubscribe",
+			initialHostname: "same-host",
+			hostnameReply:   "same-host",
+			expectChanged:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			// Create fresh mocks per subtest to avoid gomock expectation leaks.
+			ctrl := gomock.NewController(s.T())
+			defer ctrl.Finish()
+
+			mockKV := mocks.NewMockKeyValue(ctrl)
+			mockJobClient := mocks.NewMockJobClient(ctrl)
+
+			appConfig := config.Config{
+				Agent: config.AgentConfig{
+					Labels: map[string]string{"group": "web"},
+				},
+			}
+
+			testAgent := newTestAgent(newTestAgentParams{
+				appConfig:       appConfig,
+				jobClient:       mockJobClient,
+				streamName:      "test-stream",
+				hostProvider:    hostMocks.NewDefaultMockProvider(ctrl),
+				diskProvider:    diskMocks.NewDefaultMockProvider(ctrl),
+				memProvider:     memMocks.NewDefaultMockProvider(ctrl),
+				loadProvider:    loadMocks.NewDefaultMockProvider(ctrl),
+				dnsProvider:     dnsMocks.NewDefaultMockProvider(ctrl),
+				pingProvider:    pingMocks.NewDefaultMockProvider(ctrl),
+				netinfoProvider: netinfoMocks.NewDefaultMockProvider(ctrl),
+				commandProvider: commandMocks.NewDefaultMockProvider(ctrl),
+				processProvider: processMocks.NewDefaultMockProvider(ctrl),
+				registryKV:      mockKV,
+			})
+			agent.SetAgentState(testAgent, job.AgentStateReady)
+			agent.SetAgentMachineID(testAgent, "test-machine-id")
+			agent.SetAgentHostname(testAgent, tt.initialHostname)
+
+			// Drain check — no drain flag present.
+			mockJobClient.EXPECT().
+				CheckDrainFlag(gomock.Any(), "test-machine-id").
+				Return(false).
+				AnyTimes()
+
+			reply := tt.hostnameReply
+			agent.SetGetAgentHostnameFn(func(_ string) (string, error) {
+				return reply, nil
+			})
+			defer agent.ResetGetAgentHostnameFn()
+
+			if tt.expectChanged {
+				// Set agent ctx so startConsumers can derive consumerCtx.
+				agentCtx, agentCancel := context.WithCancel(context.Background())
+				agent.SetAgentLifecycle(agentCtx, agentCtx, testAgent, agentCancel, agentCancel)
+
+				// stopConsumers + startConsumers triggers consumer creation.
+				mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+					Return(nil).
+					MinTimes(8)
+
+				mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(context.Canceled).
+					MinTimes(8)
+			}
+
+			// Initial write + at least 1 ticker refresh
+			mockKV.EXPECT().
+				Put(gomock.Any(), "agents.test_machine_id", gomock.Any()).
+				Return(uint64(1), nil).
+				MinTimes(2)
+
+			// Deregister on cancel
+			mockKV.EXPECT().
+				Delete(gomock.Any(), "agents.test_machine_id").
+				Return(nil).
+				Times(1)
+
+			agent.SetHeartbeatInterval(10 * time.Millisecond)
+
+			ctx, cancel := context.WithCancel(context.Background())
+			agent.ExportStartHeartbeat(ctx, testAgent, "test-machine-id", tt.initialHostname)
+
+			// Wait for at least one ticker refresh
+			time.Sleep(50 * time.Millisecond)
+			cancel()
+
+			// Wait for goroutine to finish
+			agent.WaitAgentWG(testAgent)
+
+			got := agent.GetAgentHostname(testAgent)
+			s.Equal(tt.hostnameReply, got)
 		})
 	}
 }
