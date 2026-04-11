@@ -29,6 +29,7 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/retr0h/osapi/internal/agent/pki"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/job"
@@ -646,4 +647,19 @@ func WaitAgentWG(
 	a *Agent,
 ) {
 	a.wg.Wait()
+}
+
+// ExportHandlePKIEnrollment exposes the private handlePKIEnrollment method for testing.
+func ExportHandlePKIEnrollment(
+	ctx context.Context,
+	a *Agent,
+) error {
+	return a.handlePKIEnrollment(ctx)
+}
+
+// GetAgentPKIManager returns the agent's pkiManager field for testing.
+func GetAgentPKIManager(
+	a *Agent,
+) *pki.Manager {
+	return a.pkiManager
 }

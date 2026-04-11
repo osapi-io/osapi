@@ -412,6 +412,64 @@ func (suite *KeypairPublicTestSuite) TestControllerPublicKey() {
 	}
 }
 
+func (suite *KeypairPublicTestSuite) TestParsePublicKeyPEM() {
+	tests := []struct {
+		name         string
+		pemData      []byte
+		wantErr      bool
+		wantContains string
+		validateFunc func(key ed25519.PublicKey)
+	}{
+		{
+			name: "when valid PEM parses successfully",
+			pemData: func() []byte {
+				pub, _, _ := ed25519.GenerateKey(rand.Reader)
+				return pem.EncodeToMemory(&pem.Block{
+					Type:  "ED25519 PUBLIC KEY",
+					Bytes: pub,
+				})
+			}(),
+			validateFunc: func(key ed25519.PublicKey) {
+				assert.Len(suite.T(), key, ed25519.PublicKeySize)
+			},
+		},
+		{
+			name:         "when PEM data is not valid returns error",
+			pemData:      []byte("not valid pem data"),
+			wantErr:      true,
+			wantContains: "failed to decode PEM block",
+		},
+		{
+			name: "when PEM has wrong block type returns error",
+			pemData: func() []byte {
+				pub, _, _ := ed25519.GenerateKey(rand.Reader)
+				return pem.EncodeToMemory(&pem.Block{
+					Type:  "RSA PUBLIC KEY",
+					Bytes: pub,
+				})
+			}(),
+			wantErr:      true,
+			wantContains: "unexpected block type",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			key, err := pki.ParsePublicKeyPEM(tc.pemData)
+
+			if tc.wantErr {
+				require.Error(suite.T(), err)
+				assert.Contains(suite.T(), err.Error(), tc.wantContains)
+			} else {
+				require.NoError(suite.T(), err)
+				if tc.validateFunc != nil {
+					tc.validateFunc(key)
+				}
+			}
+		})
+	}
+}
+
 func TestKeypairPublicTestSuite(t *testing.T) {
 	t.Parallel()
 	suite.Run(t, new(KeypairPublicTestSuite))

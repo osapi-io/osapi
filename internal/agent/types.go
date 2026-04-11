@@ -31,6 +31,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel/metric"
 
+	"github.com/retr0h/osapi/internal/agent/pki"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/job"
@@ -90,6 +91,9 @@ type Agent struct {
 
 	// state is the agent's scheduling state (Ready, Draining, Cordoned).
 	state string
+
+	// pkiManager handles keypair and enrollment lifecycle (nil when PKI disabled).
+	pkiManager *pki.Manager
 
 	// machineID is the permanent host identifier resolved at startup.
 	machineID string

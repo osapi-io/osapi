@@ -59,6 +59,18 @@ func (a *Agent) Start() {
 		slog.Any("labels", a.appConfig.Agent.Labels),
 	)
 
+	// PKI enrollment (when enabled).
+	if a.appConfig.Agent.PKI.Enabled {
+		if err := a.handlePKIEnrollment(a.ctx); err != nil {
+			a.logger.Error("PKI enrollment failed",
+				slog.String("error", err.Error()),
+			)
+			a.cancel()
+
+			return
+		}
+	}
+
 	// Run preflight checks when privilege escalation is enabled.
 	pe := a.appConfig.Agent.PrivilegeEscalation
 	if pe.Enabled {

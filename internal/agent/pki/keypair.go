@@ -142,6 +142,25 @@ func (m *Manager) ControllerPublicKey() ed25519.PublicKey {
 	return m.controllerPubKey
 }
 
+// ParsePublicKeyPEM parses a PEM-encoded Ed25519 public key.
+func ParsePublicKeyPEM(
+	pemData []byte,
+) (ed25519.PublicKey, error) {
+	block, _ := pem.Decode(pemData)
+	if block == nil {
+		return nil, fmt.Errorf("failed to decode PEM block")
+	}
+
+	if block.Type != pemPublicKeyType {
+		return nil, fmt.Errorf(
+			"unexpected block type %q, expected %q",
+			block.Type, pemPublicKeyType,
+		)
+	}
+
+	return ed25519.PublicKey(block.Bytes), nil
+}
+
 // loadKeys parses PEM-encoded private and public key data into the
 // manager's key fields.
 func (m *Manager) loadKeys(
