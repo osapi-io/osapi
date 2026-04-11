@@ -37,6 +37,7 @@ OSAPI provides a comprehensive set of features for managing Linux systems.
 | 📄  | [Log Management](log-management.md)            | Query systemd journal entries by host, unit, or source                                        |
 | 🔒  | [Certificate Management](certificate-management.md) | CA certificate trust store management                                                    |
 | 🔧  | [Service Management](service-management.md)  | Systemd service lifecycle and unit file management                                            |
+| 🔑  | [Agent Identity & PKI](agent-identity.md)        | Machine-ID identity, PKI enrollment, job signing                                          |
 | 🖥️  | [Management Dashboard](management-dashboard.md) | Embedded React UI for fleet health, operations, and admin                                 |
 
 <!-- prettier-ignore-end -->

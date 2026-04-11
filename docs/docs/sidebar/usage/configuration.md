@@ -55,6 +55,10 @@ uppercased:
 | `controller.client.security.bearer_token`        | `OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN`        |
 | `controller.metrics.enabled`                     | `OSAPI_CONTROLLER_METRICS_ENABLED`                     |
 | `controller.metrics.port`                        | `OSAPI_CONTROLLER_METRICS_PORT`                        |
+| `controller.pki.enabled`                         | `OSAPI_CONTROLLER_PKI_ENABLED`                         |
+| `controller.pki.key_dir`                         | `OSAPI_CONTROLLER_PKI_KEY_DIR`                         |
+| `controller.pki.auto_accept`                     | `OSAPI_CONTROLLER_PKI_AUTO_ACCEPT`                     |
+| `controller.pki.rotation_grace_period`           | `OSAPI_CONTROLLER_PKI_ROTATION_GRACE_PERIOD`           |
 | `nats.server.host`                               | `OSAPI_NATS_SERVER_HOST`                               |
 | `nats.server.port`                               | `OSAPI_NATS_SERVER_PORT`                               |
 | `nats.server.namespace`                          | `OSAPI_NATS_SERVER_NAMESPACE`                          |
@@ -110,6 +114,8 @@ uppercased:
 | `agent.metrics.enabled`                          | `OSAPI_AGENT_METRICS_ENABLED`                          |
 | `agent.metrics.port`                             | `OSAPI_AGENT_METRICS_PORT`                             |
 | `agent.privilege_escalation.enabled`             | `OSAPI_AGENT_PRIVILEGE_ESCALATION_ENABLED`             |
+| `agent.pki.enabled`                             | `OSAPI_AGENT_PKI_ENABLED`                             |
+| `agent.pki.key_dir`                             | `OSAPI_AGENT_PKI_KEY_DIR`                             |
 
 Environment variables take precedence over file values.
 
@@ -313,6 +319,18 @@ controller:
     # How often to re-fire active conditions (Go duration).
     # Zero disables re-notification.
     renotify_interval: '5m'
+
+  # PKI enrollment and job signing.
+  pki:
+    # Enable PKI enrollment and job signing.
+    enabled: false
+    # Directory for controller keypair storage.
+    key_dir: '/etc/osapi/pki'
+    # Automatically accept all enrollment requests (dev/test only).
+    auto_accept: false
+    # Grace period during key rotation where both old and new keys
+    # are accepted. Go duration format.
+    rotation_grace_period: '24h'
 
 nats:
   api:
@@ -536,6 +554,12 @@ agent:
   # Linux capabilities are verified at startup.
   privilege_escalation:
     enabled: false
+  # PKI enrollment and job signature verification.
+  pki:
+    # Enable PKI enrollment and job signature verification.
+    enabled: false
+    # Directory for agent keypair storage.
+    key_dir: '/etc/osapi/pki'
 ```
 
 ## Section Reference
@@ -579,6 +603,15 @@ agent:
 
 When enabled, the port also serves `/health` (liveness) and `/health/ready`
 (readiness) probes without authentication.
+
+### `controller.pki`
+
+| Key                      | Type   | Description                                      |
+| ------------------------ | ------ | ------------------------------------------------ |
+| `enabled`                | bool   | Enable PKI enrollment and job signing             |
+| `key_dir`                | string | Directory for controller keypair (default: `/etc/osapi/pki`) |
+| `auto_accept`            | bool   | Auto-accept agent enrollments (default: `false`) |
+| `rotation_grace_period`  | string | Both keys accepted during rotation (default: `24h`) |
 
 ### `nats.server`
 
@@ -735,6 +768,8 @@ When enabled, the port also serves `/health` (liveness) and `/health/ready`
 | `metrics.enabled`                          | bool              | Enable the metrics server (default: true)                  |
 | `metrics.port`                             | int               | Port the metrics server listens on (default: 9091)         |
 | `privilege_escalation.enabled`             | bool              | Activate sudo and capability checks (default false)        |
+| `pki.enabled`                              | bool              | Enable PKI enrollment and job verify (default false)       |
+| `pki.key_dir`                              | string            | Directory for agent keypair (default `/etc/osapi/pki`)     |
 
 When `metrics.enabled` is true, the port also serves `/health` (liveness) and
 `/health/ready` (readiness) probes without authentication.
