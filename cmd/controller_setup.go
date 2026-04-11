@@ -880,6 +880,7 @@ func buildControllerSubComponents() map[string]job.SubComponentInfo {
 			Status: enabledOrDisabled(appConfig.Controller.Notifications.Enabled),
 		},
 		"controller.tracing": {Status: enabledOrDisabled(appConfig.Telemetry.Tracing.Enabled)},
+		"controller.ui":      {Status: enabledOrDisabled(appConfig.Controller.UI.UIEnabled())},
 	}
 }
 
