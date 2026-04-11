@@ -23,6 +23,7 @@ package health
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/retr0h/osapi/internal/controller/api/health/gen"
 )
@@ -37,19 +38,24 @@ func (h *Health) StartMetricsRefresh(
 		return
 	}
 
+	interval := h.MetricsRefreshInterval
+	if interval == 0 {
+		interval = metricsCacheTTL
+	}
+
 	h.logger.Info(
 		"metrics cache refresh started",
-		slog.String("interval", metricsCacheTTL.String()),
+		slog.String("interval", interval.String()),
 	)
 
 	go func() {
 		h.refreshMetricsCache(ctx)
 		h.logger.Info(
 			"metrics cache initialized",
-			slog.String("next_in", metricsCacheTTL.String()),
+			slog.String("next_in", interval.String()),
 		)
 
-		ticker := metricsTicker(metricsCacheTTL)
+		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 
 		for {
@@ -62,7 +68,7 @@ func (h *Health) StartMetricsRefresh(
 				h.refreshMetricsCache(ctx)
 				h.logger.Debug(
 					"metrics cache refreshed",
-					slog.String("next_in", metricsCacheTTL.String()),
+					slog.String("next_in", interval.String()),
 				)
 			}
 		}
@@ -82,7 +88,7 @@ func (h *Health) refreshMetricsCache(
 	h.metricsCacheMu.Lock()
 	h.metricsCache = &cachedMetrics{
 		resp:      resp,
-		fetchedAt: metricsCacheNow(),
+		fetchedAt: time.Now(),
 	}
 	h.metricsCacheMu.Unlock()
 }

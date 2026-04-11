@@ -50,11 +50,6 @@ func (s *MetricsRefreshPublicTestSuite) SetupSubTest() {
 	s.SetupTest()
 }
 
-func (s *MetricsRefreshPublicTestSuite) TearDownSubTest() {
-	health.ResetMetricsTicker()
-	health.ResetMetricsCacheNow()
-}
-
 func (s *MetricsRefreshPublicTestSuite) newMetricsProvider(
 	callCount *atomic.Int32,
 ) *health.ClosureMetricsProvider {
@@ -92,6 +87,7 @@ func (s *MetricsRefreshPublicTestSuite) TestStartMetricsRefresh() {
 			name: "when metrics is nil does not start goroutine",
 			validateFunc: func() {
 				handler := health.New(s.logger, nil, time.Now(), "0.1.0", nil, nil)
+				// Should not panic or start goroutine.
 				handler.StartMetricsRefresh(s.ctx)
 			},
 		},
@@ -101,12 +97,9 @@ func (s *MetricsRefreshPublicTestSuite) TestStartMetricsRefresh() {
 				var callCount atomic.Int32
 				metrics := s.newMetricsProvider(&callCount)
 
-				// Use a ticker that never fires so we only test initial fetch.
-				health.SetMetricsTicker(func(_ time.Duration) *time.Ticker {
-					return time.NewTicker(time.Hour)
-				})
-
 				ctx, cancel := context.WithCancel(s.ctx)
+				defer cancel()
+
 				handler := health.New(s.logger, nil, time.Now(), "0.1.0", metrics, nil)
 				handler.StartMetricsRefresh(ctx)
 
@@ -114,13 +107,10 @@ func (s *MetricsRefreshPublicTestSuite) TestStartMetricsRefresh() {
 				time.Sleep(50 * time.Millisecond)
 				s.GreaterOrEqual(callCount.Load(), int32(1))
 
-				// Verify cache is populated — second GetHealthStatus uses cache.
+				// Verify cache is populated via GetHealthStatus.
 				resp, err := handler.GetHealthStatus(ctx, gen.GetHealthStatusRequestObject{})
 				s.NoError(err)
 				s.NotNil(resp)
-
-				cancel()
-				time.Sleep(20 * time.Millisecond)
 			},
 		},
 		{
@@ -129,21 +119,16 @@ func (s *MetricsRefreshPublicTestSuite) TestStartMetricsRefresh() {
 				var callCount atomic.Int32
 				metrics := s.newMetricsProvider(&callCount)
 
-				// Use a fast ticker to trigger refresh.
-				health.SetMetricsTicker(func(_ time.Duration) *time.Ticker {
-					return time.NewTicker(10 * time.Millisecond)
-				})
-
 				ctx, cancel := context.WithCancel(s.ctx)
+				defer cancel()
+
 				handler := health.New(s.logger, nil, time.Now(), "0.1.0", metrics, nil)
+				handler.MetricsRefreshInterval = 20 * time.Millisecond
 				handler.StartMetricsRefresh(ctx)
 
 				// Wait for initial + at least one ticker refresh.
-				time.Sleep(50 * time.Millisecond)
+				time.Sleep(100 * time.Millisecond)
 				s.GreaterOrEqual(callCount.Load(), int32(2))
-
-				cancel()
-				time.Sleep(20 * time.Millisecond)
 			},
 		},
 		{
@@ -152,22 +137,19 @@ func (s *MetricsRefreshPublicTestSuite) TestStartMetricsRefresh() {
 				var callCount atomic.Int32
 				metrics := s.newMetricsProvider(&callCount)
 
-				health.SetMetricsTicker(func(_ time.Duration) *time.Ticker {
-					return time.NewTicker(10 * time.Millisecond)
-				})
-
 				ctx, cancel := context.WithCancel(s.ctx)
 				handler := health.New(s.logger, nil, time.Now(), "0.1.0", metrics, nil)
+				handler.MetricsRefreshInterval = 20 * time.Millisecond
 				handler.StartMetricsRefresh(ctx)
 
-				// Wait for initial fetch.
-				time.Sleep(30 * time.Millisecond)
+				// Wait for goroutine to enter the select loop.
+				time.Sleep(100 * time.Millisecond)
 				cancel()
-				time.Sleep(30 * time.Millisecond)
+				time.Sleep(50 * time.Millisecond)
 
 				// Record count after cancel.
 				countAfterCancel := callCount.Load()
-				time.Sleep(50 * time.Millisecond)
+				time.Sleep(100 * time.Millisecond)
 
 				// No more calls after cancel.
 				s.Equal(countAfterCancel, callCount.Load())

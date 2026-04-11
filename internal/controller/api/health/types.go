@@ -157,6 +157,10 @@ type Health struct {
 	// querying NATS on every poll cycle.
 	metricsCache   *cachedMetrics
 	metricsCacheMu sync.RWMutex
+
+	// MetricsRefreshInterval overrides the default metrics cache TTL
+	// for the background refresh goroutine. Zero uses metricsCacheTTL.
+	MetricsRefreshInterval time.Duration
 }
 
 // cachedMetrics holds a snapshot of metrics with a timestamp for TTL.
@@ -167,11 +171,3 @@ type cachedMetrics struct {
 
 // metricsCacheTTL is how long cached metrics are served before refreshing.
 const metricsCacheTTL = 15 * time.Second
-
-// metricsTicker creates the ticker for the metrics refresh goroutine.
-// Swappable for testing.
-var metricsTicker = time.NewTicker
-
-// metricsCacheNow returns the current time for cache timestamps.
-// Swappable for testing.
-var metricsCacheNow = time.Now
