@@ -620,6 +620,8 @@ type AgentRegistration struct {
 
 // AgentInfo represents information about an active agent.
 type AgentInfo struct {
+	// MachineID is the permanent host identifier.
+	MachineID string `json:"machine_id"`
 	// Hostname is the hostname of the agent.
 	Hostname string `json:"hostname"`
 	// Labels are the key-value labels configured on the agent.

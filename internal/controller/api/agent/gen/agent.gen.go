@@ -77,6 +77,9 @@ type AgentInfo struct {
 	// LoadAverage The system load averages for 1, 5, and 15 minutes.
 	LoadAverage *LoadAverageResponse `json:"load_average,omitempty"`
 
+	// MachineId The permanent machine identifier.
+	MachineId *string `json:"machine_id,omitempty"`
+
 	// Memory Memory usage information.
 	Memory *MemoryResponse `json:"memory,omitempty"`
 

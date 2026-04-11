@@ -78,6 +78,11 @@ func setIdentity(
 	a *job.AgentInfo,
 	info *gen.AgentInfo,
 ) {
+	if a.MachineID != "" {
+		machineID := a.MachineID
+		info.MachineId = &machineID
+	}
+
 	if len(a.Labels) > 0 {
 		labels := a.Labels
 		info.Labels = &labels
