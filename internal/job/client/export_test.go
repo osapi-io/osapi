@@ -27,6 +27,22 @@ func ExportSanitizeKeyForNATS(
 	return sanitizeKeyForNATS(s)
 }
 
+// ExportWrapInSignedEnvelope exposes the private wrapInSignedEnvelope for testing.
+func ExportWrapInSignedEnvelope(
+	signer PKISigner,
+	payload []byte,
+) ([]byte, error) {
+	return wrapInSignedEnvelope(signer, payload)
+}
+
+// ExportUnwrapSignedEnvelope exposes the private unwrapSignedEnvelope for testing.
+func ExportUnwrapSignedEnvelope(
+	data []byte,
+	pubKey []byte,
+) ([]byte, bool, error) {
+	return unwrapSignedEnvelope(data, pubKey)
+}
+
 // ExportComputeStatusFromKeyNames exposes the private computeStatusFromKeyNames
 // for testing, returning the ordered IDs and a simplified map[jobID]status.
 func ExportComputeStatusFromKeyNames(

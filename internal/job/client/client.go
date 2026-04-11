@@ -49,6 +49,8 @@ type Client struct {
 	// Exported for testing.
 	JSONMarshalFn func(v any) ([]byte, error)
 	jobsCreated   metric.Int64Counter
+	// pkiSigner signs job payloads when PKI is enabled. Nil when disabled.
+	pkiSigner PKISigner
 }
 
 // Options configures the jobs client.
@@ -65,6 +67,8 @@ type Options struct {
 	StateKV jetstream.KeyValue
 	// StreamName is the JetStream stream name (used to derive DLQ name).
 	StreamName string
+	// PKISigner signs job payloads when PKI is enabled. Nil when disabled.
+	PKISigner PKISigner
 }
 
 // New creates a new jobs client using an existing NATS client.
@@ -90,6 +94,7 @@ func New(
 		streamName:    opts.StreamName,
 		timeout:       opts.Timeout,
 		JSONMarshalFn: json.Marshal,
+		pkiSigner:     opts.PKISigner,
 	}, nil
 }
 
@@ -250,6 +255,17 @@ func (c *Client) publishAndWait(
 	}
 
 	jobJSON, _ := json.Marshal(jobData)
+
+	// Sign the job data when PKI is enabled.
+	kvPayload := jobJSON
+	if c.pkiSigner != nil {
+		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, jobJSON)
+		if signErr != nil {
+			return "", nil, fmt.Errorf("failed to sign job data: %w", signErr)
+		}
+		kvPayload = signed
+	}
+
 	kvKey := "jobs." + jobID
 
 	c.logger.DebugContext(ctx, "kv.put",
@@ -257,7 +273,7 @@ func (c *Client) publishAndWait(
 		slog.String("job_id", jobID),
 	)
 
-	if _, err := c.kv.Put(ctx, kvKey, jobJSON); err != nil {
+	if _, err := c.kv.Put(ctx, kvKey, kvPayload); err != nil {
 		return "", nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}
 
@@ -299,8 +315,22 @@ func (c *Client) publishAndWait(
 				continue
 			}
 
+			// Unwrap signed envelope if present.
+			responseData := entry.Value()
+			if c.pkiSigner != nil {
+				unwrapped, _, unwrapErr := unwrapSignedEnvelope(responseData, nil)
+				if unwrapErr != nil {
+					c.logger.WarnContext(ctx, "response signature verification failed",
+						slog.String("job_id", jobID),
+						slog.String("error", unwrapErr.Error()),
+					)
+				} else {
+					responseData = unwrapped
+				}
+			}
+
 			var response job.Response
-			if err := json.Unmarshal(entry.Value(), &response); err != nil {
+			if err := json.Unmarshal(responseData, &response); err != nil {
 				return "", nil, fmt.Errorf("failed to unmarshal response: %w", err)
 			}
 
@@ -349,6 +379,17 @@ func (c *Client) publishAndCollect(
 	}
 
 	jobJSON, _ := json.Marshal(jobData)
+
+	// Sign the job data when PKI is enabled.
+	kvPayload := jobJSON
+	if c.pkiSigner != nil {
+		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, jobJSON)
+		if signErr != nil {
+			return "", nil, fmt.Errorf("failed to sign job data: %w", signErr)
+		}
+		kvPayload = signed
+	}
+
 	kvKey := "jobs." + jobID
 
 	c.logger.DebugContext(ctx, "kv.put",
@@ -356,7 +397,7 @@ func (c *Client) publishAndCollect(
 		slog.String("job_id", jobID),
 	)
 
-	if _, err := c.kv.Put(ctx, kvKey, jobJSON); err != nil {
+	if _, err := c.kv.Put(ctx, kvKey, kvPayload); err != nil {
 		return "", nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}
 
@@ -435,8 +476,22 @@ func (c *Client) publishAndCollect(
 				continue
 			}
 
+			// Unwrap signed envelope if present.
+			responseData := entry.Value()
+			if c.pkiSigner != nil {
+				unwrapped, _, unwrapErr := unwrapSignedEnvelope(responseData, nil)
+				if unwrapErr != nil {
+					c.logger.WarnContext(ctx, "broadcast response signature verification failed",
+						slog.String("job_id", jobID),
+						slog.String("error", unwrapErr.Error()),
+					)
+				} else {
+					responseData = unwrapped
+				}
+			}
+
 			var response job.Response
-			if err := json.Unmarshal(entry.Value(), &response); err != nil {
+			if err := json.Unmarshal(responseData, &response); err != nil {
 				c.logger.WarnContext(ctx, "failed to unmarshal broadcast response",
 					slog.String("job_id", jobID),
 					slog.String("error", err.Error()),

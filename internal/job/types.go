@@ -73,6 +73,16 @@ var StatusPriority = map[string]int{
 	string(StatusRetried):      4,
 }
 
+// SignedEnvelope wraps a job or response payload with an Ed25519 signature.
+type SignedEnvelope struct {
+	// Payload is the raw JSON payload (job data or response data).
+	Payload []byte `json:"payload"`
+	// Signature is the Ed25519 signature of the payload.
+	Signature []byte `json:"signature"`
+	// Fingerprint is the SHA256 fingerprint of the signer's public key.
+	Fingerprint string `json:"fingerprint"`
+}
+
 // Request represents a request to perform a job operation.
 type Request struct {
 	// JobID is a unique identifier for this job.

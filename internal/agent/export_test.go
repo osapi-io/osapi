@@ -663,3 +663,19 @@ func GetAgentPKIManager(
 ) *pki.Manager {
 	return a.pkiManager
 }
+
+// SetAgentPKIManager sets the agent's pkiManager field for testing.
+func SetAgentPKIManager(
+	a *Agent,
+	m *pki.Manager,
+) {
+	a.pkiManager = m
+}
+
+// ExportUnwrapJobEnvelope exposes the private unwrapJobEnvelope method for testing.
+func ExportUnwrapJobEnvelope(
+	a *Agent,
+	data []byte,
+) ([]byte, error) {
+	return a.unwrapJobEnvelope(data)
+}

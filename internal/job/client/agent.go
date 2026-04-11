@@ -111,8 +111,18 @@ func (c *Client) WriteJobResponse(
 	// Marshal response (Response fields are always marshalable)
 	responseJSON, _ := json.Marshal(response)
 
+	// Sign the response when PKI is enabled.
+	kvPayload := responseJSON
+	if c.pkiSigner != nil {
+		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, responseJSON)
+		if signErr != nil {
+			return fmt.Errorf("failed to sign response: %w", signErr)
+		}
+		kvPayload = signed
+	}
+
 	// Store in KV
-	err := c.natsClient.KVPut(c.kv.Bucket(), responseKey, responseJSON)
+	err := c.natsClient.KVPut(c.kv.Bucket(), responseKey, kvPayload)
 	if err != nil {
 		return fmt.Errorf("failed to store job response: %w", err)
 	}

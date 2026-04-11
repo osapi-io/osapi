@@ -22,6 +22,7 @@ package client_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -29,6 +30,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
@@ -1163,6 +1165,103 @@ func (s *ClientPublicTestSuite) newClientWithRegistry(
 	c, err := client.New(slog.Default(), s.mockNATSClient, opts)
 	s.Require().NoError(err)
 	return c
+}
+
+func (s *ClientPublicTestSuite) TestQueryWithPKISigner() {
+	const (
+		target    = "server1"
+		category  = "node"
+		operation = job.OperationType("node.hostname.get")
+		subject   = "jobs.query.host.server1"
+	)
+
+	signer := newMockPKISigner()
+
+	tests := []struct {
+		name         string
+		setupMocks   func()
+		expectedErr  string
+		validateFunc func(jobID string, resp *job.Response)
+	}{
+		{
+			name: "when PKI signs job data and unwraps response",
+			setupMocks: func() {
+				// KV Put should receive a signed envelope.
+				s.mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(_ interface{}, _ string, data []byte) (uint64, error) {
+						// Verify the stored data is a valid signed envelope.
+						var envelope job.SignedEnvelope
+						s.NoError(json.Unmarshal(data, &envelope))
+						s.NotEmpty(envelope.Payload)
+						s.NotEmpty(envelope.Signature)
+						s.Equal("SHA256:test-fingerprint", envelope.Fingerprint)
+						return uint64(1), nil
+					})
+
+				// Publish succeeds.
+				s.mockNATSClient.EXPECT().
+					Publish(gomock.Any(), subject, gomock.Any()).
+					Return(nil)
+
+				// Watch returns a response.
+				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry.EXPECT().Value().Return(
+					[]byte(`{"status":"completed","hostname":"server1"}`),
+				)
+				ch := make(chan jetstream.KeyValueEntry, 1)
+				ch <- mockEntry
+
+				mockWatcher := jobmocks.NewMockKeyWatcher(s.mockCtrl)
+				mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
+				mockWatcher.EXPECT().Stop().Return(nil)
+
+				s.mockKV.EXPECT().
+					Watch(gomock.Any(), gomock.Any()).
+					Return(mockWatcher, nil)
+			},
+			validateFunc: func(jobID string, resp *job.Response) {
+				s.NotEmpty(jobID)
+				s.NotNil(resp)
+				s.Equal(job.StatusCompleted, resp.Status)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			// Create a client with PKI signer.
+			opts := &client.Options{
+				Timeout:    30 * time.Second,
+				KVBucket:   s.mockKV,
+				StreamName: "JOBS",
+				PKISigner:  signer,
+			}
+			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			tt.setupMocks()
+
+			jobID, resp, err := c.Query(
+				s.ctx,
+				target,
+				category,
+				operation,
+				nil,
+			)
+
+			if tt.expectedErr != "" {
+				s.Error(err)
+				s.Contains(err.Error(), tt.expectedErr)
+				return
+			}
+
+			s.NoError(err)
+			if tt.validateFunc != nil {
+				tt.validateFunc(jobID, resp)
+			}
+		})
+	}
 }
 
 func TestClientPublicTestSuite(t *testing.T) {

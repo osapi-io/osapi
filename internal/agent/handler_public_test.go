@@ -22,6 +22,8 @@ package agent_test
 
 import (
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,12 +31,14 @@ import (
 	"net"
 	"testing"
 
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/agent"
 	agentmocks "github.com/retr0h/osapi/internal/agent/mocks"
+	"github.com/retr0h/osapi/internal/agent/pki"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider"
@@ -907,6 +911,260 @@ func (s *HandlerPublicTestSuite) TestExtractChanged() {
 			got := agent.ExportExtractChanged(tt.data)
 
 			s.Equal(tt.want, got)
+		})
+	}
+}
+
+func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
+	// Generate a keypair for signing.
+	controllerPub, controllerPriv, err := ed25519.GenerateKey(rand.Reader)
+	s.Require().NoError(err)
+
+	tests := []struct {
+		name        string
+		setupPKI    func() *pki.Manager
+		data        func() []byte
+		wantPayload string
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name: "when PKI disabled passes through raw data",
+			setupPKI: func() *pki.Manager {
+				return nil
+			},
+			data: func() []byte {
+				return []byte(`{"id":"test","operation":{"type":"node.hostname.get"}}`)
+			},
+			wantPayload: `{"id":"test","operation":{"type":"node.hostname.get"}}`,
+			expectError: false,
+		},
+		{
+			name: "when valid signed envelope with correct controller key",
+			setupPKI: func() *pki.Manager {
+				m := pki.NewManager(memfs.New(), "/tmp/pki")
+				s.Require().NoError(m.LoadOrGenerate())
+				m.SetControllerPublicKey(controllerPub)
+				return m
+			},
+			data: func() []byte {
+				payload := []byte(`{"id":"signed-test"}`)
+				sig := ed25519.Sign(controllerPriv, payload)
+				envelope := job.SignedEnvelope{
+					Payload:     payload,
+					Signature:   sig,
+					Fingerprint: "SHA256:controller-fp",
+				}
+				data, _ := json.Marshal(envelope)
+				return data
+			},
+			wantPayload: `{"id":"signed-test"}`,
+			expectError: false,
+		},
+		{
+			name: "when signed envelope with invalid signature",
+			setupPKI: func() *pki.Manager {
+				m := pki.NewManager(memfs.New(), "/tmp/pki")
+				s.Require().NoError(m.LoadOrGenerate())
+				m.SetControllerPublicKey(controllerPub)
+				return m
+			},
+			data: func() []byte {
+				payload := []byte(`{"id":"bad-sig"}`)
+				envelope := job.SignedEnvelope{
+					Payload:     payload,
+					Signature:   []byte("invalid-signature-data-that-is-long-enough-for-ed25519-64-bytes!!"),
+					Fingerprint: "SHA256:bad-fp",
+				}
+				data, _ := json.Marshal(envelope)
+				return data
+			},
+			wantPayload: "",
+			expectError: true,
+			errorMsg:    "invalid controller signature",
+		},
+		{
+			name: "when signed envelope without controller key skips verification",
+			setupPKI: func() *pki.Manager {
+				m := pki.NewManager(memfs.New(), "/tmp/pki")
+				s.Require().NoError(m.LoadOrGenerate())
+				// No controller public key set.
+				return m
+			},
+			data: func() []byte {
+				payload := []byte(`{"id":"no-ctrl-key"}`)
+				sig := ed25519.Sign(controllerPriv, payload)
+				envelope := job.SignedEnvelope{
+					Payload:     payload,
+					Signature:   sig,
+					Fingerprint: "SHA256:controller-fp",
+				}
+				data, _ := json.Marshal(envelope)
+				return data
+			},
+			wantPayload: `{"id":"no-ctrl-key"}`,
+			expectError: false,
+		},
+		{
+			name: "when raw JSON with PKI enabled passes through",
+			setupPKI: func() *pki.Manager {
+				m := pki.NewManager(memfs.New(), "/tmp/pki")
+				s.Require().NoError(m.LoadOrGenerate())
+				m.SetControllerPublicKey(controllerPub)
+				return m
+			},
+			data: func() []byte {
+				return []byte(`{"id":"raw-job","operation":{"type":"node.hostname.get"}}`)
+			},
+			wantPayload: `{"id":"raw-job","operation":{"type":"node.hostname.get"}}`,
+			expectError: false,
+		},
+		{
+			name: "when invalid JSON with PKI enabled passes through",
+			setupPKI: func() *pki.Manager {
+				m := pki.NewManager(memfs.New(), "/tmp/pki")
+				s.Require().NoError(m.LoadOrGenerate())
+				return m
+			},
+			data: func() []byte {
+				return []byte(`not json at all`)
+			},
+			wantPayload: "not json at all",
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			pkiMgr := tt.setupPKI()
+			agent.SetAgentPKIManager(s.testAgent, pkiMgr)
+			defer agent.SetAgentPKIManager(s.testAgent, nil)
+
+			data := tt.data()
+			result, err := agent.ExportUnwrapJobEnvelope(s.testAgent, data)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorMsg != "" {
+					s.Contains(err.Error(), tt.errorMsg)
+				}
+				return
+			}
+
+			s.NoError(err)
+			s.Equal(tt.wantPayload, string(result))
+		})
+	}
+}
+
+func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
+	// Generate controller keypair for signing job data.
+	controllerPub, controllerPriv, err := ed25519.GenerateKey(rand.Reader)
+	s.Require().NoError(err)
+
+	tests := []struct {
+		name        string
+		setupPKI    func()
+		cleanupPKI  func()
+		setupMsg    func(ctrl *gomock.Controller) jetstream.Msg
+		setupMocks  func()
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name: "when signed job data processed successfully",
+			setupPKI: func() {
+				m := pki.NewManager(memfs.New(), "/tmp/pki")
+				s.Require().NoError(m.LoadOrGenerate())
+				m.SetControllerPublicKey(controllerPub)
+				agent.SetAgentPKIManager(s.testAgent, m)
+			},
+			cleanupPKI: func() {
+				agent.SetAgentPKIManager(s.testAgent, nil)
+			},
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("signed-job-ok"))
+			},
+			setupMocks: func() {
+				// Create signed job data.
+				payload := []byte(`{"id":"signed-job-ok","operation":{"type":"node.hostname.get","data":{}}}`)
+				sig := ed25519.Sign(controllerPriv, payload)
+				envelope := job.SignedEnvelope{
+					Payload:     payload,
+					Signature:   sig,
+					Fingerprint: "SHA256:ctrl",
+				}
+				envelopeJSON, _ := json.Marshal(envelope)
+
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.signed-job-ok").
+					Return(envelopeJSON, nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "signed-job-ok", "acknowledged", gomock.Any(), gomock.Any()).
+					Return(nil)
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "signed-job-ok", "started", gomock.Any(), gomock.Any()).
+					Return(nil)
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "signed-job-ok", "completed", gomock.Any(), gomock.Any()).
+					Return(nil)
+				s.mockJobClient.EXPECT().
+					WriteJobResponse(gomock.Any(), "signed-job-ok", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
+					Return(nil)
+			},
+			expectError: false,
+		},
+		{
+			name: "when signed job data with invalid signature fails",
+			setupPKI: func() {
+				m := pki.NewManager(memfs.New(), "/tmp/pki")
+				s.Require().NoError(m.LoadOrGenerate())
+				m.SetControllerPublicKey(controllerPub)
+				agent.SetAgentPKIManager(s.testAgent, m)
+			},
+			cleanupPKI: func() {
+				agent.SetAgentPKIManager(s.testAgent, nil)
+			},
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("bad-sig-job"))
+			},
+			setupMocks: func() {
+				// Create job data with invalid signature.
+				payload := []byte(`{"id":"bad-sig-job","operation":{"type":"node.hostname.get"}}`)
+				envelope := job.SignedEnvelope{
+					Payload:     payload,
+					Signature:   []byte("bad-signature-data-that-is-at-least-64-bytes-long-for-ed25519!!!"),
+					Fingerprint: "SHA256:bad",
+				}
+				envelopeJSON, _ := json.Marshal(envelope)
+
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.bad-sig-job").
+					Return(envelopeJSON, nil)
+			},
+			expectError: true,
+			errorMsg:    "job signature verification failed",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupPKI()
+			defer tt.cleanupPKI()
+			tt.setupMocks()
+
+			msg := tt.setupMsg(s.mockCtrl)
+			err := agent.ExportHandleJobMessage(s.testAgent, msg)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorMsg != "" {
+					s.Contains(err.Error(), tt.errorMsg)
+				}
+			} else {
+				s.NoError(err)
+			}
 		})
 	}
 }
