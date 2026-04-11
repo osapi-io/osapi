@@ -979,17 +979,17 @@ func (s *HealthStatusGetPublicTestSuite) TestMetricsCache() {
 					return nil, nil
 				},
 				ComponentRegistryFn: func(_ context.Context) ([]health.ComponentEntry, error) {
-				return []health.ComponentEntry{
-					{
-						Type:     "agent",
-						Hostname: "web-01",
-						Status:   "Ready",
-						SubComponents: map[string]health.SubComponentInfo{
-							"agent.heartbeat": {Status: "ok"},
+					return []health.ComponentEntry{
+						{
+							Type:     "agent",
+							Hostname: "web-01",
+							Status:   "Ready",
+							SubComponents: map[string]health.SubComponentInfo{
+								"agent.heartbeat": {Status: "ok"},
+							},
 						},
-					},
-				}, nil
-			},
+					}, nil
+				},
 			}
 			handler := health.New(s.logger, checker, time.Now(), "0.1.0", metrics, nil)
 
