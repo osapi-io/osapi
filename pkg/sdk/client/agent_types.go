@@ -279,6 +279,40 @@ func agentFromGen(
 	return a
 }
 
+// PendingAgent represents an agent awaiting enrollment acceptance.
+type PendingAgent struct {
+	MachineID   string    `json:"machine_id"`
+	Hostname    string    `json:"hostname"`
+	Fingerprint string    `json:"fingerprint"`
+	RequestedAt time.Time `json:"requested_at"`
+}
+
+// PendingAgentList is a collection of pending agents.
+type PendingAgentList struct {
+	Agents []PendingAgent `json:"agents"`
+	Total  int            `json:"total"`
+}
+
+// pendingAgentListFromGen converts a gen.ListPendingAgentsResponse to a PendingAgentList.
+func pendingAgentListFromGen(
+	g *gen.ListPendingAgentsResponse,
+) PendingAgentList {
+	agents := make([]PendingAgent, 0, len(g.Agents))
+	for _, a := range g.Agents {
+		agents = append(agents, PendingAgent{
+			MachineID:   a.MachineId,
+			Hostname:    a.Hostname,
+			Fingerprint: a.Fingerprint,
+			RequestedAt: a.RequestedAt,
+		})
+	}
+
+	return PendingAgentList{
+		Agents: agents,
+		Total:  g.Total,
+	}
+}
+
 // agentListFromGen converts a gen.ListAgentsResponse to an AgentList.
 func agentListFromGen(
 	g *gen.ListAgentsResponse,

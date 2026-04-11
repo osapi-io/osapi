@@ -18,29 +18,45 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package agent
+package cmd
 
 import (
-	"context"
-	"log/slog"
+	"fmt"
 
-	"github.com/retr0h/osapi/internal/controller/enrollment"
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/spf13/cobra"
+
+	"github.com/retr0h/osapi/internal/cli"
 )
 
-// EnrollmentManager defines the enrollment operations needed by the
-// agent API handlers. When nil, enrollment endpoints return 500.
-type EnrollmentManager interface {
-	ListPending(ctx context.Context) ([]enrollment.PendingAgent, error)
-	AcceptByHostname(ctx context.Context, hostname string) error
-	AcceptByFingerprint(ctx context.Context, fingerprint string) error
-	RejectByHostname(ctx context.Context, hostname string, reason string) error
+// clientAgentAcceptCmd represents the clientAgentAccept command.
+var clientAgentAcceptCmd = &cobra.Command{
+	Use:   "accept",
+	Short: "Accept a pending agent enrollment",
+	Long:  `Accept a pending agent enrollment request by hostname or fingerprint.`,
+	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
+		hostname, _ := cmd.Flags().GetString("hostname")
+		fingerprint, _ := cmd.Flags().GetString("fingerprint")
+
+		resp, err := sdkClient.Agent.Accept(ctx, hostname, fingerprint)
+		if err != nil {
+			cli.HandleError(err, logger)
+			return
+		}
+
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
+		}
+
+		fmt.Println()
+		cli.PrintKV("Status", "Accepted", "Message", resp.Data.Message)
+	},
 }
 
-// Agent implementation of the Agent APIs operations.
-type Agent struct {
-	// JobClient provides job-based operations for agent queries.
-	JobClient  client.JobClient
-	logger     *slog.Logger
-	enrollment EnrollmentManager
+func init() {
+	clientAgentCmd.AddCommand(clientAgentAcceptCmd)
+	clientAgentAcceptCmd.Flags().String("hostname", "", "Hostname of the pending agent to accept")
+	clientAgentAcceptCmd.Flags().String("fingerprint", "", "Accept by fingerprint instead of hostname")
+	_ = clientAgentAcceptCmd.MarkFlagRequired("hostname")
 }

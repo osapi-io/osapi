@@ -18,29 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package agent
+package mocks
 
-import (
-	"context"
-	"log/slog"
-
-	"github.com/retr0h/osapi/internal/controller/enrollment"
-	"github.com/retr0h/osapi/internal/job/client"
-)
-
-// EnrollmentManager defines the enrollment operations needed by the
-// agent API handlers. When nil, enrollment endpoints return 500.
-type EnrollmentManager interface {
-	ListPending(ctx context.Context) ([]enrollment.PendingAgent, error)
-	AcceptByHostname(ctx context.Context, hostname string) error
-	AcceptByFingerprint(ctx context.Context, fingerprint string) error
-	RejectByHostname(ctx context.Context, hostname string, reason string) error
-}
-
-// Agent implementation of the Agent APIs operations.
-type Agent struct {
-	// JobClient provides job-based operations for agent queries.
-	JobClient  client.JobClient
-	logger     *slog.Logger
-	enrollment EnrollmentManager
-}
+//go:generate go tool github.com/golang/mock/mockgen -destination=agent.gen.go -package=mocks github.com/retr0h/osapi/internal/controller/api/agent EnrollmentManager

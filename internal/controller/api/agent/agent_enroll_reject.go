@@ -22,25 +22,38 @@ package agent
 
 import (
 	"context"
-	"log/slog"
+	"fmt"
+	"strings"
 
-	"github.com/retr0h/osapi/internal/controller/enrollment"
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/retr0h/osapi/internal/controller/api/agent/gen"
 )
 
-// EnrollmentManager defines the enrollment operations needed by the
-// agent API handlers. When nil, enrollment endpoints return 500.
-type EnrollmentManager interface {
-	ListPending(ctx context.Context) ([]enrollment.PendingAgent, error)
-	AcceptByHostname(ctx context.Context, hostname string) error
-	AcceptByFingerprint(ctx context.Context, fingerprint string) error
-	RejectByHostname(ctx context.Context, hostname string, reason string) error
-}
+// RejectAgent handles POST /agent/{hostname}/reject.
+func (a *Agent) RejectAgent(
+	ctx context.Context,
+	request gen.RejectAgentRequestObject,
+) (gen.RejectAgentResponseObject, error) {
+	if errMsg, ok := validateHostname(request.Hostname); !ok {
+		return gen.RejectAgent400JSONResponse{Error: &errMsg}, nil
+	}
 
-// Agent implementation of the Agent APIs operations.
-type Agent struct {
-	// JobClient provides job-based operations for agent queries.
-	JobClient  client.JobClient
-	logger     *slog.Logger
-	enrollment EnrollmentManager
+	if a.enrollment == nil {
+		errMsg := "enrollment not enabled"
+		return gen.RejectAgent500JSONResponse{Error: &errMsg}, nil
+	}
+
+	hostname := request.Hostname
+	if err := a.enrollment.RejectByHostname(ctx, hostname, "rejected via API"); err != nil {
+		if strings.Contains(err.Error(), "no pending agent") {
+			errMsg := fmt.Sprintf("no pending agent with hostname %q", hostname)
+			return gen.RejectAgent404JSONResponse{Error: &errMsg}, nil
+		}
+
+		errMsg := err.Error()
+		return gen.RejectAgent500JSONResponse{Error: &errMsg}, nil
+	}
+
+	msg := fmt.Sprintf("agent %s rejected", hostname)
+
+	return gen.RejectAgent200JSONResponse{Message: msg}, nil
 }

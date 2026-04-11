@@ -83,7 +83,7 @@ func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
 			handlers := make([]func(e *echo.Echo), 0, 5)
 			handlers = append(
 				handlers,
-				agentAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...)
+				agentAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil, nil)...)
 			handlers = append(
 				handlers,
 				nodeAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...)

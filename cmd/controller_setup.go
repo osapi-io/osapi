@@ -724,7 +724,7 @@ func registerControllerHandlers(
 	}
 
 	handlers := make([]func(e *echo.Echo), 0, 16)
-	handlers = append(handlers, agentAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, agentAPI.Handler(log, jc, signingKey, customRoles, nil)...)
 	handlers = append(handlers, nodeAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, jobAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(

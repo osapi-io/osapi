@@ -1039,6 +1039,106 @@ func (s *WatcherPublicTestSuite) makeEnrollmentMsg(
 	return &nats.Msg{Data: data}
 }
 
+func (s *WatcherPublicTestSuite) TestRejectByHostname() {
+	tests := []struct {
+		name       string
+		hostname   string
+		setupMock  func()
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name:     "finds and rejects agent by hostname",
+			hostname: "web-01",
+			setupMock: func() {
+				// findPendingBy: ListKeys + Get.
+				keys := make(chan string, 1)
+				keys <- "enrollment.machine-001"
+				close(keys)
+
+				mockLister := jobMocks.NewMockKeyLister(s.mockCtrl)
+				mockLister.EXPECT().Keys().Return(keys)
+
+				s.mockKV.EXPECT().
+					ListKeys(gomock.Any()).
+					Return(mockLister, nil)
+
+				pendingData := s.makePendingJSON("machine-001", "web-01", "SHA256:abc123")
+
+				findEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+				findEntry.EXPECT().Value().Return(pendingData)
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "enrollment.machine-001").
+					Return(findEntry, nil)
+
+				// RejectAgent: Get from KV.
+				rejectEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+				rejectEntry.EXPECT().Value().Return(pendingData)
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "enrollment.machine-001").
+					Return(rejectEntry, nil)
+
+				// RejectAgent: Publish + Delete.
+				s.mockNC.EXPECT().
+					Publish("osapi.enroll.response.machine-001", gomock.Any()).
+					Return(nil)
+				s.mockKV.EXPECT().
+					Delete(gomock.Any(), "enrollment.machine-001").
+					Return(nil)
+			},
+		},
+		{
+			name:     "returns error when no matching hostname found",
+			hostname: "nonexistent",
+			setupMock: func() {
+				keys := make(chan string, 1)
+				keys <- "enrollment.machine-001"
+				close(keys)
+
+				mockLister := jobMocks.NewMockKeyLister(s.mockCtrl)
+				mockLister.EXPECT().Keys().Return(keys)
+
+				s.mockKV.EXPECT().
+					ListKeys(gomock.Any()).
+					Return(mockLister, nil)
+
+				pendingData := s.makePendingJSON("machine-001", "web-01", "SHA256:abc123")
+				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(pendingData)
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "enrollment.machine-001").
+					Return(entry, nil)
+			},
+			wantErr:    true,
+			wantErrMsg: `no pending agent with hostname "nonexistent"`,
+		},
+		{
+			name:     "returns error when bucket is empty",
+			hostname: "web-01",
+			setupMock: func() {
+				s.mockKV.EXPECT().
+					ListKeys(gomock.Any()).
+					Return(nil, jetstream.ErrNoKeysFound)
+			},
+			wantErr:    true,
+			wantErrMsg: `no pending agent with hostname "web-01"`,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.setupMock()
+			err := s.watcher.RejectByHostname(s.ctx, tc.hostname, "rejected via API")
+			if tc.wantErr {
+				s.Require().Error(err)
+				s.Contains(err.Error(), tc.wantErrMsg)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
 // makePendingJSON creates serialized PendingAgent JSON.
 func (s *WatcherPublicTestSuite) makePendingJSON(
 	machineID string,

@@ -84,6 +84,7 @@ func (s *HandlerPublicTestSuite) TestHandler() {
 				s.mockJobClient,
 				"test-signing-key",
 				nil,
+				nil,
 			)
 
 			tt.validate(handlers)

@@ -22,25 +22,38 @@ package agent
 
 import (
 	"context"
-	"log/slog"
 
-	"github.com/retr0h/osapi/internal/controller/enrollment"
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/retr0h/osapi/internal/controller/api/agent/gen"
 )
 
-// EnrollmentManager defines the enrollment operations needed by the
-// agent API handlers. When nil, enrollment endpoints return 500.
-type EnrollmentManager interface {
-	ListPending(ctx context.Context) ([]enrollment.PendingAgent, error)
-	AcceptByHostname(ctx context.Context, hostname string) error
-	AcceptByFingerprint(ctx context.Context, fingerprint string) error
-	RejectByHostname(ctx context.Context, hostname string, reason string) error
-}
+// GetAgentsPending handles GET /agent/pending.
+func (a *Agent) GetAgentsPending(
+	ctx context.Context,
+	_ gen.GetAgentsPendingRequestObject,
+) (gen.GetAgentsPendingResponseObject, error) {
+	if a.enrollment == nil {
+		errMsg := "enrollment not enabled"
+		return gen.GetAgentsPending500JSONResponse{Error: &errMsg}, nil
+	}
 
-// Agent implementation of the Agent APIs operations.
-type Agent struct {
-	// JobClient provides job-based operations for agent queries.
-	JobClient  client.JobClient
-	logger     *slog.Logger
-	enrollment EnrollmentManager
+	pending, err := a.enrollment.ListPending(ctx)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.GetAgentsPending500JSONResponse{Error: &errMsg}, nil
+	}
+
+	agents := make([]gen.PendingAgentInfo, 0, len(pending))
+	for _, p := range pending {
+		agents = append(agents, gen.PendingAgentInfo{
+			MachineId:   p.MachineID,
+			Hostname:    p.Hostname,
+			Fingerprint: p.Fingerprint,
+			RequestedAt: p.RequestedAt,
+		})
+	}
+
+	return gen.GetAgentsPending200JSONResponse{
+		Agents: agents,
+		Total:  len(agents),
+	}, nil
 }

@@ -168,6 +168,27 @@ func (w *Watcher) AcceptByFingerprint(
 	return w.AcceptAgent(ctx, agent.MachineID)
 }
 
+// RejectByHostname scans the pending KV for an agent matching the given
+// hostname and rejects it. Returns an error if no matching agent is found.
+func (w *Watcher) RejectByHostname(
+	ctx context.Context,
+	hostname string,
+	reason string,
+) error {
+	agent, err := w.findPendingBy(ctx, func(p PendingAgent) bool {
+		return p.Hostname == hostname
+	})
+	if err != nil {
+		return err
+	}
+
+	if agent == nil {
+		return fmt.Errorf("no pending agent with hostname %q", hostname)
+	}
+
+	return w.RejectAgent(ctx, agent.MachineID, reason)
+}
+
 // findPendingBy scans all pending agents and returns the first one
 // matching the predicate. Returns nil if no match is found.
 func (w *Watcher) findPendingBy(

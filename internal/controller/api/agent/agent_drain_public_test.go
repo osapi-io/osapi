@@ -56,7 +56,7 @@ type AgentDrainPublicTestSuite struct {
 func (s *AgentDrainPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apiagent.New(slog.Default(), s.mockJobClient)
+	s.handler = apiagent.New(slog.Default(), s.mockJobClient, nil)
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -307,7 +307,7 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgentHTTP() {
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
 
-			agentHandler := apiagent.New(s.logger, jobMock)
+			agentHandler := apiagent.New(s.logger, jobMock, nil)
 			strictHandler := gen.NewStrictHandler(agentHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
@@ -424,6 +424,7 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgentRBACHTTP() {
 				s.logger,
 				jobMock,
 				appConfig.Controller.API.Security.SigningKey,
+				nil,
 				nil,
 			)
 			server.RegisterHandlers(handlers)

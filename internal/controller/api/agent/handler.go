@@ -38,10 +38,11 @@ func Handler(
 	jobClient client.JobClient,
 	signingKey string,
 	customRoles map[string][]string,
+	enrollmentMgr EnrollmentManager,
 ) []func(e *echo.Echo) {
 	var tokenManager api.TokenValidator = authtoken.New(logger)
 
-	agentHandler := New(logger, jobClient)
+	agentHandler := New(logger, jobClient, enrollmentMgr)
 
 	strictHandler := gen.NewStrictHandler(
 		agentHandler,

@@ -3,97 +3,97 @@ info:
   title: Agent Management API
   version: 1.0.0
 tags:
-  - name: Agent_Management_API_agent_operations
+  - name: agent_operations
     x-displayName: Agent
     description: Operations related to agent discovery and details.
-  - name: Audit_Log_API_audit
+  - name: audit
     x-displayName: Audit
     description: Audit log endpoints for viewing API activity.
-  - name: OSAPI_-_A_CRUD_API_for_managing_Linux_systems_info
+  - name: info
     x-displayName: Info
     description: Operations related to the info endpoint.
-  - name: Facts_API_facts
+  - name: facts
     x-displayName: Facts
     description: Fact key discovery for @fact. references.
-  - name: File_Management_API_file_operations
+  - name: file_operations
     x-displayName: File
     description: Object Store file management operations.
-  - name: Health_Check_API_health
+  - name: health
     x-displayName: Health
     description: Health check endpoints for liveness, readiness, and detailed status.
-  - name: Job_Management_API_job_operations
+  - name: job_operations
     x-displayName: Job
     description: Operations related to the job queue.
-  - name: Node_Management_API_node_operations
+  - name: node_operations
     x-displayName: Node
     description: Operations related to the node endpoint.
-  - name: Node_Management_API_node_status
+  - name: node_status
     x-displayName: Node/Status
     description: Operations related to node status endpoint.
-  - name: Certificate_Management_API_certificate_operations
+  - name: certificate_operations
     x-displayName: Node/Certificate
     description: CA certificate management on a target node.
-  - name: Command_Execution_API_command_operations
+  - name: command_operations
     x-displayName: Node/Command
     description: Command execution on a target node.
-  - name: Docker_Management_API_docker_operations
+  - name: docker_operations
     x-displayName: Node/Docker
     description: Docker lifecycle operations on a target node.
-  - name: Docker_Management_API_docker_exec
+  - name: docker_exec
     x-displayName: Node/Docker/Exec
     description: Command execution inside containers on a target node.
-  - name: Docker_Management_API_docker_image
+  - name: docker_image
     x-displayName: Node/Docker/Image
     description: Docker image operations on a target node.
-  - name: Node_File_Operations_API_node_file_operations
+  - name: node_file_operations
     x-displayName: Node/File
     description: File deploy, undeploy, and status operations on a target node.
-  - name: Hostname_Management_API_hostname_operations
+  - name: hostname_operations
     x-displayName: Node/Hostname
     description: Hostname operations on a target node.
-  - name: Log_Management_API_log_operations
+  - name: log_operations
     x-displayName: Node/Log
     description: Log viewing operations on a target node.
-  - name: Network_Management_API_network_operations
+  - name: network_operations
     x-displayName: Node/Network
     description: Network operations on a target node.
-  - name: Network_Management_API_dns_operations
+  - name: dns_operations
     x-displayName: Node/Network/DNS
     description: DNS configuration operations on a target node.
-  - name: Network_Management_API_interface_operations
+  - name: interface_operations
     x-displayName: Node/Network/Interface
     description: Network interface configuration on a target node.
-  - name: Network_Management_API_route_operations
+  - name: route_operations
     x-displayName: Node/Network/Route
     description: Network route configuration on a target node.
-  - name: NTP_Management_API_ntp_operations
+  - name: ntp_operations
     x-displayName: Node/NTP
     description: NTP server configuration management on a target node.
-  - name: Package_Management_API_package_operations
+  - name: package_operations
     x-displayName: Node/Package
     description: Package management on a target node.
-  - name: Power_Management_API_power_operations
+  - name: power_operations
     x-displayName: Node/Power
     description: Power management operations (reboot, shutdown) on a target node.
-  - name: Process_Management_API_process_operations
+  - name: process_operations
     x-displayName: Node/Process
     description: Process management operations on a target node.
-  - name: Schedule_Management_API_cron_operations
+  - name: cron_operations
     x-displayName: Node/Schedule/Cron
     description: Cron drop-in file management on a target node.
-  - name: Service_Management_API_service_operations
+  - name: service_operations
     x-displayName: Node/Service
     description: Systemd service management on a target node.
-  - name: Sysctl_Management_API_sysctl_operations
+  - name: sysctl_operations
     x-displayName: Node/Sysctl
     description: Kernel parameter management on a target node.
-  - name: Timezone_Management_API_timezone_operations
+  - name: timezone_operations
     x-displayName: Node/Timezone
     description: System timezone management on a target node.
-  - name: User_and_Group_Management_API_user_operations
+  - name: user_operations
     x-displayName: Node/User
     description: User account management on a target node.
-  - name: User_and_Group_Management_API_group_operations
+  - name: group_operations
     x-displayName: Node/Group
     description: Group management on a target node.
 paths:
@@ -104,7 +104,7 @@ paths:
       summary: List active agents
       description: Discover all active agents in the fleet.
       tags:
-        - Agent_Management_API_agent_operations
+        - agent_operations
       security:
         - BearerAuth:
             - agent:read
@@ -140,7 +140,7 @@ paths:
       description: Get detailed information about a specific agent by hostname.
       operationId: getAgentDetails
       tags:
-        - Agent_Management_API_agent_operations
+        - agent_operations
       security:
         - BearerAuth:
             - agent:read
@@ -192,6 +192,183 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/agent/pending:
+    servers: []
+    get:
+      operationId: getAgentsPending
+      summary: List agents awaiting enrollment
+      description: >-
+        List all agents that have submitted enrollment requests but have not yet
+        been accepted or rejected.
+      tags:
+        - agent_operations
+      security:
+        - BearerAuth:
+            - agent:read
+      responses:
+        '200':
+          description: List of pending agents.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListPendingAgentsResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing pending agents.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/agent/{hostname}/accept:
+    servers: []
+    post:
+      operationId: acceptAgent
+      summary: Accept a pending agent
+      description: >
+        Accept a pending agent enrollment request. The agent can be identified
+        by hostname (path parameter) or by fingerprint (query parameter).
+      tags:
+        - agent_operations
+      security:
+        - BearerAuth:
+            - agent:write
+      parameters:
+        - name: hostname
+          in: path
+          required: true
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+          description: The hostname of the pending agent to accept.
+        - name: fingerprint
+          in: query
+          required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=255
+          schema:
+            type: string
+            maxLength: 255
+          description: Accept by fingerprint instead of hostname.
+      responses:
+        '200':
+          description: Agent accepted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+        '400':
+          description: Invalid hostname or fingerprint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Pending agent not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error accepting agent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/agent/{hostname}/reject:
+    servers: []
+    post:
+      operationId: rejectAgent
+      summary: Reject a pending agent
+      description: Reject a pending agent enrollment request.
+      tags:
+        - agent_operations
+      security:
+        - BearerAuth:
+            - agent:write
+      parameters:
+        - name: hostname
+          in: path
+          required: true
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+          description: The hostname of the pending agent to reject.
+      responses:
+        '200':
+          description: Agent rejected.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+        '400':
+          description: Invalid hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Pending agent not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error rejecting agent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/agent/{hostname}/drain:
     servers: []
     post:
@@ -201,7 +378,7 @@ paths:
         Stop the agent from accepting new jobs. In-flight jobs continue to
         completion.
       tags:
-        - Agent_Management_API_agent_operations
+        - agent_operations
       security:
         - BearerAuth:
             - agent:write
@@ -265,7 +442,7 @@ paths:
       summary: Undrain an agent
       description: Resume accepting jobs on a drained agent.
       tags:
-        - Agent_Management_API_agent_operations
+        - agent_operations
       security:
         - BearerAuth:
             - agent:write
@@ -329,7 +506,7 @@ paths:
       summary: List audit log entries
       description: Returns a paginated list of audit log entries, newest first.
       tags:
-        - Audit_Log_API_audit
+        - audit
       security:
         - BearerAuth:
             - audit:read
@@ -393,7 +570,7 @@ paths:
       summary: Export all audit log entries
       description: Returns all audit log entries without pagination for export.
       tags:
-        - Audit_Log_API_audit
+        - audit
       security:
         - BearerAuth:
             - audit:read
@@ -429,7 +606,7 @@ paths:
       summary: Get a single audit log entry
       description: Returns a single audit log entry by ID.
       tags:
-        - Audit_Log_API_audit
+        - audit
       security:
         - BearerAuth:
             - audit:read
@@ -480,7 +657,7 @@ paths:
       summary: Retrieve the software version
       description: Get the current version of the software running on the system.
       tags:
-        - OSAPI_-_A_CRUD_API_for_managing_Linux_systems_info
+        - info
       responses:
         '400':
           description: A common JSON error response.
@@ -497,7 +674,7 @@ paths:
         Includes built-in keys and any custom keys registered by agents.
       operationId: GetFactKeys
       tags:
-        - Facts_API_facts
+        - facts
       security:
         - BearerAuth:
             - agent:read
@@ -532,7 +709,7 @@ paths:
       summary: Upload a file
       description: Upload a file to the Object Store.
       tags:
-        - File_Management_API_file_operations
+        - file_operations
       operationId: PostFile
       security:
         - BearerAuth:
@@ -626,7 +803,7 @@ paths:
       summary: List stored files
       description: List all files stored in the Object Store.
       tags:
-        - File_Management_API_file_operations
+        - file_operations
       operationId: GetFiles
       security:
         - BearerAuth:
@@ -665,7 +842,7 @@ paths:
         updated since the file was last deployed. Controller-only check that
         compares state KV SHA-256 hashes against current object content.
       tags:
-        - File_Management_API_file_operations
+        - file_operations
       operationId: GetFileStale
       security:
         - BearerAuth:
@@ -701,7 +878,7 @@ paths:
       summary: Get file metadata
       description: Get metadata for a specific file in the Object Store.
       tags:
-        - File_Management_API_file_operations
+        - file_operations
       operationId: GetFileByName
       security:
         - BearerAuth:
@@ -749,7 +926,7 @@ paths:
       summary: Delete a file
       description: Delete a file from the Object Store.
       tags:
-        - File_Management_API_file_operations
+        - file_operations
       operationId: DeleteFileByName
       security:
         - BearerAuth:
@@ -800,7 +977,7 @@ paths:
       summary: Liveness probe
       description: Returns 200 if the process is alive. No checks performed.
       tags:
-        - Health_Check_API_health
+        - health
       responses:
         '200':
           description: Process is alive.
@@ -815,7 +992,7 @@ paths:
       summary: Readiness probe
       description: Returns 200 when the service is ready to accept traffic.
       tags:
-        - Health_Check_API_health
+        - health
       responses:
         '200':
           description: Service is ready.
@@ -838,7 +1015,7 @@ paths:
         Returns per-component health status with system metrics. Requires
         authentication.
       tags:
-        - Health_Check_API_health
+        - health
       security:
         - BearerAuth:
             - health:read
@@ -874,7 +1051,7 @@ paths:
       summary: List jobs
       description: Retrieve jobs, optionally filtered by status.
       tags:
-        - Job_Management_API_job_operations
+        - job_operations
       security:
         - BearerAuth:
             - job:read
@@ -953,7 +1130,7 @@ paths:
       summary: Get job detail
       description: Retrieve details of a specific job by its ID.
       tags:
-        - Job_Management_API_job_operations
+        - job_operations
       operationId: GetJobByID
       security:
         - BearerAuth:
@@ -1009,7 +1186,7 @@ paths:
       summary: Delete a job
       description: Delete a specific job by its ID.
       tags:
-        - Job_Management_API_job_operations
+        - job_operations
       operationId: DeleteJobByID
       security:
         - BearerAuth:
@@ -1065,7 +1242,7 @@ paths:
         Create a new job using the same operation data as an existing job. The
         original job is preserved. Returns the new job ID.
       tags:
-        - Job_Management_API_job_operations
+        - job_operations
       operationId: RetryJobByID
       security:
         - BearerAuth:
@@ -1131,7 +1308,7 @@ paths:
         Get the current status of the node including hostname, uptime, load
         averages, memory, and disk usage.
       tags:
-        - Node_Management_API_node_status
+        - node_status
       operationId: GetNodeStatus
       security:
         - BearerAuth:
@@ -1176,7 +1353,7 @@ paths:
       summary: Retrieve disk usage
       description: Get disk usage information for the target node.
       tags:
-        - Node_Management_API_node_operations
+        - node_operations
       operationId: GetNodeDisk
       security:
         - BearerAuth:
@@ -1220,7 +1397,7 @@ paths:
       summary: Retrieve memory stats
       description: Get memory usage information for the target node.
       tags:
-        - Node_Management_API_node_operations
+        - node_operations
       operationId: GetNodeMemory
       security:
         - BearerAuth:
@@ -1264,7 +1441,7 @@ paths:
       summary: Retrieve load averages
       description: Get load average information for the target node.
       tags:
-        - Node_Management_API_node_operations
+        - node_operations
       operationId: GetNodeLoad
       security:
         - BearerAuth:
@@ -1308,7 +1485,7 @@ paths:
       summary: Retrieve OS info
       description: Get operating system information for the target node.
       tags:
-        - Node_Management_API_node_operations
+        - node_operations
       operationId: GetNodeOS
       security:
         - BearerAuth:
@@ -1352,7 +1529,7 @@ paths:
       summary: Retrieve uptime
       description: Get uptime information for the target node.
       tags:
-        - Node_Management_API_node_operations
+        - node_operations
       operationId: GetNodeUptime
       security:
         - BearerAuth:
@@ -1397,7 +1574,7 @@ paths:
       description: |
         List all CA certificates on the target node.
       tags:
-        - Certificate_Management_API_certificate_operations
+        - certificate_operations
       operationId: GetNodeCertificateCa
       security:
         - BearerAuth:
@@ -1440,7 +1617,7 @@ paths:
       description: |
         Install a new CA certificate on the target node.
       tags:
-        - Certificate_Management_API_certificate_operations
+        - certificate_operations
       operationId: PostNodeCertificateCa
       security:
         - BearerAuth:
@@ -1492,7 +1669,7 @@ paths:
       description: |
         Update an existing CA certificate on the target node.
       tags:
-        - Certificate_Management_API_certificate_operations
+        - certificate_operations
       operationId: PutNodeCertificateCa
       security:
         - BearerAuth:
@@ -1549,7 +1726,7 @@ paths:
       description: |
         Delete a CA certificate from the target node.
       tags:
-        - Certificate_Management_API_certificate_operations
+        - certificate_operations
       operationId: DeleteNodeCertificateCa
       security:
         - BearerAuth:
@@ -1596,7 +1773,7 @@ paths:
         Execute a command directly without a shell. This is the safer option as
         it does not interpret shell metacharacters.
       tags:
-        - Command_Execution_API_command_operations
+        - command_operations
       operationId: PostNodeCommandExec
       security:
         - BearerAuth:
@@ -1649,7 +1826,7 @@ paths:
         Execute a command through /bin/sh -c. Supports shell features like
         pipes, redirects, and variable expansion.
       tags:
-        - Command_Execution_API_command_operations
+        - command_operations
       operationId: PostNodeCommandShell
       security:
         - BearerAuth:
@@ -1702,7 +1879,7 @@ paths:
         Create a new container on the target node. Returns a job ID for tracking
         the asynchronous operation.
       tags:
-        - Docker_Management_API_docker_operations
+        - docker_operations
       operationId: PostNodeContainerDocker
       security:
         - BearerAuth:
@@ -1752,7 +1929,7 @@ paths:
       description: |
         List containers on the target node, optionally filtered by state.
       tags:
-        - Docker_Management_API_docker_operations
+        - docker_operations
       operationId: GetNodeContainerDocker
       security:
         - BearerAuth:
@@ -1823,7 +2000,7 @@ paths:
       description: |
         Get detailed information about a specific container.
       tags:
-        - Docker_Management_API_docker_operations
+        - docker_operations
       operationId: GetNodeContainerDockerByID
       security:
         - BearerAuth:
@@ -1874,7 +2051,7 @@ paths:
         Remove a container from the target node. Use the force query parameter
         to remove a running container.
       tags:
-        - Docker_Management_API_docker_operations
+        - docker_operations
       operationId: DeleteNodeContainerDockerByID
       security:
         - BearerAuth:
@@ -1936,7 +2113,7 @@ paths:
       description: |
         Start a stopped container on the target node.
       tags:
-        - Docker_Management_API_docker_operations
+        - docker_operations
       operationId: PostNodeContainerDockerStart
       security:
         - BearerAuth:
@@ -1989,7 +2166,7 @@ paths:
         Stop a running container on the target node. Optionally specify a
         timeout before the container is killed.
       tags:
-        - Docker_Management_API_docker_operations
+        - docker_operations
       operationId: PostNodeContainerDockerStop
       security:
         - BearerAuth:
@@ -2048,7 +2225,7 @@ paths:
       description: |
         Execute a command inside a running container on the target node.
       tags:
-        - Docker_Management_API_docker_exec
+        - docker_exec
       operationId: PostNodeContainerDockerExec
       security:
         - BearerAuth:
@@ -2108,7 +2285,7 @@ paths:
         Remove a container image from the target node. The image parameter
         accepts an image name or ID.
       tags:
-        - Docker_Management_API_docker_image
+        - docker_image
       operationId: DeleteNodeContainerDockerImage
       security:
         - BearerAuth:
@@ -2173,7 +2350,7 @@ paths:
       description: |
         Pull a container image on the target node.
       tags:
-        - Docker_Management_API_docker_image
+        - docker_image
       operationId: PostNodeContainerDockerPull
       security:
         - BearerAuth:
@@ -2224,7 +2401,7 @@ paths:
       operationId: PostNodeFileDeploy
       summary: Deploy a file from Object Store to the host
       tags:
-        - Node_File_Operations_API_node_file_operations
+        - node_file_operations
       security:
         - BearerAuth:
             - file:write
@@ -2273,7 +2450,7 @@ paths:
       operationId: PostNodeFileUndeploy
       summary: Remove a deployed file from the host filesystem
       tags:
-        - Node_File_Operations_API_node_file_operations
+        - node_file_operations
       security:
         - BearerAuth:
             - file:write
@@ -2322,7 +2499,7 @@ paths:
       operationId: PostNodeFileStatus
       summary: Check deployment status of a file on the host
       tags:
-        - Node_File_Operations_API_node_file_operations
+        - node_file_operations
       security:
         - BearerAuth:
             - file:read
@@ -2371,7 +2548,7 @@ paths:
       summary: Retrieve node hostname
       description: Get the current hostname and labels of the node.
       tags:
-        - Hostname_Management_API_hostname_operations
+        - hostname_operations
       operationId: GetNodeHostname
       security:
         - BearerAuth:
@@ -2413,7 +2590,7 @@ paths:
       summary: Update node hostname
       description: Set the system hostname on the target node.
       tags:
-        - Hostname_Management_API_hostname_operations
+        - hostname_operations
       operationId: PutNodeHostname
       security:
         - BearerAuth:
@@ -2464,7 +2641,7 @@ paths:
       description: |
         Retrieve log entries from the target node's system journal.
       tags:
-        - Log_Management_API_log_operations
+        - log_operations
       operationId: GetNodeLog
       security:
         - BearerAuth:
@@ -2542,7 +2719,7 @@ paths:
         List unique syslog identifiers (log sources) available in the journal on
         the target node.
       tags:
-        - Log_Management_API_log_operations
+        - log_operations
       operationId: GetNodeLogSource
       security:
         - BearerAuth:
@@ -2587,7 +2764,7 @@ paths:
       description: |
         Retrieve log entries for a specific systemd unit on the target node.
       tags:
-        - Log_Management_API_log_operations
+        - log_operations
       operationId: GetNodeLogUnit
       security:
         - BearerAuth:
@@ -2665,7 +2842,7 @@ paths:
       description: |
         Send a ping to a remote server to verify network connectivity.
       tags:
-        - Network_Management_API_network_operations
+        - network_operations
       operationId: PostNodeNetworkPing
       security:
         - BearerAuth:
@@ -2730,7 +2907,7 @@ paths:
         Retrieve the list of currently configured DNS servers for a specific
         network interface.
       tags:
-        - Network_Management_API_dns_operations
+        - dns_operations
       operationId: GetNodeNetworkDNSByInterface
       security:
         - BearerAuth:
@@ -2784,7 +2961,7 @@ paths:
       summary: Update DNS servers
       description: Update the system's DNS server configuration.
       tags:
-        - Network_Management_API_dns_operations
+        - dns_operations
       operationId: PutNodeNetworkDNS
       security:
         - BearerAuth:
@@ -2834,7 +3011,7 @@ paths:
         Delete the managed DNS configuration from the target node, restoring the
         system default.
       tags:
-        - Network_Management_API_dns_operations
+        - dns_operations
       operationId: DeleteNodeNetworkDNS
       security:
         - BearerAuth:
@@ -2885,7 +3062,7 @@ paths:
       description: |
         List all network interfaces on the target node.
       tags:
-        - Network_Management_API_interface_operations
+        - interface_operations
       operationId: GetNodeNetworkInterface
       security:
         - BearerAuth:
@@ -2931,7 +3108,7 @@ paths:
         Get detailed configuration for a specific network interface on the
         target node.
       tags:
-        - Network_Management_API_interface_operations
+        - interface_operations
       operationId: GetNodeNetworkInterfaceByName
       security:
         - BearerAuth:
@@ -2982,7 +3159,7 @@ paths:
         Create a managed Netplan configuration for a network interface on the
         target node.
       tags:
-        - Network_Management_API_interface_operations
+        - interface_operations
       operationId: PostNodeNetworkInterface
       security:
         - BearerAuth:
@@ -3034,7 +3211,7 @@ paths:
         Update the managed Netplan configuration for a network interface on the
         target node.
       tags:
-        - Network_Management_API_interface_operations
+        - interface_operations
       operationId: PutNodeNetworkInterface
       security:
         - BearerAuth:
@@ -3092,7 +3269,7 @@ paths:
         Delete the managed Netplan configuration for a network interface on the
         target node.
       tags:
-        - Network_Management_API_interface_operations
+        - interface_operations
       operationId: DeleteNodeNetworkInterface
       security:
         - BearerAuth:
@@ -3138,7 +3315,7 @@ paths:
       description: |
         List all network routes on the target node.
       tags:
-        - Network_Management_API_route_operations
+        - route_operations
       operationId: GetNodeNetworkRoute
       security:
         - BearerAuth:
@@ -3184,7 +3361,7 @@ paths:
         Get routes associated with a specific network interface on the target
         node.
       tags:
-        - Network_Management_API_route_operations
+        - route_operations
       operationId: GetNodeNetworkRouteByInterface
       security:
         - BearerAuth:
@@ -3235,7 +3412,7 @@ paths:
         Create managed route configuration for a network interface on the target
         node.
       tags:
-        - Network_Management_API_route_operations
+        - route_operations
       operationId: PostNodeNetworkRoute
       security:
         - BearerAuth:
@@ -3287,7 +3464,7 @@ paths:
         Update the managed route configuration for a network interface on the
         target node.
       tags:
-        - Network_Management_API_route_operations
+        - route_operations
       operationId: PutNodeNetworkRoute
       security:
         - BearerAuth:
@@ -3345,7 +3522,7 @@ paths:
         Delete the managed route configuration for a network interface on the
         target node.
       tags:
-        - Network_Management_API_route_operations
+        - route_operations
       operationId: DeleteNodeNetworkRoute
       security:
         - BearerAuth:
@@ -3391,7 +3568,7 @@ paths:
       description: |
         Get NTP sync status and configured servers on the target node.
       tags:
-        - NTP_Management_API_ntp_operations
+        - ntp_operations
       operationId: GetNodeNtp
       security:
         - BearerAuth:
@@ -3435,7 +3612,7 @@ paths:
         Deploy a managed NTP server configuration on the target node.
         Idempotent: returns changed=false if already managed.
       tags:
-        - NTP_Management_API_ntp_operations
+        - ntp_operations
       operationId: PostNodeNtp
       security:
         - BearerAuth:
@@ -3486,7 +3663,7 @@ paths:
         Replace the managed NTP server configuration on the target node. Fails
         if not currently managed.
       tags:
-        - NTP_Management_API_ntp_operations
+        - ntp_operations
       operationId: PutNodeNtp
       security:
         - BearerAuth:
@@ -3542,7 +3719,7 @@ paths:
       description: |
         Remove the managed NTP server configuration from the target node.
       tags:
-        - NTP_Management_API_ntp_operations
+        - ntp_operations
       operationId: DeleteNodeNtp
       security:
         - BearerAuth:
@@ -3593,7 +3770,7 @@ paths:
       description: |
         List all installed packages on the target node.
       tags:
-        - Package_Management_API_package_operations
+        - package_operations
       operationId: GetNodePackage
       security:
         - BearerAuth:
@@ -3636,7 +3813,7 @@ paths:
       description: |
         Install a package on the target node.
       tags:
-        - Package_Management_API_package_operations
+        - package_operations
       operationId: PostNodePackage
       security:
         - BearerAuth:
@@ -3688,7 +3865,7 @@ paths:
       description: |
         Get details for a specific installed package by name on the target node.
       tags:
-        - Package_Management_API_package_operations
+        - package_operations
       operationId: GetNodePackageByName
       security:
         - BearerAuth:
@@ -3738,7 +3915,7 @@ paths:
       description: |
         Remove a package from the target node.
       tags:
-        - Package_Management_API_package_operations
+        - package_operations
       operationId: DeleteNodePackage
       security:
         - BearerAuth:
@@ -3790,7 +3967,7 @@ paths:
       description: |
         Refresh package sources (apt update) on the target node.
       tags:
-        - Package_Management_API_package_operations
+        - package_operations
       operationId: PostNodePackageUpdate
       security:
         - BearerAuth:
@@ -3833,7 +4010,7 @@ paths:
       description: |
         List packages with available updates on the target node.
       tags:
-        - Package_Management_API_package_operations
+        - package_operations
       operationId: GetNodePackageUpdate
       security:
         - BearerAuth:
@@ -3879,7 +4056,7 @@ paths:
         Reboot the target node. An optional delay (in seconds) and message can
         be provided.
       tags:
-        - Power_Management_API_power_operations
+        - power_operations
       operationId: PostNodePowerReboot
       security:
         - BearerAuth:
@@ -3932,7 +4109,7 @@ paths:
         Shutdown the target node. An optional delay (in seconds) and message can
         be provided.
       tags:
-        - Power_Management_API_power_operations
+        - power_operations
       operationId: PostNodePowerShutdown
       security:
         - BearerAuth:
@@ -3984,7 +4161,7 @@ paths:
       description: |
         List all running processes on the target node.
       tags:
-        - Process_Management_API_process_operations
+        - process_operations
       operationId: GetNodeProcess
       security:
         - BearerAuth:
@@ -4029,7 +4206,7 @@ paths:
       description: |
         Get detailed information about a specific process by PID.
       tags:
-        - Process_Management_API_process_operations
+        - process_operations
       operationId: GetNodeProcessByPid
       security:
         - BearerAuth:
@@ -4081,7 +4258,7 @@ paths:
       description: |
         Send a signal to a process by PID on the target node.
       tags:
-        - Process_Management_API_process_operations
+        - process_operations
       operationId: PostNodeProcessSignal
       security:
         - BearerAuth:
@@ -4140,7 +4317,7 @@ paths:
       description: |
         List all cron drop-in entries on the target node.
       tags:
-        - Schedule_Management_API_cron_operations
+        - cron_operations
       operationId: GetNodeScheduleCron
       security:
         - BearerAuth:
@@ -4183,7 +4360,7 @@ paths:
       description: |
         Create a new cron drop-in entry on the target node.
       tags:
-        - Schedule_Management_API_cron_operations
+        - cron_operations
       operationId: PostNodeScheduleCron
       security:
         - BearerAuth:
@@ -4235,7 +4412,7 @@ paths:
       description: |
         Get a specific cron drop-in entry by name on the target node.
       tags:
-        - Schedule_Management_API_cron_operations
+        - cron_operations
       operationId: GetNodeScheduleCronByName
       security:
         - BearerAuth:
@@ -4285,7 +4462,7 @@ paths:
       description: |
         Update an existing cron drop-in entry on the target node.
       tags:
-        - Schedule_Management_API_cron_operations
+        - cron_operations
       operationId: PutNodeScheduleCron
       security:
         - BearerAuth:
@@ -4342,7 +4519,7 @@ paths:
       description: |
         Delete a cron drop-in entry from the target node.
       tags:
-        - Schedule_Management_API_cron_operations
+        - cron_operations
       operationId: DeleteNodeScheduleCron
       security:
         - BearerAuth:
@@ -4394,7 +4571,7 @@ paths:
       description: |
         List all systemd services on the target node.
       tags:
-        - Service_Management_API_service_operations
+        - service_operations
       operationId: GetNodeService
       security:
         - BearerAuth:
@@ -4437,7 +4614,7 @@ paths:
       description: |
         Create a new systemd service unit file on the target node.
       tags:
-        - Service_Management_API_service_operations
+        - service_operations
       operationId: PostNodeService
       security:
         - BearerAuth:
@@ -4489,7 +4666,7 @@ paths:
       description: |
         Get detailed information about a specific service on the target node.
       tags:
-        - Service_Management_API_service_operations
+        - service_operations
       operationId: GetNodeServiceByName
       security:
         - BearerAuth:
@@ -4539,7 +4716,7 @@ paths:
       description: |
         Update an existing systemd service unit file on the target node.
       tags:
-        - Service_Management_API_service_operations
+        - service_operations
       operationId: PutNodeService
       security:
         - BearerAuth:
@@ -4596,7 +4773,7 @@ paths:
       description: |
         Delete a systemd service unit file from the target node.
       tags:
-        - Service_Management_API_service_operations
+        - service_operations
       operationId: DeleteNodeService
       security:
         - BearerAuth:
@@ -4642,7 +4819,7 @@ paths:
       description: |
         Start a systemd service on the target node.
       tags:
-        - Service_Management_API_service_operations
+        - service_operations
       operationId: PostNodeServiceStart
       security:
         - BearerAuth:
@@ -4688,7 +4865,7 @@ paths:
       description: |
         Stop a systemd service on the target node.
       tags:
-        - Service_Management_API_service_operations
+        - service_operations
       operationId: PostNodeServiceStop
       security:
         - BearerAuth:
@@ -4734,7 +4911,7 @@ paths:
       description: |
         Restart a systemd service on the target node.
       tags:
-        - Service_Management_API_service_operations
+        - service_operations
       operationId: PostNodeServiceRestart
       security:
         - BearerAuth:
@@ -4780,7 +4957,7 @@ paths:
       description: |
         Enable a systemd service on the target node so it starts on boot.
       tags:
-        - Service_Management_API_service_operations
+        - service_operations
       operationId: PostNodeServiceEnable
       security:
         - BearerAuth:
@@ -4827,7 +5004,7 @@ paths:
         Disable a systemd service on the target node so it does not start on
         boot.
       tags:
-        - Service_Management_API_service_operations
+        - service_operations
       operationId: PostNodeServiceDisable
       security:
         - BearerAuth:
@@ -4873,7 +5050,7 @@ paths:
       description: |
         List all managed sysctl entries on the target node.
       tags:
-        - Sysctl_Management_API_sysctl_operations
+        - sysctl_operations
       operationId: GetNodeSysctl
       security:
         - BearerAuth:
@@ -4917,7 +5094,7 @@ paths:
         Create a new sysctl kernel parameter on the target node. Idempotent:
         returns changed=false if the key is already managed.
       tags:
-        - Sysctl_Management_API_sysctl_operations
+        - sysctl_operations
       operationId: PostNodeSysctl
       security:
         - BearerAuth:
@@ -4969,7 +5146,7 @@ paths:
       description: |
         Get a specific managed sysctl entry by key on the target node.
       tags:
-        - Sysctl_Management_API_sysctl_operations
+        - sysctl_operations
       operationId: GetNodeSysctlByKey
       security:
         - BearerAuth:
@@ -5021,7 +5198,7 @@ paths:
         the key is not currently managed. This operation is idempotent —
         updating with the same value results in no change.
       tags:
-        - Sysctl_Management_API_sysctl_operations
+        - sysctl_operations
       operationId: PutNodeSysctl
       security:
         - BearerAuth:
@@ -5078,7 +5255,7 @@ paths:
       description: |
         Delete a managed sysctl entry from the target node.
       tags:
-        - Sysctl_Management_API_sysctl_operations
+        - sysctl_operations
       operationId: DeleteNodeSysctl
       security:
         - BearerAuth:
@@ -5130,7 +5307,7 @@ paths:
       description: |
         Get the current system timezone on the target node.
       tags:
-        - Timezone_Management_API_timezone_operations
+        - timezone_operations
       operationId: GetNodeTimezone
       security:
         - BearerAuth:
@@ -5174,7 +5351,7 @@ paths:
         Set the system timezone on the target node. Idempotent: returns changed
         false when the timezone already matches.
       tags:
-        - Timezone_Management_API_timezone_operations
+        - timezone_operations
       operationId: PutNodeTimezone
       security:
         - BearerAuth:
@@ -5226,7 +5403,7 @@ paths:
       description: |
         List all user accounts on the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - user_operations
       operationId: GetNodeUser
       security:
         - BearerAuth:
@@ -5269,7 +5446,7 @@ paths:
       description: |
         Create a new user account on the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - user_operations
       operationId: PostNodeUser
       security:
         - BearerAuth:
@@ -5321,7 +5498,7 @@ paths:
       description: |
         Get a specific user account by name on the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - user_operations
       operationId: GetNodeUserByName
       security:
         - BearerAuth:
@@ -5371,7 +5548,7 @@ paths:
       description: |
         Update an existing user account on the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - user_operations
       operationId: PutNodeUser
       security:
         - BearerAuth:
@@ -5428,7 +5605,7 @@ paths:
       description: |
         Delete a user account from the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - user_operations
       operationId: DeleteNodeUser
       security:
         - BearerAuth:
@@ -5480,7 +5657,7 @@ paths:
       description: |
         Change the password for a user account on the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - user_operations
       operationId: PostNodeUserPassword
       security:
         - BearerAuth:
@@ -5539,7 +5716,7 @@ paths:
       description: |
         List SSH authorized keys for a user on the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - user_operations
       operationId: GetNodeUserSSHKey
       security:
         - BearerAuth:
@@ -5583,7 +5760,7 @@ paths:
       description: |
         Add an SSH authorized key for a user on the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - user_operations
       operationId: PostNodeUserSSHKey
       security:
         - BearerAuth:
@@ -5637,7 +5814,7 @@ paths:
         Remove an SSH authorized key by fingerprint for a user on the target
         node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - user_operations
       operationId: DeleteNodeUserSSHKey
       security:
         - BearerAuth:
@@ -5684,7 +5861,7 @@ paths:
       description: |
         List all groups on the target node.
       tags:
-        - User_and_Group_Management_API_group_operations
+        - group_operations
       operationId: GetNodeGroup
       security:
         - BearerAuth:
@@ -5727,7 +5904,7 @@ paths:
       description: |
         Create a new group on the target node.
       tags:
-        - User_and_Group_Management_API_group_operations
+        - group_operations
       operationId: PostNodeGroup
       security:
         - BearerAuth:
@@ -5779,7 +5956,7 @@ paths:
       description: |
         Get a specific group by name on the target node.
       tags:
-        - User_and_Group_Management_API_group_operations
+        - group_operations
       operationId: GetNodeGroupByName
       security:
         - BearerAuth:
@@ -5829,7 +6006,7 @@ paths:
       description: |
         Update an existing group on the target node.
       tags:
-        - User_and_Group_Management_API_group_operations
+        - group_operations
       operationId: PutNodeGroup
       security:
         - BearerAuth:
@@ -5886,7 +6063,7 @@ paths:
       description: |
         Delete a group from the target node.
       tags:
-        - User_and_Group_Management_API_group_operations
+        - group_operations
       operationId: DeleteNodeGroup
       security:
         - BearerAuth:
@@ -5953,6 +6130,40 @@ components:
           type: integer
           description: The error code.
           example: 500
+    ListPendingAgentsResponse:
+      type: object
+      properties:
+        agents:
+          type: array
+          items:
+            $ref: '#/components/schemas/PendingAgentInfo'
+        total:
+          type: integer
+          description: Total number of pending agents.
+      required:
+        - agents
+        - total
+    PendingAgentInfo:
+      type: object
+      properties:
+        machine_id:
+          type: string
+          description: The permanent machine identifier.
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        fingerprint:
+          type: string
+          description: The SHA256 fingerprint of the agent's public key.
+        requested_at:
+          type: string
+          format: date-time
+          description: When the enrollment request was received.
+      required:
+        - machine_id
+        - hostname
+        - fingerprint
+        - requested_at
     ListAgentsResponse:
       type: object
       properties:
@@ -10689,80 +10900,80 @@ components:
 x-tagGroups:
   - name: Agent Management API
     tags:
-      - Agent_Management_API_agent_operations
+      - agent_operations
   - name: Audit Log API
     tags:
-      - Audit_Log_API_audit
+      - audit
   - name: OSAPI - A CRUD API for managing Linux systems
     tags:
-      - OSAPI_-_A_CRUD_API_for_managing_Linux_systems_info
+      - info
   - name: Facts API
     tags:
-      - Facts_API_facts
+      - facts
   - name: File Management API
     tags:
-      - File_Management_API_file_operations
+      - file_operations
   - name: Health Check API
     tags:
-      - Health_Check_API_health
+      - health
   - name: Job Management API
     tags:
-      - Job_Management_API_job_operations
+      - job_operations
   - name: Node Management API
     tags:
-      - Node_Management_API_node_operations
-      - Node_Management_API_node_status
+      - node_operations
+      - node_status
   - name: Certificate Management API
     tags:
-      - Certificate_Management_API_certificate_operations
+      - certificate_operations
   - name: Command Execution API
     tags:
-      - Command_Execution_API_command_operations
+      - command_operations
   - name: Docker Management API
     tags:
-      - Docker_Management_API_docker_operations
-      - Docker_Management_API_docker_exec
-      - Docker_Management_API_docker_image
+      - docker_operations
+      - docker_exec
+      - docker_image
   - name: Node File Operations API
     tags:
-      - Node_File_Operations_API_node_file_operations
+      - node_file_operations
   - name: Hostname Management API
     tags:
-      - Hostname_Management_API_hostname_operations
+      - hostname_operations
   - name: Log Management API
     tags:
-      - Log_Management_API_log_operations
+      - log_operations
   - name: Network Management API
     tags:
-      - Network_Management_API_network_operations
-      - Network_Management_API_dns_operations
-      - Network_Management_API_interface_operations
-      - Network_Management_API_route_operations
+      - network_operations
+      - dns_operations
+      - interface_operations
+      - route_operations
   - name: NTP Management API
     tags:
-      - NTP_Management_API_ntp_operations
+      - ntp_operations
   - name: Package Management API
     tags:
-      - Package_Management_API_package_operations
+      - package_operations
   - name: Power Management API
     tags:
-      - Power_Management_API_power_operations
+      - power_operations
   - name: Process Management API
     tags:
-      - Process_Management_API_process_operations
+      - process_operations
   - name: Schedule Management API
     tags:
-      - Schedule_Management_API_cron_operations
+      - cron_operations
   - name: Service Management API
     tags:
-      - Service_Management_API_service_operations
+      - service_operations
   - name: Sysctl Management API
     tags:
-      - Sysctl_Management_API_sysctl_operations
+      - sysctl_operations
   - name: Timezone Management API
     tags:
-      - Timezone_Management_API_timezone_operations
+      - timezone_operations
   - name: User and Group Management API
     tags:
-      - User_and_Group_Management_API_user_operations
-      - User_and_Group_Management_API_group_operations
+      - user_operations
+      - group_operations
