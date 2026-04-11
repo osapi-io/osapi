@@ -21,6 +21,7 @@
 package health
 
 import (
+	"context"
 	"log/slog"
 	"time"
 
@@ -52,6 +53,7 @@ func Handler(
 	var tokenManager api.TokenValidator = authtoken.New(logger)
 
 	healthHandler := New(logger, checker, startTime, version, metrics, subComponents)
+	healthHandler.StartMetricsRefresh(context.Background())
 
 	strictHandler := gen.NewStrictHandler(
 		healthHandler,

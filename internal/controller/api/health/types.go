@@ -167,3 +167,49 @@ type cachedMetrics struct {
 
 // metricsCacheTTL is how long cached metrics are served before refreshing.
 const metricsCacheTTL = 15 * time.Second
+
+// StartMetricsRefresh starts a background goroutine that refreshes the
+// metrics cache on a fixed interval. This ensures the health endpoint
+// always serves from cache and never blocks on NATS queries.
+func (h *Health) StartMetricsRefresh(
+	ctx context.Context,
+) {
+	if h.Metrics == nil {
+		return
+	}
+
+	go func() {
+		// Initial fetch so first request has data immediately.
+		h.refreshMetricsCache(ctx)
+
+		ticker := time.NewTicker(metricsCacheTTL)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				h.refreshMetricsCache(ctx)
+			}
+		}
+	}()
+}
+
+// refreshMetricsCache fetches fresh metrics and updates the cache.
+func (h *Health) refreshMetricsCache(
+	ctx context.Context,
+) {
+	resp := gen.StatusResponse{
+		Components: make(map[string]gen.ComponentHealth),
+	}
+
+	h.populateMetrics(ctx, &resp)
+
+	h.metricsCacheMu.Lock()
+	h.metricsCache = &cachedMetrics{
+		resp:      resp,
+		fetchedAt: time.Now(),
+	}
+	h.metricsCacheMu.Unlock()
+}
