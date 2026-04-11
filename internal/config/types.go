@@ -380,7 +380,7 @@ type AgentConfig struct {
 	// Labels are key-value pairs for label-based routing (e.g., role: web, env: prod).
 	// Maximum 5 labels per agent — each label creates multiple NATS consumers
 	// for hierarchical prefix matching.
-	Labels map[string]string `mapstructure:"labels" validate:"max=5"`
+	Labels map[string]string `mapstructure:"labels"                         validate:"max=5"`
 	// Conditions holds threshold settings for node condition evaluation.
 	Conditions AgentConditions `mapstructure:"conditions,omitempty"`
 	// ProcessConditions holds threshold settings for process-level condition evaluation.
