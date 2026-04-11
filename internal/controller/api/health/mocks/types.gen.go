@@ -102,21 +102,6 @@ func (mr *MockMetricsProviderMockRecorder) GetComponentRegistry(ctx interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetComponentRegistry", reflect.TypeOf((*MockMetricsProvider)(nil).GetComponentRegistry), ctx)
 }
 
-// GetConsumerStats mocks base method.
-func (m *MockMetricsProvider) GetConsumerStats(ctx context.Context) (*health.ConsumerMetrics, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetConsumerStats", ctx)
-	ret0, _ := ret[0].(*health.ConsumerMetrics)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetConsumerStats indicates an expected call of GetConsumerStats.
-func (mr *MockMetricsProviderMockRecorder) GetConsumerStats(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConsumerStats", reflect.TypeOf((*MockMetricsProvider)(nil).GetConsumerStats), ctx)
-}
-
 // GetJobStats mocks base method.
 func (m *MockMetricsProvider) GetJobStats(ctx context.Context) (*health.JobMetrics, error) {
 	m.ctrl.T.Helper()

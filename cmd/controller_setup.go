@@ -463,9 +463,6 @@ func newMetricsProvider(
 
 			return results, nil
 		},
-		// ConsumerStatsFn is no longer used — consumer count is derived
-		// from stream info to avoid N sequential NATS API calls.
-		ConsumerStatsFn: nil,
 		JobStatsFn: func(fnCtx context.Context) (*health.JobMetrics, error) {
 			stats, err := jc.GetQueueSummary(fnCtx)
 			if err != nil {

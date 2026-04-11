@@ -50,13 +50,6 @@ func (p *ClosureMetricsProvider) GetObjectStoreInfo(
 	return p.ObjectStoreInfoFn(ctx)
 }
 
-// GetConsumerStats delegates to the ConsumerStatsFn closure.
-func (p *ClosureMetricsProvider) GetConsumerStats(
-	ctx context.Context,
-) (*ConsumerMetrics, error) {
-	return p.ConsumerStatsFn(ctx)
-}
-
 // GetJobStats delegates to the JobStatsFn closure.
 func (p *ClosureMetricsProvider) GetJobStats(
 	ctx context.Context,
