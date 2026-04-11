@@ -34,7 +34,8 @@ type Manager struct {
 	keyDir           string
 	publicKey        ed25519.PublicKey
 	privateKey       ed25519.PrivateKey
-	controllerPubKey ed25519.PublicKey
+	controllerPubKey         ed25519.PublicKey
+	previousControllerPubKey ed25519.PublicKey
 }
 
 // EnrollmentState represents the agent's PKI enrollment state.
