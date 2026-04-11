@@ -69,11 +69,11 @@ var clientNodeTimezoneGetCmd = &cobra.Command{
 				},
 			})
 		}
-		headers, rows := cli.BuildBroadcastTable(
+		tr := cli.BuildBroadcastTable(
 			results,
 			[]string{"TIMEZONE", "UTC_OFFSET"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
 	},
 }
 

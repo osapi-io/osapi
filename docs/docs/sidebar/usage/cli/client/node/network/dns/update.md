@@ -10,12 +10,13 @@ $ osapi client node network dns update \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  CHANGED  ERROR
-  web-01    ok      true
+  HOSTNAME  STATUS   CHANGED
+  web-01    changed  true
+
+  1 host: 1 changed
 ```
 
-When targeting all hosts, HOSTNAME is shown. STATUS and ERROR columns appear
-when any host has an error or is skipped:
+When targeting all hosts:
 
 ```bash
 $ osapi client node network dns update \
@@ -25,9 +26,14 @@ $ osapi client node network dns update \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS   CHANGED  ERROR
-  server1   ok       true
-  server2   skipped           unsupported platform
+  HOSTNAME  STATUS   CHANGED
+  server1   changed  true
+  server2   skip
+
+  2 hosts: 1 changed, 1 skipped
+
+  Details:
+  server2   unsupported platform
 ```
 
 Target by label to update a group of servers:

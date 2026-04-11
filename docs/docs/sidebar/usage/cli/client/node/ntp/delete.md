@@ -9,8 +9,10 @@ $ osapi client node ntp delete --target web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  CHANGED  ERROR
-  web-01    ok      true
+  HOSTNAME  STATUS   CHANGED
+  web-01    changed  true
+
+  1 host: 1 changed
 ```
 
 If the configuration does not exist, `changed: false` is returned:
@@ -20,8 +22,10 @@ $ osapi client node ntp delete --target web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  CHANGED  ERROR
+  HOSTNAME  STATUS  CHANGED
   web-01    ok      false
+
+  1 host: 1 ok
 ```
 
 Broadcast to all hosts:
@@ -31,9 +35,11 @@ $ osapi client node ntp delete --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS   CHANGED  ERROR
-  web-01    ok       true
-  web-02    ok       true
+  HOSTNAME  STATUS   CHANGED
+  web-01    changed  true
+  web-02    changed  true
+
+  2 hosts: 2 changed
 ```
 
 ## JSON Output

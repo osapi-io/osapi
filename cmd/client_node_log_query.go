@@ -98,18 +98,17 @@ var clientNodeLogQueryCmd = &cobra.Command{
 					Status:   r.Status,
 					Fields: []string{
 						e.Timestamp,
-						e.Priority,
 						e.Unit,
 						message,
 					},
 				})
 			}
 		}
-		headers, rows := cli.BuildBroadcastTable(
+		tr := cli.BuildBroadcastTable(
 			results,
-			[]string{"TIMESTAMP", "PRIORITY", "UNIT", "MESSAGE"},
+			[]string{"TIMESTAMP", "UNIT", "MESSAGE"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
 	},
 }
 

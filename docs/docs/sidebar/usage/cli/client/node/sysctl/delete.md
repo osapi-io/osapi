@@ -10,8 +10,10 @@ $ osapi client node sysctl delete --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  KEY                   CHANGED
-  web-01    net.ipv4.ip_forward   true
+  HOSTNAME  STATUS   KEY                   CHANGED
+  web-01    changed  net.ipv4.ip_forward   true
+
+  1 host: 1 changed
 ```
 
 If the parameter does not exist, `changed: false` is returned:
@@ -22,8 +24,10 @@ $ osapi client node sysctl delete --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  KEY                   CHANGED
-  web-01    net.ipv4.ip_forward   false
+  HOSTNAME  STATUS  KEY                   CHANGED
+  web-01    ok      net.ipv4.ip_forward   false
+
+  1 host: 1 ok
 ```
 
 Broadcast to all hosts:
@@ -34,9 +38,11 @@ $ osapi client node sysctl delete --target _all \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  KEY           CHANGED
-  web-01    vm.swappiness  true
-  web-02    vm.swappiness  true
+  HOSTNAME  STATUS   KEY            CHANGED
+  web-01    changed  vm.swappiness  true
+  web-02    changed  vm.swappiness  true
+
+  2 hosts: 2 changed
 ```
 
 ## JSON Output

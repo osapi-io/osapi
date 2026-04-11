@@ -80,17 +80,16 @@ var clientNodeDiskGetCmd = &cobra.Command{
 						disk.Name,
 						cli.FormatBytes(disk.Total),
 						cli.FormatBytes(disk.Used),
-						cli.FormatBytes(disk.Free),
 						usage,
 					},
 				})
 			}
 		}
-		headers, rows := cli.BuildBroadcastTable(
+		tr := cli.BuildBroadcastTable(
 			results,
-			[]string{"MOUNT", "TOTAL", "USED", "FREE", "USAGE"},
+			[]string{"MOUNT", "TOTAL", "USED", "USAGE"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
 	},
 }
 

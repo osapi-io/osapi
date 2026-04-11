@@ -8,9 +8,11 @@ $ osapi client node network route get \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  DESTINATION   GATEWAY      INTERFACE  METRIC
-  web-01    10.0.0.0/8    192.168.1.1  eth0       0
-  web-01    172.16.0.0/12 192.168.1.1  eth0       100
+  HOSTNAME  STATUS  DESTINATION   GATEWAY      INTERFACE  METRIC
+  web-01    ok      10.0.0.0/8    192.168.1.1  eth0       0
+  web-01    ok      172.16.0.0/12 192.168.1.1  eth0       100
+
+  1 host: 1 ok
 ```
 
 When targeting all hosts:
@@ -21,12 +23,14 @@ $ osapi client node network route get \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  DESTINATION   GATEWAY      INTERFACE  METRIC
-  web-01    10.0.0.0/8    192.168.1.1  eth0       0
-  web-02    10.0.0.0/8    192.168.1.1  eth0       0
+  HOSTNAME  STATUS  DESTINATION   GATEWAY      INTERFACE  METRIC
+  web-01    ok      10.0.0.0/8    192.168.1.1  eth0       0
+  web-02    ok      10.0.0.0/8    192.168.1.1  eth0       0
+
+  2 hosts: 2 ok
 ```
 
-When some hosts fail or are skipped, STATUS and ERROR columns are shown:
+When some hosts fail or are skipped:
 
 ```bash
 $ osapi client node network route get \
@@ -34,9 +38,14 @@ $ osapi client node network route get \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS   DESTINATION   GATEWAY  INTERFACE  METRIC  ERROR
-  web-01    ok       10.0.0.0/8    ...
-  mac-01    skipped                                             unsupported platform
+  HOSTNAME  STATUS  DESTINATION   GATEWAY      INTERFACE  METRIC
+  web-01    ok      10.0.0.0/8    192.168.1.1  eth0       0
+  mac-01    skip
+
+  2 hosts: 1 ok, 1 skipped
+
+  Details:
+  mac-01    unsupported platform
 ```
 
 ## JSON Output

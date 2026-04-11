@@ -8,8 +8,10 @@ $ osapi client node package update --target web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  CHANGED  ERROR
-  web-01    ok      true
+  HOSTNAME  STATUS   CHANGED
+  web-01    changed  true
+
+  1 host: 1 changed
 ```
 
 Broadcast to refresh sources across all hosts:
@@ -19,10 +21,15 @@ $ osapi client node package update --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS   CHANGED  ERROR
-  web-01    ok       true
-  web-02    ok       true
-  mac-01    skipped  false    unsupported platform
+  HOSTNAME  STATUS   CHANGED
+  web-01    changed  true
+  web-02    changed  true
+  mac-01    skip
+
+  3 hosts: 2 changed, 1 skipped
+
+  Details:
+  mac-01    unsupported platform
 ```
 
 ## JSON Output

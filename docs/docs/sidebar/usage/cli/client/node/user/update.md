@@ -8,8 +8,10 @@ $ osapi client node user update --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  CHANGED  ERROR  NAME
-  web-01    ok      true            deploy
+  HOSTNAME  STATUS   CHANGED  NAME
+  web-01    changed  true     deploy
+
+  1 host: 1 changed
 ```
 
 Lock or unlock an account:
@@ -30,10 +32,15 @@ $ osapi client node user update --target _all \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  CHANGED  ERROR                 NAME
-  web-01    ok      true                            deploy
-  web-02    ok      true                            deploy
-  mac-01    skipped false    unsupported platform
+  HOSTNAME  STATUS   CHANGED  NAME
+  web-01    changed  true     deploy
+  web-02    changed  true     deploy
+  mac-01    skip
+
+  3 hosts: 2 changed, 1 skipped
+
+  Details:
+  mac-01    unsupported platform
 ```
 
 ## Flags

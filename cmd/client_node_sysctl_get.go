@@ -66,8 +66,8 @@ var clientNodeSysctlGetCmd = &cobra.Command{
 				Fields:   []string{r.Key, r.Value},
 			})
 		}
-		headers, rows := cli.BuildBroadcastTable(results, []string{"KEY", "VALUE"})
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		tr := cli.BuildBroadcastTable(results, []string{"KEY", "VALUE"})
+		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
 	},
 }
 

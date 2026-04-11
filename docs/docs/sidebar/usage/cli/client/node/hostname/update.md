@@ -7,8 +7,10 @@ $ osapi client node hostname update --name web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  CHANGED  ERROR
-  web-01    ok      true
+  HOSTNAME  STATUS   CHANGED
+  web-01    changed  true
+
+  1 host: 1 changed
 ```
 
 When the target host does not support the operation:
@@ -18,8 +20,13 @@ $ osapi client node hostname update --name web-01 --target darwin-host
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME     STATUS   CHANGED  ERROR
-  darwin-host  skipped           host: operation not supported on this OS family
+  HOSTNAME     STATUS
+  darwin-host  skip
+
+  1 host: 1 skipped
+
+  Details:
+  darwin-host  host: operation not supported on this OS family
 ```
 
 When targeting all hosts:
@@ -29,9 +36,14 @@ $ osapi client node hostname update --name web-01 --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS   CHANGED  ERROR
-  server1   ok       true
-  server2   skipped           unsupported platform
+  HOSTNAME  STATUS   CHANGED
+  server1   changed  true
+  server2   skip
+
+  2 hosts: 1 changed, 1 skipped
+
+  Details:
+  server2   unsupported platform
 ```
 
 ## Flags

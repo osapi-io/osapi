@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -68,26 +67,23 @@ var clientNodeNetworkPingCmd = &cobra.Command{
 				Error:    errPtr,
 				Fields: []string{
 					r.AvgRtt,
-					r.MaxRtt,
 					r.MinRtt,
+					r.MaxRtt,
 					fmt.Sprintf("%f", r.PacketLoss),
-					strconv.Itoa(r.PacketsReceived),
-					strconv.Itoa(r.PacketsSent),
 				},
 			})
 		}
-		headers, rows := cli.BuildBroadcastTable(results, []string{
-			"AVG RTT",
-			"MAX RTT",
-			"MIN RTT",
-			"PACKET LOSS",
-			"PACKETS RECEIVED",
-			"PACKETS SENT",
+		tr := cli.BuildBroadcastTable(results, []string{
+			"AVG",
+			"MIN",
+			"MAX",
+			"LOSS",
 		})
 		cli.PrintCompactTable([]cli.Section{{
 			Title:   "Ping Response",
-			Headers: headers,
-			Rows:    rows,
+			Headers: tr.Headers,
+			Rows:    tr.Rows,
+			Errors:  tr.Errors,
 		}})
 	},
 }

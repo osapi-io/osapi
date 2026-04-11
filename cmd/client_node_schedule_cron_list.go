@@ -66,13 +66,13 @@ var clientNodeScheduleCronListCmd = &cobra.Command{
 				Hostname: r.Hostname,
 				Status:   r.Status,
 				Error:    errPtr,
-				Fields:   []string{r.Name, r.Source, schedule, r.Object, r.User},
+				Fields:   []string{r.Name, schedule, r.Object, r.User},
 			})
 		}
-		headers, rows := cli.BuildBroadcastTable(results, []string{
-			"NAME", "SOURCE", "SCHEDULE", "OBJECT", "USER",
+		tr := cli.BuildBroadcastTable(results, []string{
+			"NAME", "SCHEDULE", "OBJECT", "USER",
 		})
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
 	},
 }
 

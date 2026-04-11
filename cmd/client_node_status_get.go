@@ -96,12 +96,12 @@ func displayNodeStatusCollection(
 			Fields:   []string{s.Uptime, load, memory},
 		})
 	}
-	headers, rows := cli.BuildBroadcastTable(results, []string{
+	tr := cli.BuildBroadcastTable(results, []string{
 		"UPTIME",
-		"LOAD (1m)",
-		"MEMORY USED",
+		"LOAD",
+		"MEM",
 	})
-	cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+	cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
 }
 
 // displayNodeStatusDetail renders a single node status response with full details.

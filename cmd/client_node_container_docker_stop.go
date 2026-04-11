@@ -61,7 +61,7 @@ var clientContainerDockerStopCmd = &cobra.Command{
 			cli.PrintKV("Job ID", resp.Data.JobID)
 		}
 
-		results := make([]cli.MutationResultRow, 0)
+		results := make([]cli.ResultRow, 0)
 		for _, r := range resp.Data.Results {
 			var errPtr *string
 			if r.Error != "" {
@@ -69,7 +69,7 @@ var clientContainerDockerStopCmd = &cobra.Command{
 				errPtr = &e
 			}
 			changed := r.Changed
-			results = append(results, cli.MutationResultRow{
+			results = append(results, cli.ResultRow{
 				Hostname: r.Hostname,
 				Status:   r.Status,
 				Changed:  &changed,
@@ -79,11 +79,11 @@ var clientContainerDockerStopCmd = &cobra.Command{
 				},
 			})
 		}
-		headers, rows := cli.BuildMutationTable(
+		tr := cli.BuildMutationTable(
 			results,
 			[]string{"MESSAGE"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
 	},
 }
 

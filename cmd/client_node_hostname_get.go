@@ -62,11 +62,10 @@ var clientNodeHostnameGetCmd = &cobra.Command{
 				Hostname: h.Hostname,
 				Status:   h.Status,
 				Error:    errPtr,
-				Fields:   []string{cli.FormatLabels(h.Labels)},
 			})
 		}
-		headers, rows := cli.BuildBroadcastTable(results, []string{"LABELS"})
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		tr := cli.BuildBroadcastTable(results, nil)
+		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
 	},
 }
 

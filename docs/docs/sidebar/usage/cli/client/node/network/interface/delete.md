@@ -9,8 +9,10 @@ $ osapi client node network interface delete \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME    CHANGED
-  web-01    eth0    true
+  HOSTNAME  STATUS   NAME    CHANGED
+  web-01    changed  eth0    true
+
+  1 host: 1 changed
 ```
 
 Broadcast delete to all hosts:
@@ -21,12 +23,14 @@ $ osapi client node network interface delete \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME    CHANGED
-  web-01    eth1    true
-  web-02    eth1    true
+  HOSTNAME  STATUS   NAME    CHANGED
+  web-01    changed  eth1    true
+  web-02    changed  eth1    true
+
+  2 hosts: 2 changed
 ```
 
-When some hosts are skipped, STATUS and ERROR columns are added:
+When some hosts are skipped:
 
 ```bash
 $ osapi client node network interface delete \
@@ -34,9 +38,14 @@ $ osapi client node network interface delete \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS   NAME    CHANGED  ERROR
-  web-01    ok       eth1    true
-  mac-01    skipped                   unsupported platform
+  HOSTNAME  STATUS   NAME    CHANGED
+  web-01    changed  eth1    true
+  mac-01    skip
+
+  2 hosts: 1 changed, 1 skipped
+
+  Details:
+  mac-01    unsupported platform
 ```
 
 ## JSON Output
