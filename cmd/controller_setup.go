@@ -855,7 +855,10 @@ func buildControllerSubComponents() map[string]job.SubComponentInfo {
 			Status: enabledOrDisabled(appConfig.Controller.Notifications.Enabled),
 		},
 		"controller.tracing": {Status: enabledOrDisabled(appConfig.Telemetry.Tracing.Enabled)},
-		"controller.ui":      {Status: enabledOrDisabled(appConfig.Controller.UI.UIEnabled())},
+		"controller.ui": {
+			Status:  enabledOrDisabled(appConfig.Controller.UI.UIEnabled()),
+			Address: httpAddr("0.0.0.0", appConfig.Controller.API.Port),
+		},
 	}
 }
 
