@@ -63,7 +63,7 @@ var clientNodePackageListCmd = &cobra.Command{
 					Hostname: r.Hostname,
 					Status:   r.Status,
 					Error:    errPtr,
-					Fields:   []string{p.Name, p.Version, p.Status, cli.FormatBytes(int(p.Size))},
+					Fields:   []string{p.Name, p.Version, p.Status},
 				})
 			}
 			if len(r.Packages) == 0 && r.Error != "" {
@@ -74,10 +74,12 @@ var clientNodePackageListCmd = &cobra.Command{
 				})
 			}
 		}
-		headers, rows := cli.BuildBroadcastTable(results, []string{
-			"NAME", "VERSION", "STATUS", "SIZE",
+		tr := cli.BuildBroadcastTable(results, []string{
+			"NAME", "VERSION", "STATUS",
 		})
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

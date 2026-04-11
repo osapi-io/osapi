@@ -7,8 +7,10 @@ $ osapi client node container docker pull --image nginx:latest
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  CHANGED  ERROR  IMAGE ID            TAG     SIZE
-  server1   ok      true            sha256:a1b2c3d4...  latest  187.8 MiB
+  HOSTNAME  STATUS   CHANGED  IMAGE ID            TAG     SIZE
+  server1   changed  true     sha256:a1b2c3d4...  latest  187.8 MiB
+
+  1 host: 1 changed
 ```
 
 Pull a specific image version:

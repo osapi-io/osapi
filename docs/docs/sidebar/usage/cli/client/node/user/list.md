@@ -5,9 +5,11 @@ List all user accounts on a target host:
 ```bash
 $ osapi client node user list --target web-01
 
-  HOSTNAME  NAME     UID   GID   HOME            SHELL        GROUPS       LOCKED
-  web-01    deploy   1001  1001  /home/deploy    /bin/bash     sudo,docker  no
-  web-01    app      1002  1002  /home/app       /bin/sh       users        no
+  HOSTNAME  STATUS  NAME     UID   HOME            SHELL      GROUPS
+  web-01    ok      deploy   1001  /home/deploy    /bin/bash   sudo,docker
+  web-01    ok      app      1002  /home/app       /bin/sh     users
+
+  1 host: 1 ok
 ```
 
 ## JSON Output

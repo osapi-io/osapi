@@ -36,8 +36,10 @@ osapi client node timezone get --json
 ```
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  TIMEZONE          UTC_OFFSET
-  web-01    America/New_York  -05:00
+  HOSTNAME  STATUS  TIMEZONE          UTC_OFFSET
+  web-01    ok      America/New_York  -05:00
+
+  1 host: 1 ok
 ```
 
 ## JSON Output

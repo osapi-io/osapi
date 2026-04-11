@@ -77,16 +77,17 @@ var clientNodeServiceListCmd = &cobra.Command{
 						svc.Name,
 						svc.Status,
 						fmt.Sprintf("%t", svc.Enabled),
-						svc.Description,
 					},
 				})
 			}
 		}
-		headers, rows := cli.BuildBroadcastTable(
+		tr := cli.BuildBroadcastTable(
 			results,
-			[]string{"NAME", "STATUS", "ENABLED", "DESCRIPTION"},
+			[]string{"NAME", "STATUS", "ENABLED"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

@@ -7,8 +7,10 @@ $ osapi client node container docker image-remove --image nginx:latest
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  CHANGED  ERROR  MESSAGE
-  server1   ok      true            Image removed successfully
+  HOSTNAME  STATUS   CHANGED  MESSAGE
+  server1   changed  true     Image removed successfully
+
+  1 host: 1 changed
 ```
 
 Force remove an image that may be in use:

@@ -8,10 +8,12 @@ $ osapi client node certificate list --target web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME                    SOURCE
-  web-01    mozilla/DigiCert.crt    system
-  web-01    mozilla/GlobalSign.crt  system
-  web-01    internal-ca             custom
+  HOSTNAME  STATUS  NAME                    SOURCE
+  web-01    ok      mozilla/DigiCert.crt    system
+  web-01    ok      mozilla/GlobalSign.crt  system
+  web-01    ok      internal-ca             custom
+
+  1 host: 1 ok
 ```
 
 Target all hosts to list certificates across the fleet:
@@ -21,12 +23,14 @@ $ osapi client node certificate list --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME                    SOURCE
-  web-01    mozilla/DigiCert.crt    system
-  web-01    mozilla/GlobalSign.crt  system
-  web-01    internal-ca             custom
-  web-02    mozilla/DigiCert.crt    system
-  web-02    mozilla/GlobalSign.crt  system
+  HOSTNAME  STATUS  NAME                    SOURCE
+  web-01    ok      mozilla/DigiCert.crt    system
+  web-01    ok      mozilla/GlobalSign.crt  system
+  web-01    ok      internal-ca             custom
+  web-02    ok      mozilla/DigiCert.crt    system
+  web-02    ok      mozilla/GlobalSign.crt  system
+
+  2 hosts: 2 ok
 ```
 
 ## JSON Output

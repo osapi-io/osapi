@@ -7,10 +7,12 @@ $ osapi client node container docker list
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  ID            NAME        IMAGE          STATE    CREATED
-  server1   a1b2c3d4e5f6  my-nginx    nginx:latest   running  2024-01-15T10:30:00Z
-  server1   f6e5d4c3b2a1  my-redis    redis:7        running  2024-01-15T09:00:00Z
-  server1   1a2b3c4d5e6f  my-alpine   alpine:latest  stopped  2024-01-14T08:00:00Z
+  HOSTNAME  STATUS  NAME        IMAGE          STATE
+  server1   ok      my-nginx    nginx:latest   running
+  server1   ok      my-redis    redis:7        running
+  server1   ok      my-alpine   alpine:latest  stopped
+
+  1 host: 1 ok
 ```
 
 Filter by state:

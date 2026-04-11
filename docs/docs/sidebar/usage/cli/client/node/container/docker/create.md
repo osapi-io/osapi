@@ -7,8 +7,10 @@ $ osapi client node container docker create --image nginx:latest
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  CHANGED  ERROR  ID            NAME          IMAGE         STATE
-  server1   ok      true            a1b2c3d4e5f6  eager_turing  nginx:latest  running
+  HOSTNAME  STATUS   CHANGED  NAME          IMAGE         STATE
+  server1   changed  true     eager_turing  nginx:latest  running
+
+  1 host: 1 changed
 ```
 
 Create a named container with environment variables, port mappings, and volume

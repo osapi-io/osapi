@@ -9,8 +9,10 @@ $ osapi client node service start --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME             CHANGED
-  web-01    nginx.service    true
+  HOSTNAME  STATUS   NAME             CHANGED
+  web-01    changed  nginx.service    true
+
+  1 host: 1 changed
 ```
 
 If the service is already running, `changed: false` is returned:
@@ -21,8 +23,10 @@ $ osapi client node service start --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME             CHANGED
-  web-01    nginx.service    false
+  HOSTNAME  STATUS  NAME             CHANGED
+  web-01    ok      nginx.service    false
+
+  1 host: 1 ok
 ```
 
 Broadcast start to all hosts:
@@ -33,9 +37,11 @@ $ osapi client node service start --target _all \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME             CHANGED
-  web-01    nginx.service    true
-  web-02    nginx.service    true
+  HOSTNAME  STATUS   NAME             CHANGED
+  web-01    changed  nginx.service    true
+  web-02    changed  nginx.service    true
+
+  2 hosts: 2 changed
 ```
 
 ## JSON Output

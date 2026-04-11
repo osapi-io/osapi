@@ -7,10 +7,12 @@ $ osapi client node package list --target web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME      VERSION      STATUS      SIZE
-  web-01    bash      5.2.21-2     installed   7.4 MB
-  web-01    nginx     1.24.0-2     installed   1.2 MB
-  web-01    curl      8.5.0-2      installed   512.0 KB
+  HOSTNAME  STATUS  NAME      VERSION      PKG STATUS
+  web-01    ok      bash      5.2.21-2     installed
+  web-01    ok      nginx     1.24.0-2     installed
+  web-01    ok      curl      8.5.0-2      installed
+
+  1 host: 1 ok
 ```
 
 Target all hosts to list packages across the fleet:
@@ -20,24 +22,30 @@ $ osapi client node package list --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME      VERSION      STATUS      SIZE
-  web-01    bash      5.2.21-2     installed   7.4 MB
-  web-01    nginx     1.24.0-2     installed   1.2 MB
-  web-02    bash      5.2.21-2     installed   7.4 MB
+  HOSTNAME  STATUS  NAME      VERSION      PKG STATUS
+  web-01    ok      bash      5.2.21-2     installed
+  web-01    ok      nginx     1.24.0-2     installed
+  web-02    ok      bash      5.2.21-2     installed
+
+  2 hosts: 2 ok
 ```
 
-When some hosts are skipped, STATUS and ERROR columns appear alongside data
-columns:
+When some hosts are skipped:
 
 ```bash
 $ osapi client node package list --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS   ERROR                 NAME      VERSION      STATUS      SIZE
-  web-01    ok                              bash      5.2.21-2     installed   7.4 MB
-  web-01    ok                              nginx     1.24.0-2     installed   1.2 MB
-  mac-01    skipped  unsupported platform
+  HOSTNAME  STATUS  NAME      VERSION      PKG STATUS
+  web-01    ok      bash      5.2.21-2     installed
+  web-01    ok      nginx     1.24.0-2     installed
+  mac-01    skip
+
+  2 hosts: 1 ok, 1 skipped
+
+  Details:
+  mac-01    unsupported platform
 ```
 
 Target by label to list packages on a group of servers:

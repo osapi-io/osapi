@@ -10,8 +10,10 @@ $ osapi client node service delete --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME             CHANGED
-  web-01    myapp.service    true
+  HOSTNAME  STATUS   NAME             CHANGED
+  web-01    changed  myapp.service    true
+
+  1 host: 1 changed
 ```
 
 If the unit file does not exist, `changed: false` is returned:
@@ -22,8 +24,10 @@ $ osapi client node service delete --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME             CHANGED
-  web-01    myapp.service    false
+  HOSTNAME  STATUS  NAME             CHANGED
+  web-01    ok      myapp.service    false
+
+  1 host: 1 ok
 ```
 
 Broadcast to all hosts:
@@ -34,9 +38,11 @@ $ osapi client node service delete --target _all \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME             CHANGED
-  web-01    myapp.service    true
-  web-02    myapp.service    true
+  HOSTNAME  STATUS   NAME             CHANGED
+  web-01    changed  myapp.service    true
+  web-02    changed  myapp.service    true
+
+  2 hosts: 2 changed
 ```
 
 ## JSON Output

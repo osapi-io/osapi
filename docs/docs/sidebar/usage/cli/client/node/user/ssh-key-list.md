@@ -7,9 +7,11 @@ $ osapi client node user ssh-key list --target web-01 --name deploy
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  TYPE         FINGERPRINT      COMMENT
-  web-01    ssh-ed25519  SHA256:abc123...  user@laptop
-  web-01    ssh-rsa      SHA256:def456...  deploy-ci
+  HOSTNAME  STATUS  TYPE         FINGERPRINT      COMMENT
+  web-01    ok      ssh-ed25519  SHA256:abc123...  user@laptop
+  web-01    ok      ssh-rsa      SHA256:def456...  deploy-ci
+
+  1 host: 1 ok
 ```
 
 When targeting all hosts:
@@ -19,10 +21,12 @@ $ osapi client node user ssh-key list --target _all --name deploy
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  TYPE         FINGERPRINT      COMMENT
-  web-01    ssh-ed25519  SHA256:abc123...  user@laptop
-  web-02    ssh-ed25519  SHA256:abc123...  user@laptop
-  web-02    ssh-rsa      SHA256:ghi789...  deploy-prod
+  HOSTNAME  STATUS  TYPE         FINGERPRINT      COMMENT
+  web-01    ok      ssh-ed25519  SHA256:abc123...  user@laptop
+  web-02    ok      ssh-ed25519  SHA256:abc123...  user@laptop
+  web-02    ok      ssh-rsa      SHA256:ghi789...  deploy-prod
+
+  2 hosts: 2 ok
 ```
 
 Hosts with no authorized keys are omitted from the output. Skipped hosts (e.g.,

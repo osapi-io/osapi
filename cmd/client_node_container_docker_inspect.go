@@ -103,7 +103,7 @@ var clientContainerDockerInspectCmd = &cobra.Command{
 				},
 			})
 		}
-		headers, rows := cli.BuildBroadcastTable(
+		tr := cli.BuildBroadcastTable(
 			results,
 			[]string{
 				"ID",
@@ -117,7 +117,9 @@ var clientContainerDockerInspectCmd = &cobra.Command{
 				"NETWORK",
 			},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

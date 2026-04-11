@@ -8,8 +8,10 @@ $ osapi client node command shell --command "ls -la /tmp | grep log"
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  CHANGED  STDOUT                          STDERR  EXIT CODE  DURATION
-  web-01    false    -rw-r--r-- 1 root root 4096 …           0          15ms
+  HOSTNAME  STATUS  EXIT  STDOUT
+  web-01    ok      0     -rw-r--r-- 1 root root 4096 ...
+
+  1 host: 1 ok
 ```
 
 Long output is truncated in the table view. Use `--json` for the full response

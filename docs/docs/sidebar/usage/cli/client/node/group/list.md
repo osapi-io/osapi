@@ -5,10 +5,12 @@ List all groups on a target host:
 ```bash
 $ osapi client node group list --target web-01
 
-  HOSTNAME  NAME     GID   MEMBERS
-  web-01    docker   999   deploy,app
-  web-01    sudo     27    deploy
-  web-01    users    100   deploy,app
+  HOSTNAME  STATUS  NAME     GID   MEMBERS
+  web-01    ok      docker   999   deploy,app
+  web-01    ok      sudo     27    deploy
+  web-01    ok      users    100   deploy,app
+
+  1 host: 1 ok
 ```
 
 ## JSON Output

@@ -7,10 +7,12 @@ $ osapi client node service list --target web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME             STATUS    ENABLED  DESCRIPTION
-  web-01    nginx.service    active    true     A high performance web server
-  web-01    ssh.service      active    true     OpenBSD Secure Shell server
-  web-01    cron.service     active    true     Regular background program processing
+  HOSTNAME  STATUS  NAME             ACTIVE  ENABLED
+  web-01    ok      nginx.service    active  true
+  web-01    ok      ssh.service      active  true
+  web-01    ok      cron.service     active  true
+
+  1 host: 1 ok
 ```
 
 Target all hosts to list services across the fleet:
@@ -20,11 +22,13 @@ $ osapi client node service list --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME             STATUS    ENABLED  DESCRIPTION
-  web-01    nginx.service    active    true     A high performance web server
-  web-01    ssh.service      active    true     OpenBSD Secure Shell server
-  web-02    nginx.service    active    true     A high performance web server
-  web-02    ssh.service      active    true     OpenBSD Secure Shell server
+  HOSTNAME  STATUS  NAME             ACTIVE  ENABLED
+  web-01    ok      nginx.service    active  true
+  web-01    ok      ssh.service      active  true
+  web-02    ok      nginx.service    active  true
+  web-02    ok      ssh.service      active  true
+
+  2 hosts: 2 ok
 ```
 
 ## JSON Output

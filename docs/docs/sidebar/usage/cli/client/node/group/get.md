@@ -5,8 +5,10 @@ Get a specific group by name:
 ```bash
 $ osapi client node group get --target web-01 --name docker
 
-  HOSTNAME  NAME     GID   MEMBERS
-  web-01    docker   999   deploy,app
+  HOSTNAME  STATUS  NAME     GID   MEMBERS
+  web-01    ok      docker   999   deploy,app
+
+  1 host: 1 ok
 ```
 
 ## JSON Output

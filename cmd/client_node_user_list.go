@@ -68,29 +68,25 @@ var clientNodeUserListCmd = &cobra.Command{
 				continue
 			}
 			for _, u := range r.Users {
-				locked := "no"
-				if u.Locked {
-					locked = "yes"
-				}
 				results = append(results, cli.ResultRow{
 					Hostname: r.Hostname,
 					Status:   r.Status,
 					Fields: []string{
 						u.Name,
 						fmt.Sprintf("%d", u.UID),
-						fmt.Sprintf("%d", u.GID),
 						u.Home,
 						u.Shell,
 						strings.Join(u.Groups, ","),
-						locked,
 					},
 				})
 			}
 		}
-		headers, rows := cli.BuildBroadcastTable(results, []string{
-			"NAME", "UID", "GID", "HOME", "SHELL", "GROUPS", "LOCKED",
+		tr := cli.BuildBroadcastTable(results, []string{
+			"NAME", "UID", "HOME", "SHELL", "GROUPS",
 		})
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

@@ -7,8 +7,10 @@ $ osapi client node process get --target web-01 --pid 1234
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  PID   NAME   USER  STATE     CPU%  MEM%  COMMAND
-  web-01    1234  nginx  www   sleeping  2.3%  1.5%  nginx: worker process
+  HOSTNAME  STATUS  PID   NAME   USER  STATE     CPU%  COMMAND
+  web-01    ok      1234  nginx  www   sleeping  2.3%  nginx: worker process
+
+  1 host: 1 ok
 ```
 
 When targeting all hosts:
@@ -18,9 +20,11 @@ $ osapi client node process get --target _all --pid 1
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  PID  NAME     USER  STATE     CPU%  MEM%  COMMAND
-  web-01    1    systemd  root  sleeping  0.0%  0.1%  /sbin/init
-  web-02    1    systemd  root  sleeping  0.0%  0.1%  /sbin/init
+  HOSTNAME  STATUS  PID  NAME     USER  STATE     CPU%  COMMAND
+  web-01    ok      1    systemd  root  sleeping  0.0%  /sbin/init
+  web-02    ok      1    systemd  root  sleeping  0.0%  /sbin/init
+
+  2 hosts: 2 ok
 ```
 
 ## JSON Output

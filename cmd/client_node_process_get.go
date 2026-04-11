@@ -85,17 +85,18 @@ var clientNodeProcessGetCmd = &cobra.Command{
 						p.User,
 						p.State,
 						fmt.Sprintf("%.1f%%", p.CPUPercent),
-						fmt.Sprintf("%.1f%%", p.MemPercent),
 						command,
 					},
 				})
 			}
 		}
-		headers, rows := cli.BuildBroadcastTable(
+		tr := cli.BuildBroadcastTable(
 			results,
-			[]string{"PID", "NAME", "USER", "STATE", "CPU%", "MEM%", "COMMAND"},
+			[]string{"PID", "NAME", "USER", "STATE", "CPU%", "COMMAND"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

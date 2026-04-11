@@ -56,14 +56,14 @@ var clientNodeNetworkInterfaceCreateCmd = &cobra.Command{
 			cli.PrintKV("Job ID", resp.Data.JobID)
 		}
 
-		results := make([]cli.MutationResultRow, 0, len(resp.Data.Results))
+		results := make([]cli.ResultRow, 0, len(resp.Data.Results))
 		for _, r := range resp.Data.Results {
 			var errPtr *string
 			if r.Error != "" {
 				errPtr = &r.Error
 			}
 			changed := r.Changed
-			results = append(results, cli.MutationResultRow{
+			results = append(results, cli.ResultRow{
 				Hostname: r.Hostname,
 				Status:   r.Status,
 				Changed:  &changed,
@@ -71,8 +71,10 @@ var clientNodeNetworkInterfaceCreateCmd = &cobra.Command{
 				Fields:   []string{r.Name},
 			})
 		}
-		headers, rows := cli.BuildMutationTable(results, []string{"NAME"})
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		tr := cli.BuildMutationTable(results, []string{"NAME"})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

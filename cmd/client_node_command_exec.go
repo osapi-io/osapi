@@ -83,30 +83,24 @@ var clientNodeCommandExecCmd = &cobra.Command{
 				errPtr = &r.Error
 			}
 			changed := r.Changed
-			durationStr := ""
-			if r.DurationMs > 0 {
-				durationStr = strconv.FormatInt(r.DurationMs, 10) + "ms"
-			}
 			results = append(results, cli.ResultRow{
 				Hostname: r.Hostname,
 				Status:   r.Status,
 				Changed:  &changed,
 				Error:    errPtr,
 				Fields: []string{
-					r.Stdout,
-					r.Stderr,
 					strconv.Itoa(r.ExitCode),
-					durationStr,
+					r.Stdout,
 				},
 			})
 		}
-		headers, rows := cli.BuildBroadcastTable(results, []string{
+		tr := cli.BuildBroadcastTable(results, []string{
+			"EXIT",
 			"STDOUT",
-			"STDERR",
-			"EXIT CODE",
-			"DURATION",
 		})
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

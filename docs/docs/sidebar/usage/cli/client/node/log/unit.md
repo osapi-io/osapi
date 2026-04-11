@@ -7,10 +7,12 @@ $ osapi client node log unit --target web-01 --name sshd.service
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  TIMESTAMP                  PRIORITY  UNIT          MESSAGE
-  web-01    2026-01-01T00:00:01+00:00  info      sshd.service  Accepted publickey for ...
-  web-01    2026-01-01T00:00:02+00:00  info      sshd.service  pam_unix(sshd:session): ...
-  web-01    2026-01-01T00:00:03+00:00  info      sshd.service  Disconnected from user ...
+  HOSTNAME  STATUS  TIMESTAMP                  UNIT          MESSAGE
+  web-01    ok      2026-01-01T00:00:01+00:00  sshd.service  Accepted publickey for ...
+  web-01    ok      2026-01-01T00:00:02+00:00  sshd.service  pam_unix(sshd:session): ...
+  web-01    ok      2026-01-01T00:00:03+00:00  sshd.service  Disconnected from user ...
+
+  1 host: 1 ok
 ```
 
 Filter to recent errors only:
@@ -21,8 +23,10 @@ $ osapi client node log unit --target web-01 --name nginx.service \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  TIMESTAMP                  PRIORITY  UNIT           MESSAGE
-  web-01    2026-01-01T00:31:15+00:00  err       nginx.service  connect() failed (111...
+  HOSTNAME  STATUS  TIMESTAMP                  UNIT           MESSAGE
+  web-01    ok      2026-01-01T00:31:15+00:00  nginx.service  connect() failed (111...
+
+  1 host: 1 ok
 ```
 
 When targeting all hosts:
@@ -32,9 +36,11 @@ $ osapi client node log unit --target _all --name sshd.service --lines 5
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  TIMESTAMP                  PRIORITY  UNIT          MESSAGE
-  web-01    2026-01-01T00:00:01+00:00  info      sshd.service  Accepted publickey for ...
-  web-02    2026-01-01T00:00:02+00:00  info      sshd.service  Accepted publickey for ...
+  HOSTNAME  STATUS  TIMESTAMP                  UNIT          MESSAGE
+  web-01    ok      2026-01-01T00:00:01+00:00  sshd.service  Accepted publickey for ...
+  web-02    ok      2026-01-01T00:00:02+00:00  sshd.service  Accepted publickey for ...
+
+  2 hosts: 2 ok
 ```
 
 ## JSON Output

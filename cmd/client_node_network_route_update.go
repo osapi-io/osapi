@@ -65,14 +65,14 @@ Route format: TO:VIA or TO:VIA:METRIC
 			cli.PrintKV("Job ID", resp.Data.JobID)
 		}
 
-		results := make([]cli.MutationResultRow, 0, len(resp.Data.Results))
+		results := make([]cli.ResultRow, 0, len(resp.Data.Results))
 		for _, r := range resp.Data.Results {
 			var errPtr *string
 			if r.Error != "" {
 				errPtr = &r.Error
 			}
 			changed := r.Changed
-			results = append(results, cli.MutationResultRow{
+			results = append(results, cli.ResultRow{
 				Hostname: r.Hostname,
 				Status:   r.Status,
 				Changed:  &changed,
@@ -80,8 +80,10 @@ Route format: TO:VIA or TO:VIA:METRIC
 				Fields:   []string{r.Interface},
 			})
 		}
-		headers, rows := cli.BuildMutationTable(results, []string{"INTERFACE"})
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		tr := cli.BuildMutationTable(results, []string{"INTERFACE"})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

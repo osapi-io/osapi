@@ -13,9 +13,11 @@ List all osapi-managed cron entries:
 ```bash
 $ osapi client node schedule cron list --target web-01
 
-  HOSTNAME  NAME           SCHEDULE     USER  OBJECT
-  web-01    backup-daily   0 2 * * *    root  backup-script
-  web-01    log-rotate     0 0 * * 0    root  logrotate-conf
+  HOSTNAME  STATUS  NAME           SCHEDULE     OBJECT          USER
+  web-01    ok      backup-daily   0 2 * * *    backup-script   root
+  web-01    ok      log-rotate     0 0 * * 0    logrotate-conf  root
+
+  1 host: 1 ok
 ```
 
 ## Get
@@ -25,10 +27,10 @@ Get a specific cron entry by name:
 ```bash
 $ osapi client node schedule cron get --target web-01 --name backup-daily
 
-  Name:     backup-daily
-  Schedule: 0 2 * * *
-  User:     root
-  Object:   backup-script
+  HOSTNAME  STATUS  NAME           SCHEDULE     OBJECT          USER
+  web-01    ok      backup-daily   0 2 * * *    backup-script   root
+
+  1 host: 1 ok
 ```
 
 ## Create
@@ -50,9 +52,10 @@ $ osapi client node schedule cron create --target web-01 \
     --object backup-script \
     --user root
 
-  Name:    backup-daily
-  Status:  ok
-  Changed: true
+  HOSTNAME  STATUS   NAME          CHANGED
+  web-01    changed  backup-daily  true
+
+  1 host: 1 changed
 ```
 
 The `--user` flag defaults to `root` if omitted.
@@ -69,9 +72,10 @@ $ osapi client node schedule cron update --target web-01 \
     --name backup-daily \
     --schedule "0 3 * * *"
 
-  Name:    backup-daily
-  Status:  ok
-  Changed: true
+  HOSTNAME  STATUS   NAME          CHANGED
+  web-01    changed  backup-daily  true
+
+  1 host: 1 changed
 ```
 
 Only the fields you specify are updated. If nothing changed, `Changed: false`.
@@ -83,9 +87,10 @@ Delete a cron entry:
 ```bash
 $ osapi client node schedule cron delete --target web-01 --name backup-daily
 
-  Name:    backup-daily
-  Status:  ok
-  Changed: true
+  HOSTNAME  STATUS   NAME          CHANGED
+  web-01    changed  backup-daily  true
+
+  1 host: 1 changed
 ```
 
 ## JSON Output

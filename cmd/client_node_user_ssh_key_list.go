@@ -74,15 +74,16 @@ var clientNodeUserSSHKeyListCmd = &cobra.Command{
 					Fields: []string{
 						k.Type,
 						k.Fingerprint,
-						k.Comment,
 					},
 				})
 			}
 		}
-		headers, rows := cli.BuildBroadcastTable(results, []string{
-			"TYPE", "FINGERPRINT", "COMMENT",
+		tr := cli.BuildBroadcastTable(results, []string{
+			"TYPE", "FINGERPRINT",
 		})
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

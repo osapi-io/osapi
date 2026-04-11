@@ -7,8 +7,10 @@ $ osapi client node package get --target web-01 --name nginx
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME    VERSION    STATUS      SIZE
-  web-01    nginx   1.24.0-2   installed   1.2 MB
+  HOSTNAME  STATUS  NAME    VERSION    PKG STATUS
+  web-01    ok      nginx   1.24.0-2   installed
+
+  1 host: 1 ok
 ```
 
 Broadcast to see the package across all hosts:
@@ -18,22 +20,28 @@ $ osapi client node package get --target _all --name nginx
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME    VERSION    STATUS      SIZE
-  web-01    nginx   1.24.0-2   installed   1.2 MB
-  web-02    nginx   1.24.0-2   installed   1.2 MB
+  HOSTNAME  STATUS  NAME    VERSION    PKG STATUS
+  web-01    ok      nginx   1.24.0-2   installed
+  web-02    ok      nginx   1.24.0-2   installed
+
+  2 hosts: 2 ok
 ```
 
-When some hosts are skipped, STATUS and ERROR columns appear alongside data
-columns:
+When some hosts are skipped:
 
 ```bash
 $ osapi client node package get --target _all --name nginx
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS   ERROR                 NAME    VERSION    STATUS      SIZE
-  web-01    ok                              nginx   1.24.0-2   installed   1.2 MB
-  mac-01    skipped  unsupported platform
+  HOSTNAME  STATUS  NAME    VERSION    PKG STATUS
+  web-01    ok      nginx   1.24.0-2   installed
+  mac-01    skip
+
+  2 hosts: 1 ok, 1 skipped
+
+  Details:
+  mac-01    unsupported platform
 ```
 
 ## JSON Output

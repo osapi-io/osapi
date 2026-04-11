@@ -8,8 +8,10 @@ $ osapi client node power shutdown --target web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  CHANGED  ERROR  ACTION    DELAY
-  web-01    ok      true            shutdown  0
+  HOSTNAME  STATUS   CHANGED  ACTION    DELAY
+  web-01    changed  true     shutdown  0
+
+  1 host: 1 changed
 ```
 
 Shutdown with a 60-second delay and a broadcast message:
@@ -20,8 +22,10 @@ $ osapi client node power shutdown --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS  CHANGED  ERROR  ACTION    DELAY
-  web-01    ok      true            shutdown  60
+  HOSTNAME  STATUS   CHANGED  ACTION    DELAY
+  web-01    changed  true     shutdown  60
+
+  1 host: 1 changed
 ```
 
 Broadcast shutdown to all hosts at once:
@@ -31,9 +35,14 @@ $ osapi client node power shutdown --target _all --delay 30
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS   CHANGED  ERROR                ACTION    DELAY
-  web-01    ok       true                           shutdown  30
-  mac-01    skipped           unsupported platform
+  HOSTNAME  STATUS   CHANGED  ACTION    DELAY
+  web-01    changed  true     shutdown  30
+  mac-01    skip
+
+  2 hosts: 1 changed, 1 skipped
+
+  Details:
+  mac-01    unsupported platform
 ```
 
 ## JSON Output

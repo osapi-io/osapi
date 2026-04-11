@@ -91,11 +91,13 @@ var clientNodeNetworkInterfaceListCmd = &cobra.Command{
 				})
 			}
 		}
-		headers, rows := cli.BuildBroadcastTable(
+		tr := cli.BuildBroadcastTable(
 			results,
 			[]string{"NAME", "IPV4", "DHCP", "PRIMARY"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

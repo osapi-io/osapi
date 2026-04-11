@@ -7,10 +7,12 @@ $ osapi client node log query --target web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  TIMESTAMP                  PRIORITY  UNIT           MESSAGE
-  web-01    2026-01-01T00:00:01+00:00  info      sshd.service   Accepted publickey for ...
-  web-01    2026-01-01T00:00:02+00:00  notice    kernel         Linux version 6.1.0 ...
-  web-01    2026-01-01T00:00:03+00:00  err       nginx.service  connect() failed (111...
+  HOSTNAME  STATUS  TIMESTAMP                  UNIT           MESSAGE
+  web-01    ok      2026-01-01T00:00:01+00:00  sshd.service   Accepted publickey for ...
+  web-01    ok      2026-01-01T00:00:02+00:00  kernel         Linux version 6.1.0 ...
+  web-01    ok      2026-01-01T00:00:03+00:00  nginx.service  connect() failed (111...
+
+  1 host: 1 ok
 ```
 
 Filter by priority and time window:
@@ -21,8 +23,10 @@ $ osapi client node log query --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  TIMESTAMP                  PRIORITY  UNIT           MESSAGE
-  web-01    2026-01-01T00:59:01+00:00  err       nginx.service  connect() failed (111...
+  HOSTNAME  STATUS  TIMESTAMP                  UNIT           MESSAGE
+  web-01    ok      2026-01-01T00:59:01+00:00  nginx.service  connect() failed (111...
+
+  1 host: 1 ok
 ```
 
 When targeting all hosts:
@@ -32,22 +36,28 @@ $ osapi client node log query --target _all --lines 5
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  TIMESTAMP                  PRIORITY  UNIT           MESSAGE
-  web-01    2026-01-01T00:00:01+00:00  info      sshd.service   Accepted publickey for ...
-  web-02    2026-01-01T00:00:02+00:00  notice    kernel         Linux version 6.1.0 ...
+  HOSTNAME  STATUS  TIMESTAMP                  UNIT           MESSAGE
+  web-01    ok      2026-01-01T00:00:01+00:00  sshd.service   Accepted publickey for ...
+  web-02    ok      2026-01-01T00:00:02+00:00  kernel         Linux version 6.1.0 ...
+
+  2 hosts: 2 ok
 ```
 
-When some hosts are skipped, STATUS and ERROR columns appear alongside data
-columns:
+When some hosts are skipped:
 
 ```bash
 $ osapi client node log query --target _all --lines 5
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS   ERROR                 TIMESTAMP                  PRIORITY  UNIT           MESSAGE
-  web-01    ok                              2026-01-01T00:00:01+00:00  info      sshd.service   Accepted publickey for ...
-  mac-01    skipped  unsupported platform
+  HOSTNAME  STATUS  TIMESTAMP                  UNIT           MESSAGE
+  web-01    ok      2026-01-01T00:00:01+00:00  sshd.service   Accepted publickey for ...
+  mac-01    skip
+
+  2 hosts: 1 ok, 1 skipped
+
+  Details:
+  mac-01    unsupported platform
 ```
 
 ## JSON Output

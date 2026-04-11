@@ -8,8 +8,10 @@ $ osapi client node process signal --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  PID   SIGNAL  CHANGED
-  web-01    1234  TERM    true
+  HOSTNAME  STATUS   PID   SIGNAL  CHANGED
+  web-01    changed  1234  TERM    true
+
+  1 host: 1 changed
 ```
 
 Broadcast a signal to a process on all hosts:
@@ -20,10 +22,15 @@ $ osapi client node process signal --target _all \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS   PID   SIGNAL  CHANGED  ERROR
-  web-01    ok       1234  HUP     true
-  web-02    ok       1234  HUP     true
-  mac-01    skipped                         unsupported platform
+  HOSTNAME  STATUS   PID   SIGNAL  CHANGED
+  web-01    changed  1234  HUP     true
+  web-02    changed  1234  HUP     true
+  mac-01    skip
+
+  3 hosts: 2 changed, 1 skipped
+
+  Details:
+  mac-01    unsupported platform
 ```
 
 ## JSON Output

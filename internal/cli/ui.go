@@ -41,6 +41,9 @@ var (
 	Gray      = lipgloss.Color("245")
 	LightGray = lipgloss.Color("241")
 	White     = lipgloss.Color("15")
+	Red       = lipgloss.Color("196")
+	Yellow    = lipgloss.Color("226")
+	Green     = lipgloss.Color("82")
 	Teal      = lipgloss.Color("#06ffa5")
 )
 
@@ -55,12 +58,15 @@ var (
 
 // Section represents a header with its corresponding rows.
 type Section struct {
-	Title   string
-	Headers []string
-	Rows    [][]string
+	Title    string
+	Headers  []string
+	Rows     [][]string
+	Errors   []ErrorEntry
+	Duration string // e.g. "286ms" — shown in summary line
 }
 
-// ResultRow is a per-host broadcast result used by BuildBroadcastTable.
+// ResultRow is a per-host result used by BuildBroadcastTable and
+// BuildMutationTable.
 type ResultRow struct {
 	Hostname string
 	Status   string
@@ -69,123 +75,95 @@ type ResultRow struct {
 	Fields   []string
 }
 
-// BuildBroadcastTable builds headers and rows for a broadcast result table.
-// It prepends HOSTNAME to every row and conditionally inserts STATUS, CHANGED,
-// and ERROR columns when any result carries an error.
+// ErrorEntry is an error or skip reason from a host, rendered below the table.
+type ErrorEntry struct {
+	Hostname string
+	Message  string
+	Status   string // "err" or "skip"
+}
+
+// TableResult holds the output of BuildBroadcastTable / BuildMutationTable.
+type TableResult struct {
+	Headers []string
+	Rows    [][]string
+	Errors  []ErrorEntry
+}
+
+// resolveStatus computes the compact STATUS value from a ResultRow.
+// Values: ok, changed, skip, err.
+func resolveStatus(
+	r ResultRow,
+) string {
+	// Check skipped before error — skipped operations set an error
+	// message ("unsupported on this OS family") but are not failures.
+	if r.Status == "skipped" || r.Status == "skip" {
+		return "skip"
+	}
+
+	if r.Error != nil {
+		return "err"
+	}
+
+	if r.Changed != nil && *r.Changed {
+		return "changed"
+	}
+
+	return "ok"
+}
+
+// BuildBroadcastTable builds a TableResult for a broadcast response.
+// HOSTNAME and STATUS are always shown. Errors are collected for
+// rendering below the table by PrintCompactTable.
 func BuildBroadcastTable(
 	results []ResultRow,
 	fieldHeaders []string,
-) ([]string, [][]string) {
-	hasErrors := false
-	for _, r := range results {
-		if r.Error != nil {
-			hasErrors = true
-			break
-		}
-	}
-
-	hasChanged := false
-	for _, r := range results {
-		if r.Changed != nil {
-			hasChanged = true
-			break
-		}
-	}
-
-	var headers []string
-	headers = append(headers, "HOSTNAME")
-	if hasErrors {
-		headers = append(headers, "STATUS", "ERROR")
-	}
-	if hasChanged {
-		headers = append(headers, "CHANGED")
-	}
-	headers = append(headers, fieldHeaders...)
-
-	rows := make([][]string, 0, len(results))
-	for _, r := range results {
-		var row []string
-		row = append(row, r.Hostname)
-		if hasErrors {
-			status := r.Status
-			if status == "" {
-				status = "ok"
-			}
-			errMsg := ""
-			if r.Error != nil {
-				errMsg = *r.Error
-			}
-			row = append(row, status, errMsg)
-		}
-		if hasChanged {
-			changedStr := ""
-			if r.Changed != nil {
-				changedStr = fmt.Sprintf("%v", *r.Changed)
-			}
-			row = append(row, changedStr)
-		}
-		row = append(row, r.Fields...)
-		rows = append(rows, row)
-	}
-
-	return headers, rows
+) TableResult {
+	return buildTable(results, fieldHeaders)
 }
 
-// MutationResultRow is a per-host mutation result used by BuildMutationTable.
-type MutationResultRow struct {
-	Hostname string
-	Status   string
-	Changed  *bool
-	Error    *string
-	Fields   []string
-}
-
-// BuildMutationTable builds headers and rows for a mutation broadcast table.
-// Unlike BuildBroadcastTable, STATUS and ERROR columns are always shown because
-// mutation results carry an explicit status field.
+// BuildMutationTable builds a TableResult for a mutation response.
+// Uses the same unified STATUS column (ok/changed/skip/err).
 func BuildMutationTable(
-	results []MutationResultRow,
+	results []ResultRow,
 	fieldHeaders []string,
-) ([]string, [][]string) {
-	// Hide HOSTNAME when all results come from the same host.
-	multiHost := false
-	if len(results) > 1 {
-		first := results[0].Hostname
-		for _, r := range results[1:] {
-			if r.Hostname != first {
-				multiHost = true
-				break
-			}
-		}
-	}
+) TableResult {
+	return buildTable(results, fieldHeaders)
+}
 
-	headers := make([]string, 0, 4+len(fieldHeaders))
-	if multiHost {
-		headers = append(headers, "HOSTNAME")
-	}
-	headers = append(headers, "STATUS", "CHANGED", "ERROR")
+// buildTable is the shared implementation for broadcast and mutation tables.
+func buildTable(
+	results []ResultRow,
+	fieldHeaders []string,
+) TableResult {
+	headers := make([]string, 0, 2+len(fieldHeaders))
+	headers = append(headers, "HOSTNAME", "STATUS")
 	headers = append(headers, fieldHeaders...)
 
+	var errors []ErrorEntry
 	rows := make([][]string, 0, len(results))
+
 	for _, r := range results {
-		errMsg := ""
+		status := resolveStatus(r)
+
+		// Collect errors and skip reasons for rendering below the table.
 		if r.Error != nil {
-			errMsg = *r.Error
+			errors = append(errors, ErrorEntry{
+				Hostname: r.Hostname,
+				Message:  *r.Error,
+				Status:   status,
+			})
 		}
-		changedStr := ""
-		if r.Changed != nil {
-			changedStr = fmt.Sprintf("%v", *r.Changed)
-		}
-		row := make([]string, 0, 4+len(r.Fields))
-		if multiHost {
-			row = append(row, r.Hostname)
-		}
-		row = append(row, r.Status, changedStr, errMsg)
+
+		row := []string{r.Hostname, status}
 		row = append(row, r.Fields...)
 		rows = append(rows, row)
 	}
 
-	return headers, rows
+	return TableResult{
+		Headers: headers,
+		Rows:    rows,
+		Errors:  errors,
+	}
 }
 
 // BoolToSafeString converts a *bool to a string. Returns "" if nil.
@@ -302,6 +280,117 @@ func PrintCompactTable(
 			}
 			fmt.Println(line.String())
 		}
+
+		printSummary(section)
+		PrintErrors(section.Errors)
+	}
+}
+
+// printSummary renders a status summary line below the table.
+// Format: "2 hosts: 1 ok, 1 skipped in 286ms"
+func printSummary(
+	section Section,
+) {
+	// Count unique hostnames and their statuses from the rows.
+	// STATUS is always the second column (index 1).
+	hostStatuses := make(map[string]string)
+	for _, row := range section.Rows {
+		if len(row) >= 2 {
+			hostname := row[0]
+			status := row[1]
+			// Keep the "worst" status per host.
+			if cur, ok := hostStatuses[hostname]; !ok || statusWeight(status) > statusWeight(cur) {
+				hostStatuses[hostname] = status
+			}
+		}
+	}
+
+	// Also count error hosts not in the table.
+	for _, e := range section.Errors {
+		if _, ok := hostStatuses[e.Hostname]; !ok {
+			hostStatuses[e.Hostname] = "err"
+		}
+	}
+
+	totalHosts := len(hostStatuses)
+	if totalHosts == 0 {
+		return
+	}
+
+	counts := map[string]int{}
+	for _, status := range hostStatuses {
+		counts[status]++
+	}
+
+	greenStyle := lipgloss.NewStyle().Foreground(Green)
+	yellowStyle := lipgloss.NewStyle().Foreground(Yellow)
+	redStyle := lipgloss.NewStyle().Foreground(Red)
+	grayStyle := lipgloss.NewStyle().Foreground(Gray)
+
+	var parts []string
+	if n := counts["ok"]; n > 0 {
+		parts = append(parts, greenStyle.Render(fmt.Sprintf("%d ok", n)))
+	}
+	if n := counts["changed"]; n > 0 {
+		parts = append(parts, greenStyle.Render(fmt.Sprintf("%d changed", n)))
+	}
+	if n := counts["skip"]; n > 0 {
+		parts = append(parts, yellowStyle.Render(fmt.Sprintf("%d skipped", n)))
+	}
+	if n := counts["err"]; n > 0 {
+		parts = append(parts, redStyle.Render(fmt.Sprintf("%d failed", n)))
+	}
+
+	summary := fmt.Sprintf("%d hosts: %s", totalHosts, strings.Join(parts, ", "))
+	if section.Duration != "" {
+		summary += grayStyle.Render(fmt.Sprintf(" in %s", section.Duration))
+	}
+
+	fmt.Printf("\n  %s\n", summary)
+}
+
+// statusWeight returns a numeric weight for status ordering.
+// Higher = worse, used to pick the "worst" status per host.
+func statusWeight(
+	status string,
+) int {
+	switch status {
+	case "ok":
+		return 0
+	case "changed":
+		return 1
+	case "skip":
+		return 2
+	case "err":
+		return 3
+	default:
+		return 0
+	}
+}
+
+// PrintErrors renders error and skip entries below a table. Errors are
+// red, skips are yellow. Each entry shows hostname and message.
+func PrintErrors(
+	errors []ErrorEntry,
+) {
+	if len(errors) == 0 {
+		return
+	}
+
+	errStyle := lipgloss.NewStyle().Foreground(Red)
+	skipStyle := lipgloss.NewStyle().Foreground(Yellow)
+	labelStyle := lipgloss.NewStyle().Bold(true).Foreground(Purple)
+
+	fmt.Printf("\n  %s\n", labelStyle.Render("Details:"))
+	for _, e := range errors {
+		style := errStyle
+		if e.Status == "skip" {
+			style = skipStyle
+		}
+		fmt.Printf("  %s  %s\n",
+			style.Render(e.Hostname),
+			style.Render(e.Message),
+		)
 	}
 }
 

@@ -13,8 +13,10 @@ $ osapi client node network interface update \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME    CHANGED
-  web-01    eth0    true
+  HOSTNAME  STATUS   NAME    CHANGED
+  web-01    changed  eth0    true
+
+  1 host: 1 changed
 ```
 
 When the configuration is unchanged, `changed` is false:
@@ -28,8 +30,10 @@ $ osapi client node network interface update \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME    CHANGED
-  web-01    eth0    false
+  HOSTNAME  STATUS  NAME    CHANGED
+  web-01    ok      eth0    false
+
+  1 host: 1 ok
 ```
 
 Broadcast an update to all hosts:
@@ -40,9 +44,11 @@ $ osapi client node network interface update \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME    CHANGED
-  web-01    eth0    true
-  web-02    eth0    true
+  HOSTNAME  STATUS   NAME    CHANGED
+  web-01    changed  eth0    true
+  web-02    changed  eth0    true
+
+  2 hosts: 2 changed
 ```
 
 ## JSON Output

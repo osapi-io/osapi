@@ -73,11 +73,13 @@ var clientNodeLoadGetCmd = &cobra.Command{
 				Fields:   []string{load1, load5, load15},
 			})
 		}
-		headers, rows := cli.BuildBroadcastTable(
+		tr := cli.BuildBroadcastTable(
 			results,
 			[]string{"LOAD (1m)", "LOAD (5m)", "LOAD (15m)"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

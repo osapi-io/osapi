@@ -7,9 +7,11 @@ $ osapi client node network interface list --target web-01
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME    IPV4                DHCP    PRIMARY
-  web-01    eth0    192.168.1.100/24    static  yes
-  web-01    lo      127.0.0.1/8
+  HOSTNAME  STATUS  NAME    IPV4                DHCP    PRIMARY
+  web-01    ok      eth0    192.168.1.100/24    static  yes
+  web-01    ok      lo      127.0.0.1/8
+
+  1 host: 1 ok
 ```
 
 Target all hosts to list interfaces across the fleet:
@@ -19,9 +21,11 @@ $ osapi client node network interface list --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME    IPV4                DHCP    PRIMARY
-  web-01    eth0    192.168.1.100/24    static  yes
-  web-02    eth0    192.168.1.200/24    static  yes
+  HOSTNAME  STATUS  NAME    IPV4                DHCP    PRIMARY
+  web-01    ok      eth0    192.168.1.100/24    static  yes
+  web-02    ok      eth0    192.168.1.200/24    static  yes
+
+  2 hosts: 2 ok
 ```
 
 ## JSON Output

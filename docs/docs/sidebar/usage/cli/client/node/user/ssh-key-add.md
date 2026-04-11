@@ -8,8 +8,10 @@ $ osapi client node user ssh-key add --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  CHANGED
-  web-01    true
+  HOSTNAME  STATUS   CHANGED
+  web-01    changed  true
+
+  1 host: 1 changed
 ```
 
 The key is appended to the user's `~/.ssh/authorized_keys` file. If the file or
@@ -26,9 +28,11 @@ $ osapi client node user ssh-key add --target _all \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  CHANGED
-  web-01    true
-  web-02    true
+  HOSTNAME  STATUS   CHANGED
+  web-01    changed  true
+  web-02    changed  true
+
+  2 hosts: 2 changed
 ```
 
 ## Flags

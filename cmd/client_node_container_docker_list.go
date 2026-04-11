@@ -77,29 +77,24 @@ var clientContainerDockerListCmd = &cobra.Command{
 			}
 
 			for _, c := range r.Containers {
-				shortID := c.ID
-				if len(shortID) > 12 {
-					shortID = shortID[:12]
-				}
-
 				results = append(results, cli.ResultRow{
 					Hostname: r.Hostname,
 					Status:   r.Status,
 					Fields: []string{
-						shortID,
 						c.Name,
 						c.Image,
 						c.State,
-						c.Created,
 					},
 				})
 			}
 		}
-		headers, rows := cli.BuildBroadcastTable(
+		tr := cli.BuildBroadcastTable(
 			results,
-			[]string{"ID", "NAME", "IMAGE", "STATE", "CREATED"},
+			[]string{"NAME", "IMAGE", "STATE"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

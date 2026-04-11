@@ -8,9 +8,12 @@ $ osapi client node file undeploy \
     --target server1 \
     --path /etc/app/app.conf
 
-  Hostname: server1
-  Status:   ok
-  Changed:  true
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  HOSTNAME  STATUS   CHANGED
+  server1   changed  true
+
+  1 host: 1 changed
 ```
 
 If the file does not exist on disk, the operation is a no-op and

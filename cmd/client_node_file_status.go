@@ -65,11 +65,13 @@ Reports whether the file is in-sync, drifted, or missing.`,
 				Hostname: r.Hostname,
 				Status:   r.Status,
 				Error:    errPtr,
-				Fields:   []string{r.Path, r.Status, r.SHA256},
+				Fields:   []string{r.Path, r.Status},
 			})
 		}
-		headers, rows := cli.BuildBroadcastTable(results, []string{"PATH", "STATUS", "SHA256"})
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		tr := cli.BuildBroadcastTable(results, []string{"PATH", "STATUS"})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 
