@@ -1190,3 +1190,242 @@ func (suite *UIPublicTestSuite) TestDisplayJobDetail() {
 		})
 	}
 }
+
+func (suite *UIPublicTestSuite) TestStatusWeight() {
+	tests := []struct {
+		name   string
+		status string
+		want   int
+	}{
+		{name: "when ok returns 0", status: "ok", want: 0},
+		{name: "when changed returns 1", status: "changed", want: 1},
+		{name: "when skip returns 2", status: "skip", want: 2},
+		{name: "when err returns 3", status: "err", want: 3},
+		{name: "when unknown returns 0", status: "unknown", want: 0},
+		{name: "when empty returns 0", status: "", want: 0},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got := cli.ExportStatusWeight(tc.status)
+			assert.Equal(suite.T(), tc.want, got)
+		})
+	}
+}
+
+func (suite *UIPublicTestSuite) TestResolveStatus() {
+	errMsg := "failed"
+
+	tests := []struct {
+		name string
+		row  cli.ResultRow
+		want string
+	}{
+		{
+			name: "when no error and no change returns ok",
+			row:  cli.ResultRow{Hostname: "h1"},
+			want: "ok",
+		},
+		{
+			name: "when changed true returns changed",
+			row:  cli.ResultRow{Hostname: "h1", Changed: boolPtr(true)},
+			want: "changed",
+		},
+		{
+			name: "when changed false returns ok",
+			row:  cli.ResultRow{Hostname: "h1", Changed: boolPtr(false)},
+			want: "ok",
+		},
+		{
+			name: "when error returns err",
+			row:  cli.ResultRow{Hostname: "h1", Error: &errMsg},
+			want: "err",
+		},
+		{
+			name: "when status skipped returns skip even with error",
+			row:  cli.ResultRow{Hostname: "h1", Status: "skipped", Error: &errMsg},
+			want: "skip",
+		},
+		{
+			name: "when status skip returns skip",
+			row:  cli.ResultRow{Hostname: "h1", Status: "skip"},
+			want: "skip",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got := cli.ExportResolveStatus(tc.row)
+			assert.Equal(suite.T(), tc.want, got)
+		})
+	}
+}
+
+func (suite *UIPublicTestSuite) TestPrintSummary() {
+	tests := []struct {
+		name         string
+		section      cli.Section
+		validateFunc func(output string)
+	}{
+		{
+			name: "when mixed statuses shows counts",
+			section: cli.Section{
+				Rows: [][]string{
+					{"web-01", "ok", "val"},
+					{"web-02", "skip"},
+					{"web-03", "err"},
+				},
+			},
+			validateFunc: func(output string) {
+				assert.Contains(suite.T(), output, "3 hosts:")
+				assert.Contains(suite.T(), output, "1 ok")
+				assert.Contains(suite.T(), output, "1 skipped")
+				assert.Contains(suite.T(), output, "1 failed")
+			},
+		},
+		{
+			name: "when all ok shows only ok count",
+			section: cli.Section{
+				Rows: [][]string{
+					{"web-01", "ok", "val"},
+					{"web-02", "ok", "val"},
+				},
+			},
+			validateFunc: func(output string) {
+				assert.Contains(suite.T(), output, "2 hosts:")
+				assert.Contains(suite.T(), output, "2 ok")
+			},
+		},
+		{
+			name: "when changed shows changed count",
+			section: cli.Section{
+				Rows: [][]string{
+					{"web-01", "changed"},
+					{"web-02", "ok"},
+				},
+			},
+			validateFunc: func(output string) {
+				assert.Contains(suite.T(), output, "2 hosts:")
+				assert.Contains(suite.T(), output, "1 changed")
+				assert.Contains(suite.T(), output, "1 ok")
+			},
+		},
+		{
+			name: "when duration set shows duration",
+			section: cli.Section{
+				Duration: "286ms",
+				Rows: [][]string{
+					{"web-01", "ok"},
+				},
+			},
+			validateFunc: func(output string) {
+				assert.Contains(suite.T(), output, "286ms")
+			},
+		},
+		{
+			name: "when no rows does not print summary line",
+			section: cli.Section{
+				Rows: [][]string{},
+			},
+			validateFunc: func(output string) {
+				assert.NotContains(suite.T(), output, "hosts:")
+			},
+		},
+		{
+			name: "when error host not in rows counts from errors",
+			section: cli.Section{
+				Rows: [][]string{
+					{"web-01", "ok"},
+				},
+				Errors: []cli.ErrorEntry{
+					{Hostname: "web-02", Message: "timeout", Status: "err"},
+				},
+			},
+			validateFunc: func(output string) {
+				assert.Contains(suite.T(), output, "2 hosts:")
+				assert.Contains(suite.T(), output, "1 ok")
+				assert.Contains(suite.T(), output, "1 failed")
+			},
+		},
+		{
+			name: "when same host has multiple rows uses worst status",
+			section: cli.Section{
+				Rows: [][]string{
+					{"web-01", "ok", "val1"},
+					{"web-01", "err"},
+				},
+			},
+			validateFunc: func(output string) {
+				assert.Contains(suite.T(), output, "1 hosts:")
+				assert.Contains(suite.T(), output, "1 failed")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			output := captureStdout(func() {
+				cli.PrintCompactTable([]cli.Section{tc.section})
+			})
+			tc.validateFunc(output)
+		})
+	}
+}
+
+func (suite *UIPublicTestSuite) TestPrintErrors() {
+	tests := []struct {
+		name         string
+		errors       []cli.ErrorEntry
+		validateFunc func(output string)
+	}{
+		{
+			name:   "when no errors prints nothing",
+			errors: nil,
+			validateFunc: func(output string) {
+				assert.Empty(suite.T(), output)
+			},
+		},
+		{
+			name: "when error shows red details",
+			errors: []cli.ErrorEntry{
+				{Hostname: "web-01", Message: "connection refused", Status: "err"},
+			},
+			validateFunc: func(output string) {
+				assert.Contains(suite.T(), output, "Details:")
+				assert.Contains(suite.T(), output, "web-01")
+				assert.Contains(suite.T(), output, "connection refused")
+			},
+		},
+		{
+			name: "when skip shows details",
+			errors: []cli.ErrorEntry{
+				{Hostname: "mac-01", Message: "unsupported OS", Status: "skip"},
+			},
+			validateFunc: func(output string) {
+				assert.Contains(suite.T(), output, "Details:")
+				assert.Contains(suite.T(), output, "mac-01")
+				assert.Contains(suite.T(), output, "unsupported OS")
+			},
+		},
+		{
+			name: "when multiple entries shows all",
+			errors: []cli.ErrorEntry{
+				{Hostname: "web-01", Message: "timeout", Status: "err"},
+				{Hostname: "mac-01", Message: "unsupported", Status: "skip"},
+			},
+			validateFunc: func(output string) {
+				assert.Contains(suite.T(), output, "web-01")
+				assert.Contains(suite.T(), output, "mac-01")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			output := captureStdout(func() {
+				cli.PrintErrors(tc.errors)
+			})
+			tc.validateFunc(output)
+		})
+	}
+}

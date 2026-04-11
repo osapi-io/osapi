@@ -49,3 +49,17 @@ func SetHostInfoFn(
 func ResetHostInfoFn() {
 	hostInfoFn = host.Info
 }
+
+// ExportStatusWeight exposes the private statusWeight function for testing.
+func ExportStatusWeight(
+	status string,
+) int {
+	return statusWeight(status)
+}
+
+// ExportResolveStatus exposes the private resolveStatus function for testing.
+func ExportResolveStatus(
+	r ResultRow,
+) string {
+	return resolveStatus(r)
+}
