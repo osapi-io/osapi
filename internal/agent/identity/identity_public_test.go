@@ -35,12 +35,6 @@ import (
 
 type GetMachineIDFromFSPublicTestSuite struct {
 	suite.Suite
-
-	appFs avfs.VFS
-}
-
-func (suite *GetMachineIDFromFSPublicTestSuite) SetupTest() {
-	suite.appFs = memfs.New()
 }
 
 func (suite *GetMachineIDFromFSPublicTestSuite) TestGetMachineIDFromFS() {
@@ -122,8 +116,6 @@ func TestGetMachineIDFromFSPublicTestSuite(t *testing.T) {
 type GetDarwinMachineIDPublicTestSuite struct {
 	suite.Suite
 }
-
-func (suite *GetDarwinMachineIDPublicTestSuite) SetupTest() {}
 
 func (suite *GetDarwinMachineIDPublicTestSuite) TearDownSubTest() {
 	identity.ResetIoregFn()

@@ -26,9 +26,9 @@ package identity
 type Identity struct {
 	// MachineID is the unique machine identifier, typically from
 	// /etc/machine-id on Linux or IOPlatformUUID on macOS.
-	MachineID string
+	MachineID string `json:"machine_id"`
 
 	// Hostname is the resolved hostname, either from configuration
 	// or system detection.
-	Hostname string
+	Hostname string `json:"hostname"`
 }
