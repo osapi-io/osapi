@@ -69,7 +69,9 @@ var clientNodeScheduleCronGetCmd = &cobra.Command{
 		tr := cli.BuildBroadcastTable(results, []string{
 			"NAME", "SCHEDULE", "OBJECT", "USER",
 		})
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

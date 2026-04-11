@@ -94,7 +94,9 @@ var clientNodeProcessGetCmd = &cobra.Command{
 			results,
 			[]string{"PID", "NAME", "USER", "STATE", "CPU%", "COMMAND"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

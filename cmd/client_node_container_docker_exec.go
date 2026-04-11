@@ -94,7 +94,9 @@ var clientContainerDockerExecCmd = &cobra.Command{
 			results,
 			[]string{"EXIT CODE", "STDOUT", "STDERR"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

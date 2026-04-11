@@ -95,7 +95,9 @@ var clientNodeNetworkInterfaceListCmd = &cobra.Command{
 			results,
 			[]string{"NAME", "IPV4", "DHCP", "PRIMARY"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

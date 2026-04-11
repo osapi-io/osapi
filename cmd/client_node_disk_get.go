@@ -89,7 +89,9 @@ var clientNodeDiskGetCmd = &cobra.Command{
 			results,
 			[]string{"MOUNT", "TOTAL", "USED", "USAGE"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

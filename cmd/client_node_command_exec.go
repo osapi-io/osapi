@@ -98,7 +98,9 @@ var clientNodeCommandExecCmd = &cobra.Command{
 			"EXIT",
 			"STDOUT",
 		})
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

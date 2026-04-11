@@ -69,7 +69,9 @@ var clientNodeSysctlDeleteCmd = &cobra.Command{
 			})
 		}
 		tr := cli.BuildMutationTable(results, []string{"KEY"})
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

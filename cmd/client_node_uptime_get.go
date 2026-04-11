@@ -67,7 +67,9 @@ var clientNodeUptimeGetCmd = &cobra.Command{
 			})
 		}
 		tr := cli.BuildBroadcastTable(results, []string{"UPTIME"})
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

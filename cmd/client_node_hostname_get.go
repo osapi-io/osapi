@@ -65,7 +65,9 @@ var clientNodeHostnameGetCmd = &cobra.Command{
 			})
 		}
 		tr := cli.BuildBroadcastTable(results, nil)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

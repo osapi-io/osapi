@@ -82,7 +82,9 @@ var clientNodeGroupListCmd = &cobra.Command{
 		tr := cli.BuildBroadcastTable(results, []string{
 			"NAME", "GID", "MEMBERS",
 		})
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

@@ -69,7 +69,9 @@ Reports whether the file is in-sync, drifted, or missing.`,
 			})
 		}
 		tr := cli.BuildBroadcastTable(results, []string{"PATH", "STATUS"})
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

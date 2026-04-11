@@ -74,7 +74,9 @@ The object store entry is preserved; only the file on disk is removed.`,
 			})
 		}
 		tr := cli.BuildMutationTable(results, nil)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

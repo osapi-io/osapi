@@ -72,7 +72,9 @@ var clientNodeNetworkInterfaceCreateCmd = &cobra.Command{
 			})
 		}
 		tr := cli.BuildMutationTable(results, []string{"NAME"})
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

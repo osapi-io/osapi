@@ -82,7 +82,9 @@ var clientNodeProcessSignalCmd = &cobra.Command{
 			results,
 			[]string{"PID", "SIGNAL", "CHANGED"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

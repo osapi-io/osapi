@@ -75,7 +75,9 @@ var clientNodePowerShutdownCmd = &cobra.Command{
 			})
 		}
 		tr := cli.BuildMutationTable(results, []string{"ACTION", "DELAY"})
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

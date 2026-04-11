@@ -83,7 +83,9 @@ var clientContainerDockerRemoveCmd = &cobra.Command{
 			results,
 			[]string{"MESSAGE"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

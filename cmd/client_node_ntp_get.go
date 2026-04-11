@@ -80,7 +80,9 @@ var clientNodeNtpGetCmd = &cobra.Command{
 			results,
 			[]string{"SYNCHRONIZED", "SOURCE", "SERVERS"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

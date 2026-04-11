@@ -83,7 +83,9 @@ var clientNodeNetworkRouteListCmd = &cobra.Command{
 			results,
 			[]string{"DESTINATION", "GATEWAY", "INTERFACE", "METRIC"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

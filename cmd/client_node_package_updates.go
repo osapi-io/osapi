@@ -77,7 +77,9 @@ var clientNodePackageUpdatesCmd = &cobra.Command{
 		tr := cli.BuildBroadcastTable(results, []string{
 			"NAME", "CURRENT", "NEW",
 		})
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

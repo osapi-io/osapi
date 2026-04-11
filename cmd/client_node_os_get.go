@@ -76,7 +76,9 @@ var clientNodeOSGetCmd = &cobra.Command{
 			results,
 			[]string{"DISTRIBUTION", "VERSION"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

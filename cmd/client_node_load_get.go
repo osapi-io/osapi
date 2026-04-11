@@ -77,7 +77,9 @@ var clientNodeLoadGetCmd = &cobra.Command{
 			results,
 			[]string{"LOAD (1m)", "LOAD (5m)", "LOAD (15m)"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

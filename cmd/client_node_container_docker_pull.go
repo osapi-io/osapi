@@ -83,7 +83,9 @@ var clientContainerDockerPullCmd = &cobra.Command{
 			results,
 			[]string{"IMAGE ID", "TAG", "SIZE"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

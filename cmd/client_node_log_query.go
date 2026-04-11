@@ -108,7 +108,9 @@ var clientNodeLogQueryCmd = &cobra.Command{
 			results,
 			[]string{"TIMESTAMP", "UNIT", "MESSAGE"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

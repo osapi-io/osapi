@@ -85,7 +85,9 @@ var clientNodeServiceListCmd = &cobra.Command{
 			results,
 			[]string{"NAME", "STATUS", "ENABLED"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

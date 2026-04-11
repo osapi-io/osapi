@@ -94,7 +94,9 @@ var clientContainerDockerCreateCmd = &cobra.Command{
 			results,
 			[]string{"ID", "NAME", "IMAGE", "STATE"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 

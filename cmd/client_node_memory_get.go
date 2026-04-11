@@ -81,7 +81,9 @@ var clientNodeMemoryGetCmd = &cobra.Command{
 			results,
 			[]string{"TOTAL", "USED", "FREE", "USAGE"},
 		)
-		cli.PrintCompactTable([]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}})
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
 	},
 }
 
