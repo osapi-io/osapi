@@ -27,3 +27,4 @@ examples/**
 !examples/**/*.go
 !examples/**/*.mod
 !examples/**/*.sum
+pki/
