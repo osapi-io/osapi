@@ -96,7 +96,24 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequest() {
 			setupMock: func() {
 				s.mockKV.EXPECT().
 					Put(gomock.Any(), "enrollment.machine-001", gomock.Any()).
-					Return(uint64(1), nil)
+					DoAndReturn(func(
+						_ context.Context,
+						_ string,
+						value []byte,
+					) (uint64, error) {
+						var stored enrollment.PendingAgent
+						err := json.Unmarshal(value, &stored)
+						s.Require().NoError(err, "stored value must be valid JSON")
+						s.Equal("machine-001", stored.MachineID)
+						s.Equal("web-01", stored.Hostname)
+						s.Equal("SHA256:abc123", stored.Fingerprint)
+						s.False(
+							stored.RequestedAt.IsZero(),
+							"requested_at must be non-zero",
+						)
+
+						return uint64(1), nil
+					})
 			},
 			msg: s.makeEnrollmentMsg("machine-001", "web-01", "SHA256:abc123"),
 		},
@@ -165,11 +182,25 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAccept() {
 					Get(gomock.Any(), "enrollment.machine-001").
 					Return(mockEntry, nil)
 
-				// AcceptAgent: Publish response.
+				// AcceptAgent: Publish response — verify the acceptance payload.
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
 					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
-					Return(nil)
+					DoAndReturn(func(
+						_ string,
+						data []byte,
+					) error {
+						var resp struct {
+							Accepted            bool   `json:"accepted"`
+							ControllerPublicKey []byte `json:"controller_public_key"`
+						}
+						err := json.Unmarshal(data, &resp)
+						s.Require().NoError(err, "response must be valid JSON")
+						s.True(resp.Accepted, "response must indicate acceptance")
+						s.NotEmpty(resp.ControllerPublicKey, "response must include controller public key")
+
+						return nil
+					})
 
 				// AcceptAgent: Delete from KV.
 				s.mockKV.EXPECT().

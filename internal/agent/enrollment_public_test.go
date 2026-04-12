@@ -30,6 +30,7 @@ import (
 	"fmt"
 	"log/slog"
 	"testing"
+	"time"
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/failfs"
@@ -464,8 +465,21 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 
 				return a, ctx, cancel
 			},
-			validateFunc: func(_ *agent.Agent, _ context.CancelFunc) {
-				// No panic, no subscription — just returns.
+			validateFunc: func(a *agent.Agent, _ context.CancelFunc) {
+				// natsClient is nil, so no subscription is created and
+				// no goroutine is started. WaitGroup should complete
+				// immediately, proving nothing was spawned.
+				done := make(chan struct{})
+				go func() {
+					agent.WaitAgentWG(a)
+					close(done)
+				}()
+				select {
+				case <-done:
+					// WaitGroup completed immediately — no goroutine was started.
+				case <-time.After(time.Second):
+					suite.Fail("WaitGroup did not complete — goroutine was unexpectedly started")
+				}
 			},
 		},
 		{
@@ -479,8 +493,8 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 						_ string,
 						handler nats.MsgHandler,
 					) (*nats.Subscription, error) {
-						// Invoke the handler to cover the closure.
-						// Pass invalid JSON so handleEnrollmentResponse returns early.
+						// Invoke the handler with invalid JSON to verify the
+						// closure is wired correctly and early-returns on bad input.
 						handler(&nats.Msg{Data: []byte("bad")})
 
 						return &nats.Subscription{}, nil
@@ -508,6 +522,13 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 				return a, ctx, cancel
 			},
 			validateFunc: func(a *agent.Agent, cancel context.CancelFunc) {
+				// The handler was invoked with invalid JSON, so the
+				// agent should NOT have transitioned to Ready.
+				assert.Empty(
+					suite.T(),
+					agent.GetAgentState(a),
+					"agent state should remain empty after invalid JSON",
+				)
 				// Goroutine was started; cancel to allow cleanup.
 				cancel()
 				agent.WaitAgentWG(a)
@@ -581,8 +602,20 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 
 				return a, ctx, cancel
 			},
-			validateFunc: func(_ *agent.Agent, _ context.CancelFunc) {
-				// No goroutine started, no panic — just returns.
+			validateFunc: func(a *agent.Agent, _ context.CancelFunc) {
+				// Subscribe failed, so no goroutine should be started.
+				// WaitGroup should complete immediately.
+				done := make(chan struct{})
+				go func() {
+					agent.WaitAgentWG(a)
+					close(done)
+				}()
+				select {
+				case <-done:
+					// WaitGroup completed immediately — no goroutine was started.
+				case <-time.After(time.Second):
+					suite.Fail("WaitGroup did not complete — goroutine was unexpectedly started")
+				}
 			},
 		},
 		{
@@ -664,8 +697,13 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 				return a
 			},
 			msg: &nats.Msg{Data: []byte("not valid json")},
-			validateFunc: func(_ *agent.Agent) {
-				// No panic — logs and returns.
+			validateFunc: func(a *agent.Agent) {
+				// Invalid JSON should not change agent state.
+				assert.Empty(
+					suite.T(),
+					agent.GetAgentState(a),
+					"agent state should remain empty after invalid JSON",
+				)
 			},
 		},
 		{
@@ -691,8 +729,12 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 			},
 			msg: &nats.Msg{Data: []byte(`{"accepted":false,"reason":"denied by admin"}`)},
 			validateFunc: func(a *agent.Agent) {
-				// State should NOT be Ready.
-				assert.NotEqual(suite.T(), "Ready", agent.GetAgentState(a))
+				// Rejection should leave agent state unchanged (empty).
+				assert.Empty(
+					suite.T(),
+					agent.GetAgentState(a),
+					"agent state should remain empty after rejection",
+				)
 			},
 		},
 		{

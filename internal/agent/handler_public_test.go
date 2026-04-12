@@ -838,14 +838,23 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageModifyJobs() {
 						}
 					}`), nil)
 
-				// Mock all the status events and response
+				// Mock status events with specific job ID.
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "modify-job-123", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
 					AnyTimes()
 
+				// Mock response write — verify job ID and completed status.
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(
+						gomock.Any(),
+						"modify-job-123",
+						gomock.Any(),
+						gomock.Any(),
+						"completed",
+						gomock.Any(),
+						gomock.Any(),
+					).
 					Return(nil)
 			},
 			expectError: false,

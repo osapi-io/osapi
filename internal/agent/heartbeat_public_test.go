@@ -271,6 +271,7 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistration() {
 		name         string
 		setupMock    func()
 		teardownMock func()
+		validateFunc func(before time.Time)
 	}{
 		{
 			name: "when marshal fails logs warning",
@@ -282,6 +283,12 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistration() {
 			teardownMock: func() {
 				agent.ResetMarshalJSON()
 			},
+			validateFunc: func(_ time.Time) {
+				// Marshal failure occurs before Put, so heartbeat time
+				// should NOT be updated.
+				got := s.testAgent.LastHeartbeatTime()
+				s.True(got.IsZero(), "expected zero heartbeat time after marshal failure")
+			},
 		},
 		{
 			name: "when Put fails logs warning",
@@ -290,6 +297,11 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistration() {
 					Put(gomock.Any(), "agents.test_machine_id", gomock.Any()).
 					Return(uint64(0), errors.New("put failed"))
 			},
+			validateFunc: func(_ time.Time) {
+				// Put failure means heartbeat time should NOT be updated.
+				got := s.testAgent.LastHeartbeatTime()
+				s.True(got.IsZero(), "expected zero heartbeat time after Put failure")
+			},
 		},
 		{
 			name: "when Put succeeds writes registration",
@@ -297,6 +309,14 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistration() {
 				s.mockKV.EXPECT().
 					Put(gomock.Any(), "agents.test_machine_id", gomock.Any()).
 					Return(uint64(1), nil)
+			},
+			validateFunc: func(before time.Time) {
+				got := s.testAgent.LastHeartbeatTime()
+				s.False(got.IsZero(), "expected non-zero heartbeat time after successful Put")
+				s.True(
+					!got.Before(before),
+					"heartbeat time should be at or after test start",
+				)
 			},
 		},
 	}
@@ -307,12 +327,14 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistration() {
 			if tt.teardownMock != nil {
 				defer tt.teardownMock()
 			}
+			before := time.Now()
 			agent.ExportWriteRegistration(
 				context.Background(),
 				s.testAgent,
 				"test-machine-id",
 				"test-agent",
 			)
+			tt.validateFunc(before)
 		})
 	}
 }
@@ -377,7 +399,14 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestDeregister() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.setupMock()
-			agent.ExportDeregister(s.testAgent, "test-machine-id")
+			// Deregister is best-effort (fire-and-forget). It deletes a
+			// KV key and logs the outcome but does not mutate agent state.
+			// The gomock expectations above verify the correct KV call was
+			// made; beyond that, we only verify the function completes
+			// without panicking.
+			s.NotPanics(func() {
+				agent.ExportDeregister(s.testAgent, "test-machine-id")
+			})
 		})
 	}
 }
