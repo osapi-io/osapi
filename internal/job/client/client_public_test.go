@@ -1264,6 +1264,62 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISigner() {
 	}
 }
 
+func (s *ClientPublicTestSuite) TestQueryWithTargetResolver() {
+	const (
+		hostname  = "web-01"
+		machineID = "abc123def456"
+		category  = "node"
+		operation = job.OperationType("node.hostname.get")
+	)
+
+	// The resolver translates hostname → machineID.
+	resolver := func(target string) string {
+		if target == hostname {
+			return machineID
+		}
+		return target
+	}
+
+	// Expect subject to use the resolved machineID, not the hostname.
+	expectedSubject := "jobs.query.host." + machineID
+
+	s.mockKV.EXPECT().
+		Put(gomock.Any(), gomock.Any(), gomock.Any()).
+		Return(uint64(1), nil)
+	s.mockNATSClient.EXPECT().
+		Publish(gomock.Any(), expectedSubject, gomock.Any()).
+		Return(nil)
+
+	mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+	mockEntry.EXPECT().Value().Return(
+		[]byte(`{"status":"completed","hostname":"web-01"}`),
+	)
+	ch := make(chan jetstream.KeyValueEntry, 1)
+	ch <- mockEntry
+
+	mockWatcher := jobmocks.NewMockKeyWatcher(s.mockCtrl)
+	mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
+	mockWatcher.EXPECT().Stop().Return(nil)
+
+	s.mockKV.EXPECT().
+		Watch(gomock.Any(), gomock.Any(), gomock.Any()).
+		Return(mockWatcher, nil)
+
+	opts := &client.Options{
+		Timeout:        30 * time.Second,
+		KVBucket:       s.mockKV,
+		StreamName:     "JOBS",
+		TargetResolver: resolver,
+	}
+	c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+	s.Require().NoError(err)
+
+	_, resp, err := c.Query(s.ctx, hostname, category, operation, nil)
+	s.NoError(err)
+	s.NotNil(resp)
+	s.Equal(job.StatusCompleted, resp.Status)
+}
+
 func TestClientPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(ClientPublicTestSuite))
 }

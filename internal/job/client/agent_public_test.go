@@ -1093,6 +1093,56 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 				s.Equal("server1.example.com", info.FQDN)
 			},
 		},
+		{
+			name:   "when timeline available on hostname fallback sets timeline",
+			target: "server1",
+			setupClient: func() *client.Client {
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				// Direct lookup fails (server1 is not a machine ID).
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(nil, errors.New("key not found"))
+				// ListAgents scan.
+				registryKV.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"agents.abc123"}, nil)
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(agentRegistrationJSON("server1"))
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.abc123").
+					Return(entry, nil)
+
+				timelineEvent, _ := json.Marshal(job.TimelineEvent{
+					Timestamp: time.Now(),
+					Event:     "drain",
+					Hostname:  "server1",
+					Message:   "drain requested",
+				})
+				timelineEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				timelineEntry.EXPECT().Value().Return(timelineEvent)
+
+				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				// overlayDrainState in ListAgents.
+				stateKV.EXPECT().
+					Get(gomock.Any(), "drain.abc123").
+					Return(nil, errors.New("key not found"))
+				// GetAgentTimeline for hostname fallback.
+				stateKV.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"timeline.server1.drain.1000000000"}, nil)
+				stateKV.EXPECT().
+					Get(gomock.Any(), "timeline.server1.drain.1000000000").
+					Return(timelineEntry, nil)
+
+				return s.newClientWithAllKVs(registryKV, nil, stateKV)
+			},
+			validateFunc: func(info *job.AgentInfo) {
+				s.NotNil(info)
+				s.Equal("server1", info.Hostname)
+				s.Len(info.Timeline, 1)
+				s.Equal("drain", info.Timeline[0].Event)
+			},
+		},
 	}
 
 	for _, tt := range tests {
