@@ -19,6 +19,8 @@ import type { TimelineEvent } from './timelineEvent';
 export interface AgentInfo {
   /** The permanent machine identifier. */
   machine_id?: string;
+  /** The SHA256 fingerprint of the agent's PKI public key. Empty when PKI is disabled. */
+  fingerprint?: string;
   /** The hostname of the agent. */
   hostname: string;
   /** The current status of the agent. */
