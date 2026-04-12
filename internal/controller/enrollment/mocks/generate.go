@@ -20,4 +20,4 @@
 
 package mocks
 
-//go:generate mockgen -destination=enrollment.gen.go -package=mocks github.com/retr0h/osapi/internal/controller/enrollment NATSSubscriber,PKIProvider
+//go:generate go tool github.com/golang/mock/mockgen -destination=enrollment.gen.go -package=mocks github.com/retr0h/osapi/internal/controller/enrollment NATSSubscriber,PKIProvider
