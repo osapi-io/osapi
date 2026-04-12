@@ -77,6 +77,10 @@ func init() {
 var customHints = map[string]func(fe validator.FieldError) string{
 	"valid_target": func(fe validator.FieldError) string {
 		if t, ok := IsPendingTarget(); ok {
+			if t == "_all" || t == "_any" {
+				return "all agents are pending PKI enrollment — accept them with: osapi client agent accept --hostname <hostname>"
+			}
+
 			return fmt.Sprintf(
 				"agent %q is pending PKI enrollment — accept it with: osapi client agent accept --hostname %s",
 				t, t,

@@ -78,6 +78,84 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			wantOK: true,
 		},
 		{
+			name: "when target is _all and all agents pending",
+			setupLister: func() {
+				validation.RegisterTargetValidator(
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
+							{Hostname: "server1", State: "Pending"},
+							{Hostname: "server2", State: "Pending"},
+						}, nil
+					},
+				)
+			},
+			input:    targetInput{Target: "_all"},
+			wantOK:   false,
+			contains: []string{"all agents are pending PKI enrollment"},
+		},
+		{
+			name: "when target is _any and all agents pending",
+			setupLister: func() {
+				validation.RegisterTargetValidator(
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
+							{Hostname: "server1", State: "Pending"},
+						}, nil
+					},
+				)
+			},
+			input:    targetInput{Target: "_any"},
+			wantOK:   false,
+			contains: []string{"all agents are pending PKI enrollment"},
+		},
+		{
+			name: "when target is _all and lister returns error",
+			setupLister: func() {
+				validation.RegisterTargetValidator(
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return nil, fmt.Errorf("nats down")
+					},
+				)
+			},
+			input:  targetInput{Target: "_all"},
+			wantOK: true, // error → can't determine pending, allow through
+		},
+		{
+			name: "when target is _all and no agents registered",
+			setupLister: func() {
+				validation.RegisterTargetValidator(
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{}, nil
+					},
+				)
+			},
+			input:  targetInput{Target: "_all"},
+			wantOK: true, // no agents → can't determine pending, allow through
+		},
+		{
+			name: "when target is _all and lister is nil",
+			setupLister: func() {
+				validation.RegisterTargetValidator(nil)
+			},
+			input:  targetInput{Target: "_all"},
+			wantOK: true, // nil lister → can't determine pending, allow through
+		},
+		{
+			name: "when target is _all with mix of pending and ready agents",
+			setupLister: func() {
+				validation.RegisterTargetValidator(
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
+							{Hostname: "server1", State: "Pending"},
+							{Hostname: "server2", State: "Ready"},
+						}, nil
+					},
+				)
+			},
+			input:  targetInput{Target: "_all"},
+			wantOK: true,
+		},
+		{
 			name: "when target is a label with exact match",
 			setupLister: func() {
 				validation.RegisterTargetValidator(

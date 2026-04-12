@@ -98,7 +98,7 @@ func validTarget(fl validator.FieldLevel) bool {
 	target := fl.Field().String()
 
 	if target == "_any" || target == "_all" {
-		return true
+		return !allAgentsPending()
 	}
 
 	if agentLister == nil {
@@ -155,6 +155,32 @@ func matchesLabel(
 	}
 
 	return false
+}
+
+// allAgentsPending returns true when every registered agent is in Pending
+// state. Used to fail fast on _any/_all targets instead of timing out.
+// Returns false when no agents are registered or the lister is unavailable.
+func allAgentsPending() bool {
+	if agentLister == nil {
+		return false
+	}
+
+	agents, err := getAgents()
+	if err != nil || len(agents) == 0 {
+		return false
+	}
+
+	for _, a := range agents {
+		if a.State != "Pending" {
+			return false
+		}
+	}
+
+	pendingTargetMu.Lock()
+	pendingTarget = "_all"
+	pendingTargetMu.Unlock()
+
+	return true
 }
 
 // pendingTarget is set when a target matches a pending agent.
