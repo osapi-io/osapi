@@ -2257,7 +2257,9 @@ func (s *JobsPublicTestSuite) TestGetJobStatusWithPKISigner() {
 					Return(responseLister, nil)
 
 				// The response entry is a signed envelope.
-				inner := []byte(`{"status":"completed","hostname":"server1","data":{"hostname":"web-01"}}`)
+				inner := []byte(
+					`{"status":"completed","hostname":"server1","data":{"hostname":"web-01"}}`,
+				)
 				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, inner)
 
 				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)

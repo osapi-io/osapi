@@ -83,7 +83,8 @@ var customHints = map[string]func(fe validator.FieldError) string{
 
 			return fmt.Sprintf(
 				"agent %q is pending PKI enrollment — accept it with: osapi client agent accept --hostname %s",
-				t, t,
+				t,
+				t,
 			)
 		}
 

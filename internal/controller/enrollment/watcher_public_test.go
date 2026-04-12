@@ -197,7 +197,10 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAccept() {
 						err := json.Unmarshal(data, &resp)
 						s.Require().NoError(err, "response must be valid JSON")
 						s.True(resp.Accepted, "response must indicate acceptance")
-						s.NotEmpty(resp.ControllerPublicKey, "response must include controller public key")
+						s.NotEmpty(
+							resp.ControllerPublicKey,
+							"response must include controller public key",
+						)
 
 						return nil
 					})
