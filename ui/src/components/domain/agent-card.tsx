@@ -44,7 +44,7 @@ function stateVariant(state?: string) {
     case "Draining":
       return "running" as const;
     case "Cordoned":
-      return "error" as const;
+      return "pending" as const;
     case "Pending":
       return "pending" as const;
     default:
@@ -107,20 +107,28 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
       <CardContent className="flex flex-1 flex-col">
         {/* Identity */}
         {agent.machine_id && (
-          <Text
-            variant="muted"
-            as="p"
-            className="cursor-pointer break-all text-xs"
+          <div
+            className="cursor-pointer"
             title="Click to copy machine ID"
             onClick={() => navigator.clipboard.writeText(agent.machine_id!)}
           >
-            {agent.machine_id}
-          </Text>
+            <Text variant="label" as="span" className="text-[10px]">
+              Machine ID{" "}
+            </Text>
+            <Text variant="muted" as="span" className="break-all text-[10px]">
+              {agent.machine_id}
+            </Text>
+          </div>
         )}
         {agent.fingerprint && (
-          <Text variant="muted" as="p" className="break-all text-xs">
-            {agent.fingerprint}
-          </Text>
+          <div>
+            <Text variant="label" as="span" className="text-[10px]">
+              Fingerprint{" "}
+            </Text>
+            <Text variant="muted" as="span" className="break-all text-[10px]">
+              {agent.fingerprint}
+            </Text>
+          </div>
         )}
 
         {/* Pending enrollment notice */}

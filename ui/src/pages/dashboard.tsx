@@ -167,6 +167,17 @@ export function Dashboard() {
     [pendingAgents, fetchPending, refreshAgents],
   );
 
+  // Filter out pending agents from the main agent list — they're
+  // shown in the Pending Enrollment section with accept/reject actions.
+  const pendingMachineIds = useMemo(
+    () => new Set(pendingAgents.map((pa) => pa.machine_id)),
+    [pendingAgents],
+  );
+  const activeAgents = useMemo(
+    () => agents.filter((a) => !pendingMachineIds.has(a.machine_id ?? "")),
+    [agents, pendingMachineIds],
+  );
+
   const loading = healthLoading || agentLoading;
   const error = healthErr || agentErr;
 
@@ -388,7 +399,7 @@ export function Dashboard() {
 
           {/* Pending Agents (PKI enrollment) */}
           {pendingAgents.length > 0 && can("agent:write") && (
-            <section id="pending-agents">
+            <section id="pending-agents" className="mt-6">
               <SectionLabel icon={ShieldAlert}>
                 Pending Enrollment ({pendingAgents.length})
               </SectionLabel>
@@ -404,13 +415,13 @@ export function Dashboard() {
             </section>
           )}
 
-          {/* Agents */}
-          <section>
+          {/* Agents — exclude pending agents (shown above) */}
+          <section className="mt-6">
             <SectionLabel icon={Activity}>
-              Agents ({agents.length})
+              Agents ({activeAgents.length})
             </SectionLabel>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {agents.map((agent) => (
+              {activeAgents.map((agent) => (
                 <AgentCard
                   key={agent.hostname}
                   agent={agent}
