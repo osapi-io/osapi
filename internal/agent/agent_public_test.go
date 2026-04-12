@@ -111,6 +111,18 @@ func (s *AgentPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
+func (s *AgentPublicTestSuite) TearDownSubTest() {
+	// Restore the default identity mock between table rows so tests
+	// that override getIdentityFn (e.g., identity-fails) don't leak
+	// into subsequent rows (e.g., pending-state).
+	agent.SetGetIdentityFn(func(_ avfs.VFS, _ string) (*identity.Identity, error) {
+		return &identity.Identity{
+			MachineID: "test-machine-id",
+			Hostname:  "test-agent",
+		}, nil
+	})
+}
+
 func (s *AgentPublicTestSuite) buildAgent() *agent.Agent {
 	return newTestAgent(newTestAgentParams{
 		appFs:           s.appFs,
@@ -185,9 +197,6 @@ func (s *AgentPublicTestSuite) TestStart() {
 			setupFunc: func() *agent.Agent {
 				agent.SetGetIdentityFn(func(_ avfs.VFS, _ string) (*identity.Identity, error) {
 					return nil, fmt.Errorf("machine-id not found")
-				})
-				s.T().Cleanup(func() {
-					agent.ResetGetIdentityFn()
 				})
 
 				return s.buildAgent()
