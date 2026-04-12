@@ -113,23 +113,48 @@ func (w *Watcher) handleEntry(
 	entry jetstream.KeyValueEntry,
 ) {
 	key := entry.Key()
-	componentType, hostname, ok := parseRegistryKey(key)
+	componentType, identifier, ok := parseRegistryKey(key)
 	if !ok {
 		return
 	}
 
 	if entry.Operation() == jetstream.KeyValueDelete ||
 		entry.Operation() == jetstream.KeyValuePurge {
-		w.handleDelete(ctx, key, componentType, hostname)
+		w.handleDelete(ctx, key, componentType, identifier)
 		return
 	}
+
+	// For agents, resolve the display name from the registration value.
+	// The identifier is the machine ID, but we want the hostname for display.
+	displayName := resolveDisplayName(componentType, identifier, entry.Value())
 
 	conditions, ok := w.extractConditions(key, componentType, entry.Value())
 	if !ok {
 		return
 	}
 
-	w.detectTransitions(key, componentType, hostname, conditions)
+	w.detectTransitions(key, componentType, displayName, conditions)
+}
+
+// resolveDisplayName returns the hostname from an agent registration value,
+// or the identifier as-is for non-agent components.
+func resolveDisplayName(
+	componentType string,
+	identifier string,
+	value []byte,
+) string {
+	if componentType != "agent" {
+		return identifier
+	}
+
+	var reg struct {
+		Hostname string `json:"hostname"`
+	}
+	if err := json.Unmarshal(value, &reg); err == nil && reg.Hostname != "" {
+		return reg.Hostname
+	}
+
+	return identifier
 }
 
 // handleDelete emits a ComponentUnreachable event when a key expires or is
@@ -269,22 +294,26 @@ func (w *Watcher) detectTransitions(
 // component type and hostname. Returns ok=false for unrecognized prefixes.
 func parseRegistryKey(
 	key string,
-) (componentType string, hostname string, ok bool) {
+) (componentType string, identifier string, ok bool) {
 	parts := strings.SplitN(key, ".", 2)
 	if len(parts) != 2 {
 		return "", "", false
 	}
 
 	prefix := parts[0]
-	hostname = parts[1]
+	identifier = parts[1]
 
 	switch prefix {
 	case "agents":
-		return "agent", hostname, true
+		// For agents, the identifier is the machine ID (not hostname).
+		// The hostname is extracted from the registration value by the caller.
+		return "agent", identifier, true
 	case "api":
-		return "api", hostname, true
+		return "api", identifier, true
+	case "controller":
+		return "controller", identifier, true
 	case "nats":
-		return "nats", hostname, true
+		return "nats", identifier, true
 	default:
 		return "", "", false
 	}

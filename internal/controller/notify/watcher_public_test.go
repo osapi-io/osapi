@@ -497,7 +497,7 @@ func (s *WatcherPublicTestSuite) TestHandleEntry() {
 				entry := jobmocks.NewMockKeyValueEntry(ctrl)
 				entry.EXPECT().Key().Return("agents.web-01")
 				entry.EXPECT().Operation().Return(jetstream.KeyValuePut).Times(2)
-				entry.EXPECT().Value().Return(b)
+				entry.EXPECT().Value().Return(b).AnyTimes()
 				return entry
 			},
 			wantEvents: 1,
@@ -516,7 +516,7 @@ func (s *WatcherPublicTestSuite) TestHandleEntry() {
 				entry := jobmocks.NewMockKeyValueEntry(ctrl)
 				entry.EXPECT().Key().Return("agents.web-01")
 				entry.EXPECT().Operation().Return(jetstream.KeyValuePut).Times(2)
-				entry.EXPECT().Value().Return([]byte("invalid"))
+				entry.EXPECT().Value().Return([]byte("invalid")).AnyTimes()
 				return entry
 			},
 			wantEvents: 0,
