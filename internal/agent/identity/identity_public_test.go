@@ -34,14 +34,9 @@ import (
 	"github.com/retr0h/osapi/internal/agent/identity"
 )
 
-// Coverage notes for inherently platform-dependent functions:
-//
-// defaultGetMachineID (identity.go:37) — runtime.GOOS switch that
-// dispatches to platform-specific readers. Only one branch executes
-// per platform. On macOS the "darwin" branch runs; on Linux the "linux"
-// branch runs. The "default" (unsupported) branch requires a runtime
-// not in {linux, darwin}, which cannot be simulated in unit tests.
-// Partial coverage (~50%) is expected.
+// defaultGetMachineID uses the injectable osPlatform variable, so all
+// platform branches (linux, darwin, unsupported) can be tested on any
+// host by swapping osPlatform via SetOSPlatform/ResetOSPlatform.
 
 type GetMachineIDFromFSPublicTestSuite struct {
 	suite.Suite
@@ -281,6 +276,8 @@ type PlatformPublicTestSuite struct {
 
 func (suite *PlatformPublicTestSuite) TearDownSubTest() {
 	identity.ResetExecCommandFn()
+	identity.ResetIoregFn()
+	identity.ResetOSPlatform()
 }
 
 func (suite *PlatformPublicTestSuite) TestDefaultIoregFn() {
@@ -292,8 +289,8 @@ func (suite *PlatformPublicTestSuite) TestDefaultIoregFn() {
 		wantContains string
 	}{
 		{
-			name:       "when ioreg command succeeds on macOS",
-			skipUnless: "darwin",
+			name:         "when ioreg command succeeds on macOS",
+			skipUnless:   "darwin",
 			wantContains: "IOPlatformUUID",
 		},
 		{
@@ -331,24 +328,67 @@ func (suite *PlatformPublicTestSuite) TestDefaultIoregFn() {
 }
 
 func (suite *PlatformPublicTestSuite) TestDefaultGetMachineID() {
-	fs := memfs.New()
+	tests := []struct {
+		name         string
+		platform     string
+		setupFS      func(fs avfs.VFS)
+		setupFn      func()
+		wantErr      bool
+		wantContains string
+		wantNonEmpty bool
+	}{
+		{
+			name:     "when platform is darwin returns machine ID",
+			platform: "darwin",
+			setupFS:  func(_ avfs.VFS) {},
+			setupFn: func() {
+				identity.SetIoregFn(func() (string, error) {
+					return `"IOPlatformUUID" = "FAKE-UUID-1234"`, nil
+				})
+			},
+			wantNonEmpty: true,
+		},
+		{
+			name:     "when platform is linux reads /etc/machine-id",
+			platform: "linux",
+			setupFS: func(fs avfs.VFS) {
+				_ = fs.MkdirAll("/etc", 0o755)
+				_ = fs.WriteFile("/etc/machine-id", []byte("abc123\n"), 0o444)
+			},
+			setupFn:      func() {},
+			wantNonEmpty: true,
+		},
+		{
+			name:         "when platform is unsupported returns error",
+			platform:     "windows",
+			setupFS:      func(_ avfs.VFS) {},
+			setupFn:      func() {},
+			wantErr:      true,
+			wantContains: "unsupported platform: windows",
+		},
+	}
 
-	switch runtime.GOOS {
-	case "darwin":
-		// On macOS, defaultGetMachineID calls GetDarwinMachineID (no fs needed).
-		id, err := identity.ExportDefaultGetMachineID(fs)
-		suite.NoError(err)
-		suite.NotEmpty(id)
-	case "linux":
-		// On Linux, defaultGetMachineID reads /etc/machine-id from the real fs.
-		// Using memfs here, so it will fail — test the error path.
-		_, err := identity.ExportDefaultGetMachineID(fs)
-		suite.Error(err)
-	default:
-		// Unsupported platform returns error.
-		_, err := identity.ExportDefaultGetMachineID(fs)
-		suite.Error(err)
-		suite.Contains(err.Error(), "unsupported platform")
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			fs := memfs.New()
+			tc.setupFS(fs)
+			identity.SetOSPlatform(tc.platform)
+			if tc.setupFn != nil {
+				tc.setupFn()
+			}
+
+			got, err := identity.ExportDefaultGetMachineID(fs)
+
+			if tc.wantErr {
+				require.Error(suite.T(), err)
+				assert.Contains(suite.T(), err.Error(), tc.wantContains)
+			} else {
+				require.NoError(suite.T(), err)
+				if tc.wantNonEmpty {
+					assert.NotEmpty(suite.T(), got)
+				}
+			}
+		})
 	}
 }
 

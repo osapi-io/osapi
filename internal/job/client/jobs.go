@@ -918,7 +918,10 @@ func (c *Client) getJobResponses(
 		// Unwrap signed envelope if PKI is enabled.
 		responseData := entry.Value()
 		if c.pkiSigner != nil {
-			unwrapped, _, unwrapErr := unwrapSignedEnvelope(responseData, nil)
+			unwrapped, _, unwrapErr := unwrapSignedEnvelope(
+				responseData,
+				c.pkiSigner.ControllerPublicKey(),
+			)
 			if unwrapErr != nil {
 				continue
 			}

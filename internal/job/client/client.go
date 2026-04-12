@@ -341,7 +341,10 @@ func (c *Client) publishAndWait(
 			// Unwrap signed envelope if present.
 			responseData := entry.Value()
 			if c.pkiSigner != nil {
-				unwrapped, _, unwrapErr := unwrapSignedEnvelope(responseData, nil)
+				unwrapped, _, unwrapErr := unwrapSignedEnvelope(
+					responseData,
+					c.pkiSigner.ControllerPublicKey(),
+				)
 				if unwrapErr != nil {
 					c.logger.WarnContext(ctx, "response signature verification failed",
 						slog.String("job_id", jobID),
@@ -502,7 +505,10 @@ func (c *Client) publishAndCollect(
 			// Unwrap signed envelope if present.
 			responseData := entry.Value()
 			if c.pkiSigner != nil {
-				unwrapped, _, unwrapErr := unwrapSignedEnvelope(responseData, nil)
+				unwrapped, _, unwrapErr := unwrapSignedEnvelope(
+					responseData,
+					c.pkiSigner.ControllerPublicKey(),
+				)
 				if unwrapErr != nil {
 					c.logger.WarnContext(ctx, "broadcast response signature verification failed",
 						slog.String("job_id", jobID),

@@ -33,17 +33,21 @@ import (
 // Overridable in tests via export_test.go.
 var getMachineIDFn = defaultGetMachineID
 
-// defaultGetMachineID selects the machine ID reader based on runtime.GOOS.
+// osPlatform holds the current platform string. Defaults to runtime.GOOS.
+// Overridable in tests via export_test.go to cover all platform branches.
+var osPlatform = runtime.GOOS
+
+// defaultGetMachineID selects the machine ID reader based on osPlatform.
 func defaultGetMachineID(
 	fs avfs.VFS,
 ) (string, error) {
-	switch runtime.GOOS {
+	switch osPlatform {
 	case "linux":
 		return GetMachineIDFromFS(fs)
 	case "darwin":
 		return GetDarwinMachineID()
 	default:
-		return "", fmt.Errorf("unsupported platform: %s", runtime.GOOS)
+		return "", fmt.Errorf("unsupported platform: %s", osPlatform)
 	}
 }
 

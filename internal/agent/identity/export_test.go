@@ -20,7 +20,11 @@
 
 package identity
 
-import "github.com/avfs/avfs"
+import (
+	"runtime"
+
+	"github.com/avfs/avfs"
+)
 
 // SetIoregFn overrides the ioregFn function for testing.
 func SetIoregFn(fn func() (string, error)) {
@@ -60,4 +64,14 @@ func ExportDefaultIoregFn() (string, error) {
 // ExportDefaultGetMachineID exposes defaultGetMachineID for testing.
 func ExportDefaultGetMachineID(fs avfs.VFS) (string, error) {
 	return defaultGetMachineID(fs)
+}
+
+// SetOSPlatform overrides the osPlatform variable for testing.
+func SetOSPlatform(platform string) {
+	osPlatform = platform
+}
+
+// ResetOSPlatform restores the osPlatform variable to its default.
+func ResetOSPlatform() {
+	osPlatform = runtime.GOOS
 }
