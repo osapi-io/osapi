@@ -22,14 +22,17 @@ package agent
 
 import (
 	"context"
+	"crypto/ed25519"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"log/slog"
 	"path/filepath"
 
 	"github.com/avfs/avfs"
+	"github.com/nats-io/nats.go"
 
-	"github.com/retr0h/osapi/internal/agent/pki"
+	agentpki "github.com/retr0h/osapi/internal/agent/pki"
 	"github.com/retr0h/osapi/internal/job"
 )
 
@@ -38,14 +41,14 @@ var marshalJSONEnrollment = json.Marshal
 
 // handlePKIEnrollment manages the PKI enrollment lifecycle.
 // It loads or generates a keypair, checks for existing controller key,
-// and if not enrolled, publishes an enrollment request and sets state
-// to Pending (no consumers started).
+// and if not enrolled, publishes an enrollment request, starts a
+// background listener for acceptance, and sets state to Pending.
 func (a *Agent) handlePKIEnrollment(
-	_ context.Context,
+	ctx context.Context,
 ) error {
 	keyDir := a.appConfig.Agent.PKI.KeyDir
 
-	m := pki.New(a.appFs, keyDir, "agent")
+	m := agentpki.New(a.appFs, keyDir, "agent")
 
 	if err := m.LoadOrGenerate(); err != nil {
 		return err
@@ -64,7 +67,7 @@ func (a *Agent) handlePKIEnrollment(
 
 	pubPEM, err := avfs.ReadFile(a.appFs, controllerPubPath)
 	if err == nil {
-		pubKey, parseErr := pki.ParsePublicKeyPEM(pubPEM)
+		pubKey, parseErr := agentpki.ParsePublicKeyPEM(pubPEM)
 		if parseErr != nil {
 			return fmt.Errorf("failed to parse controller public key: %w", parseErr)
 		}
@@ -83,6 +86,9 @@ func (a *Agent) handlePKIEnrollment(
 		)
 	}
 
+	// Start background listener for acceptance response.
+	a.startEnrollmentListener(ctx)
+
 	a.state = job.AgentStatePending
 	a.logger.Info(
 		"agent not enrolled, entering pending state",
@@ -93,14 +99,13 @@ func (a *Agent) handlePKIEnrollment(
 }
 
 // publishEnrollmentRequest sends the agent's enrollment request to the
-// controller via NATS. The controller's enrollment watcher picks it up
-// and stores it in the enrollment KV bucket.
+// controller via core NATS (not JetStream).
 func (a *Agent) publishEnrollmentRequest() error {
 	if a.natsClient == nil {
 		return fmt.Errorf("NATS client not available")
 	}
 
-	req := pki.EnrollmentRequest{
+	req := agentpki.EnrollmentRequest{
 		MachineID:   a.machineID,
 		Hostname:    a.hostname,
 		PublicKey:   a.pkiManager.PublicKey(),
@@ -118,7 +123,7 @@ func (a *Agent) publishEnrollmentRequest() error {
 		subject = namespace + "." + subject
 	}
 
-	if err := a.natsClient.Publish(context.Background(), subject, data); err != nil {
+	if err := a.natsClient.PublishCore(subject, data); err != nil {
 		return fmt.Errorf("publish enrollment request: %w", err)
 	}
 
@@ -130,4 +135,104 @@ func (a *Agent) publishEnrollmentRequest() error {
 	)
 
 	return nil
+}
+
+// startEnrollmentListener subscribes to the enrollment response subject
+// for this agent's machine ID. When the controller accepts the agent,
+// the listener saves the controller's public key, transitions to Ready,
+// and starts job consumers.
+func (a *Agent) startEnrollmentListener(
+	ctx context.Context,
+) {
+	if a.natsClient == nil {
+		return
+	}
+
+	namespace := a.appConfig.Agent.NATS.Namespace
+	subject := "enroll.response." + a.machineID
+	if namespace != "" {
+		subject = namespace + "." + subject
+	}
+
+	sub, err := a.natsClient.Subscribe(subject, func(msg *nats.Msg) {
+		a.handleEnrollmentResponse(msg)
+	})
+	if err != nil {
+		a.logger.Warn(
+			"failed to subscribe to enrollment response",
+			slog.String("subject", subject),
+			slog.String("error", err.Error()),
+		)
+
+		return
+	}
+
+	a.logger.Info(
+		"listening for enrollment acceptance",
+		slog.String("subject", subject),
+	)
+
+	// Unsubscribe when context is cancelled.
+	a.wg.Add(1)
+	go func() {
+		defer a.wg.Done()
+		<-ctx.Done()
+		_ = sub.Unsubscribe()
+	}()
+}
+
+// handleEnrollmentResponse processes the controller's enrollment response.
+// On acceptance, it saves the controller public key and transitions to Ready.
+func (a *Agent) handleEnrollmentResponse(
+	msg *nats.Msg,
+) {
+	var resp agentpki.EnrollmentResponse
+	if err := json.Unmarshal(msg.Data, &resp); err != nil {
+		a.logger.Warn(
+			"failed to parse enrollment response",
+			slog.String("error", err.Error()),
+		)
+
+		return
+	}
+
+	if !resp.Accepted {
+		a.logger.Warn(
+			"enrollment rejected",
+			slog.String("reason", resp.Reason),
+		)
+
+		return
+	}
+
+	// Save controller public key to disk.
+	controllerPubKey := ed25519.PublicKey(resp.ControllerPublicKey)
+	a.pkiManager.SetControllerPublicKey(controllerPubKey)
+
+	keyDir := a.appConfig.Agent.PKI.KeyDir
+	controllerPubPath := filepath.Join(keyDir, "controller.pub")
+
+	pubPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "ED25519 PUBLIC KEY",
+		Bytes: controllerPubKey,
+	})
+
+	if err := avfs.WriteFile(a.appFs, controllerPubPath, pubPEM, 0o644); err != nil {
+		a.logger.Error(
+			"failed to save controller public key",
+			slog.String("path", controllerPubPath),
+			slog.String("error", err.Error()),
+		)
+
+		return
+	}
+
+	// Transition to Ready and start consumers.
+	a.state = job.AgentStateReady
+	a.startConsumers()
+
+	a.logger.Info(
+		"enrollment accepted, agent is now ready",
+		slog.String("controller_fingerprint", a.pkiManager.Fingerprint()),
+	)
 }

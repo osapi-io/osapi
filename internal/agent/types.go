@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/avfs/avfs"
+	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel/metric"
 
@@ -44,10 +45,11 @@ import (
 	"github.com/retr0h/osapi/internal/telemetry/process"
 )
 
-// NATSPublisher publishes messages to NATS subjects.
+// NATSPublisher provides core NATS pub/sub for enrollment.
 // Satisfied by the nats-client's Client type.
 type NATSPublisher interface {
-	Publish(ctx context.Context, subject string, data []byte) error
+	PublishCore(subject string, data []byte) error
+	Subscribe(subject string, handler nats.MsgHandler) (*nats.Subscription, error)
 }
 
 // Agent implements job processing with clean lifecycle management.

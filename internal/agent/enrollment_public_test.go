@@ -278,7 +278,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 				ctrl := gomock.NewController(suite.T())
 				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
 				mockNATS.EXPECT().
-					Publish(gomock.Any(), "enroll.request", gomock.Any()).
+					PublishCore("enroll.request", gomock.Any()).
 					Return(nil)
 
 				fs := memfs.New()
@@ -311,7 +311,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 				ctrl := gomock.NewController(suite.T())
 				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
 				mockNATS.EXPECT().
-					Publish(gomock.Any(), "osapi.enroll.request", gomock.Any()).
+					PublishCore("osapi.enroll.request", gomock.Any()).
 					Return(nil)
 
 				fs := memfs.New()
@@ -347,7 +347,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 				ctrl := gomock.NewController(suite.T())
 				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
 				mockNATS.EXPECT().
-					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
+					PublishCore(gomock.Any(), gomock.Any()).
 					Return(fmt.Errorf("connection refused"))
 
 				fs := memfs.New()

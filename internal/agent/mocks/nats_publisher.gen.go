@@ -5,10 +5,10 @@
 package mocks
 
 import (
-	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	nats "github.com/nats-io/nats.go"
 )
 
 // MockNATSPublisher is a mock of NATSPublisher interface.
@@ -34,16 +34,31 @@ func (m *MockNATSPublisher) EXPECT() *MockNATSPublisherMockRecorder {
 	return m.recorder
 }
 
-// Publish mocks base method.
-func (m *MockNATSPublisher) Publish(arg0 context.Context, arg1 string, arg2 []byte) error {
+// PublishCore mocks base method.
+func (m *MockNATSPublisher) PublishCore(arg0 string, arg1 []byte) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Publish", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "PublishCore", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Publish indicates an expected call of Publish.
-func (mr *MockNATSPublisherMockRecorder) Publish(arg0, arg1, arg2 interface{}) *gomock.Call {
+// PublishCore indicates an expected call of PublishCore.
+func (mr *MockNATSPublisherMockRecorder) PublishCore(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Publish", reflect.TypeOf((*MockNATSPublisher)(nil).Publish), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublishCore", reflect.TypeOf((*MockNATSPublisher)(nil).PublishCore), arg0, arg1)
+}
+
+// Subscribe mocks base method.
+func (m *MockNATSPublisher) Subscribe(arg0 string, arg1 nats.MsgHandler) (*nats.Subscription, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Subscribe", arg0, arg1)
+	ret0, _ := ret[0].(*nats.Subscription)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Subscribe indicates an expected call of Subscribe.
+func (mr *MockNATSPublisherMockRecorder) Subscribe(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Subscribe", reflect.TypeOf((*MockNATSPublisher)(nil).Subscribe), arg0, arg1)
 }
