@@ -6,6 +6,7 @@ import { HealthDot } from "@/components/ui/health-dot";
 import { Text } from "@/components/ui/text";
 import { LabelTag } from "@/components/ui/label-tag";
 import { ConditionAlert } from "@/components/ui/condition-alert";
+import { CopyField } from "@/components/ui/copy-field";
 import { MetricValue } from "@/components/ui/metric-value";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -109,28 +110,10 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
         {(agent.machine_id || agent.fingerprint) && (
           <div className="mt-1 space-y-0.5">
             {agent.machine_id && (
-              <div
-                className="flex cursor-pointer gap-1"
-                title="Click to copy machine ID"
-                onClick={() => navigator.clipboard.writeText(agent.machine_id!)}
-              >
-                <Text variant="label" as="span" className="shrink-0 text-[10px]">
-                  ID:
-                </Text>
-                <Text variant="muted" as="span" className="break-all font-mono text-[10px]">
-                  {agent.machine_id}
-                </Text>
-              </div>
+              <CopyField label="ID" value={agent.machine_id} />
             )}
             {agent.fingerprint && (
-              <div className="flex gap-1">
-                <Text variant="label" as="span" className="shrink-0 text-[10px]">
-                  FP:
-                </Text>
-                <Text variant="muted" as="span" className="break-all font-mono text-[10px]">
-                  {agent.fingerprint}
-                </Text>
-              </div>
+              <CopyField label="FP" value={agent.fingerprint} />
             )}
           </div>
         )}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CopyField } from "@/components/ui/copy-field";
 import { Text } from "@/components/ui/text";
 import { Check, X, Loader2, ShieldAlert } from "lucide-react";
 import type { PendingAgentInfo } from "@/sdk/gen/schemas";
@@ -79,22 +80,8 @@ export function PendingAgentCard({ agent, onRefresh }: PendingAgentCardProps) {
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-1.5">
         <div className="space-y-0.5">
-          <div className="flex gap-1">
-            <Text variant="label" as="span" className="shrink-0 text-[10px]">
-              ID:
-            </Text>
-            <Text variant="muted" as="span" className="break-all font-mono text-[10px]">
-              {agent.machine_id}
-            </Text>
-          </div>
-          <div className="flex gap-1">
-            <Text variant="label" as="span" className="shrink-0 text-[10px]">
-              FP:
-            </Text>
-            <Text variant="muted" as="span" className="break-all font-mono text-[10px]">
-              {agent.fingerprint}
-            </Text>
-          </div>
+          <CopyField label="ID" value={agent.machine_id} />
+          <CopyField label="FP" value={agent.fingerprint} />
         </div>
         <Text variant="muted" as="p">
           Requested {formatAge(agent.requested_at)}
