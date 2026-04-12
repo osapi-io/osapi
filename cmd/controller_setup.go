@@ -821,7 +821,7 @@ func setupEnrollmentWatcher(
 	b *natsBundle,
 	namespace string,
 ) *enrollment.Watcher {
-	enrollLog := log.With(slog.String("subsystem", "enrollment"))
+	enrollLog := log
 
 	// Create enrollment KV bucket.
 	enrollmentKVConfig := cli.BuildEnrollmentKVConfig(namespace, appConfig.NATS.Enrollment)
