@@ -38,6 +38,12 @@ var clientAgentListCmd = &cobra.Command{
 Shows each agent's hostname, status, labels, age, load, and OS.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
+		pending, _ := cmd.Flags().GetBool("pending")
+
+		if pending {
+			listPendingAgents(cmd)
+			return
+		}
 
 		resp, err := sdkClient.Agent.List(ctx)
 		if err != nil {
@@ -87,7 +93,12 @@ Shows each agent's hostname, status, labels, age, load, and OS.`,
 			if a.OSInfo != nil {
 				osStr = a.OSInfo.Distribution + " " + a.OSInfo.Version
 			}
+			machineID := ""
+			if a.MachineID != "" {
+				machineID = a.MachineID
+			}
 			rows = append(rows, []string{
+				machineID,
 				a.Hostname,
 				status,
 				conditions,
@@ -102,6 +113,7 @@ Shows each agent's hostname, status, labels, age, load, and OS.`,
 			{
 				Title: fmt.Sprintf("Active Agents (%d)", resp.Data.Total),
 				Headers: []string{
+					"MACHINE ID",
 					"HOSTNAME",
 					"STATUS",
 					"CONDITIONS",
@@ -117,6 +129,59 @@ Shows each agent's hostname, status, labels, age, load, and OS.`,
 	},
 }
 
+func listPendingAgents(
+	cmd *cobra.Command,
+) {
+	ctx := cmd.Context()
+
+	resp, err := sdkClient.Agent.ListPending(ctx)
+	if err != nil {
+		cli.HandleError(err, logger)
+		return
+	}
+
+	if jsonOutput {
+		fmt.Println(string(resp.RawJSON()))
+		return
+	}
+
+	agents := resp.Data.Agents
+	if len(agents) == 0 {
+		fmt.Println("No pending agents found.")
+		return
+	}
+
+	rows := make([][]string, 0, len(agents))
+	for _, a := range agents {
+		machineID := a.MachineID
+		fingerprint := a.Fingerprint
+		if len(fingerprint) > 20 {
+			fingerprint = fingerprint[:20] + "..."
+		}
+		rows = append(rows, []string{
+			machineID,
+			a.Hostname,
+			fingerprint,
+			cli.FormatAge(time.Since(a.RequestedAt)),
+		})
+	}
+
+	sections := []cli.Section{
+		{
+			Title: fmt.Sprintf("Pending Agents (%d)", resp.Data.Total),
+			Headers: []string{
+				"MACHINE ID",
+				"HOSTNAME",
+				"FINGERPRINT",
+				"REQUESTED",
+			},
+			Rows: rows,
+		},
+	}
+	cli.PrintCompactTable(sections)
+}
+
 func init() {
 	clientAgentCmd.AddCommand(clientAgentListCmd)
+	clientAgentListCmd.Flags().Bool("pending", false, "List agents awaiting enrollment")
 }

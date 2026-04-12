@@ -75,6 +75,7 @@ type newTestAgentParams struct {
 	execManager      exec.Manager
 	registryKV       jetstream.KeyValue
 	factsKV          jetstream.KeyValue
+	natsClient       agent.NATSPublisher
 }
 
 // newTestAgent builds a ProviderRegistry from the supplied providers and
@@ -155,5 +156,6 @@ func newTestAgent(p newTestAgentParams) *agent.Agent {
 		p.registryKV,
 		p.factsKV,
 		p.execManager,
+		p.natsClient,
 	)
 }

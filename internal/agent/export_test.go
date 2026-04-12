@@ -27,8 +27,12 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/avfs/avfs"
+	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/retr0h/osapi/internal/agent/identity"
+	"github.com/retr0h/osapi/internal/agent/pki"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/job"
@@ -172,76 +176,96 @@ func ExportHandleJobMessageJS(
 func ExportCheckDrainFlag(
 	ctx context.Context,
 	a *Agent,
-	hostname string,
+	machineID string,
 ) bool {
-	return a.checkDrainFlag(ctx, hostname)
+	return a.checkDrainFlag(ctx, machineID)
 }
 
 // ExportHandleDrainDetection exposes the private handleDrainDetection method for testing.
 func ExportHandleDrainDetection(
 	ctx context.Context,
 	a *Agent,
+	machineID string,
 	hostname string,
 ) {
-	a.handleDrainDetection(ctx, hostname)
+	a.handleDrainDetection(ctx, machineID, hostname)
 }
 
 // ExportWriteFacts exposes the private writeFacts method for testing.
 func ExportWriteFacts(
 	ctx context.Context,
 	a *Agent,
+	machineID string,
 	hostname string,
 ) {
-	a.writeFacts(ctx, hostname)
+	a.writeFacts(ctx, machineID, hostname)
 }
 
 // ExportStartFacts exposes the private startFacts method for testing.
 func ExportStartFacts(
 	ctx context.Context,
 	a *Agent,
+	machineID string,
 	hostname string,
 ) {
-	a.startFacts(ctx, hostname)
+	a.startFacts(ctx, machineID, hostname)
 }
 
 // ExportFactsKey exposes the private factsKey function for testing.
 func ExportFactsKey(
-	hostname string,
+	machineID string,
 ) string {
-	return factsKey(hostname)
+	return factsKey(machineID)
 }
 
 // ExportWriteRegistration exposes the private writeRegistration method for testing.
 func ExportWriteRegistration(
 	ctx context.Context,
 	a *Agent,
+	machineID string,
 	hostname string,
 ) {
-	a.writeRegistration(ctx, hostname)
+	a.writeRegistration(ctx, machineID, hostname)
 }
 
 // ExportDeregister exposes the private deregister method for testing.
 func ExportDeregister(
 	a *Agent,
-	hostname string,
+	machineID string,
 ) {
-	a.deregister(hostname)
+	a.deregister(machineID)
 }
 
 // ExportStartHeartbeat exposes the private startHeartbeat method for testing.
 func ExportStartHeartbeat(
 	ctx context.Context,
 	a *Agent,
+	machineID string,
 	hostname string,
 ) {
-	a.startHeartbeat(ctx, hostname)
+	a.startHeartbeat(ctx, machineID, hostname)
 }
 
 // ExportRegistryKey exposes the private registryKey function for testing.
 func ExportRegistryKey(
-	hostname string,
+	machineID string,
 ) string {
-	return registryKey(hostname)
+	return registryKey(machineID)
+}
+
+// SetAgentMachineID sets the agent's machineID field for testing.
+func SetAgentMachineID(
+	a *Agent,
+	machineID string,
+) {
+	a.machineID = machineID
+}
+
+// GetAgentMachineID returns the agent's machineID field for testing.
+func GetAgentMachineID(
+	a *Agent,
+) string {
+	return a.machineID
 }
 
 // ExportFindPrevCondition exposes the private findPrevCondition function for testing.
@@ -329,6 +353,31 @@ func SetHeartbeatInterval(d time.Duration) {
 // ResetHeartbeatInterval restores the default heartbeatInterval.
 func ResetHeartbeatInterval() {
 	heartbeatInterval = 10 * time.Second
+}
+
+// SetGetAgentHostnameFn overrides the getAgentHostnameFn for testing.
+func SetGetAgentHostnameFn(fn func(string) (string, error)) {
+	getAgentHostnameFn = fn
+}
+
+// ResetGetAgentHostnameFn restores the default getAgentHostnameFn.
+func ResetGetAgentHostnameFn() {
+	getAgentHostnameFn = job.GetAgentHostname
+}
+
+// GetAgentHostname returns the agent's hostname field for testing.
+func GetAgentHostname(
+	a *Agent,
+) string {
+	return a.hostname
+}
+
+// SetAgentHostname sets the agent's hostname field for testing.
+func SetAgentHostname(
+	a *Agent,
+	hostname string,
+) {
+	a.hostname = hostname
 }
 
 // SetDockerNewFn overrides the dockerNewFn used by the factory for testing.
@@ -601,4 +650,86 @@ func WaitAgentWG(
 	a *Agent,
 ) {
 	a.wg.Wait()
+}
+
+// SetGetIdentityFn overrides the getIdentityFn variable for testing.
+func SetGetIdentityFn(fn func(avfs.VFS, string) (*identity.Identity, error)) {
+	getIdentityFn = fn
+}
+
+// ResetGetIdentityFn restores the default getIdentityFn variable.
+func ResetGetIdentityFn() {
+	getIdentityFn = identity.GetIdentity
+}
+
+// ExportHandlePKIEnrollment exposes the private handlePKIEnrollment method for testing.
+func ExportHandlePKIEnrollment(
+	ctx context.Context,
+	a *Agent,
+) error {
+	return a.handlePKIEnrollment(ctx)
+}
+
+// GetAgentPKIManager returns the agent's pkiManager field for testing.
+func GetAgentPKIManager(
+	a *Agent,
+) *pki.Manager {
+	return a.pkiManager
+}
+
+// SetAgentPKIManager sets the agent's pkiManager field for testing.
+func SetAgentPKIManager(
+	a *Agent,
+	m *pki.Manager,
+) {
+	a.pkiManager = m
+}
+
+// ExportPublishEnrollmentRequest exposes the private publishEnrollmentRequest method for testing.
+func ExportPublishEnrollmentRequest(
+	a *Agent,
+) error {
+	return a.publishEnrollmentRequest()
+}
+
+// SetMarshalJSONEnrollment overrides the marshalJSONEnrollment function for testing.
+func SetMarshalJSONEnrollment(fn func(interface{}) ([]byte, error)) {
+	marshalJSONEnrollment = fn
+}
+
+// ResetMarshalJSONEnrollment restores the default marshalJSONEnrollment function.
+func ResetMarshalJSONEnrollment() {
+	marshalJSONEnrollment = json.Marshal
+}
+
+// SetAgentNATSClient sets the agent's natsClient field for testing.
+func SetAgentNATSClient(
+	a *Agent,
+	c NATSPublisher,
+) {
+	a.natsClient = c
+}
+
+// ExportUnwrapJobEnvelope exposes the private unwrapJobEnvelope method for testing.
+func ExportUnwrapJobEnvelope(
+	a *Agent,
+	data []byte,
+) ([]byte, error) {
+	return a.unwrapJobEnvelope(data)
+}
+
+// ExportStartEnrollmentListener exposes the private startEnrollmentListener method for testing.
+func ExportStartEnrollmentListener(
+	ctx context.Context,
+	a *Agent,
+) {
+	a.startEnrollmentListener(ctx)
+}
+
+// ExportHandleEnrollmentResponse exposes the private handleEnrollmentResponse method for testing.
+func ExportHandleEnrollmentResponse(
+	a *Agent,
+	msg *nats.Msg,
+) {
+	a.handleEnrollmentResponse(msg)
 }

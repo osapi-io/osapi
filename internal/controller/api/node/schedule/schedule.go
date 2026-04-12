@@ -38,6 +38,6 @@ func New(
 ) *Schedule {
 	return &Schedule{
 		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "api.schedule")),
+		logger:    logger.With(slog.String("subsystem", "controller.schedule")),
 	}
 }

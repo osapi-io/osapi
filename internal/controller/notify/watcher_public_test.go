@@ -271,6 +271,13 @@ func (s *WatcherPublicTestSuite) TestParseRegistryKey() {
 			wantOK:            true,
 		},
 		{
+			name:              "controller prefix returns controller type",
+			key:               "controller.ctrl-01",
+			wantComponentType: "controller",
+			wantHostname:      "ctrl-01",
+			wantOK:            true,
+		},
+		{
 			name:              "unknown prefix returns false",
 			key:               "unknown.host-01",
 			wantComponentType: "",
@@ -293,6 +300,56 @@ func (s *WatcherPublicTestSuite) TestParseRegistryKey() {
 			s.Equal(tt.wantComponentType, componentType)
 			s.Equal(tt.wantHostname, hostname)
 			s.Equal(tt.wantOK, ok)
+		})
+	}
+}
+
+func (s *WatcherPublicTestSuite) TestResolveDisplayName() {
+	tests := []struct {
+		name          string
+		componentType string
+		identifier    string
+		value         []byte
+		want          string
+	}{
+		{
+			name:          "non-agent returns identifier as-is",
+			componentType: "controller",
+			identifier:    "ctrl-01",
+			value:         nil,
+			want:          "ctrl-01",
+		},
+		{
+			name:          "agent with valid hostname returns hostname",
+			componentType: "agent",
+			identifier:    "abc123",
+			value:         []byte(`{"hostname":"web-01"}`),
+			want:          "web-01",
+		},
+		{
+			name:          "agent with invalid JSON returns identifier",
+			componentType: "agent",
+			identifier:    "abc123",
+			value:         []byte("invalid"),
+			want:          "abc123",
+		},
+		{
+			name:          "agent with empty hostname returns identifier",
+			componentType: "agent",
+			identifier:    "abc123",
+			value:         []byte(`{"hostname":""}`),
+			want:          "abc123",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			got := notify.ExportResolveDisplayName(
+				tt.componentType,
+				tt.identifier,
+				tt.value,
+			)
+			s.Equal(tt.want, got)
 		})
 	}
 }
@@ -497,7 +554,7 @@ func (s *WatcherPublicTestSuite) TestHandleEntry() {
 				entry := jobmocks.NewMockKeyValueEntry(ctrl)
 				entry.EXPECT().Key().Return("agents.web-01")
 				entry.EXPECT().Operation().Return(jetstream.KeyValuePut).Times(2)
-				entry.EXPECT().Value().Return(b)
+				entry.EXPECT().Value().Return(b).AnyTimes()
 				return entry
 			},
 			wantEvents: 1,
@@ -516,7 +573,7 @@ func (s *WatcherPublicTestSuite) TestHandleEntry() {
 				entry := jobmocks.NewMockKeyValueEntry(ctrl)
 				entry.EXPECT().Key().Return("agents.web-01")
 				entry.EXPECT().Operation().Return(jetstream.KeyValuePut).Times(2)
-				entry.EXPECT().Value().Return([]byte("invalid"))
+				entry.EXPECT().Value().Return([]byte("invalid")).AnyTimes()
 				return entry
 			},
 			wantEvents: 0,

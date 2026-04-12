@@ -56,7 +56,7 @@ type AgentDrainPublicTestSuite struct {
 func (s *AgentDrainPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apiagent.New(slog.Default(), s.mockJobClient)
+	s.handler = apiagent.New(slog.Default(), s.mockJobClient, nil)
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -103,8 +103,9 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgent() {
 			name:     "success drains agent",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
-				Hostname: "server1",
-				State:    jobtypes.AgentStateReady,
+				MachineID: "abc123",
+				Hostname:  "server1",
+				State:     jobtypes.AgentStateReady,
 			},
 			mockSetDrain: true,
 			validateFunc: func(resp gen.DrainAgentResponseObject) {
@@ -127,8 +128,9 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgent() {
 			name:     "agent already draining returns 409",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
-				Hostname: "server1",
-				State:    jobtypes.AgentStateDraining,
+				MachineID: "abc123",
+				Hostname:  "server1",
+				State:     jobtypes.AgentStateDraining,
 			},
 			skipWrite: true,
 			validateFunc: func(resp gen.DrainAgentResponseObject) {
@@ -140,8 +142,9 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgent() {
 			name:     "agent already cordoned returns 409",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
-				Hostname: "server1",
-				State:    jobtypes.AgentStateCordoned,
+				MachineID: "abc123",
+				Hostname:  "server1",
+				State:     jobtypes.AgentStateCordoned,
 			},
 			skipWrite: true,
 			validateFunc: func(resp gen.DrainAgentResponseObject) {
@@ -153,8 +156,9 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgent() {
 			name:     "when SetDrainFlag fails returns 409",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
-				Hostname: "server1",
-				State:    jobtypes.AgentStateReady,
+				MachineID: "abc123",
+				Hostname:  "server1",
+				State:     jobtypes.AgentStateReady,
 			},
 			mockSetDrain:    true,
 			mockSetDrainErr: fmt.Errorf("kv connection failed"),
@@ -169,8 +173,9 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgent() {
 			name:     "when WriteAgentTimelineEvent returns not found error returns 404",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
-				Hostname: "server1",
-				State:    jobtypes.AgentStateReady,
+				MachineID: "abc123",
+				Hostname:  "server1",
+				State:     jobtypes.AgentStateReady,
 			},
 			mockSetDrain: true,
 			mockWriteErr: fmt.Errorf("agent not found: server1"),
@@ -183,8 +188,9 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgent() {
 			name:     "when WriteAgentTimelineEvent returns other error returns 409",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
-				Hostname: "server1",
-				State:    jobtypes.AgentStateReady,
+				MachineID: "abc123",
+				Hostname:  "server1",
+				State:     jobtypes.AgentStateReady,
 			},
 			mockSetDrain: true,
 			mockWriteErr: fmt.Errorf("connection failed"),
@@ -206,7 +212,7 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgent() {
 
 			if tt.mockSetDrain {
 				s.mockJobClient.EXPECT().
-					SetDrainFlag(gomock.Any(), tt.hostname).
+					SetDrainFlag(gomock.Any(), "abc123").
 					Return(tt.mockSetDrainErr)
 			}
 
@@ -250,11 +256,12 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgentHTTP() {
 				mock.EXPECT().
 					GetAgent(gomock.Any(), "server1").
 					Return(&jobtypes.AgentInfo{
-						Hostname: "server1",
-						State:    jobtypes.AgentStateReady,
+						MachineID: "abc123",
+						Hostname:  "server1",
+						State:     jobtypes.AgentStateReady,
 					}, nil)
 				mock.EXPECT().
-					SetDrainFlag(gomock.Any(), "server1").
+					SetDrainFlag(gomock.Any(), "abc123").
 					Return(nil)
 				mock.EXPECT().
 					WriteAgentTimelineEvent(gomock.Any(), "server1", "drain", "Drain initiated via API").
@@ -285,8 +292,9 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgentHTTP() {
 				mock.EXPECT().
 					GetAgent(gomock.Any(), "server1").
 					Return(&jobtypes.AgentInfo{
-						Hostname: "server1",
-						State:    jobtypes.AgentStateDraining,
+						MachineID: "abc123",
+						Hostname:  "server1",
+						State:     jobtypes.AgentStateDraining,
 					}, nil)
 				return mock
 			},
@@ -299,7 +307,7 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgentHTTP() {
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
 
-			agentHandler := apiagent.New(s.logger, jobMock)
+			agentHandler := apiagent.New(s.logger, jobMock, nil)
 			strictHandler := gen.NewStrictHandler(agentHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
@@ -380,11 +388,12 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgentRBACHTTP() {
 				mock.EXPECT().
 					GetAgent(gomock.Any(), "server1").
 					Return(&jobtypes.AgentInfo{
-						Hostname: "server1",
-						State:    jobtypes.AgentStateReady,
+						MachineID: "abc123",
+						Hostname:  "server1",
+						State:     jobtypes.AgentStateReady,
 					}, nil)
 				mock.EXPECT().
-					SetDrainFlag(gomock.Any(), "server1").
+					SetDrainFlag(gomock.Any(), "abc123").
 					Return(nil)
 				mock.EXPECT().
 					WriteAgentTimelineEvent(gomock.Any(), "server1", "drain", "Drain initiated via API").
@@ -415,6 +424,7 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgentRBACHTTP() {
 				s.logger,
 				jobMock,
 				appConfig.Controller.API.Security.SigningKey,
+				nil,
 				nil,
 			)
 			server.RegisterHandlers(handlers)

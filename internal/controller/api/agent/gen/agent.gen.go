@@ -61,6 +61,9 @@ type AgentInfo struct {
 	// Facts Extended facts from additional providers.
 	Facts *map[string]interface{} `json:"facts,omitempty"`
 
+	// Fingerprint The SHA256 fingerprint of the agent's PKI public key. Empty when PKI is disabled.
+	Fingerprint *string `json:"fingerprint,omitempty"`
+
 	// Fqdn Fully qualified domain name.
 	Fqdn *string `json:"fqdn,omitempty"`
 
@@ -76,6 +79,9 @@ type AgentInfo struct {
 
 	// LoadAverage The system load averages for 1, 5, and 15 minutes.
 	LoadAverage *LoadAverageResponse `json:"load_average,omitempty"`
+
+	// MachineId The permanent machine identifier.
+	MachineId *string `json:"machine_id,omitempty"`
 
 	// Memory Memory usage information.
 	Memory *MemoryResponse `json:"memory,omitempty"`
@@ -128,6 +134,14 @@ type ListAgentsResponse struct {
 	Agents []AgentInfo `json:"agents"`
 
 	// Total Total number of active agents.
+	Total int `json:"total"`
+}
+
+// ListPendingAgentsResponse defines model for ListPendingAgentsResponse.
+type ListPendingAgentsResponse struct {
+	Agents []PendingAgentInfo `json:"agents"`
+
+	// Total Total number of pending agents.
 	Total int `json:"total"`
 }
 
@@ -188,6 +202,21 @@ type OSInfoResponse struct {
 	Version string `json:"version"`
 }
 
+// PendingAgentInfo defines model for PendingAgentInfo.
+type PendingAgentInfo struct {
+	// Fingerprint The SHA256 fingerprint of the agent's public key.
+	Fingerprint string `json:"fingerprint"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// MachineId The permanent machine identifier.
+	MachineId string `json:"machine_id"`
+
+	// RequestedAt When the enrollment request was received.
+	RequestedAt time.Time `json:"requested_at"`
+}
+
 // RouteResponse A network routing table entry.
 type RouteResponse struct {
 	// Destination Destination network address.
@@ -218,17 +247,32 @@ type TimelineEvent struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
+// AcceptAgentParams defines parameters for AcceptAgent.
+type AcceptAgentParams struct {
+	// Fingerprint Accept by fingerprint instead of hostname.
+	Fingerprint *string `form:"fingerprint,omitempty" json:"fingerprint,omitempty" validate:"omitempty,min=1,max=255"`
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List active agents
 	// (GET /api/agent)
 	GetAgents(ctx echo.Context) error
+	// List agents awaiting enrollment
+	// (GET /api/agent/pending)
+	GetAgentsPending(ctx echo.Context) error
 	// Get agent details
 	// (GET /api/agent/{hostname})
 	GetAgentDetails(ctx echo.Context, hostname string) error
+	// Accept a pending agent
+	// (POST /api/agent/{hostname}/accept)
+	AcceptAgent(ctx echo.Context, hostname string, params AcceptAgentParams) error
 	// Drain an agent
 	// (POST /api/agent/{hostname}/drain)
 	DrainAgent(ctx echo.Context, hostname string) error
+	// Reject a pending agent
+	// (POST /api/agent/{hostname}/reject)
+	RejectAgent(ctx echo.Context, hostname string) error
 	// Undrain an agent
 	// (POST /api/agent/{hostname}/undrain)
 	UndrainAgent(ctx echo.Context, hostname string) error
@@ -250,6 +294,17 @@ func (w *ServerInterfaceWrapper) GetAgents(ctx echo.Context) error {
 	return err
 }
 
+// GetAgentsPending converts echo context to params.
+func (w *ServerInterfaceWrapper) GetAgentsPending(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(BearerAuthScopes, []string{"agent:read"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetAgentsPending(ctx)
+	return err
+}
+
 // GetAgentDetails converts echo context to params.
 func (w *ServerInterfaceWrapper) GetAgentDetails(ctx echo.Context) error {
 	var err error
@@ -268,6 +323,33 @@ func (w *ServerInterfaceWrapper) GetAgentDetails(ctx echo.Context) error {
 	return err
 }
 
+// AcceptAgent converts echo context to params.
+func (w *ServerInterfaceWrapper) AcceptAgent(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"agent:write"})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params AcceptAgentParams
+	// ------------- Optional query parameter "fingerprint" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "fingerprint", ctx.QueryParams(), &params.Fingerprint)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter fingerprint: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.AcceptAgent(ctx, hostname, params)
+	return err
+}
+
 // DrainAgent converts echo context to params.
 func (w *ServerInterfaceWrapper) DrainAgent(ctx echo.Context) error {
 	var err error
@@ -283,6 +365,24 @@ func (w *ServerInterfaceWrapper) DrainAgent(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.DrainAgent(ctx, hostname)
+	return err
+}
+
+// RejectAgent converts echo context to params.
+func (w *ServerInterfaceWrapper) RejectAgent(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"agent:write"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RejectAgent(ctx, hostname)
 	return err
 }
 
@@ -333,8 +433,11 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.GET(baseURL+"/api/agent", wrapper.GetAgents)
+	router.GET(baseURL+"/api/agent/pending", wrapper.GetAgentsPending)
 	router.GET(baseURL+"/api/agent/:hostname", wrapper.GetAgentDetails)
+	router.POST(baseURL+"/api/agent/:hostname/accept", wrapper.AcceptAgent)
 	router.POST(baseURL+"/api/agent/:hostname/drain", wrapper.DrainAgent)
+	router.POST(baseURL+"/api/agent/:hostname/reject", wrapper.RejectAgent)
 	router.POST(baseURL+"/api/agent/:hostname/undrain", wrapper.UndrainAgent)
 
 }
@@ -376,6 +479,49 @@ func (response GetAgents403JSONResponse) VisitGetAgentsResponse(w http.ResponseW
 type GetAgents500JSONResponse externalRef0.ErrorResponse
 
 func (response GetAgents500JSONResponse) VisitGetAgentsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAgentsPendingRequestObject struct {
+}
+
+type GetAgentsPendingResponseObject interface {
+	VisitGetAgentsPendingResponse(w http.ResponseWriter) error
+}
+
+type GetAgentsPending200JSONResponse ListPendingAgentsResponse
+
+func (response GetAgentsPending200JSONResponse) VisitGetAgentsPendingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAgentsPending401JSONResponse externalRef0.ErrorResponse
+
+func (response GetAgentsPending401JSONResponse) VisitGetAgentsPendingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAgentsPending403JSONResponse externalRef0.ErrorResponse
+
+func (response GetAgentsPending403JSONResponse) VisitGetAgentsPendingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAgentsPending500JSONResponse externalRef0.ErrorResponse
+
+func (response GetAgentsPending500JSONResponse) VisitGetAgentsPendingResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -444,6 +590,71 @@ func (response GetAgentDetails500JSONResponse) VisitGetAgentDetailsResponse(w ht
 	return json.NewEncoder(w).Encode(response)
 }
 
+type AcceptAgentRequestObject struct {
+	Hostname string `json:"hostname"`
+	Params   AcceptAgentParams
+}
+
+type AcceptAgentResponseObject interface {
+	VisitAcceptAgentResponse(w http.ResponseWriter) error
+}
+
+type AcceptAgent200JSONResponse struct {
+	Message string `json:"message"`
+}
+
+func (response AcceptAgent200JSONResponse) VisitAcceptAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AcceptAgent400JSONResponse externalRef0.ErrorResponse
+
+func (response AcceptAgent400JSONResponse) VisitAcceptAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AcceptAgent401JSONResponse externalRef0.ErrorResponse
+
+func (response AcceptAgent401JSONResponse) VisitAcceptAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AcceptAgent403JSONResponse externalRef0.ErrorResponse
+
+func (response AcceptAgent403JSONResponse) VisitAcceptAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AcceptAgent404JSONResponse externalRef0.ErrorResponse
+
+func (response AcceptAgent404JSONResponse) VisitAcceptAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AcceptAgent500JSONResponse externalRef0.ErrorResponse
+
+func (response AcceptAgent500JSONResponse) VisitAcceptAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type DrainAgentRequestObject struct {
 	Hostname string `json:"hostname"`
 }
@@ -504,6 +715,70 @@ type DrainAgent409JSONResponse externalRef0.ErrorResponse
 func (response DrainAgent409JSONResponse) VisitDrainAgentResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RejectAgentRequestObject struct {
+	Hostname string `json:"hostname"`
+}
+
+type RejectAgentResponseObject interface {
+	VisitRejectAgentResponse(w http.ResponseWriter) error
+}
+
+type RejectAgent200JSONResponse struct {
+	Message string `json:"message"`
+}
+
+func (response RejectAgent200JSONResponse) VisitRejectAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RejectAgent400JSONResponse externalRef0.ErrorResponse
+
+func (response RejectAgent400JSONResponse) VisitRejectAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RejectAgent401JSONResponse externalRef0.ErrorResponse
+
+func (response RejectAgent401JSONResponse) VisitRejectAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RejectAgent403JSONResponse externalRef0.ErrorResponse
+
+func (response RejectAgent403JSONResponse) VisitRejectAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RejectAgent404JSONResponse externalRef0.ErrorResponse
+
+func (response RejectAgent404JSONResponse) VisitRejectAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RejectAgent500JSONResponse externalRef0.ErrorResponse
+
+func (response RejectAgent500JSONResponse) VisitRejectAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -577,12 +852,21 @@ type StrictServerInterface interface {
 	// List active agents
 	// (GET /api/agent)
 	GetAgents(ctx context.Context, request GetAgentsRequestObject) (GetAgentsResponseObject, error)
+	// List agents awaiting enrollment
+	// (GET /api/agent/pending)
+	GetAgentsPending(ctx context.Context, request GetAgentsPendingRequestObject) (GetAgentsPendingResponseObject, error)
 	// Get agent details
 	// (GET /api/agent/{hostname})
 	GetAgentDetails(ctx context.Context, request GetAgentDetailsRequestObject) (GetAgentDetailsResponseObject, error)
+	// Accept a pending agent
+	// (POST /api/agent/{hostname}/accept)
+	AcceptAgent(ctx context.Context, request AcceptAgentRequestObject) (AcceptAgentResponseObject, error)
 	// Drain an agent
 	// (POST /api/agent/{hostname}/drain)
 	DrainAgent(ctx context.Context, request DrainAgentRequestObject) (DrainAgentResponseObject, error)
+	// Reject a pending agent
+	// (POST /api/agent/{hostname}/reject)
+	RejectAgent(ctx context.Context, request RejectAgentRequestObject) (RejectAgentResponseObject, error)
 	// Undrain an agent
 	// (POST /api/agent/{hostname}/undrain)
 	UndrainAgent(ctx context.Context, request UndrainAgentRequestObject) (UndrainAgentResponseObject, error)
@@ -623,6 +907,29 @@ func (sh *strictHandler) GetAgents(ctx echo.Context) error {
 	return nil
 }
 
+// GetAgentsPending operation middleware
+func (sh *strictHandler) GetAgentsPending(ctx echo.Context) error {
+	var request GetAgentsPendingRequestObject
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAgentsPending(ctx.Request().Context(), request.(GetAgentsPendingRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAgentsPending")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetAgentsPendingResponseObject); ok {
+		return validResponse.VisitGetAgentsPendingResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
 // GetAgentDetails operation middleware
 func (sh *strictHandler) GetAgentDetails(ctx echo.Context, hostname string) error {
 	var request GetAgentDetailsRequestObject
@@ -648,6 +955,32 @@ func (sh *strictHandler) GetAgentDetails(ctx echo.Context, hostname string) erro
 	return nil
 }
 
+// AcceptAgent operation middleware
+func (sh *strictHandler) AcceptAgent(ctx echo.Context, hostname string, params AcceptAgentParams) error {
+	var request AcceptAgentRequestObject
+
+	request.Hostname = hostname
+	request.Params = params
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AcceptAgent(ctx.Request().Context(), request.(AcceptAgentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AcceptAgent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(AcceptAgentResponseObject); ok {
+		return validResponse.VisitAcceptAgentResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
 // DrainAgent operation middleware
 func (sh *strictHandler) DrainAgent(ctx echo.Context, hostname string) error {
 	var request DrainAgentRequestObject
@@ -667,6 +1000,31 @@ func (sh *strictHandler) DrainAgent(ctx echo.Context, hostname string) error {
 		return err
 	} else if validResponse, ok := response.(DrainAgentResponseObject); ok {
 		return validResponse.VisitDrainAgentResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RejectAgent operation middleware
+func (sh *strictHandler) RejectAgent(ctx echo.Context, hostname string) error {
+	var request RejectAgentRequestObject
+
+	request.Hostname = hostname
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RejectAgent(ctx.Request().Context(), request.(RejectAgentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RejectAgent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RejectAgentResponseObject); ok {
+		return validResponse.VisitRejectAgentResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

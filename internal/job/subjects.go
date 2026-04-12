@@ -23,21 +23,25 @@
 // Subject Format: [namespace.]jobs.{type}.{routing_type}.{value...}
 //
 // Routing Patterns:
-//   - Direct: jobs.query.host.server1 (specific host)
+//   - Direct: jobs.query.host.<machineID> (specific host by machine ID)
 //   - Any: jobs.query._any (load-balanced across available agents)
 //   - Broadcast: jobs.modify._all (all agents receive)
 //   - Label: jobs.query.label.group.web (broadcast to label group)
 //   - Hierarchical: jobs.query.label.group.web.dev.us-east (prefix matching)
 //
 // Agents subscribe to:
-//   - Their specific hostname: jobs.*.host.server1
+//   - Their machine ID: jobs.*.host.<machineID> (permanent, never changes)
 //   - Load-balanced work: jobs.*._any (with queue group)
 //   - Broadcast messages: jobs.*._all
 //   - Label prefixes: jobs.*.label.group.web, jobs.*.label.group.web.dev, etc.
 //
+// The controller resolves hostname targets to machine IDs before building
+// subjects. This ensures direct routing uses the permanent machine ID,
+// not the mutable hostname.
+//
 // When a namespace is configured via Init(), all subjects are prefixed:
 //
-//	Init("osapi") -> osapi.jobs.query._any, osapi.jobs.*.host.server1, etc.
+//	Init("osapi") -> osapi.jobs.query._any, osapi.jobs.*.host.<machineID>, etc.
 package job
 
 import (
@@ -330,6 +334,20 @@ func BuildLabelSubjects(
 	return subjects
 }
 
+// agentCanReceiveJobs returns true if the agent is in a state where it has
+// active NATS consumers and can process jobs. Agents that are cordoned,
+// draining, or pending PKI enrollment are excluded from broadcast expectations.
+func agentCanReceiveJobs(
+	state string,
+) bool {
+	switch state {
+	case AgentStateCordoned, AgentStateDraining, AgentStatePending:
+		return false
+	default:
+		return true
+	}
+}
+
 // CountExpectedAgents returns the number of agents expected to respond to a
 // broadcast target. For _all it returns len(agents). For label targets it
 // filters to agents whose label value equals or is a prefix of the target value
@@ -344,15 +362,16 @@ func CountExpectedAgents(
 	case BroadcastHost:
 		count := 0
 		for i := range agents {
-			if agents[i].State != AgentStateCordoned && agents[i].State != AgentStateDraining {
-				count++
+			if !agentCanReceiveJobs(agents[i].State) {
+				continue
 			}
+			count++
 		}
 		return count
 	case "label":
 		count := 0
 		for i := range agents {
-			if agents[i].State == AgentStateCordoned || agents[i].State == AgentStateDraining {
+			if !agentCanReceiveJobs(agents[i].State) {
 				continue
 			}
 			if agentVal, ok := agents[i].Labels[key]; ok {
@@ -378,7 +397,7 @@ func ExpectedAgentHostnames(
 	var hostnames []string
 
 	for i := range agents {
-		if agents[i].State == AgentStateCordoned || agents[i].State == AgentStateDraining {
+		if !agentCanReceiveJobs(agents[i].State) {
 			continue
 		}
 

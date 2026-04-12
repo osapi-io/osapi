@@ -8,6 +8,12 @@ controller:
       bearer_token: placeholder
   ui:
     enabled: true
+  # PKI enrollment and job signing (default: disabled).
+  # pki:
+  #   enabled: false
+  #   key_dir: /etc/osapi/pki
+  #   auto_accept: false
+  #   rotation_grace_period: 24h
   api:
     port: 8080
     job_timeout: 30s
@@ -123,4 +129,8 @@ agent:
     enabled: false
   privilege_escalation:
     enabled: false
+  # PKI enrollment and job signing (default: disabled).
+  # pki:
+  #   enabled: false
+  #   key_dir: /etc/osapi/pki
 

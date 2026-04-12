@@ -80,6 +80,7 @@ func (s *DrainPublicTestSuite) SetupTest() {
 		registryKV:      s.mockKV,
 	})
 	agent.SetAgentState(s.testAgent, job.AgentStateReady)
+	agent.SetAgentMachineID(s.testAgent, "test-machine-id")
 	ctx, cancel := context.WithCancel(context.Background())
 	consumerCtx, consumerCancel := context.WithCancel(ctx)
 	agent.SetAgentLifecycle(ctx, consumerCtx, s.testAgent, cancel, consumerCancel)
@@ -99,7 +100,7 @@ func (s *DrainPublicTestSuite) TestCheckDrainFlag() {
 			name: "when drain key exists returns true",
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					CheckDrainFlag(gomock.Any(), "test-agent").
+					CheckDrainFlag(gomock.Any(), "test-machine-id").
 					Return(true)
 			},
 			validateFunc: func(result bool) {
@@ -110,7 +111,7 @@ func (s *DrainPublicTestSuite) TestCheckDrainFlag() {
 			name: "when drain key missing returns false",
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					CheckDrainFlag(gomock.Any(), "test-agent").
+					CheckDrainFlag(gomock.Any(), "test-machine-id").
 					Return(false)
 			},
 			validateFunc: func(result bool) {
@@ -122,7 +123,11 @@ func (s *DrainPublicTestSuite) TestCheckDrainFlag() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.setupMock()
-			result := agent.ExportCheckDrainFlag(context.Background(), s.testAgent, "test-agent")
+			result := agent.ExportCheckDrainFlag(
+				context.Background(),
+				s.testAgent,
+				"test-machine-id",
+			)
 			tt.validateFunc(result)
 		})
 	}
@@ -140,7 +145,7 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 			initialState: job.AgentStateReady,
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					CheckDrainFlag(gomock.Any(), "test-agent").
+					CheckDrainFlag(gomock.Any(), "test-machine-id").
 					Return(true)
 				s.mockJobClient.EXPECT().
 					WriteAgentTimelineEvent(
@@ -166,7 +171,7 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 			initialState: job.AgentStateDraining,
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					CheckDrainFlag(gomock.Any(), "test-agent").
+					CheckDrainFlag(gomock.Any(), "test-machine-id").
 					Return(false)
 				s.mockJobClient.EXPECT().
 					WriteAgentTimelineEvent(
@@ -193,7 +198,7 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 			initialState: job.AgentStateCordoned,
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					CheckDrainFlag(gomock.Any(), "test-agent").
+					CheckDrainFlag(gomock.Any(), "test-machine-id").
 					Return(false)
 				s.mockJobClient.EXPECT().
 					WriteAgentTimelineEvent(
@@ -220,7 +225,7 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 			initialState: job.AgentStateDraining,
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					CheckDrainFlag(gomock.Any(), "test-agent").
+					CheckDrainFlag(gomock.Any(), "test-machine-id").
 					Return(true)
 			},
 			expectedState: job.AgentStateDraining,
@@ -230,7 +235,7 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 			initialState: job.AgentStateReady,
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					CheckDrainFlag(gomock.Any(), "test-agent").
+					CheckDrainFlag(gomock.Any(), "test-machine-id").
 					Return(false)
 			},
 			expectedState: job.AgentStateReady,
@@ -241,7 +246,12 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 		s.Run(tt.name, func() {
 			agent.SetAgentState(s.testAgent, tt.initialState)
 			tt.setupMock()
-			agent.ExportHandleDrainDetection(context.Background(), s.testAgent, "test-agent")
+			agent.ExportHandleDrainDetection(
+				context.Background(),
+				s.testAgent,
+				"test-machine-id",
+				"test-agent",
+			)
 			s.Equal(tt.expectedState, agent.GetAgentState(s.testAgent))
 		})
 	}

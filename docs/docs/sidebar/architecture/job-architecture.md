@@ -119,7 +119,7 @@ jobs.{type}.{routing_type}.{value...}
 Examples:
 - jobs.query._any                  — load-balanced
 - jobs.query._all                  — broadcast all
-- jobs.query.host.server1          — direct to host
+- jobs.query.host.a1b2c3d4         — direct to host (by machine ID)
 - jobs.query.label.group.web       — label group (role level)
 - jobs.query.label.group.web.dev   — label group (role+env level)
 - jobs.modify._all                 — broadcast modify

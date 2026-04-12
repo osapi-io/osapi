@@ -218,3 +218,18 @@ func BuildFileStateKVConfig(
 		Replicas: fileStateCfg.Replicas,
 	}
 }
+
+// BuildEnrollmentKVConfig builds a jetstream.KeyValueConfig from enrollment config values.
+// The enrollment bucket has no TTL so pending requests persist until accepted or rejected.
+func BuildEnrollmentKVConfig(
+	namespace string,
+	enrollmentCfg config.NATSEnrollment,
+) jetstream.KeyValueConfig {
+	enrollmentBucket := job.ApplyNamespaceToInfraName(namespace, enrollmentCfg.Bucket)
+
+	return jetstream.KeyValueConfig{
+		Bucket:   enrollmentBucket,
+		Storage:  ParseJetstreamStorageType(enrollmentCfg.Storage),
+		Replicas: enrollmentCfg.Replicas,
+	}
+}

@@ -105,7 +105,7 @@ func (s *FactsPublicTestSuite) TestWriteFacts() {
 			name: "when Put succeeds writes facts",
 			setupMock: func() {
 				s.mockFactsKV.EXPECT().
-					Put(gomock.Any(), "facts.test_agent", gomock.Any()).
+					Put(gomock.Any(), "facts.test_machine_id", gomock.Any()).
 					DoAndReturn(func(
 						_ context.Context,
 						_ string,
@@ -130,7 +130,7 @@ func (s *FactsPublicTestSuite) TestWriteFacts() {
 			name: "when Put fails logs warning",
 			setupMock: func() {
 				s.mockFactsKV.EXPECT().
-					Put(gomock.Any(), "facts.test_agent", gomock.Any()).
+					Put(gomock.Any(), "facts.test_machine_id", gomock.Any()).
 					Return(uint64(0), errors.New("put failed"))
 			},
 		},
@@ -174,7 +174,7 @@ func (s *FactsPublicTestSuite) TestWriteFacts() {
 				agent.SetAgentNetinfoProvider(s.testAgent, errNetinfoProvider)
 
 				s.mockFactsKV.EXPECT().
-					Put(gomock.Any(), "facts.test_agent", gomock.Any()).
+					Put(gomock.Any(), "facts.test_machine_id", gomock.Any()).
 					DoAndReturn(func(
 						_ context.Context,
 						_ string,
@@ -203,7 +203,12 @@ func (s *FactsPublicTestSuite) TestWriteFacts() {
 			if tt.teardownMock != nil {
 				defer tt.teardownMock()
 			}
-			agent.ExportWriteFacts(context.Background(), s.testAgent, "test-agent")
+			agent.ExportWriteFacts(
+				context.Background(),
+				s.testAgent,
+				"test-machine-id",
+				"test-agent",
+			)
 		})
 	}
 }
@@ -218,7 +223,7 @@ func (s *FactsPublicTestSuite) TestStartFactsRefresh() {
 			setupMock: func() {
 				// Initial write + at least 1 ticker refresh
 				s.mockFactsKV.EXPECT().
-					Put(gomock.Any(), "facts.test_agent", gomock.Any()).
+					Put(gomock.Any(), "facts.test_machine_id", gomock.Any()).
 					Return(uint64(1), nil).
 					MinTimes(2)
 			},
@@ -232,7 +237,7 @@ func (s *FactsPublicTestSuite) TestStartFactsRefresh() {
 			agent.SetDefaultFactsInterval(10 * time.Millisecond)
 
 			ctx, cancel := context.WithCancel(context.Background())
-			agent.ExportStartFacts(ctx, s.testAgent, "test-agent")
+			agent.ExportStartFacts(ctx, s.testAgent, "test-machine-id", "test-agent")
 
 			// Wait for at least one ticker refresh
 			time.Sleep(50 * time.Millisecond)
@@ -256,7 +261,7 @@ func (s *FactsPublicTestSuite) TestStartFactsInterval() {
 			interval: "20ms",
 			setupMock: func() {
 				s.mockFactsKV.EXPECT().
-					Put(gomock.Any(), "facts.test_agent", gomock.Any()).
+					Put(gomock.Any(), "facts.test_machine_id", gomock.Any()).
 					Return(uint64(1), nil).
 					AnyTimes()
 			},
@@ -267,7 +272,7 @@ func (s *FactsPublicTestSuite) TestStartFactsInterval() {
 			interval: "",
 			setupMock: func() {
 				s.mockFactsKV.EXPECT().
-					Put(gomock.Any(), "facts.test_agent", gomock.Any()).
+					Put(gomock.Any(), "facts.test_machine_id", gomock.Any()).
 					Return(uint64(1), nil).
 					AnyTimes()
 			},
@@ -278,7 +283,7 @@ func (s *FactsPublicTestSuite) TestStartFactsInterval() {
 			interval: "7d",
 			setupMock: func() {
 				s.mockFactsKV.EXPECT().
-					Put(gomock.Any(), "facts.test_agent", gomock.Any()).
+					Put(gomock.Any(), "facts.test_machine_id", gomock.Any()).
 					Return(uint64(1), nil).
 					AnyTimes()
 			},
@@ -299,7 +304,7 @@ func (s *FactsPublicTestSuite) TestStartFactsInterval() {
 			agent.SetAgentAppConfig(s.testAgent, cfg)
 
 			ctx, cancel := context.WithCancel(context.Background())
-			agent.ExportStartFacts(ctx, s.testAgent, "test-agent")
+			agent.ExportStartFacts(ctx, s.testAgent, "test-machine-id", "test-agent")
 
 			// Wait for at least one ticker refresh
 			time.Sleep(50 * time.Millisecond)
@@ -394,25 +399,25 @@ func (s *FactsPublicTestSuite) TestGetFacts() {
 
 func (s *FactsPublicTestSuite) TestFactsKey() {
 	tests := []struct {
-		name     string
-		hostname string
-		expected string
+		name      string
+		machineID string
+		expected  string
 	}{
 		{
-			name:     "simple hostname",
-			hostname: "web-01",
-			expected: "facts.web_01",
+			name:      "simple machine ID",
+			machineID: "abc-123-def",
+			expected:  "facts.abc_123_def",
 		},
 		{
-			name:     "hostname with dots",
-			hostname: "Johns-MacBook-Pro.local",
-			expected: "facts.Johns_MacBook_Pro_local",
+			name:      "machine ID with dots",
+			machineID: "A1B2C3D4-E5F6.7890",
+			expected:  "facts.A1B2C3D4_E5F6_7890",
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			result := agent.ExportFactsKey(tt.hostname)
+			result := agent.ExportFactsKey(tt.machineID)
 			s.Equal(tt.expected, result)
 		})
 	}

@@ -29,6 +29,8 @@ import (
 // Agent represents a registered OSAPI agent.
 type Agent struct {
 	Hostname         string             `json:"hostname"`
+	MachineID        string             `json:"machine_id,omitempty"`
+	Fingerprint      string             `json:"fingerprint,omitempty"`
 	Status           string             `json:"status"`
 	State            string             `json:"state,omitempty"`
 	Labels           map[string]string  `json:"labels,omitempty"`
@@ -112,6 +114,14 @@ func agentFromGen(
 	a := Agent{
 		Hostname: g.Hostname,
 		Status:   string(g.Status),
+	}
+
+	if g.MachineId != nil {
+		a.MachineID = *g.MachineId
+	}
+
+	if g.Fingerprint != nil {
+		a.Fingerprint = *g.Fingerprint
 	}
 
 	if g.Labels != nil {
@@ -272,6 +282,40 @@ func agentFromGen(
 	}
 
 	return a
+}
+
+// PendingAgent represents an agent awaiting enrollment acceptance.
+type PendingAgent struct {
+	MachineID   string    `json:"machine_id"`
+	Hostname    string    `json:"hostname"`
+	Fingerprint string    `json:"fingerprint"`
+	RequestedAt time.Time `json:"requested_at"`
+}
+
+// PendingAgentList is a collection of pending agents.
+type PendingAgentList struct {
+	Agents []PendingAgent `json:"agents"`
+	Total  int            `json:"total"`
+}
+
+// pendingAgentListFromGen converts a gen.ListPendingAgentsResponse to a PendingAgentList.
+func pendingAgentListFromGen(
+	g *gen.ListPendingAgentsResponse,
+) PendingAgentList {
+	agents := make([]PendingAgent, 0, len(g.Agents))
+	for _, a := range g.Agents {
+		agents = append(agents, PendingAgent{
+			MachineID:   a.MachineId,
+			Hostname:    a.Hostname,
+			Fingerprint: a.Fingerprint,
+			RequestedAt: a.RequestedAt,
+		})
+	}
+
+	return PendingAgentList{
+		Agents: agents,
+		Total:  g.Total,
+	}
 }
 
 // agentListFromGen converts a gen.ListAgentsResponse to an AgentList.

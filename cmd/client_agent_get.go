@@ -61,7 +61,14 @@ func displayAgentGetDetail(
 ) {
 	fmt.Println()
 
-	kvArgs := []string{"Hostname", data.Hostname, "Status", data.Status}
+	kvArgs := []string{"Hostname", data.Hostname}
+	if data.MachineID != "" {
+		kvArgs = append(kvArgs, "Machine ID", data.MachineID)
+	}
+	if data.Fingerprint != "" {
+		kvArgs = append(kvArgs, "Fingerprint", data.Fingerprint)
+	}
+	kvArgs = append(kvArgs, "Status", data.Status)
 	cli.PrintKV(kvArgs...)
 
 	if data.State != "" && data.State != "Ready" {

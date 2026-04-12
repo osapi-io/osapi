@@ -61,7 +61,7 @@ type AgentListPublicTestSuite struct {
 func (s *AgentListPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apiagent.New(slog.Default(), s.mockJobClient)
+	s.handler = apiagent.New(slog.Default(), s.mockJobClient, nil)
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -83,6 +83,8 @@ func (s *AgentListPublicTestSuite) TestListAgents() {
 			mockAgents: []jobtypes.AgentInfo{
 				{
 					Hostname:     "server1",
+					MachineID:    "abc123def456",
+					Fingerprint:  "SHA256:test-fingerprint",
 					Labels:       map[string]string{"group": "web"},
 					RegisteredAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 					StartedAt:    time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
@@ -100,6 +102,10 @@ func (s *AgentListPublicTestSuite) TestListAgents() {
 				s.Len(r.Agents, 2)
 				s.Equal("server1", r.Agents[0].Hostname)
 				s.Equal(gen.AgentInfoStatusReady, r.Agents[0].Status)
+				s.Require().NotNil(r.Agents[0].MachineId)
+				s.Equal("abc123def456", *r.Agents[0].MachineId)
+				s.Require().NotNil(r.Agents[0].Fingerprint)
+				s.Equal("SHA256:test-fingerprint", *r.Agents[0].Fingerprint)
 				s.NotNil(r.Agents[0].Labels)
 				s.NotNil(r.Agents[0].RegisteredAt)
 				s.NotNil(r.Agents[0].StartedAt)
@@ -110,6 +116,7 @@ func (s *AgentListPublicTestSuite) TestListAgents() {
 				s.NotNil(r.Agents[0].Uptime)
 				s.Equal("server2", r.Agents[1].Hostname)
 				s.Equal(gen.AgentInfoStatusReady, r.Agents[1].Status)
+				s.Nil(r.Agents[1].MachineId)
 			},
 		},
 		{
@@ -379,7 +386,7 @@ func (s *AgentListPublicTestSuite) TestListAgentsHTTP() {
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
 
-			agentHandler := apiagent.New(s.logger, jobMock)
+			agentHandler := apiagent.New(s.logger, jobMock, nil)
 			strictHandler := gen.NewStrictHandler(agentHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
@@ -485,6 +492,7 @@ func (s *AgentListPublicTestSuite) TestListAgentsRBACHTTP() {
 				s.logger,
 				jobMock,
 				appConfig.Controller.API.Security.SigningKey,
+				nil,
 				nil,
 			)
 			server.RegisterHandlers(handlers)

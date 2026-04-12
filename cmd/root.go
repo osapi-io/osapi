@@ -149,6 +149,19 @@ func initConfig() {
 	viper.SetDefault("agent.consumer.max_ack_pending", 1000)
 	viper.SetDefault("agent.consumer.replay_policy", "instant")
 
+	// PKI defaults.
+	viper.SetDefault("agent.pki.enabled", false)
+	viper.SetDefault("agent.pki.key_dir", "/etc/osapi/pki")
+	viper.SetDefault("controller.pki.enabled", false)
+	viper.SetDefault("controller.pki.key_dir", "/etc/osapi/pki")
+	viper.SetDefault("controller.pki.auto_accept", false)
+	viper.SetDefault("controller.pki.rotation_grace_period", "24h")
+
+	// Enrollment KV defaults.
+	viper.SetDefault("nats.enrollment.bucket", "agent-enrollment")
+	viper.SetDefault("nats.enrollment.storage", "file")
+	viper.SetDefault("nats.enrollment.replicas", 1)
+
 	viper.SetConfigFile(viper.GetString("osapiFile"))
 
 	if err := viper.ReadInConfig(); err != nil {

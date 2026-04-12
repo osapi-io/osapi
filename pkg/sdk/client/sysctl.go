@@ -44,6 +44,7 @@ func (s *SysctlService) List(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,
@@ -74,6 +75,7 @@ func (s *SysctlService) Get(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
@@ -178,6 +180,7 @@ func (s *SysctlService) Delete(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,

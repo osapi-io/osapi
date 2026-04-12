@@ -38,6 +38,6 @@ func New(
 ) *Timezone {
 	return &Timezone{
 		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "api.timezone")),
+		logger:    logger.With(slog.String("subsystem", "controller.timezone")),
 	}
 }

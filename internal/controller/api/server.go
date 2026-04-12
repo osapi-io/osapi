@@ -54,7 +54,7 @@ func New(
 
 	s := &Server{
 		Echo:      e,
-		logger:    logger.With(slog.String("subsystem", "api.server")),
+		logger:    logger.With(slog.String("subsystem", "controller.api")),
 		appConfig: appConfig,
 	}
 

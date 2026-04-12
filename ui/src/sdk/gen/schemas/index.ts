@@ -5,6 +5,8 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './acceptAgent200';
+export * from './acceptAgentParams';
 export * from './agentDetail';
 export * from './agentInfo';
 export * from './agentInfoFacts';
@@ -162,6 +164,7 @@ export * from './listAgentsResponse';
 export * from './listAuditResponse';
 export * from './listJobsResponse';
 export * from './listJobsResponseStatusCounts';
+export * from './listPendingAgentsResponse';
 export * from './loadAverageResponse';
 export * from './loadCollectionResponse';
 export * from './loadResultItem';
@@ -208,6 +211,7 @@ export * from './packageInstallRequest';
 export * from './packageMutationResponse';
 export * from './packageMutationResult';
 export * from './packageMutationResultStatus';
+export * from './pendingAgentInfo';
 export * from './pingCollectionResponse';
 export * from './pingResponse';
 export * from './pingResponseStatus';
@@ -233,6 +237,7 @@ export * from './processSignalResponse';
 export * from './processSignalResult';
 export * from './processSignalResultStatus';
 export * from './readyResponse';
+export * from './rejectAgent200';
 export * from './retryJobRequest';
 export * from './routeConfigRequest';
 export * from './routeGetEntry';

@@ -34,6 +34,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/agent"
+	"github.com/retr0h/osapi/internal/agent/identity"
+	"github.com/retr0h/osapi/internal/agent/pki"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
@@ -66,6 +68,14 @@ func (s *HeartbeatPublicTestSuite) SetupTest() {
 	s.appFs = memfs.New()
 	s.logger = slog.Default()
 
+	// Mock identity so tests don't depend on /etc/machine-id.
+	agent.SetGetIdentityFn(func(_ avfs.VFS, _ string) (*identity.Identity, error) {
+		return &identity.Identity{
+			MachineID: "test-machine-id",
+			Hostname:  "test-agent",
+		}, nil
+	})
+
 	s.appConfig = config.Config{
 		NATS: config.NATS{
 			Stream: config.NATSStream{Name: "test-stream"},
@@ -93,6 +103,7 @@ func (s *HeartbeatPublicTestSuite) SetupTest() {
 }
 
 func (s *HeartbeatPublicTestSuite) TearDownTest() {
+	agent.ResetGetIdentityFn()
 	s.mockCtrl.Finish()
 }
 
@@ -105,21 +116,22 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 		{
 			name: "when registryKV is set registers and deregisters",
 			setupFunc: func() *agent.Agent {
-				// Drain check on each heartbeat tick (no drain flag present)
+				// Drain check on each heartbeat tick (no drain flag present).
+				// machineID is resolved from the real system at Start(), so use Any().
 				s.mockJobClient.EXPECT().
-					CheckDrainFlag(gomock.Any(), "test-agent").
+					CheckDrainFlag(gomock.Any(), gomock.Any()).
 					Return(false).
 					AnyTimes()
 
-				// Heartbeat initial write
+				// Heartbeat initial write (machineID-based key from real system)
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "agents.test_agent", gomock.Any()).
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil).
 					MinTimes(1)
 
 				// Deregister on stop
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "agents.test_agent").
+					Delete(gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 
@@ -249,11 +261,12 @@ func (s *HeartbeatLowLevelPublicTestSuite) SetupTest() {
 		registryKV:      s.mockKV,
 	})
 	agent.SetAgentState(s.testAgent, job.AgentStateReady)
+	agent.SetAgentMachineID(s.testAgent, "test-machine-id")
 
 	// writeRegistration now calls handleDrainDetection which checks drain flag.
 	// Default: no drain flag present.
 	s.mockJobClient.EXPECT().
-		CheckDrainFlag(gomock.Any(), "test-agent").
+		CheckDrainFlag(gomock.Any(), "test-machine-id").
 		Return(false).
 		AnyTimes()
 }
@@ -269,6 +282,7 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistration() {
 		name         string
 		setupMock    func()
 		teardownMock func()
+		validateFunc func(before time.Time)
 	}{
 		{
 			name: "when marshal fails logs warning",
@@ -280,22 +294,65 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistration() {
 			teardownMock: func() {
 				agent.ResetMarshalJSON()
 			},
+			validateFunc: func(_ time.Time) {
+				// Marshal failure occurs before Put, so heartbeat time
+				// should NOT be updated.
+				got := s.testAgent.LastHeartbeatTime()
+				s.True(got.IsZero(), "expected zero heartbeat time after marshal failure")
+			},
 		},
 		{
 			name: "when Put fails logs warning",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "agents.test_agent", gomock.Any()).
+					Put(gomock.Any(), "agents.test_machine_id", gomock.Any()).
 					Return(uint64(0), errors.New("put failed"))
+			},
+			validateFunc: func(_ time.Time) {
+				// Put failure means heartbeat time should NOT be updated.
+				got := s.testAgent.LastHeartbeatTime()
+				s.True(got.IsZero(), "expected zero heartbeat time after Put failure")
 			},
 		},
 		{
 			name: "when Put succeeds writes registration",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "agents.test_agent", gomock.Any()).
+					Put(gomock.Any(), "agents.test_machine_id", gomock.Any()).
 					Return(uint64(1), nil)
 			},
+			validateFunc: func(before time.Time) {
+				got := s.testAgent.LastHeartbeatTime()
+				s.False(got.IsZero(), "expected non-zero heartbeat time after successful Put")
+				s.True(
+					!got.Before(before),
+					"heartbeat time should be at or after test start",
+				)
+			},
+		},
+		{
+			name: "when PKI enabled includes fingerprint in registration",
+			setupMock: func() {
+				m := pki.New(memfs.New(), "/keys", "agent")
+				s.Require().NoError(m.LoadOrGenerate())
+				agent.SetAgentPKIManager(s.testAgent, m)
+
+				s.mockKV.EXPECT().
+					Put(gomock.Any(), "agents.test_machine_id", gomock.Any()).
+					DoAndReturn(func(
+						_ interface{},
+						_ string,
+						data []byte,
+					) (uint64, error) {
+						s.Contains(string(data), "fingerprint")
+						s.Contains(string(data), "SHA256:")
+						return uint64(1), nil
+					})
+			},
+			teardownMock: func() {
+				agent.SetAgentPKIManager(s.testAgent, nil)
+			},
+			validateFunc: func(_ time.Time) {},
 		},
 	}
 
@@ -305,7 +362,14 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistration() {
 			if tt.teardownMock != nil {
 				defer tt.teardownMock()
 			}
-			agent.ExportWriteRegistration(context.Background(), s.testAgent, "test-agent")
+			before := time.Now()
+			agent.ExportWriteRegistration(
+				context.Background(),
+				s.testAgent,
+				"test-machine-id",
+				"test-agent",
+			)
+			tt.validateFunc(before)
 		})
 	}
 }
@@ -322,11 +386,16 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistrationStoresHeartbeatT
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			s.mockKV.EXPECT().
-				Put(gomock.Any(), "agents.test_agent", gomock.Any()).
+				Put(gomock.Any(), "agents.test_machine_id", gomock.Any()).
 				Return(uint64(1), nil)
 
 			before := time.Now()
-			agent.ExportWriteRegistration(context.Background(), s.testAgent, "test-agent")
+			agent.ExportWriteRegistration(
+				context.Background(),
+				s.testAgent,
+				"test-machine-id",
+				"test-agent",
+			)
 			after := time.Now()
 
 			got := s.testAgent.LastHeartbeatTime()
@@ -348,7 +417,7 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestDeregister() {
 			name: "when Delete fails logs warning",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "agents.test_agent").
+					Delete(gomock.Any(), "agents.test_machine_id").
 					Return(errors.New("delete failed"))
 			},
 		},
@@ -356,7 +425,7 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestDeregister() {
 			name: "when Delete succeeds logs deregistration",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "agents.test_agent").
+					Delete(gomock.Any(), "agents.test_machine_id").
 					Return(nil)
 			},
 		},
@@ -365,7 +434,14 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestDeregister() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.setupMock()
-			agent.ExportDeregister(s.testAgent, "test-agent")
+			// Deregister is best-effort (fire-and-forget). It deletes a
+			// KV key and logs the outcome but does not mutate agent state.
+			// The gomock expectations above verify the correct KV call was
+			// made; beyond that, we only verify the function completes
+			// without panicking.
+			s.NotPanics(func() {
+				agent.ExportDeregister(s.testAgent, "test-machine-id")
+			})
 		})
 	}
 }
@@ -380,13 +456,13 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatRefresh() {
 			setupMock: func() {
 				// Initial write + at least 1 ticker refresh
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "agents.test_agent", gomock.Any()).
+					Put(gomock.Any(), "agents.test_machine_id", gomock.Any()).
 					Return(uint64(1), nil).
 					MinTimes(2)
 
 				// Deregister on cancel
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "agents.test_agent").
+					Delete(gomock.Any(), "agents.test_machine_id").
 					Return(nil).
 					Times(1)
 			},
@@ -397,10 +473,16 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatRefresh() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
+			// Return the same hostname to prevent hostname change detection.
+			agent.SetGetAgentHostnameFn(func(_ string) (string, error) {
+				return "test-agent", nil
+			})
+			defer agent.ResetGetAgentHostnameFn()
+
 			agent.SetHeartbeatInterval(10 * time.Millisecond)
 
 			ctx, cancel := context.WithCancel(context.Background())
-			agent.ExportStartHeartbeat(ctx, s.testAgent, "test-agent")
+			agent.ExportStartHeartbeat(ctx, s.testAgent, "test-machine-id", "test-agent")
 
 			// Wait for at least one ticker refresh
 			time.Sleep(50 * time.Millisecond)
@@ -412,27 +494,128 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatRefresh() {
 	}
 }
 
-func (s *HeartbeatLowLevelPublicTestSuite) TestRegistryKey() {
+func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatHostnameChange() {
 	tests := []struct {
-		name     string
-		hostname string
-		expected string
+		name            string
+		initialHostname string
+		hostnameReply   string
+		expectChanged   bool
 	}{
 		{
-			name:     "simple hostname",
-			hostname: "web-01",
-			expected: "agents.web_01",
+			name:            "when hostname changes updates cached hostname",
+			initialHostname: "old-host",
+			hostnameReply:   "new-host",
+			expectChanged:   true,
 		},
 		{
-			name:     "hostname with dots",
-			hostname: "Johns-MacBook-Pro.local",
-			expected: "agents.Johns_MacBook_Pro_local",
+			name:            "when hostname unchanged does not resubscribe",
+			initialHostname: "same-host",
+			hostnameReply:   "same-host",
+			expectChanged:   false,
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			result := agent.ExportRegistryKey(tt.hostname)
+			// Create fresh mocks per subtest to avoid gomock expectation leaks.
+			ctrl := gomock.NewController(s.T())
+			defer ctrl.Finish()
+
+			mockKV := mocks.NewMockKeyValue(ctrl)
+			mockJobClient := mocks.NewMockJobClient(ctrl)
+
+			appConfig := config.Config{
+				Agent: config.AgentConfig{
+					Labels: map[string]string{"group": "web"},
+				},
+			}
+
+			testAgent := newTestAgent(newTestAgentParams{
+				appConfig:       appConfig,
+				jobClient:       mockJobClient,
+				streamName:      "test-stream",
+				hostProvider:    hostMocks.NewDefaultMockProvider(ctrl),
+				diskProvider:    diskMocks.NewDefaultMockProvider(ctrl),
+				memProvider:     memMocks.NewDefaultMockProvider(ctrl),
+				loadProvider:    loadMocks.NewDefaultMockProvider(ctrl),
+				dnsProvider:     dnsMocks.NewDefaultMockProvider(ctrl),
+				pingProvider:    pingMocks.NewDefaultMockProvider(ctrl),
+				netinfoProvider: netinfoMocks.NewDefaultMockProvider(ctrl),
+				commandProvider: commandMocks.NewDefaultMockProvider(ctrl),
+				processProvider: processMocks.NewDefaultMockProvider(ctrl),
+				registryKV:      mockKV,
+			})
+			agent.SetAgentState(testAgent, job.AgentStateReady)
+			agent.SetAgentMachineID(testAgent, "test-machine-id")
+			agent.SetAgentHostname(testAgent, tt.initialHostname)
+
+			// Drain check — no drain flag present.
+			mockJobClient.EXPECT().
+				CheckDrainFlag(gomock.Any(), "test-machine-id").
+				Return(false).
+				AnyTimes()
+
+			reply := tt.hostnameReply
+			agent.SetGetAgentHostnameFn(func(_ string) (string, error) {
+				return reply, nil
+			})
+			defer agent.ResetGetAgentHostnameFn()
+
+			// Consumers use machine ID (permanent), so hostname changes
+			// do NOT trigger consumer stop/start — only the cached
+			// hostname is updated for registry entries and logging.
+
+			// Initial write + at least 1 ticker refresh
+			mockKV.EXPECT().
+				Put(gomock.Any(), "agents.test_machine_id", gomock.Any()).
+				Return(uint64(1), nil).
+				MinTimes(2)
+
+			// Deregister on cancel
+			mockKV.EXPECT().
+				Delete(gomock.Any(), "agents.test_machine_id").
+				Return(nil).
+				Times(1)
+
+			agent.SetHeartbeatInterval(10 * time.Millisecond)
+
+			ctx, cancel := context.WithCancel(context.Background())
+			agent.ExportStartHeartbeat(ctx, testAgent, "test-machine-id", tt.initialHostname)
+
+			// Wait for at least one ticker refresh
+			time.Sleep(50 * time.Millisecond)
+			cancel()
+
+			// Wait for goroutine to finish
+			agent.WaitAgentWG(testAgent)
+
+			got := agent.GetAgentHostname(testAgent)
+			s.Equal(tt.hostnameReply, got)
+		})
+	}
+}
+
+func (s *HeartbeatLowLevelPublicTestSuite) TestRegistryKey() {
+	tests := []struct {
+		name      string
+		machineID string
+		expected  string
+	}{
+		{
+			name:      "simple machine ID",
+			machineID: "abc-123-def",
+			expected:  "agents.abc_123_def",
+		},
+		{
+			name:      "machine ID with dots",
+			machineID: "A1B2C3D4-E5F6.7890",
+			expected:  "agents.A1B2C3D4_E5F6_7890",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			result := agent.ExportRegistryKey(tt.machineID)
 			s.Equal(tt.expected, result)
 		})
 	}

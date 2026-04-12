@@ -25,8 +25,13 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/retr0h/osapi/internal/agent/identity"
 	"github.com/retr0h/osapi/internal/job"
 )
+
+// getIdentityFn dispatches to the identity resolution function.
+// Overridable in tests via export_test.go.
+var getIdentityFn = identity.GetIdentity
 
 // Start starts the agent without blocking. Call Stop to shut down.
 func (a *Agent) Start() {
@@ -36,16 +41,39 @@ func (a *Agent) Start() {
 
 	a.logger.Info("starting node agent")
 
-	// Determine agent hostname (GetAgentHostname always succeeds)
-	a.hostname, _ = job.GetAgentHostname(a.appConfig.Agent.Hostname)
+	// Resolve agent identity (machine ID + hostname).
+	ident, err := getIdentityFn(a.appFs, a.appConfig.Agent.Hostname)
+	if err != nil {
+		a.logger.Error("failed to resolve agent identity",
+			slog.String("error", err.Error()),
+		)
+		a.cancel()
+
+		return
+	}
+	a.machineID = ident.MachineID
+	a.hostname = ident.Hostname
 
 	a.logger.Info(
 		"agent configuration",
+		slog.String("machine_id", a.machineID),
 		slog.String("hostname", a.hostname),
 		slog.String("queue_group", a.appConfig.Agent.QueueGroup),
 		slog.Int("max_jobs", a.appConfig.Agent.MaxJobs),
 		slog.Any("labels", a.appConfig.Agent.Labels),
 	)
+
+	// PKI enrollment (when enabled).
+	if a.appConfig.Agent.PKI.Enabled {
+		if err := a.handlePKIEnrollment(a.ctx); err != nil {
+			a.logger.Error("PKI enrollment failed",
+				slog.String("error", err.Error()),
+			)
+			a.cancel()
+
+			return
+		}
+	}
 
 	// Run preflight checks when privilege escalation is enabled.
 	pe := a.appConfig.Agent.PrivilegeEscalation
@@ -71,13 +99,19 @@ func (a *Agent) Start() {
 	}
 
 	// Register in agent registry and start heartbeat keepalive.
-	a.startHeartbeat(a.ctx, a.hostname)
+	// Heartbeats run even in Pending state so the agent is visible.
+	a.startHeartbeat(a.ctx, a.machineID, a.hostname)
 
 	// Collect and publish system facts.
-	a.startFacts(a.ctx, a.hostname)
+	a.startFacts(a.ctx, a.machineID, a.hostname)
 
-	// Start consuming messages for different job types.
-	a.startConsumers()
+	// Start consuming messages only when not pending enrollment.
+	// Pending agents are visible (heartbeat) but don't process jobs.
+	if a.state != job.AgentStatePending {
+		a.startConsumers()
+	} else {
+		a.logger.Info("skipping job consumers — agent is pending PKI enrollment")
+	}
 
 	a.logger.Info("node agent started successfully")
 }

@@ -92,6 +92,16 @@ func (c *Client) CreateJob(
 		return nil, fmt.Errorf("failed to marshal job with status: %w", err)
 	}
 
+	// Sign the job data when PKI is enabled.
+	kvPayload := jobWithStatusJSON
+	if c.pkiSigner != nil {
+		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, jobWithStatusJSON)
+		if signErr != nil {
+			return nil, fmt.Errorf("failed to sign job data: %w", signErr)
+		}
+		kvPayload = signed
+	}
+
 	// Store job in KV with immutable key format
 	kvKey := "jobs." + jobID
 	c.logger.DebugContext(ctx, "storing job and sending notification",
@@ -101,7 +111,7 @@ func (c *Client) CreateJob(
 		slog.String("job_id", jobID),
 	)
 
-	revision, err := c.kv.Put(ctx, kvKey, jobWithStatusJSON)
+	revision, err := c.kv.Put(ctx, kvKey, kvPayload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}
@@ -905,8 +915,21 @@ func (c *Client) getJobResponses(
 			continue
 		}
 
+		// Unwrap signed envelope if PKI is enabled.
+		responseData := entry.Value()
+		if c.pkiSigner != nil {
+			unwrapped, _, unwrapErr := unwrapSignedEnvelope(
+				responseData,
+				c.pkiSigner.ControllerPublicKey(),
+			)
+			if unwrapErr != nil {
+				continue
+			}
+			responseData = unwrapped
+		}
+
 		var response job.Response
-		if err := json.Unmarshal(entry.Value(), &response); err != nil {
+		if err := json.Unmarshal(responseData, &response); err != nil {
 			continue
 		}
 

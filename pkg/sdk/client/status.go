@@ -70,6 +70,9 @@ const (
 	// AgentCordoned indicates the agent is blocked from receiving
 	// new jobs until manually uncordoned.
 	AgentCordoned AgentSchedulingState = "Cordoned"
+	// AgentPending indicates the agent is awaiting PKI enrollment
+	// acceptance and will not process jobs until accepted.
+	AgentPending AgentSchedulingState = "Pending"
 )
 
 // ConditionType represents a node or process condition evaluated agent-side.

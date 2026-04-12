@@ -216,6 +216,11 @@ const config: Config = {
             },
             {
               type: 'doc',
+              label: 'Agent Identity & PKI',
+              docId: 'sidebar/features/agent-identity'
+            },
+            {
+              type: 'doc',
               label: 'Management Dashboard',
               docId: 'sidebar/features/management-dashboard'
             }

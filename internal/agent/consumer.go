@@ -37,34 +37,35 @@ import (
 // consumeQueryJobs handles read-only job operations using JetStream consumers.
 func (a *Agent) consumeQueryJobs(
 	ctx context.Context,
-	hostname string,
+	machineID string,
 ) error {
 	streamName := a.streamName
 
-	// Sanitize hostname for consumer names (alphanumeric and underscores only)
-	sanitizedHostname := job.SanitizeHostname(hostname)
+	// Sanitize machine ID for consumer names (alphanumeric and underscores only).
+	sanitizedMachineID := job.SanitizeHostname(machineID)
 
 	// Use configured consumer name as prefix, falling back to empty string
 	consumerPrefix := a.consumerNamePrefix()
 
-	// Create consumers for different query patterns
+	// Create consumers for different query patterns.
+	// Direct targeting uses machine ID (permanent), not hostname (mutable).
 	consumers := []struct {
 		name       string
 		filter     string
 		queueGroup string
 	}{
 		{
-			name:       consumerPrefix + "query_any_" + sanitizedHostname,
+			name:       consumerPrefix + "query_any_" + sanitizedMachineID,
 			filter:     job.JobsQueryPrefix + "._any",
 			queueGroup: a.appConfig.Agent.QueueGroup,
 		},
 		{
-			name:   consumerPrefix + "query_all_" + sanitizedHostname,
+			name:   consumerPrefix + "query_all_" + sanitizedMachineID,
 			filter: job.JobsQueryPrefix + "._all",
 		},
 		{
-			name:   consumerPrefix + "query_direct_" + sanitizedHostname,
-			filter: job.JobsQueryPrefix + ".host." + sanitizedHostname,
+			name:   consumerPrefix + "query_direct_" + sanitizedMachineID,
+			filter: job.JobsQueryPrefix + ".host." + sanitizedMachineID,
 		},
 	}
 
@@ -88,7 +89,7 @@ func (a *Agent) consumeQueryJobs(
 					consumerPrefix,
 					key,
 					sanitizedPrefix,
-					sanitizedHostname,
+					sanitizedMachineID,
 				),
 				filter: job.JobsQueryPrefix + ".label." + key + "." + prefix,
 			})
@@ -137,34 +138,35 @@ func (a *Agent) consumeQueryJobs(
 // consumeModifyJobs handles write job operations using JetStream consumers.
 func (a *Agent) consumeModifyJobs(
 	ctx context.Context,
-	hostname string,
+	machineID string,
 ) error {
 	streamName := a.streamName
 
-	// Sanitize hostname for consumer names (alphanumeric and underscores only)
-	sanitizedHostname := job.SanitizeHostname(hostname)
+	// Sanitize machine ID for consumer names (alphanumeric and underscores only).
+	sanitizedMachineID := job.SanitizeHostname(machineID)
 
 	// Use configured consumer name as prefix, falling back to empty string
 	consumerPrefix := a.consumerNamePrefix()
 
-	// Create consumers for different modify patterns
+	// Create consumers for different modify patterns.
+	// Direct targeting uses machine ID (permanent), not hostname (mutable).
 	consumers := []struct {
 		name       string
 		filter     string
 		queueGroup string
 	}{
 		{
-			name:       consumerPrefix + "modify_any_" + sanitizedHostname,
+			name:       consumerPrefix + "modify_any_" + sanitizedMachineID,
 			filter:     job.JobsModifyPrefix + "._any",
 			queueGroup: a.appConfig.Agent.QueueGroup,
 		},
 		{
-			name:   consumerPrefix + "modify_all_" + sanitizedHostname,
+			name:   consumerPrefix + "modify_all_" + sanitizedMachineID,
 			filter: job.JobsModifyPrefix + "._all",
 		},
 		{
-			name:   consumerPrefix + "modify_direct_" + sanitizedHostname,
-			filter: job.JobsModifyPrefix + ".host." + sanitizedHostname,
+			name:   consumerPrefix + "modify_direct_" + sanitizedMachineID,
+			filter: job.JobsModifyPrefix + ".host." + sanitizedMachineID,
 		},
 	}
 
@@ -184,7 +186,7 @@ func (a *Agent) consumeModifyJobs(
 					consumerPrefix,
 					key,
 					sanitizedPrefix,
-					sanitizedHostname,
+					sanitizedMachineID,
 				),
 				filter: job.JobsModifyPrefix + ".label." + key + "." + prefix,
 			})
@@ -233,8 +235,8 @@ func (a *Agent) consumeModifyJobs(
 // startConsumers creates a consumer context and starts all job consumers.
 func (a *Agent) startConsumers() {
 	a.consumerCtx, a.consumerCancel = context.WithCancel(a.ctx)
-	_ = a.consumeQueryJobs(a.consumerCtx, a.hostname)
-	_ = a.consumeModifyJobs(a.consumerCtx, a.hostname)
+	_ = a.consumeQueryJobs(a.consumerCtx, a.machineID)
+	_ = a.consumeModifyJobs(a.consumerCtx, a.machineID)
 }
 
 // stopConsumers cancels the consumer context and waits for all consumer

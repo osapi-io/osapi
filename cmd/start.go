@@ -96,7 +96,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			s := metrics.New(
 				appConfig.Controller.Metrics.Host,
 				appConfig.Controller.Metrics.Port,
-				logger.With("component", "controller", "subsystem", "metrics"),
+				logger.With("component", "controller"),
 			)
 			if s != nil {
 				controllerMetrics = s
@@ -139,7 +139,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			s := metrics.New(
 				appConfig.Agent.Metrics.Host,
 				appConfig.Agent.Metrics.Port,
-				logger.With("component", "agent", "subsystem", "metrics"),
+				logger.With("component", "agent"),
 			)
 			s.SetReadinessFunc(func() error {
 				return agentServer.IsReady()
@@ -158,7 +158,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			s := metrics.New(
 				appConfig.NATS.Server.Metrics.Host,
 				appConfig.NATS.Server.Metrics.Port,
-				logger.With("component", "nats", "subsystem", "metrics"),
+				logger.With("component", "nats"),
 			)
 			s.SetReadinessFunc(func() error {
 				return nil

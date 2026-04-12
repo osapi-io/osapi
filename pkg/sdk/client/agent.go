@@ -70,7 +70,7 @@ func (s *AgentService) Get(
 		return nil, fmt.Errorf("get agent %s: %w", hostname, err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500); err != nil {
+	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500); err != nil {
 		return nil, err
 	}
 
@@ -124,6 +124,94 @@ func (s *AgentService) Undrain(
 	}
 
 	if err := checkError(resp.StatusCode(), resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON409); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	msg := MessageResponse{
+		Message: resp.JSON200.Message,
+	}
+
+	return NewResponse(msg, resp.Body), nil
+}
+
+// ListPending retrieves all agents awaiting enrollment acceptance.
+func (s *AgentService) ListPending(
+	ctx context.Context,
+) (*Response[PendingAgentList], error) {
+	resp, err := s.client.GetAgentsPendingWithResponse(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list pending agents: %w", err)
+	}
+
+	if err := checkError(resp.StatusCode(), resp.JSON401, resp.JSON403, resp.JSON500); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(pendingAgentListFromGen(resp.JSON200), resp.Body), nil
+}
+
+// Accept accepts a pending agent enrollment. If fingerprint is provided,
+// the agent is accepted by fingerprint; otherwise by hostname.
+func (s *AgentService) Accept(
+	ctx context.Context,
+	hostname string,
+	fingerprint string,
+) (*Response[MessageResponse], error) {
+	var params *gen.AcceptAgentParams
+	if fingerprint != "" {
+		params = &gen.AcceptAgentParams{
+			Fingerprint: &fingerprint,
+		}
+	}
+
+	resp, err := s.client.AcceptAgentWithResponse(ctx, hostname, params)
+	if err != nil {
+		return nil, fmt.Errorf("accept agent %s: %w", hostname, err)
+	}
+
+	if err := checkError(resp.StatusCode(), resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	msg := MessageResponse{
+		Message: resp.JSON200.Message,
+	}
+
+	return NewResponse(msg, resp.Body), nil
+}
+
+// Reject rejects a pending agent enrollment.
+func (s *AgentService) Reject(
+	ctx context.Context,
+	hostname string,
+) (*Response[MessageResponse], error) {
+	resp, err := s.client.RejectAgentWithResponse(ctx, hostname)
+	if err != nil {
+		return nil, fmt.Errorf("reject agent %s: %w", hostname, err)
+	}
+
+	if err := checkError(resp.StatusCode(), resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500); err != nil {
 		return nil, err
 	}
 

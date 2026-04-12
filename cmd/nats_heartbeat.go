@@ -87,7 +87,7 @@ func startNATSHeartbeat(
 	subComponents := buildNATSSubComponents()
 
 	hb := controller.NewComponentHeartbeat(
-		log.With("subsystem", "heartbeat"),
+		log,
 		registryKV,
 		hostname,
 		"0.1.0",
@@ -127,7 +127,7 @@ func startNATSHeartbeatFromKV(
 	subComponents := buildNATSSubComponents()
 
 	hb := controller.NewComponentHeartbeat(
-		log.With("subsystem", "heartbeat"),
+		log,
 		registryKV,
 		hostname,
 		"0.1.0",

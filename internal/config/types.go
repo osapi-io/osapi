@@ -101,16 +101,26 @@ type NATSServerUser struct {
 
 // NATS configuration settings.
 type NATS struct {
-	Server    NATSServer    `mapstructure:"server,omitempty"`
-	Stream    NATSStream    `mapstructure:"stream,omitempty"`
-	KV        NATSKV        `mapstructure:"kv,omitempty"`
-	DLQ       NATSDLQ       `mapstructure:"dlq,omitempty"`
-	Audit     NATSAudit     `mapstructure:"audit,omitempty"`
-	Registry  NATSRegistry  `mapstructure:"registry,omitempty"`
-	Facts     NATSFacts     `mapstructure:"facts,omitempty"`
-	State     NATSState     `mapstructure:"state,omitempty"`
-	Objects   NATSObjects   `mapstructure:"objects,omitempty"`
-	FileState NATSFileState `mapstructure:"file_state,omitempty"`
+	Server     NATSServer     `mapstructure:"server,omitempty"`
+	Stream     NATSStream     `mapstructure:"stream,omitempty"`
+	KV         NATSKV         `mapstructure:"kv,omitempty"`
+	DLQ        NATSDLQ        `mapstructure:"dlq,omitempty"`
+	Audit      NATSAudit      `mapstructure:"audit,omitempty"`
+	Registry   NATSRegistry   `mapstructure:"registry,omitempty"`
+	Facts      NATSFacts      `mapstructure:"facts,omitempty"`
+	State      NATSState      `mapstructure:"state,omitempty"`
+	Objects    NATSObjects    `mapstructure:"objects,omitempty"`
+	FileState  NATSFileState  `mapstructure:"file_state,omitempty"`
+	Enrollment NATSEnrollment `mapstructure:"enrollment,omitempty"`
+}
+
+// NATSEnrollment configuration for the PKI enrollment KV bucket.
+// No TTL — pending enrollment requests persist until accepted or rejected.
+type NATSEnrollment struct {
+	// Bucket is the KV bucket name for pending enrollment entries.
+	Bucket   string `mapstructure:"bucket"`
+	Storage  string `mapstructure:"storage"` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"`
 }
 
 // NATSAudit configuration for the audit log stream.
@@ -261,6 +271,8 @@ type Controller struct {
 	Notifications NotificationsConfig `mapstructure:"notifications,omitempty"`
 	// UI holds settings for the embedded management UI.
 	UI UIConfig `mapstructure:"ui,omitempty"`
+	// PKI holds PKI enrollment and signing settings.
+	PKI ControllerPKI `mapstructure:"pki,omitempty"`
 }
 
 // UIConfig holds settings for the embedded management UI.
@@ -363,6 +375,27 @@ type PrivilegeEscalation struct {
 	Enabled bool `mapstructure:"enabled"`
 }
 
+// AgentPKI holds PKI configuration for the agent.
+type AgentPKI struct {
+	// Enabled activates PKI enrollment and job signature verification.
+	Enabled bool `mapstructure:"enabled"`
+	// KeyDir is the directory for agent keypair storage.
+	KeyDir string `mapstructure:"key_dir"`
+}
+
+// ControllerPKI holds PKI configuration for the controller.
+type ControllerPKI struct {
+	// Enabled activates PKI enrollment and job signing.
+	Enabled bool `mapstructure:"enabled"`
+	// KeyDir is the directory for controller keypair storage.
+	KeyDir string `mapstructure:"key_dir"`
+	// AutoAccept automatically accepts all agent enrollment requests.
+	AutoAccept bool `mapstructure:"auto_accept"`
+	// RotationGracePeriod is how long both old and new keys are accepted
+	// during key rotation. Uses Go duration format.
+	RotationGracePeriod string `mapstructure:"rotation_grace_period" validate:"omitempty,go_duration"`
+}
+
 // AgentConfig configuration settings.
 type AgentConfig struct {
 	// NATS connection settings for the agent.
@@ -387,5 +420,7 @@ type AgentConfig struct {
 	ProcessConditions ProcessConditions `mapstructure:"process_conditions,omitempty"`
 	// PrivilegeEscalation configures least-privilege agent mode.
 	PrivilegeEscalation PrivilegeEscalation `mapstructure:"privilege_escalation,omitempty"`
-	Metrics             MetricsServer       `mapstructure:"metrics"`
+	// PKI holds PKI enrollment and signing settings.
+	PKI     AgentPKI      `mapstructure:"pki,omitempty"`
+	Metrics MetricsServer `mapstructure:"metrics"`
 }

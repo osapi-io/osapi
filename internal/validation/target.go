@@ -32,8 +32,10 @@ import (
 
 // AgentTarget holds the routing-relevant fields of an active agent.
 type AgentTarget struct {
-	Hostname string
-	Labels   map[string]string
+	MachineID string
+	Hostname  string
+	State     string
+	Labels    map[string]string
 }
 
 // AgentLister returns active agents with their hostnames and labels.
@@ -96,7 +98,7 @@ func validTarget(fl validator.FieldLevel) bool {
 	target := fl.Field().String()
 
 	if target == "_any" || target == "_all" {
-		return true
+		return !allAgentsPending()
 	}
 
 	if agentLister == nil {
@@ -155,7 +157,42 @@ func matchesLabel(
 	return false
 }
 
-// matchesHostname checks whether any active agent has the given hostname.
+// allAgentsPending returns true when every registered agent is in Pending
+// state. Used to fail fast on _any/_all targets instead of timing out.
+// Returns false when no agents are registered or the lister is unavailable.
+func allAgentsPending() bool {
+	if agentLister == nil {
+		return false
+	}
+
+	agents, err := getAgents()
+	if err != nil || len(agents) == 0 {
+		return false
+	}
+
+	for _, a := range agents {
+		if a.State != "Pending" {
+			return false
+		}
+	}
+
+	pendingTargetMu.Lock()
+	pendingTarget = "_all"
+	pendingTargetMu.Unlock()
+
+	return true
+}
+
+// pendingTarget is set when a target matches a pending agent.
+// Used by the error message formatter to provide a specific message.
+var (
+	pendingTargetMu sync.Mutex
+	pendingTarget   string
+)
+
+// matchesHostname checks whether any active agent has the given hostname
+// or machine ID. Returns false for agents in Pending state (awaiting
+// PKI enrollment).
 func matchesHostname(
 	target string,
 ) bool {
@@ -165,10 +202,67 @@ func matchesHostname(
 	}
 
 	for _, a := range agents {
-		if a.Hostname == target {
+		if a.Hostname == target || a.MachineID == target {
+			if a.State == "Pending" {
+				pendingTargetMu.Lock()
+				pendingTarget = target
+				pendingTargetMu.Unlock()
+
+				return false
+			}
+
 			return true
 		}
 	}
 
 	return false
+}
+
+// IsPendingTarget returns true if the last validation failure was
+// due to a pending agent, and clears the flag.
+func IsPendingTarget() (string, bool) {
+	pendingTargetMu.Lock()
+	defer pendingTargetMu.Unlock()
+
+	t := pendingTarget
+	pendingTarget = ""
+
+	return t, t != ""
+}
+
+// ResolveTarget resolves a target string to a machine ID for NATS subject
+// routing. If the target matches a hostname, the corresponding machine ID
+// is returned. If it matches a machine ID directly, it is returned as-is.
+// Broadcast and label targets are returned unchanged.
+func ResolveTarget(
+	target string,
+) string {
+	if target == "_any" || target == "_all" {
+		return target
+	}
+
+	if strings.ContainsRune(target, ':') {
+		return target
+	}
+
+	agents, err := getAgents()
+	if err != nil {
+		return target
+	}
+
+	// Check if target is a hostname → resolve to machine ID.
+	for _, a := range agents {
+		if a.Hostname == target {
+			return a.MachineID
+		}
+	}
+
+	// Check if target is already a machine ID.
+	for _, a := range agents {
+		if a.MachineID == target {
+			return target
+		}
+	}
+
+	return target
 }

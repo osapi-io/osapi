@@ -30,9 +30,9 @@ import (
 // are stored in the main KV bucket (longer TTL than registry).
 func (a *Agent) checkDrainFlag(
 	ctx context.Context,
-	hostname string,
+	machineID string,
 ) bool {
-	return a.jobClient.CheckDrainFlag(ctx, hostname)
+	return a.jobClient.CheckDrainFlag(ctx, machineID)
 }
 
 // handleDrainDetection checks drain flag on each heartbeat tick.
@@ -42,9 +42,10 @@ func (a *Agent) checkDrainFlag(
 // to Ready and resumes accepting jobs.
 func (a *Agent) handleDrainDetection(
 	ctx context.Context,
+	machineID string,
 	hostname string,
 ) {
-	drainRequested := a.checkDrainFlag(ctx, hostname)
+	drainRequested := a.checkDrainFlag(ctx, machineID)
 
 	switch {
 	case drainRequested && a.state == job.AgentStateReady:

@@ -38,6 +38,6 @@ func New(
 ) *Ntp {
 	return &Ntp{
 		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "api.ntp")),
+		logger:    logger.With(slog.String("subsystem", "controller.ntp")),
 	}
 }

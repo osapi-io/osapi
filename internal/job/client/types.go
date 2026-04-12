@@ -22,12 +22,24 @@ package client
 
 import (
 	"context"
+	"crypto/ed25519"
 
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/retr0h/osapi/internal/job"
 )
+
+// PKISigner signs and verifies payloads. Nil when PKI is disabled.
+type PKISigner interface {
+	// Sign signs the given data with the signer's private key.
+	Sign(data []byte) []byte
+	// Fingerprint returns the SHA256 fingerprint of the signer's public key.
+	Fingerprint() string
+	// ControllerPublicKey returns the controller's public key for verifying
+	// controller-signed messages. Returns nil if not set.
+	ControllerPublicKey() ed25519.PublicKey
+}
 
 const (
 	// DefaultPageSize is the default number of jobs per page.

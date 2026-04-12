@@ -12,6 +12,11 @@
       "topics": ["osapi"]
     },
     {
+      "name": "gohai",
+      "description": "A Go-based system fact collector inspired by Chef Ohai.",
+      "topics": ["facts", "golang", "node-exporter", "ohai", "osapi", "system-information"]
+    },
+    {
       "name": "nats-client",
       "description": "A Go package for connecting to and interacting with a NATS server.",
       "topics": ["golang", "messaging", "nats-client", "nats-jetstream", "osapi"]

@@ -38,6 +38,6 @@ func New(
 ) *File {
 	return &File{
 		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "api.node.file")),
+		logger:    logger.With(slog.String("subsystem", "controller.node.file")),
 	}
 }

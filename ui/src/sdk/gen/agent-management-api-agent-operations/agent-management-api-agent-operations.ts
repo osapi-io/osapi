@@ -5,10 +5,14 @@
  * OpenAPI spec version: 1.0.0
  */
 import type {
+  AcceptAgent200,
+  AcceptAgentParams,
   AgentInfo,
   DrainAgent200,
   ErrorResponse,
   ListAgentsResponse,
+  ListPendingAgentsResponse,
+  RejectAgent200,
   UndrainAgent200
 } from '../schemas';
 
@@ -124,6 +128,195 @@ export const getAgentDetails = async (hostname: string, options?: RequestInit): 
   {
     ...options,
     method: 'GET'
+
+
+  }
+);}
+
+
+/**
+ * List all agents that have submitted enrollment requests but have not yet been accepted or rejected.
+ * @summary List agents awaiting enrollment
+ */
+export type getAgentsPendingResponse200 = {
+  data: ListPendingAgentsResponse
+  status: 200
+}
+
+export type getAgentsPendingResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getAgentsPendingResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getAgentsPendingResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type getAgentsPendingResponseSuccess = (getAgentsPendingResponse200) & {
+  headers: Headers;
+};
+export type getAgentsPendingResponseError = (getAgentsPendingResponse401 | getAgentsPendingResponse403 | getAgentsPendingResponse500) & {
+  headers: Headers;
+};
+
+export type getAgentsPendingResponse = (getAgentsPendingResponseSuccess | getAgentsPendingResponseError)
+
+export const getGetAgentsPendingUrl = () => {
+
+
+
+
+  return `/api/agent/pending`
+}
+
+export const getAgentsPending = async ( options?: RequestInit): Promise<getAgentsPendingResponse> => {
+
+  return apiFetch<getAgentsPendingResponse>(getGetAgentsPendingUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+/**
+ * Accept a pending agent enrollment request. The agent can be identified by hostname (path parameter) or by fingerprint (query parameter).
+
+ * @summary Accept a pending agent
+ */
+export type acceptAgentResponse200 = {
+  data: AcceptAgent200
+  status: 200
+}
+
+export type acceptAgentResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type acceptAgentResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type acceptAgentResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type acceptAgentResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type acceptAgentResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type acceptAgentResponseSuccess = (acceptAgentResponse200) & {
+  headers: Headers;
+};
+export type acceptAgentResponseError = (acceptAgentResponse400 | acceptAgentResponse401 | acceptAgentResponse403 | acceptAgentResponse404 | acceptAgentResponse500) & {
+  headers: Headers;
+};
+
+export type acceptAgentResponse = (acceptAgentResponseSuccess | acceptAgentResponseError)
+
+export const getAcceptAgentUrl = (hostname: string,
+    params?: AcceptAgentParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/agent/${hostname}/accept?${stringifiedParams}` : `/api/agent/${hostname}/accept`
+}
+
+export const acceptAgent = async (hostname: string,
+    params?: AcceptAgentParams, options?: RequestInit): Promise<acceptAgentResponse> => {
+
+  return apiFetch<acceptAgentResponse>(getAcceptAgentUrl(hostname,params),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+/**
+ * Reject a pending agent enrollment request.
+ * @summary Reject a pending agent
+ */
+export type rejectAgentResponse200 = {
+  data: RejectAgent200
+  status: 200
+}
+
+export type rejectAgentResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type rejectAgentResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type rejectAgentResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type rejectAgentResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type rejectAgentResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type rejectAgentResponseSuccess = (rejectAgentResponse200) & {
+  headers: Headers;
+};
+export type rejectAgentResponseError = (rejectAgentResponse400 | rejectAgentResponse401 | rejectAgentResponse403 | rejectAgentResponse404 | rejectAgentResponse500) & {
+  headers: Headers;
+};
+
+export type rejectAgentResponse = (rejectAgentResponseSuccess | rejectAgentResponseError)
+
+export const getRejectAgentUrl = (hostname: string,) => {
+
+
+
+
+  return `/api/agent/${hostname}/reject`
+}
+
+export const rejectAgent = async (hostname: string, options?: RequestInit): Promise<rejectAgentResponse> => {
+
+  return apiFetch<rejectAgentResponse>(getRejectAgentUrl(hostname),
+  {
+    ...options,
+    method: 'POST'
 
 
   }

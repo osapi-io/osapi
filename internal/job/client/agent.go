@@ -111,8 +111,18 @@ func (c *Client) WriteJobResponse(
 	// Marshal response (Response fields are always marshalable)
 	responseJSON, _ := json.Marshal(response)
 
+	// Sign the response when PKI is enabled.
+	kvPayload := responseJSON
+	if c.pkiSigner != nil {
+		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, responseJSON)
+		if signErr != nil {
+			return fmt.Errorf("failed to sign response: %w", signErr)
+		}
+		kvPayload = signed
+	}
+
 	// Store in KV
-	err := c.natsClient.KVPut(c.kv.Bucket(), responseKey, responseJSON)
+	err := c.natsClient.KVPut(c.kv.Bucket(), responseKey, kvPayload)
 	if err != nil {
 		return fmt.Errorf("failed to store job response: %w", err)
 	}
@@ -209,36 +219,56 @@ func (c *Client) ListAgents(
 	return agents, nil
 }
 
-// GetAgent reads a single agent's registration from the KV registry by hostname.
+// GetAgent reads a single agent's registration from the KV registry.
+// It tries a direct machine ID lookup first, then falls back to scanning
+// all agents by hostname.
 func (c *Client) GetAgent(
 	ctx context.Context,
-	hostname string,
+	target string,
 ) (*job.AgentInfo, error) {
 	if c.registryKV == nil {
 		return nil, fmt.Errorf("agent registry not configured")
 	}
 
-	key := "agents." + job.SanitizeHostname(hostname)
+	// Try as machine ID first (direct KV lookup).
+	key := "agents." + target
 	entry, err := c.registryKV.Get(ctx, key)
-	if err != nil {
-		return nil, fmt.Errorf("agent not found: %s", hostname)
+	if err == nil {
+		var reg job.AgentRegistration
+		if err := json.Unmarshal(entry.Value(), &reg); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal agent registration: %w", err)
+		}
+
+		info := agentInfoFromRegistration(&reg)
+		c.mergeFacts(ctx, &info)
+		c.overlayDrainState(ctx, &info)
+
+		timeline, _ := c.GetAgentTimeline(ctx, reg.Hostname)
+		if len(timeline) > 0 {
+			info.Timeline = timeline
+		}
+
+		return &info, nil
 	}
 
-	var reg job.AgentRegistration
-	if err := json.Unmarshal(entry.Value(), &reg); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal agent registration: %w", err)
+	// Fall back to hostname scan.
+	agents, listErr := c.ListAgents(ctx)
+	if listErr != nil {
+		return nil, fmt.Errorf("agent not found: %s", target)
 	}
 
-	info := agentInfoFromRegistration(&reg)
-	c.mergeFacts(ctx, &info)
-	c.overlayDrainState(ctx, &info)
+	for i := range agents {
+		if agents[i].Hostname == target {
+			timeline, _ := c.GetAgentTimeline(ctx, target)
+			if len(timeline) > 0 {
+				agents[i].Timeline = timeline
+			}
 
-	timeline, err := c.GetAgentTimeline(ctx, hostname)
-	if err == nil && len(timeline) > 0 {
-		info.Timeline = timeline
+			return &agents[i], nil
+		}
 	}
 
-	return &info, nil
+	return nil, fmt.Errorf("agent not found: %s", target)
 }
 
 // overlayDrainState checks if a drain flag exists for the agent and
@@ -253,7 +283,7 @@ func (c *Client) overlayDrainState(
 		return
 	}
 
-	key := "drain." + job.SanitizeHostname(info.Hostname)
+	key := "drain." + info.MachineID
 	_, err := c.stateKV.Get(ctx, key)
 	if err == nil {
 		info.State = job.AgentStateCordoned
@@ -270,7 +300,7 @@ func (c *Client) mergeFacts(
 		return
 	}
 
-	key := "facts." + job.SanitizeHostname(info.Hostname)
+	key := "facts." + info.MachineID
 	entry, err := c.factsKV.Get(ctx, key)
 	if err != nil {
 		return
@@ -298,6 +328,7 @@ func agentInfoFromRegistration(
 	reg *job.AgentRegistration,
 ) job.AgentInfo {
 	return job.AgentInfo{
+		MachineID:    reg.MachineID,
 		Hostname:     reg.Hostname,
 		Labels:       reg.Labels,
 		RegisteredAt: reg.RegisteredAt,
@@ -309,6 +340,7 @@ func agentInfoFromRegistration(
 		AgentVersion: reg.AgentVersion,
 		Conditions:   reg.Conditions,
 		State:        reg.State,
+		Fingerprint:  reg.Fingerprint,
 	}
 }
 

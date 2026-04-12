@@ -56,7 +56,7 @@ type AgentUndrainPublicTestSuite struct {
 func (s *AgentUndrainPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apiagent.New(slog.Default(), s.mockJobClient)
+	s.handler = apiagent.New(slog.Default(), s.mockJobClient, nil)
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -103,8 +103,9 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 			name:     "success undrains draining agent",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
-				Hostname: "server1",
-				State:    jobtypes.AgentStateDraining,
+				MachineID: "abc123",
+				Hostname:  "server1",
+				State:     jobtypes.AgentStateDraining,
 			},
 			mockDeleteDrain: true,
 			validateFunc: func(resp gen.UndrainAgentResponseObject) {
@@ -117,8 +118,9 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 			name:     "success undrains cordoned agent",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
-				Hostname: "server1",
-				State:    jobtypes.AgentStateCordoned,
+				MachineID: "abc123",
+				Hostname:  "server1",
+				State:     jobtypes.AgentStateCordoned,
 			},
 			mockDeleteDrain: true,
 			validateFunc: func(resp gen.UndrainAgentResponseObject) {
@@ -141,8 +143,9 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 			name:     "agent in ready state returns 409",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
-				Hostname: "server1",
-				State:    jobtypes.AgentStateReady,
+				MachineID: "abc123",
+				Hostname:  "server1",
+				State:     jobtypes.AgentStateReady,
 			},
 			skipWrite: true,
 			validateFunc: func(resp gen.UndrainAgentResponseObject) {
@@ -154,8 +157,9 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 			name:     "agent with empty state returns 409",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
-				Hostname: "server1",
-				State:    "",
+				MachineID: "abc123",
+				Hostname:  "server1",
+				State:     "",
 			},
 			skipWrite: true,
 			validateFunc: func(resp gen.UndrainAgentResponseObject) {
@@ -167,8 +171,9 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 			name:     "when DeleteDrainFlag fails returns 409",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
-				Hostname: "server1",
-				State:    jobtypes.AgentStateDraining,
+				MachineID: "abc123",
+				Hostname:  "server1",
+				State:     jobtypes.AgentStateDraining,
 			},
 			mockDeleteDrain:    true,
 			mockDeleteDrainErr: fmt.Errorf("kv connection failed"),
@@ -183,8 +188,9 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 			name:     "when WriteAgentTimelineEvent returns not found error returns 404",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
-				Hostname: "server1",
-				State:    jobtypes.AgentStateDraining,
+				MachineID: "abc123",
+				Hostname:  "server1",
+				State:     jobtypes.AgentStateDraining,
 			},
 			mockDeleteDrain: true,
 			mockWriteErr:    fmt.Errorf("agent not found: server1"),
@@ -197,8 +203,9 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 			name:     "when WriteAgentTimelineEvent returns other error returns 409",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
-				Hostname: "server1",
-				State:    jobtypes.AgentStateDraining,
+				MachineID: "abc123",
+				Hostname:  "server1",
+				State:     jobtypes.AgentStateDraining,
 			},
 			mockDeleteDrain: true,
 			mockWriteErr:    fmt.Errorf("connection failed"),
@@ -220,7 +227,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 
 			if tt.mockDeleteDrain {
 				s.mockJobClient.EXPECT().
-					DeleteDrainFlag(gomock.Any(), tt.hostname).
+					DeleteDrainFlag(gomock.Any(), "abc123").
 					Return(tt.mockDeleteDrainErr)
 			}
 
@@ -264,11 +271,12 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgentHTTP() {
 				mock.EXPECT().
 					GetAgent(gomock.Any(), "server1").
 					Return(&jobtypes.AgentInfo{
-						Hostname: "server1",
-						State:    jobtypes.AgentStateDraining,
+						MachineID: "abc123",
+						Hostname:  "server1",
+						State:     jobtypes.AgentStateDraining,
 					}, nil)
 				mock.EXPECT().
-					DeleteDrainFlag(gomock.Any(), "server1").
+					DeleteDrainFlag(gomock.Any(), "abc123").
 					Return(nil)
 				mock.EXPECT().
 					WriteAgentTimelineEvent(gomock.Any(), "server1", "undrain", "Undrain initiated via API").
@@ -299,8 +307,9 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgentHTTP() {
 				mock.EXPECT().
 					GetAgent(gomock.Any(), "server1").
 					Return(&jobtypes.AgentInfo{
-						Hostname: "server1",
-						State:    jobtypes.AgentStateReady,
+						MachineID: "abc123",
+						Hostname:  "server1",
+						State:     jobtypes.AgentStateReady,
 					}, nil)
 				return mock
 			},
@@ -313,7 +322,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgentHTTP() {
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
 
-			agentHandler := apiagent.New(s.logger, jobMock)
+			agentHandler := apiagent.New(s.logger, jobMock, nil)
 			strictHandler := gen.NewStrictHandler(agentHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
@@ -394,11 +403,12 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgentRBACHTTP() {
 				mock.EXPECT().
 					GetAgent(gomock.Any(), "server1").
 					Return(&jobtypes.AgentInfo{
-						Hostname: "server1",
-						State:    jobtypes.AgentStateDraining,
+						MachineID: "abc123",
+						Hostname:  "server1",
+						State:     jobtypes.AgentStateDraining,
 					}, nil)
 				mock.EXPECT().
-					DeleteDrainFlag(gomock.Any(), "server1").
+					DeleteDrainFlag(gomock.Any(), "abc123").
 					Return(nil)
 				mock.EXPECT().
 					WriteAgentTimelineEvent(gomock.Any(), "server1", "undrain", "Undrain initiated via API").
@@ -429,6 +439,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgentRBACHTTP() {
 				s.logger,
 				jobMock,
 				appConfig.Controller.API.Security.SigningKey,
+				nil,
 				nil,
 			)
 			server.RegisterHandlers(handlers)

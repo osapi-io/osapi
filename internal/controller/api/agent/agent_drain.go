@@ -51,7 +51,7 @@ func (a *Agent) DrainAgent(
 		return gen.DrainAgent409JSONResponse{Error: &errMsg}, nil
 	}
 
-	if err := a.JobClient.SetDrainFlag(ctx, hostname); err != nil {
+	if err := a.JobClient.SetDrainFlag(ctx, agentInfo.MachineID); err != nil {
 		errMsg := fmt.Sprintf("failed to set drain flag: %s", err.Error())
 		return gen.DrainAgent409JSONResponse{Error: &errMsg}, nil
 	}

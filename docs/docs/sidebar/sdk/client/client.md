@@ -108,9 +108,9 @@ resp, err := client.Hostname.Get(ctx, "_any")
 
 ### Agent
 
-| Service                 | Description                    |
-| ----------------------- | ------------------------------ |
-| [Agent](agent/agent.md) | Agent discovery, drain/undrain |
+| Service                 | Description                            |
+| ----------------------- | -------------------------------------- |
+| [Agent](agent/agent.md) | Agent discovery, lifecycle, enrollment |
 
 ### Health
 

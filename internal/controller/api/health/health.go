@@ -46,6 +46,6 @@ func New(
 		Version:       version,
 		Metrics:       metrics,
 		SubComponents: subComponents,
-		logger:        logger.With(slog.String("subsystem", "api.health")),
+		logger:        logger.With(slog.String("subsystem", "controller.health")),
 	}
 }

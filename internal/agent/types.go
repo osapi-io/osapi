@@ -28,9 +28,11 @@ import (
 	"time"
 
 	"github.com/avfs/avfs"
+	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel/metric"
 
+	"github.com/retr0h/osapi/internal/agent/pki"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/job"
@@ -42,6 +44,13 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/mem"
 	"github.com/retr0h/osapi/internal/telemetry/process"
 )
+
+// NATSPublisher provides core NATS pub/sub for enrollment.
+// Satisfied by the nats-client's Client type.
+type NATSPublisher interface {
+	PublishCore(subject string, data []byte) error
+	Subscribe(subject string, handler nats.MsgHandler) (*nats.Subscription, error)
+}
 
 // Agent implements job processing with clean lifecycle management.
 type Agent struct {
@@ -91,6 +100,16 @@ type Agent struct {
 	// state is the agent's scheduling state (Ready, Draining, Cordoned).
 	state string
 
+	// pkiManager handles keypair and enrollment lifecycle (nil when PKI disabled).
+	pkiManager *pki.Manager
+
+	// natsClient is used for publishing enrollment requests via NATS.
+	// Uses the same NATSClient interface as the rest of the project.
+	natsClient NATSPublisher
+
+	// machineID is the permanent host identifier resolved at startup.
+	machineID string
+
 	// hostname cached from Start for drain/undrain resubscribe.
 	hostname string
 
@@ -110,6 +129,7 @@ type Agent struct {
 	// Subsystem-specific loggers for background processes.
 	heartbeatLogger *slog.Logger
 	factsLogger     *slog.Logger
+	pkiLogger       *slog.Logger
 
 	// OTEL instruments for job metrics.
 	jobsProcessed metric.Int64Counter

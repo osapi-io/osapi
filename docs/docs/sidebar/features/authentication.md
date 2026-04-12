@@ -107,8 +107,26 @@ controller:
 See [Configuration](../usage/configuration.md#permissions) for the full
 reference including custom roles and CORS settings.
 
+## Agent-Level Authentication (PKI)
+
+JWT-based auth secures the REST API between clients and the controller. For
+agent-level trust -- ensuring that only approved agents process jobs and that
+jobs originate from a trusted controller -- OSAPI provides an optional PKI
+enrollment system.
+
+When PKI is enabled, each agent generates an Ed25519 key pair and submits an
+enrollment request. An administrator accepts or rejects the request,
+establishing cryptographic trust. The controller signs jobs with its private
+key, and agents verify the signature before processing.
+
+PKI is complementary to JWT auth: JWTs authenticate API callers, while PKI
+authenticates the agent-controller relationship over NATS. See
+[Agent Identity & PKI](agent-identity.md) for full details.
+
 ## Related
 
+- [Agent Identity & PKI](agent-identity.md) -- machine-ID identity, PKI
+  enrollment, job signing
 - [CLI Reference](../usage/cli/token/token.mdx) -- token generation and
   validation commands
 - [API Reference](/category/api) -- REST API documentation

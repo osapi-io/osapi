@@ -38,6 +38,6 @@ func New(
 ) *Command {
 	return &Command{
 		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "api.command")),
+		logger:    logger.With(slog.String("subsystem", "controller.command")),
 	}
 }

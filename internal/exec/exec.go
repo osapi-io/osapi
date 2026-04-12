@@ -72,7 +72,7 @@ func New(
 	logger *slog.Logger,
 	sudo bool,
 ) *Exec {
-	l := logger.With(slog.String("subsystem", "exec"))
+	l := logger.With(slog.String("subsystem", "agent.exec"))
 
 	return &Exec{
 		logger:   l,

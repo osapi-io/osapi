@@ -44,6 +44,7 @@ func (s *ServiceService) List(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,
@@ -74,6 +75,7 @@ func (s *ServiceService) Get(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
@@ -178,6 +180,7 @@ func (s *ServiceService) Delete(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,
@@ -208,6 +211,7 @@ func (s *ServiceService) Start(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,
@@ -238,6 +242,7 @@ func (s *ServiceService) Stop(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,
@@ -268,6 +273,7 @@ func (s *ServiceService) Restart(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,
@@ -298,6 +304,7 @@ func (s *ServiceService) Enable(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,
@@ -328,6 +335,7 @@ func (s *ServiceService) Disable(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,

@@ -281,7 +281,7 @@ func (s *AgentDrainPublicTestSuite) TestOverlayDrainState() {
 			setupMocks: func(kv *jobmocks.MockKeyValue) {
 				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				kv.EXPECT().
-					Get(gomock.Any(), "drain.server1").
+					Get(gomock.Any(), "drain.abc123").
 					Return(entry, nil)
 			},
 			expectedState: job.AgentStateCordoned,
@@ -291,7 +291,7 @@ func (s *AgentDrainPublicTestSuite) TestOverlayDrainState() {
 			useState: true,
 			setupMocks: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
-					Get(gomock.Any(), "drain.server1").
+					Get(gomock.Any(), "drain.abc123").
 					Return(nil, errors.New("key not found"))
 			},
 			expectedState: "",
@@ -307,13 +307,11 @@ func (s *AgentDrainPublicTestSuite) TestOverlayDrainState() {
 		s.Run(tt.name, func() {
 			registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
 
-			// Set up the registry KV to return agent data
+			// Set up the registry KV to return agent data with machine_id
 			entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-			entry.EXPECT().Value().Return(
-				[]byte(`{"hostname":"server1","registered_at":"2026-01-01T00:00:00Z"}`),
-			)
+			entry.EXPECT().Value().Return(agentRegistrationJSON("server1"))
 			registryKV.EXPECT().
-				Get(gomock.Any(), "agents.server1").
+				Get(gomock.Any(), "agents.abc123").
 				Return(entry, nil)
 
 			opts := &client.Options{
@@ -341,7 +339,7 @@ func (s *AgentDrainPublicTestSuite) TestOverlayDrainState() {
 			)
 			s.Require().NoError(err)
 
-			info, err := jobsClient.GetAgent(s.ctx, "server1")
+			info, err := jobsClient.GetAgent(s.ctx, "abc123")
 			s.NoError(err)
 			s.Equal(tt.expectedState, info.State)
 		})

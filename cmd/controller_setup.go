@@ -31,10 +31,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/labstack/echo/v4"
+	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
+	agentPKI "github.com/retr0h/osapi/internal/agent/pki"
 	"github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/config"
@@ -64,6 +67,7 @@ import (
 	timezoneAPI "github.com/retr0h/osapi/internal/controller/api/node/timezone"
 	userAPI "github.com/retr0h/osapi/internal/controller/api/node/user"
 	uihandler "github.com/retr0h/osapi/internal/controller/api/ui"
+	"github.com/retr0h/osapi/internal/controller/enrollment"
 	"github.com/retr0h/osapi/internal/controller/notify"
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
@@ -147,6 +151,16 @@ type NATSClient interface {
 		value []byte,
 	) error
 
+	// Core NATS operations (non-JetStream)
+	Subscribe(
+		subject string,
+		handler nats.MsgHandler,
+	) (*nats.Subscription, error)
+	PublishCore(
+		subject string,
+		data []byte,
+	) error
+
 	// Connection inspection
 	ConnectedURL() string
 	ConnectedServerVersion() string
@@ -200,8 +214,10 @@ func setupController(
 			targets := make([]validation.AgentTarget, 0, len(agents))
 			for _, a := range agents {
 				targets = append(targets, validation.AgentTarget{
-					Hostname: a.Hostname,
-					Labels:   a.Labels,
+					MachineID: a.MachineID,
+					Hostname:  a.Hostname,
+					State:     a.State,
+					Labels:    a.Labels,
 				})
 			}
 			return targets, nil
@@ -222,16 +238,22 @@ func setupController(
 		b.registryKV,
 	)
 
+	// --- PKI enrollment watcher (conditional) ---
+	var enrollmentWatcher *enrollment.Watcher
+	if appConfig.Controller.PKI.Enabled {
+		enrollmentWatcher = setupEnrollmentWatcher(ctx, log, b, namespace)
+	}
+
 	serverOpts = append(serverOpts, extraOpts...)
 	sm := api.New(appConfig, log, serverOpts...)
 	registerControllerHandlers(
 		log, sm, b.jobClient, checker, metricsProvider,
-		auditStore, b.objStore, b.fileStateKV,
+		auditStore, b.objStore, b.fileStateKV, enrollmentWatcher,
 	)
 
 	b.subComponents = buildControllerSubComponents()
-	startControllerHeartbeat(ctx, log.With("subsystem", "heartbeat"), b.registryKV, b.subComponents)
-	startConditionWatcher(ctx, log.With("subsystem", "notifier"), b.registryKV)
+	startControllerHeartbeat(ctx, log, b.registryKV, b.subComponents)
+	startConditionWatcher(ctx, log, b.registryKV)
 
 	return sm, b
 }
@@ -243,16 +265,18 @@ func connectNATSBundle(
 	namespace string,
 	streamName string,
 ) *natsBundle {
-	var nc NATSClient = natsclient.New(log, &natsclient.Options{
+	concreteNC := natsclient.New(log, &natsclient.Options{
 		Host: connCfg.Host,
 		Port: connCfg.Port,
 		Auth: cli.BuildNATSAuthOptions(connCfg.Auth),
 		Name: connCfg.ClientName,
 	})
 
-	if err := nc.Connect(); err != nil {
+	if err := concreteNC.Connect(); err != nil {
 		cli.LogFatal(log, "failed to connect to NATS", err)
 	}
+
+	var nc NATSClient = concreteNC
 
 	jobKVConfig := cli.BuildJobKVConfig(namespace, appConfig.NATS.KV)
 	jobsKV, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, jobKVConfig)
@@ -315,12 +339,13 @@ func connectNATSBundle(
 	jobTimeout, _ := time.ParseDuration(appConfig.Controller.API.JobTimeout)
 
 	jc, err := jobclient.New(log, nc, &jobclient.Options{
-		Timeout:    jobTimeout,
-		KVBucket:   jobsKV,
-		RegistryKV: registryKV,
-		FactsKV:    factsKV,
-		StateKV:    stateKV,
-		StreamName: streamName,
+		Timeout:        jobTimeout,
+		KVBucket:       jobsKV,
+		RegistryKV:     registryKV,
+		FactsKV:        factsKV,
+		StateKV:        stateKV,
+		StreamName:     streamName,
+		TargetResolver: validation.ResolveTarget,
 	})
 	if err != nil {
 		cli.LogFatal(log, "failed to create job client", err)
@@ -682,6 +707,7 @@ func registerControllerHandlers(
 	auditStore audit.Store,
 	objStore file.ObjectStoreManager,
 	fileStateKV file.StateKeyValue,
+	enrollmentWatcher *enrollment.Watcher,
 ) {
 	startTime := time.Now()
 	signingKey := appConfig.Controller.API.Security.SigningKey
@@ -724,7 +750,9 @@ func registerControllerHandlers(
 	}
 
 	handlers := make([]func(e *echo.Echo), 0, 16)
-	handlers = append(handlers, agentAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(
+		handlers,
+		agentAPI.Handler(log, jc, signingKey, customRoles, enrollmentWatcher)...)
 	handlers = append(handlers, nodeAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, jobAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(
@@ -782,6 +810,63 @@ func registerControllerHandlers(
 	}
 
 	sm.RegisterHandlers(handlers)
+}
+
+// setupEnrollmentWatcher creates the enrollment KV bucket, the controller PKI
+// manager, and the enrollment watcher. It starts the watcher in a background
+// goroutine and returns it so the agent handler can list/accept/reject agents.
+func setupEnrollmentWatcher(
+	ctx context.Context,
+	log *slog.Logger,
+	b *natsBundle,
+	namespace string,
+) *enrollment.Watcher {
+	enrollLog := log
+
+	// Create enrollment KV bucket.
+	enrollmentKVConfig := cli.BuildEnrollmentKVConfig(namespace, appConfig.NATS.Enrollment)
+	enrollmentKV, err := b.nc.CreateOrUpdateKVBucketWithConfig(ctx, enrollmentKVConfig)
+	if err != nil {
+		enrollLog.Warn(
+			"failed to create enrollment KV bucket, enrollment disabled",
+			slog.String("error", err.Error()),
+		)
+		return nil
+	}
+
+	// Create controller PKI manager and load or generate keypair.
+	pkiFS := osfs.New()
+	pkiManager := agentPKI.New(pkiFS, appConfig.Controller.PKI.KeyDir, "controller")
+	if err := pkiManager.LoadOrGenerate(); err != nil {
+		cli.LogFatal(enrollLog, "failed to load or generate controller keypair", err)
+	}
+
+	enrollLog.Info(
+		"controller PKI initialized",
+		slog.String("fingerprint", pkiManager.Fingerprint()),
+		slog.String("key_dir", appConfig.Controller.PKI.KeyDir),
+	)
+
+	// Create and start enrollment watcher.
+	watcher := enrollment.NewWatcher(
+		enrollLog,
+		b.nc,
+		enrollmentKV,
+		pkiManager,
+		appConfig.Controller.PKI.AutoAccept,
+		namespace,
+	)
+
+	go func() {
+		if err := watcher.Start(ctx); err != nil {
+			enrollLog.Warn(
+				"enrollment watcher stopped with error",
+				slog.String("error", err.Error()),
+			)
+		}
+	}()
+
+	return watcher
 }
 
 // startConditionWatcher creates a LogNotifier and a Watcher, then starts the
@@ -850,6 +935,9 @@ func buildControllerSubComponents() map[string]job.SubComponentInfo {
 		"controller.metrics": {
 			Status:  enabledOrDisabled(appConfig.Controller.Metrics.Enabled),
 			Address: httpAddr(appConfig.Controller.Metrics.Host, appConfig.Controller.Metrics.Port),
+		},
+		"controller.pki": {
+			Status: enabledOrDisabled(appConfig.Controller.PKI.Enabled),
 		},
 		"controller.notifier": {
 			Status: enabledOrDisabled(appConfig.Controller.Notifications.Enabled),

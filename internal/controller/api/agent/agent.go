@@ -35,9 +35,11 @@ var _ gen.StrictServerInterface = (*Agent)(nil)
 func New(
 	logger *slog.Logger,
 	jobClient client.JobClient,
+	enrollmentMgr EnrollmentManager,
 ) *Agent {
 	return &Agent{
-		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "api.agent")),
+		JobClient:  jobClient,
+		logger:     logger.With(slog.String("subsystem", "controller.agent")),
+		enrollment: enrollmentMgr,
 	}
 }

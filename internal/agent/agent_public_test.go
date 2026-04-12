@@ -22,6 +22,7 @@ package agent_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -31,11 +32,13 @@ import (
 	"time"
 
 	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/agent"
+	"github.com/retr0h/osapi/internal/agent/identity"
 	"github.com/retr0h/osapi/internal/config"
 	execmocks "github.com/retr0h/osapi/internal/exec/mocks"
 	"github.com/retr0h/osapi/internal/job"
@@ -76,6 +79,14 @@ func (s *AgentPublicTestSuite) SetupTest() {
 	s.appFs = memfs.New()
 	s.logger = slog.Default()
 
+	// Mock identity so tests don't depend on /etc/machine-id existing.
+	agent.SetGetIdentityFn(func(_ avfs.VFS, _ string) (*identity.Identity, error) {
+		return &identity.Identity{
+			MachineID: "test-machine-id",
+			Hostname:  "test-agent",
+		}, nil
+	})
+
 	s.appConfig = config.Config{
 		NATS: config.NATS{
 			Stream: config.NATSStream{Name: "test-stream"},
@@ -96,7 +107,20 @@ func (s *AgentPublicTestSuite) SetupTest() {
 }
 
 func (s *AgentPublicTestSuite) TearDownTest() {
+	agent.ResetGetIdentityFn()
 	s.mockCtrl.Finish()
+}
+
+func (s *AgentPublicTestSuite) TearDownSubTest() {
+	// Restore the default identity mock between table rows so tests
+	// that override getIdentityFn (e.g., identity-fails) don't leak
+	// into subsequent rows (e.g., pending-state).
+	agent.SetGetIdentityFn(func(_ avfs.VFS, _ string) (*identity.Identity, error) {
+		return &identity.Identity{
+			MachineID: "test-machine-id",
+			Hostname:  "test-agent",
+		}, nil
+	})
 }
 
 func (s *AgentPublicTestSuite) buildAgent() *agent.Agent {
@@ -162,6 +186,108 @@ func (s *AgentPublicTestSuite) TestStart() {
 				return s.buildAgent()
 			},
 			stopFunc: func(a *agent.Agent) {
+				stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+
+				a.Stop(stopCtx)
+			},
+		},
+		{
+			name: "returns early when identity resolution fails",
+			setupFunc: func() *agent.Agent {
+				agent.SetGetIdentityFn(func(_ avfs.VFS, _ string) (*identity.Identity, error) {
+					return nil, fmt.Errorf("machine-id not found")
+				})
+
+				return s.buildAgent()
+			},
+			stopFunc: func(a *agent.Agent) {
+				// Agent should not have started — identity failed.
+				err := a.IsReady()
+				s.Error(err)
+			},
+		},
+		{
+			name: "returns early when PKI enrollment fails",
+			setupFunc: func() *agent.Agent {
+				cfg := s.appConfig
+				cfg.Agent.PKI = config.AgentPKI{
+					Enabled: true,
+					KeyDir:  "/nonexistent/keys",
+				}
+
+				// Use failfs to make the key directory creation fail.
+				ffs := failfs.New(memfs.New())
+				_ = ffs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					if fn == avfs.FnMkdirAll {
+						return errors.New("permission denied")
+					}
+					return nil
+				})
+
+				return newTestAgent(newTestAgentParams{
+					appFs:           ffs,
+					appConfig:       cfg,
+					logger:          s.logger,
+					jobClient:       s.mockJobClient,
+					streamName:      "test-stream",
+					hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
+					diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
+					memProvider:     memMocks.NewDefaultMockProvider(s.mockCtrl),
+					loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
+					dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+					pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
+					processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+				})
+			},
+			stopFunc: func(a *agent.Agent) {
+				// Agent should not have started — PKI enrollment failed.
+				err := a.IsReady()
+				s.Error(err)
+			},
+		},
+		{
+			name: "enters pending state when PKI enabled and not enrolled skips consumers",
+			setupFunc: func() *agent.Agent {
+				fs := memfs.New()
+
+				cfg := s.appConfig
+				cfg.Agent.PKI = config.AgentPKI{
+					Enabled: true,
+					KeyDir:  "/keys",
+				}
+
+				// No CreateOrUpdateConsumer/ConsumeJobs expectations:
+				// consumers must NOT be started in pending state.
+
+				return newTestAgent(newTestAgentParams{
+					appFs:           fs,
+					appConfig:       cfg,
+					logger:          s.logger,
+					jobClient:       s.mockJobClient,
+					streamName:      "test-stream",
+					hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
+					diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
+					memProvider:     memMocks.NewDefaultMockProvider(s.mockCtrl),
+					loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
+					dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+					pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
+					processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+				})
+			},
+			stopFunc: func(a *agent.Agent) {
+				// Agent should be in pending state — consumers not started.
+				state := agent.GetAgentState(a)
+				s.Equal(job.AgentStatePending, state)
+
 				stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 

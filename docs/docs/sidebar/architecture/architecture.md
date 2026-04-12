@@ -184,6 +184,8 @@ configure them — see the Features section:
 - [Metrics](../features/metrics.md) — Prometheus endpoint
 - [Agent Hardening](../features/agent-hardening.md) — least-privilege mode with
   sudo and capabilities
+- [Agent Identity & PKI](../features/agent-identity.md) — machine-ID identity,
+  PKI enrollment, job signing
 - [Management Dashboard](../features/management-dashboard.md) — embedded React
   UI for fleet health, operations, and admin
 

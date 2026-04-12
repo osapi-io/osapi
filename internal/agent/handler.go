@@ -36,6 +36,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 
+	"github.com/retr0h/osapi/internal/agent/pki"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/telemetry/tracing"
@@ -64,6 +65,43 @@ func extractChanged(
 	return &b
 }
 
+// unwrapJobEnvelope attempts to unwrap a SignedEnvelope from job data.
+// When PKI is disabled (pkiManager is nil), the raw data passes through.
+// When PKI is enabled and a controller public key is set, the signature
+// is verified. Returns the inner payload or an error.
+func (a *Agent) unwrapJobEnvelope(
+	data []byte,
+) ([]byte, error) {
+	if a.pkiManager == nil {
+		return data, nil
+	}
+
+	var envelope job.SignedEnvelope
+	if err := json.Unmarshal(data, &envelope); err != nil {
+		// Not a signed envelope — pass through.
+		return data, nil
+	}
+
+	// Check if this looks like a signed envelope.
+	if len(envelope.Payload) == 0 || len(envelope.Signature) == 0 || envelope.Fingerprint == "" {
+		return data, nil
+	}
+
+	// Verify signature if controller public key is available.
+	controllerPubKey := a.pkiManager.ControllerPublicKey()
+	if len(controllerPubKey) > 0 {
+		if !pki.Verify(controllerPubKey, envelope.Payload, envelope.Signature) {
+			return nil, fmt.Errorf("invalid controller signature on job data")
+		}
+
+		a.logger.Debug("verified job signature",
+			slog.String("fingerprint", envelope.Fingerprint),
+		)
+	}
+
+	return envelope.Payload, nil
+}
+
 // writeStatusEvent writes an append-only status event for a job.
 // This eliminates race conditions by never updating existing keys.
 func (a *Agent) writeStatusEvent(
@@ -72,11 +110,8 @@ func (a *Agent) writeStatusEvent(
 	event string,
 	data map[string]interface{},
 ) error {
-	// Get hostname for this agent (GetAgentHostname always succeeds)
-	hostname, _ := job.GetAgentHostname(a.appConfig.Agent.Hostname)
-
-	// Use job client to write status event
-	return a.jobClient.WriteStatusEvent(ctx, jobID, event, hostname, data)
+	// Use cached hostname resolved at startup.
+	return a.jobClient.WriteStatusEvent(ctx, jobID, event, a.hostname, data)
 }
 
 // handleJobMessage processes incoming job messages from NATS.
@@ -110,6 +145,12 @@ func (a *Agent) handleJobMessage(
 	jobDataBytes, err := a.jobClient.GetJobData(context.Background(), jobDataKey)
 	if err != nil {
 		return fmt.Errorf("job not found: %s", jobKey)
+	}
+
+	// Unwrap signed envelope if PKI is enabled and controller public key is set.
+	jobDataBytes, err = a.unwrapJobEnvelope(jobDataBytes)
+	if err != nil {
+		return fmt.Errorf("job signature verification failed: %w", err)
 	}
 
 	// Parse the job data
@@ -235,10 +276,8 @@ func (a *Agent) handleJobMessage(
 		a.jobsActive.Add(ctx, 1)
 	}
 
-	// Get agent hostname (GetAgentHostname always succeeds)
-	hostname, _ := job.GetAgentHostname(a.appConfig.Agent.Hostname)
-
-	// Create job response
+	// Create job response using cached hostname resolved at startup.
+	hostname := a.hostname
 	response := job.Response{
 		JobID:     jobRequest.JobID,
 		Status:    job.StatusProcessing,

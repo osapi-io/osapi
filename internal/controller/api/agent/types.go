@@ -21,14 +21,26 @@
 package agent
 
 import (
+	"context"
 	"log/slog"
 
+	"github.com/retr0h/osapi/internal/controller/enrollment"
 	"github.com/retr0h/osapi/internal/job/client"
 )
+
+// EnrollmentManager defines the enrollment operations needed by the
+// agent API handlers. When nil, enrollment endpoints return 500.
+type EnrollmentManager interface {
+	ListPending(ctx context.Context) ([]enrollment.PendingAgent, error)
+	AcceptByHostname(ctx context.Context, hostname string) error
+	AcceptByFingerprint(ctx context.Context, fingerprint string) error
+	RejectByHostname(ctx context.Context, hostname string, reason string) error
+}
 
 // Agent implementation of the Agent APIs operations.
 type Agent struct {
 	// JobClient provides job-based operations for agent queries.
-	JobClient client.JobClient
-	logger    *slog.Logger
+	JobClient  client.JobClient
+	logger     *slog.Logger
+	enrollment EnrollmentManager
 }

@@ -39,6 +39,6 @@ func New(
 	return &File{
 		objStore: objStore,
 		stateKV:  stateKV,
-		logger:   logger.With(slog.String("subsystem", "api.file")),
+		logger:   logger.With(slog.String("subsystem", "controller.file")),
 	}
 }

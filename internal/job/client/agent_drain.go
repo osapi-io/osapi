@@ -24,42 +24,42 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-
-	"github.com/retr0h/osapi/internal/job"
 )
 
-// CheckDrainFlag returns true if the drain flag exists for the hostname.
+// CheckDrainFlag returns true if the drain flag exists for the given
+// identifier. Callers pass a machine ID (hex string, no sanitization needed).
 func (c *Client) CheckDrainFlag(
 	ctx context.Context,
-	hostname string,
+	machineID string,
 ) bool {
 	if c.stateKV == nil {
 		return false
 	}
 
-	key := "drain." + job.SanitizeHostname(hostname)
+	key := "drain." + machineID
 	_, err := c.stateKV.Get(ctx, key)
 	return err == nil
 }
 
 // SetDrainFlag writes the drain flag for an agent in the state KV bucket.
 // The agent detects this flag on heartbeat and stops accepting jobs.
+// Callers pass a machine ID (hex string, no sanitization needed).
 func (c *Client) SetDrainFlag(
 	ctx context.Context,
-	hostname string,
+	machineID string,
 ) error {
 	if c.stateKV == nil {
 		return fmt.Errorf("agent state bucket not configured")
 	}
 
-	key := "drain." + job.SanitizeHostname(hostname)
+	key := "drain." + machineID
 	_, err := c.stateKV.Put(ctx, key, []byte("1"))
 	if err != nil {
 		return fmt.Errorf("set drain flag: %w", err)
 	}
 
 	c.logger.Debug("set drain flag",
-		slog.String("hostname", hostname),
+		slog.String("machine_id", machineID),
 		slog.String("key", key),
 	)
 
@@ -68,22 +68,23 @@ func (c *Client) SetDrainFlag(
 
 // DeleteDrainFlag removes the drain flag for an agent from the state KV bucket.
 // The agent detects this on heartbeat and resumes accepting jobs.
+// Callers pass a machine ID (hex string, no sanitization needed).
 func (c *Client) DeleteDrainFlag(
 	ctx context.Context,
-	hostname string,
+	machineID string,
 ) error {
 	if c.stateKV == nil {
 		return fmt.Errorf("agent state bucket not configured")
 	}
 
-	key := "drain." + job.SanitizeHostname(hostname)
+	key := "drain." + machineID
 	err := c.stateKV.Delete(ctx, key)
 	if err != nil {
 		return fmt.Errorf("delete drain flag: %w", err)
 	}
 
 	c.logger.Debug("deleted drain flag",
-		slog.String("hostname", hostname),
+		slog.String("machine_id", machineID),
 		slog.String("key", key),
 	)
 

@@ -55,7 +55,7 @@ func (a *Agent) UndrainAgent(
 		return gen.UndrainAgent409JSONResponse{Error: &errMsg}, nil
 	}
 
-	if err := a.JobClient.DeleteDrainFlag(ctx, hostname); err != nil {
+	if err := a.JobClient.DeleteDrainFlag(ctx, agentInfo.MachineID); err != nil {
 		errMsg := fmt.Sprintf("failed to delete drain flag: %s", err.Error())
 		return gen.UndrainAgent409JSONResponse{Error: &errMsg}, nil
 	}

@@ -585,6 +585,53 @@ func (suite *NATSPublicTestSuite) TestBuildObjectStoreConfig() {
 	}
 }
 
+func (suite *NATSPublicTestSuite) TestBuildEnrollmentKVConfig() {
+	tests := []struct {
+		name          string
+		namespace     string
+		enrollmentCfg config.NATSEnrollment
+		validateFn    func(jetstream.KeyValueConfig)
+	}{
+		{
+			name:      "when namespace is set",
+			namespace: "osapi",
+			enrollmentCfg: config.NATSEnrollment{
+				Bucket:   "agent-enrollment",
+				Storage:  "file",
+				Replicas: 1,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "osapi-agent-enrollment", cfg.Bucket)
+				assert.Equal(suite.T(), time.Duration(0), cfg.TTL)
+				assert.Equal(suite.T(), jetstream.FileStorage, cfg.Storage)
+				assert.Equal(suite.T(), 1, cfg.Replicas)
+			},
+		},
+		{
+			name:      "when namespace is empty",
+			namespace: "",
+			enrollmentCfg: config.NATSEnrollment{
+				Bucket:   "agent-enrollment",
+				Storage:  "memory",
+				Replicas: 3,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "agent-enrollment", cfg.Bucket)
+				assert.Equal(suite.T(), jetstream.MemoryStorage, cfg.Storage)
+				assert.Equal(suite.T(), 3, cfg.Replicas)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got := cli.BuildEnrollmentKVConfig(tc.namespace, tc.enrollmentCfg)
+
+			tc.validateFn(got)
+		})
+	}
+}
+
 func (suite *NATSPublicTestSuite) TestBuildFileStateKVConfig() {
 	tests := []struct {
 		name         string

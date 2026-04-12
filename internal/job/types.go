@@ -73,6 +73,16 @@ var StatusPriority = map[string]int{
 	string(StatusRetried):      4,
 }
 
+// SignedEnvelope wraps a job or response payload with an Ed25519 signature.
+type SignedEnvelope struct {
+	// Payload is the raw JSON payload (job data or response data).
+	Payload []byte `json:"payload"`
+	// Signature is the Ed25519 signature of the payload.
+	Signature []byte `json:"signature"`
+	// Fingerprint is the SHA256 fingerprint of the signer's public key.
+	Fingerprint string `json:"fingerprint"`
+}
+
 // Request represents a request to perform a job operation.
 type Request struct {
 	// JobID is a unique identifier for this job.
@@ -537,6 +547,7 @@ const (
 	AgentStateReady    = client.AgentReady
 	AgentStateDraining = client.AgentDraining
 	AgentStateCordoned = client.AgentCordoned
+	AgentStatePending  = client.AgentPending
 )
 
 // Condition represents a node condition evaluated agent-side.
@@ -588,6 +599,8 @@ type ComponentRegistration struct {
 
 // AgentRegistration represents an agent's registration entry in the KV registry.
 type AgentRegistration struct {
+	// MachineID is the permanent host identifier.
+	MachineID string `json:"machine_id"`
 	// Hostname is the hostname of the agent.
 	Hostname string `json:"hostname"`
 	// Labels are the key-value labels configured on the agent.
@@ -610,14 +623,19 @@ type AgentRegistration struct {
 	Process *ProcessMetrics `json:"process,omitempty"`
 	// Conditions contains the evaluated node conditions.
 	Conditions []Condition `json:"conditions,omitempty"`
-	// State is the agent's scheduling state (Ready, Draining, Cordoned).
+	// State is the agent's scheduling state (Ready, Draining, Cordoned, Pending).
 	State string `json:"state,omitempty"`
+	// Fingerprint is the SHA256 fingerprint of the agent's PKI public key.
+	// Empty when PKI is disabled.
+	Fingerprint string `json:"fingerprint,omitempty"`
 	// SubComponents reports the status of internal services.
 	SubComponents map[string]SubComponentInfo `json:"sub_components,omitempty"`
 }
 
 // AgentInfo represents information about an active agent.
 type AgentInfo struct {
+	// MachineID is the permanent host identifier.
+	MachineID string `json:"machine_id"`
 	// Hostname is the hostname of the agent.
 	Hostname string `json:"hostname"`
 	// Labels are the key-value labels configured on the agent.
@@ -658,8 +676,11 @@ type AgentInfo struct {
 	Facts map[string]any `json:"facts,omitempty"`
 	// Conditions contains the evaluated node conditions.
 	Conditions []Condition `json:"conditions,omitempty"`
-	// State is the agent's scheduling state (Ready, Draining, Cordoned).
+	// State is the agent's scheduling state (Ready, Draining, Cordoned, Pending).
 	State string `json:"state,omitempty"`
+	// Fingerprint is the SHA256 fingerprint of the agent's PKI public key.
+	// Empty when PKI is disabled.
+	Fingerprint string `json:"fingerprint,omitempty"`
 	// Timeline contains the chronological sequence of state transition events.
 	Timeline []TimelineEvent `json:"timeline,omitempty"`
 }
