@@ -71,6 +71,17 @@ export function PageLayout({ children }: PageLayoutProps) {
             },
           ]
         : []),
+      ...(pathname !== "/admin/enrollment"
+        ? [
+            {
+              id: "nav:enrollment",
+              name: "admin enrollment",
+              description: "Go to PKI Enrollment",
+              category: "admin",
+              action: () => navigate("/admin/enrollment"),
+            },
+          ]
+        : []),
     ],
     [pathname, navigate],
   );
