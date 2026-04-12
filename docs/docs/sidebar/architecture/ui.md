@@ -129,8 +129,8 @@ Pages (Dashboard, Configure, Roles, SignIn)
 Framework-level reusable components that define the visual language: `Text`,
 `Card`, `Button`, `Badge`, `Input`, `Dropdown`, `FormField`, `PageHeader`,
 `SectionLabel`, `StatCard`, `DataTable`, `HealthDot`, `ErrorBanner`, `Modal`,
-`EmptyState`, `Popover`, and more. Every visual pattern is a component — raw
-Tailwind classes are never duplicated inline.
+`EmptyState`, `Popover`, `CopyField`, and more. Every visual pattern is a
+component — raw Tailwind classes are never duplicated inline.
 
 ### Domain Components (`ui/src/components/domain/`)
 
@@ -138,7 +138,7 @@ Business logic components specific to OSAPI: the block system (`BlockCard`,
 `BlockStack`, `ResultCard`), per-operation block forms (`CommandBlock`,
 `CronBlock`, `DockerBlock`, `FileBlock`, …), pickers (`TargetPicker`,
 `ObjectPicker`, `ContainerPicker`), and dashboard widgets (`AgentCard`,
-`ComponentRow`, `JobDetail`).
+`ComponentRow`, `JobDetail`, `PendingAgentCard`).
 
 ### Layout Components (`ui/src/components/layout/`)
 
@@ -249,6 +249,12 @@ per-block spinners, and result rendering.
 
 RBAC reference: current session info with role badge, role definitions table,
 full permission matrix, and block permissions table.
+
+### Enrollment (`/admin/enrollment`)
+
+PKI enrollment management: lists pending agents with machine ID, fingerprint,
+and requested time. Accept and reject buttons for each agent. Empty state when
+no agents are pending. Command bar commands for accept/reject by hostname.
 
 ### SignIn
 

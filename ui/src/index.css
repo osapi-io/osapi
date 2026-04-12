@@ -13,8 +13,8 @@
   --color-border: rgba(103, 234, 148, 0.15);
   --color-border-accent: rgba(124, 58, 237, 0.2);
   --color-status-ready: #67ea94;
-  --color-status-pending: #7c3aed;
-  --color-status-running: #f59e0b;
+  --color-status-pending: #f59e0b;
+  --color-status-running: #3b82f6;
   --color-status-error: #ef4444;
   --color-status-applied: #22aa62;
   --font-mono: "JetBrains Mono", "Fira Code", monospace;

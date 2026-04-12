@@ -94,6 +94,12 @@ export function Dashboard() {
     refresh: refreshAgents,
   } = useAgents();
 
+  // Filter out pending agents — they're managed in Admin > Enrollment.
+  const activeAgents = useMemo(
+    () => agents.filter((a) => a.state !== "Pending"),
+    [agents],
+  );
+
   const loading = healthLoading || agentLoading;
   const error = healthErr || agentErr;
 
@@ -313,13 +319,13 @@ export function Dashboard() {
             </div>
           )}
 
-          {/* Agents */}
+          {/* Agents — pending agents are managed in Admin > Enrollment */}
           <section>
             <SectionLabel icon={Activity}>
-              Agents ({agents.length})
+              Agents ({activeAgents.length})
             </SectionLabel>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {agents.map((agent) => (
+              {activeAgents.map((agent) => (
                 <AgentCard
                   key={agent.hostname}
                   agent={agent}

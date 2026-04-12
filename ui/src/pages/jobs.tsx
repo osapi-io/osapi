@@ -39,6 +39,7 @@ const STATUS_OPTIONS = [
   { value: "completed", label: "Completed" },
   { value: "failed", label: "Failed" },
   { value: "partial_failure", label: "Partial Failure" },
+  { value: "skipped", label: "Skipped" },
 ];
 
 function statusBadgeVariant(status?: string) {
@@ -46,13 +47,15 @@ function statusBadgeVariant(status?: string) {
     case "completed":
       return "ready" as const;
     case "failed":
-      return "error" as const;
     case "partial_failure":
       return "error" as const;
     case "processing":
       return "running" as const;
     case "submitted":
+    case "retried":
       return "pending" as const;
+    case "skipped":
+      return "muted" as const;
     default:
       return "muted" as const;
   }

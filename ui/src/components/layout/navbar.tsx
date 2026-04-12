@@ -8,6 +8,7 @@ import {
   FileText,
   Briefcase,
   Shield,
+  ShieldAlert,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/hooks/use-auth";
@@ -23,6 +24,7 @@ const navItems = [
 
 const adminLinks = [
   { to: "/admin/audit", label: "Audit Log", icon: FileText },
+  { to: "/admin/enrollment", label: "Enrollment", icon: ShieldAlert },
   { to: "/admin/jobs", label: "Jobs", icon: Briefcase },
   { to: "/admin/roles", label: "Roles", icon: Shield },
 ];

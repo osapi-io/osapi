@@ -8,7 +8,8 @@ const badgeVariants = cva(
     variants: {
       variant: {
         ready: "bg-primary/10 text-primary border border-primary/20",
-        pending: "bg-accent/10 text-accent-light border border-accent/20",
+        pending:
+          "bg-status-pending/10 text-status-pending border border-status-pending/20",
         running:
           "bg-status-running/10 text-status-running border border-status-running/20",
         error:
