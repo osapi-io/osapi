@@ -252,8 +252,8 @@ func setupController(
 	)
 
 	b.subComponents = buildControllerSubComponents()
-	startControllerHeartbeat(ctx, log.With("subsystem", "heartbeat"), b.registryKV, b.subComponents)
-	startConditionWatcher(ctx, log.With("subsystem", "notifier"), b.registryKV)
+	startControllerHeartbeat(ctx, log, b.registryKV, b.subComponents)
+	startConditionWatcher(ctx, log, b.registryKV)
 
 	return sm, b
 }

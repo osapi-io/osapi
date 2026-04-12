@@ -62,10 +62,8 @@ func New(
 	execManager exec.Manager,
 	natsClient NATSPublisher,
 ) *Agent {
-	logger = logger.With(slog.String("subsystem", "agent"))
-
 	a := &Agent{
-		logger:          logger,
+		logger:          logger.With(slog.String("subsystem", "agent")),
 		appConfig:       appConfig,
 		appFs:           appFs,
 		jobClient:       jobClient,
@@ -81,8 +79,8 @@ func New(
 		factsKV:         factsKV,
 		execManager:     execManager,
 		natsClient:      natsClient,
-		heartbeatLogger: logger.With(slog.String("subsystem", "heartbeat")),
-		factsLogger:     logger.With(slog.String("subsystem", "facts")),
+		heartbeatLogger: logger.With(slog.String("subsystem", "agent.heartbeat")),
+		factsLogger:     logger.With(slog.String("subsystem", "agent.facts")),
 		pkiLogger:       logger.With(slog.String("subsystem", "agent.pki")),
 	}
 
