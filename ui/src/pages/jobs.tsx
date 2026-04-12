@@ -50,8 +50,6 @@ function statusBadgeVariant(status?: string) {
     case "partial_failure":
       return "error" as const;
     case "processing":
-    case "acknowledged":
-    case "started":
       return "running" as const;
     case "submitted":
     case "retried":
