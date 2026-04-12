@@ -45,6 +45,8 @@ function stateVariant(state?: string) {
       return "running" as const;
     case "Cordoned":
       return "error" as const;
+    case "Pending":
+      return "pending" as const;
     default:
       return undefined;
   }
@@ -55,10 +57,11 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
   const [acting, setActing] = useState(false);
 
   const isReady = agent.status === "Ready";
+  const isPending = agent.state === "Pending";
   const isDrained = agent.state === "Draining" || agent.state === "Cordoned";
   const canWrite = can("agent:write");
-  const variant = isReady ? "active" : "error";
-  const badgeVariant = isReady ? "ready" : "error";
+  const variant = isPending ? "active" : isReady ? "active" : "error";
+  const badgeVariant = isPending ? "pending" : isReady ? "ready" : "error";
   const activeConditions = agent.conditions?.filter((c) => c.status) ?? [];
 
   const handleDrain = async () => {
@@ -94,13 +97,39 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
           {agent.hostname}
         </CardTitle>
         <div className="ml-auto flex items-center gap-1.5">
-          {agent.state && agent.state !== "Ready" && (
+          {agent.state && agent.state !== "Ready" ? (
             <Badge variant={stateVariant(agent.state)}>{agent.state}</Badge>
+          ) : (
+            <Badge variant={badgeVariant}>{agent.status}</Badge>
           )}
-          <Badge variant={badgeVariant}>{agent.status}</Badge>
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col">
+        {/* Identity */}
+        {agent.machine_id && (
+          <Text
+            variant="muted"
+            as="p"
+            className="cursor-pointer break-all text-xs"
+            title="Click to copy machine ID"
+            onClick={() => navigator.clipboard.writeText(agent.machine_id!)}
+          >
+            {agent.machine_id}
+          </Text>
+        )}
+        {agent.fingerprint && (
+          <Text variant="muted" as="p" className="break-all text-xs">
+            {agent.fingerprint}
+          </Text>
+        )}
+
+        {/* Pending enrollment notice */}
+        {isPending && (
+          <Text variant="muted" as="p" className="mt-1 italic">
+            Awaiting PKI enrollment
+          </Text>
+        )}
+
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-2">
           {agent.load_average && (
@@ -161,8 +190,8 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
             </div>
           )}
 
-          {/* Drain / Undrain */}
-          {canWrite && (
+          {/* Drain / Undrain — hidden when pending */}
+          {canWrite && !isPending && (
             <div className="mt-2 border-t border-border/30 pt-2">
               {isDrained ? (
                 <Button

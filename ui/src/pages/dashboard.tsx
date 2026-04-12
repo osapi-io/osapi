@@ -1,7 +1,9 @@
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
+import { useCommands } from "@/hooks/use-commands";
 import { ContentArea } from "@/components/layout/content-area";
 import { AgentCard } from "@/components/domain/agent-card";
+import { PendingAgentCard } from "@/components/domain/pending-agent-card";
 import { ComponentRow } from "@/components/domain/component-row";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,8 +15,14 @@ import { DataTable } from "@/components/ui/data-table";
 import { Text } from "@/components/ui/text";
 import { useHealth } from "@/hooks/use-health";
 import { useAgents } from "@/hooks/use-agents";
-import { Activity, Loader2 } from "lucide-react";
-import type { ComponentHealth, ComponentEntry } from "@/sdk/gen/schemas";
+import { useAuth } from "@/hooks/use-auth";
+import { Activity, Loader2, ShieldAlert } from "lucide-react";
+import type { ComponentHealth, ComponentEntry, PendingAgentInfo } from "@/sdk/gen/schemas";
+import {
+  getAgentsPending,
+  acceptAgent,
+  rejectAgent,
+} from "@/sdk/gen/agent-management-api-agent-operations/agent-management-api-agent-operations";
 
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -93,6 +101,71 @@ export function Dashboard() {
     loading: agentLoading,
     refresh: refreshAgents,
   } = useAgents();
+  const { can } = useAuth();
+
+  const [pendingAgents, setPendingAgents] = useState<PendingAgentInfo[]>([]);
+
+  const fetchPending = useCallback(async () => {
+    if (!can("agent:write")) return;
+    try {
+      const resp = await getAgentsPending();
+      if (resp.status === 200) {
+        setPendingAgents(
+          (resp.data as { agents?: PendingAgentInfo[] })?.agents ?? [],
+        );
+      }
+    } catch {
+      // silent — pending section just won't show
+    }
+  }, [can]);
+
+  useEffect(() => {
+    fetchPending();
+    const interval = setInterval(fetchPending, 10000);
+    return () => clearInterval(interval);
+  }, [fetchPending]);
+
+  const refreshAll = useCallback(() => {
+    refreshAgents();
+    fetchPending();
+  }, [refreshAgents, fetchPending]);
+
+  // Command bar commands for PKI operations.
+  useCommands(
+    [
+      {
+        id: "pki:pending",
+        name: "pending",
+        description: "Show pending PKI enrollments",
+        category: "navigation",
+        action: () => {
+          document.getElementById("pending-agents")?.scrollIntoView({ behavior: "smooth" });
+        },
+      },
+      ...pendingAgents.map((a) => ({
+        id: `pki:accept:${a.hostname}`,
+        name: `accept ${a.hostname}`,
+        description: `Accept PKI enrollment for ${a.hostname}`,
+        category: "actions",
+        action: async () => {
+          await acceptAgent(a.hostname);
+          fetchPending();
+          refreshAgents();
+        },
+      })),
+      ...pendingAgents.map((a) => ({
+        id: `pki:reject:${a.hostname}`,
+        name: `reject ${a.hostname}`,
+        description: `Reject PKI enrollment for ${a.hostname}`,
+        category: "actions",
+        action: async () => {
+          await rejectAgent(a.hostname);
+          fetchPending();
+        },
+      })),
+    ],
+    [pendingAgents, fetchPending, refreshAgents],
+  );
 
   const loading = healthLoading || agentLoading;
   const error = healthErr || agentErr;
@@ -313,6 +386,24 @@ export function Dashboard() {
             </div>
           )}
 
+          {/* Pending Agents (PKI enrollment) */}
+          {pendingAgents.length > 0 && can("agent:write") && (
+            <section id="pending-agents">
+              <SectionLabel icon={ShieldAlert}>
+                Pending Enrollment ({pendingAgents.length})
+              </SectionLabel>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {pendingAgents.map((pa) => (
+                  <PendingAgentCard
+                    key={pa.machine_id}
+                    agent={pa}
+                    onRefresh={refreshAll}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Agents */}
           <section>
             <SectionLabel icon={Activity}>
@@ -324,7 +415,7 @@ export function Dashboard() {
                   key={agent.hostname}
                   agent={agent}
                   components={grouped?.agent}
-                  onRefresh={refreshAgents}
+                  onRefresh={refreshAll}
                 />
               ))}
             </div>

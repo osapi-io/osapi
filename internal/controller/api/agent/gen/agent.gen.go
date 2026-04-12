@@ -24,6 +24,7 @@ const (
 const (
 	AgentInfoStateCordoned AgentInfoState = "Cordoned"
 	AgentInfoStateDraining AgentInfoState = "Draining"
+	AgentInfoStatePending  AgentInfoState = "Pending"
 	AgentInfoStateReady    AgentInfoState = "Ready"
 )
 

@@ -15,4 +15,5 @@ export const AgentInfoState = {
   Ready: 'Ready',
   Draining: 'Draining',
   Cordoned: 'Cordoned',
+  Pending: 'Pending',
 } as const;

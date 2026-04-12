@@ -6266,6 +6266,7 @@ components:
             - Ready
             - Draining
             - Cordoned
+            - Pending
           description: Agent scheduling state.
         conditions:
           type: array

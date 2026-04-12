@@ -46,13 +46,17 @@ function statusBadgeVariant(status?: string) {
     case "completed":
       return "ready" as const;
     case "failed":
-      return "error" as const;
     case "partial_failure":
       return "error" as const;
     case "processing":
+    case "acknowledged":
+    case "started":
       return "running" as const;
     case "submitted":
+    case "retried":
       return "pending" as const;
+    case "skipped":
+      return "muted" as const;
     default:
       return "muted" as const;
   }

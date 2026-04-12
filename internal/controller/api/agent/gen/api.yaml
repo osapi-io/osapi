@@ -582,7 +582,7 @@ components:
           description: Extended facts from additional providers.
         state:
           type: string
-          enum: [Ready, Draining, Cordoned]
+          enum: [Ready, Draining, Cordoned, Pending]
           description: Agent scheduling state.
         conditions:
           type: array
