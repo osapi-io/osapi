@@ -39,6 +39,7 @@ const STATUS_OPTIONS = [
   { value: "completed", label: "Completed" },
   { value: "failed", label: "Failed" },
   { value: "partial_failure", label: "Partial Failure" },
+  { value: "skipped", label: "Skipped" },
 ];
 
 function statusBadgeVariant(status?: string) {

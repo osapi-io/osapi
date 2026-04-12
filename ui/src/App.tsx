@@ -8,6 +8,7 @@ import { Configure } from "./pages/configure";
 import { Roles } from "./pages/roles";
 import { Audit } from "./pages/audit";
 import { Jobs } from "./pages/jobs";
+import { Enrollment } from "./pages/enrollment";
 import { SignIn } from "./pages/sign-in";
 
 function AuthenticatedApp() {
@@ -26,6 +27,7 @@ function AuthenticatedApp() {
         <Route path="/admin/audit" element={<Audit />} />
         <Route path="/admin/jobs" element={<Jobs />} />
         <Route path="/admin/roles" element={<Roles />} />
+        <Route path="/admin/enrollment" element={<Enrollment />} />
       </Routes>
     </PageLayout>
   );
