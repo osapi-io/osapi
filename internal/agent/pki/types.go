@@ -30,10 +30,10 @@ import (
 
 // Manager handles Ed25519 keypair lifecycle.
 type Manager struct {
-	fs               avfs.VFS
-	keyDir           string
-	publicKey        ed25519.PublicKey
-	privateKey       ed25519.PrivateKey
+	fs                       avfs.VFS
+	keyDir                   string
+	publicKey                ed25519.PublicKey
+	privateKey               ed25519.PrivateKey
 	controllerPubKey         ed25519.PublicKey
 	previousControllerPubKey ed25519.PublicKey
 }

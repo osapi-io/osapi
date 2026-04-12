@@ -57,6 +57,7 @@ var clientAgentAcceptCmd = &cobra.Command{
 func init() {
 	clientAgentCmd.AddCommand(clientAgentAcceptCmd)
 	clientAgentAcceptCmd.Flags().String("hostname", "", "Hostname of the pending agent to accept")
-	clientAgentAcceptCmd.Flags().String("fingerprint", "", "Accept by fingerprint instead of hostname")
+	clientAgentAcceptCmd.Flags().
+		String("fingerprint", "", "Accept by fingerprint instead of hostname")
 	_ = clientAgentAcceptCmd.MarkFlagRequired("hostname")
 }

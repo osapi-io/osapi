@@ -73,11 +73,11 @@ func (s *AgentPendingPublicTestSuite) TestGetAgentsPending() {
 	fixedTime := time.Date(2026, 1, 15, 10, 30, 0, 0, time.UTC)
 
 	tests := []struct {
-		name           string
-		useNilEnroll   bool
-		mockPending    []enrollment.PendingAgent
-		mockErr        error
-		validateFunc   func(resp gen.GetAgentsPendingResponseObject)
+		name         string
+		useNilEnroll bool
+		mockPending  []enrollment.PendingAgent
+		mockErr      error
+		validateFunc func(resp gen.GetAgentsPendingResponseObject)
 	}{
 		{
 			name:         "returns 500 when enrollment not enabled",
@@ -89,7 +89,7 @@ func (s *AgentPendingPublicTestSuite) TestGetAgentsPending() {
 			},
 		},
 		{
-			name: "returns empty list when no pending agents",
+			name:        "returns empty list when no pending agents",
 			mockPending: nil,
 			validateFunc: func(resp gen.GetAgentsPendingResponseObject) {
 				r, ok := resp.(gen.GetAgentsPending200JSONResponse)
@@ -151,10 +151,10 @@ func (s *AgentPendingPublicTestSuite) TestGetAgentsPending() {
 
 func (s *AgentPendingPublicTestSuite) TestGetAgentsPendingHTTP() {
 	tests := []struct {
-		name           string
-		setupMocks     func() (*jobmocks.MockJobClient, *agentmocks.MockEnrollmentManager)
-		wantCode       int
-		wantContains   []string
+		name         string
+		setupMocks   func() (*jobmocks.MockJobClient, *agentmocks.MockEnrollmentManager)
+		wantCode     int
+		wantContains []string
 	}{
 		{
 			name: "when pending agents exist returns 200",
@@ -227,10 +227,14 @@ func (s *AgentPendingPublicTestSuite) TestGetAgentsPendingRBACHTTP() {
 		wantContains []string
 	}{
 		{
-			name: "when no token returns 401",
+			name:      "when no token returns 401",
 			setupAuth: func(_ *http.Request) {},
 			setupMocks: func() (*jobmocks.MockJobClient, *agentmocks.MockEnrollmentManager) {
-				return jobmocks.NewMockJobClient(s.mockCtrl), agentmocks.NewMockEnrollmentManager(s.mockCtrl)
+				return jobmocks.NewMockJobClient(
+						s.mockCtrl,
+					), agentmocks.NewMockEnrollmentManager(
+						s.mockCtrl,
+					)
 			},
 			wantCode:     http.StatusUnauthorized,
 			wantContains: []string{"Bearer token required"},
@@ -248,7 +252,11 @@ func (s *AgentPendingPublicTestSuite) TestGetAgentsPendingRBACHTTP() {
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupMocks: func() (*jobmocks.MockJobClient, *agentmocks.MockEnrollmentManager) {
-				return jobmocks.NewMockJobClient(s.mockCtrl), agentmocks.NewMockEnrollmentManager(s.mockCtrl)
+				return jobmocks.NewMockJobClient(
+						s.mockCtrl,
+					), agentmocks.NewMockEnrollmentManager(
+						s.mockCtrl,
+					)
 			},
 			wantCode:     http.StatusForbidden,
 			wantContains: []string{"Insufficient permissions"},

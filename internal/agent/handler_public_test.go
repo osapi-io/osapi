@@ -972,8 +972,10 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 			data: func() []byte {
 				payload := []byte(`{"id":"bad-sig"}`)
 				envelope := job.SignedEnvelope{
-					Payload:     payload,
-					Signature:   []byte("invalid-signature-data-that-is-long-enough-for-ed25519-64-bytes!!"),
+					Payload: payload,
+					Signature: []byte(
+						"invalid-signature-data-that-is-long-enough-for-ed25519-64-bytes!!",
+					),
 					Fingerprint: "SHA256:bad-fp",
 				}
 				data, _ := json.Marshal(envelope)
@@ -1087,7 +1089,9 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 			},
 			setupMocks: func() {
 				// Create signed job data.
-				payload := []byte(`{"id":"signed-job-ok","operation":{"type":"node.hostname.get","data":{}}}`)
+				payload := []byte(
+					`{"id":"signed-job-ok","operation":{"type":"node.hostname.get","data":{}}}`,
+				)
 				sig := ed25519.Sign(controllerPriv, payload)
 				envelope := job.SignedEnvelope{
 					Payload:     payload,
@@ -1133,8 +1137,10 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 				// Create job data with invalid signature.
 				payload := []byte(`{"id":"bad-sig-job","operation":{"type":"node.hostname.get"}}`)
 				envelope := job.SignedEnvelope{
-					Payload:     payload,
-					Signature:   []byte("bad-signature-data-that-is-at-least-64-bytes-long-for-ed25519!!!"),
+					Payload: payload,
+					Signature: []byte(
+						"bad-signature-data-that-is-at-least-64-bytes-long-for-ed25519!!!",
+					),
 					Fingerprint: "SHA256:bad",
 				}
 				envelopeJSON, _ := json.Marshal(envelope)

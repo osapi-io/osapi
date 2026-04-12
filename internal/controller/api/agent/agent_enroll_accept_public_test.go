@@ -216,7 +216,11 @@ func (s *AgentEnrollAcceptPublicTestSuite) TestAcceptAgentHTTP() {
 			name:     "when hostname exceeds max length returns 400",
 			hostname: strings.Repeat("a", 256),
 			setupMocks: func() (*jobmocks.MockJobClient, *agentmocks.MockEnrollmentManager) {
-				return jobmocks.NewMockJobClient(s.mockCtrl), agentmocks.NewMockEnrollmentManager(s.mockCtrl)
+				return jobmocks.NewMockJobClient(
+						s.mockCtrl,
+					), agentmocks.NewMockEnrollmentManager(
+						s.mockCtrl,
+					)
 			},
 			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`},
@@ -291,7 +295,11 @@ func (s *AgentEnrollAcceptPublicTestSuite) TestAcceptAgentRBACHTTP() {
 			name:      "when no token returns 401",
 			setupAuth: func(_ *http.Request) {},
 			setupMocks: func() (*jobmocks.MockJobClient, *agentmocks.MockEnrollmentManager) {
-				return jobmocks.NewMockJobClient(s.mockCtrl), agentmocks.NewMockEnrollmentManager(s.mockCtrl)
+				return jobmocks.NewMockJobClient(
+						s.mockCtrl,
+					), agentmocks.NewMockEnrollmentManager(
+						s.mockCtrl,
+					)
 			},
 			wantCode:     http.StatusUnauthorized,
 			wantContains: []string{"Bearer token required"},
@@ -309,7 +317,11 @@ func (s *AgentEnrollAcceptPublicTestSuite) TestAcceptAgentRBACHTTP() {
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupMocks: func() (*jobmocks.MockJobClient, *agentmocks.MockEnrollmentManager) {
-				return jobmocks.NewMockJobClient(s.mockCtrl), agentmocks.NewMockEnrollmentManager(s.mockCtrl)
+				return jobmocks.NewMockJobClient(
+						s.mockCtrl,
+					), agentmocks.NewMockEnrollmentManager(
+						s.mockCtrl,
+					)
 			},
 			wantCode:     http.StatusForbidden,
 			wantContains: []string{"Insufficient permissions"},

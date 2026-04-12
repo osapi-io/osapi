@@ -307,7 +307,12 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistration() {
 			if tt.teardownMock != nil {
 				defer tt.teardownMock()
 			}
-			agent.ExportWriteRegistration(context.Background(), s.testAgent, "test-machine-id", "test-agent")
+			agent.ExportWriteRegistration(
+				context.Background(),
+				s.testAgent,
+				"test-machine-id",
+				"test-agent",
+			)
 		})
 	}
 }
@@ -328,7 +333,12 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistrationStoresHeartbeatT
 				Return(uint64(1), nil)
 
 			before := time.Now()
-			agent.ExportWriteRegistration(context.Background(), s.testAgent, "test-machine-id", "test-agent")
+			agent.ExportWriteRegistration(
+				context.Background(),
+				s.testAgent,
+				"test-machine-id",
+				"test-agent",
+			)
 			after := time.Now()
 
 			got := s.testAgent.LastHeartbeatTime()

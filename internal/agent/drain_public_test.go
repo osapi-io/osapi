@@ -123,7 +123,11 @@ func (s *DrainPublicTestSuite) TestCheckDrainFlag() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.setupMock()
-			result := agent.ExportCheckDrainFlag(context.Background(), s.testAgent, "test-machine-id")
+			result := agent.ExportCheckDrainFlag(
+				context.Background(),
+				s.testAgent,
+				"test-machine-id",
+			)
 			tt.validateFunc(result)
 		})
 	}
@@ -242,7 +246,12 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 		s.Run(tt.name, func() {
 			agent.SetAgentState(s.testAgent, tt.initialState)
 			tt.setupMock()
-			agent.ExportHandleDrainDetection(context.Background(), s.testAgent, "test-machine-id", "test-agent")
+			agent.ExportHandleDrainDetection(
+				context.Background(),
+				s.testAgent,
+				"test-machine-id",
+				"test-agent",
+			)
 			s.Equal(tt.expectedState, agent.GetAgentState(s.testAgent))
 		})
 	}

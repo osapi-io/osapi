@@ -43,7 +43,6 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller"
 	"github.com/retr0h/osapi/internal/controller/api"
-	"github.com/retr0h/osapi/internal/controller/enrollment"
 	agentAPI "github.com/retr0h/osapi/internal/controller/api/agent"
 	auditAPI "github.com/retr0h/osapi/internal/controller/api/audit"
 	factsAPI "github.com/retr0h/osapi/internal/controller/api/facts"
@@ -68,6 +67,7 @@ import (
 	timezoneAPI "github.com/retr0h/osapi/internal/controller/api/node/timezone"
 	userAPI "github.com/retr0h/osapi/internal/controller/api/node/user"
 	uihandler "github.com/retr0h/osapi/internal/controller/api/ui"
+	"github.com/retr0h/osapi/internal/controller/enrollment"
 	"github.com/retr0h/osapi/internal/controller/notify"
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
@@ -745,7 +745,9 @@ func registerControllerHandlers(
 	}
 
 	handlers := make([]func(e *echo.Echo), 0, 16)
-	handlers = append(handlers, agentAPI.Handler(log, jc, signingKey, customRoles, enrollmentWatcher)...)
+	handlers = append(
+		handlers,
+		agentAPI.Handler(log, jc, signingKey, customRoles, enrollmentWatcher)...)
 	handlers = append(handlers, nodeAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, jobAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(

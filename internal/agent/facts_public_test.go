@@ -203,7 +203,12 @@ func (s *FactsPublicTestSuite) TestWriteFacts() {
 			if tt.teardownMock != nil {
 				defer tt.teardownMock()
 			}
-			agent.ExportWriteFacts(context.Background(), s.testAgent, "test-machine-id", "test-agent")
+			agent.ExportWriteFacts(
+				context.Background(),
+				s.testAgent,
+				"test-machine-id",
+				"test-agent",
+			)
 		})
 	}
 }
