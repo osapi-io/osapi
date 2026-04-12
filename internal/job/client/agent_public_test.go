@@ -269,6 +269,112 @@ func (s *AgentPublicTestSuite) TestWriteJobResponse() {
 	}
 }
 
+func (s *AgentPublicTestSuite) TestWriteJobResponseWithPKISigner() {
+	signer := newMockPKISigner()
+
+	tests := []struct {
+		name         string
+		jobID        string
+		hostname     string
+		responseData []byte
+		status       string
+		errorMsg     string
+		changed      *bool
+		kvError      error
+		expectError  bool
+		errorText    string
+	}{
+		{
+			name:         "when PKI signer signs response before KV write",
+			jobID:        "job-pki-123",
+			hostname:     "agent-1",
+			responseData: []byte(`{"result": "signed"}`),
+			status:       "completed",
+		},
+		{
+			name:         "when PKI signer and KV write fails",
+			jobID:        "job-pki-456",
+			hostname:     "agent-2",
+			responseData: []byte(`{"result": "fail"}`),
+			status:       "completed",
+			kvError:      errors.New("storage failure"),
+			expectError:  true,
+			errorText:    "failed to store job response",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			mockKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+			mockNATS := jobmocks.NewMockNATSClient(s.mockCtrl)
+
+			opts := &client.Options{
+				Timeout:   30 * time.Second,
+				KVBucket:  mockKV,
+				PKISigner: signer,
+			}
+			pkiClient, err := client.New(slog.Default(), mockNATS, opts)
+			s.Require().NoError(err)
+
+			mockKV.EXPECT().Bucket().Return("test-bucket")
+			mockNATS.EXPECT().
+				KVPut("test-bucket", gomock.Any(), gomock.Any()).
+				Return(tt.kvError)
+
+			err = pkiClient.WriteJobResponse(
+				s.ctx,
+				tt.jobID,
+				tt.hostname,
+				tt.responseData,
+				tt.status,
+				tt.errorMsg,
+				tt.changed,
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				s.Contains(err.Error(), tt.errorText)
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
+}
+
+func (s *AgentPublicTestSuite) TestWriteJobResponseWithPKISignerError() {
+	signer := newMockPKISigner()
+
+	// Inject a failing marshal function to trigger the sign error path.
+	client.SetSigningMarshalFn(func(_ any) ([]byte, error) {
+		return nil, errors.New("marshal error")
+	})
+	defer client.ResetSigningMarshalFn()
+
+	mockKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+	mockNATS := jobmocks.NewMockNATSClient(s.mockCtrl)
+
+	opts := &client.Options{
+		Timeout:   30 * time.Second,
+		KVBucket:  mockKV,
+		PKISigner: signer,
+	}
+	pkiClient, err := client.New(slog.Default(), mockNATS, opts)
+	s.Require().NoError(err)
+
+	err = pkiClient.WriteJobResponse(
+		s.ctx,
+		"job-sign-fail",
+		"agent-1",
+		[]byte(`{"result": "test"}`),
+		"completed",
+		"",
+		nil,
+	)
+
+	s.Error(err)
+	s.Contains(err.Error(), "failed to sign response")
+}
+
 func (s *AgentPublicTestSuite) TestConsumeJobs() {
 	tests := []struct {
 		name          string

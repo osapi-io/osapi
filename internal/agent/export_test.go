@@ -27,8 +27,10 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/retr0h/osapi/internal/agent/identity"
 	"github.com/retr0h/osapi/internal/agent/pki"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/exec"
@@ -647,6 +649,16 @@ func WaitAgentWG(
 	a *Agent,
 ) {
 	a.wg.Wait()
+}
+
+// SetGetIdentityFn overrides the getIdentityFn variable for testing.
+func SetGetIdentityFn(fn func(avfs.VFS, string) (*identity.Identity, error)) {
+	getIdentityFn = fn
+}
+
+// ResetGetIdentityFn restores the default getIdentityFn variable.
+func ResetGetIdentityFn() {
+	getIdentityFn = identity.GetIdentity
 }
 
 // ExportHandlePKIEnrollment exposes the private handlePKIEnrollment method for testing.

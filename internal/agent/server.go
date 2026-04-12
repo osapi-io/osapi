@@ -29,6 +29,10 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 )
 
+// getIdentityFn dispatches to the identity resolution function.
+// Overridable in tests via export_test.go.
+var getIdentityFn = identity.GetIdentity
+
 // Start starts the agent without blocking. Call Stop to shut down.
 func (a *Agent) Start() {
 	a.ctx, a.cancel = context.WithCancel(context.Background())
@@ -38,7 +42,7 @@ func (a *Agent) Start() {
 	a.logger.Info("starting node agent")
 
 	// Resolve agent identity (machine ID + hostname).
-	ident, err := identity.GetIdentity(a.appFs, a.appConfig.Agent.Hostname)
+	ident, err := getIdentityFn(a.appFs, a.appConfig.Agent.Hostname)
 	if err != nil {
 		a.logger.Error("failed to resolve agent identity",
 			slog.String("error", err.Error()),

@@ -22,6 +22,7 @@ package identity_test
 
 import (
 	"fmt"
+	"runtime"
 	"testing"
 
 	"github.com/avfs/avfs"
@@ -33,18 +34,14 @@ import (
 	"github.com/retr0h/osapi/internal/agent/identity"
 )
 
-// Coverage notes for inherently untestable functions:
-//
-// defaultIoregFn (darwin.go:38) — Executes the real `ioreg` command via
-// exec.Command. Swapped via SetIoregFn/ResetIoregFn in tests. Cannot be
-// unit-tested without running the actual macOS ioreg binary. 0% coverage
-// is expected and acceptable.
+// Coverage notes for inherently platform-dependent functions:
 //
 // defaultGetMachineID (identity.go:37) — runtime.GOOS switch that
-// dispatches to platform-specific readers. Swapped via
-// SetGetMachineIDFn/ResetGetMachineIDFn in tests. Only one branch
-// executes per platform, so full coverage requires running tests on
-// every supported OS. 0% coverage in unit tests is expected.
+// dispatches to platform-specific readers. Only one branch executes
+// per platform. On macOS the "darwin" branch runs; on Linux the "linux"
+// branch runs. The "default" (unsupported) branch requires a runtime
+// not in {linux, darwin}, which cannot be simulated in unit tests.
+// Partial coverage (~50%) is expected.
 
 type GetMachineIDFromFSPublicTestSuite struct {
 	suite.Suite
@@ -241,11 +238,6 @@ func (suite *GetIdentityPublicTestSuite) TestGetIdentity() {
 			wantErr:      true,
 			wantContains: "machine-id",
 		},
-		// NOTE: The hostname error path (identity.go lines 63-65) is
-		// unreachable in unit tests. job.GetAgentHostname never returns
-		// an error — it falls back to "unknown" on any failure. The
-		// error return exists for interface consistency, but no input
-		// can trigger it. Coverage gap: ~14% of GetIdentity.
 	}
 
 	for _, tc := range tests {
@@ -279,4 +271,87 @@ func (suite *GetIdentityPublicTestSuite) TestGetIdentity() {
 func TestGetIdentityPublicTestSuite(t *testing.T) {
 	t.Parallel()
 	suite.Run(t, new(GetIdentityPublicTestSuite))
+}
+
+// PlatformPublicTestSuite tests the real platform-specific functions.
+// These run the actual OS commands so they only pass on their target platform.
+type PlatformPublicTestSuite struct {
+	suite.Suite
+}
+
+func (suite *PlatformPublicTestSuite) TearDownSubTest() {
+	identity.ResetExecCommandFn()
+}
+
+func (suite *PlatformPublicTestSuite) TestDefaultIoregFn() {
+	tests := []struct {
+		name         string
+		setupFn      func()
+		skipUnless   string
+		wantErr      bool
+		wantContains string
+	}{
+		{
+			name:       "when ioreg command succeeds on macOS",
+			skipUnless: "darwin",
+			wantContains: "IOPlatformUUID",
+		},
+		{
+			name: "when exec command fails returns error",
+			setupFn: func() {
+				identity.SetExecCommandFn(func() ([]byte, error) {
+					return nil, fmt.Errorf("exec: command not found")
+				})
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			if tc.skipUnless != "" && runtime.GOOS != tc.skipUnless {
+				suite.T().Skipf("only runs on %s", tc.skipUnless)
+			}
+
+			if tc.setupFn != nil {
+				tc.setupFn()
+			}
+
+			out, err := identity.ExportDefaultIoregFn()
+
+			if tc.wantErr {
+				require.Error(suite.T(), err)
+				assert.Empty(suite.T(), out)
+			} else {
+				require.NoError(suite.T(), err)
+				assert.Contains(suite.T(), out, tc.wantContains)
+			}
+		})
+	}
+}
+
+func (suite *PlatformPublicTestSuite) TestDefaultGetMachineID() {
+	fs := memfs.New()
+
+	switch runtime.GOOS {
+	case "darwin":
+		// On macOS, defaultGetMachineID calls GetDarwinMachineID (no fs needed).
+		id, err := identity.ExportDefaultGetMachineID(fs)
+		suite.NoError(err)
+		suite.NotEmpty(id)
+	case "linux":
+		// On Linux, defaultGetMachineID reads /etc/machine-id from the real fs.
+		// Using memfs here, so it will fail — test the error path.
+		_, err := identity.ExportDefaultGetMachineID(fs)
+		suite.Error(err)
+	default:
+		// Unsupported platform returns error.
+		_, err := identity.ExportDefaultGetMachineID(fs)
+		suite.Error(err)
+		suite.Contains(err.Error(), "unsupported platform")
+	}
+}
+
+func TestPlatformPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(PlatformPublicTestSuite))
 }

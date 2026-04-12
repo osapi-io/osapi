@@ -32,6 +32,16 @@ func ResetIoregFn() {
 	ioregFn = defaultIoregFn
 }
 
+// SetExecCommandFn overrides the execCommandFn function for testing.
+func SetExecCommandFn(fn func() ([]byte, error)) {
+	execCommandFn = fn
+}
+
+// ResetExecCommandFn restores the default execCommandFn function.
+func ResetExecCommandFn() {
+	execCommandFn = defaultExecCommandFn
+}
+
 // SetGetMachineIDFn overrides the getMachineIDFn function for testing.
 func SetGetMachineIDFn(fn func(avfs.VFS) (string, error)) {
 	getMachineIDFn = fn
@@ -40,4 +50,14 @@ func SetGetMachineIDFn(fn func(avfs.VFS) (string, error)) {
 // ResetGetMachineIDFn restores the default getMachineIDFn function.
 func ResetGetMachineIDFn() {
 	getMachineIDFn = defaultGetMachineID
+}
+
+// ExportDefaultIoregFn exposes defaultIoregFn for testing.
+func ExportDefaultIoregFn() (string, error) {
+	return defaultIoregFn()
+}
+
+// ExportDefaultGetMachineID exposes defaultGetMachineID for testing.
+func ExportDefaultGetMachineID(fs avfs.VFS) (string, error) {
+	return defaultGetMachineID(fs)
 }

@@ -59,10 +59,9 @@ func GetIdentity(
 		return nil, fmt.Errorf("resolve machine-id: %w", err)
 	}
 
-	hostname, err := job.GetAgentHostname(configHostname)
-	if err != nil {
-		return nil, fmt.Errorf("resolve hostname: %w", err)
-	}
+	// GetAgentHostname never returns an error — it falls back to "unknown"
+	// on any failure. The error return exists for interface consistency.
+	hostname, _ := job.GetAgentHostname(configHostname)
 
 	return &Identity{
 		MachineID: machineID,

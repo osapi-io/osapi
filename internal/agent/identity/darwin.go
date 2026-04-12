@@ -31,12 +31,21 @@ import (
 // Injectable for testing via export_test.go.
 var ioregFn = defaultIoregFn
 
+// execCommandFn wraps exec.Command().Output() for testing.
+// Injectable via export_test.go to simulate command failures.
+var execCommandFn = defaultExecCommandFn
+
 // uuidPattern matches the IOPlatformUUID value in ioreg output.
 var uuidPattern = regexp.MustCompile(`"IOPlatformUUID"\s*=\s*"([^"]+)"`)
 
+// defaultExecCommandFn runs the ioreg command via exec.Command.
+func defaultExecCommandFn() ([]byte, error) {
+	return exec.Command("ioreg", "-rd1", "-c", "IOPlatformExpertDevice").Output()
+}
+
 // defaultIoregFn runs the ioreg command to retrieve platform expert device info.
 func defaultIoregFn() (string, error) {
-	out, err := exec.Command("ioreg", "-rd1", "-c", "IOPlatformExpertDevice").Output()
+	out, err := execCommandFn()
 	if err != nil {
 		return "", err
 	}
