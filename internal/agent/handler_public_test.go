@@ -942,7 +942,7 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 		{
 			name: "when valid signed envelope with correct controller key",
 			setupPKI: func() *pki.Manager {
-				m := pki.NewManager(memfs.New(), "/tmp/pki")
+				m := pki.New(memfs.New(), "/tmp/pki", "agent")
 				s.Require().NoError(m.LoadOrGenerate())
 				m.SetControllerPublicKey(controllerPub)
 				return m
@@ -964,7 +964,7 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 		{
 			name: "when signed envelope with invalid signature",
 			setupPKI: func() *pki.Manager {
-				m := pki.NewManager(memfs.New(), "/tmp/pki")
+				m := pki.New(memfs.New(), "/tmp/pki", "agent")
 				s.Require().NoError(m.LoadOrGenerate())
 				m.SetControllerPublicKey(controllerPub)
 				return m
@@ -988,7 +988,7 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 		{
 			name: "when signed envelope without controller key skips verification",
 			setupPKI: func() *pki.Manager {
-				m := pki.NewManager(memfs.New(), "/tmp/pki")
+				m := pki.New(memfs.New(), "/tmp/pki", "agent")
 				s.Require().NoError(m.LoadOrGenerate())
 				// No controller public key set.
 				return m
@@ -1010,7 +1010,7 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 		{
 			name: "when raw JSON with PKI enabled passes through",
 			setupPKI: func() *pki.Manager {
-				m := pki.NewManager(memfs.New(), "/tmp/pki")
+				m := pki.New(memfs.New(), "/tmp/pki", "agent")
 				s.Require().NoError(m.LoadOrGenerate())
 				m.SetControllerPublicKey(controllerPub)
 				return m
@@ -1024,7 +1024,7 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 		{
 			name: "when invalid JSON with PKI enabled passes through",
 			setupPKI: func() *pki.Manager {
-				m := pki.NewManager(memfs.New(), "/tmp/pki")
+				m := pki.New(memfs.New(), "/tmp/pki", "agent")
 				s.Require().NoError(m.LoadOrGenerate())
 				return m
 			},
@@ -1076,7 +1076,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 		{
 			name: "when signed job data processed successfully",
 			setupPKI: func() {
-				m := pki.NewManager(memfs.New(), "/tmp/pki")
+				m := pki.New(memfs.New(), "/tmp/pki", "agent")
 				s.Require().NoError(m.LoadOrGenerate())
 				m.SetControllerPublicKey(controllerPub)
 				agent.SetAgentPKIManager(s.testAgent, m)
@@ -1122,7 +1122,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 		{
 			name: "when signed job data with invalid signature fails",
 			setupPKI: func() {
-				m := pki.NewManager(memfs.New(), "/tmp/pki")
+				m := pki.New(memfs.New(), "/tmp/pki", "agent")
 				s.Require().NoError(m.LoadOrGenerate())
 				m.SetControllerPublicKey(controllerPub)
 				agent.SetAgentPKIManager(s.testAgent, m)

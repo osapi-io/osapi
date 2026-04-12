@@ -121,7 +121,7 @@ func (suite *RotationPublicTestSuite) TestVerifyWithGrace() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			fs := memfs.New()
-			m := pki.NewManager(fs, "/keys")
+			m := pki.New(fs, "/keys", "agent")
 
 			data, sig := tc.setup(m)
 			got := m.VerifyWithGrace(data, sig)
@@ -147,7 +147,7 @@ func (suite *RotationPublicTestSuite) TestRotateControllerKey() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			fs := memfs.New()
-			m := pki.NewManager(fs, "/keys")
+			m := pki.New(fs, "/keys", "agent")
 
 			oldPub, _, _ := ed25519.GenerateKey(rand.Reader)
 			newPub, _, _ := ed25519.GenerateKey(rand.Reader)
@@ -187,7 +187,7 @@ func (suite *RotationPublicTestSuite) TestRotateControllerKeyChain() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			fs := memfs.New()
-			m := pki.NewManager(fs, "/keys")
+			m := pki.New(fs, "/keys", "agent")
 
 			key1, _, _ := ed25519.GenerateKey(rand.Reader)
 			key2, _, _ := ed25519.GenerateKey(rand.Reader)
@@ -243,7 +243,7 @@ func (suite *RotationPublicTestSuite) TestPreviousControllerPublicKey() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			fs := memfs.New()
-			m := pki.NewManager(fs, "/keys")
+			m := pki.New(fs, "/keys", "agent")
 
 			tc.setup(m)
 			tc.validateFunc(m)

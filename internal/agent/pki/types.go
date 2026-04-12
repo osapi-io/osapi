@@ -32,6 +32,7 @@ import (
 type Manager struct {
 	fs                       avfs.VFS
 	keyDir                   string
+	keyPrefix                string // "agent" or "controller"
 	publicKey                ed25519.PublicKey
 	privateKey               ed25519.PrivateKey
 	controllerPubKey         ed25519.PublicKey

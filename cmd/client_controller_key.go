@@ -48,7 +48,7 @@ var clientControllerKeyFingerprintCmd = &cobra.Command{
 		}
 
 		fs := osfs.NewWithNoIdm()
-		mgr := pki.NewManager(fs, keyDir)
+		mgr := pki.New(fs, keyDir, "controller")
 
 		if err := mgr.LoadOrGenerate(); err != nil {
 			cli.HandleError(

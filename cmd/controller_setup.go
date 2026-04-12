@@ -838,7 +838,7 @@ func setupEnrollmentWatcher(
 
 	// Create controller PKI manager and load or generate keypair.
 	pkiFS := osfs.New()
-	pkiManager := agentPKI.NewManager(pkiFS, appConfig.Controller.PKI.KeyDir)
+	pkiManager := agentPKI.New(pkiFS, appConfig.Controller.PKI.KeyDir, "controller")
 	if err := pkiManager.LoadOrGenerate(); err != nil {
 		cli.LogFatal(enrollLog, "failed to load or generate controller keypair", err)
 	}

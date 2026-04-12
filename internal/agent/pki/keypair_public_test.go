@@ -100,7 +100,7 @@ func (suite *KeypairPublicTestSuite) TestLoadOrGenerate() {
 					Bytes: pubKey,
 				})
 				_ = fs.WriteFile("/keys/agent.pub", pubPEM, 0o644)
-				*m = *pki.NewManager(fs, "/keys")
+				*m = *pki.New(fs, "/keys", "agent")
 			},
 			wantErr:      true,
 			wantContains: "decode private key PEM",
@@ -117,7 +117,7 @@ func (suite *KeypairPublicTestSuite) TestLoadOrGenerate() {
 				})
 				_ = fs.WriteFile("/keys/agent.key", privPEM, 0o600)
 				_ = fs.WriteFile("/keys/agent.pub", []byte("not a pem"), 0o644)
-				*m = *pki.NewManager(fs, "/keys")
+				*m = *pki.New(fs, "/keys", "agent")
 			},
 			wantErr:      true,
 			wantContains: "decode public key PEM",
@@ -139,7 +139,7 @@ func (suite *KeypairPublicTestSuite) TestLoadOrGenerate() {
 				})
 				_ = fs.WriteFile("/keys/agent.key", privPEM, 0o600)
 				_ = fs.WriteFile("/keys/agent.pub", pubPEM, 0o644)
-				*m = *pki.NewManager(fs, "/keys")
+				*m = *pki.New(fs, "/keys", "agent")
 			},
 			wantErr:      true,
 			wantContains: "unexpected block type",
@@ -161,7 +161,7 @@ func (suite *KeypairPublicTestSuite) TestLoadOrGenerate() {
 				})
 				_ = fs.WriteFile("/keys/agent.key", privPEM, 0o600)
 				_ = fs.WriteFile("/keys/agent.pub", pubPEM, 0o644)
-				*m = *pki.NewManager(fs, "/keys")
+				*m = *pki.New(fs, "/keys", "agent")
 			},
 			wantErr:      true,
 			wantContains: "unexpected block type",
@@ -180,7 +180,7 @@ func (suite *KeypairPublicTestSuite) TestLoadOrGenerate() {
 					}
 					return nil
 				})
-				*m = *pki.NewManager(vfs, "/keys")
+				*m = *pki.New(vfs, "/keys", "agent")
 			},
 			wantErr:      true,
 			wantContains: "create key directory",
@@ -199,7 +199,7 @@ func (suite *KeypairPublicTestSuite) TestLoadOrGenerate() {
 					}
 					return nil
 				})
-				*m = *pki.NewManager(vfs, "/keys")
+				*m = *pki.New(vfs, "/keys", "agent")
 			},
 			wantErr:      true,
 			wantContains: "write private key",
@@ -223,7 +223,7 @@ func (suite *KeypairPublicTestSuite) TestLoadOrGenerate() {
 					}
 					return nil
 				})
-				*m = *pki.NewManager(vfs, "/keys")
+				*m = *pki.New(vfs, "/keys", "agent")
 			},
 			wantErr:      true,
 			wantContains: "write public key",
@@ -233,7 +233,7 @@ func (suite *KeypairPublicTestSuite) TestLoadOrGenerate() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			fs := memfs.New()
-			m := pki.NewManager(fs, "/keys")
+			m := pki.New(fs, "/keys", "agent")
 
 			tc.setup(m)
 			if tc.setupFn != nil {
@@ -273,11 +273,11 @@ func (suite *KeypairPublicTestSuite) TestLoadOrGenerateRoundTrip() {
 		suite.Run(tc.name, func() {
 			fs := memfs.New()
 
-			original := pki.NewManager(fs, "/keys")
+			original := pki.New(fs, "/keys", "agent")
 			err := original.LoadOrGenerate()
 			require.NoError(suite.T(), err)
 
-			loaded := pki.NewManager(fs, "/keys")
+			loaded := pki.New(fs, "/keys", "agent")
 			err = loaded.LoadOrGenerate()
 			require.NoError(suite.T(), err)
 
@@ -309,7 +309,7 @@ func (suite *KeypairPublicTestSuite) TestSignAndVerify() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			fs := memfs.New()
-			m := pki.NewManager(fs, "/keys")
+			m := pki.New(fs, "/keys", "agent")
 			err := m.LoadOrGenerate()
 			require.NoError(suite.T(), err)
 
@@ -338,7 +338,7 @@ func (suite *KeypairPublicTestSuite) TestFingerprint() {
 			name: "when public key is set returns SHA256 fingerprint",
 			setup: func() *pki.Manager {
 				fs := memfs.New()
-				m := pki.NewManager(fs, "/keys")
+				m := pki.New(fs, "/keys", "agent")
 				_ = m.LoadOrGenerate()
 				return m
 			},
@@ -354,7 +354,7 @@ func (suite *KeypairPublicTestSuite) TestFingerprint() {
 			name: "when public key is empty returns empty string",
 			setup: func() *pki.Manager {
 				fs := memfs.New()
-				return pki.NewManager(fs, "/keys")
+				return pki.New(fs, "/keys", "agent")
 			},
 			wantEmpty: true,
 		},
@@ -401,7 +401,7 @@ func (suite *KeypairPublicTestSuite) TestControllerPublicKey() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			fs := memfs.New()
-			m := pki.NewManager(fs, "/keys")
+			m := pki.New(fs, "/keys", "agent")
 
 			if tc.setKey != nil {
 				m.SetControllerPublicKey(tc.setKey)

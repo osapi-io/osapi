@@ -33,9 +33,6 @@ import (
 )
 
 const (
-	privateKeyFile = "agent.key"
-	publicKeyFile  = "agent.pub"
-
 	pemPrivateKeyType = "ED25519 PRIVATE KEY"
 	pemPublicKeyType  = "ED25519 PUBLIC KEY"
 
@@ -53,23 +50,26 @@ func defaultGenerateKeyPair() (ed25519.PublicKey, ed25519.PrivateKey, error) {
 	return ed25519.GenerateKey(rand.Reader)
 }
 
-// NewManager creates a new PKI Manager with the given filesystem and
-// key directory path.
-func NewManager(
+// New creates a PKI Manager with the given filesystem, key directory path,
+// and key prefix (e.g., "agent" or "controller"). The prefix determines
+// the key filenames: {prefix}.key and {prefix}.pub.
+func New(
 	fs avfs.VFS,
 	keyDir string,
+	keyPrefix string,
 ) *Manager {
 	return &Manager{
-		fs:     fs,
-		keyDir: keyDir,
+		fs:        fs,
+		keyDir:    keyDir,
+		keyPrefix: keyPrefix,
 	}
 }
 
 // LoadOrGenerate loads existing PEM-encoded Ed25519 keys from disk,
 // or generates and saves a new keypair if none exists.
 func (m *Manager) LoadOrGenerate() error {
-	privPath := filepath.Join(m.keyDir, privateKeyFile)
-	pubPath := filepath.Join(m.keyDir, publicKeyFile)
+	privPath := filepath.Join(m.keyDir, m.keyPrefix+".key")
+	pubPath := filepath.Join(m.keyDir, m.keyPrefix+".pub")
 
 	privData, privErr := m.fs.ReadFile(privPath)
 	pubData, pubErr := m.fs.ReadFile(pubPath)

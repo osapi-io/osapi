@@ -39,7 +39,7 @@ func (a *Agent) handlePKIEnrollment(
 ) error {
 	keyDir := a.appConfig.Agent.PKI.KeyDir
 
-	m := pki.NewManager(a.appFs, keyDir)
+	m := pki.New(a.appFs, keyDir, "agent")
 
 	if err := m.LoadOrGenerate(); err != nil {
 		return err
