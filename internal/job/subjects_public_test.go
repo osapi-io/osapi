@@ -976,6 +976,15 @@ func (suite *SubjectsPublicTestSuite) TestCountExpectedAgents() {
 			want:   1,
 		},
 		{
+			name: "when _all excludes pending agents",
+			agents: []job.AgentInfo{
+				{Hostname: "web-01"},
+				{Hostname: "web-02", State: job.AgentStatePending},
+			},
+			target: "_all",
+			want:   1,
+		},
+		{
 			name: "when label match excludes cordoned agents",
 			agents: []job.AgentInfo{
 				{
@@ -1082,6 +1091,15 @@ func (suite *SubjectsPublicTestSuite) TestExpectedAgentHostnames() {
 			agents: []job.AgentInfo{
 				{Hostname: "web-01"},
 				{Hostname: "web-02", State: job.AgentStateDraining},
+			},
+			target: "_all",
+			want:   []string{"web-01"},
+		},
+		{
+			name: "when _all excludes pending agents",
+			agents: []job.AgentInfo{
+				{Hostname: "web-01"},
+				{Hostname: "web-02", State: job.AgentStatePending},
 			},
 			target: "_all",
 			want:   []string{"web-01"},

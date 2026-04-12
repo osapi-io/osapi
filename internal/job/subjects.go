@@ -334,6 +334,20 @@ func BuildLabelSubjects(
 	return subjects
 }
 
+// agentCanReceiveJobs returns true if the agent is in a state where it has
+// active NATS consumers and can process jobs. Agents that are cordoned,
+// draining, or pending PKI enrollment are excluded from broadcast expectations.
+func agentCanReceiveJobs(
+	state string,
+) bool {
+	switch state {
+	case AgentStateCordoned, AgentStateDraining, AgentStatePending:
+		return false
+	default:
+		return true
+	}
+}
+
 // CountExpectedAgents returns the number of agents expected to respond to a
 // broadcast target. For _all it returns len(agents). For label targets it
 // filters to agents whose label value equals or is a prefix of the target value
@@ -348,15 +362,16 @@ func CountExpectedAgents(
 	case BroadcastHost:
 		count := 0
 		for i := range agents {
-			if agents[i].State != AgentStateCordoned && agents[i].State != AgentStateDraining {
-				count++
+			if !agentCanReceiveJobs(agents[i].State) {
+				continue
 			}
+			count++
 		}
 		return count
 	case "label":
 		count := 0
 		for i := range agents {
-			if agents[i].State == AgentStateCordoned || agents[i].State == AgentStateDraining {
+			if !agentCanReceiveJobs(agents[i].State) {
 				continue
 			}
 			if agentVal, ok := agents[i].Labels[key]; ok {
@@ -382,7 +397,7 @@ func ExpectedAgentHostnames(
 	var hostnames []string
 
 	for i := range agents {
-		if agents[i].State == AgentStateCordoned || agents[i].State == AgentStateDraining {
+		if !agentCanReceiveJobs(agents[i].State) {
 			continue
 		}
 
