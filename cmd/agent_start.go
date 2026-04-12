@@ -60,7 +60,7 @@ It processes jobs as they become available.
 			metricsServer = metrics.New(
 				appConfig.Agent.Metrics.Host,
 				appConfig.Agent.Metrics.Port,
-				log.With("subsystem", "metrics"),
+				log,
 			)
 
 			if metricsServer != nil {

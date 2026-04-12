@@ -64,7 +64,7 @@ func NewStreamStore(
 	subject string,
 ) *StreamStore {
 	return &StreamStore{
-		logger:    logger.With(slog.String("subsystem", "audit")),
+		logger:    logger.With(slog.String("subsystem", "controller.audit.store")),
 		stream:    stream,
 		publisher: publisher,
 		subject:   subject,

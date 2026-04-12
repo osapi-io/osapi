@@ -63,7 +63,7 @@ var controllerStartCmd = &cobra.Command{
 			metricsServer = metrics.New(
 				appConfig.Controller.Metrics.Host,
 				appConfig.Controller.Metrics.Port,
-				log.With("subsystem", "metrics"),
+				log,
 			)
 
 			if metricsServer != nil {

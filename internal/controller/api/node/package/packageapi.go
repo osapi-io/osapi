@@ -38,6 +38,6 @@ func New(
 ) *Package {
 	return &Package{
 		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "api.package")),
+		logger:    logger.With(slog.String("subsystem", "controller.package")),
 	}
 }

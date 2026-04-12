@@ -38,6 +38,6 @@ func New(
 ) *Power {
 	return &Power{
 		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "api.power")),
+		logger:    logger.With(slog.String("subsystem", "controller.power")),
 	}
 }

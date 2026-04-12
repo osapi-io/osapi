@@ -38,6 +38,6 @@ func New(
 ) *Network {
 	return &Network{
 		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "api.network")),
+		logger:    logger.With(slog.String("subsystem", "controller.network")),
 	}
 }

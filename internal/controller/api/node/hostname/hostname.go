@@ -38,6 +38,6 @@ func New(
 ) *Hostname {
 	return &Hostname{
 		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "api.hostname")),
+		logger:    logger.With(slog.String("subsystem", "controller.hostname")),
 	}
 }

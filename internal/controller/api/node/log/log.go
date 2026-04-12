@@ -38,6 +38,6 @@ func New(
 ) *Log {
 	return &Log{
 		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "api.log")),
+		logger:    logger.With(slog.String("subsystem", "controller.log")),
 	}
 }

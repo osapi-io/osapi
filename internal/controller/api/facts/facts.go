@@ -40,6 +40,6 @@ func New(
 	logger *slog.Logger,
 ) *Facts {
 	return &Facts{
-		logger: logger.With(slog.String("subsystem", "api.facts")),
+		logger: logger.With(slog.String("subsystem", "controller.facts")),
 	}
 }

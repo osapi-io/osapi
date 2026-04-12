@@ -59,7 +59,7 @@ Configures streams, consumers, and KV buckets needed by the job system.
 			metricsServer = metrics.New(
 				appConfig.NATS.Server.Metrics.Host,
 				appConfig.NATS.Server.Metrics.Port,
-				log.With("subsystem", "metrics"),
+				log,
 			)
 
 			if metricsServer != nil {

@@ -38,6 +38,6 @@ func New(
 ) *Sysctl {
 	return &Sysctl{
 		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "api.sysctl")),
+		logger:    logger.With(slog.String("subsystem", "controller.sysctl")),
 	}
 }

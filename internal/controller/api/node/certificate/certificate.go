@@ -38,6 +38,6 @@ func New(
 ) *Certificate {
 	return &Certificate{
 		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "api.certificate")),
+		logger:    logger.With(slog.String("subsystem", "controller.certificate")),
 	}
 }
