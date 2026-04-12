@@ -33,6 +33,19 @@ import (
 	"github.com/retr0h/osapi/internal/agent/identity"
 )
 
+// Coverage notes for inherently untestable functions:
+//
+// defaultIoregFn (darwin.go:38) — Executes the real `ioreg` command via
+// exec.Command. Swapped via SetIoregFn/ResetIoregFn in tests. Cannot be
+// unit-tested without running the actual macOS ioreg binary. 0% coverage
+// is expected and acceptable.
+//
+// defaultGetMachineID (identity.go:37) — runtime.GOOS switch that
+// dispatches to platform-specific readers. Swapped via
+// SetGetMachineIDFn/ResetGetMachineIDFn in tests. Only one branch
+// executes per platform, so full coverage requires running tests on
+// every supported OS. 0% coverage in unit tests is expected.
+
 type GetMachineIDFromFSPublicTestSuite struct {
 	suite.Suite
 }
@@ -228,6 +241,11 @@ func (suite *GetIdentityPublicTestSuite) TestGetIdentity() {
 			wantErr:      true,
 			wantContains: "machine-id",
 		},
+		// NOTE: The hostname error path (identity.go lines 63-65) is
+		// unreachable in unit tests. job.GetAgentHostname never returns
+		// an error — it falls back to "unknown" on any failure. The
+		// error return exists for interface consistency, but no input
+		// can trigger it. Coverage gap: ~14% of GetIdentity.
 	}
 
 	for _, tc := range tests {

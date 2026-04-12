@@ -28,6 +28,10 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 )
 
+// signingMarshalFn is the JSON marshal function used by signing helpers.
+// Overridable in tests via export_test.go.
+var signingMarshalFn = json.Marshal
+
 // wrapInSignedEnvelope signs the payload and wraps it in a SignedEnvelope.
 // Returns the JSON-encoded envelope.
 func wrapInSignedEnvelope(
@@ -41,7 +45,7 @@ func wrapInSignedEnvelope(
 		Fingerprint: signer.Fingerprint(),
 	}
 
-	envelopeJSON, err := json.Marshal(envelope)
+	envelopeJSON, err := signingMarshalFn(envelope)
 	if err != nil {
 		return nil, fmt.Errorf("marshal signed envelope: %w", err)
 	}

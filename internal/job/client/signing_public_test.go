@@ -24,6 +24,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -65,11 +66,17 @@ type SigningPublicTestSuite struct {
 	suite.Suite
 }
 
+func (s *SigningPublicTestSuite) TearDownSubTest() {
+	client.ResetSigningMarshalFn()
+}
+
 func (s *SigningPublicTestSuite) TestWrapInSignedEnvelope() {
 	tests := []struct {
-		name        string
-		payload     []byte
-		expectError bool
+		name         string
+		payload      []byte
+		setupFn      func()
+		expectError  bool
+		wantContains string
 	}{
 		{
 			name:        "when wrapping valid payload",
@@ -81,16 +88,34 @@ func (s *SigningPublicTestSuite) TestWrapInSignedEnvelope() {
 			payload:     []byte{},
 			expectError: false,
 		},
+		{
+			name:    "when marshal fails returns error",
+			payload: []byte(`{"id":"test"}`),
+			setupFn: func() {
+				client.SetSigningMarshalFn(func(_ any) ([]byte, error) {
+					return nil, errors.New("marshal error")
+				})
+			},
+			expectError:  true,
+			wantContains: "marshal signed envelope",
+		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			if tt.setupFn != nil {
+				tt.setupFn()
+			}
+
 			signer := newMockPKISigner()
 
 			result, err := client.ExportWrapInSignedEnvelope(signer, tt.payload)
 
 			if tt.expectError {
 				s.Error(err)
+				if tt.wantContains != "" {
+					s.Contains(err.Error(), tt.wantContains)
+				}
 				return
 			}
 

@@ -20,6 +20,8 @@
 
 package client
 
+import "encoding/json"
+
 // ExportSanitizeKeyForNATS exposes the private sanitizeKeyForNATS for testing.
 func ExportSanitizeKeyForNATS(
 	s string,
@@ -41,6 +43,18 @@ func ExportUnwrapSignedEnvelope(
 	pubKey []byte,
 ) ([]byte, bool, error) {
 	return unwrapSignedEnvelope(data, pubKey)
+}
+
+// SetSigningMarshalFn overrides the signingMarshalFn variable for testing.
+func SetSigningMarshalFn(
+	fn func(any) ([]byte, error),
+) {
+	signingMarshalFn = fn
+}
+
+// ResetSigningMarshalFn restores the signingMarshalFn variable to its default.
+func ResetSigningMarshalFn() {
+	signingMarshalFn = json.Marshal
 }
 
 // ExportComputeStatusFromKeyNames exposes the private computeStatusFromKeyNames

@@ -149,6 +149,17 @@ func (s *AgentEnrollAcceptPublicTestSuite) TestAcceptAgent() {
 			},
 		},
 		{
+			name:        "returns 500 on fingerprint internal error",
+			hostname:    "web-01",
+			fingerprint: &fingerprint,
+			mockErr:     fmt.Errorf("kv connection failed"),
+			validateFunc: func(resp gen.AcceptAgentResponseObject) {
+				r, ok := resp.(gen.AcceptAgent500JSONResponse)
+				s.True(ok)
+				s.Contains(*r.Error, "kv connection failed")
+			},
+		},
+		{
 			name:     "returns 500 on internal error",
 			hostname: "web-01",
 			mockErr:  fmt.Errorf("kv connection failed"),

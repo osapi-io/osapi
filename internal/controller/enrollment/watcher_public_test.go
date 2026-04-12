@@ -939,7 +939,13 @@ func (s *WatcherPublicTestSuite) TestStart() {
 			setupMock: func() {
 				s.mockNC.EXPECT().
 					Subscribe("osapi.enroll.request", gomock.Any()).
-					Return(&nats.Subscription{}, nil)
+					DoAndReturn(func(_ string, cb nats.MsgHandler) (*nats.Subscription, error) {
+						// Invoke the callback to cover the closure body inside Start.
+						// The msg contains invalid JSON, so handleEnrollmentRequest
+						// logs a warning and returns without side effects.
+						cb(&nats.Msg{Data: []byte("invalid")})
+						return &nats.Subscription{}, nil
+					})
 			},
 		},
 		{
@@ -1122,6 +1128,17 @@ func (s *WatcherPublicTestSuite) TestRejectByHostname() {
 			},
 			wantErr:    true,
 			wantErrMsg: `no pending agent with hostname "web-01"`,
+		},
+		{
+			name:     "returns error on list failure",
+			hostname: "web-01",
+			setupMock: func() {
+				s.mockKV.EXPECT().
+					ListKeys(gomock.Any()).
+					Return(nil, errors.New("list error"))
+			},
+			wantErr:    true,
+			wantErrMsg: "list enrollment keys",
 		},
 	}
 
