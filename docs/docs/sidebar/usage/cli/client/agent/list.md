@@ -7,10 +7,10 @@ $ osapi client agent list
 
   Active Agents (3):
 
-  HOSTNAME  STATUS    CONDITIONS               LABELS                 AGE     LOAD (1m)  OS
-  web-01    Ready     HighLoad,MemoryPressure  group:web.dev.us-east  3d 4h   4.12       Ubuntu 24.04
-  web-02    Ready     -                        group:web.dev.us-west  12h 5m  0.45       Ubuntu 24.04
-  db-01     Cordoned  DiskPressure             -                      5d 2h   1.22       Ubuntu 24.04
+  MACHINE ID                            HOSTNAME  STATUS    CONDITIONS               LABELS                 AGE     LOAD (1m)  OS
+  a1b2c3d4-e5f6-7890-abcd-ef1234567890  web-01    Ready     HighLoad,MemoryPressure  group:web.dev.us-east  3d 4h   4.12       Ubuntu 24.04
+  b2c3d4e5-f6a7-8901-bcde-f12345678901  web-02    Ready     -                        group:web.dev.us-west  12h 5m  0.45       Ubuntu 24.04
+  c3d4e5f6-a7b8-9012-cdef-123456789012  db-01     Cordoned  DiskPressure             -                      5d 2h   1.22       Ubuntu 24.04
 ```
 
 This command reads directly from the agent heartbeat registry -- no job is
@@ -19,8 +19,9 @@ Agents that stop heartbeating disappear from the list automatically.
 
 | Column     | Source                                                          |
 | ---------- | --------------------------------------------------------------- |
+| MACHINE ID | Permanent identifier from `/etc/machine-id` or macOS UUID       |
 | HOSTNAME   | Agent's configured or OS hostname                               |
-| STATUS     | Scheduling state: `Ready`, `Draining`, or `Cordoned`            |
+| STATUS     | Scheduling state: `Ready`, `Pending`, `Draining`, or `Cordoned` |
 | CONDITIONS | Active node conditions (MemoryPressure, HighLoad, DiskPressure) |
 | LABELS     | Key-value labels from agent config                              |
 | AGE        | Time since the agent process started                            |

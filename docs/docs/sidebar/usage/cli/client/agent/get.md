@@ -5,7 +5,8 @@ Get detailed information about a specific agent by hostname:
 ```bash
 $ osapi client agent get --hostname web-01
 
-  Hostname: web-01                       Status: Ready
+  Hostname: web-01                       Machine ID: a1b2c3d4e5f6
+  Fingerprint: SHA256:4feebecfc58b7fcd...  Status: Ready
   State: Draining
   Labels: group:web.dev.us-east
   OS: Ubuntu 24.04
@@ -42,8 +43,10 @@ created. The data comes from the agent's most recent heartbeat write.
 | Field        | Description                                               |
 | ------------ | --------------------------------------------------------- |
 | Hostname     | Agent's configured or OS hostname                         |
+| Machine ID   | Permanent identifier from `/etc/machine-id` or macOS UUID |
+| Fingerprint  | SHA256 hash of agent's PKI public key (when PKI enabled)  |
 | Status       | `Ready` if present in registry                            |
-| State        | Scheduling state: `Draining` or `Cordoned` (if not Ready) |
+| State        | Scheduling state: `Pending`, `Draining`, or `Cordoned`    |
 | Labels       | Key-value labels from agent config                        |
 | OS           | Distribution and version                                  |
 | Uptime       | System uptime reported by the agent                       |
