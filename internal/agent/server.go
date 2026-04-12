@@ -99,13 +99,19 @@ func (a *Agent) Start() {
 	}
 
 	// Register in agent registry and start heartbeat keepalive.
+	// Heartbeats run even in Pending state so the agent is visible.
 	a.startHeartbeat(a.ctx, a.machineID, a.hostname)
 
 	// Collect and publish system facts.
 	a.startFacts(a.ctx, a.machineID, a.hostname)
 
-	// Start consuming messages for different job types.
-	a.startConsumers()
+	// Start consuming messages only when not pending enrollment.
+	// Pending agents are visible (heartbeat) but don't process jobs.
+	if a.state != job.AgentStatePending {
+		a.startConsumers()
+	} else {
+		a.logger.Info("skipping job consumers — agent is pending PKI enrollment")
+	}
 
 	a.logger.Info("node agent started successfully")
 }

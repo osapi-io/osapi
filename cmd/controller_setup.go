@@ -151,6 +151,16 @@ type NATSClient interface {
 		value []byte,
 	) error
 
+	// Core NATS operations (non-JetStream)
+	Subscribe(
+		subject string,
+		handler nats.MsgHandler,
+	) (*nats.Subscription, error)
+	PublishCore(
+		subject string,
+		data []byte,
+	) error
+
 	// Connection inspection
 	ConnectedURL() string
 	ConnectedServerVersion() string
@@ -170,7 +180,6 @@ type NATSClient interface {
 // by connectNATSBundle.
 type natsBundle struct {
 	nc            NATSClient
-	rawConn       *nats.Conn
 	jobClient     jobclient.JobClient
 	jobsKV        jetstream.KeyValue
 	registryKV    jetstream.KeyValue
@@ -207,6 +216,7 @@ func setupController(
 				targets = append(targets, validation.AgentTarget{
 					MachineID: a.MachineID,
 					Hostname:  a.Hostname,
+					State:     a.State,
 					Labels:    a.Labels,
 				})
 			}
@@ -264,12 +274,6 @@ func connectNATSBundle(
 
 	if err := concreteNC.Connect(); err != nil {
 		cli.LogFatal(log, "failed to connect to NATS", err)
-	}
-
-	// Extract the raw *nats.Conn for enrollment watcher (NATSSubscriber).
-	var rawConn *nats.Conn
-	if wrapper, ok := concreteNC.NC.(*natsclient.NATSConnWrapper); ok {
-		rawConn = wrapper.Conn
 	}
 
 	var nc NATSClient = concreteNC
@@ -349,7 +353,6 @@ func connectNATSBundle(
 
 	return &natsBundle{
 		nc:          nc,
-		rawConn:     rawConn,
 		jobClient:   jc,
 		jobsKV:      jobsKV,
 		registryKV:  registryKV,
@@ -820,11 +823,6 @@ func setupEnrollmentWatcher(
 ) *enrollment.Watcher {
 	enrollLog := log.With(slog.String("subsystem", "enrollment"))
 
-	if b.rawConn == nil {
-		enrollLog.Warn("raw NATS connection not available, enrollment disabled")
-		return nil
-	}
-
 	// Create enrollment KV bucket.
 	enrollmentKVConfig := cli.BuildEnrollmentKVConfig(namespace, appConfig.NATS.Enrollment)
 	enrollmentKV, err := b.nc.CreateOrUpdateKVBucketWithConfig(ctx, enrollmentKVConfig)
@@ -852,7 +850,7 @@ func setupEnrollmentWatcher(
 	// Create and start enrollment watcher.
 	watcher := enrollment.NewWatcher(
 		enrollLog,
-		b.rawConn,
+		b.nc,
 		enrollmentKV,
 		pkiManager,
 		appConfig.Controller.PKI.AutoAccept,

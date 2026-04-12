@@ -60,6 +60,7 @@ func New(
 	registryKV jetstream.KeyValue,
 	factsKV jetstream.KeyValue,
 	execManager exec.Manager,
+	natsClient NATSPublisher,
 ) *Agent {
 	logger = logger.With(slog.String("subsystem", "agent"))
 
@@ -79,6 +80,7 @@ func New(
 		registryKV:      registryKV,
 		factsKV:         factsKV,
 		execManager:     execManager,
+		natsClient:      natsClient,
 		heartbeatLogger: logger.With(slog.String("subsystem", "heartbeat")),
 		factsLogger:     logger.With(slog.String("subsystem", "facts")),
 	}

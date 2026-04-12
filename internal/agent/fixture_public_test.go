@@ -155,5 +155,6 @@ func newTestAgent(p newTestAgentParams) *agent.Agent {
 		p.registryKV,
 		p.factsKV,
 		p.execManager,
+		nil, // natsClient — not needed in most tests
 	)
 }

@@ -214,6 +214,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandlePKIEnrollment() {
 				nil, // registryKV
 				nil, // factsKV
 				nil, // execManager
+				nil, // natsClient
 			)
 
 			err := agent.ExportHandlePKIEnrollment(context.Background(), a)

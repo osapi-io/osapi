@@ -22,6 +22,7 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"path/filepath"
@@ -29,11 +30,13 @@ import (
 	"github.com/avfs/avfs"
 
 	"github.com/retr0h/osapi/internal/agent/pki"
+	"github.com/retr0h/osapi/internal/job"
 )
 
 // handlePKIEnrollment manages the PKI enrollment lifecycle.
 // It loads or generates a keypair, checks for existing controller key,
-// and if not enrolled, the agent enters pending state.
+// and if not enrolled, publishes an enrollment request and sets state
+// to Pending (no consumers started).
 func (a *Agent) handlePKIEnrollment(
 	_ context.Context,
 ) error {
@@ -69,11 +72,58 @@ func (a *Agent) handlePKIEnrollment(
 		return nil
 	}
 
-	// Not enrolled yet — agent enters pending state.
-	// The enrollment request will be handled by a background goroutine.
+	// Not enrolled — publish enrollment request and enter pending state.
+	if err := a.publishEnrollmentRequest(); err != nil {
+		a.logger.Warn(
+			"failed to publish enrollment request",
+			slog.String("error", err.Error()),
+		)
+	}
+
+	a.state = job.AgentStatePending
 	a.logger.Info(
 		"agent not enrolled, entering pending state",
 		slog.String("fingerprint", m.Fingerprint()),
+	)
+
+	return nil
+}
+
+// publishEnrollmentRequest sends the agent's enrollment request to the
+// controller via NATS. The controller's enrollment watcher picks it up
+// and stores it in the enrollment KV bucket.
+func (a *Agent) publishEnrollmentRequest() error {
+	if a.natsClient == nil {
+		return fmt.Errorf("NATS client not available")
+	}
+
+	req := pki.EnrollmentRequest{
+		MachineID:   a.machineID,
+		Hostname:    a.hostname,
+		PublicKey:   a.pkiManager.PublicKey(),
+		Fingerprint: a.pkiManager.Fingerprint(),
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return fmt.Errorf("marshal enrollment request: %w", err)
+	}
+
+	namespace := a.appConfig.Agent.NATS.Namespace
+	subject := "enroll.request"
+	if namespace != "" {
+		subject = namespace + "." + subject
+	}
+
+	if err := a.natsClient.Publish(context.Background(), subject, data); err != nil {
+		return fmt.Errorf("publish enrollment request: %w", err)
+	}
+
+	a.logger.Info(
+		"enrollment request published",
+		slog.String("subject", subject),
+		slog.String("machine_id", a.machineID),
+		slog.String("fingerprint", a.pkiManager.Fingerprint()),
 	)
 
 	return nil

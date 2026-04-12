@@ -99,6 +99,20 @@ func (mr *MockNATSConnectorMockRecorder) JetStream(arg0 ...interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JetStream", reflect.TypeOf((*MockNATSConnector)(nil).JetStream), arg0...)
 }
 
+// Publish mocks base method.
+func (m *MockNATSConnector) Publish(arg0 string, arg1 []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Publish", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Publish indicates an expected call of Publish.
+func (mr *MockNATSConnectorMockRecorder) Publish(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Publish", reflect.TypeOf((*MockNATSConnector)(nil).Publish), arg0, arg1)
+}
+
 // QueueSubscribe mocks base method.
 func (m *MockNATSConnector) QueueSubscribe(arg0, arg1 string, arg2 nats.MsgHandler) (*nats.Subscription, error) {
 	m.ctrl.T.Helper()

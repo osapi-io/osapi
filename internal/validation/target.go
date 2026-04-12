@@ -34,6 +34,7 @@ import (
 type AgentTarget struct {
 	MachineID string
 	Hostname  string
+	State     string
 	Labels    map[string]string
 }
 
@@ -156,8 +157,16 @@ func matchesLabel(
 	return false
 }
 
+// pendingTarget is set when a target matches a pending agent.
+// Used by the error message formatter to provide a specific message.
+var (
+	pendingTargetMu sync.Mutex
+	pendingTarget   string
+)
+
 // matchesHostname checks whether any active agent has the given hostname
-// or machine ID.
+// or machine ID. Returns false for agents in Pending state (awaiting
+// PKI enrollment).
 func matchesHostname(
 	target string,
 ) bool {
@@ -168,11 +177,31 @@ func matchesHostname(
 
 	for _, a := range agents {
 		if a.Hostname == target || a.MachineID == target {
+			if a.State == "Pending" {
+				pendingTargetMu.Lock()
+				pendingTarget = target
+				pendingTargetMu.Unlock()
+
+				return false
+			}
+
 			return true
 		}
 	}
 
 	return false
+}
+
+// IsPendingTarget returns true if the last validation failure was
+// due to a pending agent, and clears the flag.
+func IsPendingTarget() (string, bool) {
+	pendingTargetMu.Lock()
+	defer pendingTargetMu.Unlock()
+
+	t := pendingTarget
+	pendingTarget = ""
+
+	return t, t != ""
 }
 
 // ResolveTarget resolves a target string to a machine ID for NATS subject

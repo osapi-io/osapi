@@ -315,6 +315,7 @@ func setupAgent(
 		b.registryKV,
 		b.factsKV,
 		execManager,
+		b.nc,
 	)
 
 	enabledOrDisabled := func(enabled bool) string {

@@ -46,7 +46,7 @@ func (w *Watcher) RotateControllerKey() error {
 	}
 
 	subject := enrollSubject(w.namespace, "pki.rotate")
-	if err := w.nc.Publish(subject, data); err != nil {
+	if err := w.nc.PublishCore(subject, data); err != nil {
 		return fmt.Errorf("publish key rotation: %w", err)
 	}
 

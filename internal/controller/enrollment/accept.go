@@ -60,7 +60,7 @@ func (w *Watcher) AcceptAgent(
 	}
 
 	subject := enrollSubject(w.namespace, "enroll.response."+machineID)
-	if err := w.nc.Publish(subject, data); err != nil {
+	if err := w.nc.PublishCore(subject, data); err != nil {
 		return fmt.Errorf("publish acceptance for %s: %w", machineID, err)
 	}
 
@@ -109,7 +109,7 @@ func (w *Watcher) RejectAgent(
 	}
 
 	subject := enrollSubject(w.namespace, "enroll.response."+machineID)
-	if err := w.nc.Publish(subject, data); err != nil {
+	if err := w.nc.PublishCore(subject, data); err != nil {
 		return fmt.Errorf("publish rejection for %s: %w", machineID, err)
 	}
 

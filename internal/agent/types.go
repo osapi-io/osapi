@@ -44,6 +44,12 @@ import (
 	"github.com/retr0h/osapi/internal/telemetry/process"
 )
 
+// NATSPublisher publishes messages to NATS subjects.
+// Satisfied by the nats-client's Client type.
+type NATSPublisher interface {
+	Publish(ctx context.Context, subject string, data []byte) error
+}
+
 // Agent implements job processing with clean lifecycle management.
 type Agent struct {
 	logger      *slog.Logger
@@ -94,6 +100,10 @@ type Agent struct {
 
 	// pkiManager handles keypair and enrollment lifecycle (nil when PKI disabled).
 	pkiManager *pki.Manager
+
+	// natsClient is used for publishing enrollment requests via NATS.
+	// Uses the same NATSClient interface as the rest of the project.
+	natsClient NATSPublisher
 
 	// machineID is the permanent host identifier resolved at startup.
 	machineID string

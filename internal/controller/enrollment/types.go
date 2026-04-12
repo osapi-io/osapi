@@ -41,12 +41,13 @@ type PendingAgent struct {
 
 // NATSSubscriber defines the NATS operations needed by the enrollment
 // watcher for subscribing to enrollment requests and publishing responses.
+// Satisfied by the nats-client's *Client type (Subscribe + PublishCore).
 type NATSSubscriber interface {
 	Subscribe(
 		subj string,
 		cb nats.MsgHandler,
 	) (*nats.Subscription, error)
-	Publish(
+	PublishCore(
 		subj string,
 		data []byte,
 	) error

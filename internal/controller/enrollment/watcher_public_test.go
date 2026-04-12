@@ -168,7 +168,7 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAccept() {
 				// AcceptAgent: Publish response.
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					Publish("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
 					Return(nil)
 
 				// AcceptAgent: Delete from KV.
@@ -225,7 +225,7 @@ func (s *WatcherPublicTestSuite) TestAcceptAgent() {
 
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					Publish("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
 					Return(nil)
 
 				s.mockKV.EXPECT().
@@ -292,7 +292,7 @@ func (s *WatcherPublicTestSuite) TestAcceptAgent() {
 
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					Publish("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
 					Return(errors.New("publish error"))
 			},
 			wantErr:    true,
@@ -312,7 +312,7 @@ func (s *WatcherPublicTestSuite) TestAcceptAgent() {
 
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					Publish("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
 					Return(nil)
 
 				s.mockKV.EXPECT().
@@ -361,7 +361,7 @@ func (s *WatcherPublicTestSuite) TestRejectAgent() {
 					Return(mockEntry, nil)
 
 				s.mockNC.EXPECT().
-					Publish("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
 					DoAndReturn(func(_ string, data []byte) error {
 						var resp pki.EnrollmentResponse
 						s.Require().NoError(json.Unmarshal(data, &resp))
@@ -435,7 +435,7 @@ func (s *WatcherPublicTestSuite) TestRejectAgent() {
 					Return(mockEntry, nil)
 
 				s.mockNC.EXPECT().
-					Publish("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
 					Return(errors.New("publish error"))
 			},
 			wantErr:    true,
@@ -455,7 +455,7 @@ func (s *WatcherPublicTestSuite) TestRejectAgent() {
 					Return(mockEntry, nil)
 
 				s.mockNC.EXPECT().
-					Publish("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
 					Return(nil)
 
 				s.mockKV.EXPECT().
@@ -651,7 +651,7 @@ func (s *WatcherPublicTestSuite) TestAcceptByHostname() {
 				// AcceptAgent: Publish + Delete.
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					Publish("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
 					Return(nil)
 				s.mockKV.EXPECT().
 					Delete(gomock.Any(), "enrollment.machine-001").
@@ -763,7 +763,7 @@ func (s *WatcherPublicTestSuite) TestAcceptByFingerprint() {
 				// AcceptAgent: Publish + Delete.
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					Publish("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
 					Return(nil)
 				s.mockKV.EXPECT().
 					Delete(gomock.Any(), "enrollment.machine-001").
@@ -856,7 +856,7 @@ func (s *WatcherPublicTestSuite) TestAcceptByFingerprint() {
 				// AcceptAgent: Publish + Delete.
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					Publish("osapi.enroll.response.machine-002", gomock.Any()).
+					PublishCore("osapi.enroll.response.machine-002", gomock.Any()).
 					Return(nil)
 				s.mockKV.EXPECT().
 					Delete(gomock.Any(), "enrollment.machine-002").
@@ -904,7 +904,7 @@ func (s *WatcherPublicTestSuite) TestAcceptByFingerprint() {
 				// AcceptAgent: Publish + Delete.
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					Publish("osapi.enroll.response.machine-002", gomock.Any()).
+					PublishCore("osapi.enroll.response.machine-002", gomock.Any()).
 					Return(nil)
 				s.mockKV.EXPECT().
 					Delete(gomock.Any(), "enrollment.machine-002").
@@ -1086,7 +1086,7 @@ func (s *WatcherPublicTestSuite) TestRejectByHostname() {
 
 				// RejectAgent: Publish + Delete.
 				s.mockNC.EXPECT().
-					Publish("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
 					Return(nil)
 				s.mockKV.EXPECT().
 					Delete(gomock.Any(), "enrollment.machine-001").

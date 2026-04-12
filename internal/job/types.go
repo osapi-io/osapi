@@ -547,6 +547,7 @@ const (
 	AgentStateReady    = client.AgentReady
 	AgentStateDraining = client.AgentDraining
 	AgentStateCordoned = client.AgentCordoned
+	AgentStatePending  = client.AgentPending
 )
 
 // Condition represents a node condition evaluated agent-side.

@@ -35,18 +35,18 @@ func (m *MockNATSSubscriber) EXPECT() *MockNATSSubscriberMockRecorder {
 	return m.recorder
 }
 
-// Publish mocks base method.
-func (m *MockNATSSubscriber) Publish(arg0 string, arg1 []byte) error {
+// PublishCore mocks base method.
+func (m *MockNATSSubscriber) PublishCore(arg0 string, arg1 []byte) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Publish", arg0, arg1)
+	ret := m.ctrl.Call(m, "PublishCore", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Publish indicates an expected call of Publish.
-func (mr *MockNATSSubscriberMockRecorder) Publish(arg0, arg1 interface{}) *gomock.Call {
+// PublishCore indicates an expected call of PublishCore.
+func (mr *MockNATSSubscriberMockRecorder) PublishCore(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Publish", reflect.TypeOf((*MockNATSSubscriber)(nil).Publish), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublishCore", reflect.TypeOf((*MockNATSSubscriber)(nil).PublishCore), arg0, arg1)
 }
 
 // Subscribe mocks base method.

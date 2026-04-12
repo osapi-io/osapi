@@ -84,7 +84,7 @@ func (s *RotationPublicTestSuite) TestRotateControllerKey() {
 			setupMock: func() {
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					Publish("osapi.pki.rotate", gomock.Any()).
+					PublishCore("osapi.pki.rotate", gomock.Any()).
 					Return(nil)
 			},
 		},
@@ -104,7 +104,7 @@ func (s *RotationPublicTestSuite) TestRotateControllerKey() {
 			setupMock: func() {
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					Publish("osapi.pki.rotate", gomock.Any()).
+					PublishCore("osapi.pki.rotate", gomock.Any()).
 					Return(errors.New("publish error"))
 			},
 			wantErr:      true,
@@ -123,7 +123,7 @@ func (s *RotationPublicTestSuite) TestRotateControllerKey() {
 				)
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					Publish("pki.rotate", gomock.Any()).
+					PublishCore("pki.rotate", gomock.Any()).
 					Return(nil)
 			},
 		},
