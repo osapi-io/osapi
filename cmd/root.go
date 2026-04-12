@@ -157,6 +157,11 @@ func initConfig() {
 	viper.SetDefault("controller.pki.auto_accept", false)
 	viper.SetDefault("controller.pki.rotation_grace_period", "24h")
 
+	// Enrollment KV defaults.
+	viper.SetDefault("nats.enrollment.bucket", "agent-enrollment")
+	viper.SetDefault("nats.enrollment.storage", "file")
+	viper.SetDefault("nats.enrollment.replicas", 1)
+
 	viper.SetConfigFile(viper.GetString("osapiFile"))
 
 	if err := viper.ReadInConfig(); err != nil {

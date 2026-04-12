@@ -101,16 +101,26 @@ type NATSServerUser struct {
 
 // NATS configuration settings.
 type NATS struct {
-	Server    NATSServer    `mapstructure:"server,omitempty"`
-	Stream    NATSStream    `mapstructure:"stream,omitempty"`
-	KV        NATSKV        `mapstructure:"kv,omitempty"`
-	DLQ       NATSDLQ       `mapstructure:"dlq,omitempty"`
-	Audit     NATSAudit     `mapstructure:"audit,omitempty"`
-	Registry  NATSRegistry  `mapstructure:"registry,omitempty"`
-	Facts     NATSFacts     `mapstructure:"facts,omitempty"`
-	State     NATSState     `mapstructure:"state,omitempty"`
-	Objects   NATSObjects   `mapstructure:"objects,omitempty"`
-	FileState NATSFileState `mapstructure:"file_state,omitempty"`
+	Server     NATSServer     `mapstructure:"server,omitempty"`
+	Stream     NATSStream     `mapstructure:"stream,omitempty"`
+	KV         NATSKV         `mapstructure:"kv,omitempty"`
+	DLQ        NATSDLQ        `mapstructure:"dlq,omitempty"`
+	Audit      NATSAudit      `mapstructure:"audit,omitempty"`
+	Registry   NATSRegistry   `mapstructure:"registry,omitempty"`
+	Facts      NATSFacts      `mapstructure:"facts,omitempty"`
+	State      NATSState      `mapstructure:"state,omitempty"`
+	Objects    NATSObjects    `mapstructure:"objects,omitempty"`
+	FileState  NATSFileState  `mapstructure:"file_state,omitempty"`
+	Enrollment NATSEnrollment `mapstructure:"enrollment,omitempty"`
+}
+
+// NATSEnrollment configuration for the PKI enrollment KV bucket.
+// No TTL — pending enrollment requests persist until accepted or rejected.
+type NATSEnrollment struct {
+	// Bucket is the KV bucket name for pending enrollment entries.
+	Bucket   string `mapstructure:"bucket"`
+	Storage  string `mapstructure:"storage"` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"`
 }
 
 // NATSAudit configuration for the audit log stream.

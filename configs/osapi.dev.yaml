@@ -13,6 +13,12 @@ controller:
   api:
     security:
       signing_key: dev-not-used
+  # PKI enrollment and job signing (default: disabled).
+  # pki:
+  #   enabled: false
+  #   key_dir: /etc/osapi/pki
+  #   auto_accept: false
+  #   rotation_grace_period: 24h
 
 agent:
   nats:
@@ -52,6 +58,10 @@ agent:
   # Linux capabilities are verified at startup. See Agent Hardening docs.
   privilege_escalation:
     enabled: false
+  # PKI enrollment and job signing (default: disabled).
+  # pki:
+  #   enabled: false
+  #   key_dir: /etc/osapi/pki
 
 nats:
   stream:

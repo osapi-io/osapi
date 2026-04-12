@@ -32,6 +32,7 @@ func (n NATS) AllKVBuckets() []KVBucketInfo {
 		{Name: "facts", Bucket: n.Facts.Bucket},
 		{Name: "state", Bucket: n.State.Bucket},
 		{Name: "file-state", Bucket: n.FileState.Bucket},
+		{Name: "enrollment", Bucket: n.Enrollment.Bucket},
 	}
 }
 

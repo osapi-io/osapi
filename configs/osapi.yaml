@@ -9,6 +9,12 @@ controller:
   # Embedded management UI served at / (API at /api/).
   ui:
     enabled: true
+  # PKI enrollment and job signing (default: disabled).
+  # pki:
+  #   enabled: false
+  #   key_dir: /etc/osapi/pki
+  #   auto_accept: false
+  #   rotation_grace_period: 24h
   api:
     port: 8080
     # How long to wait for agent responses before returning partial
@@ -178,4 +184,8 @@ agent:
   # Linux capabilities are verified at startup. See Agent Hardening docs.
   privilege_escalation:
     enabled: false
+  # PKI enrollment and job signing (default: disabled).
+  # pki:
+  #   enabled: false
+  #   key_dir: /etc/osapi/pki
 
