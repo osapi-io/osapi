@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/avfs/avfs"
+	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/retr0h/osapi/internal/agent/identity"
@@ -715,4 +716,20 @@ func ExportUnwrapJobEnvelope(
 	data []byte,
 ) ([]byte, error) {
 	return a.unwrapJobEnvelope(data)
+}
+
+// ExportStartEnrollmentListener exposes the private startEnrollmentListener method for testing.
+func ExportStartEnrollmentListener(
+	ctx context.Context,
+	a *Agent,
+) {
+	a.startEnrollmentListener(ctx)
+}
+
+// ExportHandleEnrollmentResponse exposes the private handleEnrollmentResponse method for testing.
+func ExportHandleEnrollmentResponse(
+	a *Agent,
+	msg *nats.Msg,
+) {
+	a.handleEnrollmentResponse(msg)
 }

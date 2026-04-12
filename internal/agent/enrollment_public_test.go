@@ -24,6 +24,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -34,6 +35,7 @@ import (
 	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
+	"github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -42,6 +44,7 @@ import (
 	agentMocks "github.com/retr0h/osapi/internal/agent/mocks"
 	"github.com/retr0h/osapi/internal/agent/pki"
 	"github.com/retr0h/osapi/internal/config"
+	jobMocks "github.com/retr0h/osapi/internal/job/mocks"
 )
 
 type EnrollmentPublicTestSuite struct {
@@ -427,6 +430,403 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 			} else {
 				require.NoError(suite.T(), err)
 			}
+		})
+	}
+}
+
+func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
+	tests := []struct {
+		name         string
+		setupAgent   func() (*agent.Agent, context.Context, context.CancelFunc)
+		validateFunc func(a *agent.Agent, cancel context.CancelFunc)
+	}{
+		{
+			name: "when natsClient is nil returns without subscribing",
+			setupAgent: func() (*agent.Agent, context.Context, context.CancelFunc) {
+				fs := memfs.New()
+				logger := slog.Default()
+				cfg := config.Config{
+					Agent: config.AgentConfig{
+						PKI: config.AgentPKI{
+							Enabled: true,
+							KeyDir:  "/keys",
+						},
+					},
+				}
+
+				a := agent.New(
+					fs, cfg, logger,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				)
+
+				agent.SetAgentMachineID(a, "test-machine")
+				ctx, cancel := context.WithCancel(context.Background())
+
+				return a, ctx, cancel
+			},
+			validateFunc: func(_ *agent.Agent, _ context.CancelFunc) {
+				// No panic, no subscription — just returns.
+			},
+		},
+		{
+			name: "when subscribe succeeds subscription is created and handler is callable",
+			setupAgent: func() (*agent.Agent, context.Context, context.CancelFunc) {
+				ctrl := gomock.NewController(suite.T())
+				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+				mockNATS.EXPECT().
+					Subscribe("enroll.response.test-machine", gomock.Any()).
+					DoAndReturn(func(
+						_ string,
+						handler nats.MsgHandler,
+					) (*nats.Subscription, error) {
+						// Invoke the handler to cover the closure.
+						// Pass invalid JSON so handleEnrollmentResponse returns early.
+						handler(&nats.Msg{Data: []byte("bad")})
+
+						return &nats.Subscription{}, nil
+					})
+
+				fs := memfs.New()
+				logger := slog.Default()
+				cfg := config.Config{
+					Agent: config.AgentConfig{
+						PKI: config.AgentPKI{
+							Enabled: true,
+							KeyDir:  "/keys",
+						},
+					},
+				}
+
+				a := agent.New(
+					fs, cfg, logger,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+				)
+
+				agent.SetAgentMachineID(a, "test-machine")
+				ctx, cancel := context.WithCancel(context.Background())
+
+				return a, ctx, cancel
+			},
+			validateFunc: func(a *agent.Agent, cancel context.CancelFunc) {
+				// Goroutine was started; cancel to allow cleanup.
+				cancel()
+				agent.WaitAgentWG(a)
+			},
+		},
+		{
+			name: "when subscribe succeeds with namespace subject is prefixed",
+			setupAgent: func() (*agent.Agent, context.Context, context.CancelFunc) {
+				ctrl := gomock.NewController(suite.T())
+				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+				mockNATS.EXPECT().
+					Subscribe("osapi.enroll.response.test-machine", gomock.Any()).
+					Return(&nats.Subscription{}, nil)
+
+				fs := memfs.New()
+				logger := slog.Default()
+				cfg := config.Config{
+					Agent: config.AgentConfig{
+						NATS: config.NATSConnection{
+							Namespace: "osapi",
+						},
+						PKI: config.AgentPKI{
+							Enabled: true,
+							KeyDir:  "/keys",
+						},
+					},
+				}
+
+				a := agent.New(
+					fs, cfg, logger,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+				)
+
+				agent.SetAgentMachineID(a, "test-machine")
+				ctx, cancel := context.WithCancel(context.Background())
+
+				return a, ctx, cancel
+			},
+			validateFunc: func(a *agent.Agent, cancel context.CancelFunc) {
+				cancel()
+				agent.WaitAgentWG(a)
+			},
+		},
+		{
+			name: "when subscribe fails logs warning and returns",
+			setupAgent: func() (*agent.Agent, context.Context, context.CancelFunc) {
+				ctrl := gomock.NewController(suite.T())
+				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+				mockNATS.EXPECT().
+					Subscribe(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("subscribe failed"))
+
+				fs := memfs.New()
+				logger := slog.Default()
+				cfg := config.Config{
+					Agent: config.AgentConfig{
+						PKI: config.AgentPKI{
+							Enabled: true,
+							KeyDir:  "/keys",
+						},
+					},
+				}
+
+				a := agent.New(
+					fs, cfg, logger,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+				)
+
+				agent.SetAgentMachineID(a, "test-machine")
+				ctx, cancel := context.WithCancel(context.Background())
+
+				return a, ctx, cancel
+			},
+			validateFunc: func(_ *agent.Agent, _ context.CancelFunc) {
+				// No goroutine started, no panic — just returns.
+			},
+		},
+		{
+			name: "when context is cancelled unsubscribes",
+			setupAgent: func() (*agent.Agent, context.Context, context.CancelFunc) {
+				ctrl := gomock.NewController(suite.T())
+				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+				mockNATS.EXPECT().
+					Subscribe(gomock.Any(), gomock.Any()).
+					Return(&nats.Subscription{}, nil)
+
+				fs := memfs.New()
+				logger := slog.Default()
+				cfg := config.Config{
+					Agent: config.AgentConfig{
+						PKI: config.AgentPKI{
+							Enabled: true,
+							KeyDir:  "/keys",
+						},
+					},
+				}
+
+				a := agent.New(
+					fs, cfg, logger,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+				)
+
+				agent.SetAgentMachineID(a, "test-machine")
+				ctx, cancel := context.WithCancel(context.Background())
+
+				return a, ctx, cancel
+			},
+			validateFunc: func(a *agent.Agent, cancel context.CancelFunc) {
+				// Cancel triggers unsubscribe in the goroutine.
+				cancel()
+				agent.WaitAgentWG(a)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			a, ctx, cancel := tc.setupAgent()
+			defer cancel()
+
+			agent.ExportStartEnrollmentListener(ctx, a)
+
+			tc.validateFunc(a, cancel)
+		})
+	}
+}
+
+func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
+	tests := []struct {
+		name         string
+		setupAgent   func() *agent.Agent
+		msg          *nats.Msg
+		validateFunc func(a *agent.Agent)
+	}{
+		{
+			name: "when invalid JSON logs warning and returns",
+			setupAgent: func() *agent.Agent {
+				fs := memfs.New()
+				logger := slog.Default()
+				cfg := config.Config{
+					Agent: config.AgentConfig{
+						PKI: config.AgentPKI{
+							Enabled: true,
+							KeyDir:  "/keys",
+						},
+					},
+				}
+
+				a := agent.New(
+					fs, cfg, logger,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				)
+
+				return a
+			},
+			msg: &nats.Msg{Data: []byte("not valid json")},
+			validateFunc: func(_ *agent.Agent) {
+				// No panic — logs and returns.
+			},
+		},
+		{
+			name: "when accepted is false logs rejection and returns",
+			setupAgent: func() *agent.Agent {
+				fs := memfs.New()
+				logger := slog.Default()
+				cfg := config.Config{
+					Agent: config.AgentConfig{
+						PKI: config.AgentPKI{
+							Enabled: true,
+							KeyDir:  "/keys",
+						},
+					},
+				}
+
+				a := agent.New(
+					fs, cfg, logger,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				)
+
+				return a
+			},
+			msg: &nats.Msg{Data: []byte(`{"accepted":false,"reason":"denied by admin"}`)},
+			validateFunc: func(a *agent.Agent) {
+				// State should NOT be Ready.
+				assert.NotEqual(suite.T(), "Ready", agent.GetAgentState(a))
+			},
+		},
+		{
+			name: "when accepted is true saves controller key and transitions to ready",
+			setupAgent: func() *agent.Agent {
+				ctrl := gomock.NewController(suite.T())
+				mockJobClient := jobMocks.NewMockJobClient(ctrl)
+				mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					AnyTimes()
+				mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(context.Canceled).
+					AnyTimes()
+
+				fs := memfs.New()
+				_ = fs.MkdirAll("/keys", 0o700)
+
+				logger := slog.Default()
+				cfg := config.Config{
+					Agent: config.AgentConfig{
+						PKI: config.AgentPKI{
+							Enabled: true,
+							KeyDir:  "/keys",
+						},
+					},
+				}
+
+				a := agent.New(
+					fs, cfg, logger,
+					mockJobClient, "test-stream",
+					nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				)
+
+				// Set up PKI manager.
+				m := pki.New(fs, "/keys", "agent")
+				require.NoError(suite.T(), m.LoadOrGenerate())
+				agent.SetAgentPKIManager(a, m)
+
+				agent.SetAgentMachineID(a, "test-machine")
+
+				// Set agent context so startConsumers can create child context.
+				ctx, cancel := context.WithCancel(context.Background())
+				suite.T().Cleanup(cancel)
+				agent.SetAgentLifecycle(ctx, ctx, a, cancel, cancel)
+
+				return a
+			},
+			msg: func() *nats.Msg {
+				ctrlPub, _, _ := ed25519.GenerateKey(rand.Reader)
+				resp := pki.EnrollmentResponse{
+					Accepted:            true,
+					ControllerPublicKey: ctrlPub,
+				}
+				data, _ := json.Marshal(resp)
+
+				return &nats.Msg{Data: data}
+			}(),
+			validateFunc: func(a *agent.Agent) {
+				assert.Equal(suite.T(), "Ready", agent.GetAgentState(a))
+
+				m := agent.GetAgentPKIManager(a)
+				assert.NotNil(suite.T(), m.ControllerPublicKey())
+				assert.Len(suite.T(), m.ControllerPublicKey(), ed25519.PublicKeySize)
+			},
+		},
+		{
+			name: "when accepted but file write fails logs error and returns",
+			setupAgent: func() *agent.Agent {
+				baseFs := memfs.New()
+				_ = baseFs.MkdirAll("/keys", 0o700)
+
+				// Pre-generate agent keys on the base fs before wrapping.
+				m := pki.New(baseFs, "/keys", "agent")
+				require.NoError(suite.T(), m.LoadOrGenerate())
+
+				vfs := failfs.New(baseFs)
+				_ = vfs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					if fn == avfs.FnOpenFile {
+						return errors.New("disk full")
+					}
+
+					return nil
+				})
+
+				logger := slog.Default()
+				cfg := config.Config{
+					Agent: config.AgentConfig{
+						PKI: config.AgentPKI{
+							Enabled: true,
+							KeyDir:  "/keys",
+						},
+					},
+				}
+
+				a := agent.New(
+					vfs, cfg, logger,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				)
+
+				// Use the manager created from the base FS (keys already loaded).
+				agent.SetAgentPKIManager(a, m)
+
+				return a
+			},
+			msg: func() *nats.Msg {
+				ctrlPub, _, _ := ed25519.GenerateKey(rand.Reader)
+				resp := pki.EnrollmentResponse{
+					Accepted:            true,
+					ControllerPublicKey: ctrlPub,
+				}
+				data, _ := json.Marshal(resp)
+
+				return &nats.Msg{Data: data}
+			}(),
+			validateFunc: func(a *agent.Agent) {
+				// File write failed — state should NOT be Ready.
+				assert.NotEqual(suite.T(), "Ready", agent.GetAgentState(a))
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			a := tc.setupAgent()
+
+			agent.ExportHandleEnrollmentResponse(a, tc.msg)
+
+			tc.validateFunc(a)
 		})
 	}
 }
