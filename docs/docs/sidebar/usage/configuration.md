@@ -114,8 +114,8 @@ uppercased:
 | `agent.metrics.enabled`                          | `OSAPI_AGENT_METRICS_ENABLED`                          |
 | `agent.metrics.port`                             | `OSAPI_AGENT_METRICS_PORT`                             |
 | `agent.privilege_escalation.enabled`             | `OSAPI_AGENT_PRIVILEGE_ESCALATION_ENABLED`             |
-| `agent.pki.enabled`                             | `OSAPI_AGENT_PKI_ENABLED`                             |
-| `agent.pki.key_dir`                             | `OSAPI_AGENT_PKI_KEY_DIR`                             |
+| `agent.pki.enabled`                              | `OSAPI_AGENT_PKI_ENABLED`                              |
+| `agent.pki.key_dir`                              | `OSAPI_AGENT_PKI_KEY_DIR`                              |
 
 Environment variables take precedence over file values.
 
@@ -606,12 +606,12 @@ When enabled, the port also serves `/health` (liveness) and `/health/ready`
 
 ### `controller.pki`
 
-| Key                      | Type   | Description                                      |
-| ------------------------ | ------ | ------------------------------------------------ |
-| `enabled`                | bool   | Enable PKI enrollment and job signing             |
-| `key_dir`                | string | Directory for controller keypair (default: `/etc/osapi/pki`) |
-| `auto_accept`            | bool   | Auto-accept agent enrollments (default: `false`) |
-| `rotation_grace_period`  | string | Both keys accepted during rotation (default: `24h`) |
+| Key                     | Type   | Description                                                  |
+| ----------------------- | ------ | ------------------------------------------------------------ |
+| `enabled`               | bool   | Enable PKI enrollment and job signing                        |
+| `key_dir`               | string | Directory for controller keypair (default: `/etc/osapi/pki`) |
+| `auto_accept`           | bool   | Auto-accept agent enrollments (default: `false`)             |
+| `rotation_grace_period` | string | Both keys accepted during rotation (default: `24h`)          |
 
 ### `nats.server`
 

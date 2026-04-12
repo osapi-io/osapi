@@ -8,15 +8,15 @@ Agent discovery, details, and lifecycle management.
 
 ## Methods
 
-| Method                                  | Description                            |
-| --------------------------------------- | -------------------------------------- |
-| `List(ctx)`                             | Retrieve all active agents             |
-| `Get(ctx, hostname)`                    | Get detailed agent info by hostname    |
-| `Drain(ctx, hostname)`                  | Drain agent (stop accepting jobs)      |
-| `Undrain(ctx, hostname)`                | Undrain agent (resume accepting jobs)  |
-| `ListPending(ctx)`                      | List agents awaiting PKI enrollment    |
-| `Accept(ctx, hostname, fingerprint)`    | Accept a pending enrollment request    |
-| `Reject(ctx, hostname)`                 | Reject a pending enrollment request    |
+| Method                               | Description                           |
+| ------------------------------------ | ------------------------------------- |
+| `List(ctx)`                          | Retrieve all active agents            |
+| `Get(ctx, hostname)`                 | Get detailed agent info by hostname   |
+| `Drain(ctx, hostname)`               | Drain agent (stop accepting jobs)     |
+| `Undrain(ctx, hostname)`             | Undrain agent (resume accepting jobs) |
+| `ListPending(ctx)`                   | List agents awaiting PKI enrollment   |
+| `Accept(ctx, hostname, fingerprint)` | Accept a pending enrollment request   |
+| `Reject(ctx, hostname)`              | Reject a pending enrollment request   |
 
 ## Usage
 
@@ -43,8 +43,8 @@ resp, err := c.Agent.Undrain(ctx, "web-01")
 
 ### Enrollment
 
-When PKI is enabled, agents submit enrollment requests that must be
-accepted before they join the fleet.
+When PKI is enabled, agents submit enrollment requests that must be accepted
+before they join the fleet.
 
 ```go
 // List pending enrollment requests
@@ -78,21 +78,21 @@ for PKI enrollment operations.
 
 ### `PendingAgent`
 
-| Field         | Type        | Description                 |
-| ------------- | ----------- | --------------------------- |
-| `MachineID`   | `string`    | Machine ID of the agent     |
-| `Hostname`    | `string`    | Agent hostname              |
+| Field         | Type        | Description                   |
+| ------------- | ----------- | ----------------------------- |
+| `MachineID`   | `string`    | Machine ID of the agent       |
+| `Hostname`    | `string`    | Agent hostname                |
 | `Fingerprint` | `string`    | SHA256 public key fingerprint |
 | `RequestedAt` | `time.Time` | When enrollment was requested |
 
 ### `PendingAgentList`
 
-| Field    | Type              | Description                  |
-| -------- | ----------------- | ---------------------------- |
-| `Agents` | `[]PendingAgent`  | List of pending agents       |
-| `Total`  | `int`             | Total number of pending agents |
+| Field    | Type             | Description                    |
+| -------- | ---------------- | ------------------------------ |
+| `Agents` | `[]PendingAgent` | List of pending agents         |
+| `Total`  | `int`            | Total number of pending agents |
 
 ## Permissions
 
-Requires `agent:read` for List, Get, and ListPending. Drain,
-Undrain, Accept, and Reject require `agent:write`.
+Requires `agent:read` for List, Get, and ListPending. Drain, Undrain, Accept,
+and Reject require `agent:write`.

@@ -445,7 +445,11 @@ func (suite *AgentPublicTestSuite) TestListPending() {
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`{"agents":[{"machine_id":"m1","hostname":"web-01","fingerprint":"SHA256:abc","requested_at":"2026-01-01T00:00:00Z"}],"total":1}`))
+				_, _ = w.Write(
+					[]byte(
+						`{"agents":[{"machine_id":"m1","hostname":"web-01","fingerprint":"SHA256:abc","requested_at":"2026-01-01T00:00:00Z"}],"total":1}`,
+					),
+				)
 			},
 			validateFunc: func(resp *client.Response[client.PendingAgentList], err error) {
 				suite.NoError(err)

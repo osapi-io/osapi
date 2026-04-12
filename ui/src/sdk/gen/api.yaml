@@ -192,6 +192,183 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/agent/pending:
+    servers: []
+    get:
+      operationId: getAgentsPending
+      summary: List agents awaiting enrollment
+      description: >-
+        List all agents that have submitted enrollment requests but have not yet
+        been accepted or rejected.
+      tags:
+        - Agent_Management_API_agent_operations
+      security:
+        - BearerAuth:
+            - agent:read
+      responses:
+        '200':
+          description: List of pending agents.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListPendingAgentsResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing pending agents.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/agent/{hostname}/accept:
+    servers: []
+    post:
+      operationId: acceptAgent
+      summary: Accept a pending agent
+      description: >
+        Accept a pending agent enrollment request. The agent can be identified
+        by hostname (path parameter) or by fingerprint (query parameter).
+      tags:
+        - Agent_Management_API_agent_operations
+      security:
+        - BearerAuth:
+            - agent:write
+      parameters:
+        - name: hostname
+          in: path
+          required: true
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+          description: The hostname of the pending agent to accept.
+        - name: fingerprint
+          in: query
+          required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=255
+          schema:
+            type: string
+            maxLength: 255
+          description: Accept by fingerprint instead of hostname.
+      responses:
+        '200':
+          description: Agent accepted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+        '400':
+          description: Invalid hostname or fingerprint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Pending agent not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error accepting agent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/agent/{hostname}/reject:
+    servers: []
+    post:
+      operationId: rejectAgent
+      summary: Reject a pending agent
+      description: Reject a pending agent enrollment request.
+      tags:
+        - Agent_Management_API_agent_operations
+      security:
+        - BearerAuth:
+            - agent:write
+      parameters:
+        - name: hostname
+          in: path
+          required: true
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+          description: The hostname of the pending agent to reject.
+      responses:
+        '200':
+          description: Agent rejected.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+        '400':
+          description: Invalid hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Pending agent not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error rejecting agent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/agent/{hostname}/drain:
     servers: []
     post:
@@ -5953,6 +6130,40 @@ components:
           type: integer
           description: The error code.
           example: 500
+    ListPendingAgentsResponse:
+      type: object
+      properties:
+        agents:
+          type: array
+          items:
+            $ref: '#/components/schemas/PendingAgentInfo'
+        total:
+          type: integer
+          description: Total number of pending agents.
+      required:
+        - agents
+        - total
+    PendingAgentInfo:
+      type: object
+      properties:
+        machine_id:
+          type: string
+          description: The permanent machine identifier.
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        fingerprint:
+          type: string
+          description: The SHA256 fingerprint of the agent's public key.
+        requested_at:
+          type: string
+          format: date-time
+          description: When the enrollment request was received.
+      required:
+        - machine_id
+        - hostname
+        - fingerprint
+        - requested_at
     ListAgentsResponse:
       type: object
       properties:
@@ -5969,6 +6180,9 @@ components:
     AgentInfo:
       type: object
       properties:
+        machine_id:
+          type: string
+          description: The permanent machine identifier.
         hostname:
           type: string
           description: The hostname of the agent.

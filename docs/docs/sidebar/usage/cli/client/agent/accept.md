@@ -9,20 +9,20 @@ $ osapi client agent accept --hostname web-01
   Message: Agent web-01 enrollment accepted
 ```
 
-When PKI is enabled, new agents submit enrollment requests that must be
-accepted before the agent can participate in the fleet. This command
-approves a pending agent by hostname. Optionally, pass `--fingerprint`
-to accept by the agent's public key fingerprint instead.
+When PKI is enabled, new agents submit enrollment requests that must be accepted
+before the agent can participate in the fleet. This command approves a pending
+agent by hostname. Optionally, pass `--fingerprint` to accept by the agent's
+public key fingerprint instead.
 
 Use `agent list --pending` to see agents awaiting approval.
 
 ## Flags
 
-| Flag            | Description                                  | Required |
-| --------------- | -------------------------------------------- | -------- |
-| `--hostname`    | Hostname of the pending agent to accept      | Yes      |
+| Flag            | Description                                   | Required |
+| --------------- | --------------------------------------------- | -------- |
+| `--hostname`    | Hostname of the pending agent to accept       | Yes      |
 | `--fingerprint` | Accept by key fingerprint instead of hostname | No       |
-| `--json`        | Output raw JSON                              | No       |
+| `--json`        | Output raw JSON                               | No       |
 
 ## Examples
 

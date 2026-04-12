@@ -5,30 +5,30 @@ sidebar_label: Agent Identity & PKI
 
 # Agent Identity & PKI
 
-OSAPI agents identify themselves using a persistent machine ID and
-support optional PKI enrollment for cryptographic trust between agents
-and the controller.
+OSAPI agents identify themselves using a persistent machine ID and support
+optional PKI enrollment for cryptographic trust between agents and the
+controller.
 
 ## Machine Identity
 
 Every agent has two identity values:
 
-- **Machine ID** -- permanent identifier from `/etc/machine-id` (Linux)
-  or `IOPlatformUUID` (macOS). Used as the registry key and stable
-  reference across hostname changes.
-- **Hostname** -- mutable display name from the OS or `agent.hostname`
-  config. Used for human-friendly targeting and display.
+- **Machine ID** -- permanent identifier from `/etc/machine-id` (Linux) or
+  `IOPlatformUUID` (macOS). Used as the registry key and stable reference across
+  hostname changes.
+- **Hostname** -- mutable display name from the OS or `agent.hostname` config.
+  Used for human-friendly targeting and display.
 
-The agent resolves its machine ID once at startup and refuses to start
-if it cannot be read. NATS subject routing uses the machine ID
-(`jobs.query.host.<machineID>`), so consumers never need to
-resubscribe when the hostname changes. The hostname is re-read on
-each heartbeat tick (10s) and updated in the registry for display.
+The agent resolves its machine ID once at startup and refuses to start if it
+cannot be read. NATS subject routing uses the machine ID
+(`jobs.query.host.<machineID>`), so consumers never need to resubscribe when the
+hostname changes. The hostname is re-read on each heartbeat tick (10s) and
+updated in the registry for display.
 
 ### CLI Targeting
 
-Both hostname and machine ID work as targets. The controller resolves
-hostnames to machine IDs for NATS subject routing automatically:
+Both hostname and machine ID work as targets. The controller resolves hostnames
+to machine IDs for NATS subject routing automatically:
 
 ```bash
 # Target by hostname
@@ -44,44 +44,42 @@ osapi client node hostname --target _all
 osapi client node hostname --target group:web.dev
 ```
 
-The `node list` and `node get` commands include the machine ID in their
-output so operators can identify agents across hostname changes.
+The `node list` and `node get` commands include the machine ID in their output
+so operators can identify agents across hostname changes.
 
 ## PKI Enrollment
 
-When `pki.enabled` is true on both controller and agent, OSAPI uses
-Ed25519 keypairs for cryptographic agent identity and job signing.
+When `pki.enabled` is true on both controller and agent, OSAPI uses Ed25519
+keypairs for cryptographic agent identity and job signing.
 
 ### Enrollment Flow
 
 The enrollment process follows a Salt-style accept/reject model:
 
-1. **Generate keypair** -- on first start, the agent generates an
-   Ed25519 keypair and saves it to `agent.pki.key_dir` (default
-   `/etc/osapi/pki`). Files: `agent.key` (mode 0600) and `agent.pub`
-   (mode 0644).
+1. **Generate keypair** -- on first start, the agent generates an Ed25519
+   keypair and saves it to `agent.pki.key_dir` (default `/etc/osapi/pki`).
+   Files: `agent.key` (mode 0600) and `agent.pub` (mode 0644).
 
-2. **Request enrollment** -- the agent publishes an enrollment request
-   to the controller via NATS containing its machine ID, hostname,
-   public key, and SHA256 fingerprint.
+2. **Request enrollment** -- the agent publishes an enrollment request to the
+   controller via NATS containing its machine ID, hostname, public key, and
+   SHA256 fingerprint.
 
-3. **Pending state** -- the controller stores the request in a
-   JetStream KV bucket. The agent enters pending state and waits.
+3. **Pending state** -- the controller stores the request in a JetStream KV
+   bucket. The agent enters pending state and waits.
 
-4. **Admin accepts** -- an administrator reviews pending agents and
-   accepts or rejects them via the CLI. On acceptance, the controller
-   replies with its own public key.
+4. **Admin accepts** -- an administrator reviews pending agents and accepts or
+   rejects them via the CLI. On acceptance, the controller replies with its own
+   public key.
 
-5. **Ready** -- the agent saves the controller's public key as
-   `controller.pub` and begins verifying job signatures. On subsequent
-   restarts, the agent loads the controller key from disk and skips
-   enrollment.
+5. **Ready** -- the agent saves the controller's public key as `controller.pub`
+   and begins verifying job signatures. On subsequent restarts, the agent loads
+   the controller key from disk and skips enrollment.
 
 ### Auto-Accept Mode
 
-For development and testing, set `controller.pki.auto_accept: true`.
-The controller automatically accepts all enrollment requests without
-admin intervention. Do not use this in production.
+For development and testing, set `controller.pki.auto_accept: true`. The
+controller automatically accepts all enrollment requests without admin
+intervention. Do not use this in production.
 
 ### CLI Commands
 
@@ -108,9 +106,9 @@ osapi client controller key fingerprint
 
 ## Job Signing
 
-When PKI is enabled, the controller signs every job payload with its
-Ed25519 private key before storing it in the KV bucket. The payload is
-wrapped in a `SignedEnvelope`:
+When PKI is enabled, the controller signs every job payload with its Ed25519
+private key before storing it in the KV bucket. The payload is wrapped in a
+`SignedEnvelope`:
 
 ```json
 {
@@ -120,29 +118,28 @@ wrapped in a `SignedEnvelope`:
 }
 ```
 
-Agents verify the signature using the controller's public key (received
-during enrollment) before processing. If verification fails, the agent
-rejects the job. When PKI is disabled, jobs are stored and processed
-without signatures -- the envelope wrapping is skipped entirely.
+Agents verify the signature using the controller's public key (received during
+enrollment) before processing. If verification fails, the agent rejects the job.
+When PKI is disabled, jobs are stored and processed without signatures -- the
+envelope wrapping is skipped entirely.
 
 ## Key Rotation
 
-The controller can rotate its Ed25519 keypair. During a configurable
-grace period (default `24h`), agents accept signatures from both the
-old and new controller keys.
+The controller can rotate its Ed25519 keypair. During a configurable grace
+period (default `24h`), agents accept signatures from both the old and new
+controller keys.
 
 The rotation flow:
 
 1. Generate a new controller keypair (replace files in
    `controller.pki.key_dir`).
-2. Restart the controller. It loads the new key and begins signing
-   with it.
-3. Agents that have already enrolled still hold the old controller
-   public key. The `VerifyWithGrace` method checks the signature
-   against both the current and previous controller keys.
-4. During the grace period (`controller.pki.rotation_grace_period`),
-   agents receive the new controller public key via an updated
-   enrollment response and transition to the new key.
+2. Restart the controller. It loads the new key and begins signing with it.
+3. Agents that have already enrolled still hold the old controller public key.
+   The `VerifyWithGrace` method checks the signature against both the current
+   and previous controller keys.
+4. During the grace period (`controller.pki.rotation_grace_period`), agents
+   receive the new controller public key via an updated enrollment response and
+   transition to the new key.
 5. After the grace period, only the new key is accepted.
 
 ## Configuration
@@ -178,18 +175,18 @@ controller:
     rotation_grace_period: 24h
 ```
 
-| Field                    | Type   | Default          | Description                                  |
-| ------------------------ | ------ | ---------------- | -------------------------------------------- |
-| `enabled`                | bool   | `false`          | Activate PKI enrollment and job signing      |
-| `key_dir`                | string | `/etc/osapi/pki` | Directory for controller keypair             |
-| `auto_accept`            | bool   | `false`          | Auto-accept agent enrollments (dev/test)     |
-| `rotation_grace_period`  | string | `24h`            | Both keys accepted during rotation           |
+| Field                   | Type   | Default          | Description                              |
+| ----------------------- | ------ | ---------------- | ---------------------------------------- |
+| `enabled`               | bool   | `false`          | Activate PKI enrollment and job signing  |
+| `key_dir`               | string | `/etc/osapi/pki` | Directory for controller keypair         |
+| `auto_accept`           | bool   | `false`          | Auto-accept agent enrollments (dev/test) |
+| `rotation_grace_period` | string | `24h`            | Both keys accepted during rotation       |
 
 ## What Is Not Changed
 
-- **JWT authentication** -- HMAC-SHA256 JWT tokens for API
-  authentication are unchanged. PKI is an additional trust layer
-  between the controller and agents, not a replacement for JWT.
-- **NATS transport** -- NATS connections still use their own auth
-  (`none`, `user_pass`, or `nkey`). PKI operates at the job payload
-  level, not the transport level.
+- **JWT authentication** -- HMAC-SHA256 JWT tokens for API authentication are
+  unchanged. PKI is an additional trust layer between the controller and agents,
+  not a replacement for JWT.
+- **NATS transport** -- NATS connections still use their own auth (`none`,
+  `user_pass`, or `nkey`). PKI operates at the job payload level, not the
+  transport level.

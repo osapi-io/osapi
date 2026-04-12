@@ -17,6 +17,8 @@ import type { RouteResponse } from './routeResponse';
 import type { TimelineEvent } from './timelineEvent';
 
 export interface AgentInfo {
+  /** The permanent machine identifier. */
+  machine_id?: string;
   /** The hostname of the agent. */
   hostname: string;
   /** The current status of the agent. */

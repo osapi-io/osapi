@@ -91,14 +91,14 @@ func New(
 	}
 
 	return &Client{
-		logger:        logger.With(slog.String("subsystem", "job.client")),
-		natsClient:    natsClient,
-		kv:            opts.KVBucket,
-		registryKV:    opts.RegistryKV,
-		factsKV:       opts.FactsKV,
-		stateKV:       opts.StateKV,
-		streamName:    opts.StreamName,
-		timeout:       opts.Timeout,
+		logger:         logger.With(slog.String("subsystem", "job.client")),
+		natsClient:     natsClient,
+		kv:             opts.KVBucket,
+		registryKV:     opts.RegistryKV,
+		factsKV:        opts.FactsKV,
+		stateKV:        opts.StateKV,
+		streamName:     opts.StreamName,
+		timeout:        opts.Timeout,
 		JSONMarshalFn:  json.Marshal,
 		pkiSigner:      opts.PKISigner,
 		targetResolver: opts.TargetResolver,
