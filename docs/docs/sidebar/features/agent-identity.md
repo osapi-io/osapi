@@ -17,18 +17,18 @@ Every agent has two identity values:
   or `IOPlatformUUID` (macOS). Used as the registry key and stable
   reference across hostname changes.
 - **Hostname** -- mutable display name from the OS or `agent.hostname`
-  config. Used for NATS subject routing and human-friendly targeting.
+  config. Used for human-friendly targeting and display.
 
 The agent resolves its machine ID once at startup and refuses to start
-if it cannot be read. The hostname is re-read on each heartbeat tick
-(10s). If the hostname changes, the agent resubscribes its NATS
-consumers to the new hostname subjects without restarting. The machine
-ID never changes.
+if it cannot be read. NATS subject routing uses the machine ID
+(`jobs.query.host.<machineID>`), so consumers never need to
+resubscribe when the hostname changes. The hostname is re-read on
+each heartbeat tick (10s) and updated in the registry for display.
 
 ### CLI Targeting
 
 Both hostname and machine ID work as targets. The controller resolves
-machine IDs to hostnames automatically:
+hostnames to machine IDs for NATS subject routing automatically:
 
 ```bash
 # Target by hostname

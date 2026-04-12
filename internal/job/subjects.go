@@ -23,21 +23,25 @@
 // Subject Format: [namespace.]jobs.{type}.{routing_type}.{value...}
 //
 // Routing Patterns:
-//   - Direct: jobs.query.host.server1 (specific host)
+//   - Direct: jobs.query.host.<machineID> (specific host by machine ID)
 //   - Any: jobs.query._any (load-balanced across available agents)
 //   - Broadcast: jobs.modify._all (all agents receive)
 //   - Label: jobs.query.label.group.web (broadcast to label group)
 //   - Hierarchical: jobs.query.label.group.web.dev.us-east (prefix matching)
 //
 // Agents subscribe to:
-//   - Their specific hostname: jobs.*.host.server1
+//   - Their machine ID: jobs.*.host.<machineID> (permanent, never changes)
 //   - Load-balanced work: jobs.*._any (with queue group)
 //   - Broadcast messages: jobs.*._all
 //   - Label prefixes: jobs.*.label.group.web, jobs.*.label.group.web.dev, etc.
 //
+// The controller resolves hostname targets to machine IDs before building
+// subjects. This ensures direct routing uses the permanent machine ID,
+// not the mutable hostname.
+//
 // When a namespace is configured via Init(), all subjects are prefixed:
 //
-//	Init("osapi") -> osapi.jobs.query._any, osapi.jobs.*.host.server1, etc.
+//	Init("osapi") -> osapi.jobs.query._any, osapi.jobs.*.host.<machineID>, etc.
 package job
 
 import (
