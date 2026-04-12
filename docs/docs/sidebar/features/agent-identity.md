@@ -45,7 +45,9 @@ osapi client node hostname --target group:web.dev
 ```
 
 The `node list` and `node get` commands include the machine ID in their output
-so operators can identify agents across hostname changes.
+so operators can identify agents across hostname changes. The management
+dashboard shows machine ID and fingerprint on agent cards, and pending
+agents are managed via the Admin > Enrollment page.
 
 ## PKI Enrollment
 

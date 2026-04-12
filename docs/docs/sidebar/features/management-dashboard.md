@@ -12,12 +12,14 @@ hosting is required — deploy the `osapi` binary and the UI is ready.
 
 The dashboard provides a visual interface for fleet management:
 
-- **Dashboard** — fleet health overview with agent cards, component status,
-  JetStream metrics, and node conditions
+- **Dashboard** — fleet health overview with agent cards (machine ID,
+  fingerprint, scheduling state), component status, JetStream metrics,
+  and node conditions
 - **Configure** — block-based operations builder for composing and applying
   changes across targets
 - **Admin** — audit log viewer with export, job queue browser with retry/delete,
-  and RBAC reference (admin-only)
+  PKI enrollment management (accept/reject agents), and RBAC reference
+  (admin-only)
 
 ## Enabling the UI
 
