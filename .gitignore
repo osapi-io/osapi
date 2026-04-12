@@ -6,10 +6,10 @@ database.db*
 dist/
 docs/node_modules/
 docs/bun.lock
-.nats/jetstream/
-result.xml
 .just/remote/*
-!.just/remote/react.mod.just
+.nats/jetstream/
+pki/
+result.xml
 test/vendor/
 tmp/
 
@@ -27,4 +27,3 @@ examples/**
 !examples/**/*.go
 !examples/**/*.mod
 !examples/**/*.sum
-pki/
