@@ -78,21 +78,23 @@ export function PendingAgentCard({ agent, onRefresh }: PendingAgentCardProps) {
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-1.5">
-        <div>
-          <Text variant="label" as="span" className="text-[10px]">
-            Machine ID{" "}
-          </Text>
-          <Text variant="muted" as="span" className="break-all text-[10px]">
-            {agent.machine_id}
-          </Text>
-        </div>
-        <div>
-          <Text variant="label" as="span" className="text-[10px]">
-            Fingerprint{" "}
-          </Text>
-          <Text variant="muted" as="span" className="break-all text-[10px]">
-            {agent.fingerprint}
-          </Text>
+        <div className="space-y-0.5">
+          <div className="flex gap-1">
+            <Text variant="label" as="span" className="shrink-0 text-[10px]">
+              ID:
+            </Text>
+            <Text variant="muted" as="span" className="break-all font-mono text-[10px]">
+              {agent.machine_id}
+            </Text>
+          </div>
+          <div className="flex gap-1">
+            <Text variant="label" as="span" className="shrink-0 text-[10px]">
+              FP:
+            </Text>
+            <Text variant="muted" as="span" className="break-all font-mono text-[10px]">
+              {agent.fingerprint}
+            </Text>
+          </div>
         </div>
         <Text variant="muted" as="p">
           Requested {formatAge(agent.requested_at)}

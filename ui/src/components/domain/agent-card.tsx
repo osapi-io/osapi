@@ -106,28 +106,32 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
       </CardHeader>
       <CardContent className="flex flex-1 flex-col">
         {/* Identity */}
-        {agent.machine_id && (
-          <div
-            className="cursor-pointer"
-            title="Click to copy machine ID"
-            onClick={() => navigator.clipboard.writeText(agent.machine_id!)}
-          >
-            <Text variant="label" as="span" className="text-[10px]">
-              Machine ID{" "}
-            </Text>
-            <Text variant="muted" as="span" className="break-all text-[10px]">
-              {agent.machine_id}
-            </Text>
-          </div>
-        )}
-        {agent.fingerprint && (
-          <div>
-            <Text variant="label" as="span" className="text-[10px]">
-              Fingerprint{" "}
-            </Text>
-            <Text variant="muted" as="span" className="break-all text-[10px]">
-              {agent.fingerprint}
-            </Text>
+        {(agent.machine_id || agent.fingerprint) && (
+          <div className="mt-1 space-y-0.5">
+            {agent.machine_id && (
+              <div
+                className="flex cursor-pointer gap-1"
+                title="Click to copy machine ID"
+                onClick={() => navigator.clipboard.writeText(agent.machine_id!)}
+              >
+                <Text variant="label" as="span" className="shrink-0 text-[10px]">
+                  ID:
+                </Text>
+                <Text variant="muted" as="span" className="break-all font-mono text-[10px]">
+                  {agent.machine_id}
+                </Text>
+              </div>
+            )}
+            {agent.fingerprint && (
+              <div className="flex gap-1">
+                <Text variant="label" as="span" className="shrink-0 text-[10px]">
+                  FP:
+                </Text>
+                <Text variant="muted" as="span" className="break-all font-mono text-[10px]">
+                  {agent.fingerprint}
+                </Text>
+              </div>
+            )}
           </div>
         )}
 
