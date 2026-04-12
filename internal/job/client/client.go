@@ -51,6 +51,9 @@ type Client struct {
 	jobsCreated   metric.Int64Counter
 	// pkiSigner signs job payloads when PKI is enabled. Nil when disabled.
 	pkiSigner PKISigner
+	// targetResolver resolves a target (hostname or machine ID) to the
+	// value used for NATS subject routing. When nil, the target is used as-is.
+	targetResolver func(string) string
 }
 
 // Options configures the jobs client.
@@ -69,6 +72,9 @@ type Options struct {
 	StreamName string
 	// PKISigner signs job payloads when PKI is enabled. Nil when disabled.
 	PKISigner PKISigner
+	// TargetResolver resolves hostname targets to machine IDs for NATS
+	// subject routing. When nil, targets are used as-is.
+	TargetResolver func(string) string
 }
 
 // New creates a new jobs client using an existing NATS client.
@@ -93,9 +99,22 @@ func New(
 		stateKV:       opts.StateKV,
 		streamName:    opts.StreamName,
 		timeout:       opts.Timeout,
-		JSONMarshalFn: json.Marshal,
-		pkiSigner:     opts.PKISigner,
+		JSONMarshalFn:  json.Marshal,
+		pkiSigner:      opts.PKISigner,
+		targetResolver: opts.TargetResolver,
 	}, nil
+}
+
+// resolveTarget resolves a target (hostname or machine ID) to the routing
+// value for NATS subjects. When no resolver is configured, returns the
+// target unchanged.
+func (c *Client) resolveTarget(
+	target string,
+) string {
+	if c.targetResolver != nil {
+		return c.targetResolver(target)
+	}
+	return target
 }
 
 // Query publishes a query job to a single target and waits for the response.
@@ -118,7 +137,8 @@ func (c *Client) Query(
 		Data:      json.RawMessage(dataBytes),
 	}
 
-	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
+	resolved := c.resolveTarget(target)
+	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, resolved)
 	jobID, resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to publish and wait: %w", err)
@@ -152,7 +172,8 @@ func (c *Client) QueryBroadcast(
 		Data:      json.RawMessage(dataBytes),
 	}
 
-	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
+	resolved := c.resolveTarget(target)
+	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, resolved)
 	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
@@ -181,7 +202,8 @@ func (c *Client) Modify(
 		Data:      json.RawMessage(dataBytes),
 	}
 
-	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
+	resolved := c.resolveTarget(target)
+	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, resolved)
 	jobID, resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to publish and wait: %w", err)
@@ -215,7 +237,8 @@ func (c *Client) ModifyBroadcast(
 		Data:      json.RawMessage(dataBytes),
 	}
 
-	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
+	resolved := c.resolveTarget(target)
+	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, resolved)
 	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to collect broadcast responses: %w", err)

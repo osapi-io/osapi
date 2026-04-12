@@ -438,7 +438,7 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatHostnameChange() {
 		expectChanged   bool
 	}{
 		{
-			name:            "when hostname changes resubscribes consumers",
+			name:            "when hostname changes updates cached hostname",
 			initialHostname: "old-host",
 			hostnameReply:   "new-host",
 			expectChanged:   true,
@@ -497,22 +497,9 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatHostnameChange() {
 			})
 			defer agent.ResetGetAgentHostnameFn()
 
-			if tt.expectChanged {
-				// Set agent ctx so startConsumers can derive consumerCtx.
-				agentCtx, agentCancel := context.WithCancel(context.Background())
-				agent.SetAgentLifecycle(agentCtx, agentCtx, testAgent, agentCancel, agentCancel)
-
-				// stopConsumers + startConsumers triggers consumer creation.
-				mockJobClient.EXPECT().
-					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
-					Return(nil).
-					MinTimes(8)
-
-				mockJobClient.EXPECT().
-					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(context.Canceled).
-					MinTimes(8)
-			}
+			// Consumers use machine ID (permanent), so hostname changes
+			// do NOT trigger consumer stop/start — only the cached
+			// hostname is updated for registry entries and logging.
 
 			// Initial write + at least 1 ticker refresh
 			mockKV.EXPECT().

@@ -32,8 +32,9 @@ import (
 
 // AgentTarget holds the routing-relevant fields of an active agent.
 type AgentTarget struct {
-	Hostname string
-	Labels   map[string]string
+	MachineID string
+	Hostname  string
+	Labels    map[string]string
 }
 
 // AgentLister returns active agents with their hostnames and labels.
@@ -155,7 +156,8 @@ func matchesLabel(
 	return false
 }
 
-// matchesHostname checks whether any active agent has the given hostname.
+// matchesHostname checks whether any active agent has the given hostname
+// or machine ID.
 func matchesHostname(
 	target string,
 ) bool {
@@ -165,10 +167,47 @@ func matchesHostname(
 	}
 
 	for _, a := range agents {
-		if a.Hostname == target {
+		if a.Hostname == target || a.MachineID == target {
 			return true
 		}
 	}
 
 	return false
+}
+
+// ResolveTarget resolves a target string to a machine ID for NATS subject
+// routing. If the target matches a hostname, the corresponding machine ID
+// is returned. If it matches a machine ID directly, it is returned as-is.
+// Broadcast and label targets are returned unchanged.
+func ResolveTarget(
+	target string,
+) string {
+	if target == "_any" || target == "_all" {
+		return target
+	}
+
+	if strings.ContainsRune(target, ':') {
+		return target
+	}
+
+	agents, err := getAgents()
+	if err != nil {
+		return target
+	}
+
+	// Check if target is a hostname → resolve to machine ID.
+	for _, a := range agents {
+		if a.Hostname == target {
+			return a.MachineID
+		}
+	}
+
+	// Check if target is already a machine ID.
+	for _, a := range agents {
+		if a.MachineID == target {
+			return target
+		}
+	}
+
+	return target
 }

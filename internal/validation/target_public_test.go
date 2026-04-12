@@ -312,6 +312,107 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 	}
 }
 
+func (s *TargetPublicTestSuite) TestResolveTarget() {
+	tests := []struct {
+		name        string
+		setupLister func()
+		target      string
+		want        string
+	}{
+		{
+			name:   "when target is _any returns unchanged",
+			target: "_any",
+			want:   "_any",
+		},
+		{
+			name:   "when target is _all returns unchanged",
+			target: "_all",
+			want:   "_all",
+		},
+		{
+			name:   "when target is label returns unchanged",
+			target: "group:web",
+			want:   "group:web",
+		},
+		{
+			name: "when target is hostname resolves to machine ID",
+			setupLister: func() {
+				validation.RegisterTargetValidator(
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
+							{MachineID: "abc123", Hostname: "web-01"},
+						}, nil
+					},
+				)
+			},
+			target: "web-01",
+			want:   "abc123",
+		},
+		{
+			name: "when target is machine ID returns unchanged",
+			setupLister: func() {
+				validation.RegisterTargetValidator(
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
+							{MachineID: "abc123", Hostname: "web-01"},
+						}, nil
+					},
+				)
+			},
+			target: "abc123",
+			want:   "abc123",
+		},
+		{
+			name: "when target not found returns unchanged",
+			setupLister: func() {
+				validation.RegisterTargetValidator(
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{}, nil
+					},
+				)
+			},
+			target: "unknown",
+			want:   "unknown",
+		},
+		{
+			name: "when lister errors returns unchanged",
+			setupLister: func() {
+				validation.RegisterTargetValidator(
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return nil, fmt.Errorf("nats down")
+					},
+				)
+			},
+			target: "web-01",
+			want:   "web-01",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			if tt.setupLister != nil {
+				tt.setupLister()
+			}
+			got := validation.ResolveTarget(tt.target)
+			s.Equal(tt.want, got)
+		})
+	}
+}
+
+func (s *TargetPublicTestSuite) TestValidTargetMatchesMachineID() {
+	validation.RegisterTargetValidator(
+		func(_ context.Context) ([]validation.AgentTarget, error) {
+			return []validation.AgentTarget{
+				{MachineID: "abc123-def456", Hostname: "web-01"},
+			}, nil
+		},
+	)
+
+	// Machine ID should pass validation
+	_, ok := validation.Struct(targetInput{Target: "abc123-def456"})
+	s.True(ok)
+}
+
 func TestTargetPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(TargetPublicTestSuite))
 }

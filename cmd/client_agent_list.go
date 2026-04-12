@@ -96,9 +96,6 @@ Shows each agent's hostname, status, labels, age, load, and OS.`,
 			machineID := ""
 			if a.MachineId != "" {
 				machineID = a.MachineId
-				if len(machineID) > 12 {
-					machineID = machineID[:12]
-				}
 			}
 			rows = append(rows, []string{
 				machineID,
@@ -157,9 +154,6 @@ func listPendingAgents(
 	rows := make([][]string, 0, len(agents))
 	for _, a := range agents {
 		machineID := a.MachineID
-		if len(machineID) > 12 {
-			machineID = machineID[:12]
-		}
 		fingerprint := a.Fingerprint
 		if len(fingerprint) > 20 {
 			fingerprint = fingerprint[:20] + "..."

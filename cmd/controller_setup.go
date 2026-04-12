@@ -205,8 +205,9 @@ func setupController(
 			targets := make([]validation.AgentTarget, 0, len(agents))
 			for _, a := range agents {
 				targets = append(targets, validation.AgentTarget{
-					Hostname: a.Hostname,
-					Labels:   a.Labels,
+					MachineID: a.MachineID,
+					Hostname:  a.Hostname,
+					Labels:    a.Labels,
 				})
 			}
 			return targets, nil
@@ -334,12 +335,13 @@ func connectNATSBundle(
 	jobTimeout, _ := time.ParseDuration(appConfig.Controller.API.JobTimeout)
 
 	jc, err := jobclient.New(log, nc, &jobclient.Options{
-		Timeout:    jobTimeout,
-		KVBucket:   jobsKV,
-		RegistryKV: registryKV,
-		FactsKV:    factsKV,
-		StateKV:    stateKV,
-		StreamName: streamName,
+		Timeout:        jobTimeout,
+		KVBucket:       jobsKV,
+		RegistryKV:     registryKV,
+		FactsKV:        factsKV,
+		StateKV:        stateKV,
+		StreamName:     streamName,
+		TargetResolver: validation.ResolveTarget,
 	})
 	if err != nil {
 		cli.LogFatal(log, "failed to create job client", err)

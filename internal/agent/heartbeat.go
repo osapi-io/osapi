@@ -83,17 +83,17 @@ func (a *Agent) startHeartbeat(
 				return
 			case <-ticker.C:
 				// Re-read current hostname for dynamic changes.
+				// Consumers use machine ID (permanent) so no resubscribe
+				// needed — only update the hostname for registry/logging.
 				newHostname, _ := getAgentHostnameFn(a.appConfig.Agent.Hostname)
 				if newHostname != hostname {
 					a.heartbeatLogger.Info(
-						"hostname changed, resubscribing consumers",
+						"hostname changed",
 						slog.String("old_hostname", hostname),
 						slog.String("new_hostname", newHostname),
 					)
-					a.stopConsumers()
 					hostname = newHostname
 					a.hostname = newHostname
-					a.startConsumers()
 				}
 
 				a.writeRegistration(ctx, machineID, hostname)
