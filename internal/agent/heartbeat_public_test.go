@@ -34,6 +34,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/agent"
+	"github.com/retr0h/osapi/internal/agent/pki"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
@@ -318,6 +319,30 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistration() {
 					"heartbeat time should be at or after test start",
 				)
 			},
+		},
+		{
+			name: "when PKI enabled includes fingerprint in registration",
+			setupMock: func() {
+				m := pki.New(memfs.New(), "/keys", "agent")
+				s.Require().NoError(m.LoadOrGenerate())
+				agent.SetAgentPKIManager(s.testAgent, m)
+
+				s.mockKV.EXPECT().
+					Put(gomock.Any(), "agents.test_machine_id", gomock.Any()).
+					DoAndReturn(func(
+						_ interface{},
+						_ string,
+						data []byte,
+					) (uint64, error) {
+						s.Contains(string(data), "fingerprint")
+						s.Contains(string(data), "SHA256:")
+						return uint64(1), nil
+					})
+			},
+			teardownMock: func() {
+				agent.SetAgentPKIManager(s.testAgent, nil)
+			},
+			validateFunc: func(_ time.Time) {},
 		},
 	}
 

@@ -61,6 +61,9 @@ type AgentInfo struct {
 	// Facts Extended facts from additional providers.
 	Facts *map[string]interface{} `json:"facts,omitempty"`
 
+	// Fingerprint The SHA256 fingerprint of the agent's PKI public key. Empty when PKI is disabled.
+	Fingerprint *string `json:"fingerprint,omitempty"`
+
 	// Fqdn Fully qualified domain name.
 	Fqdn *string `json:"fqdn,omitempty"`
 

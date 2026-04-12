@@ -623,8 +623,11 @@ type AgentRegistration struct {
 	Process *ProcessMetrics `json:"process,omitempty"`
 	// Conditions contains the evaluated node conditions.
 	Conditions []Condition `json:"conditions,omitempty"`
-	// State is the agent's scheduling state (Ready, Draining, Cordoned).
+	// State is the agent's scheduling state (Ready, Draining, Cordoned, Pending).
 	State string `json:"state,omitempty"`
+	// Fingerprint is the SHA256 fingerprint of the agent's PKI public key.
+	// Empty when PKI is disabled.
+	Fingerprint string `json:"fingerprint,omitempty"`
 	// SubComponents reports the status of internal services.
 	SubComponents map[string]SubComponentInfo `json:"sub_components,omitempty"`
 }
@@ -673,8 +676,11 @@ type AgentInfo struct {
 	Facts map[string]any `json:"facts,omitempty"`
 	// Conditions contains the evaluated node conditions.
 	Conditions []Condition `json:"conditions,omitempty"`
-	// State is the agent's scheduling state (Ready, Draining, Cordoned).
+	// State is the agent's scheduling state (Ready, Draining, Cordoned, Pending).
 	State string `json:"state,omitempty"`
+	// Fingerprint is the SHA256 fingerprint of the agent's PKI public key.
+	// Empty when PKI is disabled.
+	Fingerprint string `json:"fingerprint,omitempty"`
 	// Timeline contains the chronological sequence of state transition events.
 	Timeline []TimelineEvent `json:"timeline,omitempty"`
 }

@@ -127,6 +127,7 @@ func (a *Agent) writeRegistration(
 		StartedAt:     a.startedAt,
 		State:         a.state,
 		SubComponents: a.subComponents,
+		Fingerprint:   a.pkiFingerprint(),
 	}
 
 	if info, err := a.hostProvider.GetOSInfo(); err == nil {
@@ -242,6 +243,16 @@ func (a *Agent) deregister(
 		slog.String("machine_id", machineID),
 		slog.String("key", key),
 	)
+}
+
+// pkiFingerprint returns the agent's PKI public key fingerprint,
+// or empty string when PKI is disabled.
+func (a *Agent) pkiFingerprint() string {
+	if a.pkiManager != nil {
+		return a.pkiManager.Fingerprint()
+	}
+
+	return ""
 }
 
 // registryKey returns the KV key for an agent's registration entry.

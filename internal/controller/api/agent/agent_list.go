@@ -83,6 +83,11 @@ func setIdentity(
 		info.MachineId = &machineID
 	}
 
+	if a.Fingerprint != "" {
+		fingerprint := a.Fingerprint
+		info.Fingerprint = &fingerprint
+	}
+
 	if len(a.Labels) > 0 {
 		labels := a.Labels
 		info.Labels = &labels

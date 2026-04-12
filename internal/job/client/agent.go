@@ -340,6 +340,7 @@ func agentInfoFromRegistration(
 		AgentVersion: reg.AgentVersion,
 		Conditions:   reg.Conditions,
 		State:        reg.State,
+		Fingerprint:  reg.Fingerprint,
 	}
 }
 

@@ -505,6 +505,11 @@ components:
         machine_id:
           type: string
           description: The permanent machine identifier.
+        fingerprint:
+          type: string
+          description: >-
+            The SHA256 fingerprint of the agent's PKI public key.
+            Empty when PKI is disabled.
         hostname:
           type: string
           description: The hostname of the agent.

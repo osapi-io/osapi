@@ -65,6 +65,9 @@ func displayAgentGetDetail(
 	if data.MachineID != "" {
 		kvArgs = append(kvArgs, "Machine ID", data.MachineID)
 	}
+	if data.Fingerprint != "" {
+		kvArgs = append(kvArgs, "Fingerprint", data.Fingerprint)
+	}
 	kvArgs = append(kvArgs, "Status", data.Status)
 	cli.PrintKV(kvArgs...)
 
