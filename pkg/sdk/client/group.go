@@ -44,6 +44,7 @@ func (s *GroupService) List(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,
@@ -74,6 +75,7 @@ func (s *GroupService) Get(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
@@ -187,6 +189,7 @@ func (s *GroupService) Delete(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,

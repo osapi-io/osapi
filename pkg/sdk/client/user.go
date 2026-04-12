@@ -44,6 +44,7 @@ func (s *UserService) List(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,
@@ -74,6 +75,7 @@ func (s *UserService) Get(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
@@ -219,6 +221,7 @@ func (s *UserService) Delete(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
@@ -250,6 +253,7 @@ func (s *UserService) ListKeys(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,
@@ -320,6 +324,7 @@ func (s *UserService) RemoveKey(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,

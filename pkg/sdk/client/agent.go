@@ -70,7 +70,7 @@ func (s *AgentService) Get(
 		return nil, fmt.Errorf("get agent %s: %w", hostname, err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500); err != nil {
+	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500); err != nil {
 		return nil, err
 	}
 
