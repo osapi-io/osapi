@@ -33,6 +33,9 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 )
 
+// marshalJSONEnrollment is a package-level variable for testing the marshal error path.
+var marshalJSONEnrollment = json.Marshal
+
 // handlePKIEnrollment manages the PKI enrollment lifecycle.
 // It loads or generates a keypair, checks for existing controller key,
 // and if not enrolled, publishes an enrollment request and sets state
@@ -104,7 +107,7 @@ func (a *Agent) publishEnrollmentRequest() error {
 		Fingerprint: a.pkiManager.Fingerprint(),
 	}
 
-	data, err := json.Marshal(req)
+	data, err := marshalJSONEnrollment(req)
 	if err != nil {
 		return fmt.Errorf("marshal enrollment request: %w", err)
 	}

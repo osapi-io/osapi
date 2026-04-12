@@ -235,6 +235,48 @@ func (s *AgentPublicTestSuite) TestStart() {
 			},
 		},
 		{
+			name: "enters pending state when PKI enabled and not enrolled skips consumers",
+			setupFunc: func() *agent.Agent {
+				fs := memfs.New()
+
+				cfg := s.appConfig
+				cfg.Agent.PKI = config.AgentPKI{
+					Enabled: true,
+					KeyDir:  "/keys",
+				}
+
+				// No CreateOrUpdateConsumer/ConsumeJobs expectations:
+				// consumers must NOT be started in pending state.
+
+				return newTestAgent(newTestAgentParams{
+					appFs:           fs,
+					appConfig:       cfg,
+					logger:          s.logger,
+					jobClient:       s.mockJobClient,
+					streamName:      "test-stream",
+					hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
+					diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
+					memProvider:     memMocks.NewDefaultMockProvider(s.mockCtrl),
+					loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
+					dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+					pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
+					processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+				})
+			},
+			stopFunc: func(a *agent.Agent) {
+				// Agent should be in pending state — consumers not started.
+				state := agent.GetAgentState(a)
+				s.Equal(job.AgentStatePending, state)
+
+				stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+
+				a.Stop(stopCtx)
+			},
+		},
+		{
 			name: "returns early when preflight fails",
 			setupFunc: func() *agent.Agent {
 				mockExecMgr := execmocks.NewMockManager(s.mockCtrl)

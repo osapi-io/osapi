@@ -216,6 +216,22 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			wantOK: true,
 		},
 		{
+			name: "when target matches a pending agent returns false with pending message",
+			setupLister: func() {
+				validation.RegisterTargetValidator(
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
+							{Hostname: "pending-host", State: "Pending"},
+							{Hostname: "server2"},
+						}, nil
+					},
+				)
+			},
+			input:    targetInput{Target: "pending-host"},
+			wantOK:   false,
+			contains: []string{"valid_target", "pending PKI enrollment"},
+		},
+		{
 			name: "when target is an unknown hostname",
 			setupLister: func() {
 				validation.RegisterTargetValidator(

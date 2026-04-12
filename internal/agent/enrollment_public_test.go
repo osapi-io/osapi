@@ -26,17 +26,21 @@ import (
 	"crypto/rand"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"log/slog"
 	"testing"
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/agent"
+	agentMocks "github.com/retr0h/osapi/internal/agent/mocks"
+	"github.com/retr0h/osapi/internal/agent/pki"
 	"github.com/retr0h/osapi/internal/config"
 )
 
@@ -227,6 +231,201 @@ func (suite *EnrollmentPublicTestSuite) TestHandlePKIEnrollment() {
 				if tc.validateFunc != nil {
 					tc.validateFunc(a)
 				}
+			}
+		})
+	}
+}
+
+func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
+	tests := []struct {
+		name         string
+		setupAgent   func() *agent.Agent
+		wantErr      bool
+		wantContains string
+	}{
+		{
+			name: "when natsClient is nil returns error",
+			setupAgent: func() *agent.Agent {
+				fs := memfs.New()
+				logger := slog.Default()
+				cfg := config.Config{
+					Agent: config.AgentConfig{
+						PKI: config.AgentPKI{
+							Enabled: true,
+							KeyDir:  "/keys",
+						},
+					},
+				}
+
+				a := agent.New(
+					fs, cfg, logger,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				)
+
+				// Set up a PKI manager so PublicKey/Fingerprint don't panic.
+				m := pki.New(fs, "/keys", "agent")
+				require.NoError(suite.T(), m.LoadOrGenerate())
+				agent.SetAgentPKIManager(a, m)
+
+				return a
+			},
+			wantErr:      true,
+			wantContains: "NATS client not available",
+		},
+		{
+			name: "when publish succeeds without namespace",
+			setupAgent: func() *agent.Agent {
+				ctrl := gomock.NewController(suite.T())
+				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+				mockNATS.EXPECT().
+					Publish(gomock.Any(), "enroll.request", gomock.Any()).
+					Return(nil)
+
+				fs := memfs.New()
+				logger := slog.Default()
+				cfg := config.Config{
+					Agent: config.AgentConfig{
+						PKI: config.AgentPKI{
+							Enabled: true,
+							KeyDir:  "/keys",
+						},
+					},
+				}
+
+				a := agent.New(
+					fs, cfg, logger,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+				)
+
+				m := pki.New(fs, "/keys", "agent")
+				require.NoError(suite.T(), m.LoadOrGenerate())
+				agent.SetAgentPKIManager(a, m)
+
+				return a
+			},
+			wantErr: false,
+		},
+		{
+			name: "when publish succeeds with namespace",
+			setupAgent: func() *agent.Agent {
+				ctrl := gomock.NewController(suite.T())
+				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+				mockNATS.EXPECT().
+					Publish(gomock.Any(), "osapi.enroll.request", gomock.Any()).
+					Return(nil)
+
+				fs := memfs.New()
+				logger := slog.Default()
+				cfg := config.Config{
+					Agent: config.AgentConfig{
+						NATS: config.NATSConnection{
+							Namespace: "osapi",
+						},
+						PKI: config.AgentPKI{
+							Enabled: true,
+							KeyDir:  "/keys",
+						},
+					},
+				}
+
+				a := agent.New(
+					fs, cfg, logger,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+				)
+
+				m := pki.New(fs, "/keys", "agent")
+				require.NoError(suite.T(), m.LoadOrGenerate())
+				agent.SetAgentPKIManager(a, m)
+
+				return a
+			},
+			wantErr: false,
+		},
+		{
+			name: "when publish fails returns error",
+			setupAgent: func() *agent.Agent {
+				ctrl := gomock.NewController(suite.T())
+				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+				mockNATS.EXPECT().
+					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(fmt.Errorf("connection refused"))
+
+				fs := memfs.New()
+				logger := slog.Default()
+				cfg := config.Config{
+					Agent: config.AgentConfig{
+						PKI: config.AgentPKI{
+							Enabled: true,
+							KeyDir:  "/keys",
+						},
+					},
+				}
+
+				a := agent.New(
+					fs, cfg, logger,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+				)
+
+				m := pki.New(fs, "/keys", "agent")
+				require.NoError(suite.T(), m.LoadOrGenerate())
+				agent.SetAgentPKIManager(a, m)
+
+				return a
+			},
+			wantErr:      true,
+			wantContains: "publish enrollment request",
+		},
+		{
+			name: "when marshal fails returns error",
+			setupAgent: func() *agent.Agent {
+				agent.SetMarshalJSONEnrollment(func(_ interface{}) ([]byte, error) {
+					return nil, fmt.Errorf("marshal boom")
+				})
+				suite.T().Cleanup(func() {
+					agent.ResetMarshalJSONEnrollment()
+				})
+
+				ctrl := gomock.NewController(suite.T())
+				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+
+				fs := memfs.New()
+				logger := slog.Default()
+				cfg := config.Config{
+					Agent: config.AgentConfig{
+						PKI: config.AgentPKI{
+							Enabled: true,
+							KeyDir:  "/keys",
+						},
+					},
+				}
+
+				a := agent.New(
+					fs, cfg, logger,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+				)
+
+				m := pki.New(fs, "/keys", "agent")
+				require.NoError(suite.T(), m.LoadOrGenerate())
+				agent.SetAgentPKIManager(a, m)
+
+				return a
+			},
+			wantErr:      true,
+			wantContains: "marshal enrollment request",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			a := tc.setupAgent()
+
+			err := agent.ExportPublishEnrollmentRequest(a)
+
+			if tc.wantErr {
+				require.Error(suite.T(), err)
+				assert.Contains(suite.T(), err.Error(), tc.wantContains)
+			} else {
+				require.NoError(suite.T(), err)
 			}
 		})
 	}

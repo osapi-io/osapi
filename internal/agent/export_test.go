@@ -684,6 +684,31 @@ func SetAgentPKIManager(
 	a.pkiManager = m
 }
 
+// ExportPublishEnrollmentRequest exposes the private publishEnrollmentRequest method for testing.
+func ExportPublishEnrollmentRequest(
+	a *Agent,
+) error {
+	return a.publishEnrollmentRequest()
+}
+
+// SetMarshalJSONEnrollment overrides the marshalJSONEnrollment function for testing.
+func SetMarshalJSONEnrollment(fn func(interface{}) ([]byte, error)) {
+	marshalJSONEnrollment = fn
+}
+
+// ResetMarshalJSONEnrollment restores the default marshalJSONEnrollment function.
+func ResetMarshalJSONEnrollment() {
+	marshalJSONEnrollment = json.Marshal
+}
+
+// SetAgentNATSClient sets the agent's natsClient field for testing.
+func SetAgentNATSClient(
+	a *Agent,
+	c NATSPublisher,
+) {
+	a.natsClient = c
+}
+
 // ExportUnwrapJobEnvelope exposes the private unwrapJobEnvelope method for testing.
 func ExportUnwrapJobEnvelope(
 	a *Agent,
