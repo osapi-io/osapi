@@ -66,8 +66,8 @@ func ResetNowFn() {
 
 // ExportHandleEnrollmentRequest exposes handleEnrollmentRequest for testing.
 func ExportHandleEnrollmentRequest(
-	w *Watcher,
 	ctx context.Context,
+	w *Watcher,
 	msg *nats.Msg,
 ) {
 	w.handleEnrollmentRequest(ctx, msg)

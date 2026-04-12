@@ -128,7 +128,7 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequest() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.setupMock()
-			enrollment.ExportHandleEnrollmentRequest(s.watcher, s.ctx, tc.msg)
+			enrollment.ExportHandleEnrollmentRequest(s.ctx, s.watcher, tc.msg)
 		})
 	}
 }
@@ -198,7 +198,7 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAccept() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.setupMock()
-			enrollment.ExportHandleEnrollmentRequest(autoWatcher, s.ctx, tc.msg)
+			enrollment.ExportHandleEnrollmentRequest(s.ctx, autoWatcher, tc.msg)
 		})
 	}
 }
@@ -362,7 +362,7 @@ func (s *WatcherPublicTestSuite) TestRejectAgent() {
 
 				s.mockNC.EXPECT().
 					Publish("osapi.enroll.response.machine-001", gomock.Any()).
-					DoAndReturn(func(subj string, data []byte) error {
+					DoAndReturn(func(_ string, data []byte) error {
 						var resp pki.EnrollmentResponse
 						s.Require().NoError(json.Unmarshal(data, &resp))
 						s.False(resp.Accepted)

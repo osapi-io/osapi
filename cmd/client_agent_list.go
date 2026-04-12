@@ -94,8 +94,8 @@ Shows each agent's hostname, status, labels, age, load, and OS.`,
 				osStr = a.OSInfo.Distribution + " " + a.OSInfo.Version
 			}
 			machineID := ""
-			if a.MachineId != "" {
-				machineID = a.MachineId
+			if a.MachineID != "" {
+				machineID = a.MachineID
 			}
 			rows = append(rows, []string{
 				machineID,

@@ -62,8 +62,8 @@ func displayAgentGetDetail(
 	fmt.Println()
 
 	kvArgs := []string{"Hostname", data.Hostname}
-	if data.MachineId != "" {
-		kvArgs = append(kvArgs, "Machine ID", data.MachineId)
+	if data.MachineID != "" {
+		kvArgs = append(kvArgs, "Machine ID", data.MachineID)
 	}
 	kvArgs = append(kvArgs, "Status", data.Status)
 	cli.PrintKV(kvArgs...)

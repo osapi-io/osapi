@@ -70,11 +70,11 @@ func (suite *AgentTypesPublicTestSuite) TestAgentFromGen() {
 				message := "agent started"
 				errMsg := "connection lost"
 
-				machineId := "abc123-machine-id"
+				machineID := "abc123-machine-id"
 
 				return &gen.AgentInfo{
 					Hostname:      "web-01",
-					MachineId:     &machineId,
+					MachineId:     &machineID,
 					Status:        gen.AgentInfoStatus("Ready"),
 					Labels:        &labels,
 					Architecture:  &arch,
@@ -148,7 +148,7 @@ func (suite *AgentTypesPublicTestSuite) TestAgentFromGen() {
 			}(),
 			validateFunc: func(a client.Agent) {
 				suite.Equal("web-01", a.Hostname)
-				suite.Equal("abc123-machine-id", a.MachineId)
+				suite.Equal("abc123-machine-id", a.MachineID)
 				suite.Equal("Ready", a.Status)
 				suite.Equal("Ready", a.State)
 				suite.Equal(map[string]string{"group": "web", "env": "prod"}, a.Labels)
@@ -226,7 +226,7 @@ func (suite *AgentTypesPublicTestSuite) TestAgentFromGen() {
 			},
 			validateFunc: func(a client.Agent) {
 				suite.Equal("minimal-host", a.Hostname)
-				suite.Empty(a.MachineId)
+				suite.Empty(a.MachineID)
 				suite.Equal("Ready", a.Status)
 				suite.Empty(a.State)
 				suite.Nil(a.Labels)
