@@ -79,6 +79,14 @@ func (s *AgentPublicTestSuite) SetupTest() {
 	s.appFs = memfs.New()
 	s.logger = slog.Default()
 
+	// Mock identity so tests don't depend on /etc/machine-id existing.
+	agent.SetGetIdentityFn(func(_ avfs.VFS, _ string) (*identity.Identity, error) {
+		return &identity.Identity{
+			MachineID: "test-machine-id",
+			Hostname:  "test-agent",
+		}, nil
+	})
+
 	s.appConfig = config.Config{
 		NATS: config.NATS{
 			Stream: config.NATSStream{Name: "test-stream"},
@@ -99,6 +107,7 @@ func (s *AgentPublicTestSuite) SetupTest() {
 }
 
 func (s *AgentPublicTestSuite) TearDownTest() {
+	agent.ResetGetIdentityFn()
 	s.mockCtrl.Finish()
 }
 

@@ -34,6 +34,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/agent"
+	"github.com/retr0h/osapi/internal/agent/identity"
 	"github.com/retr0h/osapi/internal/agent/pki"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
@@ -67,6 +68,14 @@ func (s *HeartbeatPublicTestSuite) SetupTest() {
 	s.appFs = memfs.New()
 	s.logger = slog.Default()
 
+	// Mock identity so tests don't depend on /etc/machine-id.
+	agent.SetGetIdentityFn(func(_ avfs.VFS, _ string) (*identity.Identity, error) {
+		return &identity.Identity{
+			MachineID: "test-machine-id",
+			Hostname:  "test-agent",
+		}, nil
+	})
+
 	s.appConfig = config.Config{
 		NATS: config.NATS{
 			Stream: config.NATSStream{Name: "test-stream"},
@@ -94,6 +103,7 @@ func (s *HeartbeatPublicTestSuite) SetupTest() {
 }
 
 func (s *HeartbeatPublicTestSuite) TearDownTest() {
+	agent.ResetGetIdentityFn()
 	s.mockCtrl.Finish()
 }
 
