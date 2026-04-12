@@ -66,7 +66,7 @@ func NewWatcher(
 	namespace string,
 ) *Watcher {
 	return &Watcher{
-		logger:       logger.With(slog.String("subsystem", "controller.enrollment")),
+		logger:       logger.With(slog.String("subsystem", "controller.pki")),
 		nc:           nc,
 		enrollmentKV: enrollmentKV,
 		pkiProvider:  pkiProvider,
