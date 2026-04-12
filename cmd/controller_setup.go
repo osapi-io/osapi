@@ -936,6 +936,9 @@ func buildControllerSubComponents() map[string]job.SubComponentInfo {
 			Status:  enabledOrDisabled(appConfig.Controller.Metrics.Enabled),
 			Address: httpAddr(appConfig.Controller.Metrics.Host, appConfig.Controller.Metrics.Port),
 		},
+		"controller.enrollment": {
+			Status: enabledOrDisabled(appConfig.Controller.PKI.Enabled),
+		},
 		"controller.notifier": {
 			Status: enabledOrDisabled(appConfig.Controller.Notifications.Enabled),
 		},

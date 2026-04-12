@@ -80,7 +80,7 @@ func NewWatcher(
 func (w *Watcher) Start(
 	ctx context.Context,
 ) error {
-	subject := enrollSubject(w.namespace, "enroll.request")
+	subject := enrollSubject(w.namespace, pki.EnrollRequestSuffix)
 
 	sub, err := w.nc.Subscribe(subject, func(msg *nats.Msg) {
 		w.handleEnrollmentRequest(ctx, msg)

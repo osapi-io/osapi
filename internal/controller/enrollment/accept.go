@@ -59,7 +59,7 @@ func (w *Watcher) AcceptAgent(
 		return fmt.Errorf("marshal acceptance response: %w", err)
 	}
 
-	subject := enrollSubject(w.namespace, "enroll.response."+machineID)
+	subject := enrollSubject(w.namespace, pki.EnrollResponsePrefix+"."+machineID)
 	if err := w.nc.PublishCore(subject, data); err != nil {
 		return fmt.Errorf("publish acceptance for %s: %w", machineID, err)
 	}
@@ -108,7 +108,7 @@ func (w *Watcher) RejectAgent(
 		return fmt.Errorf("marshal rejection response: %w", err)
 	}
 
-	subject := enrollSubject(w.namespace, "enroll.response."+machineID)
+	subject := enrollSubject(w.namespace, pki.EnrollResponsePrefix+"."+machineID)
 	if err := w.nc.PublishCore(subject, data); err != nil {
 		return fmt.Errorf("publish rejection for %s: %w", machineID, err)
 	}

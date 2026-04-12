@@ -56,7 +56,7 @@ func (a *Agent) handlePKIEnrollment(
 
 	a.pkiManager = m
 
-	a.logger.Info(
+	a.pkiLogger.Info(
 		"PKI keypair loaded",
 		slog.String("fingerprint", m.Fingerprint()),
 		slog.String("key_dir", keyDir),
@@ -73,14 +73,14 @@ func (a *Agent) handlePKIEnrollment(
 		}
 
 		m.SetControllerPublicKey(pubKey)
-		a.logger.Info("controller public key loaded, agent enrolled")
+		a.pkiLogger.Info("controller public key loaded, agent enrolled")
 
 		return nil
 	}
 
 	// Not enrolled — publish enrollment request and enter pending state.
 	if err := a.publishEnrollmentRequest(); err != nil {
-		a.logger.Warn(
+		a.pkiLogger.Warn(
 			"failed to publish enrollment request",
 			slog.String("error", err.Error()),
 		)
@@ -90,7 +90,7 @@ func (a *Agent) handlePKIEnrollment(
 	a.startEnrollmentListener(ctx)
 
 	a.state = job.AgentStatePending
-	a.logger.Info(
+	a.pkiLogger.Info(
 		"agent not enrolled, entering pending state",
 		slog.String("fingerprint", m.Fingerprint()),
 	)
@@ -118,7 +118,7 @@ func (a *Agent) publishEnrollmentRequest() error {
 	}
 
 	namespace := a.appConfig.Agent.NATS.Namespace
-	subject := "enroll.request"
+	subject := agentpki.EnrollRequestSuffix
 	if namespace != "" {
 		subject = namespace + "." + subject
 	}
@@ -127,7 +127,7 @@ func (a *Agent) publishEnrollmentRequest() error {
 		return fmt.Errorf("publish enrollment request: %w", err)
 	}
 
-	a.logger.Info(
+	a.pkiLogger.Info(
 		"enrollment request published",
 		slog.String("subject", subject),
 		slog.String("machine_id", a.machineID),
@@ -149,7 +149,7 @@ func (a *Agent) startEnrollmentListener(
 	}
 
 	namespace := a.appConfig.Agent.NATS.Namespace
-	subject := "enroll.response." + a.machineID
+	subject := agentpki.EnrollResponsePrefix + "." + a.machineID
 	if namespace != "" {
 		subject = namespace + "." + subject
 	}
@@ -158,7 +158,7 @@ func (a *Agent) startEnrollmentListener(
 		a.handleEnrollmentResponse(msg)
 	})
 	if err != nil {
-		a.logger.Warn(
+		a.pkiLogger.Warn(
 			"failed to subscribe to enrollment response",
 			slog.String("subject", subject),
 			slog.String("error", err.Error()),
@@ -167,7 +167,7 @@ func (a *Agent) startEnrollmentListener(
 		return
 	}
 
-	a.logger.Info(
+	a.pkiLogger.Info(
 		"listening for enrollment acceptance",
 		slog.String("subject", subject),
 	)
@@ -188,7 +188,7 @@ func (a *Agent) handleEnrollmentResponse(
 ) {
 	var resp agentpki.EnrollmentResponse
 	if err := json.Unmarshal(msg.Data, &resp); err != nil {
-		a.logger.Warn(
+		a.pkiLogger.Warn(
 			"failed to parse enrollment response",
 			slog.String("error", err.Error()),
 		)
@@ -197,7 +197,7 @@ func (a *Agent) handleEnrollmentResponse(
 	}
 
 	if !resp.Accepted {
-		a.logger.Warn(
+		a.pkiLogger.Warn(
 			"enrollment rejected",
 			slog.String("reason", resp.Reason),
 		)
@@ -218,7 +218,7 @@ func (a *Agent) handleEnrollmentResponse(
 	})
 
 	if err := avfs.WriteFile(a.appFs, controllerPubPath, pubPEM, 0o644); err != nil {
-		a.logger.Error(
+		a.pkiLogger.Error(
 			"failed to save controller public key",
 			slog.String("path", controllerPubPath),
 			slog.String("error", err.Error()),
@@ -231,7 +231,7 @@ func (a *Agent) handleEnrollmentResponse(
 	a.state = job.AgentStateReady
 	a.startConsumers()
 
-	a.logger.Info(
+	a.pkiLogger.Info(
 		"enrollment accepted, agent is now ready",
 		slog.String("controller_fingerprint", a.pkiManager.Fingerprint()),
 	)

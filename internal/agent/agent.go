@@ -83,6 +83,7 @@ func New(
 		natsClient:      natsClient,
 		heartbeatLogger: logger.With(slog.String("subsystem", "heartbeat")),
 		factsLogger:     logger.With(slog.String("subsystem", "facts")),
+		pkiLogger:       logger.With(slog.String("subsystem", "agent.pki")),
 	}
 
 	// Wire agent facts into all providers so they can access the latest

@@ -39,6 +39,18 @@ type Manager struct {
 	previousControllerPubKey ed25519.PublicKey
 }
 
+const (
+	// EnrollRequestSuffix is the NATS subject suffix for enrollment requests.
+	EnrollRequestSuffix = "enroll.request"
+
+	// EnrollResponsePrefix is the NATS subject prefix for enrollment responses.
+	// Append ".<machineID>" to form the full subject.
+	EnrollResponsePrefix = "enroll.response"
+
+	// PKIRotateSuffix is the NATS subject suffix for key rotation notifications.
+	PKIRotateSuffix = "pki.rotate"
+)
+
 // EnrollmentState represents the agent's PKI enrollment state.
 type EnrollmentState string
 

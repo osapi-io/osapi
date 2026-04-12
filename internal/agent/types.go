@@ -129,6 +129,7 @@ type Agent struct {
 	// Subsystem-specific loggers for background processes.
 	heartbeatLogger *slog.Logger
 	factsLogger     *slog.Logger
+	pkiLogger       *slog.Logger
 
 	// OTEL instruments for job metrics.
 	jobsProcessed metric.Int64Counter

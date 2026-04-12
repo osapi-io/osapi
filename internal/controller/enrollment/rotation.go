@@ -23,6 +23,8 @@ package enrollment
 import (
 	"fmt"
 	"log/slog"
+
+	"github.com/retr0h/osapi/internal/agent/pki"
 )
 
 // KeyRotationMessage is published to agents when the controller
@@ -45,7 +47,7 @@ func (w *Watcher) RotateControllerKey() error {
 		return fmt.Errorf("marshal rotation message: %w", err)
 	}
 
-	subject := enrollSubject(w.namespace, "pki.rotate")
+	subject := enrollSubject(w.namespace, pki.PKIRotateSuffix)
 	if err := w.nc.PublishCore(subject, data); err != nil {
 		return fmt.Errorf("publish key rotation: %w", err)
 	}

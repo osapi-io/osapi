@@ -329,6 +329,9 @@ func setupAgent(
 	subComponents := map[string]job.SubComponentInfo{
 		"agent.facts":     {Status: "ok"},
 		"agent.heartbeat": {Status: "ok"},
+		"agent.pki": {
+			Status: enabledOrDisabled(appConfig.Agent.PKI.Enabled),
+		},
 		"agent.metrics": {
 			Status: enabledOrDisabled(appConfig.Agent.Metrics.Enabled),
 			Address: fmt.Sprintf(
