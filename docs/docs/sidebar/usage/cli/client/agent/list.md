@@ -35,5 +35,26 @@ manager, and package manager. These fields are not shown in the table view.
 
 :::
 
-Use `agent get --hostname X` for detailed information about a specific agent, or
-`node status` for deep system metrics gathered via the job system.
+## Pending Agents
+
+When PKI is enabled, list agents awaiting enrollment with
+`--pending`:
+
+```bash
+$ osapi client agent list --pending
+
+  Pending Agents (2):
+
+  MACHINE ID    HOSTNAME  FINGERPRINT           REQUESTED
+  abc123...     web-03    SHA256:ab12cd34ef...   5m ago
+  def456...     web-04    SHA256:ef56ab78cd...   2m ago
+```
+
+Use `agent accept` and `agent reject` to manage pending enrollment
+requests.
+
+---
+
+Use `agent get --hostname X` for detailed information about a
+specific agent, or `node status` for deep system metrics gathered
+via the job system.
