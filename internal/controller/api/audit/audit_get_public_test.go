@@ -30,10 +30,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	auditstore "github.com/retr0h/osapi/internal/audit"
 	auditmocks "github.com/retr0h/osapi/internal/audit/mocks"

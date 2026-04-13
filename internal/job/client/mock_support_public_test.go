@@ -21,8 +21,8 @@
 package client_test
 
 import (
-	"github.com/golang/mock/gomock"
 	"github.com/nats-io/nats.go/jetstream"
+	"go.uber.org/mock/gomock"
 
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 )

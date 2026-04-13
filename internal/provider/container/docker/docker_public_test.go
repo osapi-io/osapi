@@ -19,9 +19,9 @@ import (
 	"github.com/docker/docker/api/types/network"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-	"github.com/golang/mock/gomock"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	dockerprov "github.com/retr0h/osapi/internal/provider/container/docker"
 	dockermocks "github.com/retr0h/osapi/internal/provider/container/docker/mocks"

@@ -11,7 +11,6 @@ require (
 	github.com/ggwhite/go-masker/v2 v2.2.0
 	github.com/go-playground/validator/v10 v10.30.2
 	github.com/golang-jwt/jwt/v4 v4.5.2
-	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.15.1
 	github.com/lmittmann/tint v1.1.3
@@ -40,6 +39,7 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.43.0
 	go.opentelemetry.io/otel/trace v1.43.0
 	go.opentelemetry.io/proto/otlp v1.10.0
+	go.uber.org/mock v0.6.0
 	golang.org/x/term v0.42.0
 )
 
@@ -324,12 +324,12 @@ require (
 
 tool (
 	github.com/boumenot/gocover-cobertura
-	github.com/golang/mock/mockgen
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	github.com/nats-io/nats.go/jetstream
 	github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 	github.com/segmentio/golines
 	github.com/spf13/cobra-cli
+	go.uber.org/mock/mockgen
 	google.golang.org/protobuf/cmd/protoc-gen-go
 	mvdan.cc/gofumpt
 )

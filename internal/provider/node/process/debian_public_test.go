@@ -28,9 +28,9 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	gopsutil "github.com/shirou/gopsutil/v4/process"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"github.com/retr0h/osapi/internal/provider/node/process"
 	"github.com/retr0h/osapi/internal/provider/node/process/mocks"

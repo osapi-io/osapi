@@ -21,7 +21,7 @@
 package mocks
 
 import (
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 // NewPlainMockObjectStoreManager creates a Mock without defaults.

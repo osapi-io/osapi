@@ -21,4 +21,4 @@
 // Package hostname provides mock implementations for HostnameProvider testing.
 package hostname
 
-//go:generate go tool github.com/golang/mock/mockgen -destination=hostname_provider.gen.go -package=hostname github.com/retr0h/osapi/internal/job HostnameProvider
+//go:generate go tool go.uber.org/mock/mockgen -destination=hostname_provider.gen.go -package=hostname github.com/retr0h/osapi/internal/job HostnameProvider

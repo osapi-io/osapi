@@ -21,5 +21,5 @@
 // Package mocks provides mock implementations for testing.
 package mocks
 
-//go:generate go tool github.com/golang/mock/mockgen -destination=./nats_connector.gen.go -package=mocks github.com/osapi-io/nats-client/pkg/client NATSConnector
-//go:generate go tool github.com/golang/mock/mockgen -source=../lifecycle.go -destination=lifecycle.gen.go -package=mocks
+//go:generate go tool go.uber.org/mock/mockgen -destination=./nats_connector.gen.go -package=mocks github.com/osapi-io/nats-client/pkg/client NATSConnector
+//go:generate go tool go.uber.org/mock/mockgen -source=../lifecycle.go -destination=lifecycle.gen.go -package=mocks

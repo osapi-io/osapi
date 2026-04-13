@@ -26,9 +26,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	apijob "github.com/retr0h/osapi/internal/controller/api/job"
 	"github.com/retr0h/osapi/internal/job/mocks"

@@ -20,5 +20,5 @@
 
 package mocks
 
-//go:generate go tool github.com/golang/mock/mockgen -source=../manager.go -destination=manager.gen.go -package=mocks
-//go:generate go tool github.com/golang/mock/mockgen -source=../types.go -destination=command_executor.gen.go -package=mocks
+//go:generate go tool go.uber.org/mock/mockgen -source=../manager.go -destination=manager.gen.go -package=mocks
+//go:generate go tool go.uber.org/mock/mockgen -source=../types.go -destination=command_executor.gen.go -package=mocks

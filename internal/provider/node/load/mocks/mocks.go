@@ -21,7 +21,7 @@
 package mocks
 
 import (
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 
 	"github.com/retr0h/osapi/internal/provider/node/load"
 )
