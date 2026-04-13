@@ -27,9 +27,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"github.com/retr0h/osapi/internal/audit/export"
 	exportmocks "github.com/retr0h/osapi/internal/audit/export/mocks"

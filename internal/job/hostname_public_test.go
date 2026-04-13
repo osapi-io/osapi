@@ -24,9 +24,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	hostpkg "github.com/shirou/gopsutil/v4/host"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"github.com/retr0h/osapi/internal/job"
 	hostnamemocks "github.com/retr0h/osapi/internal/job/mocks/hostname"

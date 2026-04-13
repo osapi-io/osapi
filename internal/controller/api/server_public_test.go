@@ -29,10 +29,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	"go.uber.org/mock/gomock"
 
 	auditmocks "github.com/retr0h/osapi/internal/audit/mocks"
 	"github.com/retr0h/osapi/internal/config"

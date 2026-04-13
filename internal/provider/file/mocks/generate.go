@@ -21,5 +21,5 @@
 // Package mocks provides mock implementations for testing.
 package mocks
 
-//go:generate go tool github.com/golang/mock/mockgen -source=../types.go -destination=types.gen.go -package=mocks
-//go:generate go tool github.com/golang/mock/mockgen -destination=object_store.gen.go -package=mocks github.com/nats-io/nats.go/jetstream ObjectStore
+//go:generate go tool go.uber.org/mock/mockgen -source=../types.go -destination=types.gen.go -package=mocks
+//go:generate go tool go.uber.org/mock/mockgen -destination=object_store.gen.go -package=mocks github.com/nats-io/nats.go/jetstream ObjectStore

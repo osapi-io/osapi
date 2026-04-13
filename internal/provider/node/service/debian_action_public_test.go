@@ -27,8 +27,8 @@ import (
 	"testing"
 
 	"github.com/avfs/avfs/vfs/memfs"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	execmocks "github.com/retr0h/osapi/internal/exec/mocks"
 	filemocks "github.com/retr0h/osapi/internal/provider/file/mocks"

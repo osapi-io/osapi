@@ -23,8 +23,8 @@ package mocks
 import (
 	"time"
 
-	"github.com/golang/mock/gomock"
 	probing "github.com/prometheus-community/pro-bing"
+	"go.uber.org/mock/gomock"
 
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 )
