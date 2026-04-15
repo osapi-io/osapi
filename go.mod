@@ -14,7 +14,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.15.1
 	github.com/lmittmann/tint v1.1.3
-	github.com/nats-io/nats-server/v2 v2.12.6
+	github.com/nats-io/nats-server/v2 v2.12.7
 	github.com/nats-io/nats.go v1.50.0
 	github.com/oapi-codegen/runtime v1.4.0
 	github.com/opencontainers/image-spec v1.1.1
