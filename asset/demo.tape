@@ -1,5 +1,5 @@
 # OSAPI Demo Recording
-# Run with: vhs demo.tape
+# Run from the repo root with: vhs asset/demo.tape
 # Requires: vhs, tmux, osapi binary built in current directory
 
 Output asset/demo.gif
