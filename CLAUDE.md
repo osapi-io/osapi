@@ -52,7 +52,6 @@ just react::fmt    # Format UI with Prettier
 - **`internal/config/`** - Viper-based config from `osapi.yaml`. Struct fields use `validate` tags (same validator as API handlers). Defaults are set via `viper.SetDefault()` in `cmd/root.go`
 - **`pkg/sdk/`** - Go SDK for programmatic REST API access (`client/` client library). See @docs/docs/sidebar/sdk/guidelines.md for SDK development rules
 - Shared `nats-client` and `nats-server` are sibling repos linked via `replace` in `go.mod`
-- **`github/`** - Temporary GitHub org config tooling (`repos.json` for declarative repo settings, `sync.sh` for drift detection via `gh` CLI). Untracked and intended to move to its own repo.
 
 ## UI Architecture (Quick Reference)
 
