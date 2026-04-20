@@ -39,10 +39,12 @@ them to be used as appliances.
 
 | Project | Description |
 | --- | --- |
+| [gohai][] | A Go-based system fact collector inspired by Chef Ohai |
 | [nats-client][] | A Go package for connecting to and interacting with a NATS server |
 | [nats-server][] | A Go package for running an embedded NATS server |
 | [osapi-orchestrator][] | Declarative infrastructure orchestration DSL built on the OSAPI SDK |
 
+[gohai]: https://github.com/osapi-io/gohai
 [nats-client]: https://github.com/osapi-io/nats-client
 [nats-server]: https://github.com/osapi-io/nats-server
 [osapi-orchestrator]: https://github.com/osapi-io/osapi-orchestrator
