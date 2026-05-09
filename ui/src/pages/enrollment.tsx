@@ -32,9 +32,12 @@ export function Enrollment() {
   }, []);
 
   useEffect(() => {
-    fetchPending();
+    const initialFetch = setTimeout(fetchPending, 0);
     const interval = setInterval(fetchPending, 10000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initialFetch);
+      clearInterval(interval);
+    };
   }, [fetchPending]);
 
   useCommands(
