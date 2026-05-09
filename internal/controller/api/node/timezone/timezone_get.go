@@ -43,7 +43,8 @@ func (s *Timezone) GetNodeTimezone(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("timezone get",
+	s.logger.Debug(
+		"timezone get",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

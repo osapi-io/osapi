@@ -42,7 +42,8 @@ func (s *Node) GetNodeUptime(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("uptime get",
+	s.logger.Debug(
+		"uptime get",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

@@ -96,7 +96,8 @@ func processRouteGet(
 		return nil, fmt.Errorf("unmarshal route get data: %w", err)
 	}
 
-	logger.Debug("executing route.Get",
+	logger.Debug(
+		"executing route.Get",
 		slog.String("interface", data.Interface),
 	)
 
@@ -120,7 +121,8 @@ func processRouteCreate(
 		return nil, fmt.Errorf("unmarshal route create data: %w", err)
 	}
 
-	logger.Debug("executing route.Create",
+	logger.Debug(
+		"executing route.Create",
 		slog.String("interface", entry.Interface),
 	)
 
@@ -144,7 +146,8 @@ func processRouteUpdate(
 		return nil, fmt.Errorf("unmarshal route update data: %w", err)
 	}
 
-	logger.Debug("executing route.Update",
+	logger.Debug(
+		"executing route.Update",
 		slog.String("interface", entry.Interface),
 	)
 
@@ -170,7 +173,8 @@ func processRouteDelete(
 		return nil, fmt.Errorf("unmarshal route delete data: %w", err)
 	}
 
-	logger.Debug("executing route.Delete",
+	logger.Debug(
+		"executing route.Delete",
 		slog.String("interface", data.Interface),
 	)
 

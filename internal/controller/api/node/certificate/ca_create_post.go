@@ -53,7 +53,8 @@ func (s *Certificate) PostNodeCertificateCa(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("certificate ca create",
+	s.logger.Debug(
+		"certificate ca create",
 		slog.String("target", hostname),
 		slog.String("name", entry.Name),
 		slog.String("object", entry.Object),

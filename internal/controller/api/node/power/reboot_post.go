@@ -60,7 +60,8 @@ func (s *Power) PostNodePowerReboot(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("power reboot",
+	s.logger.Debug(
+		"power reboot",
 		slog.String("target", hostname),
 		slog.Int("delay", opts.Delay),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

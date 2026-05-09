@@ -43,7 +43,8 @@ func (s *Service) GetNodeService(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("service list",
+	s.logger.Debug(
+		"service list",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

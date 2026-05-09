@@ -152,7 +152,8 @@ func repoRoot() string {
 }
 
 func serverEnv() []string {
-	return append(os.Environ(),
+	return append(
+		os.Environ(),
 		fmt.Sprintf("OSAPI_NATS_SERVER_PORT=%d", natsPort),
 		fmt.Sprintf("OSAPI_NATS_SERVER_STORE_DIR=%s", storeDir),
 		fmt.Sprintf("OSAPI_CONTROLLER_API_PORT=%d", apiPort),
@@ -163,7 +164,8 @@ func serverEnv() []string {
 }
 
 func clientEnv() []string {
-	return append(os.Environ(),
+	return append(
+		os.Environ(),
 		fmt.Sprintf("OSAPI_CONTROLLER_CLIENT_URL=http://127.0.0.1:%d", apiPort),
 		fmt.Sprintf("OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN=%s", token),
 	)

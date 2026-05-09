@@ -45,7 +45,8 @@ func (u *User) GetNodeGroupByName(
 	hostname := request.Hostname
 	name := request.Name
 
-	u.logger.Debug("group get",
+	u.logger.Debug(
+		"group get",
 		slog.String("target", hostname),
 		slog.String("name", name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

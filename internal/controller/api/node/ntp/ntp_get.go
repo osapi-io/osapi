@@ -43,7 +43,8 @@ func (s *Ntp) GetNodeNtp(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("ntp get",
+	s.logger.Debug(
+		"ntp get",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

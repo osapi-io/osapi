@@ -104,7 +104,8 @@ func (c *Client) CreateJob(
 
 	// Store job in KV with immutable key format
 	kvKey := "jobs." + jobID
-	c.logger.DebugContext(ctx, "storing job and sending notification",
+	c.logger.DebugContext(
+		ctx, "storing job and sending notification",
 		slog.String("kv_bucket", c.kv.Bucket()),
 		slog.String("key", kvKey),
 		slog.String("subject", notificationSubject),
@@ -145,7 +146,8 @@ func (c *Client) CreateJob(
 		return nil, fmt.Errorf("failed to send notification: %w", err)
 	}
 
-	c.logger.DebugContext(ctx, "job created successfully",
+	c.logger.DebugContext(
+		ctx, "job created successfully",
 		slog.String("job_id", jobID),
 		slog.Uint64("revision", revision),
 		slog.String("subject", notificationSubject),
@@ -219,7 +221,8 @@ func (c *Client) GetJobStatus(
 ) (*job.QueuedJob, error) {
 	// Get the immutable job data
 	jobKey := "jobs." + jobID
-	c.logger.Debug("kv.get",
+	c.logger.Debug(
+		"kv.get",
 		slog.String("key", jobKey),
 	)
 	entry, err := c.kv.Get(ctx, jobKey)
@@ -308,7 +311,8 @@ func (c *Client) ListJobs(
 		limit = DefaultPageSize
 	}
 
-	c.logger.Debug("kv.keys",
+	c.logger.Debug(
+		"kv.keys",
 		slog.String("operation", "list_jobs"),
 		slog.String("status_filter", statusFilter),
 		slog.Int("limit", limit),
@@ -377,7 +381,8 @@ func (c *Client) ListJobs(
 		matchingIDs = matchingIDs[:limit]
 	}
 
-	c.logger.Debug("kv.keys",
+	c.logger.Debug(
+		"kv.keys",
 		slog.Int("total_matching", totalCount),
 		slog.Int("page_size", len(matchingIDs)),
 		slog.Int("all_keys", len(allKeys)),
@@ -389,7 +394,8 @@ func (c *Client) ListJobs(
 		jobKey := "jobs." + id
 		jobInfo, err := c.getJobStatusFromKeys(ctx, allKeys, jobKey, id)
 		if err != nil {
-			c.logger.Debug("failed to get job status during list",
+			c.logger.Debug(
+				"failed to get job status during list",
 				slog.String("job_id", id),
 				slog.String("error", err.Error()),
 			)
@@ -715,7 +721,8 @@ func (c *Client) RetryJob(
 ) (*CreateJobResult, error) {
 	// Read original job from KV
 	jobKey := "jobs." + jobID
-	c.logger.Debug("kv.get",
+	c.logger.Debug(
+		"kv.get",
 		slog.String("key", jobKey),
 		slog.String("operation", "retry_job"),
 	)
@@ -757,12 +764,14 @@ func (c *Client) RetryJob(
 	}
 	retriedEventJSON, _ := json.Marshal(retriedEvent)
 	if _, err := c.kv.Put(ctx, retriedKey, retriedEventJSON); err != nil {
-		c.logger.Error("failed to write retried event",
+		c.logger.Error(
+			"failed to write retried event",
 			slog.String("error", err.Error()),
 		)
 	}
 
-	c.logger.Debug("job retried successfully",
+	c.logger.Debug(
+		"job retried successfully",
 		slog.String("original_job_id", jobID),
 		slog.String("new_job_id", result.JobID),
 		slog.String("target_hostname", targetHostname),
@@ -777,7 +786,8 @@ func (c *Client) DeleteJob(
 	jobID string,
 ) error {
 	jobKey := "jobs." + jobID
-	c.logger.Debug("kv.delete",
+	c.logger.Debug(
+		"kv.delete",
 		slog.String("key", jobKey),
 	)
 	_, err := c.kv.Get(ctx, jobKey)

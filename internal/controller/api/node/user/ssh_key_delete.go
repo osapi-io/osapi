@@ -44,7 +44,8 @@ func (u *User) DeleteNodeUserSSHKey(
 	username := request.Name
 	fingerprint := request.Fingerprint
 
-	u.logger.Debug("ssh key remove",
+	u.logger.Debug(
+		"ssh key remove",
 		slog.String("target", hostname),
 		slog.String("username", username),
 		slog.String("fingerprint", fingerprint),

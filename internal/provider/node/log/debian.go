@@ -76,7 +76,8 @@ func (d *Debian) QueryUnit(
 	unit string,
 	opts QueryOpts,
 ) ([]Entry, error) {
-	d.logger.Debug("executing log.QueryUnit",
+	d.logger.Debug(
+		"executing log.QueryUnit",
 		slog.String("unit", unit),
 	)
 	args := buildUnitArgs(unit, opts)

@@ -54,7 +54,8 @@ func (s *Service) PutNodeService(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("service update",
+	s.logger.Debug(
+		"service update",
 		slog.String("target", hostname),
 		slog.String("name", entry.Name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

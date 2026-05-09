@@ -96,7 +96,8 @@ func processSysctlGet(
 		return nil, fmt.Errorf("unmarshal sysctl get data: %w", err)
 	}
 
-	logger.Debug("executing sysctl.Get",
+	logger.Debug(
+		"executing sysctl.Get",
 		slog.String("key", data.Key),
 	)
 
@@ -120,7 +121,8 @@ func processSysctlCreate(
 		return nil, fmt.Errorf("unmarshal sysctl create data: %w", err)
 	}
 
-	logger.Debug("executing sysctl.Create",
+	logger.Debug(
+		"executing sysctl.Create",
 		slog.String("key", entry.Key),
 	)
 
@@ -144,7 +146,8 @@ func processSysctlUpdate(
 		return nil, fmt.Errorf("unmarshal sysctl update data: %w", err)
 	}
 
-	logger.Debug("executing sysctl.Update",
+	logger.Debug(
+		"executing sysctl.Update",
 		slog.String("key", entry.Key),
 	)
 
@@ -170,7 +173,8 @@ func processSysctlDelete(
 		return nil, fmt.Errorf("unmarshal sysctl delete data: %w", err)
 	}
 
-	logger.Debug("executing sysctl.Delete",
+	logger.Debug(
+		"executing sysctl.Delete",
 		slog.String("key", data.Key),
 	)
 

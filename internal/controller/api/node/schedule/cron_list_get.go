@@ -43,7 +43,8 @@ func (s *Schedule) GetNodeScheduleCron(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("cron list",
+	s.logger.Debug(
+		"cron list",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

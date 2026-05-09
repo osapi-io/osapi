@@ -46,7 +46,8 @@ func (f *File) DeleteFileByName(
 		return gen.DeleteFileByName403JSONResponse{Error: &errMsg}, nil
 	}
 
-	f.logger.Debug("file delete",
+	f.logger.Debug(
+		"file delete",
 		slog.String("name", request.Name),
 	)
 

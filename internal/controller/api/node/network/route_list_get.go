@@ -43,7 +43,8 @@ func (s *Network) GetNodeNetworkRoute(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("route list",
+	s.logger.Debug(
+		"route list",
 		slog.String("target", hostname),
 	)
 

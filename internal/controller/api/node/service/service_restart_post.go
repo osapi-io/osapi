@@ -44,7 +44,8 @@ func (s *Service) PostNodeServiceRestart(
 	hostname := request.Hostname
 	name := request.Name
 
-	s.logger.Debug("service restart",
+	s.logger.Debug(
+		"service restart",
 		slog.String("target", hostname),
 		slog.String("name", name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

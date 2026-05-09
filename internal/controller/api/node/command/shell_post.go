@@ -62,7 +62,8 @@ func (s *Command) PostNodeCommandShell(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("command shell",
+	s.logger.Debug(
+		"command shell",
 		slog.String("command", cmdStr),
 		slog.String("target", hostname),
 	)

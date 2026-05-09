@@ -65,7 +65,8 @@ func (c *Client) WriteAgentTimelineEvent(
 		return fmt.Errorf("write timeline event: %w", err)
 	}
 
-	c.logger.Debug("wrote agent timeline event",
+	c.logger.Debug(
+		"wrote agent timeline event",
 		slog.String("hostname", hostname),
 		slog.String("event", event),
 		slog.String("key", key),

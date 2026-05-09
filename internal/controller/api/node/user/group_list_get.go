@@ -43,7 +43,8 @@ func (u *User) GetNodeGroup(
 
 	hostname := request.Hostname
 
-	u.logger.Debug("group list",
+	u.logger.Debug(
+		"group list",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

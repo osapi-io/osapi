@@ -56,7 +56,8 @@ var clientJobRetryCmd = &cobra.Command{
 			cli.PrintKV("Revision", fmt.Sprintf("%d", resp.Data.Revision))
 		}
 
-		logger.Info("job retried successfully",
+		logger.Info(
+			"job retried successfully",
 			slog.String("original_job_id", jobID),
 			slog.String("new_job_id", resp.Data.JobID),
 			slog.String("target_hostname", targetHostname),

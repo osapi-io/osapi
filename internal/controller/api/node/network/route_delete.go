@@ -45,7 +45,8 @@ func (s *Network) DeleteNodeNetworkRoute(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("route delete",
+	s.logger.Debug(
+		"route delete",
 		slog.String("interface", request.InterfaceName),
 		slog.String("target", hostname),
 	)

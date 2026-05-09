@@ -73,7 +73,8 @@ func (s *File) PostNodeFileDeploy(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("file deploy",
+	s.logger.Debug(
+		"file deploy",
 		slog.String("object_name", objectName),
 		slog.String("path", path),
 		slog.String("content_type", contentType),

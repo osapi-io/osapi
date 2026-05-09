@@ -51,7 +51,8 @@ func (s *File) PostNodeFileStatus(
 	path := request.Body.Path
 	hostname := request.Hostname
 
-	s.logger.Debug("file status",
+	s.logger.Debug(
+		"file status",
 		slog.String("path", path),
 		slog.String("target", hostname),
 	)

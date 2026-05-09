@@ -45,7 +45,8 @@ func (s *Process) GetNodeProcessByPid(
 	hostname := request.Hostname
 	pid := request.Pid
 
-	s.logger.Debug("process get",
+	s.logger.Debug(
+		"process get",
 		slog.String("target", hostname),
 		slog.Int("pid", pid),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

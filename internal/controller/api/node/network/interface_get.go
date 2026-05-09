@@ -47,7 +47,8 @@ func (s *Network) GetNodeNetworkInterfaceByName(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("interface get",
+	s.logger.Debug(
+		"interface get",
 		slog.String("name", request.Name),
 		slog.String("target", hostname),
 	)

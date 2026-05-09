@@ -47,7 +47,8 @@ func (t *authTransport) RoundTrip(
 	duration := time.Since(start)
 
 	if err != nil {
-		t.logger.Debug("http request failed",
+		t.logger.Debug(
+			"http request failed",
 			slog.String("method", req.Method),
 			slog.String("url", req.URL.String()),
 			slog.String("error", err.Error()),
@@ -56,7 +57,8 @@ func (t *authTransport) RoundTrip(
 		return nil, err
 	}
 
-	t.logger.Debug("http response",
+	t.logger.Debug(
+		"http response",
 		slog.String("method", req.Method),
 		slog.String("url", req.URL.String()),
 		slog.Int("status", resp.StatusCode),

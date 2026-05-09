@@ -264,7 +264,8 @@ func setupAgent(
 		serviceProvider,
 	)
 
-	registry.Register("network",
+	registry.Register(
+		"network",
 		agent.NewNetworkProcessor(
 			dnsProvider, pingProvider,
 			interfaceProvider, routeProvider,
@@ -274,27 +275,32 @@ func setupAgent(
 		interfaceProvider, routeProvider,
 	)
 
-	registry.Register("command",
+	registry.Register(
+		"command",
 		agent.NewCommandProcessor(commandProvider, log),
 		commandProvider,
 	)
 
-	registry.Register("file",
+	registry.Register(
+		"file",
 		agent.NewFileProcessor(fileProvider, log),
 		fileProvider,
 	)
 
-	registry.Register("docker",
+	registry.Register(
+		"docker",
 		agent.NewDockerProcessor(dockerProvider, log),
 		dockerProvider,
 	)
 
-	registry.Register("schedule",
+	registry.Register(
+		"schedule",
 		agent.NewScheduleProcessor(cronProvider, log),
 		cronProvider,
 	)
 
-	registry.Register("certificate",
+	registry.Register(
+		"certificate",
 		agent.NewCertificateProcessor(certificateProvider, log),
 		certificateProvider,
 	)
@@ -363,7 +369,8 @@ func createFileProvider(
 	objStoreName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Objects.Bucket)
 	objStore, err := b.nc.ObjectStore(ctx, objStoreName)
 	if err != nil {
-		log.Warn("Object Store not available, file operations disabled",
+		log.Warn(
+			"Object Store not available, file operations disabled",
 			slog.String("bucket", objStoreName),
 			slog.String("error", err.Error()),
 		)
@@ -373,7 +380,8 @@ func createFileProvider(
 	fileStateKVConfig := cli.BuildFileStateKVConfig(namespace, appConfig.NATS.FileState)
 	fileStateKV, err := b.nc.CreateOrUpdateKVBucketWithConfig(ctx, fileStateKVConfig)
 	if err != nil {
-		log.Warn("file state KV not available, file operations disabled",
+		log.Warn(
+			"file state KV not available, file operations disabled",
 			slog.String("bucket", fileStateKVConfig.Bucket),
 			slog.String("error", err.Error()),
 		)
@@ -382,7 +390,8 @@ func createFileProvider(
 
 	// Seed system templates into the object store (idempotent).
 	if err := agent.SeedSystemTemplates(ctx, log, objStore); err != nil {
-		log.Warn("failed to seed system templates",
+		log.Warn(
+			"failed to seed system templates",
 			slog.String("error", err.Error()),
 		)
 	}

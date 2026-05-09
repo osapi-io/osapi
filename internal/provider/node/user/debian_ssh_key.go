@@ -49,7 +49,8 @@ func (d *Debian) ListKeys(
 ) ([]SSHKey, error) {
 	_ = ctx
 
-	d.logger.Debug("executing user.ListKeys",
+	d.logger.Debug(
+		"executing user.ListKeys",
 		slog.String("username", username),
 	)
 
@@ -82,7 +83,8 @@ func (d *Debian) AddKey(
 ) (*SSHKeyResult, error) {
 	_ = ctx
 
-	d.logger.Debug("executing user.AddKey",
+	d.logger.Debug(
+		"executing user.AddKey",
 		slog.String("username", username),
 	)
 
@@ -144,14 +146,16 @@ func (d *Debian) AddKey(
 		sshDir,
 	})
 	if chownErr != nil {
-		d.logger.Warn("chown failed for ssh directory",
+		d.logger.Warn(
+			"chown failed for ssh directory",
 			slog.String("username", username),
 			slog.String("path", sshDir),
 			slog.String("error", chownErr.Error()),
 		)
 	}
 
-	d.logger.Info("ssh key added",
+	d.logger.Info(
+		"ssh key added",
 		slog.String("username", username),
 	)
 
@@ -167,7 +171,8 @@ func (d *Debian) RemoveKey(
 ) (*SSHKeyResult, error) {
 	_ = ctx
 
-	d.logger.Debug("executing user.RemoveKey",
+	d.logger.Debug(
+		"executing user.RemoveKey",
 		slog.String("username", username),
 		slog.String("fingerprint", fingerprint),
 	)
@@ -221,7 +226,8 @@ func (d *Debian) RemoveKey(
 		return nil, fmt.Errorf("ssh key: remove: write %s: %w", authKeysPath, err)
 	}
 
-	d.logger.Info("ssh key removed",
+	d.logger.Info(
+		"ssh key removed",
 		slog.String("username", username),
 		slog.String("fingerprint", fingerprint),
 	)
@@ -279,7 +285,8 @@ func (d *Debian) parseAuthorizedKeys(
 
 		fields := strings.Fields(trimmed)
 		if len(fields) < minKeyFields {
-			d.logger.Debug("skipping malformed authorized_keys line",
+			d.logger.Debug(
+				"skipping malformed authorized_keys line",
 				slog.String("line", trimmed),
 			)
 
@@ -288,7 +295,8 @@ func (d *Debian) parseAuthorizedKeys(
 
 		fp := computeFingerprint(fields[1])
 		if fp == "" {
-			d.logger.Debug("skipping line with invalid base64 key data",
+			d.logger.Debug(
+				"skipping line with invalid base64 key data",
 				slog.String("line", trimmed),
 			)
 

@@ -112,7 +112,8 @@ func displayAgentGetDetail(
 	}
 
 	if data.LoadAverage != nil {
-		cli.PrintKV("Load", fmt.Sprintf("%.2f, %.2f, %.2f",
+		cli.PrintKV("Load", fmt.Sprintf(
+			"%.2f, %.2f, %.2f",
 			data.LoadAverage.OneMin, data.LoadAverage.FiveMin, data.LoadAverage.FifteenMin,
 		)+" "+cli.DimStyle.Render("(1m, 5m, 15m)"))
 	}

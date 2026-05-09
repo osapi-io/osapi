@@ -291,7 +291,8 @@ func (c *Client) publishAndWait(
 
 	kvKey := "jobs." + jobID
 
-	c.logger.DebugContext(ctx, "kv.put",
+	c.logger.DebugContext(
+		ctx, "kv.put",
 		slog.String("key", kvKey),
 		slog.String("job_id", jobID),
 	)
@@ -300,7 +301,8 @@ func (c *Client) publishAndWait(
 		return "", nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}
 
-	c.logger.InfoContext(ctx, "publishing job request",
+	c.logger.InfoContext(
+		ctx, "publishing job request",
 		slog.String("job_id", jobID),
 		slog.String("subject", subject),
 		slog.String("type", string(req.Type)),
@@ -346,7 +348,8 @@ func (c *Client) publishAndWait(
 					c.pkiSigner.ControllerPublicKey(),
 				)
 				if unwrapErr != nil {
-					c.logger.WarnContext(ctx, "response signature verification failed",
+					c.logger.WarnContext(
+						ctx, "response signature verification failed",
 						slog.String("job_id", jobID),
 						slog.String("error", unwrapErr.Error()),
 					)
@@ -360,7 +363,8 @@ func (c *Client) publishAndWait(
 				return "", nil, fmt.Errorf("failed to unmarshal response: %w", err)
 			}
 
-			c.logger.InfoContext(ctx, "received job response",
+			c.logger.InfoContext(
+				ctx, "received job response",
 				slog.String("job_id", jobID),
 				slog.String("status", string(response.Status)),
 			)
@@ -418,7 +422,8 @@ func (c *Client) publishAndCollect(
 
 	kvKey := "jobs." + jobID
 
-	c.logger.DebugContext(ctx, "kv.put",
+	c.logger.DebugContext(
+		ctx, "kv.put",
 		slog.String("key", kvKey),
 		slog.String("job_id", jobID),
 	)
@@ -432,18 +437,21 @@ func (c *Client) publishAndCollect(
 	var expectedHostnames []string
 	agents, err := c.ListAgents(ctx)
 	if err != nil {
-		c.logger.WarnContext(ctx, "failed to list agents for broadcast count, using full timeout",
+		c.logger.WarnContext(
+			ctx, "failed to list agents for broadcast count, using full timeout",
 			slog.String("error", err.Error()),
 		)
 	} else {
 		expectedHostnames = job.ExpectedAgentHostnames(agents, target)
-		c.logger.DebugContext(ctx, "broadcast expected agent count",
+		c.logger.DebugContext(
+			ctx, "broadcast expected agent count",
 			slog.String("target", target),
 			slog.Int("expected_count", len(expectedHostnames)),
 		)
 	}
 
-	c.logger.InfoContext(ctx, "publishing broadcast job request",
+	c.logger.InfoContext(
+		ctx, "publishing broadcast job request",
 		slog.String("job_id", jobID),
 		slog.String("subject", subject),
 		slog.String("type", string(req.Type)),
@@ -510,7 +518,8 @@ func (c *Client) publishAndCollect(
 					c.pkiSigner.ControllerPublicKey(),
 				)
 				if unwrapErr != nil {
-					c.logger.WarnContext(ctx, "broadcast response signature verification failed",
+					c.logger.WarnContext(
+						ctx, "broadcast response signature verification failed",
 						slog.String("job_id", jobID),
 						slog.String("error", unwrapErr.Error()),
 					)
@@ -521,7 +530,8 @@ func (c *Client) publishAndCollect(
 
 			var response job.Response
 			if err := json.Unmarshal(responseData, &response); err != nil {
-				c.logger.WarnContext(ctx, "failed to unmarshal broadcast response",
+				c.logger.WarnContext(
+					ctx, "failed to unmarshal broadcast response",
 					slog.String("job_id", jobID),
 					slog.String("error", err.Error()),
 				)
@@ -533,7 +543,8 @@ func (c *Client) publishAndCollect(
 				hostname = "unknown"
 			}
 
-			c.logger.InfoContext(ctx, "received broadcast response",
+			c.logger.InfoContext(
+				ctx, "received broadcast response",
 				slog.String("job_id", jobID),
 				slog.String("hostname", hostname),
 				slog.String("status", string(response.Status)),

@@ -48,7 +48,8 @@ func (s *Log) GetNodeLog(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("log query",
+	s.logger.Debug(
+		"log query",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

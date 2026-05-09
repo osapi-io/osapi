@@ -58,7 +58,8 @@ func (u *User) PostNodeGroup(
 
 	hostname := request.Hostname
 
-	u.logger.Debug("group create",
+	u.logger.Debug(
+		"group create",
 		slog.String("target", hostname),
 		slog.String("name", opts.Name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

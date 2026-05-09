@@ -44,7 +44,8 @@ func (a *Agent) Start() {
 	// Resolve agent identity (machine ID + hostname).
 	ident, err := getIdentityFn(a.appFs, a.appConfig.Agent.Hostname)
 	if err != nil {
-		a.logger.Error("failed to resolve agent identity",
+		a.logger.Error(
+			"failed to resolve agent identity",
 			slog.String("error", err.Error()),
 		)
 		a.cancel()
@@ -66,7 +67,8 @@ func (a *Agent) Start() {
 	// PKI enrollment (when enabled).
 	if a.appConfig.Agent.PKI.Enabled {
 		if err := a.handlePKIEnrollment(a.ctx); err != nil {
-			a.logger.Error("PKI enrollment failed",
+			a.logger.Error(
+				"PKI enrollment failed",
 				slog.String("error", err.Error()),
 			)
 			a.cancel()
@@ -82,7 +84,8 @@ func (a *Agent) Start() {
 		if !ok {
 			for _, r := range results {
 				if !r.Passed {
-					a.logger.Error("preflight check failed",
+					a.logger.Error(
+						"preflight check failed",
 						slog.String("check", r.Name),
 						slog.String("error", r.Error),
 					)

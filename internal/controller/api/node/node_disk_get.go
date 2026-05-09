@@ -42,7 +42,8 @@ func (s *Node) GetNodeDisk(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("disk get",
+	s.logger.Debug(
+		"disk get",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

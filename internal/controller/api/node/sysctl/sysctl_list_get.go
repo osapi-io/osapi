@@ -43,7 +43,8 @@ func (s *Sysctl) GetNodeSysctl(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("sysctl list",
+	s.logger.Debug(
+		"sysctl list",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

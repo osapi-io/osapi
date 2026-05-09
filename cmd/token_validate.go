@@ -70,7 +70,8 @@ This command ensures that the token is authentic, has not expired, and conforms 
 		cli.PrintKV("Effective Permissions", strings.Join(effectivePerms, ", "))
 
 		cli.PrintKV("Audience", strings.Join(claims.Audience, ", "))
-		cli.PrintKV("Issued", claims.IssuedAt.Format(time.RFC3339),
+		cli.PrintKV(
+			"Issued", claims.IssuedAt.Format(time.RFC3339),
 			"Expires", claims.ExpiresAt.Format(time.RFC3339),
 		)
 	},

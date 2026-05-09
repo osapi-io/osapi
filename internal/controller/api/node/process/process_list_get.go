@@ -43,7 +43,8 @@ func (s *Process) GetNodeProcess(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("process list",
+	s.logger.Debug(
+		"process list",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

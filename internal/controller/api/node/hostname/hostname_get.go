@@ -42,7 +42,8 @@ func (s *Hostname) GetNodeHostname(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("routing",
+	s.logger.Debug(
+		"routing",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

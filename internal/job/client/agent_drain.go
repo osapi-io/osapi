@@ -58,7 +58,8 @@ func (c *Client) SetDrainFlag(
 		return fmt.Errorf("set drain flag: %w", err)
 	}
 
-	c.logger.Debug("set drain flag",
+	c.logger.Debug(
+		"set drain flag",
 		slog.String("machine_id", machineID),
 		slog.String("key", key),
 	)
@@ -83,7 +84,8 @@ func (c *Client) DeleteDrainFlag(
 		return fmt.Errorf("delete drain flag: %w", err)
 	}
 
-	c.logger.Debug("deleted drain flag",
+	c.logger.Debug(
+		"deleted drain flag",
 		slog.String("machine_id", machineID),
 		slog.String("key", key),
 	)

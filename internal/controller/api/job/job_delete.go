@@ -35,7 +35,8 @@ func (j *Job) DeleteJobByID(
 ) (gen.DeleteJobByIDResponseObject, error) {
 	jobID := request.Id.String()
 
-	j.logger.Debug("deleting job",
+	j.logger.Debug(
+		"deleting job",
 		slog.String("job_id", jobID),
 	)
 

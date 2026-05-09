@@ -48,7 +48,8 @@ func (s *Container) GetNodeContainerDockerByID(
 	hostname := request.Hostname
 	id := request.Id
 
-	s.logger.Debug("container inspect",
+	s.logger.Debug(
+		"container inspect",
 		slog.String("target", hostname),
 		slog.String("id", id),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

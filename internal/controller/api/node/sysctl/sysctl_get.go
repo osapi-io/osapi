@@ -45,7 +45,8 @@ func (s *Sysctl) GetNodeSysctlByKey(
 	hostname := request.Hostname
 	key := request.Key
 
-	s.logger.Debug("sysctl get",
+	s.logger.Debug(
+		"sysctl get",
 		slog.String("target", hostname),
 		slog.String("key", key),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

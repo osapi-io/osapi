@@ -73,7 +73,8 @@ func (u *User) PostNodeUser(
 
 	hostname := request.Hostname
 
-	u.logger.Debug("user create",
+	u.logger.Debug(
+		"user create",
 		slog.String("target", hostname),
 		slog.String("name", opts.Name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

@@ -44,7 +44,8 @@ func (u *User) GetNodeUserSSHKey(
 	hostname := request.Hostname
 	username := request.Name
 
-	u.logger.Debug("ssh key list",
+	u.logger.Debug(
+		"ssh key list",
 		slog.String("target", hostname),
 		slog.String("username", username),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

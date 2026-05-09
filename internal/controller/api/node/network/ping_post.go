@@ -54,7 +54,8 @@ func (s *Network) PostNodeNetworkPing(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("ping",
+	s.logger.Debug(
+		"ping",
 		slog.String("address", request.Body.Address),
 		slog.String("target", hostname),
 	)

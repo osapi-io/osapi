@@ -52,7 +52,8 @@ func (s *Ntp) PostNodeNtp(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("ntp create",
+	s.logger.Debug(
+		"ntp create",
 		slog.String("target", hostname),
 		slog.Any("servers", config.Servers),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

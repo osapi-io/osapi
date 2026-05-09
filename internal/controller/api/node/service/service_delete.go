@@ -44,7 +44,8 @@ func (s *Service) DeleteNodeService(
 	hostname := request.Hostname
 	name := request.Name
 
-	s.logger.Debug("service delete",
+	s.logger.Debug(
+		"service delete",
 		slog.String("target", hostname),
 		slog.String("name", name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

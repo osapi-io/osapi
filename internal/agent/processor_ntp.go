@@ -92,7 +92,8 @@ func processNtpCreate(
 		return nil, fmt.Errorf("unmarshal ntp create data: %w", err)
 	}
 
-	logger.Debug("executing ntp.Create",
+	logger.Debug(
+		"executing ntp.Create",
 		slog.Int("servers", len(config.Servers)),
 	)
 
@@ -116,7 +117,8 @@ func processNtpUpdate(
 		return nil, fmt.Errorf("unmarshal ntp update data: %w", err)
 	}
 
-	logger.Debug("executing ntp.Update",
+	logger.Debug(
+		"executing ntp.Update",
 		slog.Int("servers", len(config.Servers)),
 	)
 

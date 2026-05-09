@@ -68,7 +68,8 @@ func (s *Schedule) PostNodeScheduleCron(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("cron create",
+	s.logger.Debug(
+		"cron create",
 		slog.String("target", hostname),
 		slog.String("name", entry.Name),
 		slog.String("object", entry.Object),

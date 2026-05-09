@@ -54,7 +54,8 @@ func (s *Certificate) PutNodeCertificateCa(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("certificate ca update",
+	s.logger.Debug(
+		"certificate ca update",
 		slog.String("target", hostname),
 		slog.String("name", entry.Name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

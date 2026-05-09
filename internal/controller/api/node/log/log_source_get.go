@@ -42,7 +42,8 @@ func (s *Log) GetNodeLogSource(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("log list sources",
+	s.logger.Debug(
+		"log list sources",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

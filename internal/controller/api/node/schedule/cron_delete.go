@@ -45,7 +45,8 @@ func (s *Schedule) DeleteNodeScheduleCron(
 	hostname := request.Hostname
 	name := request.Name
 
-	s.logger.Debug("cron delete",
+	s.logger.Debug(
+		"cron delete",
 		slog.String("target", hostname),
 		slog.String("name", name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

@@ -53,7 +53,8 @@ func (s *Sysctl) PostNodeSysctl(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("sysctl create",
+	s.logger.Debug(
+		"sysctl create",
 		slog.String("target", hostname),
 		slog.String("key", entry.Key),
 		slog.String("value", entry.Value),

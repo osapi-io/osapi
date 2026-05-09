@@ -43,7 +43,8 @@ func (u *User) GetNodeUser(
 
 	hostname := request.Hostname
 
-	u.logger.Debug("user list",
+	u.logger.Debug(
+		"user list",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

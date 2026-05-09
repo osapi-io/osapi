@@ -51,7 +51,8 @@ func (d *Debian) ListUsers(
 	for _, u := range entries {
 		groups, locked, err := d.getUserDetails(u.Name)
 		if err != nil {
-			d.logger.Warn("failed to get user details",
+			d.logger.Warn(
+				"failed to get user details",
 				slog.String("name", u.Name),
 				slog.String("error", err.Error()),
 			)
@@ -81,7 +82,8 @@ func (d *Debian) GetUser(
 		if u.Name == name {
 			groups, locked, detailErr := d.getUserDetails(u.Name)
 			if detailErr != nil {
-				d.logger.Warn("failed to get user details",
+				d.logger.Warn(
+					"failed to get user details",
 					slog.String("name", u.Name),
 					slog.String("error", detailErr.Error()),
 				)
@@ -117,7 +119,8 @@ func (d *Debian) CreateUser(
 		}
 	}
 
-	d.logger.Info("user created",
+	d.logger.Info(
+		"user created",
 		slog.String("name", opts.Name),
 	)
 
@@ -148,7 +151,8 @@ func (d *Debian) UpdateUser(
 		return nil, fmt.Errorf("user: usermod failed: %w", err)
 	}
 
-	d.logger.Info("user updated",
+	d.logger.Info(
+		"user updated",
 		slog.String("name", name),
 	)
 
@@ -170,7 +174,8 @@ func (d *Debian) DeleteUser(
 		return nil, fmt.Errorf("user: userdel failed: %w", err)
 	}
 
-	d.logger.Info("user deleted",
+	d.logger.Info(
+		"user deleted",
 		slog.String("name", name),
 	)
 
@@ -192,7 +197,8 @@ func (d *Debian) ChangePassword(
 		return nil, fmt.Errorf("user: %w", err)
 	}
 
-	d.logger.Info("password changed",
+	d.logger.Info(
+		"password changed",
 		slog.String("name", name),
 	)
 

@@ -44,7 +44,8 @@ func (s *Service) PostNodeServiceEnable(
 	hostname := request.Hostname
 	name := request.Name
 
-	s.logger.Debug("service enable",
+	s.logger.Debug(
+		"service enable",
 		slog.String("target", hostname),
 		slog.String("name", name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

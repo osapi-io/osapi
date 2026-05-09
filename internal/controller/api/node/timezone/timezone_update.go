@@ -52,7 +52,8 @@ func (s *Timezone) PutNodeTimezone(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("timezone update",
+	s.logger.Debug(
+		"timezone update",
 		slog.String("target", hostname),
 		slog.String("timezone", request.Body.Timezone),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

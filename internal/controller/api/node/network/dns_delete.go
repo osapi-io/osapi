@@ -47,7 +47,8 @@ func (s *Network) DeleteNodeNetworkDNS(
 	hostname := request.Hostname
 	interfaceName := request.Body.InterfaceName
 
-	s.logger.Debug("dns delete",
+	s.logger.Debug(
+		"dns delete",
 		slog.String("interface", interfaceName),
 		slog.String("target", hostname),
 	)

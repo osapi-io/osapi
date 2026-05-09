@@ -67,7 +67,8 @@ func (s *Command) PostNodeCommandExec(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("command exec",
+	s.logger.Debug(
+		"command exec",
 		slog.String("command", cmdName),
 		slog.Any("args", args),
 		slog.String("target", hostname),

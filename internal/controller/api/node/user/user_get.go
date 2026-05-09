@@ -45,7 +45,8 @@ func (u *User) GetNodeUserByName(
 	hostname := request.Hostname
 	name := request.Name
 
-	u.logger.Debug("user get",
+	u.logger.Debug(
+		"user get",
 		slog.String("target", hostname),
 		slog.String("name", name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

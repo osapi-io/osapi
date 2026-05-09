@@ -50,7 +50,8 @@ func (s *Hostname) PutNodeHostname(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("hostname put",
+	s.logger.Debug(
+		"hostname put",
 		slog.String("new_hostname", request.Body.Hostname),
 		slog.String("target", hostname),
 	)

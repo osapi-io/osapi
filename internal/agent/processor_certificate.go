@@ -110,7 +110,8 @@ func processCertificateCACreate(
 		return nil, fmt.Errorf("unmarshal certificate CA create data: %w", err)
 	}
 
-	logger.Debug("executing certificate.ca.Create",
+	logger.Debug(
+		"executing certificate.ca.Create",
 		slog.String("name", entry.Name),
 	)
 
@@ -134,7 +135,8 @@ func processCertificateCAUpdate(
 		return nil, fmt.Errorf("unmarshal certificate CA update data: %w", err)
 	}
 
-	logger.Debug("executing certificate.ca.Update",
+	logger.Debug(
+		"executing certificate.ca.Update",
 		slog.String("name", entry.Name),
 	)
 
@@ -160,7 +162,8 @@ func processCertificateCADelete(
 		return nil, fmt.Errorf("unmarshal certificate CA delete data: %w", err)
 	}
 
-	logger.Debug("executing certificate.ca.Delete",
+	logger.Debug(
+		"executing certificate.ca.Delete",
 		slog.String("name", data.Name),
 	)
 

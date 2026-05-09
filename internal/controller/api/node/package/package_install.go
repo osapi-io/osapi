@@ -49,7 +49,8 @@ func (p *Package) PostNodePackage(
 	hostname := request.Hostname
 	pkgName := request.Body.Name
 
-	p.logger.Debug("package install",
+	p.logger.Debug(
+		"package install",
 		slog.String("target", hostname),
 		slog.String("name", pkgName),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

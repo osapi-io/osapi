@@ -45,7 +45,8 @@ func (p *Package) DeleteNodePackage(
 	hostname := request.Hostname
 	name := request.Name
 
-	p.logger.Debug("package remove",
+	p.logger.Debug(
+		"package remove",
 		slog.String("target", hostname),
 		slog.String("name", name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

@@ -56,7 +56,8 @@ func (s *Log) GetNodeLogUnit(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("log unit query",
+	s.logger.Debug(
+		"log unit query",
 		slog.String("target", hostname),
 		slog.String("unit", request.Name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

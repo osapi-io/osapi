@@ -58,7 +58,8 @@ func (s *Container) PostNodeContainerDockerStop(
 		data.Timeout = request.Body.Timeout
 	}
 
-	s.logger.Debug("container stop",
+	s.logger.Debug(
+		"container stop",
 		slog.String("target", hostname),
 		slog.String("id", id),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

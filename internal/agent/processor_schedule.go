@@ -114,7 +114,8 @@ func processCronGet(
 		return nil, fmt.Errorf("unmarshal cron get data: %w", err)
 	}
 
-	logger.Debug("executing cron.Get",
+	logger.Debug(
+		"executing cron.Get",
 		slog.String("name", data.Name),
 	)
 
@@ -138,7 +139,8 @@ func processCronCreate(
 		return nil, fmt.Errorf("unmarshal cron create data: %w", err)
 	}
 
-	logger.Debug("executing cron.Create",
+	logger.Debug(
+		"executing cron.Create",
 		slog.String("name", entry.Name),
 	)
 
@@ -162,7 +164,8 @@ func processCronUpdate(
 		return nil, fmt.Errorf("unmarshal cron update data: %w", err)
 	}
 
-	logger.Debug("executing cron.Update",
+	logger.Debug(
+		"executing cron.Update",
 		slog.String("name", entry.Name),
 	)
 
@@ -188,7 +191,8 @@ func processCronDelete(
 		return nil, fmt.Errorf("unmarshal cron delete data: %w", err)
 	}
 
-	logger.Debug("executing cron.Delete",
+	logger.Debug(
+		"executing cron.Delete",
 		slog.String("name", data.Name),
 	)
 

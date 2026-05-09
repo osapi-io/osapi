@@ -50,7 +50,8 @@ func (s *Network) PostNodeNetworkRoute(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("route create",
+	s.logger.Debug(
+		"route create",
 		slog.String("interface", request.InterfaceName),
 		slog.Int("routes", len(request.Body.Routes)),
 		slog.String("target", hostname),

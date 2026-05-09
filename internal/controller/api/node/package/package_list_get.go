@@ -43,7 +43,8 @@ func (p *Package) GetNodePackage(
 
 	hostname := request.Hostname
 
-	p.logger.Debug("package list",
+	p.logger.Debug(
+		"package list",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
