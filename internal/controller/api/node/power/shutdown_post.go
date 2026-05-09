@@ -60,7 +60,8 @@ func (s *Power) PostNodePowerShutdown(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("power shutdown",
+	s.logger.Debug(
+		"power shutdown",
 		slog.String("target", hostname),
 		slog.Int("delay", opts.Delay),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

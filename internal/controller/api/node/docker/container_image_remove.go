@@ -60,7 +60,8 @@ func (s *Container) DeleteNodeContainerDockerImage(
 		data.Force = *request.Params.Force
 	}
 
-	s.logger.Debug("container image remove",
+	s.logger.Debug(
+		"container image remove",
 		slog.String("target", hostname),
 		slog.String("image", imageName),
 		slog.Bool("force", data.Force),

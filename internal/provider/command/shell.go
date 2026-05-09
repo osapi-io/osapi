@@ -29,7 +29,8 @@ import (
 func (c *Executor) Shell(
 	params ShellParams,
 ) (*Result, error) {
-	c.logger.Debug("executing shell command",
+	c.logger.Debug(
+		"executing shell command",
 		slog.String("command", params.Command),
 		slog.String("cwd", params.Cwd),
 		slog.Int("timeout", params.Timeout),

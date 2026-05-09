@@ -58,7 +58,8 @@ func (s *Container) DeleteNodeContainerDockerByID(
 		data.Force = *request.Params.Force
 	}
 
-	s.logger.Debug("container remove",
+	s.logger.Debug(
+		"container remove",
 		slog.String("target", hostname),
 		slog.String("id", id),
 		slog.Bool("force", data.Force),

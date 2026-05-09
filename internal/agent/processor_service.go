@@ -106,7 +106,8 @@ func processServiceGet(
 		return nil, fmt.Errorf("unmarshal service get data: %w", err)
 	}
 
-	logger.Debug("executing service.Get",
+	logger.Debug(
+		"executing service.Get",
 		slog.String("name", data.Name),
 	)
 
@@ -130,7 +131,8 @@ func processServiceCreate(
 		return nil, fmt.Errorf("unmarshal service create data: %w", err)
 	}
 
-	logger.Debug("executing service.Create",
+	logger.Debug(
+		"executing service.Create",
 		slog.String("name", entry.Name),
 	)
 
@@ -154,7 +156,8 @@ func processServiceUpdate(
 		return nil, fmt.Errorf("unmarshal service update data: %w", err)
 	}
 
-	logger.Debug("executing service.Update",
+	logger.Debug(
+		"executing service.Update",
 		slog.String("name", entry.Name),
 	)
 
@@ -180,7 +183,8 @@ func processServiceDelete(
 		return nil, fmt.Errorf("unmarshal service delete data: %w", err)
 	}
 
-	logger.Debug("executing service.Delete",
+	logger.Debug(
+		"executing service.Delete",
 		slog.String("name", data.Name),
 	)
 
@@ -206,7 +210,8 @@ func processServiceStart(
 		return nil, fmt.Errorf("unmarshal service start data: %w", err)
 	}
 
-	logger.Debug("executing service.Start",
+	logger.Debug(
+		"executing service.Start",
 		slog.String("name", data.Name),
 	)
 
@@ -232,7 +237,8 @@ func processServiceStop(
 		return nil, fmt.Errorf("unmarshal service stop data: %w", err)
 	}
 
-	logger.Debug("executing service.Stop",
+	logger.Debug(
+		"executing service.Stop",
 		slog.String("name", data.Name),
 	)
 
@@ -258,7 +264,8 @@ func processServiceRestart(
 		return nil, fmt.Errorf("unmarshal service restart data: %w", err)
 	}
 
-	logger.Debug("executing service.Restart",
+	logger.Debug(
+		"executing service.Restart",
 		slog.String("name", data.Name),
 	)
 
@@ -284,7 +291,8 @@ func processServiceEnable(
 		return nil, fmt.Errorf("unmarshal service enable data: %w", err)
 	}
 
-	logger.Debug("executing service.Enable",
+	logger.Debug(
+		"executing service.Enable",
 		slog.String("name", data.Name),
 	)
 
@@ -310,7 +318,8 @@ func processServiceDisable(
 		return nil, fmt.Errorf("unmarshal service disable data: %w", err)
 	}
 
-	logger.Debug("executing service.Disable",
+	logger.Debug(
+		"executing service.Disable",
 		slog.String("name", data.Name),
 	)
 

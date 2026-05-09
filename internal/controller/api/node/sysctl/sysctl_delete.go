@@ -45,7 +45,8 @@ func (s *Sysctl) DeleteNodeSysctl(
 	hostname := request.Hostname
 	key := request.Key
 
-	s.logger.Debug("sysctl delete",
+	s.logger.Debug(
+		"sysctl delete",
 		slog.String("target", hostname),
 		slog.String("key", key),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

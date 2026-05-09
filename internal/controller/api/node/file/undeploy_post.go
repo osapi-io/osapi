@@ -50,7 +50,8 @@ func (s *File) PostNodeFileUndeploy(
 	path := request.Body.Path
 	hostname := request.Hostname
 
-	s.logger.Debug("file undeploy",
+	s.logger.Debug(
+		"file undeploy",
 		slog.String("path", path),
 		slog.String("target", hostname),
 	)

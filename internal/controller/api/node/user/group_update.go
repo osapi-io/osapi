@@ -55,7 +55,8 @@ func (u *User) PutNodeGroup(
 	hostname := request.Hostname
 	name := request.Name
 
-	u.logger.Debug("group update",
+	u.logger.Debug(
+		"group update",
 		slog.String("target", hostname),
 		slog.String("name", name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

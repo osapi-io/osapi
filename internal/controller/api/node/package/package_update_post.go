@@ -43,7 +43,8 @@ func (p *Package) PostNodePackageUpdate(
 
 	hostname := request.Hostname
 
-	p.logger.Debug("package update",
+	p.logger.Debug(
+		"package update",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

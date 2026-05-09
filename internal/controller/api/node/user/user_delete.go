@@ -45,7 +45,8 @@ func (u *User) DeleteNodeUser(
 	hostname := request.Hostname
 	name := request.Name
 
-	u.logger.Debug("user delete",
+	u.logger.Debug(
+		"user delete",
 		slog.String("target", hostname),
 		slog.String("name", name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

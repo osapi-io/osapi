@@ -38,7 +38,8 @@ func (j *Job) GetJobByID(
 ) (gen.GetJobByIDResponseObject, error) {
 	jobID := request.Id.String()
 
-	j.logger.Debug("getting job",
+	j.logger.Debug(
+		"getting job",
 		slog.String("job_id", jobID),
 	)
 

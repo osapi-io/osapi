@@ -54,7 +54,8 @@ func (s *Network) PutNodeNetworkInterface(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("interface update",
+	s.logger.Debug(
+		"interface update",
 		slog.String("name", request.Name),
 		slog.String("target", hostname),
 	)

@@ -75,7 +75,8 @@ func (c *Client) WriteStatusEvent(
 		return fmt.Errorf("failed to write status event: %w", err)
 	}
 
-	c.logger.Debug("wrote status event",
+	c.logger.Debug(
+		"wrote status event",
 		slog.String("job_id", jobID),
 		slog.String("event", event),
 		slog.String("hostname", hostname),
@@ -127,7 +128,8 @@ func (c *Client) WriteJobResponse(
 		return fmt.Errorf("failed to store job response: %w", err)
 	}
 
-	c.logger.Debug("wrote job response",
+	c.logger.Debug(
+		"wrote job response",
 		slog.String("job_id", jobID),
 		slog.String("hostname", hostname),
 		slog.String("status", status),
@@ -156,7 +158,8 @@ func (c *Client) GetJobData(
 	ctx context.Context,
 	jobKey string,
 ) ([]byte, error) {
-	c.logger.Debug("kv.get",
+	c.logger.Debug(
+		"kv.get",
 		slog.String("key", jobKey),
 	)
 	entry, err := c.kv.Get(ctx, jobKey)

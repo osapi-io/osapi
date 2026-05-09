@@ -52,7 +52,8 @@ func (s *Network) PostNodeNetworkInterface(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("interface create",
+	s.logger.Debug(
+		"interface create",
 		slog.String("name", request.Name),
 		slog.String("target", hostname),
 	)

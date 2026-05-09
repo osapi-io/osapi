@@ -49,7 +49,8 @@ func (j *Job) RetryJobByID(
 		targetHostname = *request.Body.TargetHostname
 	}
 
-	j.logger.Debug("retrying job",
+	j.logger.Debug(
+		"retrying job",
 		slog.String("job_id", jobID),
 		slog.String("target_hostname", targetHostname),
 	)

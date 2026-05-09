@@ -47,7 +47,8 @@ func (s *Network) GetNodeNetworkDNSByInterface(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("dns get",
+	s.logger.Debug(
+		"dns get",
 		slog.String("interface", request.InterfaceName),
 		slog.String("target", hostname),
 	)

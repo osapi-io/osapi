@@ -58,7 +58,8 @@ func (f *File) PostFile(
 		return gen.PostFile403JSONResponse{Error: &errMsg}, nil
 	}
 
-	f.logger.Debug("file upload",
+	f.logger.Debug(
+		"file upload",
 		slog.String("name", name),
 		slog.String("content_type", contentType),
 		slog.Int("size", len(fileData)),

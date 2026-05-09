@@ -47,7 +47,8 @@ import (
 func (a *Agent) processJobOperation(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
-	a.logger.Debug("dispatching to provider",
+	a.logger.Debug(
+		"dispatching to provider",
 		slog.String("category", jobRequest.Category),
 		slog.String("operation", jobRequest.Operation),
 	)

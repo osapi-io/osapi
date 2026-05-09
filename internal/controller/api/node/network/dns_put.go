@@ -62,7 +62,8 @@ func (s *Network) PutNodeNetworkDNS(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("dns put",
+	s.logger.Debug(
+		"dns put",
 		slog.String("interface", interfaceName),
 		slog.Int("servers", len(servers)),
 		slog.String("target", hostname),

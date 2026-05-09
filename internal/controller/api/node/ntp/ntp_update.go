@@ -53,7 +53,8 @@ func (s *Ntp) PutNodeNtp(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("ntp update",
+	s.logger.Debug(
+		"ntp update",
 		slog.String("target", hostname),
 		slog.Any("servers", config.Servers),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

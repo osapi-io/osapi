@@ -133,7 +133,8 @@ func processUserGet(
 		return nil, fmt.Errorf("unmarshal user get data: %w", err)
 	}
 
-	logger.Debug("executing user.GetUser",
+	logger.Debug(
+		"executing user.GetUser",
 		slog.String("name", data.Name),
 	)
 
@@ -157,7 +158,8 @@ func processUserCreate(
 		return nil, fmt.Errorf("unmarshal user create data: %w", err)
 	}
 
-	logger.Debug("executing user.CreateUser",
+	logger.Debug(
+		"executing user.CreateUser",
 		slog.String("name", opts.Name),
 	)
 
@@ -184,7 +186,8 @@ func processUserUpdate(
 		return nil, fmt.Errorf("unmarshal user update data: %w", err)
 	}
 
-	logger.Debug("executing user.UpdateUser",
+	logger.Debug(
+		"executing user.UpdateUser",
 		slog.String("name", data.Name),
 	)
 
@@ -210,7 +213,8 @@ func processUserDelete(
 		return nil, fmt.Errorf("unmarshal user delete data: %w", err)
 	}
 
-	logger.Debug("executing user.DeleteUser",
+	logger.Debug(
+		"executing user.DeleteUser",
 		slog.String("name", data.Name),
 	)
 
@@ -237,7 +241,8 @@ func processUserPassword(
 		return nil, fmt.Errorf("unmarshal user password data: %w", err)
 	}
 
-	logger.Debug("executing user.ChangePassword",
+	logger.Debug(
+		"executing user.ChangePassword",
 		slog.String("name", data.Name),
 	)
 
@@ -279,7 +284,8 @@ func processGroupGet(
 		return nil, fmt.Errorf("unmarshal group get data: %w", err)
 	}
 
-	logger.Debug("executing user.GetGroup",
+	logger.Debug(
+		"executing user.GetGroup",
 		slog.String("name", data.Name),
 	)
 
@@ -303,7 +309,8 @@ func processGroupCreate(
 		return nil, fmt.Errorf("unmarshal group create data: %w", err)
 	}
 
-	logger.Debug("executing user.CreateGroup",
+	logger.Debug(
+		"executing user.CreateGroup",
 		slog.String("name", opts.Name),
 	)
 
@@ -330,7 +337,8 @@ func processGroupUpdate(
 		return nil, fmt.Errorf("unmarshal group update data: %w", err)
 	}
 
-	logger.Debug("executing user.UpdateGroup",
+	logger.Debug(
+		"executing user.UpdateGroup",
 		slog.String("name", data.Name),
 	)
 
@@ -356,7 +364,8 @@ func processGroupDelete(
 		return nil, fmt.Errorf("unmarshal group delete data: %w", err)
 	}
 
-	logger.Debug("executing user.DeleteGroup",
+	logger.Debug(
+		"executing user.DeleteGroup",
 		slog.String("name", data.Name),
 	)
 

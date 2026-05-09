@@ -94,7 +94,8 @@ func (a *Agent) unwrapJobEnvelope(
 			return nil, fmt.Errorf("invalid controller signature on job data")
 		}
 
-		a.logger.Debug("verified job signature",
+		a.logger.Debug(
+			"verified job signature",
 			slog.String("fingerprint", envelope.Fingerprint),
 		)
 	}

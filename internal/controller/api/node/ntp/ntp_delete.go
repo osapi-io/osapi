@@ -44,7 +44,8 @@ func (s *Ntp) DeleteNodeNtp(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("ntp delete",
+	s.logger.Debug(
+		"ntp delete",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

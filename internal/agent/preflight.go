@@ -118,7 +118,8 @@ func checkSudoAccess(
 
 		_, err := execManager.RunCmd("sudo", []string{"-n", "which", cmd})
 		if err != nil {
-			logger.Debug("sudo preflight check failed",
+			logger.Debug(
+				"sudo preflight check failed",
 				slog.String("command", cmd),
 				slog.String("error", err.Error()),
 			)
@@ -149,7 +150,8 @@ func checkCapabilities(
 
 	capEff, err := readCapEff()
 	if err != nil {
-		logger.Debug("capability preflight check failed",
+		logger.Debug(
+			"capability preflight check failed",
 			slog.String("error", err.Error()),
 		)
 
@@ -173,7 +175,8 @@ func checkCapabilities(
 				Passed: true,
 			})
 		} else {
-			logger.Debug("capability not present",
+			logger.Debug(
+				"capability not present",
 				slog.String("capability", capName),
 				slog.Int("bit", bit),
 			)

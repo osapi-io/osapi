@@ -51,7 +51,8 @@ func (s *Process) PostNodeProcessSignal(
 	pid := request.Pid
 	signal := string(request.Body.Signal)
 
-	s.logger.Debug("process signal",
+	s.logger.Debug(
+		"process signal",
 		slog.String("target", hostname),
 		slog.Int("pid", pid),
 		slog.String("signal", signal),

@@ -92,7 +92,8 @@ func (suite *FilePublicTestSuite) TestUpload() {
 				w.Header().Set("Content-Type", "application/json")
 				if r.Method == http.MethodGet {
 					w.WriteHeader(http.StatusOK)
-					_, _ = fmt.Fprintf(w,
+					_, _ = fmt.Fprintf(
+						w,
 						`{"name":"nginx.conf","sha256":"%s","size":7,"content_type":"raw"}`,
 						contentSHA,
 					)
@@ -835,7 +836,8 @@ func (suite *FilePublicTestSuite) TestChanged() {
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				_, _ = fmt.Fprintf(w,
+				_, _ = fmt.Fprintf(
+					w,
 					`{"name":"nginx.conf","sha256":"%s","size":7,"content_type":"raw"}`,
 					contentSHA,
 				)
@@ -853,7 +855,8 @@ func (suite *FilePublicTestSuite) TestChanged() {
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				_, _ = fmt.Fprintf(w,
+				_, _ = fmt.Fprintf(
+					w,
 					`{"name":"nginx.conf","sha256":"%s","size":7,"content_type":"raw"}`,
 					contentSHA,
 				)

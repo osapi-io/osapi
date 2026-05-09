@@ -60,7 +60,8 @@ func (s *Container) PostNodeContainerDockerExec(
 		data.WorkingDir = *request.Body.WorkingDir
 	}
 
-	s.logger.Debug("container exec",
+	s.logger.Debug(
+		"container exec",
 		slog.String("target", hostname),
 		slog.String("id", id),
 		slog.Any("command", data.Command),

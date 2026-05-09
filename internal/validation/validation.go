@@ -156,7 +156,7 @@ func AtLeastOneField(
 	v any,
 ) (string, bool) {
 	rv := reflect.ValueOf(v)
-	if rv.Kind() == reflect.Ptr {
+	if rv.Kind() == reflect.Pointer {
 		rv = rv.Elem()
 	}
 
@@ -172,7 +172,7 @@ func AtLeastOneField(
 		}
 
 		switch field.Kind() {
-		case reflect.Ptr, reflect.Slice, reflect.Map:
+		case reflect.Pointer, reflect.Slice, reflect.Map:
 			if !field.IsNil() {
 				return "", true
 			}

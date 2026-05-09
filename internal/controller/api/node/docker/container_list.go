@@ -55,7 +55,8 @@ func (s *Container) GetNodeContainerDocker(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("container list",
+	s.logger.Debug(
+		"container list",
 		slog.String("target", hostname),
 		slog.String("state", data.State),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

@@ -43,7 +43,8 @@ func (s *Node) GetNodeMemory(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("memory get",
+	s.logger.Debug(
+		"memory get",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

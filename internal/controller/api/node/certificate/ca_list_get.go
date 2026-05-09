@@ -43,7 +43,8 @@ func (s *Certificate) GetNodeCertificateCa(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("certificate ca list",
+	s.logger.Debug(
+		"certificate ca list",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

@@ -42,7 +42,8 @@ func (f *File) GetFileByName(
 		return gen.GetFileByName400JSONResponse{Error: &errMsg}, nil
 	}
 
-	f.logger.Debug("file get",
+	f.logger.Debug(
+		"file get",
 		slog.String("name", request.Name),
 	)
 

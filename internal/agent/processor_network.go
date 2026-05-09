@@ -85,7 +85,8 @@ func processNetworkDNS(
 			interfaceName = "eth0" // Default interface
 		}
 
-		logger.Debug("executing dns.GetResolvConfByInterface",
+		logger.Debug(
+			"executing dns.GetResolvConfByInterface",
 			slog.String("interface", interfaceName),
 		)
 
@@ -101,7 +102,8 @@ func processNetworkDNS(
 	if subOp == "delete" {
 		interfaceName, _ := dnsData["interface"].(string)
 
-		logger.Debug("executing dns.DeleteResolvConf",
+		logger.Debug(
+			"executing dns.DeleteResolvConf",
 			slog.String("interface", interfaceName),
 		)
 
@@ -139,7 +141,8 @@ func processNetworkDNS(
 		}
 	}
 
-	logger.Debug("executing dns.UpdateResolvConfByInterface",
+	logger.Debug(
+		"executing dns.UpdateResolvConfByInterface",
 		slog.String("interface", interfaceName),
 		slog.Int("servers", len(serverStrings)),
 	)
@@ -179,7 +182,8 @@ func processNetworkPing(
 		return nil, fmt.Errorf("missing ping address")
 	}
 
-	logger.Debug("executing ping.Do",
+	logger.Debug(
+		"executing ping.Do",
 		slog.String("address", address),
 	)
 

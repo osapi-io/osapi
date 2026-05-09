@@ -90,7 +90,8 @@ func processTimezoneUpdate(
 		return nil, fmt.Errorf("unmarshal timezone update data: %w", err)
 	}
 
-	logger.Debug("executing timezone.Update",
+	logger.Debug(
+		"executing timezone.Update",
 		slog.String("timezone", data.Timezone),
 	)
 

@@ -69,7 +69,8 @@ func (s *Container) PostNodeContainerDocker(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("container create",
+	s.logger.Debug(
+		"container create",
 		slog.String("image", data.Image),
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

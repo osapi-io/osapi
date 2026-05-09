@@ -60,7 +60,8 @@ var clientJobDeleteCmd = &cobra.Command{
 		fmt.Println()
 		cli.PrintKV("Job ID", jobID, "Status", "Deleted")
 
-		logger.Info("job deleted successfully",
+		logger.Info(
+			"job deleted successfully",
 			slog.String("job_id", jobID),
 		)
 	},

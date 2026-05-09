@@ -53,7 +53,8 @@ func (s *Sysctl) PutNodeSysctl(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("sysctl update",
+	s.logger.Debug(
+		"sysctl update",
 		slog.String("target", hostname),
 		slog.String("key", entry.Key),
 		slog.String("value", entry.Value),

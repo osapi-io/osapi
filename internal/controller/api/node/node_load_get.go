@@ -43,7 +43,8 @@ func (s *Node) GetNodeLoad(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("load get",
+	s.logger.Debug(
+		"load get",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

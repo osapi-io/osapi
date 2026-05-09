@@ -83,7 +83,8 @@ func (d *Debian) CreateGroup(
 		return nil, fmt.Errorf("group: groupadd failed: %w", err)
 	}
 
-	d.logger.Info("group created",
+	d.logger.Info(
+		"group created",
 		slog.String("name", opts.Name),
 	)
 
@@ -108,7 +109,8 @@ func (d *Debian) UpdateGroup(
 		return nil, fmt.Errorf("group: gpasswd failed: %w", err)
 	}
 
-	d.logger.Info("group updated",
+	d.logger.Info(
+		"group updated",
 		slog.String("name", name),
 	)
 
@@ -130,7 +132,8 @@ func (d *Debian) DeleteGroup(
 		return nil, fmt.Errorf("group: groupdel failed: %w", err)
 	}
 
-	d.logger.Info("group deleted",
+	d.logger.Info(
+		"group deleted",
 		slog.String("name", name),
 	)
 

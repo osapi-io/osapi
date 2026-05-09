@@ -50,7 +50,8 @@ func (u *User) PostNodeUserPassword(
 	hostname := request.Hostname
 	name := request.Name
 
-	u.logger.Debug("user password change",
+	u.logger.Debug(
+		"user password change",
 		slog.String("target", hostname),
 		slog.String("name", name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

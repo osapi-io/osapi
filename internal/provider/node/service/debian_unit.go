@@ -53,7 +53,8 @@ func (d *Debian) Create(
 		}, nil
 	}
 
-	d.logger.Debug("creating service unit file",
+	d.logger.Debug(
+		"creating service unit file",
 		slog.String("name", entry.Name),
 	)
 
@@ -106,7 +107,8 @@ func (d *Debian) Update(
 		entry.Object = existing.Object
 	}
 
-	d.logger.Debug("updating service unit file",
+	d.logger.Debug(
+		"updating service unit file",
 		slog.String("name", entry.Name),
 	)
 
@@ -154,20 +156,23 @@ func (d *Debian) Delete(
 
 	// Best-effort stop and disable before removing the unit file.
 	if _, err := d.execManager.RunPrivilegedCmd("systemctl", []string{"stop", unitName}); err != nil {
-		d.logger.Warn("failed to stop service before delete",
+		d.logger.Warn(
+			"failed to stop service before delete",
 			slog.String("name", name),
 			slog.String("error", err.Error()),
 		)
 	}
 
 	if _, err := d.execManager.RunPrivilegedCmd("systemctl", []string{"disable", unitName}); err != nil {
-		d.logger.Warn("failed to disable service before delete",
+		d.logger.Warn(
+			"failed to disable service before delete",
 			slog.String("name", name),
 			slog.String("error", err.Error()),
 		)
 	}
 
-	d.logger.Debug("deleting service unit file",
+	d.logger.Debug(
+		"deleting service unit file",
 		slog.String("name", name),
 	)
 

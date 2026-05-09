@@ -62,7 +62,8 @@ func New(
 		prometheusExporter.WithNamespace("osapi"),
 	)
 	if err != nil {
-		logger.Error("failed to create prometheus exporter",
+		logger.Error(
+			"failed to create prometheus exporter",
 			slog.String("error", err.Error()),
 		)
 
@@ -183,13 +184,15 @@ func (s *Server) MeterProvider() *sdkmetric.MeterProvider {
 // Start starts the HTTP server in a background goroutine.
 func (s *Server) Start() {
 	go func() {
-		s.logger.Info("metrics server started",
+		s.logger.Info(
+			"metrics server started",
 			slog.String("addr", s.addr),
 		)
 
 		if err := s.echo.Start(s.addr); err != nil &&
 			err != http.ErrServerClosed {
-			s.logger.Error("metrics server error",
+			s.logger.Error(
+				"metrics server error",
 				slog.String("error", err.Error()),
 			)
 		}
@@ -199,13 +202,15 @@ func (s *Server) Start() {
 // Stop gracefully shuts down the HTTP server and meter provider.
 func (s *Server) Stop(ctx context.Context) {
 	if err := s.meterProvider.Shutdown(ctx); err != nil {
-		s.logger.Error("meter provider shutdown error",
+		s.logger.Error(
+			"meter provider shutdown error",
 			slog.String("error", err.Error()),
 		)
 	}
 
 	if err := s.echo.Shutdown(ctx); err != nil {
-		s.logger.Error("metrics server shutdown error",
+		s.logger.Error(
+			"metrics server shutdown error",
 			slog.String("error", err.Error()),
 		)
 	}

@@ -752,7 +752,8 @@ func registerControllerHandlers(
 	handlers := make([]func(e *echo.Echo), 0, 16)
 	handlers = append(
 		handlers,
-		agentAPI.Handler(log, jc, signingKey, customRoles, enrollmentWatcher)...)
+		agentAPI.Handler(log, jc, signingKey, customRoles, enrollmentWatcher)...,
+	)
 	handlers = append(handlers, nodeAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, jobAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(
@@ -766,7 +767,8 @@ func registerControllerHandlers(
 			subComponents,
 			signingKey,
 			customRoles,
-		)...)
+		)...,
+	)
 	handlers = append(handlers, hostnameAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, dockerAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, scheduleAPI.Handler(log, jc, signingKey, customRoles)...)
@@ -789,7 +791,8 @@ func registerControllerHandlers(
 	if objStore != nil {
 		handlers = append(
 			handlers,
-			file.Handler(log, objStore, fileStateKV, signingKey, customRoles)...)
+			file.Handler(log, objStore, fileStateKV, signingKey, customRoles)...,
+		)
 	}
 	handlers = append(handlers, factsAPI.Handler(log, signingKey, customRoles)...)
 

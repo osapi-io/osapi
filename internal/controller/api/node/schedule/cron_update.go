@@ -72,7 +72,8 @@ func (s *Schedule) PutNodeScheduleCron(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("cron update",
+	s.logger.Debug(
+		"cron update",
 		slog.String("target", hostname),
 		slog.String("name", entry.Name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

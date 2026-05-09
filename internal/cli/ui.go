@@ -395,7 +395,8 @@ func PrintErrors(
 		if e.Status == "skip" {
 			style = skipStyle
 		}
-		fmt.Printf("  %s  %s\n",
+		fmt.Printf(
+			"  %s  %s\n",
 			style.Render(fmt.Sprintf("%-*s", maxHost, e.Hostname)),
 			style.Render(e.Message),
 		)

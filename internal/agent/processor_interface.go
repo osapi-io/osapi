@@ -96,7 +96,8 @@ func processInterfaceGet(
 		return nil, fmt.Errorf("unmarshal interface get data: %w", err)
 	}
 
-	logger.Debug("executing interface.Get",
+	logger.Debug(
+		"executing interface.Get",
 		slog.String("name", data.Name),
 	)
 
@@ -120,7 +121,8 @@ func processInterfaceCreate(
 		return nil, fmt.Errorf("unmarshal interface create data: %w", err)
 	}
 
-	logger.Debug("executing interface.Create",
+	logger.Debug(
+		"executing interface.Create",
 		slog.String("name", entry.Name),
 	)
 
@@ -144,7 +146,8 @@ func processInterfaceUpdate(
 		return nil, fmt.Errorf("unmarshal interface update data: %w", err)
 	}
 
-	logger.Debug("executing interface.Update",
+	logger.Debug(
+		"executing interface.Update",
 		slog.String("name", entry.Name),
 	)
 
@@ -170,7 +173,8 @@ func processInterfaceDelete(
 		return nil, fmt.Errorf("unmarshal interface delete data: %w", err)
 	}
 
-	logger.Debug("executing interface.Delete",
+	logger.Debug(
+		"executing interface.Delete",
 		slog.String("name", data.Name),
 	)
 

@@ -44,7 +44,8 @@ func (s *Certificate) DeleteNodeCertificateCa(
 	hostname := request.Hostname
 	name := request.Name
 
-	s.logger.Debug("certificate ca delete",
+	s.logger.Debug(
+		"certificate ca delete",
 		slog.String("target", hostname),
 		slog.String("name", name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

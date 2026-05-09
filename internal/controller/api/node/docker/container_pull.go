@@ -51,7 +51,8 @@ func (s *Container) PostNodeContainerDockerPull(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("container pull",
+	s.logger.Debug(
+		"container pull",
 		slog.String("target", hostname),
 		slog.String("image", data.Image),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

@@ -76,7 +76,8 @@ func processSSHKeyList(
 		return nil, fmt.Errorf("unmarshal sshKey list data: %w", err)
 	}
 
-	logger.Debug("executing sshKey.List",
+	logger.Debug(
+		"executing sshKey.List",
 		slog.String("username", data.Username),
 	)
 
@@ -103,7 +104,8 @@ func processSSHKeyAdd(
 		return nil, fmt.Errorf("unmarshal sshKey add data: %w", err)
 	}
 
-	logger.Debug("executing sshKey.Add",
+	logger.Debug(
+		"executing sshKey.Add",
 		slog.String("username", data.Username),
 	)
 
@@ -130,7 +132,8 @@ func processSSHKeyRemove(
 		return nil, fmt.Errorf("unmarshal sshKey remove data: %w", err)
 	}
 
-	logger.Debug("executing sshKey.Remove",
+	logger.Debug(
+		"executing sshKey.Remove",
 		slog.String("username", data.Username),
 		slog.String("fingerprint", data.Fingerprint),
 	)

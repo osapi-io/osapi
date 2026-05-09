@@ -121,13 +121,15 @@ func displayNodeStatusDetail(
 	cli.PrintKV(kvArgs...)
 
 	if data.LoadAverage != nil {
-		cli.PrintKV("Load", fmt.Sprintf("%.2f, %.2f, %.2f",
+		cli.PrintKV("Load", fmt.Sprintf(
+			"%.2f, %.2f, %.2f",
 			data.LoadAverage.OneMin, data.LoadAverage.FiveMin, data.LoadAverage.FifteenMin,
 		)+" "+cli.DimStyle.Render("(1m, 5m, 15m)"))
 	}
 
 	if data.Memory != nil {
-		cli.PrintKV("Memory", fmt.Sprintf("%d GB used / %d GB total / %d GB free",
+		cli.PrintKV("Memory", fmt.Sprintf(
+			"%d GB used / %d GB total / %d GB free",
 			data.Memory.Used/1024/1024/1024,
 			data.Memory.Total/1024/1024/1024,
 			data.Memory.Free/1024/1024/1024,

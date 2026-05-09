@@ -53,7 +53,8 @@ func (s *Service) PostNodeService(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("service create",
+	s.logger.Debug(
+		"service create",
 		slog.String("target", hostname),
 		slog.String("name", entry.Name),
 		slog.String("object", entry.Object),

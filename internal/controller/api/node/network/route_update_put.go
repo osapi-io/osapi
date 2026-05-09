@@ -50,7 +50,8 @@ func (s *Network) PutNodeNetworkRoute(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("route update",
+	s.logger.Debug(
+		"route update",
 		slog.String("interface", request.InterfaceName),
 		slog.Int("routes", len(request.Body.Routes)),
 		slog.String("target", hostname),

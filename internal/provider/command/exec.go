@@ -29,7 +29,8 @@ import (
 func (c *Executor) Exec(
 	params ExecParams,
 ) (*Result, error) {
-	c.logger.Debug("executing command",
+	c.logger.Debug(
+		"executing command",
 		slog.String("command", params.Command),
 		slog.Any("args", params.Args),
 		slog.String("cwd", params.Cwd),

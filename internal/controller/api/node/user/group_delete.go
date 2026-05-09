@@ -45,7 +45,8 @@ func (u *User) DeleteNodeGroup(
 	hostname := request.Hostname
 	name := request.Name
 
-	u.logger.Debug("group delete",
+	u.logger.Debug(
+		"group delete",
 		slog.String("target", hostname),
 		slog.String("name", name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),

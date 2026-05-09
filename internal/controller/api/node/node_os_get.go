@@ -43,7 +43,8 @@ func (s *Node) GetNodeOS(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("os get",
+	s.logger.Debug(
+		"os get",
 		slog.String("target", hostname),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)

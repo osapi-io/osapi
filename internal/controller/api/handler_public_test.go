@@ -83,13 +83,16 @@ func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
 			handlers := make([]func(e *echo.Echo), 0, 5)
 			handlers = append(
 				handlers,
-				agentAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil, nil)...)
+				agentAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil, nil)...,
+			)
 			handlers = append(
 				handlers,
-				nodeAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...)
+				nodeAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...,
+			)
 			handlers = append(
 				handlers,
-				jobAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...)
+				jobAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...,
+			)
 			checker := &health.NATSChecker{}
 			handlers = append(
 				handlers,
@@ -102,7 +105,8 @@ func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
 					nil,
 					signingKey,
 					nil,
-				)...)
+				)...,
+			)
 
 			routesBefore := len(s.server.Echo.Routes())
 			s.server.RegisterHandlers(handlers)

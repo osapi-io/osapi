@@ -94,7 +94,8 @@ func newTestAgent(p newTestAgentParams) *agent.Agent {
 
 	registry := agent.NewProviderRegistry()
 
-	registry.Register("node",
+	registry.Register(
+		"node",
 		agent.NewNodeProcessor(
 			p.hostProvider,
 			p.diskProvider,
@@ -115,27 +116,32 @@ func newTestAgent(p newTestAgentParams) *agent.Agent {
 		p.hostProvider, p.diskProvider, p.memProvider, p.loadProvider,
 	)
 
-	registry.Register("network",
+	registry.Register(
+		"network",
 		agent.NewNetworkProcessor(p.dnsProvider, p.pingProvider, nil, nil, logger),
 		p.dnsProvider, p.pingProvider, p.netinfoProvider,
 	)
 
-	registry.Register("command",
+	registry.Register(
+		"command",
 		agent.NewCommandProcessor(p.commandProvider, logger),
 		p.commandProvider,
 	)
 
-	registry.Register("file",
+	registry.Register(
+		"file",
 		agent.NewFileProcessor(p.fileProvider, logger),
 		p.fileProvider,
 	)
 
-	registry.Register("docker",
+	registry.Register(
+		"docker",
 		agent.NewDockerProcessor(p.dockerProvider, logger),
 		p.dockerProvider,
 	)
 
-	registry.Register("schedule",
+	registry.Register(
+		"schedule",
 		agent.NewScheduleProcessor(p.cronProvider, logger),
 		p.cronProvider,
 	)
