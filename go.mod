@@ -23,7 +23,7 @@ require (
 	github.com/prometheus-community/pro-bing v0.8.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/samber/slog-echo v1.21.0
+	github.com/samber/slog-echo v1.23.0
 	github.com/shirou/gopsutil/v4 v4.26.4
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
