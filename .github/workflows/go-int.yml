@@ -29,9 +29,9 @@ jobs:
       - name: Deps
         run: |
           just go::deps
-          just react::deps
+          just react-deps
       - name: Build UI
-        run: just react::build
+        run: just react-build
       - name: Linux tuning
         run: just linux-tune
       - name: Integration

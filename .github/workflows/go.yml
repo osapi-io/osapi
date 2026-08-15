@@ -30,7 +30,7 @@ jobs:
         run: |
           just go::deps
           just go::mod
-          just react::deps
+          just react-deps
       - name: Test
         run: just test
       - name: Upload coverage reports to Codecov

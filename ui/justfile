@@ -1,14 +1,17 @@
+# The React application is this directory.
+react_dir := "."
+
 # Optional modules: mod? allows `just fetch` to work before .just/remote/ exists.
-mod? react '.just/remote/react.mod.just'
 mod? just '.just/remote/just.mod.just'
+
+import? '.just/remote/react.just'
 
 # --- Fetch ---
 
 # Fetch shared justfiles from osapi-justfiles
 fetch:
     mkdir -p .just/remote
-    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/react.mod.just -o .just/remote/react.mod.just
-    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/react.just -o .just/remote/react.just
+    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/react/react.just -o .just/remote/react.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/just.mod.just -o .just/remote/just.mod.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/just.just -o .just/remote/just.just
 
@@ -16,15 +19,15 @@ fetch:
 
 # Install all dependencies
 deps:
-    just react::deps
+    just react-deps
 
 # Run all tests
 test:
-    just react::test
+    just react-test
 
 # Format, lint, generate, and build before committing
 ready:
-    just react::generate
-    just react::fmt
-    just react::lint
-    just react::build
+    just react-generate
+    just react-fmt
+    just react-lint
+    just react-build
