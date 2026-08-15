@@ -18,4 +18,4 @@ jobs:
       - name: Fetch justfiles
         run: just fetch
       - name: Test build website
-        run: just docs::build
+        run: just docusaurus-build

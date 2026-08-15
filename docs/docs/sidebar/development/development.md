@@ -91,12 +91,15 @@ server (`just react-dev`), code style, and component conventions.
 
 OSAPI uses [Docusaurus][] to host a documentation server. Content is written in
 Markdown and located in the `docs/docs` directory. All Markdown documents should
-have an 80 character line wrap limit (enforced by Prettier).
+have an 80 character line wrap limit. The site is formatted by Prettier through
+the `docusaurus` module; markdown outside it is formatted by mdformat through
+the `md` module.
 
 ```bash
-just docs::start     # Start local docs server (requires bun)
-just docs::build     # Build docs for production
-just docs::fmt-check # Check docs formatting
+just docusaurus-start     # Start local docs server (requires bun)
+just docusaurus-build     # Build docs for production
+just docusaurus-fmt-check # Check site formatting
+just md-fmt-check         # Check markdown outside the site
 ```
 
 ## Testing

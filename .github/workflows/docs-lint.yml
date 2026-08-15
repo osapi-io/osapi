@@ -13,9 +13,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
       - name: Install just
         uses: extractions/setup-just@v4
       - name: Fetch justfiles
         run: just fetch
       - name: Lint docs
-        run: just docs::fmt-check
+        run: just docusaurus-fmt-check
+      - name: Lint markdown
+        run: just md-fmt-check
