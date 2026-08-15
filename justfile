@@ -16,9 +16,9 @@ go_coverage_target := "99.9"
 
 import? '.just/remote/go.just'
 
-mod? docs '.just/remote/docs.mod.just'
+import? '.just/remote/docusaurus.just'
+import? '.just/remote/md.just'
 mod? just '.just/remote/just.mod.just'
-mod? docker '.just/remote/docker.mod.just'
 
 import? '.just/remote/react.just'
 
@@ -28,12 +28,10 @@ import? '.just/remote/react.just'
 fetch:
     mkdir -p .just/remote
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/go/go.just -o .just/remote/go.just
-    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docs.mod.just -o .just/remote/docs.mod.just
-    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docs.just -o .just/remote/docs.just
+    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docusaurus/docusaurus.just -o .just/remote/docusaurus.just
+    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/md/md.just -o .just/remote/md.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/just.mod.just -o .just/remote/just.mod.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/just.just -o .just/remote/just.just
-    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docker.mod.just -o .just/remote/docker.mod.just
-    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docker.just -o .just/remote/docker.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/react/react.just -o .just/remote/react.just
 
 # --- Top-level orchestration ---
@@ -42,7 +40,7 @@ fetch:
 deps:
     just go-deps
     just go-mod
-    just docs::deps
+    just docusaurus-deps
     just react-deps
 
 # Build production binary (includes embedded UI)
@@ -60,7 +58,7 @@ test: linux-tune
 generate:
     redocly join --prefix-tags-with-info-prop title -o internal/controller/api/gen/api.yaml internal/controller/api/*/gen/api.yaml internal/controller/api/node/*/gen/api.yaml
     just go-generate
-    just docs::generate
+    just docusaurus-generate
     cp internal/controller/api/gen/api.yaml ui/src/sdk/gen/api.yaml
     just react-generate
 
@@ -68,7 +66,8 @@ generate:
 ready:
     just generate
     just just::fmt
-    just docs::fmt
+    just docusaurus-fmt
+    just md-fmt
     just go-fmt
     just go-vet
     just react-fmt
