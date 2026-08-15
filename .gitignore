@@ -5,7 +5,6 @@ configs/osapi.*.yaml
 database.db*
 dist/
 docs/node_modules/
-docs/bun.lock
 .just/remote/*
 .nats/jetstream/
 pki/
@@ -18,7 +17,6 @@ tmp/
 # UI
 ui/dist/
 ui/node_modules/
-ui/bun.lock
 ui/.just/remote/
 
 # Compiled example binaries
