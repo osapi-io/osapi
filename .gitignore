@@ -5,10 +5,9 @@ configs/osapi.*.yaml
 database.db*
 dist/
 docs/node_modules/
-.just/
+.just/remote/*
 .nats/jetstream/
 pki/
-netplanStatus.txt
 result.xml
 test/vendor/
 tmp/
@@ -26,3 +25,8 @@ examples/**
 !examples/**/*.go
 !examples/**/*.mod
 !examples/**/*.sum
+
+# Fetched justfile modules, except osapi's local react override
+# (upstream sets working-directory to the repo root; osapi's React app is in ui/)
+.just/remote/*
+!.just/remote/react.mod.just
