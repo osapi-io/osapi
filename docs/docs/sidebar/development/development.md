@@ -110,6 +110,16 @@ just go::unit       # Run unit tests only
 just go::unit-int   # Run integration tests (requires running osapi)
 ```
 
+Coverage is gated at 99.9%. `just test` fails if total coverage drops below it,
+so a change that adds untested code fails locally and in CI:
+
+```bash
+just go::unit-cov-check   # Report coverage and fail below the target
+```
+
+The target is declared in `.github/codecov.yml` and in the shared `go` justfile
+module — change both together.
+
 Unit tests should follow the Go convention of being located in a file named
 `*_test.go` in the same package as the code being tested. Integration tests are
 located in `test/integration/` and use a `//go:build integration` tag. They
