@@ -80,8 +80,8 @@ TypeScript and CSS should be formatted by [Prettier][] and linted using
 [ESLint][]. This style is enforced by CI.
 
 ```bash
-just react::fmt           # Auto-fix formatting
-just react::lint          # Run ESLint
+just react-fmt           # Auto-fix formatting
+just react-lint          # Run ESLint
 ```
 
 ### Component conventions
@@ -116,7 +116,7 @@ repo and regenerate the TypeScript SDK:
 cp <osapi-repo>/internal/controller/api/gen/api.yaml src/sdk/gen/api.yaml
 
 # Regenerate typed fetch functions from the spec:
-just react::generate
+just react-generate
 ```
 
 See the [Architecture](architecture.md) docs for the full generation flow.

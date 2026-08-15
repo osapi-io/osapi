@@ -76,7 +76,7 @@ just build     # Builds React UI + Go binary
 
 Use `just build` (not `go build` directly). The `//go:embed` directive for the
 UI assets requires `ui/dist/` to be populated at compile time — `just build`
-runs `just react::build` first to satisfy this. The same applies to tests: use
+runs `just react-build` first to satisfy this. The same applies to tests: use
 `just test`, not `go test ./...`.
 
 :::
@@ -85,7 +85,7 @@ runs `just react::build` first to satisfy this. The same applies to tests: use
 
 The embedded React management dashboard has its own development workflow. See
 the [UI Development](ui-development.md) guide for prerequisites, the development
-server (`just react::dev`), code style, and component conventions.
+server (`just react-dev`), code style, and component conventions.
 
 ## Documentation
 

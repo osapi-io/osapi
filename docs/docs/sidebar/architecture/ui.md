@@ -214,7 +214,7 @@ in order:
    `internal/controller/api/gen/api.yaml`.
 2. `go generate` regenerates Go server and SDK code.
 3. The combined spec is copied to `ui/src/sdk/gen/api.yaml`.
-4. `just react::generate` runs orval against the copied spec to regenerate typed
+4. `just react-generate` runs orval against the copied spec to regenerate typed
    fetch functions and schema types under `ui/src/sdk/gen/`.
 
 ### Fetch mutator
