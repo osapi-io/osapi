@@ -204,7 +204,7 @@ func initLogger() {
 	if jsonOutput {
 		handler = slog.NewJSONHandler(os.Stderr, nil)
 	} else {
-		handler = tint.NewHandler(os.Stderr, &tint.Options{
+		handler = tint.NewTextHandler(os.Stderr, &tint.Options{
 			Level:      logLevel,
 			TimeFormat: time.Kitchen,
 			NoColor:    !term.IsTerminal(int(os.Stdout.Fd())),
