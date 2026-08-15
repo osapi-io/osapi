@@ -29,16 +29,15 @@ document before submitting a PR.
 
 When adding a new operation to the Configure page:
 
-1. Add the `BlockType` entry to `src/hooks/use-stack.ts` in
-   `ALL_BLOCK_TYPES` and the appropriate category.
+1. Add the `BlockType` entry to `src/hooks/use-stack.ts` in `ALL_BLOCK_TYPES`
+   and the appropriate category.
 2. Add the required permission to `BLOCK_PERMISSIONS` in
    `src/lib/permissions.ts`.
-3. Create a block form component in `src/components/domain/` if the
-   block needs input fields. Use `SingleInputBlock` for simple
-   single-field blocks.
+3. Create a block form component in `src/components/domain/` if the block needs
+   input fields. Use `SingleInputBlock` for simple single-field blocks.
 4. Add the apply handler case in `src/pages/configure.tsx`.
-5. Add result rendering in `src/components/domain/result-card.tsx` if
-   the response shape isn't handled by existing patterns.
+5. Add result rendering in `src/components/domain/result-card.tsx` if the
+   response shape isn't handled by existing patterns.
 6. Add the icon mapping in `blockIcons` in `configure.tsx`.
 
 ### Adding new UI components
@@ -73,6 +72,6 @@ answer questions.
 
 > I'm stuck, where can I get help?
 
-If you have questions, feel free to open a [Discussion][] on GitHub.
+If you have questions, feel free to open a [Discussion] on GitHub.
 
-[Discussion]: https://github.com/osapi-io/osapi-ui/discussions
+[discussion]: https://github.com/osapi-io/osapi-ui/discussions

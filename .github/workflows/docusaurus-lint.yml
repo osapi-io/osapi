@@ -1,14 +1,14 @@
 ---
-name: Docs Build
+name: Docusaurus Lint
 
 on:
+  push:
+    branches: ["main"]
   pull_request:
-    branches:
-      - main
+    branches: ["main"]
 
 jobs:
-  build:
-    name: Test build website
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -17,5 +17,5 @@ jobs:
         uses: extractions/setup-just@v4
       - name: Fetch justfiles
         run: just fetch
-      - name: Test build website
-        run: just docs::build
+      - name: Lint the site
+        run: just docusaurus-fmt-check

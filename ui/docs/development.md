@@ -1,25 +1,24 @@
 # Development
 
-This guide covers the tools, setup, and conventions needed to work on
-osapi-ui.
+This guide covers the tools, setup, and conventions needed to work on osapi-ui.
 
 ## Prerequisites
 
-Install tools using [mise][]:
+Install tools using [mise]:
 
 ```bash
 mise install
 ```
 
-- **[Node.js][]** — Required runtime.
-- **[Bun][]** — Package manager and script runner.
-- **[just][]** — Task runner used for building, testing, formatting, and other
+- **[Node.js]** — Required runtime.
+- **[Bun]** — Package manager and script runner.
+- **[just]** — Task runner used for building, testing, formatting, and other
   development workflows. Install with `brew install just`.
 
 ### Claude Code
 
-If you use [Claude Code][] for development, install these plugins from the
-default marketplace:
+If you use [Claude Code] for development, install these plugins from the default
+marketplace:
 
 ```
 /plugin install commit-commands@claude-plugins-official
@@ -59,11 +58,11 @@ OSAPI_BEARER_TOKEN=<your-jwt-here>
 
 All env vars use the `OSAPI_` prefix (configured in `vite.config.ts`).
 
-| Variable               | Default                | Description              |
-| ---------------------- | ---------------------- | ------------------------ |
-| `OSAPI_API_URL`        | `http://localhost:8080` | OSAPI API base URL      |
-| `OSAPI_BEARER_TOKEN`   | (empty)                | JWT token for auto-login |
-| `OSAPI_FEATURE_STACKS` | `false`                | Enable saved stacks UI   |
+| Variable               | Default                 | Description              |
+| ---------------------- | ----------------------- | ------------------------ |
+| `OSAPI_API_URL`        | `http://localhost:8080` | OSAPI API base URL       |
+| `OSAPI_BEARER_TOKEN`   | (empty)                 | JWT token for auto-login |
+| `OSAPI_FEATURE_STACKS` | `false`                 | Enable saved stacks UI   |
 
 Generate a bearer token with the OSAPI CLI:
 
@@ -71,13 +70,13 @@ Generate a bearer token with the OSAPI CLI:
 osapi token generate
 ```
 
-If `OSAPI_BEARER_TOKEN` is set, the app auto-authenticates and skips the
-sign-in page. If not set, users paste their token on the sign-in page.
+If `OSAPI_BEARER_TOKEN` is set, the app auto-authenticates and skips the sign-in
+page. If not set, users paste their token on the sign-in page.
 
 ## Code style
 
-TypeScript and CSS should be formatted by [Prettier][] and linted using
-[ESLint][]. This style is enforced by CI.
+TypeScript and CSS should be formatted by [Prettier] and linted using [ESLint].
+This style is enforced by CI.
 
 ```bash
 just react-fmt           # Auto-fix formatting
@@ -91,8 +90,8 @@ just react-lint          # Run ESLint
 - Use the `cn()` helper for conditional Tailwind classes.
 - Icons from lucide-react only.
 - No inline styles — Tailwind classes only.
-- Use shared UI primitives (see [Architecture](architecture.md) docs) instead
-  of repeating Tailwind patterns inline.
+- Use shared UI primitives (see [Architecture](architecture.md) docs) instead of
+  repeating Tailwind patterns inline.
 - **Always use `Text` for styled text** — never write `text-xs text-text-muted`
   inline. Use `<Text variant="muted">` instead.
 - Always use the custom `Dropdown` component. Never use native `<select>`.
@@ -132,9 +131,9 @@ just ready   # generate + fmt + lint + build
 
 ## Branching
 
-All changes should be developed on feature branches. Create a branch from
-`main` using the naming convention `type/short-description`, where `type`
-matches the [Conventional Commits][] type:
+All changes should be developed on feature branches. Create a branch from `main`
+using the naming convention `type/short-description`, where `type` matches the
+[Conventional Commits] type:
 
 - `feat/add-dns-block`
 - `fix/agent-card-overflow`
@@ -147,24 +146,23 @@ automatically if you are on `main`.
 
 ## Commit messages
 
-Follow [Conventional Commits][] with the 50/72 rule:
+Follow [Conventional Commits] with the 50/72 rule:
 
 - **Subject line**: max 50 characters, imperative mood, capitalized, no period
 - **Body**: wrap at 72 characters, separated from subject by a blank line
 - **Format**: `type(scope): description`
-- **Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
-  `chore`
+- **Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
 - Summarize the "what" and "why", not the "how"
 
 Try to write meaningful commit messages and avoid having too many commits on a
 PR. Most PRs should likely have a single commit (although for bigger PRs it may
 be reasonable to split it in a few). Git squash and rebase is your friend!
 
-[mise]: https://mise.jdx.dev
-[Node.js]: https://nodejs.org
-[Bun]: https://bun.sh
+[bun]: https://bun.sh
+[claude code]: https://claude.ai/code
+[conventional commits]: https://www.conventionalcommits.org
+[eslint]: https://eslint.org
 [just]: https://just.systems
-[Claude Code]: https://claude.ai/code
-[Prettier]: https://prettier.io
-[ESLint]: https://eslint.org
-[Conventional Commits]: https://www.conventionalcommits.org
+[mise]: https://mise.jdx.dev
+[node.js]: https://nodejs.org
+[prettier]: https://prettier.io

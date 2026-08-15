@@ -28,29 +28,27 @@ them to be used as appliances.
 
 ## 📖 Documentation
 
-[Getting Started][] | [API][] | [Usage][] | [SDK][]
-
-[Getting Started]: https://osapi-io.github.io/osapi/
-[API]: https://osapi-io.github.io/osapi/category/api
-[Usage]: https://osapi-io.github.io/osapi/sidebar/usage
-[SDK]: https://osapi-io.github.io/osapi/sidebar/sdk
+[Getting Started] | [API] | [Usage] | [SDK]
 
 ## 🔗 Sister Projects
 
-| Project | Description |
-| --- | --- |
-| [gohai][] | A Go-based system fact collector inspired by Chef Ohai |
-| [nats-client][] | A Go package for connecting to and interacting with a NATS server |
-| [nats-server][] | A Go package for running an embedded NATS server |
-| [osapi-orchestrator][] | Declarative infrastructure orchestration DSL built on the OSAPI SDK |
-
-[gohai]: https://github.com/osapi-io/gohai
-[nats-client]: https://github.com/osapi-io/nats-client
-[nats-server]: https://github.com/osapi-io/nats-server
-[osapi-orchestrator]: https://github.com/osapi-io/osapi-orchestrator
+| Project              | Description                                                         |
+| -------------------- | ------------------------------------------------------------------- |
+| [gohai]              | A Go-based system fact collector inspired by Chef Ohai              |
+| [nats-client]        | A Go package for connecting to and interacting with a NATS server   |
+| [nats-server]        | A Go package for running an embedded NATS server                    |
+| [osapi-orchestrator] | Declarative infrastructure orchestration DSL built on the OSAPI SDK |
 
 ## 📄 License
 
-The [MIT][] License.
+The [MIT] License.
 
-[MIT]: LICENSE
+[api]: https://osapi-io.github.io/osapi/category/api
+[getting started]: https://osapi-io.github.io/osapi/
+[gohai]: https://github.com/osapi-io/gohai
+[mit]: LICENSE
+[nats-client]: https://github.com/osapi-io/nats-client
+[nats-server]: https://github.com/osapi-io/nats-server
+[osapi-orchestrator]: https://github.com/osapi-io/osapi-orchestrator
+[sdk]: https://osapi-io.github.io/osapi/sidebar/sdk
+[usage]: https://osapi-io.github.io/osapi/sidebar/usage
