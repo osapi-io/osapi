@@ -2,6 +2,10 @@
 # Recipes below use `just` subcommands instead of dependency syntax because just
 
 # validates dependencies at parse time, which would fail when modules aren't loaded.
+# The React application lives in ui/, not at the repository root. The shared
+# react module reads this instead of the shim hardcoding a working directory.
+export JUST_REACT_DIR := "ui"
+
 mod? go '.just/remote/go.mod.just'
 mod? docs '.just/remote/docs.mod.just'
 mod? just '.just/remote/just.mod.just'
@@ -21,6 +25,7 @@ fetch:
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/just.just -o .just/remote/just.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docker.mod.just -o .just/remote/docker.mod.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docker.just -o .just/remote/docker.just
+    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/react.mod.just -o .just/remote/react.mod.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/react.just -o .just/remote/react.just
 
 # --- Top-level orchestration ---

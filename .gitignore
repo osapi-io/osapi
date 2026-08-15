@@ -26,7 +26,5 @@ examples/**
 !examples/**/*.mod
 !examples/**/*.sum
 
-# Fetched justfile modules, except osapi's local react override
-# (upstream sets working-directory to the repo root; osapi's React app is in ui/)
-.just/remote/*
-!.just/remote/react.mod.just
+# Host network state written by `netplan status --format=json`
+netplanStatus.txt
