@@ -1,5 +1,5 @@
 ---
-name: Docs Build
+name: Docusaurus Build
 
 on:
   pull_request:
