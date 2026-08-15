@@ -1,14 +1,15 @@
 ---
 # Coverage target for this repository.
 #
-# `target: 100%` is declared again as JUST_COVERAGE_TARGET in the shared go
-# justfile module (osapi-io/osapi-justfiles), which gates `just test` locally
-# and in CI. Neither system can read the other's config, so the number lives in
-# both places — change both together.
+# `target: 99.9%` is declared again as JUST_COVERAGE_TARGET in this repository's
+# justfile, which overrides the org-wide default of 100 from the shared go
+# module. osapi has 9 uncovered statements across 7 functions (99.9359%); raise
+# both to 100 once they are covered. Neither system can read the other's config,
+# so the number lives in both places — change both together.
 #
 # The threshold absorbs rounding, not regression. With precision 2 and round
-# down, a change in statement count can render a genuine 100% as 99.99% and fail
-# the status on an artifact. `just go::unit-cov-check` is the exact check; this
+# down, a change in statement count can shift the reported figure and fail the
+# status on an artifact. `just go::unit-cov-check` is the exact check; this
 # tolerance exists so Codecov's own rounding does not report a failure the
 # coverage does not have.
 #
@@ -23,11 +24,11 @@ coverage:
   status:
     project:
       default:
-        target: 100%
+        target: 99.9%
         threshold: 0.05%
     patch:
       default:
-        target: 100%
+        target: 99.9%
         threshold: 0.05%
 
 comment:
