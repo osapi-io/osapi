@@ -16,5 +16,7 @@ jobs:
         uses: extractions/setup-just@v4
       - name: Fetch justfiles
         run: just fetch
+      - name: Record just version
+        run: just --version
       - name: Lint justfiles
         run: just just::fmt-check

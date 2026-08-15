@@ -1,18 +1,21 @@
+set allow-duplicate-variables
+
 # Optional modules: mod? allows `just fetch` to work before .just/remote/ exists.
 # Recipes below use `just` subcommands instead of dependency syntax because just
-
 # validates dependencies at parse time, which would fail when modules aren't loaded.
-# Coverage target. Below the org-wide 100% because osapi has 9 uncovered
-# statements across 7 functions (99.9359%). Raise to 100 once they are covered;
-# this holds the current level so it cannot decay in the meantime. Mirrored in
-# .github/codecov.yml — change both together.
-export JUST_COVERAGE_TARGET := "99.9"
+# The React application lives in ui/, not at the repository root, so the react
+# module's default of "." is reassigned above the import.
 
-# The React application lives in ui/, not at the repository root. The flat
-# react module requires the importing justfile to declare it.
 react_dir := "ui"
 
-mod? go '.just/remote/go.mod.just'
+# Minimum total coverage. Below the org-wide 100% because nine statements are
+# unreachable guards that cannot execute. Declared again in .github/codecov.yml
+# — change both together.
+
+go_coverage_target := "99.9"
+
+import? '.just/remote/go.just'
+
 mod? docs '.just/remote/docs.mod.just'
 mod? just '.just/remote/just.mod.just'
 mod? docker '.just/remote/docker.mod.just'
@@ -24,8 +27,7 @@ import? '.just/remote/react.just'
 # Fetch shared justfiles from osapi-justfiles
 fetch:
     mkdir -p .just/remote
-    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/go.mod.just -o .just/remote/go.mod.just
-    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/go.just -o .just/remote/go.just
+    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/go/go.just -o .just/remote/go.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docs.mod.just -o .just/remote/docs.mod.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docs.just -o .just/remote/docs.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/just.mod.just -o .just/remote/just.mod.just
@@ -38,8 +40,8 @@ fetch:
 
 # Install all dependencies
 deps:
-    just go::deps
-    just go::mod
+    just go-deps
+    just go-mod
     just docs::deps
     just react-deps
 
@@ -52,12 +54,12 @@ build:
 test: linux-tune
     just just::fmt-check
     just react-build
-    just go::test
+    just go-test
 
 # Generate code
 generate:
     redocly join --prefix-tags-with-info-prop title -o internal/controller/api/gen/api.yaml internal/controller/api/*/gen/api.yaml internal/controller/api/node/*/gen/api.yaml
-    just go::generate
+    just go-generate
     just docs::generate
     cp internal/controller/api/gen/api.yaml ui/src/sdk/gen/api.yaml
     just react-generate
@@ -67,8 +69,8 @@ ready:
     just generate
     just just::fmt
     just docs::fmt
-    just go::fmt
-    just go::vet
+    just go-fmt
+    just go-vet
     just react-fmt
     just react-lint
     just react-build

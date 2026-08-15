@@ -15,8 +15,8 @@ $ just deps
 Unit tests run with mocked dependencies and require no external services:
 
 ```bash
-$ just go::unit       # Run unit tests
-$ just go::unit-cov   # Run with coverage report
+$ just go-unit       # Run unit tests
+$ just go-unit-cov   # Run with coverage report
 $ just test           # Run all checks (lint + unit + coverage)
 ```
 
@@ -33,7 +33,7 @@ API server, agent), and exercise CLI commands end-to-end. They are guarded by a
 `//go:build integration` tag and located in `test/integration/`:
 
 ```bash
-$ just go::unit-int   # Run integration tests
+$ just go-unit-int   # Run integration tests
 ```
 
 The test harness allocates random ports, generates a JWT, and starts the server
@@ -45,7 +45,7 @@ commands with `--json` output.
 Auto format code:
 
 ```bash
-$ just go::fmt
+$ just go-fmt
 ```
 
 ## Listing Recipes
