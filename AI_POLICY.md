@@ -1,6 +1,6 @@
 # AI Usage Policy
 
-The OSAPI project has strict rules for AI usage:
+The osapi-io project has strict rules for AI usage:
 
 - **All AI usage in any form must be disclosed.** You must state
   the tool you used (e.g. Claude Code, Cursor, Amp) along with
@@ -30,13 +30,13 @@ The OSAPI project has strict rules for AI usage:
   if you're interested in that then don't use AI, and we'll help you.
   I'm sorry that bad AI drivers have ruined this for you.
 
-These rules apply only to outside contributions to OSAPI. Maintainers
+These rules apply only to outside contributions to osapi-io. Maintainers
 are exempt from these rules and may use AI tools at their discretion;
 they've proven themselves trustworthy to apply good judgment.
 
 ## There are Humans Here
 
-Please remember that OSAPI is maintained by humans.
+Please remember that osapi-io is maintained by humans.
 
 Every discussion, issue, and pull request is read and reviewed by
 humans (and sometimes machines, too). It is a boundary point at which
@@ -52,7 +52,7 @@ strict rules to protect maintainers.
 
 ## AI is Welcome Here
 
-OSAPI is written with plenty of AI assistance, and many maintainers
+osapi-io is written with plenty of AI assistance, and many maintainers
 embrace AI tools as a productive tool in their workflow. As a project,
 we welcome AI as a tool!
 
