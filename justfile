@@ -1,8 +1,10 @@
+set allow-duplicate-variables := true
+
 # Optional modules: mod? allows `just fetch` to work before .just/remote/ exists.
 # Recipes below use `just` subcommands instead of dependency syntax because just
 # validates dependencies at parse time, which would fail when modules aren't loaded.
-# The React application lives in ui/, not at the repository root. The flat
-# react module requires the importing justfile to declare it.
+# The React application lives in ui/, not at the repository root, so the react
+# module's default of "." is reassigned above the import.
 
 react_dir := "ui"
 
