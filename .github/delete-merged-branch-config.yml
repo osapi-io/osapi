@@ -1,0 +1,4 @@
+---
+exclude:
+  - dependabot/*
+delete_closed_pr: true
