@@ -14,7 +14,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.15.4
 	github.com/lmittmann/tint v1.1.3
-	github.com/nats-io/nats-server/v2 v2.14.2
+	github.com/nats-io/nats-server/v2 v2.14.4
 	github.com/nats-io/nats.go v1.52.0
 	github.com/oapi-codegen/runtime v1.6.0
 	github.com/opencontainers/image-spec v1.1.1
@@ -74,7 +74,7 @@ require (
 	github.com/alfatraining/structtag v1.0.0 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/alingse/nilnesserr v0.2.0 // indirect
-	github.com/antithesishq/antithesis-sdk-go v0.7.0-default-no-op // indirect
+	github.com/antithesishq/antithesis-sdk-go v0.7.2-default-no-op // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/ashanbrown/forbidigo/v2 v2.3.1 // indirect
 	github.com/ashanbrown/makezero/v2 v2.2.1 // indirect
