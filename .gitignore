@@ -5,9 +5,10 @@ configs/osapi.*.yaml
 database.db*
 dist/
 docs/node_modules/
-.just/remote/*
+.just/
 .nats/jetstream/
 pki/
+netplanStatus.txt
 result.xml
 test/vendor/
 tmp/
