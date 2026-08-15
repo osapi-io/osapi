@@ -28,11 +28,11 @@ jobs:
         run: just fetch
       - name: Deps
         run: |
-          just go::deps
+          just go-deps
           just react-deps
       - name: Build UI
         run: just react-build
       - name: Linux tuning
         run: just linux-tune
       - name: Integration
-        run: just go::unit-int
+        run: just go-unit-int

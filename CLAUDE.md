@@ -26,10 +26,10 @@ Quick reference for common commands:
 just deps          # Install all dependencies
 just build         # Build production binary (React UI + Go)
 just test          # Run all tests (lint + unit + coverage)
-just go::unit      # Run unit tests only
-just go::unit-int  # Run integration tests (requires running osapi)
-just go::vet       # Run golangci-lint
-just go::fmt       # Auto-format (gofumpt + golines)
+just go-unit      # Run unit tests only
+just go-unit-int  # Run integration tests (requires running osapi)
+just go-vet       # Run golangci-lint
+just go-fmt       # Auto-format (gofumpt + golines)
 go test -run TestName -v ./internal/job/...  # Run a single test
 
 just react-dev    # Start UI dev server (http://localhost:5173)
@@ -772,8 +772,8 @@ service. Follow the same principles as the orchestrator examples:
 ```bash
 just generate        # regenerate specs + code
 go build ./...       # compiles
-just go::unit        # tests pass
-just go::vet         # lint passes
+just go-unit        # tests pass
+just go-vet         # lint passes
 ```
 
 ## Code Standards (MANDATORY)
@@ -793,12 +793,12 @@ func FunctionName(
 
 Three test layers:
 - **Unit tests** (`*_test.go`, `*_public_test.go`) — fast, mocked
-  dependencies, run with `just go::unit`. Includes `TestXxxHTTP` /
+  dependencies, run with `just go-unit`. Includes `TestXxxHTTP` /
   `TestXxxRBACHTTP` methods that send raw HTTP through real Echo
   middleware with mocked backends.
 - **Integration tests** (`test/integration/`) — build and start a real
   `osapi` binary, exercise CLI commands end-to-end. Guarded by
-  `//go:build integration` tag, run with `just go::unit-int`. New API
+  `//go:build integration` tag, run with `just go-unit-int`. New API
   domains should include a `{domain}_test.go` smoke suite. Write tests
   (mutations) must be guarded by `skipWrite(s.T())` so CI can run
   read-only tests by default (`OSAPI_INTEGRATION_WRITES=1` enables

@@ -28,8 +28,8 @@ jobs:
         run: just fetch
       - name: Deps
         run: |
-          just go::deps
-          just go::mod
+          just go-deps
+          just go-mod
           just react-deps
       - name: Test
         run: just test
