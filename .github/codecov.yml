@@ -1,4 +1,15 @@
 ---
+# Coverage target for this repository.
+#
+# `target: 100%` is declared again as JUST_COVERAGE_TARGET in the shared go
+# justfile module (osapi-io/osapi-justfiles), which gates `just test` locally
+# and in CI. Neither system can read the other's config, so the number lives in
+# both places — change both together.
+#
+# There is deliberately no `ignore:` list. Exclusions are defined once in
+# .coverignore and applied by `just go::unit-cov` before the profile is
+# uploaded, so excluded files never reach Codecov. A second list here would be
+# free to drift from that one.
 coverage:
   precision: 2
   round: down
@@ -6,16 +17,14 @@ coverage:
   status:
     project:
       default:
-        threshold: 0.05%
+        target: 100%
+        threshold: 0%
     patch:
       default:
         target: 100%
+        threshold: 0%
 
 comment:
   layout: "reach,diff,flags,files,footer"
   behavior: default
   require_changes: false
-
-ignore:
-  - "**/mocks/*.go"
-  - "**/*.gen.go"
