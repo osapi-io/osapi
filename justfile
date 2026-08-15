@@ -1,4 +1,4 @@
-set allow-duplicate-variables := true
+set allow-duplicate-variables
 
 # Optional modules: mod? allows `just fetch` to work before .just/remote/ exists.
 # Recipes below use `just` subcommands instead of dependency syntax because just
