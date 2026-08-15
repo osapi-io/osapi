@@ -1,0 +1,21 @@
+---
+# Coverage target for this repository.
+#
+# Declared again as JUST_COVERAGE_TARGET in the shared go justfile module
+# (osapi-io/osapi-justfiles). Neither system can read the other's config, so the
+# number lives in both places — change both together.
+#
+# There is deliberately no `ignore:` list here. Exclusions are defined once in
+# .coverignore and applied by `just go::unit-cov` before the profile is
+# uploaded, so the excluded files never reach Codecov. A second list here would
+# be free to drift from that one.
+coverage:
+  status:
+    project:
+      default:
+        target: 100%
+        threshold: 0%
+    patch:
+      default:
+        target: 100%
+        threshold: 0%

@@ -35,5 +35,10 @@ jobs:
         run: just test
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v7
+        with:
+          # Name the profile explicitly. `just test` filters it through
+          # .coverignore; auto-discovery could pick up an unfiltered one and
+          # report a different number for the same commit.
+          files: .coverage/cover.out
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
