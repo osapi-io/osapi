@@ -1,20 +1,22 @@
-set allow-duplicate-variables := true
-
 # Optional modules: mod? allows `just fetch` to work before .just/remote/ exists.
 # Recipes below use `just` subcommands instead of dependency syntax because just
-
 # validates dependencies at parse time, which would fail when modules aren't loaded.
 # Coverage target. Below the org-wide 100% because osapi has 9 uncovered
 # statements across 7 functions (99.9359%). Raise to 100 once they are covered;
 # this holds the current level so it cannot decay in the meantime. Mirrored in
 # .github/codecov.yml — change both together.
-go_coverage_target := "99.9"
-
 # The React application lives in ui/, not at the repository root. The flat
 # react module requires the importing justfile to declare it.
+
 react_dir := "ui"
 
+# Minimum total coverage. Declared again in .github/codecov.yml —
+# change both together.
+
+go_coverage_target := "99.9"
+
 import? '.just/remote/go.just'
+
 mod? docs '.just/remote/docs.mod.just'
 mod? just '.just/remote/just.mod.just'
 mod? docker '.just/remote/docker.mod.just'
