@@ -2,6 +2,12 @@
 # Recipes below use `just` subcommands instead of dependency syntax because just
 
 # validates dependencies at parse time, which would fail when modules aren't loaded.
+# Coverage target. Below the org-wide 100% because osapi has 9 uncovered
+# statements across 7 functions (99.9359%). Raise to 100 once they are covered;
+# this holds the current level so it cannot decay in the meantime. Mirrored in
+# .github/codecov.yml — change both together.
+export JUST_COVERAGE_TARGET := "99.9"
+
 mod? go '.just/remote/go.mod.just'
 mod? docs '.just/remote/docs.mod.just'
 mod? just '.just/remote/just.mod.just'

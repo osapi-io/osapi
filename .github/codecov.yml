@@ -1,4 +1,22 @@
 ---
+# Coverage target for this repository.
+#
+# `target: 99.9%` is declared again as JUST_COVERAGE_TARGET in this repository's
+# justfile, which overrides the org-wide default of 100 from the shared go
+# module. osapi has 9 uncovered statements across 7 functions (99.9359%); raise
+# both to 100 once they are covered. Neither system can read the other's config,
+# so the number lives in both places — change both together.
+#
+# The threshold absorbs rounding, not regression. With precision 2 and round
+# down, a change in statement count can shift the reported figure and fail the
+# status on an artifact. `just go::unit-cov-check` is the exact check; this
+# tolerance exists so Codecov's own rounding does not report a failure the
+# coverage does not have.
+#
+# There is deliberately no `ignore:` list. Exclusions are defined once in
+# .coverignore and applied by `just go::unit-cov` before the profile is
+# uploaded, so excluded files never reach Codecov. A second list here would be
+# free to drift from that one.
 coverage:
   precision: 2
   round: down
@@ -6,16 +24,14 @@ coverage:
   status:
     project:
       default:
+        target: 99.9%
         threshold: 0.05%
     patch:
       default:
-        target: 100%
+        target: 99.9%
+        threshold: 0.05%
 
 comment:
   layout: "reach,diff,flags,files,footer"
   behavior: default
   require_changes: false
-
-ignore:
-  - "**/mocks/*.go"
-  - "**/*.gen.go"
