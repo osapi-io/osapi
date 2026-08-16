@@ -1,0 +1,413 @@
+# Contributing
+
+Contributions to OSAPI are very welcome, but we ask that you read this document
+before submitting a PR. It covers everything you need: prerequisites, setup, the
+conventions code follows, how to add an API domain, and the pull request
+workflow.
+
+## Before you start
+
+- Read the [Code of Conduct](CODE_OF_CONDUCT.md). It applies to every
+  interaction in this repo.
+
+- **Design records** — Reasoning behind a change lives in
+  [osapi-io/specs](https://github.com/osapi-io/specs) as a change, not in this
+  repository. A design document kept here goes stale the moment the code moves
+  past it, with nothing to catch the drift.
+
+- **Get familiar with the project** — Read the docs in this order:
+
+  1. [Guiding Principles][principles] — design philosophy and project values
+  2. [System Architecture][system-architecture] — REST API, NATS, CLI
+  3. [API Design Guidelines][api-guidelines] — REST conventions and endpoint
+     structure
+  4. [Job System Architecture][job-architecture] — KV-first job processing,
+     subject routing, and the agent pipeline
+
+- **Check existing work** — Is there an existing PR? Are there issues discussing
+  the feature/change you want to make? Please make sure you consider/address
+  these discussions in your work.
+
+- **Backwards compatibility** — Will your change break existing OSAPI files? It
+  is much more likely that your change will be merged if it is backwards
+  compatible. Is there an approach you can take that maintains this
+  compatibility? If not, consider opening an issue first so that API changes can
+  be discussed before you invest your time into a PR.
+
+## Prerequisites
+
+Install tools using [mise]:
+
+```bash
+mise install
+```
+
+- **[Go]** — OSAPI is written in Go. We always support the latest two major Go
+  versions, so make sure your version is recent enough.
+- **[Node.js]** — Runtime for tools like `@redocly/cli`, for building the
+  Docusaurus docs site, and for building the embedded React UI in `ui/`.
+- **[Bun]** — JavaScript package manager and script runner used for the
+  Docusaurus docs and the React UI.
+- **[just]** — Task runner used for building, testing, formatting, and other
+  development workflows.
+- **[uv]** — Python package runner. `just md-fmt` formats repository markdown
+  with [mdformat] via `uvx`; nothing is installed into the repo.
+- **[NATS CLI]** — Command-line tools for interacting with NATS. Useful for
+  debugging and monitoring during development. Install with
+  `brew install nats-io/nats-tools/nats`.
+
+### Claude Code
+
+If you use [Claude Code] for development, install these plugins from the default
+marketplace:
+
+```
+/plugin install commit-commands@claude-plugins-official
+/plugin install superpowers@claude-plugins-official
+```
+
+- **commit-commands** — provides `/commit` and `/commit-push-pr` slash commands
+  that follow the project's commit conventions automatically.
+- **superpowers** — provides structured workflows for planning, TDD, debugging,
+  code review, and git worktree isolation.
+
+## Setup
+
+Fetch shared justfiles and install all dependencies:
+
+```bash
+just fetch
+just deps
+```
+
+## Building and running
+
+```bash
+just build     # Builds the React UI, then the Go binary
+./osapi controller start -f configs/osapi.yaml
+```
+
+**Always build through `just`.** The `//go:embed dist/*` directive in
+`ui/embed.go` requires `ui/dist/` to hold files at compile time, and
+`just build` runs `just react-build` first to satisfy it. Running
+`go build ./...` or `go test ./...` directly fails for this reason.
+`just build`, `just test`, and `just ready` all build the UI first.
+
+## Project structure
+
+- **`cmd/`** — Cobra CLI commands (`client`, `node agent`, `controller.api`,
+  `nats server`).
+- **`internal/controller/api/`** — Echo REST API. Node-targeted handlers nest
+  under `node/{domain}/`; controller-only handlers are top-level (`job/`,
+  `health/`). Each domain has its own `gen/` with an OpenAPI spec; the combined
+  spec is `internal/controller/api/gen/api.yaml`.
+- **`internal/job/`** — Job domain types and subject routing. `client/` holds
+  the high-level operations.
+- **`internal/agent/`** — Node agent: the consumer/handler/processor pipeline
+  for job execution.
+- **`internal/provider/`** — Operation implementations, organized by category
+  then domain.
+- **`internal/config/`** — Viper-based config from `osapi.yaml`.
+- **`internal/telemetry/`** — Tracing, metrics, and agent self-metrics.
+- **`internal/controller/notify/`** — Condition notification system.
+- **`pkg/sdk/`** — Go SDK for programmatic REST API access.
+- **`ui/`** — React 19 + TypeScript + Vite + Tailwind CSS v4, embedded into the
+  Go binary at build time.
+
+[System Architecture][system-architecture] describes the package layout, handler
+structure, and provider pattern in full.
+
+`nats-client` and `nats-server` are sibling repositories, consumed as pinned
+module versions in `go.mod` — there is no `replace` directive.
+
+## Code style
+
+Go code should be formatted by [gofumpt] and linted using [golangci-lint]. This
+style is enforced by CI.
+
+```bash
+just go-fmt-check   # Check formatting
+just go-fmt         # Auto-fix formatting
+just go-vet         # Run linter
+```
+
+golangci-lint runs errcheck, errname, goimports, govet, prealloc, predeclared,
+revive, and staticcheck. Generated files (`*.gen.go`, `*.pb.go`) are excluded
+from formatting.
+
+TypeScript and CSS in `ui/` are formatted by [Prettier] and linted by [ESLint].
+Markdown outside the Docusaurus site is formatted by [mdformat]; the site itself
+is formatted by Prettier through the `docusaurus` module.
+
+```bash
+just react-fmt      # Auto-fix UI formatting
+just react-lint     # Run ESLint
+just md-fmt         # Format markdown outside the site
+just docusaurus-fmt # Format the site
+```
+
+## Code standards
+
+The Go conventions this repository follows — multi-line function signatures,
+naming a file for what it holds, `types.go` for types only, table-driven
+`testify/suite` tests, generated mocks, and the error-wrapping and import-order
+baseline — are specified in the `go-code-standards` capability in
+[osapi-io/specs](https://github.com/osapi-io/specs). Read it before writing
+code; it is the source, and this repository does not restate it.
+
+The conventions below are specific to OSAPI and are stated only here.
+
+### Logging
+
+All logging uses Go's `log/slog` structured logger.
+
+- **Subsystem labels** — Every component that holds a logger MUST wrap it with
+  `logger.With(slog.String("subsystem", "..."))` at construction time, which
+  auto-tags every line from that component. Examples: `"agent"`, `"agent.seed"`,
+  `"api.schedule"`, `"provider.file"`, `"job.client"`, `"metrics"`,
+  `"controller.heartbeat"`.
+- **Typed attributes** — Use `slog.String("key", val)`, `slog.Int`, `slog.Bool`,
+  `slog.Any`. Never use positional pairs like `"key", val`; they compile but
+  bypass type safety.
+- **Standard field names** — `error` for errors, `hostname` for hosts, `path`
+  for file paths, `job_id` for job IDs, `name` for entry names, `addr` for
+  addresses.
+- **Error fields** — `slog.String("error", err.Error())` for string context, or
+  `slog.Any("error", err)` to preserve the error type.
+- **Log levels** — `Debug` for operation dispatch and idempotency skips, `Info`
+  for lifecycle events and state changes, `Warn` for degraded but functional
+  states, `Error` for failures that need attention.
+
+### Lifecycle
+
+Components use a non-blocking lifecycle: `Start()` returns immediately, and
+`Stop(ctx)` shuts down with a deadline.
+
+### Filesystem access
+
+Use [avfs] — `memfs.New()` for in-memory work and `failfs.New()` for targeted
+error injection. Never use `afero`.
+
+## Testing
+
+```bash
+just test           # Run all tests (lint + unit + coverage)
+just go-unit        # Run unit tests only
+just go-unit-int    # Run integration tests
+go test -run TestName -v ./internal/job/...  # Run a single test
+```
+
+Coverage is gated at 99.9%. `just test` fails if total coverage drops below it,
+so a change that adds untested code fails locally and in CI:
+
+```bash
+just go-unit-cov-check   # Report coverage and fail below the target
+```
+
+The target is declared in `.github/codecov.yml` and in the shared `go` justfile
+module — change both together.
+
+### Test layers
+
+- **Unit tests** (`*_test.go`, `*_public_test.go`) — fast, mocked dependencies.
+  Public suites also carry HTTP wiring methods (`TestXxxHTTP`,
+  `TestXxxRBACHTTP`) that send raw HTTP through the full Echo middleware stack
+  with mocked backends.
+- **Integration tests** (`test/integration/`) — build and start a real `osapi`
+  binary and exercise CLI commands end-to-end. Guarded by a
+  `//go:build integration` tag. The harness allocates random ports, generates a
+  JWT, and starts the server, so no external setup is required.
+
+A new API domain should include a `{domain}_test.go` smoke suite under
+`test/integration/`. Mutating tests MUST be guarded by `skipWrite(s.T())` so CI
+runs read-only tests by default; `OSAPI_INTEGRATION_WRITES=1` enables writes.
+
+### Test doubles
+
+- Use `export_test.go` to expose an unexported variable or function to the
+  `_test` package, rather than writing an internal test or a hand-rolled stub.
+- Use `suite.TearDownSubTest()` to reset swapped variables between table-driven
+  sub-tests, not `defer` inside the loop.
+- Platform stubs: test that the Darwin and Linux stubs return `ErrUnsupported`
+  for every method.
+- The only exception to generated mocks is a stdlib interface such as `fs.FS` or
+  `net.Conn`, where `mockgen` is impractical.
+
+## Input validation
+
+All user input is validated through the `internal/validation` package, which
+wraps [go-playground/validator]. Rules are declared in OpenAPI specs via
+`x-oapi-codegen-extra-tags` and enforced at runtime by handler calls to
+`validation.Struct()` or `validation.Var()`.
+
+Config struct fields in `internal/config/types.go` use the same `validate` tags.
+Validation runs at startup after `viper.Unmarshal()`, so an invalid value exits
+immediately with a clear error. Defaults are set via `viper.SetDefault()` in
+`cmd/root.go`, so most fields can be omitted. Use `go_duration` for Go duration
+strings, and add `required` to fields with no sensible default.
+
+- **Required fields** use `validate:"required,..."`.
+- **Optional fields** use `validate:"omitempty,..."`.
+- **Enum constraints** use `validate:"oneof=a b c"`.
+- **Cross-field validation** uses `required_without` / `excluded_with` for
+  mutually exclusive fields, such as cron `schedule` versus `interval`.
+
+### Update endpoints with all-optional fields
+
+When a PUT endpoint has all-optional fields (user update, group update, cron
+update), call `validation.AtLeastOneField(request.Body)` after
+`validation.Struct()` to reject empty bodies with a 400. This prevents
+meaningless no-op updates and, worse, triggering destructive defaults.
+
+```go
+if errMsg, ok := validation.Struct(request.Body); !ok {
+    return gen.PutXxx400JSONResponse{Error: &errMsg}, nil
+}
+
+if errMsg, ok := validation.AtLeastOneField(request.Body); !ok {
+    return gen.PutXxx400JSONResponse{Error: &errMsg}, nil
+}
+```
+
+### Defense in depth
+
+When `validation.Struct()` cannot currently fail because every field uses
+`omitempty`, keep the call and comment why. This guards against a later field
+addition silently breaking validation:
+
+```go
+// Defense in depth: current fields use omitempty so validation
+// always passes, but guards against future field additions.
+if errMsg, ok := validation.Struct(request.Body); !ok {
+    return gen.PostXxx400JSONResponse{Error: &errMsg}, nil
+}
+```
+
+This applies to action endpoints (power, docker stop) where an empty body is
+valid — unlike update endpoints, which must use `AtLeastOneField`.
+
+## Adding a new API domain
+
+Every domain must be consistent across all layers: provider, agent processor,
+API handler, SDK service, CLI commands, docs, and tests. The
+[Adding an API Domain][adding-an-api-domain] guide walks the nine steps in
+order, from the provider implementation through to verification.
+
+The principle: **pick an existing domain and `find`/`grep` for it across the
+codebase. Your new domain should appear in all the same places.** If something
+exists for `sysctl` but not for yours, it is missing.
+
+## UI contributions
+
+The React management dashboard lives in `ui/` and is embedded into the Go binary
+at build time. See [UI Development][ui-development] for prerequisites, the
+development server, code style, and component conventions, and
+[UI Architecture][ui-architecture] for the embedding mechanism, component
+layers, and SDK generation flow.
+
+## Documentation
+
+OSAPI uses [Docusaurus] to host a documentation server. Content is written in
+Markdown under `docs/docs/`, wrapped at 80 characters.
+
+```bash
+just docusaurus-start     # Start local docs server
+just docusaurus-build     # Build docs for production
+just docusaurus-fmt-check # Check site formatting
+just md-fmt-check         # Check markdown outside the site
+```
+
+## Before committing
+
+Run `just ready` before committing. It regenerates code, formats, lints, and
+builds both the Go binary and the UI, so your commit matches what CI verifies:
+
+```bash
+just ready
+```
+
+## Branching
+
+All changes should be developed on feature branches. Create a branch from `main`
+using the naming convention `type/short-description`, where `type` matches the
+[Conventional Commits] type:
+
+- `feat/add-retry-logic`
+- `fix/null-pointer-crash`
+- `docs/update-api-reference`
+- `refactor/simplify-handler`
+- `chore/update-dependencies`
+
+When using Claude Code's `/commit` command, a branch will be created
+automatically if you are on `main`.
+
+## Commit messages
+
+Follow [Conventional Commits] with the 50/72 rule:
+
+- **Subject line**: max 50 characters, imperative mood, capitalized, no period
+- **Body**: wrap at 72 characters, separated from subject by a blank line
+- **Format**: `type(scope): description`
+- **Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
+- Summarize the "what" and "why", not the "how"
+
+Try to write meaningful commit messages and avoid having too many commits on a
+PR. Most PRs should likely have a single commit (although for bigger PRs it may
+be reasonable to split it in a few). Git squash and rebase is your friend!
+
+## Submitting a PR
+
+- **Describe your changes** — Ensure that you provide a comprehensive
+  description of your changes.
+- **Issue/PR links** — Link any previous work such as related issues or PRs.
+  Please describe how your changes differ to/extend this work.
+- **Examples** — Add any examples or screenshots that you think are useful to
+  demonstrate the effect of your changes.
+- **Draft PRs** — If your changes are incomplete, but you would like to discuss
+  them, open the PR as a draft and add a comment to start a discussion. Using
+  comments rather than the PR description allows the description to be updated
+  later while preserving any discussions.
+
+## AI usage
+
+This repo is written with AI assistance. All contributions are subject to the
+[AI Usage Policy](AI_POLICY.md) — disclose the tool you used, and make sure you
+can explain what your change does without the aid of AI tools.
+
+## FAQ
+
+> I want to contribute, where do I start?
+
+All kinds of contributions are welcome, whether it's a typo fix or a shiny new
+feature. You can also contribute by upvoting/commenting on issues or helping to
+answer questions.
+
+> I'm stuck, where can I get help?
+
+If you have questions, feel free to open a [Discussion] on GitHub.
+
+[adding-an-api-domain]: docs/docs/sidebar/development/adding-an-api-domain.md
+[api-guidelines]: docs/docs/sidebar/architecture/api-guidelines.md
+[avfs]: https://github.com/avfs/avfs
+[bun]: https://bun.sh
+[claude code]: https://claude.ai/code
+[conventional commits]: https://www.conventionalcommits.org
+[discussion]: https://github.com/osapi-io/osapi/discussions
+[docusaurus]: https://docusaurus.io
+[eslint]: https://eslint.org
+[go]: https://go.dev
+[go-playground/validator]: https://github.com/go-playground/validator
+[gofumpt]: https://github.com/mvdan/gofumpt
+[golangci-lint]: https://golangci-lint.run
+[job-architecture]: docs/docs/sidebar/architecture/job-architecture.md
+[just]: https://just.systems
+[mdformat]: https://pypi.org/project/mdformat/
+[mise]: https://mise.jdx.dev
+[nats cli]: https://github.com/nats-io/natscli
+[node.js]: https://nodejs.org
+[prettier]: https://prettier.io
+[principles]: docs/docs/sidebar/architecture/principles.md
+[system-architecture]: docs/docs/sidebar/architecture/system-architecture.md
+[ui-architecture]: docs/docs/sidebar/architecture/ui.md
+[ui-development]: docs/docs/sidebar/development/ui-development.md
+[uv]: https://docs.astral.sh/uv/

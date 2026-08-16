@@ -4,106 +4,14 @@ sidebar_position: 2
 
 # Contributing
 
-Contributions to OSAPI are very welcome, but we ask that you read this document
-before submitting a PR.
+The contributing guide is [`CONTRIBUTING.md`][contributing] at the root of the
+[OSAPI][] repository. It covers prerequisites, setup, code style, code
+standards, testing, input validation, and the pull request workflow.
 
-:::note
-
-This document applies to the [OSAPI][] repository.
-
-:::
-
-## Before you start
-
-- **Get familiar with the project** - Read through the docs in this order:
-  1. [Development](development.md) - Prerequisites, setup, code style, testing,
-     and commit conventions
-  2. [Guiding Principles](../architecture/principles.md) - Design philosophy and
-     project values
-  3. [System Architecture](../architecture/system-architecture.md) - High-level
-     component overview (REST API, NATS, CLI)
-  4. [API Design Guidelines](../architecture/api-guidelines.md) - REST
-     conventions and endpoint structure
-  5. [Job System Architecture](../architecture/job-architecture.md) - KV-first
-     job processing, subject routing, and agent pipeline
-- **Check existing work** - Is there an existing PR? Are there issues discussing
-  the feature/change you want to make? Please make sure you consider/address
-  these discussions in your work.
-- **Backwards compatibility** - Will your change break existing OSAPI files? It
-  is much more likely that your change will merged if it backwards compatible.
-  Is there an approach you can take that maintains this compatibility? If not,
-  consider opening an issue first so that API changes can be discussed before
-  you invest your time into a PR.
-
-## Making changes
-
-- **Code style** - Follow the conventions described in the
-  [Development](development.md#code-style) guide.
-
-- **Documentation** - Ensure that you add/update any relevant documentation.
-- **Tests** - Ensure that you add/update any relevant tests and that all tests
-  are passing before submitting the PR. See
-  [Development](development.md#testing) for how to run tests.
-
-## UI Contributions
-
-The React management dashboard lives in the `ui/` directory and is embedded into
-the Go binary at build time. See [UI Development](ui-development.md) for
-prerequisites, setup, and code style, and
-[UI Architecture](../architecture/ui.md) for the embedding mechanism, component
-layers, and SDK generation flow.
-
-### Adding new block types
-
-When adding a new operation to the Configure page:
-
-1. Add the `BlockType` entry to `ui/src/hooks/use-stack.ts` in `ALL_BLOCK_TYPES`
-   and the appropriate category.
-2. Add the required permission to `BLOCK_PERMISSIONS` in
-   `ui/src/lib/permissions.ts`.
-3. Create a block form component in `ui/src/components/domain/` if the block
-   needs input fields. Use `SingleInputBlock` for simple single-field blocks.
-4. Add the apply handler case in `ui/src/pages/configure.tsx`.
-5. Add result rendering in `ui/src/components/domain/result-card.tsx` if the
-   response shape isn't handled by existing patterns.
-6. Add the icon mapping in `blockIcons` in `configure.tsx`.
-
-### Adding new UI components
-
-When extracting a new shared component:
-
-1. Create it in `ui/src/components/ui/` with cva variants if applicable.
-2. Accept a `className` prop for escape-hatch styling.
-3. Replace all inline occurrences across the codebase.
-4. Update [UI Architecture](../architecture/ui.md) if the new component is part
-   of the core visual language.
-
-## Submitting a PR
-
-- **Describe your changes** - Ensure that you provide a comprehensive
-  description of your changes.
-- **Issue/PR links** - Link any previous work such as related issues or PRs.
-  Please describe how your changes differ to/extend this work.
-- **Examples** - Add any examples or screenshots that you think are useful to
-  demonstrate the effect of your changes.
-- **Draft PRs** - If your changes are incomplete, but you would like to discuss
-  them, open the PR as a draft and add a comment to start a discussion. Using
-  comments rather than the PR description allows the description to be updated
-  later while preserving any discussions.
-
-## FAQ
-
-> I want to contribute, where do I start?
-
-All kinds of contributions are welcome, whether its a typo fix or a shiny new
-feature. You can also contribute by upvoting/commenting on issues or helping to
-answer questions.
-
-> I'm stuck, where can I get help?
-
-If you have questions, feel free open a [Discussion][] on GitHub.
+That file is the single source, so this page is a pointer rather than a second
+copy of it. GitHub surfaces it when you open an issue or a pull request.
 
 <!-- prettier-ignore-start -->
 [OSAPI]: https://github.com/osapi-io/osapi
-[Discussion]: https://github.com/osapi-io/osapi/discussions
+[contributing]: https://github.com/osapi-io/osapi/blob/main/CONTRIBUTING.md
 <!-- prettier-ignore-end -->
