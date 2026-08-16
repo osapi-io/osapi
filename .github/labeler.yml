@@ -3,15 +3,22 @@ kind/action:
   - changed-files:
       - any-glob-to-any-file: ".github/**/*.yml"
 
-kind/docs:
-  - changed-files:
-      - any-glob-to-any-file: "docs/**"
-      - any-glob-to-any-file: "**/*.md"
-
 kind/docker:
   - changed-files:
       - any-glob-to-any-file: "**/Dockerfile*"
-      - any-glob-to-any-file: "**/*.dockerignore"
+      - any-glob-to-any-file: "**/.dockerignore"
+
+kind/deps:
+  - changed-files:
+      - any-glob-to-any-file: "**/go.mod"
+      - any-glob-to-any-file: "**/go.sum"
+      - any-glob-to-any-file: "**/package.json"
+      - any-glob-to-any-file: "**/bun.lock"
+
+kind/docs:
+  - changed-files:
+      - any-glob-to-any-file: "README.md"
+      - any-glob-to-any-file: "docs/**"
 
 kind/go:
   - changed-files:
@@ -21,6 +28,22 @@ kind/just:
   - changed-files:
       - any-glob-to-any-file: "**/justfile"
       - any-glob-to-any-file: "**/*.just"
+
+kind/policy:
+  - changed-files:
+      - any-glob-to-any-file: "AI_POLICY.md"
+      - any-glob-to-any-file: "CODE_OF_CONDUCT.md"
+      - any-glob-to-any-file: "LICENSE"
+
+kind/toolchain:
+  - changed-files:
+      - any-glob-to-any-file: ".mise.toml"
+      - any-glob-to-any-file: ".golangci.yml"
+      - any-glob-to-any-file: ".goreleaser.yaml"
+      - any-glob-to-any-file: "codecov.yml"
+      - any-glob-to-any-file: ".github/codecov.yml"
+      - any-glob-to-any-file: ".coverignore"
+      - any-glob-to-any-file: ".github/dependabot.yml"
 
 kind/ts:
   - changed-files:
