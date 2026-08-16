@@ -78,8 +78,8 @@ just react-fmt    # Format UI with Prettier
   `viper.SetDefault()` in `cmd/root.go`
 - **`pkg/sdk/`** - Go SDK for programmatic REST API access (`client/` client
   library). See @docs/docs/sidebar/sdk/guidelines.md for SDK development rules
-- Shared `nats-client` and `nats-server` are sibling repos linked via `replace`
-  in `go.mod`
+- Shared `nats-client` and `nats-server` are sibling repos, consumed as pinned
+  module versions in `go.mod` (no `replace` directive)
 
 ## UI Architecture (Quick Reference)
 
@@ -769,8 +769,8 @@ the same principles as the orchestrator examples:
 - `cmd/client_node_{domain}_{operation}.go` — one subcommand per endpoint (e.g.,
   `client_node_sysctl_get.go`)
 - All commands support `--json` for raw output
-- Use `printKV` for inline key-value output and `printStyledTable` for multi-row
-  tabular data (both in `cmd/ui.go`)
+- Use `cli.PrintKV` for inline key-value output and `cli.PrintCompactTable` for
+  multi-row tabular data (both in `internal/cli/ui.go`)
 - Use flags (e.g., `--job-id`, `--audit-id`) instead of positional args for
   resource IDs
 - Handle **all** API response codes in the `switch resp.StatusCode()` block:

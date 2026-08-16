@@ -121,15 +121,17 @@ Environment variables take precedence over file values.
 
 ## Required Fields
 
-Two fields carry a `required` validation tag and must be set before the server
-or client will start:
+Seven fields carry a `required` validation tag. Five of them
+(`nats.stream.name`, `nats.stream.subjects`, `nats.kv.bucket`,
+`nats.kv.response_bucket`, and `nats.registry.bucket`) are given defaults via
+`viper.SetDefault()`, so they satisfy validation without appearing in your
+config file. Two have no default and must be set before the server or client
+will start:
 
-| Key                                       | Purpose                            |
-| ----------------------------------------- | ---------------------------------- |
-| `controller.api.security.signing_key`     | HS256 key for signing JWTs         |
-| `controller.client.security.bearer_token` | JWT sent with client requests      |
-| `controller.metrics.enabled`              | `OSAPI_CONTROLLER_METRICS_ENABLED` |
-| `controller.metrics.port`                 | `OSAPI_CONTROLLER_METRICS_PORT`    |
+| Key                                       | Purpose                       |
+| ----------------------------------------- | ----------------------------- |
+| `controller.api.security.signing_key`     | HS256 key for signing JWTs    |
+| `controller.client.security.bearer_token` | JWT sent with client requests |
 
 Generate a signing key with `openssl rand -hex 32`. Generate a bearer token with
 `osapi token generate`.

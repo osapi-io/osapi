@@ -95,13 +95,13 @@ osapi client health
 
 ## Explore the Docs
 
-- [Features](sidebar/features/node-management.md) — what OSAPI can manage and
-  how each feature works
-- [Architecture](sidebar/architecture/architecture.md) — how the three processes
-  (NATS, API server, agent) fit together
-- [Configuration](sidebar/usage/configuration.md) — full `osapi.yaml` reference
-- [API](category/api) — OpenAPI documentation for all endpoints
-- [CLI Usage](sidebar/usage/usage.mdx) — command reference with examples
+- [Features](features/node-management.md) — what OSAPI can manage and how each
+  feature works
+- [Architecture](architecture/architecture.md) — how the three processes (NATS,
+  API server, agent) fit together
+- [Configuration](usage/configuration.md) — full `osapi.yaml` reference
+- [API](/category/api) — OpenAPI documentation for all endpoints
+- [CLI Usage](usage/usage.mdx) — command reference with examples
 
 ## Alternatives
 
