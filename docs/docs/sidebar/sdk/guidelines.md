@@ -4,8 +4,19 @@ sidebar_position: 1
 
 # SDK Development Guidelines
 
-Rules for developing the OSAPI Go SDK (`pkg/sdk/`). These apply to the client
-library and any new SDK packages.
+How to develop the OSAPI Go SDK (`pkg/sdk/`), with worked examples. Applies to
+the client library and any new SDK packages.
+
+:::note
+
+The rules this page illustrates — method naming, keeping generated types out of
+public signatures, JSON tags on result fields, and error handling — are
+specified in the `sdk-standards` capability in
+[osapi-io/specs](https://github.com/osapi-io/specs). They bind
+`osapi-orchestrator` as well, which is built on this SDK. Where this page and
+the specification disagree, the specification wins.
+
+:::
 
 ## Package Structure
 

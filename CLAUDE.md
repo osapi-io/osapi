@@ -710,41 +710,12 @@ with context.
    under the matching category header. The dropdown is grouped the same way as
    the sidebar.
 
-#### SDK method naming (MANDATORY)
+#### SDK method naming
 
-Method names MUST be clean verbs — NEVER repeat the service name. The service
-struct already provides the namespace. Stuttering like
-`SysctlService.SysctlGet()` is wrong — use `SysctlService.Get()`.
-
-Standard verbs:
-
-| Verb     | HTTP | Description                      |
-| -------- | ---- | -------------------------------- |
-| `List`   | GET  | List collection                  |
-| `Get`    | GET  | Get single resource / read state |
-| `Create` | POST | Create new resource              |
-| `Update` | PUT  | Update existing resource         |
-| `Delete` | DEL  | Remove resource                  |
-
-Rare exceptions for action operations (no persistent resource):
-
-- `Ping.Do()` — one-shot action
-- `Command.Exec()`, `Command.Shell()` — execute commands
-
-Examples:
-
-```go
-// GOOD — clean verbs, no stuttering
-client.Sysctl.Get(ctx, host, key)
-client.Cron.Create(ctx, host, opts)
-client.Hostname.Update(ctx, host, name)
-client.NTP.Delete(ctx, host)
-client.Timezone.Get(ctx, host)
-
-// BAD — stuttering, repeats service name
-client.Sysctl.SysctlGet(ctx, host, key)
-client.NTP.NtpCreate(ctx, host, opts)
-```
+Method naming, type exposure, result-field tags, and error handling are
+specified in the `sdk-standards` capability in
+[osapi-io/specs](https://github.com/osapi-io/specs). When a convention here and
+the specification disagree, the specification wins.
 
 #### SDK example conventions
 
