@@ -43,14 +43,6 @@ func ExportDeregister(
 	h.deregister()
 }
 
-// ExportRegistryKey exposes the private registryKey method for testing.
-func ExportRegistryKey(
-	h *ComponentHeartbeat,
-) string {
-	return h.registryKey()
-}
-
-// SetHeartbeatThresholds sets the thresholds field on ComponentHeartbeat for testing.
 func SetHeartbeatThresholds(
 	h *ComponentHeartbeat,
 	thresholds process.ConditionThresholds,
