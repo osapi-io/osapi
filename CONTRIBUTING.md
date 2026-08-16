@@ -182,6 +182,39 @@ counterpart, rather than splitting tests away from the file they cover.
 - Import order: standard library, third party, then local, separated by blank
   lines.
 
+### Test doubles
+
+A double for an interface this organization defines is generated with `mockgen`
+and committed. Do not write a struct by hand to satisfy one.
+
+Generated mocks live in a `mocks` package beside the code they mock, produced by
+a `generate.go` holding the directive:
+
+```go
+package mocks
+
+//go:generate go tool go.uber.org/mock/mockgen -source=../types.go -destination=types.gen.go -package=mocks
+```
+
+The generator is resolved through the module's tool dependencies, so every
+checkout runs the version `go.mod` records. Destination files end in `.gen.go`
+and are committed. Do not use `gen/` for mocks — that name is taken by API code
+generation.
+
+Where call sites would otherwise repeat the same expectations, write a
+constructor returning a configured mock rather than introducing a hand-written
+type. The generated mock is still what satisfies the interface.
+
+Three doubles are written by hand, because generating them buys nothing:
+
+- One standing in for a standard library interface — `net.Conn`, `fs.File`,
+  `io.Writer`, `slog.Handler`. Those do not move when our code does.
+- One carrying a real implementation of the behavior under test, such as signing
+  with a genuinely generated key pair.
+- A recorder for a dependency called from a goroutine the test cannot join,
+  where a generated mock would assert a call count at a moment the test cannot
+  establish. State that reason where the recorder is defined.
+
 The conventions below are specific to OSAPI.
 
 ### Logging
@@ -248,9 +281,6 @@ module — change both together.
 - `export_test.go` exposes unexported symbols to external tests, by alias or by
   setter. Do not use an alias to re-cover behavior the caller's own test already
   reaches; a helper with its own contract is what the pattern is for.
-- Mocks are generated with `go.uber.org/mock` and committed, never hand-written.
-  A double that carries a real implementation — signing with a real key, serving
-  real HTTP — is not a mock and does not need generating.
 
 ### Test layers
 
@@ -267,7 +297,7 @@ A new API domain should include a `{domain}_test.go` smoke suite under
 `test/integration/`. Mutating tests MUST be guarded by `skipWrite(s.T())` so CI
 runs read-only tests by default; `OSAPI_INTEGRATION_WRITES=1` enables writes.
 
-### Test doubles
+### Test helpers
 
 - Use `export_test.go` to expose an unexported variable or function to the
   `_test` package, rather than writing an internal test or a hand-rolled stub.
@@ -275,8 +305,6 @@ runs read-only tests by default; `OSAPI_INTEGRATION_WRITES=1` enables writes.
   sub-tests, not `defer` inside the loop.
 - Platform stubs: test that the Darwin and Linux stubs return `ErrUnsupported`
   for every method.
-- The only exception to generated mocks is a stdlib interface such as `fs.FS` or
-  `net.Conn`, where `mockgen` is impractical.
 
 ## Building and running
 
