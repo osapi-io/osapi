@@ -1175,7 +1175,7 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISigner() {
 		subject   = "jobs.query.host.server1"
 	)
 
-	signer := newMockPKISigner()
+	signer, _ := newSigner(gomock.NewController(s.T()))
 
 	tests := []struct {
 		name         string
@@ -1271,7 +1271,7 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISignerSignError() {
 		operation = job.OperationType("node.hostname.get")
 	)
 
-	signer := newMockPKISigner()
+	signer, _ := newSigner(gomock.NewController(s.T()))
 
 	tests := []struct {
 		name        string
@@ -1321,9 +1321,7 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISignerUnwrapPaths() {
 		subject   = "jobs.query.host.server1"
 	)
 
-	signer := newMockPKISigner()
-	// Set ControllerPublicKey so verification is attempted on responses.
-	signer.ctrlKey = signer.pubKey
+	signer, _ := newSignerWithControllerKey(gomock.NewController(s.T()))
 
 	tests := []struct {
 		name         string
@@ -1413,11 +1411,10 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithPKISigner() {
 		subject   = "jobs.modify._all"
 	)
 
-	signer := newMockPKISigner()
+	signer, _ := newSigner(gomock.NewController(s.T()))
 
 	// Use a signer with ControllerPublicKey set so verification is attempted.
-	signerWithCtrl := newMockPKISigner()
-	signerWithCtrl.ctrlKey = signerWithCtrl.pubKey
+	signerWithCtrl, _ := newSignerWithControllerKey(gomock.NewController(s.T()))
 
 	tests := []struct {
 		name         string

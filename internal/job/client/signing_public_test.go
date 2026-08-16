@@ -31,35 +31,50 @@ import (
 
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/job/mocks"
+	"go.uber.org/mock/gomock"
 )
 
-// mockPKISigner implements client.PKISigner for testing.
-type mockPKISigner struct {
-	pubKey  ed25519.PublicKey
-	privKey ed25519.PrivateKey
-	ctrlKey ed25519.PublicKey
-}
-
-func newMockPKISigner() *mockPKISigner {
+// newSigner returns a generated PKISigner mock backed by a real ed25519 key
+// pair. Sign delegates to the real implementation, so a signature it produces
+// verifies against the public key returned alongside it.
+func newSigner(
+	ctrl *gomock.Controller,
+) (*mocks.MockPKISigner, ed25519.PublicKey) {
 	pub, priv, _ := ed25519.GenerateKey(rand.Reader)
-	return &mockPKISigner{
-		pubKey:  pub,
-		privKey: priv,
-	}
+
+	m := mocks.NewMockPKISigner(ctrl)
+	m.EXPECT().
+		Sign(gomock.Any()).
+		DoAndReturn(func(data []byte) []byte {
+			return ed25519.Sign(priv, data)
+		}).
+		AnyTimes()
+	m.EXPECT().Fingerprint().Return("SHA256:test-fingerprint").AnyTimes()
+	m.EXPECT().ControllerPublicKey().Return(nil).AnyTimes()
+
+	return m, pub
 }
 
-func (m *mockPKISigner) Sign(
-	data []byte,
-) []byte {
-	return ed25519.Sign(m.privKey, data)
-}
+// newSignerWithControllerKey is newSigner with the signer's own public key
+// reported as the controller's, for paths that verify controller-signed
+// messages against it.
+func newSignerWithControllerKey(
+	ctrl *gomock.Controller,
+) (*mocks.MockPKISigner, ed25519.PublicKey) {
+	pub, priv, _ := ed25519.GenerateKey(rand.Reader)
 
-func (m *mockPKISigner) Fingerprint() string {
-	return "SHA256:test-fingerprint"
-}
+	m := mocks.NewMockPKISigner(ctrl)
+	m.EXPECT().
+		Sign(gomock.Any()).
+		DoAndReturn(func(data []byte) []byte {
+			return ed25519.Sign(priv, data)
+		}).
+		AnyTimes()
+	m.EXPECT().Fingerprint().Return("SHA256:test-fingerprint").AnyTimes()
+	m.EXPECT().ControllerPublicKey().Return(pub).AnyTimes()
 
-func (m *mockPKISigner) ControllerPublicKey() ed25519.PublicKey {
-	return m.ctrlKey
+	return m, pub
 }
 
 type SigningPublicTestSuite struct {
@@ -107,7 +122,7 @@ func (s *SigningPublicTestSuite) TestWrapInSignedEnvelope() {
 				tt.setupFn()
 			}
 
-			signer := newMockPKISigner()
+			signer, pubKey := newSigner(gomock.NewController(s.T()))
 
 			result, err := client.ExportWrapInSignedEnvelope(signer, tt.payload)
 
@@ -129,13 +144,13 @@ func (s *SigningPublicTestSuite) TestWrapInSignedEnvelope() {
 			s.Equal("SHA256:test-fingerprint", envelope.Fingerprint)
 
 			// Verify signature is valid.
-			s.True(ed25519.Verify(signer.pubKey, tt.payload, envelope.Signature))
+			s.True(ed25519.Verify(pubKey, tt.payload, envelope.Signature))
 		})
 	}
 }
 
 func (s *SigningPublicTestSuite) TestUnwrapSignedEnvelope() {
-	signer := newMockPKISigner()
+	signer, pubKey := newSigner(gomock.NewController(s.T()))
 
 	tests := []struct {
 		name        string
@@ -153,7 +168,7 @@ func (s *SigningPublicTestSuite) TestUnwrapSignedEnvelope() {
 				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, payload)
 				return wrapped
 			},
-			pubKey:      signer.pubKey,
+			pubKey:      pubKey,
 			wantPayload: []byte(`{"id":"test"}`),
 			wantEnv:     true,
 			expectError: false,
@@ -191,7 +206,7 @@ func (s *SigningPublicTestSuite) TestUnwrapSignedEnvelope() {
 			setupData: func() []byte {
 				return []byte(`{"id":"test","operation":{"type":"node.hostname.get"}}`)
 			},
-			pubKey:      signer.pubKey,
+			pubKey:      pubKey,
 			wantPayload: []byte(`{"id":"test","operation":{"type":"node.hostname.get"}}`),
 			wantEnv:     false,
 			expectError: false,
@@ -201,7 +216,7 @@ func (s *SigningPublicTestSuite) TestUnwrapSignedEnvelope() {
 			setupData: func() []byte {
 				return []byte(`not json at all`)
 			},
-			pubKey:      signer.pubKey,
+			pubKey:      pubKey,
 			wantPayload: []byte(`not json at all`),
 			wantEnv:     false,
 			expectError: false,
@@ -211,7 +226,7 @@ func (s *SigningPublicTestSuite) TestUnwrapSignedEnvelope() {
 			setupData: func() []byte {
 				return []byte(`{"payload":"","signature":"","fingerprint":""}`)
 			},
-			pubKey:      signer.pubKey,
+			pubKey:      pubKey,
 			wantPayload: []byte(`{"payload":"","signature":"","fingerprint":""}`),
 			wantEnv:     false,
 			expectError: false,
@@ -240,7 +255,7 @@ func (s *SigningPublicTestSuite) TestUnwrapSignedEnvelope() {
 }
 
 func (s *SigningPublicTestSuite) TestRoundTrip() {
-	signer := newMockPKISigner()
+	signer, pubKey := newSigner(gomock.NewController(s.T()))
 	originalPayload := []byte(`{"id":"round-trip-test","status":"unprocessed"}`)
 
 	// Wrap
@@ -248,7 +263,7 @@ func (s *SigningPublicTestSuite) TestRoundTrip() {
 	s.NoError(err)
 
 	// Unwrap with correct key
-	unwrapped, isEnvelope, err := client.ExportUnwrapSignedEnvelope(wrapped, signer.pubKey)
+	unwrapped, isEnvelope, err := client.ExportUnwrapSignedEnvelope(wrapped, pubKey)
 	s.NoError(err)
 	s.True(isEnvelope)
 	s.Equal(originalPayload, unwrapped)

@@ -270,7 +270,7 @@ func (s *AgentPublicTestSuite) TestWriteJobResponse() {
 }
 
 func (s *AgentPublicTestSuite) TestWriteJobResponseWithPKISigner() {
-	signer := newMockPKISigner()
+	signer, _ := newSigner(gomock.NewController(s.T()))
 
 	tests := []struct {
 		name         string
@@ -342,7 +342,7 @@ func (s *AgentPublicTestSuite) TestWriteJobResponseWithPKISigner() {
 }
 
 func (s *AgentPublicTestSuite) TestWriteJobResponseWithPKISignerError() {
-	signer := newMockPKISigner()
+	signer, _ := newSigner(gomock.NewController(s.T()))
 
 	// Inject a failing marshal function to trigger the sign error path.
 	client.SetSigningMarshalFn(func(_ any) ([]byte, error) {

@@ -2143,7 +2143,7 @@ func (s *JobsPublicTestSuite) TestComputeStatusFromKeyNames() {
 }
 
 func (s *JobsPublicTestSuite) TestCreateJobWithPKISigner() {
-	signer := newMockPKISigner()
+	signer, _ := newSigner(gomock.NewController(s.T()))
 
 	tests := []struct {
 		name        string
@@ -2220,9 +2220,7 @@ func (s *JobsPublicTestSuite) TestCreateJobWithPKISigner() {
 }
 
 func (s *JobsPublicTestSuite) TestGetJobStatusWithPKISigner() {
-	signer := newMockPKISigner()
-	// Set ControllerPublicKey so signature verification is attempted.
-	signer.ctrlKey = signer.pubKey
+	signer, _ := newSignerWithControllerKey(gomock.NewController(s.T()))
 	jobID := "pki-job-123"
 
 	tests := []struct {
