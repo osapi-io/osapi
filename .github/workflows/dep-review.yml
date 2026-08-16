@@ -1,5 +1,5 @@
 ---
-name: 'Dependency Review'
+name: Dependency Review
 on: [pull_request]
 
 permissions:
@@ -11,5 +11,5 @@ jobs:
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v7
-      - name: 'Dependency Review'
+      - name: Dependency Review
         uses: actions/dependency-review-action@v5
