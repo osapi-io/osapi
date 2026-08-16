@@ -314,8 +314,8 @@ disables CORS headers entirely.
 - [API Design Guidelines](api-guidelines.md) — REST conventions, collection
   envelopes, and endpoint patterns
 - [Guiding Principles](principles.md) — design philosophy and project values
-- [Development](../development/development.md) — setup, building, testing, and
-  contributing
+- [Contributing](https://github.com/osapi-io/osapi/blob/main/CONTRIBUTING.md) —
+  setup, building, testing, and the conventions code follows
 
 <!-- prettier-ignore-start -->
 [Cobra]: https://github.com/spf13/cobra

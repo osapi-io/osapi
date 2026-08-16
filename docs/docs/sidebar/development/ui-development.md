@@ -122,12 +122,45 @@ just react-lint    # Run ESLint
   pixel values like `text-[10px]`.
 - **Every visual pattern must be a component.** Never duplicate styling with raw
   Tailwind when a component exists.
+- Colors are defined in `ui/src/index.css` via the Tailwind v4 `@theme` block.
+  Never use raw hex values.
 
 ### File naming
 
 - Components: `kebab-case.tsx` (e.g., `agent-card.tsx`)
 - Hooks: `use-kebab-case.ts` (e.g., `use-health.ts`)
 - Utilities: `kebab-case.ts` (e.g., `cn.ts`)
+
+### Vocabulary
+
+A **block** is a single operation — a command, a file deploy, a cron create. A
+**stack** is a saved composition of one or more blocks together with their
+targets. Do not use "runlist"; that term has been replaced.
+
+## Adding a new block type
+
+When adding a new operation to the Configure page:
+
+1. Add the `BlockType` entry to `ui/src/hooks/use-stack.ts` in `ALL_BLOCK_TYPES`
+   and the appropriate category.
+2. Add the required permission to `BLOCK_PERMISSIONS` in
+   `ui/src/lib/permissions.ts`.
+3. Create a block form component in `ui/src/components/domain/` if the block
+   needs input fields. Use `SingleInputBlock` for simple single-field blocks.
+4. Add the apply handler case in `ui/src/pages/configure.tsx`.
+5. Add result rendering in `ui/src/components/domain/result-card.tsx` if the
+   response shape isn't handled by existing patterns.
+6. Add the icon mapping in `blockIcons` in `configure.tsx`.
+
+## Adding a new UI component
+
+When extracting a new shared component:
+
+1. Create it in `ui/src/components/ui/` with cva variants if applicable.
+2. Accept a `className` prop for escape-hatch styling.
+3. Replace all inline occurrences across the codebase.
+4. Update [UI Architecture](../architecture/ui.md) if the new component is part
+   of the core visual language.
 
 ## SDK regeneration
 

@@ -39,6 +39,11 @@ them to be used as appliances.
 | [nats-server]        | A Go package for running an embedded NATS server                    |
 | [osapi-orchestrator] | Declarative infrastructure orchestration DSL built on the OSAPI SDK |
 
+## 🤝 Contributing
+
+See the [Contributing](CONTRIBUTING.md) guide for prerequisites, setup,
+conventions, and the PR workflow.
+
 ## 📄 License
 
 The [MIT] License.

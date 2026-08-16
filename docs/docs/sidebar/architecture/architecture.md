@@ -200,5 +200,5 @@ configure them — see the Features section:
 - [API Design Guidelines](api-guidelines.md) — REST conventions and endpoint
   patterns
 - [Guiding Principles](principles.md) — design philosophy and project values
-- [Development](../development/development.md) — setup, building, testing, and
-  contributing
+- [Contributing](https://github.com/osapi-io/osapi/blob/main/CONTRIBUTING.md) —
+  setup, building, testing, and the conventions code follows
