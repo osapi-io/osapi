@@ -295,17 +295,17 @@ disables CORS headers entirely.
 
 ## External Dependencies
 
-| Dependency                    | Purpose                                     |
-| ----------------------------- | ------------------------------------------- |
-| [Echo][]                      | HTTP framework for the REST API             |
-| [Cobra][] / [Viper][]         | CLI framework and configuration             |
-| [NATS][] / JetStream          | Messaging, KV store, stream processing      |
-| [oapi-codegen][]              | OpenAPI strict-server code generation       |
-| [OpenTelemetry][]             | Distributed tracing and Prometheus metrics  |
-| [gopsutil][]                  | Cross-platform system metrics               |
-| [pro-bing][]                  | ICMP ping implementation                    |
-| [golang-jwt][]                | JWT creation and validation                 |
-| `nats-client` / `nats-server` | Sibling repos (linked via `go.mod` replace) |
+| Dependency                    | Purpose                                      |
+| ----------------------------- | -------------------------------------------- |
+| [Echo][]                      | HTTP framework for the REST API              |
+| [Cobra][] / [Viper][]         | CLI framework and configuration              |
+| [NATS][] / JetStream          | Messaging, KV store, stream processing       |
+| [oapi-codegen][]              | OpenAPI strict-server code generation        |
+| [OpenTelemetry][]             | Distributed tracing and Prometheus metrics   |
+| [gopsutil][]                  | Cross-platform system metrics                |
+| [pro-bing][]                  | ICMP ping implementation                     |
+| [golang-jwt][]                | JWT creation and validation                  |
+| `nats-client` / `nats-server` | Sibling repos, pinned by version in `go.mod` |
 
 ## Further Reading
 
