@@ -201,6 +201,22 @@ checkout runs the version `go.mod` records. Destination files end in `.gen.go`
 and are committed. Do not use `gen/` for mocks — that name is taken by API code
 generation.
 
+When the interface is **unexported**, a sibling package cannot work: the mock
+has to import the package to name the types in the interface, and the package's
+own tests have to import the mock. Generate it into the package instead, with a
+destination scoped to tests so the mocking library stays out of the dependency
+graph of anything that imports the package:
+
+```go
+// generate.go, in the package that declares the interface
+package thispackage
+
+//go:generate go tool go.uber.org/mock/mockgen -source=thing.go -destination=thing.gen_test.go -package=thispackage
+```
+
+Either way the directives live in a `generate.go` that holds no code, and the
+generated file carries `.gen` so a reader knows not to edit it.
+
 Where call sites would otherwise repeat the same expectations, write a
 constructor returning a configured mock rather than introducing a hand-written
 type. The generated mock is still what satisfies the interface.
