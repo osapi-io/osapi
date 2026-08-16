@@ -19,4 +19,4 @@ jobs:
       - name: Record just version
         run: just --version
       - name: Lint justfiles
-        run: just just::fmt-check
+        run: just just-fmt-check

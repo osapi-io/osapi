@@ -18,7 +18,7 @@ import? '.just/remote/go.just'
 
 import? '.just/remote/docusaurus.just'
 import? '.just/remote/md.just'
-mod? just '.just/remote/just.mod.just'
+import? '.just/remote/just.just'
 
 import? '.just/remote/react.just'
 
@@ -30,8 +30,7 @@ fetch:
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/go/go.just -o .just/remote/go.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docusaurus/docusaurus.just -o .just/remote/docusaurus.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/md/md.just -o .just/remote/md.just
-    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/just.mod.just -o .just/remote/just.mod.just
-    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/just.just -o .just/remote/just.just
+    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/just/just.just -o .just/remote/just.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/react/react.just -o .just/remote/react.just
 
 # --- Top-level orchestration ---
@@ -50,7 +49,7 @@ build:
 
 # Run all tests
 test: linux-tune
-    just just::fmt-check
+    just just-fmt-check
     just react-build
     just go-test
 
@@ -65,7 +64,7 @@ generate:
 # Format, lint, and generate before committing
 ready:
     just generate
-    just just::fmt
+    just just-fmt
     just docusaurus-fmt
     just md-fmt
     just go-fmt
