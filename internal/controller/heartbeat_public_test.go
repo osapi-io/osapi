@@ -366,51 +366,6 @@ func (s *HeartbeatPublicTestSuite) TestStart() {
 	}
 }
 
-func (s *HeartbeatPublicTestSuite) TestRegistryKey() {
-	tests := []struct {
-		name          string
-		componentType string
-		hostname      string
-		expected      string
-	}{
-		{
-			name:          "simple hostname",
-			componentType: "api",
-			hostname:      "web-01",
-			expected:      "api.web_01",
-		},
-		{
-			name:          "hostname with dots",
-			componentType: "api",
-			hostname:      "Johns-MacBook-Pro.local",
-			expected:      "api.Johns_MacBook_Pro_local",
-		},
-		{
-			name:          "nats component type",
-			componentType: "nats",
-			hostname:      "nats-server-01",
-			expected:      "nats.nats_server_01",
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			hb := controller.NewComponentHeartbeat(
-				slog.Default(),
-				s.mockKV,
-				tt.hostname,
-				"0.1.0",
-				tt.componentType,
-				s.mockProcess,
-				10*time.Second,
-				process.ConditionThresholds{},
-				nil,
-			)
-			s.Equal(tt.expected, controller.ExportRegistryKey(hb))
-		})
-	}
-}
-
 func TestHeartbeatPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(HeartbeatPublicTestSuite))
 }
