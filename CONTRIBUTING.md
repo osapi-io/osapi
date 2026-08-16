@@ -281,9 +281,6 @@ module — change both together.
 - `export_test.go` exposes unexported symbols to external tests, by alias or by
   setter. Do not use an alias to re-cover behavior the caller's own test already
   reaches; a helper with its own contract is what the pattern is for.
-- Mocks are generated with `go.uber.org/mock` and committed, never hand-written.
-  A double that carries a real implementation — signing with a real key, serving
-  real HTTP — is not a mock and does not need generating.
 
 ### Test layers
 
