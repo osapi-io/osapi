@@ -14,6 +14,12 @@ react_dir := "ui"
 
 go_coverage_target := "99.9"
 
+# Pinned so the combined spec does not change under whoever runs `just
+# generate`. Run through bunx rather than from the path: bun is declared in
+# .mise.toml, redocly was not declared anywhere.
+
+redocly_version := "2.19.1"
+
 import? '.just/remote/go.just'
 
 import? '.just/remote/docusaurus.just'
@@ -55,7 +61,7 @@ test: linux-tune
 
 # Generate code
 generate:
-    redocly join --prefix-tags-with-info-prop title -o internal/controller/api/gen/api.yaml internal/controller/api/*/gen/api.yaml internal/controller/api/node/*/gen/api.yaml
+    bunx @redocly/cli@{{ redocly_version }} join --prefix-tags-with-info-prop title -o internal/controller/api/gen/api.yaml internal/controller/api/*/gen/api.yaml internal/controller/api/node/*/gen/api.yaml
     just go-generate
     just docusaurus-generate
     cp internal/controller/api/gen/api.yaml ui/src/sdk/gen/api.yaml
