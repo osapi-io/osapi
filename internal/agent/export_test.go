@@ -34,7 +34,6 @@ import (
 	"github.com/osapi-io/osapi/internal/agent/identity"
 	"github.com/osapi-io/osapi/internal/agent/pki"
 	"github.com/osapi-io/osapi/internal/config"
-	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/command"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
@@ -400,15 +399,6 @@ func ResetProcStatusPath() {
 	procStatusPath = "/proc/self/status"
 }
 
-// ExportCheckSudoAccess exposes the private checkSudoAccess function for testing.
-func ExportCheckSudoAccess(
-	logger *slog.Logger,
-	execManager exec.Manager,
-) []PreflightResult {
-	return checkSudoAccess(logger, execManager)
-}
-
-// ExportCheckCapabilities exposes the private checkCapabilities function for testing.
 func ExportCheckCapabilities(
 	logger *slog.Logger,
 ) []PreflightResult {

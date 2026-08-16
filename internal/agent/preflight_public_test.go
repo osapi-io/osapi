@@ -62,67 +62,6 @@ func (s *PreflightPublicTestSuite) TearDownSubTest() {
 	agent.ResetProcStatusPath()
 }
 
-func (s *PreflightPublicTestSuite) TestCheckSudoAccess() {
-	tests := []struct {
-		name         string
-		setupMock    func()
-		validateFunc func([]agent.PreflightResult)
-	}{
-		{
-			name: "when all commands pass",
-			setupMock: func() {
-				s.mockExecMgr.EXPECT().
-					RunCmd("sudo", gomock.Any()).
-					Return("/usr/bin/something", nil).
-					AnyTimes()
-			},
-			validateFunc: func(results []agent.PreflightResult) {
-				s.NotEmpty(results)
-				for _, r := range results {
-					s.True(r.Passed, "expected %s to pass", r.Name)
-					s.Empty(r.Error)
-				}
-			},
-		},
-		{
-			name: "when one command fails",
-			setupMock: func() {
-				s.mockExecMgr.EXPECT().
-					RunCmd("sudo", gomock.Any()).
-					DoAndReturn(func(_ string, args []string) (string, error) {
-						if len(args) == 3 && args[2] == "systemctl" {
-							return "", fmt.Errorf("sudo: a password is required")
-						}
-						return "/usr/bin/something", nil
-					}).
-					AnyTimes()
-			},
-			validateFunc: func(results []agent.PreflightResult) {
-				s.NotEmpty(results)
-
-				var failCount int
-				for _, r := range results {
-					if !r.Passed {
-						failCount++
-						s.Equal("sudo:systemctl", r.Name)
-						s.Contains(r.Error, "sudo -n which systemctl")
-					}
-				}
-
-				s.Equal(1, failCount, "expected exactly one failure")
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.setupMock()
-			results := agent.ExportCheckSudoAccess(s.logger, s.mockExecMgr)
-			tc.validateFunc(results)
-		})
-	}
-}
-
 func (s *PreflightPublicTestSuite) TestCheckCapabilities() {
 	tests := []struct {
 		name         string

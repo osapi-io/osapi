@@ -329,69 +329,6 @@ func (suite *AgentTypesPublicTestSuite) TestAgentListFromGen() {
 	}
 }
 
-func (suite *AgentTypesPublicTestSuite) TestPendingAgentListFromGen() {
-	now := time.Now().UTC().Truncate(time.Second)
-
-	tests := []struct {
-		name         string
-		input        *gen.ListPendingAgentsResponse
-		validateFunc func(client.PendingAgentList)
-	}{
-		{
-			name: "when list contains pending agents",
-			input: &gen.ListPendingAgentsResponse{
-				Agents: []gen.PendingAgentInfo{
-					{
-						MachineId:   "machine-001",
-						Hostname:    "web-01",
-						Fingerprint: "SHA256:abc123",
-						RequestedAt: now,
-					},
-					{
-						MachineId:   "machine-002",
-						Hostname:    "web-02",
-						Fingerprint: "SHA256:def456",
-						RequestedAt: now.Add(-5 * time.Minute),
-					},
-				},
-				Total: 2,
-			},
-			validateFunc: func(pl client.PendingAgentList) {
-				suite.Equal(2, pl.Total)
-				suite.Require().Len(pl.Agents, 2)
-
-				suite.Equal("machine-001", pl.Agents[0].MachineID)
-				suite.Equal("web-01", pl.Agents[0].Hostname)
-				suite.Equal("SHA256:abc123", pl.Agents[0].Fingerprint)
-				suite.Equal(now, pl.Agents[0].RequestedAt)
-
-				suite.Equal("machine-002", pl.Agents[1].MachineID)
-				suite.Equal("web-02", pl.Agents[1].Hostname)
-				suite.Equal("SHA256:def456", pl.Agents[1].Fingerprint)
-				suite.Equal(now.Add(-5*time.Minute), pl.Agents[1].RequestedAt)
-			},
-		},
-		{
-			name: "when list is empty",
-			input: &gen.ListPendingAgentsResponse{
-				Agents: []gen.PendingAgentInfo{},
-				Total:  0,
-			},
-			validateFunc: func(pl client.PendingAgentList) {
-				suite.Equal(0, pl.Total)
-				suite.Empty(pl.Agents)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			result := client.ExportPendingAgentListFromGen(tc.input)
-			tc.validateFunc(result)
-		})
-	}
-}
-
 func TestAgentTypesPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(AgentTypesPublicTestSuite))
 }

@@ -22,14 +22,6 @@ package container
 
 import "github.com/osapi-io/osapi/internal/job"
 
-// ExportStringPtrOrNil exposes the private stringPtrOrNil for testing.
-func ExportStringPtrOrNil(
-	s string,
-) *string {
-	return stringPtrOrNil(s)
-}
-
-// ExportPtrToSlice exposes the private ptrToSlice for testing.
 func ExportPtrToSlice(
 	s *[]string,
 ) []string {

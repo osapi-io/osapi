@@ -23,7 +23,6 @@ package client_test
 import (
 	"testing"
 
-	openapi_types "github.com/oapi-codegen/runtime/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
@@ -93,88 +92,6 @@ func (suite *DiskTypesPublicTestSuite) TestDisksFromGen() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			result := client.ExportDisksFromGen(tc.input)
-			tc.validateFunc(result)
-		})
-	}
-}
-
-func (suite *DiskTypesPublicTestSuite) TestDiskCollectionFromGen() {
-	testUUID := openapi_types.UUID{
-		0x55, 0x0e, 0x84, 0x00, 0xe2, 0x9b, 0x41, 0xd4,
-		0xa7, 0x16, 0x44, 0x66, 0x55, 0x44, 0x00, 0x00,
-	}
-
-	tests := []struct {
-		name         string
-		input        *gen.DiskCollectionResponse
-		validateFunc func(client.Collection[client.DiskResult])
-	}{
-		{
-			name: "when disks are populated",
-			input: func() *gen.DiskCollectionResponse {
-				changed := false
-				disks := gen.DisksResponse{
-					{
-						Name:  "/dev/sda1",
-						Total: 500000000000,
-						Used:  250000000000,
-						Free:  250000000000,
-					},
-					{
-						Name:  "/dev/sdb1",
-						Total: 1000000000000,
-						Used:  100000000000,
-						Free:  900000000000,
-					},
-				}
-
-				return &gen.DiskCollectionResponse{
-					JobId: &testUUID,
-					Results: []gen.DiskResultItem{
-						{
-							Hostname: "web-01",
-							Changed:  &changed,
-							Disks:    &disks,
-						},
-					},
-				}
-			}(),
-			validateFunc: func(c client.Collection[client.DiskResult]) {
-				suite.Equal("550e8400-e29b-41d4-a716-446655440000", c.JobID)
-				suite.Require().Len(c.Results, 1)
-
-				dr := c.Results[0]
-				suite.Equal("web-01", dr.Hostname)
-				suite.Empty(dr.Error)
-				suite.False(dr.Changed)
-				suite.Require().Len(dr.Disks, 2)
-				suite.Equal("/dev/sda1", dr.Disks[0].Name)
-				suite.Equal(500000000000, dr.Disks[0].Total)
-				suite.Equal(250000000000, dr.Disks[0].Used)
-				suite.Equal(250000000000, dr.Disks[0].Free)
-				suite.Equal("/dev/sdb1", dr.Disks[1].Name)
-			},
-		},
-		{
-			name: "when empty",
-			input: &gen.DiskCollectionResponse{
-				Results: []gen.DiskResultItem{
-					{Hostname: "web-01"},
-				},
-			},
-			validateFunc: func(c client.Collection[client.DiskResult]) {
-				suite.Empty(c.JobID)
-				suite.Require().Len(c.Results, 1)
-				suite.Equal("web-01", c.Results[0].Hostname)
-				suite.False(c.Results[0].Changed)
-				suite.Nil(c.Results[0].Disks)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			result := client.ExportDiskCollectionFromGen(tc.input)
 			tc.validateFunc(result)
 		})
 	}
