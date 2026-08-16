@@ -21,7 +21,7 @@ The system is organized into six layers, top to bottom:
 | **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status                                                   |
 | **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses`, KV `agent-registry`                   |
 | **Agent / Provider Layer** | `internal/agent/`, `internal/provider/` | Consumes jobs, executes providers, evaluates conditions, drain lifecycle, heartbeat      |
-| **Notifications**          | `internal/notify/`                      | Watches registry KV for condition transitions; dispatches events via pluggable notifiers |
+| **Notifications**          | `internal/controller/notify/`           | Watches registry KV for condition transitions; dispatches events via pluggable notifiers |
 
 ```mermaid
 graph TD
