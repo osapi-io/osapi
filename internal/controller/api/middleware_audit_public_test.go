@@ -26,72 +26,17 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"sync"
 	"testing"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/audit/mocks"
 	"github.com/osapi-io/osapi/internal/controller/api"
+	"go.uber.org/mock/gomock"
 )
-
-// captureStore is a concurrency-safe audit store spy that records Write calls.
-// It is kept as a hand-written spy rather than a gomock mock because the
-// auditMiddleware fires writes in a goroutine after the HTTP response is sent,
-// making gomock's strict call-count semantics impractical.
-type captureStore struct {
-	mu      sync.Mutex
-	entries []audit.Entry
-	err     error
-}
-
-func (f *captureStore) Write(
-	_ context.Context,
-	entry audit.Entry,
-) error {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-
-	if f.err != nil {
-		return f.err
-	}
-
-	f.entries = append(f.entries, entry)
-	return nil
-}
-
-func (f *captureStore) Get(
-	_ context.Context,
-	_ string,
-) (*audit.Entry, error) {
-	return nil, nil
-}
-
-func (f *captureStore) List(
-	_ context.Context,
-	_ int,
-	_ int,
-) ([]audit.Entry, int, error) {
-	return nil, 0, nil
-}
-
-func (f *captureStore) ListAll(
-	_ context.Context,
-) ([]audit.Entry, error) {
-	return nil, nil
-}
-
-func (f *captureStore) getEntries() []audit.Entry {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-
-	cp := make([]audit.Entry, len(f.entries))
-	copy(cp, f.entries)
-	return cp
-}
 
 type AuditMiddlewarePublicTestSuite struct {
 	suite.Suite
@@ -104,71 +49,50 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 		subject      string
 		roles        []string
 		storeErr     error
+		wantWrite    bool
 		setupReq     func(req *http.Request) *http.Request
-		validateFunc func(store *captureStore)
+		validateFunc func(entry audit.Entry)
 	}{
 		{
-			name:    "authenticated request is logged",
-			path:    "/api/node/hostname",
-			subject: "user@example.com",
-			roles:   []string{"admin"},
-			validateFunc: func(store *captureStore) {
-				// Give goroutine time to write
-				time.Sleep(50 * time.Millisecond)
-				entries := store.getEntries()
-				s.Len(entries, 1)
-				s.Equal("user@example.com", entries[0].User)
-				s.Equal("GET", entries[0].Method)
-				s.Equal("/api/node/hostname", entries[0].Path)
-				s.Equal(http.StatusOK, entries[0].ResponseCode)
-				s.Equal([]string{"admin"}, entries[0].Roles)
+			name:      "authenticated request is logged",
+			path:      "/api/node/hostname",
+			subject:   "user@example.com",
+			roles:     []string{"admin"},
+			wantWrite: true,
+			validateFunc: func(entry audit.Entry) {
+				s.Equal("user@example.com", entry.User)
+				s.Equal("GET", entry.Method)
+				s.Equal("/api/node/hostname", entry.Path)
+				s.Equal(http.StatusOK, entry.ResponseCode)
+				s.Equal([]string{"admin"}, entry.Roles)
 			},
 		},
 		{
 			name:    "unauthenticated request is skipped",
 			path:    "/api/node/hostname",
 			subject: "",
-			validateFunc: func(store *captureStore) {
-				time.Sleep(50 * time.Millisecond)
-				entries := store.getEntries()
-				s.Empty(entries)
-			},
 		},
 		{
 			name:    "health path is excluded",
 			path:    "/api/health",
 			subject: "user@example.com",
-			validateFunc: func(store *captureStore) {
-				time.Sleep(50 * time.Millisecond)
-				entries := store.getEntries()
-				s.Empty(entries)
-			},
 		},
 		{
 			name:    "health ready path is excluded",
 			path:    "/api/health/ready",
 			subject: "user@example.com",
-			validateFunc: func(store *captureStore) {
-				time.Sleep(50 * time.Millisecond)
-				entries := store.getEntries()
-				s.Empty(entries)
-			},
 		},
 		{
 			name:    "metrics path is excluded",
 			path:    "/metrics",
 			subject: "user@example.com",
-			validateFunc: func(store *captureStore) {
-				time.Sleep(50 * time.Millisecond)
-				entries := store.getEntries()
-				s.Empty(entries)
-			},
 		},
 		{
-			name:    "authenticated request with trace context captures trace ID",
-			path:    "/api/node/hostname",
-			subject: "user@example.com",
-			roles:   []string{"admin"},
+			name:      "authenticated request with trace context captures trace ID",
+			path:      "/api/node/hostname",
+			subject:   "user@example.com",
+			roles:     []string{"admin"},
+			wantWrite: true,
 			setupReq: func(req *http.Request) *http.Request {
 				traceID, _ := trace.TraceIDFromHex(
 					"4bf92f3577b34da6a3ce929d0e0e4736",
@@ -183,34 +107,48 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 				)
 				return req.WithContext(ctx)
 			},
-			validateFunc: func(store *captureStore) {
-				time.Sleep(50 * time.Millisecond)
-				entries := store.getEntries()
-				s.Len(entries, 1)
+			validateFunc: func(entry audit.Entry) {
 				s.Equal(
 					"4bf92f3577b34da6a3ce929d0e0e4736",
-					entries[0].TraceID,
+					entry.TraceID,
 				)
 			},
 		},
 		{
-			name:     "store error is handled gracefully",
-			path:     "/api/node/hostname",
-			subject:  "user@example.com",
-			roles:    []string{"admin"},
-			storeErr: fmt.Errorf("write failed"),
-			validateFunc: func(store *captureStore) {
-				// Should not panic; the middleware logs the error
-				time.Sleep(50 * time.Millisecond)
-				entries := store.getEntries()
-				s.Empty(entries)
-			},
+			name:      "store error is handled gracefully",
+			path:      "/api/node/hostname",
+			subject:   "user@example.com",
+			roles:     []string{"admin"},
+			storeErr:  fmt.Errorf("write failed"),
+			wantWrite: true,
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			store := &captureStore{err: tt.storeErr}
+			ctrl := gomock.NewController(s.T())
+			store := mocks.NewMockStore(ctrl)
+
+			// The middleware writes from a goroutine it does not join. The mock
+			// closes this channel from the write, so the test waits on the call
+			// itself rather than on a duration.
+			written := make(chan struct{})
+			var got audit.Entry
+
+			if tt.wantWrite {
+				store.EXPECT().
+					Write(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(_ context.Context, entry audit.Entry) error {
+						got = entry
+						close(written)
+						return tt.storeErr
+					})
+			} else {
+				// Excluded and unauthenticated paths return before the
+				// goroutine is started, so any write is a regression.
+				store.EXPECT().Write(gomock.Any(), gomock.Any()).Times(0)
+			}
+
 			logger := slog.Default()
 
 			e := echo.New()
@@ -232,7 +170,14 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 			e.ServeHTTP(rec, req)
 
 			s.Equal(http.StatusOK, rec.Code)
-			tt.validateFunc(store)
+
+			if tt.wantWrite {
+				<-written
+
+				if tt.validateFunc != nil {
+					tt.validateFunc(got)
+				}
+			}
 		})
 	}
 }
