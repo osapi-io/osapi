@@ -27,8 +27,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/log/gen"
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/controller/api/node/log/gen"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // GetNodeLogSource returns unique syslog identifiers from a target node.

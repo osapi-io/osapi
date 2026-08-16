@@ -34,8 +34,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/agent"
-	filemocks "github.com/retr0h/osapi/internal/provider/file/mocks"
+	"github.com/osapi-io/osapi/internal/agent"
+	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 )
 
 // SeedPublicTestSuite tests the exported SeedSystemTemplates function.

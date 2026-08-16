@@ -24,7 +24,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"go.uber.org/mock/gomock"
 
-	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
 
 // publishAndWaitErrorMode controls which step of the publishAndWait flow fails.

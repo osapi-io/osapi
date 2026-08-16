@@ -24,8 +24,8 @@ package command
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/exec"
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/exec"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 var _ provider.FactsSetter = (*Executor)(nil)

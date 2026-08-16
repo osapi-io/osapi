@@ -23,7 +23,7 @@ package job
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // Job implementation of the Job APIs operations.

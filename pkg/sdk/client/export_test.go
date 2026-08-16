@@ -26,7 +26,7 @@ import (
 
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // ExportCheckError exposes the private checkError function for testing.

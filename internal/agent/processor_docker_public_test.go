@@ -30,10 +30,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/agent"
-	"github.com/retr0h/osapi/internal/job"
-	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
-	dockerMocks "github.com/retr0h/osapi/internal/provider/container/docker/mocks"
+	"github.com/osapi-io/osapi/internal/agent"
+	"github.com/osapi-io/osapi/internal/job"
+	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
+	dockerMocks "github.com/osapi-io/osapi/internal/provider/container/docker/mocks"
 )
 
 type ProcessorDockerPublicTestSuite struct {

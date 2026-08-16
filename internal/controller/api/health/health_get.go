@@ -23,7 +23,7 @@ package health
 import (
 	"context"
 
-	"github.com/retr0h/osapi/internal/controller/api/health/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/health/gen"
 )
 
 // GetHealth liveness probe — always returns 200 if the process is running.

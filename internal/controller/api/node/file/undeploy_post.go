@@ -26,10 +26,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/file/gen"
-	"github.com/retr0h/osapi/internal/job"
-	providerFile "github.com/retr0h/osapi/internal/provider/file"
-	"github.com/retr0h/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/controller/api/node/file/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	providerFile "github.com/osapi-io/osapi/internal/provider/file"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // PostNodeFileUndeploy post the node file undeploy API endpoint.

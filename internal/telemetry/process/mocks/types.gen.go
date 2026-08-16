@@ -12,7 +12,7 @@ package mocks
 import (
 	reflect "reflect"
 
-	process "github.com/retr0h/osapi/internal/telemetry/process"
+	process "github.com/osapi-io/osapi/internal/telemetry/process"
 	gomock "go.uber.org/mock/gomock"
 )
 

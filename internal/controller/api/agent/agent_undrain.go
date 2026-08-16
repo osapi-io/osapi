@@ -25,8 +25,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/controller/api/agent/gen"
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/controller/api/agent/gen"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // UndrainAgent handles POST /agent/{hostname}/undrain.

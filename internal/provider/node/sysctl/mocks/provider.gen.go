@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	sysctl "github.com/retr0h/osapi/internal/provider/node/sysctl"
+	sysctl "github.com/osapi-io/osapi/internal/provider/node/sysctl"
 	gomock "go.uber.org/mock/gomock"
 )
 

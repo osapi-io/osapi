@@ -25,8 +25,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	container "github.com/retr0h/osapi/internal/controller/api/node/docker"
-	"github.com/retr0h/osapi/internal/job"
+	container "github.com/osapi-io/osapi/internal/controller/api/node/docker"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 type ConvertPublicTestSuite struct {

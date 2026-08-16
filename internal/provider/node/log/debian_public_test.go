@@ -30,8 +30,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	execmocks "github.com/retr0h/osapi/internal/exec/mocks"
-	oslog "github.com/retr0h/osapi/internal/provider/node/log"
+	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
+	oslog "github.com/osapi-io/osapi/internal/provider/node/log"
 )
 
 // singleEntry is a valid journalctl JSON line used across tests.

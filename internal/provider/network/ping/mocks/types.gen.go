@@ -13,7 +13,7 @@ import (
 	reflect "reflect"
 
 	probing "github.com/prometheus-community/pro-bing"
-	ping "github.com/retr0h/osapi/internal/provider/network/ping"
+	ping "github.com/osapi-io/osapi/internal/provider/network/ping"
 	gomock "go.uber.org/mock/gomock"
 )
 

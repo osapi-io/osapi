@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	power "github.com/retr0h/osapi/internal/provider/node/power"
+	power "github.com/osapi-io/osapi/internal/provider/node/power"
 	gomock "go.uber.org/mock/gomock"
 )
 

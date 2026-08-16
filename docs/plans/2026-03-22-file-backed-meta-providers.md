@@ -121,7 +121,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // Undeploy removes a deployed file from disk. The object store entry

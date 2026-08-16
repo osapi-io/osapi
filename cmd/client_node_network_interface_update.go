@@ -25,7 +25,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/retr0h/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli"
 )
 
 // clientNodeNetworkInterfaceUpdateCmd represents the interface update command.

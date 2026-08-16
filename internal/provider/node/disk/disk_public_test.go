@@ -28,7 +28,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider/node/disk"
+	"github.com/osapi-io/osapi/internal/provider/node/disk"
 )
 
 type DiskPublicTestSuite struct {

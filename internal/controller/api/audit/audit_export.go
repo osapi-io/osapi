@@ -24,7 +24,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/controller/api/audit/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/audit/gen"
 )
 
 // GetAuditExport returns all audit log entries without pagination.

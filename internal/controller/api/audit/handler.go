@@ -26,10 +26,10 @@ import (
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
-	auditstore "github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/controller/api"
-	gen "github.com/retr0h/osapi/internal/controller/api/audit/gen"
+	auditstore "github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/controller/api"
+	gen "github.com/osapi-io/osapi/internal/controller/api/audit/gen"
 )
 
 // Handler returns audit route registration functions.

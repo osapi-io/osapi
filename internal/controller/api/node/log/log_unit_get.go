@@ -27,10 +27,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/log/gen"
-	"github.com/retr0h/osapi/internal/job"
-	logProv "github.com/retr0h/osapi/internal/provider/node/log"
-	"github.com/retr0h/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/controller/api/node/log/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	logProv "github.com/osapi-io/osapi/internal/provider/node/log"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // unitQueryPayload is the JSON payload sent to the agent for unit log queries.

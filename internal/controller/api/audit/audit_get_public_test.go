@@ -35,13 +35,13 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	auditstore "github.com/retr0h/osapi/internal/audit"
-	auditmocks "github.com/retr0h/osapi/internal/audit/mocks"
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/controller/api"
-	auditapi "github.com/retr0h/osapi/internal/controller/api/audit"
-	"github.com/retr0h/osapi/internal/controller/api/audit/gen"
+	auditstore "github.com/osapi-io/osapi/internal/audit"
+	auditmocks "github.com/osapi-io/osapi/internal/audit/mocks"
+	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/api"
+	auditapi "github.com/osapi-io/osapi/internal/controller/api/audit"
+	"github.com/osapi-io/osapi/internal/controller/api/audit/gen"
 )
 
 type AuditGetPublicTestSuite struct {

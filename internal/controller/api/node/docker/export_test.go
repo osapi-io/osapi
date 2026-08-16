@@ -20,7 +20,7 @@
 
 package container
 
-import "github.com/retr0h/osapi/internal/job"
+import "github.com/osapi-io/osapi/internal/job"
 
 // ExportStringPtrOrNil exposes the private stringPtrOrNil for testing.
 func ExportStringPtrOrNil(

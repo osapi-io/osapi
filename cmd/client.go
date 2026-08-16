@@ -24,12 +24,12 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/retr0h/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/telemetry/tracing"
+	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/telemetry/tracing"
 )
 
 var (

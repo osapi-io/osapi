@@ -27,10 +27,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/timezone/gen"
-	"github.com/retr0h/osapi/internal/job"
-	tzProv "github.com/retr0h/osapi/internal/provider/node/timezone"
-	"github.com/retr0h/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/controller/api/node/timezone/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	tzProv "github.com/osapi-io/osapi/internal/provider/node/timezone"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // PutNodeTimezone updates the system timezone on a target node.

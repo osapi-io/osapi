@@ -27,7 +27,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // PKISigner signs and verifies payloads. Nil when PKI is disabled.

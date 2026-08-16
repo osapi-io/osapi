@@ -13,7 +13,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	host "github.com/retr0h/osapi/internal/provider/node/host"
+	host "github.com/osapi-io/osapi/internal/provider/node/host"
 	gomock "go.uber.org/mock/gomock"
 )
 

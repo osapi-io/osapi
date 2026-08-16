@@ -26,8 +26,8 @@ import (
 	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/spf13/cobra"
 
-	"github.com/retr0h/osapi/internal/agent/pki"
-	"github.com/retr0h/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/agent/pki"
+	"github.com/osapi-io/osapi/internal/cli"
 )
 
 // clientAgentKeyCmd represents the clientAgentKey parent command.

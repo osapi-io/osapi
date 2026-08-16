@@ -21,7 +21,7 @@
 package client
 
 import (
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // CertificateCAResult represents a CA certificate list result from a single agent.

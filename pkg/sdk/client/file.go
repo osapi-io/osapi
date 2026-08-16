@@ -29,7 +29,7 @@ import (
 	"io"
 	"mime/multipart"
 
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // UploadOption configures Upload behavior.

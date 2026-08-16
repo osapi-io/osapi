@@ -30,11 +30,11 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
-	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/controller"
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/telemetry/process"
+	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/telemetry/process"
 )
 
 // startNATSHeartbeat creates a persistent NATS connection, resolves the

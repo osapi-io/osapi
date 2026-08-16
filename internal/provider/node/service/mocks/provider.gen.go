@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	service "github.com/retr0h/osapi/internal/provider/node/service"
+	service "github.com/osapi-io/osapi/internal/provider/node/service"
 	gomock "go.uber.org/mock/gomock"
 )
 

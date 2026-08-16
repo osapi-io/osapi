@@ -104,6 +104,6 @@ answer questions.
 If you have questions, feel free open a [Discussion][] on GitHub.
 
 <!-- prettier-ignore-start -->
-[OSAPI]: https://github.com/retr0h/osapi
-[Discussion]: https://github.com/retr0h/go-gilt/discussions
+[OSAPI]: https://github.com/osapi-io/osapi
+[Discussion]: https://github.com/osapi-io/osapi/discussions
 <!-- prettier-ignore-end -->

@@ -23,7 +23,7 @@ package process
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // Process implementation of the Process APIs operations.

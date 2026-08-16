@@ -55,8 +55,8 @@ pkg/sdk/
 
 Import paths change to:
 
-- `github.com/retr0h/osapi/pkg/sdk/osapi`
-- `github.com/retr0h/osapi/pkg/sdk/orchestrator`
+- `github.com/osapi-io/osapi/pkg/sdk/osapi`
+- `github.com/osapi-io/osapi/pkg/sdk/orchestrator`
 
 ## Spec Generation
 
@@ -156,7 +156,7 @@ directories. Landing page uses `<DocCardList />` cards.
 - Remove `generate.go` gilt step (oapi-codegen only)
 - Flatten `osapi-sdk/examples/osapi/` → `examples/sdk/osapi/`
 - Update all `cmd/*.go` imports: `github.com/osapi-io/osapi-sdk/pkg/osapi` →
-  `github.com/retr0h/osapi/pkg/sdk/osapi`
+  `github.com/osapi-io/osapi/pkg/sdk/osapi`
 - Remove `github.com/osapi-io/osapi-sdk` from `go.mod`
 - Create Docusaurus client pages
 - Update README.md, CLAUDE.md

@@ -589,7 +589,7 @@ generate:
   echo-server: true
   models: true
 import-mapping:
-  ../../common/gen/api.yaml: github.com/retr0h/osapi/internal/api/common/gen
+  ../../common/gen/api.yaml: github.com/osapi-io/osapi/internal/api/common/gen
 output: file.gen.go
 ```
 
@@ -691,7 +691,7 @@ package file
 import (
 	"log/slog"
 
-	gen "github.com/retr0h/osapi/internal/api/file/gen"
+	gen "github.com/osapi-io/osapi/internal/api/file/gen"
 )
 
 var _ gen.StrictServerInterface = (*File)(nil)
@@ -997,7 +997,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/spf13/afero"
 
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // FileProvider implements file deploy and status operations.
@@ -1307,7 +1307,7 @@ In `internal/agent/types.go`, add:
 ```go
 import (
 	// ... existing ...
-	fileProv "github.com/retr0h/osapi/internal/provider/file"
+	fileProv "github.com/osapi-io/osapi/internal/provider/file"
 )
 
 type Agent struct {

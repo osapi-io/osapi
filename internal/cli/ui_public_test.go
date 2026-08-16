@@ -31,11 +31,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/retr0h/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli"
 )
 
 type UIPublicTestSuite struct {

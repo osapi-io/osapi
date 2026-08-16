@@ -28,8 +28,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/cli"
-	climocks "github.com/retr0h/osapi/internal/cli/mocks"
+	"github.com/osapi-io/osapi/internal/cli"
+	climocks "github.com/osapi-io/osapi/internal/cli/mocks"
 )
 
 type LifecyclePublicTestSuite struct {

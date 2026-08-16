@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // ConditionThresholds holds thresholds for process-level conditions.

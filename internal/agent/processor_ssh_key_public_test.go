@@ -29,11 +29,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/agent"
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/node/user"
-	userMocks "github.com/retr0h/osapi/internal/provider/node/user/mocks"
+	"github.com/osapi-io/osapi/internal/agent"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/provider/node/user"
+	userMocks "github.com/osapi-io/osapi/internal/provider/node/user/mocks"
 )
 
 type ProcessorSSHKeyPublicTestSuite struct {

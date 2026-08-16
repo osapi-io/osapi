@@ -33,13 +33,13 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/controller/api"
-	apiagent "github.com/retr0h/osapi/internal/controller/api/agent"
-	"github.com/retr0h/osapi/internal/controller/api/agent/gen"
-	agentmocks "github.com/retr0h/osapi/internal/controller/api/agent/mocks"
-	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/api"
+	apiagent "github.com/osapi-io/osapi/internal/controller/api/agent"
+	"github.com/osapi-io/osapi/internal/controller/api/agent/gen"
+	agentmocks "github.com/osapi-io/osapi/internal/controller/api/agent/mocks"
+	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
 
 type AgentEnrollAcceptPublicTestSuite struct {

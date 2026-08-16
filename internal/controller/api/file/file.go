@@ -24,7 +24,7 @@ package file
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/controller/api/file/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/file/gen"
 )
 
 // ensure that we've conformed to the `StrictServerInterface` with a compile-time check

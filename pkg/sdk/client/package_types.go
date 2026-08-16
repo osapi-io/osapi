@@ -21,7 +21,7 @@
 package client
 
 import (
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // PackageInfoResult represents a package list result from a query operation.

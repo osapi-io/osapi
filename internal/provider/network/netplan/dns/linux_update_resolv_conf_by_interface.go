@@ -21,7 +21,7 @@
 package dns
 
 import (
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // UpdateResolvConfByInterface updates the DNS configuration for a specific network interface

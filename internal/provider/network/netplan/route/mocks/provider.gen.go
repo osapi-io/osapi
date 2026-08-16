@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	route "github.com/retr0h/osapi/internal/provider/network/netplan/route"
+	route "github.com/osapi-io/osapi/internal/provider/network/netplan/route"
 	gomock "go.uber.org/mock/gomock"
 )
 

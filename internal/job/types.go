@@ -24,11 +24,11 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/retr0h/osapi/internal/provider/node/disk"
-	"github.com/retr0h/osapi/internal/provider/node/host"
-	"github.com/retr0h/osapi/internal/provider/node/load"
-	"github.com/retr0h/osapi/internal/provider/node/mem"
-	"github.com/retr0h/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/internal/provider/node/disk"
+	"github.com/osapi-io/osapi/internal/provider/node/host"
+	"github.com/osapi-io/osapi/internal/provider/node/load"
+	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // Type is a type alias for client.JobType.

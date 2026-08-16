@@ -24,7 +24,7 @@ package netinfo
 import (
 	"net"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 var _ provider.FactsSetter = (*Netinfo)(nil)

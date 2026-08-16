@@ -28,9 +28,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/schedule/gen"
-	"github.com/retr0h/osapi/internal/job"
-	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
+	"github.com/osapi-io/osapi/internal/controller/api/node/schedule/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	cronProv "github.com/osapi-io/osapi/internal/provider/scheduled/cron"
 )
 
 // GetNodeScheduleCronByName gets a single cron entry by name on a target node.

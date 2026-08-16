@@ -23,7 +23,7 @@ package user
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // User implementation of the User and Group APIs operations.

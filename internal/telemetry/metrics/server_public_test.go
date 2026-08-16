@@ -35,7 +35,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	prometheusExporter "go.opentelemetry.io/otel/exporters/prometheus"
 
-	"github.com/retr0h/osapi/internal/telemetry/metrics"
+	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 )
 
 type ServerPublicTestSuite struct {

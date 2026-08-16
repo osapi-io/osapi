@@ -34,12 +34,12 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/controller/api"
-	apijob "github.com/retr0h/osapi/internal/controller/api/job"
-	"github.com/retr0h/osapi/internal/controller/api/job/gen"
-	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/api"
+	apijob "github.com/osapi-io/osapi/internal/controller/api/job"
+	"github.com/osapi-io/osapi/internal/controller/api/job/gen"
+	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
 
 type JobDeletePublicTestSuite struct {

@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider/network/netinfo"
+	"github.com/osapi-io/osapi/internal/provider/network/netinfo"
 )
 
 type GetInterfacesPublicTestSuite struct {

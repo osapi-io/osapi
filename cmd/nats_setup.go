@@ -31,9 +31,9 @@ import (
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	natsembedded "github.com/osapi-io/nats-server/pkg/server"
 
-	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // natsLifecycle adapts the embedded NATS server to the Lifecycle interface.

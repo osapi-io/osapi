@@ -57,7 +57,7 @@ info:
       deployment.
   version: 1.0.0
   contact:
-    url: https://github.com/retr0h/osapi
+    url: https://github.com/osapi-io/osapi
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT

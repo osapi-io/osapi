@@ -26,7 +26,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/provider/network/netplan"
+	"github.com/osapi-io/osapi/internal/provider/network/netplan"
 )
 
 // UpdateResolvConfByInterface updates the DNS configuration for a specific

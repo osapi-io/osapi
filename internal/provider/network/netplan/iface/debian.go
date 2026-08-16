@@ -26,8 +26,8 @@ import (
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
 
-	"github.com/retr0h/osapi/internal/exec"
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/exec"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // Compile-time checks.

@@ -34,7 +34,7 @@ func buildVersion(
 		goversion.WithAppDetails(
 			"osapi",
 			"A CRUD API for managing Linux systems.\n",
-			"https://github.com/retr0h/osapi",
+			"https://github.com/osapi-io/osapi",
 		),
 		func(i *goversion.Info) {
 			if commit != "" {

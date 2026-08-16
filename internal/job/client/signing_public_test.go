@@ -29,8 +29,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // mockPKISigner implements client.PKISigner for testing.

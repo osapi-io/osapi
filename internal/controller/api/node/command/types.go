@@ -23,7 +23,7 @@ package command
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // Command implementation of the Command APIs operations.

@@ -40,7 +40,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/pkg/sdk/platform"
+	"github.com/osapi-io/osapi/pkg/sdk/platform"
 )
 
 type ContainerPublicTestSuite struct {
@@ -160,8 +160,8 @@ import (
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/osapi-io/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider/network/dns"
 )
 
 type DebianDockerPublicTestSuite struct {
@@ -228,7 +228,7 @@ import (
 
 	"github.com/avfs/avfs"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // Compile-time check: DebianDocker must satisfy Provider and FactsSetter.
@@ -267,7 +267,7 @@ package dns
 import (
 	"fmt"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // UpdateResolvConfByInterface returns ErrUnsupported for container
@@ -780,7 +780,7 @@ feat(facts): add Containerized field to FactsRegistration and fact resolver
 In `internal/agent/facts.go`, add the import:
 
 ```go
-"github.com/retr0h/osapi/pkg/sdk/platform"
+"github.com/osapi-io/osapi/pkg/sdk/platform"
 ```
 
 In the `writeFacts` method, add after `reg := job.FactsRegistration{}`:

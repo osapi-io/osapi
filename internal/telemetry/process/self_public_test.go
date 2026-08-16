@@ -28,7 +28,7 @@ import (
 	gopsutil "github.com/shirou/gopsutil/v4/process"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/telemetry/process"
+	"github.com/osapi-io/osapi/internal/telemetry/process"
 )
 
 type ProcessPublicTestSuite struct {

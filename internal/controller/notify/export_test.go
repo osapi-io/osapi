@@ -26,7 +26,7 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // ExportConditionState exposes the private conditionState type for testing.

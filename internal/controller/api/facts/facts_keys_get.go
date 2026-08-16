@@ -23,8 +23,8 @@ package facts
 import (
 	"context"
 
-	"github.com/retr0h/osapi/internal/controller/api/facts/gen"
-	factskeys "github.com/retr0h/osapi/internal/facts"
+	"github.com/osapi-io/osapi/internal/controller/api/facts/gen"
+	factskeys "github.com/osapi-io/osapi/internal/facts"
 )
 
 // builtInDescriptions provides human-readable descriptions for built-in keys.

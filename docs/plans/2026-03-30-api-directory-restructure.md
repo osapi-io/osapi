@@ -136,10 +136,10 @@ grep -r "controller/api/sysctl" --include="*.go" .
 
 Update every occurrence:
 
-- `github.com/retr0h/osapi/internal/controller/api/sysctl` →
-  `github.com/retr0h/osapi/internal/controller/api/node/sysctl`
-- `github.com/retr0h/osapi/internal/controller/api/sysctl/gen` →
-  `github.com/retr0h/osapi/internal/controller/api/node/sysctl/gen`
+- `github.com/osapi-io/osapi/internal/controller/api/sysctl` →
+  `github.com/osapi-io/osapi/internal/controller/api/node/sysctl`
+- `github.com/osapi-io/osapi/internal/controller/api/sysctl/gen` →
+  `github.com/osapi-io/osapi/internal/controller/api/node/sysctl/gen`
 
 Files that will need import updates:
 
@@ -156,7 +156,7 @@ Read `internal/controller/api/node/sysctl/gen/cfg.yaml` and update:
 
 ```yaml
 import-mapping:
-  ../../../common/gen/api.yaml: github.com/retr0h/osapi/internal/controller/api/common/gen
+  ../../../common/gen/api.yaml: github.com/osapi-io/osapi/internal/controller/api/common/gen
 ```
 
 (Was `../../common/gen/api.yaml` — now one level deeper.)
@@ -393,7 +393,7 @@ generate:
   echo-server: true
   strict-server: true
 import-mapping:
-  ../../../common/gen/api.yaml: github.com/retr0h/osapi/internal/controller/api/common/gen
+  ../../../common/gen/api.yaml: github.com/osapi-io/osapi/internal/controller/api/common/gen
 output-options:
   skip-prune: true
 ```
@@ -419,8 +419,8 @@ package hostname
 import (
     "log/slog"
 
-    client "github.com/retr0h/osapi/internal/job/client"
-    gen "github.com/retr0h/osapi/internal/controller/api/node/hostname/gen"
+    client "github.com/osapi-io/osapi/internal/job/client"
+    gen "github.com/osapi-io/osapi/internal/controller/api/node/hostname/gen"
 )
 
 var _ gen.StrictServerInterface = (*Hostname)(nil)

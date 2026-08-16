@@ -24,7 +24,7 @@ package facts
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/controller/api/facts/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/facts/gen"
 )
 
 // ensure that we've conformed to the `StrictServerInterface` with a compile-time check.

@@ -29,15 +29,15 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/agent"
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/job/mocks"
-	diskMocks "github.com/retr0h/osapi/internal/provider/node/disk/mocks"
-	hostMocks "github.com/retr0h/osapi/internal/provider/node/host/mocks"
-	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
-	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
-	"github.com/retr0h/osapi/internal/provider/scheduled/cron"
-	cronMocks "github.com/retr0h/osapi/internal/provider/scheduled/cron/mocks"
+	"github.com/osapi-io/osapi/internal/agent"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job/mocks"
+	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
+	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
+	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
+	memMocks "github.com/osapi-io/osapi/internal/provider/node/mem/mocks"
+	"github.com/osapi-io/osapi/internal/provider/scheduled/cron"
+	cronMocks "github.com/osapi-io/osapi/internal/provider/scheduled/cron/mocks"
 )
 
 type ProcessorSchedulePublicTestSuite struct {

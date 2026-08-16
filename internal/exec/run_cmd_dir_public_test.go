@@ -27,7 +27,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/exec"
+	"github.com/osapi-io/osapi/internal/exec"
 )
 
 type RunCmdDirPublicTestSuite struct {

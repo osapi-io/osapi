@@ -27,9 +27,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/timezone/gen"
-	"github.com/retr0h/osapi/internal/job"
-	tzProv "github.com/retr0h/osapi/internal/provider/node/timezone"
+	"github.com/osapi-io/osapi/internal/controller/api/node/timezone/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	tzProv "github.com/osapi-io/osapi/internal/provider/node/timezone"
 )
 
 // GetNodeTimezone gets the current system timezone on a target node.

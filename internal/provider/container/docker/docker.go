@@ -19,7 +19,7 @@ import (
 	dockerclient "github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // Compile-time check: Client must satisfy FactsSetter.

@@ -27,10 +27,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/command/gen"
-	"github.com/retr0h/osapi/internal/job"
-	commandProvider "github.com/retr0h/osapi/internal/provider/command"
-	"github.com/retr0h/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/controller/api/node/command/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	commandProvider "github.com/osapi-io/osapi/internal/provider/command"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // PostNodeCommandExec post the node command exec API endpoint.

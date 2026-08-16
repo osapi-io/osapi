@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	timezone "github.com/retr0h/osapi/internal/provider/node/timezone"
+	timezone "github.com/osapi-io/osapi/internal/provider/node/timezone"
 	gomock "go.uber.org/mock/gomock"
 )
 

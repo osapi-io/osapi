@@ -41,11 +41,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/agent"
-	agentMocks "github.com/retr0h/osapi/internal/agent/mocks"
-	"github.com/retr0h/osapi/internal/agent/pki"
-	"github.com/retr0h/osapi/internal/config"
-	jobMocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/agent"
+	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
+	"github.com/osapi-io/osapi/internal/agent/pki"
+	"github.com/osapi-io/osapi/internal/config"
+	jobMocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
 
 type EnrollmentPublicTestSuite struct {

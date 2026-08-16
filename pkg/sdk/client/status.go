@@ -24,7 +24,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // JobStatus represents the status of a job in the OSAPI system.

@@ -28,7 +28,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/exec"
+	"github.com/osapi-io/osapi/internal/exec"
 )
 
 // PreflightResult holds the outcome of a single preflight check.

@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	iface "github.com/retr0h/osapi/internal/provider/network/netplan/iface"
+	iface "github.com/osapi-io/osapi/internal/provider/network/netplan/iface"
 	gomock "go.uber.org/mock/gomock"
 )
 

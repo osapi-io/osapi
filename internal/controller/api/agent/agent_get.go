@@ -24,7 +24,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/controller/api/agent/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/agent/gen"
 )
 
 // GetAgentDetails retrieves detailed information about a specific agent.

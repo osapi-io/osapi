@@ -32,11 +32,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	execmocks "github.com/retr0h/osapi/internal/exec/mocks"
-	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/provider/file"
-	filemocks "github.com/retr0h/osapi/internal/provider/file/mocks"
-	"github.com/retr0h/osapi/internal/provider/node/certificate"
+	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
+	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/provider/file"
+	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
+	"github.com/osapi-io/osapi/internal/provider/node/certificate"
 )
 
 const testHostname = "test-host"

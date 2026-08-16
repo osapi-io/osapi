@@ -23,7 +23,7 @@ package host
 import (
 	"time"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // GetUptime retrieves the system uptime.

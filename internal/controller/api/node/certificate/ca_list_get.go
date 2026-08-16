@@ -27,9 +27,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/certificate/gen"
-	"github.com/retr0h/osapi/internal/job"
-	certProv "github.com/retr0h/osapi/internal/provider/node/certificate"
+	"github.com/osapi-io/osapi/internal/controller/api/node/certificate/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	certProv "github.com/osapi-io/osapi/internal/provider/node/certificate"
 )
 
 // GetNodeCertificateCa lists all CA certificates on a target node.

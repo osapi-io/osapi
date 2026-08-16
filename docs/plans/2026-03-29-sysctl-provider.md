@@ -244,7 +244,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // Darwin implements the sysctl Provider interface for macOS.
@@ -298,7 +298,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // Linux implements the sysctl Provider interface for generic Linux.
@@ -400,8 +400,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/node/sysctl"
+	"github.com/osapi-io/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider/node/sysctl"
 )
 
 type DarwinPublicTestSuite struct {
@@ -655,8 +655,8 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/node/sysctl"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/provider/node/sysctl"
 )
 
 // NewSysctlProcessor creates a processor for sysctl operations.
@@ -836,7 +836,7 @@ func createSysctlProvider(
 Add the import:
 
 ```go
-sysctlProv "github.com/retr0h/osapi/internal/provider/node/sysctl"
+sysctlProv "github.com/osapi-io/osapi/internal/provider/node/sysctl"
 ```
 
 Note: `execManager` is already created earlier in `setupAgent` as
@@ -942,7 +942,7 @@ generate:
   echo-server: true
   strict-server: true
 import-mapping:
-  ../../common/gen/api.yaml: github.com/retr0h/osapi/internal/controller/api/common/gen
+  ../../common/gen/api.yaml: github.com/osapi-io/osapi/internal/controller/api/common/gen
 output-options:
   skip-prune: true
 ```
@@ -1331,7 +1331,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/retr0h/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 func sysctlExample() {

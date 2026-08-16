@@ -27,9 +27,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/package/gen"
-	"github.com/retr0h/osapi/internal/job"
-	aptProv "github.com/retr0h/osapi/internal/provider/node/apt"
+	"github.com/osapi-io/osapi/internal/controller/api/node/package/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	aptProv "github.com/osapi-io/osapi/internal/provider/node/apt"
 )
 
 // GetNodePackageUpdate lists available package updates on a target node.

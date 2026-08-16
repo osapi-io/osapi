@@ -21,7 +21,7 @@
 package disk
 
 import (
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // GetLocalUsageStats retrieves disk space statistics for local disks only.

@@ -28,9 +28,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/exec"
-	execMocks "github.com/retr0h/osapi/internal/exec/mocks"
-	"github.com/retr0h/osapi/internal/provider/command"
+	"github.com/osapi-io/osapi/internal/exec"
+	execMocks "github.com/osapi-io/osapi/internal/exec/mocks"
+	"github.com/osapi-io/osapi/internal/provider/command"
 )
 
 type ExecPublicTestSuite struct {

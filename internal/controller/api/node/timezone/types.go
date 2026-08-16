@@ -23,7 +23,7 @@ package timezone
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // Timezone implementation of the Timezone APIs operations.

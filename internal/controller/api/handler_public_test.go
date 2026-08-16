@@ -29,13 +29,13 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/controller/api"
-	agentAPI "github.com/retr0h/osapi/internal/controller/api/agent"
-	"github.com/retr0h/osapi/internal/controller/api/health"
-	jobAPI "github.com/retr0h/osapi/internal/controller/api/job"
-	nodeAPI "github.com/retr0h/osapi/internal/controller/api/node"
-	"github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/api"
+	agentAPI "github.com/osapi-io/osapi/internal/controller/api/agent"
+	"github.com/osapi-io/osapi/internal/controller/api/health"
+	jobAPI "github.com/osapi-io/osapi/internal/controller/api/job"
+	nodeAPI "github.com/osapi-io/osapi/internal/controller/api/node"
+	"github.com/osapi-io/osapi/internal/job/mocks"
 )
 
 type HandlerPublicTestSuite struct {

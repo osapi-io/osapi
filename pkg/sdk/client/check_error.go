@@ -23,7 +23,7 @@ package client
 import (
 	"fmt"
 
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // checkError inspects the HTTP status code and returns the appropriate

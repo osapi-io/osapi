@@ -25,7 +25,7 @@ import (
 
 	"github.com/shirou/gopsutil/v4/disk"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 var _ provider.FactsSetter = (*Debian)(nil)

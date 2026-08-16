@@ -171,10 +171,10 @@ needed.
 
 Find and replace all occurrences:
 
-- `"github.com/retr0h/osapi/internal/api"` →
-  `"github.com/retr0h/osapi/internal/controller/api"`
-- `"github.com/retr0h/osapi/internal/api/` →
-  `"github.com/retr0h/osapi/internal/controller/api/`
+- `"github.com/osapi-io/osapi/internal/api"` →
+  `"github.com/osapi-io/osapi/internal/controller/api"`
+- `"github.com/osapi-io/osapi/internal/api/` →
+  `"github.com/osapi-io/osapi/internal/controller/api/`
 
 Files that import `internal/api`:
 
@@ -213,8 +213,8 @@ git mv internal/notify internal/controller/notify
 
 Find and replace:
 
-- `"github.com/retr0h/osapi/internal/notify"` →
-  `"github.com/retr0h/osapi/internal/controller/notify"`
+- `"github.com/osapi-io/osapi/internal/notify"` →
+  `"github.com/osapi-io/osapi/internal/controller/notify"`
 
 Files that import `internal/notify`:
 

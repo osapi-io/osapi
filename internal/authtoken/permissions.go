@@ -20,7 +20,7 @@
 
 package authtoken
 
-import "github.com/retr0h/osapi/pkg/sdk/client"
+import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 // Permission is a type alias for client.Permission.
 type Permission = client.Permission

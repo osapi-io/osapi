@@ -23,7 +23,7 @@ package container
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // Container implementation of the Container APIs operations.

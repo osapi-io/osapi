@@ -34,9 +34,9 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.uber.org/mock/gomock"
 
-	auditmocks "github.com/retr0h/osapi/internal/audit/mocks"
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/controller/api"
+	auditmocks "github.com/osapi-io/osapi/internal/audit/mocks"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/api"
 )
 
 type ServerPublicTestSuite struct {

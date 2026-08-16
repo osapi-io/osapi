@@ -32,8 +32,8 @@ import (
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/sdk/resource"
 
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/telemetry/tracing"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/telemetry/tracing"
 )
 
 type InitTracerPublicTestSuite struct {

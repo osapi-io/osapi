@@ -30,7 +30,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
 
-	uihandler "github.com/retr0h/osapi/internal/controller/api/ui"
+	uihandler "github.com/osapi-io/osapi/internal/controller/api/ui"
 )
 
 // populatedFS returns an in-memory filesystem shaped like the output of

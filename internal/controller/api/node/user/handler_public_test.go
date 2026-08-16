@@ -30,8 +30,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	apiuser "github.com/retr0h/osapi/internal/controller/api/node/user"
-	"github.com/retr0h/osapi/internal/job/mocks"
+	apiuser "github.com/osapi-io/osapi/internal/controller/api/node/user"
+	"github.com/osapi-io/osapi/internal/job/mocks"
 )
 
 type HandlerPublicTestSuite struct {

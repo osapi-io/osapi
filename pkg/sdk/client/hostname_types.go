@@ -21,7 +21,7 @@
 package client
 
 import (
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // HostnameResult represents a hostname query result from a single agent.

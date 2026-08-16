@@ -23,7 +23,7 @@ package mocks
 import (
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/telemetry/process"
+	"github.com/osapi-io/osapi/internal/telemetry/process"
 )
 
 // NewPlainMockProvider creates a Mock without defaults.

@@ -26,8 +26,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/node/power"
+	"github.com/osapi-io/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider/node/power"
 )
 
 type LinuxPublicTestSuite struct {

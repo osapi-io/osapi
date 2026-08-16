@@ -25,7 +25,7 @@ import (
 
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/provider/node/host"
+	"github.com/osapi-io/osapi/internal/provider/node/host"
 )
 
 // NewPlainMockProvider creates a Mock without defaults.

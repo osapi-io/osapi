@@ -28,10 +28,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/process/gen"
-	"github.com/retr0h/osapi/internal/job"
-	processProv "github.com/retr0h/osapi/internal/provider/node/process"
-	"github.com/retr0h/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/controller/api/node/process/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	processProv "github.com/osapi-io/osapi/internal/provider/node/process"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // PostNodeProcessSignal sends a signal to a process on a target node.

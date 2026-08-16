@@ -26,9 +26,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/job/gen"
-	"github.com/retr0h/osapi/internal/job/client"
-	"github.com/retr0h/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/controller/api/job/gen"
+	"github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // GetJobs lists jobs, optionally filtered by status.

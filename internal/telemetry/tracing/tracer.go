@@ -34,7 +34,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace/noop"
 
-	"github.com/retr0h/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/config"
 )
 
 // resourceNewFn is the function used to create OTel resources. It is a

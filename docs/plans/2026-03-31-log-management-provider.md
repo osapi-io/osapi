@@ -217,8 +217,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	logProv "github.com/retr0h/osapi/internal/provider/node/log"
-	"github.com/retr0h/osapi/internal/provider"
+	logProv "github.com/osapi-io/osapi/internal/provider/node/log"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 type DarwinPublicTestSuite struct {
@@ -280,8 +280,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	logProv "github.com/retr0h/osapi/internal/provider/node/log"
-	"github.com/retr0h/osapi/internal/provider"
+	logProv "github.com/osapi-io/osapi/internal/provider/node/log"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 type LinuxPublicTestSuite struct {
@@ -345,7 +345,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // Darwin implements the Provider interface for Darwin (macOS).
@@ -404,7 +404,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // Linux implements the Provider interface for generic Linux.
@@ -528,9 +528,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/exec"
-	execMocks "github.com/retr0h/osapi/internal/exec/mocks"
-	logProv "github.com/retr0h/osapi/internal/provider/node/log"
+	"github.com/osapi-io/osapi/internal/exec"
+	execMocks "github.com/osapi-io/osapi/internal/exec/mocks"
+	logProv "github.com/osapi-io/osapi/internal/provider/node/log"
 )
 
 type DebianPublicTestSuite struct {
@@ -793,8 +793,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/exec"
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/exec"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // Compile-time checks.
@@ -1186,8 +1186,8 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/job"
-	logProv "github.com/retr0h/osapi/internal/provider/node/log"
+	"github.com/osapi-io/osapi/internal/job"
+	logProv "github.com/osapi-io/osapi/internal/provider/node/log"
 )
 
 // processLogOperation dispatches log sub-operations.
@@ -1272,7 +1272,7 @@ Add `logProvider logProv.Provider` parameter to `NewNodeProcessor` in
 `internal/agent/processor.go`. Add the import:
 
 ```go
-logProv "github.com/retr0h/osapi/internal/provider/node/log"
+logProv "github.com/osapi-io/osapi/internal/provider/node/log"
 ```
 
 Add the case in the switch:
@@ -1287,7 +1287,7 @@ Add the case in the switch:
 Add import:
 
 ```go
-logProv "github.com/retr0h/osapi/internal/provider/node/log"
+logProv "github.com/osapi-io/osapi/internal/provider/node/log"
 ```
 
 Add factory function:
@@ -1671,7 +1671,7 @@ generate:
   echo-server: true
   strict-server: true
 import-mapping:
-  ../../../common/gen/api.yaml: github.com/retr0h/osapi/internal/controller/api/common/gen
+  ../../../common/gen/api.yaml: github.com/osapi-io/osapi/internal/controller/api/common/gen
 output-options:
   # to make sure that all types are generated
   skip-prune: true
@@ -1751,7 +1751,7 @@ package log
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // Log implementation of the Log APIs operations.
@@ -1770,8 +1770,8 @@ package log
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/log/gen"
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/controller/api/node/log/gen"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // ensure that we've conformed to the `StrictServerInterface` with a compile-time check
@@ -1794,7 +1794,7 @@ Create `internal/controller/api/node/log/validate.go`:
 ```go
 package log
 
-import "github.com/retr0h/osapi/internal/validation"
+import "github.com/osapi-io/osapi/internal/validation"
 
 // validateHostname validates a hostname path parameter using the shared
 // validator. Returns the error message and false if invalid.
@@ -1858,9 +1858,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/log/gen"
-	"github.com/retr0h/osapi/internal/job"
-	logProv "github.com/retr0h/osapi/internal/provider/node/log"
+	"github.com/osapi-io/osapi/internal/controller/api/node/log/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	logProv "github.com/osapi-io/osapi/internal/provider/node/log"
 )
 
 // GetNodeLog queries journal entries on a target node.
@@ -2039,7 +2039,7 @@ func (s *Log) getNodeLogBroadcast(
 ```
 
 Note: The import for `validation` is
-`"github.com/retr0h/osapi/internal/validation"`. All files need full license
+`"github.com/osapi-io/osapi/internal/validation"`. All files need full license
 headers.
 
 - [ ] **Step 5: Implement GetNodeLogUnit handler**
@@ -2063,10 +2063,10 @@ import (
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/controller/api"
-	gen "github.com/retr0h/osapi/internal/controller/api/node/log/gen"
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/controller/api"
+	gen "github.com/osapi-io/osapi/internal/controller/api/node/log/gen"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // Handler returns Log route registration functions.
@@ -2108,7 +2108,7 @@ func Handler(
 Add import:
 
 ```go
-logAPI "github.com/retr0h/osapi/internal/controller/api/node/log"
+logAPI "github.com/osapi-io/osapi/internal/controller/api/node/log"
 ```
 
 Add after the `packageAPI.Handler(...)` line:
@@ -2172,7 +2172,7 @@ Create `pkg/sdk/client/log_types_public_test.go` — test conversion functions:
 package client
 
 import (
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // LogEntryResult represents the result of a log query for one host.
@@ -2261,7 +2261,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // LogService provides log viewing operations.
@@ -2420,8 +2420,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // clientNodeLogQueryCmd represents the log query command.
@@ -2529,8 +2529,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // clientNodeLogUnitCmd represents the log unit command.

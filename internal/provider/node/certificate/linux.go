@@ -23,7 +23,7 @@ package certificate
 import (
 	"context"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // Linux implements the Provider interface for generic Linux.

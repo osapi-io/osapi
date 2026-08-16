@@ -39,7 +39,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // Client is the top-level OSAPI SDK client. Use New() to create one.

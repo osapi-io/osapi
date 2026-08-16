@@ -27,8 +27,8 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 type ConfigPublicTestSuite struct {

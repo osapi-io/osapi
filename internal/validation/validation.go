@@ -30,7 +30,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	cronparser "github.com/robfig/cron/v3"
 
-	"github.com/retr0h/osapi/internal/facts"
+	"github.com/osapi-io/osapi/internal/facts"
 )
 
 var instance = validator.New()

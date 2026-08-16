@@ -28,8 +28,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/job"
-	hostnamemocks "github.com/retr0h/osapi/internal/job/mocks/hostname"
+	"github.com/osapi-io/osapi/internal/job"
+	hostnamemocks "github.com/osapi-io/osapi/internal/job/mocks/hostname"
 )
 
 type HostnamePublicTestSuite struct {

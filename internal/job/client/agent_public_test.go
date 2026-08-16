@@ -35,9 +35,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/job/client"
-	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job/client"
+	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
 
 type AgentPublicTestSuite struct {

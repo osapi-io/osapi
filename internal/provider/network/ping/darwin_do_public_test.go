@@ -30,8 +30,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/provider/network/ping"
-	"github.com/retr0h/osapi/internal/provider/network/ping/mocks"
+	"github.com/osapi-io/osapi/internal/provider/network/ping"
+	"github.com/osapi-io/osapi/internal/provider/network/ping/mocks"
 )
 
 type DarwinDoPublicTestSuite struct {

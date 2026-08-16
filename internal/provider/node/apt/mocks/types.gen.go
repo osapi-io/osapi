@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	apt "github.com/retr0h/osapi/internal/provider/node/apt"
+	apt "github.com/osapi-io/osapi/internal/provider/node/apt"
 	gomock "go.uber.org/mock/gomock"
 )
 

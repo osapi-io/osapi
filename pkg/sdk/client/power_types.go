@@ -21,7 +21,7 @@
 package client
 
 import (
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // PowerResult represents the result of a power operation for one host.

@@ -26,7 +26,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/exec"
+	"github.com/osapi-io/osapi/internal/exec"
 )
 
 // Status holds the parsed output of netplan status --format json.

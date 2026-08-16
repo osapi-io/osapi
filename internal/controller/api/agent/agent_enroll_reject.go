@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/controller/api/agent/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/agent/gen"
 )
 
 // RejectAgent handles POST /agent/{hostname}/reject.

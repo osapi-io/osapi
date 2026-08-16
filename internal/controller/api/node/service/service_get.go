@@ -28,9 +28,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/service/gen"
-	"github.com/retr0h/osapi/internal/job"
-	serviceProv "github.com/retr0h/osapi/internal/provider/node/service"
+	"github.com/osapi-io/osapi/internal/controller/api/node/service/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	serviceProv "github.com/osapi-io/osapi/internal/provider/node/service"
 )
 
 // GetNodeServiceByName gets details for a single service on a target node.

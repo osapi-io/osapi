@@ -32,10 +32,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/file"
-	filemocks "github.com/retr0h/osapi/internal/provider/file/mocks"
+	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider/file"
+	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 )
 
 type TemplatePublicTestSuite struct {

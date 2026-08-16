@@ -21,7 +21,7 @@
 package mem
 
 import (
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // GetStats retrieves memory statistics of the system.

@@ -23,7 +23,7 @@ package health
 import (
 	"context"
 
-	"github.com/retr0h/osapi/internal/controller/api/health/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/health/gen"
 )
 
 // GetHealthReady readiness probe — returns 200 when dependencies are reachable.

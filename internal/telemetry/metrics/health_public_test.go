@@ -33,7 +33,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/telemetry/metrics"
+	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 )
 
 type HealthPublicTestSuite struct {

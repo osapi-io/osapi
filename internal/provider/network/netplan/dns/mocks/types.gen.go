@@ -12,7 +12,7 @@ package mocks
 import (
 	reflect "reflect"
 
-	dns "github.com/retr0h/osapi/internal/provider/network/netplan/dns"
+	dns "github.com/osapi-io/osapi/internal/provider/network/netplan/dns"
 	gomock "go.uber.org/mock/gomock"
 )
 

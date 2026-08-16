@@ -21,7 +21,7 @@
 package ping
 
 import (
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // Do pings the given host and returns the ping statistics or an error.

@@ -27,8 +27,8 @@ import (
 
 	"github.com/shirou/gopsutil/v4/host"
 
-	iexec "github.com/retr0h/osapi/internal/exec"
-	"github.com/retr0h/osapi/internal/provider"
+	iexec "github.com/osapi-io/osapi/internal/exec"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 var _ provider.FactsSetter = (*Debian)(nil)

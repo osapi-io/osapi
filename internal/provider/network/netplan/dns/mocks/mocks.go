@@ -23,7 +23,7 @@ package mocks
 import (
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/provider/network/netplan/dns"
+	"github.com/osapi-io/osapi/internal/provider/network/netplan/dns"
 )
 
 // NewPlainMockProvider creates a Mock without defaults.

@@ -31,7 +31,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // marshalJSON is a package-level variable for testing the marshal error path.

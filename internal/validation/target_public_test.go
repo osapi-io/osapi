@@ -27,7 +27,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 type TargetPublicTestSuite struct {
