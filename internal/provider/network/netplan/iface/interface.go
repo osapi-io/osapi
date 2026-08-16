@@ -28,7 +28,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/provider/network/netplan"
+	"github.com/osapi-io/osapi/internal/provider/network/netplan"
 )
 
 const (

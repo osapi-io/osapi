@@ -27,9 +27,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/network/gen"
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/netplan/iface"
+	"github.com/osapi-io/osapi/internal/controller/api/node/network/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/provider/network/netplan/iface"
 )
 
 // GetNodeNetworkInterfaceByName get the node network interface by name API endpoint.

@@ -27,8 +27,8 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/job"
-	logProv "github.com/retr0h/osapi/internal/provider/node/log"
+	"github.com/osapi-io/osapi/internal/job"
+	logProv "github.com/osapi-io/osapi/internal/provider/node/log"
 )
 
 // processLogOperation dispatches log management sub-operations.

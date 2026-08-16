@@ -27,9 +27,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/sysctl/gen"
-	"github.com/retr0h/osapi/internal/job"
-	sysctlProv "github.com/retr0h/osapi/internal/provider/node/sysctl"
+	"github.com/osapi-io/osapi/internal/controller/api/node/sysctl/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	sysctlProv "github.com/osapi-io/osapi/internal/provider/node/sysctl"
 )
 
 // GetNodeSysctl lists all managed sysctl entries on a target node.

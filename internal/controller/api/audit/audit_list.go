@@ -26,9 +26,9 @@ import (
 
 	"github.com/google/uuid"
 
-	auditstore "github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/controller/api/audit/gen"
-	"github.com/retr0h/osapi/internal/validation"
+	auditstore "github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/controller/api/audit/gen"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // GetAuditLogs returns a paginated list of audit log entries.

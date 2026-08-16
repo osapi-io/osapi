@@ -20,7 +20,7 @@
 
 package client
 
-import "github.com/retr0h/osapi/pkg/sdk/client/gen"
+import "github.com/osapi-io/osapi/pkg/sdk/client/gen"
 
 // FileUpload represents a successfully uploaded file.
 type FileUpload struct {

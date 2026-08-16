@@ -34,9 +34,9 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/job/client"
-	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job/client"
+	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
 
 // registrationJSON returns a minimal agent registration JSON for the given hostname.

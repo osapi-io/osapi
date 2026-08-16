@@ -25,8 +25,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/retr0h/osapi/internal/agent/identity"
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/agent/identity"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // getIdentityFn dispatches to the identity resolution function.

@@ -25,7 +25,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/controller/api/audit/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/audit/gen"
 )
 
 // GetAuditLogByID returns a single audit log entry by ID.

@@ -27,8 +27,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/job/gen"
-	"github.com/retr0h/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/controller/api/job/gen"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // RetryJobByID creates a new job using the same operation data as an existing job.

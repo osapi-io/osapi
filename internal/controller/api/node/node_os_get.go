@@ -27,9 +27,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/node/host"
+	"github.com/osapi-io/osapi/internal/controller/api/node/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/provider/node/host"
 )
 
 // GetNodeOS get the node OS info API endpoint.

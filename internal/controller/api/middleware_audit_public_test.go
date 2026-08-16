@@ -34,8 +34,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/controller/api"
+	"github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/controller/api"
 )
 
 // captureStore is a concurrency-safe audit store spy that records Write calls.

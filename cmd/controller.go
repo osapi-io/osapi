@@ -28,8 +28,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/config"
 )
 
 // controllerCmd represents the controller command.

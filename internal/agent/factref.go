@@ -24,8 +24,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/facts"
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/facts"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // ResolveFacts walks all string values in params and replaces @fact.X

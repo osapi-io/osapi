@@ -28,8 +28,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/retr0h/osapi/internal/job"
-	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
+	"github.com/osapi-io/osapi/internal/job"
+	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 )
 
 // NewDockerProcessor returns a ProcessorFunc that handles docker-related operations.

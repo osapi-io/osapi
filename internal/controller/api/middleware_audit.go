@@ -30,7 +30,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/retr0h/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/audit"
 )
 
 // excludedAuditPaths lists path prefixes that should not generate audit entries.

@@ -23,7 +23,7 @@ package file
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // File implementation of the node file deploy APIs operations.

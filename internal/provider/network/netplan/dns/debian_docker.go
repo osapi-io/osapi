@@ -25,7 +25,7 @@ import (
 
 	"github.com/avfs/avfs"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 const resolvConfPath = "/etc/resolv.conf"

@@ -31,7 +31,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/retr0h/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 func main() {

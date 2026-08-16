@@ -21,7 +21,7 @@
 package schedule_test
 
 import (
-	"github.com/retr0h/osapi/internal/controller/api/node/schedule/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/node/schedule/gen"
 )
 
 func strPtr(

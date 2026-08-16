@@ -345,9 +345,9 @@ import (
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
 
-	"github.com/retr0h/osapi/internal/exec"
-	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/file"
+	"github.com/osapi-io/osapi/internal/exec"
+	"github.com/osapi-io/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider/file"
 )
 
 const (
@@ -571,8 +571,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/file"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/provider/file"
 )
 
 // List returns all CA certificates — both system CAs from
@@ -854,7 +854,7 @@ func NewCertificateProcessor(
 Add import:
 
 ```go
-certProv "github.com/retr0h/osapi/internal/provider/node/certificate"
+certProv "github.com/osapi-io/osapi/internal/provider/node/certificate"
 ```
 
 Add factory function `createCertificateProvider` — on Debian, needs
@@ -954,7 +954,7 @@ generate:
   echo-server: true
   strict-server: true
 import-mapping:
-  ../../../common/gen/api.yaml: github.com/retr0h/osapi/internal/controller/api/common/gen
+  ../../../common/gen/api.yaml: github.com/osapi-io/osapi/internal/controller/api/common/gen
 output-options:
   skip-prune: true
 ```
@@ -1065,7 +1065,7 @@ Each test file needs:
 Add import:
 
 ```go
-certAPI "github.com/retr0h/osapi/internal/controller/api/node/certificate"
+certAPI "github.com/osapi-io/osapi/internal/controller/api/node/certificate"
 ```
 
 Add:

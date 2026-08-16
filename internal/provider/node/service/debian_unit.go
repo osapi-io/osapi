@@ -26,8 +26,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/file"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/provider/file"
 )
 
 const (

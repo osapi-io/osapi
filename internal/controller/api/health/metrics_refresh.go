@@ -25,7 +25,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/retr0h/osapi/internal/controller/api/health/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/health/gen"
 )
 
 // StartMetricsRefresh starts a background goroutine that refreshes the

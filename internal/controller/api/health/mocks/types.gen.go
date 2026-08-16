@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	health "github.com/retr0h/osapi/internal/controller/api/health"
+	health "github.com/osapi-io/osapi/internal/controller/api/health"
 	gomock "go.uber.org/mock/gomock"
 )
 

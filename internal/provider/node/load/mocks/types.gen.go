@@ -12,7 +12,7 @@ package mocks
 import (
 	reflect "reflect"
 
-	load "github.com/retr0h/osapi/internal/provider/node/load"
+	load "github.com/osapi-io/osapi/internal/provider/node/load"
 	gomock "go.uber.org/mock/gomock"
 )
 

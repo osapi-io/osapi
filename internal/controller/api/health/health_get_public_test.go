@@ -31,10 +31,10 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/controller/api"
-	"github.com/retr0h/osapi/internal/controller/api/health"
-	"github.com/retr0h/osapi/internal/controller/api/health/gen"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/api"
+	"github.com/osapi-io/osapi/internal/controller/api/health"
+	"github.com/osapi-io/osapi/internal/controller/api/health/gen"
 )
 
 type HealthGetPublicTestSuite struct {

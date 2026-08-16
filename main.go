@@ -21,7 +21,7 @@
 // Package main is the entry point for the OSAPI binary.
 package main
 
-import "github.com/retr0h/osapi/cmd"
+import "github.com/osapi-io/osapi/cmd"
 
 func main() {
 	cmd.Execute()

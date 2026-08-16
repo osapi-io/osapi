@@ -20,7 +20,7 @@
 
 package file
 
-import "github.com/retr0h/osapi/internal/validation"
+import "github.com/osapi-io/osapi/internal/validation"
 
 // validateFileName validates a file name path parameter using the shared
 // validator. Returns the error message and false if invalid.

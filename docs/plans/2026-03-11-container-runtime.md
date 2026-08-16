@@ -183,8 +183,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider/container/runtime"
-	"github.com/retr0h/osapi/internal/provider/container/runtime/docker"
+	"github.com/osapi-io/osapi/internal/provider/container/runtime"
+	"github.com/osapi-io/osapi/internal/provider/container/runtime/docker"
 )
 
 type DockerDriverPublicTestSuite struct {
@@ -260,7 +260,7 @@ import (
 	dockerclient "github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
-	"github.com/retr0h/osapi/internal/provider/container/runtime"
+	"github.com/osapi-io/osapi/internal/provider/container/runtime"
 )
 
 // Driver implements runtime.Driver using the Docker Engine API.
@@ -332,7 +332,7 @@ struct pattern.
 package container
 
 import (
-	"github.com/retr0h/osapi/internal/provider/container/runtime"
+	"github.com/osapi-io/osapi/internal/provider/container/runtime"
 )
 
 // Provider defines the container management interface.
@@ -360,8 +360,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider/container"
-	"github.com/retr0h/osapi/internal/provider/container/runtime"
+	"github.com/osapi-io/osapi/internal/provider/container"
+	"github.com/osapi-io/osapi/internal/provider/container/runtime"
 )
 
 type ProviderPublicTestSuite struct {
@@ -410,7 +410,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/retr0h/osapi/internal/provider/container/runtime"
+	"github.com/osapi-io/osapi/internal/provider/container/runtime"
 )
 
 // Service implements Provider by delegating to a runtime.Driver.
@@ -727,8 +727,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/container/runtime"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/provider/container/runtime"
 )
 
 func (a *Agent) processContainerOperation(
@@ -865,7 +865,7 @@ generate:
   echo-server: true
   strict-server: true
 import-mapping:
-  ../../common/gen/api.yaml: github.com/retr0h/osapi/internal/api/common/gen
+  ../../common/gen/api.yaml: github.com/osapi-io/osapi/internal/api/common/gen
 output-options:
   skip-prune: true
 ```
@@ -933,7 +933,7 @@ package container
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // Container implementation of the Container APIs operations.
@@ -952,8 +952,8 @@ package container
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/api/container/gen"
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/api/container/gen"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 var _ gen.StrictServerInterface = (*Container)(nil)
@@ -1144,10 +1144,10 @@ import (
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
-	"github.com/retr0h/osapi/internal/api/container"
-	containerGen "github.com/retr0h/osapi/internal/api/container/gen"
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/api/container"
+	containerGen "github.com/osapi-io/osapi/internal/api/container/gen"
+	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // GetContainerHandler returns container handler for registration.

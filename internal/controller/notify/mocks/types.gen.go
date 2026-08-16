@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	notify "github.com/retr0h/osapi/internal/controller/notify"
+	notify "github.com/osapi-io/osapi/internal/controller/notify"
 	gomock "go.uber.org/mock/gomock"
 )
 

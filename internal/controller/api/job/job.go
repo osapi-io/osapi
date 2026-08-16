@@ -24,8 +24,8 @@ package job
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/controller/api/job/gen"
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/controller/api/job/gen"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // ensure that we've conformed to the `StrictServerInterface` with a compile-time check

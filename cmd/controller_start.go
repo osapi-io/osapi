@@ -25,12 +25,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/controller/api"
-	"github.com/retr0h/osapi/internal/job"
-	jobclient "github.com/retr0h/osapi/internal/job/client"
-	"github.com/retr0h/osapi/internal/telemetry/metrics"
-	"github.com/retr0h/osapi/internal/telemetry/tracing"
+	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/controller/api"
+	"github.com/osapi-io/osapi/internal/job"
+	jobclient "github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/telemetry/metrics"
+	"github.com/osapi-io/osapi/internal/telemetry/tracing"
 )
 
 // controllerStartCmd represents the controller start command.

@@ -1,6 +1,6 @@
 [![release](https://img.shields.io/github/release/osapi-io/osapi.svg?style=for-the-badge)](https://github.com/osapi-io/osapi/releases/latest)
 [![codecov](https://img.shields.io/codecov/c/github/osapi-io/osapi?token=NF0T86B1EP&style=for-the-badge)](https://codecov.io/gh/osapi-io/osapi)
-[![go report card](https://goreportcard.com/badge/github.com/retr0h/osapi?style=for-the-badge)](https://goreportcard.com/report/github.com/retr0h/osapi)
+[![go report card](https://goreportcard.com/badge/github.com/osapi-io/osapi?style=for-the-badge)](https://goreportcard.com/report/github.com/osapi-io/osapi)
 [![license](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge)](LICENSE)
 [![build](https://img.shields.io/github/actions/workflow/status/osapi-io/osapi/go.yml?style=for-the-badge)](https://github.com/osapi-io/osapi/actions/workflows/go.yml)
 [![docker](https://img.shields.io/badge/ghcr.io-osapi-blue?style=for-the-badge&logo=docker&logoColor=white)](https://github.com/osapi-io/osapi/pkgs/container/osapi)
@@ -11,7 +11,7 @@
 ![openapi initiative](https://img.shields.io/badge/openapiinitiative-%23000000.svg?style=for-the-badge&logo=openapiinitiative&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
 ![gitHub commit activity](https://img.shields.io/github/commit-activity/m/osapi-io/osapi?style=for-the-badge)
-[![go reference](https://img.shields.io/badge/go-reference-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://pkg.go.dev/github.com/retr0h/osapi)
+[![go reference](https://img.shields.io/badge/go-reference-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://pkg.go.dev/github.com/osapi-io/osapi)
 
 # OS API
 

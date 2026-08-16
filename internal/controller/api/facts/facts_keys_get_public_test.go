@@ -31,12 +31,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/controller/api"
-	"github.com/retr0h/osapi/internal/controller/api/facts"
-	"github.com/retr0h/osapi/internal/controller/api/facts/gen"
-	factskeys "github.com/retr0h/osapi/internal/facts"
+	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/api"
+	"github.com/osapi-io/osapi/internal/controller/api/facts"
+	"github.com/osapi-io/osapi/internal/controller/api/facts/gen"
+	factskeys "github.com/osapi-io/osapi/internal/facts"
 )
 
 const testSigningKey = "test-signing-key-for-facts"

@@ -20,7 +20,7 @@
 
 package certificate
 
-import "github.com/retr0h/osapi/internal/validation"
+import "github.com/osapi-io/osapi/internal/validation"
 
 // validateHostname validates a hostname path parameter using the shared
 // validator. Returns the error message and false if invalid.

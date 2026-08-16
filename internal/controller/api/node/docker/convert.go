@@ -25,7 +25,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // stringPtrOrNil returns a pointer to s if non-empty, otherwise nil.

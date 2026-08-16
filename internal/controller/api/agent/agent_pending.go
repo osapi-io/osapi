@@ -23,7 +23,7 @@ package agent
 import (
 	"context"
 
-	"github.com/retr0h/osapi/internal/controller/api/agent/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/agent/gen"
 )
 
 // GetAgentsPending handles GET /agent/pending.

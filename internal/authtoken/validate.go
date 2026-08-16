@@ -25,7 +25,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 
-	"github.com/retr0h/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // Validate parses and validates the JWT.

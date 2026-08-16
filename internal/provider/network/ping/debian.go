@@ -23,7 +23,7 @@ package ping
 import (
 	probing "github.com/prometheus-community/pro-bing"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // Compile-time check: Debian must satisfy FactsSetter.

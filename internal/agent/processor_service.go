@@ -27,8 +27,8 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/node/service"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/provider/node/service"
 )
 
 // processServiceOperation dispatches service management sub-operations.

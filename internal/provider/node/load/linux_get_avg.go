@@ -21,7 +21,7 @@
 package load
 
 import (
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // GetAverageStats returns the system's load averages over 1, 5, and 15 minutes.

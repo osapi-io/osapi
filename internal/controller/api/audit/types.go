@@ -23,7 +23,7 @@ package audit
 import (
 	"log/slog"
 
-	auditstore "github.com/retr0h/osapi/internal/audit"
+	auditstore "github.com/osapi-io/osapi/internal/audit"
 )
 
 // Audit implementation of the Audit APIs operations.

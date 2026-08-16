@@ -27,10 +27,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/power/gen"
-	"github.com/retr0h/osapi/internal/job"
-	powerProv "github.com/retr0h/osapi/internal/provider/node/power"
-	"github.com/retr0h/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/controller/api/node/power/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	powerProv "github.com/osapi-io/osapi/internal/provider/node/power"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // PostNodePowerReboot initiates a reboot on the target node.

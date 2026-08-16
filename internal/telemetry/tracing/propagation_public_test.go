@@ -32,7 +32,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/retr0h/osapi/internal/telemetry/tracing"
+	"github.com/osapi-io/osapi/internal/telemetry/tracing"
 )
 
 type PropagationPublicTestSuite struct {

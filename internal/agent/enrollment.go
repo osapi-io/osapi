@@ -32,8 +32,8 @@ import (
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go"
 
-	agentpki "github.com/retr0h/osapi/internal/agent/pki"
-	"github.com/retr0h/osapi/internal/job"
+	agentpki "github.com/osapi-io/osapi/internal/agent/pki"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // marshalJSONEnrollment is a package-level variable for testing the marshal error path.

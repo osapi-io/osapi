@@ -23,7 +23,7 @@ package log
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // Log implementation of the Log APIs operations.

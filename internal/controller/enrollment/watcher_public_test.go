@@ -34,10 +34,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/agent/pki"
-	"github.com/retr0h/osapi/internal/controller/enrollment"
-	enrollMocks "github.com/retr0h/osapi/internal/controller/enrollment/mocks"
-	jobMocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/agent/pki"
+	"github.com/osapi-io/osapi/internal/controller/enrollment"
+	enrollMocks "github.com/osapi-io/osapi/internal/controller/enrollment/mocks"
+	jobMocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
 
 type WatcherPublicTestSuite struct {

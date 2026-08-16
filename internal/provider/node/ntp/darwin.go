@@ -23,7 +23,7 @@ package ntp
 import (
 	"context"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // Darwin implements the Provider interface for Darwin (macOS).

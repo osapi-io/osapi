@@ -239,7 +239,7 @@ In `types.go`:
 ```go
 package netinfo
 
-import "github.com/retr0h/osapi/internal/job"
+import "github.com/osapi-io/osapi/internal/job"
 
 type Provider interface {
 	GetInterfaces() ([]job.NetworkInterface, error)
@@ -256,7 +256,7 @@ package netinfo
 import (
 	"net"
 
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 type Netinfo struct{}

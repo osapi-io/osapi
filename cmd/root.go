@@ -38,10 +38,10 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/term"
 
-	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/telemetry/tracing"
-	"github.com/retr0h/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/telemetry/tracing"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 var (
@@ -65,7 +65,7 @@ the system's configuration matches the desired state.
 │ │└─┐├─┤├─┘│
 └─┘└─┘┴ ┴┴  ┴
 
-https://github.com/retr0h/osapi
+https://github.com/osapi-io/osapi
 `,
 }
 

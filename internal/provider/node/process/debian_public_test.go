@@ -32,8 +32,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/provider/node/process"
-	"github.com/retr0h/osapi/internal/provider/node/process/mocks"
+	"github.com/osapi-io/osapi/internal/provider/node/process"
+	"github.com/osapi-io/osapi/internal/provider/node/process/mocks"
 )
 
 type DebianPublicTestSuite struct {

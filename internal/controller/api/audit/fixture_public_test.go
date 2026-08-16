@@ -23,8 +23,8 @@ package audit_test
 import (
 	"log/slog"
 
-	auditstore "github.com/retr0h/osapi/internal/audit"
-	auditapi "github.com/retr0h/osapi/internal/controller/api/audit"
+	auditstore "github.com/osapi-io/osapi/internal/audit"
+	auditapi "github.com/osapi-io/osapi/internal/controller/api/audit"
 )
 
 // newTestAuditHandler creates an audit handler for integration tests.

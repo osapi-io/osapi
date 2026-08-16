@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	audit "github.com/retr0h/osapi/internal/audit"
+	audit "github.com/osapi-io/osapi/internal/audit"
 	gomock "go.uber.org/mock/gomock"
 )
 

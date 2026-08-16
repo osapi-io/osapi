@@ -31,8 +31,8 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 
-	"github.com/retr0h/osapi/internal/controller/api/file/gen"
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/controller/api/file/gen"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // GetFileStale returns deployments where the source object has been updated

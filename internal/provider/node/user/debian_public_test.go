@@ -33,8 +33,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	execmocks "github.com/retr0h/osapi/internal/exec/mocks"
-	"github.com/retr0h/osapi/internal/provider/node/user"
+	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
+	"github.com/osapi-io/osapi/internal/provider/node/user"
 )
 
 const passwdContent = `root:x:0:0:root:/root:/bin/bash

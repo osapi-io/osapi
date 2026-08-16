@@ -80,16 +80,16 @@ import (
 
 	"github.com/shirou/gopsutil/v4/host"
 
-	"github.com/retr0h/osapi/internal/exec"
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/exec"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 ```
 
 Note: the import alias must avoid collision with `os/exec`. Use the full path
-`iexec "github.com/retr0h/osapi/internal/exec"` if needed, or since the field
+`iexec "github.com/osapi-io/osapi/internal/exec"` if needed, or since the field
 type is an interface, use the `exec.Manager` type directly. Check how the dns
-package handles this — it imports `"github.com/retr0h/osapi/internal/exec"` and
-the field type is `exec.Manager`.
+package handles this — it imports `"github.com/osapi-io/osapi/internal/exec"`
+and the field type is `exec.Manager`.
 
 Add `execManager` field to the `Debian` struct:
 
@@ -145,8 +145,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/exec/mocks"
-	"github.com/retr0h/osapi/internal/provider/node/host"
+	"github.com/osapi-io/osapi/internal/exec/mocks"
+	"github.com/osapi-io/osapi/internal/provider/node/host"
 )
 
 type DebianSetHostnamePublicTestSuite struct {
@@ -348,7 +348,7 @@ package host
 import (
 	"fmt"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // SetHostname returns ErrUnsupported on Darwin.
@@ -370,7 +370,7 @@ package host
 import (
 	"fmt"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // SetHostname returns ErrUnsupported on generic Linux.

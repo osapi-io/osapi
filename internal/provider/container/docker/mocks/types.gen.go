@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	docker "github.com/retr0h/osapi/internal/provider/container/docker"
+	docker "github.com/osapi-io/osapi/internal/provider/container/docker"
 	gomock "go.uber.org/mock/gomock"
 )
 

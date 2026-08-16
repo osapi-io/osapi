@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/retr0h/osapi/internal/controller/api/health/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/health/gen"
 )
 
 // metricTimeout is the per-metric context deadline. Individual metric

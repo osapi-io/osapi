@@ -59,7 +59,7 @@ package orchestrator
 import (
 	"encoding/json"
 
-	osapiclient "github.com/retr0h/osapi/pkg/sdk/client"
+	osapiclient "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // StructToMap converts a struct to map[string]any using its JSON

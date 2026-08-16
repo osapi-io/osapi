@@ -27,8 +27,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	execmocks "github.com/retr0h/osapi/internal/exec/mocks"
-	"github.com/retr0h/osapi/internal/provider/network/netplan"
+	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
+	"github.com/osapi-io/osapi/internal/provider/network/netplan"
 )
 
 // netplanStatusJSON is a trimmed version of real netplan status output used

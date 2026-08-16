@@ -26,7 +26,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/controller/api/file"
+	"github.com/osapi-io/osapi/internal/controller/api/file"
 )
 
 type ValidateFilePublicTestSuite struct {

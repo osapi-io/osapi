@@ -25,9 +25,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/telemetry/metrics"
+	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 )
 
 // natsServerStartCmd represents the natsServerStart command.

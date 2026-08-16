@@ -26,7 +26,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider/node/host"
+	"github.com/osapi-io/osapi/internal/provider/node/host"
 )
 
 type DebianGetServiceManagerPublicTestSuite struct {

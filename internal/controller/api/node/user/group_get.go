@@ -28,9 +28,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/user/gen"
-	"github.com/retr0h/osapi/internal/job"
-	userProv "github.com/retr0h/osapi/internal/provider/node/user"
+	"github.com/osapi-io/osapi/internal/controller/api/node/user/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	userProv "github.com/osapi-io/osapi/internal/provider/node/user"
 )
 
 // GetNodeGroupByName gets a single group by name on a target node.

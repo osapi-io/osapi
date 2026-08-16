@@ -32,8 +32,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/audit/mocks"
+	"github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/audit/mocks"
 )
 
 type StreamStorePublicTestSuite struct {

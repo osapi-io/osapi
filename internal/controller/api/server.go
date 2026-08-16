@@ -32,7 +32,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	"go.opentelemetry.io/otel"
 
-	"github.com/retr0h/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/config"
 )
 
 // New initialize a new Server and configure an Echo server.

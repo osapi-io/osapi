@@ -30,7 +30,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 
-	"github.com/retr0h/osapi/internal/agent/pki"
+	"github.com/osapi-io/osapi/internal/agent/pki"
 )
 
 // marshalFn is the JSON marshal function (injectable for testing).

@@ -29,7 +29,7 @@ import (
 
 	gopsutil "github.com/shirou/gopsutil/v4/process"
 
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // allowedSignals maps signal names to their syscall equivalents.

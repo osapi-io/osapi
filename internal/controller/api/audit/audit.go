@@ -24,8 +24,8 @@ package audit
 import (
 	"log/slog"
 
-	auditstore "github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/controller/api/audit/gen"
+	auditstore "github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/controller/api/audit/gen"
 )
 
 // ensure that we've conformed to the `StrictServerInterface` with a compile-time check

@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	cron "github.com/retr0h/osapi/internal/provider/scheduled/cron"
+	cron "github.com/osapi-io/osapi/internal/provider/scheduled/cron"
 	gomock "go.uber.org/mock/gomock"
 )
 

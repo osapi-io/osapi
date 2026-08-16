@@ -13,7 +13,7 @@ import (
 	"github.com/oapi-codegen/runtime"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 	openapi_types "github.com/oapi-codegen/runtime/types"
-	externalRef0 "github.com/retr0h/osapi/internal/controller/api/common/gen"
+	externalRef0 "github.com/osapi-io/osapi/internal/controller/api/common/gen"
 )
 
 const (

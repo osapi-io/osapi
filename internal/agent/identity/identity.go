@@ -26,7 +26,7 @@ import (
 
 	"github.com/avfs/avfs"
 
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // getMachineIDFn dispatches to the platform-specific machine ID resolver.

@@ -29,10 +29,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/agent"
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/netplan/iface"
-	netifMocks "github.com/retr0h/osapi/internal/provider/network/netplan/iface/mocks"
+	"github.com/osapi-io/osapi/internal/agent"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/provider/network/netplan/iface"
+	netifMocks "github.com/osapi-io/osapi/internal/provider/network/netplan/iface/mocks"
 )
 
 type ProcessorInterfacePublicTestSuite struct {

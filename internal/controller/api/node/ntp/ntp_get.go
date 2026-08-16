@@ -27,9 +27,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/ntp/gen"
-	"github.com/retr0h/osapi/internal/job"
-	ntpProv "github.com/retr0h/osapi/internal/provider/node/ntp"
+	"github.com/osapi-io/osapi/internal/controller/api/node/ntp/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	ntpProv "github.com/osapi-io/osapi/internal/provider/node/ntp"
 )
 
 // GetNodeNtp gets NTP sync status and configured servers on a target node.

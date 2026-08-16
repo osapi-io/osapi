@@ -32,17 +32,17 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel/metric"
 
-	"github.com/retr0h/osapi/internal/agent/pki"
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/exec"
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/job/client"
-	"github.com/retr0h/osapi/internal/provider/network/netinfo"
-	"github.com/retr0h/osapi/internal/provider/node/disk"
-	"github.com/retr0h/osapi/internal/provider/node/host"
-	"github.com/retr0h/osapi/internal/provider/node/load"
-	"github.com/retr0h/osapi/internal/provider/node/mem"
-	"github.com/retr0h/osapi/internal/telemetry/process"
+	"github.com/osapi-io/osapi/internal/agent/pki"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/exec"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/provider/network/netinfo"
+	"github.com/osapi-io/osapi/internal/provider/node/disk"
+	"github.com/osapi-io/osapi/internal/provider/node/host"
+	"github.com/osapi-io/osapi/internal/provider/node/load"
+	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/internal/telemetry/process"
 )
 
 // NATSPublisher provides core NATS pub/sub for enrollment.

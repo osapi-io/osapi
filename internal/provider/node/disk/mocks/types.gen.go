@@ -12,7 +12,7 @@ package mocks
 import (
 	reflect "reflect"
 
-	disk "github.com/retr0h/osapi/internal/provider/node/disk"
+	disk "github.com/osapi-io/osapi/internal/provider/node/disk"
 	gomock "go.uber.org/mock/gomock"
 )
 

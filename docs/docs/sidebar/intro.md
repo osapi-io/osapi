@@ -18,7 +18,7 @@ file, and get a REST API and CLI for querying and changing system configuration
 ## Install
 
 ```bash
-go install github.com/retr0h/osapi@latest
+go install github.com/osapi-io/osapi@latest
 ```
 
 Or download a prebuilt binary from the [releases][] page.
@@ -111,7 +111,7 @@ osapi client health
 <!-- prettier-ignore-start -->
 [Cockpit]: https://cockpit-project.org/
 [webmin]: https://webmin.com/
-[releases]: https://github.com/retr0h/osapi/releases
+[releases]: https://github.com/osapi-io/osapi/releases
 [ghcr]: https://github.com/osapi-io/osapi/pkgs/container/osapi
 [cosign]: https://github.com/sigstore/cosign
 [SBOM]: https://en.wikipedia.org/wiki/Software_supply_chain

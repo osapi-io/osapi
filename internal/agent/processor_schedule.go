@@ -27,8 +27,8 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/scheduled/cron"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/provider/scheduled/cron"
 )
 
 // NewScheduleProcessor returns a ProcessorFunc that handles schedule-related operations.

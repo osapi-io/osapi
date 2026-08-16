@@ -23,7 +23,7 @@ package api
 import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
-	"github.com/retr0h/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/audit"
 )
 
 // WithAuditStore sets the audit store for audit middleware.

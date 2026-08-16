@@ -35,7 +35,7 @@ import (
     "encoding/json"
     "fmt"
 
-    "github.com/retr0h/osapi/internal/job"
+    "github.com/osapi-io/osapi/internal/job"
 )
 
 // ProcessorFunc handles job requests for a category.

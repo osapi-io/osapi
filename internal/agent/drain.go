@@ -23,7 +23,7 @@ package agent
 import (
 	"context"
 
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // checkDrainFlag checks the drain flag via the job client. Drain flags

@@ -25,10 +25,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/retr0h/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 
-	"github.com/retr0h/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli"
 )
 
 // clientHealthStatusCmd represents the clientHealthStatus command.

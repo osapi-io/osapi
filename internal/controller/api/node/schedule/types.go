@@ -23,7 +23,7 @@ package schedule
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // Schedule implementation of the Schedule APIs operations.

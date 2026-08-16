@@ -37,14 +37,14 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/controller/api"
-	apifile "github.com/retr0h/osapi/internal/controller/api/file"
-	"github.com/retr0h/osapi/internal/controller/api/file/gen"
-	"github.com/retr0h/osapi/internal/controller/api/file/mocks"
-	"github.com/retr0h/osapi/internal/job"
-	jobMocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/api"
+	apifile "github.com/osapi-io/osapi/internal/controller/api/file"
+	"github.com/osapi-io/osapi/internal/controller/api/file/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/file/mocks"
+	"github.com/osapi-io/osapi/internal/job"
+	jobMocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
 
 type FileStalePublicTestSuite struct {

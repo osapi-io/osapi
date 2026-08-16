@@ -25,7 +25,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/controller/api/job/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/job/gen"
 )
 
 // DeleteJobByID deletes a specific job by its ID.

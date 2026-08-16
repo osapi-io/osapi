@@ -26,8 +26,8 @@ import (
 	"github.com/labstack/echo/v4"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
-	"github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/config"
 )
 
 // Server implementation of the Server's API operations.

@@ -31,7 +31,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/agent/identity"
+	"github.com/osapi-io/osapi/internal/agent/identity"
 )
 
 // defaultGetMachineID uses the injectable osPlatform variable, so all

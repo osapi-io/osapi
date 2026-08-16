@@ -28,9 +28,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/ntp/gen"
-	"github.com/retr0h/osapi/internal/job"
-	ntpProv "github.com/retr0h/osapi/internal/provider/node/ntp"
+	"github.com/osapi-io/osapi/internal/controller/api/node/ntp/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	ntpProv "github.com/osapi-io/osapi/internal/provider/node/ntp"
 )
 
 // DeleteNodeNtp deletes a managed NTP configuration on a target node.

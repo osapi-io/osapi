@@ -173,7 +173,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/ops"
+	"github.com/osapi-io/osapi/internal/ops"
 )
 
 type ServerPublicTestSuite struct {
@@ -401,7 +401,7 @@ cli.RunServer(ctx, sm, func() {
 })
 ```
 
-Add import: `"github.com/retr0h/osapi/internal/ops"`
+Add import: `"github.com/osapi-io/osapi/internal/ops"`
 
 - [ ] **Step 2: Remove metrics from API port**
 
@@ -479,7 +479,7 @@ cli.RunServer(ctx, agentServer, func() {
 })
 ```
 
-Add import: `"github.com/retr0h/osapi/internal/ops"`
+Add import: `"github.com/osapi-io/osapi/internal/ops"`
 
 - [ ] **Step 2: Verify build**
 

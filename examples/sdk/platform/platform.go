@@ -28,7 +28,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/retr0h/osapi/pkg/sdk/platform"
+	"github.com/osapi-io/osapi/pkg/sdk/platform"
 )
 
 func main() {

@@ -29,7 +29,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/authtoken"
 )
 
 type AuthTokenPublicTestSuite struct {

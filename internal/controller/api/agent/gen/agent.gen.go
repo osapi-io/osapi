@@ -13,7 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
-	externalRef0 "github.com/retr0h/osapi/internal/controller/api/common/gen"
+	externalRef0 "github.com/osapi-io/osapi/internal/controller/api/common/gen"
 )
 
 const (

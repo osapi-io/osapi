@@ -35,14 +35,14 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/controller/api"
-	apicontainer "github.com/retr0h/osapi/internal/controller/api/node/docker"
-	"github.com/retr0h/osapi/internal/controller/api/node/docker/gen"
-	"github.com/retr0h/osapi/internal/job"
-	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/api"
+	apicontainer "github.com/osapi-io/osapi/internal/controller/api/node/docker"
+	"github.com/osapi-io/osapi/internal/controller/api/node/docker/gen"
+	"github.com/osapi-io/osapi/internal/job"
+	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 type ContainerPullPublicTestSuite struct {

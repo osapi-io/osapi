@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 	syscall "syscall"
 
-	process "github.com/retr0h/osapi/internal/provider/node/process"
+	process "github.com/osapi-io/osapi/internal/provider/node/process"
 	process0 "github.com/shirou/gopsutil/v4/process"
 	gomock "go.uber.org/mock/gomock"
 )

@@ -25,7 +25,7 @@ const config: Config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'retr0h', // Usually your GitHub org/user name.
+  organizationName: 'osapi-io', // Usually your GitHub org/user name.
   projectName: 'osapi', // Usually your repo name.
 
   onBrokenLinks: 'throw',
@@ -526,7 +526,7 @@ const config: Config = {
           to: '/category/api'
         },
         {
-          href: 'https://github.com/retr0h/osapi',
+          href: 'https://github.com/osapi-io/osapi',
           position: 'right',
           className: 'header-github-link',
           'aria-label': 'GitHub repository'

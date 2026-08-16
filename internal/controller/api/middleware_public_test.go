@@ -30,8 +30,8 @@ import (
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/controller/api"
+	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/controller/api"
 )
 
 const testSigningKey = "test-signing-key-for-middleware"

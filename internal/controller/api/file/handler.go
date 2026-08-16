@@ -26,9 +26,9 @@ import (
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/controller/api"
-	gen "github.com/retr0h/osapi/internal/controller/api/file/gen"
+	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/controller/api"
+	gen "github.com/osapi-io/osapi/internal/controller/api/file/gen"
 )
 
 // Handler returns file route registration functions.

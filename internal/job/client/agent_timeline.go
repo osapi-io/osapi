@@ -29,7 +29,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // WriteAgentTimelineEvent writes an append-only timeline event

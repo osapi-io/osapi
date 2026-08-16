@@ -36,10 +36,10 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 
-	"github.com/retr0h/osapi/internal/agent/pki"
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/telemetry/tracing"
+	"github.com/osapi-io/osapi/internal/agent/pki"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/telemetry/tracing"
 )
 
 // extractChanged parses the processor result JSON and extracts the "changed"

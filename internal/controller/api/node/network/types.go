@@ -23,7 +23,7 @@ package network
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/job/client"
 )
 
 // Network implementation of the Network APIs operations.

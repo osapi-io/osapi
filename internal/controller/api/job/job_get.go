@@ -28,7 +28,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/job/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/job/gen"
 )
 
 // GetJobByID retrieves details of a specific job by its ID.

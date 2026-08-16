@@ -26,7 +26,7 @@ import (
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/pkg/sdk/platform"
+	"github.com/osapi-io/osapi/pkg/sdk/platform"
 )
 
 type ContainerPublicTestSuite struct {

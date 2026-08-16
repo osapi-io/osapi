@@ -21,7 +21,7 @@
 package host
 
 import (
-	"github.com/retr0h/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // GetServiceManager detects the system's service manager.

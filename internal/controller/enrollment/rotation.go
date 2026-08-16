@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/agent/pki"
+	"github.com/osapi-io/osapi/internal/agent/pki"
 )
 
 // KeyRotationMessage is published to agents when the controller

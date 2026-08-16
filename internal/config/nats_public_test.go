@@ -25,7 +25,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/config"
 )
 
 type NATSPublicTestSuite struct {

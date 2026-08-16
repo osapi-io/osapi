@@ -23,8 +23,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	dockerprov "github.com/retr0h/osapi/internal/provider/container/docker"
-	dockermocks "github.com/retr0h/osapi/internal/provider/container/docker/mocks"
+	dockerprov "github.com/osapi-io/osapi/internal/provider/container/docker"
+	dockermocks "github.com/osapi-io/osapi/internal/provider/container/docker/mocks"
 )
 
 // newHijackedResponse creates a HijackedResponse with the given content

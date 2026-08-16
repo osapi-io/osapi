@@ -25,7 +25,7 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 
-	"github.com/retr0h/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/config"
 )
 
 // GetJobsStreamConfig returns the stream configuration for job processing.

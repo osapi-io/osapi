@@ -72,7 +72,7 @@ In every `.go` file under `pkg/sdk/osapi/` (non-test, non-gen), replace:
 with:
 
 ```
-"github.com/retr0h/osapi/pkg/sdk/osapi/gen"
+"github.com/osapi-io/osapi/pkg/sdk/osapi/gen"
 ```
 
 In every `_test.go` file under `pkg/sdk/osapi/`, replace:
@@ -84,7 +84,7 @@ In every `_test.go` file under `pkg/sdk/osapi/`, replace:
 with:
 
 ```
-"github.com/retr0h/osapi/pkg/sdk/osapi/gen"
+"github.com/osapi-io/osapi/pkg/sdk/osapi/gen"
 ```
 
 And for public test files, replace:
@@ -96,7 +96,7 @@ And for public test files, replace:
 with:
 
 ```
-"github.com/retr0h/osapi/pkg/sdk/osapi"
+"github.com/osapi-io/osapi/pkg/sdk/osapi"
 ```
 
 **Step 5: Regenerate client to verify**
@@ -126,7 +126,7 @@ git commit -m "feat(sdk): copy client library into pkg/sdk/osapi"
 **Step 1: Update all Go imports**
 
 In every file listed below, replace `"github.com/osapi-io/osapi-sdk/pkg/osapi"`
-with `"github.com/retr0h/osapi/pkg/sdk/osapi"`:
+with `"github.com/osapi-io/osapi/pkg/sdk/osapi"`:
 
 - `cmd/client.go`
 - `cmd/client_agent_get.go`
@@ -190,13 +190,13 @@ mkdir -p examples/sdk/osapi
 Create `examples/sdk/osapi/go.mod`:
 
 ```
-module github.com/retr0h/osapi/examples/sdk/osapi
+module github.com/osapi-io/osapi/examples/sdk/osapi
 
 go 1.25.0
 
-replace github.com/retr0h/osapi => ../../../
+replace github.com/osapi-io/osapi => ../../../
 
-require github.com/retr0h/osapi v0.0.0
+require github.com/osapi-io/osapi v0.0.0
 ```
 
 Then run:
@@ -233,7 +233,7 @@ In each file, replace:
 with:
 
 ```
-"github.com/retr0h/osapi/pkg/sdk/osapi"
+"github.com/osapi-io/osapi/pkg/sdk/osapi"
 ```
 
 **Step 3: Verify examples compile**

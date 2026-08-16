@@ -12,7 +12,7 @@ package mocks
 import (
 	reflect "reflect"
 
-	netinfo "github.com/retr0h/osapi/internal/provider/network/netinfo"
+	netinfo "github.com/osapi-io/osapi/internal/provider/network/netinfo"
 	gomock "go.uber.org/mock/gomock"
 )
 

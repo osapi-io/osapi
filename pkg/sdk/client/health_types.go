@@ -20,7 +20,7 @@
 
 package client
 
-import "github.com/retr0h/osapi/pkg/sdk/client/gen"
+import "github.com/osapi-io/osapi/pkg/sdk/client/gen"
 
 // HealthStatus represents a liveness check response.
 type HealthStatus struct {

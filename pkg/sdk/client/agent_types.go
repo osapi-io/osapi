@@ -23,7 +23,7 @@ package client
 import (
 	"time"
 
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // Agent represents a registered OSAPI agent.

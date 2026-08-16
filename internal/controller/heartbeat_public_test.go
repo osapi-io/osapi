@@ -31,11 +31,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/controller"
-	"github.com/retr0h/osapi/internal/job"
-	jobMocks "github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/telemetry/process"
-	processMocks "github.com/retr0h/osapi/internal/telemetry/process/mocks"
+	"github.com/osapi-io/osapi/internal/controller"
+	"github.com/osapi-io/osapi/internal/job"
+	jobMocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/telemetry/process"
+	processMocks "github.com/osapi-io/osapi/internal/telemetry/process/mocks"
 )
 
 type HeartbeatPublicTestSuite struct {

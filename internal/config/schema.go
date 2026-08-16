@@ -24,7 +24,7 @@ package config
 import (
 	"github.com/go-playground/validator/v10"
 
-	"github.com/retr0h/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // regsiterValidatorsFn function to switch when testing

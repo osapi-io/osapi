@@ -25,7 +25,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/authtoken"
 )
 
 type PermissionsPublicTestSuite struct {

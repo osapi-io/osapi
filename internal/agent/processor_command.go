@@ -26,8 +26,8 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/command"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/provider/command"
 )
 
 // NewCommandProcessor returns a ProcessorFunc that handles command-related operations.

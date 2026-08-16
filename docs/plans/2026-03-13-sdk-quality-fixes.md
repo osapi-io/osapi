@@ -427,7 +427,7 @@ directive).
 
 - [ ] **Step 1: Update go.mod to use latest SDK**
 
-Either `go get github.com/retr0h/osapi@latest` or add a `replace` directive
+Either `go get github.com/osapi-io/osapi@latest` or add a `replace` directive
 pointing to the local checkout.
 
 - [ ] **Step 2: Delete result_types.go**

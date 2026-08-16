@@ -30,7 +30,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/controller/api/health"
+	"github.com/osapi-io/osapi/internal/controller/api/health"
 )
 
 type HandlerPublicTestSuite struct {
