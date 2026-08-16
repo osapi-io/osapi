@@ -1,20 +1,36 @@
 ---
-github/action:
+kind/action:
   - changed-files:
       - any-glob-to-any-file: ".github/**/*.yml"
 
 kind/docs:
   - changed-files:
       - any-glob-to-any-file: "docs/**"
+      - any-glob-to-any-file: "**/*.md"
+
+kind/docker:
+  - changed-files:
+      - any-glob-to-any-file: "**/Dockerfile*"
+      - any-glob-to-any-file: "**/*.dockerignore"
 
 kind/go:
   - changed-files:
       - any-glob-to-any-file: "**/*.go"
 
+kind/just:
+  - changed-files:
+      - any-glob-to-any-file: "**/justfile"
+      - any-glob-to-any-file: "**/*.just"
+
+kind/ts:
+  - changed-files:
+      - any-glob-to-any-file: "**/*.ts"
+      - any-glob-to-any-file: "**/*.tsx"
+
 kind/yaml:
   - changed-files:
-      - any-glob-to-any-file: "**/*.yaml"
-      - any-glob-to-any-file: "**/*.yml"
+      - any-glob-to-any-file: ["**/*.yaml", "**/*.yml"]
+        all-globs-to-all-files: "!.github/**"
 
 test/unit:
   - changed-files:
