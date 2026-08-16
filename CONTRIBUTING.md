@@ -80,19 +80,6 @@ just fetch
 just deps
 ```
 
-## Building and running
-
-```bash
-just build     # Builds the React UI, then the Go binary
-./osapi controller start -f configs/osapi.yaml
-```
-
-**Always build through `just`.** The `//go:embed dist/*` directive in
-`ui/embed.go` requires `ui/dist/` to hold files at compile time, and
-`just build` runs `just react-build` first to satisfy it. Running
-`go build ./...` or `go test ./...` directly fails for this reason.
-`just build`, `just test`, and `just ready` all build the UI first.
-
 ## Project structure
 
 - **`cmd/`** — Cobra CLI commands (`client`, `node agent`, `controller.api`,
@@ -131,9 +118,10 @@ just go-fmt         # Auto-fix formatting
 just go-vet         # Run linter
 ```
 
-golangci-lint runs errcheck, errname, goimports, govet, prealloc, predeclared,
-revive, and staticcheck. Generated files (`*.gen.go`, `*.pb.go`) are excluded
-from formatting.
+The linters that run are declared in `.golangci.yml`. Read them there rather
+than looking for a list here — a copied list goes stale the first time the
+configuration changes. Generated files (`*.gen.go`, `*.pb.go`) are excluded from
+formatting.
 
 TypeScript and CSS in `ui/` are formatted by [Prettier] and linted by [ESLint].
 Markdown outside the Docusaurus site is formatted by [mdformat]; the site itself
@@ -148,14 +136,53 @@ just docusaurus-fmt # Format the site
 
 ## Code standards
 
-The Go conventions this repository follows — multi-line function signatures,
-naming a file for what it holds, `types.go` for types only, table-driven
-`testify/suite` tests, generated mocks, and the error-wrapping and import-order
-baseline — are specified in the `go-code-standards` capability in
-[osapi-io/specs](https://github.com/osapi-io/specs). Read it before writing
-code; it is the source, and this repository does not restate it.
+### Function signatures
 
-The conventions below are specific to OSAPI and are stated only here.
+Functions with parameters use multi-line format — one parameter per line, with
+the closing parenthesis and the return types on a line of their own:
+
+```go
+func FunctionName(
+    param1 type1,
+    param2 type2,
+) (returnType, error) {
+}
+```
+
+Functions taking no parameters stay on one line:
+
+```go
+func Name() string {
+}
+```
+
+Adding a parameter then shows as one added line rather than a rewritten
+signature.
+
+### File naming
+
+Name a file for what it holds. Avoid `helpers.go`, `utils.go`, and names of that
+kind: they describe where code was put rather than what it is, and they
+accumulate whatever has no other home.
+
+`types.go` holds only type declarations — structs, interfaces, constants, and
+aliases. A function belongs in a file named for what it does.
+
+A test file is named for the production file it tests. Where tests grow too
+large to read, split the production file first so each test file keeps a
+counterpart, rather than splitting tests away from the file they cover.
+
+### Go patterns
+
+- Error wrapping: `fmt.Errorf("context: %w", err)`, so the chain names each
+  layer it passed through and stays inspectable with `errors.Is` and
+  `errors.As`.
+- Early returns rather than nesting the successful path inside conditionals.
+- Unused parameters: rename to `_`.
+- Import order: standard library, third party, then local, separated by blank
+  lines.
+
+The conventions below are specific to OSAPI.
 
 ### Logging
 
@@ -207,6 +234,24 @@ just go-unit-cov-check   # Report coverage and fail below the target
 The target is declared in `.github/codecov.yml` and in the shared `go` justfile
 module — change both together.
 
+### Test file conventions
+
+- Public tests: `*_public_test.go` in the package's `_test` package, exercising
+  the exported surface. This is the default.
+- Internal tests: `*_test.go` in the same package, for what the exported surface
+  cannot reach.
+- Suite naming: `*_public_test.go` → `{Name}PublicTestSuite`, `*_test.go` →
+  `{Name}TestSuite`.
+- `testify/suite` with table-driven cases.
+- One suite method per function under test — success, errors, and edge cases are
+  rows in one table, not separate methods.
+- `export_test.go` exposes unexported symbols to external tests, by alias or by
+  setter. Do not use an alias to re-cover behavior the caller's own test already
+  reaches; a helper with its own contract is what the pattern is for.
+- Mocks are generated with `go.uber.org/mock` and committed, never hand-written.
+  A double that carries a real implementation — signing with a real key, serving
+  real HTTP — is not a mock and does not need generating.
+
 ### Test layers
 
 - **Unit tests** (`*_test.go`, `*_public_test.go`) — fast, mocked dependencies.
@@ -232,6 +277,19 @@ runs read-only tests by default; `OSAPI_INTEGRATION_WRITES=1` enables writes.
   for every method.
 - The only exception to generated mocks is a stdlib interface such as `fs.FS` or
   `net.Conn`, where `mockgen` is impractical.
+
+## Building and running
+
+```bash
+just build     # Builds the React UI, then the Go binary
+./osapi controller start -f configs/osapi.yaml
+```
+
+**Always build through `just`.** The `//go:embed dist/*` directive in
+`ui/embed.go` requires `ui/dist/` to hold files at compile time, and
+`just build` runs `just react-build` first to satisfy it. Running
+`go build ./...` or `go test ./...` directly fails for this reason.
+`just build`, `just test`, and `just ready` all build the UI first.
 
 ## Input validation
 
