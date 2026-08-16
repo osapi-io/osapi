@@ -88,8 +88,8 @@ import (
 Note: the import alias must avoid collision with `os/exec`. Use the full path
 `iexec "github.com/osapi-io/osapi/internal/exec"` if needed, or since the field
 type is an interface, use the `exec.Manager` type directly. Check how the dns
-package handles this — it imports `"github.com/osapi-io/osapi/internal/exec"` and
-the field type is `exec.Manager`.
+package handles this — it imports `"github.com/osapi-io/osapi/internal/exec"`
+and the field type is `exec.Manager`.
 
 Add `execManager` field to the `Debian` struct:
 
