@@ -59,18 +59,21 @@ mise install
 
 ### Claude Code
 
-If you use [Claude Code] for development, install these plugins from the default
+If you use [Claude Code] for development, install this plugin from the default
 marketplace:
 
 ```
 /plugin install commit-commands@claude-plugins-official
-/plugin install superpowers@claude-plugins-official
 ```
 
 - **commit-commands** — provides `/commit` and `/commit-push-pr` slash commands
   that follow the project's commit conventions automatically.
-- **superpowers** — provides structured workflows for planning, TDD, debugging,
-  code review, and git worktree isolation.
+
+**Do not use superpowers.** Spec Kit governs specification, planning, and
+implementation, and the design record for a change lives in
+[osapi-io/specs](https://github.com/osapi-io/specs). A second workflow over that
+ground gives two answers to which artifact is authoritative, and the answer that
+loses is the one nobody reads. Nothing superpowers produces is committed.
 
 ## Setup
 
