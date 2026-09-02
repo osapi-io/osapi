@@ -33,37 +33,6 @@ type ConvertPublicTestSuite struct {
 	suite.Suite
 }
 
-func (s *ConvertPublicTestSuite) TestStringPtrOrNil() {
-	tests := []struct {
-		name         string
-		input        string
-		validateFunc func(result *string)
-	}{
-		{
-			name:  "when empty string returns nil",
-			input: "",
-			validateFunc: func(result *string) {
-				s.Nil(result)
-			},
-		},
-		{
-			name:  "when non-empty string returns pointer",
-			input: "hello",
-			validateFunc: func(result *string) {
-				s.Require().NotNil(result)
-				s.Equal("hello", *result)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			result := container.ExportStringPtrOrNil(tt.input)
-			tt.validateFunc(result)
-		})
-	}
-}
-
 func (s *ConvertPublicTestSuite) TestPtrToSlice() {
 	tests := []struct {
 		name         string

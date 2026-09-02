@@ -19,10 +19,3 @@
 // DEALINGS IN THE SOFTWARE.
 
 package file
-
-// ExportValidateFileName exposes the private validateFileName for testing.
-func ExportValidateFileName(
-	name string,
-) (string, bool) {
-	return validateFileName(name)
-}
