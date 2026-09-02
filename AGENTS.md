@@ -32,10 +32,9 @@ See @CONTRIBUTING.md under "Building and running".
 
 ## Where the rules come from
 
-Repository layout, shared tooling, and the Go conventions this repository
-follows are specified in [osapi-io/specs](https://github.com/osapi-io/specs).
-When a convention here and the specification disagree, the specification wins —
-say so rather than following the code.
+@CONTRIBUTING.md names the specification under "Before you start". When a
+convention here and the specification disagree, the specification wins — say so
+rather than following the code.
 
 ## Commit trailer
 
