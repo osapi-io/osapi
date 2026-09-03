@@ -3,7 +3,7 @@
 OSAPI UI is a React single-page application that provides a management dashboard
 and operations builder for [OSAPI](https://github.com/osapi-io/osapi).
 
-## Tech Stack
+## Tech stack
 
 - **React 19**. UI framework
 - **TypeScript**. Type-safe codebase
@@ -15,7 +15,7 @@ and operations builder for [OSAPI](https://github.com/osapi-io/osapi).
 - **React Router v7**. Client-side routing
 - **orval**. OpenAPI SDK generation
 
-## Application Structure
+## Application structure
 
 ```
 src/
@@ -45,9 +45,9 @@ src/
   pages/               — Route page components
 ```
 
-## Authentication & Authorization
+## Authentication & authorization
 
-### Auth Flow
+### Auth flow
 
 ```
 User opens app
@@ -59,7 +59,7 @@ User opens app
     → Auto-authenticate → Dashboard
 ```
 
-### JWT Token
+### JWT token
 
 OSAPI issues JWTs via `osapi token generate`. The token contains:
 
@@ -70,7 +70,7 @@ The UI decodes the token client-side (no verification, that's the server's job)
 to extract roles. The token is sent as a Bearer header on every API request via
 the fetch mutator.
 
-### RBAC Model
+### RBAC model
 
 Three built-in roles with hierarchical permissions:
 
@@ -83,7 +83,7 @@ Three built-in roles with hierarchical permissions:
 Permissions use `resource:verb` format matching osapi's Go model: `agent:read`,
 `file:write`, `command:execute`, `docker:execute`, etc.
 
-### Permission Gating
+### Permission gating
 
 - **Configure blocks**. Each block type maps to a required permission in
   `BLOCK_PERMISSIONS`. Unauthorized blocks show greyed out with a lock icon.
@@ -91,12 +91,12 @@ Permissions use `resource:verb` format matching osapi's Go model: `agent:read`,
 - **Role override dropdown**. Lets users preview what other roles see without
   changing the token.
 
-## SDK Generation
+## SDK generation
 
 The TypeScript SDK is generated from OSAPI's combined OpenAPI spec using
 [orval](https://orval.dev/).
 
-### Generation Flow
+### Generation flow
 
 ```
 osapi repo                          osapi-ui repo
@@ -116,7 +116,7 @@ osapi repo                          osapi-ui repo
    `src/sdk/gen/api.yaml` and runs orval to produce typed fetch functions and
    schema types.
 
-### Fetch Mutator
+### Fetch mutator
 
 `src/sdk/fetch.ts` is the only hand-written file in `src/sdk/`. It:
 
@@ -125,7 +125,7 @@ osapi repo                          osapi-ui repo
 - Sends it as a `Bearer` header
 - Wraps responses in `{ data, status, headers }` for orval
 
-## Component Architecture
+## Component architecture
 
 ### Layers
 
@@ -136,7 +136,7 @@ Pages (Dashboard, Configure, Roles, SignIn)
             └─ Tailwind CSS theme tokens
 ```
 
-### UI Primitives (`src/components/ui/`)
+### UI primitives (`src/components/ui/`)
 
 Framework-level reusable components. These define the visual language:
 
@@ -171,7 +171,7 @@ Framework-level reusable components. These define the visual language:
 | ConditionAlert                           | Warning condition with triangle icon                          |
 | Popover, PopoverItem, PopoverPanel       | Floating popover menu system                                  |
 
-### Text Component
+### Text component
 
 The `Text` component is the standard way to render styled text. Never write
 inline Tailwind text classes, always use `Text` with the appropriate variant:
@@ -189,7 +189,7 @@ Available variants: `default`, `muted`, `label`, `mono`, `mono-muted`,
 
 Available sizes: `xs` (default), `sm`, `base`.
 
-### Domain Components (`src/components/domain/`)
+### Domain components (`src/components/domain/`)
 
 Business logic components specific to OSAPI:
 
@@ -214,7 +214,7 @@ Business logic components specific to OSAPI:
 | useObjects | Fetch file objects for pickers                     |
 | useFacts   | Fetch @fact. keys from `/facts/keys`               |
 
-## Feature Flags
+## Feature flags
 
 Feature flags gate unreleased functionality via env vars:
 

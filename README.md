@@ -30,7 +30,7 @@ them to be used as appliances.
 
 [Getting Started] | [API] | [Usage] | [SDK]
 
-## Sister Projects
+## Sister projects
 
 | Project              | Description                                                         |
 | -------------------- | ------------------------------------------------------------------- |
