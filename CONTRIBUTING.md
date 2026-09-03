@@ -10,26 +10,26 @@ workflow.
 - Read the [Code of Conduct](CODE_OF_CONDUCT.md). It applies to every
   interaction in this repo.
 
-- **Design records** — The conventions binding this repository are specified in
+- **Design records.** The conventions binding this repository are specified in
   [osapi-io/specs](https://github.com/osapi-io/specs) under `components/osapi/`,
   whose `.specify/memory/` is the standing record. Design reasoning for a change
-  lives there too, not here — a design document kept in this repository goes
-  stale the moment the code moves past it, with nothing to catch the drift.
+  lives there, not here. A design document kept in this repository goes stale
+  the moment the code moves past it, and nothing catches the drift.
 
-- **Get familiar with the project** — Read the docs in this order:
+- **Get familiar with the project.** Read the docs in this order:
 
-  1. [Guiding Principles][principles] — design philosophy and project values
-  2. [System Architecture][system-architecture] — REST API, NATS, CLI
-  3. [API Design Guidelines][api-guidelines] — REST conventions and endpoint
+  1. [Guiding Principles][principles]. Design philosophy and project values
+  2. [System Architecture][system-architecture]. REST API, NATS, CLI
+  3. [API Design Guidelines][api-guidelines]. REST conventions and endpoint
      structure
-  4. [Job System Architecture][job-architecture] — KV-first job processing,
+  4. [Job System Architecture][job-architecture]. KV-first job processing,
      subject routing, and the agent pipeline
 
-- **Check existing work** — Is there an existing PR? Are there issues discussing
+- **Check existing work.** Is there an existing PR? Are there issues discussing
   the feature/change you want to make? Please make sure you consider/address
   these discussions in your work.
 
-- **Backwards compatibility** — Will your change break existing OSAPI files? It
+- **Backwards compatibility.** Will your change break existing OSAPI files? It
   is much more likely that your change will be merged if it is backwards
   compatible. Is there an approach you can take that maintains this
   compatibility? If not, consider opening an issue first so that API changes can
@@ -43,17 +43,17 @@ Install tools using [mise]:
 mise install
 ```
 
-- **[Go]** — OSAPI is written in Go. We always support the latest two major Go
+- **[Go].** OSAPI is written in Go. We always support the latest two major Go
   versions, so make sure your version is recent enough.
-- **[Node.js]** — Runtime for tools like `@redocly/cli`, for building the
+- **[Node.js].** Runtime for tools like `@redocly/cli`, for building the
   Docusaurus docs site, and for building the embedded React UI in `ui/`.
-- **[Bun]** — JavaScript package manager and script runner used for the
+- **[Bun].** JavaScript package manager and script runner used for the
   Docusaurus docs and the React UI.
-- **[just]** — Task runner used for building, testing, formatting, and other
+- **[just].** Task runner used for building, testing, formatting, and other
   development workflows.
-- **[uv]** — Python package runner. `just md-fmt` formats repository markdown
+- **[uv].** Python package runner. `just md-fmt` formats repository markdown
   with [mdformat] via `uvx`; nothing is installed into the repo.
-- **[NATS CLI]** — Command-line tools for interacting with NATS. Useful for
+- **[NATS CLI].** Command-line tools for interacting with NATS. Useful for
   debugging and monitoring during development. Install with
   `brew install nats-io/nats-tools/nats`.
 
@@ -66,7 +66,7 @@ marketplace:
 /plugin install commit-commands@claude-plugins-official
 ```
 
-- **commit-commands** — provides `/commit` and `/commit-push-pr` slash commands
+- **commit-commands.** provides `/commit` and `/commit-push-pr` slash commands
   that follow the project's commit conventions automatically.
 
 **Do not use superpowers.** Spec Kit governs specification, planning, and
@@ -86,30 +86,30 @@ just deps
 
 ## Project structure
 
-- **`cmd/`** — Cobra CLI commands (`client`, `node agent`, `controller.api`,
+- **`cmd/`.** Cobra CLI commands (`client`, `node agent`, `controller.api`,
   `nats server`).
-- **`internal/controller/api/`** — Echo REST API. Node-targeted handlers nest
+- **`internal/controller/api/`.** Echo REST API. Node-targeted handlers nest
   under `node/{domain}/`; controller-only handlers are top-level (`job/`,
   `health/`). Each domain has its own `gen/` with an OpenAPI spec; the combined
   spec is `internal/controller/api/gen/api.yaml`.
-- **`internal/job/`** — Job domain types and subject routing. `client/` holds
-  the high-level operations.
-- **`internal/agent/`** — Node agent: the consumer/handler/processor pipeline
-  for job execution.
-- **`internal/provider/`** — Operation implementations, organized by category
+- **`internal/job/`.** Job domain types and subject routing. `client/` holds the
+  high-level operations.
+- **`internal/agent/`.** Node agent: the consumer/handler/processor pipeline for
+  job execution.
+- **`internal/provider/`.** Operation implementations, organized by category
   then domain.
-- **`internal/config/`** — Viper-based config from `osapi.yaml`.
-- **`internal/telemetry/`** — Tracing, metrics, and agent self-metrics.
-- **`internal/controller/notify/`** — Condition notification system.
-- **`pkg/sdk/`** — Go SDK for programmatic REST API access.
-- **`ui/`** — React 19 + TypeScript + Vite + Tailwind CSS v4, embedded into the
+- **`internal/config/`.** Viper-based config from `osapi.yaml`.
+- **`internal/telemetry/`.** Tracing, metrics, and agent self-metrics.
+- **`internal/controller/notify/`.** Condition notification system.
+- **`pkg/sdk/`.** Go SDK for programmatic REST API access.
+- **`ui/`.** React 19 + TypeScript + Vite + Tailwind CSS v4, embedded into the
   Go binary at build time.
 
 [System Architecture][system-architecture] describes the package layout, handler
 structure, and provider pattern in full.
 
 `nats-client` and `nats-server` are sibling repositories, consumed as pinned
-module versions in `go.mod` — there is no `replace` directive.
+module versions in `go.mod`. There is no `replace` directive.
 
 ## Code style
 
@@ -123,7 +123,7 @@ just go-vet         # Run linter
 ```
 
 The linters that run are declared in `.golangci.yml`. Read them there rather
-than looking for a list here — a copied list goes stale the first time the
+than looking for a list here. A copied list goes stale the first time the
 configuration changes. Generated files (`*.gen.go`, `*.pb.go`) are excluded from
 formatting.
 
@@ -142,7 +142,7 @@ just docusaurus-fmt # Format the site
 
 ### Function signatures
 
-Functions with parameters use multi-line format — one parameter per line, with
+Functions with parameters use multi-line format, one parameter per line, with
 the closing parenthesis and the return types on a line of their own:
 
 ```go
@@ -169,7 +169,7 @@ Name a file for what it holds. Avoid `helpers.go`, `utils.go`, and names of that
 kind: they describe where code was put rather than what it is, and they
 accumulate whatever has no other home.
 
-`types.go` holds only type declarations — structs, interfaces, constants, and
+`types.go` holds only type declarations: structs, interfaces, constants, and
 aliases. A function belongs in a file named for what it does.
 
 A test file is named for the production file it tests. Where tests grow too
@@ -202,7 +202,7 @@ package mocks
 
 The generator is resolved through the module's tool dependencies, so every
 checkout runs the version `go.mod` records. Destination files end in `.gen.go`
-and are committed. Do not use `gen/` for mocks — that name is taken by API code
+and are committed. Do not use `gen/` for mocks. That name is taken by API code
 generation.
 
 When the interface is **unexported**, a sibling package cannot work: the mock
@@ -227,7 +227,7 @@ type. The generated mock is still what satisfies the interface.
 
 Three doubles are written by hand, because generating them buys nothing:
 
-- One standing in for a standard library interface — `net.Conn`, `fs.File`,
+- One standing in for a standard library interface: `net.Conn`, `fs.File`,
   `io.Writer`, `slog.Handler`. Those do not move when our code does.
 - One carrying a real implementation of the behavior under test, such as signing
   with a genuinely generated key pair.
@@ -241,20 +241,20 @@ The conventions below are specific to OSAPI.
 
 All logging uses Go's `log/slog` structured logger.
 
-- **Subsystem labels** — Every component that holds a logger MUST wrap it with
+- **Subsystem labels.** Every component that holds a logger MUST wrap it with
   `logger.With(slog.String("subsystem", "..."))` at construction time, which
   auto-tags every line from that component. Examples: `"agent"`, `"agent.seed"`,
   `"api.schedule"`, `"provider.file"`, `"job.client"`, `"metrics"`,
   `"controller.heartbeat"`.
-- **Typed attributes** — Use `slog.String("key", val)`, `slog.Int`, `slog.Bool`,
+- **Typed attributes.** Use `slog.String("key", val)`, `slog.Int`, `slog.Bool`,
   `slog.Any`. Never use positional pairs like `"key", val`; they compile but
   bypass type safety.
-- **Standard field names** — `error` for errors, `hostname` for hosts, `path`
-  for file paths, `job_id` for job IDs, `name` for entry names, `addr` for
+- **Standard field names.** `error` for errors, `hostname` for hosts, `path` for
+  file paths, `job_id` for job IDs, `name` for entry names, `addr` for
   addresses.
-- **Error fields** — `slog.String("error", err.Error())` for string context, or
+- **Error fields.** `slog.String("error", err.Error())` for string context, or
   `slog.Any("error", err)` to preserve the error type.
-- **Log levels** — `Debug` for operation dispatch and idempotency skips, `Info`
+- **Log levels.** `Debug` for operation dispatch and idempotency skips, `Info`
   for lifecycle events and state changes, `Warn` for degraded but functional
   states, `Error` for failures that need attention.
 
@@ -265,7 +265,7 @@ Components use a non-blocking lifecycle: `Start()` returns immediately, and
 
 ### Filesystem access
 
-Use [avfs] — `memfs.New()` for in-memory work and `failfs.New()` for targeted
+Use [avfs]: `memfs.New()` for in-memory work and `failfs.New()` for targeted
 error injection. Never use `afero`.
 
 ## Testing
@@ -285,7 +285,7 @@ just go-unit-cov-check   # Report coverage and fail below the target
 ```
 
 The target is declared in `.github/codecov.yml` and in the shared `go` justfile
-module — change both together.
+module. Change both together.
 
 ### Test file conventions
 
@@ -296,7 +296,7 @@ module — change both together.
 - Suite naming: `*_public_test.go` → `{Name}PublicTestSuite`, `*_test.go` →
   `{Name}TestSuite`.
 - `testify/suite` with table-driven cases.
-- One suite method per function under test — success, errors, and edge cases are
+- One suite method per function under test. Success, errors, and edge cases are
   rows in one table, not separate methods.
 - `export_test.go` exposes unexported symbols to external tests, by alias or by
   setter. Do not use an alias to re-cover behavior the caller's own test already
@@ -304,11 +304,11 @@ module — change both together.
 
 ### Test layers
 
-- **Unit tests** (`*_test.go`, `*_public_test.go`) — fast, mocked dependencies.
+- **Unit tests** (`*_test.go`, `*_public_test.go`). Fast, mocked dependencies.
   Public suites also carry HTTP wiring methods (`TestXxxHTTP`,
   `TestXxxRBACHTTP`) that send raw HTTP through the full Echo middleware stack
   with mocked backends.
-- **Integration tests** (`test/integration/`) — build and start a real `osapi`
+- **Integration tests** (`test/integration/`). Build and start a real `osapi`
   binary and exercise CLI commands end-to-end. Guarded by a
   `//go:build integration` tag. The harness allocates random ports, generates a
   JWT, and starts the server, so no external setup is required.
@@ -390,7 +390,7 @@ if errMsg, ok := validation.Struct(request.Body); !ok {
 ```
 
 This applies to action endpoints (power, docker stop) where an empty body is
-valid — unlike update endpoints, which must use `AtLeastOneField`.
+valid, unlike update endpoints, which must use `AtLeastOneField`.
 
 ## Adding a new API domain
 
@@ -463,13 +463,13 @@ be reasonable to split it in a few). Git squash and rebase is your friend!
 
 ## Submitting a PR
 
-- **Describe your changes** — Ensure that you provide a comprehensive
-  description of your changes.
-- **Issue/PR links** — Link any previous work such as related issues or PRs.
+- **Describe your changes.** Say what changed and why. A reviewer should not
+  have to read the diff to learn the reason for it.
+- **Issue/PR links.** Link any previous work such as related issues or PRs.
   Please describe how your changes differ to/extend this work.
-- **Examples** — Add any examples or screenshots that you think are useful to
+- **Examples.** Add any examples or screenshots that you think are useful to
   demonstrate the effect of your changes.
-- **Draft PRs** — If your changes are incomplete, but you would like to discuss
+- **Draft PRs.** If your changes are incomplete, but you would like to discuss
   them, open the PR as a draft and add a comment to start a discussion. Using
   comments rather than the PR description allows the description to be updated
   later while preserving any discussions.
@@ -477,7 +477,7 @@ be reasonable to split it in a few). Git squash and rebase is your friend!
 ## AI usage
 
 This repo is written with AI assistance. All contributions are subject to the
-[AI Usage Policy](AI_POLICY.md) — disclose the tool you used, and make sure you
+[AI Usage Policy](AI_POLICY.md). Disclose the tool you used, and make sure you
 can explain what your change does without the aid of AI tools.
 
 ## FAQ
