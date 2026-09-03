@@ -113,8 +113,8 @@ module versions in `go.mod`. There is no `replace` directive.
 
 ## Code style
 
-Go code should be formatted by [gofumpt] and linted using [golangci-lint]. This
-style is enforced by CI.
+Go code is formatted by [gofumpt] and linted using [golangci-lint], enforced by
+CI.
 
 ```bash
 just go-fmt-check   # Check formatting
