@@ -3,19 +3,19 @@
 OSAPI UI is a React single-page application that provides a management dashboard
 and operations builder for [OSAPI](https://github.com/osapi-io/osapi).
 
-## Tech Stack
+## Tech stack
 
-- **React 19** — UI framework
-- **TypeScript** — type-safe codebase
-- **Vite** — build tool and dev server
-- **Tailwind CSS v4** — utility-first styling via CSS-based `@theme`
-- **class-variance-authority (cva)** — component variant patterns
-- **clsx + tailwind-merge** — conditional class composition (`cn()` helper)
-- **lucide-react** — icons
-- **React Router v7** — client-side routing
-- **orval** — OpenAPI SDK generation
+- **React 19**. UI framework
+- **TypeScript**. Type-safe codebase
+- **Vite**. Build tool and dev server
+- **Tailwind CSS v4**. Utility-first styling via CSS-based `@theme`
+- **class-variance-authority (cva)**. Component variant patterns
+- **clsx + tailwind-merge**. Conditional class composition (`cn()` helper)
+- **lucide-react**. Icons
+- **React Router v7**. Client-side routing
+- **orval**. OpenAPI SDK generation
 
-## Application Structure
+## Application structure
 
 ```
 src/
@@ -45,9 +45,9 @@ src/
   pages/               — Route page components
 ```
 
-## Authentication & Authorization
+## Authentication & authorization
 
-### Auth Flow
+### Auth flow
 
 ```
 User opens app
@@ -59,18 +59,18 @@ User opens app
     → Auto-authenticate → Dashboard
 ```
 
-### JWT Token
+### JWT token
 
 OSAPI issues JWTs via `osapi token generate`. The token contains:
 
-- `roles` claim — array of role strings (`admin`, `write`, `read`)
+- `roles` claim, array of role strings (`admin`, `write`, `read`)
 - Standard JWT claims (sub, exp, iat)
 
-The UI decodes the token client-side (no verification — that's the server's job)
+The UI decodes the token client-side (no verification, that's the server's job)
 to extract roles. The token is sent as a Bearer header on every API request via
 the fetch mutator.
 
-### RBAC Model
+### RBAC model
 
 Three built-in roles with hierarchical permissions:
 
@@ -83,20 +83,20 @@ Three built-in roles with hierarchical permissions:
 Permissions use `resource:verb` format matching osapi's Go model: `agent:read`,
 `file:write`, `command:execute`, `docker:execute`, etc.
 
-### Permission Gating
+### Permission gating
 
-- **Configure blocks** — each block type maps to a required permission in
+- **Configure blocks**. Each block type maps to a required permission in
   `BLOCK_PERMISSIONS`. Unauthorized blocks show greyed out with a lock icon.
-- **Agent drain/undrain** — requires `agent:write`.
-- **Role override dropdown** — lets users preview what other roles see without
+- **Agent drain/undrain**. Requires `agent:write`.
+- **Role override dropdown**. Lets users preview what other roles see without
   changing the token.
 
-## SDK Generation
+## SDK generation
 
 The TypeScript SDK is generated from OSAPI's combined OpenAPI spec using
 [orval](https://orval.dev/).
 
-### Generation Flow
+### Generation flow
 
 ```
 osapi repo                          osapi-ui repo
@@ -116,7 +116,7 @@ osapi repo                          osapi-ui repo
    `src/sdk/gen/api.yaml` and runs orval to produce typed fetch functions and
    schema types.
 
-### Fetch Mutator
+### Fetch mutator
 
 `src/sdk/fetch.ts` is the only hand-written file in `src/sdk/`. It:
 
@@ -125,7 +125,7 @@ osapi repo                          osapi-ui repo
 - Sends it as a `Bearer` header
 - Wraps responses in `{ data, status, headers }` for orval
 
-## Component Architecture
+## Component architecture
 
 ### Layers
 
@@ -136,45 +136,45 @@ Pages (Dashboard, Configure, Roles, SignIn)
             └─ Tailwind CSS theme tokens
 ```
 
-### UI Primitives (`src/components/ui/`)
+### UI primitives (`src/components/ui/`)
 
 Framework-level reusable components. These define the visual language:
 
-| Component                                | Purpose                                                        |
-| ---------------------------------------- | -------------------------------------------------------------- |
-| Text                                     | Styled text with variant/size props — the default for all text |
-| Card, CardHeader, CardTitle, CardContent | Container with variant borders/shadows                         |
-| Button                                   | Primary/secondary/ghost/destructive with sizes                 |
-| Badge                                    | Status indicators (ready/pending/running/error/applied/muted)  |
-| Input                                    | Form input with label, autofill suppression                    |
-| Dropdown                                 | Custom popover dropdown (replaces native select)               |
-| FactInput                                | Input with @fact. reference autocomplete                       |
-| FormField                                | Label + Input wrapper for consistent form layout               |
-| PageHeader                               | Page title + subtitle + optional actions slot                  |
-| SectionLabel                             | Uppercase section header with optional icon                    |
-| StatCard                                 | Label + big value + detail text in a card                      |
-| DataTable                                | Typed table with header/rows inside a card                     |
-| HealthDot                                | Colored status dot (ok/error/muted)                            |
-| ErrorBanner                              | Error message with icon (sm/md sizes)                          |
-| MetricValue                              | Formatted metric display (label + value)                       |
-| CodeBlock                                | Styled code/pre block with border                              |
-| IdBadge                                  | Monospace ID pill for identifiers                              |
-| IconButton                               | Icon-only button with ghost/danger/accent variants             |
-| CollapsibleSection                       | Togglable section with chevron, icon, right content            |
-| Modal                                    | Dialog overlay with close button                               |
-| EmptyState                               | Centered message with dashed border and optional icon          |
-| SearchBox                                | Inline search input with close button                          |
-| ScrollButton                             | Directional scroll arrow (left/right)                          |
-| InfoBox                                  | Subtle container for hints and info text                       |
-| KeyValue                                 | Inline key:value display pair                                  |
-| LabelTag                                 | Accent-colored key:value label pill                            |
-| ConditionAlert                           | Warning condition with triangle icon                           |
-| Popover, PopoverItem, PopoverPanel       | Floating popover menu system                                   |
+| Component                                | Purpose                                                       |
+| ---------------------------------------- | ------------------------------------------------------------- |
+| Text                                     | Styled text with variant/size props, the default for all text |
+| Card, CardHeader, CardTitle, CardContent | Container with variant borders/shadows                        |
+| Button                                   | Primary/secondary/ghost/destructive with sizes                |
+| Badge                                    | Status indicators (ready/pending/running/error/applied/muted) |
+| Input                                    | Form input with label, autofill suppression                   |
+| Dropdown                                 | Custom popover dropdown (replaces native select)              |
+| FactInput                                | Input with @fact. reference autocomplete                      |
+| FormField                                | Label + Input wrapper for consistent form layout              |
+| PageHeader                               | Page title + subtitle + optional actions slot                 |
+| SectionLabel                             | Uppercase section header with optional icon                   |
+| StatCard                                 | Label + big value + detail text in a card                     |
+| DataTable                                | Typed table with header/rows inside a card                    |
+| HealthDot                                | Colored status dot (ok/error/muted)                           |
+| ErrorBanner                              | Error message with icon (sm/md sizes)                         |
+| MetricValue                              | Formatted metric display (label + value)                      |
+| CodeBlock                                | Styled code/pre block with border                             |
+| IdBadge                                  | Monospace ID pill for identifiers                             |
+| IconButton                               | Icon-only button with ghost/danger/accent variants            |
+| CollapsibleSection                       | Togglable section with chevron, icon, right content           |
+| Modal                                    | Dialog overlay with close button                              |
+| EmptyState                               | Centered message with dashed border and optional icon         |
+| SearchBox                                | Inline search input with close button                         |
+| ScrollButton                             | Directional scroll arrow (left/right)                         |
+| InfoBox                                  | Subtle container for hints and info text                      |
+| KeyValue                                 | Inline key:value display pair                                 |
+| LabelTag                                 | Accent-colored key:value label pill                           |
+| ConditionAlert                           | Warning condition with triangle icon                          |
+| Popover, PopoverItem, PopoverPanel       | Floating popover menu system                                  |
 
-### Text Component
+### Text component
 
 The `Text` component is the standard way to render styled text. Never write
-inline Tailwind text classes — always use `Text` with the appropriate variant:
+inline Tailwind text classes, always use `Text` with the appropriate variant:
 
 ```tsx
 <Text variant="muted">Secondary text</Text>
@@ -189,18 +189,18 @@ Available variants: `default`, `muted`, `label`, `mono`, `mono-muted`,
 
 Available sizes: `xs` (default), `sm`, `base`.
 
-### Domain Components (`src/components/domain/`)
+### Domain components (`src/components/domain/`)
 
 Business logic components specific to OSAPI:
 
-- **Block system** — BlockCard, BlockStack, ApplyButton, ResultCard,
+- **Block system**. BlockCard, BlockStack, ApplyButton, ResultCard,
   SaveStackDialog, StackBar
-- **Block forms** — one per operation type (CommandBlock, CronBlock,
-  DockerBlock, DockerExecBlock, FileBlock, FileUploadBlock, FileDeleteBlock,
-  CronDeleteBlock, ContainerActionBlock, DnsUpdateBlock, SingleInputBlock)
-- **Pickers** — TargetPicker (agents/labels), ObjectPicker (files),
+- **Block forms**. One per operation type (CommandBlock, CronBlock, DockerBlock,
+  DockerExecBlock, FileBlock, FileUploadBlock, FileDeleteBlock, CronDeleteBlock,
+  ContainerActionBlock, DnsUpdateBlock, SingleInputBlock)
+- **Pickers**. TargetPicker (agents/labels), ObjectPicker (files),
   ContainerPicker, CronPicker
-- **Dashboard** — AgentCard, ComponentRow, JobDetail, HostGroupHeader
+- **Dashboard**. AgentCard, ComponentRow, JobDetail, HostGroupHeader
 
 ### Hooks (`src/hooks/`)
 
@@ -214,7 +214,7 @@ Business logic components specific to OSAPI:
 | useObjects | Fetch file objects for pickers                     |
 | useFacts   | Fetch @fact. keys from `/facts/keys`               |
 
-## Feature Flags
+## Feature flags
 
 Feature flags gate unreleased functionality via env vars:
 
