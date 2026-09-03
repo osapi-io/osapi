@@ -32,12 +32,14 @@ them to be used as appliances.
 
 ## Sister projects
 
-| Project              | Description                                                         |
-| -------------------- | ------------------------------------------------------------------- |
-| [gohai]              | A Go-based system fact collector inspired by Chef Ohai              |
-| [nats-client]        | A Go package for connecting to and interacting with a NATS server   |
-| [nats-server]        | A Go package for running an embedded NATS server                    |
-| [osapi-orchestrator] | Declarative infrastructure orchestration DSL built on the OSAPI SDK |
+| Project              | Description                                                          |
+| -------------------- | -------------------------------------------------------------------- |
+| [gohai]              | A Go-based system fact collector inspired by Chef Ohai               |
+| [nats-client]        | A Go package for connecting to and interacting with a NATS server    |
+| [nats-server]        | A Go package for running an embedded NATS server                     |
+| [osapi-justfiles]    | Shared justfiles this repository fetches its recipes from            |
+| [osapi-orchestrator] | A Go package for orchestrating operations across OSAPI-managed hosts |
+| [specs]              | The design record for this repository, under `components/osapi/`     |
 
 ## Contributing
 
@@ -54,6 +56,8 @@ The [MIT] License.
 [mit]: LICENSE
 [nats-client]: https://github.com/osapi-io/nats-client
 [nats-server]: https://github.com/osapi-io/nats-server
+[osapi-justfiles]: https://github.com/osapi-io/osapi-justfiles
 [osapi-orchestrator]: https://github.com/osapi-io/osapi-orchestrator
 [sdk]: https://osapi-io.github.io/osapi/sidebar/sdk
+[specs]: https://github.com/osapi-io/specs
 [usage]: https://osapi-io.github.io/osapi/sidebar/usage
