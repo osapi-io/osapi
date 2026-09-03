@@ -19,7 +19,7 @@ language.
   <a href="asset/configure.png"><img src="asset/configure.png" width="400" alt="Configure"></a>
 </p>
 
-## ✨ Features
+## Features
 
 | Feature           | Description                                                                                     |
 | ----------------- | ----------------------------------------------------------------------------------------------- |
@@ -30,13 +30,13 @@ language.
 | @fact. References | Auto-complete fact references in DNS and network fields from live API                           |
 | Generated SDK     | Typed fetch functions from OSAPI's OpenAPI spec via [orval](https://orval.dev/)                 |
 
-## 🤝 Contributing
+## Contributing
 
 See the [Development](docs/development.md) guide for prerequisites, setup, and
 conventions. See the [Contributing](docs/contributing.md) guide before
 submitting a PR.
 
-## 📄 License
+## License
 
 The [MIT] License.
 

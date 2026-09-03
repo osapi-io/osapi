@@ -490,7 +490,7 @@ answer questions.
 
 > I'm stuck, where can I get help?
 
-If you have questions, feel free to open a [Discussion] on GitHub.
+If you have questions, open a [Discussion] on GitHub.
 
 [adding-an-api-domain]: docs/docs/sidebar/development/adding-an-api-domain.md
 [api-guidelines]: docs/docs/sidebar/architecture/api-guidelines.md
