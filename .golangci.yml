@@ -1,16 +1,9 @@
 # golangci-lint v2 configuration.
 # https://golangci-lint.run/docs/configuration/file/
 #
-# One config, byte for byte identical in every Go repository in osapi-io and
-# in @retr0h/golang-starter, which new projects are generated from. A
-# repository that needs a change to it changes it in the template too, and
-# the change goes back out to the others in the same pass. `md5 .golangci.yml`
-# in each repository is how you check.
-#
-# `version` is the string "2" and settings nest under `linters`. Written the
-# v1 way — a numeric version, a top-level `linters-settings`, an
-# `issues.exclude-use-default` — `run` drops the keys without complaint and
-# nothing takes effect. `golangci-lint config verify` is the check.
+# Identical in every osapi-io Go repository and in @retr0h/golang-starter,
+# which new projects come from. Change it here too, and `md5 .golangci.yml`
+# is how you check they still match.
 
 version: "2"
 
@@ -31,10 +24,8 @@ linters:
 
   settings:
     revive:
-      # Each rule is named rather than the whole set switched on. Every
-      # one here states a convention Go itself has an opinion about.
-      # Rules that report a threshold are left out: the number is
-      # somebody's taste, not the language's.
+      # Named rules, not the whole set: these are conventions Go itself
+      # has an opinion about. Rules that report a threshold are left out.
       rules:
         - name: error-naming
         - name: error-return
@@ -52,9 +43,7 @@ linters:
 
   exclusions:
     paths:
-      # Go source vendored inside a JavaScript dependency tree is not ours
-      # to fix, and is not even tracked in git: `flatted` ships a Go port
-      # beside its JS, and it only exists after npm install.
+      # Go shipped inside a JS package. Not ours, and not tracked in git.
       - node_modules
     presets:
       - comments
@@ -66,11 +55,7 @@ formatters:
     - goimports
 
 issues:
-  # Without these every run stops at 50 findings per linter and the
-  # repository looks like it has exactly 50 problems, forever.
+  # Defaults truncate: 50 findings per linter, and one per line.
   max-issues-per-linter: 0
   max-same-issues: 0
-  # Default true, which reports one finding per line. Several rules anchor
-  # to the same function declaration, so one line can carry more than one
-  # and you are shown whichever came first.
   uniq-by-line: false
