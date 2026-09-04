@@ -1,8 +1,5 @@
 # golangci-lint v2 configuration.
 # https://golangci-lint.run/docs/configuration/file/
-#
-# This file is the same in every Go repository here. Change it in all of
-# them at once; `md5 .golangci.yml` is how you check they still match.
 
 version: "2"
 
