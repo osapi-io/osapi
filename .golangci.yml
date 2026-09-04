@@ -1,9 +1,8 @@
 # golangci-lint v2 configuration.
 # https://golangci-lint.run/docs/configuration/file/
 #
-# Identical in every osapi-io Go repository and in @retr0h/golang-starter,
-# which new projects come from. Change it here too, and `md5 .golangci.yml`
-# is how you check they still match.
+# This file is the same in every Go repository here. Change it in all of
+# them at once; `md5 .golangci.yml` is how you check they still match.
 
 version: "2"
 
