@@ -1,50 +1,76 @@
-# Refer to golangci-lint's example config file for more options and information:
-# https://github.com/golangci/golangci-lint/blob/master/.golangci.example.yml
+# golangci-lint v2 configuration.
+# https://golangci-lint.run/docs/configuration/file/
+#
+# One config, byte for byte identical in every Go repository in osapi-io and
+# in @retr0h/golang-starter, which new projects are generated from. A
+# repository that needs a change to it changes it in the template too, and
+# the change goes back out to the others in the same pass. `md5 .golangci.yml`
+# in each repository is how you check.
+#
+# `version` is the string "2" and settings nest under `linters`. Written the
+# v1 way — a numeric version, a top-level `linters-settings`, an
+# `issues.exclude-use-default` — `run` drops the keys without complaint and
+# nothing takes effect. `golangci-lint config verify` is the check.
 
-version: 2
+version: "2"
 
 run:
   timeout: 5m
-  modules-download-mode: readonly
 
 linters:
   enable:
     - errcheck
     - errname
     - govet
+    - ineffassign
     - prealloc
     - predeclared
     - revive
     - staticcheck
     - unused
+
+  settings:
+    revive:
+      # Named rules only, not enable-all-rules. Every rule here states a
+      # convention Go itself has an opinion about. Rules that measure — a
+      # line length, a complexity score, a count of constants — are left
+      # out: the number is somebody's taste, not the language's.
+      rules:
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: exported
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: range
+        - name: receiver-naming
+        - name: superfluous-else
+        - name: time-naming
+        - name: unused-parameter
+        - name: var-naming
+
   exclusions:
     paths:
-      - ui/node_modules
-    rules:
-      - linters:
-          - revive
-        path: internal/api/
-        text: "var-naming: avoid meaningless package names"
-      - linters:
-          - revive
-        path: internal/exec/
-        text: "var-naming: avoid package names that conflict with Go standard library package names"
-      - linters:
-          - revive
-        path: internal/api/metrics/
-        text: "var-naming: avoid package names that conflict with Go standard library package names"
+      # Go source vendored inside a JavaScript dependency tree is not ours
+      # to fix, and is not even tracked in git: `flatted` ships a Go port
+      # beside its JS, and it only exists after npm install.
+      - node_modules
+    presets:
+      - comments
+      - std-error-handling
 
 formatters:
   enable:
+    - gofmt
     - goimports
 
-linters-settings:
-  revive:
-    enable-all-rules: true
-
 issues:
-  exclude-use-default: false
+  # Without these every run stops at 50 findings per linter and the
+  # repository looks like it has exactly 50 problems, forever.
   max-issues-per-linter: 0
   max-same-issues: 0
-  exclude-dirs:
-    - ./client
+  # Default true, which reports one finding per line. Several rules anchor
+  # to the same function declaration, so one line can carry more than one
+  # and you are shown whichever came first.
+  uniq-by-line: false
