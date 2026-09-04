@@ -31,10 +31,10 @@ linters:
 
   settings:
     revive:
-      # Named rules only, not enable-all-rules. Every rule here states a
-      # convention Go itself has an opinion about. Rules that measure — a
-      # line length, a complexity score, a count of constants — are left
-      # out: the number is somebody's taste, not the language's.
+      # Each rule is named rather than the whole set switched on. Every
+      # one here states a convention Go itself has an opinion about.
+      # Rules that report a threshold are left out: the number is
+      # somebody's taste, not the language's.
       rules:
         - name: error-naming
         - name: error-return
