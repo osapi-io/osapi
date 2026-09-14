@@ -1,0 +1,1 @@
+{"parameters":[{"name":"hostname","in":"path","required":true,"x-oapi-codegen-extra-tags":{"validate":"required,min=1,max=255"},"schema":{"type":"string","minLength":1,"maxLength":255},"description":"The hostname of the agent to retrieve."}]}

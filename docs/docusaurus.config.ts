@@ -13,7 +13,10 @@ const config: Config = {
   favicon: 'img/favicon.ico',
   markdown: {
     mermaid: true,
-    format: 'detect'
+    format: 'detect',
+    hooks: {
+      onBrokenMarkdownLinks: 'warn'
+    }
   },
 
   // Set the production url of your site here
@@ -29,7 +32,6 @@ const config: Config = {
   projectName: 'osapi', // Usually your repo name.
 
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you

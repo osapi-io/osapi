@@ -1,0 +1,1 @@
+{"parameters":[{"name":"force","in":"query","required":false,"x-oapi-codegen-extra-tags":{"validate":"omitempty"},"description":"When true, bypass the digest check and always write the file. Returns changed=true regardless of whether the content differs from the existing object.\n","schema":{"type":"boolean","default":false}}]}

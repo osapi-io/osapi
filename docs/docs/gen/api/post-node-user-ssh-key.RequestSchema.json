@@ -1,0 +1,1 @@
+{"title":"Body","body":{"description":"SSH public key to add.","required":true,"content":{"application/json":{"schema":{"type":"object","required":["key"],"properties":{"key":{"type":"string","description":"Full SSH public key line (e.g., \"ssh-ed25519 AAAA... user@host\").\n","x-oapi-codegen-extra-tags":{"validate":"required,min=1"}}},"title":"SSHKeyAddRequest"}}}}}

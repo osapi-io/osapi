@@ -1,0 +1,1 @@
+{"title":"Body","body":{"description":"Package install parameters.","required":true,"content":{"application/json":{"schema":{"type":"object","required":["name"],"properties":{"name":{"type":"string","description":"Name of the package to install.\n","x-oapi-codegen-extra-tags":{"validate":"required,min=1"}}},"title":"PackageInstallRequest"}}}}}
