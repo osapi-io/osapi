@@ -1,6 +1,6 @@
 [tools]
 go = "latest"
 just = "latest"
-node = "22"
+node = "24"
 bun = "latest"
 uv = "latest"
