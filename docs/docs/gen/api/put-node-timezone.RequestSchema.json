@@ -1,0 +1,1 @@
+{"title":"Body","body":{"description":"Timezone update parameters.","required":true,"content":{"application/json":{"schema":{"type":"object","required":["timezone"],"properties":{"timezone":{"type":"string","description":"IANA timezone name (e.g., \"America/New_York\", \"UTC\").\n","x-oapi-codegen-extra-tags":{"validate":"required,min=1"}}},"title":"TimezoneUpdateRequest"}}}}}

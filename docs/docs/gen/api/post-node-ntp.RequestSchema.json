@@ -1,0 +1,1 @@
+{"title":"Body","body":{"description":"NTP create parameters.","required":true,"content":{"application/json":{"schema":{"type":"object","required":["servers"],"properties":{"servers":{"type":"array","items":{"type":"string"},"description":"List of NTP server addresses to configure.\n","x-oapi-codegen-extra-tags":{"validate":"required,min=1"}}},"title":"NtpCreateRequest"}}}}}

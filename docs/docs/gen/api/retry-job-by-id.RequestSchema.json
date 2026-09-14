@@ -1,0 +1,1 @@
+{"title":"Body","body":{"required":false,"content":{"application/json":{"schema":{"type":"object","properties":{"target_hostname":{"type":"string","description":"Override target hostname for the retried job. Defaults to _any if not specified.","example":"_any","x-oapi-codegen-extra-tags":{"validate":"omitempty,min=1,valid_target"}}},"title":"RetryJobRequest"}}}}}

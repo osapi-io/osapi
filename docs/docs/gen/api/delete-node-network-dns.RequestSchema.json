@@ -1,0 +1,1 @@
+{"title":"Body","body":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"interface_name":{"type":"string","x-oapi-codegen-extra-tags":{"validate":"required,alphanum_or_fact"},"description":"The name of the network interface to delete DNS configuration from.\n"}},"required":["interface_name"],"title":"DNSDeleteRequest"}}}}}

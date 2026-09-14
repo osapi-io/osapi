@@ -1,0 +1,1 @@
+{"title":"Body","body":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"hostname":{"type":"string","x-oapi-codegen-extra-tags":{"validate":"required,min=1,max=253"},"description":"The new hostname to set.","example":"web-01"}},"required":["hostname"],"title":"HostnameUpdateRequest"}}}}}

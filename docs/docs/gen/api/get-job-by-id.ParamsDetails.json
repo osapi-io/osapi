@@ -1,0 +1,1 @@
+{"parameters":[{"name":"id","in":"path","required":true,"description":"UUID of the job to retrieve.","schema":{"type":"string","format":"uuid","x-oapi-codegen-extra-tags":{"validate":"required,uuid"}}}]}
