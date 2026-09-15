@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Job System Architecture | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/job-architecture"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Job System Architecture | OSAPI"><meta data-rh="true" name="description" content="Date Implemented Author: @retr0h"><meta data-rh="true" property="og:description" content="Date Implemented Author: @retr0h"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/job-architecture"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/job-architecture" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/job-architecture" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"Job System Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/job-architecture"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.9fa6a866.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.964db756.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.e2450577.js" defer="defer"></script>
 </head>
 <body>
@@ -447,10 +447,42 @@ incrementally rather than scanning all keys on each request</li>
 </ol>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="error-handling">Error Handling<a href="#error-handling" class="hash-link" aria-label="Direct link to Error Handling" title="Direct link to Error Handling" translate="no">​</a></h2>
 <ol>
-<li class=""><strong>Retry Logic</strong>: Failed jobs retry up to MaxDeliver times</li>
-<li class=""><strong>Dead Letter Queue</strong>: Jobs failing after max retries</li>
-<li class=""><strong>Timeout Handling</strong>: Jobs timeout after AckWait period</li>
-<li class=""><strong>Graceful Degradation</strong>: Agents continue on provider errors</li>
+<li class=""><strong>A job that has run is terminal</strong>: once an agent executes an operation and
+records its response and status — success or failure — it acknowledges the
+message, so JetStream does not redeliver it. A failed operation is not
+retried by redelivery; the failure is already recorded for polling clients.
+This matters because some operations are not safe to run twice —
+<code>command.exec</code>, <code>command.shell</code>, <code>power.reboot</code>, and <code>power.shutdown</code> in
+particular.</li>
+<li class=""><strong>Idempotent redelivery</strong>: a message can still be redelivered despite the
+above — for example, a crash between executing the operation and
+acknowledging the message. Before running the operation, the agent checks
+whether it has already written a response for this job, and if so, acks
+without re-executing. The check is scoped to this agent, so broadcast jobs
+(where every targeted agent answers independently) are unaffected. If the
+response itself cannot be written to KV after the operation runs, the job is
+not retried either: the agent records the storage failure as a failed status
+event on a best-effort basis and still acks, rather than leaving the message
+unacked — which would redeliver it and, finding no response recorded, run the
+operation a second time. A caller sees a failed or timed-out job in this
+case, never a second execution.</li>
+<li class=""><strong>Pre-execution failures</strong>: an error raised before the operation runs — a
+malformed payload, an unparsable subject, a failed signature — terminates the
+message (JetStream <code>Term</code>) rather than letting it redeliver, since none of
+these can succeed on retry. A failure reading the job data itself from KV is
+treated as possibly transient and is left to redeliver normally.</li>
+<li class=""><strong>In-flight keepalive</strong>: while an operation executes, the agent calls
+JetStream&#x27;s <code>InProgress</code> at roughly half the consumer&#x27;s <code>AckWait</code> to reset
+the redelivery timer, so an operation that runs longer than <code>AckWait</code> is not
+redelivered while still in progress.</li>
+<li class=""><strong>Retrying a job</strong>: the <code>job retry</code> CLI command creates a new job with the
+same operation data; it does not resubmit or redeliver the original message,
+so it is unaffected by the above.</li>
+<li class=""><strong>Dead Letter Queue</strong>: a message that cannot be delivered to a handler at all
+is redelivered up to <code>MaxDeliver</code> times before landing in the DLQ.</li>
+<li class=""><strong>Timeout Handling</strong>: for broadcast jobs, an agent that never responds within
+<code>job_timeout</code> appears in the result as <code>status: failed</code>.</li>
+<li class=""><strong>Graceful Degradation</strong>: agents continue on provider errors.</li>
 </ol>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="monitoring">Monitoring<a href="#monitoring" class="hash-link" aria-label="Direct link to Monitoring" title="Direct link to Monitoring" translate="no">​</a></h2>
 <p>Key metrics to track:</p>
