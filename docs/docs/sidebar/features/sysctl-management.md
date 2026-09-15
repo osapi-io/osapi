@@ -118,8 +118,10 @@ generating unnecessary filesystem writes or `sysctl -p` invocations.
 
 Sysctl keys follow the standard dot-notation format used by the Linux kernel:
 `net.ipv4.ip_forward`, `vm.swappiness`, `kernel.hostname`, etc. OSAPI accepts
-any key that sysctl recognizes; validation happens at the agent when the
-provider attempts to apply the value.
+keys made up of letters, digits, dots, underscores, and hyphens, starting with a
+letter or digit (`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`), which covers every key that
+sysctl recognizes. The API and the agent's provider both validate the key and
+value shape before a change is applied.
 
 ## Supported Platforms
 

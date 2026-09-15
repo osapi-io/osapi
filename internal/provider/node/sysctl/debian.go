@@ -27,6 +27,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"regexp"
 	"strings"
 	"time"
 
@@ -40,6 +41,15 @@ import (
 )
 
 const sysctlDir = "/etc/sysctl.d"
+
+// validKey matches sysctl parameter names: letters, digits, dots,
+// underscores, and hyphens. Dots separate namespace components (e.g.
+// net.ipv4.ip_forward). Slashes, spaces, and other characters are
+// rejected so the key cannot be used for path traversal when building
+// the conf file path. The first character must be a letter or digit so
+// the key cannot be mistaken for a `sysctl` command-line option (e.g.
+// -p) when passed as an argument.
+var validKey = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`)
 
 // marshalJSON is a package-level variable for testing the marshal error path.
 var marshalJSON = json.Marshal
@@ -91,8 +101,16 @@ func (d *Debian) Create(
 		return nil, fmt.Errorf("sysctl create: key must not be empty")
 	}
 
+	if err := validateKey(entry.Key); err != nil {
+		return nil, fmt.Errorf("sysctl create: %w", err)
+	}
+
 	if entry.Value == "" {
 		return nil, fmt.Errorf("sysctl create: value must not be empty")
+	}
+
+	if err := validateValue(entry.Value); err != nil {
+		return nil, fmt.Errorf("sysctl create: %w", err)
 	}
 
 	confPath := confPath(entry.Key)
@@ -126,8 +144,16 @@ func (d *Debian) Update(
 		return nil, fmt.Errorf("sysctl update: key must not be empty")
 	}
 
+	if err := validateKey(entry.Key); err != nil {
+		return nil, fmt.Errorf("sysctl update: %w", err)
+	}
+
 	if entry.Value == "" {
 		return nil, fmt.Errorf("sysctl update: value must not be empty")
+	}
+
+	if err := validateValue(entry.Value); err != nil {
+		return nil, fmt.Errorf("sysctl update: %w", err)
 	}
 
 	confPath := confPath(entry.Key)
@@ -257,6 +283,10 @@ func (d *Debian) Delete(
 		return nil, fmt.Errorf("sysctl delete: key must not be empty")
 	}
 
+	if err := validateKey(key); err != nil {
+		return nil, fmt.Errorf("sysctl delete: %w", err)
+	}
+
 	confPath := confPath(key)
 	stateKey := file.BuildStateKey(d.hostname, confPath)
 
@@ -379,6 +409,10 @@ func (d *Debian) Get(
 		return nil, fmt.Errorf("sysctl get: key must not be empty")
 	}
 
+	if err := validateKey(key); err != nil {
+		return nil, fmt.Errorf("sysctl get: %w", err)
+	}
+
 	confPath := confPath(key)
 	stateKey := file.BuildStateKey(d.hostname, confPath)
 
@@ -470,6 +504,34 @@ func confPath(
 	key string,
 ) string {
 	return sysctlDir + "/osapi-" + key + ".conf"
+}
+
+// validateKey checks that a sysctl key is safe for use in a file path.
+func validateKey(
+	key string,
+) error {
+	if !validKey.MatchString(key) {
+		return fmt.Errorf(
+			"invalid sysctl key %q: must match %s",
+			key,
+			validKey.String(),
+		)
+	}
+
+	return nil
+}
+
+// validateValue checks that a sysctl value contains no line breaks, which
+// would let it inject additional lines into the conf file. The value
+// itself is not included in the error since it may be long.
+func validateValue(
+	value string,
+) error {
+	if strings.ContainsAny(value, "\r\n") {
+		return fmt.Errorf("invalid sysctl value: must not contain line breaks")
+	}
+
+	return nil
 }
 
 // computeSHA256 returns the hex-encoded SHA-256 hash of the given data.

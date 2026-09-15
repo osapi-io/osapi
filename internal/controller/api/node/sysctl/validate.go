@@ -32,3 +32,14 @@ func validateHostname(
 ) (string, bool) {
 	return validation.Var(hostname, "required,min=1,valid_target")
 }
+
+// validateKey validates a sysctl key path parameter using the shared
+// validator. Returns the error message and false if invalid.
+//
+// This exists because oapi-codegen does not generate validate tags on
+// path parameters in strict-server mode (upstream limitation).
+func validateKey(
+	key string,
+) (string, bool) {
+	return validation.Var(key, "required,min=1,sysctl_key")
+}

@@ -42,6 +42,10 @@ func (s *Sysctl) DeleteNodeSysctl(
 		return gen.DeleteNodeSysctl400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validateKey(request.Key); !ok {
+		return gen.DeleteNodeSysctl400JSONResponse{Error: &errMsg}, nil
+	}
+
 	hostname := request.Hostname
 	key := request.Key
 

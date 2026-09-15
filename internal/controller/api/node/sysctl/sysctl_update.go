@@ -42,6 +42,10 @@ func (s *Sysctl) PutNodeSysctl(
 		return gen.PutNodeSysctl400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validateKey(request.Key); !ok {
+		return gen.PutNodeSysctl400JSONResponse{Error: &errMsg}, nil
+	}
+
 	if errMsg, ok := validation.Struct(request.Body); !ok {
 		return gen.PutNodeSysctl400JSONResponse{Error: &errMsg}, nil
 	}

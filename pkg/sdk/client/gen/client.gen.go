@@ -4127,10 +4127,10 @@ type SysctlCollectionResponse struct {
 // SysctlCreateRequest defines model for SysctlCreateRequest.
 type SysctlCreateRequest struct {
 	// Key Sysctl parameter key (e.g., net.ipv4.ip_forward).
-	Key string `json:"key" validate:"required,min=1"`
+	Key string `json:"key" validate:"required,min=1,sysctl_key"`
 
 	// Value Value to set for the sysctl parameter.
-	Value string `json:"value" validate:"required"`
+	Value string `json:"value" validate:"required,no_linebreak"`
 }
 
 // SysctlCreateResponse defines model for SysctlCreateResponse.
@@ -4199,7 +4199,7 @@ type SysctlMutationResultStatus string
 // SysctlUpdateRequest defines model for SysctlUpdateRequest.
 type SysctlUpdateRequest struct {
 	// Value New value for the sysctl parameter.
-	Value string `json:"value" validate:"required"`
+	Value string `json:"value" validate:"required,no_linebreak"`
 }
 
 // SysctlUpdateResponse defines model for SysctlUpdateResponse.

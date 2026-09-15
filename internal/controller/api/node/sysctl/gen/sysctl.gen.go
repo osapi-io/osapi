@@ -75,10 +75,10 @@ type SysctlCollectionResponse struct {
 // SysctlCreateRequest defines model for SysctlCreateRequest.
 type SysctlCreateRequest struct {
 	// Key Sysctl parameter key (e.g., net.ipv4.ip_forward).
-	Key string `json:"key" validate:"required,min=1"`
+	Key string `json:"key" validate:"required,min=1,sysctl_key"`
 
 	// Value Value to set for the sysctl parameter.
-	Value string `json:"value" validate:"required"`
+	Value string `json:"value" validate:"required,no_linebreak"`
 }
 
 // SysctlCreateResponse defines model for SysctlCreateResponse.
@@ -147,7 +147,7 @@ type SysctlMutationResultStatus string
 // SysctlUpdateRequest defines model for SysctlUpdateRequest.
 type SysctlUpdateRequest struct {
 	// Value New value for the sysctl parameter.
-	Value string `json:"value" validate:"required"`
+	Value string `json:"value" validate:"required,no_linebreak"`
 }
 
 // SysctlUpdateResponse defines model for SysctlUpdateResponse.
@@ -524,7 +524,7 @@ func (response PostNodeSysctl500JSONResponse) VisitPostNodeSysctlResponse(w http
 
 type DeleteNodeSysctlRequestObject struct {
 	Hostname Hostname  `json:"hostname" validate:"required,min=1,valid_target"`
-	Key      SysctlKey `json:"key" validate:"required,min=1"`
+	Key      SysctlKey `json:"key" validate:"required,min=1,sysctl_key"`
 }
 
 type DeleteNodeSysctlResponseObject interface {
@@ -617,7 +617,7 @@ func (response DeleteNodeSysctl500JSONResponse) VisitDeleteNodeSysctlResponse(w 
 
 type GetNodeSysctlByKeyRequestObject struct {
 	Hostname Hostname  `json:"hostname" validate:"required,min=1,valid_target"`
-	Key      SysctlKey `json:"key" validate:"required,min=1"`
+	Key      SysctlKey `json:"key" validate:"required,min=1,sysctl_key"`
 }
 
 type GetNodeSysctlByKeyResponseObject interface {
@@ -710,7 +710,7 @@ func (response GetNodeSysctlByKey500JSONResponse) VisitGetNodeSysctlByKeyRespons
 
 type PutNodeSysctlRequestObject struct {
 	Hostname Hostname  `json:"hostname" validate:"required,min=1,valid_target"`
-	Key      SysctlKey `json:"key" validate:"required,min=1"`
+	Key      SysctlKey `json:"key" validate:"required,min=1,sysctl_key"`
 	Body     *PutNodeSysctlJSONRequestBody
 }
 

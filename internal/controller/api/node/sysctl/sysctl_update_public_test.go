@@ -146,6 +146,40 @@ func (s *SysctlUpdatePublicTestSuite) TestPutNodeSysctl() {
 			},
 		},
 		{
+			name: "validation error key attempts path traversal",
+			request: gen.PutNodeSysctlRequestObject{
+				Hostname: "server1",
+				Key:      "../../etc/cron.d/pwn",
+				Body: &gen.SysctlUpdateRequest{
+					Value: "1",
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNodeSysctlResponseObject) {
+				r, ok := resp.(gen.PutNodeSysctl400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "sysctl_key")
+			},
+		},
+		{
+			name: "validation error value contains newline",
+			request: gen.PutNodeSysctlRequestObject{
+				Hostname: "server1",
+				Key:      "net.ipv4.ip_forward",
+				Body: &gen.SysctlUpdateRequest{
+					Value: "1\nkernel.modprobe = /tmp/evil",
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNodeSysctlResponseObject) {
+				r, ok := resp.(gen.PutNodeSysctl400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "no_linebreak")
+			},
+		},
+		{
 			name: "validation error empty hostname",
 			request: gen.PutNodeSysctlRequestObject{
 				Hostname: "",
@@ -466,6 +500,32 @@ func (s *SysctlUpdatePublicTestSuite) TestPutNodeSysctlValidationHTTP() {
 				s.Equal(http.StatusBadRequest, rec.Code)
 				s.Contains(rec.Body.String(), `"error"`)
 				s.Contains(rec.Body.String(), "valid_target")
+			},
+		},
+		{
+			name: "when key path param contains an equals sign returns 400",
+			path: "/api/node/server1/sysctl/net.ipv4.ip_forward=1",
+			body: `{"value":"0"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "sysctl_key")
+			},
+		},
+		{
+			name: "when value contains newline returns 400",
+			path: "/api/node/server1/sysctl/net.ipv4.ip_forward",
+			body: `{"value":"1\nkernel.modprobe = /tmp/evil"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "no_linebreak")
 			},
 		},
 	}

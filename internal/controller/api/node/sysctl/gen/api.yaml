@@ -323,11 +323,11 @@ components:
       # validate tags in strict-server mode. Validation is handled
       # manually in the handler.
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,min=1,sysctl_key
       schema:
         type: string
         minLength: 1
-        pattern: '^[a-z0-9._-]+$'
+        pattern: '^[a-zA-Z0-9][a-zA-Z0-9._-]*$'
 
   securitySchemes:
     BearerAuth:
@@ -352,13 +352,13 @@ components:
           description: >
             Sysctl parameter key (e.g., net.ipv4.ip_forward).
           x-oapi-codegen-extra-tags:
-            validate: "required,min=1"
+            validate: "required,min=1,sysctl_key"
         value:
           type: string
           description: >
             Value to set for the sysctl parameter.
           x-oapi-codegen-extra-tags:
-            validate: "required"
+            validate: "required,no_linebreak"
 
     SysctlUpdateRequest:
       type: object
@@ -370,7 +370,7 @@ components:
           description: >
             New value for the sysctl parameter.
           x-oapi-codegen-extra-tags:
-            validate: "required"
+            validate: "required,no_linebreak"
 
     # -- Response schemas ------------------------------------------------
 

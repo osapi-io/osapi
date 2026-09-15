@@ -163,6 +163,74 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 			},
 		},
 		{
+			name: "validation error key attempts path traversal",
+			request: gen.PostNodeSysctlRequestObject{
+				Hostname: "server1",
+				Body: &gen.SysctlCreateRequest{
+					Key:   "../../etc/cron.d/pwn",
+					Value: "1",
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeSysctlResponseObject) {
+				r, ok := resp.(gen.PostNodeSysctl400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "sysctl_key")
+			},
+		},
+		{
+			name: "validation error value contains newline",
+			request: gen.PostNodeSysctlRequestObject{
+				Hostname: "server1",
+				Body: &gen.SysctlCreateRequest{
+					Key:   "net.ipv4.ip_forward",
+					Value: "1\nkernel.modprobe = /tmp/evil",
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeSysctlResponseObject) {
+				r, ok := resp.(gen.PostNodeSysctl400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "no_linebreak")
+			},
+		},
+		{
+			name: "validation error key starts with a hyphen",
+			request: gen.PostNodeSysctlRequestObject{
+				Hostname: "server1",
+				Body: &gen.SysctlCreateRequest{
+					Key:   "-pfoo",
+					Value: "1",
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeSysctlResponseObject) {
+				r, ok := resp.(gen.PostNodeSysctl400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "sysctl_key")
+			},
+		},
+		{
+			name: "validation error key starts with a dot",
+			request: gen.PostNodeSysctlRequestObject{
+				Hostname: "server1",
+				Body: &gen.SysctlCreateRequest{
+					Key:   ".hidden",
+					Value: "1",
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeSysctlResponseObject) {
+				r, ok := resp.(gen.PostNodeSysctl400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "sysctl_key")
+			},
+		},
+		{
 			name: "validation error empty hostname",
 			request: gen.PostNodeSysctlRequestObject{
 				Hostname: "",
@@ -455,6 +523,32 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctlValidationHTTP() {
 				s.Equal(http.StatusBadRequest, rec.Code)
 				s.Contains(rec.Body.String(), `"error"`)
 				s.Contains(rec.Body.String(), "valid_target")
+			},
+		},
+		{
+			name: "when key attempts path traversal returns 400",
+			path: "/api/node/server1/sysctl",
+			body: `{"key":"../../etc/cron.d/pwn","value":"1"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "sysctl_key")
+			},
+		},
+		{
+			name: "when value contains newline returns 400",
+			path: "/api/node/server1/sysctl",
+			body: `{"key":"net.ipv4.ip_forward","value":"1\nkernel.modprobe = /tmp/evil"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "no_linebreak")
 			},
 		},
 	}

@@ -136,6 +136,20 @@ func (s *SysctlDeletePublicTestSuite) TestDeleteNodeSysctl() {
 			},
 		},
 		{
+			name: "validation error key attempts path traversal",
+			request: gen.DeleteNodeSysctlRequestObject{
+				Hostname: "server1",
+				Key:      "../../etc/cron.d/pwn",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.DeleteNodeSysctlResponseObject) {
+				r, ok := resp.(gen.DeleteNodeSysctl400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "sysctl_key")
+			},
+		},
+		{
 			name: "not found error",
 			request: gen.DeleteNodeSysctlRequestObject{
 				Hostname: "server1",
@@ -416,6 +430,19 @@ func (s *SysctlDeletePublicTestSuite) TestDeleteNodeSysctlValidationHTTP() {
 				s.Equal(http.StatusBadRequest, rec.Code)
 				s.Contains(rec.Body.String(), `"error"`)
 				s.Contains(rec.Body.String(), "valid_target")
+			},
+		},
+		{
+			name:   "when key path param contains an equals sign returns 400",
+			path:   "/api/node/server1/sysctl/net.ipv4.ip_forward=1",
+			method: http.MethodDelete,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "sysctl_key")
 			},
 		},
 	}

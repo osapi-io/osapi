@@ -24,6 +24,7 @@ package validation
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -34,6 +35,14 @@ import (
 )
 
 var instance = validator.New()
+
+// sysctlKeyPattern matches dot-separated sysctl parameter names: letters,
+// digits, dots, underscores, and hyphens. Slashes, spaces, and other
+// characters are rejected so the key cannot be used for path traversal.
+// The first character must be a letter or digit so the key cannot be
+// mistaken for a `sysctl` command-line option (e.g. -p) when passed as
+// an argument.
+var sysctlKeyPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`)
 
 func init() {
 	// alphanum_or_fact accepts alphanumeric values or @fact. prefixed references
@@ -71,6 +80,19 @@ func init() {
 		_, err := cronParser.Parse(fl.Field().String())
 		return err == nil
 	})
+
+	// sysctl_key validates a sysctl parameter key: dot-separated names only,
+	// which rejects path traversal and other injection characters when the
+	// key is used to build a file path.
+	_ = instance.RegisterValidation("sysctl_key", func(fl validator.FieldLevel) bool {
+		return sysctlKeyPattern.MatchString(fl.Field().String())
+	})
+
+	// no_linebreak rejects values containing a carriage return or line feed,
+	// which would let the value inject additional lines into a config file.
+	_ = instance.RegisterValidation("no_linebreak", func(fl validator.FieldLevel) bool {
+		return !strings.ContainsAny(fl.Field().String(), "\r\n")
+	})
 }
 
 // customHints maps validator tags to a hint appended to the default error.
@@ -101,6 +123,16 @@ var customHints = map[string]func(fe validator.FieldError) string{
 			"%q is not a valid cron expression (expected: minute hour day-of-month month day-of-week)",
 			fe.Value(),
 		)
+	},
+	"sysctl_key": func(fe validator.FieldError) string {
+		return fmt.Sprintf(
+			"%q is not a valid sysctl key (expected: %s)",
+			fe.Value(),
+			sysctlKeyPattern.String(),
+		)
+	},
+	"no_linebreak": func(_ validator.FieldError) string {
+		return "value must not contain line breaks"
 	},
 }
 

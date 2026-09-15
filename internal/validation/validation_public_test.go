@@ -550,6 +550,144 @@ func (s *ValidationPublicTestSuite) TestGoDuration() {
 	}
 }
 
+func (s *ValidationPublicTestSuite) TestSysctlKey() {
+	tests := []struct {
+		name         string
+		field        string
+		validateFunc func(bool)
+	}{
+		{
+			name:  "when dotted key",
+			field: "net.ipv4.ip_forward",
+			validateFunc: func(got bool) {
+				s.True(got)
+			},
+		},
+		{
+			name:  "when key with hyphen and underscore",
+			field: "some-key_name.value",
+			validateFunc: func(got bool) {
+				s.True(got)
+			},
+		},
+		{
+			name:  "when path traversal key",
+			field: "../../etc/cron.d/pwn",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+		{
+			name:  "when key contains slash",
+			field: "a/b",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+		{
+			name:  "when key contains space",
+			field: "net.ipv4 ip_forward",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+		{
+			name:  "when key contains equals sign",
+			field: "net.ipv4.ip_forward=1",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+		{
+			name:  "when key starts with a hyphen",
+			field: "-pfoo",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+		{
+			name:  "when key starts with a dot",
+			field: ".hidden",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+		{
+			name:  "when empty string",
+			field: "",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			_, ok := validation.Var(tt.field, "sysctl_key")
+			tt.validateFunc(ok)
+		})
+	}
+
+	s.Run("invalid key shows hint through struct validation", func() {
+		type keyReq struct {
+			Key string `validate:"required,sysctl_key"`
+		}
+
+		errMsg, ok := validation.Struct(keyReq{Key: "a/b"})
+		s.False(ok)
+		s.Contains(errMsg, "sysctl_key")
+		s.Contains(errMsg, "not a valid sysctl key")
+	})
+}
+
+func (s *ValidationPublicTestSuite) TestNoLinebreak() {
+	tests := []struct {
+		name         string
+		field        string
+		validateFunc func(bool)
+	}{
+		{
+			name:  "when simple value",
+			field: "1",
+			validateFunc: func(got bool) {
+				s.True(got)
+			},
+		},
+		{
+			name:  "when value contains newline",
+			field: "1\nkernel.modprobe = /tmp/evil",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+		{
+			name:  "when value contains carriage return",
+			field: "1\r\nkernel.modprobe = /tmp/evil",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			_, ok := validation.Var(tt.field, "no_linebreak")
+			tt.validateFunc(ok)
+		})
+	}
+
+	s.Run("invalid value shows hint through struct validation", func() {
+		type valueReq struct {
+			Value string `validate:"required,no_linebreak"`
+		}
+
+		errMsg, ok := validation.Struct(valueReq{Value: "1\nkernel.modprobe = /tmp/evil"})
+		s.False(ok)
+		s.Contains(errMsg, "no_linebreak")
+		s.Contains(errMsg, "must not contain line breaks")
+	})
+}
+
 func (s *ValidationPublicTestSuite) TestAtLeastOneField() {
 	type allPointers struct {
 		Shell  *string

@@ -208,6 +208,134 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 		},
 		{
+			name: "when key attempts path traversal",
+			entry: sysctl.Entry{
+				Key:   "../../etc/cron.d/pwn",
+				Value: "1",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name: "when key contains a slash",
+			entry: sysctl.Entry{
+				Key:   "a/b",
+				Value: "1",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name: "when key contains a space",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4 ip_forward",
+				Value: "1",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name: "when key contains an equals sign",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward=1",
+				Value: "1",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name: "when key starts with a hyphen",
+			entry: sysctl.Entry{
+				Key:   "-pfoo",
+				Value: "1",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name: "when key starts with a dot",
+			entry: sysctl.Entry{
+				Key:   ".hidden",
+				Value: "1",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name: "when value contains a newline",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "1\nkernel.modprobe = /tmp/evil",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl value")
+			},
+		},
+		{
+			name: "when value contains a carriage return",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "1\r\nkernel.modprobe = /tmp/evil",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl value")
+			},
+		},
+		{
 			name: "when previously undeployed allows create",
 			entry: sysctl.Entry{
 				Key:   "net.ipv4.ip_forward",
@@ -468,6 +596,102 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			},
 		},
 		{
+			name: "when key attempts path traversal",
+			entry: sysctl.Entry{
+				Key:   "../../etc/cron.d/pwn",
+				Value: "1",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name: "when key contains a slash",
+			entry: sysctl.Entry{
+				Key:   "a/b",
+				Value: "1",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name: "when key contains a space",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4 ip_forward",
+				Value: "1",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name: "when key contains an equals sign",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward=1",
+				Value: "1",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name: "when value contains a newline",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "1\nkernel.modprobe = /tmp/evil",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl value")
+			},
+		},
+		{
+			name: "when value contains a carriage return",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "1\r\nkernel.modprobe = /tmp/evil",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl value")
+			},
+		},
+		{
 			name: "when content unchanged returns not changed",
 			entry: sysctl.Entry{
 				Key:   "net.ipv4.ip_forward",
@@ -680,6 +904,58 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 				suite.Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "key must not be empty")
+			},
+		},
+		{
+			name:  "when key attempts path traversal",
+			key:   "../../etc/cron.d/pwn",
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.DeleteResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name:  "when key contains a slash",
+			key:   "a/b",
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.DeleteResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name:  "when key contains a space",
+			key:   "net.ipv4 ip_forward",
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.DeleteResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name:  "when key contains an equals sign",
+			key:   "net.ipv4.ip_forward=1",
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.DeleteResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid sysctl key")
 			},
 		},
 		{
@@ -1268,6 +1544,58 @@ func (suite *DebianPublicTestSuite) TestGet() {
 				suite.Error(err)
 				suite.Nil(entry)
 				suite.Contains(err.Error(), "key must not be empty")
+			},
+		},
+		{
+			name:  "when key attempts path traversal",
+			key:   "../../etc/cron.d/pwn",
+			setup: func() {},
+			validateFunc: func(
+				entry *sysctl.Entry,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(entry)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name:  "when key contains a slash",
+			key:   "a/b",
+			setup: func() {},
+			validateFunc: func(
+				entry *sysctl.Entry,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(entry)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name:  "when key contains a space",
+			key:   "net.ipv4 ip_forward",
+			setup: func() {},
+			validateFunc: func(
+				entry *sysctl.Entry,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(entry)
+				suite.Contains(err.Error(), "invalid sysctl key")
+			},
+		},
+		{
+			name:  "when key contains an equals sign",
+			key:   "net.ipv4.ip_forward=1",
+			setup: func() {},
+			validateFunc: func(
+				entry *sysctl.Entry,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(entry)
+				suite.Contains(err.Error(), "invalid sysctl key")
 			},
 		},
 		{
