@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -20,46 +20,21 @@
 
 package exec
 
-import (
-	"log/slog"
-)
+// RunPrivilegedCmdWithStdin executes the provided command with arguments and
+// writes stdin to the command's standard input. When sudo is enabled, the
+// command is prepended with "sudo".
+//
+// Pass secrets this way rather than in arguments: stdin is not interpreted by
+// a shell, does not appear in the process list, and is never logged.
+func (e *Exec) RunPrivilegedCmdWithStdin(
+	name string,
+	args []string,
+	stdin string,
+) (string, error) {
+	if e.sudo {
+		args = append([]string{name}, args...)
+		name = "sudo"
+	}
 
-// CommandExecutor executes OS commands. The default implementation
-// runs real commands via os/exec. Tests inject a mock to assert
-// commands without executing them.
-type CommandExecutor interface {
-	Execute(
-		name string,
-		args []string,
-		cwd string,
-	) (string, error)
-
-	// ExecuteWithStdin runs the command with stdin written to its standard
-	// input. Implementations must not log stdin.
-	ExecuteWithStdin(
-		name string,
-		args []string,
-		cwd string,
-		stdin string,
-	) (string, error)
-}
-
-// Exec disk implementation.
-type Exec struct {
-	logger   *slog.Logger
-	sudo     bool
-	executor CommandExecutor
-}
-
-// CmdResult contains the full result of a command execution
-// with separate stdout and stderr streams.
-type CmdResult struct {
-	// Stdout contains the standard output of the command.
-	Stdout string
-	// Stderr contains the standard error output of the command.
-	Stderr string
-	// ExitCode is the exit code of the command.
-	ExitCode int
-	// DurationMs is the execution time in milliseconds.
-	DurationMs int64
+	return e.executor.ExecuteWithStdin(name, args, "", stdin)
 }

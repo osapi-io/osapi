@@ -36,6 +36,16 @@ type Manager interface {
 		args []string,
 	) (string, error)
 
+	// RunPrivilegedCmdWithStdin executes the provided command with arguments
+	// and writes stdin to its standard input. When sudo is enabled, the
+	// command is prepended with "sudo". Use it to pass secrets, which must
+	// never be placed in arguments.
+	RunPrivilegedCmdWithStdin(
+		name string,
+		args []string,
+		stdin string,
+	) (string, error)
+
 	// RunCmdFull executes a command with separate stdout/stderr capture,
 	// an optional working directory, and a timeout in seconds.
 	RunCmdFull(

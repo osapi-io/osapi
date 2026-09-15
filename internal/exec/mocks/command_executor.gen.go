@@ -53,3 +53,18 @@ func (mr *MockCommandExecutorMockRecorder) Execute(name, args, cwd any) *gomock.
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Execute", reflect.TypeOf((*MockCommandExecutor)(nil).Execute), name, args, cwd)
 }
+
+// ExecuteWithStdin mocks base method.
+func (m *MockCommandExecutor) ExecuteWithStdin(name string, args []string, cwd, stdin string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExecuteWithStdin", name, args, cwd, stdin)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExecuteWithStdin indicates an expected call of ExecuteWithStdin.
+func (mr *MockCommandExecutorMockRecorder) ExecuteWithStdin(name, args, cwd, stdin any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteWithStdin", reflect.TypeOf((*MockCommandExecutor)(nil).ExecuteWithStdin), name, args, cwd, stdin)
+}

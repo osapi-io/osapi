@@ -106,6 +106,14 @@ func (d *Debian) CreateUser(
 ) (*Result, error) {
 	_ = ctx
 
+	// Validate before useradd so a rejected password does not leave an
+	// account behind without one.
+	if opts.Password != "" {
+		if err := validatePasswordInput(opts.Name, opts.Password); err != nil {
+			return nil, fmt.Errorf("user: %w", err)
+		}
+	}
+
 	args := d.buildUseraddArgs(opts)
 
 	_, err := d.execManager.RunPrivilegedCmd("useradd", args)
@@ -192,6 +200,10 @@ func (d *Debian) ChangePassword(
 	password string,
 ) (*Result, error) {
 	_ = ctx
+
+	if err := validatePasswordInput(name, password); err != nil {
+		return nil, fmt.Errorf("user: %w", err)
+	}
 
 	if err := d.setPassword(name, password); err != nil {
 		return nil, fmt.Errorf("user: %w", err)
@@ -352,19 +364,40 @@ func (d *Debian) buildUsermodArgs(
 	return args
 }
 
-// setPassword sets a user's password via chpasswd.
+// setPassword sets a user's password via chpasswd. The name:password pair is
+// written to chpasswd's standard input, so the password is never interpreted
+// by a shell, never appears in the process arguments, and is never logged.
+// Callers must pass the values through validatePasswordInput first.
 func (d *Debian) setPassword(
 	name string,
 	password string,
 ) error {
-	input := fmt.Sprintf("%s:%s", name, password)
-
-	_, err := d.execManager.RunPrivilegedCmd(
-		"sh",
-		[]string{"-c", fmt.Sprintf("echo '%s' | chpasswd", input)},
+	_, err := d.execManager.RunPrivilegedCmdWithStdin(
+		"chpasswd",
+		nil,
+		name+":"+password+"\n",
 	)
 	if err != nil {
 		return fmt.Errorf("chpasswd failed: %w", err)
+	}
+
+	return nil
+}
+
+// validatePasswordInput rejects values that would change what chpasswd does.
+// chpasswd reads one name:password pair per line and splits each line at the
+// first colon, so a line break in either value, or a colon in the name, would
+// set the password of a different account.
+func validatePasswordInput(
+	name string,
+	password string,
+) error {
+	if strings.ContainsAny(name, ":\r\n") {
+		return fmt.Errorf("invalid user name: must not contain a colon or line break")
+	}
+
+	if strings.ContainsAny(password, "\r\n") {
+		return fmt.Errorf("invalid password: must not contain a line break")
 	}
 
 	return nil

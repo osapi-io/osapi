@@ -23,6 +23,7 @@ package exec
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"os/exec"
 	"strings"
@@ -42,10 +43,32 @@ func (d *defaultExecutor) Execute(
 	args []string,
 	cwd string,
 ) (string, error) {
+	return d.run(name, args, cwd, nil)
+}
+
+// ExecuteWithStdin runs the command with stdin written to its standard input
+// and returns its combined output. Stdin is not logged.
+func (d *defaultExecutor) ExecuteWithStdin(
+	name string,
+	args []string,
+	cwd string,
+	stdin string,
+) (string, error) {
+	return d.run(name, args, cwd, strings.NewReader(stdin))
+}
+
+// run executes the command, logging its arguments and output but never stdin.
+func (d *defaultExecutor) run(
+	name string,
+	args []string,
+	cwd string,
+	stdin io.Reader,
+) (string, error) {
 	cmd := exec.Command(name, args...)
 	if cwd != "" {
 		cmd.Dir = cwd
 	}
+	cmd.Stdin = stdin
 	out, err := cmd.CombinedOutput()
 
 	logOutput := string(out)
