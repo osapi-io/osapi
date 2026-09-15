@@ -311,14 +311,24 @@ sequenceDiagram
     participant KVR as KV job-responses
 
     JS->>Agent: deliver notification
-    Agent->>KV: fetch immutable job
-    Agent->>KV: write status: acknowledged
-    Agent->>KV: write status: started
-    Agent->>Provider: execute operation
-    Provider-->>Agent: result
-    Agent->>KV: write status: completed/failed
-    Agent->>KVR: store response
-    Agent->>JS: ACK message
+    Agent->>KVR: already responded to this job?
+    alt already responded (redelivery)
+        Agent->>JS: ACK message (not re-executed)
+    else not yet responded
+        Agent->>KV: fetch immutable job
+        alt payload malformed or unverifiable
+            Agent->>JS: Term message (not redelivered)
+        else job data valid
+            Agent->>KV: write status: acknowledged
+            Agent->>KV: write status: started
+            Agent->>Provider: execute operation
+            Note over Agent,Provider: periodic InProgress resets AckWait
+            Provider-->>Agent: result
+            Agent->>KVR: store response
+            Agent->>KV: write status: completed/failed
+            Agent->>JS: ACK message
+        end
+    end
 ```
 
 ### Append-Only Status Architecture
@@ -545,10 +555,42 @@ For now, the 1-hour TTL keeps the bucket bounded and `kv.Keys()` fast.
 
 ## Error Handling
 
-1. **Retry Logic**: Failed jobs retry up to MaxDeliver times
-2. **Dead Letter Queue**: Jobs failing after max retries
-3. **Timeout Handling**: Jobs timeout after AckWait period
-4. **Graceful Degradation**: Agents continue on provider errors
+1. **A job that has run is terminal**: once an agent executes an operation and
+   records its response and status — success or failure — it acknowledges the
+   message, so JetStream does not redeliver it. A failed operation is not
+   retried by redelivery; the failure is already recorded for polling clients.
+   This matters because some operations are not safe to run twice —
+   `command.exec`, `command.shell`, `power.reboot`, and `power.shutdown` in
+   particular.
+2. **Idempotent redelivery**: a message can still be redelivered despite the
+   above — for example, a crash between executing the operation and
+   acknowledging the message. Before running the operation, the agent checks
+   whether it has already written a response for this job, and if so, acks
+   without re-executing. The check is scoped to this agent, so broadcast jobs
+   (where every targeted agent answers independently) are unaffected. If the
+   response itself cannot be written to KV after the operation runs, the job is
+   not retried either: the agent records the storage failure as a failed status
+   event on a best-effort basis and still acks, rather than leaving the message
+   unacked — which would redeliver it and, finding no response recorded, run the
+   operation a second time. A caller sees a failed or timed-out job in this
+   case, never a second execution.
+3. **Pre-execution failures**: an error raised before the operation runs — a
+   malformed payload, an unparsable subject, a failed signature — terminates the
+   message (JetStream `Term`) rather than letting it redeliver, since none of
+   these can succeed on retry. A failure reading the job data itself from KV is
+   treated as possibly transient and is left to redeliver normally.
+4. **In-flight keepalive**: while an operation executes, the agent calls
+   JetStream's `InProgress` at roughly half the consumer's `AckWait` to reset
+   the redelivery timer, so an operation that runs longer than `AckWait` is not
+   redelivered while still in progress.
+5. **Retrying a job**: the `job retry` CLI command creates a new job with the
+   same operation data; it does not resubmit or redeliver the original message,
+   so it is unaffected by the above.
+6. **Dead Letter Queue**: a message that cannot be delivered to a handler at all
+   is redelivered up to `MaxDeliver` times before landing in the DLQ.
+7. **Timeout Handling**: for broadcast jobs, an agent that never responds within
+   `job_timeout` appears in the result as `status: failed`.
+8. **Graceful Degradation**: agents continue on provider errors.
 
 ## Monitoring
 

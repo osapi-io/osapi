@@ -29,7 +29,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"k8s.io/utils/ptr"
 
@@ -71,7 +73,23 @@ func newTestMsg(
 	m.EXPECT().Subject().Return(subject).AnyTimes()
 	m.EXPECT().Data().Return(data).AnyTimes()
 	m.EXPECT().Headers().Return(nil).AnyTimes()
+	// InProgress fires only if a test's operation outlives the (very long,
+	// default-derived) keepalive interval; TermWithReason fires only for
+	// pre-execution failures the handler decides can never be fixed by
+	// redelivery. AnyTimes() permits both zero and multiple calls.
+	m.EXPECT().InProgress().Return(nil).AnyTimes()
+	m.EXPECT().TermWithReason(gomock.Any()).Return(nil).AnyTimes()
 	return m
+}
+
+// expectNotAnswered sets up the standard "no prior response from this
+// agent" HasJobResponse expectation shared by most handleJobMessage cases.
+func (s *HandlerPublicTestSuite) expectNotAnswered(
+	jobKey string,
+) {
+	s.mockJobClient.EXPECT().
+		HasJobResponse(gomock.Any(), jobKey, gomock.Any()).
+		Return(false, nil)
 }
 
 type HandlerPublicTestSuite struct {
@@ -232,6 +250,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("test-job-123"))
 			},
 			setupMocks: func() {
+				s.expectNotAnswered("test-job-123")
+
 				// Mock job data retrieval
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.test-job-123").
@@ -271,6 +291,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("test-job-456"))
 			},
 			setupMocks: func() {
+				s.expectNotAnswered("test-job-456")
+
 				// Mock job data retrieval
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.test-job-456").
@@ -301,10 +323,10 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return(nil)
 			},
 			validateFunc: func(err error) {
-				s.Error(err)
-				if "job processing failed" != "" {
-					s.Contains(err.Error(), "job processing failed")
-				}
+				// The operation ran and its failure is already recorded in
+				// the response and status event, so the message is acked
+				// (nil) rather than left to redeliver.
+				s.NoError(err)
 			},
 		},
 		{
@@ -313,7 +335,10 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				return newTestMsg(ctrl, "invalid", []byte("test-job-789"))
 			},
 			setupMocks: func() {
-				// No mocks needed as it should fail early
+				s.expectNotAnswered("test-job-789")
+				// No further mocks needed: an unparsable subject is
+				// terminated (msg.TermWithReason, stubbed in newTestMsg)
+				// rather than retried.
 			},
 			validateFunc: func(err error) {
 				s.Error(err)
@@ -328,6 +353,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("nonexistent-job"))
 			},
 			setupMocks: func() {
+				s.expectNotAnswered("nonexistent-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.nonexistent-job").
 					Return(nil, errors.New("job not found"))
@@ -345,6 +371,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("invalid-job"))
 			},
 			setupMocks: func() {
+				s.expectNotAnswered("invalid-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.invalid-job").
 					Return([]byte(`invalid json`), nil)
@@ -362,6 +389,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("missing-id-job"))
 			},
 			setupMocks: func() {
+				s.expectNotAnswered("missing-id-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.missing-id-job").
 					Return([]byte(`{
@@ -384,6 +412,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("missing-op-job"))
 			},
 			setupMocks: func() {
+				s.expectNotAnswered("missing-op-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.missing-op-job").
 					Return([]byte(`{
@@ -403,6 +432,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("missing-type-job"))
 			},
 			setupMocks: func() {
+				s.expectNotAnswered("missing-type-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.missing-type-job").
 					Return([]byte(`{
@@ -425,6 +455,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("invalid-type-job"))
 			},
 			setupMocks: func() {
+				s.expectNotAnswered("invalid-type-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.invalid-type-job").
 					Return([]byte(`{
@@ -448,6 +479,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("ack-err-job"))
 			},
 			setupMocks: func() {
+				s.expectNotAnswered("ack-err-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.ack-err-job").
 					Return([]byte(`{
@@ -484,6 +516,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("start-err-job"))
 			},
 			setupMocks: func() {
+				s.expectNotAnswered("start-err-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.start-err-job").
 					Return([]byte(`{
@@ -520,6 +553,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("comp-err-job"))
 			},
 			setupMocks: func() {
+				s.expectNotAnswered("comp-err-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.comp-err-job").
 					Return([]byte(`{
@@ -556,6 +590,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("fail-err-job"))
 			},
 			setupMocks: func() {
+				s.expectNotAnswered("fail-err-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.fail-err-job").
 					Return([]byte(`{
@@ -583,10 +618,9 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return(nil)
 			},
 			validateFunc: func(err error) {
-				s.Error(err)
-				if "job processing failed" != "" {
-					s.Contains(err.Error(), "job processing failed")
-				}
+				// The response was persisted despite the failed-event write
+				// error (which is only logged), so the job is still terminal.
+				s.NoError(err)
 			},
 		},
 		{
@@ -607,6 +641,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					})
 				agent.SetAgentHostProvider(s.testAgent, unsupportedHost)
 
+				s.expectNotAnswered("skip-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.skip-job").
 					Return([]byte(`{
@@ -653,6 +688,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					})
 				agent.SetAgentHostProvider(s.testAgent, unsupportedHost)
 
+				s.expectNotAnswered("skip-err-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.skip-err-job").
 					Return([]byte(`{
@@ -693,6 +729,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					PrimaryInterface: "eth0",
 				})
 
+				s.expectNotAnswered("fact-resolve-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.fact-resolve-job").
 					Return([]byte(`{
@@ -731,6 +768,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 			setupMocks: func() {
 				agent.SetAgentCachedFacts(s.testAgent, nil)
 
+				s.expectNotAnswered("fact-nil-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.fact-nil-job").
 					Return([]byte(`{
@@ -758,10 +796,10 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return(nil)
 			},
 			validateFunc: func(err error) {
-				s.Error(err)
-				if "facts not available" != "" {
-					s.Contains(err.Error(), "facts not available")
-				}
+				// Fact resolution fails before the operation executes, but
+				// the failure is still recorded via WriteJobResponse above,
+				// so the message is acked rather than retried.
+				s.NoError(err)
 			},
 		},
 		{
@@ -772,6 +810,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 			setupMocks: func() {
 				agent.SetAgentCachedFacts(s.testAgent, &job.FactsRegistration{})
 
+				s.expectNotAnswered("fact-fail-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.fact-fail-job").
 					Return([]byte(`{
@@ -799,10 +838,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return(nil)
 			},
 			validateFunc: func(err error) {
-				s.Error(err)
-				if "failed to resolve fact references" != "" {
-					s.Contains(err.Error(), "failed to resolve fact references")
-				}
+				// Same as the nil-facts case: recorded, so acked.
+				s.NoError(err)
 			},
 		},
 		{
@@ -811,6 +848,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("storage-fail-job"))
 			},
 			setupMocks: func() {
+				s.expectNotAnswered("storage-fail-job")
+
 				// Mock successful job processing
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.storage-fail-job").
@@ -835,12 +874,139 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				s.mockJobClient.EXPECT().
 					WriteJobResponse(gomock.Any(), "storage-fail-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
 					Return(errors.New("storage failure"))
+
+				// The handler falls back to recording the storage failure
+				// itself as a failed status event, rather than leaving the
+				// message unacked (which would redeliver and re-execute
+				// the already-completed operation).
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "storage-fail-job", "failed", gomock.Any(), gomock.Any()).
+					Return(nil)
 			},
 			validateFunc: func(err error) {
+				// The operation ran exactly once (enforced by the mock
+				// expectations above having no AnyTimes()/extra calls); a
+				// storage failure after execution must still ack rather
+				// than trigger redelivery and a second execution.
+				s.NoError(err)
+			},
+		},
+		{
+			name: "when response storage failure and the failed-event write also fails",
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("storage-fail-double-job"))
+			},
+			setupMocks: func() {
+				s.expectNotAnswered("storage-fail-double-job")
+
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.storage-fail-double-job").
+					Return([]byte(`{
+						"id": "storage-fail-double-job",
+						"operation": {
+							"type": "node.hostname.get",
+							"data": {}
+						}
+					}`), nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "storage-fail-double-job", "acknowledged", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "storage-fail-double-job", "started", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteJobResponse(gomock.Any(), "storage-fail-double-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
+					Return(errors.New("storage failure"))
+
+				// Even the fallback failed-event write fails; this is only
+				// logged, and the message is still acked rather than
+				// redelivered for a second execution.
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "storage-fail-double-job", "failed", gomock.Any(), gomock.Any()).
+					Return(errors.New("status write also failed"))
+			},
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
+		{
+			name: "when the message cannot be terminated the original error still propagates",
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				m := agentmocks.NewMockMsg(ctrl)
+				m.EXPECT().Subject().Return("invalid").AnyTimes()
+				m.EXPECT().Data().Return([]byte("term-err-job")).AnyTimes()
+				m.EXPECT().Headers().Return(nil).AnyTimes()
+				m.EXPECT().TermWithReason(gomock.Any()).Return(errors.New("term failed"))
+				return m
+			},
+			setupMocks: func() {
+				s.expectNotAnswered("term-err-job")
+			},
+			validateFunc: func(err error) {
+				// TermWithReason failing is only logged; the original
+				// parse error is still returned so the message is neither
+				// silently dropped nor mistaken for success.
 				s.Error(err)
-				if "failed to store job response" != "" {
-					s.Contains(err.Error(), "failed to store job response")
-				}
+				s.Contains(err.Error(), "failed to parse subject")
+			},
+		},
+		{
+			name: "when job already answered by this agent skips redelivered execution",
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("already-answered-job"))
+			},
+			setupMocks: func() {
+				s.mockJobClient.EXPECT().
+					HasJobResponse(gomock.Any(), "already-answered-job", gomock.Any()).
+					Return(true, nil)
+				// No GetJobData, WriteStatusEvent, or WriteJobResponse call
+				// is expected: the operation must not run a second time.
+			},
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
+		{
+			name: "when checking for an existing response fails proceeds with execution",
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("check-err-job"))
+			},
+			setupMocks: func() {
+				s.mockJobClient.EXPECT().
+					HasJobResponse(gomock.Any(), "check-err-job", gomock.Any()).
+					Return(false, errors.New("kv unavailable"))
+
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.check-err-job").
+					Return([]byte(`{
+						"id": "check-err-job",
+						"operation": {
+							"type": "node.hostname.get",
+							"data": {}
+						}
+					}`), nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "check-err-job", "acknowledged", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "check-err-job", "started", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "check-err-job", "completed", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteJobResponse(gomock.Any(), "check-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
+					Return(nil)
+			},
+			validateFunc: func(err error) {
+				s.NoError(err)
 			},
 		},
 	}
@@ -878,6 +1044,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageModifyJobs() {
 				}
 			}`,
 			setupMocks: func() {
+				s.expectNotAnswered("modify-job-123")
+
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.modify-job-123").
 					Return([]byte(`{
@@ -1182,6 +1350,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 				}
 				envelopeJSON, _ := json.Marshal(envelope)
 
+				s.expectNotAnswered("signed-job-ok")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.signed-job-ok").
 					Return(envelopeJSON, nil)
@@ -1229,6 +1398,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 				}
 				envelopeJSON, _ := json.Marshal(envelope)
 
+				s.expectNotAnswered("bad-sig-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.bad-sig-job").
 					Return(envelopeJSON, nil)
@@ -1250,6 +1420,82 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 
 			msg := tt.setupMsg(s.mockCtrl)
 			tt.validateFunc(agent.ExportHandleJobMessage(s.testAgent, msg))
+		})
+	}
+}
+
+func (s *HandlerPublicTestSuite) TestStartInProgressKeepAlive() {
+	tests := []struct {
+		name         string
+		inProgressFn func() error
+		cancelCtx    bool
+		validateFunc func(calls *atomic.Int32)
+	}{
+		{
+			name:         "when the operation outlives the interval it extends the ack deadline",
+			inProgressFn: func() error { return nil },
+			validateFunc: func(calls *atomic.Int32) {
+				s.GreaterOrEqual(calls.Load(), int32(1))
+			},
+		},
+		{
+			name:         "when stopped no further InProgress calls are made",
+			inProgressFn: func() error { return nil },
+			validateFunc: func(calls *atomic.Int32) {
+				afterStop := calls.Load()
+				time.Sleep(30 * time.Millisecond)
+				// stop() has already returned by the time validateFunc
+				// runs, which blocks until the keepalive goroutine exits —
+				// so no call arrives after this point and no goroutine
+				// leaks past the test.
+				s.Equal(afterStop, calls.Load())
+			},
+		},
+		{
+			name:         "when InProgress fails the keepalive logs and keeps ticking",
+			inProgressFn: func() error { return errors.New("ack deadline extend failed") },
+			validateFunc: func(calls *atomic.Int32) {
+				s.GreaterOrEqual(calls.Load(), int32(1))
+			},
+		},
+		{
+			name:         "when the context is already canceled the keepalive exits immediately",
+			cancelCtx:    true,
+			inProgressFn: func() error { return nil },
+			validateFunc: func(_ *atomic.Int32) {
+				// No assertion beyond reaching here without hanging: stop()
+				// returning proves the goroutine exited via ctx.Done()
+				// rather than waiting for a tick.
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			agent.SetInProgressInterval(5 * time.Millisecond)
+			defer agent.ResetInProgressInterval()
+
+			var calls atomic.Int32
+			mockMsg := agentmocks.NewMockMsg(s.mockCtrl)
+			mockMsg.EXPECT().InProgress().DoAndReturn(func() error {
+				calls.Add(1)
+				return tt.inProgressFn()
+			}).AnyTimes()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			if tt.cancelCtx {
+				cancel()
+			}
+
+			stop := agent.ExportStartInProgressKeepAlive(ctx, s.testAgent, mockMsg)
+			if !tt.cancelCtx {
+				// Let the ticker fire at least once before stopping.
+				time.Sleep(30 * time.Millisecond)
+			}
+			stop()
+
+			tt.validateFunc(&calls)
 		})
 	}
 }

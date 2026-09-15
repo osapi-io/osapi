@@ -189,6 +189,21 @@ func (mr *MockJobClientMockRecorder) GetQueueSummary(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueueSummary", reflect.TypeOf((*MockJobClient)(nil).GetQueueSummary), ctx)
 }
 
+// HasJobResponse mocks base method.
+func (m *MockJobClient) HasJobResponse(ctx context.Context, jobID, hostname string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasJobResponse", ctx, jobID, hostname)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HasJobResponse indicates an expected call of HasJobResponse.
+func (mr *MockJobClientMockRecorder) HasJobResponse(ctx, jobID, hostname any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasJobResponse", reflect.TypeOf((*MockJobClient)(nil).HasJobResponse), ctx, jobID, hostname)
+}
+
 // ListAgents mocks base method.
 func (m *MockJobClient) ListAgents(ctx context.Context) ([]job.AgentInfo, error) {
 	m.ctrl.T.Helper()

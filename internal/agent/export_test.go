@@ -354,6 +354,30 @@ func ResetDefaultFactsInterval() {
 	defaultFactsInterval = 60 * time.Second
 }
 
+// SetInProgressInterval overrides the InProgress keepalive interval for
+// testing. Zero restores deriving it from the consumer's AckWait.
+func SetInProgressInterval(
+	d time.Duration,
+) {
+	inProgressInterval = d
+}
+
+// ResetInProgressInterval restores deriving the InProgress keepalive
+// interval from the consumer's AckWait.
+func ResetInProgressInterval() {
+	inProgressInterval = 0
+}
+
+// ExportStartInProgressKeepAlive exposes the private startInProgressKeepAlive
+// method for testing.
+func ExportStartInProgressKeepAlive(
+	ctx context.Context,
+	a *Agent,
+	msg jetstream.Msg,
+) func() {
+	return a.startInProgressKeepAlive(ctx, msg)
+}
+
 // SetHeartbeatInterval overrides the heartbeatInterval for testing.
 func SetHeartbeatInterval(
 	d time.Duration,

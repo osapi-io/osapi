@@ -143,6 +143,15 @@ type JobClient interface {
 	) (*CreateJobResult, error)
 
 	// Agent operations - used by agents for processing
+	// HasJobResponse reports whether this agent has already recorded a
+	// response for the given job. Used to detect a redelivered message
+	// for a job this agent has already executed, so the operation is not
+	// run a second time.
+	HasJobResponse(
+		ctx context.Context,
+		jobID string,
+		hostname string,
+	) (bool, error)
 	WriteStatusEvent(
 		ctx context.Context,
 		jobID string,

@@ -23,6 +23,7 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"regexp"
@@ -34,6 +35,24 @@ import (
 
 	"github.com/osapi-io/osapi/internal/job"
 )
+
+// HasJobResponse reports whether this agent has already written a response
+// for the given job. A redelivered message must not re-execute an operation
+// this agent has already answered, so the handler checks this before running
+// the operation. The check is scoped to hostname so broadcast jobs, where
+// every targeted agent responds independently, remain unaffected.
+func (c *Client) HasJobResponse(
+	ctx context.Context,
+	jobID string,
+	hostname string,
+) (bool, error) {
+	filter := fmt.Sprintf("responses.%s.%s.>", jobID, sanitizeKeyForNATS(hostname))
+	keys, err := collectKeys(ctx, c.kv, filter)
+	if err != nil && !errors.Is(err, jetstream.ErrNoKeysFound) {
+		return false, fmt.Errorf("failed to check for existing job response: %w", err)
+	}
+	return len(keys) > 0, nil
+}
 
 // WriteStatusEvent writes an append-only status event for a job.
 // This eliminates race conditions by never updating existing keys.

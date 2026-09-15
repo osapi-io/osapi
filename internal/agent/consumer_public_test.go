@@ -627,6 +627,10 @@ func (s *ConsumerPublicTestSuite) TestHandleJobMessageJS() {
 			msgData:    []byte("test-job-key"),
 			msgSubject: "jobs.query.test-agent",
 			setupMocks: func() {
+				s.mockJobClient.EXPECT().
+					HasJobResponse(gomock.Any(), "test-job-key", gomock.Any()).
+					Return(false, nil)
+
 				// Mock successful job data retrieval and processing
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.test-job-key").
@@ -665,6 +669,10 @@ func (s *ConsumerPublicTestSuite) TestHandleJobMessageJS() {
 			msgData:    []byte("failed-job-key"),
 			msgSubject: "jobs.query.test-agent",
 			setupMocks: func() {
+				s.mockJobClient.EXPECT().
+					HasJobResponse(gomock.Any(), "failed-job-key", gomock.Any()).
+					Return(false, nil)
+
 				// Mock job data retrieval failure
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.failed-job-key").
@@ -680,7 +688,12 @@ func (s *ConsumerPublicTestSuite) TestHandleJobMessageJS() {
 			msgData:    []byte("test-job-key"),
 			msgSubject: "invalid.subject",
 			setupMocks: func() {
-				// No mocks needed as it should fail early
+				s.mockJobClient.EXPECT().
+					HasJobResponse(gomock.Any(), "test-job-key", gomock.Any()).
+					Return(false, nil)
+				// No further mocks needed: an unparsable subject is
+				// terminated (msg.TermWithReason, stubbed below) rather
+				// than retried.
 			},
 			validateFunc: func(err error) {
 				s.Error(err)
@@ -697,6 +710,8 @@ func (s *ConsumerPublicTestSuite) TestHandleJobMessageJS() {
 			mockMsg.EXPECT().Subject().Return(tt.msgSubject).AnyTimes()
 			mockMsg.EXPECT().Data().Return(tt.msgData).AnyTimes()
 			mockMsg.EXPECT().Headers().Return(nil).AnyTimes()
+			mockMsg.EXPECT().InProgress().Return(nil).AnyTimes()
+			mockMsg.EXPECT().TermWithReason(gomock.Any()).Return(nil).AnyTimes()
 
 			tt.validateFunc(agent.ExportHandleJobMessageJS(s.testAgent, mockMsg))
 		})

@@ -519,6 +519,85 @@ func (s *AgentPublicTestSuite) TestGetJobData() {
 	}
 }
 
+func (s *AgentPublicTestSuite) TestHasJobResponse() {
+	tests := []struct {
+		name         string
+		jobID        string
+		hostname     string
+		setupMocks   func()
+		validateFunc func(bool, error)
+	}{
+		{
+			name:     "when a response exists for this agent",
+			jobID:    "job-1",
+			hostname: "agent-1",
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-1.agent-1.>").
+					Return(newMockKeyLister(s.mockCtrl, []string{
+						"responses.job-1.agent-1.1700000000000000000",
+					}), nil)
+			},
+			validateFunc: func(got bool, err error) {
+				s.NoError(err)
+				s.True(got)
+			},
+		},
+		{
+			name:     "when no response exists for this agent",
+			jobID:    "job-2",
+			hostname: "agent-1",
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-2.agent-1.>").
+					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+			},
+			validateFunc: func(got bool, err error) {
+				s.NoError(err)
+				s.False(got)
+			},
+		},
+		{
+			name:     "when the hostname needs sanitizing for the key filter",
+			jobID:    "job-3",
+			hostname: "agent.one",
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-3.agent_one.>").
+					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+			},
+			validateFunc: func(got bool, err error) {
+				s.NoError(err)
+				s.False(got)
+			},
+		},
+		{
+			name:     "when the KV listing fails",
+			jobID:    "job-4",
+			hostname: "agent-1",
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-4.agent-1.>").
+					Return(nil, errors.New("kv unavailable"))
+			},
+			validateFunc: func(got bool, err error) {
+				s.Error(err)
+				s.False(got)
+				s.Contains(err.Error(), "failed to check for existing job response")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupMocks()
+
+			got, err := s.jobsClient.HasJobResponse(s.ctx, tt.jobID, tt.hostname)
+			tt.validateFunc(got, err)
+		})
+	}
+}
+
 func (s *AgentPublicTestSuite) TestCreateOrUpdateConsumer() {
 	tests := []struct {
 		name           string

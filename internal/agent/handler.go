@@ -115,6 +115,85 @@ func (a *Agent) writeStatusEvent(
 	return a.jobClient.WriteStatusEvent(ctx, jobID, event, a.hostname, data)
 }
 
+// defaultAckWait is used to size the InProgress keepalive interval when the
+// configured AckWait is missing or unparsable. It matches the default set in
+// cmd/root.go.
+const defaultAckWait = 2 * time.Minute
+
+// inProgressInterval overrides the computed InProgress keepalive interval.
+// Zero means derive it from the consumer's AckWait, halved. Exposed for
+// tests via export_test.go.
+var inProgressInterval time.Duration
+
+// startInProgressKeepAlive periodically calls msg.InProgress() to reset the
+// server's redelivery timer while a long-running operation executes. It
+// returns a stop function that must be called exactly once when the
+// operation finishes; stop blocks until the keepalive goroutine has exited,
+// so no goroutine outlives the call.
+func (a *Agent) startInProgressKeepAlive(
+	ctx context.Context,
+	msg jetstream.Msg,
+) func() {
+	interval := inProgressInterval
+	if interval <= 0 {
+		ackWait, err := time.ParseDuration(a.appConfig.Agent.Consumer.AckWait)
+		if err != nil || ackWait <= 0 {
+			ackWait = defaultAckWait
+		}
+		interval = ackWait / 2
+	}
+
+	done := make(chan struct{})
+	stop := make(chan struct{})
+
+	go func() {
+		defer close(done)
+
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-stop:
+				return
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				if err := msg.InProgress(); err != nil {
+					a.logger.WarnContext(
+						ctx,
+						"failed to extend job ack deadline",
+						slog.String("error", err.Error()),
+					)
+				}
+			}
+		}
+	}()
+
+	return func() {
+		close(stop)
+		<-done
+	}
+}
+
+// terminateMessage tells JetStream not to redeliver msg, then returns err
+// unchanged. Used for pre-execution failures that redelivery can never fix:
+// a malformed payload, an unparsable subject, or a failed signature.
+func (a *Agent) terminateMessage(
+	msg jetstream.Msg,
+	reason string,
+	err error,
+) error {
+	if termErr := msg.TermWithReason(reason); termErr != nil {
+		a.logger.Warn(
+			"failed to terminate undeliverable message",
+			slog.String("reason", reason),
+			slog.String("error", termErr.Error()),
+		)
+	}
+	return err
+}
+
 // handleJobMessage processes incoming job messages from NATS.
 func (a *Agent) handleJobMessage(
 	msg jetstream.Msg,
@@ -135,29 +214,58 @@ func (a *Agent) handleJobMessage(
 		slog.String("raw_data", string(msg.Data())),
 	)
 
+	// A redelivered message for a job this agent already answered must not
+	// re-execute the operation — the response and terminal status are
+	// already recorded. Checked before touching the job data itself, since
+	// a message that gets this far has already run to completion once.
+	// The check is scoped to this agent's hostname, so broadcast jobs
+	// (where every targeted agent answers independently) are unaffected.
+	// A failed check fails open: proceed with execution rather than risk
+	// silently dropping a job this agent has not actually answered.
+	if answered, err := a.jobClient.HasJobResponse(context.Background(), jobKey, a.hostname); err != nil {
+		a.logger.Warn(
+			"failed to check for existing job response; proceeding with execution",
+			slog.String("job_id", jobKey),
+			slog.String("error", err.Error()),
+		)
+	} else if answered {
+		a.logger.Debug(
+			"job already answered by this agent; skipping redelivered execution",
+			slog.String("job_id", jobKey),
+			slog.String("hostname", a.hostname),
+		)
+		return nil
+	}
+
 	// Parse subject to extract prefix and hostname
 	prefix, _, err := job.ParseSubject(msg.Subject())
 	if err != nil {
-		return fmt.Errorf("failed to parse subject %s: %w", msg.Subject(), err)
+		return a.terminateMessage(msg, "unparsable subject",
+			fmt.Errorf("failed to parse subject %s: %w", msg.Subject(), err))
 	}
 
 	// Get the immutable job data
 	jobDataKey := "jobs." + jobKey
 	jobDataBytes, err := a.jobClient.GetJobData(context.Background(), jobDataKey)
 	if err != nil {
+		// Redelivery can help here: the job's KV write and this
+		// notification are not transactional, so a very early delivery
+		// may briefly race the write.
 		return fmt.Errorf("job not found: %s", jobKey)
 	}
 
 	// Unwrap signed envelope if PKI is enabled and controller public key is set.
 	jobDataBytes, err = a.unwrapJobEnvelope(jobDataBytes)
 	if err != nil {
-		return fmt.Errorf("job signature verification failed: %w", err)
+		return a.terminateMessage(msg, "signature verification failed",
+			fmt.Errorf("job signature verification failed: %w", err))
 	}
 
 	// Parse the job data
 	var jobData map[string]interface{}
 	if err := json.Unmarshal(jobDataBytes, &jobData); err != nil {
-		return fmt.Errorf("failed to parse job data: %w", err)
+		return a.terminateMessage(msg, "malformed job data",
+			fmt.Errorf("failed to parse job data: %w", err))
 	}
 
 	// Extract trace context from NATS message headers and create a processing span
@@ -168,25 +276,29 @@ func (a *Agent) handleJobMessage(
 	// Extract the job ID from top-level job data
 	jobID, ok := jobData["id"].(string)
 	if !ok {
-		return fmt.Errorf("invalid job format: missing id")
+		return a.terminateMessage(msg, "missing job id",
+			fmt.Errorf("invalid job format: missing id"))
 	}
 
 	// Extract the operation data
 	operationData, ok := jobData["operation"].(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("invalid job format: missing operation")
+		return a.terminateMessage(msg, "missing operation",
+			fmt.Errorf("invalid job format: missing operation"))
 	}
 
 	// Extract operation type from the operation data
 	operationType, ok := operationData["type"].(string)
 	if !ok {
-		return fmt.Errorf("invalid operation format: missing type field")
+		return a.terminateMessage(msg, "missing operation type",
+			fmt.Errorf("invalid operation format: missing type field"))
 	}
 
 	// Parse operation type to extract category and operation
 	parts := strings.Split(operationType, ".")
 	if len(parts) < 2 {
-		return fmt.Errorf("invalid operation type format: %s", operationType)
+		return a.terminateMessage(msg, "invalid operation type",
+			fmt.Errorf("invalid operation type format: %s", operationType))
 	}
 
 	category := parts[0]
@@ -293,7 +405,11 @@ func (a *Agent) handleJobMessage(
 	if resolveFactsErr != nil {
 		err = resolveFactsErr
 	} else {
+		// Extend the ack deadline periodically while the operation runs, so
+		// an operation that outlives AckWait is not redelivered mid-flight.
+		stopKeepAlive := a.startInProgressKeepAlive(ctx, msg)
 		result, err = a.processJobOperation(jobRequest)
+		stopKeepAlive()
 	}
 	if err != nil && errors.Is(err, provider.ErrUnsupported) {
 		a.logger.WarnContext(
@@ -355,7 +471,31 @@ func (a *Agent) handleJobMessage(
 	err = a.jobClient.WriteJobResponse(ctx, jobKey, hostname,
 		response.Data, string(response.Status), errorMsg, response.Changed)
 	if err != nil {
-		return fmt.Errorf("failed to store job response: %w", err)
+		// The operation already ran. Returning an error here would leave
+		// the message unacked, and JetStream would redeliver it — but
+		// HasJobResponse would find nothing, since this write is what
+		// failed, and the operation would run a second time. That is the
+		// exact double-execution this handler exists to prevent, so the
+		// failure is recorded as best-effort and the message is still
+		// acked; the caller sees a failed or timed-out job rather than a
+		// second execution.
+		a.logger.ErrorContext(
+			ctx,
+			"failed to store job response",
+			slog.String("job_id", jobKey),
+			slog.String("error", err.Error()),
+		)
+		if statusErr := a.writeStatusEvent(ctx, jobKey, string(job.StatusFailed), map[string]interface{}{
+			"error":       fmt.Sprintf("failed to store job response: %s", err.Error()),
+			"duration_ms": time.Since(startTime).Milliseconds(),
+		}); statusErr != nil {
+			a.logger.ErrorContext(
+				ctx,
+				"failed to write failed event after response storage failure",
+				slog.String("error", statusErr.Error()),
+			)
+		}
+		return nil
 	}
 
 	// Write terminal status event after the response is persisted.
@@ -405,10 +545,11 @@ func (a *Agent) handleJobMessage(
 		slog.String("status", string(response.Status)),
 	)
 
-	// Return error if job failed so message won't be acknowledged and will retry
-	if response.Status == job.StatusFailed {
-		return fmt.Errorf("job processing failed: %s", response.Error)
-	}
-
+	// The operation has run and its outcome — success or failure — is
+	// durably recorded above. The job is terminal from this agent's
+	// perspective: acknowledge the message so JetStream does not redeliver
+	// and re-execute it. A client that wants another attempt uses
+	// `job retry`, which creates a new job rather than relying on
+	// redelivery of this one.
 	return nil
 }
