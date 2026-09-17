@@ -54,8 +54,15 @@ build:
     go build -o osapi .
 
 # Run all tests
+#
+# The formatter checks belong here, not only in CI. A change merged from a
+# security advisory's private fork runs no Actions at all, so this recipe is
+# the only pre-merge gate those fixes get. Three of them left five pages
+# unformatted and broke Docusaurus Lint on main in September 2026.
 test: linux-tune
     just just-fmt-check
+    just md-fmt-check
+    just docusaurus-fmt-check
     just react-build
     just go-test
 
