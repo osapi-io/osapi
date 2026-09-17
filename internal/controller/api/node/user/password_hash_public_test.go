@@ -21,6 +21,7 @@
 package user_test
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -33,15 +34,21 @@ type PasswordHashPublicTestSuite struct {
 	suite.Suite
 }
 
+func (s *PasswordHashPublicTestSuite) TearDownSubTest() {
+	apiuser.ResetGenerateHashFn()
+}
+
 func (s *PasswordHashPublicTestSuite) TestHashPassword() {
 	tests := []struct {
 		name         string
 		password     string
+		setup        func()
 		validateFunc func(hash string, err error)
 	}{
 		{
 			name:     "produces a sha-512 crypt hash",
 			password: "correct horse battery staple",
+			setup:    func() {},
 			validateFunc: func(hash string, err error) {
 				s.NoError(err)
 				s.True(strings.HasPrefix(hash, "$6$"))
@@ -51,6 +58,7 @@ func (s *PasswordHashPublicTestSuite) TestHashPassword() {
 		{
 			name:     "empty password still hashes",
 			password: "",
+			setup:    func() {},
 			validateFunc: func(hash string, err error) {
 				s.NoError(err)
 				s.True(strings.HasPrefix(hash, "$6$"))
@@ -59,6 +67,7 @@ func (s *PasswordHashPublicTestSuite) TestHashPassword() {
 		{
 			name:     "two calls produce different hashes",
 			password: "same-password",
+			setup:    func() {},
 			validateFunc: func(hash string, err error) {
 				s.NoError(err)
 				other, err := apiuser.HashPasswordForTest("same-password")
@@ -66,10 +75,26 @@ func (s *PasswordHashPublicTestSuite) TestHashPassword() {
 				s.NotEqual(hash, other, "salts must be random per call")
 			},
 		},
+		{
+			name:     "when the underlying generator fails",
+			password: "correct horse battery staple",
+			setup: func() {
+				apiuser.SetGenerateHashFn(func(_ []byte, _ []byte) (string, error) {
+					return "", errors.New("salt decode failed")
+				})
+			},
+			validateFunc: func(hash string, err error) {
+				s.Error(err)
+				s.Empty(hash)
+				s.Contains(err.Error(), "hash password: salt decode failed")
+			},
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			tc.setup()
+
 			hash, err := apiuser.HashPasswordForTest(tc.password)
 			tc.validateFunc(hash, err)
 		})

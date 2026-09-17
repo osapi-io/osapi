@@ -20,6 +20,10 @@
 
 package user
 
+import (
+	sha512crypt "github.com/GehirnInc/crypt/sha512_crypt"
+)
+
 // HashPasswordForTest exposes defaultHashPassword to external tests.
 func HashPasswordForTest(
 	password string,
@@ -37,4 +41,16 @@ func SetHashPasswordFn(
 // ResetHashPasswordFn restores the default password hashing function.
 func ResetHashPasswordFn() {
 	hashPassword = defaultHashPassword
+}
+
+// SetGenerateHashFn overrides the underlying crypt library call for testing.
+func SetGenerateHashFn(
+	fn func([]byte, []byte) (string, error),
+) {
+	generateHash = fn
+}
+
+// ResetGenerateHashFn restores the default crypt library call.
+func ResetGenerateHashFn() {
+	generateHash = sha512crypt.New().Generate
 }

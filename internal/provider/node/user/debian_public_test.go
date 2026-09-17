@@ -971,6 +971,16 @@ func (suite *DebianPublicTestSuite) TestGetGroup() {
 				suite.Nil(result)
 			},
 		},
+		{
+			name:         "when group name is invalid",
+			groupName:    "Invalid",
+			groupContent: "",
+			validateFunc: func(result *user.Group, err error) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid group name")
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -1061,6 +1071,18 @@ func (suite *DebianPublicTestSuite) TestCreateGroup() {
 				suite.Contains(err.Error(), "groupadd failed")
 			},
 		},
+		{
+			name: "when group name is invalid",
+			opts: user.CreateGroupOpts{
+				Name: "Invalid",
+			},
+			setup: func() {},
+			validateFunc: func(result *user.GroupResult, err error) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid group name")
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -1116,6 +1138,19 @@ func (suite *DebianPublicTestSuite) TestUpdateGroup() {
 				suite.Contains(err.Error(), "gpasswd failed")
 			},
 		},
+		{
+			name:      "when group name is invalid",
+			groupName: "Invalid",
+			opts: user.UpdateGroupOpts{
+				Members: []string{"john"},
+			},
+			setup: func() {},
+			validateFunc: func(result *user.GroupResult, err error) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid group name")
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -1162,6 +1197,16 @@ func (suite *DebianPublicTestSuite) TestDeleteGroup() {
 				suite.Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "groupdel failed")
+			},
+		},
+		{
+			name:      "when group name is invalid",
+			groupName: "Invalid",
+			setup:     func() {},
+			validateFunc: func(result *user.GroupResult, err error) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid group name")
 			},
 		},
 	}
