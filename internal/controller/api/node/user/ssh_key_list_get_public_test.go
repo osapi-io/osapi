@@ -243,6 +243,18 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSSHKey() {
 			},
 		},
 		{
+			name: "validation error invalid name",
+			request: gen.GetNodeUserSSHKeyRequestObject{
+				Hostname: "server1",
+				Name:     "Invalid",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.GetNodeUserSSHKeyResponseObject) {
+				_, ok := resp.(gen.GetNodeUserSSHKey400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "broadcast target _all",
 			request: gen.GetNodeUserSSHKeyRequestObject{
 				Hostname: "_all",

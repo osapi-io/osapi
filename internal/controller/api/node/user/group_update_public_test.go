@@ -140,6 +140,32 @@ func (s *GroupUpdatePublicTestSuite) TestPutNodeGroup() {
 			},
 		},
 		{
+			name: "validation error invalid name",
+			request: gen.PutNodeGroupRequestObject{
+				Hostname: "server1",
+				Name:     "Invalid",
+				Body:     &gen.GroupUpdateRequest{Members: &members},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNodeGroupResponseObject) {
+				_, ok := resp.(gen.PutNodeGroup400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name: "validation error invalid member in body",
+			request: gen.PutNodeGroupRequestObject{
+				Hostname: "server1",
+				Name:     "devops",
+				Body:     &gen.GroupUpdateRequest{Members: &[]string{"Invalid"}},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNodeGroupResponseObject) {
+				_, ok := resp.(gen.PutNodeGroup400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "not found",
 			request: gen.PutNodeGroupRequestObject{
 				Hostname: "server1",

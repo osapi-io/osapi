@@ -352,6 +352,17 @@ func (suite *DebianSSHKeyPublicTestSuite) TestListKeys() {
 				suite.Empty(keys[0].Comment)
 			},
 		},
+		{
+			name:       "when username is invalid",
+			username:   "Invalid",
+			skipPasswd: true,
+			setupFS:    func() {},
+			validateFunc: func(keys []user.SSHKey, err error) {
+				suite.Error(err)
+				suite.Nil(keys)
+				suite.Contains(err.Error(), "invalid user name")
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -675,6 +686,21 @@ func (suite *DebianSSHKeyPublicTestSuite) TestAddKey() {
 				suite.True(result.Changed)
 			},
 		},
+		{
+			name:       "when username is invalid",
+			username:   "Invalid",
+			skipPasswd: true,
+			key: user.SSHKey{
+				RawLine: testKey1Line,
+			},
+			setupFS:   func() {},
+			setupMock: func() {},
+			validateFunc: func(result *user.SSHKeyResult, err error) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid user name")
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -892,6 +918,18 @@ func (suite *DebianSSHKeyPublicTestSuite) TestRemoveKey() {
 
 				content := suite.readFile("/home/testuser/.ssh/authorized_keys")
 				suite.NotContains(content, testKey1Line)
+			},
+		},
+		{
+			name:        "when username is invalid",
+			username:    "Invalid",
+			skipPasswd:  true,
+			fingerprint: testKey1FP,
+			setupFS:     func() {},
+			validateFunc: func(result *user.SSHKeyResult, err error) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid user name")
 			},
 		},
 	}

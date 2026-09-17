@@ -121,6 +121,18 @@ func (s *GroupDeletePublicTestSuite) TestDeleteNodeGroup() {
 			},
 		},
 		{
+			name: "validation error invalid name",
+			request: gen.DeleteNodeGroupRequestObject{
+				Hostname: "server1",
+				Name:     "Invalid",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.DeleteNodeGroupResponseObject) {
+				_, ok := resp.(gen.DeleteNodeGroup400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "not found",
 			request: gen.DeleteNodeGroupRequestObject{
 				Hostname: "server1",

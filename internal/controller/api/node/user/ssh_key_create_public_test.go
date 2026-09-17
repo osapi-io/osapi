@@ -154,6 +154,21 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSSHKey() {
 			},
 		},
 		{
+			name: "validation error invalid name",
+			request: gen.PostNodeUserSSHKeyRequestObject{
+				Hostname: "server1",
+				Name:     "Invalid",
+				Body: &gen.SSHKeyAddRequest{
+					Key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAITest user@host",
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeUserSSHKeyResponseObject) {
+				_, ok := resp.(gen.PostNodeUserSSHKey400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "when job skipped",
 			request: gen.PostNodeUserSSHKeyRequestObject{
 				Hostname: "server1",

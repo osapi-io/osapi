@@ -174,6 +174,19 @@ func (s *UserPasswordPublicTestSuite) TestPostNodeUserPassword() {
 			},
 		},
 		{
+			name: "validation error invalid name",
+			request: gen.PostNodeUserPasswordRequestObject{
+				Hostname: "server1",
+				Name:     "Invalid",
+				Body:     &gen.UserPasswordRequest{Password: "newpass123"},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeUserPasswordResponseObject) {
+				_, ok := resp.(gen.PostNodeUserPassword400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "not found",
 			request: gen.PostNodeUserPasswordRequestObject{
 				Hostname: "server1",

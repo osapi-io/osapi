@@ -125,6 +125,18 @@ func (s *UserGetPublicTestSuite) TestGetNodeUserByName() {
 			},
 		},
 		{
+			name: "validation error invalid name",
+			request: gen.GetNodeUserByNameRequestObject{
+				Hostname: "server1",
+				Name:     "Invalid",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.GetNodeUserByNameResponseObject) {
+				_, ok := resp.(gen.GetNodeUserByName400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "not found",
 			request: gen.GetNodeUserByNameRequestObject{
 				Hostname: "server1",

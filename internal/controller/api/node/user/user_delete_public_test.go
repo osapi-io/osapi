@@ -121,6 +121,18 @@ func (s *UserDeletePublicTestSuite) TestDeleteNodeUser() {
 			},
 		},
 		{
+			name: "validation error invalid name",
+			request: gen.DeleteNodeUserRequestObject{
+				Hostname: "server1",
+				Name:     "Invalid",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.DeleteNodeUserResponseObject) {
+				_, ok := resp.(gen.DeleteNodeUser400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "not found",
 			request: gen.DeleteNodeUserRequestObject{
 				Hostname: "server1",
