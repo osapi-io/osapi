@@ -20,37 +20,14 @@
 
 package user
 
-import (
-	sha512crypt "github.com/GehirnInc/crypt/sha512_crypt"
-)
-
-// HashPasswordForTest exposes defaultHashPassword to external tests.
-func HashPasswordForTest(
-	password string,
-) (string, error) {
-	return defaultHashPassword(password)
-}
-
-// SetHashPasswordFn overrides the password hashing function for testing.
-func SetHashPasswordFn(
-	fn func(string) (string, error),
-) {
-	hashPassword = fn
-}
-
-// ResetHashPasswordFn restores the default password hashing function.
-func ResetHashPasswordFn() {
-	hashPassword = defaultHashPassword
-}
-
-// SetGenerateHashFn overrides the underlying crypt library call for testing.
-func SetGenerateHashFn(
-	fn func([]byte, []byte) (string, error),
-) {
-	generateHash = fn
-}
-
-// ResetGenerateHashFn restores the default crypt library call.
-func ResetGenerateHashFn() {
-	generateHash = sha512crypt.New().Generate
+// ValidatePasswordInputForTest exposes validatePasswordInput to external
+// tests. Every caller validates name via validateAccountName first, which
+// already rejects a colon or line break, so the name-side branch here is
+// unreachable through CreateUser or ChangePassword — this lets a test reach
+// it directly.
+func ValidatePasswordInputForTest(
+	name string,
+	passwordHash string,
+) error {
+	return validatePasswordInput(name, passwordHash)
 }

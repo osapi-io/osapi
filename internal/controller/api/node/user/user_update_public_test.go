@@ -141,6 +141,32 @@ func (s *UserUpdatePublicTestSuite) TestPutNodeUser() {
 			},
 		},
 		{
+			name: "validation error invalid name",
+			request: gen.PutNodeUserRequestObject{
+				Hostname: "server1",
+				Name:     "Invalid",
+				Body:     &gen.UserUpdateRequest{Shell: &shell},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNodeUserResponseObject) {
+				_, ok := resp.(gen.PutNodeUser400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name: "validation error invalid group in body",
+			request: gen.PutNodeUserRequestObject{
+				Hostname: "server1",
+				Name:     "testuser",
+				Body:     &gen.UserUpdateRequest{Groups: &[]string{"Invalid"}},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNodeUserResponseObject) {
+				_, ok := resp.(gen.PutNodeUser400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "not found",
 			request: gen.PutNodeUserRequestObject{
 				Hostname: "server1",
