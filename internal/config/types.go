@@ -311,8 +311,9 @@ type CustomRole struct {
 type ServerSecurity struct {
 	// CORS Cross-Origin Resource Sharing (CORS) settings for the server.
 	CORS CORS `mapstructure:"cors"`
-	// SigningKey is the key used for signing or validating tokens.
-	SigningKey string `mapstructure:"signing_key" validate:"required" mask:"password"`
+	// SigningKey is the key used for signing or validating tokens. Must be at
+	// least validation.MinSigningKeyLen characters (see openssl rand -hex 32).
+	SigningKey string `mapstructure:"signing_key" validate:"required,signing_key" mask:"password"`
 	// Roles defines custom roles with fine-grained permissions.
 	Roles map[string]CustomRole `mapstructure:"roles"`
 }

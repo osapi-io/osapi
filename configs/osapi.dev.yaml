@@ -12,7 +12,9 @@ controller:
       bearer_token: dev-not-used
   api:
     security:
-      signing_key: dev-not-used
+      # Meets the minimum length only so the agent-only container passes
+      # startup validation; the controller API is never run against it.
+      signing_key: dev-not-used-do-not-deploy-this-value
   # PKI enrollment and job signing (default: disabled).
   # pki:
   #   enabled: false

@@ -25,6 +25,8 @@ the same `go-playground/validator` library as the API handlers.
 
 - **Required fields** must be present and non-empty (e.g., `signing_key`,
   `bearer_token`, stream and bucket names)
+- **`signing_key`** must also be at least 32 characters; generate one with
+  `openssl rand -hex 32`
 - **Port fields** must be between 1 and 65535
 - **Duration fields** must be valid Go durations (e.g., `30s`, `5m`, `1h`,
   `720h`). The `d` (day) suffix is not supported — use hours instead (e.g.,
@@ -133,8 +135,8 @@ will start:
 | `controller.api.security.signing_key`     | HS256 key for signing JWTs    |
 | `controller.client.security.bearer_token` | JWT sent with client requests |
 
-Generate a signing key with `openssl rand -hex 32`. Generate a bearer token with
-`osapi token generate`.
+Generate a signing key with `openssl rand -hex 32`; the value must be at least
+32 characters. Generate a bearer token with `osapi token generate`.
 
 ## Authentication
 

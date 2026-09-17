@@ -21,6 +21,7 @@
 package validation_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -685,6 +686,54 @@ func (s *ValidationPublicTestSuite) TestNoLinebreak() {
 		s.False(ok)
 		s.Contains(errMsg, "no_linebreak")
 		s.Contains(errMsg, "must not contain line breaks")
+	})
+}
+
+func (s *ValidationPublicTestSuite) TestSigningKey() {
+	tests := []struct {
+		name         string
+		field        string
+		validateFunc func(bool)
+	}{
+		{
+			name:  "when exactly the minimum length",
+			field: strings.Repeat("a", validation.MinSigningKeyLen),
+			validateFunc: func(got bool) {
+				s.True(got)
+			},
+		},
+		{
+			name:  "when one character under the minimum",
+			field: strings.Repeat("a", validation.MinSigningKeyLen-1),
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+		{
+			name:  "when empty",
+			field: "",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			_, ok := validation.Var(tt.field, "signing_key")
+			tt.validateFunc(ok)
+		})
+	}
+
+	s.Run("short key shows hint through struct validation", func() {
+		type keyReq struct {
+			SigningKey string `validate:"required,signing_key"`
+		}
+
+		errMsg, ok := validation.Struct(keyReq{SigningKey: "too-short"})
+		s.False(ok)
+		s.Contains(errMsg, "signing_key")
+		s.Contains(errMsg, "openssl rand -hex 32")
 	})
 }
 

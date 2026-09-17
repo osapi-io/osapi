@@ -21,8 +21,10 @@ controller:
     # results. Go duration format (default: 30s).
     job_timeout: 30s
     security:
-      # openssl rand -hex 32
-      signing_key: 111fdb0cfd9788fa6af8815f856a0374bf7a0174ad62fa8b98ec07a55f68d8d8
+      # Placeholder — this value is intentionally too short to pass startup
+      # validation. Generate a real key with: openssl rand -hex 32
+      # or set it via the OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY env var.
+      signing_key: CHANGE_ME_BEFORE_DEPLOYING
       cors:
         allow_origins: []
       # Custom roles with fine-grained permissions.

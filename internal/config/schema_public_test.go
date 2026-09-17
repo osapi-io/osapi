@@ -30,6 +30,10 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 )
 
+// testSigningKey is a fixture signing key long enough to satisfy the
+// minimum-length validation, used wherever a test only needs a valid value.
+const testSigningKey = "test-signing-key-0123456789abcdef"
+
 type ConfigPublicTestSuite struct {
 	suite.Suite
 }
@@ -52,7 +56,7 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 					API: config.APIServer{
 						Port: 8080,
 						Security: config.ServerSecurity{
-							SigningKey: "test-signing-key",
+							SigningKey: testSigningKey,
 						},
 					},
 					NATS: config.NATSConnection{Port: 4222},
@@ -98,6 +102,84 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "signing key one character under the minimum",
+			config: config.Config{
+				Controller: config.Controller{
+					Client: config.Client{
+						Security: config.ClientSecurity{
+							BearerToken: "test-bearer-token",
+						},
+					},
+					API: config.APIServer{
+						Security: config.ServerSecurity{
+							SigningKey: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // 31 characters
+						},
+					},
+				},
+			},
+			validateFunc: func(err error) {
+				s.Error(err)
+				s.Contains(err.Error(), "SigningKey")
+			},
+		},
+		{
+			name: "signing key at the minimum length",
+			config: config.Config{
+				Controller: config.Controller{
+					Client: config.Client{
+						Security: config.ClientSecurity{
+							BearerToken: "test-bearer-token",
+						},
+					},
+					API: config.APIServer{
+						Port: 8080,
+						Security: config.ServerSecurity{
+							SigningKey: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // 32 characters
+						},
+					},
+					NATS: config.NATSConnection{Port: 4222},
+				},
+				NATS: config.NATS{
+					Stream:   config.NATSStream{Name: "JOBS", Subjects: "jobs.>"},
+					KV:       config.NATSKV{Bucket: "job-queue", ResponseBucket: "job-responses"},
+					Registry: config.NATSRegistry{Bucket: "agent-registry"},
+				},
+				Agent: config.AgentConfig{
+					NATS:    config.NATSConnection{Port: 4222},
+					MaxJobs: 10,
+					Conditions: config.AgentConditions{
+						MemoryPressureThreshold: 90,
+						HighLoadMultiplier:      2.0,
+						DiskPressureThreshold:   90,
+					},
+				},
+			},
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
+		{
+			name: "committed example placeholder signing key",
+			config: config.Config{
+				Controller: config.Controller{
+					Client: config.Client{
+						Security: config.ClientSecurity{
+							BearerToken: "test-bearer-token",
+						},
+					},
+					API: config.APIServer{
+						Security: config.ServerSecurity{
+							SigningKey: "CHANGE_ME_BEFORE_DEPLOYING",
+						},
+					},
+				},
+			},
+			validateFunc: func(err error) {
+				s.Error(err)
+				s.Contains(err.Error(), "SigningKey")
+			},
+		},
+		{
 			name: "missing bearer token",
 			config: config.Config{
 				Controller: config.Controller{
@@ -108,7 +190,7 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 					},
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: "test-signing-key",
+							SigningKey: testSigningKey,
 						},
 					},
 				},
@@ -167,7 +249,7 @@ func (s *ConfigPublicTestSuite) TestValidateRegisterValidatorsError() {
 					},
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: "test-key",
+							SigningKey: testSigningKey,
 						},
 					},
 				},

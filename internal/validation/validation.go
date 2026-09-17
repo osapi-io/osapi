@@ -36,6 +36,11 @@ import (
 
 var instance = validator.New()
 
+// MinSigningKeyLen is the minimum character length required for a JWT
+// signing key, matching the output of `openssl rand -hex 32`. A short key
+// makes brute-forcing the HS256 secret and forging tokens practical.
+const MinSigningKeyLen = 32
+
 // sysctlKeyPattern matches dot-separated sysctl parameter names: letters,
 // digits, dots, underscores, and hyphens. Slashes, spaces, and other
 // characters are rejected so the key cannot be used for path traversal.
@@ -93,6 +98,13 @@ func init() {
 	_ = instance.RegisterValidation("no_linebreak", func(fl validator.FieldLevel) bool {
 		return !strings.ContainsAny(fl.Field().String(), "\r\n")
 	})
+
+	// signing_key rejects a JWT signing key shorter than MinSigningKeyLen,
+	// so a weak or placeholder value is caught at startup instead of
+	// silently signing tokens with a brute-forceable secret.
+	_ = instance.RegisterValidation("signing_key", func(fl validator.FieldLevel) bool {
+		return len(fl.Field().String()) >= MinSigningKeyLen
+	})
 }
 
 // customHints maps validator tags to a hint appended to the default error.
@@ -133,6 +145,12 @@ var customHints = map[string]func(fe validator.FieldError) string{
 	},
 	"no_linebreak": func(_ validator.FieldError) string {
 		return "value must not contain line breaks"
+	},
+	"signing_key": func(_ validator.FieldError) string {
+		return fmt.Sprintf(
+			"signing key must be at least %d characters — generate one with: openssl rand -hex 32",
+			MinSigningKeyLen,
+		)
 	},
 }
 

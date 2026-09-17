@@ -359,8 +359,14 @@ runs read-only tests by default; `OSAPI_INTEGRATION_WRITES=1` enables writes.
 
 ```bash
 just build     # Builds the React UI, then the Go binary
+export OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY=$(openssl rand -hex 32)
 ./osapi controller start -f configs/osapi.yaml
 ```
+
+`configs/osapi.yaml` ships with a placeholder `signing_key` that fails startup
+validation on purpose, so the env var above is required to run it locally. The
+env var overrides the file value; see [Configuration] for how `OSAPI_`
+environment variables map onto config keys.
 
 **Always build through `just`.** The `//go:embed dist/*` directive in
 `ui/embed.go` requires `ui/dist/` to hold files at compile time, and
@@ -525,6 +531,7 @@ If you have questions, open a [Discussion] on GitHub.
 [avfs]: https://github.com/avfs/avfs
 [bun]: https://bun.sh
 [claude code]: https://claude.ai/code
+[configuration]: docs/docs/sidebar/usage/configuration.md
 [conventional commits]: https://www.conventionalcommits.org
 [discussion]: https://github.com/osapi-io/osapi/discussions
 [docusaurus]: https://docusaurus.io

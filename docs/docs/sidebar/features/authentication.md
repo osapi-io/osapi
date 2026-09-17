@@ -24,6 +24,9 @@ Only someone who knows the signing key can create valid tokens. If the signing
 key is compromised, rotate it immediately -- all previously issued tokens become
 invalid.
 
+The key must be at least 32 characters; a shorter value fails config validation
+at startup. Generate one with `openssl rand -hex 32`.
+
 ### Token Structure
 
 A token carries three pieces of authorization data:
@@ -93,7 +96,7 @@ controller:
 controller:
   api:
     security:
-      # HS256 signing key (REQUIRED)
+      # HS256 signing key (REQUIRED, minimum 32 characters)
       # Generate with: openssl rand -hex 32
       signing_key: '<64-char hex string>'
 

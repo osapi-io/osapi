@@ -38,7 +38,7 @@ import (
 	"github.com/osapi-io/osapi/internal/authtoken"
 )
 
-const signingKey = "111fdb0cfd9788fa6af8815f856a0374bf7a0174ad62fa8b98ec07a55f68d8d8"
+const signingKey = "1dcf49fb9ad538f8b70fdb4ccb73c78692022e3191dba86f63308f0c3ee0e3c3"
 
 var (
 	binaryPath string
