@@ -39,9 +39,9 @@ $ osapi client node user password --target _all \
 
 ## Flags
 
-| Flag           | Description                                                        | Default |
-| -------------- | ------------------------------------------------------------------ | ------- |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`)           | `_all`  |
+| Flag           | Description                                                       | Default |
+| -------------- | ----------------------------------------------------------------- | ------- |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`)          | `_all`  |
 | `--name`       | Username to change password for (required)                        |         |
 | `--password`   | New password (hashed by the controller before storage) (required) |         |
-| `-j, --json`   | Output raw JSON response                                           |         |
+| `-j, --json`   | Output raw JSON response                                          |         |

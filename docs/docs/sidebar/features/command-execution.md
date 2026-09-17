@@ -78,10 +78,9 @@ role can be scoped to structured commands without also granting shell access:
 Only the built-in `admin` role includes either permission by default. The
 `write` and `read` roles do not.
 
-> **Upgrading?** A custom role or token that was granted only
-> `command:execute` no longer reaches the `shell` endpoint -- it now also needs
-> `command:shell`. Add `command:shell` to any custom role or token that should
-> keep shell access.
+> **Upgrading?** A custom role or token that was granted only `command:execute`
+> no longer reaches the `shell` endpoint -- it now also needs `command:shell`.
+> Add `command:shell` to any custom role or token that should keep shell access.
 
 To grant command execution to a custom role:
 
@@ -113,13 +112,13 @@ NATS, agent, and authentication settings.
 
 ## Permissions
 
-| Operation | Permission       |
-| --------- | ---------------- |
+| Operation | Permission        |
+| --------- | ----------------- |
 | Exec      | `command:execute` |
 | Shell     | `command:shell`   |
 
-Only the `admin` role includes `command:execute` or `command:shell` by
-default. Grant them to other roles or tokens explicitly when needed.
+Only the `admin` role includes `command:execute` or `command:shell` by default.
+Grant them to other roles or tokens explicitly when needed.
 
 ## Related
 
