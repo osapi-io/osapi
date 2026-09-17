@@ -244,7 +244,8 @@ Result: FAILED (1 error)
 
 - **Controller and NATS server** — already run unprivileged, no changes needed.
 - **`command exec` and `command shell`** — these endpoints execute arbitrary
-  user-provided commands and inherit whatever privileges the agent has. They are
-  gated by the `command:execute` RBAC permission.
+  user-provided commands and inherit whatever privileges the agent has. `exec`
+  is gated by the `command:execute` RBAC permission, and `shell` additionally
+  requires `command:shell`.
 - **Docker provider** — talks to the Docker API socket, not system commands. The
   `osapi` user needs to be in the `docker` group.

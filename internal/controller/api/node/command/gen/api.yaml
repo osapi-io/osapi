@@ -93,7 +93,7 @@ paths:
       operationId: PostNodeCommandShell
       security:
         - BearerAuth:
-            - command:execute
+            - command:shell
       parameters:
         - $ref: '#/components/parameters/Hostname'
       requestBody:

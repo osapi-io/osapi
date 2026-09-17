@@ -38,6 +38,7 @@ const (
 	PermHealthRead       Permission = "health:read"
 	PermAuditRead        Permission = "audit:read"
 	PermCommandExecute   Permission = "command:execute"
+	PermCommandShell     Permission = "command:shell"
 	PermFileRead         Permission = "file:read"
 	PermFileWrite        Permission = "file:write"
 	PermDockerRead       Permission = "docker:read"

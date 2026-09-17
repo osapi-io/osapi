@@ -32,7 +32,7 @@ controller:
       # unless overridden here. Permissions use resource:verb format.
       # Available: node:read, node:write, network:read, network:write,
       #            job:read, job:write, health:read, audit:read,
-      #            command:execute
+      #            command:execute, command:shell
       # roles:
       #   ops:
       #     permissions:

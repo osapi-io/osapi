@@ -50,7 +50,19 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			},
 		},
 		{
-			name:  "write role gets write permissions but not audit",
+			name:  "admin role gets command:execute and command:shell",
+			roles: []string{"admin"},
+			validateFunc: func(resolved map[string]bool) {
+				for _, p := range []string{
+					authtoken.PermCommandExecute,
+					authtoken.PermCommandShell,
+				} {
+					s.True(resolved[p], "expected permission %s to be present", p)
+				}
+			},
+		},
+		{
+			name:  "write role gets write permissions but not audit or command",
 			roles: []string{"write"},
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range []string{
@@ -67,6 +79,8 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 				}
 				for _, p := range []string{
 					authtoken.PermAuditRead,
+					authtoken.PermCommandExecute,
+					authtoken.PermCommandShell,
 				} {
 					s.False(resolved[p], "expected permission %s to be absent", p)
 				}
@@ -90,6 +104,8 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 					authtoken.PermJobWrite,
 					authtoken.PermAuditRead,
 					authtoken.PermFileWrite,
+					authtoken.PermCommandExecute,
+					authtoken.PermCommandShell,
 				} {
 					s.False(resolved[p], "expected permission %s to be absent", p)
 				}

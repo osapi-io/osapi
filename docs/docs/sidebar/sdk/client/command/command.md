@@ -49,4 +49,4 @@ for a complete working example.
 
 ## Permissions
 
-Requires `command:execute` permission.
+`Exec` requires `command:execute`. `Shell` requires `command:shell`.

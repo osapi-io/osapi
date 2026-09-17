@@ -164,7 +164,7 @@ func (w *ServerInterfaceWrapper) PostNodeCommandShell(ctx *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
 	}
 
-	ctx.Set(string(BearerAuthScopes), []string{"command:execute"})
+	ctx.Set(string(BearerAuthScopes), []string{"command:shell"})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PostNodeCommandShell(ctx, hostname)

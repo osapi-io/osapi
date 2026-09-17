@@ -613,7 +613,66 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellRBACHTTP() {
 			},
 		},
 		{
-			name: "when valid token with command:execute returns 202",
+			name: "when token has only command:execute returns 403",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacShellTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"command:execute"},
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusForbidden, rec.Code)
+				s.Contains(rec.Body.String(), "Insufficient permissions")
+			},
+		},
+		{
+			name: "when valid token with command:shell returns 202",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacShellTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"command:shell"},
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				data, _ := json.Marshal(command.Result{
+					Stdout:     "hello",
+					Stderr:     "",
+					ExitCode:   0,
+					DurationMs: 10,
+					Changed:    true,
+				})
+				mock.EXPECT().
+					Modify(gomock.Any(), "server1", "command", job.OperationCommandShellExecute, gomock.Any()).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
+						},
+						nil,
+					)
+				return mock
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusAccepted, rec.Code)
+				s.Contains(rec.Body.String(), `"results"`)
+				s.Contains(rec.Body.String(), `"changed":true`)
+			},
+		},
+		{
+			name: "when admin token returns 202",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
 					rbacShellTestSigningKey,

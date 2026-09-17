@@ -13,6 +13,7 @@ export type Permission =
   | "health:read"
   | "audit:read"
   | "command:execute"
+  | "command:shell"
   | "file:read"
   | "file:write"
   | "docker:read"
@@ -54,6 +55,7 @@ export const ALL_PERMISSIONS: Permission[] = [
   "health:read",
   "audit:read",
   "command:execute",
+  "command:shell",
   "file:read",
   "file:write",
   "docker:read",
@@ -143,7 +145,11 @@ const OPERATOR_PERMISSIONS: Permission[] = [
   "certificate:write",
 ];
 
-const ADMIN_PERMISSIONS: Permission[] = [...OPERATOR_PERMISSIONS, "audit:read"];
+const ADMIN_PERMISSIONS: Permission[] = [
+  ...OPERATOR_PERMISSIONS,
+  "audit:read",
+  "command:shell",
+];
 
 export const ROLES: RoleDefinition[] = [
   {
@@ -229,7 +235,7 @@ export const BLOCK_PERMISSIONS: Record<string, Permission> = {
   "docker-inspect": "docker:read",
   // Command group
   command: "command:execute",
-  "command-shell": "command:execute",
+  "command-shell": "command:shell",
   // Networking group
   "dns-list": "network:read",
   "dns-update": "network:write",

@@ -38,6 +38,7 @@ const (
 	PermHealthRead       = client.PermHealthRead
 	PermAuditRead        = client.PermAuditRead
 	PermCommandExecute   = client.PermCommandExecute
+	PermCommandShell     = client.PermCommandShell
 	PermFileRead         = client.PermFileRead
 	PermFileWrite        = client.PermFileWrite
 	PermDockerRead       = client.PermDockerRead
@@ -78,6 +79,7 @@ var AllPermissions = []Permission{
 	PermHealthRead,
 	PermAuditRead,
 	PermCommandExecute,
+	PermCommandShell,
 	PermFileRead,
 	PermFileWrite,
 	PermDockerRead,
@@ -119,6 +121,7 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermHealthRead,
 		PermAuditRead,
 		PermCommandExecute,
+		PermCommandShell,
 		PermFileRead,
 		PermFileWrite,
 		PermDockerRead,

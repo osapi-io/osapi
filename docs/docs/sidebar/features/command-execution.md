@@ -68,9 +68,20 @@ See [System Facts](system-facts.md) for the full list of available references.
 
 ## Security Model
 
-Command execution is a privileged operation. The `command:execute` permission is
-required for both `exec` and `shell` endpoints. Only the built-in `admin` role
-includes this permission by default. The `write` and `read` roles do not.
+Command execution is a privileged operation, split into two permissions so a
+role can be scoped to structured commands without also granting shell access:
+
+- `command:execute` guards the `exec` endpoint (no shell interpretation).
+- `command:shell` guards the `shell` endpoint (`/bin/sh -c`, with pipes,
+  redirects, and expansion).
+
+Only the built-in `admin` role includes either permission by default. The
+`write` and `read` roles do not.
+
+> **Upgrading?** A custom role or token that was granted only
+> `command:execute` no longer reaches the `shell` endpoint -- it now also needs
+> `command:shell`. Add `command:shell` to any custom role or token that should
+> keep shell access.
 
 To grant command execution to a custom role:
 
@@ -82,6 +93,7 @@ controller:
         ops:
           permissions:
             - command:execute
+            - command:shell
             - node:read
             - health:read
 ```
@@ -90,7 +102,7 @@ Or grant it directly on a token:
 
 ```bash
 osapi token generate -r read -u user@example.com \
-  -p command:execute
+  -p command:execute -p command:shell
 ```
 
 ## Configuration
@@ -101,13 +113,13 @@ NATS, agent, and authentication settings.
 
 ## Permissions
 
-| Operation | Permission        |
-| --------- | ----------------- |
+| Operation | Permission       |
+| --------- | ---------------- |
 | Exec      | `command:execute` |
-| Shell     | `command:execute` |
+| Shell     | `command:shell`   |
 
-Only the `admin` role includes `command:execute` by default. Grant it to other
-roles or tokens explicitly when needed.
+Only the `admin` role includes `command:execute` or `command:shell` by
+default. Grant them to other roles or tokens explicitly when needed.
 
 ## Related
 
