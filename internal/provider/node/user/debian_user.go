@@ -73,6 +73,10 @@ func (d *Debian) GetUser(
 ) (*User, error) {
 	_ = ctx
 
+	if err := validateAccountName("user", name); err != nil {
+		return nil, fmt.Errorf("user: %w", err)
+	}
+
 	entries, err := d.parsePasswd()
 	if err != nil {
 		return nil, fmt.Errorf("user: %w", err)
@@ -105,6 +109,10 @@ func (d *Debian) CreateUser(
 	opts CreateUserOpts,
 ) (*Result, error) {
 	_ = ctx
+
+	if err := validateAccountName("user", opts.Name); err != nil {
+		return nil, fmt.Errorf("user: %w", err)
+	}
 
 	// Validate before useradd so a rejected password does not leave an
 	// account behind without one.
@@ -146,6 +154,10 @@ func (d *Debian) UpdateUser(
 ) (*Result, error) {
 	_ = ctx
 
+	if err := validateAccountName("user", name); err != nil {
+		return nil, fmt.Errorf("user: %w", err)
+	}
+
 	args := d.buildUsermodArgs(name, opts)
 	if len(args) == 0 {
 		return &Result{
@@ -177,7 +189,11 @@ func (d *Debian) DeleteUser(
 ) (*Result, error) {
 	_ = ctx
 
-	_, err := d.execManager.RunPrivilegedCmd("userdel", []string{"-r", name})
+	if err := validateAccountName("user", name); err != nil {
+		return nil, fmt.Errorf("user: %w", err)
+	}
+
+	_, err := d.execManager.RunPrivilegedCmd("userdel", []string{"-r", "--", name})
 	if err != nil {
 		return nil, fmt.Errorf("user: userdel failed: %w", err)
 	}
@@ -200,6 +216,10 @@ func (d *Debian) ChangePassword(
 	passwordHash string,
 ) (*Result, error) {
 	_ = ctx
+
+	if err := validateAccountName("user", name); err != nil {
+		return nil, fmt.Errorf("user: %w", err)
+	}
 
 	if err := validatePasswordInput(name, passwordHash); err != nil {
 		return nil, fmt.Errorf("user: %w", err)
@@ -323,7 +343,9 @@ func (d *Debian) buildUseraddArgs(
 		args = append(args, "-r")
 	}
 
-	args = append(args, opts.Name)
+	// "--" stops useradd from parsing the name as an option, in case a
+	// name that should have been rejected earlier reaches this point.
+	args = append(args, "--", opts.Name)
 
 	return args
 }
@@ -359,7 +381,9 @@ func (d *Debian) buildUsermodArgs(
 		return nil
 	}
 
-	args = append(args, name)
+	// "--" stops usermod from parsing the name as an option, in case a
+	// name that should have been rejected earlier reaches this point.
+	args = append(args, "--", name)
 
 	return args
 }

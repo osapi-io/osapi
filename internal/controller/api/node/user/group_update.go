@@ -43,6 +43,14 @@ func (u *User) PutNodeGroup(
 		return gen.PutNodeGroup400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validateName(request.Name); !ok {
+		return gen.PutNodeGroup400JSONResponse{Error: &errMsg}, nil
+	}
+
+	if errMsg, ok := validation.Struct(request.Body); !ok {
+		return gen.PutNodeGroup400JSONResponse{Error: &errMsg}, nil
+	}
+
 	if errMsg, ok := validation.AtLeastOneField(request.Body); !ok {
 		return gen.PutNodeGroup400JSONResponse{Error: &errMsg}, nil
 	}

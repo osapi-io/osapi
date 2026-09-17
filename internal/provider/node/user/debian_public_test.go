@@ -393,7 +393,7 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("useradd", []string{"--create-home", "newuser"}).
+					RunPrivilegedCmd("useradd", []string{"--create-home", "--", "newuser"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *user.Result, err error) {
@@ -424,6 +424,7 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 						"-s", "/bin/zsh",
 						"-G", "sudo,docker",
 						"-r",
+						"--",
 						"newuser",
 					}).
 					Return("", nil)
@@ -443,7 +444,7 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("useradd", []string{"--create-home", "newuser"}).
+					RunPrivilegedCmd("useradd", []string{"--create-home", "--", "newuser"}).
 					Return("", nil)
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmdWithStdin("chpasswd", []string{"-e"}, "newuser:$6$abcd$deadbeef\n").
@@ -463,7 +464,7 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("useradd", []string{"--create-home", "newuser"}).
+					RunPrivilegedCmd("useradd", []string{"--create-home", "--", "newuser"}).
 					Return("", errors.New("user already exists"))
 			},
 			validateFunc: func(result *user.Result, err error) {
@@ -480,7 +481,7 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("useradd", []string{"--create-home", "newuser"}).
+					RunPrivilegedCmd("useradd", []string{"--create-home", "--", "newuser"}).
 					Return("", nil)
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmdWithStdin("chpasswd", []string{"-e"}, "newuser:$6$abcd$deadbeef\n").
@@ -550,7 +551,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("usermod", []string{"-s", "/bin/zsh", "john"}).
+					RunPrivilegedCmd("usermod", []string{"-s", "/bin/zsh", "--", "john"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *user.Result, err error) {
@@ -568,7 +569,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("usermod", []string{"-G", "sudo,docker,admin", "john"}).
+					RunPrivilegedCmd("usermod", []string{"-G", "sudo,docker,admin", "--", "john"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *user.Result, err error) {
@@ -585,7 +586,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("usermod", []string{"-L", "john"}).
+					RunPrivilegedCmd("usermod", []string{"-L", "--", "john"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *user.Result, err error) {
@@ -602,7 +603,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("usermod", []string{"-U", "john"}).
+					RunPrivilegedCmd("usermod", []string{"-U", "--", "john"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *user.Result, err error) {
@@ -619,7 +620,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("usermod", []string{"-d", "/opt/john", "-m", "john"}).
+					RunPrivilegedCmd("usermod", []string{"-d", "/opt/john", "-m", "--", "john"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *user.Result, err error) {
@@ -648,7 +649,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("usermod", []string{"-s", "/bin/zsh", "john"}).
+					RunPrivilegedCmd("usermod", []string{"-s", "/bin/zsh", "--", "john"}).
 					Return("", errors.New("usermod error"))
 			},
 			validateFunc: func(result *user.Result, err error) {
@@ -681,7 +682,7 @@ func (suite *DebianPublicTestSuite) TestDeleteUser() {
 			userName: "john",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("userdel", []string{"-r", "john"}).
+					RunPrivilegedCmd("userdel", []string{"-r", "--", "john"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *user.Result, err error) {
@@ -696,7 +697,7 @@ func (suite *DebianPublicTestSuite) TestDeleteUser() {
 			userName: "nonexistent",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("userdel", []string{"-r", "nonexistent"}).
+					RunPrivilegedCmd("userdel", []string{"-r", "--", "nonexistent"}).
 					Return("", errors.New("user does not exist"))
 			},
 			validateFunc: func(result *user.Result, err error) {
@@ -998,7 +999,7 @@ func (suite *DebianPublicTestSuite) TestCreateGroup() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("groupadd", []string{"newgroup"}).
+					RunPrivilegedCmd("groupadd", []string{"--", "newgroup"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *user.GroupResult, err error) {
@@ -1016,7 +1017,7 @@ func (suite *DebianPublicTestSuite) TestCreateGroup() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("groupadd", []string{"-g", "5000", "newgroup"}).
+					RunPrivilegedCmd("groupadd", []string{"-g", "5000", "--", "newgroup"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *user.GroupResult, err error) {
@@ -1034,7 +1035,7 @@ func (suite *DebianPublicTestSuite) TestCreateGroup() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("groupadd", []string{"-r", "sysgroup"}).
+					RunPrivilegedCmd("groupadd", []string{"-r", "--", "sysgroup"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *user.GroupResult, err error) {
@@ -1051,7 +1052,7 @@ func (suite *DebianPublicTestSuite) TestCreateGroup() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("groupadd", []string{"newgroup"}).
+					RunPrivilegedCmd("groupadd", []string{"--", "newgroup"}).
 					Return("", errors.New("group already exists"))
 			},
 			validateFunc: func(result *user.GroupResult, err error) {
@@ -1088,7 +1089,7 @@ func (suite *DebianPublicTestSuite) TestUpdateGroup() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("gpasswd", []string{"-M", "john,jane,alice", "developers"}).
+					RunPrivilegedCmd("gpasswd", []string{"-M", "john,jane,alice", "--", "developers"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *user.GroupResult, err error) {
@@ -1106,7 +1107,7 @@ func (suite *DebianPublicTestSuite) TestUpdateGroup() {
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("gpasswd", []string{"-M", "john", "developers"}).
+					RunPrivilegedCmd("gpasswd", []string{"-M", "john", "--", "developers"}).
 					Return("", errors.New("gpasswd error"))
 			},
 			validateFunc: func(result *user.GroupResult, err error) {
@@ -1139,7 +1140,7 @@ func (suite *DebianPublicTestSuite) TestDeleteGroup() {
 			groupName: "developers",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("groupdel", []string{"developers"}).
+					RunPrivilegedCmd("groupdel", []string{"--", "developers"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *user.GroupResult, err error) {
@@ -1154,7 +1155,7 @@ func (suite *DebianPublicTestSuite) TestDeleteGroup() {
 			groupName: "nonexistent",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("groupdel", []string{"nonexistent"}).
+					RunPrivilegedCmd("groupdel", []string{"--", "nonexistent"}).
 					Return("", errors.New("group does not exist"))
 			},
 			validateFunc: func(result *user.GroupResult, err error) {

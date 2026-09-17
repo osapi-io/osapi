@@ -55,6 +55,10 @@ func (d *Debian) GetGroup(
 ) (*Group, error) {
 	_ = ctx
 
+	if err := validateAccountName("group", name); err != nil {
+		return nil, fmt.Errorf("group: %w", err)
+	}
+
 	groups, err := d.parseGroup()
 	if err != nil {
 		return nil, fmt.Errorf("group: %w", err)
@@ -75,6 +79,10 @@ func (d *Debian) CreateGroup(
 	opts CreateGroupOpts,
 ) (*GroupResult, error) {
 	_ = ctx
+
+	if err := validateAccountName("group", opts.Name); err != nil {
+		return nil, fmt.Errorf("group: %w", err)
+	}
 
 	args := d.buildGroupaddArgs(opts)
 
@@ -102,9 +110,13 @@ func (d *Debian) UpdateGroup(
 ) (*GroupResult, error) {
 	_ = ctx
 
+	if err := validateAccountName("group", name); err != nil {
+		return nil, fmt.Errorf("group: %w", err)
+	}
+
 	members := strings.Join(opts.Members, ",")
 
-	_, err := d.execManager.RunPrivilegedCmd("gpasswd", []string{"-M", members, name})
+	_, err := d.execManager.RunPrivilegedCmd("gpasswd", []string{"-M", members, "--", name})
 	if err != nil {
 		return nil, fmt.Errorf("group: gpasswd failed: %w", err)
 	}
@@ -127,7 +139,11 @@ func (d *Debian) DeleteGroup(
 ) (*GroupResult, error) {
 	_ = ctx
 
-	_, err := d.execManager.RunPrivilegedCmd("groupdel", []string{name})
+	if err := validateAccountName("group", name); err != nil {
+		return nil, fmt.Errorf("group: %w", err)
+	}
+
+	_, err := d.execManager.RunPrivilegedCmd("groupdel", []string{"--", name})
 	if err != nil {
 		return nil, fmt.Errorf("group: groupdel failed: %w", err)
 	}
@@ -203,7 +219,9 @@ func (d *Debian) buildGroupaddArgs(
 		args = append(args, "-r")
 	}
 
-	args = append(args, opts.Name)
+	// "--" stops groupadd from parsing the name as an option, in case a
+	// name that should have been rejected earlier reaches this point.
+	args = append(args, "--", opts.Name)
 
 	return args
 }

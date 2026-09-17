@@ -49,6 +49,19 @@ const MinSigningKeyLen = 32
 // an argument.
 var sysctlKeyPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`)
 
+// accountNamePattern matches a POSIX system account name: it must start with
+// a lowercase letter or underscore, followed by lowercase letters, digits,
+// underscores, or hyphens, with an optional trailing dollar sign (used by
+// machine accounts). This is the Debian `adduser` default (NAME_REGEX)
+// without --allow-bad-names, and it rejects a leading hyphen, so the name
+// cannot be mistaken for an option when passed as a command-line argument
+// to useradd, usermod, userdel, groupadd, groupmod, groupdel, or gpasswd.
+var accountNamePattern = regexp.MustCompile(`^[a-z_][a-z0-9_-]*\$?$`)
+
+// accountNameMaxLength is the longest account name accepted, matching the
+// historical utmp/wtmp field width Debian tools enforce by default.
+const accountNameMaxLength = 32
+
 func init() {
 	// alphanum_or_fact accepts alphanumeric values or @fact. prefixed references
 	// with a known fact key. Fact references are resolved agent-side.
@@ -99,6 +112,15 @@ func init() {
 		return !strings.ContainsAny(fl.Field().String(), "\r\n")
 	})
 
+	// account_name validates a system user or group name: it rejects a
+	// leading hyphen, path separators, colons, whitespace, and control
+	// characters, so the value cannot be mistaken for a command-line option
+	// or used for path traversal when passed to a user/group provider.
+	_ = instance.RegisterValidation("account_name", func(fl validator.FieldLevel) bool {
+		v := fl.Field().String()
+		return len(v) <= accountNameMaxLength && accountNamePattern.MatchString(v)
+	})
+
 	// signing_key rejects a JWT signing key shorter than MinSigningKeyLen,
 	// so a weak or placeholder value is caught at startup instead of
 	// silently signing tokens with a brute-forceable secret.
@@ -145,6 +167,14 @@ var customHints = map[string]func(fe validator.FieldError) string{
 	},
 	"no_linebreak": func(_ validator.FieldError) string {
 		return "value must not contain line breaks"
+	},
+	"account_name": func(fe validator.FieldError) string {
+		return fmt.Sprintf(
+			"%q is not a valid account name (expected: %s, max %d characters)",
+			fe.Value(),
+			accountNamePattern.String(),
+			accountNameMaxLength,
+		)
 	},
 	"signing_key": func(_ validator.FieldError) string {
 		return fmt.Sprintf(

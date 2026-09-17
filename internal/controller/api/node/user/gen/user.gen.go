@@ -161,8 +161,8 @@ type GroupCreateRequest struct {
 	// Gid Numeric group ID. If omitted, the system assigns one.
 	Gid *int `json:"gid,omitempty" validate:"omitempty,min=0"`
 
-	// Name Group name.
-	Name string `json:"name" validate:"required,min=1,max=32"`
+	// Name Group name. Must start with a lowercase letter or underscore, followed by lowercase letters, digits, underscores, or hyphens, with an optional trailing `$`; 32 characters or fewer.
+	Name string `json:"name" validate:"required,account_name"`
 
 	// System Create a system group.
 	System *bool `json:"system,omitempty" validate:"omitempty"`
@@ -229,7 +229,7 @@ type GroupMutationResultStatus string
 // GroupUpdateRequest defines model for GroupUpdateRequest.
 type GroupUpdateRequest struct {
 	// Members Group member usernames (replaces existing).
-	Members *[]string `json:"members,omitempty"`
+	Members *[]string `json:"members,omitempty" validate:"omitempty,dive,account_name"`
 }
 
 // SSHKeyAddRequest defines model for SSHKeyAddRequest.
@@ -313,13 +313,13 @@ type UserCreateRequest struct {
 	Gid *int `json:"gid,omitempty" validate:"omitempty,min=0"`
 
 	// Groups Supplementary group names.
-	Groups *[]string `json:"groups,omitempty"`
+	Groups *[]string `json:"groups,omitempty" validate:"omitempty,dive,account_name"`
 
 	// Home Home directory path.
 	Home *string `json:"home,omitempty" validate:"omitempty,min=1"`
 
-	// Name Username for the new account.
-	Name string `json:"name" validate:"required,min=1,max=32"`
+	// Name Username for the new account. Must start with a lowercase letter or underscore, followed by lowercase letters, digits, underscores, or hyphens, with an optional trailing `$`; 32 characters or fewer.
+	Name string `json:"name" validate:"required,account_name"`
 
 	// Password Initial password (plaintext, hashed by the agent).
 	Password *string `json:"password,omitempty" validate:"omitempty,min=1"`
@@ -413,7 +413,7 @@ type UserPasswordRequest struct {
 // UserUpdateRequest defines model for UserUpdateRequest.
 type UserUpdateRequest struct {
 	// Groups Supplementary group names (replaces existing).
-	Groups *[]string `json:"groups,omitempty"`
+	Groups *[]string `json:"groups,omitempty" validate:"omitempty,dive,account_name"`
 
 	// Home New home directory path.
 	Home *string `json:"home,omitempty" validate:"omitempty,min=1"`
@@ -1072,7 +1072,7 @@ func (response PostNodeGroup500JSONResponse) VisitPostNodeGroupResponse(w http.R
 
 type DeleteNodeGroupRequestObject struct {
 	Hostname Hostname  `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     GroupName `json:"name" validate:"required,min=1"`
+	Name     GroupName `json:"name" validate:"required,account_name"`
 }
 
 type DeleteNodeGroupResponseObject interface {
@@ -1165,7 +1165,7 @@ func (response DeleteNodeGroup500JSONResponse) VisitDeleteNodeGroupResponse(w ht
 
 type GetNodeGroupByNameRequestObject struct {
 	Hostname Hostname  `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     GroupName `json:"name" validate:"required,min=1"`
+	Name     GroupName `json:"name" validate:"required,account_name"`
 }
 
 type GetNodeGroupByNameResponseObject interface {
@@ -1258,7 +1258,7 @@ func (response GetNodeGroupByName500JSONResponse) VisitGetNodeGroupByNameRespons
 
 type PutNodeGroupRequestObject struct {
 	Hostname Hostname  `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     GroupName `json:"name" validate:"required,min=1"`
+	Name     GroupName `json:"name" validate:"required,account_name"`
 	Body     *PutNodeGroupJSONRequestBody
 }
 
@@ -1509,7 +1509,7 @@ func (response PostNodeUser500JSONResponse) VisitPostNodeUserResponse(w http.Res
 
 type DeleteNodeUserRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     UserName `json:"name" validate:"required,min=1"`
+	Name     UserName `json:"name" validate:"required,account_name"`
 }
 
 type DeleteNodeUserResponseObject interface {
@@ -1602,7 +1602,7 @@ func (response DeleteNodeUser500JSONResponse) VisitDeleteNodeUserResponse(w http
 
 type GetNodeUserByNameRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     UserName `json:"name" validate:"required,min=1"`
+	Name     UserName `json:"name" validate:"required,account_name"`
 }
 
 type GetNodeUserByNameResponseObject interface {
@@ -1695,7 +1695,7 @@ func (response GetNodeUserByName500JSONResponse) VisitGetNodeUserByNameResponse(
 
 type PutNodeUserRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     UserName `json:"name" validate:"required,min=1"`
+	Name     UserName `json:"name" validate:"required,account_name"`
 	Body     *PutNodeUserJSONRequestBody
 }
 
@@ -1789,7 +1789,7 @@ func (response PutNodeUser500JSONResponse) VisitPutNodeUserResponse(w http.Respo
 
 type PostNodeUserPasswordRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     UserName `json:"name" validate:"required,min=1"`
+	Name     UserName `json:"name" validate:"required,account_name"`
 	Body     *PostNodeUserPasswordJSONRequestBody
 }
 
@@ -1883,7 +1883,7 @@ func (response PostNodeUserPassword500JSONResponse) VisitPostNodeUserPasswordRes
 
 type GetNodeUserSSHKeyRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     UserName `json:"name" validate:"required,min=1"`
+	Name     UserName `json:"name" validate:"required,account_name"`
 }
 
 type GetNodeUserSSHKeyResponseObject interface {
@@ -1962,7 +1962,7 @@ func (response GetNodeUserSSHKey500JSONResponse) VisitGetNodeUserSSHKeyResponse(
 
 type PostNodeUserSSHKeyRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     UserName `json:"name" validate:"required,min=1"`
+	Name     UserName `json:"name" validate:"required,account_name"`
 	Body     *PostNodeUserSSHKeyJSONRequestBody
 }
 
@@ -2042,7 +2042,7 @@ func (response PostNodeUserSSHKey500JSONResponse) VisitPostNodeUserSSHKeyRespons
 
 type DeleteNodeUserSSHKeyRequestObject struct {
 	Hostname    Hostname          `json:"hostname" validate:"required,min=1,valid_target"`
-	Name        UserName          `json:"name" validate:"required,min=1"`
+	Name        UserName          `json:"name" validate:"required,account_name"`
 	Fingerprint SSHKeyFingerprint `json:"fingerprint" validate:"required,min=1"`
 }
 

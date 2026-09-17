@@ -49,6 +49,10 @@ func (d *Debian) ListKeys(
 ) ([]SSHKey, error) {
 	_ = ctx
 
+	if err := validateAccountName("user", username); err != nil {
+		return nil, fmt.Errorf("ssh key: list: %w", err)
+	}
+
 	d.logger.Debug(
 		"executing user.ListKeys",
 		slog.String("username", username),
@@ -82,6 +86,10 @@ func (d *Debian) AddKey(
 	key SSHKey,
 ) (*SSHKeyResult, error) {
 	_ = ctx
+
+	if err := validateAccountName("user", username); err != nil {
+		return nil, fmt.Errorf("ssh key: add: %w", err)
+	}
 
 	d.logger.Debug(
 		"executing user.AddKey",
@@ -170,6 +178,10 @@ func (d *Debian) RemoveKey(
 	fingerprint string,
 ) (*SSHKeyResult, error) {
 	_ = ctx
+
+	if err := validateAccountName("user", username); err != nil {
+		return nil, fmt.Errorf("ssh key: remove: %w", err)
+	}
 
 	d.logger.Debug(
 		"executing user.RemoveKey",

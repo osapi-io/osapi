@@ -41,6 +41,10 @@ func (u *User) GetNodeUserSSHKey(
 		return gen.GetNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validateName(request.Name); !ok {
+		return gen.GetNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
+	}
+
 	hostname := request.Hostname
 	username := request.Name
 

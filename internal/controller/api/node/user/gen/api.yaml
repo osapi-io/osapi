@@ -788,30 +788,39 @@ components:
       in: path
       required: true
       description: >
-        User account name.
+        User account name. Must start with a lowercase letter or
+        underscore, followed by lowercase letters, digits, underscores,
+        or hyphens, with an optional trailing `$`; 32 characters or
+        fewer.
       # NOTE: x-oapi-codegen-extra-tags on path params do not generate
       # validate tags in strict-server mode. Validation is handled
       # manually in the handler.
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,account_name
       schema:
         type: string
         minLength: 1
+        maxLength: 32
+        pattern: '^[a-z_][a-z0-9_-]*\$?$'
 
     GroupName:
       name: name
       in: path
       required: true
       description: >
-        Group name.
+        Group name. Must start with a lowercase letter or underscore,
+        followed by lowercase letters, digits, underscores, or hyphens,
+        with an optional trailing `$`; 32 characters or fewer.
       # NOTE: x-oapi-codegen-extra-tags on path params do not generate
       # validate tags in strict-server mode. Validation is handled
       # manually in the handler.
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,account_name
       schema:
         type: string
         minLength: 1
+        maxLength: 32
+        pattern: '^[a-z_][a-z0-9_-]*\$?$'
 
     SSHKeyFingerprint:
       name: fingerprint
@@ -847,9 +856,13 @@ components:
       properties:
         name:
           type: string
-          description: Username for the new account.
+          description: >
+            Username for the new account. Must start with a lowercase
+            letter or underscore, followed by lowercase letters, digits,
+            underscores, or hyphens, with an optional trailing `$`; 32
+            characters or fewer.
           x-oapi-codegen-extra-tags:
-            validate: "required,min=1,max=32"
+            validate: "required,account_name"
         uid:
           type: integer
           description: Numeric user ID. If omitted, the system assigns one.
@@ -875,6 +888,8 @@ components:
           items:
             type: string
           description: Supplementary group names.
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,dive,account_name"
         password:
           type: string
           description: >-
@@ -907,6 +922,8 @@ components:
           items:
             type: string
           description: Supplementary group names (replaces existing).
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,dive,account_name"
         lock:
           type: boolean
           description: Lock or unlock the account.
@@ -934,9 +951,13 @@ components:
       properties:
         name:
           type: string
-          description: Group name.
+          description: >
+            Group name. Must start with a lowercase letter or underscore,
+            followed by lowercase letters, digits, underscores, or
+            hyphens, with an optional trailing `$`; 32 characters or
+            fewer.
           x-oapi-codegen-extra-tags:
-            validate: "required,min=1,max=32"
+            validate: "required,account_name"
         gid:
           type: integer
           description: Numeric group ID. If omitted, the system assigns one.
@@ -956,6 +977,8 @@ components:
           items:
             type: string
           description: Group member usernames (replaces existing).
+          x-oapi-codegen-extra-tags:
+            validate: "omitempty,dive,account_name"
 
     # -- Response schemas --------------------------------------------------
 

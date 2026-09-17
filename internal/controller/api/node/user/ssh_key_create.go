@@ -42,6 +42,10 @@ func (u *User) PostNodeUserSSHKey(
 		return gen.PostNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validateName(request.Name); !ok {
+		return gen.PostNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
+	}
+
 	if errMsg, ok := validation.Struct(request.Body); !ok {
 		return gen.PostNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
 	}

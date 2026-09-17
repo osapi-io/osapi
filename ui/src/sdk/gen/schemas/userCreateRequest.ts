@@ -6,7 +6,8 @@
  */
 
 export interface UserCreateRequest {
-  /** Username for the new account. */
+  /** Username for the new account. Must start with a lowercase letter or underscore, followed by lowercase letters, digits, underscores, or hyphens, with an optional trailing `$`; 32 characters or fewer.
+   */
   name: string;
   /** Numeric user ID. If omitted, the system assigns one. */
   uid?: number;

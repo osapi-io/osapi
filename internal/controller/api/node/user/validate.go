@@ -32,3 +32,14 @@ func validateHostname(
 ) (string, bool) {
 	return validation.Var(hostname, "required,min=1,valid_target")
 }
+
+// validateName validates a user or group name path parameter using the
+// shared validator. Returns the error message and false if invalid.
+//
+// This exists because oapi-codegen does not generate validate tags on
+// path parameters in strict-server mode (upstream limitation).
+func validateName(
+	name string,
+) (string, bool) {
+	return validation.Var(name, "required,account_name")
+}

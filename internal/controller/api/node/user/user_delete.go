@@ -42,6 +42,10 @@ func (u *User) DeleteNodeUser(
 		return gen.DeleteNodeUser400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validateName(request.Name); !ok {
+		return gen.DeleteNodeUser400JSONResponse{Error: &errMsg}, nil
+	}
+
 	hostname := request.Hostname
 	name := request.Name
 
