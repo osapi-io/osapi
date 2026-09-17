@@ -185,6 +185,19 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSSHKey() {
 			},
 		},
 		{
+			name: "validation error invalid name",
+			request: gen.DeleteNodeUserSSHKeyRequestObject{
+				Hostname:    "server1",
+				Name:        "Invalid",
+				Fingerprint: "SHA256:abc123",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.DeleteNodeUserSSHKeyResponseObject) {
+				_, ok := resp.(gen.DeleteNodeUserSSHKey400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "broadcast target _all",
 			request: gen.DeleteNodeUserSSHKeyRequestObject{
 				Hostname:    "_all",

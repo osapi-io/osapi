@@ -125,6 +125,18 @@ func (s *GroupGetPublicTestSuite) TestGetNodeGroupByName() {
 			},
 		},
 		{
+			name: "validation error invalid name",
+			request: gen.GetNodeGroupByNameRequestObject{
+				Hostname: "server1",
+				Name:     "Invalid",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.GetNodeGroupByNameResponseObject) {
+				_, ok := resp.(gen.GetNodeGroupByName400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "not found",
 			request: gen.GetNodeGroupByNameRequestObject{
 				Hostname: "server1",
