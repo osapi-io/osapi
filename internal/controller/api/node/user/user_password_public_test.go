@@ -47,6 +47,12 @@ import (
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
+// hashLooksValid reports whether hash is a plausible SHA-512 crypt hash
+// rather than the plaintext password that was hashed.
+func hashLooksValid(hash, plaintext string) bool {
+	return strings.HasPrefix(hash, "$6$") && hash != plaintext
+}
+
 type UserPasswordPublicTestSuite struct {
 	suite.Suite
 
@@ -80,6 +86,10 @@ func (s *UserPasswordPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
+func (s *UserPasswordPublicTestSuite) TearDownSubTest() {
+	apiuser.ResetHashPasswordFn()
+}
+
 func (s *UserPasswordPublicTestSuite) TestPostNodeUserPassword() {
 	tests := []struct {
 		name         string
@@ -96,7 +106,15 @@ func (s *UserPasswordPublicTestSuite) TestPostNodeUserPassword() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					Modify(gomock.Any(), "server1", "user", job.OperationUserChangePassword, gomock.Any()).
+					Modify(gomock.Any(), "server1", "user", job.OperationUserChangePassword,
+						gomock.Cond(func(data map[string]string) bool {
+							hash, ok := data["password_hash"]
+							if !ok || !hashLooksValid(hash, "newpass123") {
+								return false
+							}
+							_, hasPlaintext := data["password"]
+							return !hasPlaintext
+						})).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1", Changed: ptr.To(true),
 						Data: json.RawMessage(`{"name":"testuser","changed":true}`),
@@ -108,6 +126,25 @@ func (s *UserPasswordPublicTestSuite) TestPostNodeUserPassword() {
 				s.Require().Len(r.Results, 1)
 				s.Require().NotNil(r.Results[0].Changed)
 				s.True(*r.Results[0].Changed)
+			},
+		},
+		{
+			name: "hashing error returns 500",
+			request: gen.PostNodeUserPasswordRequestObject{
+				Hostname: "server1",
+				Name:     "testuser",
+				Body:     &gen.UserPasswordRequest{Password: "newpass123"},
+			},
+			setupMock: func() {
+				apiuser.SetHashPasswordFn(func(_ string) (string, error) {
+					return "", fmt.Errorf("boom")
+				})
+			},
+			validateFunc: func(resp gen.PostNodeUserPasswordResponseObject) {
+				r, ok := resp.(gen.PostNodeUserPassword500JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "boom")
 			},
 		},
 		{

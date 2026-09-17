@@ -65,7 +65,12 @@ func (u *User) PostNodeUser(
 		opts.Groups = *request.Body.Groups
 	}
 	if request.Body.Password != nil {
-		opts.Password = *request.Body.Password
+		hash, err := hashPassword(*request.Body.Password)
+		if err != nil {
+			errMsg := err.Error()
+			return gen.PostNodeUser500JSONResponse{Error: &errMsg}, nil
+		}
+		opts.PasswordHash = hash
 	}
 	if request.Body.System != nil {
 		opts.System = *request.Body.System

@@ -67,7 +67,8 @@ type UserCreateOpts struct {
 	Shell string
 	// Groups is the list of supplementary group names.
 	Groups []string
-	// Password is the initial password (plaintext, hashed by the agent).
+	// Password is the initial password, hashed by the controller before
+	// storage.
 	Password string
 	// System creates a system account.
 	System bool

@@ -57,9 +57,15 @@ func (u *User) PostNodeUserPassword(
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
 
+	hash, err := hashPassword(request.Body.Password)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.PostNodeUserPassword500JSONResponse{Error: &errMsg}, nil
+	}
+
 	data := map[string]string{
-		"name":     name,
-		"password": request.Body.Password,
+		"name":          name,
+		"password_hash": hash,
 	}
 
 	if job.IsBroadcastTarget(hostname) {

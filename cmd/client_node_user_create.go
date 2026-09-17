@@ -108,7 +108,7 @@ func init() {
 	clientNodeUserCreateCmd.PersistentFlags().
 		StringSlice("groups", nil, "Supplementary groups (comma-separated)")
 	clientNodeUserCreateCmd.PersistentFlags().
-		String("password", "", "Initial password (plaintext, hashed by the agent)")
+		String("password", "", "Initial password (hashed by the controller before storage)")
 	clientNodeUserCreateCmd.PersistentFlags().
 		Bool("system", false, "Create a system account")
 

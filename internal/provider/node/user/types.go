@@ -37,7 +37,7 @@ type Provider interface {
 	CreateUser(ctx context.Context, opts CreateUserOpts) (*Result, error)
 	UpdateUser(ctx context.Context, name string, opts UpdateUserOpts) (*Result, error)
 	DeleteUser(ctx context.Context, name string) (*Result, error)
-	ChangePassword(ctx context.Context, name string, password string) (*Result, error)
+	ChangePassword(ctx context.Context, name string, passwordHash string) (*Result, error)
 	ListGroups(ctx context.Context) ([]Group, error)
 	GetGroup(ctx context.Context, name string) (*Group, error)
 	CreateGroup(ctx context.Context, opts CreateGroupOpts) (*GroupResult, error)
@@ -61,14 +61,14 @@ type User struct {
 
 // CreateUserOpts contains options for creating a new user.
 type CreateUserOpts struct {
-	Name     string   `json:"name"`
-	UID      int      `json:"uid,omitempty"`
-	GID      int      `json:"gid,omitempty"`
-	Home     string   `json:"home,omitempty"`
-	Shell    string   `json:"shell,omitempty"`
-	Groups   []string `json:"groups,omitempty"`
-	Password string   `json:"password,omitempty"`
-	System   bool     `json:"system,omitempty"`
+	Name         string   `json:"name"`
+	UID          int      `json:"uid,omitempty"`
+	GID          int      `json:"gid,omitempty"`
+	Home         string   `json:"home,omitempty"`
+	Shell        string   `json:"shell,omitempty"`
+	Groups       []string `json:"groups,omitempty"`
+	PasswordHash string   `json:"password_hash,omitempty"`
+	System       bool     `json:"system,omitempty"`
 }
 
 // UpdateUserOpts contains options for updating an existing user.

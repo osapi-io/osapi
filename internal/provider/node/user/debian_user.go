@@ -108,8 +108,8 @@ func (d *Debian) CreateUser(
 
 	// Validate before useradd so a rejected password does not leave an
 	// account behind without one.
-	if opts.Password != "" {
-		if err := validatePasswordInput(opts.Name, opts.Password); err != nil {
+	if opts.PasswordHash != "" {
+		if err := validatePasswordInput(opts.Name, opts.PasswordHash); err != nil {
 			return nil, fmt.Errorf("user: %w", err)
 		}
 	}
@@ -121,8 +121,8 @@ func (d *Debian) CreateUser(
 		return nil, fmt.Errorf("user: useradd failed: %w", err)
 	}
 
-	if opts.Password != "" {
-		if err := d.setPassword(opts.Name, opts.Password); err != nil {
+	if opts.PasswordHash != "" {
+		if err := d.setPassword(opts.Name, opts.PasswordHash); err != nil {
 			return nil, fmt.Errorf("user: set password failed: %w", err)
 		}
 	}
@@ -197,15 +197,15 @@ func (d *Debian) DeleteUser(
 func (d *Debian) ChangePassword(
 	ctx context.Context,
 	name string,
-	password string,
+	passwordHash string,
 ) (*Result, error) {
 	_ = ctx
 
-	if err := validatePasswordInput(name, password); err != nil {
+	if err := validatePasswordInput(name, passwordHash); err != nil {
 		return nil, fmt.Errorf("user: %w", err)
 	}
 
-	if err := d.setPassword(name, password); err != nil {
+	if err := d.setPassword(name, passwordHash); err != nil {
 		return nil, fmt.Errorf("user: %w", err)
 	}
 
@@ -364,18 +364,22 @@ func (d *Debian) buildUsermodArgs(
 	return args
 }
 
-// setPassword sets a user's password via chpasswd. The name:password pair is
-// written to chpasswd's standard input, so the password is never interpreted
+// setPassword sets a user's password via "chpasswd -e". The name:hash pair
+// is written to chpasswd's standard input, so the hash is never interpreted
 // by a shell, never appears in the process arguments, and is never logged.
 // Callers must pass the values through validatePasswordInput first.
+//
+// The controller hashes the password before the job carrying it ever reaches
+// this provider (see internal/controller/api/node/user), so passwordHash is
+// always a crypt hash, never plaintext.
 func (d *Debian) setPassword(
 	name string,
-	password string,
+	passwordHash string,
 ) error {
 	_, err := d.execManager.RunPrivilegedCmdWithStdin(
 		"chpasswd",
-		nil,
-		name+":"+password+"\n",
+		[]string{"-e"},
+		name+":"+passwordHash+"\n",
 	)
 	if err != nil {
 		return fmt.Errorf("chpasswd failed: %w", err)
@@ -384,20 +388,29 @@ func (d *Debian) setPassword(
 	return nil
 }
 
-// validatePasswordInput rejects values that would change what chpasswd does.
-// chpasswd reads one name:password pair per line and splits each line at the
-// first colon, so a line break in either value, or a colon in the name, would
-// set the password of a different account.
+// validatePasswordInput rejects values that would change what "chpasswd -e"
+// does, or a value that is not actually a crypt hash.
+//
+// chpasswd reads one name:hash pair per line and splits each line at the
+// first colon, so a line break in either value, or a colon in the name,
+// would set the password of a different account. A hash must also start
+// with "$", the marker every crypt(3) hash uses, so a plaintext value —
+// sent by mistake, or replayed from a job stored before this validation
+// existed — is rejected rather than written to the shadow file.
 func validatePasswordInput(
 	name string,
-	password string,
+	passwordHash string,
 ) error {
 	if strings.ContainsAny(name, ":\r\n") {
 		return fmt.Errorf("invalid user name: must not contain a colon or line break")
 	}
 
-	if strings.ContainsAny(password, "\r\n") {
-		return fmt.Errorf("invalid password: must not contain a line break")
+	if strings.ContainsAny(passwordHash, ":\r\n") {
+		return fmt.Errorf("invalid password hash: must not contain a colon or line break")
+	}
+
+	if !strings.HasPrefix(passwordHash, "$") {
+		return fmt.Errorf("invalid password hash: must be a crypt hash")
 	}
 
 	return nil

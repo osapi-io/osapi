@@ -227,6 +227,37 @@ func (s *JobListPublicTestSuite) TestListJobs() {
 			},
 		},
 		{
+			name:    "redacts password hash from operation data",
+			request: gen.GetJobsRequestObject{},
+			mockResult: &jobclient.ListJobsResult{
+				Jobs: []*jobtypes.QueuedJob{
+					{
+						ID:      "660e8400-e29b-41d4-a716-446655440000",
+						Status:  "completed",
+						Created: "2025-06-14T10:00:00Z",
+						Operation: map[string]interface{}{
+							"type": "user.password",
+							"data": map[string]interface{}{
+								"name":          "john",
+								"password_hash": "$6$abcd$deadbeef",
+							},
+						},
+					},
+				},
+				TotalCount: 1,
+			},
+			expectMock: true,
+			validateFunc: func(resp gen.GetJobsResponseObject) {
+				r, ok := resp.(gen.GetJobs200JSONResponse)
+				s.True(ok)
+				item := (*r.Items)[0]
+				data, ok := (*item.Operation)["data"].(map[string]interface{})
+				s.Require().True(ok)
+				s.Equal("john", data["name"])
+				s.Equal("[redacted]", data["password_hash"])
+			},
+		},
+		{
 			name: "explicit limit and offset params",
 			request: func() gen.GetJobsRequestObject {
 				limit := 5

@@ -877,7 +877,10 @@ components:
           description: Supplementary group names.
         password:
           type: string
-          description: Initial password (plaintext, hashed by the agent).
+          description: >-
+            Initial password. Sent in plaintext over TLS, hashed by the
+            controller before the job is stored, and never written to
+            disk or logs in plaintext.
           x-oapi-codegen-extra-tags:
             validate: "omitempty,min=1"
         system:
@@ -917,7 +920,10 @@ components:
       properties:
         password:
           type: string
-          description: New password (plaintext, hashed by the agent).
+          description: >-
+            New password. Sent in plaintext over TLS, hashed by the
+            controller before the job is stored, and never written to
+            disk or logs in plaintext.
           x-oapi-codegen-extra-tags:
             validate: "required,min=1"
 

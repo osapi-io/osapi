@@ -538,12 +538,12 @@ func (s *ProcessorUserPublicTestSuite) TestProcessUserPassword() {
 				Type:      job.TypeModify,
 				Category:  "node",
 				Operation: "user.password",
-				Data:      json.RawMessage(`{"name":"john","password":"newpass123"}`),
+				Data:      json.RawMessage(`{"name":"john","password_hash":"$6$abcd$deadbeef"}`),
 			},
 			setupMock: func() user.Provider {
 				m := userMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().
-					ChangePassword(gomock.Any(), "john", "newpass123").
+					ChangePassword(gomock.Any(), "john", "$6$abcd$deadbeef").
 					Return(&user.Result{
 						Name:    "john",
 						Changed: true,
@@ -583,7 +583,7 @@ func (s *ProcessorUserPublicTestSuite) TestProcessUserPassword() {
 				Type:      job.TypeModify,
 				Category:  "node",
 				Operation: "user.password",
-				Data:      json.RawMessage(`{"name":"john","password":"newpass123"}`),
+				Data:      json.RawMessage(`{"name":"john","password_hash":"$6$abcd$deadbeef"}`),
 			},
 			setupMock: func() user.Provider {
 				m := userMocks.NewMockProvider(s.mockCtrl)

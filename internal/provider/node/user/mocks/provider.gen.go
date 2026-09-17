@@ -57,18 +57,18 @@ func (mr *MockProviderMockRecorder) AddKey(ctx, username, key any) *gomock.Call 
 }
 
 // ChangePassword mocks base method.
-func (m *MockProvider) ChangePassword(ctx context.Context, name, password string) (*user.Result, error) {
+func (m *MockProvider) ChangePassword(ctx context.Context, name, passwordHash string) (*user.Result, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ChangePassword", ctx, name, password)
+	ret := m.ctrl.Call(m, "ChangePassword", ctx, name, passwordHash)
 	ret0, _ := ret[0].(*user.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ChangePassword indicates an expected call of ChangePassword.
-func (mr *MockProviderMockRecorder) ChangePassword(ctx, name, password any) *gomock.Call {
+func (mr *MockProviderMockRecorder) ChangePassword(ctx, name, passwordHash any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockProvider)(nil).ChangePassword), ctx, name, password)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockProvider)(nil).ChangePassword), ctx, name, passwordHash)
 }
 
 // CreateGroup mocks base method.

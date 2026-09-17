@@ -44,6 +44,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/api/node/user/gen"
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	userProv "github.com/osapi-io/osapi/internal/provider/node/user"
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
@@ -78,6 +79,10 @@ func (s *UserCreatePublicTestSuite) SetupTest() {
 
 func (s *UserCreatePublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
+}
+
+func (s *UserCreatePublicTestSuite) TearDownSubTest() {
+	apiuser.ResetHashPasswordFn()
 }
 
 func (s *UserCreatePublicTestSuite) TestPostNodeUser() {
@@ -220,7 +225,10 @@ func (s *UserCreatePublicTestSuite) TestPostNodeUser() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					Modify(gomock.Any(), "server1", "user", job.OperationUserCreate, gomock.Any()).
+					Modify(gomock.Any(), "server1", "user", job.OperationUserCreate,
+						gomock.Cond(func(opts userProv.CreateUserOpts) bool {
+							return hashLooksValid(opts.PasswordHash, "secret123")
+						})).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  ptr.To(true),
@@ -232,6 +240,27 @@ func (s *UserCreatePublicTestSuite) TestPostNodeUser() {
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("newuser", *r.Results[0].Name)
+			},
+		},
+		{
+			name: "hashing error returns 500",
+			request: gen.PostNodeUserRequestObject{
+				Hostname: "server1",
+				Body: &gen.UserCreateRequest{
+					Name:     "newuser",
+					Password: ptr.To("secret123"),
+				},
+			},
+			setupMock: func() {
+				apiuser.SetHashPasswordFn(func(_ string) (string, error) {
+					return "", fmt.Errorf("boom")
+				})
+			},
+			validateFunc: func(resp gen.PostNodeUserResponseObject) {
+				r, ok := resp.(gen.PostNodeUser500JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "boom")
 			},
 		},
 		{

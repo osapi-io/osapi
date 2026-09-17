@@ -158,6 +158,62 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 			},
 		},
 		{
+			name: "redacts password hash from operation data",
+			request: gen.GetJobByIDRequestObject{
+				Id: uuid.MustParse("ff0e8400-e29b-41d4-a716-446655440000"),
+			},
+			mockJob: &jobtypes.QueuedJob{
+				ID:      "ff0e8400-e29b-41d4-a716-446655440000",
+				Status:  "completed",
+				Created: "2026-02-19T10:00:00Z",
+				Operation: map[string]interface{}{
+					"type": "user.password",
+					"data": map[string]interface{}{
+						"name":          "john",
+						"password_hash": "$6$abcd$deadbeef",
+					},
+				},
+			},
+			expectMock: true,
+			validateFunc: func(resp gen.GetJobByIDResponseObject) {
+				r, ok := resp.(gen.GetJobByID200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Operation)
+				data, ok := (*r.Operation)["data"].(map[string]interface{})
+				s.Require().True(ok)
+				s.Equal("john", data["name"])
+				s.Equal("[redacted]", data["password_hash"])
+			},
+		},
+		{
+			name: "redacts legacy plaintext password from operation data",
+			request: gen.GetJobByIDRequestObject{
+				Id: uuid.MustParse("110e8400-e29b-41d4-a716-446655440000"),
+			},
+			mockJob: &jobtypes.QueuedJob{
+				ID:      "110e8400-e29b-41d4-a716-446655440000",
+				Status:  "completed",
+				Created: "2026-02-19T10:00:00Z",
+				Operation: map[string]interface{}{
+					"type": "user.password",
+					"data": map[string]interface{}{
+						"name":     "john",
+						"password": "hunter2",
+					},
+				},
+			},
+			expectMock: true,
+			validateFunc: func(resp gen.GetJobByIDResponseObject) {
+				r, ok := resp.(gen.GetJobByID200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Operation)
+				data, ok := (*r.Operation)["data"].(map[string]interface{})
+				s.Require().True(ok)
+				s.Equal("[redacted]", data["password"])
+				s.NotEqual("hunter2", data["password"])
+			},
+		},
+		{
 			name: "not found",
 			request: gen.GetJobByIDRequestObject{
 				Id: uuid.MustParse("770e8400-e29b-41d4-a716-446655440000"),

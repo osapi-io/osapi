@@ -65,7 +65,7 @@ func (j *Job) GetJobByID(
 		Created: &qj.Created,
 	}
 	if qj.Operation != nil {
-		op := map[string]interface{}(qj.Operation)
+		op := redactOperation(qj.Operation)
 		resp.Operation = &op
 	}
 	if qj.Error != "" {

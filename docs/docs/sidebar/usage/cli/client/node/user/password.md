@@ -14,8 +14,9 @@ $ osapi client node user password --target web-01 \
   1 host: 1 changed
 ```
 
-The password is sent as plaintext and hashed by the agent using the system's
-default hashing algorithm.
+The password is sent to the controller in plaintext over TLS. The controller
+hashes it before the job is stored; the agent and provider only ever see the
+hash, and the plaintext is never written to disk or logs.
 
 Broadcast to all hosts:
 
@@ -38,9 +39,9 @@ $ osapi client node user password --target _all \
 
 ## Flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
-| `--name`       | Username to change password for (required)               |         |
-| `--password`   | New password (plaintext, hashed by the agent) (required) |         |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| Flag           | Description                                                        | Default |
+| -------------- | ------------------------------------------------------------------ | ------- |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`)           | `_all`  |
+| `--name`       | Username to change password for (required)                        |         |
+| `--password`   | New password (hashed by the controller before storage) (required) |         |
+| `-j, --json`   | Output raw JSON response                                           |         |

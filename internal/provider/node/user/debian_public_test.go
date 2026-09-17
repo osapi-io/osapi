@@ -438,15 +438,15 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 		{
 			name: "when create with password",
 			opts: user.CreateUserOpts{
-				Name:     "newuser",
-				Password: "secret123",
+				Name:         "newuser",
+				PasswordHash: "$6$abcd$deadbeef",
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd("useradd", []string{"--create-home", "newuser"}).
 					Return("", nil)
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmdWithStdin("chpasswd", []string(nil), "newuser:secret123\n").
+					RunPrivilegedCmdWithStdin("chpasswd", []string{"-e"}, "newuser:$6$abcd$deadbeef\n").
 					Return("", nil)
 			},
 			validateFunc: func(result *user.Result, err error) {
@@ -475,15 +475,15 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 		{
 			name: "when password set fails after create",
 			opts: user.CreateUserOpts{
-				Name:     "newuser",
-				Password: "secret123",
+				Name:         "newuser",
+				PasswordHash: "$6$abcd$deadbeef",
 			},
 			setup: func() {
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd("useradd", []string{"--create-home", "newuser"}).
 					Return("", nil)
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmdWithStdin("chpasswd", []string(nil), "newuser:secret123\n").
+					RunPrivilegedCmdWithStdin("chpasswd", []string{"-e"}, "newuser:$6$abcd$deadbeef\n").
 					Return("", errors.New("chpasswd failed"))
 			},
 			validateFunc: func(result *user.Result, err error) {
@@ -493,17 +493,30 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 			},
 		},
 		{
-			name: "when password contains a line break",
+			name: "when password hash contains a line break",
 			opts: user.CreateUserOpts{
-				Name:     "newuser",
-				Password: "x\nroot:pwned",
+				Name:         "newuser",
+				PasswordHash: "$6\nroot:pwned",
 			},
 			setup: func() {},
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid password")
+				suite.Contains(err.Error(), "invalid password hash")
 				suite.NotContains(err.Error(), "pwned")
+			},
+		},
+		{
+			name: "when password is not a crypt hash",
+			opts: user.CreateUserOpts{
+				Name:         "newuser",
+				PasswordHash: "secret123",
+			},
+			setup: func() {},
+			validateFunc: func(result *user.Result, err error) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid password hash: must be a crypt hash")
 			},
 		},
 	}
@@ -708,17 +721,17 @@ func (suite *DebianPublicTestSuite) TestChangePassword() {
 	tests := []struct {
 		name         string
 		userName     string
-		password     string
+		passwordHash string
 		setup        func()
 		validateFunc func(*user.Result, error)
 	}{
 		{
-			name:     "when password change succeeds",
-			userName: "john",
-			password: "newpassword",
+			name:         "when password change succeeds",
+			userName:     "john",
+			passwordHash: "$6$abcd$deadbeef",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmdWithStdin("chpasswd", []string(nil), "john:newpassword\n").
+					RunPrivilegedCmdWithStdin("chpasswd", []string{"-e"}, "john:$6$abcd$deadbeef\n").
 					Return("", nil)
 			},
 			validateFunc: func(result *user.Result, err error) {
@@ -729,12 +742,12 @@ func (suite *DebianPublicTestSuite) TestChangePassword() {
 			},
 		},
 		{
-			name:     "when chpasswd fails",
-			userName: "john",
-			password: "newpassword",
+			name:         "when chpasswd fails",
+			userName:     "john",
+			passwordHash: "$6$abcd$deadbeef",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmdWithStdin("chpasswd", []string(nil), "john:newpassword\n").
+					RunPrivilegedCmdWithStdin("chpasswd", []string{"-e"}, "john:$6$abcd$deadbeef\n").
 					Return("", errors.New("chpasswd error"))
 			},
 			validateFunc: func(result *user.Result, err error) {
@@ -744,12 +757,12 @@ func (suite *DebianPublicTestSuite) TestChangePassword() {
 			},
 		},
 		{
-			name:     "when password contains shell metacharacters",
-			userName: "john",
-			password: "x' ; id > /tmp/pwn ; echo 'x",
+			name:         "when hash contains shell metacharacters",
+			userName:     "john",
+			passwordHash: "$6$x' ; id > /tmp/pwn ; echo 'x",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmdWithStdin("chpasswd", []string(nil), "john:x' ; id > /tmp/pwn ; echo 'x\n").
+					RunPrivilegedCmdWithStdin("chpasswd", []string{"-e"}, "john:$6$x' ; id > /tmp/pwn ; echo 'x\n").
 					Return("", nil)
 			},
 			validateFunc: func(result *user.Result, err error) {
@@ -759,33 +772,44 @@ func (suite *DebianPublicTestSuite) TestChangePassword() {
 			},
 		},
 		{
-			name:     "when password contains a line break",
-			userName: "john",
-			password: "x\nroot:pwned",
-			setup:    func() {},
+			name:         "when hash contains a line break",
+			userName:     "john",
+			passwordHash: "$6$abcd$x\nroot:pwned",
+			setup:        func() {},
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid password")
+				suite.Contains(err.Error(), "invalid password hash")
 				suite.NotContains(err.Error(), "pwned")
 			},
 		},
 		{
-			name:     "when password contains a carriage return",
-			userName: "john",
-			password: "x\rroot:pwned",
-			setup:    func() {},
+			name:         "when hash contains a carriage return",
+			userName:     "john",
+			passwordHash: "$6$abcd$x\rroot:pwned",
+			setup:        func() {},
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid password")
+				suite.Contains(err.Error(), "invalid password hash")
 			},
 		},
 		{
-			name:     "when user name contains a colon",
-			userName: "john:root",
-			password: "newpassword",
-			setup:    func() {},
+			name:         "when hash does not start with a dollar sign",
+			userName:     "john",
+			passwordHash: "newpassword",
+			setup:        func() {},
+			validateFunc: func(result *user.Result, err error) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid password hash: must be a crypt hash")
+			},
+		},
+		{
+			name:         "when user name contains a colon",
+			userName:     "john:root",
+			passwordHash: "$6$abcd$deadbeef",
+			setup:        func() {},
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
@@ -798,7 +822,7 @@ func (suite *DebianPublicTestSuite) TestChangePassword() {
 		suite.Run(tc.name, func() {
 			tc.setup()
 
-			result, err := suite.provider.ChangePassword(suite.ctx, tc.userName, tc.password)
+			result, err := suite.provider.ChangePassword(suite.ctx, tc.userName, tc.passwordHash)
 			tc.validateFunc(result, err)
 		})
 	}

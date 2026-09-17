@@ -234,8 +234,8 @@ func processUserPassword(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var data struct {
-		Name     string `json:"name"`
-		Password string `json:"password"`
+		Name         string `json:"name"`
+		PasswordHash string `json:"password_hash"`
 	}
 	if err := json.Unmarshal(jobRequest.Data, &data); err != nil {
 		return nil, fmt.Errorf("unmarshal user password data: %w", err)
@@ -246,7 +246,7 @@ func processUserPassword(
 		slog.String("name", data.Name),
 	)
 
-	result, err := userProvider.ChangePassword(ctx, data.Name, data.Password)
+	result, err := userProvider.ChangePassword(ctx, data.Name, data.PasswordHash)
 	if err != nil {
 		return nil, err
 	}

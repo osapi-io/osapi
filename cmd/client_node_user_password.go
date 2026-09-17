@@ -82,7 +82,7 @@ func init() {
 	clientNodeUserPasswordCmd.PersistentFlags().
 		String("name", "", "Username to change password for (required)")
 	clientNodeUserPasswordCmd.PersistentFlags().
-		String("password", "", "New password (plaintext, hashed by the agent) (required)")
+		String("password", "", "New password (hashed by the controller before storage) (required)")
 
 	_ = clientNodeUserPasswordCmd.MarkPersistentFlagRequired("name")
 	_ = clientNodeUserPasswordCmd.MarkPersistentFlagRequired("password")
