@@ -19,7 +19,7 @@ export interface UserCreateRequest {
   shell?: string;
   /** Supplementary group names. */
   groups?: string[];
-  /** Initial password (plaintext, hashed by the agent). */
+  /** Initial password. Sent in plaintext over TLS, hashed by the controller before the job is stored, and never written to disk or logs in plaintext. */
   password?: string;
   /** Create a system account. */
   system?: boolean;

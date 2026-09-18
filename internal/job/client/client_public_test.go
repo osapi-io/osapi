@@ -1329,6 +1329,7 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISignerUnwrapPaths() {
 	tests := []struct {
 		name         string
 		responseData func() []byte
+		wantErr      string
 		validateFunc func(jobID string, resp *job.Response)
 	}{
 		{
@@ -1344,7 +1345,7 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISignerUnwrapPaths() {
 			},
 		},
 		{
-			name: "when response envelope has invalid signature warns and uses raw envelope data",
+			name: "when response envelope has invalid signature the job fails",
 			responseData: func() []byte {
 				// Build an envelope with a tampered signature so verification fails.
 				inner := []byte(`{"status":"completed","hostname":"server1"}`)
@@ -1355,15 +1356,10 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISignerUnwrapPaths() {
 				corrupted, _ := json.Marshal(envelope)
 				return corrupted
 			},
-			// The warn path fires. The raw responseData (the envelope JSON) is then
-			// unmarshalled as a job.Response — unrecognized fields are ignored,
-			// so status ends up as zero value.
-			validateFunc: func(_ string, resp *job.Response) {
-				s.NotNil(resp)
-				// Status is empty because the raw envelope JSON doesn't have a
-				// "status" field at the top level.
-				s.Equal(job.Status(""), resp.Status)
-			},
+			// A forged or corrupted response must never be treated as a
+			// successful result: Query returns an error instead of a
+			// response built from unverified data.
+			wantErr: "response signature verification failed",
 		},
 	}
 
@@ -1400,6 +1396,11 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISignerUnwrapPaths() {
 				Return(mockWatcher, nil)
 
 			jobID, resp, err := c.Query(s.ctx, target, category, operation, nil)
+			if tt.wantErr != "" {
+				s.Error(err)
+				s.Contains(err.Error(), tt.wantErr)
+				return
+			}
 			s.NoError(err)
 			tt.validateFunc(jobID, resp)
 		})
@@ -1473,7 +1474,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithPKISigner() {
 			},
 		},
 		{
-			name: "when broadcast response has invalid signature warns and skips",
+			name: "when broadcast response has invalid signature the agent times out",
 			setupMocks: func() {
 				// Registry returns one agent.
 				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
@@ -1518,12 +1519,10 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithPKISigner() {
 					Watch(gomock.Any(), gomock.Any()).
 					Return(mockWatcher, nil)
 			},
-			// The warn fires, raw envelope JSON is unmarshalled to a Response
-			// with empty hostname, so it goes under "unknown". Then timeout
-			// fires because expected agents (server1) never responded.
-			validateFunc: func(responses map[string]*job.Response) {
-				s.NotEmpty(responses)
-			},
+			// A forged or corrupted response is dropped rather than kept
+			// as an unverified result: it never counts toward server1's
+			// reply, so the broadcast times out with none received.
+			expectedErr: "no agents responded",
 		},
 		{
 			name: "when PKI signing marshal fails returns error",

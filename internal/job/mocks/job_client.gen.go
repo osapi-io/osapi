@@ -327,6 +327,18 @@ func (mr *MockJobClientMockRecorder) SetDrainFlag(ctx, hostname any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDrainFlag", reflect.TypeOf((*MockJobClient)(nil).SetDrainFlag), ctx, hostname)
 }
 
+// SetPKISigner mocks base method.
+func (m *MockJobClient) SetPKISigner(signer client0.PKISigner) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetPKISigner", signer)
+}
+
+// SetPKISigner indicates an expected call of SetPKISigner.
+func (mr *MockJobClientMockRecorder) SetPKISigner(signer any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPKISigner", reflect.TypeOf((*MockJobClient)(nil).SetPKISigner), signer)
+}
+
 // WriteAgentTimelineEvent mocks base method.
 func (m *MockJobClient) WriteAgentTimelineEvent(ctx context.Context, hostname, event, message string) error {
 	m.ctrl.T.Helper()

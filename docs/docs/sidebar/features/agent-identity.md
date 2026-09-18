@@ -108,9 +108,9 @@ osapi client controller key fingerprint
 
 ## Job Signing
 
-When PKI is enabled, the controller signs every job payload with its Ed25519
-private key before storing it in the KV bucket. The payload is wrapped in a
-`SignedEnvelope`:
+When `controller.pki.enabled` is true, the controller signs every job payload
+with its Ed25519 private key before storing it in the KV bucket. The payload is
+wrapped in a `SignedEnvelope`:
 
 ```json
 {
@@ -120,10 +120,37 @@ private key before storing it in the KV bucket. The payload is wrapped in a
 }
 ```
 
-Agents verify the signature using the controller's public key (received during
-enrollment) before processing. If verification fails, the agent rejects the job.
-When PKI is disabled, jobs are stored and processed without signatures -- the
-envelope wrapping is skipped entirely.
+Agents also sign their job responses with their own keypair before writing them
+to the KV bucket, using the same envelope shape.
+
+When PKI is disabled on either side, that side neither signs nor verifies --
+jobs and responses are stored and processed as plain JSON, with no envelope
+wrapping.
+
+### Verification and failure behavior
+
+When `agent.pki.enabled` is true, an agent verifies the envelope on every job it
+receives before running the operation. Verification is fail-closed: the job is
+rejected and never executed unless it fully passes. Three rejection reasons are
+logged and recorded as the job's termination reason, so an operator can tell
+them apart:
+
+- **Not enrolled** -- the agent has no cached controller public key yet
+  (enrollment is still pending, or was never completed). This is reported
+  distinctly from a bad signature, since it means "not yet trusted" rather than
+  "this job was tampered with."
+- **Missing or malformed signature** -- the job data is not wrapped in a signed
+  envelope, or the envelope is missing a required field.
+- **Invalid signature** -- the envelope's signature does not verify against the
+  agent's cached controller key (or the previous key, during a rotation grace
+  period; see [Key Rotation](#key-rotation)).
+
+The controller likewise verifies the signature on an agent's job response before
+treating it as a result. A response that fails verification is treated as a
+failed or missing result, never as a successful one.
+
+When PKI is disabled, none of the above applies -- there is no envelope to
+verify, so nothing is rejected on signature grounds.
 
 ## Key Rotation
 
@@ -143,6 +170,18 @@ The rotation flow:
    receive the new controller public key via an updated enrollment response and
    transition to the new key.
 5. After the grace period, only the new key is accepted.
+
+## Rollout
+
+Because agent-side verification is fail-closed, enabling `agent.pki.enabled` on
+a fleet is order-sensitive:
+
+1. Enable `controller.pki.enabled` first, and confirm agents complete enrollment
+   and show as accepted (`osapi client agent list`).
+2. Only then enable `agent.pki.enabled`. An agent that has not completed
+   enrollment holds no controller public key, so if PKI is enabled on it before
+   enrollment finishes, every job it receives is rejected as "not enrolled"
+   until enrollment completes.
 
 ## Configuration
 

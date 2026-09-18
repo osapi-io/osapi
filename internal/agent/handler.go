@@ -36,10 +36,26 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 
-	"github.com/osapi-io/osapi/internal/agent/pki"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/telemetry/tracing"
+)
+
+// Errors returned by unwrapJobEnvelope. Each names a distinct rejection
+// reason so an operator reading agent logs or job termination reasons can
+// tell an unenrolled agent apart from a forged or malformed job.
+var (
+	// ErrJobEnvelopeMissing means PKI is enabled but the job data is not a
+	// signed envelope at all, or is missing a required envelope field.
+	ErrJobEnvelopeMissing = errors.New("job data is not a signed envelope")
+	// ErrControllerKeyUnknown means PKI is enabled but this agent has not
+	// completed enrollment, so it holds no controller public key to verify
+	// against.
+	ErrControllerKeyUnknown = errors.New("no cached controller public key: agent not enrolled")
+	// ErrJobSignatureInvalid means the envelope signature did not verify
+	// against the cached controller key (or the previous key, during a
+	// rotation grace period).
+	ErrJobSignatureInvalid = errors.New("invalid controller signature on job data")
 )
 
 // extractChanged parses the processor result JSON and extracts the "changed"
@@ -65,10 +81,13 @@ func extractChanged(
 	return &b
 }
 
-// unwrapJobEnvelope attempts to unwrap a SignedEnvelope from job data.
-// When PKI is disabled (pkiManager is nil), the raw data passes through.
-// When PKI is enabled and a controller public key is set, the signature
-// is verified. Returns the inner payload or an error.
+// unwrapJobEnvelope unwraps a SignedEnvelope from job data and verifies its
+// signature. When PKI is disabled (pkiManager is nil), the raw data passes
+// through unchanged — job payloads are never wrapped in an envelope in that
+// case. When PKI is enabled, verification is fail-closed: a missing or
+// malformed envelope, an agent with no cached controller key, and a bad
+// signature are each rejected with a distinct error rather than executed.
+// Returns the inner payload or one of the Err* sentinels above.
 func (a *Agent) unwrapJobEnvelope(
 	data []byte,
 ) ([]byte, error) {
@@ -77,28 +96,29 @@ func (a *Agent) unwrapJobEnvelope(
 	}
 
 	var envelope job.SignedEnvelope
-	if err := json.Unmarshal(data, &envelope); err != nil {
-		// Not a signed envelope — pass through.
-		return data, nil
+	if err := json.Unmarshal(data, &envelope); err != nil ||
+		len(envelope.Payload) == 0 || len(envelope.Signature) == 0 || envelope.Fingerprint == "" {
+		return nil, ErrJobEnvelopeMissing
 	}
 
-	// Check if this looks like a signed envelope.
-	if len(envelope.Payload) == 0 || len(envelope.Signature) == 0 || envelope.Fingerprint == "" {
-		return data, nil
+	// An agent that has not finished enrollment holds no controller key
+	// and so cannot verify anything. That is distinct from a bad
+	// signature: the former means "not yet trusted", the latter means
+	// "this job was tampered with or forged".
+	if len(a.pkiManager.ControllerPublicKey()) == 0 {
+		return nil, ErrControllerKeyUnknown
 	}
 
-	// Verify signature if controller public key is available.
-	controllerPubKey := a.pkiManager.ControllerPublicKey()
-	if len(controllerPubKey) > 0 {
-		if !pki.Verify(controllerPubKey, envelope.Payload, envelope.Signature) {
-			return nil, fmt.Errorf("invalid controller signature on job data")
-		}
-
-		a.logger.Debug(
-			"verified job signature",
-			slog.String("fingerprint", envelope.Fingerprint),
-		)
+	// VerifyWithGrace checks both the current and previous controller
+	// key, so a key rotation does not reject jobs signed just before it.
+	if !a.pkiManager.VerifyWithGrace(envelope.Payload, envelope.Signature) {
+		return nil, ErrJobSignatureInvalid
 	}
+
+	a.logger.Debug(
+		"verified job signature",
+		slog.String("fingerprint", envelope.Fingerprint),
+	)
 
 	return envelope.Payload, nil
 }
@@ -254,10 +274,22 @@ func (a *Agent) handleJobMessage(
 		return fmt.Errorf("job not found: %s", jobKey)
 	}
 
-	// Unwrap signed envelope if PKI is enabled and controller public key is set.
+	// Unwrap and verify the signed envelope when PKI is enabled. Each
+	// rejection reason is distinct so an operator can tell an unenrolled
+	// agent apart from a forged or malformed job in logs and in the
+	// terminated message's reason.
 	jobDataBytes, err = a.unwrapJobEnvelope(jobDataBytes)
 	if err != nil {
-		return a.terminateMessage(msg, "signature verification failed",
+		reason := "job signature verification failed"
+		switch {
+		case errors.Is(err, ErrControllerKeyUnknown):
+			reason = "agent not enrolled: no cached controller key"
+		case errors.Is(err, ErrJobEnvelopeMissing):
+			reason = "missing or malformed job signature"
+		case errors.Is(err, ErrJobSignatureInvalid):
+			reason = "invalid job signature"
+		}
+		return a.terminateMessage(msg, reason,
 			fmt.Errorf("job signature verification failed: %w", err))
 	}
 

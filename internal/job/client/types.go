@@ -184,6 +184,16 @@ type JobClient interface {
 		streamName string,
 		consumerConfig jetstream.ConsumerConfig,
 	) error
+
+	// SetPKISigner wires the signer used to sign outgoing job and response
+	// payloads and to verify incoming ones. The keypair a signer needs is
+	// not always available at client construction time, so this is called
+	// once one is: on the controller when the enrollment watcher loads the
+	// controller keypair, and on the agent when PKI enrollment loads the
+	// agent keypair. Passing nil disables signing and verification.
+	SetPKISigner(
+		signer PKISigner,
+	)
 }
 
 // CreateJobResult represents the result of creating a job.

@@ -1231,11 +1231,11 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 			},
 		},
 		{
-			name: "when signed envelope without controller key skips verification",
+			name: "when signed envelope without cached controller key is rejected distinctly",
 			setupPKI: func() *pki.Manager {
 				m := pki.New(memfs.New(), "/tmp/pki", "agent")
 				s.Require().NoError(m.LoadOrGenerate())
-				// No controller public key set.
+				// No controller public key set — agent has not enrolled.
 				return m
 			},
 			data: func() []byte {
@@ -1249,13 +1249,14 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 				data, _ := json.Marshal(envelope)
 				return data
 			},
-			expectError: false,
+			expectError: true,
+			errorMsg:    "no cached controller public key",
 			validateFunc: func(got string) {
-				s.Equal(`{"id":"no-ctrl-key"}`, got)
+				s.Equal("", got)
 			},
 		},
 		{
-			name: "when raw JSON with PKI enabled passes through",
+			name: "when raw JSON with PKI enabled is rejected as unsigned",
 			setupPKI: func() *pki.Manager {
 				m := pki.New(memfs.New(), "/tmp/pki", "agent")
 				s.Require().NoError(m.LoadOrGenerate())
@@ -1265,13 +1266,14 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 			data: func() []byte {
 				return []byte(`{"id":"raw-job","operation":{"type":"node.hostname.get"}}`)
 			},
-			expectError: false,
+			expectError: true,
+			errorMsg:    "not a signed envelope",
 			validateFunc: func(got string) {
-				s.Equal(`{"id":"raw-job","operation":{"type":"node.hostname.get"}}`, got)
+				s.Equal("", got)
 			},
 		},
 		{
-			name: "when invalid JSON with PKI enabled passes through",
+			name: "when invalid JSON with PKI enabled is rejected as unsigned",
 			setupPKI: func() *pki.Manager {
 				m := pki.New(memfs.New(), "/tmp/pki", "agent")
 				s.Require().NoError(m.LoadOrGenerate())
@@ -1280,9 +1282,40 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 			data: func() []byte {
 				return []byte(`not json at all`)
 			},
+			expectError: true,
+			errorMsg:    "not a signed envelope",
+			validateFunc: func(got string) {
+				s.Equal("", got)
+			},
+		},
+		{
+			name: "when signed with the previous controller key during rotation grace",
+			setupPKI: func() *pki.Manager {
+				m := pki.New(memfs.New(), "/tmp/pki", "agent")
+				s.Require().NoError(m.LoadOrGenerate())
+				// Simulate a rotation: controllerPub is now "previous",
+				// and a freshly generated key is current.
+				m.SetControllerPublicKey(controllerPub)
+				newPub, _, genErr := ed25519.GenerateKey(rand.Reader)
+				s.Require().NoError(genErr)
+				m.RotateControllerKey(newPub)
+				return m
+			},
+			data: func() []byte {
+				payload := []byte(`{"id":"rotation-grace"}`)
+				// Signed with the now-previous key.
+				sig := ed25519.Sign(controllerPriv, payload)
+				envelope := job.SignedEnvelope{
+					Payload:     payload,
+					Signature:   sig,
+					Fingerprint: "SHA256:controller-fp",
+				}
+				data, _ := json.Marshal(envelope)
+				return data
+			},
 			expectError: false,
 			validateFunc: func(got string) {
-				s.Equal("not json at all", got)
+				s.Equal(`{"id":"rotation-grace"}`, got)
 			},
 		},
 	}
@@ -1405,9 +1438,46 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 			},
 			validateFunc: func(err error) {
 				s.Error(err)
-				if "job signature verification failed" != "" {
-					s.Contains(err.Error(), "job signature verification failed")
+				s.Contains(err.Error(), "job signature verification failed")
+			},
+		},
+		{
+			name: "when agent has not completed enrollment rejects distinctly",
+			setupPKI: func() {
+				m := pki.New(memfs.New(), "/tmp/pki", "agent")
+				s.Require().NoError(m.LoadOrGenerate())
+				// No controller public key — agent is pending, not enrolled.
+				agent.SetAgentPKIManager(s.testAgent, m)
+			},
+			cleanupPKI: func() {
+				agent.SetAgentPKIManager(s.testAgent, nil)
+			},
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("not-enrolled-job"))
+			},
+			setupMocks: func() {
+				payload := []byte(
+					`{"id":"not-enrolled-job","operation":{"type":"node.hostname.get"}}`,
+				)
+				sig := ed25519.Sign(controllerPriv, payload)
+				envelope := job.SignedEnvelope{
+					Payload:     payload,
+					Signature:   sig,
+					Fingerprint: "SHA256:ctrl",
 				}
+				envelopeJSON, _ := json.Marshal(envelope)
+
+				s.expectNotAnswered("not-enrolled-job")
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.not-enrolled-job").
+					Return(envelopeJSON, nil)
+				// No WriteStatusEvent/WriteJobResponse expectations: an
+				// unenrolled agent must refuse before touching the
+				// operation, distinctly from a bad-signature rejection.
+			},
+			validateFunc: func(err error) {
+				s.Error(err)
+				s.Contains(err.Error(), "no cached controller public key")
 			},
 		},
 	}

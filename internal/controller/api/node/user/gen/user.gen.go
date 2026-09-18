@@ -321,7 +321,7 @@ type UserCreateRequest struct {
 	// Name Username for the new account. Must start with a lowercase letter or underscore, followed by lowercase letters, digits, underscores, or hyphens, with an optional trailing `$`; 32 characters or fewer.
 	Name string `json:"name" validate:"required,account_name"`
 
-	// Password Initial password (plaintext, hashed by the agent).
+	// Password Initial password. Sent in plaintext over TLS, hashed by the controller before the job is stored, and never written to disk or logs in plaintext.
 	Password *string `json:"password,omitempty" validate:"omitempty,min=1"`
 
 	// Shell Login shell path.
@@ -406,7 +406,7 @@ type UserMutationResultStatus string
 
 // UserPasswordRequest defines model for UserPasswordRequest.
 type UserPasswordRequest struct {
-	// Password New password (plaintext, hashed by the agent).
+	// Password New password. Sent in plaintext over TLS, hashed by the controller before the job is stored, and never written to disk or logs in plaintext.
 	Password string `json:"password" validate:"required,min=1"`
 }
 

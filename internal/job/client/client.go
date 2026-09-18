@@ -105,6 +105,16 @@ func New(
 	}, nil
 }
 
+// SetPKISigner wires the signer used to sign outgoing job and response
+// payloads and to verify incoming ones. See the JobClient interface for why
+// this is separate from construction. Passing nil disables signing and
+// verification.
+func (c *Client) SetPKISigner(
+	signer PKISigner,
+) {
+	c.pkiSigner = signer
+}
+
 // resolveTarget resolves a target (hostname or machine ID) to the routing
 // value for NATS subjects. When no resolver is configured, returns the
 // target unchanged.
@@ -340,7 +350,10 @@ func (c *Client) publishAndWait(
 				continue
 			}
 
-			// Unwrap signed envelope if present.
+			// Unwrap signed envelope if present. A verification failure
+			// means the response cannot be trusted, so it is treated as a
+			// job failure rather than fallen through as unverified data
+			// that happens to fail to unmarshal into a useful response.
 			responseData := entry.Value()
 			if c.pkiSigner != nil {
 				unwrapped, _, unwrapErr := unwrapSignedEnvelope(
@@ -348,14 +361,12 @@ func (c *Client) publishAndWait(
 					c.pkiSigner.ControllerPublicKey(),
 				)
 				if unwrapErr != nil {
-					c.logger.WarnContext(
-						ctx, "response signature verification failed",
-						slog.String("job_id", jobID),
-						slog.String("error", unwrapErr.Error()),
+					return "", nil, fmt.Errorf(
+						"response signature verification failed for job %s: %w",
+						jobID, unwrapErr,
 					)
-				} else {
-					responseData = unwrapped
 				}
+				responseData = unwrapped
 			}
 
 			var response job.Response
@@ -510,7 +521,12 @@ func (c *Client) publishAndCollect(
 				continue
 			}
 
-			// Unwrap signed envelope if present.
+			// Unwrap signed envelope if present. A verification failure
+			// means this response cannot be trusted, so it is dropped
+			// rather than kept as unverified data — same treatment as an
+			// unmarshalable response below. The agent that sent it then
+			// shows as missing rather than answered, and surfaces as a
+			// timeout for that hostname if it never sends a good response.
 			responseData := entry.Value()
 			if c.pkiSigner != nil {
 				unwrapped, _, unwrapErr := unwrapSignedEnvelope(
@@ -523,9 +539,9 @@ func (c *Client) publishAndCollect(
 						slog.String("job_id", jobID),
 						slog.String("error", unwrapErr.Error()),
 					)
-				} else {
-					responseData = unwrapped
+					continue
 				}
+				responseData = unwrapped
 			}
 
 			var response job.Response

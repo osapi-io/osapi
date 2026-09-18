@@ -56,6 +56,13 @@ func (a *Agent) handlePKIEnrollment(
 
 	a.pkiManager = m
 
+	// Wire the signer into the job client now that the agent keypair is
+	// loaded: job responses are signed going forward. jobClient is nil
+	// only in tests that exercise enrollment in isolation.
+	if a.jobClient != nil {
+		a.jobClient.SetPKISigner(m)
+	}
+
 	a.pkiLogger.Info(
 		"PKI keypair loaded",
 		slog.String("fingerprint", m.Fingerprint()),

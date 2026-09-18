@@ -6,6 +6,6 @@
  */
 
 export interface UserPasswordRequest {
-  /** New password (plaintext, hashed by the agent). */
+  /** New password. Sent in plaintext over TLS, hashed by the controller before the job is stored, and never written to disk or logs in plaintext. */
   password: string;
 }

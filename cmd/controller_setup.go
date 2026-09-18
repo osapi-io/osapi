@@ -854,6 +854,11 @@ func setupEnrollmentWatcher(
 		slog.String("key_dir", appConfig.Controller.PKI.KeyDir),
 	)
 
+	// Wire the signer into the job client now that the controller keypair
+	// is loaded: job payloads are signed going forward, and agent
+	// responses are verified as they arrive.
+	b.jobClient.SetPKISigner(pkiManager)
+
 	// Create and start enrollment watcher.
 	watcher := enrollment.NewWatcher(
 		enrollLog,

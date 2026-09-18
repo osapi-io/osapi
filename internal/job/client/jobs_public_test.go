@@ -26,6 +26,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"testing"
 	"time"
 
@@ -2335,6 +2336,96 @@ func (s *JobsPublicTestSuite) TestCreateJobWithPKISigner() {
 			s.Require().NoError(err)
 
 			tt.validateFunc(c.CreateJob(s.ctx, tt.opData, tt.target))
+		})
+	}
+}
+
+// TestSetPKISigner verifies that wiring the signer after construction — the
+// path cmd/ uses once the controller or agent keypair finishes loading —
+// turns signing on or off exactly like passing it via Options at
+// construction time.
+func (s *JobsPublicTestSuite) TestSetPKISigner() {
+	signer, _ := newSigner(gomock.NewController(s.T()))
+
+	opData := map[string]interface{}{
+		"type": "node.hostname.get",
+		"data": map[string]interface{}{},
+	}
+
+	tests := []struct {
+		name         string
+		buildOpts    func() *client.Options
+		wireFn       func(c *client.Client)
+		validateFunc func(storedJobData []byte)
+	}{
+		{
+			name: "when signer is set after construction signing turns on",
+			buildOpts: func() *client.Options {
+				return &client.Options{
+					Timeout:    30 * time.Second,
+					KVBucket:   s.mockKV,
+					StreamName: "JOBS",
+				}
+			},
+			wireFn: func(c *client.Client) {
+				c.SetPKISigner(signer)
+			},
+			validateFunc: func(storedJobData []byte) {
+				var envelope job.SignedEnvelope
+				s.NoError(json.Unmarshal(storedJobData, &envelope))
+				s.NotEmpty(envelope.Signature)
+				s.Equal("SHA256:test-fingerprint", envelope.Fingerprint)
+			},
+		},
+		{
+			name: "when signer is cleared after construction signing turns off",
+			buildOpts: func() *client.Options {
+				return &client.Options{
+					Timeout:    30 * time.Second,
+					KVBucket:   s.mockKV,
+					StreamName: "JOBS",
+					PKISigner:  signer,
+				}
+			},
+			wireFn: func(c *client.Client) {
+				c.SetPKISigner(nil)
+			},
+			validateFunc: func(storedJobData []byte) {
+				var jobData map[string]interface{}
+				s.NoError(json.Unmarshal(storedJobData, &jobData))
+				// A signed envelope would carry "signature" and
+				// "fingerprint" fields instead of the job fields below.
+				s.Contains(jobData, "operation")
+				s.NotContains(jobData, "signature")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			c, err := client.New(slog.Default(), s.mockNATSClient, tt.buildOpts())
+			s.Require().NoError(err)
+			tt.wireFn(c)
+
+			var storedJobData []byte
+			s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
+			s.mockKV.EXPECT().
+				Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				DoAndReturn(func(_ context.Context, key string, data []byte) (uint64, error) {
+					if strings.HasPrefix(key, "jobs.") {
+						storedJobData = data
+					}
+					return uint64(1), nil
+				}).
+				Times(2)
+			s.mockNATSClient.EXPECT().
+				Publish(gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(nil)
+
+			_, err = c.CreateJob(s.ctx, opData, "_any")
+			s.Require().NoError(err)
+
+			tt.validateFunc(storedJobData)
 		})
 	}
 }

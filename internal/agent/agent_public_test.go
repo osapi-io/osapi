@@ -268,6 +268,11 @@ func (s *AgentPublicTestSuite) TestStart() {
 				// No CreateOrUpdateConsumer/ConsumeJobs expectations:
 				// consumers must NOT be started in pending state.
 
+				// PKI enrollment loads a keypair even while pending, and
+				// wires it into the job client so responses are signed
+				// once the agent is accepted.
+				s.mockJobClient.EXPECT().SetPKISigner(gomock.Any())
+
 				return newTestAgent(newTestAgentParams{
 					appFs:           fs,
 					appConfig:       cfg,
