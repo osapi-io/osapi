@@ -1590,10 +1590,14 @@ func (s *HandlerPublicTestSuite) TestStartInProgressKeepAlive() {
 			}
 
 			stop := agent.ExportStartInProgressKeepAlive(ctx, s.testAgent, mockMsg)
-			if !tt.cancelCtx {
-				// Let the ticker fire at least once before stopping.
-				time.Sleep(30 * time.Millisecond)
-			}
+
+			// Always let the keepalive goroutine reach its select before
+			// stop() closes the stop channel. Without this, a canceled
+			// context and a closed stop channel are both ready and select
+			// picks at random, so the ctx.Done() path is only sometimes
+			// taken -- which made its coverage flap between runs.
+			time.Sleep(30 * time.Millisecond)
+
 			stop()
 
 			tt.validateFunc(&calls)
