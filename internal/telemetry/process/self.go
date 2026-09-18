@@ -33,15 +33,27 @@ import (
 var (
 	newProcessFn = gopsutil.NewProcess
 	cpuPercentFn = func(proc *gopsutil.Process) (float64, error) { return proc.CPUPercent() }
-	memoryInfoFn = func(proc *gopsutil.Process) (uint64, error) {
-		info, err := proc.MemoryInfo()
-		if err != nil {
-			return 0, err
-		}
-
-		return info.RSS, nil
-	}
+	// procMemoryInfoFn wraps the raw gopsutil call so the error branch in
+	// defaultMemoryInfoFn below can be exercised: gopsutil's MemoryInfo()
+	// never fails in practice on any platform this runs on, so the failure
+	// path needs its own seam to test.
+	procMemoryInfoFn = func(proc *gopsutil.Process) (*gopsutil.MemoryInfoStat, error) { return proc.MemoryInfo() }
+	memoryInfoFn     = defaultMemoryInfoFn
 )
+
+// defaultMemoryInfoFn is the default value of memoryInfoFn, named so
+// ResetMemoryInfoFn in export_test.go can restore this exact function
+// rather than a duplicate closure at a different source location.
+func defaultMemoryInfoFn(
+	proc *gopsutil.Process,
+) (uint64, error) {
+	info, err := procMemoryInfoFn(proc)
+	if err != nil {
+		return 0, err
+	}
+
+	return info.RSS, nil
+}
 
 type provider struct {
 	pid int32

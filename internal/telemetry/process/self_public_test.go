@@ -162,6 +162,33 @@ func (suite *ProcessPublicTestSuite) TestGetMetricsWithInjection() {
 				suite.Contains(err.Error(), "get memory info")
 			},
 		},
+		{
+			name: "returns error when the underlying MemoryInfo call fails",
+			pid:  0,
+			setup: func() {
+				process.SetNewProcessFn(func(_ int32) (*gopsutil.Process, error) {
+					return &gopsutil.Process{}, nil
+				})
+				process.SetCPUPercentFn(func(_ *gopsutil.Process) (float64, error) {
+					return 1.5, nil
+				})
+				process.SetProcMemoryInfoFn(
+					func(_ *gopsutil.Process) (*gopsutil.MemoryInfoStat, error) {
+						return nil, errors.New("memory info error")
+					},
+				)
+			},
+			teardown: func() {
+				process.ResetNewProcessFn()
+				process.ResetCPUPercentFn()
+				process.ResetProcMemoryInfoFn()
+			},
+			validateFunc: func(got *process.Metrics, err error) {
+				suite.Nil(got)
+				suite.Error(err)
+				suite.Contains(err.Error(), "get memory info")
+			},
+		},
 	}
 
 	for _, tc := range tests {
