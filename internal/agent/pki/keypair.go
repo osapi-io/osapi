@@ -102,11 +102,23 @@ func (m *Manager) PrivateKey() ed25519.PrivateKey {
 // Fingerprint returns the SHA256 fingerprint of the public key in the
 // format "SHA256:<hex>". Returns an empty string if no public key is set.
 func (m *Manager) Fingerprint() string {
-	if len(m.publicKey) == 0 {
+	return FingerprintOf(m.publicKey)
+}
+
+// FingerprintOf returns the SHA256 fingerprint of the given public key in
+// the format "SHA256:<hex>". Returns an empty string when the key is empty,
+// so a record without a key never reports a fingerprint.
+//
+// Callers that hold a bare public key rather than a Manager use this, which
+// keeps one digest format across the codebase.
+func FingerprintOf(
+	pubKey ed25519.PublicKey,
+) string {
+	if len(pubKey) == 0 {
 		return ""
 	}
 
-	hash := sha256.Sum256(m.publicKey)
+	hash := sha256.Sum256(pubKey)
 
 	return "SHA256:" + hex.EncodeToString(hash[:])
 }

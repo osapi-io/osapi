@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/nats-io/nats.go/jetstream"
 
@@ -47,6 +48,14 @@ func (w *Watcher) AcceptAgent(
 	var pending PendingAgent
 	if err := unmarshalFn(entry.Value(), &pending); err != nil {
 		return fmt.Errorf("unmarshal pending agent %s: %w", machineID, err)
+	}
+
+	// Store the agent's key before anything is published: the store is the
+	// authority for every later verification, and acceptance is the only
+	// event allowed to write it. Deleting the pending entry below discards
+	// the only other copy.
+	if err := w.recordAgentKey(ctx, pending); err != nil {
+		return err
 	}
 
 	resp := pki.EnrollmentResponse{
@@ -115,6 +124,12 @@ func (w *Watcher) RejectAgent(
 
 	if err := w.enrollmentKV.Delete(ctx, key); err != nil {
 		return fmt.Errorf("delete pending agent %s: %w", machineID, err)
+	}
+
+	// A rejected agent must not keep a stored key from an earlier
+	// acceptance, so nothing it signs verifies afterwards.
+	if err := w.RemoveAgentKey(ctx, machineID); err != nil {
+		return err
 	}
 
 	w.logger.Info(
@@ -204,6 +219,13 @@ func (w *Watcher) findPendingBy(
 	}
 
 	for key := range lister.Keys() {
+		// Accepted agents' keys share this bucket and would otherwise
+		// unmarshal into a PendingAgent, making an already-accepted agent
+		// look pending.
+		if !strings.HasPrefix(key, kvPrefix) {
+			continue
+		}
+
 		entry, err := w.enrollmentKV.Get(ctx, key)
 		if err != nil {
 			continue

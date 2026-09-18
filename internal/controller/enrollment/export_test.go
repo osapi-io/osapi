@@ -78,6 +78,20 @@ func KVPrefix() string {
 	return kvPrefix
 }
 
+// AcceptedKVPrefix returns the acceptedKVPrefix constant for testing.
+func AcceptedKVPrefix() string {
+	return acceptedKVPrefix
+}
+
+// ExportRecordAgentKey exposes recordAgentKey for testing.
+func ExportRecordAgentKey(
+	ctx context.Context,
+	w *Watcher,
+	pending PendingAgent,
+) error {
+	return w.recordAgentKey(ctx, pending)
+}
+
 // EnrollSubject exposes enrollSubject for testing.
 func EnrollSubject(
 	namespace string,
