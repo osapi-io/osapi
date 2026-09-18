@@ -1480,6 +1480,37 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 				s.Contains(err.Error(), "no cached controller public key")
 			},
 		},
+		{
+			name: "when job data is not a signed envelope rejects distinctly",
+			setupPKI: func() {
+				m := pki.New(memfs.New(), "/tmp/pki", "agent")
+				s.Require().NoError(m.LoadOrGenerate())
+				m.SetControllerPublicKey(controllerPub)
+				agent.SetAgentPKIManager(s.testAgent, m)
+			},
+			cleanupPKI: func() {
+				agent.SetAgentPKIManager(s.testAgent, nil)
+			},
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("unwrapped-job"))
+			},
+			setupMocks: func() {
+				// Plain, unsigned job data: PKI is enabled, so this is
+				// rejected for missing an envelope rather than parsed.
+				s.expectNotAnswered("unwrapped-job")
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.unwrapped-job").
+					Return([]byte(`{"id":"unwrapped-job","operation":{"type":"node.hostname.get"}}`), nil)
+
+				// No WriteStatusEvent/WriteJobResponse expectations: an
+				// unsigned envelope must be refused before touching the
+				// operation.
+			},
+			validateFunc: func(err error) {
+				s.Error(err)
+				s.Contains(err.Error(), "job data is not a signed envelope")
+			},
+		},
 	}
 
 	for _, tt := range tests {

@@ -65,12 +65,19 @@ func SetMemoryInfoFn(
 
 // ResetMemoryInfoFn restores the default memoryInfoFn.
 func ResetMemoryInfoFn() {
-	memoryInfoFn = func(proc *gopsutil.Process) (uint64, error) {
-		info, err := proc.MemoryInfo()
-		if err != nil {
-			return 0, err
-		}
+	memoryInfoFn = defaultMemoryInfoFn
+}
 
-		return info.RSS, nil
+// SetProcMemoryInfoFn overrides the procMemoryInfoFn injectable for testing.
+func SetProcMemoryInfoFn(
+	fn func(*gopsutil.Process) (*gopsutil.MemoryInfoStat, error),
+) {
+	procMemoryInfoFn = fn
+}
+
+// ResetProcMemoryInfoFn restores the default procMemoryInfoFn.
+func ResetProcMemoryInfoFn() {
+	procMemoryInfoFn = func(proc *gopsutil.Process) (*gopsutil.MemoryInfoStat, error) {
+		return proc.MemoryInfo()
 	}
 }

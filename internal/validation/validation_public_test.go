@@ -737,6 +737,111 @@ func (s *ValidationPublicTestSuite) TestSigningKey() {
 	})
 }
 
+func (s *ValidationPublicTestSuite) TestAccountName() {
+	tests := []struct {
+		name         string
+		field        string
+		validateFunc func(bool)
+	}{
+		{
+			name:  "when simple lowercase name",
+			field: "john",
+			validateFunc: func(got bool) {
+				s.True(got)
+			},
+		},
+		{
+			name:  "when name with digits hyphen and underscore",
+			field: "j0hn-doe_2",
+			validateFunc: func(got bool) {
+				s.True(got)
+			},
+		},
+		{
+			name:  "when machine account with trailing dollar sign",
+			field: "host$",
+			validateFunc: func(got bool) {
+				s.True(got)
+			},
+		},
+		{
+			name:  "when exactly the maximum length",
+			field: strings.Repeat("a", 32),
+			validateFunc: func(got bool) {
+				s.True(got)
+			},
+		},
+		{
+			name:  "when one character over the maximum length",
+			field: strings.Repeat("a", 33),
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+		{
+			name:  "when name contains an uppercase letter",
+			field: "John",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+		{
+			name:  "when name starts with a digit",
+			field: "1john",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+		{
+			name:  "when name starts with a hyphen",
+			field: "-john",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+		{
+			name:  "when name contains a slash",
+			field: "jo/hn",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+		{
+			name:  "when name contains a space",
+			field: "jo hn",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+		{
+			name:  "when empty string",
+			field: "",
+			validateFunc: func(got bool) {
+				s.False(got)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			_, ok := validation.Var(tt.field, "account_name")
+			tt.validateFunc(ok)
+		})
+	}
+
+	s.Run("invalid name shows hint through struct validation", func() {
+		type nameReq struct {
+			Name string `validate:"required,account_name"`
+		}
+
+		errMsg, ok := validation.Struct(nameReq{Name: "-bad"})
+		s.False(ok)
+		s.Contains(errMsg, "account_name")
+		s.Contains(errMsg, "not a valid account name")
+		s.Contains(errMsg, "max 32 characters")
+	})
+}
+
 func (s *ValidationPublicTestSuite) TestAtLeastOneField() {
 	type allPointers struct {
 		Shell  *string
