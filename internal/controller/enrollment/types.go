@@ -23,6 +23,7 @@
 package enrollment
 
 import (
+	"context"
 	"crypto/ed25519"
 	"time"
 
@@ -37,6 +38,40 @@ type PendingAgent struct {
 	PublicKey   []byte    `json:"public_key"`
 	Fingerprint string    `json:"fingerprint"`
 	RequestedAt time.Time `json:"requested_at"`
+}
+
+// AcceptedAgent is the stored record of an accepted agent's public key. It
+// outlives the pending record, which is deleted on acceptance, so every
+// later message from that agent can be verified against the key the agent
+// enrolled with.
+//
+// Only enrollment acceptance creates or replaces a record: nothing an agent
+// sends may introduce or change one.
+type AcceptedAgent struct {
+	MachineID   string            `json:"machine_id"`
+	Hostname    string            `json:"hostname"`
+	PublicKey   ed25519.PublicKey `json:"public_key"`
+	Fingerprint string            `json:"fingerprint"`
+	AcceptedAt  time.Time         `json:"accepted_at"`
+
+	// SupersededKey is the key replaced by the most recent rotation. It is
+	// absent unless a rotation is inside its grace period.
+	SupersededKey ed25519.PublicKey `json:"superseded_key,omitempty"`
+
+	// SupersededUntil is the instant the superseded key stops being
+	// accepted. Storing the instant rather than a duration means a restart
+	// cannot silently extend the window.
+	SupersededUntil time.Time `json:"superseded_until,omitempty"`
+}
+
+// AgentKeyStore is the narrow lookup the verification callers depend on, so
+// the job client and target resolution need not import this package
+// wholesale. Satisfied by *Watcher.
+type AgentKeyStore interface {
+	LookupAgentKey(
+		ctx context.Context,
+		machineID string,
+	) (*AcceptedAgent, error)
 }
 
 // NATSSubscriber defines the NATS operations needed by the enrollment

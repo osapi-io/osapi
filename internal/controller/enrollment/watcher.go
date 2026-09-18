@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/nats-io/nats.go"
@@ -45,6 +47,11 @@ var nowFn = time.Now
 // kvPrefix is the key prefix for pending enrollment entries.
 const kvPrefix = "enrollment."
 
+// acceptedKVPrefix is the key prefix for accepted agents' stored keys. Both
+// prefixes share the enrollment bucket, so every scan of pending entries
+// must filter on kvPrefix rather than reading whatever keys it finds.
+const acceptedKVPrefix = "accepted."
+
 // Watcher monitors NATS for agent enrollment requests and manages
 // pending agents in a JetStream KV bucket.
 type Watcher struct {
@@ -54,6 +61,12 @@ type Watcher struct {
 	pkiProvider  PKIProvider
 	autoAccept   bool
 	namespace    string
+
+	// keyCache holds accepted agents' records by machine ID. Verification
+	// touches it for every response and heartbeat, so the lookup does not
+	// hit the KV in steady state. Invalidated by acceptance and removal.
+	keyCacheMu sync.RWMutex
+	keyCache   map[string]*AcceptedAgent
 }
 
 // NewWatcher creates a new enrollment Watcher.
@@ -72,6 +85,7 @@ func NewWatcher(
 		pkiProvider:  pkiProvider,
 		autoAccept:   autoAccept,
 		namespace:    namespace,
+		keyCache:     make(map[string]*AcceptedAgent),
 	}
 }
 
@@ -191,6 +205,12 @@ func (w *Watcher) ListPending(
 	var pending []PendingAgent
 
 	for key := range lister.Keys() {
+		// The bucket also holds accepted agents' keys, which are not
+		// pending entries and would otherwise unmarshal into one.
+		if !strings.HasPrefix(key, kvPrefix) {
+			continue
+		}
+
 		entry, err := w.enrollmentKV.Get(ctx, key)
 		if err != nil {
 			w.logger.Warn(
