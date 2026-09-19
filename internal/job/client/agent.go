@@ -134,7 +134,11 @@ func (c *Client) WriteJobResponse(
 	// Sign the response when PKI is enabled.
 	kvPayload := responseJSON
 	if c.pkiSigner != nil {
-		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, responseJSON)
+		signed, signErr := wrapInSignedEnvelope(
+			c.pkiSigner,
+			c.machineID,
+			responseJSON,
+		)
 		if signErr != nil {
 			return fmt.Errorf("failed to sign response: %w", signErr)
 		}

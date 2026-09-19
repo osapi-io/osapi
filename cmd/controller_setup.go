@@ -869,6 +869,11 @@ func setupEnrollmentWatcher(
 		namespace,
 	)
 
+	// Verify agent responses against the key recorded when each agent was
+	// accepted. The watcher owns those records, so verification reads what
+	// acceptance wrote and shares its cache.
+	b.jobClient.SetAgentKeyStore(watcher.KeyStore())
+
 	go func() {
 		if err := watcher.Start(ctx); err != nil {
 			enrollLog.Warn(

@@ -54,6 +54,15 @@ type Client struct {
 	// targetResolver resolves a target (hostname or machine ID) to the
 	// value used for NATS subject routing. When nil, the target is used as-is.
 	targetResolver func(string) string
+	// agentKeyStore verifies agent responses against the key recorded when
+	// the agent was accepted. Nil when the controller is not enforcing, in
+	// which case responses are handled exactly as they were before
+	// verification existed.
+	agentKeyStore AgentKeyStore
+	// machineID identifies this client's host on payloads it signs, so the
+	// verifier knows which stored key to check them against. Empty on the
+	// controller.
+	machineID string
 }
 
 // Options configures the jobs client.
@@ -113,6 +122,22 @@ func (c *Client) SetPKISigner(
 	signer PKISigner,
 ) {
 	c.pkiSigner = signer
+}
+
+// SetAgentKeyStore wires the store used to verify agent responses. See the
+// JobClient interface for why this is separate from construction. Passing nil
+// leaves responses unverified.
+func (c *Client) SetAgentKeyStore(
+	store AgentKeyStore,
+) {
+	c.agentKeyStore = store
+}
+
+// SetMachineID records the identity stamped on payloads this client signs.
+func (c *Client) SetMachineID(
+	machineID string,
+) {
+	c.machineID = machineID
 }
 
 // resolveTarget resolves a target (hostname or machine ID) to the routing
@@ -292,7 +317,7 @@ func (c *Client) publishAndWait(
 	// Sign the job data when PKI is enabled.
 	kvPayload := jobJSON
 	if c.pkiSigner != nil {
-		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, jobJSON)
+		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, c.machineID, jobJSON)
 		if signErr != nil {
 			return "", nil, fmt.Errorf("failed to sign job data: %w", signErr)
 		}
@@ -355,7 +380,25 @@ func (c *Client) publishAndWait(
 			// job failure rather than fallen through as unverified data
 			// that happens to fail to unmarshal into a useful response.
 			responseData := entry.Value()
-			if c.pkiSigner != nil {
+
+			switch {
+			case c.agentKeyStore != nil:
+				// Enforcing: the response is verified against the key
+				// stored for the agent that claims to have sent it, and
+				// the job fails rather than returning unverified data.
+				verified, verifyErr := verifyAgentResponse(
+					ctx,
+					c.agentKeyStore,
+					responseData,
+				)
+				if verifyErr != nil {
+					return "", nil, fmt.Errorf(
+						"response verification failed for job %s: %w",
+						jobID, verifyErr,
+					)
+				}
+				responseData = verified
+			case c.pkiSigner != nil:
 				unwrapped, _, unwrapErr := unwrapSignedEnvelope(
 					responseData,
 					c.pkiSigner.ControllerPublicKey(),
@@ -424,7 +467,7 @@ func (c *Client) publishAndCollect(
 	// Sign the job data when PKI is enabled.
 	kvPayload := jobJSON
 	if c.pkiSigner != nil {
-		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, jobJSON)
+		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, c.machineID, jobJSON)
 		if signErr != nil {
 			return "", nil, fmt.Errorf("failed to sign job data: %w", signErr)
 		}
@@ -528,7 +571,29 @@ func (c *Client) publishAndCollect(
 			// shows as missing rather than answered, and surfaces as a
 			// timeout for that hostname if it never sends a good response.
 			responseData := entry.Value()
-			if c.pkiSigner != nil {
+
+			switch {
+			case c.agentKeyStore != nil:
+				// Enforcing: a response that does not verify is not this
+				// agent's reply. It is dropped, so the agent shows as not
+				// having answered rather than as answered by whoever sent
+				// it.
+				verified, verifyErr := verifyAgentResponse(
+					ctx,
+					c.agentKeyStore,
+					responseData,
+				)
+				if verifyErr != nil {
+					c.logger.WarnContext(
+						ctx, "broadcast response verification failed",
+						slog.String("job_id", jobID),
+						slog.String("error", verifyErr.Error()),
+					)
+
+					continue
+				}
+				responseData = verified
+			case c.pkiSigner != nil:
 				unwrapped, _, unwrapErr := unwrapSignedEnvelope(
 					responseData,
 					c.pkiSigner.ControllerPublicKey(),
@@ -539,6 +604,7 @@ func (c *Client) publishAndCollect(
 						slog.String("job_id", jobID),
 						slog.String("error", unwrapErr.Error()),
 					)
+
 					continue
 				}
 				responseData = unwrapped
