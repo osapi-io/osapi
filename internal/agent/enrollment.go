@@ -61,6 +61,10 @@ func (a *Agent) handlePKIEnrollment(
 	// only in tests that exercise enrollment in isolation.
 	if a.jobClient != nil {
 		a.jobClient.SetPKISigner(m)
+		// Stamp this agent's identity on what it signs, so the controller
+		// knows which stored key to verify its responses against. Start
+		// resolves the machine ID before this runs.
+		a.jobClient.SetMachineID(a.machineID)
 	}
 
 	a.pkiLogger.Info(

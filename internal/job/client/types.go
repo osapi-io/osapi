@@ -23,6 +23,7 @@ package client
 import (
 	"context"
 	"crypto/ed25519"
+	"errors"
 
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
@@ -40,6 +41,62 @@ type PKISigner interface {
 	// controller-signed messages. Returns nil if not set.
 	ControllerPublicKey() ed25519.PublicKey
 }
+
+// AgentKey is what the controller holds for an accepted agent: the key its
+// messages are verified against, and the hostname it enrolled under.
+type AgentKey struct {
+	// MachineID is the permanent host identifier the record is keyed by.
+	MachineID string
+	// Hostname is the hostname recorded at acceptance. A response claiming
+	// a different hostname is not this agent's to answer for.
+	Hostname string
+	// PublicKey is the key recorded at acceptance.
+	PublicKey ed25519.PublicKey
+}
+
+// AgentKeyStore looks up an accepted agent's key by machine ID. Nil when the
+// controller is not enforcing response verification, which leaves behaviour
+// exactly as it was before verification existed.
+//
+// Implemented on the controller by the enrollment watcher, which is the only
+// thing allowed to write the underlying records.
+type AgentKeyStore interface {
+	LookupAgentKey(
+		ctx context.Context,
+		machineID string,
+	) (*AgentKey, error)
+}
+
+// The causes of a rejected response stay distinct so an operator can tell an
+// agent that has not re-enrolled yet from one whose messages are being
+// forged, and both from a store that cannot be read. None of them ever means
+// "treat as verified".
+var (
+	// ErrResponseNotSigned means the response carried no signed envelope.
+	// Expected from an agent that has not been upgraded; never accepted
+	// while enforcing.
+	ErrResponseNotSigned = errors.New("response is not a signed envelope")
+
+	// ErrResponseKeyUnknown means no key is stored for the machine ID the
+	// response claims. Expected during a rollout, before that agent
+	// re-enrolls.
+	ErrResponseKeyUnknown = errors.New("no stored key for responding agent")
+
+	// ErrResponseStoreUnavailable means the store could not be read. It is
+	// never mistaken for "no stored key".
+	ErrResponseStoreUnavailable = errors.New("agent key store unavailable")
+
+	// ErrResponseSignatureInvalid means a key that is not the stored key
+	// for that agent signed the response.
+	ErrResponseSignatureInvalid = errors.New("invalid agent signature on response")
+
+	// ErrResponseHostnameMismatch means the signature verified, but the
+	// response claims a hostname the signing agent did not enroll under —
+	// an accepted agent answering for a host that is not its own.
+	ErrResponseHostnameMismatch = errors.New(
+		"response hostname does not match the enrolled hostname",
+	)
+)
 
 const (
 	// DefaultPageSize is the default number of jobs per page.
@@ -193,6 +250,22 @@ type JobClient interface {
 	// agent keypair. Passing nil disables signing and verification.
 	SetPKISigner(
 		signer PKISigner,
+	)
+
+	// SetAgentKeyStore wires the store used to verify agent responses. Like
+	// the signer, it is not available at construction: on the controller it
+	// arrives with the enrollment watcher. Passing nil leaves responses
+	// unverified, which is the behaviour before this feature.
+	SetAgentKeyStore(
+		store AgentKeyStore,
+	)
+
+	// SetMachineID records the identity stamped on payloads this client
+	// signs, so the verifier knows which stored key to check them against.
+	// Set on the agent once its identity is resolved; empty on the
+	// controller, whose payloads agents verify against the controller key.
+	SetMachineID(
+		machineID string,
 	)
 }
 

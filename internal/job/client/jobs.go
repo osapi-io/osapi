@@ -95,7 +95,11 @@ func (c *Client) CreateJob(
 	// Sign the job data when PKI is enabled.
 	kvPayload := jobWithStatusJSON
 	if c.pkiSigner != nil {
-		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, jobWithStatusJSON)
+		signed, signErr := wrapInSignedEnvelope(
+			c.pkiSigner,
+			c.machineID,
+			jobWithStatusJSON,
+		)
 		if signErr != nil {
 			return nil, fmt.Errorf("failed to sign job data: %w", signErr)
 		}
@@ -925,9 +929,22 @@ func (c *Client) getJobResponses(
 			continue
 		}
 
-		// Unwrap signed envelope if PKI is enabled.
+		// Verify against the responding agent's stored key when enforcing,
+		// otherwise unwrap as before.
 		responseData := entry.Value()
-		if c.pkiSigner != nil {
+
+		switch {
+		case c.agentKeyStore != nil:
+			verified, verifyErr := verifyAgentResponse(
+				ctx,
+				c.agentKeyStore,
+				responseData,
+			)
+			if verifyErr != nil {
+				continue
+			}
+			responseData = verified
+		case c.pkiSigner != nil:
 			unwrapped, _, unwrapErr := unwrapSignedEnvelope(
 				responseData,
 				c.pkiSigner.ControllerPublicKey(),
