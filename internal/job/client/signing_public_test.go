@@ -149,7 +149,7 @@ func (s *SigningPublicTestSuite) TestWrapInSignedEnvelope() {
 
 			signer, pubKey := newSigner(gomock.NewController(s.T()))
 
-			result, err := client.ExportWrapInSignedEnvelope(signer, tt.payload)
+			result, err := client.ExportWrapInSignedEnvelope(signer, "", tt.payload)
 
 			tt.validateFunc(result, err, pubKey)
 		})
@@ -172,7 +172,7 @@ func (s *SigningPublicTestSuite) TestUnwrapSignedEnvelope() {
 			name: "when valid signed envelope with correct key",
 			setupData: func() []byte {
 				payload := []byte(`{"id":"test"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, payload)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "", payload)
 				return wrapped
 			},
 			pubKey:      pubKey,
@@ -186,7 +186,7 @@ func (s *SigningPublicTestSuite) TestUnwrapSignedEnvelope() {
 			name: "when valid signed envelope with nil key skips verification",
 			setupData: func() []byte {
 				payload := []byte(`{"id":"test"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, payload)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "", payload)
 				return wrapped
 			},
 			pubKey:      nil,
@@ -200,7 +200,7 @@ func (s *SigningPublicTestSuite) TestUnwrapSignedEnvelope() {
 			name: "when valid signed envelope with wrong key fails verification",
 			setupData: func() []byte {
 				payload := []byte(`{"id":"test"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, payload)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "", payload)
 				return wrapped
 			},
 			pubKey: func() ed25519.PublicKey {
@@ -278,7 +278,7 @@ func (s *SigningPublicTestSuite) TestRoundTrip() {
 	originalPayload := []byte(`{"id":"round-trip-test","status":"unprocessed"}`)
 
 	// Wrap
-	wrapped, err := client.ExportWrapInSignedEnvelope(signer, originalPayload)
+	wrapped, err := client.ExportWrapInSignedEnvelope(signer, "", originalPayload)
 	s.NoError(err)
 
 	// Unwrap with correct key

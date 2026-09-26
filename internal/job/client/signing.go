@@ -21,6 +21,7 @@
 package client
 
 import (
+	"context"
 	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
@@ -33,9 +34,12 @@ import (
 var signingMarshalFn = json.Marshal
 
 // wrapInSignedEnvelope signs the payload and wraps it in a SignedEnvelope.
+// machineID identifies the signer so the verifier can find the key to check
+// the signature against; it is empty for controller-signed payloads.
 // Returns the JSON-encoded envelope.
 func wrapInSignedEnvelope(
 	signer PKISigner,
+	machineID string,
 	payload []byte,
 ) ([]byte, error) {
 	signature := signer.Sign(payload)
@@ -43,6 +47,7 @@ func wrapInSignedEnvelope(
 		Payload:     payload,
 		Signature:   signature,
 		Fingerprint: signer.Fingerprint(),
+		MachineID:   machineID,
 	}
 
 	envelopeJSON, err := signingMarshalFn(envelope)
@@ -84,4 +89,66 @@ func unwrapSignedEnvelope(
 	}
 
 	return envelope.Payload, true, nil
+}
+
+// verifyAgentResponse checks a response against the key stored for the agent
+// that claims to have sent it, and returns the inner payload.
+//
+// The envelope's machine ID is self-reported, so it is used only to choose
+// which stored record to verify against: a response naming another agent is
+// checked against that agent's key and fails unless it was actually signed by
+// it. The hostname in the payload must also match the one recorded at
+// acceptance, so an accepted agent cannot answer for a host it did not enrol
+// as.
+//
+// Every rejection carries a distinct cause. There is no path that returns the
+// payload unverified.
+func verifyAgentResponse(
+	ctx context.Context,
+	store AgentKeyStore,
+	data []byte,
+) ([]byte, error) {
+	var envelope job.SignedEnvelope
+	if err := json.Unmarshal(data, &envelope); err != nil {
+		return nil, ErrResponseNotSigned
+	}
+
+	if len(envelope.Payload) == 0 || len(envelope.Signature) == 0 ||
+		envelope.MachineID == "" {
+		return nil, ErrResponseNotSigned
+	}
+
+	record, err := store.LookupAgentKey(ctx, envelope.MachineID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !ed25519.Verify(record.PublicKey, envelope.Payload, envelope.Signature) {
+		return nil, fmt.Errorf(
+			"%w: machine %s",
+			ErrResponseSignatureInvalid,
+			envelope.MachineID,
+		)
+	}
+
+	var response job.Response
+	if err := json.Unmarshal(envelope.Payload, &response); err != nil {
+		return nil, fmt.Errorf(
+			"%w: machine %s payload is not a response",
+			ErrResponseNotSigned,
+			envelope.MachineID,
+		)
+	}
+
+	if response.Hostname != record.Hostname {
+		return nil, fmt.Errorf(
+			"%w: machine %s enrolled as %q but answered as %q",
+			ErrResponseHostnameMismatch,
+			envelope.MachineID,
+			record.Hostname,
+			response.Hostname,
+		)
+	}
+
+	return envelope.Payload, nil
 }

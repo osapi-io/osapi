@@ -272,6 +272,10 @@ func (s *AgentPublicTestSuite) TestStart() {
 				// wires it into the job client so responses are signed
 				// once the agent is accepted.
 				s.mockJobClient.EXPECT().SetPKISigner(gomock.Any())
+				// Enrollment also stamps the agent's identity on what it
+				// signs, so the controller knows which stored key verifies
+				// its responses.
+				s.mockJobClient.EXPECT().SetMachineID(gomock.Any())
 
 				return newTestAgent(newTestAgentParams{
 					appFs:           fs,

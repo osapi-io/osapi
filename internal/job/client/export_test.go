@@ -20,7 +20,10 @@
 
 package client
 
-import "encoding/json"
+import (
+	"context"
+	"encoding/json"
+)
 
 // ExportSanitizeKeyForNATS exposes the private sanitizeKeyForNATS for testing.
 func ExportSanitizeKeyForNATS(
@@ -32,9 +35,20 @@ func ExportSanitizeKeyForNATS(
 // ExportWrapInSignedEnvelope exposes the private wrapInSignedEnvelope for testing.
 func ExportWrapInSignedEnvelope(
 	signer PKISigner,
+	machineID string,
 	payload []byte,
 ) ([]byte, error) {
-	return wrapInSignedEnvelope(signer, payload)
+	return wrapInSignedEnvelope(signer, machineID, payload)
+}
+
+// ExportVerifyAgentResponse exposes the private verifyAgentResponse for
+// testing.
+func ExportVerifyAgentResponse(
+	ctx context.Context,
+	store AgentKeyStore,
+	data []byte,
+) ([]byte, error) {
+	return verifyAgentResponse(ctx, store, data)
 }
 
 // ExportUnwrapSignedEnvelope exposes the private unwrapSignedEnvelope for testing.

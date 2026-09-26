@@ -81,6 +81,13 @@ type SignedEnvelope struct {
 	Signature []byte `json:"signature"`
 	// Fingerprint is the SHA256 fingerprint of the signer's public key.
 	Fingerprint string `json:"fingerprint"`
+	// MachineID identifies the signer so a verifier can find the key to
+	// check the signature against. It is self-reported and therefore only
+	// an index: it selects which stored record to verify against, and a
+	// signature that does not match that record's key is rejected. Empty
+	// for controller-signed payloads, which agents verify against the
+	// controller key they were given at enrollment.
+	MachineID string `json:"machine_id,omitempty"`
 }
 
 // Request represents a request to perform a job operation.

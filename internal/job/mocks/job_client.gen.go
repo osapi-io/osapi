@@ -313,6 +313,18 @@ func (mr *MockJobClientMockRecorder) RetryJob(ctx, jobID, targetHostname any) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RetryJob", reflect.TypeOf((*MockJobClient)(nil).RetryJob), ctx, jobID, targetHostname)
 }
 
+// SetAgentKeyStore mocks base method.
+func (m *MockJobClient) SetAgentKeyStore(store client0.AgentKeyStore) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetAgentKeyStore", store)
+}
+
+// SetAgentKeyStore indicates an expected call of SetAgentKeyStore.
+func (mr *MockJobClientMockRecorder) SetAgentKeyStore(store any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAgentKeyStore", reflect.TypeOf((*MockJobClient)(nil).SetAgentKeyStore), store)
+}
+
 // SetDrainFlag mocks base method.
 func (m *MockJobClient) SetDrainFlag(ctx context.Context, hostname string) error {
 	m.ctrl.T.Helper()
@@ -325,6 +337,18 @@ func (m *MockJobClient) SetDrainFlag(ctx context.Context, hostname string) error
 func (mr *MockJobClientMockRecorder) SetDrainFlag(ctx, hostname any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDrainFlag", reflect.TypeOf((*MockJobClient)(nil).SetDrainFlag), ctx, hostname)
+}
+
+// SetMachineID mocks base method.
+func (m *MockJobClient) SetMachineID(machineID string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMachineID", machineID)
+}
+
+// SetMachineID indicates an expected call of SetMachineID.
+func (mr *MockJobClientMockRecorder) SetMachineID(machineID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMachineID", reflect.TypeOf((*MockJobClient)(nil).SetMachineID), machineID)
 }
 
 // SetPKISigner mocks base method.

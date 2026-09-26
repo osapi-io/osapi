@@ -2469,7 +2469,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatusWithPKISigner() {
 				inner := []byte(
 					`{"status":"completed","hostname":"server1","data":{"hostname":"web-01"}}`,
 				)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, inner)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "", inner)
 
 				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				respEntry.EXPECT().Value().Return(wrapped)
@@ -2513,7 +2513,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatusWithPKISigner() {
 
 				// Build a valid signed envelope then corrupt the signature.
 				inner := []byte(`{"status":"completed","hostname":"server1"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, inner)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "", inner)
 				var envelope job.SignedEnvelope
 				_ = json.Unmarshal(wrapped, &envelope)
 				envelope.Signature[0] ^= 0xFF
@@ -2558,4 +2558,216 @@ func TestJobsPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(JobsPublicTestSuite))
+}
+
+// TestSetAgentKeyStoreAndMachineID verifies the two wiring calls cmd/ makes
+// once identity is known: the controller hands the client the store that
+// verifies agent responses, and the agent stamps its machine ID on what it
+// signs so the controller knows which stored key to check it against.
+func (s *JobsPublicTestSuite) TestSetAgentKeyStoreAndMachineID() {
+	signer, _ := newSigner(gomock.NewController(s.T()))
+
+	opData := map[string]interface{}{
+		"type": "node.hostname.get",
+		"data": map[string]interface{}{},
+	}
+
+	tests := []struct {
+		name         string
+		wireFn       func(c *client.Client)
+		validateFunc func(storedJobData []byte)
+	}{
+		{
+			name: "when a machine ID is set it is stamped on signed payloads",
+			wireFn: func(c *client.Client) {
+				c.SetPKISigner(signer)
+				c.SetMachineID("machine-001")
+			},
+			validateFunc: func(storedJobData []byte) {
+				var envelope job.SignedEnvelope
+				s.Require().NoError(json.Unmarshal(storedJobData, &envelope))
+				s.Equal("machine-001", envelope.MachineID)
+			},
+		},
+		{
+			name: "when no machine ID is set the envelope carries none",
+			wireFn: func(c *client.Client) {
+				c.SetPKISigner(signer)
+			},
+			validateFunc: func(storedJobData []byte) {
+				var envelope job.SignedEnvelope
+				s.Require().NoError(json.Unmarshal(storedJobData, &envelope))
+				s.Empty(envelope.MachineID)
+			},
+		},
+		{
+			name: "when the key store is cleared responses are not verified",
+			wireFn: func(c *client.Client) {
+				c.SetPKISigner(signer)
+				c.SetAgentKeyStore(jobmocks.NewMockAgentKeyStore(s.mockCtrl))
+				c.SetAgentKeyStore(nil)
+			},
+			validateFunc: func(storedJobData []byte) {
+				// Nothing to verify against: the job still signs as before,
+				// which is the pre-enforcement behaviour.
+				var envelope job.SignedEnvelope
+				s.Require().NoError(json.Unmarshal(storedJobData, &envelope))
+				s.NotEmpty(envelope.Signature)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			opts := &client.Options{
+				Timeout:    30 * time.Second,
+				KVBucket:   s.mockKV,
+				StreamName: "JOBS",
+			}
+			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+			tt.wireFn(c)
+
+			var storedJobData []byte
+			s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
+			s.mockKV.EXPECT().
+				Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				DoAndReturn(func(_ context.Context, key string, data []byte) (uint64, error) {
+					if strings.HasPrefix(key, "jobs.") {
+						storedJobData = data
+					}
+
+					return uint64(1), nil
+				}).
+				Times(2)
+			s.mockNATSClient.EXPECT().
+				Publish(gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(nil)
+
+			_, err = c.CreateJob(s.ctx, opData, "_any")
+			s.Require().NoError(err)
+
+			tt.validateFunc(storedJobData)
+		})
+	}
+}
+
+// TestGetJobStatusWithAgentKeyStoreEnforcing covers the stored-response path:
+// a recorded response is only reported once it verifies against the key held
+// for the agent that claims to have written it.
+func (s *JobsPublicTestSuite) TestGetJobStatusWithAgentKeyStoreEnforcing() {
+	jobID := "enforce-job-123"
+
+	setupJobAndKeys := func(responseKey string) {
+		jobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+		jobEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
+			`{"id":"%s","status":"unprocessed","created":"2026-01-01T00:00:00Z","subject":"jobs.query.host.server1","operation":{"type":"node.hostname.get"}}`,
+			jobID,
+		)))
+		s.mockKV.EXPECT().
+			Get(gomock.Any(), "jobs."+jobID).
+			Return(jobEntry, nil)
+
+		statusLister := newMockKeyLister(s.mockCtrl, []string{})
+		s.mockKV.EXPECT().
+			ListKeysFiltered(gomock.Any(), "status."+jobID+".>").
+			Return(statusLister, nil)
+
+		responseLister := newMockKeyLister(s.mockCtrl, []string{responseKey})
+		s.mockKV.EXPECT().
+			ListKeysFiltered(gomock.Any(), "responses."+jobID+".>").
+			Return(responseLister, nil)
+	}
+
+	tests := []struct {
+		name         string
+		setupMocks   func(store *jobmocks.MockAgentKeyStore)
+		validateFunc func(qj *job.QueuedJob)
+	}{
+		{
+			name: "a response verified against the stored key is reported",
+			setupMocks: func(store *jobmocks.MockAgentKeyStore) {
+				responseKey := "responses." + jobID + ".server1.12345"
+				setupJobAndKeys(responseKey)
+
+				signer, pub := newSigner(s.mockCtrl)
+				store.EXPECT().
+					LookupAgentKey(gomock.Any(), "machine-001").
+					Return(&client.AgentKey{
+						MachineID: "machine-001",
+						Hostname:  "server1",
+						PublicKey: pub,
+					}, nil)
+
+				inner := []byte(
+					`{"status":"completed","hostname":"server1","data":{"hostname":"web-01"}}`,
+				)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(
+					signer, "machine-001", inner,
+				)
+
+				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				respEntry.EXPECT().Value().Return(wrapped)
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), responseKey).
+					Return(respEntry, nil)
+			},
+			validateFunc: func(qj *job.QueuedJob) {
+				s.Require().NotNil(qj)
+				s.Len(qj.Responses, 1)
+				resp, ok := qj.Responses["server1"]
+				s.True(ok)
+				s.Equal("completed", string(resp.Status))
+			},
+		},
+		{
+			name: "a response from an agent with no stored key is skipped",
+			setupMocks: func(store *jobmocks.MockAgentKeyStore) {
+				responseKey := "responses." + jobID + ".server1.12345"
+				setupJobAndKeys(responseKey)
+
+				signer, _ := newSigner(s.mockCtrl)
+				store.EXPECT().
+					LookupAgentKey(gomock.Any(), "machine-001").
+					Return(nil, client.ErrResponseKeyUnknown)
+
+				inner := []byte(`{"status":"completed","hostname":"server1"}`)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(
+					signer, "machine-001", inner,
+				)
+
+				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				respEntry.EXPECT().Value().Return(wrapped)
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), responseKey).
+					Return(respEntry, nil)
+			},
+			validateFunc: func(qj *job.QueuedJob) {
+				// Not reported as a result: an unverified response is not
+				// this agent's answer.
+				s.Require().NotNil(qj)
+				s.Len(qj.Responses, 0)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			store := jobmocks.NewMockAgentKeyStore(s.mockCtrl)
+			tt.setupMocks(store)
+
+			opts := &client.Options{
+				Timeout:    30 * time.Second,
+				KVBucket:   s.mockKV,
+				StreamName: "JOBS",
+			}
+			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+			c.SetAgentKeyStore(store)
+
+			qj, err := c.GetJobStatus(s.ctx, jobID)
+			s.NoError(err)
+			tt.validateFunc(qj)
+		})
+	}
 }

@@ -22,6 +22,8 @@ package client_test
 
 import (
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -1336,7 +1338,7 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISignerUnwrapPaths() {
 			name: "when response is a valid signed envelope unwraps successfully",
 			responseData: func() []byte {
 				inner := []byte(`{"status":"completed","hostname":"server1"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, inner)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "", inner)
 				return wrapped
 			},
 			validateFunc: func(_ string, resp *job.Response) {
@@ -1349,7 +1351,7 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISignerUnwrapPaths() {
 			responseData: func() []byte {
 				// Build an envelope with a tampered signature so verification fails.
 				inner := []byte(`{"status":"completed","hostname":"server1"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, inner)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "", inner)
 				var envelope job.SignedEnvelope
 				_ = json.Unmarshal(wrapped, &envelope)
 				envelope.Signature[0] ^= 0xFF
@@ -1453,7 +1455,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithPKISigner() {
 
 				// Return a signed envelope response.
 				inner := []byte(`{"status":"completed","hostname":"server1"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signerWithCtrl, inner)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(signerWithCtrl, "", inner)
 
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return(wrapped)
@@ -1500,7 +1502,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithPKISigner() {
 
 				// Return a signed envelope with tampered signature.
 				inner := []byte(`{"status":"completed","hostname":"server1"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signerWithCtrl, inner)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(signerWithCtrl, "", inner)
 				var envelope job.SignedEnvelope
 				_ = json.Unmarshal(wrapped, &envelope)
 				envelope.Signature[0] ^= 0xFF
@@ -1868,4 +1870,256 @@ func setupPublishAndWaitMocksWithOpts(
 	mockKV.EXPECT().
 		Watch(gomock.Any(), gomock.Any()).
 		Return(mockWatcher, nil)
+}
+
+// TestQueryWithAgentKeyStoreEnforcing covers the single-target response path
+// once the controller holds agents' keys: a response is a result only when it
+// verifies against the key stored for the agent that claims to have sent it.
+func (s *ClientPublicTestSuite) TestQueryWithAgentKeyStoreEnforcing() {
+	const (
+		target    = "server1"
+		category  = "node"
+		operation = job.OperationType("node.hostname.get")
+		subject   = "jobs.query.host.server1"
+	)
+
+	tests := []struct {
+		name         string
+		responseData func(store *jobmocks.MockAgentKeyStore) []byte
+		wantErr      string
+		validateFunc func(resp *job.Response)
+	}{
+		{
+			name: "a response signed by the stored key is a result",
+			responseData: func(store *jobmocks.MockAgentKeyStore) []byte {
+				signer, pub := newSigner(s.mockCtrl)
+				store.EXPECT().
+					LookupAgentKey(gomock.Any(), "machine-001").
+					Return(&client.AgentKey{
+						MachineID: "machine-001",
+						Hostname:  "server1",
+						PublicKey: pub,
+					}, nil)
+
+				inner := []byte(`{"status":"completed","hostname":"server1"}`)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(
+					signer, "machine-001", inner,
+				)
+
+				return wrapped
+			},
+			validateFunc: func(resp *job.Response) {
+				s.Require().NotNil(resp)
+				s.Equal(job.StatusCompleted, resp.Status)
+			},
+		},
+		{
+			name: "a forged response fails the job rather than returning data",
+			responseData: func(store *jobmocks.MockAgentKeyStore) []byte {
+				signer, _ := newSigner(s.mockCtrl)
+
+				// The stored record holds a different key, so the signature
+				// does not verify.
+				otherPub, _, _ := ed25519.GenerateKey(rand.Reader)
+				store.EXPECT().
+					LookupAgentKey(gomock.Any(), "machine-001").
+					Return(&client.AgentKey{
+						MachineID: "machine-001",
+						Hostname:  "server1",
+						PublicKey: otherPub,
+					}, nil)
+
+				inner := []byte(`{"status":"completed","hostname":"server1"}`)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(
+					signer, "machine-001", inner,
+				)
+
+				return wrapped
+			},
+			wantErr: "response verification failed",
+		},
+		{
+			name: "an agent with no stored key is refused while enforcing",
+			responseData: func(store *jobmocks.MockAgentKeyStore) []byte {
+				signer, _ := newSigner(s.mockCtrl)
+				store.EXPECT().
+					LookupAgentKey(gomock.Any(), "machine-001").
+					Return(nil, client.ErrResponseKeyUnknown)
+
+				inner := []byte(`{"status":"completed","hostname":"server1"}`)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(
+					signer, "machine-001", inner,
+				)
+
+				return wrapped
+			},
+			wantErr: "no stored key for responding agent",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			store := jobmocks.NewMockAgentKeyStore(s.mockCtrl)
+			data := tt.responseData(store)
+
+			opts := &client.Options{
+				Timeout:    30 * time.Second,
+				KVBucket:   s.mockKV,
+				StreamName: "JOBS",
+			}
+			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+			c.SetAgentKeyStore(store)
+
+			s.mockKV.EXPECT().
+				Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(uint64(1), nil)
+			s.mockNATSClient.EXPECT().
+				Publish(gomock.Any(), subject, gomock.Any()).
+				Return(nil)
+
+			mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+			mockEntry.EXPECT().Value().Return(data)
+			ch := make(chan jetstream.KeyValueEntry, 1)
+			ch <- mockEntry
+
+			mockWatcher := jobmocks.NewMockKeyWatcher(s.mockCtrl)
+			mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
+			mockWatcher.EXPECT().Stop().Return(nil)
+
+			s.mockKV.EXPECT().
+				Watch(gomock.Any(), gomock.Any()).
+				Return(mockWatcher, nil)
+
+			_, resp, err := c.Query(s.ctx, target, category, operation, nil)
+			if tt.wantErr != "" {
+				s.Require().Error(err)
+				s.Contains(err.Error(), tt.wantErr)
+
+				return
+			}
+
+			s.Require().NoError(err)
+			tt.validateFunc(resp)
+		})
+	}
+}
+
+// TestModifyBroadcastWithAgentKeyStoreEnforcing covers the broadcast path: a
+// response that does not verify is not that agent's reply, so the agent shows
+// as not having answered rather than as answered by whoever sent it.
+func (s *ClientPublicTestSuite) TestModifyBroadcastWithAgentKeyStoreEnforcing() {
+	const (
+		target    = "_all"
+		category  = "node"
+		operation = job.OperationType("node.hostname.get")
+		subject   = "jobs.modify._all"
+	)
+
+	tests := []struct {
+		name         string
+		responseData func(store *jobmocks.MockAgentKeyStore) []byte
+		expectedErr  string
+		validateFunc func(responses map[string]*job.Response)
+	}{
+		{
+			name: "a verified broadcast response counts as the agent's reply",
+			responseData: func(store *jobmocks.MockAgentKeyStore) []byte {
+				signer, pub := newSigner(s.mockCtrl)
+				store.EXPECT().
+					LookupAgentKey(gomock.Any(), "machine-001").
+					Return(&client.AgentKey{
+						MachineID: "machine-001",
+						Hostname:  "server1",
+						PublicKey: pub,
+					}, nil)
+
+				inner := []byte(`{"status":"completed","hostname":"server1"}`)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(
+					signer, "machine-001", inner,
+				)
+
+				return wrapped
+			},
+			validateFunc: func(responses map[string]*job.Response) {
+				s.Len(responses, 1)
+				s.Equal(job.StatusCompleted, responses["server1"].Status)
+			},
+		},
+		{
+			name: "a response from an agent answering for another host is dropped",
+			responseData: func(store *jobmocks.MockAgentKeyStore) []byte {
+				signer, pub := newSigner(s.mockCtrl)
+
+				// Signature verifies, but this agent enrolled as evil-01.
+				store.EXPECT().
+					LookupAgentKey(gomock.Any(), "machine-evil").
+					Return(&client.AgentKey{
+						MachineID: "machine-evil",
+						Hostname:  "evil-01",
+						PublicKey: pub,
+					}, nil)
+
+				inner := []byte(`{"status":"completed","hostname":"server1"}`)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(
+					signer, "machine-evil", inner,
+				)
+
+				return wrapped
+			},
+			expectedErr: "no agents responded",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			store := jobmocks.NewMockAgentKeyStore(s.mockCtrl)
+			data := tt.responseData(store)
+
+			registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
+
+			opts := &client.Options{
+				Timeout:    1 * time.Second,
+				KVBucket:   s.mockKV,
+				StreamName: "JOBS",
+				RegistryKV: registryKV,
+			}
+			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+			c.SetAgentKeyStore(store)
+
+			s.mockKV.EXPECT().
+				Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(uint64(1), nil)
+			s.mockNATSClient.EXPECT().
+				Publish(gomock.Any(), subject, gomock.Any()).
+				Return(nil)
+
+			mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+			mockEntry.EXPECT().Value().Return(data)
+			ch := make(chan jetstream.KeyValueEntry, 1)
+			ch <- mockEntry
+
+			mockWatcher := jobmocks.NewMockKeyWatcher(s.mockCtrl)
+			mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
+			mockWatcher.EXPECT().Stop().Return(nil)
+
+			s.mockKV.EXPECT().
+				Watch(gomock.Any(), gomock.Any()).
+				Return(mockWatcher, nil)
+
+			_, responses, err := c.ModifyBroadcast(
+				s.ctx, target, category, operation, nil,
+			)
+			if tt.expectedErr != "" {
+				s.Require().Error(err)
+				s.Contains(err.Error(), tt.expectedErr)
+
+				return
+			}
+
+			s.Require().NoError(err)
+			tt.validateFunc(responses)
+		})
+	}
 }
