@@ -44,7 +44,6 @@ fetch:
 # Install all dependencies
 deps:
     just go-deps
-    just go-mod
     just docusaurus-deps
     just react-deps
 
