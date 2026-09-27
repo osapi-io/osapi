@@ -100,7 +100,7 @@ func (a *Agent) handlePKIEnrollment(
 	// Start background listener for acceptance response.
 	a.startEnrollmentListener(ctx)
 
-	a.state = job.AgentStatePending
+	a.setState(job.AgentStatePending)
 	a.pkiLogger.Info(
 		"agent not enrolled, entering pending state",
 		slog.String("fingerprint", m.Fingerprint()),
@@ -238,9 +238,12 @@ func (a *Agent) handleEnrollmentResponse(
 		return
 	}
 
-	// Transition to Ready and start consumers.
+	// Transition to Ready and start consumers, as one step for the reason given
+	// on lifecycleMu.
+	a.lifecycleMu.Lock()
 	a.state = job.AgentStateReady
-	a.startConsumers()
+	a.startConsumersLocked()
+	a.lifecycleMu.Unlock()
 
 	a.pkiLogger.Info(
 		"enrollment accepted, agent is now ready",

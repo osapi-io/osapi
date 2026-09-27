@@ -37,7 +37,7 @@ var getIdentityFn = identity.GetIdentity
 func (a *Agent) Start() {
 	a.ctx, a.cancel = context.WithCancel(context.Background())
 	a.startedAt = time.Now()
-	a.state = job.AgentStateReady
+	a.setState(job.AgentStateReady)
 
 	a.logger.Info("starting node agent")
 
@@ -110,7 +110,7 @@ func (a *Agent) Start() {
 
 	// Start consuming messages only when not pending enrollment.
 	// Pending agents are visible (heartbeat) but don't process jobs.
-	if a.state != job.AgentStatePending {
+	if a.State() != job.AgentStatePending {
 		a.startConsumers()
 	} else {
 		a.logger.Info("skipping job consumers — agent is pending PKI enrollment")

@@ -95,9 +95,19 @@ type Agent struct {
 	cpuCount int
 
 	// cachedFacts holds the latest collected facts for @fact.X resolution.
-	cachedFacts *job.FactsRegistration
+	// The refresh goroutine replaces it while job goroutines read it, so it is
+	// swapped as a whole rather than mutated in place.
+	cachedFacts atomic.Pointer[job.FactsRegistration]
+
+	// lifecycleMu guards state and the consumer context below. A transition is
+	// a state change and a consumer start or stop together, so the two must be
+	// taken as one: draining an agent at the moment its enrollment is accepted
+	// otherwise interleaves stopping and starting the consumers, and the agent ends
+	// up cordoned with live consumers or ready with none.
+	lifecycleMu sync.RWMutex
 
 	// state is the agent's scheduling state (Ready, Draining, Cordoned).
+	// Guarded by lifecycleMu.
 	state string
 
 	// pkiManager handles keypair and enrollment lifecycle (nil when PKI disabled).
@@ -118,7 +128,7 @@ type Agent struct {
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
 
-	// Consumer lifecycle for drain/undrain.
+	// Consumer lifecycle for drain/undrain. Guarded by lifecycleMu.
 	consumerCtx    context.Context
 	consumerCancel context.CancelFunc
 	consumerWg     sync.WaitGroup

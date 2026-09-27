@@ -232,17 +232,52 @@ func (a *Agent) consumeModifyJobs(
 	return nil
 }
 
+// State returns the agent's scheduling state. Read by the heartbeat on its own
+// goroutine while a drain or an enrollment acceptance writes it.
+func (a *Agent) State() string {
+	a.lifecycleMu.RLock()
+	defer a.lifecycleMu.RUnlock()
+
+	return a.state
+}
+
+// setState records a state that carries no consumer change with it. A
+// transition that does own one takes lifecycleMu itself and sets the field
+// under it, so the two cannot be observed apart.
+func (a *Agent) setState(
+	state string,
+) {
+	a.lifecycleMu.Lock()
+	defer a.lifecycleMu.Unlock()
+
+	a.state = state
+}
+
 // startConsumers creates a consumer context and starts all job consumers.
 func (a *Agent) startConsumers() {
+	a.lifecycleMu.Lock()
+	defer a.lifecycleMu.Unlock()
+
+	a.startConsumersLocked()
+}
+
+// startConsumersLocked is startConsumers for a caller that already holds
+// lifecycleMu, so a state change and the consumers it implies are one step.
+func (a *Agent) startConsumersLocked() {
 	a.consumerCtx, a.consumerCancel = context.WithCancel(a.ctx)
 	_ = a.consumeQueryJobs(a.consumerCtx, a.machineID)
 	_ = a.consumeModifyJobs(a.consumerCtx, a.machineID)
 }
 
-// stopConsumers cancels the consumer context and waits for all consumer
-// goroutines to finish. After this returns, the agent is no longer
-// receiving new jobs.
-func (a *Agent) stopConsumers() {
+// stopConsumersLocked cancels the consumer context and waits for all consumer
+// goroutines to finish. After this returns, the agent is no longer receiving new
+// jobs.
+//
+// The caller holds lifecycleMu, and this waits for the consumer goroutines while
+// holding it. That is deliberate: a transition that has cancelled the consumers
+// is not finished until they have stopped, and the next transition must not
+// start before then.
+func (a *Agent) stopConsumersLocked() {
 	if a.consumerCancel != nil {
 		a.consumerCancel()
 	}

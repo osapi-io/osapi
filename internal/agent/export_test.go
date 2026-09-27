@@ -637,7 +637,7 @@ func ExportGetFileProvider(
 func GetAgentCachedFacts(
 	a *Agent,
 ) *job.FactsRegistration {
-	return a.cachedFacts
+	return a.cachedFacts.Load()
 }
 
 // SetAgentCachedFacts sets the agent's cachedFacts field for testing.
@@ -645,14 +645,14 @@ func SetAgentCachedFacts(
 	a *Agent,
 	facts *job.FactsRegistration,
 ) {
-	a.cachedFacts = facts
+	a.cachedFacts.Store(facts)
 }
 
 // GetAgentState returns the agent's state field for testing.
 func GetAgentState(
 	a *Agent,
 ) string {
-	return a.state
+	return a.State()
 }
 
 // SetAgentState sets the agent's state field for testing.
@@ -660,7 +660,7 @@ func SetAgentState(
 	a *Agent,
 	state string,
 ) {
-	a.state = state
+	a.setState(state)
 }
 
 // SetAgentLifecycle sets the agent's ctx/cancel and consumerCtx/consumerCancel for testing.

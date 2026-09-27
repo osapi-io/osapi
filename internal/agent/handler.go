@@ -383,7 +383,7 @@ func (a *Agent) handleJobMessage(
 	if len(jobRequest.Data) > 0 {
 		var dataMap map[string]any
 		if err := json.Unmarshal(jobRequest.Data, &dataMap); err == nil {
-			resolved, err := ResolveFacts(dataMap, a.cachedFacts, a.hostname)
+			resolved, err := ResolveFacts(dataMap, a.cachedFacts.Load(), a.hostname)
 			if err != nil {
 				resolveFactsErr = fmt.Errorf("failed to resolve fact references: %w", err)
 			} else if resolved != nil {
