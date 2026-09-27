@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Agent Identity &amp; PKI | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/agent-identity"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Agent Identity &amp; PKI | OSAPI"><meta data-rh="true" name="description" content="OSAPI agents identify themselves using a persistent machine ID and support"><meta data-rh="true" property="og:description" content="OSAPI agents identify themselves using a persistent machine ID and support"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/agent-identity"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/agent-identity" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/agent-identity" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Agent Identity & PKI","item":"https://osapi-io.github.io/osapi/sidebar/features/agent-identity"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.47bdf077.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.d7e9b8b9.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.e2450577.js" defer="defer"></script>
 </head>
 <body>
@@ -106,6 +106,91 @@ treating it as a result. A response that fails verification is treated as a
 failed or missing result, never as a successful one.</p>
 <p>When PKI is disabled, none of the above applies -- there is no envelope to
 verify, so nothing is rejected on signature grounds.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="registration-signing">Registration Signing<a href="#registration-signing" class="hash-link" aria-label="Direct link to Registration Signing" title="Direct link to Registration Signing" translate="no">​</a></h2>
+<p>An agent&#x27;s job responses are not the only thing it sends. Every heartbeat it
+rewrites its own entry in the agent registry, and that entry is what targeting
+reads: the hostname a job names, the labels a label target selects, and the
+scheduling state that decides whether the agent is eligible for work at all.</p>
+<p>When <code>agent.pki.enabled</code> is true, the agent signs the routing fields of its
+registration with its own keypair. The signature covers:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Why it is signed</th></tr></thead><tbody><tr><td><code>machine_id</code></td><td>Selects which stored key the signature is checked against</td></tr><tr><td><code>hostname</code></td><td>A job names it, so a forged one redirects that host&#x27;s work</td></tr><tr><td><code>fingerprint</code></td><td>Reported as this agent&#x27;s key in the fleet view</td></tr><tr><td><code>state</code></td><td>A <code>Pending</code> agent is refused work; a forged <code>Ready</code> lifts that</td></tr><tr><td><code>labels</code></td><td>A label target routes on them, so a forged label attracts jobs</td></tr></tbody></table>
+<p>Everything else in a registration -- uptime, load, memory, conditions -- is
+reporting rather than routing, and is not signed. The signature is carried
+beside these fields, never inside the signed bytes.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-controller-checks">What the controller checks<a href="#what-the-controller-checks" class="hash-link" aria-label="Direct link to What the controller checks" title="Direct link to What the controller checks" translate="no">​</a></h3>
+<p>When the controller holds a key for the agent, it verifies each registration
+before letting it decide anything:</p>
+<ol>
+<li class="">The machine ID selects the stored record. A registration naming another agent
+is checked against <strong>that</strong> agent&#x27;s key, and fails unless it was signed by
+it.</li>
+<li class="">The signature must verify against the key recorded when the agent&#x27;s
+enrollment was accepted.</li>
+<li class="">The hostname must match the one recorded at acceptance. An accepted agent is
+not entitled to answer for a host it did not enrol as.</li>
+</ol>
+<p>A registration that fails any of these is not an error returned to the agent.
+The agent keeps heartbeating and stays listed; it simply stops being
+authoritative. It is invisible to target resolution, to label matching, and to
+machine-ID targeting, and work aimed at that hostname continues to reach the
+agent that enrolled under it.</p>
+<p>Where more than one agent claims a hostname, resolution is deterministic: the
+lowest machine ID wins, rather than whichever entry the registry happened to
+list first.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="seeing-where-a-fleet-stands">Seeing where a fleet stands<a href="#seeing-where-a-fleet-stands" class="hash-link" aria-label="Direct link to Seeing where a fleet stands" title="Direct link to Seeing where a fleet stands" translate="no">​</a></h3>
+<p><code>osapi client agent list</code> and <code>GET /agent</code> report two separate fields per agent:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>key_stored</code></td><td>The controller holds this agent&#x27;s key, recorded at acceptance</td></tr><tr><td><code>verified</code></td><td>What it last registered was signed by that key and claims its own host</td></tr></tbody></table>
+<p>They answer different questions. <code>key_stored: false</code> means the agent has not
+enrolled since the key store existed -- expected during a rollout, and fixed by
+re-enrolling it. <code>key_stored: true</code> with <code>verified: false</code> means the controller
+can check this agent and what arrived did not check out, which is worth
+investigating rather than waiting out.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="key-rotation">Key Rotation<a href="#key-rotation" class="hash-link" aria-label="Direct link to Key Rotation" title="Direct link to Key Rotation" translate="no">​</a></h2>
 <p>The controller can rotate its Ed25519 keypair. During a configurable grace
 period (default <code>24h</code>), agents accept signatures from both the old and new
@@ -134,6 +219,21 @@ enrollment holds no controller public key, so if PKI is enabled on it before
 enrollment finishes, every job it receives is rejected as &quot;not enrolled&quot;
 until enrollment completes.</li>
 </ol>
+<p>Neither switch flips as a consequence of upgrading. An agent accepted before the
+key store existed has no stored key, so it reports <code>key_stored: false</code> and is
+not authoritative once the controller is verifying. Nothing starts refusing work
+at a moment nobody chose, and the order to follow is:</p>
+<ol>
+<li class="">Enable <code>controller.pki.enabled</code>. The controller begins recording each agent&#x27;s
+key as its enrollment is accepted.</li>
+<li class="">Read <code>osapi client agent list</code>. Every agent still showing <code>key_stored: false</code>
+has not enrolled since the store existed.</li>
+<li class="">Re-enrol those agents, and watch the field flip as each is accepted.</li>
+<li class="">Once the fleet reports <code>key_stored: true</code> and <code>verified: true</code> throughout,
+enable <code>agent.pki.enabled</code>.</li>
+</ol>
+<p>Doing step 4 first is what produces a fleet that refuses work: the agents are
+verifying jobs before the controller can verify them back.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="configuration">Configuration<a href="#configuration" class="hash-link" aria-label="Direct link to Configuration" title="Direct link to Configuration" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="agent-pki">Agent PKI<a href="#agent-pki" class="hash-link" aria-label="Direct link to Agent PKI" title="Direct link to Agent PKI" translate="no">​</a></h3>
 <div class="language-yaml codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-yaml codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token key atrule">agent</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token key atrule">pki</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token comment" style="color:rgb(105, 112, 152);font-style:italic"># Enable PKI enrollment and job signature verification.</span><span class="token plain"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token key atrule">enabled</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token boolean important" style="color:rgb(255, 88, 116)">false</span><span class="token plain"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token comment" style="color:rgb(105, 112, 152);font-style:italic"># Directory for agent keypair storage.</span><span class="token plain"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token key atrule">key_dir</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> /etc/osapi/pki</span><br></div></code></pre></div></div>
@@ -207,6 +307,6 @@ not a replacement for JWT.</li>
 <li class=""><strong>NATS transport</strong> -- NATS connections still use their own auth (<code>none</code>,
 <code>user_pass</code>, or <code>nkey</code>). PKI operates at the job payload level, not the
 transport level.</li>
-</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/service-management"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Service Management</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/network-interface-management"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Network Interface Management</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#machine-identity" class="table-of-contents__link toc-highlight">Machine Identity</a><ul><li><a href="#cli-targeting" class="table-of-contents__link toc-highlight">CLI Targeting</a></li></ul></li><li><a href="#pki-enrollment" class="table-of-contents__link toc-highlight">PKI Enrollment</a><ul><li><a href="#enrollment-flow" class="table-of-contents__link toc-highlight">Enrollment Flow</a></li><li><a href="#auto-accept-mode" class="table-of-contents__link toc-highlight">Auto-Accept Mode</a></li><li><a href="#cli-commands" class="table-of-contents__link toc-highlight">CLI Commands</a></li></ul></li><li><a href="#job-signing" class="table-of-contents__link toc-highlight">Job Signing</a><ul><li><a href="#verification-and-failure-behavior" class="table-of-contents__link toc-highlight">Verification and failure behavior</a></li></ul></li><li><a href="#key-rotation" class="table-of-contents__link toc-highlight">Key Rotation</a></li><li><a href="#rollout" class="table-of-contents__link toc-highlight">Rollout</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a><ul><li><a href="#agent-pki" class="table-of-contents__link toc-highlight">Agent PKI</a></li><li><a href="#controller-pki" class="table-of-contents__link toc-highlight">Controller PKI</a></li></ul></li><li><a href="#what-is-not-changed" class="table-of-contents__link toc-highlight">What Is Not Changed</a></li></ul></div></div></div></div></main></div></div></div></div>
+</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/service-management"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Service Management</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/network-interface-management"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Network Interface Management</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#machine-identity" class="table-of-contents__link toc-highlight">Machine Identity</a><ul><li><a href="#cli-targeting" class="table-of-contents__link toc-highlight">CLI Targeting</a></li></ul></li><li><a href="#pki-enrollment" class="table-of-contents__link toc-highlight">PKI Enrollment</a><ul><li><a href="#enrollment-flow" class="table-of-contents__link toc-highlight">Enrollment Flow</a></li><li><a href="#auto-accept-mode" class="table-of-contents__link toc-highlight">Auto-Accept Mode</a></li><li><a href="#cli-commands" class="table-of-contents__link toc-highlight">CLI Commands</a></li></ul></li><li><a href="#job-signing" class="table-of-contents__link toc-highlight">Job Signing</a><ul><li><a href="#verification-and-failure-behavior" class="table-of-contents__link toc-highlight">Verification and failure behavior</a></li></ul></li><li><a href="#registration-signing" class="table-of-contents__link toc-highlight">Registration Signing</a><ul><li><a href="#what-the-controller-checks" class="table-of-contents__link toc-highlight">What the controller checks</a></li><li><a href="#seeing-where-a-fleet-stands" class="table-of-contents__link toc-highlight">Seeing where a fleet stands</a></li></ul></li><li><a href="#key-rotation" class="table-of-contents__link toc-highlight">Key Rotation</a></li><li><a href="#rollout" class="table-of-contents__link toc-highlight">Rollout</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a><ul><li><a href="#agent-pki" class="table-of-contents__link toc-highlight">Agent PKI</a></li><li><a href="#controller-pki" class="table-of-contents__link toc-highlight">Controller PKI</a></li></ul></li><li><a href="#what-is-not-changed" class="table-of-contents__link toc-highlight">What Is Not Changed</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
