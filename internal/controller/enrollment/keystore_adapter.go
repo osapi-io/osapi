@@ -61,8 +61,10 @@ func (s clientKeyStore) LookupAgentKey(
 	}
 
 	return &client.AgentKey{
-		MachineID: record.MachineID,
-		Hostname:  record.Hostname,
-		PublicKey: record.PublicKey,
+		MachineID:       record.MachineID,
+		Hostname:        record.Hostname,
+		PublicKey:       record.PublicKey,
+		SupersededKey:   record.SupersededKey,
+		SupersededUntil: record.SupersededUntil,
 	}, nil
 }

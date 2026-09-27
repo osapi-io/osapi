@@ -26,6 +26,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -283,4 +284,125 @@ func TestVerifyAgentResponsePublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(VerifyAgentResponsePublicTestSuite))
+}
+
+// TestAcceptableKeys covers the rotation window itself: which keys a message
+// may be signed with, and when the replaced one stops counting.
+func (s *VerifyAgentResponsePublicTestSuite) TestAcceptableKeys() {
+	now := time.Date(2026, 4, 11, 12, 0, 0, 0, time.UTC)
+	current, _, _ := ed25519.GenerateKey(rand.Reader)
+	old, _, _ := ed25519.GenerateKey(rand.Reader)
+
+	tests := []struct {
+		name         string
+		key          *client.AgentKey
+		validateFunc func([]ed25519.PublicKey)
+	}{
+		{
+			name: "outside a rotation only the current key counts",
+			key:  &client.AgentKey{PublicKey: current},
+			validateFunc: func(keys []ed25519.PublicKey) {
+				s.Len(keys, 1)
+				s.Equal(current, keys[0])
+			},
+		},
+		{
+			name: "inside the window both keys count",
+			key: &client.AgentKey{
+				PublicKey:       current,
+				SupersededKey:   old,
+				SupersededUntil: now.Add(time.Hour),
+			},
+			validateFunc: func(keys []ed25519.PublicKey) {
+				s.Len(keys, 2)
+				s.Equal(current, keys[0])
+				s.Equal(old, keys[1])
+			},
+		},
+		{
+			name: "once the window lapses the replaced key is gone",
+			key: &client.AgentKey{
+				PublicKey:       current,
+				SupersededKey:   old,
+				SupersededUntil: now.Add(-time.Second),
+			},
+			validateFunc: func(keys []ed25519.PublicKey) {
+				s.Len(keys, 1)
+				s.Equal(current, keys[0])
+			},
+		},
+		{
+			name: "a removed record offers no keys",
+			key:  nil,
+			validateFunc: func(keys []ed25519.PublicKey) {
+				s.Empty(keys)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.validateFunc(tt.key.AcceptableKeys(now))
+		})
+	}
+}
+
+// TestVerifyAgentResponseDuringRotation proves the window is honoured end to
+// end, and that an expired key reads as a mismatch rather than as its own
+// outcome.
+func (s *VerifyAgentResponsePublicTestSuite) TestVerifyAgentResponseDuringRotation() {
+	now := time.Date(2026, 4, 11, 12, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name         string
+		until        time.Time
+		validateFunc func([]byte, error)
+	}{
+		{
+			name:  "a response signed with the replaced key verifies inside the window",
+			until: now.Add(time.Hour),
+			validateFunc: func(payload []byte, err error) {
+				s.Require().NoError(err)
+				s.NotEmpty(payload)
+			},
+		},
+		{
+			name:  "the same response is a mismatch once the window lapses",
+			until: now.Add(-time.Second),
+			validateFunc: func(payload []byte, err error) {
+				s.Require().Error(err)
+				s.Nil(payload)
+				s.Require().ErrorIs(err, client.ErrResponseSignatureInvalid)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			client.SetNowFn(func() time.Time { return now })
+			defer client.ResetNowFn()
+
+			// The agent still signs with the key the rotation replaced.
+			oldSigner, oldPub := newSigner(s.mockCtrl)
+			currentPub, _, _ := ed25519.GenerateKey(rand.Reader)
+
+			s.store.EXPECT().
+				LookupAgentKey(gomock.Any(), "machine-001").
+				Return(&client.AgentKey{
+					MachineID:       "machine-001",
+					Hostname:        "web-01",
+					PublicKey:       currentPub,
+					SupersededKey:   oldPub,
+					SupersededUntil: tt.until,
+				}, nil)
+
+			data := s.signedResponse(
+				oldSigner,
+				"machine-001",
+				[]byte(`{"status":"completed","hostname":"web-01"}`),
+			)
+
+			tt.validateFunc(client.ExportVerifyAgentResponse(s.ctx, s.store, data))
+		})
+	}
 }

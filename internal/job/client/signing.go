@@ -25,6 +25,7 @@ import (
 	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/osapi-io/osapi/internal/job"
 )
@@ -32,6 +33,10 @@ import (
 // signingMarshalFn is the JSON marshal function used by signing helpers.
 // Overridable in tests via export_test.go.
 var signingMarshalFn = json.Marshal
+
+// nowFn returns the current time, so a rotation grace window can be tested
+// without waiting for one. Overridable in tests via export_test.go.
+var nowFn = time.Now
 
 // wrapInSignedEnvelope signs the payload and wraps it in a SignedEnvelope.
 // machineID identifies the signer so the verifier can find the key to check
@@ -123,7 +128,17 @@ func verifyAgentResponse(
 		return nil, err
 	}
 
-	if !ed25519.Verify(record.PublicKey, envelope.Payload, envelope.Signature) {
+	verified := false
+
+	for _, key := range record.AcceptableKeys(nowFn()) {
+		if ed25519.Verify(key, envelope.Payload, envelope.Signature) {
+			verified = true
+
+			break
+		}
+	}
+
+	if !verified {
 		return nil, fmt.Errorf(
 			"%w: machine %s",
 			ErrResponseSignatureInvalid,

@@ -24,6 +24,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"errors"
+	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
@@ -52,6 +53,39 @@ type AgentKey struct {
 	Hostname string
 	// PublicKey is the key recorded at acceptance.
 	PublicKey ed25519.PublicKey
+	// SupersededKey is the key a rotation replaced, kept acceptable until
+	// SupersededUntil so a message signed moments before the rotation is not
+	// rejected for arriving late. Absent outside a rotation window.
+	SupersededKey ed25519.PublicKey
+	// SupersededUntil is the instant the superseded key stops being accepted.
+	SupersededUntil time.Time
+}
+
+// AcceptableKeys returns the keys a message from this agent may be signed with:
+// the current one, and the key a rotation replaced while it is still inside its
+// grace period.
+//
+// An expired superseded key is simply not returned, so a signature matching only
+// it fails as a mismatch rather than as its own outcome. That is deliberate:
+// after the window, that key is no longer this agent's.
+func (k *AgentKey) AcceptableKeys(
+	now time.Time,
+) []ed25519.PublicKey {
+	if k == nil {
+		return nil
+	}
+
+	keys := make([]ed25519.PublicKey, 0, 2)
+
+	if len(k.PublicKey) > 0 {
+		keys = append(keys, k.PublicKey)
+	}
+
+	if len(k.SupersededKey) > 0 && now.Before(k.SupersededUntil) {
+		keys = append(keys, k.SupersededKey)
+	}
+
+	return keys
 }
 
 // AgentKeyStore looks up an accepted agent's key by machine ID. Nil when the
