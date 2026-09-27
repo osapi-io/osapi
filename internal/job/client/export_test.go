@@ -23,6 +23,7 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"time"
 )
 
 // ExportSanitizeKeyForNATS exposes the private sanitizeKeyForNATS for testing.
@@ -82,4 +83,16 @@ func ExportComputeStatusFromKeyNames(
 		statuses[id] = info.Status
 	}
 	return orderedIDs, statuses
+}
+
+// SetNowFn overrides nowFn for testing a rotation grace window.
+func SetNowFn(
+	fn func() time.Time,
+) {
+	nowFn = fn
+}
+
+// ResetNowFn restores nowFn to its default.
+func ResetNowFn() {
+	nowFn = time.Now
 }

@@ -410,7 +410,17 @@ func (c *Client) applyRegistrationTrust(
 
 	info.KeyStored = true
 
-	if !job.VerifyRegistration(reg, record.PublicKey) {
+	signedByStoredKey := false
+
+	for _, key := range record.AcceptableKeys(nowFn()) {
+		if job.VerifyRegistration(reg, key) {
+			signedByStoredKey = true
+
+			break
+		}
+	}
+
+	if !signedByStoredKey {
 		info.Verified = false
 
 		return

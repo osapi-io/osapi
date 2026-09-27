@@ -67,6 +67,22 @@ type Watcher struct {
 	// hit the KV in steady state. Invalidated by acceptance and removal.
 	keyCacheMu sync.RWMutex
 	keyCache   map[string]*AcceptedAgent
+
+	// rotationGrace is how long the key an acceptance replaces stays
+	// acceptable. Zero means a replacement takes effect at once, which is
+	// also the behaviour when nothing configures it.
+	rotationGrace time.Duration
+}
+
+// SetRotationGracePeriod sets how long a replaced key keeps verifying after a
+// rotation. Called once at startup from the controller's PKI configuration.
+//
+// Without it a rotation rejects everything signed in the moments before the new
+// key was accepted, which is the reason operators turn verification off.
+func (w *Watcher) SetRotationGracePeriod(
+	d time.Duration,
+) {
+	w.rotationGrace = d
 }
 
 // NewWatcher creates a new enrollment Watcher.

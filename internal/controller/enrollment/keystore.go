@@ -21,6 +21,7 @@
 package enrollment
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -73,6 +74,23 @@ func (w *Watcher) recordAgentKey(
 		PublicKey:   pending.PublicKey,
 		Fingerprint: pki.FingerprintOf(pending.PublicKey),
 		AcceptedAt:  nowFn(),
+	}
+
+	// A re-acceptance with a different key is a rotation. The outgoing key
+	// stays acceptable for the configured grace period, so a message signed
+	// moments before the rotation is not rejected for arriving late. The
+	// expiry is stored as an instant rather than a duration: a restart cannot
+	// then silently extend the window.
+	//
+	// Only read the previous record when a grace period is configured. With
+	// none, a replacement takes effect at once and there is nothing to carry
+	// forward.
+	if w.rotationGrace > 0 {
+		if previous, err := w.LookupAgentKey(ctx, pending.MachineID); err == nil &&
+			!bytes.Equal(previous.PublicKey, record.PublicKey) {
+			record.SupersededKey = previous.PublicKey
+			record.SupersededUntil = nowFn().Add(w.rotationGrace)
+		}
 	}
 
 	data, err := marshalFn(record)

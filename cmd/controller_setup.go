@@ -880,6 +880,15 @@ func setupEnrollmentWatcher(
 	// and without it target resolution behaves as it did before.
 	validation.SetEnforceVerifiedRegistrations(true)
 
+	// A rotation replaces an agent's key. Keep the replaced one acceptable for
+	// the configured window, so messages signed just before it are not
+	// rejected for arriving late.
+	if grace, err := time.ParseDuration(
+		appConfig.Controller.PKI.RotationGracePeriod,
+	); err == nil {
+		watcher.SetRotationGracePeriod(grace)
+	}
+
 	go func() {
 		if err := watcher.Start(ctx); err != nil {
 			enrollLog.Warn(
