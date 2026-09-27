@@ -234,11 +234,8 @@ func matchesHostname(
 		}
 
 		if a.Hostname == target || a.MachineID == target {
-			if a.State == "Pending" {
-				return false
-			}
-
-			return true
+			// A pending agent exists but cannot be dispatched to yet.
+			return a.State != "Pending"
 		}
 	}
 
