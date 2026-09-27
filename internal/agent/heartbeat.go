@@ -125,7 +125,7 @@ func (a *Agent) writeRegistration(
 		Labels:        a.appConfig.Agent.Labels,
 		RegisteredAt:  time.Now(),
 		StartedAt:     a.startedAt,
-		State:         a.state,
+		State:         a.State(),
 		SubComponents: a.subComponents,
 		Fingerprint:   a.pkiFingerprint(),
 	}

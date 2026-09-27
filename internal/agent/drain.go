@@ -47,10 +47,16 @@ func (a *Agent) handleDrainDetection(
 ) {
 	drainRequested := a.checkDrainFlag(ctx, machineID)
 
+	// The whole transition is taken under the lock: reading the state, moving the
+	// consumers, and recording the new state are one step, so an enrollment
+	// acceptance arriving now waits rather than interleaving with it.
+	a.lifecycleMu.Lock()
+	defer a.lifecycleMu.Unlock()
+
 	switch {
 	case drainRequested && a.state == job.AgentStateReady:
 		a.logger.Info("drain detected, stopping job consumption")
-		a.stopConsumers()
+		a.stopConsumersLocked()
 		a.state = job.AgentStateCordoned
 		a.logger.Info("all consumers stopped, agent cordoned")
 		_ = a.jobClient.WriteAgentTimelineEvent(
@@ -62,7 +68,7 @@ func (a *Agent) handleDrainDetection(
 
 	case !drainRequested && (a.state == job.AgentStateDraining || a.state == job.AgentStateCordoned):
 		a.logger.Info("undrain detected, resuming job consumption")
-		a.startConsumers()
+		a.startConsumersLocked()
 		a.state = job.AgentStateReady
 		_ = a.jobClient.WriteAgentTimelineEvent(
 			ctx, hostname, "undrain", "Resumed accepting jobs",

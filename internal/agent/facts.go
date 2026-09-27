@@ -141,7 +141,7 @@ func (a *Agent) writeFacts(
 		reg.PrimaryInterface = primary
 	}
 
-	a.cachedFacts = &reg
+	a.cachedFacts.Store(&reg)
 
 	data, err := marshalJSON(reg)
 	if err != nil {
@@ -171,11 +171,12 @@ func (a *Agent) writeFacts(
 // Uses JSON round-trip so the map automatically includes all fields
 // from FactsRegistration without hardcoding field names.
 func (a *Agent) GetFacts() map[string]any {
-	if a.cachedFacts == nil {
+	facts := a.cachedFacts.Load()
+	if facts == nil {
 		return nil
 	}
 
-	data, err := marshalJSON(a.cachedFacts)
+	data, err := marshalJSON(facts)
 	if err != nil {
 		return nil
 	}
