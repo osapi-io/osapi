@@ -148,7 +148,7 @@ func (d *Debian) AddKey(
 	}
 
 	// Best-effort chown.
-	_, chownErr := d.execManager.RunPrivilegedCmd("chown", []string{
+	_, chownErr := d.execManager.RunPrivilegedCmd(ctx, "chown", []string{
 		"-R",
 		username + ":" + username,
 		sshDir,

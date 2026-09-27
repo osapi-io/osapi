@@ -10,6 +10,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
@@ -40,31 +41,31 @@ func (m *MockCommandExecutor) EXPECT() *MockCommandExecutorMockRecorder {
 }
 
 // Execute mocks base method.
-func (m *MockCommandExecutor) Execute(name string, args []string, cwd string) (string, error) {
+func (m *MockCommandExecutor) Execute(ctx context.Context, name string, args []string, cwd string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Execute", name, args, cwd)
+	ret := m.ctrl.Call(m, "Execute", ctx, name, args, cwd)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Execute indicates an expected call of Execute.
-func (mr *MockCommandExecutorMockRecorder) Execute(name, args, cwd any) *gomock.Call {
+func (mr *MockCommandExecutorMockRecorder) Execute(ctx, name, args, cwd any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Execute", reflect.TypeOf((*MockCommandExecutor)(nil).Execute), name, args, cwd)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Execute", reflect.TypeOf((*MockCommandExecutor)(nil).Execute), ctx, name, args, cwd)
 }
 
 // ExecuteWithStdin mocks base method.
-func (m *MockCommandExecutor) ExecuteWithStdin(name string, args []string, cwd, stdin string) (string, error) {
+func (m *MockCommandExecutor) ExecuteWithStdin(ctx context.Context, name string, args []string, cwd, stdin string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExecuteWithStdin", name, args, cwd, stdin)
+	ret := m.ctrl.Call(m, "ExecuteWithStdin", ctx, name, args, cwd, stdin)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ExecuteWithStdin indicates an expected call of ExecuteWithStdin.
-func (mr *MockCommandExecutorMockRecorder) ExecuteWithStdin(name, args, cwd, stdin any) *gomock.Call {
+func (mr *MockCommandExecutorMockRecorder) ExecuteWithStdin(ctx, name, args, cwd, stdin any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteWithStdin", reflect.TypeOf((*MockCommandExecutor)(nil).ExecuteWithStdin), name, args, cwd, stdin)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteWithStdin", reflect.TypeOf((*MockCommandExecutor)(nil).ExecuteWithStdin), ctx, name, args, cwd, stdin)
 }

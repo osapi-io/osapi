@@ -21,6 +21,7 @@
 package dns
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -41,9 +42,10 @@ import (
 //	  nameserver[1] : 8.8.8.8
 //	  if_index : 6 (en0)
 func (d *Darwin) GetResolvConfByInterface(
+	ctx context.Context,
 	interfaceName string,
 ) (*GetResult, error) {
-	output, err := d.execManager.RunCmd("scutil", []string{"--dns"})
+	output, err := d.execManager.RunCmd(ctx, "scutil", []string{"--dns"})
 	if err != nil {
 		return nil, fmt.Errorf("failed to run scutil --dns: %w - %s", err, output)
 	}

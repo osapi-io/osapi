@@ -21,6 +21,7 @@
 package dns_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -51,7 +52,7 @@ func (s *LinuxPublicTestSuite) TestGetResolvConfByInterface() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			l := &dns.Linux{}
-			tt.validateFunc(l.GetResolvConfByInterface("eth0"))
+			tt.validateFunc(l.GetResolvConfByInterface(context.Background(), "eth0"))
 		})
 	}
 }
@@ -75,6 +76,7 @@ func (s *LinuxPublicTestSuite) TestUpdateResolvConfByInterface() {
 		s.Run(tt.name, func() {
 			l := &dns.Linux{}
 			tt.validateFunc(l.UpdateResolvConfByInterface(
+				context.Background(),
 				[]string{"8.8.8.8"},
 				[]string{"example.com"},
 				"eth0",

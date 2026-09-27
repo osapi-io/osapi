@@ -38,6 +38,7 @@ import (
 // path generates a Netplan YAML file under /etc/netplan/osapi-dns.yaml and
 // applies it via `netplan generate` + `netplan apply`.
 func (u *Debian) UpdateResolvConfByInterface(
+	ctx context.Context,
 	servers []string,
 	searchDomains []string,
 	interfaceName string,
@@ -53,7 +54,7 @@ func (u *Debian) UpdateResolvConfByInterface(
 		return nil, fmt.Errorf("no DNS servers or search domains provided; nothing to update")
 	}
 
-	existingConfig, err := u.GetResolvConfByInterface(interfaceName)
+	existingConfig, err := u.GetResolvConfByInterface(ctx, interfaceName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get current resolvectl configuration: %w", err)
 	}
@@ -79,7 +80,7 @@ func (u *Debian) UpdateResolvConfByInterface(
 
 	// Detect the interface type from netplan status to use the
 	// correct YAML section (ethernets, wifis, bridges, etc.).
-	ifaceType := netplan.SectionForInterface(u.execManager, resolvedInterface)
+	ifaceType := netplan.SectionForInterface(ctx, u.execManager, resolvedInterface)
 
 	// Generate the Netplan YAML content.
 	content := generateDNSNetplanYAML(
@@ -115,6 +116,7 @@ func (u *Debian) UpdateResolvConfByInterface(
 
 // DeleteNetplanConfig removes the managed DNS Netplan config file.
 func (u *Debian) DeleteNetplanConfig(
+	_ context.Context,
 	_ string,
 ) (bool, error) {
 	path := dnsNetplanPath()

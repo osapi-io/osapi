@@ -21,6 +21,7 @@
 package host_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -51,7 +52,7 @@ func (s *DebianDockerPublicTestSuite) TestUpdateHostname() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			p := host.NewDebianDockerProvider()
-			tt.validateFunc(p.UpdateHostname("new-hostname"))
+			tt.validateFunc(p.UpdateHostname(context.Background(), "new-hostname"))
 		})
 	}
 }

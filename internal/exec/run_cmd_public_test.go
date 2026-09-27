@@ -21,9 +21,11 @@
 package exec_test
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -91,7 +93,55 @@ func (suite *RunCmdPublicTestSuite) TestRunCmd() {
 		suite.Run(tc.name, func() {
 			em := exec.New(suite.logger, false)
 
-			tc.validateFunc(em.RunCmd(tc.command, tc.args))
+			tc.validateFunc(em.RunCmd(context.Background(), tc.command, tc.args))
+		})
+	}
+}
+
+// TestRunCmdCancellation covers what the context is for: a command that would
+// otherwise run to completion is killed when the caller's context ends, and the
+// reason it stopped comes from the context rather than from the command's own
+// output, which a killed command does not produce.
+func (suite *RunCmdPublicTestSuite) TestRunCmdCancellation() {
+	tests := []struct {
+		name         string
+		ctxFunc      func() (context.Context, context.CancelFunc)
+		validateFunc func(string, error)
+	}{
+		{
+			name: "a context cancelled before the command starts",
+			ctxFunc: func() (context.Context, context.CancelFunc) {
+				ctx, cancel := context.WithCancel(context.Background())
+				cancel()
+
+				return ctx, func() {}
+			},
+			validateFunc: func(_ string, err error) {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, context.Canceled)
+				suite.Require().Contains(err.Error(), "command sleep")
+			},
+		},
+		{
+			name: "a deadline that passes while the command runs",
+			ctxFunc: func() (context.Context, context.CancelFunc) {
+				return context.WithTimeout(context.Background(), 10*time.Millisecond)
+			},
+			validateFunc: func(_ string, err error) {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, context.DeadlineExceeded)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			ctx, cancel := tc.ctxFunc()
+			defer cancel()
+
+			em := exec.New(suite.logger, false)
+
+			tc.validateFunc(em.RunCmd(ctx, "sleep", []string{"5"}))
 		})
 	}
 }

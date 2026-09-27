@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -127,7 +128,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlOperation() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -201,7 +202,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlList() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -291,7 +292,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlGet() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -386,7 +387,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlCreate() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -481,7 +482,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlUpdate() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -571,7 +572,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlDelete() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }

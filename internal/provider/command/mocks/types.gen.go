@@ -10,6 +10,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	command "github.com/osapi-io/osapi/internal/provider/command"
@@ -41,31 +42,31 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 }
 
 // Exec mocks base method.
-func (m *MockProvider) Exec(params command.ExecParams) (*command.Result, error) {
+func (m *MockProvider) Exec(ctx context.Context, params command.ExecParams) (*command.Result, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Exec", params)
+	ret := m.ctrl.Call(m, "Exec", ctx, params)
 	ret0, _ := ret[0].(*command.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Exec indicates an expected call of Exec.
-func (mr *MockProviderMockRecorder) Exec(params any) *gomock.Call {
+func (mr *MockProviderMockRecorder) Exec(ctx, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockProvider)(nil).Exec), params)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockProvider)(nil).Exec), ctx, params)
 }
 
 // Shell mocks base method.
-func (m *MockProvider) Shell(params command.ShellParams) (*command.Result, error) {
+func (m *MockProvider) Shell(ctx context.Context, params command.ShellParams) (*command.Result, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Shell", params)
+	ret := m.ctrl.Call(m, "Shell", ctx, params)
 	ret0, _ := ret[0].(*command.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Shell indicates an expected call of Shell.
-func (mr *MockProviderMockRecorder) Shell(params any) *gomock.Call {
+func (mr *MockProviderMockRecorder) Shell(ctx, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Shell", reflect.TypeOf((*MockProvider)(nil).Shell), params)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Shell", reflect.TypeOf((*MockProvider)(nil).Shell), ctx, params)
 }

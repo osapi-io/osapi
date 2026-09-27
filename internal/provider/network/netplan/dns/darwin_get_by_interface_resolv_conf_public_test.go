@@ -21,6 +21,7 @@
 package dns_test
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"testing"
@@ -81,7 +82,7 @@ resolver #2
   if_index : 7 (en1)
 `
 				mock.EXPECT().
-					RunCmd("scutil", []string{"--dns"}).
+					RunCmd(gomock.Any(), "scutil", []string{"--dns"}).
 					Return(output, nil)
 
 				return mock
@@ -112,7 +113,7 @@ resolver #2
   if_index : 7 (en1)
 `
 				mock.EXPECT().
-					RunCmd("scutil", []string{"--dns"}).
+					RunCmd(gomock.Any(), "scutil", []string{"--dns"}).
 					Return(output, nil)
 
 				return mock
@@ -129,7 +130,7 @@ resolver #2
 				mock := execMocks.NewPlainMockManager(suite.ctrl)
 
 				mock.EXPECT().
-					RunCmd("scutil", []string{"--dns"}).
+					RunCmd(gomock.Any(), "scutil", []string{"--dns"}).
 					Return("", assert.AnError)
 
 				return mock
@@ -152,7 +153,7 @@ resolver #1
   if_index : 6 (en0)
 `
 				mock.EXPECT().
-					RunCmd("scutil", []string{"--dns"}).
+					RunCmd(gomock.Any(), "scutil", []string{"--dns"}).
 					Return(output, nil)
 
 				return mock
@@ -169,7 +170,7 @@ resolver #1
 				mock := execMocks.NewPlainMockManager(suite.ctrl)
 
 				mock.EXPECT().
-					RunCmd("scutil", []string{"--dns"}).
+					RunCmd(gomock.Any(), "scutil", []string{"--dns"}).
 					Return("", nil)
 
 				return mock
@@ -193,7 +194,7 @@ resolver #1
   if_index : 6 (en0)
 `
 				mock.EXPECT().
-					RunCmd("scutil", []string{"--dns"}).
+					RunCmd(gomock.Any(), "scutil", []string{"--dns"}).
 					Return(output, nil)
 
 				return mock
@@ -213,7 +214,7 @@ resolver #1
 			mock := tc.setupMock()
 
 			darwin := dns.NewDarwinProvider(suite.logger, mock)
-			tc.validateFunc(darwin.GetResolvConfByInterface(tc.interfaceName))
+			tc.validateFunc(darwin.GetResolvConfByInterface(context.Background(), tc.interfaceName))
 		})
 	}
 }

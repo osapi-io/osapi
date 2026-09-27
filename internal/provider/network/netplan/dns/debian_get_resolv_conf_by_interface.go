@@ -21,6 +21,7 @@
 package dns
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -51,11 +52,12 @@ import (
 //
 // See `systemd-resolved.service(8)` manual page for further information.
 func (u *Debian) GetResolvConfByInterface(
+	ctx context.Context,
 	interfaceName string,
 ) (*GetResult, error) {
 	cmd := "resolvectl"
 	args := []string{"status", interfaceName}
-	output, err := u.execManager.RunCmd(cmd, args)
+	output, err := u.execManager.RunCmd(ctx, cmd, args)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run resolvectl: %w - %s", err, output)
 	}

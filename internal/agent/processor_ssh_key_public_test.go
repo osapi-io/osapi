@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -132,7 +133,7 @@ func (s *ProcessorSSHKeyPublicTestSuite) TestProcessSSHKeyOperation() {
 			}
 
 			processor := s.newProcessor(userProvider)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -223,7 +224,7 @@ func (s *ProcessorSSHKeyPublicTestSuite) TestProcessSSHKeyList() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -311,7 +312,7 @@ func (s *ProcessorSSHKeyPublicTestSuite) TestProcessSSHKeyAdd() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -392,7 +393,7 @@ func (s *ProcessorSSHKeyPublicTestSuite) TestProcessSSHKeyRemove() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }

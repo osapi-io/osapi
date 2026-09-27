@@ -21,6 +21,7 @@
 package command_test
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"testing"
@@ -117,7 +118,7 @@ func (s *ExecPublicTestSuite) TestExec() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			s.mockExecMgr.EXPECT().
-				RunCmdFull(
+				RunCmdFull(gomock.Any(),
 					tt.params.Command,
 					tt.params.Args,
 					tt.params.Cwd,
@@ -125,7 +126,7 @@ func (s *ExecPublicTestSuite) TestExec() {
 				).
 				Return(tt.mockResult, tt.mockError)
 
-			tt.validateFunc(s.sut.Exec(tt.params))
+			tt.validateFunc(s.sut.Exec(context.Background(), tt.params))
 		})
 	}
 }

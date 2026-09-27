@@ -80,7 +80,7 @@ func (suite *DebianGetPublicTestSuite) TestGet() {
 			setup: func() {
 				output := "ActiveState=active\nUnitFileState=enabled\nDescription=A high performance web server\nMainPID=1234\n"
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{
+					RunCmd(gomock.Any(), "systemctl", []string{
 						"show",
 						"nginx.service",
 						"--property=ActiveState,UnitFileState,Description,MainPID",
@@ -107,7 +107,7 @@ func (suite *DebianGetPublicTestSuite) TestGet() {
 			setup: func() {
 				output := "ActiveState=inactive\nUnitFileState=disabled\nDescription=Regular background program processing daemon\nMainPID=0\n"
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{
+					RunCmd(gomock.Any(), "systemctl", []string{
 						"show",
 						"cron.service",
 						"--property=ActiveState,UnitFileState,Description,MainPID",
@@ -133,7 +133,7 @@ func (suite *DebianGetPublicTestSuite) TestGet() {
 			serviceName: "missing.service",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{
+					RunCmd(gomock.Any(), "systemctl", []string{
 						"show",
 						"missing.service",
 						"--property=ActiveState,UnitFileState,Description,MainPID",
@@ -156,7 +156,7 @@ func (suite *DebianGetPublicTestSuite) TestGet() {
 			setup: func() {
 				output := "ActiveState=active\nmalformed-line-no-equals\n"
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{
+					RunCmd(gomock.Any(), "systemctl", []string{
 						"show",
 						"bad.service",
 						"--property=ActiveState,UnitFileState,Description,MainPID",
@@ -179,7 +179,7 @@ func (suite *DebianGetPublicTestSuite) TestGet() {
 			setup: func() {
 				output := "ActiveState=active\n\nDescription=test service\n\nMainPID=42\n"
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{
+					RunCmd(gomock.Any(), "systemctl", []string{
 						"show",
 						"blanks.service",
 						"--property=ActiveState,UnitFileState,Description,MainPID",

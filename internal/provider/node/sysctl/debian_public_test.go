@@ -127,7 +127,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
+					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -366,7 +366,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("sysctl", gomock.Any()).
+					RunPrivilegedCmd(gomock.Any(), "sysctl", gomock.Any()).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -440,7 +440,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("sysctl", gomock.Any()).
+					RunPrivilegedCmd(gomock.Any(), "sysctl", gomock.Any()).
 					Return("", errors.New("sysctl failed"))
 			},
 			validateFunc: func(
@@ -495,7 +495,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
+					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -881,7 +881,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("sysctl", []string{"--system"}).
+					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"--system"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -1188,7 +1188,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("sysctl", []string{"--system"}).
+					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"--system"}).
 					Return("", errors.New("sysctl failed"))
 			},
 			validateFunc: func(
@@ -1238,7 +1238,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 					Get(gomock.Any(), gomock.Any()).
 					Return(mockEntry, nil)
 				suite.mockExec.EXPECT().
-					RunCmd("sysctl", []string{"-n", "net.ipv4.ip_forward"}).
+					RunCmd(gomock.Any(), "sysctl", []string{"-n", "net.ipv4.ip_forward"}).
 					Return("1\n", nil)
 			},
 			validateFunc: func(
@@ -1463,7 +1463,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 					Get(gomock.Any(), gomock.Any()).
 					Return(mockEntry, nil)
 				suite.mockExec.EXPECT().
-					RunCmd("sysctl", []string{"-n", "net.ipv4.ip_forward"}).
+					RunCmd(gomock.Any(), "sysctl", []string{"-n", "net.ipv4.ip_forward"}).
 					Return("", errors.New("sysctl not found"))
 			},
 			validateFunc: func(
@@ -1521,7 +1521,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 					Get(gomock.Any(), gomock.Any()).
 					Return(mockEntry, nil)
 				suite.mockExec.EXPECT().
-					RunCmd("sysctl", []string{"-n", "net.ipv4.ip_forward"}).
+					RunCmd(gomock.Any(), "sysctl", []string{"-n", "net.ipv4.ip_forward"}).
 					Return("1\n", nil)
 			},
 			validateFunc: func(
@@ -1681,7 +1681,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 					Get(gomock.Any(), gomock.Any()).
 					Return(mockEntry, nil)
 				suite.mockExec.EXPECT().
-					RunCmd("sysctl", []string{"-n", "net.ipv4.ip_forward"}).
+					RunCmd(gomock.Any(), "sysctl", []string{"-n", "net.ipv4.ip_forward"}).
 					Return("", errors.New("sysctl not found"))
 			},
 			validateFunc: func(

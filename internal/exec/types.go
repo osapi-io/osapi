@@ -21,14 +21,30 @@
 package exec
 
 import (
+	"context"
 	"log/slog"
+	"time"
 )
+
+// DefaultCommandTimeout bounds a command whose caller supplied no deadline of
+// its own. It is a backstop rather than a budget: long enough for a package
+// installation over a slow mirror, short enough that a command waiting on a
+// prompt nobody will answer does not outlive the agent.
+//
+// A caller's own deadline still wins whenever it falls earlier, because the
+// deadline is derived from the context it passed.
+const DefaultCommandTimeout = 10 * time.Minute
 
 // CommandExecutor executes OS commands. The default implementation
 // runs real commands via os/exec. Tests inject a mock to assert
 // commands without executing them.
+//
+// Every method takes a context: it is what cancels a command that is still
+// running when the agent shuts down, and what bounds one that would otherwise
+// run forever.
 type CommandExecutor interface {
 	Execute(
+		ctx context.Context,
 		name string,
 		args []string,
 		cwd string,
@@ -37,6 +53,7 @@ type CommandExecutor interface {
 	// ExecuteWithStdin runs the command with stdin written to its standard
 	// input. Implementations must not log stdin.
 	ExecuteWithStdin(
+		ctx context.Context,
 		name string,
 		args []string,
 		cwd string,

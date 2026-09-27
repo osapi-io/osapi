@@ -56,13 +56,13 @@ func NewDebianProvider(
 
 // Query returns journal entries with optional filtering.
 func (d *Debian) Query(
-	_ context.Context,
+	ctx context.Context,
 	opts QueryOpts,
 ) ([]Entry, error) {
 	d.logger.Debug("executing log.Query")
 	args := buildArgs(opts)
 
-	output, err := d.execManager.RunCmd("journalctl", args)
+	output, err := d.execManager.RunCmd(ctx, "journalctl", args)
 	if err != nil {
 		return nil, fmt.Errorf("log: query: %w", err)
 	}
@@ -72,7 +72,7 @@ func (d *Debian) Query(
 
 // QueryUnit returns journal entries for a specific systemd unit.
 func (d *Debian) QueryUnit(
-	_ context.Context,
+	ctx context.Context,
 	unit string,
 	opts QueryOpts,
 ) ([]Entry, error) {
@@ -82,7 +82,7 @@ func (d *Debian) QueryUnit(
 	)
 	args := buildUnitArgs(unit, opts)
 
-	output, err := d.execManager.RunCmd("journalctl", args)
+	output, err := d.execManager.RunCmd(ctx, "journalctl", args)
 	if err != nil {
 		return nil, fmt.Errorf("log: query unit: %w", err)
 	}
@@ -92,11 +92,11 @@ func (d *Debian) QueryUnit(
 
 // ListSources returns unique syslog identifiers from the journal.
 func (d *Debian) ListSources(
-	_ context.Context,
+	ctx context.Context,
 ) ([]string, error) {
 	d.logger.Debug("executing log.ListSources")
 
-	output, err := d.execManager.RunCmd("journalctl", []string{"--field=SYSLOG_IDENTIFIER"})
+	output, err := d.execManager.RunCmd(ctx, "journalctl", []string{"--field=SYSLOG_IDENTIFIER"})
 	if err != nil {
 		return nil, fmt.Errorf("log: list sources: %w", err)
 	}

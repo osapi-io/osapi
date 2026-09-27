@@ -10,6 +10,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	exec "github.com/osapi-io/osapi/internal/exec"
@@ -41,61 +42,61 @@ func (m *MockManager) EXPECT() *MockManagerMockRecorder {
 }
 
 // RunCmd mocks base method.
-func (m *MockManager) RunCmd(name string, args []string) (string, error) {
+func (m *MockManager) RunCmd(ctx context.Context, name string, args []string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RunCmd", name, args)
+	ret := m.ctrl.Call(m, "RunCmd", ctx, name, args)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RunCmd indicates an expected call of RunCmd.
-func (mr *MockManagerMockRecorder) RunCmd(name, args any) *gomock.Call {
+func (mr *MockManagerMockRecorder) RunCmd(ctx, name, args any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunCmd", reflect.TypeOf((*MockManager)(nil).RunCmd), name, args)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunCmd", reflect.TypeOf((*MockManager)(nil).RunCmd), ctx, name, args)
 }
 
 // RunCmdFull mocks base method.
-func (m *MockManager) RunCmdFull(name string, args []string, cwd string, timeout int) (*exec.CmdResult, error) {
+func (m *MockManager) RunCmdFull(ctx context.Context, name string, args []string, cwd string, timeout int) (*exec.CmdResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RunCmdFull", name, args, cwd, timeout)
+	ret := m.ctrl.Call(m, "RunCmdFull", ctx, name, args, cwd, timeout)
 	ret0, _ := ret[0].(*exec.CmdResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RunCmdFull indicates an expected call of RunCmdFull.
-func (mr *MockManagerMockRecorder) RunCmdFull(name, args, cwd, timeout any) *gomock.Call {
+func (mr *MockManagerMockRecorder) RunCmdFull(ctx, name, args, cwd, timeout any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunCmdFull", reflect.TypeOf((*MockManager)(nil).RunCmdFull), name, args, cwd, timeout)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunCmdFull", reflect.TypeOf((*MockManager)(nil).RunCmdFull), ctx, name, args, cwd, timeout)
 }
 
 // RunPrivilegedCmd mocks base method.
-func (m *MockManager) RunPrivilegedCmd(name string, args []string) (string, error) {
+func (m *MockManager) RunPrivilegedCmd(ctx context.Context, name string, args []string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RunPrivilegedCmd", name, args)
+	ret := m.ctrl.Call(m, "RunPrivilegedCmd", ctx, name, args)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RunPrivilegedCmd indicates an expected call of RunPrivilegedCmd.
-func (mr *MockManagerMockRecorder) RunPrivilegedCmd(name, args any) *gomock.Call {
+func (mr *MockManagerMockRecorder) RunPrivilegedCmd(ctx, name, args any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunPrivilegedCmd", reflect.TypeOf((*MockManager)(nil).RunPrivilegedCmd), name, args)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunPrivilegedCmd", reflect.TypeOf((*MockManager)(nil).RunPrivilegedCmd), ctx, name, args)
 }
 
 // RunPrivilegedCmdWithStdin mocks base method.
-func (m *MockManager) RunPrivilegedCmdWithStdin(name string, args []string, stdin string) (string, error) {
+func (m *MockManager) RunPrivilegedCmdWithStdin(ctx context.Context, name string, args []string, stdin string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RunPrivilegedCmdWithStdin", name, args, stdin)
+	ret := m.ctrl.Call(m, "RunPrivilegedCmdWithStdin", ctx, name, args, stdin)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RunPrivilegedCmdWithStdin indicates an expected call of RunPrivilegedCmdWithStdin.
-func (mr *MockManagerMockRecorder) RunPrivilegedCmdWithStdin(name, args, stdin any) *gomock.Call {
+func (mr *MockManagerMockRecorder) RunPrivilegedCmdWithStdin(ctx, name, args, stdin any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunPrivilegedCmdWithStdin", reflect.TypeOf((*MockManager)(nil).RunPrivilegedCmdWithStdin), name, args, stdin)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunPrivilegedCmdWithStdin", reflect.TypeOf((*MockManager)(nil).RunPrivilegedCmdWithStdin), ctx, name, args, stdin)
 }

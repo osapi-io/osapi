@@ -21,6 +21,7 @@
 package exec_test
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"testing"
@@ -95,7 +96,7 @@ func (suite *RunCmdDirPublicTestSuite) TestRunCmd() {
 		suite.Run(tc.name, func() {
 			em := exec.New(suite.logger, false)
 
-			tc.validateFunc(em.RunCmdInDir(tc.command, tc.args, tc.cwd))
+			tc.validateFunc(em.RunCmdInDir(context.Background(), tc.command, tc.args, tc.cwd))
 		})
 	}
 }

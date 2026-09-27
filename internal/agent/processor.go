@@ -21,6 +21,7 @@
 package agent
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -45,6 +46,7 @@ import (
 
 // processJobOperation handles the actual job processing based on category and operation.
 func (a *Agent) processJobOperation(
+	ctx context.Context,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	a.logger.Debug(
@@ -53,7 +55,7 @@ func (a *Agent) processJobOperation(
 		slog.String("operation", jobRequest.Operation),
 	)
 
-	return a.registry.Dispatch(jobRequest)
+	return a.registry.Dispatch(ctx, jobRequest)
 }
 
 // NewNodeProcessor returns a ProcessorFunc that handles node-related operations.
@@ -74,14 +76,14 @@ func NewNodeProcessor(
 	appConfig config.Config,
 	logger *slog.Logger,
 ) ProcessorFunc {
-	return func(req job.Request) (json.RawMessage, error) {
+	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
 		// Extract base operation from dotted operation (e.g., "hostname.get" -> "hostname")
 		baseOperation := strings.Split(req.Operation, ".")[0]
 
 		switch baseOperation {
 		case "hostname":
 			if req.Type == job.TypeModify {
-				return setNodeHostname(hostProvider, req, logger)
+				return setNodeHostname(ctx, hostProvider, req, logger)
 			}
 			return getNodeHostname(hostProvider, appConfig, logger)
 		case "status":
@@ -151,6 +153,7 @@ func getNodeHostname(
 
 // setNodeHostname sets the node hostname via the host provider.
 func setNodeHostname(
+	ctx context.Context,
 	hostProvider nodeHost.Provider,
 	req job.Request,
 	logger *slog.Logger,
@@ -164,7 +167,7 @@ func setNodeHostname(
 		return nil, fmt.Errorf("invalid hostname update data: %w", err)
 	}
 
-	result, err := hostProvider.UpdateHostname(data.Hostname)
+	result, err := hostProvider.UpdateHostname(ctx, data.Hostname)
 	if err != nil {
 		return nil, err
 	}

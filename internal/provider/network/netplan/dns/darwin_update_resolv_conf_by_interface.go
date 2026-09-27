@@ -21,12 +21,15 @@
 package dns
 
 import (
+	"context"
+
 	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // UpdateResolvConfByInterface returns ErrUnsupported on Darwin.
 // Darwin is a development platform only; mutations are not supported.
 func (d *Darwin) UpdateResolvConfByInterface(
+	_ context.Context,
 	_ []string,
 	_ []string,
 	_ string,
@@ -37,6 +40,7 @@ func (d *Darwin) UpdateResolvConfByInterface(
 
 // DeleteNetplanConfig returns ErrUnsupported on Darwin.
 func (d *Darwin) DeleteNetplanConfig(
+	_ context.Context,
 	_ string,
 ) (bool, error) {
 	return false, provider.ErrUnsupported

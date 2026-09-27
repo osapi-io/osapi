@@ -70,10 +70,10 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name: "when successful returns timezone info",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("timedatectl", []string{"show", "-p", "Timezone", "--value"}).
+					RunCmd(gomock.Any(), "timedatectl", []string{"show", "-p", "Timezone", "--value"}).
 					Return("America/New_York\n", nil)
 				suite.mockExec.EXPECT().
-					RunCmd("date", []string{"+%:z"}).
+					RunCmd(gomock.Any(), "date", []string{"+%:z"}).
 					Return("-04:00\n", nil)
 			},
 			validateFunc: func(info *timezone.Info) {
@@ -85,7 +85,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name: "when timedatectl fails returns error",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("timedatectl", []string{"show", "-p", "Timezone", "--value"}).
+					RunCmd(gomock.Any(), "timedatectl", []string{"show", "-p", "Timezone", "--value"}).
 					Return("", errors.New("command not found"))
 			},
 			wantErr:    true,
@@ -95,10 +95,10 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name: "when date command fails returns error",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("timedatectl", []string{"show", "-p", "Timezone", "--value"}).
+					RunCmd(gomock.Any(), "timedatectl", []string{"show", "-p", "Timezone", "--value"}).
 					Return("America/New_York\n", nil)
 				suite.mockExec.EXPECT().
-					RunCmd("date", []string{"+%:z"}).
+					RunCmd(gomock.Any(), "date", []string{"+%:z"}).
 					Return("", errors.New("date failed"))
 			},
 			wantErr:    true,
@@ -144,10 +144,10 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			timezone: "Europe/London",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("timedatectl", []string{"show", "-p", "Timezone", "--value"}).
+					RunCmd(gomock.Any(), "timedatectl", []string{"show", "-p", "Timezone", "--value"}).
 					Return("America/New_York\n", nil)
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("timedatectl", []string{"set-timezone", "Europe/London"}).
+					RunPrivilegedCmd(gomock.Any(), "timedatectl", []string{"set-timezone", "Europe/London"}).
 					Return("", nil)
 			},
 			validateFunc: func(r *timezone.UpdateResult) {
@@ -160,7 +160,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			timezone: "America/New_York",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("timedatectl", []string{"show", "-p", "Timezone", "--value"}).
+					RunCmd(gomock.Any(), "timedatectl", []string{"show", "-p", "Timezone", "--value"}).
 					Return("America/New_York\n", nil)
 			},
 			validateFunc: func(r *timezone.UpdateResult) {
@@ -173,7 +173,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			timezone: "Europe/London",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("timedatectl", []string{"show", "-p", "Timezone", "--value"}).
+					RunCmd(gomock.Any(), "timedatectl", []string{"show", "-p", "Timezone", "--value"}).
 					Return("", errors.New("command not found"))
 			},
 			wantErr:    true,
@@ -184,10 +184,10 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			timezone: "Europe/London",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("timedatectl", []string{"show", "-p", "Timezone", "--value"}).
+					RunCmd(gomock.Any(), "timedatectl", []string{"show", "-p", "Timezone", "--value"}).
 					Return("America/New_York\n", nil)
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("timedatectl", []string{"set-timezone", "Europe/London"}).
+					RunPrivilegedCmd(gomock.Any(), "timedatectl", []string{"set-timezone", "Europe/London"}).
 					Return("", errors.New("permission denied"))
 			},
 			wantErr:    true,

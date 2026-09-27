@@ -21,6 +21,7 @@
 package host_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -62,10 +63,10 @@ func (suite *DebianUpdateHostnamePublicTestSuite) TestUpdateHostname() {
 				mock := mocks.NewPlainMockManager(suite.ctrl)
 				gomock.InOrder(
 					mock.EXPECT().
-						RunCmd("hostnamectl", []string{"hostname"}).
+						RunCmd(gomock.Any(), "hostnamectl", []string{"hostname"}).
 						Return("old-host", nil),
 					mock.EXPECT().
-						RunPrivilegedCmd("hostnamectl", []string{"set-hostname", "new-host"}).
+						RunPrivilegedCmd(gomock.Any(), "hostnamectl", []string{"set-hostname", "new-host"}).
 						Return("", nil),
 				)
 				return mock
@@ -81,7 +82,7 @@ func (suite *DebianUpdateHostnamePublicTestSuite) TestUpdateHostname() {
 			setupMock: func() *mocks.MockManager {
 				mock := mocks.NewPlainMockManager(suite.ctrl)
 				mock.EXPECT().
-					RunCmd("hostnamectl", []string{"hostname"}).
+					RunCmd(gomock.Any(), "hostnamectl", []string{"hostname"}).
 					Return("existing-host", nil)
 				return mock
 			},
@@ -96,7 +97,7 @@ func (suite *DebianUpdateHostnamePublicTestSuite) TestUpdateHostname() {
 			setupMock: func() *mocks.MockManager {
 				mock := mocks.NewPlainMockManager(suite.ctrl)
 				mock.EXPECT().
-					RunCmd("hostnamectl", []string{"hostname"}).
+					RunCmd(gomock.Any(), "hostnamectl", []string{"hostname"}).
 					Return("existing-host\n", nil)
 				return mock
 			},
@@ -111,7 +112,7 @@ func (suite *DebianUpdateHostnamePublicTestSuite) TestUpdateHostname() {
 			setupMock: func() *mocks.MockManager {
 				mock := mocks.NewPlainMockManager(suite.ctrl)
 				mock.EXPECT().
-					RunCmd("hostnamectl", []string{"hostname"}).
+					RunCmd(gomock.Any(), "hostnamectl", []string{"hostname"}).
 					Return("", assert.AnError)
 				return mock
 			},
@@ -128,10 +129,10 @@ func (suite *DebianUpdateHostnamePublicTestSuite) TestUpdateHostname() {
 				mock := mocks.NewPlainMockManager(suite.ctrl)
 				gomock.InOrder(
 					mock.EXPECT().
-						RunCmd("hostnamectl", []string{"hostname"}).
+						RunCmd(gomock.Any(), "hostnamectl", []string{"hostname"}).
 						Return("old-host", nil),
 					mock.EXPECT().
-						RunPrivilegedCmd("hostnamectl", []string{"set-hostname", "new-host"}).
+						RunPrivilegedCmd(gomock.Any(), "hostnamectl", []string{"set-hostname", "new-host"}).
 						Return("", assert.AnError),
 				)
 				return mock
@@ -149,7 +150,7 @@ func (suite *DebianUpdateHostnamePublicTestSuite) TestUpdateHostname() {
 			mock := tc.setupMock()
 			debian := host.NewDebianProvider(mock)
 
-			tc.validateFunc(debian.UpdateHostname(tc.hostname))
+			tc.validateFunc(debian.UpdateHostname(context.Background(), tc.hostname))
 		})
 	}
 }

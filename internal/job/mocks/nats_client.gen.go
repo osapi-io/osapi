@@ -7,8 +7,8 @@ package mocks
 import (
 	reflect "reflect"
 
-	gomock "go.uber.org/mock/gomock"
 	nats "github.com/nats-io/nats.go"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockNATSConnector is a mock of NATSConnector interface.

@@ -22,6 +22,7 @@
 package exec
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
@@ -39,32 +40,38 @@ type defaultExecutor struct {
 
 // Execute runs the command and returns its combined output.
 func (d *defaultExecutor) Execute(
+	ctx context.Context,
 	name string,
 	args []string,
 	cwd string,
 ) (string, error) {
-	return d.run(name, args, cwd, nil)
+	return d.run(ctx, name, args, cwd, nil)
 }
 
 // ExecuteWithStdin runs the command with stdin written to its standard input
 // and returns its combined output. Stdin is not logged.
 func (d *defaultExecutor) ExecuteWithStdin(
+	ctx context.Context,
 	name string,
 	args []string,
 	cwd string,
 	stdin string,
 ) (string, error) {
-	return d.run(name, args, cwd, strings.NewReader(stdin))
+	return d.run(ctx, name, args, cwd, strings.NewReader(stdin))
 }
 
 // run executes the command, logging its arguments and output but never stdin.
 func (d *defaultExecutor) run(
+	ctx context.Context,
 	name string,
 	args []string,
 	cwd string,
 	stdin io.Reader,
 ) (string, error) {
-	cmd := exec.Command(name, args...)
+	ctx, cancel := context.WithTimeout(ctx, DefaultCommandTimeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, name, args...)
 	if cwd != "" {
 		cmd.Dir = cwd
 	}
@@ -84,6 +91,16 @@ func (d *defaultExecutor) run(
 		slog.Any("error", err),
 	)
 	if err != nil {
+		// The command was killed rather than having failed on its own terms,
+		// so the reason it stopped is not in its output.
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return string(out), fmt.Errorf(
+				"command %s: %w",
+				name,
+				ctxErr,
+			)
+		}
+
 		return string(out), err
 	}
 
@@ -107,9 +124,10 @@ func New(
 // RunCmdImpl executes the provided command with the specified arguments and
 // an optional working directory. It delegates to the CommandExecutor.
 func (e *Exec) RunCmdImpl(
+	ctx context.Context,
 	name string,
 	args []string,
 	cwd string,
 ) (string, error) {
-	return e.executor.Execute(name, args, cwd)
+	return e.executor.Execute(ctx, name, args, cwd)
 }

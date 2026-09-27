@@ -21,6 +21,8 @@
 package dns
 
 import (
+	"context"
+
 	"github.com/osapi-io/osapi/internal/provider"
 )
 
@@ -29,6 +31,7 @@ import (
 // if provided, while preserving existing settings for values that are not specified.
 // The function returns an error if the operation fails.
 func (l *Linux) UpdateResolvConfByInterface(
+	_ context.Context,
 	_ []string,
 	_ []string,
 	_ string,
@@ -39,6 +42,7 @@ func (l *Linux) UpdateResolvConfByInterface(
 
 // DeleteNetplanConfig returns ErrUnsupported on generic Linux.
 func (l *Linux) DeleteNetplanConfig(
+	_ context.Context,
 	_ string,
 ) (bool, error) {
 	return false, provider.ErrUnsupported

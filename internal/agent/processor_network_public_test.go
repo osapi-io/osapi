@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -70,7 +71,7 @@ func (s *ProcessorNetworkPublicTestSuite) TestProcessDNSDelete() {
 			setupMock: func() *dnsMocks.MockProvider {
 				m := dnsMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().
-					DeleteNetplanConfig("eth0").
+					DeleteNetplanConfig(gomock.Any(), "eth0").
 					Return(true, nil)
 				return m
 			},
@@ -96,7 +97,7 @@ func (s *ProcessorNetworkPublicTestSuite) TestProcessDNSDelete() {
 			setupMock: func() *dnsMocks.MockProvider {
 				m := dnsMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().
-					DeleteNetplanConfig("eth0").
+					DeleteNetplanConfig(gomock.Any(), "eth0").
 					Return(false, nil)
 				return m
 			},
@@ -121,7 +122,7 @@ func (s *ProcessorNetworkPublicTestSuite) TestProcessDNSDelete() {
 			setupMock: func() *dnsMocks.MockProvider {
 				m := dnsMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().
-					DeleteNetplanConfig("eth0").
+					DeleteNetplanConfig(gomock.Any(), "eth0").
 					Return(false, errors.New("netplan remove failed"))
 				return m
 			},
@@ -143,7 +144,7 @@ func (s *ProcessorNetworkPublicTestSuite) TestProcessDNSDelete() {
 				nil,
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }

@@ -21,6 +21,7 @@
 package netinfo_test
 
 import (
+	"context"
 	"io"
 	"strings"
 	"testing"
@@ -155,7 +156,7 @@ func (suite *GetRoutesPublicTestSuite) TestGetRoutes() {
 				}
 			}
 
-			got, err := l.GetRoutes()
+			got, err := l.GetRoutes(context.Background())
 
 			if tc.skipErrCheck {
 				// Succeeds on Linux, errors on macOS — both are valid
@@ -229,7 +230,7 @@ func (suite *GetRoutesPublicTestSuite) TestGetPrimaryInterface() {
 				}
 			}
 
-			got, err := l.GetPrimaryInterface()
+			got, err := l.GetPrimaryInterface(context.Background())
 
 			if tc.wantErr {
 				suite.Error(err)

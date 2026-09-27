@@ -57,9 +57,10 @@ func NewDebianProvider(
 
 // Get returns the current system timezone by running timedatectl and date.
 func (d *Debian) Get(
-	_ context.Context,
+	ctx context.Context,
 ) (*Info, error) {
 	tzOutput, err := d.execManager.RunCmd(
+		ctx,
 		"timedatectl",
 		[]string{"show", "-p", "Timezone", "--value"},
 	)
@@ -67,7 +68,7 @@ func (d *Debian) Get(
 		return nil, fmt.Errorf("timezone: timedatectl show: %w", err)
 	}
 
-	offsetOutput, err := d.execManager.RunCmd("date", []string{"+%:z"})
+	offsetOutput, err := d.execManager.RunCmd(ctx, "date", []string{"+%:z"})
 	if err != nil {
 		return nil, fmt.Errorf("timezone: date offset: %w", err)
 	}
@@ -81,10 +82,11 @@ func (d *Debian) Get(
 // Update sets the system timezone via timedatectl. Idempotent: returns
 // Changed false when the timezone already matches.
 func (d *Debian) Update(
-	_ context.Context,
+	ctx context.Context,
 	timezone string,
 ) (*UpdateResult, error) {
 	currentOutput, err := d.execManager.RunCmd(
+		ctx,
 		"timedatectl",
 		[]string{"show", "-p", "Timezone", "--value"},
 	)
@@ -105,7 +107,7 @@ func (d *Debian) Update(
 		}, nil
 	}
 
-	if _, setErr := d.execManager.RunPrivilegedCmd("timedatectl", []string{"set-timezone", timezone}); setErr != nil {
+	if _, setErr := d.execManager.RunPrivilegedCmd(ctx, "timedatectl", []string{"set-timezone", timezone}); setErr != nil {
 		return nil, fmt.Errorf("timezone: set-timezone: %w", setErr)
 	}
 

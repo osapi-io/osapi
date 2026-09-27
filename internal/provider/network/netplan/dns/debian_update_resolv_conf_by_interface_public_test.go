@@ -21,6 +21,7 @@
 package dns_test
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"os"
@@ -206,7 +207,7 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
 				mock.EXPECT().
-					RunCmd(execmocks.ResolveCommand, []string{"status", execmocks.NetworkInterfaceName}).
+					RunCmd(gomock.Any(), execmocks.ResolveCommand, []string{"status", execmocks.NetworkInterfaceName}).
 					Return("", assert.AnError).
 					AnyTimes()
 
@@ -238,7 +239,7 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 					Return(nil, errors.New("not found"))
 
 				mock.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", errors.New("invalid YAML"))
 
 				return mock, kv
@@ -269,11 +270,11 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 					Return(nil, errors.New("not found"))
 
 				mock.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", nil)
 
 				mock.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", errors.New("apply failed"))
 
 				return mock, kv
@@ -305,7 +306,7 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				// calling update. For this test the read path errors
 				// since we pass empty interface to resolvectl.
 				mock.EXPECT().
-					RunCmd(execmocks.ResolveCommand, []string{"status", ""}).
+					RunCmd(gomock.Any(), execmocks.ResolveCommand, []string{"status", ""}).
 					Return("", assert.AnError).
 					AnyTimes()
 
@@ -331,6 +332,7 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 
 			net := dns.NewDebianProvider(suite.logger, fs, kv, mock, "test-host")
 			tc.validateFunc(net.UpdateResolvConfByInterface(
+				context.Background(),
 				tc.servers,
 				tc.searchDomains,
 				tc.interfaceName,
@@ -354,7 +356,7 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestDeleteNetplan
 				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
 				mock.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
 				// KV Get for state cleanup — return not found so
@@ -401,7 +403,7 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestDeleteNetplan
 				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
 				mock.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", errors.New("apply failed"))
 
 				return mock, kv
@@ -428,7 +430,7 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestDeleteNetplan
 			tc.setupFS(fs)
 
 			net := dns.NewDebianProvider(suite.logger, fs, kv, mock, "test-host")
-			tc.validateFunc(net.DeleteNetplanConfig("eth0"))
+			tc.validateFunc(net.DeleteNetplanConfig(context.Background(), "eth0"))
 		})
 	}
 }

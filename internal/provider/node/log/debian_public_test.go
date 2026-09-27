@@ -76,7 +76,7 @@ func (suite *DebianPublicTestSuite) TestQuery() {
 			opts: oslog.QueryOpts{},
 			setupMock: func() {
 				suite.mockManager.EXPECT().
-					RunCmd("journalctl", []string{"--output=json", "-n", "100"}).
+					RunCmd(gomock.Any(), "journalctl", []string{"--output=json", "-n", "100"}).
 					Return(twoEntries, nil)
 			},
 			validateFunc: func(result []oslog.Entry) {
@@ -100,7 +100,7 @@ func (suite *DebianPublicTestSuite) TestQuery() {
 			},
 			setupMock: func() {
 				suite.mockManager.EXPECT().
-					RunCmd("journalctl", []string{"--output=json", "--since", "1 hour ago", "--priority", "err", "-n", "50"}).
+					RunCmd(gomock.Any(), "journalctl", []string{"--output=json", "--since", "1 hour ago", "--priority", "err", "-n", "50"}).
 					Return(singleEntry, nil)
 			},
 			validateFunc: func(result []oslog.Entry) {
@@ -113,7 +113,7 @@ func (suite *DebianPublicTestSuite) TestQuery() {
 			opts: oslog.QueryOpts{Lines: 25},
 			setupMock: func() {
 				suite.mockManager.EXPECT().
-					RunCmd("journalctl", []string{"--output=json", "-n", "25"}).
+					RunCmd(gomock.Any(), "journalctl", []string{"--output=json", "-n", "25"}).
 					Return(singleEntry, nil)
 			},
 			validateFunc: func(result []oslog.Entry) {
@@ -125,7 +125,7 @@ func (suite *DebianPublicTestSuite) TestQuery() {
 			opts: oslog.QueryOpts{},
 			setupMock: func() {
 				suite.mockManager.EXPECT().
-					RunCmd("journalctl", gomock.Any()).
+					RunCmd(gomock.Any(), "journalctl", gomock.Any()).
 					Return("", errors.New("journalctl not found"))
 			},
 			wantErr:    true,
@@ -136,7 +136,7 @@ func (suite *DebianPublicTestSuite) TestQuery() {
 			opts: oslog.QueryOpts{},
 			setupMock: func() {
 				suite.mockManager.EXPECT().
-					RunCmd("journalctl", gomock.Any()).
+					RunCmd(gomock.Any(), "journalctl", gomock.Any()).
 					Return("", nil)
 			},
 			validateFunc: func(result []oslog.Entry) {
@@ -148,7 +148,7 @@ func (suite *DebianPublicTestSuite) TestQuery() {
 			opts: oslog.QueryOpts{},
 			setupMock: func() {
 				suite.mockManager.EXPECT().
-					RunCmd("journalctl", gomock.Any()).
+					RunCmd(gomock.Any(), "journalctl", gomock.Any()).
 					Return("not-valid-json\n"+singleEntry, nil)
 			},
 			validateFunc: func(result []oslog.Entry) {
@@ -161,7 +161,7 @@ func (suite *DebianPublicTestSuite) TestQuery() {
 			opts: oslog.QueryOpts{},
 			setupMock: func() {
 				suite.mockManager.EXPECT().
-					RunCmd("journalctl", gomock.Any()).
+					RunCmd(gomock.Any(), "journalctl", gomock.Any()).
 					Return(`{"__REALTIME_TIMESTAMP":"","SYSLOG_IDENTIFIER":"test","PRIORITY":"6","MESSAGE":"hello"}`, nil)
 			},
 			validateFunc: func(result []oslog.Entry) {
@@ -174,7 +174,7 @@ func (suite *DebianPublicTestSuite) TestQuery() {
 			opts: oslog.QueryOpts{},
 			setupMock: func() {
 				suite.mockManager.EXPECT().
-					RunCmd("journalctl", gomock.Any()).
+					RunCmd(gomock.Any(), "journalctl", gomock.Any()).
 					Return(`{"__REALTIME_TIMESTAMP":"not-a-number","SYSLOG_IDENTIFIER":"test","PRIORITY":"6","MESSAGE":"hello"}`, nil)
 			},
 			validateFunc: func(result []oslog.Entry) {
@@ -220,7 +220,7 @@ func (suite *DebianPublicTestSuite) TestQueryUnit() {
 			opts: oslog.QueryOpts{},
 			setupMock: func() {
 				suite.mockManager.EXPECT().
-					RunCmd("journalctl", []string{"--output=json", "-u", "nginx.service", "-n", "100"}).
+					RunCmd(gomock.Any(), "journalctl", []string{"--output=json", "-u", "nginx.service", "-n", "100"}).
 					Return(singleEntry, nil)
 			},
 			validateFunc: func(result []oslog.Entry) {
@@ -242,7 +242,7 @@ func (suite *DebianPublicTestSuite) TestQueryUnit() {
 			},
 			setupMock: func() {
 				suite.mockManager.EXPECT().
-					RunCmd("journalctl", []string{"--output=json", "-u", "sshd.service", "--since", "30 minutes ago", "--priority", "warning", "-n", "20"}).
+					RunCmd(gomock.Any(), "journalctl", []string{"--output=json", "-u", "sshd.service", "--since", "30 minutes ago", "--priority", "warning", "-n", "20"}).
 					Return(singleEntry, nil)
 			},
 			validateFunc: func(result []oslog.Entry) {
@@ -255,7 +255,7 @@ func (suite *DebianPublicTestSuite) TestQueryUnit() {
 			opts: oslog.QueryOpts{},
 			setupMock: func() {
 				suite.mockManager.EXPECT().
-					RunCmd("journalctl", gomock.Any()).
+					RunCmd(gomock.Any(), "journalctl", gomock.Any()).
 					Return("", errors.New("journalctl failed"))
 			},
 			wantErr:    true,
@@ -295,7 +295,7 @@ func (suite *DebianPublicTestSuite) TestListSources() {
 			name: "when sources returned sorted list",
 			setupMock: func() {
 				suite.mockManager.EXPECT().
-					RunCmd("journalctl", []string{"--field=SYSLOG_IDENTIFIER"}).
+					RunCmd(gomock.Any(), "journalctl", []string{"--field=SYSLOG_IDENTIFIER"}).
 					Return("sshd\nnginx\ncron\n", nil)
 			},
 			validateFunc: func(result []string) {
@@ -306,7 +306,7 @@ func (suite *DebianPublicTestSuite) TestListSources() {
 			name: "when exec errors returns error",
 			setupMock: func() {
 				suite.mockManager.EXPECT().
-					RunCmd("journalctl", []string{"--field=SYSLOG_IDENTIFIER"}).
+					RunCmd(gomock.Any(), "journalctl", []string{"--field=SYSLOG_IDENTIFIER"}).
 					Return("", errors.New("journalctl not found"))
 			},
 			wantErr:    true,
@@ -316,7 +316,7 @@ func (suite *DebianPublicTestSuite) TestListSources() {
 			name: "when empty output returns nil",
 			setupMock: func() {
 				suite.mockManager.EXPECT().
-					RunCmd("journalctl", []string{"--field=SYSLOG_IDENTIFIER"}).
+					RunCmd(gomock.Any(), "journalctl", []string{"--field=SYSLOG_IDENTIFIER"}).
 					Return("", nil)
 			},
 			validateFunc: func(result []string) {

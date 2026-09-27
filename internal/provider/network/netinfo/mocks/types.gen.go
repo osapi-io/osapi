@@ -10,6 +10,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	netinfo "github.com/osapi-io/osapi/internal/provider/network/netinfo"
@@ -56,31 +57,31 @@ func (mr *MockProviderMockRecorder) GetInterfaces() *gomock.Call {
 }
 
 // GetPrimaryInterface mocks base method.
-func (m *MockProvider) GetPrimaryInterface() (string, error) {
+func (m *MockProvider) GetPrimaryInterface(ctx context.Context) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPrimaryInterface")
+	ret := m.ctrl.Call(m, "GetPrimaryInterface", ctx)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPrimaryInterface indicates an expected call of GetPrimaryInterface.
-func (mr *MockProviderMockRecorder) GetPrimaryInterface() *gomock.Call {
+func (mr *MockProviderMockRecorder) GetPrimaryInterface(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrimaryInterface", reflect.TypeOf((*MockProvider)(nil).GetPrimaryInterface))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrimaryInterface", reflect.TypeOf((*MockProvider)(nil).GetPrimaryInterface), ctx)
 }
 
 // GetRoutes mocks base method.
-func (m *MockProvider) GetRoutes() ([]netinfo.RouteResult, error) {
+func (m *MockProvider) GetRoutes(ctx context.Context) ([]netinfo.RouteResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRoutes")
+	ret := m.ctrl.Call(m, "GetRoutes", ctx)
 	ret0, _ := ret[0].([]netinfo.RouteResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetRoutes indicates an expected call of GetRoutes.
-func (mr *MockProviderMockRecorder) GetRoutes() *gomock.Call {
+func (mr *MockProviderMockRecorder) GetRoutes(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRoutes", reflect.TypeOf((*MockProvider)(nil).GetRoutes))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRoutes", reflect.TypeOf((*MockProvider)(nil).GetRoutes), ctx)
 }

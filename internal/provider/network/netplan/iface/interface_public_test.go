@@ -187,7 +187,7 @@ func (suite *InterfacePublicTestSuite) TestList() {
 			name: "when interfaces exist",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusTwoIfaces, nil)
 			},
 			validateFunc: func(result []iface.InterfaceEntry, err error) {
@@ -214,7 +214,7 @@ func (suite *InterfacePublicTestSuite) TestList() {
 			name: "when single interface exists",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusSingleIface, nil)
 			},
 			validateFunc: func(result []iface.InterfaceEntry, err error) {
@@ -228,7 +228,7 @@ func (suite *InterfacePublicTestSuite) TestList() {
 			name: "when only loopback exists",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusEmpty, nil)
 			},
 			validateFunc: func(result []iface.InterfaceEntry, err error) {
@@ -240,7 +240,7 @@ func (suite *InterfacePublicTestSuite) TestList() {
 			name: "when netplan status fails",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return("", errors.New("command not found"))
 			},
 			validateFunc: func(result []iface.InterfaceEntry, err error) {
@@ -253,7 +253,7 @@ func (suite *InterfacePublicTestSuite) TestList() {
 			name: "when two interfaces share the same index, sort falls back to alphabetical order",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusSameIndexIfaces, nil)
 			},
 			validateFunc: func(result []iface.InterfaceEntry, err error) {
@@ -291,7 +291,7 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 			interfaceNm: "eth0",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusTwoIfaces, nil)
 			},
 			validateFunc: func(result *iface.InterfaceEntry, err error) {
@@ -310,7 +310,7 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 			interfaceNm: "eth99",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusSingleIface, nil)
 			},
 			validateFunc: func(result *iface.InterfaceEntry, err error) {
@@ -334,7 +334,7 @@ func (suite *InterfacePublicTestSuite) TestGet() {
 			interfaceNm: "eth0",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return("", errors.New("command not found"))
 			},
 			validateFunc: func(result *iface.InterfaceEntry, err error) {
@@ -377,7 +377,7 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 			setup: func() {
 				// SectionForInterface calls netplan status.
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(`{"eth0": {"type": "ethernet"}}`, nil).
 					AnyTimes()
 
@@ -388,12 +388,12 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 
 				// netplan generate succeeds.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", nil)
 
 				// netplan apply succeeds.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
 				// KV Put succeeds.
@@ -473,7 +473,7 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 			setup: func() {
 				// SectionForInterface calls netplan status.
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(`{"eth0": {"type": "ethernet"}}`, nil).
 					AnyTimes()
 
@@ -484,7 +484,7 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 
 				// netplan generate fails.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", errors.New("invalid YAML"))
 			},
 			validateFunc: func(result *iface.InterfaceResult, err error) {
@@ -532,7 +532,7 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 
 				// SectionForInterface calls netplan status.
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(`{"eth0": {"type": "ethernet"}}`, nil).
 					AnyTimes()
 
@@ -543,12 +543,12 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 
 				// netplan generate succeeds.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", nil)
 
 				// netplan apply succeeds.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
 				// KV Put succeeds.
@@ -605,7 +605,7 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 
 				// SectionForInterface calls netplan status.
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(`{"eth0": {"type": "ethernet"}}`, nil).
 					AnyTimes()
 
@@ -614,7 +614,7 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 					Return(nil, errors.New("not found"))
 
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", errors.New("validation error"))
 			},
 			validateFunc: func(result *iface.InterfaceResult, err error) {
@@ -656,7 +656,7 @@ func (suite *InterfacePublicTestSuite) TestDelete() {
 
 				// netplan apply succeeds.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
 				// KV state exists for undeploy marking.
@@ -709,7 +709,7 @@ func (suite *InterfacePublicTestSuite) TestDelete() {
 				)
 
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", errors.New("apply failed"))
 			},
 			validateFunc: func(result *iface.InterfaceResult, err error) {

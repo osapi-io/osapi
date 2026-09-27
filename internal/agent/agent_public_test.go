@@ -310,7 +310,7 @@ func (s *AgentPublicTestSuite) TestStart() {
 			setupFunc: func() *agent.Agent {
 				mockExecMgr := execmocks.NewMockManager(s.mockCtrl)
 				mockExecMgr.EXPECT().
-					RunCmd("sudo", gomock.Any()).
+					RunCmd(gomock.Any(), "sudo", gomock.Any()).
 					Return("", fmt.Errorf("sudo: a password is required")).
 					AnyTimes()
 
@@ -348,7 +348,7 @@ func (s *AgentPublicTestSuite) TestStart() {
 			setupFunc: func() *agent.Agent {
 				mockExecMgr := execmocks.NewMockManager(s.mockCtrl)
 				mockExecMgr.EXPECT().
-					RunCmd("sudo", gomock.Any()).
+					RunCmd(gomock.Any(), "sudo", gomock.Any()).
 					Return("/usr/bin/something", nil).
 					AnyTimes()
 

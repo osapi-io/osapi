@@ -21,6 +21,7 @@
 package netplan_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -118,7 +119,7 @@ func (suite *StatusPublicTestSuite) TestGetStatus() {
 			name: "when netplan status returns valid JSON",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusJSON, nil)
 			},
 			validateFunc: func(result netplan.Status, err error) {
@@ -162,7 +163,7 @@ func (suite *StatusPublicTestSuite) TestGetStatus() {
 			name: "when netplan command fails",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return("", errors.New("command not found"))
 			},
 			validateFunc: func(result netplan.Status, err error) {
@@ -175,7 +176,7 @@ func (suite *StatusPublicTestSuite) TestGetStatus() {
 			name: "when output is invalid JSON",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return("not valid json", nil)
 			},
 			validateFunc: func(result netplan.Status, err error) {
@@ -188,7 +189,7 @@ func (suite *StatusPublicTestSuite) TestGetStatus() {
 			name: "when output contains only global state",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(`{"netplan-global-state": {"online": true}}`, nil)
 			},
 			validateFunc: func(result netplan.Status, err error) {
@@ -200,7 +201,7 @@ func (suite *StatusPublicTestSuite) TestGetStatus() {
 			name: "when interface entry is invalid JSON object",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(`{"netplan-global-state": {"online": true}, "eth0": "not-an-object"}`, nil)
 			},
 			validateFunc: func(result netplan.Status, err error) {
@@ -215,7 +216,7 @@ func (suite *StatusPublicTestSuite) TestGetStatus() {
 		suite.Run(tc.name, func() {
 			tc.setup()
 
-			result, err := netplan.GetStatus(suite.mockExec)
+			result, err := netplan.GetStatus(context.Background(), suite.mockExec)
 
 			tc.validateFunc(result, err)
 		})
@@ -575,7 +576,7 @@ func (suite *StatusPublicTestSuite) TestSectionForInterface() {
 			name: "when interface found returns correct section",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusJSON, nil)
 			},
 			ifaceName: "wlp0s20f3",
@@ -587,7 +588,7 @@ func (suite *StatusPublicTestSuite) TestSectionForInterface() {
 			name: "when interface found returns bridges section",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusJSON, nil)
 			},
 			ifaceName: "cni0",
@@ -599,7 +600,7 @@ func (suite *StatusPublicTestSuite) TestSectionForInterface() {
 			name: "when interface not found falls back to ethernets",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusJSON, nil)
 			},
 			ifaceName: "nonexistent0",
@@ -611,7 +612,7 @@ func (suite *StatusPublicTestSuite) TestSectionForInterface() {
 			name: "when exec error falls back to ethernets",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return("", errors.New("command not found"))
 			},
 			ifaceName: "eth0",
@@ -625,7 +626,11 @@ func (suite *StatusPublicTestSuite) TestSectionForInterface() {
 		suite.Run(tc.name, func() {
 			tc.setup()
 
-			result := netplan.SectionForInterface(suite.mockExec, tc.ifaceName)
+			result := netplan.SectionForInterface(
+				context.Background(),
+				suite.mockExec,
+				tc.ifaceName,
+			)
 
 			tc.validateFunc(result)
 		})

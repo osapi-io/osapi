@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -132,7 +133,7 @@ func (s *ProcessorServicePublicTestSuite) TestProcessServiceOperation() {
 			}
 
 			processor := s.newNodeProcessor(serviceProvider)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -197,7 +198,7 @@ func (s *ProcessorServicePublicTestSuite) TestProcessServiceList() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newNodeProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -277,7 +278,7 @@ func (s *ProcessorServicePublicTestSuite) TestProcessServiceGet() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newNodeProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -362,7 +363,7 @@ func (s *ProcessorServicePublicTestSuite) TestProcessServiceCreate() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newNodeProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -447,7 +448,7 @@ func (s *ProcessorServicePublicTestSuite) TestProcessServiceUpdate() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newNodeProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -527,7 +528,7 @@ func (s *ProcessorServicePublicTestSuite) TestProcessServiceDelete() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newNodeProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -607,7 +608,7 @@ func (s *ProcessorServicePublicTestSuite) TestProcessServiceStart() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newNodeProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -687,7 +688,7 @@ func (s *ProcessorServicePublicTestSuite) TestProcessServiceStop() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newNodeProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -767,7 +768,7 @@ func (s *ProcessorServicePublicTestSuite) TestProcessServiceRestart() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newNodeProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -847,7 +848,7 @@ func (s *ProcessorServicePublicTestSuite) TestProcessServiceEnable() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newNodeProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -927,7 +928,7 @@ func (s *ProcessorServicePublicTestSuite) TestProcessServiceDisable() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newNodeProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }

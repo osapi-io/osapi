@@ -20,6 +20,8 @@
 
 package exec
 
+import "context"
+
 // RunPrivilegedCmdWithStdin executes the provided command with arguments and
 // writes stdin to the command's standard input. When sudo is enabled, the
 // command is prepended with "sudo".
@@ -27,6 +29,7 @@ package exec
 // Pass secrets this way rather than in arguments: stdin is not interpreted by
 // a shell, does not appear in the process list, and is never logged.
 func (e *Exec) RunPrivilegedCmdWithStdin(
+	ctx context.Context,
 	name string,
 	args []string,
 	stdin string,
@@ -36,5 +39,5 @@ func (e *Exec) RunPrivilegedCmdWithStdin(
 		name = "sudo"
 	}
 
-	return e.executor.ExecuteWithStdin(name, args, "", stdin)
+	return e.executor.ExecuteWithStdin(ctx, name, args, "", stdin)
 }

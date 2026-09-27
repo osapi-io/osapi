@@ -91,7 +91,7 @@ func ApplyConfig(
 	}
 
 	// Validate with netplan generate (validates without applying).
-	if _, genErr := execManager.RunPrivilegedCmd("netplan", []string{"generate"}); genErr != nil {
+	if _, genErr := execManager.RunPrivilegedCmd(ctx, "netplan", []string{"generate"}); genErr != nil {
 		// Roll back: remove the invalid file.
 		_ = fs.Remove(path)
 
@@ -102,7 +102,7 @@ func ApplyConfig(
 	}
 
 	// Apply the configuration.
-	if _, applyErr := execManager.RunPrivilegedCmd("netplan", []string{"apply"}); applyErr != nil {
+	if _, applyErr := execManager.RunPrivilegedCmd(ctx, "netplan", []string{"apply"}); applyErr != nil {
 		return false, fmt.Errorf("netplan apply: %w", applyErr)
 	}
 
@@ -157,7 +157,7 @@ func RemoveConfig(
 	}
 
 	// Apply the configuration change.
-	if _, applyErr := execManager.RunPrivilegedCmd("netplan", []string{"apply"}); applyErr != nil {
+	if _, applyErr := execManager.RunPrivilegedCmd(ctx, "netplan", []string{"apply"}); applyErr != nil {
 		return false, fmt.Errorf("netplan remove: apply: %w", applyErr)
 	}
 

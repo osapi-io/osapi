@@ -48,9 +48,9 @@ func interfaceFilePath(
 
 // List returns all network interfaces from netplan status.
 func (d *Debian) List(
-	_ context.Context,
+	ctx context.Context,
 ) ([]InterfaceEntry, error) {
-	status, err := netplan.GetStatus(d.execManager)
+	status, err := netplan.GetStatus(ctx, d.execManager)
 	if err != nil {
 		return nil, fmt.Errorf("interface list: %w", err)
 	}
@@ -94,14 +94,14 @@ func (d *Debian) List(
 
 // Get returns a single interface by name.
 func (d *Debian) Get(
-	_ context.Context,
+	ctx context.Context,
 	name string,
 ) (*InterfaceEntry, error) {
 	if name == "" {
 		return nil, fmt.Errorf("interface get: name must not be empty")
 	}
 
-	status, err := netplan.GetStatus(d.execManager)
+	status, err := netplan.GetStatus(ctx, d.execManager)
 	if err != nil {
 		return nil, fmt.Errorf("interface get: %w", err)
 	}
@@ -146,7 +146,7 @@ func (d *Debian) Create(
 		}, nil
 	}
 
-	ifaceSection := netplan.SectionForInterface(d.execManager, entry.Name)
+	ifaceSection := netplan.SectionForInterface(ctx, d.execManager, entry.Name)
 	content := generateInterfaceYAML(entry, ifaceSection)
 	metadata := map[string]string{
 		"interface": entry.Name,
@@ -199,7 +199,7 @@ func (d *Debian) Update(
 		)
 	}
 
-	ifaceSection := netplan.SectionForInterface(d.execManager, entry.Name)
+	ifaceSection := netplan.SectionForInterface(ctx, d.execManager, entry.Name)
 	content := generateInterfaceYAML(entry, ifaceSection)
 	metadata := map[string]string{
 		"interface": entry.Name,

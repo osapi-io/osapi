@@ -21,6 +21,7 @@
 package netinfo
 
 import (
+	"context"
 	"io"
 	"net"
 	"strings"
@@ -34,7 +35,7 @@ var _ provider.FactsSetter = (*Darwin)(nil)
 // Darwin implements the Provider interface for macOS systems.
 type Darwin struct {
 	Netinfo
-	RouteReaderFn func() (io.ReadCloser, error)
+	RouteReaderFn func(ctx context.Context) (io.ReadCloser, error)
 }
 
 // NewDarwinProvider factory to create a new Darwin instance.
@@ -48,8 +49,8 @@ func NewDarwinProvider(
 				return iface.Addrs()
 			},
 		},
-		RouteReaderFn: func() (io.ReadCloser, error) {
-			output, err := em.RunCmd("netstat", []string{"-rn"})
+		RouteReaderFn: func(ctx context.Context) (io.ReadCloser, error) {
+			output, err := em.RunCmd(ctx, "netstat", []string{"-rn"})
 			if err != nil {
 				return nil, err
 			}

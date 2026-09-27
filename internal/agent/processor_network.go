@@ -21,6 +21,7 @@
 package agent
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -41,13 +42,13 @@ func NewNetworkProcessor(
 	routeProvider route.Provider,
 	logger *slog.Logger,
 ) ProcessorFunc {
-	return func(req job.Request) (json.RawMessage, error) {
+	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
 		// Extract base operation from dotted operation (e.g., "dns.get" -> "dns")
 		baseOperation := strings.Split(req.Operation, ".")[0]
 
 		switch baseOperation {
 		case "dns":
-			return processNetworkDNS(dnsProvider, logger, req)
+			return processNetworkDNS(ctx, dnsProvider, logger, req)
 		case "ping":
 			return processNetworkPing(pingProvider, logger, req)
 		case "interface":
@@ -62,6 +63,7 @@ func NewNetworkProcessor(
 
 // processNetworkDNS handles DNS configuration operations.
 func processNetworkDNS(
+	ctx context.Context,
 	dnsProvider dns.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -90,7 +92,7 @@ func processNetworkDNS(
 			slog.String("interface", interfaceName),
 		)
 
-		config, err := dnsProvider.GetResolvConfByInterface(interfaceName)
+		config, err := dnsProvider.GetResolvConfByInterface(ctx, interfaceName)
 		if err != nil {
 			return nil, err
 		}
@@ -107,7 +109,7 @@ func processNetworkDNS(
 			slog.String("interface", interfaceName),
 		)
 
-		changed, err := dnsProvider.DeleteNetplanConfig(interfaceName)
+		changed, err := dnsProvider.DeleteNetplanConfig(ctx, interfaceName)
 		if err != nil {
 			return nil, err
 		}
@@ -148,6 +150,7 @@ func processNetworkDNS(
 	)
 
 	dnsResult, err := dnsProvider.UpdateResolvConfByInterface(
+		ctx,
 		serverStrings,
 		searchStrings,
 		interfaceName,

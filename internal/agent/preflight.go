@@ -22,6 +22,7 @@ package agent
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -77,12 +78,13 @@ var procStatusPath = "/proc/self/status"
 // checks both sudo access and Linux capabilities. Returns the combined
 // results and whether all checks passed.
 func RunPreflight(
+	ctx context.Context,
 	logger *slog.Logger,
 	execManager exec.Manager,
 ) ([]PreflightResult, bool) {
 	allPassed := true
 
-	sudoResults := checkSudoAccess(logger, execManager)
+	sudoResults := checkSudoAccess(ctx, logger, execManager)
 	capResults := checkCapabilities(logger)
 
 	results := make([]PreflightResult, 0, len(sudoResults)+len(capResults))
@@ -108,6 +110,7 @@ func RunPreflight(
 // checkSudoAccess verifies that the agent can run each required command
 // via sudo without a password prompt.
 func checkSudoAccess(
+	ctx context.Context,
 	logger *slog.Logger,
 	execManager exec.Manager,
 ) []PreflightResult {
@@ -116,7 +119,7 @@ func checkSudoAccess(
 	for _, cmd := range sudoCommands {
 		name := fmt.Sprintf("sudo:%s", cmd)
 
-		_, err := execManager.RunCmd("sudo", []string{"-n", "which", cmd})
+		_, err := execManager.RunCmd(ctx, "sudo", []string{"-n", "which", cmd})
 		if err != nil {
 			logger.Debug(
 				"sudo preflight check failed",

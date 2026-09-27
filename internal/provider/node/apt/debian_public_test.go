@@ -76,7 +76,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 			name: "when list succeeds",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("dpkg-query", []string{"-W", "-f", suite.dpkgFormat}).
+					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat}).
 					Return(suite.dpkgOutput, nil)
 			},
 			validateFunc: func(pkgs []apt.Package) {
@@ -94,7 +94,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 			name: "when exec error",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("dpkg-query", []string{"-W", "-f", suite.dpkgFormat}).
+					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat}).
 					Return("", fmt.Errorf("exec failed"))
 			},
 			wantErr:     true,
@@ -104,7 +104,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 			name: "when empty output",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("dpkg-query", []string{"-W", "-f", suite.dpkgFormat}).
+					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat}).
 					Return("", nil)
 			},
 			validateFunc: func(pkgs []apt.Package) {
@@ -117,7 +117,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 				output := "only-two\tfields\n" +
 					"vim\t2:9.0.1378-2\tVi IMproved\tii \t3826\n"
 				suite.mockExec.EXPECT().
-					RunCmd("dpkg-query", []string{"-W", "-f", suite.dpkgFormat}).
+					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat}).
 					Return(output, nil)
 			},
 			validateFunc: func(pkgs []apt.Package) {
@@ -161,7 +161,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			setupMock: func() {
 				output := "vim\t2:9.0.1378-2\tVi IMproved - enhanced vi editor\tii \t3826\n"
 				suite.mockExec.EXPECT().
-					RunCmd("dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "vim"}).
+					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "vim"}).
 					Return(output, nil)
 			},
 			validateFunc: func(pkg *apt.Package) {
@@ -177,7 +177,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			pkgName: "nonexistent",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "nonexistent"}).
+					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "nonexistent"}).
 					Return("", fmt.Errorf("no packages found matching nonexistent"))
 			},
 			wantErr:     true,
@@ -189,7 +189,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			setupMock: func() {
 				output := "removed-pkg\t1.0-1\tA removed package\trc \t100\n"
 				suite.mockExec.EXPECT().
-					RunCmd("dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "removed-pkg"}).
+					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "removed-pkg"}).
 					Return(output, nil)
 			},
 			wantErr:     true,
@@ -200,7 +200,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			pkgName: "vim",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "vim"}).
+					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "vim"}).
 					Return("", fmt.Errorf("exec failed"))
 			},
 			wantErr:     true,
@@ -241,7 +241,7 @@ func (suite *DebianPublicTestSuite) TestInstall() {
 			pkgName: "vim",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("apt-get", []string{"install", "-y", "vim"}).
+					RunPrivilegedCmd(gomock.Any(), "apt-get", []string{"install", "-y", "vim"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *apt.Result) {
@@ -255,7 +255,7 @@ func (suite *DebianPublicTestSuite) TestInstall() {
 			pkgName: "badpkg",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("apt-get", []string{"install", "-y", "badpkg"}).
+					RunPrivilegedCmd(gomock.Any(), "apt-get", []string{"install", "-y", "badpkg"}).
 					Return("", fmt.Errorf("E: Unable to locate package badpkg"))
 			},
 			wantErr:     true,
@@ -296,7 +296,7 @@ func (suite *DebianPublicTestSuite) TestRemove() {
 			pkgName: "vim",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("apt-get", []string{"remove", "-y", "vim"}).
+					RunPrivilegedCmd(gomock.Any(), "apt-get", []string{"remove", "-y", "vim"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *apt.Result) {
@@ -310,7 +310,7 @@ func (suite *DebianPublicTestSuite) TestRemove() {
 			pkgName: "vim",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("apt-get", []string{"remove", "-y", "vim"}).
+					RunPrivilegedCmd(gomock.Any(), "apt-get", []string{"remove", "-y", "vim"}).
 					Return("", fmt.Errorf("permission denied"))
 			},
 			wantErr:     true,
@@ -349,7 +349,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			name: "when update succeeds",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("apt-get", []string{"update"}).
+					RunPrivilegedCmd(gomock.Any(), "apt-get", []string{"update"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *apt.Result) {
@@ -361,7 +361,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			name: "when exec error",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("apt-get", []string{"update"}).
+					RunPrivilegedCmd(gomock.Any(), "apt-get", []string{"update"}).
 					Return("", fmt.Errorf("permission denied"))
 			},
 			wantErr:     true,
@@ -400,7 +400,7 @@ func (suite *DebianPublicTestSuite) TestListUpdates() {
 			name: "when list updates succeeds",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("apt", []string{"list", "--upgradable"}).
+					RunCmd(gomock.Any(), "apt", []string{"list", "--upgradable"}).
 					Return(suite.aptUpOutput, nil)
 			},
 			validateFunc: func(updates []apt.Update) {
@@ -417,7 +417,7 @@ func (suite *DebianPublicTestSuite) TestListUpdates() {
 			name: "when no updates available",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("apt", []string{"list", "--upgradable"}).
+					RunCmd(gomock.Any(), "apt", []string{"list", "--upgradable"}).
 					Return("Listing... Done\n", nil)
 			},
 			validateFunc: func(updates []apt.Update) {
@@ -432,7 +432,7 @@ func (suite *DebianPublicTestSuite) TestListUpdates() {
 					"short/line version\n" +
 					"vim/stable 2:9.0.1378-3 amd64 [upgradable from: 2:9.0.1378-2]\n"
 				suite.mockExec.EXPECT().
-					RunCmd("apt", []string{"list", "--upgradable"}).
+					RunCmd(gomock.Any(), "apt", []string{"list", "--upgradable"}).
 					Return(output, nil)
 			},
 			validateFunc: func(updates []apt.Update) {
@@ -444,7 +444,7 @@ func (suite *DebianPublicTestSuite) TestListUpdates() {
 			name: "when exec error",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("apt", []string{"list", "--upgradable"}).
+					RunCmd(gomock.Any(), "apt", []string{"list", "--upgradable"}).
 					Return("", fmt.Errorf("exec failed"))
 			},
 			wantErr:     true,

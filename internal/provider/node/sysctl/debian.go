@@ -252,7 +252,7 @@ func (d *Debian) deploy(
 	}
 
 	// Apply the sysctl conf file.
-	if _, execErr := d.execManager.RunPrivilegedCmd("sysctl", []string{"-p", confPath}); execErr != nil {
+	if _, execErr := d.execManager.RunPrivilegedCmd(ctx, "sysctl", []string{"-p", confPath}); execErr != nil {
 		d.logger.Warn(
 			"sysctl apply failed after deploy",
 			slog.String("key", entry.Key),
@@ -339,7 +339,7 @@ func (d *Debian) Delete(
 
 	// Reload sysctl defaults.
 	if changed {
-		if _, execErr := d.execManager.RunPrivilegedCmd("sysctl", []string{"--system"}); execErr != nil {
+		if _, execErr := d.execManager.RunPrivilegedCmd(ctx, "sysctl", []string{"--system"}); execErr != nil {
 			d.logger.Warn(
 				"sysctl reload failed after delete",
 				slog.String("key", key),
@@ -389,7 +389,7 @@ func (d *Debian) List(
 		}
 
 		// Read current runtime value.
-		runtimeValue := d.readRuntimeValue(entry.Key)
+		runtimeValue := d.readRuntimeValue(ctx, entry.Key)
 		if runtimeValue != "" {
 			entry.Value = runtimeValue
 		}
@@ -439,7 +439,7 @@ func (d *Debian) Get(
 	}
 
 	// Read current runtime value.
-	runtimeValue := d.readRuntimeValue(key)
+	runtimeValue := d.readRuntimeValue(ctx, key)
 	if runtimeValue != "" {
 		entry.Value = runtimeValue
 	}
@@ -487,9 +487,10 @@ func (d *Debian) buildEntryFromState(
 // readRuntimeValue reads the current runtime value for a sysctl key
 // using `sysctl -n`. Returns empty string on error.
 func (d *Debian) readRuntimeValue(
+	ctx context.Context,
 	key string,
 ) string {
-	output, err := d.execManager.RunCmd("sysctl", []string{"-n", key})
+	output, err := d.execManager.RunCmd(ctx, "sysctl", []string{"-n", key})
 	if err != nil {
 		return ""
 	}

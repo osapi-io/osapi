@@ -9,9 +9,9 @@ import (
 	reflect "reflect"
 	time "time"
 
-	gomock "go.uber.org/mock/gomock"
 	nats "github.com/nats-io/nats.go"
 	jetstream "github.com/nats-io/nats.go/jetstream"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockJetStream is a mock of JetStream interface.

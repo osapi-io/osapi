@@ -30,7 +30,7 @@ import (
 
 // Get returns a single systemd service by name using systemctl show.
 func (d *Debian) Get(
-	_ context.Context,
+	ctx context.Context,
 	name string,
 ) (*Info, error) {
 	d.logger.Debug(
@@ -42,7 +42,7 @@ func (d *Debian) Get(
 		return nil, err
 	}
 
-	output, err := d.execManager.RunCmd("systemctl", []string{
+	output, err := d.execManager.RunCmd(ctx, "systemctl", []string{
 		"show",
 		name,
 		"--property=ActiveState,UnitFileState,Description,MainPID",

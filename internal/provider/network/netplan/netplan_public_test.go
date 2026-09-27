@@ -103,12 +103,12 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 
 				// netplan generate succeeds.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", nil)
 
 				// netplan apply succeeds.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
 				// KV Put succeeds.
@@ -173,11 +173,11 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 
 				// Proceeds to write, generate, apply, put.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", nil)
 
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
 				suite.mockStateKV.EXPECT().
@@ -197,7 +197,7 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 					Return(nil, errors.New("not found"))
 
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", errors.New("invalid YAML"))
 			},
 			validateFunc: func(changed bool, err error) {
@@ -218,11 +218,11 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 					Return(nil, errors.New("not found"))
 
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", nil)
 
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", errors.New("apply failed"))
 			},
 			validateFunc: func(changed bool, err error) {
@@ -299,11 +299,11 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 					Return(nil, errors.New("not found"))
 
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", nil)
 
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
 				suite.mockStateKV.EXPECT().
@@ -324,11 +324,11 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 					Return(nil, errors.New("not found"))
 
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", nil)
 
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
 				netplan.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
@@ -378,7 +378,7 @@ func (suite *NetplanPublicTestSuite) TestRemoveConfig() {
 
 				// netplan apply succeeds.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
 				// KV state exists for undeploy marking.
@@ -454,7 +454,7 @@ func (suite *NetplanPublicTestSuite) TestRemoveConfig() {
 				_ = suite.memFs.WriteFile(testPath, testContent, 0o644)
 
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", errors.New("apply failed"))
 			},
 			validateFunc: func(changed bool, err error) {
@@ -469,7 +469,7 @@ func (suite *NetplanPublicTestSuite) TestRemoveConfig() {
 				_ = suite.memFs.WriteFile(testPath, testContent, 0o644)
 
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
 				state := job.FileState{
@@ -503,7 +503,7 @@ func (suite *NetplanPublicTestSuite) TestRemoveConfig() {
 				_ = suite.memFs.WriteFile(testPath, testContent, 0o644)
 
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
 				suite.mockStateKV.EXPECT().

@@ -39,14 +39,14 @@ func NewDefaultMockProvider(
 ) *MockProvider {
 	mock := NewPlainMockProvider(ctrl)
 
-	mock.EXPECT().Exec(gomock.Any()).Return(&command.Result{
+	mock.EXPECT().Exec(gomock.Any(), gomock.Any()).Return(&command.Result{
 		Stdout:     "mock output",
 		Stderr:     "",
 		ExitCode:   0,
 		DurationMs: 10,
 	}, nil).AnyTimes()
 
-	mock.EXPECT().Shell(gomock.Any()).Return(&command.Result{
+	mock.EXPECT().Shell(gomock.Any(), gomock.Any()).Return(&command.Result{
 		Stdout:     "mock output",
 		Stderr:     "",
 		ExitCode:   0,

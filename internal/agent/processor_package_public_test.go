@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -129,7 +130,7 @@ func (s *ProcessorPackagePublicTestSuite) TestProcessPackageOperation() {
 			}
 
 			processor := s.newProcessor(packageProvider)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -198,7 +199,7 @@ func (s *ProcessorPackagePublicTestSuite) TestProcessPackageList() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -280,7 +281,7 @@ func (s *ProcessorPackagePublicTestSuite) TestProcessPackageGet() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -361,7 +362,7 @@ func (s *ProcessorPackagePublicTestSuite) TestProcessPackageInstall() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -442,7 +443,7 @@ func (s *ProcessorPackagePublicTestSuite) TestProcessPackageRemove() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -500,7 +501,7 @@ func (s *ProcessorPackagePublicTestSuite) TestProcessPackageUpdate() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -564,7 +565,7 @@ func (s *ProcessorPackagePublicTestSuite) TestProcessPackageListUpdates() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newProcessor(tt.setupMock())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }

@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -127,7 +128,7 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerOperation() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -251,7 +252,7 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerReboot() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -375,7 +376,7 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerShutdown() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }

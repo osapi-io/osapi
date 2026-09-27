@@ -21,6 +21,7 @@
 package exec_test
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"testing"
@@ -125,7 +126,13 @@ func (suite *RunCmdFullPublicTestSuite) TestRunCmdFull() {
 		suite.Run(tc.name, func() {
 			em := exec.New(suite.logger, false)
 
-			result, err := em.RunCmdFull(tc.command, tc.args, tc.cwd, tc.timeout)
+			result, err := em.RunCmdFull(
+				context.Background(),
+				tc.command,
+				tc.args,
+				tc.cwd,
+				tc.timeout,
+			)
 
 			if tc.expectError {
 				suite.Require().Error(err)

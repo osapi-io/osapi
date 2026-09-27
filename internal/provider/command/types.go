@@ -20,12 +20,14 @@
 
 package command
 
+import "context"
+
 // Provider implements the methods to execute commands on the system.
 type Provider interface {
 	// Exec executes a command directly without a shell.
-	Exec(params ExecParams) (*Result, error)
+	Exec(ctx context.Context, params ExecParams) (*Result, error)
 	// Shell executes a command through /bin/sh -c.
-	Shell(params ShellParams) (*Result, error)
+	Shell(ctx context.Context, params ShellParams) (*Result, error)
 }
 
 // ExecParams contains parameters for direct command execution.

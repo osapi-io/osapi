@@ -21,6 +21,7 @@
 package dns_test
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"os"
@@ -170,7 +171,7 @@ func (s *DebianDockerPublicTestSuite) TestGetResolvConfByInterface() {
 			}
 
 			p := dns.NewDebianDockerProvider(s.logger, fs)
-			tc.validateFunc(p.GetResolvConfByInterface(tc.interfaceName))
+			tc.validateFunc(p.GetResolvConfByInterface(context.Background(), tc.interfaceName))
 		})
 	}
 }
@@ -194,6 +195,7 @@ func (s *DebianDockerPublicTestSuite) TestUpdateResolvConfByInterface() {
 		s.Run(tt.name, func() {
 			p := dns.NewDebianDockerProvider(s.logger, s.fs)
 			tt.validateFunc(p.UpdateResolvConfByInterface(
+				context.Background(),
 				[]string{"8.8.8.8"},
 				[]string{"example.com"},
 				"eth0",
@@ -221,7 +223,7 @@ func (s *DebianDockerPublicTestSuite) TestDeleteNetplanConfig() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			p := dns.NewDebianDockerProvider(s.logger, s.fs)
-			tt.validateFunc(p.DeleteNetplanConfig("eth0"))
+			tt.validateFunc(p.DeleteNetplanConfig(context.Background(), "eth0"))
 		})
 	}
 }
