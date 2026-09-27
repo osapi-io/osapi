@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Job System Architecture | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/job-architecture"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Job System Architecture | OSAPI"><meta data-rh="true" name="description" content="Date Implemented Author: @retr0h"><meta data-rh="true" property="og:description" content="Date Implemented Author: @retr0h"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/job-architecture"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/job-architecture" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/job-architecture" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"Job System Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/job-architecture"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.d7e9b8b9.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.46b80a13.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.e2450577.js" defer="defer"></script>
 </head>
 <body>
@@ -483,6 +483,20 @@ is redelivered up to <code>MaxDeliver</code> times before landing in the DLQ.</l
 <li class=""><strong>Timeout Handling</strong>: for broadcast jobs, an agent that never responds within
 <code>job_timeout</code> appears in the result as <code>status: failed</code>.</li>
 <li class=""><strong>Graceful Degradation</strong>: agents continue on provider errors.</li>
+<li class=""><strong>Every command has a deadline</strong>: an operation runs under the agent&#x27;s job
+context, so a command still running when the agent shuts down is killed with
+it rather than outliving it. A command whose caller set no deadline of its
+own is bounded by a 10-minute backstop — long enough for a package
+installation over a slow mirror, short enough that a command waiting on a
+prompt nobody will answer does not run forever. The error then names the
+context&#x27;s cause, because a killed command produces no output of its own to
+explain itself.</li>
+<li class=""><strong>Cancelling the request does not cancel the work</strong>: <code>job_timeout</code> bounds
+how long the controller waits, not how long the agent runs. When it expires
+the caller is told the job timed out while the agent carries on and records
+its response, and <code>job delete</code> removes the queue entry rather than the
+running process. An operation is stopped only by its own deadline, the
+backstop, or the agent shutting down.</li>
 </ol>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="monitoring">Monitoring<a href="#monitoring" class="hash-link" aria-label="Direct link to Monitoring" title="Direct link to Monitoring" translate="no">​</a></h2>
 <p>Key metrics to track:</p>
