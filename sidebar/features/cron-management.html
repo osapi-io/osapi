@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Cron Management | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/cron-management"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Cron Management | OSAPI"><meta data-rh="true" name="description" content="OSAPI manages cron entries on target hosts. It supports two placement modes:"><meta data-rh="true" property="og:description" content="OSAPI manages cron entries on target hosts. It supports two placement modes:"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/cron-management"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/cron-management" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/cron-management" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Cron Management","item":"https://osapi-io.github.io/osapi/sidebar/features/cron-management"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.82f5393c.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.23430851.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.e2450577.js" defer="defer"></script>
 </head>
 <body>
@@ -35,8 +35,12 @@ in the NATS Object Store. When the agent deploys or updates a cron entry, it:</p
 <li class="">Records the deploy state in the file-state KV bucket (SHA-256, path,
 timestamps).</li>
 </ol>
-<p>The file-state KV tracks each deployed cron file, so updates are idempotent: if
-the script content has not changed, the file is not rewritten.</p>
+<p>Both <code>create</code> and <code>update</code> are idempotent on content: the agent compares the
+content it was asked to deploy with the file on disk and rewrites it only when
+they differ, so an entry edited by hand is restored. <code>create</code> is the one
+exception worth knowing: when an entry of the same name already exists under a
+different schedule, it reports <code>changed: false</code> rather than writing a second
+copy in another directory. Use <code>update</code> to move it.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="custom-schedule-etccrond">Custom Schedule (<code>/etc/cron.d/</code>)<a href="#custom-schedule-etccrond" class="hash-link" aria-label="Direct link to custom-schedule-etccrond" title="Direct link to custom-schedule-etccrond" translate="no">​</a></h3>
 <p>For entries with a <code>schedule</code> field, the provider writes a drop-in file. The
 file content comes from the referenced object in the Object Store:</p>
