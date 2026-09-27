@@ -22,6 +22,7 @@ package agent_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -650,4 +651,80 @@ func TestHeartbeatLowLevelPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(HeartbeatLowLevelPublicTestSuite))
+}
+
+// TestWriteRegistrationSigning covers what the controller relies on to tell
+// this agent's registration from one written by anything else able to reach the
+// registry bucket.
+func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistrationSigning() {
+	tests := []struct {
+		name         string
+		withPKI      bool
+		validateFunc func(job.AgentRegistration, *pki.Manager)
+	}{
+		{
+			name:    "with PKI the registration is signed over its routing fields",
+			withPKI: true,
+			validateFunc: func(reg job.AgentRegistration, m *pki.Manager) {
+				s.NotEmpty(reg.Signature)
+				s.True(
+					job.VerifyRegistration(&reg, m.PublicKey()),
+					"the controller must be able to verify this with the stored key",
+				)
+			},
+		},
+		{
+			name:    "a signature does not cover a hostname it did not claim",
+			withPKI: true,
+			validateFunc: func(reg job.AgentRegistration, m *pki.Manager) {
+				// Whoever rewrites the hostname has to re-sign it, and cannot.
+				reg.Hostname = "web-99"
+				s.False(job.VerifyRegistration(&reg, m.PublicKey()))
+			},
+		},
+		{
+			name:    "without PKI the registration is unsigned",
+			withPKI: false,
+			validateFunc: func(reg job.AgentRegistration, _ *pki.Manager) {
+				s.Empty(reg.Signature)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			var m *pki.Manager
+
+			if tt.withPKI {
+				m = pki.New(memfs.New(), "/keys", "agent")
+				s.Require().NoError(m.LoadOrGenerate())
+				agent.SetAgentPKIManager(s.testAgent, m)
+
+				defer agent.SetAgentPKIManager(s.testAgent, nil)
+			}
+
+			var written job.AgentRegistration
+
+			s.mockKV.EXPECT().
+				Put(gomock.Any(), "agents.test_machine_id", gomock.Any()).
+				DoAndReturn(func(
+					_ interface{},
+					_ string,
+					data []byte,
+				) (uint64, error) {
+					s.Require().NoError(json.Unmarshal(data, &written))
+
+					return uint64(1), nil
+				})
+
+			agent.ExportWriteRegistration(
+				context.Background(),
+				s.testAgent,
+				"test-machine-id",
+				"test-agent",
+			)
+
+			tt.validateFunc(written, m)
+		})
+	}
 }

@@ -2076,6 +2076,15 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithAgentKeyStoreEnforcing() 
 			store := jobmocks.NewMockAgentKeyStore(s.mockCtrl)
 			data := tt.responseData(store)
 
+			// The broadcast path also lists agents to learn who is expected to
+			// answer, and that now verifies each registration. Those lookups
+			// are not what this test asserts, and the registry agent was never
+			// accepted, so they report no stored key.
+			store.EXPECT().
+				LookupAgentKey(gomock.Any(), gomock.Any()).
+				Return(nil, client.ErrResponseKeyUnknown).
+				AnyTimes()
+
 			registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
 
 			opts := &client.Options{
