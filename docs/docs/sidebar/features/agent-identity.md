@@ -152,6 +152,66 @@ failed or missing result, never as a successful one.
 When PKI is disabled, none of the above applies -- there is no envelope to
 verify, so nothing is rejected on signature grounds.
 
+## Registration Signing
+
+An agent's job responses are not the only thing it sends. Every heartbeat it
+rewrites its own entry in the agent registry, and that entry is what targeting
+reads: the hostname a job names, the labels a label target selects, and the
+scheduling state that decides whether the agent is eligible for work at all.
+
+When `agent.pki.enabled` is true, the agent signs the routing fields of its
+registration with its own keypair. The signature covers:
+
+| Field         | Why it is signed                                               |
+| ------------- | -------------------------------------------------------------- |
+| `machine_id`  | Selects which stored key the signature is checked against      |
+| `hostname`    | A job names it, so a forged one redirects that host's work     |
+| `fingerprint` | Reported as this agent's key in the fleet view                 |
+| `state`       | A `Pending` agent is refused work; a forged `Ready` lifts that |
+| `labels`      | A label target routes on them, so a forged label attracts jobs |
+
+Everything else in a registration -- uptime, load, memory, conditions -- is
+reporting rather than routing, and is not signed. The signature is carried
+beside these fields, never inside the signed bytes.
+
+### What the controller checks
+
+When the controller holds a key for the agent, it verifies each registration
+before letting it decide anything:
+
+1. The machine ID selects the stored record. A registration naming another agent
+   is checked against **that** agent's key, and fails unless it was signed by
+   it.
+2. The signature must verify against the key recorded when the agent's
+   enrollment was accepted.
+3. The hostname must match the one recorded at acceptance. An accepted agent is
+   not entitled to answer for a host it did not enrol as.
+
+A registration that fails any of these is not an error returned to the agent.
+The agent keeps heartbeating and stays listed; it simply stops being
+authoritative. It is invisible to target resolution, to label matching, and to
+machine-ID targeting, and work aimed at that hostname continues to reach the
+agent that enrolled under it.
+
+Where more than one agent claims a hostname, resolution is deterministic: the
+lowest machine ID wins, rather than whichever entry the registry happened to
+list first.
+
+### Seeing where a fleet stands
+
+`osapi client agent list` and `GET /agent` report two separate fields per agent:
+
+| Field        | Meaning                                                                |
+| ------------ | ---------------------------------------------------------------------- |
+| `key_stored` | The controller holds this agent's key, recorded at acceptance          |
+| `verified`   | What it last registered was signed by that key and claims its own host |
+
+They answer different questions. `key_stored: false` means the agent has not
+enrolled since the key store existed -- expected during a rollout, and fixed by
+re-enrolling it. `key_stored: true` with `verified: false` means the controller
+can check this agent and what arrived did not check out, which is worth
+investigating rather than waiting out.
+
 ## Key Rotation
 
 The controller can rotate its Ed25519 keypair. During a configurable grace
@@ -182,6 +242,22 @@ a fleet is order-sensitive:
    enrollment holds no controller public key, so if PKI is enabled on it before
    enrollment finishes, every job it receives is rejected as "not enrolled"
    until enrollment completes.
+
+Neither switch flips as a consequence of upgrading. An agent accepted before the
+key store existed has no stored key, so it reports `key_stored: false` and is
+not authoritative once the controller is verifying. Nothing starts refusing work
+at a moment nobody chose, and the order to follow is:
+
+1. Enable `controller.pki.enabled`. The controller begins recording each agent's
+   key as its enrollment is accepted.
+2. Read `osapi client agent list`. Every agent still showing `key_stored: false`
+   has not enrolled since the store existed.
+3. Re-enrol those agents, and watch the field flip as each is accepted.
+4. Once the fleet reports `key_stored: true` and `verified: true` throughout,
+   enable `agent.pki.enabled`.
+
+Doing step 4 first is what produces a fleet that refuses work: the agents are
+verifying jobs before the controller can verify them back.
 
 ## Configuration
 

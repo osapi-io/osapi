@@ -88,6 +88,16 @@ func setIdentity(
 		info.Fingerprint = &fingerprint
 	}
 
+	// Both are reported, because they answer different questions: whether the
+	// controller can verify this agent at all, and whether what it last
+	// registered checked out. An operator staging a rollout needs the first to
+	// know who to re-enrol, and the second to see who is being refused.
+	keyStored := a.KeyStored
+	info.KeyStored = &keyStored
+
+	verified := a.Verified
+	info.Verified = &verified
+
 	if len(a.Labels) > 0 {
 		labels := a.Labels
 		info.Labels = &labels

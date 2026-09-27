@@ -61,4 +61,8 @@ export interface AgentInfo {
   conditions?: NodeCondition[];
   /** Agent state transition history. */
   timeline?: TimelineEvent[];
+  /** Whether the controller holds this agent's public key, recorded when its enrollment was accepted. False for an agent that has not enrolled since the key store existed, which is what to re-enrol before enabling enforcement. */
+  key_stored?: boolean;
+  /** Whether this agent's registration was signed by its stored key and claims the hostname it enrolled under. Only a verified registration decides where work is routed. True when the controller is not enforcing verification. */
+  verified?: boolean;
 }
