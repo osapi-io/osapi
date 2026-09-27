@@ -56,8 +56,12 @@ func (u *Debian) Do(
 	defer cancel()
 
 	// Run the ping in a separate goroutine to avoid blocking
-	resultChan := make(chan *Result)
-	errorChan := make(chan error)
+	// Buffered, so the goroutine can finish after a timeout. Do returns as
+	// soon as the context expires and stops receiving; on an unbuffered
+	// channel the send would then block forever and leak the goroutine on
+	// every timed-out ping.
+	resultChan := make(chan *Result, 1)
+	errorChan := make(chan error, 1)
 
 	go func() {
 		err = pinger.Run() // This blocks until pinging is finished
