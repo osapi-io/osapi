@@ -637,6 +637,11 @@ type AgentRegistration struct {
 	Fingerprint string `json:"fingerprint,omitempty"`
 	// SubComponents reports the status of internal services.
 	SubComponents map[string]SubComponentInfo `json:"sub_components,omitempty"`
+	// Signature is the agent's Ed25519 signature over the routing fields of
+	// this registration, as RegistrationSigningBytes encodes them. Empty when
+	// agent PKI is disabled, and unverifiable rather than trusted when the
+	// controller is enforcing.
+	Signature []byte `json:"signature,omitempty"`
 }
 
 // AgentInfo represents information about an active agent.
@@ -690,6 +695,15 @@ type AgentInfo struct {
 	Fingerprint string `json:"fingerprint,omitempty"`
 	// Timeline contains the chronological sequence of state transition events.
 	Timeline []TimelineEvent `json:"timeline,omitempty"`
+	// Verified reports whether this registration's signature checked out
+	// against the key stored for its machine ID. Only a verified registration
+	// may decide where work goes. True when the controller is not enforcing,
+	// which is the behaviour before verification existed.
+	Verified bool `json:"verified"`
+	// KeyStored reports whether the controller holds a key for this agent at
+	// all, so an operator can tell an agent that has not re-enrolled from one
+	// whose registration is being forged.
+	KeyStored bool `json:"key_stored"`
 }
 
 // NodeDiskResponse represents the response for node.disk.get operations.

@@ -23,6 +23,7 @@ package validation
 import (
 	"context"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -36,12 +37,43 @@ type AgentTarget struct {
 	Hostname  string
 	State     string
 	Labels    map[string]string
+	// Verified reports whether the registration behind this target was signed
+	// by the key stored for its machine ID. Only a verified target is
+	// resolvable: an unverified registration is not an error, it simply does
+	// not decide where work goes. True when the controller is not enforcing.
+	Verified bool
 }
 
 // AgentLister returns active agents with their hostnames and labels.
 type AgentLister func(ctx context.Context) ([]AgentTarget, error)
 
 var agentLister AgentLister
+
+// enforceVerified gates whether an unverified registration is allowed to
+// decide where work goes.
+//
+// Enforcement is a property of the controller, not of each target, so it lives
+// here once rather than as a flag every caller has to set correctly. Off leaves
+// resolution exactly as it was before registrations were signed, which is what
+// FR-009 requires of an upgrade: nothing starts refusing work at a moment the
+// operator did not choose.
+var enforceVerified bool
+
+// SetEnforceVerifiedRegistrations turns registration verification on for target
+// resolution. Called once at startup, when the controller has a key store to
+// verify against.
+func SetEnforceVerifiedRegistrations(
+	enforce bool,
+) {
+	enforceVerified = enforce
+}
+
+// resolvable reports whether a target may be routed to.
+func resolvable(
+	a AgentTarget,
+) bool {
+	return a.Verified || !enforceVerified
+}
 
 // labelSegmentRe matches NATS subject-safe segments (same as job.labelSegmentRegex).
 var labelSegmentRe = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
@@ -149,6 +181,10 @@ func matchesLabel(
 	}
 
 	for _, a := range agents {
+		if !resolvable(a) {
+			continue
+		}
+
 		if av, ok := a.Labels[key]; ok {
 			if av == value || strings.HasPrefix(av, value+".") {
 				return true
@@ -204,6 +240,10 @@ func matchesHostname(
 	}
 
 	for _, a := range agents {
+		if !resolvable(a) {
+			continue
+		}
+
 		if a.Hostname == target || a.MachineID == target {
 			if a.State == "Pending" {
 				pendingTargetMu.Lock()
@@ -252,16 +292,28 @@ func ResolveTarget(
 		return target
 	}
 
-	// Check if target is a hostname → resolve to machine ID.
+	// Only a verified registration may claim a hostname, and where more than
+	// one does, the lowest machine ID wins. Returning whichever the registry
+	// happened to list first made the winner depend on iteration order, which
+	// is what let a second machine take over a hostname it never enrolled
+	// under.
+	claimants := make([]string, 0, 1)
+
 	for _, a := range agents {
-		if a.Hostname == target {
-			return a.MachineID
+		if a.Hostname == target && resolvable(a) {
+			claimants = append(claimants, a.MachineID)
 		}
+	}
+
+	if len(claimants) > 0 {
+		sort.Strings(claimants)
+
+		return claimants[0]
 	}
 
 	// Check if target is already a machine ID.
 	for _, a := range agents {
-		if a.MachineID == target {
+		if a.MachineID == target && resolvable(a) {
 			return target
 		}
 	}

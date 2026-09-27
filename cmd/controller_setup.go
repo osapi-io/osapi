@@ -218,6 +218,7 @@ func setupController(
 					Hostname:  a.Hostname,
 					State:     a.State,
 					Labels:    a.Labels,
+					Verified:  a.Verified,
 				})
 			}
 			return targets, nil
@@ -873,6 +874,11 @@ func setupEnrollmentWatcher(
 	// accepted. The watcher owns those records, so verification reads what
 	// acceptance wrote and shares its cache.
 	b.jobClient.SetAgentKeyStore(watcher.KeyStore())
+
+	// And stop unverified registrations deciding where work goes. Both sides
+	// of this turn on together: the store is what makes verification possible,
+	// and without it target resolution behaves as it did before.
+	validation.SetEnforceVerifiedRegistrations(true)
 
 	go func() {
 		if err := watcher.Start(ctx); err != nil {

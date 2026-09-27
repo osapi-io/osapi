@@ -526,3 +526,154 @@ func TestTargetPublicTestSuite(
 ) {
 	suite.Run(t, new(TargetPublicTestSuite))
 }
+
+// TestResolveTargetEnforcing covers what changes once the controller verifies
+// registrations: an unverified one stops deciding where work goes, and a
+// contested hostname resolves the same way every time.
+func (s *TargetPublicTestSuite) TestResolveTargetEnforcing() {
+	tests := []struct {
+		name         string
+		enforce      bool
+		agents       []validation.AgentTarget
+		target       string
+		validateFunc func(string)
+	}{
+		{
+			name:    "a verified registration resolves to its machine ID",
+			enforce: true,
+			agents: []validation.AgentTarget{
+				{MachineID: "machine-001", Hostname: "web-01", Verified: true},
+			},
+			target:       "web-01",
+			validateFunc: func(got string) { s.Equal("machine-001", got) },
+		},
+		{
+			name:    "an unverified registration does not claim the hostname",
+			enforce: true,
+			agents: []validation.AgentTarget{
+				{MachineID: "machine-evil", Hostname: "web-01", Verified: false},
+			},
+			target: "web-01",
+			validateFunc: func(got string) {
+				// Unresolved, so the target is returned unchanged rather than
+				// routed to a machine that never enrolled under this name.
+				s.Equal("web-01", got)
+			},
+		},
+		{
+			name:    "a contested hostname resolves deterministically",
+			enforce: true,
+			agents: []validation.AgentTarget{
+				{MachineID: "machine-zulu", Hostname: "web-01", Verified: true},
+				{MachineID: "machine-alpha", Hostname: "web-01", Verified: true},
+			},
+			target: "web-01",
+			validateFunc: func(got string) {
+				s.Equal("machine-alpha", got)
+			},
+		},
+		{
+			name:    "with enforcement off an unverified registration still resolves",
+			enforce: false,
+			agents: []validation.AgentTarget{
+				{MachineID: "machine-001", Hostname: "web-01", Verified: false},
+			},
+			target:       "web-01",
+			validateFunc: func(got string) { s.Equal("machine-001", got) },
+		},
+		{
+			name:    "a machine ID target is refused when unverified",
+			enforce: true,
+			agents: []validation.AgentTarget{
+				{MachineID: "machine-001", Hostname: "web-01", Verified: false},
+			},
+			target:       "machine-001",
+			validateFunc: func(got string) { s.Equal("machine-001", got) },
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			agents := tt.agents
+			validation.RegisterTargetValidator(
+				func(_ context.Context) ([]validation.AgentTarget, error) {
+					return agents, nil
+				},
+			)
+			validation.SetEnforceVerifiedRegistrations(tt.enforce)
+			defer validation.SetEnforceVerifiedRegistrations(false)
+
+			tt.validateFunc(validation.ResolveTarget(tt.target))
+		})
+	}
+}
+
+// TestValidTargetEnforcing covers the other two routing inputs: a hostname and
+// a label are both refused when the registration behind them is unverified.
+func (s *TargetPublicTestSuite) TestValidTargetEnforcing() {
+	tests := []struct {
+		name         string
+		agents       []validation.AgentTarget
+		target       string
+		validateFunc func(bool)
+	}{
+		{
+			name: "a verified hostname is a valid target",
+			agents: []validation.AgentTarget{
+				{MachineID: "m1", Hostname: "web-01", Verified: true},
+			},
+			target:       "web-01",
+			validateFunc: func(ok bool) { s.True(ok) },
+		},
+		{
+			name: "an unverified hostname is not a valid target",
+			agents: []validation.AgentTarget{
+				{MachineID: "m1", Hostname: "web-01", Verified: false},
+			},
+			target:       "web-01",
+			validateFunc: func(ok bool) { s.False(ok) },
+		},
+		{
+			name: "an unverified label is not a valid target",
+			agents: []validation.AgentTarget{
+				{
+					MachineID: "m1",
+					Hostname:  "web-01",
+					Labels:    map[string]string{"group": "web"},
+					Verified:  false,
+				},
+			},
+			target:       "group:web",
+			validateFunc: func(ok bool) { s.False(ok) },
+		},
+		{
+			name: "a verified label is a valid target",
+			agents: []validation.AgentTarget{
+				{
+					MachineID: "m1",
+					Hostname:  "web-01",
+					Labels:    map[string]string{"group": "web"},
+					Verified:  true,
+				},
+			},
+			target:       "group:web",
+			validateFunc: func(ok bool) { s.True(ok) },
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			agents := tt.agents
+			validation.RegisterTargetValidator(
+				func(_ context.Context) ([]validation.AgentTarget, error) {
+					return agents, nil
+				},
+			)
+			validation.SetEnforceVerifiedRegistrations(true)
+			defer validation.SetEnforceVerifiedRegistrations(false)
+
+			_, ok := validation.Struct(targetInput{Target: tt.target})
+			tt.validateFunc(ok)
+		})
+	}
+}

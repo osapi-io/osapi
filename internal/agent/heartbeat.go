@@ -198,6 +198,15 @@ func (a *Agent) writeRegistration(
 
 	reg.Conditions = conditions
 
+	// Sign the routing fields. Without this the controller cannot tell this
+	// registration from one written by anything else that can reach the
+	// bucket, which is what lets a hostname be claimed by a machine that
+	// never enrolled under it. Unsigned when PKI is disabled, which leaves
+	// behaviour as it was.
+	if a.pkiManager != nil {
+		reg.Signature = a.pkiManager.Sign(job.RegistrationSigningBytes(&reg))
+	}
+
 	data, err := marshalJSON(reg)
 	if err != nil {
 		a.heartbeatLogger.Warn(

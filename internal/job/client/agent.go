@@ -236,6 +236,7 @@ func (c *Client) ListAgents(
 		}
 
 		info := agentInfoFromRegistration(&reg)
+		c.applyRegistrationTrust(ctx, &reg, &info)
 		c.mergeFacts(ctx, &info)
 		c.overlayDrainState(ctx, &info)
 
@@ -266,6 +267,7 @@ func (c *Client) GetAgent(
 		}
 
 		info := agentInfoFromRegistration(&reg)
+		c.applyRegistrationTrust(ctx, &reg, &info)
 		c.mergeFacts(ctx, &info)
 		c.overlayDrainState(ctx, &info)
 
@@ -368,6 +370,66 @@ func agentInfoFromRegistration(
 		State:        reg.State,
 		Fingerprint:  reg.Fingerprint,
 	}
+}
+
+// applyRegistrationTrust records whether this registration may decide where
+// work goes.
+//
+// The machine ID selects which stored record to check against, so a
+// registration naming another agent is verified against that agent's key and
+// fails unless it was actually signed by it. The hostname must also match the
+// one recorded at acceptance: an accepted agent is not entitled to answer for
+// a host it did not enrol as, which is the claim GHSA-j73r describes.
+//
+// The fingerprint needs no separate check. It is inside the signed bytes, so a
+// wrong one would have to be signed by the right key.
+//
+// With no store wired the controller is not enforcing, and every registration
+// is trusted exactly as it was before verification existed.
+func (c *Client) applyRegistrationTrust(
+	ctx context.Context,
+	reg *job.AgentRegistration,
+	info *job.AgentInfo,
+) {
+	if c.agentKeyStore == nil {
+		info.Verified = true
+		info.KeyStored = false
+
+		return
+	}
+
+	record, err := c.agentKeyStore.LookupAgentKey(ctx, reg.MachineID)
+	if err != nil {
+		// No stored key, or the store could not be read. Either way this
+		// registration is not authoritative, and the fleet view shows why.
+		info.Verified = false
+		info.KeyStored = false
+
+		return
+	}
+
+	info.KeyStored = true
+
+	if !job.VerifyRegistration(reg, record.PublicKey) {
+		info.Verified = false
+
+		return
+	}
+
+	if reg.Hostname != record.Hostname {
+		c.logger.WarnContext(
+			ctx, "registration claims a hostname the agent did not enrol as",
+			slog.String("machine_id", reg.MachineID),
+			slog.String("enrolled_as", record.Hostname),
+			slog.String("claimed", reg.Hostname),
+		)
+
+		info.Verified = false
+
+		return
+	}
+
+	info.Verified = true
 }
 
 // sanitizeKeyForNATS sanitizes a string for use as a NATS key.
