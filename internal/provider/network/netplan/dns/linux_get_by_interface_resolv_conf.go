@@ -21,6 +21,8 @@
 package dns
 
 import (
+	"context"
+
 	"github.com/osapi-io/osapi/internal/provider"
 )
 
@@ -28,6 +30,7 @@ import (
 // using the `resolvectl` command. It returns a Config struct containing the DNS
 // servers and search domains for the interface, and an error if something goes wrong.
 func (l *Linux) GetResolvConfByInterface(
+	_ context.Context,
 	_ string,
 ) (*GetResult, error) {
 	return nil, provider.ErrUnsupported

@@ -21,12 +21,14 @@
 package command
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 )
 
 // Shell executes a command through /bin/sh -c.
 func (c *Executor) Shell(
+	ctx context.Context,
 	params ShellParams,
 ) (*Result, error) {
 	c.logger.Debug(
@@ -37,6 +39,7 @@ func (c *Executor) Shell(
 	)
 
 	cmdResult, err := c.execManager.RunCmdFull(
+		ctx,
 		"/bin/sh",
 		[]string{"-c", params.Command},
 		params.Cwd,

@@ -21,11 +21,14 @@
 package host
 
 import (
+	"context"
+
 	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // UpdateHostname returns ErrUnsupported on generic Linux.
 func (l *Linux) UpdateHostname(
+	_ context.Context,
 	_ string,
 ) (*UpdateHostnameResult, error) {
 	return nil, provider.ErrUnsupported

@@ -104,7 +104,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 						Path:    "/usr/local/share/ca-certificates/osapi-my-ca.crt",
 					}, nil)
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("update-ca-certificates", nil).
+					RunPrivilegedCmd(gomock.Any(), "update-ca-certificates", nil).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -170,7 +170,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					Deploy(gomock.Any(), gomock.Any()).
 					Return(&file.DeployResult{Changed: true}, nil)
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("update-ca-certificates", nil).
+					RunPrivilegedCmd(gomock.Any(), "update-ca-certificates", nil).
 					Return("", errors.New("exec error"))
 			},
 			validateFunc: func(
@@ -274,7 +274,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 						Path:    "/usr/local/share/ca-certificates/osapi-my-ca.crt",
 					}, nil)
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("update-ca-certificates", nil).
+					RunPrivilegedCmd(gomock.Any(), "update-ca-certificates", nil).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -369,7 +369,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					Deploy(gomock.Any(), gomock.Any()).
 					Return(&file.DeployResult{Changed: true}, nil)
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("update-ca-certificates", nil).
+					RunPrivilegedCmd(gomock.Any(), "update-ca-certificates", nil).
 					Return("", errors.New("exec error"))
 			},
 			validateFunc: func(
@@ -426,7 +426,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					}).
 					Return(&file.DeployResult{Changed: true}, nil)
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("update-ca-certificates", nil).
+					RunPrivilegedCmd(gomock.Any(), "update-ca-certificates", nil).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -526,7 +526,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 						Path:    "/usr/local/share/ca-certificates/osapi-my-ca.crt",
 					}, nil)
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("update-ca-certificates", nil).
+					RunPrivilegedCmd(gomock.Any(), "update-ca-certificates", nil).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -586,7 +586,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 					Undeploy(gomock.Any(), gomock.Any()).
 					Return(&file.UndeployResult{Changed: true}, nil)
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("update-ca-certificates", nil).
+					RunPrivilegedCmd(gomock.Any(), "update-ca-certificates", nil).
 					Return("", errors.New("exec error"))
 			},
 			validateFunc: func(

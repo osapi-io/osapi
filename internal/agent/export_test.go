@@ -82,7 +82,7 @@ func ExportProcessJobOperation(
 	a *Agent,
 	req job.Request,
 ) (json.RawMessage, error) {
-	return a.processJobOperation(req)
+	return a.processJobOperation(context.Background(), req)
 }
 
 // ExportProcessNodeOperation invokes the "node" processor from the agent's
@@ -92,7 +92,7 @@ func ExportProcessNodeOperation(
 	req job.Request,
 ) (json.RawMessage, error) {
 	req.Category = "node"
-	return a.registry.Dispatch(req)
+	return a.registry.Dispatch(context.Background(), req)
 }
 
 // ExportProcessNetworkOperation invokes the "network" processor from the
@@ -102,7 +102,7 @@ func ExportProcessNetworkOperation(
 	req job.Request,
 ) (json.RawMessage, error) {
 	req.Category = "network"
-	return a.registry.Dispatch(req)
+	return a.registry.Dispatch(context.Background(), req)
 }
 
 // ExportWriteStatusEvent exposes the private writeStatusEvent method for testing.

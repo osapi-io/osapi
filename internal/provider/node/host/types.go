@@ -21,6 +21,7 @@
 package host
 
 import (
+	"context"
 	"time"
 )
 
@@ -46,7 +47,7 @@ type Provider interface {
 	// GetPackageManager detects the system's package manager (e.g., apt, dnf, yum).
 	GetPackageManager() (string, error)
 	// UpdateHostname sets the system hostname.
-	UpdateHostname(name string) (*UpdateHostnameResult, error)
+	UpdateHostname(ctx context.Context, name string) (*UpdateHostnameResult, error)
 }
 
 // Result represents the operating system information.

@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -120,7 +121,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceOperation() {
 				nil,
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -184,7 +185,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceList() {
 				nil,
 				slog.Default(),
 			)
-			result, err := processor(tt.jobRequest)
+			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -270,7 +271,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceGet() {
 				nil,
 				slog.Default(),
 			)
-			result, err := processor(tt.jobRequest)
+			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -363,7 +364,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceCreate() {
 				nil,
 				slog.Default(),
 			)
-			result, err := processor(tt.jobRequest)
+			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -456,7 +457,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceUpdate() {
 				nil,
 				slog.Default(),
 			)
-			result, err := processor(tt.jobRequest)
+			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -544,7 +545,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceDelete() {
 				nil,
 				slog.Default(),
 			)
-			result, err := processor(tt.jobRequest)
+			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)

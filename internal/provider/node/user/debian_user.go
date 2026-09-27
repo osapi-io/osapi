@@ -49,7 +49,7 @@ func (d *Debian) ListUsers(
 
 	var users []User
 	for _, u := range entries {
-		groups, locked, err := d.getUserDetails(u.Name)
+		groups, locked, err := d.getUserDetails(ctx, u.Name)
 		if err != nil {
 			d.logger.Warn(
 				"failed to get user details",
@@ -84,7 +84,7 @@ func (d *Debian) GetUser(
 
 	for _, u := range entries {
 		if u.Name == name {
-			groups, locked, detailErr := d.getUserDetails(u.Name)
+			groups, locked, detailErr := d.getUserDetails(ctx, u.Name)
 			if detailErr != nil {
 				d.logger.Warn(
 					"failed to get user details",
@@ -124,13 +124,13 @@ func (d *Debian) CreateUser(
 
 	args := d.buildUseraddArgs(opts)
 
-	_, err := d.execManager.RunPrivilegedCmd("useradd", args)
+	_, err := d.execManager.RunPrivilegedCmd(ctx, "useradd", args)
 	if err != nil {
 		return nil, fmt.Errorf("user: useradd failed: %w", err)
 	}
 
 	if opts.PasswordHash != "" {
-		if err := d.setPassword(opts.Name, opts.PasswordHash); err != nil {
+		if err := d.setPassword(ctx, opts.Name, opts.PasswordHash); err != nil {
 			return nil, fmt.Errorf("user: set password failed: %w", err)
 		}
 	}
@@ -166,7 +166,7 @@ func (d *Debian) UpdateUser(
 		}, nil
 	}
 
-	_, err := d.execManager.RunPrivilegedCmd("usermod", args)
+	_, err := d.execManager.RunPrivilegedCmd(ctx, "usermod", args)
 	if err != nil {
 		return nil, fmt.Errorf("user: usermod failed: %w", err)
 	}
@@ -193,7 +193,7 @@ func (d *Debian) DeleteUser(
 		return nil, fmt.Errorf("user: %w", err)
 	}
 
-	_, err := d.execManager.RunPrivilegedCmd("userdel", []string{"-r", "--", name})
+	_, err := d.execManager.RunPrivilegedCmd(ctx, "userdel", []string{"-r", "--", name})
 	if err != nil {
 		return nil, fmt.Errorf("user: userdel failed: %w", err)
 	}
@@ -225,7 +225,7 @@ func (d *Debian) ChangePassword(
 		return nil, fmt.Errorf("user: %w", err)
 	}
 
-	if err := d.setPassword(name, passwordHash); err != nil {
+	if err := d.setPassword(ctx, name, passwordHash); err != nil {
 		return nil, fmt.Errorf("user: %w", err)
 	}
 
@@ -290,16 +290,17 @@ func (d *Debian) parsePasswd() ([]User, error) {
 
 // getUserDetails returns a user's supplementary groups and locked status.
 func (d *Debian) getUserDetails(
+	ctx context.Context,
 	name string,
 ) ([]string, bool, error) {
-	groupsOut, err := d.execManager.RunCmd("id", []string{"-Gn", name})
+	groupsOut, err := d.execManager.RunCmd(ctx, "id", []string{"-Gn", name})
 	if err != nil {
 		return nil, false, fmt.Errorf("id -Gn %s: %w", name, err)
 	}
 
 	groups := strings.Fields(strings.TrimSpace(groupsOut))
 
-	statusOut, err := d.execManager.RunCmd("passwd", []string{"-S", name})
+	statusOut, err := d.execManager.RunCmd(ctx, "passwd", []string{"-S", name})
 	if err != nil {
 		return groups, false, fmt.Errorf("passwd -S %s: %w", name, err)
 	}
@@ -397,10 +398,12 @@ func (d *Debian) buildUsermodArgs(
 // this provider (see internal/controller/api/node/user), so passwordHash is
 // always a crypt hash, never plaintext.
 func (d *Debian) setPassword(
+	ctx context.Context,
 	name string,
 	passwordHash string,
 ) error {
 	_, err := d.execManager.RunPrivilegedCmdWithStdin(
+		ctx,
 		"chpasswd",
 		[]string{"-e"},
 		name+":"+passwordHash+"\n",

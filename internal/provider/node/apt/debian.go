@@ -61,9 +61,10 @@ func NewDebianProvider(
 
 // List returns all installed packages by querying dpkg.
 func (d *Debian) List(
-	_ context.Context,
+	ctx context.Context,
 ) ([]Package, error) {
 	output, err := d.execManager.RunCmd(
+		ctx,
 		"dpkg-query",
 		[]string{"-W", "-f", dpkgQueryFormat},
 	)
@@ -76,10 +77,11 @@ func (d *Debian) List(
 
 // Get returns details for a single installed package.
 func (d *Debian) Get(
-	_ context.Context,
+	ctx context.Context,
 	name string,
 ) (*Package, error) {
 	output, err := d.execManager.RunCmd(
+		ctx,
 		"dpkg-query",
 		[]string{"-W", "-f", dpkgQueryFormat, name},
 	)
@@ -97,10 +99,11 @@ func (d *Debian) Get(
 
 // Install installs a package by name using apt-get.
 func (d *Debian) Install(
-	_ context.Context,
+	ctx context.Context,
 	name string,
 ) (*Result, error) {
 	_, err := d.execManager.RunPrivilegedCmd(
+		ctx,
 		"apt-get",
 		[]string{"install", "-y", name},
 	)
@@ -121,10 +124,11 @@ func (d *Debian) Install(
 
 // Remove removes a package by name using apt-get.
 func (d *Debian) Remove(
-	_ context.Context,
+	ctx context.Context,
 	name string,
 ) (*Result, error) {
 	_, err := d.execManager.RunPrivilegedCmd(
+		ctx,
 		"apt-get",
 		[]string{"remove", "-y", name},
 	)
@@ -145,9 +149,10 @@ func (d *Debian) Remove(
 
 // Update refreshes the package index using apt-get update.
 func (d *Debian) Update(
-	_ context.Context,
+	ctx context.Context,
 ) (*Result, error) {
 	_, err := d.execManager.RunPrivilegedCmd(
+		ctx,
 		"apt-get",
 		[]string{"update"},
 	)
@@ -165,9 +170,10 @@ func (d *Debian) Update(
 // ListUpdates returns packages with available updates by parsing
 // apt list --upgradable output.
 func (d *Debian) ListUpdates(
-	_ context.Context,
+	ctx context.Context,
 ) ([]Update, error) {
 	output, err := d.execManager.RunCmd(
+		ctx,
 		"apt",
 		[]string{"list", "--upgradable"},
 	)

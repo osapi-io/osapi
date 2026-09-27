@@ -21,6 +21,7 @@
 package netinfo_test
 
 import (
+	"context"
 	"io"
 	"net"
 	"strings"
@@ -200,11 +201,11 @@ default            192.168.1.1        UGScg       en0
 			if tc.useDefaultReader {
 				if tc.execMockErr {
 					mock.EXPECT().
-						RunCmd("netstat", []string{"-rn"}).
+						RunCmd(gomock.Any(), "netstat", []string{"-rn"}).
 						Return("", assert.AnError)
 				} else {
 					mock.EXPECT().
-						RunCmd("netstat", []string{"-rn"}).
+						RunCmd(gomock.Any(), "netstat", []string{"-rn"}).
 						Return(tc.routeContent, nil)
 				}
 			}
@@ -213,18 +214,18 @@ default            192.168.1.1        UGScg       en0
 
 			if !tc.useDefaultReader {
 				if tc.readerErr {
-					d.RouteReaderFn = func() (io.ReadCloser, error) {
+					d.RouteReaderFn = func(_ context.Context) (io.ReadCloser, error) {
 						return nil, assert.AnError
 					}
 				} else {
 					content := tc.routeContent
-					d.RouteReaderFn = func() (io.ReadCloser, error) {
+					d.RouteReaderFn = func(_ context.Context) (io.ReadCloser, error) {
 						return io.NopCloser(strings.NewReader(content)), nil
 					}
 				}
 			}
 
-			got, err := d.GetRoutes()
+			got, err := d.GetRoutes(context.Background())
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -303,7 +304,7 @@ default            192.168.1.1        UGScg       en0
 
 			if tc.useDefaultReader {
 				mock.EXPECT().
-					RunCmd("netstat", []string{"-rn"}).
+					RunCmd(gomock.Any(), "netstat", []string{"-rn"}).
 					Return(tc.routeContent, nil)
 			}
 
@@ -311,18 +312,18 @@ default            192.168.1.1        UGScg       en0
 
 			if !tc.useDefaultReader {
 				if tc.readerErr {
-					d.RouteReaderFn = func() (io.ReadCloser, error) {
+					d.RouteReaderFn = func(_ context.Context) (io.ReadCloser, error) {
 						return nil, assert.AnError
 					}
 				} else {
 					content := tc.routeContent
-					d.RouteReaderFn = func() (io.ReadCloser, error) {
+					d.RouteReaderFn = func(_ context.Context) (io.ReadCloser, error) {
 						return io.NopCloser(strings.NewReader(content)), nil
 					}
 				}
 			}
 
-			got, err := d.GetPrimaryInterface()
+			got, err := d.GetPrimaryInterface(context.Background())
 
 			if tc.wantErr {
 				suite.Error(err)

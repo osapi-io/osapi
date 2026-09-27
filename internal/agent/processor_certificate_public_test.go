@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -114,7 +115,7 @@ func (s *ProcessorCertificatePublicTestSuite) TestProcessCertificateOperation() 
 			}
 
 			processor := agent.NewCertificateProcessor(certProvider, slog.Default())
-			result, err := processor(tt.jobRequest)
+			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -388,7 +389,7 @@ func (s *ProcessorCertificatePublicTestSuite) TestProcessCertificateCAOperation(
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := agent.NewCertificateProcessor(tt.setupMock(), slog.Default())
-			result, err := processor(tt.jobRequest)
+			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)

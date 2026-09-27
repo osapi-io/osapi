@@ -21,6 +21,7 @@
 package exec_test
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -74,7 +75,7 @@ func (s *RunPrivilegedCmdWithStdinPublicTestSuite) TestRunPrivilegedCmdWithStdin
 			stdin:   "john:secret\n",
 			setupMock: func() {
 				s.mockExecutor.EXPECT().
-					ExecuteWithStdin("chpasswd", []string(nil), "", "john:secret\n").
+					ExecuteWithStdin(gomock.Any(), "chpasswd", []string(nil), "", "john:secret\n").
 					Return("", nil)
 			},
 			validateFunc: func(output string, err error) {
@@ -90,7 +91,7 @@ func (s *RunPrivilegedCmdWithStdinPublicTestSuite) TestRunPrivilegedCmdWithStdin
 			stdin:   "john:secret\n",
 			setupMock: func() {
 				s.mockExecutor.EXPECT().
-					ExecuteWithStdin("sudo", []string{"chpasswd"}, "", "john:secret\n").
+					ExecuteWithStdin(gomock.Any(), "sudo", []string{"chpasswd"}, "", "john:secret\n").
 					Return("", nil)
 			},
 			validateFunc: func(output string, err error) {
@@ -106,7 +107,7 @@ func (s *RunPrivilegedCmdWithStdinPublicTestSuite) TestRunPrivilegedCmdWithStdin
 			stdin:   "john:secret\n",
 			setupMock: func() {
 				s.mockExecutor.EXPECT().
-					ExecuteWithStdin("chpasswd", []string(nil), "", "john:secret\n").
+					ExecuteWithStdin(gomock.Any(), "chpasswd", []string(nil), "", "john:secret\n").
 					Return("chpasswd: line 1: user 'john' does not exist", fmt.Errorf("exit status 1"))
 			},
 			validateFunc: func(output string, err error) {
@@ -135,7 +136,7 @@ func (s *RunPrivilegedCmdWithStdinPublicTestSuite) TestRunPrivilegedCmdWithStdin
 				exec.SetExecutor(em, s.mockExecutor)
 			}
 
-			output, err := em.RunPrivilegedCmdWithStdin(tc.command, tc.args, tc.stdin)
+			output, err := em.RunPrivilegedCmdWithStdin(context.Background(), tc.command, tc.args, tc.stdin)
 
 			tc.validateFunc(output, err)
 		})

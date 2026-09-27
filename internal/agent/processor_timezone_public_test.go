@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -126,7 +127,7 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneOperation() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -198,7 +199,7 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneGet() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -289,7 +290,7 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneUpdate() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }

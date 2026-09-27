@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -251,7 +252,7 @@ func (s *ProcessorFilePublicTestSuite) TestProcessFileOperation() {
 			tt.setupMock(fMock)
 
 			processor := agent.NewFileProcessor(fMock, slog.Default())
-			result, err := processor(tt.jobRequest)
+			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -284,7 +285,7 @@ func (s *ProcessorFilePublicTestSuite) TestProcessFileOperationNilProvider() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := agent.NewFileProcessor(nil, slog.Default())
-			tt.validateFunc(processor(job.Request{
+			tt.validateFunc(processor(context.Background(), job.Request{
 				Type:      job.TypeModify,
 				Category:  "file",
 				Operation: "deploy.execute",

@@ -138,7 +138,7 @@ func (suite *RoutePublicTestSuite) TestList() {
 			name: "when routes exist and kernel routes are filtered",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusWithRoutes, nil)
 			},
 			validateFunc: func(result []route.ListEntry, err error) {
@@ -169,7 +169,7 @@ func (suite *RoutePublicTestSuite) TestList() {
 			name: "when only kernel routes exist",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusNoRoutes, nil)
 			},
 			validateFunc: func(result []route.ListEntry, err error) {
@@ -181,7 +181,7 @@ func (suite *RoutePublicTestSuite) TestList() {
 			name: "when netplan status fails",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return("", errors.New("command not found"))
 			},
 			validateFunc: func(result []route.ListEntry, err error) {
@@ -194,7 +194,7 @@ func (suite *RoutePublicTestSuite) TestList() {
 			name: "when route has gateway and metric",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(netplanStatusWithRoutes, nil)
 			},
 			validateFunc: func(result []route.ListEntry, err error) {
@@ -428,7 +428,7 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 			setup: func() {
 				// SectionForInterface calls netplan status.
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(`{"eth0": {"type": "ethernet"}}`, nil).
 					AnyTimes()
 
@@ -439,12 +439,12 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 
 				// netplan generate succeeds.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", nil)
 
 				// netplan apply succeeds.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
 				// KV Put succeeds.
@@ -579,7 +579,7 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 			setup: func() {
 				// SectionForInterface calls netplan status.
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(`{"eth0": {"type": "ethernet"}}`, nil).
 					AnyTimes()
 
@@ -590,7 +590,7 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 
 				// netplan generate fails.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", errors.New("invalid YAML"))
 			},
 			validateFunc: func(result *route.Result, err error) {
@@ -610,7 +610,7 @@ func (suite *RoutePublicTestSuite) TestCreate() {
 			setup: func() {
 				// SectionForInterface calls netplan status.
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(`{"eth0": {"type": "ethernet"}}`, nil).
 					AnyTimes()
 
@@ -662,7 +662,7 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 
 				// SectionForInterface calls netplan status.
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(`{"eth0": {"type": "ethernet"}}`, nil).
 					AnyTimes()
 
@@ -673,12 +673,12 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 
 				// netplan generate succeeds.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", nil)
 
 				// netplan apply succeeds.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
 				// KV Put succeeds.
@@ -757,7 +757,7 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 
 				// SectionForInterface calls netplan status.
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(`{"eth0": {"type": "ethernet"}}`, nil).
 					AnyTimes()
 
@@ -766,7 +766,7 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 					Return(nil, errors.New("not found"))
 
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"generate"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", errors.New("validation error"))
 			},
 			validateFunc: func(result *route.Result, err error) {
@@ -792,7 +792,7 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 
 				// SectionForInterface calls netplan status.
 				suite.mockExec.EXPECT().
-					RunCmd("netplan", []string{"status", "--format", "json"}).
+					RunCmd(gomock.Any(), "netplan", []string{"status", "--format", "json"}).
 					Return(`{"eth0": {"type": "ethernet"}}`, nil).
 					AnyTimes()
 
@@ -839,7 +839,7 @@ func (suite *RoutePublicTestSuite) TestDelete() {
 
 				// netplan apply succeeds.
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
 				// KV state exists for undeploy marking.
@@ -892,7 +892,7 @@ func (suite *RoutePublicTestSuite) TestDelete() {
 				)
 
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("netplan", []string{"apply"}).
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", errors.New("apply failed"))
 			},
 			validateFunc: func(result *route.Result, err error) {

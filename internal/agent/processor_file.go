@@ -36,7 +36,7 @@ func NewFileProcessor(
 	fileProvider fileProv.Provider,
 	_ *slog.Logger,
 ) ProcessorFunc {
-	return func(req job.Request) (json.RawMessage, error) {
+	return func(_ context.Context, req job.Request) (json.RawMessage, error) {
 		if fileProvider == nil {
 			return nil, fmt.Errorf("file provider not configured")
 		}

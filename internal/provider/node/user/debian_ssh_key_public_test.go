@@ -400,7 +400,7 @@ func (suite *DebianSSHKeyPublicTestSuite) TestAddKey() {
 			setupFS: func() {},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("chown", []string{"-R", "testuser:testuser", "/home/testuser/.ssh"}).
+					RunPrivilegedCmd(gomock.Any(), "chown", []string{"-R", "testuser:testuser", "/home/testuser/.ssh"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *user.SSHKeyResult, err error) {
@@ -456,7 +456,7 @@ func (suite *DebianSSHKeyPublicTestSuite) TestAddKey() {
 			},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("chown", []string{"-R", "testuser:testuser", "/home/testuser/.ssh"}).
+					RunPrivilegedCmd(gomock.Any(), "chown", []string{"-R", "testuser:testuser", "/home/testuser/.ssh"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *user.SSHKeyResult, err error) {
@@ -495,7 +495,7 @@ func (suite *DebianSSHKeyPublicTestSuite) TestAddKey() {
 			},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("chown", []string{"-R", "testuser:testuser", "/home/testuser/.ssh"}).
+					RunPrivilegedCmd(gomock.Any(), "chown", []string{"-R", "testuser:testuser", "/home/testuser/.ssh"}).
 					Return("", nil)
 			},
 			validateFunc: func(result *user.SSHKeyResult, err error) {
@@ -677,7 +677,7 @@ func (suite *DebianSSHKeyPublicTestSuite) TestAddKey() {
 			setupFS: func() {},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("chown", []string{"-R", "testuser:testuser", "/home/testuser/.ssh"}).
+					RunPrivilegedCmd(gomock.Any(), "chown", []string{"-R", "testuser:testuser", "/home/testuser/.ssh"}).
 					Return("", errors.New("permission denied"))
 			},
 			validateFunc: func(result *user.SSHKeyResult, err error) {

@@ -21,6 +21,7 @@
 package dns_test
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -119,7 +120,7 @@ func (suite *DebianGetResolvConfPublicTestSuite) TestGetResolvConfByInterface() 
 				output := `Failed to resolve interface "invalid", ignoring: No such device`
 
 				mock.EXPECT().
-					RunCmd(mocks.ResolveCommand, []string{"status", "eth!"}).
+					RunCmd(gomock.Any(), mocks.ResolveCommand, []string{"status", "eth!"}).
 					Return(output, nil).
 					AnyTimes()
 
@@ -140,7 +141,7 @@ func (suite *DebianGetResolvConfPublicTestSuite) TestGetResolvConfByInterface() 
 				mock := mocks.NewPlainMockManager(suite.ctrl)
 
 				mock.EXPECT().
-					RunCmd(mocks.ResolveCommand, []string{"status", mocks.NetworkInterfaceName}).
+					RunCmd(gomock.Any(), mocks.ResolveCommand, []string{"status", mocks.NetworkInterfaceName}).
 					Return("", assert.AnError).
 					AnyTimes()
 
@@ -159,7 +160,7 @@ func (suite *DebianGetResolvConfPublicTestSuite) TestGetResolvConfByInterface() 
 			mock := tc.setupMock()
 
 			net := dns.NewDebianProvider(suite.logger, memfs.New(), nil, mock, "test-host")
-			tc.validateFunc(net.GetResolvConfByInterface(tc.interfaceName))
+			tc.validateFunc(net.GetResolvConfByInterface(context.Background(), tc.interfaceName))
 		})
 	}
 }

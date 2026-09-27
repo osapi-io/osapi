@@ -21,12 +21,15 @@
 package host
 
 import (
+	"context"
+
 	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // UpdateHostname returns ErrUnsupported on Darwin.
 // Darwin is a development platform only; mutations are not supported.
 func (d *Darwin) UpdateHostname(
+	_ context.Context,
 	_ string,
 ) (*UpdateHostnameResult, error) {
 	return nil, provider.ErrUnsupported

@@ -21,6 +21,7 @@
 package agent
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -29,7 +30,7 @@ import (
 
 // ProcessorFunc is a function that handles a job request and returns
 // a JSON-encoded result.
-type ProcessorFunc func(job.Request) (json.RawMessage, error)
+type ProcessorFunc func(context.Context, job.Request) (json.RawMessage, error)
 
 // ProviderRegistry maps job categories to processor functions and
 // tracks all registered providers for lifecycle wiring (e.g., facts).
@@ -58,6 +59,7 @@ func (r *ProviderRegistry) Register(
 
 // Dispatch routes a job request to the registered processor for its category.
 func (r *ProviderRegistry) Dispatch(
+	ctx context.Context,
 	req job.Request,
 ) (json.RawMessage, error) {
 	fn, ok := r.processors[req.Category]
@@ -65,7 +67,7 @@ func (r *ProviderRegistry) Dispatch(
 		return nil, fmt.Errorf("unsupported job category: %s", req.Category)
 	}
 
-	return fn(req)
+	return fn(ctx, req)
 }
 
 // AllProviders returns all providers registered across all categories.

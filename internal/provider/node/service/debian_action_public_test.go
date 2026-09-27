@@ -79,10 +79,10 @@ func (suite *DebianActionPublicTestSuite) TestStart() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"is-active", "osapi-nginx.service"}).
+					RunCmd(gomock.Any(), "systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("inactive\n", errors.New("exit status 3"))
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("systemctl", []string{"start", "osapi-nginx.service"}).
+					RunPrivilegedCmd(gomock.Any(), "systemctl", []string{"start", "osapi-nginx.service"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -100,7 +100,7 @@ func (suite *DebianActionPublicTestSuite) TestStart() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"is-active", "osapi-nginx.service"}).
+					RunCmd(gomock.Any(), "systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("active\n", nil)
 			},
 			validateFunc: func(
@@ -118,10 +118,10 @@ func (suite *DebianActionPublicTestSuite) TestStart() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"is-active", "osapi-nginx.service"}).
+					RunCmd(gomock.Any(), "systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("inactive\n", errors.New("exit status 3"))
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("systemctl", []string{"start", "osapi-nginx.service"}).
+					RunPrivilegedCmd(gomock.Any(), "systemctl", []string{"start", "osapi-nginx.service"}).
 					Return("", errors.New("start failed"))
 			},
 			validateFunc: func(
@@ -171,10 +171,10 @@ func (suite *DebianActionPublicTestSuite) TestStop() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"is-active", "osapi-nginx.service"}).
+					RunCmd(gomock.Any(), "systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("active\n", nil)
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("systemctl", []string{"stop", "osapi-nginx.service"}).
+					RunPrivilegedCmd(gomock.Any(), "systemctl", []string{"stop", "osapi-nginx.service"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -192,7 +192,7 @@ func (suite *DebianActionPublicTestSuite) TestStop() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"is-active", "osapi-nginx.service"}).
+					RunCmd(gomock.Any(), "systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("inactive\n", errors.New("exit status 3"))
 			},
 			validateFunc: func(
@@ -210,10 +210,10 @@ func (suite *DebianActionPublicTestSuite) TestStop() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"is-active", "osapi-nginx.service"}).
+					RunCmd(gomock.Any(), "systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("active\n", nil)
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("systemctl", []string{"stop", "osapi-nginx.service"}).
+					RunPrivilegedCmd(gomock.Any(), "systemctl", []string{"stop", "osapi-nginx.service"}).
 					Return("", errors.New("stop failed"))
 			},
 			validateFunc: func(
@@ -263,7 +263,7 @@ func (suite *DebianActionPublicTestSuite) TestRestart() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("systemctl", []string{"restart", "osapi-nginx.service"}).
+					RunPrivilegedCmd(gomock.Any(), "systemctl", []string{"restart", "osapi-nginx.service"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -281,7 +281,7 @@ func (suite *DebianActionPublicTestSuite) TestRestart() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("systemctl", []string{"restart", "osapi-nginx.service"}).
+					RunPrivilegedCmd(gomock.Any(), "systemctl", []string{"restart", "osapi-nginx.service"}).
 					Return("", errors.New("restart failed"))
 			},
 			validateFunc: func(
@@ -331,10 +331,10 @@ func (suite *DebianActionPublicTestSuite) TestEnable() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"is-enabled", "osapi-nginx.service"}).
+					RunCmd(gomock.Any(), "systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("disabled\n", errors.New("exit status 1"))
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("systemctl", []string{"enable", "osapi-nginx.service"}).
+					RunPrivilegedCmd(gomock.Any(), "systemctl", []string{"enable", "osapi-nginx.service"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -352,7 +352,7 @@ func (suite *DebianActionPublicTestSuite) TestEnable() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"is-enabled", "osapi-nginx.service"}).
+					RunCmd(gomock.Any(), "systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("enabled\n", nil)
 			},
 			validateFunc: func(
@@ -370,10 +370,10 @@ func (suite *DebianActionPublicTestSuite) TestEnable() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"is-enabled", "osapi-nginx.service"}).
+					RunCmd(gomock.Any(), "systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("disabled\n", errors.New("exit status 1"))
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("systemctl", []string{"enable", "osapi-nginx.service"}).
+					RunPrivilegedCmd(gomock.Any(), "systemctl", []string{"enable", "osapi-nginx.service"}).
 					Return("", errors.New("enable failed"))
 			},
 			validateFunc: func(
@@ -423,10 +423,10 @@ func (suite *DebianActionPublicTestSuite) TestDisable() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"is-enabled", "osapi-nginx.service"}).
+					RunCmd(gomock.Any(), "systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("enabled\n", nil)
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("systemctl", []string{"disable", "osapi-nginx.service"}).
+					RunPrivilegedCmd(gomock.Any(), "systemctl", []string{"disable", "osapi-nginx.service"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -444,7 +444,7 @@ func (suite *DebianActionPublicTestSuite) TestDisable() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"is-enabled", "osapi-nginx.service"}).
+					RunCmd(gomock.Any(), "systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("disabled\n", errors.New("exit status 1"))
 			},
 			validateFunc: func(
@@ -462,10 +462,10 @@ func (suite *DebianActionPublicTestSuite) TestDisable() {
 			serviceName: "nginx",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{"is-enabled", "osapi-nginx.service"}).
+					RunCmd(gomock.Any(), "systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("enabled\n", nil)
 				suite.mockExecManager.EXPECT().
-					RunPrivilegedCmd("systemctl", []string{"disable", "osapi-nginx.service"}).
+					RunPrivilegedCmd(gomock.Any(), "systemctl", []string{"disable", "osapi-nginx.service"}).
 					Return("", errors.New("disable failed"))
 			},
 			validateFunc: func(

@@ -62,9 +62,9 @@ func routeFilePath(
 // kernel-internal entries (local, broadcast, anycast, multicast types
 // and host-scoped routes).
 func (d *Debian) List(
-	_ context.Context,
+	ctx context.Context,
 ) ([]ListEntry, error) {
-	status, err := netplan.GetStatus(d.execManager)
+	status, err := netplan.GetStatus(ctx, d.execManager)
 	if err != nil {
 		return nil, fmt.Errorf("route list: %w", err)
 	}
@@ -164,7 +164,7 @@ func (d *Debian) Create(
 		}, nil
 	}
 
-	ifaceSection := netplan.SectionForInterface(d.execManager, entry.Interface)
+	ifaceSection := netplan.SectionForInterface(ctx, d.execManager, entry.Interface)
 	content := generateRouteYAML(entry, ifaceSection)
 
 	metadata, err := buildRouteMetadata(entry)
@@ -226,7 +226,7 @@ func (d *Debian) Update(
 		)
 	}
 
-	ifaceSection := netplan.SectionForInterface(d.execManager, entry.Interface)
+	ifaceSection := netplan.SectionForInterface(ctx, d.execManager, entry.Interface)
 	content := generateRouteYAML(entry, ifaceSection)
 
 	metadata, err := buildRouteMetadata(entry)

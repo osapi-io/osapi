@@ -96,10 +96,10 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name: "when successful returns status with servers",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("chronyc", []string{"tracking"}).
+					RunCmd(gomock.Any(), "chronyc", []string{"tracking"}).
 					Return(trackingOutput, nil)
 				suite.mockExec.EXPECT().
-					RunCmd("chronyc", []string{"sources", "-c"}).
+					RunCmd(gomock.Any(), "chronyc", []string{"sources", "-c"}).
 					Return(sourcesOutput, nil)
 			},
 			validateFunc: func(got *ntp.Status, err error) {
@@ -129,10 +129,10 @@ Root dispersion : 1.000000000 seconds
 Update interval : 0.0 seconds
 Leap status     : Not synchronised`
 				suite.mockExec.EXPECT().
-					RunCmd("chronyc", []string{"tracking"}).
+					RunCmd(gomock.Any(), "chronyc", []string{"tracking"}).
 					Return(output, nil)
 				suite.mockExec.EXPECT().
-					RunCmd("chronyc", []string{"sources", "-c"}).
+					RunCmd(gomock.Any(), "chronyc", []string{"sources", "-c"}).
 					Return("", nil)
 			},
 			validateFunc: func(got *ntp.Status, err error) {
@@ -149,7 +149,7 @@ Leap status     : Not synchronised`
 			name: "when chronyc tracking fails returns error",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("chronyc", []string{"tracking"}).
+					RunCmd(gomock.Any(), "chronyc", []string{"tracking"}).
 					Return("", errors.New("command not found"))
 			},
 			validateFunc: func(got *ntp.Status, err error) {
@@ -162,10 +162,10 @@ Leap status     : Not synchronised`
 			name: "when chronyc sources fails returns error",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunCmd("chronyc", []string{"tracking"}).
+					RunCmd(gomock.Any(), "chronyc", []string{"tracking"}).
 					Return(trackingOutput, nil)
 				suite.mockExec.EXPECT().
-					RunCmd("chronyc", []string{"sources", "-c"}).
+					RunCmd(gomock.Any(), "chronyc", []string{"sources", "-c"}).
 					Return("", errors.New("connection refused"))
 			},
 			validateFunc: func(got *ntp.Status, err error) {
@@ -202,7 +202,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			setupFs: func() {},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
+					RunPrivilegedCmd(gomock.Any(), "chronyc", []string{"reload", "sources"}).
 					Return("", nil)
 			},
 			validateFunc: func(got *ntp.CreateResult, err error) {
@@ -309,7 +309,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			setupFs: func() {},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
+					RunPrivilegedCmd(gomock.Any(), "chronyc", []string{"reload", "sources"}).
 					Return("", errors.New("chronyc not running"))
 			},
 			validateFunc: func(got *ntp.CreateResult, err error) {
@@ -354,7 +354,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
+					RunPrivilegedCmd(gomock.Any(), "chronyc", []string{"reload", "sources"}).
 					Return("", nil)
 			},
 			validateFunc: func(got *ntp.UpdateResult, err error) {
@@ -463,7 +463,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
+					RunPrivilegedCmd(gomock.Any(), "chronyc", []string{"reload", "sources"}).
 					Return("", errors.New("chronyc not running"))
 			},
 			validateFunc: func(got *ntp.UpdateResult, err error) {
@@ -504,7 +504,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
+					RunPrivilegedCmd(gomock.Any(), "chronyc", []string{"reload", "sources"}).
 					Return("", nil)
 			},
 			validateFunc: func(got *ntp.DeleteResult, err error) {
@@ -570,7 +570,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd("chronyc", []string{"reload", "sources"}).
+					RunPrivilegedCmd(gomock.Any(), "chronyc", []string{"reload", "sources"}).
 					Return("", errors.New("chronyc not running"))
 			},
 			validateFunc: func(got *ntp.DeleteResult, err error) {

@@ -36,7 +36,7 @@ func NewCertificateProcessor(
 	certProvider certificate.Provider,
 	logger *slog.Logger,
 ) ProcessorFunc {
-	return func(req job.Request) (json.RawMessage, error) {
+	return func(_ context.Context, req job.Request) (json.RawMessage, error) {
 		if certProvider == nil {
 			return nil, fmt.Errorf("certificate provider not available")
 		}

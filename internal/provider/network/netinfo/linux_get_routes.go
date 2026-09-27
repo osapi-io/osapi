@@ -22,6 +22,7 @@ package netinfo
 
 import (
 	"bufio"
+	"context"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -68,7 +69,9 @@ func parseHexMask(
 }
 
 // GetRoutes returns the system routing table by parsing /proc/net/route.
-func (l *Linux) GetRoutes() ([]RouteResult, error) {
+func (l *Linux) GetRoutes(
+	_ context.Context,
+) ([]RouteResult, error) {
 	rc, err := l.RouteReaderFn()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read route table: %w", err)
@@ -116,7 +119,9 @@ func parseRoutes(
 
 // GetPrimaryInterface returns the name of the interface used for the default route
 // by parsing /proc/net/route.
-func (l *Linux) GetPrimaryInterface() (string, error) {
+func (l *Linux) GetPrimaryInterface(
+	_ context.Context,
+) (string, error) {
 	rc, err := l.RouteReaderFn()
 	if err != nil {
 		return "", fmt.Errorf("failed to read route table: %w", err)

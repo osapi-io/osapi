@@ -45,11 +45,11 @@ type systemctlUnitFile struct {
 
 // List returns all systemd services by merging list-units and list-unit-files output.
 func (d *Debian) List(
-	_ context.Context,
+	ctx context.Context,
 ) ([]Info, error) {
 	d.logger.Debug("executing service.List")
 
-	unitsJSON, err := d.execManager.RunCmd("systemctl", []string{
+	unitsJSON, err := d.execManager.RunCmd(ctx, "systemctl", []string{
 		"list-units",
 		"--type=service",
 		"--all",
@@ -65,7 +65,7 @@ func (d *Debian) List(
 		return nil, fmt.Errorf("service: list: parse units: %w", err)
 	}
 
-	enabledMap := d.buildEnabledMap()
+	enabledMap := d.buildEnabledMap(ctx)
 
 	result := make([]Info, 0, len(units))
 	for _, u := range units {
@@ -85,8 +85,10 @@ func (d *Debian) List(
 // buildEnabledMap runs systemctl list-unit-files and returns a map of
 // service name to enabled status. Errors are logged and result in an
 // empty map (all services default to enabled=false).
-func (d *Debian) buildEnabledMap() map[string]bool {
-	unitFilesJSON, err := d.execManager.RunCmd("systemctl", []string{
+func (d *Debian) buildEnabledMap(
+	ctx context.Context,
+) map[string]bool {
+	unitFilesJSON, err := d.execManager.RunCmd(ctx, "systemctl", []string{
 		"list-unit-files",
 		"--type=service",
 		"--no-pager",

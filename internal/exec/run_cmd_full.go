@@ -35,6 +35,7 @@ import (
 // capture, an optional working directory, and a timeout in seconds.
 // A timeout of 0 defaults to 30 seconds.
 func (e *Exec) RunCmdFull(
+	ctx context.Context,
 	name string,
 	args []string,
 	cwd string,
@@ -44,7 +45,7 @@ func (e *Exec) RunCmdFull(
 		timeout = 30
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, name, args...)

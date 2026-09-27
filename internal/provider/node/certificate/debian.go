@@ -112,7 +112,7 @@ func (d *Debian) Create(
 	}
 
 	if result.Changed {
-		if err := d.updateCACertificates(); err != nil {
+		if err := d.updateCACertificates(ctx); err != nil {
 			return nil, fmt.Errorf("create certificate: %w", err)
 		}
 	}
@@ -161,7 +161,7 @@ func (d *Debian) Update(
 	}
 
 	if result.Changed {
-		if err := d.updateCACertificates(); err != nil {
+		if err := d.updateCACertificates(ctx); err != nil {
 			return nil, fmt.Errorf("update certificate: %w", err)
 		}
 	}
@@ -198,7 +198,7 @@ func (d *Debian) Delete(
 	}
 
 	if result.Changed {
-		if err := d.updateCACertificates(); err != nil {
+		if err := d.updateCACertificates(ctx); err != nil {
 			return nil, fmt.Errorf("delete certificate: %w", err)
 		}
 	}
@@ -217,8 +217,10 @@ func certFilePath(
 }
 
 // updateCACertificates runs update-ca-certificates to rebuild the trust store.
-func (d *Debian) updateCACertificates() error {
-	_, err := d.execManager.RunPrivilegedCmd("update-ca-certificates", nil)
+func (d *Debian) updateCACertificates(
+	ctx context.Context,
+) error {
+	_, err := d.execManager.RunPrivilegedCmd(ctx, "update-ca-certificates", nil)
 	if err != nil {
 		return fmt.Errorf("update-ca-certificates: %w", err)
 	}

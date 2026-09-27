@@ -21,6 +21,7 @@
 package host_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -55,7 +56,7 @@ func (suite *LinuxUpdateHostnamePublicTestSuite) TestUpdateHostname() {
 		suite.Run(tc.name, func() {
 			linux := host.NewLinuxProvider()
 
-			tc.validateFunc(linux.UpdateHostname("new-host"))
+			tc.validateFunc(linux.UpdateHostname(context.Background(), "new-host"))
 		})
 	}
 }

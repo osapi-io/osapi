@@ -21,12 +21,15 @@
 package host
 
 import (
+	"context"
+
 	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // UpdateHostname returns ErrUnsupported for container environments.
 // Hostname in containers is managed by the container runtime.
 func (d *DebianDocker) UpdateHostname(
+	_ context.Context,
 	_ string,
 ) (*UpdateHostnameResult, error) {
 	return nil, provider.ErrUnsupported

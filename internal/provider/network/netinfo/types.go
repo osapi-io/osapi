@@ -20,6 +20,8 @@
 
 package netinfo
 
+import "context"
+
 // InterfaceResult represents a network interface with its address.
 type InterfaceResult struct {
 	Name   string
@@ -45,8 +47,8 @@ type Provider interface {
 	// with name, IPv4, and MAC address.
 	GetInterfaces() ([]InterfaceResult, error)
 	// GetRoutes returns the system routing table.
-	GetRoutes() ([]RouteResult, error)
+	GetRoutes(ctx context.Context) ([]RouteResult, error)
 	// GetPrimaryInterface returns the name of the interface used
 	// for the default route.
-	GetPrimaryInterface() (string, error)
+	GetPrimaryInterface(ctx context.Context) (string, error)
 }

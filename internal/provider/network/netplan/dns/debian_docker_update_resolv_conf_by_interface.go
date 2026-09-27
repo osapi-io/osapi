@@ -21,6 +21,8 @@
 package dns
 
 import (
+	"context"
+
 	"github.com/osapi-io/osapi/internal/provider"
 )
 
@@ -28,6 +30,7 @@ import (
 // environments. DNS configuration in containers is managed by the
 // container runtime (Docker, Kubernetes), not the agent.
 func (d *DebianDocker) UpdateResolvConfByInterface(
+	_ context.Context,
 	_ []string,
 	_ []string,
 	_ string,
@@ -38,6 +41,7 @@ func (d *DebianDocker) UpdateResolvConfByInterface(
 
 // DeleteNetplanConfig returns ErrUnsupported in containers.
 func (d *DebianDocker) DeleteNetplanConfig(
+	_ context.Context,
 	_ string,
 ) (bool, error) {
 	return false, provider.ErrUnsupported

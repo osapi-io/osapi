@@ -49,7 +49,7 @@ func NewDefaultMockProvider(
 		},
 	}, nil).AnyTimes()
 
-	mock.EXPECT().GetRoutes().Return([]netinfo.RouteResult{
+	mock.EXPECT().GetRoutes(gomock.Any()).Return([]netinfo.RouteResult{
 		{
 			Destination: "0.0.0.0",
 			Gateway:     "192.168.1.1",
@@ -59,7 +59,7 @@ func NewDefaultMockProvider(
 		},
 	}, nil).AnyTimes()
 
-	mock.EXPECT().GetPrimaryInterface().Return("eth0", nil).AnyTimes()
+	mock.EXPECT().GetPrimaryInterface(gomock.Any()).Return("eth0", nil).AnyTimes()
 
 	return mock
 }

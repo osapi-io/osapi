@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -127,7 +128,7 @@ func (s *ProcessorSchedulePublicTestSuite) TestProcessScheduleOperation() {
 			}
 
 			processor := agent.NewScheduleProcessor(cronProvider, slog.Default())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -498,7 +499,7 @@ func (s *ProcessorSchedulePublicTestSuite) TestProcessCronOperation() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := agent.NewScheduleProcessor(tt.setupMock(), slog.Default())
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }

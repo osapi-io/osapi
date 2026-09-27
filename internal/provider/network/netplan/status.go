@@ -21,6 +21,7 @@
 package netplan
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -72,9 +73,11 @@ type RouteStatus struct {
 
 // GetStatus runs "netplan status --format json" and parses the output.
 func GetStatus(
+	ctx context.Context,
 	execManager exec.Manager,
 ) (Status, error) {
 	output, err := execManager.RunCmd(
+		ctx,
 		"netplan",
 		[]string{"status", "--format", "json"},
 	)
@@ -192,10 +195,11 @@ func (s InterfaceStatus) AddressFamily() string {
 // interface by querying netplan status. Falls back to "ethernets" if
 // the interface type cannot be determined.
 func SectionForInterface(
+	ctx context.Context,
 	execManager exec.Manager,
 	interfaceName string,
 ) string {
-	status, err := GetStatus(execManager)
+	status, err := GetStatus(ctx, execManager)
 	if err != nil {
 		return "ethernets"
 	}

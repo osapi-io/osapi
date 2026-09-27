@@ -106,12 +106,12 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 
 	// Use plain DNS mock with appropriate expectations
 	dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
-	dnsMock.EXPECT().GetResolvConfByInterface(gomock.Any()).Return(&dns.GetResult{
+	dnsMock.EXPECT().GetResolvConfByInterface(gomock.Any(), gomock.Any()).Return(&dns.GetResult{
 		DNSServers:    []string{"192.168.1.1", "8.8.8.8"},
 		SearchDomains: []string{"example.com"},
 	}, nil).AnyTimes()
 	dnsMock.EXPECT().
-		UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(&dns.UpdateResult{Changed: true}, nil).
 		AnyTimes()
 

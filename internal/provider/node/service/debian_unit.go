@@ -69,7 +69,7 @@ func (d *Debian) Create(
 	}
 
 	if result.Changed {
-		if err := d.daemonReload(); err != nil {
+		if err := d.daemonReload(ctx); err != nil {
 			return nil, fmt.Errorf("service: create: %w", err)
 		}
 	}
@@ -123,7 +123,7 @@ func (d *Debian) Update(
 	}
 
 	if result.Changed {
-		if err := d.daemonReload(); err != nil {
+		if err := d.daemonReload(ctx); err != nil {
 			return nil, fmt.Errorf("service: update: %w", err)
 		}
 	}
@@ -155,7 +155,7 @@ func (d *Debian) Delete(
 	unitName := managedPrefix + name + ".service"
 
 	// Best-effort stop and disable before removing the unit file.
-	if _, err := d.execManager.RunPrivilegedCmd("systemctl", []string{"stop", unitName}); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"stop", unitName}); err != nil {
 		d.logger.Warn(
 			"failed to stop service before delete",
 			slog.String("name", name),
@@ -163,7 +163,7 @@ func (d *Debian) Delete(
 		)
 	}
 
-	if _, err := d.execManager.RunPrivilegedCmd("systemctl", []string{"disable", unitName}); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"disable", unitName}); err != nil {
 		d.logger.Warn(
 			"failed to disable service before delete",
 			slog.String("name", name),
@@ -184,7 +184,7 @@ func (d *Debian) Delete(
 	}
 
 	if result.Changed {
-		if err := d.daemonReload(); err != nil {
+		if err := d.daemonReload(ctx); err != nil {
 			return nil, fmt.Errorf("service: delete: %w", err)
 		}
 	}
@@ -203,8 +203,10 @@ func unitFilePath(
 }
 
 // daemonReload runs systemctl daemon-reload to pick up unit file changes.
-func (d *Debian) daemonReload() error {
-	_, err := d.execManager.RunPrivilegedCmd("systemctl", []string{"daemon-reload"})
+func (d *Debian) daemonReload(
+	ctx context.Context,
+) error {
+	_, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"daemon-reload"})
 	if err != nil {
 		return fmt.Errorf("daemon-reload: %w", err)
 	}

@@ -22,6 +22,7 @@ package dns
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"strings"
 )
@@ -30,6 +31,7 @@ import (
 // The interfaceName parameter is accepted but ignored — containers have
 // a single global DNS configuration managed by the container runtime.
 func (d *DebianDocker) GetResolvConfByInterface(
+	_ context.Context,
 	_ string,
 ) (*GetResult, error) {
 	f, err := d.fs.Open(resolvConfPath)

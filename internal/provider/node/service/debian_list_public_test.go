@@ -83,7 +83,7 @@ func (suite *DebianListPublicTestSuite) TestList() {
 					{"unit":"ssh.service","load":"loaded","active":"active","sub":"running","description":"OpenBSD Secure Shell server"}
 				]`
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{
+					RunCmd(gomock.Any(), "systemctl", []string{
 						"list-units",
 						"--type=service",
 						"--all",
@@ -97,7 +97,7 @@ func (suite *DebianListPublicTestSuite) TestList() {
 					{"unit_file":"ssh.service","state":"disabled","preset":"enabled"}
 				]`
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{
+					RunCmd(gomock.Any(), "systemctl", []string{
 						"list-unit-files",
 						"--type=service",
 						"--no-pager",
@@ -127,7 +127,7 @@ func (suite *DebianListPublicTestSuite) TestList() {
 			name: "when list-units exec fails returns error",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{
+					RunCmd(gomock.Any(), "systemctl", []string{
 						"list-units",
 						"--type=service",
 						"--all",
@@ -152,7 +152,7 @@ func (suite *DebianListPublicTestSuite) TestList() {
 					{"unit":"nginx.service","load":"loaded","active":"active","sub":"running","description":"nginx"}
 				]`
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{
+					RunCmd(gomock.Any(), "systemctl", []string{
 						"list-units",
 						"--type=service",
 						"--all",
@@ -162,7 +162,7 @@ func (suite *DebianListPublicTestSuite) TestList() {
 					Return(unitsJSON, nil)
 
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{
+					RunCmd(gomock.Any(), "systemctl", []string{
 						"list-unit-files",
 						"--type=service",
 						"--no-pager",
@@ -184,7 +184,7 @@ func (suite *DebianListPublicTestSuite) TestList() {
 			name: "when no services exist returns empty list",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{
+					RunCmd(gomock.Any(), "systemctl", []string{
 						"list-units",
 						"--type=service",
 						"--all",
@@ -194,7 +194,7 @@ func (suite *DebianListPublicTestSuite) TestList() {
 					Return("[]", nil)
 
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{
+					RunCmd(gomock.Any(), "systemctl", []string{
 						"list-unit-files",
 						"--type=service",
 						"--no-pager",
@@ -214,7 +214,7 @@ func (suite *DebianListPublicTestSuite) TestList() {
 			name: "when list-units returns malformed JSON returns error",
 			setup: func() {
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{
+					RunCmd(gomock.Any(), "systemctl", []string{
 						"list-units",
 						"--type=service",
 						"--all",
@@ -239,7 +239,7 @@ func (suite *DebianListPublicTestSuite) TestList() {
 					{"unit":"cron.service","load":"loaded","active":"inactive","sub":"dead","description":"cron daemon"}
 				]`
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{
+					RunCmd(gomock.Any(), "systemctl", []string{
 						"list-units",
 						"--type=service",
 						"--all",
@@ -249,7 +249,7 @@ func (suite *DebianListPublicTestSuite) TestList() {
 					Return(unitsJSON, nil)
 
 				suite.mockExecManager.EXPECT().
-					RunCmd("systemctl", []string{
+					RunCmd(gomock.Any(), "systemctl", []string{
 						"list-unit-files",
 						"--type=service",
 						"--no-pager",

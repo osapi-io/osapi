@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -682,7 +683,7 @@ func (s *ProcessorDockerPublicTestSuite) TestProcessDockerOperation() {
 			// nil provider case uses nil containerMock
 
 			processor := agent.NewDockerProcessor(containerMock, slog.Default())
-			result, err := processor(tt.jobRequest)
+			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)

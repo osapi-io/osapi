@@ -30,7 +30,7 @@ import (
 // Start starts a systemd service. If the service is already active, it
 // returns Changed: false without taking action.
 func (d *Debian) Start(
-	_ context.Context,
+	ctx context.Context,
 	name string,
 ) (*ActionResult, error) {
 	if err := validateName(name); err != nil {
@@ -41,12 +41,12 @@ func (d *Debian) Start(
 
 	d.logger.Debug("executing service.Start", slog.String("name", unitName))
 
-	output, _ := d.execManager.RunCmd("systemctl", []string{"is-active", unitName})
+	output, _ := d.execManager.RunCmd(ctx, "systemctl", []string{"is-active", unitName})
 	if strings.TrimSpace(output) == "active" {
 		return &ActionResult{Name: name, Changed: false}, nil
 	}
 
-	if _, err := d.execManager.RunPrivilegedCmd("systemctl", []string{"start", unitName}); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"start", unitName}); err != nil {
 		return nil, fmt.Errorf("service: start: %w", err)
 	}
 
@@ -56,7 +56,7 @@ func (d *Debian) Start(
 // Stop stops a systemd service. If the service is already inactive, it
 // returns Changed: false without taking action.
 func (d *Debian) Stop(
-	_ context.Context,
+	ctx context.Context,
 	name string,
 ) (*ActionResult, error) {
 	if err := validateName(name); err != nil {
@@ -67,12 +67,12 @@ func (d *Debian) Stop(
 
 	d.logger.Debug("executing service.Stop", slog.String("name", unitName))
 
-	output, _ := d.execManager.RunCmd("systemctl", []string{"is-active", unitName})
+	output, _ := d.execManager.RunCmd(ctx, "systemctl", []string{"is-active", unitName})
 	if strings.TrimSpace(output) != "active" {
 		return &ActionResult{Name: name, Changed: false}, nil
 	}
 
-	if _, err := d.execManager.RunPrivilegedCmd("systemctl", []string{"stop", unitName}); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"stop", unitName}); err != nil {
 		return nil, fmt.Errorf("service: stop: %w", err)
 	}
 
@@ -81,7 +81,7 @@ func (d *Debian) Stop(
 
 // Restart restarts a systemd service. Always returns Changed: true on success.
 func (d *Debian) Restart(
-	_ context.Context,
+	ctx context.Context,
 	name string,
 ) (*ActionResult, error) {
 	if err := validateName(name); err != nil {
@@ -92,7 +92,7 @@ func (d *Debian) Restart(
 
 	d.logger.Debug("executing service.Restart", slog.String("name", unitName))
 
-	if _, err := d.execManager.RunPrivilegedCmd("systemctl", []string{"restart", unitName}); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"restart", unitName}); err != nil {
 		return nil, fmt.Errorf("service: restart: %w", err)
 	}
 
@@ -102,7 +102,7 @@ func (d *Debian) Restart(
 // Enable enables a systemd service. If the service is already enabled, it
 // returns Changed: false without taking action.
 func (d *Debian) Enable(
-	_ context.Context,
+	ctx context.Context,
 	name string,
 ) (*ActionResult, error) {
 	if err := validateName(name); err != nil {
@@ -113,12 +113,12 @@ func (d *Debian) Enable(
 
 	d.logger.Debug("executing service.Enable", slog.String("name", unitName))
 
-	output, _ := d.execManager.RunCmd("systemctl", []string{"is-enabled", unitName})
+	output, _ := d.execManager.RunCmd(ctx, "systemctl", []string{"is-enabled", unitName})
 	if strings.TrimSpace(output) == "enabled" {
 		return &ActionResult{Name: name, Changed: false}, nil
 	}
 
-	if _, err := d.execManager.RunPrivilegedCmd("systemctl", []string{"enable", unitName}); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"enable", unitName}); err != nil {
 		return nil, fmt.Errorf("service: enable: %w", err)
 	}
 
@@ -128,7 +128,7 @@ func (d *Debian) Enable(
 // Disable disables a systemd service. If the service is already disabled, it
 // returns Changed: false without taking action.
 func (d *Debian) Disable(
-	_ context.Context,
+	ctx context.Context,
 	name string,
 ) (*ActionResult, error) {
 	if err := validateName(name); err != nil {
@@ -139,12 +139,12 @@ func (d *Debian) Disable(
 
 	d.logger.Debug("executing service.Disable", slog.String("name", unitName))
 
-	output, _ := d.execManager.RunCmd("systemctl", []string{"is-enabled", unitName})
+	output, _ := d.execManager.RunCmd(ctx, "systemctl", []string{"is-enabled", unitName})
 	if strings.TrimSpace(output) != "enabled" {
 		return &ActionResult{Name: name, Changed: false}, nil
 	}
 
-	if _, err := d.execManager.RunPrivilegedCmd("systemctl", []string{"disable", unitName}); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"disable", unitName}); err != nil {
 		return nil, fmt.Errorf("service: disable: %w", err)
 	}
 

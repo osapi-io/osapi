@@ -21,6 +21,7 @@
 package dns_test
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"testing"
@@ -75,6 +76,7 @@ func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 
 			darwin := dns.NewDarwinProvider(suite.logger, mock)
 			tt.validateFunc(darwin.UpdateResolvConfByInterface(
+				context.Background(),
 				[]string{"8.8.8.8"},
 				[]string{"example.com"},
 				"en0",
@@ -104,7 +106,7 @@ func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TestDeleteNetplan
 			mock := execMocks.NewPlainMockManager(suite.ctrl)
 
 			darwin := dns.NewDarwinProvider(suite.logger, mock)
-			tt.validateFunc(darwin.DeleteNetplanConfig("eth0"))
+			tt.validateFunc(darwin.DeleteNetplanConfig(context.Background(), "eth0"))
 		})
 	}
 }

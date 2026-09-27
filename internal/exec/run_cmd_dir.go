@@ -20,12 +20,15 @@
 
 package exec
 
+import "context"
+
 // RunCmdInDir executes the provided command with arguments, using the current
 // provided directory.
 func (e *Exec) RunCmdInDir(
+	ctx context.Context,
 	name string,
 	args []string,
 	cwd string,
 ) (string, error) {
-	return e.RunCmdImpl(name, args, cwd)
+	return e.RunCmdImpl(ctx, name, args, cwd)
 }

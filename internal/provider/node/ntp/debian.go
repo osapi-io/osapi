@@ -72,16 +72,16 @@ func NewDebianProvider(
 // Get returns current NTP sync status and configured servers by
 // running chronyc tracking and chronyc sources -c.
 func (d *Debian) Get(
-	_ context.Context,
+	ctx context.Context,
 ) (*Status, error) {
-	trackingOutput, err := d.execManager.RunCmd("chronyc", []string{"tracking"})
+	trackingOutput, err := d.execManager.RunCmd(ctx, "chronyc", []string{"tracking"})
 	if err != nil {
 		return nil, fmt.Errorf("ntp: chronyc tracking: %w", err)
 	}
 
 	status := parseTracking(trackingOutput)
 
-	sourcesOutput, err := d.execManager.RunCmd("chronyc", []string{"sources", "-c"})
+	sourcesOutput, err := d.execManager.RunCmd(ctx, "chronyc", []string{"sources", "-c"})
 	if err != nil {
 		return nil, fmt.Errorf("ntp: chronyc sources: %w", err)
 	}
@@ -94,7 +94,7 @@ func (d *Debian) Get(
 // Create deploys a managed NTP server configuration via a chrony
 // drop-in file. Idempotent: returns Changed: false if already managed.
 func (d *Debian) Create(
-	_ context.Context,
+	ctx context.Context,
 	config Config,
 ) (*CreateResult, error) {
 	if _, err := d.fs.Stat(sourcesFile); err == nil {
@@ -111,7 +111,7 @@ func (d *Debian) Create(
 		return nil, fmt.Errorf("ntp: write file: %w", writeErr)
 	}
 
-	d.reloadSources()
+	d.reloadSources(ctx)
 
 	d.logger.Info(
 		"ntp config deployed",
@@ -126,7 +126,7 @@ func (d *Debian) Create(
 // config file does not exist. Idempotent: returns Changed false when
 // the content SHA matches.
 func (d *Debian) Update(
-	_ context.Context,
+	ctx context.Context,
 	config Config,
 ) (*UpdateResult, error) {
 	existing, err := d.fs.ReadFile(sourcesFile)
@@ -151,7 +151,7 @@ func (d *Debian) Update(
 		return nil, fmt.Errorf("ntp: write file: %w", writeErr)
 	}
 
-	d.reloadSources()
+	d.reloadSources(ctx)
 
 	d.logger.Info(
 		"ntp config updated",
@@ -165,7 +165,7 @@ func (d *Debian) Update(
 // Delete removes the managed NTP server configuration. Fails if the
 // config file does not exist.
 func (d *Debian) Delete(
-	_ context.Context,
+	ctx context.Context,
 ) (*DeleteResult, error) {
 	if _, err := d.fs.Stat(sourcesFile); err != nil {
 		return nil, fmt.Errorf("ntp: config not managed")
@@ -175,7 +175,7 @@ func (d *Debian) Delete(
 		return nil, fmt.Errorf("ntp: remove file: %w", removeErr)
 	}
 
-	d.reloadSources()
+	d.reloadSources(ctx)
 
 	d.logger.Info(
 		"ntp config removed",
@@ -187,8 +187,8 @@ func (d *Debian) Delete(
 
 // reloadSources runs chronyc reload sources. Failures are logged as
 // warnings but do not fail the operation.
-func (d *Debian) reloadSources() {
-	if _, err := d.execManager.RunPrivilegedCmd("chronyc", []string{"reload", "sources"}); err != nil {
+func (d *Debian) reloadSources(ctx context.Context) {
+	if _, err := d.execManager.RunPrivilegedCmd(ctx, "chronyc", []string{"reload", "sources"}); err != nil {
 		d.logger.Warn(
 			"chronyc reload sources failed",
 			slog.String("error", err.Error()),

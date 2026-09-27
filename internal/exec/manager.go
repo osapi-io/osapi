@@ -20,11 +20,18 @@
 
 package exec
 
+import "context"
+
 // Manager manager responsible for exec operations.
+//
+// Every method takes a context. A command with no deadline of its own is bounded
+// by DefaultCommandTimeout, and one still running when the agent shuts down is
+// killed with it rather than outliving it.
 type Manager interface {
 	// RunCmd executes the provided command with arguments, using the current
 	// working directory.
 	RunCmd(
+		ctx context.Context,
 		name string,
 		args []string,
 	) (string, error)
@@ -32,6 +39,7 @@ type Manager interface {
 	// RunPrivilegedCmd executes the provided command with arguments.
 	// When sudo is enabled, the command is prepended with "sudo".
 	RunPrivilegedCmd(
+		ctx context.Context,
 		name string,
 		args []string,
 	) (string, error)
@@ -41,6 +49,7 @@ type Manager interface {
 	// command is prepended with "sudo". Use it to pass secrets, which must
 	// never be placed in arguments.
 	RunPrivilegedCmdWithStdin(
+		ctx context.Context,
 		name string,
 		args []string,
 		stdin string,
@@ -49,6 +58,7 @@ type Manager interface {
 	// RunCmdFull executes a command with separate stdout/stderr capture,
 	// an optional working directory, and a timeout in seconds.
 	RunCmdFull(
+		ctx context.Context,
 		name string,
 		args []string,
 		cwd string,

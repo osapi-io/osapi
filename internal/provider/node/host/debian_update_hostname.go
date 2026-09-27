@@ -21,6 +21,7 @@
 package host
 
 import (
+	"context"
 	"fmt"
 	"strings"
 )
@@ -29,9 +30,10 @@ import (
 // It checks the current hostname first and returns Changed: false
 // if the hostname is already set to the requested value.
 func (u *Debian) UpdateHostname(
+	ctx context.Context,
 	name string,
 ) (*UpdateHostnameResult, error) {
-	current, err := u.execManager.RunCmd("hostnamectl", []string{"hostname"})
+	current, err := u.execManager.RunCmd(ctx, "hostnamectl", []string{"hostname"})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get current hostname: %w", err)
 	}
@@ -40,7 +42,7 @@ func (u *Debian) UpdateHostname(
 		return &UpdateHostnameResult{Changed: false}, nil
 	}
 
-	if _, err := u.execManager.RunPrivilegedCmd("hostnamectl", []string{"set-hostname", name}); err != nil {
+	if _, err := u.execManager.RunPrivilegedCmd(ctx, "hostnamectl", []string{"set-hostname", name}); err != nil {
 		return nil, fmt.Errorf("failed to set hostname: %w", err)
 	}
 

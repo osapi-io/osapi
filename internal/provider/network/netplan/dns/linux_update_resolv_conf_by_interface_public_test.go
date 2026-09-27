@@ -21,6 +21,7 @@
 package dns_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -60,6 +61,7 @@ func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvCo
 			searchDomains := []string{}
 			interfaceName := ""
 			tc.validateFunc(linux.UpdateResolvConfByInterface(
+				context.Background(),
 				servers,
 				searchDomains,
 				interfaceName,
@@ -87,7 +89,7 @@ func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TestDeleteNetplanC
 		suite.Run(tc.name, func() {
 			linux := dns.NewLinuxProvider()
 
-			tc.validateFunc(linux.DeleteNetplanConfig("eth0"))
+			tc.validateFunc(linux.DeleteNetplanConfig(context.Background(), "eth0"))
 		})
 	}
 }

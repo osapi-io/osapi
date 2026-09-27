@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -122,7 +123,7 @@ func (s *ProcessorLogPublicTestSuite) TestProcessLogOperation() {
 			}
 
 			processor := s.newProcessor(logProvider)
-			result, err := processor(tt.jobRequest)
+			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -242,7 +243,7 @@ func (s *ProcessorLogPublicTestSuite) TestProcessLogQuery() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newProcessor(tt.setupMock())
-			result, err := processor(tt.jobRequest)
+			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -334,7 +335,7 @@ func (s *ProcessorLogPublicTestSuite) TestProcessLogQueryUnit() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newProcessor(tt.setupMock())
-			result, err := processor(tt.jobRequest)
+			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -401,7 +402,7 @@ func (s *ProcessorLogPublicTestSuite) TestProcessLogSources() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := s.newProcessor(tt.setupMock())
-			result, err := processor(tt.jobRequest)
+			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)

@@ -78,7 +78,7 @@ func (d *Debian) Shutdown(
 // executePowerAction runs the shutdown command with the given flag (-r or -h).
 // Uses `shutdown <flag> +N` where N is in minutes (minimum 1 minute).
 func (d *Debian) executePowerAction(
-	_ context.Context,
+	ctx context.Context,
 	action string,
 	flag string,
 	opts Opts,
@@ -102,7 +102,7 @@ func (d *Debian) executePowerAction(
 		args = append(args, opts.Message)
 	}
 
-	if _, err := d.execManager.RunPrivilegedCmd("shutdown", args); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd(ctx, "shutdown", args); err != nil {
 		return nil, fmt.Errorf("power: %s: %w", action, err)
 	}
 

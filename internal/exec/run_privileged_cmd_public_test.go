@@ -21,6 +21,7 @@
 package exec_test
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -70,7 +71,7 @@ func (s *RunPrivilegedCmdPublicTestSuite) TestRunPrivilegedCmd() {
 			args:    []string{"-n", "hello"},
 			setupMock: func() {
 				s.mockExecutor.EXPECT().
-					Execute("echo", []string{"-n", "hello"}, "").
+					Execute(gomock.Any(), "echo", []string{"-n", "hello"}, "").
 					Return("hello", nil)
 			},
 			validateFunc: func(output string, err error) {
@@ -85,7 +86,7 @@ func (s *RunPrivilegedCmdPublicTestSuite) TestRunPrivilegedCmd() {
 			args:    []string{"-n", "hello"},
 			setupMock: func() {
 				s.mockExecutor.EXPECT().
-					Execute("sudo", []string{"echo", "-n", "hello"}, "").
+					Execute(gomock.Any(), "sudo", []string{"echo", "-n", "hello"}, "").
 					Return("hello", nil)
 			},
 			validateFunc: func(output string, err error) {
@@ -100,7 +101,7 @@ func (s *RunPrivilegedCmdPublicTestSuite) TestRunPrivilegedCmd() {
 			args:    nil,
 			setupMock: func() {
 				s.mockExecutor.EXPECT().
-					Execute("sudo", []string{"systemctl"}, "").
+					Execute(gomock.Any(), "sudo", []string{"systemctl"}, "").
 					Return("", nil)
 			},
 			validateFunc: func(output string, err error) {
@@ -115,7 +116,7 @@ func (s *RunPrivilegedCmdPublicTestSuite) TestRunPrivilegedCmd() {
 			args:    []string{},
 			setupMock: func() {
 				s.mockExecutor.EXPECT().
-					Execute("nonexistent", []string{}, "").
+					Execute(gomock.Any(), "nonexistent", []string{}, "").
 					Return("", fmt.Errorf("command not found"))
 			},
 			validateFunc: func(_ string, err error) {
@@ -132,7 +133,7 @@ func (s *RunPrivilegedCmdPublicTestSuite) TestRunPrivilegedCmd() {
 			em := exec.New(s.logger, tc.sudo)
 			exec.SetExecutor(em, s.mockExecutor)
 
-			output, err := em.RunPrivilegedCmd(tc.command, tc.args)
+			output, err := em.RunPrivilegedCmd(context.Background(), tc.command, tc.args)
 
 			tc.validateFunc(output, err)
 		})

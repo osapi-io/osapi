@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -120,7 +121,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteOperation() {
 				routeProvider,
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -187,7 +188,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteList() {
 				tt.setupMock(),
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -273,7 +274,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteGet() {
 				tt.setupMock(),
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -368,7 +369,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteCreate() {
 				tt.setupMock(),
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -463,7 +464,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteUpdate() {
 				tt.setupMock(),
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -547,7 +548,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteDelete() {
 				tt.setupMock(),
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }

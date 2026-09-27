@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -196,7 +197,7 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 			name: "when both checks pass",
 			setup: func() {
 				s.mockExecMgr.EXPECT().
-					RunCmd("sudo", gomock.Any()).
+					RunCmd(gomock.Any(), "sudo", gomock.Any()).
 					Return("/usr/bin/something", nil).
 					AnyTimes()
 
@@ -215,7 +216,7 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 			name: "when sudo check fails",
 			setup: func() {
 				s.mockExecMgr.EXPECT().
-					RunCmd("sudo", gomock.Any()).
+					RunCmd(gomock.Any(), "sudo", gomock.Any()).
 					Return("", fmt.Errorf("sudo failed")).
 					AnyTimes()
 
@@ -234,7 +235,7 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 			name: "when caps check fails",
 			setup: func() {
 				s.mockExecMgr.EXPECT().
-					RunCmd("sudo", gomock.Any()).
+					RunCmd(gomock.Any(), "sudo", gomock.Any()).
 					Return("/usr/bin/something", nil).
 					AnyTimes()
 
@@ -255,6 +256,7 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 		s.Run(tc.name, func() {
 			tc.setup()
 			results, allPassed := agent.RunPreflight(
+				context.Background(),
 				s.logger,
 				s.mockExecMgr,
 			)

@@ -79,11 +79,11 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 	// Create mock providers
 	hostMock := hostMocks.NewDefaultMockProvider(s.mockCtrl)
 	hostMock.EXPECT().
-		UpdateHostname("success-host").
+		UpdateHostname(gomock.Any(), "success-host").
 		Return(&nodeHost.UpdateHostnameResult{Changed: true}, nil).
 		AnyTimes()
 	hostMock.EXPECT().
-		UpdateHostname(gomock.Any()).
+		UpdateHostname(gomock.Any(), gomock.Any()).
 		Return(nil, fmt.Errorf("host: %w", provider.ErrUnsupported)).
 		AnyTimes()
 	diskMock := diskMocks.NewDefaultMockProvider(s.mockCtrl)
@@ -93,12 +93,12 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 	// Use plain DNS mock to avoid hardcoded interface expectations
 	dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
 	// Set up expectations for eth0 interface used in tests
-	dnsMock.EXPECT().GetResolvConfByInterface("eth0").Return(&dns.GetResult{
+	dnsMock.EXPECT().GetResolvConfByInterface(gomock.Any(), "eth0").Return(&dns.GetResult{
 		DNSServers:    []string{"192.168.1.1", "8.8.8.8"},
 		SearchDomains: []string{"example.com"},
 	}, nil).AnyTimes()
 	dnsMock.EXPECT().
-		UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(&dns.UpdateResult{Changed: true}, nil).
 		AnyTimes()
 
@@ -1016,7 +1016,7 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperationErrors() {
 			createAgent: func() *agent.Agent {
 				dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
 				dnsMock.EXPECT().
-					GetResolvConfByInterface("eth0").
+					GetResolvConfByInterface(gomock.Any(), "eth0").
 					Return(nil, errors.New("DNS lookup failed"))
 				return newTestAgent(newTestAgentParams{
 					appFs:           memfs.New(),
@@ -1046,7 +1046,7 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperationErrors() {
 			createAgent: func() *agent.Agent {
 				dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
 				dnsMock.EXPECT().
-					UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("DNS update failed"))
 				return newTestAgent(newTestAgentParams{
 					appFs:           memfs.New(),

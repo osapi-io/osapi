@@ -224,7 +224,7 @@ func mockRunCmdStatus(
 	output string,
 ) {
 	mock.EXPECT().
-		RunCmd(ResolveCommand, []string{"status", NetworkInterfaceName}).
+		RunCmd(gomock.Any(), ResolveCommand, []string{"status", NetworkInterfaceName}).
 		Return(output, nil).
 		AnyTimes()
 }
@@ -235,7 +235,7 @@ func mockNetplanStatus(
 ) {
 	statusJSON := `{"` + NetworkInterfaceName + `": {"type": "wifi", "macaddress": "b0:a4:60:17:cb:90"}}`
 	mock.EXPECT().
-		RunCmd(NetplanCommand, []string{"status", "--format", "json"}).
+		RunCmd(gomock.Any(), NetplanCommand, []string{"status", "--format", "json"}).
 		Return(statusJSON, nil).
 		AnyTimes()
 }
@@ -247,13 +247,13 @@ func mockNetplanApply(
 	applyErr error,
 ) {
 	mock.EXPECT().
-		RunPrivilegedCmd(NetplanCommand, []string{"generate"}).
+		RunPrivilegedCmd(gomock.Any(), NetplanCommand, []string{"generate"}).
 		Return("", genErr).
 		AnyTimes()
 
 	if genErr == nil {
 		mock.EXPECT().
-			RunPrivilegedCmd(NetplanCommand, []string{"apply"}).
+			RunPrivilegedCmd(gomock.Any(), NetplanCommand, []string{"apply"}).
 			Return("", applyErr).
 			AnyTimes()
 	}

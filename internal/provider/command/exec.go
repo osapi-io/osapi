@@ -21,12 +21,14 @@
 package command
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 )
 
 // Exec executes a command directly without a shell.
 func (c *Executor) Exec(
+	ctx context.Context,
 	params ExecParams,
 ) (*Result, error) {
 	c.logger.Debug(
@@ -38,6 +40,7 @@ func (c *Executor) Exec(
 	)
 
 	cmdResult, err := c.execManager.RunCmdFull(
+		ctx,
 		params.Command,
 		params.Args,
 		params.Cwd,

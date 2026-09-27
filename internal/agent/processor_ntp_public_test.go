@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -126,7 +127,7 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpOperation() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -202,7 +203,7 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpGet() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -293,7 +294,7 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpCreate() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -384,7 +385,7 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpUpdate() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }
@@ -454,7 +455,7 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpDelete() {
 				config.Config{},
 				slog.Default(),
 			)
-			tt.validateFunc(processor(tt.jobRequest))
+			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
 }

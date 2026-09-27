@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -70,7 +71,7 @@ func (s *ProcessorCommandPublicTestSuite) TestProcessCommandOperation() {
 			},
 			setupMock: func(m *commandMocks.MockProvider) {
 				m.EXPECT().
-					Exec(command.ExecParams{
+					Exec(gomock.Any(), command.ExecParams{
 						Command: "ls",
 						Args:    []string{"-la"},
 						Cwd:     "/tmp",
@@ -103,7 +104,7 @@ func (s *ProcessorCommandPublicTestSuite) TestProcessCommandOperation() {
 			},
 			setupMock: func(m *commandMocks.MockProvider) {
 				m.EXPECT().
-					Shell(command.ShellParams{
+					Shell(gomock.Any(), command.ShellParams{
 						Command: "echo hello | tr a-z A-Z",
 						Cwd:     "/tmp",
 						Timeout: 30,
@@ -168,7 +169,7 @@ func (s *ProcessorCommandPublicTestSuite) TestProcessCommandOperation() {
 			},
 			setupMock: func(m *commandMocks.MockProvider) {
 				m.EXPECT().
-					Exec(gomock.Any()).
+					Exec(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("execution failed"))
 			},
 			expectError: true,
@@ -184,7 +185,7 @@ func (s *ProcessorCommandPublicTestSuite) TestProcessCommandOperation() {
 			},
 			setupMock: func(m *commandMocks.MockProvider) {
 				m.EXPECT().
-					Shell(gomock.Any()).
+					Shell(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("shell failed"))
 			},
 			expectError: true,
@@ -198,7 +199,7 @@ func (s *ProcessorCommandPublicTestSuite) TestProcessCommandOperation() {
 			tt.setupMock(cmdMock)
 
 			processor := agent.NewCommandProcessor(cmdMock, slog.Default())
-			result, err := processor(tt.jobRequest)
+			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)

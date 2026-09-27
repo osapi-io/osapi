@@ -440,7 +440,7 @@ func (a *Agent) handleJobMessage(
 		// Extend the ack deadline periodically while the operation runs, so
 		// an operation that outlives AckWait is not redelivered mid-flight.
 		stopKeepAlive := a.startInProgressKeepAlive(ctx, msg)
-		result, err = a.processJobOperation(jobRequest)
+		result, err = a.processJobOperation(ctx, jobRequest)
 		stopKeepAlive()
 	}
 	if err != nil && errors.Is(err, provider.ErrUnsupported) {

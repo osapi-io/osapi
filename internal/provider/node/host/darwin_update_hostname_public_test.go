@@ -21,6 +21,7 @@
 package host_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -55,7 +56,7 @@ func (suite *DarwinUpdateHostnamePublicTestSuite) TestUpdateHostname() {
 		suite.Run(tc.name, func() {
 			darwin := host.NewDarwinProvider()
 
-			tc.validateFunc(darwin.UpdateHostname("new-host"))
+			tc.validateFunc(darwin.UpdateHostname(context.Background(), "new-host"))
 		})
 	}
 }

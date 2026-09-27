@@ -20,10 +20,13 @@
 
 package dns
 
+import "context"
+
 // Provider implements the methods to interact with various DNS components.
 type Provider interface {
 	// GetResolvConfByInterface retrieves the DNS configuration.
 	GetResolvConfByInterface(
+		ctx context.Context,
 		interfaceName string,
 	) (*GetResult, error)
 	// UpdateResolvConfByInterface updates the DNS configuration.
@@ -31,6 +34,7 @@ type Provider interface {
 	// When overrideDHCP is true, DHCP-provided DNS servers are disabled so
 	// only the configured servers are used.
 	UpdateResolvConfByInterface(
+		ctx context.Context,
 		servers []string,
 		searchDomains []string,
 		interfaceName string,
@@ -38,6 +42,7 @@ type Provider interface {
 	) (*UpdateResult, error)
 	// DeleteNetplanConfig removes the managed DNS Netplan config file.
 	DeleteNetplanConfig(
+		ctx context.Context,
 		interfaceName string,
 	) (bool, error)
 }

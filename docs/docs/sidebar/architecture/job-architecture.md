@@ -591,6 +591,20 @@ For now, the 1-hour TTL keeps the bucket bounded and `kv.Keys()` fast.
 7. **Timeout Handling**: for broadcast jobs, an agent that never responds within
    `job_timeout` appears in the result as `status: failed`.
 8. **Graceful Degradation**: agents continue on provider errors.
+9. **Every command has a deadline**: an operation runs under the agent's job
+   context, so a command still running when the agent shuts down is killed with
+   it rather than outliving it. A command whose caller set no deadline of its
+   own is bounded by a 10-minute backstop — long enough for a package
+   installation over a slow mirror, short enough that a command waiting on a
+   prompt nobody will answer does not run forever. The error then names the
+   context's cause, because a killed command produces no output of its own to
+   explain itself.
+10. **Cancelling the request does not cancel the work**: `job_timeout` bounds
+    how long the controller waits, not how long the agent runs. When it expires
+    the caller is told the job timed out while the agent carries on and records
+    its response, and `job delete` removes the queue entry rather than the
+    running process. An operation is stopped only by its own deadline, the
+    backstop, or the agent shutting down.
 
 ## Monitoring
 

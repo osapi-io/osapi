@@ -37,12 +37,10 @@ func NewDockerProcessor(
 	dockerProvider dockerProv.Provider,
 	_ *slog.Logger,
 ) ProcessorFunc {
-	return func(req job.Request) (json.RawMessage, error) {
+	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
 		if dockerProvider == nil {
 			return nil, fmt.Errorf("docker runtime not available")
 		}
-
-		ctx := context.Background()
 
 		// Extract base operation from dotted operation (e.g., "create.execute" -> "create")
 		baseOperation := strings.Split(req.Operation, ".")[0]

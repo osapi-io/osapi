@@ -122,7 +122,7 @@ func (a *Agent) writeFacts(
 		reg.Interfaces = ifaces
 	}
 
-	if providerRoutes, err := a.netinfoProvider.GetRoutes(); err == nil {
+	if providerRoutes, err := a.netinfoProvider.GetRoutes(ctx); err == nil {
 		routes := make([]job.Route, len(providerRoutes))
 		for i, r := range providerRoutes {
 			routes[i] = job.Route{
@@ -137,7 +137,7 @@ func (a *Agent) writeFacts(
 		reg.Routes = routes
 	}
 
-	if primary, err := a.netinfoProvider.GetPrimaryInterface(); err == nil {
+	if primary, err := a.netinfoProvider.GetPrimaryInterface(ctx); err == nil {
 		reg.PrimaryInterface = primary
 	}
 

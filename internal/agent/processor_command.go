@@ -21,6 +21,7 @@
 package agent
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -35,15 +36,15 @@ func NewCommandProcessor(
 	commandProvider command.Provider,
 	_ *slog.Logger,
 ) ProcessorFunc {
-	return func(req job.Request) (json.RawMessage, error) {
+	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
 		// Extract base operation from dotted operation (e.g., "exec.execute" -> "exec")
 		baseOperation := strings.Split(req.Operation, ".")[0]
 
 		switch baseOperation {
 		case "exec":
-			return processCommandExec(commandProvider, req)
+			return processCommandExec(ctx, commandProvider, req)
 		case "shell":
-			return processCommandShell(commandProvider, req)
+			return processCommandShell(ctx, commandProvider, req)
 		default:
 			return nil, fmt.Errorf("unsupported command operation: %s", req.Operation)
 		}
@@ -52,6 +53,7 @@ func NewCommandProcessor(
 
 // processCommandExec handles direct command execution.
 func processCommandExec(
+	ctx context.Context,
 	commandProvider command.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
@@ -60,7 +62,7 @@ func processCommandExec(
 		return nil, fmt.Errorf("failed to parse command exec data: %w", err)
 	}
 
-	result, err := commandProvider.Exec(command.ExecParams{
+	result, err := commandProvider.Exec(ctx, command.ExecParams{
 		Command: execData.Command,
 		Args:    execData.Args,
 		Cwd:     execData.Cwd,
@@ -75,6 +77,7 @@ func processCommandExec(
 
 // processCommandShell handles shell command execution.
 func processCommandShell(
+	ctx context.Context,
 	commandProvider command.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
@@ -83,7 +86,7 @@ func processCommandShell(
 		return nil, fmt.Errorf("failed to parse command shell data: %w", err)
 	}
 
-	result, err := commandProvider.Shell(command.ShellParams{
+	result, err := commandProvider.Shell(ctx, command.ShellParams{
 		Command: shellData.Command,
 		Cwd:     shellData.Cwd,
 		Timeout: shellData.Timeout,

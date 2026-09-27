@@ -22,6 +22,7 @@ package netinfo
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"strings"
@@ -37,8 +38,10 @@ import (
 //	default            192.168.1.1        UGScg       en0
 //	127                127.0.0.1          UCS         lo0
 //	192.168.1/24       link#6             UCS         en0
-func (d *Darwin) GetRoutes() ([]RouteResult, error) {
-	rc, err := d.RouteReaderFn()
+func (d *Darwin) GetRoutes(
+	ctx context.Context,
+) ([]RouteResult, error) {
+	rc, err := d.RouteReaderFn(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read route table: %w", err)
 	}
@@ -110,8 +113,10 @@ func parseDarwinRoutes(
 
 // GetPrimaryInterface returns the name of the interface used for the default
 // route from macOS `netstat -rn` output.
-func (d *Darwin) GetPrimaryInterface() (string, error) {
-	routes, err := d.GetRoutes()
+func (d *Darwin) GetPrimaryInterface(
+	ctx context.Context,
+) (string, error) {
+	routes, err := d.GetRoutes(ctx)
 	if err != nil {
 		return "", err
 	}
