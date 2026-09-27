@@ -131,6 +131,9 @@ type AgentInfo struct {
 	// KernelVersion OS kernel version.
 	KernelVersion *string `json:"kernel_version,omitempty"`
 
+	// KeyStored Whether the controller holds this agent's public key, recorded when its enrollment was accepted. False for an agent that has not enrolled since the key store existed, which is what to re-enrol before enabling enforcement.
+	KeyStored *bool `json:"key_stored,omitempty"`
+
 	// Labels Key-value labels configured on the agent.
 	Labels *map[string]string `json:"labels,omitempty"`
 
@@ -175,6 +178,9 @@ type AgentInfo struct {
 
 	// Uptime The system uptime.
 	Uptime *string `json:"uptime,omitempty"`
+
+	// Verified Whether this agent's registration was signed by its stored key and claims the hostname it enrolled under. Only a verified registration decides where work is routed. True when the controller is not enforcing verification.
+	Verified *bool `json:"verified,omitempty"`
 }
 
 // AgentInfoState Agent scheduling state.
