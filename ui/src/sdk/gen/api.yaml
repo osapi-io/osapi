@@ -6497,6 +6497,18 @@ components:
           type: string
           description: OpenTelemetry trace ID for correlation.
           example: 4bf92f3577b34da6a3ce929d0e0e4736
+        job_id:
+          type: string
+          description: >-
+            The job this request created, absent when it created none. Joins the
+            entry to that job's own status timeline.
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        request_summary:
+          type: string
+          description: >-
+            What the request asked for, with sensitive values replaced. Recorded
+            for methods that change something.
+          example: '{"command":"systemctl","args":["restart","nginx"]}'
       required:
         - id
         - timestamp

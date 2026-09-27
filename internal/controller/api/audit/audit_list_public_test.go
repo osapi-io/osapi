@@ -162,6 +162,66 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogs() {
 			},
 		},
 		{
+			name:   "returns the job and the summary an entry carries",
+			params: gen.GetAuditLogsParams{Limit: &limit, Offset: &offset},
+			setupStore: func() {
+				s.mockStore.EXPECT().
+					List(gomock.Any(), limit, offset).
+					Return([]auditstore.Entry{
+						{
+							ID:             "550e8400-e29b-41d4-a716-446655440000",
+							Timestamp:      time.Now(),
+							User:           "user@example.com",
+							Roles:          []string{"admin"},
+							Method:         "POST",
+							Path:           "/api/node/command/shell",
+							SourceIP:       "127.0.0.1",
+							ResponseCode:   200,
+							DurationMs:     42,
+							JobID:          "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+							RequestSummary: `{"command":"systemctl restart nginx"}`,
+						},
+					}, 1, nil)
+			},
+			validateFunc: func(resp gen.GetAuditLogsResponseObject) {
+				r, ok := resp.(gen.GetAuditLogs200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Items, 1)
+				s.Require().NotNil(r.Items[0].JobId)
+				s.Equal("7c9e6679-7425-40de-944b-e07fc1f90ae7", *r.Items[0].JobId)
+				s.Require().NotNil(r.Items[0].RequestSummary)
+				s.Contains(*r.Items[0].RequestSummary, "systemctl restart nginx")
+			},
+		},
+		{
+			name:   "an entry with no job and no summary reports neither",
+			params: gen.GetAuditLogsParams{Limit: &limit, Offset: &offset},
+			setupStore: func() {
+				s.mockStore.EXPECT().
+					List(gomock.Any(), limit, offset).
+					Return([]auditstore.Entry{
+						{
+							ID:           "550e8400-e29b-41d4-a716-446655440000",
+							Timestamp:    time.Now(),
+							User:         "user@example.com",
+							Roles:        []string{"admin"},
+							Method:       "GET",
+							Path:         "/api/node/hostname",
+							SourceIP:     "127.0.0.1",
+							ResponseCode: 200,
+							DurationMs:   42,
+						},
+					}, 1, nil)
+			},
+			validateFunc: func(resp gen.GetAuditLogsResponseObject) {
+				r, ok := resp.(gen.GetAuditLogs200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Items, 1)
+				s.Nil(r.Items[0].JobId)
+				s.Nil(r.Items[0].RequestSummary)
+			},
+		},
+		{
 			name:   "returns entry with operation ID",
 			params: gen.GetAuditLogsParams{Limit: &limit, Offset: &offset},
 			setupStore: func() {

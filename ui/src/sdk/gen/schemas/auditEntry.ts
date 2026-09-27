@@ -28,4 +28,8 @@ export interface AuditEntry {
   duration_ms: number;
   /** OpenTelemetry trace ID for correlation. */
   trace_id?: string;
+  /** The job this request created, absent when it created none. Joins the entry to that job's own status timeline. */
+  job_id?: string;
+  /** What the request asked for, with sensitive values replaced. Recorded for methods that change something. */
+  request_summary?: string;
 }

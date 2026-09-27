@@ -33,6 +33,8 @@ import (
 	"go.opentelemetry.io/otel/metric"
 
 	"github.com/osapi-io/osapi/internal/job"
+
+	"github.com/osapi-io/osapi/internal/audit"
 )
 
 // Client provides methods for publishing job requests and retrieving responses.
@@ -296,6 +298,11 @@ func (c *Client) publishAndWait(
 	req.Timestamp = time.Now()
 
 	jobID := req.JobID
+
+	// Tell the audit trail which job answered this request, so an entry can be
+	// joined to the job's own status timeline. Outside a request — an agent, a
+	// background task, a test — there is no sink and this does nothing.
+	audit.RecordJobID(ctx, jobID)
 	createdTime := req.Timestamp.Format(time.RFC3339)
 
 	operationData := map[string]interface{}{
@@ -446,6 +453,11 @@ func (c *Client) publishAndCollect(
 	req.Timestamp = time.Now()
 
 	jobID := req.JobID
+
+	// Tell the audit trail which job answered this request, so an entry can be
+	// joined to the job's own status timeline. Outside a request — an agent, a
+	// background task, a test — there is no sink and this does nothing.
+	audit.RecordJobID(ctx, jobID)
 	createdTime := req.Timestamp.Format(time.RFC3339)
 
 	operationData := map[string]interface{}{

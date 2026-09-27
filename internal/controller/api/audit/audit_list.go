@@ -93,5 +93,14 @@ func mapEntryToGen(
 	if e.TraceID != "" {
 		entry.TraceId = &e.TraceID
 	}
+
+	if e.JobID != "" {
+		entry.JobId = &e.JobID
+	}
+
+	if e.RequestSummary != "" {
+		entry.RequestSummary = &e.RequestSummary
+	}
+
 	return entry
 }
