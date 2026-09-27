@@ -69,9 +69,8 @@ Configures streams, consumers, and KV buckets needed by the job system.
 				metricsServer.RegisterSubsystems(
 					subsystemStatuses(buildNATSSubComponents()),
 				)
+				metricsServer.Start()
 			}
-
-			metricsServer.Start()
 		}
 
 		var ns cli.Lifecycle = &natsLifecycle{server: s}

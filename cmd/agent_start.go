@@ -67,9 +67,8 @@ It processes jobs as they become available.
 				metricsServer.SetReadinessFunc(func() error {
 					return a.IsReady()
 				})
+				metricsServer.Start()
 			}
-
-			metricsServer.Start()
 		}
 
 		if metricsServer != nil {
