@@ -381,11 +381,6 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 					Return(`{"eth0": {"type": "ethernet"}}`, nil).
 					AnyTimes()
 
-				// KV Get returns not found (new file).
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-
 				// netplan generate succeeds.
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
@@ -478,9 +473,6 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 					AnyTimes()
 
 				// KV Get returns not found.
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
 
 				// netplan generate fails.
 				suite.mockExec.EXPECT().
@@ -537,9 +529,6 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 					AnyTimes()
 
 				// KV Get returns not found (different SHA).
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
 
 				// netplan generate succeeds.
 				suite.mockExec.EXPECT().
@@ -609,10 +598,6 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 					Return(`{"eth0": {"type": "ethernet"}}`, nil).
 					AnyTimes()
 
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", errors.New("validation error"))
@@ -647,6 +632,10 @@ func (suite *InterfacePublicTestSuite) TestDelete() {
 			name:        "when file exists and removal succeeds",
 			interfaceNm: "eth0",
 			setup: func() {
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found"))
+
 				// Create the managed file on disk.
 				_ = suite.memFs.WriteFile(
 					"/etc/netplan/osapi-eth0.yaml",
@@ -660,9 +649,6 @@ func (suite *InterfacePublicTestSuite) TestDelete() {
 					Return("", nil)
 
 				// KV state exists for undeploy marking.
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
 			},
 			validateFunc: func(result *iface.InterfaceResult, err error) {
 				suite.Require().NoError(err)

@@ -36,6 +36,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/exec"
+	"github.com/osapi-io/osapi/internal/fsutil"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/file"
 )
@@ -61,22 +62,17 @@ func ApplyConfig(
 	sha := ComputeSHA256(content)
 	stateKey := file.BuildStateKey(hostname, path)
 
-	// Check for idempotency: if SHA matches and file exists, skip.
-	kvEntry, err := stateKV.Get(ctx, stateKey)
-	if err == nil {
-		var state job.FileState
-		if unmarshalErr := json.Unmarshal(kvEntry.Value(), &state); unmarshalErr == nil {
-			if state.SHA256 == sha && state.UndeployedAt == "" {
-				if _, statErr := fs.Stat(path); statErr == nil {
-					logger.Debug(
-						"netplan config unchanged, skipping deploy",
-						slog.String("path", path),
-					)
+	// Idempotency is decided by the file on disk, not by what the last apply
+	// recorded: a config edited by hand still matches the record, and skipping on
+	// that basis leaves the host running something nobody asked for.
+	if onDisk, readErr := fs.ReadFile(path); readErr == nil &&
+		ComputeSHA256(onDisk) == sha {
+		logger.Debug(
+			"netplan config unchanged, skipping deploy",
+			slog.String("path", path),
+		)
 
-					return false, nil
-				}
-			}
-		}
+		return false, nil
 	}
 
 	// Ensure the parent directory exists.
@@ -85,8 +81,9 @@ func ApplyConfig(
 		return false, fmt.Errorf("netplan apply: create directory: %w", mkErr)
 	}
 
-	// Write the config file.
-	if writeErr := fs.WriteFile(path, content, 0o600); writeErr != nil {
+	// Write the config file. netplan reads the directory, so a half-written file
+	// is a config it may refuse or misparse.
+	if writeErr := fsutil.WriteFileAtomic(fs, path, content, 0o600); writeErr != nil {
 		return false, fmt.Errorf("netplan apply: write file: %w", writeErr)
 	}
 

@@ -28,10 +28,10 @@ import (
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	execMocks "github.com/osapi-io/osapi/internal/exec/mocks"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/file"
@@ -295,10 +295,6 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 
 			if !tc.wantErr {
 				mockKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, assert.AnError)
-
-				mockKV.EXPECT().
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			}
@@ -309,6 +305,7 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 				mockObj,
 				mockKV,
 				tc.hostname,
+				execMocks.NewMockManager(ctrl),
 			)
 			if tc.factsFn != nil {
 				p.SetFactsFunc(tc.factsFn)

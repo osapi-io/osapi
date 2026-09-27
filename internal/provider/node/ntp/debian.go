@@ -33,6 +33,7 @@ import (
 	"github.com/avfs/avfs"
 
 	"github.com/osapi-io/osapi/internal/exec"
+	"github.com/osapi-io/osapi/internal/fsutil"
 	"github.com/osapi-io/osapi/internal/provider"
 )
 
@@ -107,7 +108,12 @@ func (d *Debian) Create(
 		return nil, fmt.Errorf("ntp: create directory: %w", mkErr)
 	}
 
-	if writeErr := d.fs.WriteFile(sourcesFile, content, 0o644); writeErr != nil {
+	if writeErr := fsutil.WriteFileAtomic(
+		d.fs,
+		sourcesFile,
+		content,
+		0o644,
+	); writeErr != nil {
 		return nil, fmt.Errorf("ntp: write file: %w", writeErr)
 	}
 
@@ -147,7 +153,12 @@ func (d *Debian) Update(
 		return &UpdateResult{Changed: false}, nil
 	}
 
-	if writeErr := d.fs.WriteFile(sourcesFile, content, 0o644); writeErr != nil {
+	if writeErr := fsutil.WriteFileAtomic(
+		d.fs,
+		sourcesFile,
+		content,
+		0o644,
+	); writeErr != nil {
 		return nil, fmt.Errorf("ntp: write file: %w", writeErr)
 	}
 

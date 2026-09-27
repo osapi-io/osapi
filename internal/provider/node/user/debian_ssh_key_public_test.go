@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/avfs/avfs"
@@ -413,6 +414,33 @@ func (suite *DebianSSHKeyPublicTestSuite) TestAddKey() {
 			},
 		},
 		{
+			name:     "when the existing file has no trailing newline the key still lands on its own line",
+			username: "testuser",
+			passwd:   testPasswdSSH,
+			key: user.SSHKey{
+				RawLine: testKey2Line,
+			},
+			setupFS: func() {
+				// A file written by hand, or by an editor that does not add the
+				// final newline. Appending to it directly would join two keys
+				// into one unusable line.
+				suite.writeAuthorizedKeys("testuser", "/home/testuser", testKey1Line)
+			},
+			setupMock: func() {
+				suite.mockExec.EXPECT().
+					RunPrivilegedCmd(gomock.Any(), "chown", []string{"-R", "testuser:testuser", "/home/testuser/.ssh"}).
+					Return("", nil)
+			},
+			validateFunc: func(result *user.SSHKeyResult, err error) {
+				suite.NoError(err)
+				suite.Require().NotNil(result)
+				suite.True(result.Changed)
+
+				content := suite.readFile("/home/testuser/.ssh/authorized_keys")
+				suite.Equal(testKey1Line+"\n"+testKey2Line+"\n", content)
+			},
+		},
+		{
 			name:     "when key already exists returns changed false",
 			username: "testuser",
 			passwd:   testPasswdSSH,
@@ -570,7 +598,7 @@ func (suite *DebianSSHKeyPublicTestSuite) TestAddKey() {
 			},
 		},
 		{
-			name:       "when open file fails for append",
+			name:       "when the temp file cannot be created",
 			username:   "testuser",
 			skipPasswd: true,
 			key: user.SSHKey{
@@ -583,18 +611,13 @@ func (suite *DebianSSHKeyPublicTestSuite) TestAddKey() {
 				_, _ = f.Write([]byte(testPasswdSSH))
 				_ = f.Close()
 
-				openFileCalls := 0
-
 				suite.provider = suite.newFailFSProvider(baseFs,
-					func(_ avfs.VFSBase, fn avfs.FnVFS, _ *failfs.FailParam) error {
-						if fn == avfs.FnOpenFile {
-							openFileCalls++
-							// 1st: userHomeDir Open("/etc/passwd")
-							// 2nd: ReadFile's internal OpenFile (not-exist)
-							// 3rd: OpenFile for append
-							if openFileCalls > 2 {
-								return fmt.Errorf("injected open error")
-							}
+					func(_ avfs.VFSBase, fn avfs.FnVFS, p *failfs.FailParam) error {
+						// Only the atomic write's temp file, which is the one
+						// named beside the target.
+						if fn == avfs.FnOpenFile &&
+							strings.Contains(p.Path, ".osapi-") {
+							return fmt.Errorf("injected create error")
 						}
 
 						return nil
@@ -604,7 +627,7 @@ func (suite *DebianSSHKeyPublicTestSuite) TestAddKey() {
 			validateFunc: func(result *user.SSHKeyResult, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "ssh key: add: open")
+				suite.Contains(err.Error(), "ssh key: add: write")
 			},
 		},
 		{
@@ -853,21 +876,13 @@ func (suite *DebianSSHKeyPublicTestSuite) TestRemoveKey() {
 				_, _ = af.Write([]byte(testKey1Line + "\n"))
 				_ = af.Close()
 
-				openFileCalls := 0
-
 				suite.provider = suite.newFailFSProvider(baseFs,
-					func(_ avfs.VFSBase, fn avfs.FnVFS, _ *failfs.FailParam) error {
-						// WriteFile uses OpenFile internally.
-						// The first OpenFile is from ReadFile, the second is
-						// from WriteFile (the rewrite). Fail the second.
-						if fn == avfs.FnOpenFile {
-							openFileCalls++
-							// First OpenFile: userHomeDir Open("/etc/passwd")
-							// Second OpenFile: ReadFile's internal OpenFile
-							// Third OpenFile: WriteFile's internal OpenFile
-							if openFileCalls > 2 {
-								return fmt.Errorf("injected write error")
-							}
+					func(_ avfs.VFSBase, fn avfs.FnVFS, p *failfs.FailParam) error {
+						// The rewrite is atomic, so it fails opening the temp
+						// file beside the target rather than the target itself.
+						if fn == avfs.FnOpenFile &&
+							strings.Contains(p.Path, ".osapi-") {
+							return fmt.Errorf("injected write error")
 						}
 
 						return nil

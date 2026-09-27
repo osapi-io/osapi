@@ -29,9 +29,10 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/osapi-io/osapi/internal/fsutil"
 )
 
 const (
@@ -127,24 +128,23 @@ func (d *Debian) AddKey(
 		return nil, fmt.Errorf("ssh key: add: mkdir %s: %w", sshDir, err)
 	}
 
-	// Append key to authorized_keys.
-	f, err := d.fs.OpenFile(
+	// Write the file with the key appended, atomically: sshd may read
+	// authorized_keys at any moment, and a half-written file is a user who
+	// cannot log in.
+	updated := string(content)
+	if updated != "" && !strings.HasSuffix(updated, "\n") {
+		updated += "\n"
+	}
+
+	updated += key.RawLine + "\n"
+
+	if err := fsutil.WriteFileAtomic(
+		d.fs,
 		authKeysPath,
-		os.O_APPEND|os.O_CREATE|os.O_WRONLY,
+		[]byte(updated),
 		authorizedKeysMode,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("ssh key: add: open %s: %w", authKeysPath, err)
-	}
-
-	_, writeErr := f.Write([]byte(key.RawLine + "\n"))
-
-	if closeErr := f.Close(); closeErr != nil && writeErr == nil {
-		writeErr = closeErr
-	}
-
-	if writeErr != nil {
-		return nil, fmt.Errorf("ssh key: add: write %s: %w", authKeysPath, writeErr)
+	); err != nil {
+		return nil, fmt.Errorf("ssh key: add: write %s: %w", authKeysPath, err)
 	}
 
 	// Best-effort chown.
@@ -234,7 +234,12 @@ func (d *Debian) RemoveKey(
 
 	output := strings.Join(remaining, "\n")
 
-	if err := d.fs.WriteFile(authKeysPath, []byte(output), authorizedKeysMode); err != nil {
+	if err := fsutil.WriteFileAtomic(
+		d.fs,
+		authKeysPath,
+		[]byte(output),
+		authorizedKeysMode,
+	); err != nil {
 		return nil, fmt.Errorf("ssh key: remove: write %s: %w", authKeysPath, err)
 	}
 

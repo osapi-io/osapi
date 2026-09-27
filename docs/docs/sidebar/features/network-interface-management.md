@@ -41,7 +41,11 @@ Returns `changed: true` if the file existed.
 - **OSAPI prefix** — only files with the `osapi-` prefix are managed. System
   files created by installers or other tools are not touched.
 - **SHA-based idempotency** — `update` computes a SHA of the new content and
-  skips the write if it matches the existing file, returning `changed: false`.
+  compares it with a SHA of the file on disk, skipping the write only when they
+  match and returning `changed: false`. A config edited by hand differs from the
+  content osapi would write, so it is restored rather than reported unchanged.
+- **Atomic writes** — the config goes to a temporary file beside the target and
+  is renamed over it, so `netplan generate` never reads a half-written file.
 
 ## Operations
 

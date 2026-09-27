@@ -28,6 +28,7 @@ import (
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/provider"
 )
 
@@ -42,11 +43,12 @@ var _ provider.FactsSetter = (*Service)(nil)
 type Service struct {
 	provider.FactsAware
 
-	logger   *slog.Logger
-	fs       avfs.VFS
-	objStore jetstream.ObjectStore
-	stateKV  jetstream.KeyValue
-	hostname string
+	logger      *slog.Logger
+	fs          avfs.VFS
+	objStore    jetstream.ObjectStore
+	stateKV     jetstream.KeyValue
+	hostname    string
+	execManager exec.Manager
 }
 
 // New creates a new Service with the given dependencies.
@@ -58,12 +60,14 @@ func New(
 	objStore jetstream.ObjectStore,
 	stateKV jetstream.KeyValue,
 	hostname string,
+	execManager exec.Manager,
 ) *Service {
 	return &Service{
-		logger:   logger.With(slog.String("subsystem", "provider.file")),
-		fs:       fs,
-		objStore: objStore,
-		stateKV:  stateKV,
-		hostname: hostname,
+		logger:      logger.With(slog.String("subsystem", "provider.file")),
+		fs:          fs,
+		objStore:    objStore,
+		stateKV:     stateKV,
+		hostname:    hostname,
+		execManager: execManager,
 	}
 }
