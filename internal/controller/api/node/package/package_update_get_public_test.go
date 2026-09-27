@@ -271,6 +271,64 @@ func (s *PackageUpdateGetPublicTestSuite) TestGetNodePackageUpdate() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodePackageUpdateRequestObject{
+				Hostname: "_all",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationPackageListUpdates,
+						nil,
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Data: json.RawMessage(
+									`[{"name":"curl","current_version":"7.68.0","new_version":"7.81.0"}]`,
+								),
+							},
+							"server2": {
+								Status:   job.StatusFailed,
+								Error:    "apt: update check failed",
+								Hostname: "server2",
+							},
+							"server3": {
+								Status:   job.StatusTimeout,
+								Error:    "apt: unsupported",
+								Hostname: "server3",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodePackageUpdateResponseObject) {
+				r, ok := resp.(gen.GetNodePackageUpdate200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]*gen.UpdateEntry)
+				for i := range r.Results {
+					byHost[r.Results[i].Hostname] = &r.Results[i]
+				}
+
+				s.Require().Contains(byHost, "server1")
+				s.Equal(gen.Ok, byHost["server1"].Status)
+
+				s.Require().Contains(byHost, "server2")
+				s.Equal(gen.Failed, byHost["server2"].Status)
+
+				s.Require().Contains(byHost, "server3")
+				s.Equal(gen.Timeout, byHost["server3"].Status)
+			},
+		},
+		{
 			name: "broadcast job client error",
 			request: gen.GetNodePackageUpdateRequestObject{
 				Hostname: "_all",

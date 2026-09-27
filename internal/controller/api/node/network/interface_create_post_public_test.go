@@ -304,6 +304,54 @@ func (s *NetworkInterfaceCreatePostPublicTestSuite) TestPostNodeNetworkInterface
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.PostNodeNetworkInterfaceRequestObject{
+				Hostname: "_all",
+				Name:     "eth0",
+				Body:     &gen.InterfaceConfigRequest{Dhcp4: &trueVal},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"network",
+						job.OperationNetworkInterfaceCreate,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "server1",
+							},
+							"server2": {
+								Status:   job.StatusTimeout,
+								Error:    "unsupported",
+								Hostname: "server2",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeNetworkInterfaceResponseObject) {
+				r, ok := resp.(gen.PostNodeNetworkInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 2)
+				statuses := map[gen.InterfaceMutationEntryStatus]bool{}
+				for _, item := range r.Results {
+					statuses[item.Status] = true
+					s.Require().NotNil(item.Error)
+					s.Require().NotNil(item.Changed)
+					s.False(*item.Changed)
+				}
+				s.True(statuses[gen.InterfaceMutationEntryStatusFailed])
+				s.True(statuses[gen.InterfaceMutationEntryStatusTimeout])
+			},
+		},
+		{
 			name: "when all optional fields provided",
 			request: gen.PostNodeNetworkInterfaceRequestObject{
 				Hostname: "server1",

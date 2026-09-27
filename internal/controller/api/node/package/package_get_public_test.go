@@ -298,6 +298,66 @@ func (s *PackageGetPublicTestSuite) TestGetNodePackageByName() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodePackageByNameRequestObject{
+				Hostname: "_all",
+				Name:     "curl",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationPackageGet,
+						map[string]string{"name": "curl"},
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Data: json.RawMessage(
+									`{"name":"curl","version":"7.68.0","status":"installed","description":"curl","size":2048}`,
+								),
+							},
+							"server2": {
+								Status:    job.StatusFailed,
+								Error:     "package not found",
+								ErrorCode: job.ErrorCodeNotFound,
+								Hostname:  "server2",
+							},
+							"server3": {
+								Status:   job.StatusTimeout,
+								Error:    "apt: unsupported",
+								Hostname: "server3",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodePackageByNameResponseObject) {
+				r, ok := resp.(gen.GetNodePackageByName200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]*gen.PackageEntry)
+				for i := range r.Results {
+					byHost[r.Results[i].Hostname] = &r.Results[i]
+				}
+
+				s.Require().Contains(byHost, "server1")
+				s.Equal(gen.PackageEntryStatusOk, byHost["server1"].Status)
+
+				s.Require().Contains(byHost, "server2")
+				s.Equal(gen.PackageEntryStatusFailed, byHost["server2"].Status)
+
+				s.Require().Contains(byHost, "server3")
+				s.Equal(gen.PackageEntryStatusTimeout, byHost["server3"].Status)
+			},
+		},
+		{
 			name: "broadcast job client error",
 			request: gen.GetNodePackageByNameRequestObject{
 				Hostname: "_all",

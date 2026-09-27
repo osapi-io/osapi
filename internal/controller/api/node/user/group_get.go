@@ -154,6 +154,10 @@ func (u *User) getNodeGroupByNameBroadcast(
 			item.Status = gen.GroupEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.GroupEntryStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.GroupEntryStatusOk
 			var entry userProv.Group

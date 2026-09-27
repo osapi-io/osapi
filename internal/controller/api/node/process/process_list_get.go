@@ -174,6 +174,10 @@ func (s *Process) getNodeProcessListBroadcast(
 			item.Status = gen.ProcessEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.ProcessEntryStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.ProcessEntryStatusOk
 			processes := processInfoListFromResponse(resp)

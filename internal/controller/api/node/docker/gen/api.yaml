@@ -750,7 +750,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         id:
           type: string
@@ -791,7 +791,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         id:
           type: string
@@ -858,7 +858,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         id:
           type: string
@@ -886,7 +886,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         stdout:
           type: string
@@ -916,7 +916,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         image_id:
           type: string
@@ -949,7 +949,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         containers:
           type: array

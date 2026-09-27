@@ -129,6 +129,10 @@ func (s *Node) getNodeDiskBroadcast(
 			item.Status = gen.DiskResultItemStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.DiskResultItemStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.DiskResultItemStatusOk
 			var diskResp job.NodeDiskResponse

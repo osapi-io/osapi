@@ -125,6 +125,14 @@ func (p *Package) getNodePackageUpdateBroadcast(
 				Status:   gen.Skipped,
 				Error:    &e,
 			})
+		case job.StatusTimeout:
+			e := resp.Error
+			h := host
+			allResults = append(allResults, gen.UpdateEntry{
+				Hostname: h,
+				Status:   gen.Timeout,
+				Error:    &e,
+			})
 		default:
 			allResults = append(allResults, responseToUpdateEntries(resp)...)
 		}

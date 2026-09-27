@@ -191,6 +191,13 @@ func (s *Container) getNodeContainerDockerInspectBroadcast(
 				Status:   gen.DockerDetailResponseStatusSkipped,
 				Error:    &e,
 			})
+		case job.StatusTimeout:
+			e := resp.Error
+			items = append(items, gen.DockerDetailResponse{
+				Hostname: host,
+				Status:   gen.DockerDetailResponseStatusTimeout,
+				Error:    &e,
+			})
 		default:
 			item := dockerDetailItemFromResponse(resp)
 			item.Status = gen.DockerDetailResponseStatusOk

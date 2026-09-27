@@ -367,6 +367,47 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.PostNodeFileDeployRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileDeployJSONRequestBody{
+					ObjectName:  "nginx.conf",
+					Path:        "/etc/nginx/nginx.conf",
+					ContentType: gen.Raw,
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"file",
+						job.OperationFileDeployExecute,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"agent1": {
+								Status:   job.StatusTimeout,
+								Error:    "timeout: agent did not respond",
+								Hostname: "agent1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("timeout: agent did not respond", *r.Results[0].Error)
+				s.Equal(gen.FileDeployResultStatusTimeout, r.Results[0].Status)
+			},
+		},
+		{
 			name: "when broadcast with failed host",
 			request: gen.PostNodeFileDeployRequestObject{
 				Hostname: "_all",

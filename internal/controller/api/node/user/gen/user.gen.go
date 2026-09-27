@@ -25,6 +25,7 @@ const (
 	GroupEntryStatusFailed  GroupEntryStatus = "failed"
 	GroupEntryStatusOk      GroupEntryStatus = "ok"
 	GroupEntryStatusSkipped GroupEntryStatus = "skipped"
+	GroupEntryStatusTimeout GroupEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the GroupEntryStatus enum.
@@ -36,6 +37,8 @@ func (e GroupEntryStatus) Valid() bool {
 		return true
 	case GroupEntryStatusSkipped:
 		return true
+	case GroupEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -46,6 +49,7 @@ const (
 	GroupMutationResultStatusFailed  GroupMutationResultStatus = "failed"
 	GroupMutationResultStatusOk      GroupMutationResultStatus = "ok"
 	GroupMutationResultStatusSkipped GroupMutationResultStatus = "skipped"
+	GroupMutationResultStatusTimeout GroupMutationResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the GroupMutationResultStatus enum.
@@ -57,6 +61,8 @@ func (e GroupMutationResultStatus) Valid() bool {
 		return true
 	case GroupMutationResultStatusSkipped:
 		return true
+	case GroupMutationResultStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -67,6 +73,7 @@ const (
 	SSHKeyEntryStatusFailed  SSHKeyEntryStatus = "failed"
 	SSHKeyEntryStatusOk      SSHKeyEntryStatus = "ok"
 	SSHKeyEntryStatusSkipped SSHKeyEntryStatus = "skipped"
+	SSHKeyEntryStatusTimeout SSHKeyEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the SSHKeyEntryStatus enum.
@@ -78,6 +85,8 @@ func (e SSHKeyEntryStatus) Valid() bool {
 		return true
 	case SSHKeyEntryStatusSkipped:
 		return true
+	case SSHKeyEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -88,6 +97,7 @@ const (
 	SSHKeyMutationEntryStatusFailed  SSHKeyMutationEntryStatus = "failed"
 	SSHKeyMutationEntryStatusOk      SSHKeyMutationEntryStatus = "ok"
 	SSHKeyMutationEntryStatusSkipped SSHKeyMutationEntryStatus = "skipped"
+	SSHKeyMutationEntryStatusTimeout SSHKeyMutationEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the SSHKeyMutationEntryStatus enum.
@@ -99,6 +109,8 @@ func (e SSHKeyMutationEntryStatus) Valid() bool {
 		return true
 	case SSHKeyMutationEntryStatusSkipped:
 		return true
+	case SSHKeyMutationEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -109,6 +121,7 @@ const (
 	UserEntryStatusFailed  UserEntryStatus = "failed"
 	UserEntryStatusOk      UserEntryStatus = "ok"
 	UserEntryStatusSkipped UserEntryStatus = "skipped"
+	UserEntryStatusTimeout UserEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the UserEntryStatus enum.
@@ -120,6 +133,8 @@ func (e UserEntryStatus) Valid() bool {
 		return true
 	case UserEntryStatusSkipped:
 		return true
+	case UserEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -130,6 +145,7 @@ const (
 	UserMutationResultStatusFailed  UserMutationResultStatus = "failed"
 	UserMutationResultStatusOk      UserMutationResultStatus = "ok"
 	UserMutationResultStatusSkipped UserMutationResultStatus = "skipped"
+	UserMutationResultStatusTimeout UserMutationResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the UserMutationResultStatus enum.
@@ -140,6 +156,8 @@ func (e UserMutationResultStatus) Valid() bool {
 	case UserMutationResultStatusOk:
 		return true
 	case UserMutationResultStatusSkipped:
+		return true
+	case UserMutationResultStatusTimeout:
 		return true
 	default:
 		return false

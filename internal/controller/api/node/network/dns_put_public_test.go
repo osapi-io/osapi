@@ -420,6 +420,46 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.PutNodeNetworkDNSRequestObject{
+				Hostname: "_all",
+				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
+					InterfaceName: "eth0",
+					Servers:       &[]string{"1.1.1.1"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"network",
+						job.OperationNetworkDNSUpdate,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusTimeout,
+								Error:    "timeout: agent did not respond",
+								Hostname: "server1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
+				r, ok := resp.(gen.PutNodeNetworkDNS202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("timeout: agent did not respond", *r.Results[0].Error)
+				s.Equal(gen.DNSUpdateResultItemStatusTimeout, r.Results[0].Status)
+			},
+		},
+		{
 			name: "when broadcast with failed host",
 			request: gen.PutNodeNetworkDNSRequestObject{
 				Hostname: "_all",

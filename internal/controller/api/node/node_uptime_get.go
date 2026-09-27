@@ -129,6 +129,10 @@ func (s *Node) getNodeUptimeBroadcast(
 			item.Status = gen.UptimeResponseStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.UptimeResponseStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.UptimeResponseStatusOk
 			var uptimeResp job.NodeUptimeResponse

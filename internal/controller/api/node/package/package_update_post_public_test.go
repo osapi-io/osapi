@@ -232,6 +232,58 @@ func (s *PackageUpdatePostPublicTestSuite) TestPostNodePackageUpdate() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.PostNodePackageUpdateRequestObject{
+				Hostname: "_all",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationPackageUpdate,
+						nil,
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Changed:  &changeBool,
+								Data:     json.RawMessage(`{"changed":true}`),
+							},
+							"server2": {
+								Status:   job.StatusFailed,
+								Error:    "apt: update failed",
+								Hostname: "server2",
+							},
+							"server3": {
+								Status:   job.StatusTimeout,
+								Error:    "apt: unsupported",
+								Hostname: "server3",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodePackageUpdateResponseObject) {
+				r, ok := resp.(gen.PostNodePackageUpdate200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]*gen.PackageMutationResult)
+				for i := range r.Results {
+					byHost[r.Results[i].Hostname] = &r.Results[i]
+				}
+
+				s.Equal(gen.PackageMutationResultStatusOk, byHost["server1"].Status)
+				s.Equal(gen.PackageMutationResultStatusFailed, byHost["server2"].Status)
+				s.Equal(gen.PackageMutationResultStatusTimeout, byHost["server3"].Status)
+			},
+		},
+		{
 			name: "broadcast job client error",
 			request: gen.PostNodePackageUpdateRequestObject{
 				Hostname: "_all",

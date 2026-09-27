@@ -336,6 +336,51 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSSHKey() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodeUserSSHKeyRequestObject{
+				Hostname: "_all",
+				Name:     "testuser",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"user",
+						job.OperationSSHKeyList,
+						map[string]string{"username": "testuser"},
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Data: json.RawMessage(
+									`[{"type":"ssh-ed25519","fingerprint":"SHA256:abc123"}]`,
+								),
+							},
+							"server2": {
+								Hostname: "server2",
+								Status:   job.StatusFailed,
+								Error:    "connection timeout",
+							},
+							"server3": {
+								Hostname: "server3",
+								Status:   job.StatusTimeout,
+								Error:    "unsupported",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.GetNodeUserSSHKey200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 3)
+			},
+		},
+		{
 			name: "broadcast job client error",
 			request: gen.GetNodeUserSSHKeyRequestObject{
 				Hostname: "_all",

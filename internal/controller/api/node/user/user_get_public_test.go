@@ -226,6 +226,38 @@ func (s *UserGetPublicTestSuite) TestGetNodeUserByName() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodeUserByNameRequestObject{
+				Hostname: "_all",
+				Name:     "testuser",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "user", job.OperationUserGet,
+						map[string]string{"name": "testuser"}).
+					Return("550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Data: json.RawMessage(
+									`{"name":"testuser","uid":1000,"gid":1000,"home":"/home/testuser","shell":"/bin/bash","locked":false}`,
+								),
+							},
+							"server2": {
+								Hostname: "server2",
+								Status:   job.StatusTimeout,
+								Error:    "unsupported",
+							},
+						}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeUserByNameResponseObject) {
+				r, ok := resp.(gen.GetNodeUserByName200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
 			name: "broadcast with failed and skipped agents",
 			request: gen.GetNodeUserByNameRequestObject{
 				Hostname: "_all",
@@ -270,6 +302,53 @@ func (s *UserGetPublicTestSuite) TestGetNodeUserByName() {
 				s.Equal(gen.UserEntryStatusFailed, byHost["server2"].Status)
 				s.Contains(*byHost["server2"].Error, "connection timeout")
 				s.Equal(gen.UserEntryStatusSkipped, byHost["server3"].Status)
+			},
+		},
+		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodeUserByNameRequestObject{
+				Hostname: "_all",
+				Name:     "testuser",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "user", job.OperationUserGet,
+						map[string]string{"name": "testuser"}).
+					Return("550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Data: json.RawMessage(
+									`{"name":"testuser","uid":1000,"gid":1000,"home":"/home/testuser","shell":"/bin/bash","locked":false,"groups":["sudo","docker"]}`,
+								),
+							},
+							"server2": {
+								Hostname: "server2",
+								Status:   job.StatusFailed,
+								Error:    "connection timeout",
+							},
+							"server3": {
+								Hostname: "server3",
+								Status:   job.StatusTimeout,
+								Error:    "unsupported",
+							},
+						}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeUserByNameResponseObject) {
+				r, ok := resp.(gen.GetNodeUserByName200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]gen.UserEntry)
+				for _, res := range r.Results {
+					byHost[res.Hostname] = res
+				}
+
+				s.Equal(gen.UserEntryStatusOk, byHost["server1"].Status)
+				s.Equal(gen.UserEntryStatusFailed, byHost["server2"].Status)
+				s.Contains(*byHost["server2"].Error, "connection timeout")
+				s.Equal(gen.UserEntryStatusTimeout, byHost["server3"].Status)
 			},
 		},
 		{

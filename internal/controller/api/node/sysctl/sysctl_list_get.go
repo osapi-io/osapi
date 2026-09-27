@@ -119,6 +119,14 @@ func (s *Sysctl) getNodeSysctlBroadcast(
 				Status:   gen.SysctlEntryStatusSkipped,
 				Error:    &e,
 			})
+		case job.StatusTimeout:
+			e := resp.Error
+			h := host
+			allResults = append(allResults, gen.SysctlEntry{
+				Hostname: h,
+				Status:   gen.SysctlEntryStatusTimeout,
+				Error:    &e,
+			})
 		default:
 			allResults = append(allResults, responseToSysctlEntries(resp)...)
 		}

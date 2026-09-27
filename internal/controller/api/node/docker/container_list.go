@@ -170,6 +170,10 @@ func (s *Container) getNodeContainerDockerListBroadcast(
 			item.Status = gen.DockerListItemStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.DockerListItemStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.DockerListItemStatusOk
 			summaries := dockerSummariesFromResponse(resp)

@@ -315,7 +315,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         entries:
           type: array
@@ -338,7 +338,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         sources:
           type: array

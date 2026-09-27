@@ -25,6 +25,7 @@ const (
 	Failed  CommandResultItemStatus = "failed"
 	Ok      CommandResultItemStatus = "ok"
 	Skipped CommandResultItemStatus = "skipped"
+	Timeout CommandResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the CommandResultItemStatus enum.
@@ -35,6 +36,8 @@ func (e CommandResultItemStatus) Valid() bool {
 	case Ok:
 		return true
 	case Skipped:
+		return true
+	case Timeout:
 		return true
 	default:
 		return false

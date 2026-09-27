@@ -176,6 +176,10 @@ func (u *User) putNodeUserUpdateBroadcast(
 			item.Status = gen.UserMutationResultStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.UserMutationResultStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.UserMutationResultStatusOk
 			var result userProv.Result

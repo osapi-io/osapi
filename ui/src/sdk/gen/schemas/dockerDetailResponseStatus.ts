@@ -15,4 +15,5 @@ export const DockerDetailResponseStatus = {
   ok: 'ok',
   failed: 'failed',
   skipped: 'skipped',
+  timeout: 'timeout',
 } as const;

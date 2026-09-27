@@ -150,6 +150,10 @@ func (s *Timezone) putNodeTimezoneBroadcast(
 			item.Status = gen.TimezoneMutationResultStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.TimezoneMutationResultStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.TimezoneMutationResultStatusOk
 			item.Changed = resp.Changed

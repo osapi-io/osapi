@@ -127,6 +127,10 @@ func (s *Timezone) getNodeTimezoneBroadcast(
 			item.Status = gen.TimezoneEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.TimezoneEntryStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			var info tzProv.Info
 			if resp.Data != nil {

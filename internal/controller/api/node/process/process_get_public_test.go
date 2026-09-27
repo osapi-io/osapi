@@ -305,6 +305,36 @@ func (s *ProcessGetPublicTestSuite) TestGetNodeProcessByPid() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodeProcessByPidRequestObject{
+				Hostname: "_all",
+				Pid:      1234,
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationProcessGet,
+						map[string]int{"pid": 1234},
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusTimeout,
+							Error:    "unsupported",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeProcessByPidResponseObject) {
+				r, ok := resp.(gen.GetNodeProcessByPid200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 1)
+				s.Equal(gen.ProcessGetEntryStatusTimeout, r.Results[0].Status)
+			},
+		},
+		{
 			name: "broadcast error collecting responses",
 			request: gen.GetNodeProcessByPidRequestObject{
 				Hostname: "_all",

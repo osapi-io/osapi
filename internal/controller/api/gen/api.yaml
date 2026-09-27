@@ -7225,6 +7225,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         uptime:
           type: string
@@ -7252,6 +7253,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         uptime:
           type: string
@@ -7286,6 +7288,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         disks:
           $ref: '#/components/schemas/DisksResponse'
@@ -7310,6 +7313,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         memory:
           $ref: '#/components/schemas/MemoryResponse'
@@ -7334,6 +7338,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         load_average:
           $ref: '#/components/schemas/LoadAverageResponse'
@@ -7358,6 +7363,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         os_info:
           $ref: '#/components/schemas/OSInfoResponse'
@@ -7514,6 +7520,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         certificates:
           type: array
@@ -7541,6 +7548,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         name:
           type: string
@@ -7648,6 +7656,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         stdout:
           type: string
@@ -7825,6 +7834,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         id:
           type: string
@@ -7868,6 +7878,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         id:
           type: string
@@ -7939,6 +7950,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         id:
           type: string
@@ -7969,6 +7981,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         stdout:
           type: string
@@ -8001,6 +8014,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         image_id:
           type: string
@@ -8036,6 +8050,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         containers:
           type: array
@@ -8209,6 +8224,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         changed:
           type: boolean
@@ -8302,6 +8318,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         changed:
           type: boolean
@@ -8340,6 +8357,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         labels:
           type: object
@@ -8392,6 +8410,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
         changed:
           type: boolean
           description: Whether the hostname was actually modified.
@@ -8455,6 +8474,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         entries:
           type: array
@@ -8480,6 +8500,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         sources:
           type: array
@@ -8532,6 +8553,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         packets_sent:
           type: integer
@@ -8596,6 +8618,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         servers:
           type: array
@@ -8642,6 +8665,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
         changed:
           type: boolean
           description: Whether the DNS configuration was actually modified.
@@ -8722,6 +8746,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         changed:
           type: boolean
@@ -8821,6 +8846,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         interfaces:
           type: array
@@ -8846,6 +8872,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         interface:
           $ref: '#/components/schemas/InterfaceInfo'
@@ -8869,6 +8896,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         name:
           type: string
@@ -8998,6 +9026,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         routes:
           type: array
@@ -9023,6 +9052,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         routes:
           type: array
@@ -9049,6 +9079,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         interface:
           type: string
@@ -9172,6 +9203,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         synchronized:
           type: boolean
@@ -9223,6 +9255,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         changed:
           type: boolean
@@ -9299,6 +9332,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         packages:
           type: array
@@ -9358,6 +9392,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         name:
           type: string
@@ -9398,6 +9433,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         updates:
           type: array
@@ -9466,6 +9502,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         action:
           type: string
@@ -9584,6 +9621,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         processes:
           type: array
@@ -9609,6 +9647,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         process:
           $ref: '#/components/schemas/ProcessInfo'
@@ -9631,6 +9670,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         pid:
           type: integer
@@ -9798,6 +9838,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         name:
           type: string
@@ -9875,6 +9916,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         name:
           type: string
@@ -9995,6 +10037,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         services:
           type: array
@@ -10020,6 +10063,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         service:
           $ref: '#/components/schemas/ServiceInfo'
@@ -10042,6 +10086,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         name:
           type: string
@@ -10139,6 +10184,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         key:
           type: string
@@ -10194,6 +10240,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         key:
           type: string
@@ -10273,6 +10320,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         timezone:
           type: string
@@ -10313,6 +10361,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         timezone:
           type: string
@@ -10506,6 +10555,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         users:
           type: array
@@ -10547,6 +10597,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         name:
           type: string
@@ -10614,6 +10665,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         keys:
           type: array
@@ -10639,6 +10691,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         changed:
           type: boolean
@@ -10705,6 +10758,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         groups:
           type: array
@@ -10744,6 +10798,7 @@ components:
             - ok
             - failed
             - skipped
+            - timeout
           description: The status of the operation for this host.
         name:
           type: string

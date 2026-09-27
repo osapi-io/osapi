@@ -91,6 +91,7 @@ const (
 	CronEntryStatusFailed  CronEntryStatus = "failed"
 	CronEntryStatusOk      CronEntryStatus = "ok"
 	CronEntryStatusSkipped CronEntryStatus = "skipped"
+	CronEntryStatusTimeout CronEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the CronEntryStatus enum.
@@ -102,6 +103,8 @@ func (e CronEntryStatus) Valid() bool {
 		return true
 	case CronEntryStatusSkipped:
 		return true
+	case CronEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -112,6 +115,7 @@ const (
 	CronMutationResultStatusFailed  CronMutationResultStatus = "failed"
 	CronMutationResultStatusOk      CronMutationResultStatus = "ok"
 	CronMutationResultStatusSkipped CronMutationResultStatus = "skipped"
+	CronMutationResultStatusTimeout CronMutationResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the CronMutationResultStatus enum.
@@ -122,6 +126,8 @@ func (e CronMutationResultStatus) Valid() bool {
 	case CronMutationResultStatusOk:
 		return true
 	case CronMutationResultStatusSkipped:
+		return true
+	case CronMutationResultStatusTimeout:
 		return true
 	default:
 		return false

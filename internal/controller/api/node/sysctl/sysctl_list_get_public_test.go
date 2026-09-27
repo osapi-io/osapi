@@ -322,6 +322,70 @@ func (s *SysctlListGetPublicTestSuite) TestGetNodeSysctl() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodeSysctlRequestObject{
+				Hostname: "_all",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationSysctlList,
+						nil,
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								JobID:    "550e8400-e29b-41d4-a716-446655440000",
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Data: json.RawMessage(
+									`[{"key":"net.ipv4.ip_forward","value":"1"}]`,
+								),
+							},
+							"server2": {
+								Status:   job.StatusFailed,
+								Error:    "timeout: agent did not respond",
+								Hostname: "server2",
+							},
+							"server3": {
+								Status:   job.StatusTimeout,
+								Error:    "timeout: agent did not respond",
+								Hostname: "server3",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeSysctlResponseObject) {
+				r, ok := resp.(gen.GetNodeSysctl200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]*gen.SysctlEntry)
+				for i := range r.Results {
+					if r.Results[i].Hostname != "" {
+						byHost[r.Results[i].Hostname] = &r.Results[i]
+					}
+				}
+
+				s.Require().Contains(byHost, "server1")
+				s.Equal("net.ipv4.ip_forward", *byHost["server1"].Key)
+				s.Nil(byHost["server1"].Error)
+
+				s.Require().Contains(byHost, "server2")
+				s.Contains(*byHost["server2"].Error, "timeout: agent did not respond")
+
+				s.Require().Contains(byHost, "server3")
+				s.Equal(gen.SysctlEntryStatusTimeout, byHost["server3"].Status)
+				s.Contains(*byHost["server3"].Error, "timeout: agent did not respond")
+			},
+		},
+		{
 			name: "broadcast target _all with empty responses",
 			request: gen.GetNodeSysctlRequestObject{
 				Hostname: "_all",

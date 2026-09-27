@@ -130,6 +130,10 @@ func (s *Node) getNodeOSBroadcast(
 			item.Status = gen.OSInfoResultItemStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.OSInfoResultItemStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.OSInfoResultItemStatusOk
 			var osInfo host.Result

@@ -227,7 +227,7 @@ components:
           description: The hostname of the agent that executed the command.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         stdout:
           type: string

@@ -147,6 +147,10 @@ func (s *Sysctl) postNodeSysctlBroadcast(
 			item.Status = gen.SysctlMutationResultStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.SysctlMutationResultStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.SysctlMutationResultStatusOk
 			var result sysctlProv.CreateResult

@@ -306,7 +306,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         processes:
           type: array
@@ -329,7 +329,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         process:
           $ref: '#/components/schemas/ProcessInfo'
@@ -349,7 +349,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         pid:
           type: integer

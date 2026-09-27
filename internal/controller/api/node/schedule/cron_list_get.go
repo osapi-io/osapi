@@ -119,6 +119,14 @@ func (s *Schedule) getNodeScheduleCronBroadcast(
 				Status:   gen.CronEntryStatusSkipped,
 				Error:    &e,
 			})
+		case job.StatusTimeout:
+			e := resp.Error
+			h := host
+			allResults = append(allResults, gen.CronEntry{
+				Hostname: h,
+				Status:   gen.CronEntryStatusTimeout,
+				Error:    &e,
+			})
 		default:
 			allResults = append(allResults, responseToCronEntries(resp)...)
 		}

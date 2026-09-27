@@ -237,6 +237,30 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOS() {
 			},
 		},
 		{
+			name:    "broadcast with a host that never answered",
+			request: gen.GetNodeOSRequestObject{Hostname: "_all"},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeOSGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusTimeout,
+							Error:    "timeout: agent did not respond",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeOSResponseObject) {
+				r, ok := resp.(gen.GetNodeOS200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("timeout: agent did not respond", *r.Results[0].Error)
+				s.Equal(gen.OSInfoResultItemStatusTimeout, r.Results[0].Status)
+			},
+		},
+		{
 			name:    "broadcast with failed host",
 			request: gen.GetNodeOSRequestObject{Hostname: "_all"},
 			setupMock: func() {

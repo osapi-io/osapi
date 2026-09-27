@@ -138,6 +138,10 @@ func (s *Log) getNodeLogSourceBroadcast(
 			item.Status = gen.LogSourceEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.LogSourceEntryStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.LogSourceEntryStatusOk
 			sources := logSourcesFromResponse(resp)

@@ -125,6 +125,14 @@ func (s *Certificate) getNodeCertificateCaBroadcast(
 				Status:   gen.CertificateCAEntryStatusSkipped,
 				Error:    &e,
 			})
+		case job.StatusTimeout:
+			e := resp.Error
+			h := host
+			allResults = append(allResults, gen.CertificateCAEntry{
+				Hostname: h,
+				Status:   gen.CertificateCAEntryStatusTimeout,
+				Error:    &e,
+			})
 		default:
 			allResults = append(allResults, responseToCertificateCAEntries(resp)...)
 		}

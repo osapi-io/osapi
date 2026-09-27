@@ -43,6 +43,7 @@ const (
 	FileDeployResultStatusFailed  FileDeployResultStatus = "failed"
 	FileDeployResultStatusOk      FileDeployResultStatus = "ok"
 	FileDeployResultStatusSkipped FileDeployResultStatus = "skipped"
+	FileDeployResultStatusTimeout FileDeployResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the FileDeployResultStatus enum.
@@ -54,6 +55,8 @@ func (e FileDeployResultStatus) Valid() bool {
 		return true
 	case FileDeployResultStatusSkipped:
 		return true
+	case FileDeployResultStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -64,6 +67,7 @@ const (
 	FileUndeployResultStatusFailed  FileUndeployResultStatus = "failed"
 	FileUndeployResultStatusOk      FileUndeployResultStatus = "ok"
 	FileUndeployResultStatusSkipped FileUndeployResultStatus = "skipped"
+	FileUndeployResultStatusTimeout FileUndeployResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the FileUndeployResultStatus enum.
@@ -74,6 +78,8 @@ func (e FileUndeployResultStatus) Valid() bool {
 	case FileUndeployResultStatusOk:
 		return true
 	case FileUndeployResultStatusSkipped:
+		return true
+	case FileUndeployResultStatusTimeout:
 		return true
 	default:
 		return false

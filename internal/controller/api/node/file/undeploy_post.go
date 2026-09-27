@@ -139,6 +139,10 @@ func (s *File) postNodeFileUndeployBroadcast(
 			item.Status = gen.FileUndeployResultStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.FileUndeployResultStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.FileUndeployResultStatusOk
 			changed := resp.Changed == nil || *resp.Changed

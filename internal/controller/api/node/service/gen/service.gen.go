@@ -25,6 +25,7 @@ const (
 	ServiceGetEntryStatusFailed  ServiceGetEntryStatus = "failed"
 	ServiceGetEntryStatusOk      ServiceGetEntryStatus = "ok"
 	ServiceGetEntryStatusSkipped ServiceGetEntryStatus = "skipped"
+	ServiceGetEntryStatusTimeout ServiceGetEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the ServiceGetEntryStatus enum.
@@ -36,6 +37,8 @@ func (e ServiceGetEntryStatus) Valid() bool {
 		return true
 	case ServiceGetEntryStatusSkipped:
 		return true
+	case ServiceGetEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -46,6 +49,7 @@ const (
 	ServiceListEntryStatusFailed  ServiceListEntryStatus = "failed"
 	ServiceListEntryStatusOk      ServiceListEntryStatus = "ok"
 	ServiceListEntryStatusSkipped ServiceListEntryStatus = "skipped"
+	ServiceListEntryStatusTimeout ServiceListEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the ServiceListEntryStatus enum.
@@ -57,6 +61,8 @@ func (e ServiceListEntryStatus) Valid() bool {
 		return true
 	case ServiceListEntryStatusSkipped:
 		return true
+	case ServiceListEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -67,6 +73,7 @@ const (
 	Failed  ServiceMutationEntryStatus = "failed"
 	Ok      ServiceMutationEntryStatus = "ok"
 	Skipped ServiceMutationEntryStatus = "skipped"
+	Timeout ServiceMutationEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the ServiceMutationEntryStatus enum.
@@ -77,6 +84,8 @@ func (e ServiceMutationEntryStatus) Valid() bool {
 	case Ok:
 		return true
 	case Skipped:
+		return true
+	case Timeout:
 		return true
 	default:
 		return false

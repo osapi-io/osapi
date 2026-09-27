@@ -25,6 +25,7 @@ const (
 	DNSConfigResponseStatusFailed  DNSConfigResponseStatus = "failed"
 	DNSConfigResponseStatusOk      DNSConfigResponseStatus = "ok"
 	DNSConfigResponseStatusSkipped DNSConfigResponseStatus = "skipped"
+	DNSConfigResponseStatusTimeout DNSConfigResponseStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DNSConfigResponseStatus enum.
@@ -36,6 +37,8 @@ func (e DNSConfigResponseStatus) Valid() bool {
 		return true
 	case DNSConfigResponseStatusSkipped:
 		return true
+	case DNSConfigResponseStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -46,6 +49,7 @@ const (
 	DNSDeleteResultItemStatusFailed  DNSDeleteResultItemStatus = "failed"
 	DNSDeleteResultItemStatusOk      DNSDeleteResultItemStatus = "ok"
 	DNSDeleteResultItemStatusSkipped DNSDeleteResultItemStatus = "skipped"
+	DNSDeleteResultItemStatusTimeout DNSDeleteResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DNSDeleteResultItemStatus enum.
@@ -57,6 +61,8 @@ func (e DNSDeleteResultItemStatus) Valid() bool {
 		return true
 	case DNSDeleteResultItemStatusSkipped:
 		return true
+	case DNSDeleteResultItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -67,6 +73,7 @@ const (
 	DNSUpdateResultItemStatusFailed  DNSUpdateResultItemStatus = "failed"
 	DNSUpdateResultItemStatusOk      DNSUpdateResultItemStatus = "ok"
 	DNSUpdateResultItemStatusSkipped DNSUpdateResultItemStatus = "skipped"
+	DNSUpdateResultItemStatusTimeout DNSUpdateResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DNSUpdateResultItemStatus enum.
@@ -78,6 +85,8 @@ func (e DNSUpdateResultItemStatus) Valid() bool {
 		return true
 	case DNSUpdateResultItemStatusSkipped:
 		return true
+	case DNSUpdateResultItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -88,6 +97,7 @@ const (
 	InterfaceGetEntryStatusFailed  InterfaceGetEntryStatus = "failed"
 	InterfaceGetEntryStatusOk      InterfaceGetEntryStatus = "ok"
 	InterfaceGetEntryStatusSkipped InterfaceGetEntryStatus = "skipped"
+	InterfaceGetEntryStatusTimeout InterfaceGetEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the InterfaceGetEntryStatus enum.
@@ -99,6 +109,8 @@ func (e InterfaceGetEntryStatus) Valid() bool {
 		return true
 	case InterfaceGetEntryStatusSkipped:
 		return true
+	case InterfaceGetEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -109,6 +121,7 @@ const (
 	InterfaceListEntryStatusFailed  InterfaceListEntryStatus = "failed"
 	InterfaceListEntryStatusOk      InterfaceListEntryStatus = "ok"
 	InterfaceListEntryStatusSkipped InterfaceListEntryStatus = "skipped"
+	InterfaceListEntryStatusTimeout InterfaceListEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the InterfaceListEntryStatus enum.
@@ -120,6 +133,8 @@ func (e InterfaceListEntryStatus) Valid() bool {
 		return true
 	case InterfaceListEntryStatusSkipped:
 		return true
+	case InterfaceListEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -130,6 +145,7 @@ const (
 	InterfaceMutationEntryStatusFailed  InterfaceMutationEntryStatus = "failed"
 	InterfaceMutationEntryStatusOk      InterfaceMutationEntryStatus = "ok"
 	InterfaceMutationEntryStatusSkipped InterfaceMutationEntryStatus = "skipped"
+	InterfaceMutationEntryStatusTimeout InterfaceMutationEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the InterfaceMutationEntryStatus enum.
@@ -141,6 +157,8 @@ func (e InterfaceMutationEntryStatus) Valid() bool {
 		return true
 	case InterfaceMutationEntryStatusSkipped:
 		return true
+	case InterfaceMutationEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -151,6 +169,7 @@ const (
 	PingResponseStatusFailed  PingResponseStatus = "failed"
 	PingResponseStatusOk      PingResponseStatus = "ok"
 	PingResponseStatusSkipped PingResponseStatus = "skipped"
+	PingResponseStatusTimeout PingResponseStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the PingResponseStatus enum.
@@ -162,6 +181,8 @@ func (e PingResponseStatus) Valid() bool {
 		return true
 	case PingResponseStatusSkipped:
 		return true
+	case PingResponseStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -172,6 +193,7 @@ const (
 	RouteGetEntryStatusFailed  RouteGetEntryStatus = "failed"
 	RouteGetEntryStatusOk      RouteGetEntryStatus = "ok"
 	RouteGetEntryStatusSkipped RouteGetEntryStatus = "skipped"
+	RouteGetEntryStatusTimeout RouteGetEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the RouteGetEntryStatus enum.
@@ -183,6 +205,8 @@ func (e RouteGetEntryStatus) Valid() bool {
 		return true
 	case RouteGetEntryStatusSkipped:
 		return true
+	case RouteGetEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -193,6 +217,7 @@ const (
 	RouteListEntryStatusFailed  RouteListEntryStatus = "failed"
 	RouteListEntryStatusOk      RouteListEntryStatus = "ok"
 	RouteListEntryStatusSkipped RouteListEntryStatus = "skipped"
+	RouteListEntryStatusTimeout RouteListEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the RouteListEntryStatus enum.
@@ -204,6 +229,8 @@ func (e RouteListEntryStatus) Valid() bool {
 		return true
 	case RouteListEntryStatusSkipped:
 		return true
+	case RouteListEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -214,6 +241,7 @@ const (
 	RouteMutationEntryStatusFailed  RouteMutationEntryStatus = "failed"
 	RouteMutationEntryStatusOk      RouteMutationEntryStatus = "ok"
 	RouteMutationEntryStatusSkipped RouteMutationEntryStatus = "skipped"
+	RouteMutationEntryStatusTimeout RouteMutationEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the RouteMutationEntryStatus enum.
@@ -224,6 +252,8 @@ func (e RouteMutationEntryStatus) Valid() bool {
 	case RouteMutationEntryStatusOk:
 		return true
 	case RouteMutationEntryStatusSkipped:
+		return true
+	case RouteMutationEntryStatusTimeout:
 		return true
 	default:
 		return false

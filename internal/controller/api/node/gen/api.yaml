@@ -431,7 +431,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         uptime:
           type: string
@@ -456,7 +456,7 @@ components:
           example: "my-linux-server"
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         uptime:
           type: string
@@ -488,7 +488,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         disks:
           $ref: '#/components/schemas/DisksResponse'
@@ -510,7 +510,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         memory:
           $ref: '#/components/schemas/MemoryResponse'
@@ -532,7 +532,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         load_average:
           $ref: '#/components/schemas/LoadAverageResponse'
@@ -554,7 +554,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         os_info:
           $ref: '#/components/schemas/OSInfoResponse'

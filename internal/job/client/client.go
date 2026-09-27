@@ -561,11 +561,15 @@ func (c *Client) publishAndCollect(
 			// Inject timeout entries for agents that didn't respond.
 			for _, hostname := range expectedHostnames {
 				if _, ok := responses[hostname]; !ok {
+					// Not failed: this agent never answered, and reporting
+					// that as a failure tells an operator the operation ran
+					// and did not succeed, which nobody knows.
 					responses[hostname] = &job.Response{
-						JobID:    jobID,
-						Hostname: hostname,
-						Status:   job.StatusFailed,
-						Error:    "timeout: agent did not respond",
+						JobID:     jobID,
+						Hostname:  hostname,
+						Status:    job.StatusTimeout,
+						ErrorCode: job.ErrorCodeTimeout,
+						Error:     "timeout: agent did not respond",
 					}
 				}
 			}

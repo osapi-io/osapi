@@ -162,6 +162,10 @@ func (s *Schedule) postNodeScheduleCronCreateBroadcast(
 			item.Status = gen.CronMutationResultStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.CronMutationResultStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.CronMutationResultStatusOk
 			var result cronProv.CreateResult

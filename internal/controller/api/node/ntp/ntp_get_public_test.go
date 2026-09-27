@@ -241,6 +241,62 @@ func (s *NtpGetPublicTestSuite) TestGetNodeNtp() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodeNtpRequestObject{
+				Hostname: "_all",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationNtpGet,
+						nil,
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Hostname: "server1",
+							Data: json.RawMessage(
+								`{"synchronized":true}`,
+							),
+						},
+						"server2": {
+							Status:    job.StatusFailed,
+							Error:     "chrony not installed",
+							ErrorCode: job.ErrorCodeNotInstalled,
+							Hostname:  "server2",
+						},
+						"server3": {
+							Status:   job.StatusTimeout,
+							Error:    "timeout: agent did not respond",
+							Hostname: "server3",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeNtpResponseObject) {
+				r, ok := resp.(gen.GetNodeNtp200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]*gen.NtpStatusEntry)
+				for i := range r.Results {
+					byHost[r.Results[i].Hostname] = &r.Results[i]
+				}
+
+				s.Require().Contains(byHost, "server1")
+				s.Equal(gen.NtpStatusEntryStatusOk, byHost["server1"].Status)
+
+				s.Require().Contains(byHost, "server2")
+				s.Equal(gen.NtpStatusEntryStatusFailed, byHost["server2"].Status)
+				s.Contains(*byHost["server2"].Error, "chrony not installed")
+
+				s.Require().Contains(byHost, "server3")
+				s.Equal(gen.NtpStatusEntryStatusTimeout, byHost["server3"].Status)
+			},
+		},
+		{
 			name: "broadcast error collecting responses",
 			request: gen.GetNodeNtpRequestObject{
 				Hostname: "_all",

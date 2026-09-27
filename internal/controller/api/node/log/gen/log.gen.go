@@ -25,6 +25,7 @@ const (
 	LogResultEntryStatusFailed  LogResultEntryStatus = "failed"
 	LogResultEntryStatusOk      LogResultEntryStatus = "ok"
 	LogResultEntryStatusSkipped LogResultEntryStatus = "skipped"
+	LogResultEntryStatusTimeout LogResultEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the LogResultEntryStatus enum.
@@ -36,6 +37,8 @@ func (e LogResultEntryStatus) Valid() bool {
 		return true
 	case LogResultEntryStatusSkipped:
 		return true
+	case LogResultEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -46,6 +49,7 @@ const (
 	LogSourceEntryStatusFailed  LogSourceEntryStatus = "failed"
 	LogSourceEntryStatusOk      LogSourceEntryStatus = "ok"
 	LogSourceEntryStatusSkipped LogSourceEntryStatus = "skipped"
+	LogSourceEntryStatusTimeout LogSourceEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the LogSourceEntryStatus enum.
@@ -56,6 +60,8 @@ func (e LogSourceEntryStatus) Valid() bool {
 	case LogSourceEntryStatusOk:
 		return true
 	case LogSourceEntryStatusSkipped:
+		return true
+	case LogSourceEntryStatusTimeout:
 		return true
 	default:
 		return false

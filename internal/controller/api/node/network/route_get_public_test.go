@@ -250,6 +250,31 @@ func (s *NetworkRouteGetPublicTestSuite) TestGetNodeNetworkRouteByInterface() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodeNetworkRouteByInterfaceRequestObject{
+				Hostname: "_all", InterfaceName: "eth0",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkRouteGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusTimeout,
+							Error:    "unsupported",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkRouteByInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkRouteByInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.RouteGetEntryStatusTimeout, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("unsupported", *r.Results[0].Error)
+			},
+		},
+		{
 			name: "when broadcast success with nil data",
 			request: gen.GetNodeNetworkRouteByInterfaceRequestObject{
 				Hostname: "_all", InterfaceName: "eth0",

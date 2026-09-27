@@ -143,6 +143,10 @@ func (s *Network) postNodeNetworkPingBroadcast(
 			item.Status = gen.PingResponseStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.PingResponseStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.PingResponseStatusOk
 			var pingResult ping.Result

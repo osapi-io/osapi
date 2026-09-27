@@ -39,6 +39,8 @@ const (
 	ErrorCodeNotInstalled ErrorCode = "not_installed"
 	// ErrorCodeUnsupported means the operation does not apply to this OS family.
 	ErrorCodeUnsupported ErrorCode = "unsupported"
+	// ErrorCodeTimeout means the agent never answered.
+	ErrorCodeTimeout ErrorCode = "timeout"
 )
 
 // The causes a handler can distinguish, as errors, because that is the shape Go
@@ -53,6 +55,10 @@ var (
 	ErrNotInstalled = errors.New("not installed")
 	// ErrUnsupported corresponds to ErrorCodeUnsupported.
 	ErrUnsupported = errors.New("operation not supported on this OS family")
+
+	// ErrTimeout corresponds to ErrorCodeTimeout: the agent never answered,
+	// which is not the same as an operation that ran and failed.
+	ErrTimeout = errors.New("agent did not respond")
 
 	// ErrNoOperationData means a stored job carries nothing to re-dispatch, so
 	// it cannot be retried. Not a missing job: the record is there and unusable,
@@ -76,6 +82,8 @@ func sentinelFor(
 		return ErrNotInstalled
 	case ErrorCodeUnsupported:
 		return ErrUnsupported
+	case ErrorCodeTimeout:
+		return ErrTimeout
 	}
 
 	return nil

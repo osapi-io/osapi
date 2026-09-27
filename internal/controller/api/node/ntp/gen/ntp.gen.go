@@ -25,6 +25,7 @@ const (
 	NtpMutationResultStatusFailed  NtpMutationResultStatus = "failed"
 	NtpMutationResultStatusOk      NtpMutationResultStatus = "ok"
 	NtpMutationResultStatusSkipped NtpMutationResultStatus = "skipped"
+	NtpMutationResultStatusTimeout NtpMutationResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the NtpMutationResultStatus enum.
@@ -36,6 +37,8 @@ func (e NtpMutationResultStatus) Valid() bool {
 		return true
 	case NtpMutationResultStatusSkipped:
 		return true
+	case NtpMutationResultStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -46,6 +49,7 @@ const (
 	NtpStatusEntryStatusFailed  NtpStatusEntryStatus = "failed"
 	NtpStatusEntryStatusOk      NtpStatusEntryStatus = "ok"
 	NtpStatusEntryStatusSkipped NtpStatusEntryStatus = "skipped"
+	NtpStatusEntryStatusTimeout NtpStatusEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the NtpStatusEntryStatus enum.
@@ -56,6 +60,8 @@ func (e NtpStatusEntryStatus) Valid() bool {
 	case NtpStatusEntryStatusOk:
 		return true
 	case NtpStatusEntryStatusSkipped:
+		return true
+	case NtpStatusEntryStatusTimeout:
 		return true
 	default:
 		return false

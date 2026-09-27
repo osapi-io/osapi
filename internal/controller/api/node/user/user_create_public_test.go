@@ -309,6 +309,51 @@ func (s *UserCreatePublicTestSuite) TestPostNodeUser() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.PostNodeUserRequestObject{
+				Hostname: "_all",
+				Body:     &gen.UserCreateRequest{Name: "newuser"},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(gomock.Any(), "_all", "user", job.OperationUserCreate, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Changed:  ptr.To(true),
+								Data:     json.RawMessage(`{"name":"newuser","changed":true}`),
+							},
+							"server2": {
+								Hostname: "server2",
+								Status:   job.StatusFailed,
+								Error:    "connection timeout",
+							},
+							"server3": {
+								Hostname: "server3",
+								Status:   job.StatusTimeout,
+								Error:    "unsupported",
+							},
+						}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeUserResponseObject) {
+				r, ok := resp.(gen.PostNodeUser200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]gen.UserMutationResult)
+				for _, res := range r.Results {
+					byHost[res.Hostname] = res
+				}
+
+				s.Equal(gen.UserMutationResultStatusOk, byHost["server1"].Status)
+				s.Equal(gen.UserMutationResultStatusFailed, byHost["server2"].Status)
+				s.Contains(*byHost["server2"].Error, "connection timeout")
+				s.Equal(gen.UserMutationResultStatusTimeout, byHost["server3"].Status)
+			},
+		},
+		{
 			name: "broadcast job client error",
 			request: gen.PostNodeUserRequestObject{
 				Hostname: "_all",

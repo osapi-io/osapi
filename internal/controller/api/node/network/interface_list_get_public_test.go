@@ -305,6 +305,41 @@ func (s *NetworkInterfaceListGetPublicTestSuite) TestGetNodeNetworkInterface() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodeNetworkInterfaceRequestObject{
+				Hostname: "_all",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"network",
+						job.OperationNetworkInterfaceList,
+						nil,
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusTimeout,
+								Error:    "unsupported",
+								Hostname: "server1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.InterfaceListEntryStatusTimeout, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("unsupported", *r.Results[0].Error)
+			},
+		},
+		{
 			name: "when broadcast success with nil data",
 			request: gen.GetNodeNetworkInterfaceRequestObject{
 				Hostname: "_all",

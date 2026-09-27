@@ -320,6 +320,45 @@ func (s *ProcessSignalPublicTestSuite) TestPostNodeProcessSignal() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.PostNodeProcessSignalRequestObject{
+				Hostname: "_all",
+				Pid:      1234,
+				Body: &gen.PostNodeProcessSignalJSONRequestBody{
+					Signal: gen.TERM,
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationProcessSignal,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Hostname: "server1",
+							Changed:  ptr.To(true),
+							Data: json.RawMessage(
+								`{"pid":1234,"signal":"TERM","changed":true}`,
+							),
+						},
+						"server2": {
+							Status:   job.StatusTimeout,
+							Error:    "unsupported",
+							Hostname: "server2",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeProcessSignalResponseObject) {
+				r, ok := resp.(gen.PostNodeProcessSignal200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
 			name: "broadcast with failed host",
 			request: gen.PostNodeProcessSignalRequestObject{
 				Hostname: "_all",

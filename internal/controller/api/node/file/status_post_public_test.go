@@ -342,6 +342,44 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.PostNodeFileStatusRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileStatusJSONRequestBody{
+					Path: "/etc/nginx/nginx.conf",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"file",
+						job.OperationFileStatusGet,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"agent1": {
+								Status:   job.StatusTimeout,
+								Error:    "timeout: agent did not respond",
+								Hostname: "agent1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("timeout: agent did not respond", *r.Results[0].Error)
+			},
+		},
+		{
 			name: "when broadcast with failed host",
 			request: gen.PostNodeFileStatusRequestObject{
 				Hostname: "_all",

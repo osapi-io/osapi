@@ -146,6 +146,9 @@ func (s *File) postNodeFileStatusBroadcast(
 		case job.StatusSkipped:
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			e := resp.Error
+			item.Error = &e
 		default:
 			var result providerFile.StatusResult
 			if resp.Data != nil {

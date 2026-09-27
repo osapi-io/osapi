@@ -149,6 +149,12 @@ func (s *Hostname) putNodeHostnameBroadcast(
 			falseVal := false
 			item.Error = &e
 			item.Changed = &falseVal
+		case job.StatusTimeout:
+			item.Status = gen.HostnameUpdateResultItemStatusTimeout
+			e := resp.Error
+			falseVal := false
+			item.Error = &e
+			item.Changed = &falseVal
 		default:
 			item.Status = gen.HostnameUpdateResultItemStatusOk
 			changed := resp.Changed == nil || *resp.Changed

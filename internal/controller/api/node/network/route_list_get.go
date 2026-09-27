@@ -133,6 +133,10 @@ func (s *Network) getNodeNetworkRouteListBroadcast(
 			item.Status = gen.RouteListEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.RouteListEntryStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.RouteListEntryStatusOk
 			var entries []route.ListEntry
