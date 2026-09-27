@@ -1,0 +1,25 @@
+# Codecov configuration.
+#
+# The gate that matters is go-unit-cov-check in the justfile, which fails the
+# build below the coverage target and is what CI enforces. This file exists so
+# Codecov's own status agrees with it rather than flagging arithmetic.
+#
+# A pull request that deletes covered statements shrinks the denominator while
+# the numerator of unreachable guards stays put, so the ratio rounds down by a
+# hundredth of a percent and reads as a regression on a PR that lost no
+# coverage at all. The threshold below absorbs that; patch coverage stays
+# strict, because a new uncovered line is a real finding.
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 0.1%
+    patch:
+      default:
+        target: 100%
+
+comment:
+  layout: "condensed_header, diff, files"
+  require_changes: true
