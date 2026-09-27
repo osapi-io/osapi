@@ -30,8 +30,12 @@ in the NATS Object Store. When the agent deploys or updates a cron entry, it:
 3. Records the deploy state in the file-state KV bucket (SHA-256, path,
    timestamps).
 
-The file-state KV tracks each deployed cron file, so updates are idempotent: if
-the script content has not changed, the file is not rewritten.
+Both `create` and `update` are idempotent on content: the agent compares the
+content it was asked to deploy with the file on disk and rewrites it only when
+they differ, so an entry edited by hand is restored. `create` is the one
+exception worth knowing: when an entry of the same name already exists under a
+different schedule, it reports `changed: false` rather than writing a second
+copy in another directory. Use `update` to move it.
 
 ### Custom Schedule (`/etc/cron.d/`)
 

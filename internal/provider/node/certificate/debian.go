@@ -94,13 +94,9 @@ func (d *Debian) Create(
 
 	filePath := certFilePath(entry.Name)
 
-	if _, err := d.fs.Stat(filePath); err == nil {
-		return &CreateResult{
-			Name:    entry.Name,
-			Changed: false,
-		}, nil
-	}
-
+	// A certificate already on disk is not a reason to stop: the deploy compares
+	// its content and rewrites it if it differs from the object store, which is
+	// how a replaced or tampered-with certificate is restored.
 	result, err := d.fileDeployer.Deploy(ctx, file.DeployRequest{
 		ObjectName: entry.Object,
 		Path:       filePath,

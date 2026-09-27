@@ -92,17 +92,25 @@ func (d *Debian) Get(
 	return status, nil
 }
 
-// Create deploys a managed NTP server configuration via a chrony
-// drop-in file. Idempotent: returns Changed: false if already managed.
+// Create deploys a managed NTP server configuration via a chrony drop-in file.
+// Idempotent on content rather than on existence: a drop-in already holding what
+// was asked for reports Changed: false, and one that has been edited is
+// rewritten, because the operation's job is to make the configuration true.
 func (d *Debian) Create(
 	ctx context.Context,
 	config Config,
 ) (*CreateResult, error) {
-	if _, err := d.fs.Stat(sourcesFile); err == nil {
+	content := generateContent(config.Servers)
+
+	if existing, err := d.fs.ReadFile(sourcesFile); err == nil &&
+		computeSHA256(existing) == computeSHA256(content) {
+		d.logger.Debug(
+			"ntp config unchanged, skipping deploy",
+			slog.String("path", sourcesFile),
+		)
+
 		return &CreateResult{Changed: false}, nil
 	}
-
-	content := generateContent(config.Servers)
 
 	if mkErr := d.fs.MkdirAll(sourcesDir, 0o755); mkErr != nil {
 		return nil, fmt.Errorf("ntp: create directory: %w", mkErr)

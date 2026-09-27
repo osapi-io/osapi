@@ -46,13 +46,8 @@ func (d *Debian) Create(
 
 	filePath := unitFilePath(entry.Name)
 
-	if _, err := d.fs.Stat(filePath); err == nil {
-		return &CreateResult{
-			Name:    entry.Name,
-			Changed: false,
-		}, nil
-	}
-
+	// A unit file already on disk is not a reason to stop: the deploy compares
+	// its content and rewrites it if it no longer matches what was asked for.
 	d.logger.Debug(
 		"creating service unit file",
 		slog.String("name", entry.Name),

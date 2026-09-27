@@ -117,17 +117,20 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when certificate already managed returns unchanged",
+			name: "when the certificate on disk already matches, nothing changes",
 			entry: certificate.Entry{
 				Name:   "my-ca",
 				Object: "my-ca-cert",
 			},
 			setup: func() {
-				_ = suite.memFs.WriteFile(
-					"/usr/local/share/ca-certificates/osapi-my-ca.crt",
-					[]byte("existing cert"),
-					0o644,
-				)
+				// The deploy is still asked: it is what compares the content on
+				// disk, and it reports nothing to do.
+				suite.mockDeployer.EXPECT().
+					Deploy(gomock.Any(), gomock.Any()).
+					Return(&file.DeployResult{
+						Changed: false,
+						Path:    "/usr/local/share/ca-certificates/osapi-my-ca.crt",
+					}, nil)
 			},
 			validateFunc: func(
 				result *certificate.CreateResult,
@@ -137,6 +140,39 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				suite.NotNil(result)
 				suite.Equal("my-ca", result.Name)
 				suite.False(result.Changed)
+			},
+		},
+		{
+			name: "when the certificate on disk was replaced it is restored",
+			entry: certificate.Entry{
+				Name:   "my-ca",
+				Object: "my-ca-cert",
+			},
+			setup: func() {
+				// A certificate already on disk, holding something else.
+				_ = suite.memFs.WriteFile(
+					"/usr/local/share/ca-certificates/osapi-my-ca.crt",
+					[]byte("somebody else's cert"),
+					0o644,
+				)
+
+				suite.mockDeployer.EXPECT().
+					Deploy(gomock.Any(), gomock.Any()).
+					Return(&file.DeployResult{
+						Changed: true,
+						Path:    "/usr/local/share/ca-certificates/osapi-my-ca.crt",
+					}, nil)
+				suite.mockExecManager.EXPECT().
+					RunPrivilegedCmd(gomock.Any(), "update-ca-certificates", nil).
+					Return("", nil)
+			},
+			validateFunc: func(
+				result *certificate.CreateResult,
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(result)
+				suite.True(result.Changed)
 			},
 		},
 		{

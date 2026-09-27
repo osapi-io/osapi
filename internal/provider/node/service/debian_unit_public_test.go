@@ -135,7 +135,7 @@ func (suite *DebianUnitPublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when service unit already managed returns unchanged",
+			name: "when the unit file on disk already matches, nothing changes",
 			entry: service.Entry{
 				Name:   "myapp",
 				Object: "myapp-unit",
@@ -146,6 +146,15 @@ func (suite *DebianUnitPublicTestSuite) TestCreate() {
 					[]byte("[Unit]\nDescription=My App"),
 					0o644,
 				)
+
+				// The deploy is still asked: it compares the content on disk and
+				// reports nothing to do.
+				suite.mockDeployer.EXPECT().
+					Deploy(gomock.Any(), gomock.Any()).
+					Return(&file.DeployResult{
+						Changed: false,
+						Path:    "/etc/systemd/system/osapi-myapp.service",
+					}, nil)
 			},
 			validateFunc: func(
 				result *service.CreateResult,

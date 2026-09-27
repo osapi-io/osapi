@@ -29,8 +29,10 @@ certificates include the `object` reference used to deploy them.
 Deploys a new custom CA certificate to the host. The PEM content must first be
 uploaded to the Object Store. The agent writes the file to
 `/usr/local/share/ca-certificates/{name}.crt` and runs `update-ca-certificates`
-to rebuild the system trust store. Idempotent: returns `changed: false` if
-already managed. Use `update` to replace it.
+to rebuild the system trust store. Idempotent **on content**: a certificate
+already on disk holding the same PEM reports `changed: false`, and one that has
+been replaced or edited is rewritten from the Object Store. `update` exists to
+point the host at a different object.
 
 ### Update
 
