@@ -143,7 +143,34 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when entry already managed returns unchanged",
+			name: "when the entry exists under a different schedule",
+			entry: cron.Entry{
+				Name:     "backup",
+				Object:   "backup-script",
+				Interval: "daily",
+			},
+			setup: func() {
+				// The same name already lives in /etc/cron.d, so writing the
+				// daily file would leave the host running it twice. Moving it is
+				// what update is for.
+				_ = suite.memFs.WriteFile(
+					"/etc/cron.d/backup",
+					[]byte("existing content"),
+					0o644,
+				)
+			},
+			validateFunc: func(
+				result *cron.CreateResult,
+				err error,
+			) {
+				suite.NoError(err)
+				suite.Require().NotNil(result)
+				suite.Equal("backup", result.Name)
+				suite.False(result.Changed)
+			},
+		},
+		{
+			name: "when the entry on disk already matches, nothing changes",
 			entry: cron.Entry{
 				Name:   "backup",
 				Object: "backup-script",
@@ -154,6 +181,15 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					[]byte("existing content"),
 					0o644,
 				)
+
+				// The deploy is still asked: it compares the content on disk and
+				// reports nothing to do.
+				suite.mockDeployer.EXPECT().
+					Deploy(gomock.Any(), gomock.Any()).
+					Return(&file.DeployResult{
+						Changed: false,
+						Path:    "/etc/cron.d/backup",
+					}, nil)
 			},
 			validateFunc: func(
 				result *cron.CreateResult,

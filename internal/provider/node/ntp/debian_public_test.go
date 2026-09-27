@@ -219,19 +219,51 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when config already managed returns unchanged",
+			name: "when the drop-in already holds what was asked for",
 			config: ntp.Config{
 				Servers: []string{"0.pool.ntp.org"},
 			},
 			setupFs: func() {
 				_ = suite.memFs.MkdirAll(sourcesDir, 0o755)
-				_ = suite.memFs.WriteFile(sourcesFile, []byte("existing"), 0o644)
+				_ = suite.memFs.WriteFile(
+					sourcesFile,
+					[]byte("server 0.pool.ntp.org iburst\n"),
+					0o644,
+				)
 			},
 			setupMock: func() {},
 			validateFunc: func(got *ntp.CreateResult, err error) {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(got)
 				suite.False(got.Changed)
+			},
+		},
+		{
+			name: "when the drop-in on disk was edited it is rewritten",
+			config: ntp.Config{
+				Servers: []string{"0.pool.ntp.org"},
+			},
+			setupFs: func() {
+				_ = suite.memFs.MkdirAll(sourcesDir, 0o755)
+				_ = suite.memFs.WriteFile(
+					sourcesFile,
+					[]byte("server pool.example.invalid iburst\n"),
+					0o644,
+				)
+			},
+			setupMock: func() {
+				suite.mockExec.EXPECT().
+					RunPrivilegedCmd(gomock.Any(), "chronyc", []string{"reload", "sources"}).
+					Return("", nil)
+			},
+			validateFunc: func(got *ntp.CreateResult, err error) {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(got)
+				suite.True(got.Changed)
+
+				content, readErr := suite.memFs.ReadFile(sourcesFile)
+				suite.Require().NoError(readErr)
+				suite.Equal("server 0.pool.ntp.org iburst\n", string(content))
 			},
 		},
 		{

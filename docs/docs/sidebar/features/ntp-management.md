@@ -6,8 +6,10 @@ sidebar_position: 11
 
 OSAPI manages NTP (Network Time Protocol) configuration on target hosts via
 chrony. Configuration is written as a drop-in file under `/etc/chrony/conf.d/`
-and chrony is reloaded to apply changes immediately. The file-state KV bucket
-tracks the SHA-256 of the deployed file so updates are idempotent.
+and chrony is reloaded to apply changes immediately. Both `create` and `update`
+are idempotent on content: they hash the drop-in on disk and rewrite it only
+when it differs from the configuration requested, so a file edited by hand is
+restored.
 
 ## How It Works
 
@@ -42,12 +44,12 @@ distribution default.
 
 ## Operations
 
-| Operation | Description                                             |
-| --------- | ------------------------------------------------------- |
-| Get       | Get NTP sync status, stratum, offset, and server list   |
-| Create    | Deploy the drop-in file (idempotent if already managed) |
-| Update    | Replace the drop-in file (fails if not managed)         |
-| Delete    | Remove the drop-in file and reload chrony               |
+| Operation | Description                                           |
+| --------- | ----------------------------------------------------- |
+| Get       | Get NTP sync status, stratum, offset, and server list |
+| Create    | Deploy the drop-in file (idempotent on its content)   |
+| Update    | Replace the drop-in file (fails if not managed)       |
+| Delete    | Remove the drop-in file and reload chrony             |
 
 ## CLI Usage
 

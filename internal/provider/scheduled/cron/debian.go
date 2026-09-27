@@ -178,15 +178,22 @@ func (d *Debian) Create(
 		return nil, err
 	}
 
-	// Already managed — nothing to do.
-	if existingPath, _ := d.findEntryPath(entry.Name); existingPath != "" {
+	filePath, perm := d.entryFilePath(entry)
+
+	// An entry of this name already exists under a different schedule, so the
+	// file this request would write is not the file that is there. Moving it is
+	// what update is for; this reports nothing done rather than leaving the host
+	// with the same entry in two directories.
+	if existingPath, _ := d.findEntryPath(entry.Name); existingPath != "" &&
+		existingPath != filePath {
 		return &CreateResult{
 			Name:    entry.Name,
 			Changed: false,
 		}, nil
 	}
 
-	filePath, perm := d.entryFilePath(entry)
+	// An entry already at this path is not a reason to stop: the deploy compares
+	// the content on disk and rewrites it if somebody has edited it.
 
 	result, err := d.fileDeployer.Deploy(ctx, file.DeployRequest{
 		ObjectName:  entry.Object,
