@@ -131,7 +131,7 @@ func (suite *DebianGetResolvConfPublicTestSuite) TestGetResolvConfByInterface() 
 				suite.Error(err)
 				suite.Contains(
 					err.Error(),
-					fmt.Errorf("interface %q does not exist", "eth!").Error(),
+					fmt.Errorf("interface %q: not found", "eth!").Error(),
 				)
 			},
 		},

@@ -328,9 +328,10 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 						map[string]*job.Response{
 							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 							"server2": {
-								Status:   job.StatusFailed,
-								Error:    "command not found",
-								Hostname: "server2",
+								Status:    job.StatusFailed,
+								Error:     "command not found",
+								ErrorCode: job.ErrorCodeNotFound,
+								Hostname:  "server2",
 							},
 						},
 						nil,

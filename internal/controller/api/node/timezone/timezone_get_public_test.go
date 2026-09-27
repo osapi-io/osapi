@@ -204,9 +204,10 @@ func (s *TimezoneGetPublicTestSuite) TestGetNodeTimezone() {
 							),
 						},
 						"server2": {
-							Status:   job.StatusFailed,
-							Error:    "timedatectl not found",
-							Hostname: "server2",
+							Status:    job.StatusFailed,
+							Error:     "timedatectl not found",
+							ErrorCode: job.ErrorCodeNotFound,
+							Hostname:  "server2",
 						},
 						"server3": {
 							Status:   job.StatusSkipped,

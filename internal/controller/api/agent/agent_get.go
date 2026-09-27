@@ -22,9 +22,10 @@ package agent
 
 import (
 	"context"
-	"strings"
 
 	"github.com/osapi-io/osapi/internal/controller/api/agent/gen"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // GetAgentDetails retrieves detailed information about a specific agent.
@@ -39,7 +40,7 @@ func (a *Agent) GetAgentDetails(
 	agentInfo, err := a.JobClient.GetAgent(ctx, request.Hostname)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") {
+		if apierr.IsMissing(err) {
 			return gen.GetAgentDetails404JSONResponse{
 				Error: &errMsg,
 			}, nil

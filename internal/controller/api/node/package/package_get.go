@@ -24,13 +24,14 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/package/gen"
 	"github.com/osapi-io/osapi/internal/job"
 	aptProv "github.com/osapi-io/osapi/internal/provider/node/apt"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // GetNodePackageByName gets a single package by name on a target node.
@@ -65,7 +66,7 @@ func (p *Package) GetNodePackageByName(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "not installed") {
+		if apierr.IsMissing(err) {
 			return gen.GetNodePackageByName404JSONResponse{Error: &errMsg}, nil
 		}
 		return gen.GetNodePackageByName500JSONResponse{Error: &errMsg}, nil

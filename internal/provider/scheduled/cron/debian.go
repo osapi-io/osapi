@@ -152,11 +152,11 @@ func (d *Debian) Get(
 
 	filePath, _ := d.findEntryPath(name)
 	if filePath == "" {
-		return nil, fmt.Errorf("cron entry %q: not found", name)
+		return nil, fmt.Errorf("cron entry %q: %w", name, provider.ErrNotFound)
 	}
 
 	if !d.isManagedFile(ctx, filePath) {
-		return nil, fmt.Errorf("cron entry %q is not managed by osapi", name)
+		return nil, fmt.Errorf("cron entry %q: %w", name, provider.ErrNotManaged)
 	}
 
 	source := d.sourceForPath(filePath)
@@ -224,7 +224,7 @@ func (d *Debian) Update(
 
 	filePath, perm := d.findEntryPath(entry.Name)
 	if filePath == "" {
-		return nil, fmt.Errorf("cron entry %q not managed", entry.Name)
+		return nil, fmt.Errorf("cron entry %q: %w", entry.Name, provider.ErrNotManaged)
 	}
 
 	// If no new object was specified, preserve the current one.

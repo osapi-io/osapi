@@ -132,7 +132,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 		{
 			name:       "agent not found returns 404",
 			hostname:   "unknown",
-			mockGetErr: fmt.Errorf("agent not found: unknown"),
+			mockGetErr: fmt.Errorf("agent unknown: %w: not found", jobtypes.ErrNotFound),
 			skipWrite:  true,
 			validateFunc: func(resp gen.UndrainAgentResponseObject) {
 				_, ok := resp.(gen.UndrainAgent404JSONResponse)
@@ -185,7 +185,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 			},
 		},
 		{
-			name:     "when WriteAgentTimelineEvent returns not found error returns 404",
+			name:     "when the timeline write fails the agent is not reported missing",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
 				MachineID: "abc123",
@@ -193,9 +193,11 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 				State:     jobtypes.AgentStateDraining,
 			},
 			mockDeleteDrain: true,
-			mockWriteErr:    fmt.Errorf("agent not found: server1"),
+			mockWriteErr:    fmt.Errorf("timeline stream unavailable"),
 			validateFunc: func(resp gen.UndrainAgentResponseObject) {
-				_, ok := resp.(gen.UndrainAgent404JSONResponse)
+				// The agent exists: the lookup before this said so. A timeline
+				// that cannot be written is not a missing agent.
+				_, ok := resp.(gen.UndrainAgent409JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -291,13 +293,30 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgentHTTP() {
 			},
 		},
 		{
+			name:     "when the agent registry cannot be read it is not a 404",
+			hostname: "unknown",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					GetAgent(gomock.Any(), "unknown").
+					Return(nil, fmt.Errorf("agent registry unavailable"))
+
+				return mock
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				// A registry that cannot be read is not an agent that does not
+				// exist, and saying so sends an operator after the wrong thing.
+				s.Equal(http.StatusConflict, rec.Code)
+			},
+		},
+		{
 			name:     "when agent not found returns 404",
 			hostname: "unknown",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
 					GetAgent(gomock.Any(), "unknown").
-					Return(nil, fmt.Errorf("agent not found: unknown"))
+					Return(nil, fmt.Errorf("agent unknown: %w: not found", jobtypes.ErrNotFound))
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {

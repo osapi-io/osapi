@@ -282,7 +282,7 @@ func (c *Client) GetAgent(
 	// Fall back to hostname scan.
 	agents, listErr := c.ListAgents(ctx)
 	if listErr != nil {
-		return nil, fmt.Errorf("agent not found: %s", target)
+		return nil, fmt.Errorf("agent %s: %w", target, job.ErrNotFound)
 	}
 
 	for i := range agents {
@@ -296,7 +296,7 @@ func (c *Client) GetAgent(
 		}
 	}
 
-	return nil, fmt.Errorf("agent not found: %s", target)
+	return nil, fmt.Errorf("agent %s: %w", target, job.ErrNotFound)
 }
 
 // overlayDrainState checks if a drain flag exists for the agent and

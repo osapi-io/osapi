@@ -23,7 +23,6 @@ package sysctl_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -164,7 +163,7 @@ func (s *SysctlDeletePublicTestSuite) TestDeleteNodeSysctl() {
 						job.OperationSysctlDelete,
 						map[string]string{"key": "nonexistent.key"},
 					).
-					Return("", nil, errors.New("sysctl entry not found"))
+					Return("", nil, fmt.Errorf("sysctl entry not found: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.DeleteNodeSysctlResponseObject) {
 				r, ok := resp.(gen.DeleteNodeSysctl404JSONResponse)
@@ -188,7 +187,7 @@ func (s *SysctlDeletePublicTestSuite) TestDeleteNodeSysctl() {
 						job.OperationSysctlDelete,
 						map[string]string{"key": "missing.key"},
 					).
-					Return("", nil, errors.New("sysctl entry does not exist"))
+					Return("", nil, fmt.Errorf("sysctl entry does not exist: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.DeleteNodeSysctlResponseObject) {
 				r, ok := resp.(gen.DeleteNodeSysctl404JSONResponse)

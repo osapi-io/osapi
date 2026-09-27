@@ -23,7 +23,6 @@ package ntp_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -146,7 +145,7 @@ func (s *NtpDeletePublicTestSuite) TestDeleteNodeNtp() {
 						job.OperationNtpDelete,
 						nil,
 					).
-					Return("", nil, errors.New("ntp configuration not found"))
+					Return("", nil, fmt.Errorf("ntp configuration not found: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.DeleteNodeNtpResponseObject) {
 				r, ok := resp.(gen.DeleteNodeNtp404JSONResponse)
@@ -169,7 +168,7 @@ func (s *NtpDeletePublicTestSuite) TestDeleteNodeNtp() {
 						job.OperationNtpDelete,
 						nil,
 					).
-					Return("", nil, errors.New("ntp configuration does not exist"))
+					Return("", nil, fmt.Errorf("ntp configuration does not exist: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.DeleteNodeNtpResponseObject) {
 				r, ok := resp.(gen.DeleteNodeNtp404JSONResponse)

@@ -24,7 +24,6 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 
@@ -32,6 +31,8 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	userProv "github.com/osapi-io/osapi/internal/provider/node/user"
 	"github.com/osapi-io/osapi/internal/validation"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // PutNodeGroup updates a group on a target node.
@@ -88,7 +89,7 @@ func (u *User) PutNodeGroup(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") {
+		if apierr.IsMissing(err) {
 			return gen.PutNodeGroup404JSONResponse{Error: &errMsg}, nil
 		}
 		return gen.PutNodeGroup500JSONResponse{Error: &errMsg}, nil

@@ -24,13 +24,14 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/service/gen"
 	"github.com/osapi-io/osapi/internal/job"
 	serviceProv "github.com/osapi-io/osapi/internal/provider/node/service"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // GetNodeServiceByName gets details for a single service on a target node.
@@ -65,7 +66,7 @@ func (s *Service) GetNodeServiceByName(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") {
+		if apierr.IsMissing(err) {
 			return gen.GetNodeServiceByName404JSONResponse{Error: &errMsg}, nil
 		}
 		return gen.GetNodeServiceByName500JSONResponse{Error: &errMsg}, nil

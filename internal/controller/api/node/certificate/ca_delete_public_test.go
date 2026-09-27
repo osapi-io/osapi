@@ -322,9 +322,10 @@ func (s *CADeletePublicTestSuite) TestDeleteNodeCertificateCa() {
 							Data:     json.RawMessage(`{"name":"my-ca","changed":true}`),
 						},
 						"server2": {
-							Status:   job.StatusFailed,
-							Error:    "certificate not found",
-							Hostname: "server2",
+							Status:    job.StatusFailed,
+							Error:     "certificate not found",
+							ErrorCode: job.ErrorCodeNotFound,
+							Hostname:  "server2",
 						},
 					}, nil)
 			},

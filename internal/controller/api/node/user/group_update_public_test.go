@@ -175,7 +175,7 @@ func (s *GroupUpdatePublicTestSuite) TestPutNodeGroup() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					Modify(gomock.Any(), "server1", "group", job.OperationGroupUpdate, gomock.Any()).
-					Return("", nil, fmt.Errorf("group not found: missing"))
+					Return("", nil, fmt.Errorf("group not found: missing: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.PutNodeGroupResponseObject) {
 				_, ok := resp.(gen.PutNodeGroup404JSONResponse)

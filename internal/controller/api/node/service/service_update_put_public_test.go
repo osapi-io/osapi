@@ -23,7 +23,6 @@ package service_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -180,7 +179,7 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeService() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					Modify(gomock.Any(), "server1", "node", job.OperationServiceUpdate, gomock.Any()).
-					Return("", nil, errors.New("service not found"))
+					Return("", nil, fmt.Errorf("service not found: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.PutNodeServiceResponseObject) {
 				r, ok := resp.(gen.PutNodeService404JSONResponse)
@@ -198,7 +197,7 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeService() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					Modify(gomock.Any(), "server1", "node", job.OperationServiceUpdate, gomock.Any()).
-					Return("", nil, errors.New("service does not exist"))
+					Return("", nil, fmt.Errorf("service does not exist: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.PutNodeServiceResponseObject) {
 				r, ok := resp.(gen.PutNodeService404JSONResponse)

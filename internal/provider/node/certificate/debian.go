@@ -131,7 +131,7 @@ func (d *Debian) Update(
 	filePath := certFilePath(entry.Name)
 
 	if _, err := d.fs.Stat(filePath); err != nil {
-		return nil, fmt.Errorf("certificate %q does not exist", entry.Name)
+		return nil, fmt.Errorf("certificate %q: %w", entry.Name, provider.ErrNotFound)
 	}
 
 	// If no new object was specified, preserve the current one.

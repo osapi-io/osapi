@@ -141,7 +141,7 @@ func (s *UserDeletePublicTestSuite) TestDeleteNodeUser() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					Modify(gomock.Any(), "server1", "user", job.OperationUserDelete, map[string]string{"name": "missing"}).
-					Return("", nil, fmt.Errorf("user not found: missing"))
+					Return("", nil, fmt.Errorf("user not found: missing: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.DeleteNodeUserResponseObject) {
 				_, ok := resp.(gen.DeleteNodeUser404JSONResponse)

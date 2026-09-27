@@ -22,10 +22,12 @@ package agent
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/osapi-io/osapi/internal/controller/api/agent/gen"
+
+	"github.com/osapi-io/osapi/internal/controller/enrollment"
 )
 
 // AcceptAgent handles POST /agent/{hostname}/accept.
@@ -47,7 +49,7 @@ func (a *Agent) AcceptAgent(
 		fingerprint := *request.Params.Fingerprint
 
 		if err := a.enrollment.AcceptByFingerprint(ctx, fingerprint); err != nil {
-			if strings.Contains(err.Error(), "no pending agent") {
+			if errors.Is(err, enrollment.ErrNoPendingAgent) {
 				errMsg := fmt.Sprintf("no pending agent with fingerprint %q", fingerprint)
 				return gen.AcceptAgent404JSONResponse{Error: &errMsg}, nil
 			}
@@ -64,7 +66,7 @@ func (a *Agent) AcceptAgent(
 	// Accept by hostname.
 	hostname := request.Hostname
 	if err := a.enrollment.AcceptByHostname(ctx, hostname); err != nil {
-		if strings.Contains(err.Error(), "no pending agent") {
+		if errors.Is(err, enrollment.ErrNoPendingAgent) {
 			errMsg := fmt.Sprintf("no pending agent with hostname %q", hostname)
 			return gen.AcceptAgent404JSONResponse{Error: &errMsg}, nil
 		}

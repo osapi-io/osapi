@@ -888,7 +888,8 @@ func (s *WatcherPublicTestSuite) TestAcceptByHostname() {
 			},
 			validateFunc: func(err error) {
 				s.Require().Error(err)
-				s.Contains(err.Error(), `no pending agent with hostname "nonexistent"`)
+				s.ErrorIs(err, enrollment.ErrNoPendingAgent)
+				s.Contains(err.Error(), "nonexistent")
 			},
 		},
 		{
@@ -901,7 +902,8 @@ func (s *WatcherPublicTestSuite) TestAcceptByHostname() {
 			},
 			validateFunc: func(err error) {
 				s.Require().Error(err)
-				s.Contains(err.Error(), `no pending agent with hostname "web-01"`)
+				s.ErrorIs(err, enrollment.ErrNoPendingAgent)
+				s.Contains(err.Error(), "web-01")
 			},
 		},
 		{
@@ -1006,7 +1008,8 @@ func (s *WatcherPublicTestSuite) TestAcceptByFingerprint() {
 			},
 			validateFunc: func(err error) {
 				s.Require().Error(err)
-				s.Contains(err.Error(), `no pending agent with fingerprint "SHA256:unknown"`)
+				s.ErrorIs(err, enrollment.ErrNoPendingAgent)
+				s.Contains(err.Error(), "SHA256:unknown")
 			},
 		},
 		{
@@ -1019,7 +1022,8 @@ func (s *WatcherPublicTestSuite) TestAcceptByFingerprint() {
 			},
 			validateFunc: func(err error) {
 				s.Require().Error(err)
-				s.Contains(err.Error(), `no pending agent with fingerprint "SHA256:abc123"`)
+				s.ErrorIs(err, enrollment.ErrNoPendingAgent)
+				s.Contains(err.Error(), "SHA256:abc123")
 			},
 		},
 		{
@@ -1360,7 +1364,8 @@ func (s *WatcherPublicTestSuite) TestRejectByHostname() {
 			},
 			validateFunc: func(err error) {
 				s.Require().Error(err)
-				s.Contains(err.Error(), `no pending agent with hostname "nonexistent"`)
+				s.ErrorIs(err, enrollment.ErrNoPendingAgent)
+				s.Contains(err.Error(), "nonexistent")
 			},
 		},
 		{
@@ -1373,7 +1378,8 @@ func (s *WatcherPublicTestSuite) TestRejectByHostname() {
 			},
 			validateFunc: func(err error) {
 				s.Require().Error(err)
-				s.Contains(err.Error(), `no pending agent with hostname "web-01"`)
+				s.ErrorIs(err, enrollment.ErrNoPendingAgent)
+				s.Contains(err.Error(), "web-01")
 			},
 		},
 		{

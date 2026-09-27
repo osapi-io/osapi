@@ -25,6 +25,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // GetResolvConfByInterface retrieves the DNS configuration for a specific
@@ -81,7 +83,7 @@ func parseScutilDNS(
 		}
 	}
 
-	return nil, fmt.Errorf("interface %q does not exist", interfaceName)
+	return nil, fmt.Errorf("interface %q: %w", interfaceName, provider.ErrNotFound)
 }
 
 var (

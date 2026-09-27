@@ -23,9 +23,10 @@ package job
 import (
 	"context"
 	"log/slog"
-	"strings"
 
 	"github.com/osapi-io/osapi/internal/controller/api/job/gen"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // DeleteJobByID deletes a specific job by its ID.
@@ -43,7 +44,7 @@ func (j *Job) DeleteJobByID(
 	err := j.JobClient.DeleteJob(ctx, jobID)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") {
+		if apierr.IsMissing(err) {
 			return gen.DeleteJobByID404JSONResponse{
 				Error: &errMsg,
 			}, nil

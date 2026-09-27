@@ -27,6 +27,8 @@ import (
 	"log/slog"
 	"strconv"
 	"strings"
+
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 const (
@@ -100,7 +102,7 @@ func (d *Debian) GetUser(
 		}
 	}
 
-	return nil, fmt.Errorf("user: %q not found", name)
+	return nil, fmt.Errorf("user %q: %w", name, provider.ErrNotFound)
 }
 
 // CreateUser creates a new user account.

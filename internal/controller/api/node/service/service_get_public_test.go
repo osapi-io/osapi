@@ -23,7 +23,6 @@ package service_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -183,7 +182,7 @@ func (s *ServiceGetPublicTestSuite) TestGetNodeServiceByName() {
 						job.OperationServiceGet,
 						gomock.Any(),
 					).
-					Return("", nil, errors.New("service not found"))
+					Return("", nil, fmt.Errorf("service not found: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.GetNodeServiceByNameResponseObject) {
 				r, ok := resp.(gen.GetNodeServiceByName404JSONResponse)
@@ -207,7 +206,7 @@ func (s *ServiceGetPublicTestSuite) TestGetNodeServiceByName() {
 						job.OperationServiceGet,
 						gomock.Any(),
 					).
-					Return("", nil, errors.New("service does not exist"))
+					Return("", nil, fmt.Errorf("service does not exist: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.GetNodeServiceByNameResponseObject) {
 				r, ok := resp.(gen.GetNodeServiceByName404JSONResponse)

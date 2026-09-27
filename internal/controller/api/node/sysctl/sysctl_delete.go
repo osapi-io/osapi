@@ -24,13 +24,14 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/sysctl/gen"
 	"github.com/osapi-io/osapi/internal/job"
 	sysctlProv "github.com/osapi-io/osapi/internal/provider/node/sysctl"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // DeleteNodeSysctl deletes a managed sysctl entry on a target node.
@@ -69,7 +70,7 @@ func (s *Sysctl) DeleteNodeSysctl(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") {
+		if apierr.IsMissing(err) {
 			return gen.DeleteNodeSysctl404JSONResponse{Error: &errMsg}, nil
 		}
 		return gen.DeleteNodeSysctl500JSONResponse{Error: &errMsg}, nil

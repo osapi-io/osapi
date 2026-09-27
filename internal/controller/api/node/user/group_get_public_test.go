@@ -146,7 +146,7 @@ func (s *GroupGetPublicTestSuite) TestGetNodeGroupByName() {
 				s.mockJobClient.EXPECT().
 					Query(gomock.Any(), "server1", "group", job.OperationGroupGet,
 						map[string]string{"name": "missing"}).
-					Return("", nil, fmt.Errorf("group not found: missing"))
+					Return("", nil, fmt.Errorf("group not found: missing: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.GetNodeGroupByNameResponseObject) {
 				_, ok := resp.(gen.GetNodeGroupByName404JSONResponse)

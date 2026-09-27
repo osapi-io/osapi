@@ -24,13 +24,14 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/schedule/gen"
 	"github.com/osapi-io/osapi/internal/job"
 	cronProv "github.com/osapi-io/osapi/internal/provider/scheduled/cron"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // DeleteNodeScheduleCron deletes a cron entry on a target node.
@@ -65,7 +66,7 @@ func (s *Schedule) DeleteNodeScheduleCron(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") {
+		if apierr.IsMissing(err) {
 			return gen.DeleteNodeScheduleCron404JSONResponse{Error: &errMsg}, nil
 		}
 		return gen.DeleteNodeScheduleCron500JSONResponse{Error: &errMsg}, nil

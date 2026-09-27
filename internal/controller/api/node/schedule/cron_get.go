@@ -24,13 +24,14 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/schedule/gen"
 	"github.com/osapi-io/osapi/internal/job"
 	cronProv "github.com/osapi-io/osapi/internal/provider/scheduled/cron"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // GetNodeScheduleCronByName gets a single cron entry by name on a target node.
@@ -65,8 +66,7 @@ func (s *Schedule) GetNodeScheduleCronByName(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") ||
-			strings.Contains(errMsg, "not managed") {
+		if apierr.IsMissing(err) {
 			return gen.GetNodeScheduleCronByName404JSONResponse{Error: &errMsg}, nil
 		}
 		return gen.GetNodeScheduleCronByName500JSONResponse{Error: &errMsg}, nil

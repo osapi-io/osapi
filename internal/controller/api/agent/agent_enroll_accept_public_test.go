@@ -40,6 +40,8 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/api/agent/gen"
 	agentmocks "github.com/osapi-io/osapi/internal/controller/api/agent/mocks"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+
+	"github.com/osapi-io/osapi/internal/controller/enrollment"
 )
 
 type AgentEnrollAcceptPublicTestSuite struct {
@@ -132,7 +134,10 @@ func (s *AgentEnrollAcceptPublicTestSuite) TestAcceptAgent() {
 		{
 			name:     "returns 404 when hostname not found",
 			hostname: "unknown",
-			mockErr:  fmt.Errorf("no pending agent with hostname"),
+			mockErr: fmt.Errorf(
+				"no pending agent with hostname: %w",
+				enrollment.ErrNoPendingAgent,
+			),
 			validateFunc: func(resp gen.AcceptAgentResponseObject) {
 				_, ok := resp.(gen.AcceptAgent404JSONResponse)
 				s.True(ok)
@@ -142,7 +147,10 @@ func (s *AgentEnrollAcceptPublicTestSuite) TestAcceptAgent() {
 			name:        "returns 404 when fingerprint not found",
 			hostname:    "web-01",
 			fingerprint: &fingerprint,
-			mockErr:     fmt.Errorf("no pending agent with fingerprint"),
+			mockErr: fmt.Errorf(
+				"no pending agent with fingerprint: %w",
+				enrollment.ErrNoPendingAgent,
+			),
 			validateFunc: func(resp gen.AcceptAgentResponseObject) {
 				_, ok := resp.(gen.AcceptAgent404JSONResponse)
 				s.True(ok)
@@ -248,7 +256,7 @@ func (s *AgentEnrollAcceptPublicTestSuite) TestAcceptAgentHTTP() {
 				jm := jobmocks.NewMockJobClient(s.mockCtrl)
 				em := agentmocks.NewMockEnrollmentManager(s.mockCtrl)
 				em.EXPECT().AcceptByHostname(gomock.Any(), "unknown").
-					Return(fmt.Errorf("no pending agent with hostname"))
+					Return(fmt.Errorf("no pending agent with hostname: %w", enrollment.ErrNoPendingAgent))
 				return jm, em
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {

@@ -22,10 +22,12 @@ package audit
 
 import (
 	"context"
+	"errors"
 	"log/slog"
-	"strings"
 
 	"github.com/osapi-io/osapi/internal/controller/api/audit/gen"
+
+	"github.com/osapi-io/osapi/internal/audit"
 )
 
 // GetAuditLogByID returns a single audit log entry by ID.
@@ -37,7 +39,7 @@ func (a *Audit) GetAuditLogByID(
 
 	entry, err := a.Store.Get(ctx, id)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
+		if errors.Is(err, audit.ErrNotFound) {
 			errMsg := "audit entry not found"
 			return gen.GetAuditLogByID404JSONResponse{Error: &errMsg}, nil
 		}

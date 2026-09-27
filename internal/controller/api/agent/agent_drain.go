@@ -23,10 +23,11 @@ package agent
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/osapi-io/osapi/internal/controller/api/agent/gen"
 	"github.com/osapi-io/osapi/internal/job"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // DrainAgent handles POST /agent/{hostname}/drain.
@@ -42,8 +43,18 @@ func (a *Agent) DrainAgent(
 
 	agentInfo, err := a.JobClient.GetAgent(ctx, hostname)
 	if err != nil {
-		errMsg := fmt.Sprintf("agent not found: %s", hostname)
-		return gen.DrainAgent404JSONResponse{Error: &errMsg}, nil
+		if apierr.IsMissing(err) {
+			errMsg := fmt.Sprintf("agent not found: %s", hostname)
+
+			return gen.DrainAgent404JSONResponse{Error: &errMsg}, nil
+		}
+
+		// A registry that cannot be read is not an agent that does not
+		// exist, and reporting it as one sends an operator looking for the
+		// wrong thing.
+		errMsg := err.Error()
+
+		return gen.DrainAgent409JSONResponse{Error: &errMsg}, nil
 	}
 
 	if agentInfo.State == job.AgentStateDraining || agentInfo.State == job.AgentStateCordoned {
@@ -56,13 +67,18 @@ func (a *Agent) DrainAgent(
 		return gen.DrainAgent409JSONResponse{Error: &errMsg}, nil
 	}
 
-	if err := a.JobClient.WriteAgentTimelineEvent(ctx, hostname, "drain", "Drain initiated via API"); err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			errMsg := fmt.Sprintf("agent not found: %s", hostname)
-			return gen.DrainAgent404JSONResponse{Error: &errMsg}, nil
-		}
-
+	if err := a.JobClient.WriteAgentTimelineEvent(
+		ctx,
+		hostname,
+		"drain",
+		"Drain initiated via API",
+	); err != nil {
+		// The agent exists: the lookup above established that. A timeline
+		// write that fails here is the timeline failing, not a missing
+		// agent, and the branch that claimed otherwise could never match
+		// because this call does not report one.
 		errMsg := err.Error()
+
 		return gen.DrainAgent409JSONResponse{Error: &errMsg}, nil
 	}
 

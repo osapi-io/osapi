@@ -22,10 +22,12 @@ package agent
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/osapi-io/osapi/internal/controller/api/agent/gen"
+
+	"github.com/osapi-io/osapi/internal/controller/enrollment"
 )
 
 // RejectAgent handles POST /agent/{hostname}/reject.
@@ -44,7 +46,7 @@ func (a *Agent) RejectAgent(
 
 	hostname := request.Hostname
 	if err := a.enrollment.RejectByHostname(ctx, hostname, "rejected via API"); err != nil {
-		if strings.Contains(err.Error(), "no pending agent") {
+		if errors.Is(err, enrollment.ErrNoPendingAgent) {
 			errMsg := fmt.Sprintf("no pending agent with hostname %q", hostname)
 			return gen.RejectAgent404JSONResponse{Error: &errMsg}, nil
 		}

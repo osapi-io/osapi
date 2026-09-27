@@ -24,13 +24,14 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/user/gen"
 	"github.com/osapi-io/osapi/internal/job"
 	userProv "github.com/osapi-io/osapi/internal/provider/node/user"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // GetNodeUserByName gets a single user by name on a target node.
@@ -69,7 +70,7 @@ func (u *User) GetNodeUserByName(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") {
+		if apierr.IsMissing(err) {
 			return gen.GetNodeUserByName404JSONResponse{Error: &errMsg}, nil
 		}
 		return gen.GetNodeUserByName500JSONResponse{Error: &errMsg}, nil

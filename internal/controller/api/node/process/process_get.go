@@ -24,7 +24,6 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 
@@ -83,7 +82,7 @@ func (s *Process) GetNodeProcessByPid(
 		}, nil
 	}
 
-	if resp.Status == job.StatusFailed && strings.Contains(resp.Error, "not found") {
+	if resp.Status == job.StatusFailed && resp.ErrorCode == job.ErrorCodeNotFound {
 		errMsg := resp.Error
 		return gen.GetNodeProcessByPid404JSONResponse{Error: &errMsg}, nil
 	}

@@ -136,7 +136,7 @@ func (s *PackageGetPublicTestSuite) TestGetNodePackageByName() {
 						job.OperationPackageGet,
 						map[string]string{"name": "nonexistent"},
 					).
-					Return("", nil, fmt.Errorf("package not found: nonexistent"))
+					Return("", nil, fmt.Errorf("package not found: nonexistent: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.GetNodePackageByNameResponseObject) {
 				r, ok := resp.(gen.GetNodePackageByName404JSONResponse)
@@ -160,7 +160,7 @@ func (s *PackageGetPublicTestSuite) TestGetNodePackageByName() {
 						job.OperationPackageGet,
 						map[string]string{"name": "removed-pkg"},
 					).
-					Return("", nil, fmt.Errorf("package not installed: removed-pkg"))
+					Return("", nil, fmt.Errorf("package not installed: removed-pkg: %w", job.ErrNotInstalled))
 			},
 			validateFunc: func(resp gen.GetNodePackageByNameResponseObject) {
 				r, ok := resp.(gen.GetNodePackageByName404JSONResponse)
@@ -263,9 +263,10 @@ func (s *PackageGetPublicTestSuite) TestGetNodePackageByName() {
 								),
 							},
 							"server2": {
-								Status:   job.StatusFailed,
-								Error:    "package not found",
-								Hostname: "server2",
+								Status:    job.StatusFailed,
+								Error:     "package not found",
+								ErrorCode: job.ErrorCodeNotFound,
+								Hostname:  "server2",
 							},
 							"server3": {
 								Status:   job.StatusSkipped,

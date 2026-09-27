@@ -31,6 +31,8 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	sysctlProv "github.com/osapi-io/osapi/internal/provider/node/sysctl"
 	"github.com/osapi-io/osapi/internal/validation"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // PutNodeSysctl updates an existing sysctl parameter on a target node.
@@ -78,6 +80,13 @@ func (s *Sysctl) PutNodeSysctl(
 	)
 	if err != nil {
 		errMsg := err.Error()
+		// Updating a key osapi does not manage is a 404, which this endpoint's
+		// specification declares and which it used to answer with 500 because it
+		// did not look at the cause at all.
+		if apierr.IsMissing(err) {
+			return gen.PutNodeSysctl404JSONResponse{Error: &errMsg}, nil
+		}
+
 		return gen.PutNodeSysctl500JSONResponse{Error: &errMsg}, nil
 	}
 

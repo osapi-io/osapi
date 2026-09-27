@@ -41,6 +41,11 @@ var (
 	// existed has one.
 	ErrAgentKeyNotFound = errors.New("no stored key for agent")
 
+	// ErrNoPendingAgent means no enrollment request is waiting under the name
+	// the caller gave. The API answers 404: there is nothing there to accept or
+	// reject.
+	ErrNoPendingAgent = errors.New("no pending agent")
+
 	// ErrAgentKeyStoreUnavailable means the record could not be read or
 	// decoded. It never resembles "no stored key", and is never treated as
 	// verified.

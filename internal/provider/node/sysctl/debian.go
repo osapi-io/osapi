@@ -420,7 +420,7 @@ func (d *Debian) Get(
 
 	kvEntry, err := d.stateKV.Get(ctx, stateKey)
 	if err != nil {
-		return nil, fmt.Errorf("sysctl entry %q: not found", key)
+		return nil, fmt.Errorf("sysctl entry %q: %w", key, provider.ErrNotFound)
 	}
 
 	var state job.FileState
@@ -429,7 +429,7 @@ func (d *Debian) Get(
 	}
 
 	if state.UndeployedAt != "" {
-		return nil, fmt.Errorf("sysctl entry %q: not found", key)
+		return nil, fmt.Errorf("sysctl entry %q: %w", key, provider.ErrNotFound)
 	}
 
 	entry := &Entry{

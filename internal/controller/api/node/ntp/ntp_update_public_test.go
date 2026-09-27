@@ -23,7 +23,6 @@ package ntp_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -177,7 +176,7 @@ func (s *NtpUpdatePublicTestSuite) TestPutNodeNtp() {
 							Servers: []string{"0.pool.ntp.org"},
 						},
 					).
-					Return("", nil, errors.New("ntp configuration not found"))
+					Return("", nil, fmt.Errorf("ntp configuration not found: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.PutNodeNtpResponseObject) {
 				r, ok := resp.(gen.PutNodeNtp404JSONResponse)

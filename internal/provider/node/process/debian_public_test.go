@@ -370,7 +370,7 @@ func (suite *DebianPublicTestSuite) TestSignal() {
 				suite.mockSignaler.EXPECT().Kill(99999, syscall.SIGTERM).Return(syscall.ESRCH)
 			},
 			wantErr:    true,
-			wantErrMsg: "process: signal: process not found",
+			wantErrMsg: "process signal: not found",
 		},
 		{
 			name:   "when permission denied returns error",

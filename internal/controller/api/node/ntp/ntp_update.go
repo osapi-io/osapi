@@ -24,7 +24,6 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 
@@ -32,6 +31,8 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	ntpProv "github.com/osapi-io/osapi/internal/provider/node/ntp"
 	"github.com/osapi-io/osapi/internal/validation"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // PutNodeNtp updates an existing NTP configuration on a target node.
@@ -73,8 +74,7 @@ func (s *Ntp) PutNodeNtp(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") ||
-			strings.Contains(errMsg, "not managed") {
+		if apierr.IsMissing(err) {
 			return gen.PutNodeNtp404JSONResponse{Error: &errMsg}, nil
 		}
 		return gen.PutNodeNtp500JSONResponse{Error: &errMsg}, nil

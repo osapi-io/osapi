@@ -126,7 +126,7 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetails() {
 		{
 			name:      "agent not found returns 404",
 			hostname:  "unknown",
-			mockError: fmt.Errorf("agent not found: unknown"),
+			mockError: fmt.Errorf("agent unknown: %w: not found", jobtypes.ErrNotFound),
 			validateFunc: func(resp gen.GetAgentDetailsResponseObject) {
 				_, ok := resp.(gen.GetAgentDetails404JSONResponse)
 				s.True(ok)
@@ -211,7 +211,7 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsHTTP() {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
 					GetAgent(gomock.Any(), "unknown").
-					Return(nil, fmt.Errorf("agent not found: unknown"))
+					Return(nil, fmt.Errorf("agent unknown: %w: not found", jobtypes.ErrNotFound))
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {

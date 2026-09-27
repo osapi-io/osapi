@@ -42,6 +42,8 @@ import (
 	"github.com/osapi-io/osapi/internal/job/client"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/validation"
+
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 type JobRetryPublicTestSuite struct {
@@ -152,7 +154,10 @@ func (s *JobRetryPublicTestSuite) TestRetryJobByID() {
 			request: gen.RetryJobByIDRequestObject{
 				Id: uuid.MustParse("660e8400-e29b-41d4-a716-446655440000"),
 			},
-			mockError:  fmt.Errorf("job not found: 660e8400-e29b-41d4-a716-446655440000"),
+			mockError: fmt.Errorf(
+				"job 660e8400-e29b-41d4-a716-446655440000: %w: not found",
+				job.ErrNotFound,
+			),
 			expectMock: true,
 			validateFunc: func(resp gen.RetryJobByIDResponseObject) {
 				_, ok := resp.(gen.RetryJobByID404JSONResponse)
@@ -165,7 +170,8 @@ func (s *JobRetryPublicTestSuite) TestRetryJobByID() {
 				Id: uuid.MustParse("770e8400-e29b-41d4-a716-446655440000"),
 			},
 			mockError: fmt.Errorf(
-				"job has no operation data: 770e8400-e29b-41d4-a716-446655440000",
+				"job 770e8400-e29b-41d4-a716-446655440000: %w",
+				job.ErrNoOperationData,
 			),
 			expectMock: true,
 			validateFunc: func(resp gen.RetryJobByIDResponseObject) {

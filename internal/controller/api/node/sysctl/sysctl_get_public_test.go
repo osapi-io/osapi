@@ -23,7 +23,6 @@ package sysctl_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -210,9 +209,10 @@ func (s *SysctlGetPublicTestSuite) TestGetNodeSysctlByKey() {
 							),
 						},
 						"server2": {
-							Status:   job.StatusFailed,
-							Error:    "sysctl entry not found",
-							Hostname: "server2",
+							Status:    job.StatusFailed,
+							Error:     "sysctl entry not found",
+							ErrorCode: job.ErrorCodeNotFound,
+							Hostname:  "server2",
 						},
 					}, nil)
 			},
@@ -329,7 +329,7 @@ func (s *SysctlGetPublicTestSuite) TestGetNodeSysctlByKey() {
 						job.OperationSysctlGet,
 						map[string]string{"key": "nonexistent.key"},
 					).
-					Return("", nil, errors.New("sysctl entry not found"))
+					Return("", nil, fmt.Errorf("sysctl entry not found: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.GetNodeSysctlByKeyResponseObject) {
 				r, ok := resp.(gen.GetNodeSysctlByKey404JSONResponse)
@@ -353,7 +353,7 @@ func (s *SysctlGetPublicTestSuite) TestGetNodeSysctlByKey() {
 						job.OperationSysctlGet,
 						map[string]string{"key": "unmanaged.key"},
 					).
-					Return("", nil, errors.New("sysctl entry not managed"))
+					Return("", nil, fmt.Errorf("sysctl entry not managed: %w", job.ErrNotManaged))
 			},
 			validateFunc: func(resp gen.GetNodeSysctlByKeyResponseObject) {
 				r, ok := resp.(gen.GetNodeSysctlByKey404JSONResponse)
@@ -377,7 +377,7 @@ func (s *SysctlGetPublicTestSuite) TestGetNodeSysctlByKey() {
 						job.OperationSysctlGet,
 						map[string]string{"key": "missing.key"},
 					).
-					Return("", nil, errors.New("sysctl entry does not exist"))
+					Return("", nil, fmt.Errorf("sysctl entry does not exist: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.GetNodeSysctlByKeyResponseObject) {
 				r, ok := resp.(gen.GetNodeSysctlByKey404JSONResponse)

@@ -28,6 +28,8 @@ import (
 
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/file"
+
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 const (
@@ -87,7 +89,7 @@ func (d *Debian) Update(
 	filePath := unitFilePath(entry.Name)
 
 	if _, err := d.fs.Stat(filePath); err != nil {
-		return nil, fmt.Errorf("service unit %q not managed", entry.Name)
+		return nil, fmt.Errorf("service unit %q: %w", entry.Name, provider.ErrNotManaged)
 	}
 
 	// If no new object was specified, preserve the current one.

@@ -156,7 +156,7 @@ func (w *Watcher) AcceptByHostname(
 	}
 
 	if agent == nil {
-		return fmt.Errorf("no pending agent with hostname %q", hostname)
+		return fmt.Errorf("pending agent with hostname %q: %w", hostname, ErrNoPendingAgent)
 	}
 
 	return w.AcceptAgent(ctx, agent.MachineID)
@@ -177,7 +177,7 @@ func (w *Watcher) AcceptByFingerprint(
 	}
 
 	if agent == nil {
-		return fmt.Errorf("no pending agent with fingerprint %q", fingerprint)
+		return fmt.Errorf("pending agent with fingerprint %q: %w", fingerprint, ErrNoPendingAgent)
 	}
 
 	return w.AcceptAgent(ctx, agent.MachineID)
@@ -198,7 +198,7 @@ func (w *Watcher) RejectByHostname(
 	}
 
 	if agent == nil {
-		return fmt.Errorf("no pending agent with hostname %q", hostname)
+		return fmt.Errorf("pending agent with hostname %q: %w", hostname, ErrNoPendingAgent)
 	}
 
 	return w.RejectAgent(ctx, agent.MachineID, reason)

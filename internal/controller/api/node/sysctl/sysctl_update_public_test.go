@@ -89,6 +89,37 @@ func (s *SysctlUpdatePublicTestSuite) TestPutNodeSysctl() {
 		validateFunc func(resp gen.PutNodeSysctlResponseObject)
 	}{
 		{
+			name: "when the key is not managed the answer is 404",
+			request: gen.PutNodeSysctlRequestObject{
+				Hostname: "server1",
+				Key:      "net.ipv4.ip_forward",
+				Body: &gen.SysctlUpdateRequest{
+					Value: "0",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"node",
+						job.OperationSysctlUpdate,
+						gomock.Any(),
+					).
+					Return("", nil, fmt.Errorf(
+						"sysctl entry %q: %w",
+						"net.ipv4.ip_forward",
+						job.ErrNotManaged,
+					))
+			},
+			validateFunc: func(resp gen.PutNodeSysctlResponseObject) {
+				// This endpoint's specification has always declared 404 here; it
+				// answered 500 because it never looked at the cause.
+				_, ok := resp.(gen.PutNodeSysctl404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "success",
 			request: gen.PutNodeSysctlRequestObject{
 				Hostname: "server1",

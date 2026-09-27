@@ -180,7 +180,7 @@ func (c *Client) Query(
 	}
 
 	if resp.Status == job.StatusFailed {
-		return "", nil, fmt.Errorf("job failed: %s", resp.Error)
+		return "", nil, job.NewResponseError(resp)
 	}
 
 	resp.JobID = jobID
@@ -245,7 +245,7 @@ func (c *Client) Modify(
 	}
 
 	if resp.Status == job.StatusFailed {
-		return "", nil, fmt.Errorf("job failed: %s", resp.Error)
+		return "", nil, job.NewResponseError(resp)
 	}
 
 	resp.JobID = jobID
