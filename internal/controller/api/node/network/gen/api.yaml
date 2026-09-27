@@ -856,7 +856,7 @@ components:
           description: The hostname of the agent that executed the ping.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         packets_sent:
           type: integer
@@ -921,7 +921,7 @@ components:
           description: The hostname of the agent that served this config.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         servers:
           type: array
@@ -966,7 +966,7 @@ components:
           type: string
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
         changed:
           type: boolean
           description: Whether the DNS configuration was actually modified.
@@ -1049,7 +1049,7 @@ components:
           description: Hostname of the agent that processed this operation.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         changed:
           type: boolean
@@ -1149,7 +1149,7 @@ components:
           description: Hostname of the agent that reported this entry.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         interfaces:
           type: array
@@ -1172,7 +1172,7 @@ components:
           description: Hostname of the agent that reported this entry.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         interface:
           $ref: '#/components/schemas/InterfaceInfo'
@@ -1193,7 +1193,7 @@ components:
           description: Hostname of the agent that processed this operation.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         name:
           type: string
@@ -1327,7 +1327,7 @@ components:
           description: Hostname of the agent that reported this entry.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         routes:
           type: array
@@ -1350,7 +1350,7 @@ components:
           description: Hostname of the agent that reported this entry.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         routes:
           type: array
@@ -1374,7 +1374,7 @@ components:
           description: Hostname of the agent that processed this operation.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         interface:
           type: string

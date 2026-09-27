@@ -134,6 +134,13 @@ func (u *User) getNodeUserSSHKeyBroadcast(
 				Status:   gen.SSHKeyEntryStatusSkipped,
 				Error:    &e,
 			})
+		case job.StatusTimeout:
+			e := resp.Error
+			allResults = append(allResults, gen.SSHKeyEntry{
+				Hostname: host,
+				Status:   gen.SSHKeyEntryStatusTimeout,
+				Error:    &e,
+			})
 		default:
 			allResults = append(allResults, sshKeyInfoListFromResponse(resp)...)
 		}

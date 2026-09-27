@@ -119,6 +119,14 @@ func (u *User) getNodeUserBroadcast(
 				Status:   gen.UserEntryStatusSkipped,
 				Error:    &e,
 			})
+		case job.StatusTimeout:
+			e := resp.Error
+			h := host
+			allResults = append(allResults, gen.UserEntry{
+				Hostname: h,
+				Status:   gen.UserEntryStatusTimeout,
+				Error:    &e,
+			})
 		default:
 			allResults = append(allResults, responseToUserEntries(resp)...)
 		}

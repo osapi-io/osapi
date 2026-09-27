@@ -146,6 +146,10 @@ func (s *Schedule) getNodeScheduleCronByNameBroadcast(
 			item.Status = gen.CronEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.CronEntryStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.CronEntryStatusOk
 			var entry cronProv.Entry

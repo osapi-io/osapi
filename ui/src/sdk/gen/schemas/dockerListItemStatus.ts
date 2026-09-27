@@ -15,4 +15,5 @@ export const DockerListItemStatus = {
   ok: 'ok',
   failed: 'failed',
   skipped: 'skipped',
+  timeout: 'timeout',
 } as const;

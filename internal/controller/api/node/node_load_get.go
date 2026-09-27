@@ -130,6 +130,10 @@ func (s *Node) getNodeLoadBroadcast(
 			item.Status = gen.LoadResultItemStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.LoadResultItemStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.LoadResultItemStatusOk
 			var loadStats load.Result

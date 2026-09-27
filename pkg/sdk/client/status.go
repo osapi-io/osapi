@@ -48,6 +48,10 @@ const (
 	// JobStatusSkipped indicates the job was skipped because the operation
 	// is not supported on the target OS family.
 	JobStatusSkipped JobStatus = "skipped"
+	// JobStatusTimeout indicates the agent never answered. Distinct from
+	// failed, which means the operation ran and did not succeed: a timeout
+	// says nothing about whether it ran, so an operator has to go and look.
+	JobStatusTimeout JobStatus = "timeout"
 	// JobStatusPartialFailure indicates some agents completed and some
 	// failed in a broadcast operation.
 	JobStatusPartialFailure JobStatus = "partial_failure"

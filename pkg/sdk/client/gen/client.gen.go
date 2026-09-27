@@ -69,6 +69,7 @@ const (
 	CertificateCAEntryStatusFailed  CertificateCAEntryStatus = "failed"
 	CertificateCAEntryStatusOk      CertificateCAEntryStatus = "ok"
 	CertificateCAEntryStatusSkipped CertificateCAEntryStatus = "skipped"
+	CertificateCAEntryStatusTimeout CertificateCAEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the CertificateCAEntryStatus enum.
@@ -79,6 +80,8 @@ func (e CertificateCAEntryStatus) Valid() bool {
 	case CertificateCAEntryStatusOk:
 		return true
 	case CertificateCAEntryStatusSkipped:
+		return true
+	case CertificateCAEntryStatusTimeout:
 		return true
 	default:
 		return false
@@ -108,6 +111,7 @@ const (
 	CertificateCAMutationEntryStatusFailed  CertificateCAMutationEntryStatus = "failed"
 	CertificateCAMutationEntryStatusOk      CertificateCAMutationEntryStatus = "ok"
 	CertificateCAMutationEntryStatusSkipped CertificateCAMutationEntryStatus = "skipped"
+	CertificateCAMutationEntryStatusTimeout CertificateCAMutationEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the CertificateCAMutationEntryStatus enum.
@@ -119,6 +123,8 @@ func (e CertificateCAMutationEntryStatus) Valid() bool {
 		return true
 	case CertificateCAMutationEntryStatusSkipped:
 		return true
+	case CertificateCAMutationEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -129,6 +135,7 @@ const (
 	CommandResultItemStatusFailed  CommandResultItemStatus = "failed"
 	CommandResultItemStatusOk      CommandResultItemStatus = "ok"
 	CommandResultItemStatusSkipped CommandResultItemStatus = "skipped"
+	CommandResultItemStatusTimeout CommandResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the CommandResultItemStatus enum.
@@ -139,6 +146,8 @@ func (e CommandResultItemStatus) Valid() bool {
 	case CommandResultItemStatusOk:
 		return true
 	case CommandResultItemStatusSkipped:
+		return true
+	case CommandResultItemStatusTimeout:
 		return true
 	default:
 		return false
@@ -216,6 +225,7 @@ const (
 	CronEntryStatusFailed  CronEntryStatus = "failed"
 	CronEntryStatusOk      CronEntryStatus = "ok"
 	CronEntryStatusSkipped CronEntryStatus = "skipped"
+	CronEntryStatusTimeout CronEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the CronEntryStatus enum.
@@ -227,6 +237,8 @@ func (e CronEntryStatus) Valid() bool {
 		return true
 	case CronEntryStatusSkipped:
 		return true
+	case CronEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -237,6 +249,7 @@ const (
 	CronMutationResultStatusFailed  CronMutationResultStatus = "failed"
 	CronMutationResultStatusOk      CronMutationResultStatus = "ok"
 	CronMutationResultStatusSkipped CronMutationResultStatus = "skipped"
+	CronMutationResultStatusTimeout CronMutationResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the CronMutationResultStatus enum.
@@ -247,6 +260,8 @@ func (e CronMutationResultStatus) Valid() bool {
 	case CronMutationResultStatusOk:
 		return true
 	case CronMutationResultStatusSkipped:
+		return true
+	case CronMutationResultStatusTimeout:
 		return true
 	default:
 		return false
@@ -276,6 +291,7 @@ const (
 	DNSConfigResponseStatusFailed  DNSConfigResponseStatus = "failed"
 	DNSConfigResponseStatusOk      DNSConfigResponseStatus = "ok"
 	DNSConfigResponseStatusSkipped DNSConfigResponseStatus = "skipped"
+	DNSConfigResponseStatusTimeout DNSConfigResponseStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DNSConfigResponseStatus enum.
@@ -287,6 +303,8 @@ func (e DNSConfigResponseStatus) Valid() bool {
 		return true
 	case DNSConfigResponseStatusSkipped:
 		return true
+	case DNSConfigResponseStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -297,6 +315,7 @@ const (
 	DNSDeleteResultItemStatusFailed  DNSDeleteResultItemStatus = "failed"
 	DNSDeleteResultItemStatusOk      DNSDeleteResultItemStatus = "ok"
 	DNSDeleteResultItemStatusSkipped DNSDeleteResultItemStatus = "skipped"
+	DNSDeleteResultItemStatusTimeout DNSDeleteResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DNSDeleteResultItemStatus enum.
@@ -308,6 +327,8 @@ func (e DNSDeleteResultItemStatus) Valid() bool {
 		return true
 	case DNSDeleteResultItemStatusSkipped:
 		return true
+	case DNSDeleteResultItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -318,6 +339,7 @@ const (
 	DNSUpdateResultItemStatusFailed  DNSUpdateResultItemStatus = "failed"
 	DNSUpdateResultItemStatusOk      DNSUpdateResultItemStatus = "ok"
 	DNSUpdateResultItemStatusSkipped DNSUpdateResultItemStatus = "skipped"
+	DNSUpdateResultItemStatusTimeout DNSUpdateResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DNSUpdateResultItemStatus enum.
@@ -329,6 +351,8 @@ func (e DNSUpdateResultItemStatus) Valid() bool {
 		return true
 	case DNSUpdateResultItemStatusSkipped:
 		return true
+	case DNSUpdateResultItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -339,6 +363,7 @@ const (
 	DiskResultItemStatusFailed  DiskResultItemStatus = "failed"
 	DiskResultItemStatusOk      DiskResultItemStatus = "ok"
 	DiskResultItemStatusSkipped DiskResultItemStatus = "skipped"
+	DiskResultItemStatusTimeout DiskResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DiskResultItemStatus enum.
@@ -350,6 +375,8 @@ func (e DiskResultItemStatus) Valid() bool {
 		return true
 	case DiskResultItemStatusSkipped:
 		return true
+	case DiskResultItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -360,6 +387,7 @@ const (
 	DockerActionResultItemStatusFailed  DockerActionResultItemStatus = "failed"
 	DockerActionResultItemStatusOk      DockerActionResultItemStatus = "ok"
 	DockerActionResultItemStatusSkipped DockerActionResultItemStatus = "skipped"
+	DockerActionResultItemStatusTimeout DockerActionResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DockerActionResultItemStatus enum.
@@ -371,6 +399,8 @@ func (e DockerActionResultItemStatus) Valid() bool {
 		return true
 	case DockerActionResultItemStatusSkipped:
 		return true
+	case DockerActionResultItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -381,6 +411,7 @@ const (
 	DockerDetailResponseStatusFailed  DockerDetailResponseStatus = "failed"
 	DockerDetailResponseStatusOk      DockerDetailResponseStatus = "ok"
 	DockerDetailResponseStatusSkipped DockerDetailResponseStatus = "skipped"
+	DockerDetailResponseStatusTimeout DockerDetailResponseStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DockerDetailResponseStatus enum.
@@ -392,6 +423,8 @@ func (e DockerDetailResponseStatus) Valid() bool {
 		return true
 	case DockerDetailResponseStatusSkipped:
 		return true
+	case DockerDetailResponseStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -402,6 +435,7 @@ const (
 	DockerExecResultItemStatusFailed  DockerExecResultItemStatus = "failed"
 	DockerExecResultItemStatusOk      DockerExecResultItemStatus = "ok"
 	DockerExecResultItemStatusSkipped DockerExecResultItemStatus = "skipped"
+	DockerExecResultItemStatusTimeout DockerExecResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DockerExecResultItemStatus enum.
@@ -413,6 +447,8 @@ func (e DockerExecResultItemStatus) Valid() bool {
 		return true
 	case DockerExecResultItemStatusSkipped:
 		return true
+	case DockerExecResultItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -423,6 +459,7 @@ const (
 	DockerListItemStatusFailed  DockerListItemStatus = "failed"
 	DockerListItemStatusOk      DockerListItemStatus = "ok"
 	DockerListItemStatusSkipped DockerListItemStatus = "skipped"
+	DockerListItemStatusTimeout DockerListItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DockerListItemStatus enum.
@@ -434,6 +471,8 @@ func (e DockerListItemStatus) Valid() bool {
 		return true
 	case DockerListItemStatusSkipped:
 		return true
+	case DockerListItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -444,6 +483,7 @@ const (
 	DockerPullResultItemStatusFailed  DockerPullResultItemStatus = "failed"
 	DockerPullResultItemStatusOk      DockerPullResultItemStatus = "ok"
 	DockerPullResultItemStatusSkipped DockerPullResultItemStatus = "skipped"
+	DockerPullResultItemStatusTimeout DockerPullResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DockerPullResultItemStatus enum.
@@ -455,6 +495,8 @@ func (e DockerPullResultItemStatus) Valid() bool {
 		return true
 	case DockerPullResultItemStatusSkipped:
 		return true
+	case DockerPullResultItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -465,6 +507,7 @@ const (
 	DockerResponseStatusFailed  DockerResponseStatus = "failed"
 	DockerResponseStatusOk      DockerResponseStatus = "ok"
 	DockerResponseStatusSkipped DockerResponseStatus = "skipped"
+	DockerResponseStatusTimeout DockerResponseStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DockerResponseStatus enum.
@@ -475,6 +518,8 @@ func (e DockerResponseStatus) Valid() bool {
 	case DockerResponseStatusOk:
 		return true
 	case DockerResponseStatusSkipped:
+		return true
+	case DockerResponseStatusTimeout:
 		return true
 	default:
 		return false
@@ -504,6 +549,7 @@ const (
 	FileDeployResultStatusFailed  FileDeployResultStatus = "failed"
 	FileDeployResultStatusOk      FileDeployResultStatus = "ok"
 	FileDeployResultStatusSkipped FileDeployResultStatus = "skipped"
+	FileDeployResultStatusTimeout FileDeployResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the FileDeployResultStatus enum.
@@ -515,6 +561,8 @@ func (e FileDeployResultStatus) Valid() bool {
 		return true
 	case FileDeployResultStatusSkipped:
 		return true
+	case FileDeployResultStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -525,6 +573,7 @@ const (
 	FileUndeployResultStatusFailed  FileUndeployResultStatus = "failed"
 	FileUndeployResultStatusOk      FileUndeployResultStatus = "ok"
 	FileUndeployResultStatusSkipped FileUndeployResultStatus = "skipped"
+	FileUndeployResultStatusTimeout FileUndeployResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the FileUndeployResultStatus enum.
@@ -536,6 +585,8 @@ func (e FileUndeployResultStatus) Valid() bool {
 		return true
 	case FileUndeployResultStatusSkipped:
 		return true
+	case FileUndeployResultStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -546,6 +597,7 @@ const (
 	GroupEntryStatusFailed  GroupEntryStatus = "failed"
 	GroupEntryStatusOk      GroupEntryStatus = "ok"
 	GroupEntryStatusSkipped GroupEntryStatus = "skipped"
+	GroupEntryStatusTimeout GroupEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the GroupEntryStatus enum.
@@ -557,6 +609,8 @@ func (e GroupEntryStatus) Valid() bool {
 		return true
 	case GroupEntryStatusSkipped:
 		return true
+	case GroupEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -567,6 +621,7 @@ const (
 	GroupMutationResultStatusFailed  GroupMutationResultStatus = "failed"
 	GroupMutationResultStatusOk      GroupMutationResultStatus = "ok"
 	GroupMutationResultStatusSkipped GroupMutationResultStatus = "skipped"
+	GroupMutationResultStatusTimeout GroupMutationResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the GroupMutationResultStatus enum.
@@ -578,6 +633,8 @@ func (e GroupMutationResultStatus) Valid() bool {
 		return true
 	case GroupMutationResultStatusSkipped:
 		return true
+	case GroupMutationResultStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -588,6 +645,7 @@ const (
 	HostnameResponseStatusFailed  HostnameResponseStatus = "failed"
 	HostnameResponseStatusOk      HostnameResponseStatus = "ok"
 	HostnameResponseStatusSkipped HostnameResponseStatus = "skipped"
+	HostnameResponseStatusTimeout HostnameResponseStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the HostnameResponseStatus enum.
@@ -599,6 +657,8 @@ func (e HostnameResponseStatus) Valid() bool {
 		return true
 	case HostnameResponseStatusSkipped:
 		return true
+	case HostnameResponseStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -609,6 +669,7 @@ const (
 	HostnameUpdateResultItemStatusFailed  HostnameUpdateResultItemStatus = "failed"
 	HostnameUpdateResultItemStatusOk      HostnameUpdateResultItemStatus = "ok"
 	HostnameUpdateResultItemStatusSkipped HostnameUpdateResultItemStatus = "skipped"
+	HostnameUpdateResultItemStatusTimeout HostnameUpdateResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the HostnameUpdateResultItemStatus enum.
@@ -620,6 +681,8 @@ func (e HostnameUpdateResultItemStatus) Valid() bool {
 		return true
 	case HostnameUpdateResultItemStatusSkipped:
 		return true
+	case HostnameUpdateResultItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -630,6 +693,7 @@ const (
 	InterfaceGetEntryStatusFailed  InterfaceGetEntryStatus = "failed"
 	InterfaceGetEntryStatusOk      InterfaceGetEntryStatus = "ok"
 	InterfaceGetEntryStatusSkipped InterfaceGetEntryStatus = "skipped"
+	InterfaceGetEntryStatusTimeout InterfaceGetEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the InterfaceGetEntryStatus enum.
@@ -641,6 +705,8 @@ func (e InterfaceGetEntryStatus) Valid() bool {
 		return true
 	case InterfaceGetEntryStatusSkipped:
 		return true
+	case InterfaceGetEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -651,6 +717,7 @@ const (
 	InterfaceListEntryStatusFailed  InterfaceListEntryStatus = "failed"
 	InterfaceListEntryStatusOk      InterfaceListEntryStatus = "ok"
 	InterfaceListEntryStatusSkipped InterfaceListEntryStatus = "skipped"
+	InterfaceListEntryStatusTimeout InterfaceListEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the InterfaceListEntryStatus enum.
@@ -662,6 +729,8 @@ func (e InterfaceListEntryStatus) Valid() bool {
 		return true
 	case InterfaceListEntryStatusSkipped:
 		return true
+	case InterfaceListEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -672,6 +741,7 @@ const (
 	InterfaceMutationEntryStatusFailed  InterfaceMutationEntryStatus = "failed"
 	InterfaceMutationEntryStatusOk      InterfaceMutationEntryStatus = "ok"
 	InterfaceMutationEntryStatusSkipped InterfaceMutationEntryStatus = "skipped"
+	InterfaceMutationEntryStatusTimeout InterfaceMutationEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the InterfaceMutationEntryStatus enum.
@@ -683,6 +753,8 @@ func (e InterfaceMutationEntryStatus) Valid() bool {
 		return true
 	case InterfaceMutationEntryStatusSkipped:
 		return true
+	case InterfaceMutationEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -693,6 +765,7 @@ const (
 	LoadResultItemStatusFailed  LoadResultItemStatus = "failed"
 	LoadResultItemStatusOk      LoadResultItemStatus = "ok"
 	LoadResultItemStatusSkipped LoadResultItemStatus = "skipped"
+	LoadResultItemStatusTimeout LoadResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the LoadResultItemStatus enum.
@@ -704,6 +777,8 @@ func (e LoadResultItemStatus) Valid() bool {
 		return true
 	case LoadResultItemStatusSkipped:
 		return true
+	case LoadResultItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -714,6 +789,7 @@ const (
 	LogResultEntryStatusFailed  LogResultEntryStatus = "failed"
 	LogResultEntryStatusOk      LogResultEntryStatus = "ok"
 	LogResultEntryStatusSkipped LogResultEntryStatus = "skipped"
+	LogResultEntryStatusTimeout LogResultEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the LogResultEntryStatus enum.
@@ -725,6 +801,8 @@ func (e LogResultEntryStatus) Valid() bool {
 		return true
 	case LogResultEntryStatusSkipped:
 		return true
+	case LogResultEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -735,6 +813,7 @@ const (
 	LogSourceEntryStatusFailed  LogSourceEntryStatus = "failed"
 	LogSourceEntryStatusOk      LogSourceEntryStatus = "ok"
 	LogSourceEntryStatusSkipped LogSourceEntryStatus = "skipped"
+	LogSourceEntryStatusTimeout LogSourceEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the LogSourceEntryStatus enum.
@@ -746,6 +825,8 @@ func (e LogSourceEntryStatus) Valid() bool {
 		return true
 	case LogSourceEntryStatusSkipped:
 		return true
+	case LogSourceEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -756,6 +837,7 @@ const (
 	MemoryResultItemStatusFailed  MemoryResultItemStatus = "failed"
 	MemoryResultItemStatusOk      MemoryResultItemStatus = "ok"
 	MemoryResultItemStatusSkipped MemoryResultItemStatus = "skipped"
+	MemoryResultItemStatusTimeout MemoryResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the MemoryResultItemStatus enum.
@@ -766,6 +848,8 @@ func (e MemoryResultItemStatus) Valid() bool {
 	case MemoryResultItemStatusOk:
 		return true
 	case MemoryResultItemStatusSkipped:
+		return true
+	case MemoryResultItemStatusTimeout:
 		return true
 	default:
 		return false
@@ -819,6 +903,7 @@ const (
 	NodeStatusResponseStatusFailed  NodeStatusResponseStatus = "failed"
 	NodeStatusResponseStatusOk      NodeStatusResponseStatus = "ok"
 	NodeStatusResponseStatusSkipped NodeStatusResponseStatus = "skipped"
+	NodeStatusResponseStatusTimeout NodeStatusResponseStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the NodeStatusResponseStatus enum.
@@ -830,6 +915,8 @@ func (e NodeStatusResponseStatus) Valid() bool {
 		return true
 	case NodeStatusResponseStatusSkipped:
 		return true
+	case NodeStatusResponseStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -840,6 +927,7 @@ const (
 	NtpMutationResultStatusFailed  NtpMutationResultStatus = "failed"
 	NtpMutationResultStatusOk      NtpMutationResultStatus = "ok"
 	NtpMutationResultStatusSkipped NtpMutationResultStatus = "skipped"
+	NtpMutationResultStatusTimeout NtpMutationResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the NtpMutationResultStatus enum.
@@ -851,6 +939,8 @@ func (e NtpMutationResultStatus) Valid() bool {
 		return true
 	case NtpMutationResultStatusSkipped:
 		return true
+	case NtpMutationResultStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -861,6 +951,7 @@ const (
 	NtpStatusEntryStatusFailed  NtpStatusEntryStatus = "failed"
 	NtpStatusEntryStatusOk      NtpStatusEntryStatus = "ok"
 	NtpStatusEntryStatusSkipped NtpStatusEntryStatus = "skipped"
+	NtpStatusEntryStatusTimeout NtpStatusEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the NtpStatusEntryStatus enum.
@@ -872,6 +963,8 @@ func (e NtpStatusEntryStatus) Valid() bool {
 		return true
 	case NtpStatusEntryStatusSkipped:
 		return true
+	case NtpStatusEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -882,6 +975,7 @@ const (
 	OSInfoResultItemStatusFailed  OSInfoResultItemStatus = "failed"
 	OSInfoResultItemStatusOk      OSInfoResultItemStatus = "ok"
 	OSInfoResultItemStatusSkipped OSInfoResultItemStatus = "skipped"
+	OSInfoResultItemStatusTimeout OSInfoResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the OSInfoResultItemStatus enum.
@@ -893,6 +987,8 @@ func (e OSInfoResultItemStatus) Valid() bool {
 		return true
 	case OSInfoResultItemStatusSkipped:
 		return true
+	case OSInfoResultItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -903,6 +999,7 @@ const (
 	PackageEntryStatusFailed  PackageEntryStatus = "failed"
 	PackageEntryStatusOk      PackageEntryStatus = "ok"
 	PackageEntryStatusSkipped PackageEntryStatus = "skipped"
+	PackageEntryStatusTimeout PackageEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the PackageEntryStatus enum.
@@ -914,6 +1011,8 @@ func (e PackageEntryStatus) Valid() bool {
 		return true
 	case PackageEntryStatusSkipped:
 		return true
+	case PackageEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -924,6 +1023,7 @@ const (
 	PackageMutationResultStatusFailed  PackageMutationResultStatus = "failed"
 	PackageMutationResultStatusOk      PackageMutationResultStatus = "ok"
 	PackageMutationResultStatusSkipped PackageMutationResultStatus = "skipped"
+	PackageMutationResultStatusTimeout PackageMutationResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the PackageMutationResultStatus enum.
@@ -935,6 +1035,8 @@ func (e PackageMutationResultStatus) Valid() bool {
 		return true
 	case PackageMutationResultStatusSkipped:
 		return true
+	case PackageMutationResultStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -945,6 +1047,7 @@ const (
 	PingResponseStatusFailed  PingResponseStatus = "failed"
 	PingResponseStatusOk      PingResponseStatus = "ok"
 	PingResponseStatusSkipped PingResponseStatus = "skipped"
+	PingResponseStatusTimeout PingResponseStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the PingResponseStatus enum.
@@ -956,6 +1059,8 @@ func (e PingResponseStatus) Valid() bool {
 		return true
 	case PingResponseStatusSkipped:
 		return true
+	case PingResponseStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -966,6 +1071,7 @@ const (
 	PowerResultStatusFailed  PowerResultStatus = "failed"
 	PowerResultStatusOk      PowerResultStatus = "ok"
 	PowerResultStatusSkipped PowerResultStatus = "skipped"
+	PowerResultStatusTimeout PowerResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the PowerResultStatus enum.
@@ -977,6 +1083,8 @@ func (e PowerResultStatus) Valid() bool {
 		return true
 	case PowerResultStatusSkipped:
 		return true
+	case PowerResultStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -987,6 +1095,7 @@ const (
 	ProcessEntryStatusFailed  ProcessEntryStatus = "failed"
 	ProcessEntryStatusOk      ProcessEntryStatus = "ok"
 	ProcessEntryStatusSkipped ProcessEntryStatus = "skipped"
+	ProcessEntryStatusTimeout ProcessEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the ProcessEntryStatus enum.
@@ -998,6 +1107,8 @@ func (e ProcessEntryStatus) Valid() bool {
 		return true
 	case ProcessEntryStatusSkipped:
 		return true
+	case ProcessEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1008,6 +1119,7 @@ const (
 	ProcessGetEntryStatusFailed  ProcessGetEntryStatus = "failed"
 	ProcessGetEntryStatusOk      ProcessGetEntryStatus = "ok"
 	ProcessGetEntryStatusSkipped ProcessGetEntryStatus = "skipped"
+	ProcessGetEntryStatusTimeout ProcessGetEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the ProcessGetEntryStatus enum.
@@ -1018,6 +1130,8 @@ func (e ProcessGetEntryStatus) Valid() bool {
 	case ProcessGetEntryStatusOk:
 		return true
 	case ProcessGetEntryStatusSkipped:
+		return true
+	case ProcessGetEntryStatusTimeout:
 		return true
 	default:
 		return false
@@ -1059,6 +1173,7 @@ const (
 	ProcessSignalResultStatusFailed  ProcessSignalResultStatus = "failed"
 	ProcessSignalResultStatusOk      ProcessSignalResultStatus = "ok"
 	ProcessSignalResultStatusSkipped ProcessSignalResultStatus = "skipped"
+	ProcessSignalResultStatusTimeout ProcessSignalResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the ProcessSignalResultStatus enum.
@@ -1070,6 +1185,8 @@ func (e ProcessSignalResultStatus) Valid() bool {
 		return true
 	case ProcessSignalResultStatusSkipped:
 		return true
+	case ProcessSignalResultStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1080,6 +1197,7 @@ const (
 	RouteGetEntryStatusFailed  RouteGetEntryStatus = "failed"
 	RouteGetEntryStatusOk      RouteGetEntryStatus = "ok"
 	RouteGetEntryStatusSkipped RouteGetEntryStatus = "skipped"
+	RouteGetEntryStatusTimeout RouteGetEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the RouteGetEntryStatus enum.
@@ -1091,6 +1209,8 @@ func (e RouteGetEntryStatus) Valid() bool {
 		return true
 	case RouteGetEntryStatusSkipped:
 		return true
+	case RouteGetEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1101,6 +1221,7 @@ const (
 	RouteListEntryStatusFailed  RouteListEntryStatus = "failed"
 	RouteListEntryStatusOk      RouteListEntryStatus = "ok"
 	RouteListEntryStatusSkipped RouteListEntryStatus = "skipped"
+	RouteListEntryStatusTimeout RouteListEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the RouteListEntryStatus enum.
@@ -1112,6 +1233,8 @@ func (e RouteListEntryStatus) Valid() bool {
 		return true
 	case RouteListEntryStatusSkipped:
 		return true
+	case RouteListEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1122,6 +1245,7 @@ const (
 	RouteMutationEntryStatusFailed  RouteMutationEntryStatus = "failed"
 	RouteMutationEntryStatusOk      RouteMutationEntryStatus = "ok"
 	RouteMutationEntryStatusSkipped RouteMutationEntryStatus = "skipped"
+	RouteMutationEntryStatusTimeout RouteMutationEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the RouteMutationEntryStatus enum.
@@ -1133,6 +1257,8 @@ func (e RouteMutationEntryStatus) Valid() bool {
 		return true
 	case RouteMutationEntryStatusSkipped:
 		return true
+	case RouteMutationEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1143,6 +1269,7 @@ const (
 	SSHKeyEntryStatusFailed  SSHKeyEntryStatus = "failed"
 	SSHKeyEntryStatusOk      SSHKeyEntryStatus = "ok"
 	SSHKeyEntryStatusSkipped SSHKeyEntryStatus = "skipped"
+	SSHKeyEntryStatusTimeout SSHKeyEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the SSHKeyEntryStatus enum.
@@ -1154,6 +1281,8 @@ func (e SSHKeyEntryStatus) Valid() bool {
 		return true
 	case SSHKeyEntryStatusSkipped:
 		return true
+	case SSHKeyEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1164,6 +1293,7 @@ const (
 	SSHKeyMutationEntryStatusFailed  SSHKeyMutationEntryStatus = "failed"
 	SSHKeyMutationEntryStatusOk      SSHKeyMutationEntryStatus = "ok"
 	SSHKeyMutationEntryStatusSkipped SSHKeyMutationEntryStatus = "skipped"
+	SSHKeyMutationEntryStatusTimeout SSHKeyMutationEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the SSHKeyMutationEntryStatus enum.
@@ -1175,6 +1305,8 @@ func (e SSHKeyMutationEntryStatus) Valid() bool {
 		return true
 	case SSHKeyMutationEntryStatusSkipped:
 		return true
+	case SSHKeyMutationEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1185,6 +1317,7 @@ const (
 	ServiceGetEntryStatusFailed  ServiceGetEntryStatus = "failed"
 	ServiceGetEntryStatusOk      ServiceGetEntryStatus = "ok"
 	ServiceGetEntryStatusSkipped ServiceGetEntryStatus = "skipped"
+	ServiceGetEntryStatusTimeout ServiceGetEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the ServiceGetEntryStatus enum.
@@ -1196,6 +1329,8 @@ func (e ServiceGetEntryStatus) Valid() bool {
 		return true
 	case ServiceGetEntryStatusSkipped:
 		return true
+	case ServiceGetEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1206,6 +1341,7 @@ const (
 	ServiceListEntryStatusFailed  ServiceListEntryStatus = "failed"
 	ServiceListEntryStatusOk      ServiceListEntryStatus = "ok"
 	ServiceListEntryStatusSkipped ServiceListEntryStatus = "skipped"
+	ServiceListEntryStatusTimeout ServiceListEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the ServiceListEntryStatus enum.
@@ -1217,6 +1353,8 @@ func (e ServiceListEntryStatus) Valid() bool {
 		return true
 	case ServiceListEntryStatusSkipped:
 		return true
+	case ServiceListEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1227,6 +1365,7 @@ const (
 	ServiceMutationEntryStatusFailed  ServiceMutationEntryStatus = "failed"
 	ServiceMutationEntryStatusOk      ServiceMutationEntryStatus = "ok"
 	ServiceMutationEntryStatusSkipped ServiceMutationEntryStatus = "skipped"
+	ServiceMutationEntryStatusTimeout ServiceMutationEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the ServiceMutationEntryStatus enum.
@@ -1238,6 +1377,8 @@ func (e ServiceMutationEntryStatus) Valid() bool {
 		return true
 	case ServiceMutationEntryStatusSkipped:
 		return true
+	case ServiceMutationEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1248,6 +1389,7 @@ const (
 	SysctlEntryStatusFailed  SysctlEntryStatus = "failed"
 	SysctlEntryStatusOk      SysctlEntryStatus = "ok"
 	SysctlEntryStatusSkipped SysctlEntryStatus = "skipped"
+	SysctlEntryStatusTimeout SysctlEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the SysctlEntryStatus enum.
@@ -1259,6 +1401,8 @@ func (e SysctlEntryStatus) Valid() bool {
 		return true
 	case SysctlEntryStatusSkipped:
 		return true
+	case SysctlEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1269,6 +1413,7 @@ const (
 	SysctlMutationResultStatusFailed  SysctlMutationResultStatus = "failed"
 	SysctlMutationResultStatusOk      SysctlMutationResultStatus = "ok"
 	SysctlMutationResultStatusSkipped SysctlMutationResultStatus = "skipped"
+	SysctlMutationResultStatusTimeout SysctlMutationResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the SysctlMutationResultStatus enum.
@@ -1280,6 +1425,8 @@ func (e SysctlMutationResultStatus) Valid() bool {
 		return true
 	case SysctlMutationResultStatusSkipped:
 		return true
+	case SysctlMutationResultStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1290,6 +1437,7 @@ const (
 	TimezoneEntryStatusFailed  TimezoneEntryStatus = "failed"
 	TimezoneEntryStatusOk      TimezoneEntryStatus = "ok"
 	TimezoneEntryStatusSkipped TimezoneEntryStatus = "skipped"
+	TimezoneEntryStatusTimeout TimezoneEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the TimezoneEntryStatus enum.
@@ -1301,6 +1449,8 @@ func (e TimezoneEntryStatus) Valid() bool {
 		return true
 	case TimezoneEntryStatusSkipped:
 		return true
+	case TimezoneEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1311,6 +1461,7 @@ const (
 	TimezoneMutationResultStatusFailed  TimezoneMutationResultStatus = "failed"
 	TimezoneMutationResultStatusOk      TimezoneMutationResultStatus = "ok"
 	TimezoneMutationResultStatusSkipped TimezoneMutationResultStatus = "skipped"
+	TimezoneMutationResultStatusTimeout TimezoneMutationResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the TimezoneMutationResultStatus enum.
@@ -1322,6 +1473,8 @@ func (e TimezoneMutationResultStatus) Valid() bool {
 		return true
 	case TimezoneMutationResultStatusSkipped:
 		return true
+	case TimezoneMutationResultStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1332,6 +1485,7 @@ const (
 	UpdateEntryStatusFailed  UpdateEntryStatus = "failed"
 	UpdateEntryStatusOk      UpdateEntryStatus = "ok"
 	UpdateEntryStatusSkipped UpdateEntryStatus = "skipped"
+	UpdateEntryStatusTimeout UpdateEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the UpdateEntryStatus enum.
@@ -1343,6 +1497,8 @@ func (e UpdateEntryStatus) Valid() bool {
 		return true
 	case UpdateEntryStatusSkipped:
 		return true
+	case UpdateEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1353,6 +1509,7 @@ const (
 	UptimeResponseStatusFailed  UptimeResponseStatus = "failed"
 	UptimeResponseStatusOk      UptimeResponseStatus = "ok"
 	UptimeResponseStatusSkipped UptimeResponseStatus = "skipped"
+	UptimeResponseStatusTimeout UptimeResponseStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the UptimeResponseStatus enum.
@@ -1364,6 +1521,8 @@ func (e UptimeResponseStatus) Valid() bool {
 		return true
 	case UptimeResponseStatusSkipped:
 		return true
+	case UptimeResponseStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1374,6 +1533,7 @@ const (
 	UserEntryStatusFailed  UserEntryStatus = "failed"
 	UserEntryStatusOk      UserEntryStatus = "ok"
 	UserEntryStatusSkipped UserEntryStatus = "skipped"
+	UserEntryStatusTimeout UserEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the UserEntryStatus enum.
@@ -1385,6 +1545,8 @@ func (e UserEntryStatus) Valid() bool {
 		return true
 	case UserEntryStatusSkipped:
 		return true
+	case UserEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -1395,6 +1557,7 @@ const (
 	UserMutationResultStatusFailed  UserMutationResultStatus = "failed"
 	UserMutationResultStatusOk      UserMutationResultStatus = "ok"
 	UserMutationResultStatusSkipped UserMutationResultStatus = "skipped"
+	UserMutationResultStatusTimeout UserMutationResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the UserMutationResultStatus enum.
@@ -1405,6 +1568,8 @@ func (e UserMutationResultStatus) Valid() bool {
 	case UserMutationResultStatusOk:
 		return true
 	case UserMutationResultStatusSkipped:
+		return true
+	case UserMutationResultStatusTimeout:
 		return true
 	default:
 		return false

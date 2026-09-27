@@ -461,6 +461,45 @@ func (s *SysctlUpdatePublicTestSuite) TestPutNodeSysctl() {
 				s.Contains(*r.Results[0].Error, "not supported")
 			},
 		},
+		{
+			name: "broadcast with a host that never answered",
+			request: gen.PutNodeSysctlRequestObject{
+				Hostname: "_all",
+				Key:      "net.ipv4.ip_forward",
+				Body: &gen.SysctlUpdateRequest{
+					Value: "0",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationSysctlUpdate,
+						sysctlProv.Entry{
+							Key:   "net.ipv4.ip_forward",
+							Value: "0",
+						},
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Hostname: "server1",
+							Status:   job.StatusTimeout,
+							Error:    "timeout: agent did not respond",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.PutNodeSysctlResponseObject) {
+				r, ok := resp.(gen.PutNodeSysctl200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.SysctlMutationResultStatusTimeout, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Contains(*r.Results[0].Error, "timeout: agent did not respond")
+			},
+		},
 	}
 
 	for _, tt := range tests {

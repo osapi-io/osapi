@@ -144,6 +144,10 @@ func (s *Process) getNodeProcessByPidBroadcast(
 			item.Status = gen.ProcessGetEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.ProcessGetEntryStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.ProcessGetEntryStatusOk
 			var info processProv.Info

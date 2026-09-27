@@ -124,6 +124,10 @@ func (s *Node) getNodeStatusBroadcast(
 			item.Status = gen.NodeStatusResponseStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.NodeStatusResponseStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.NodeStatusResponseStatusOk
 			var status job.NodeStatusResponse

@@ -356,6 +356,67 @@ func (s *NtpUpdatePublicTestSuite) TestPutNodeNtp() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.PutNodeNtpRequestObject{
+				Hostname: "_all",
+				Body: &gen.NtpUpdateRequest{
+					Servers: []string{"0.pool.ntp.org"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationNtpUpdate,
+						ntpProv.Config{
+							Servers: []string{"0.pool.ntp.org"},
+						},
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Hostname: "server1",
+							Changed:  &changedTrue,
+							Data: json.RawMessage(
+								`{"changed":true}`,
+							),
+						},
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "permission denied",
+							Hostname: "server2",
+						},
+						"server3": {
+							Status:   job.StatusTimeout,
+							Error:    "timeout: agent did not respond",
+							Hostname: "server3",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.PutNodeNtpResponseObject) {
+				r, ok := resp.(gen.PutNodeNtp200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]*gen.NtpMutationResult)
+				for i := range r.Results {
+					byHost[r.Results[i].Hostname] = &r.Results[i]
+				}
+
+				s.Require().Contains(byHost, "server1")
+				s.Equal(gen.NtpMutationResultStatusOk, byHost["server1"].Status)
+
+				s.Require().Contains(byHost, "server2")
+				s.Equal(gen.NtpMutationResultStatusFailed, byHost["server2"].Status)
+				s.Contains(*byHost["server2"].Error, "permission denied")
+
+				s.Require().Contains(byHost, "server3")
+				s.Equal(gen.NtpMutationResultStatusTimeout, byHost["server3"].Status)
+			},
+		},
+		{
 			name: "broadcast job client error",
 			request: gen.PutNodeNtpRequestObject{
 				Hostname: "_all",

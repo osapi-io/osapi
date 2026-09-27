@@ -25,6 +25,7 @@ const (
 	Failed  PowerResultStatus = "failed"
 	Ok      PowerResultStatus = "ok"
 	Skipped PowerResultStatus = "skipped"
+	Timeout PowerResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the PowerResultStatus enum.
@@ -35,6 +36,8 @@ func (e PowerResultStatus) Valid() bool {
 	case Ok:
 		return true
 	case Skipped:
+		return true
+	case Timeout:
 		return true
 	default:
 		return false

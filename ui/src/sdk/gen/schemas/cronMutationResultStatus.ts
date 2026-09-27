@@ -15,4 +15,5 @@ export const CronMutationResultStatus = {
   ok: 'ok',
   failed: 'failed',
   skipped: 'skipped',
+  timeout: 'timeout',
 } as const;

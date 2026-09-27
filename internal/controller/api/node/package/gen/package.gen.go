@@ -25,6 +25,7 @@ const (
 	PackageEntryStatusFailed  PackageEntryStatus = "failed"
 	PackageEntryStatusOk      PackageEntryStatus = "ok"
 	PackageEntryStatusSkipped PackageEntryStatus = "skipped"
+	PackageEntryStatusTimeout PackageEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the PackageEntryStatus enum.
@@ -36,6 +37,8 @@ func (e PackageEntryStatus) Valid() bool {
 		return true
 	case PackageEntryStatusSkipped:
 		return true
+	case PackageEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -46,6 +49,7 @@ const (
 	PackageMutationResultStatusFailed  PackageMutationResultStatus = "failed"
 	PackageMutationResultStatusOk      PackageMutationResultStatus = "ok"
 	PackageMutationResultStatusSkipped PackageMutationResultStatus = "skipped"
+	PackageMutationResultStatusTimeout PackageMutationResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the PackageMutationResultStatus enum.
@@ -57,6 +61,8 @@ func (e PackageMutationResultStatus) Valid() bool {
 		return true
 	case PackageMutationResultStatusSkipped:
 		return true
+	case PackageMutationResultStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -67,6 +73,7 @@ const (
 	Failed  UpdateEntryStatus = "failed"
 	Ok      UpdateEntryStatus = "ok"
 	Skipped UpdateEntryStatus = "skipped"
+	Timeout UpdateEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the UpdateEntryStatus enum.
@@ -77,6 +84,8 @@ func (e UpdateEntryStatus) Valid() bool {
 	case Ok:
 		return true
 	case Skipped:
+		return true
+	case Timeout:
 		return true
 	default:
 		return false

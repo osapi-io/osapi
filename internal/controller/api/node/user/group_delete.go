@@ -146,6 +146,10 @@ func (u *User) deleteNodeGroupBroadcast(
 			item.Status = gen.GroupMutationResultStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.GroupMutationResultStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.GroupMutationResultStatusOk
 			var result userProv.GroupResult

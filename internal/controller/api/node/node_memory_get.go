@@ -130,6 +130,10 @@ func (s *Node) getNodeMemoryBroadcast(
 			item.Status = gen.MemoryResultItemStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.MemoryResultItemStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.MemoryResultItemStatusOk
 			var memStats mem.Result

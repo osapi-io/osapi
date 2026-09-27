@@ -333,6 +333,63 @@ func (s *RebootPostPublicTestSuite) TestPostNodePowerReboot() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.PostNodePowerRebootRequestObject{
+				Hostname: "_all",
+				Body:     nil,
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationPowerReboot,
+						powerProv.Opts{},
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Hostname: "server1",
+							Changed:  &changedTrue,
+							Data: json.RawMessage(
+								`{"action":"reboot","delay":0,"changed":true}`,
+							),
+						},
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "permission denied",
+							Hostname: "server2",
+						},
+						"server3": {
+							Status:   job.StatusTimeout,
+							Error:    "timeout: agent did not respond",
+							Hostname: "server3",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodePowerRebootResponseObject) {
+				r, ok := resp.(gen.PostNodePowerReboot200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]*gen.PowerResult)
+				for i := range r.Results {
+					byHost[r.Results[i].Hostname] = &r.Results[i]
+				}
+
+				s.Require().Contains(byHost, "server1")
+				s.Equal(gen.Ok, byHost["server1"].Status)
+
+				s.Require().Contains(byHost, "server2")
+				s.Equal(gen.Failed, byHost["server2"].Status)
+				s.Contains(*byHost["server2"].Error, "permission denied")
+
+				s.Require().Contains(byHost, "server3")
+				s.Equal(gen.Timeout, byHost["server3"].Status)
+			},
+		},
+		{
 			name: "broadcast job client error",
 			request: gen.PostNodePowerRebootRequestObject{
 				Hostname: "_all",

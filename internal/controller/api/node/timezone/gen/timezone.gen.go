@@ -25,6 +25,7 @@ const (
 	TimezoneEntryStatusFailed  TimezoneEntryStatus = "failed"
 	TimezoneEntryStatusOk      TimezoneEntryStatus = "ok"
 	TimezoneEntryStatusSkipped TimezoneEntryStatus = "skipped"
+	TimezoneEntryStatusTimeout TimezoneEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the TimezoneEntryStatus enum.
@@ -36,6 +37,8 @@ func (e TimezoneEntryStatus) Valid() bool {
 		return true
 	case TimezoneEntryStatusSkipped:
 		return true
+	case TimezoneEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -46,6 +49,7 @@ const (
 	TimezoneMutationResultStatusFailed  TimezoneMutationResultStatus = "failed"
 	TimezoneMutationResultStatusOk      TimezoneMutationResultStatus = "ok"
 	TimezoneMutationResultStatusSkipped TimezoneMutationResultStatus = "skipped"
+	TimezoneMutationResultStatusTimeout TimezoneMutationResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the TimezoneMutationResultStatus enum.
@@ -56,6 +60,8 @@ func (e TimezoneMutationResultStatus) Valid() bool {
 	case TimezoneMutationResultStatusOk:
 		return true
 	case TimezoneMutationResultStatusSkipped:
+		return true
+	case TimezoneMutationResultStatusTimeout:
 		return true
 	default:
 		return false

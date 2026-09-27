@@ -738,7 +738,10 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				s.Contains(results, "server1")
 				s.Equal(job.StatusCompleted, results["server1"].Status)
 				s.Contains(results, "server2")
-				s.Equal(job.StatusFailed, results["server2"].Status)
+				// An agent that never answered is a timeout, not a failure:
+				// nobody knows whether the operation ran.
+				s.Equal(job.StatusTimeout, results["server2"].Status)
+				s.Equal(job.ErrorCodeTimeout, results["server2"].ErrorCode)
 				s.Equal("timeout: agent did not respond", results["server2"].Error)
 			},
 		},

@@ -244,6 +244,7 @@ stateDiagram-v2
     started --> completed
     started --> failed
     started --> skipped
+    acknowledged --> timeout
 ```
 
 **State Transitions via Events:**
@@ -262,6 +263,18 @@ stateDiagram-v2
 - `completed`: All agents finished successfully
 - `failed`: All agents failed
 - `skipped`: All agents skipped the operation
+
+**A host that never answers reports `timeout`**, not `failed`. The distinction
+is the point: `failed` means the operation ran and did not succeed, while
+`timeout` says nothing about whether it ran at all — the agent may be gone, or
+it may be mid-`apt-get` and answering after the controller stopped waiting. An
+operator has to go and look, which is a different next step from reading an
+error.
+
+A broadcast synthesizes one of these rows for each expected agent that did not
+answer within `job_timeout`, carrying the error code `timeout` beside the
+message. Per-host result rows across every domain use the same four values:
+`ok`, `failed`, `skipped`, `timeout`.
 
 ### 3. Job Polling
 

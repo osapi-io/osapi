@@ -147,6 +147,10 @@ func (s *Certificate) postNodeCertificateCaCreateBroadcast(
 			item.Status = gen.CertificateCAMutationEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.CertificateCAMutationEntryStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.CertificateCAMutationEntryStatusOk
 			var result certProv.CreateResult

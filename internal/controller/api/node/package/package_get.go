@@ -158,6 +158,10 @@ func (p *Package) getNodePackageByNameBroadcast(
 			item.Status = gen.PackageEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.PackageEntryStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.PackageEntryStatusOk
 			var pkg aptProv.Package

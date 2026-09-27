@@ -263,6 +263,28 @@ func (s *ServiceDeletePublicTestSuite) TestDeleteNodeService() {
 			},
 		},
 		{
+			name:    "broadcast with a host that never answered",
+			request: gen.DeleteNodeServiceRequestObject{Hostname: "_all", Name: "my-app.service"},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(gomock.Any(), "_all", "node", job.OperationServiceDelete, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusTimeout,
+							Error:    "timeout: agent did not respond",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.DeleteNodeServiceResponseObject) {
+				r, ok := resp.(gen.DeleteNodeService200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.Timeout, r.Results[0].Status)
+				s.Contains(*r.Results[0].Error, "timeout: agent did not respond")
+			},
+		},
+		{
 			name:    "broadcast error collecting responses",
 			request: gen.DeleteNodeServiceRequestObject{Hostname: "_all", Name: "my-app.service"},
 			setupMock: func() {

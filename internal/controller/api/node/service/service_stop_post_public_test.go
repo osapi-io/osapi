@@ -263,6 +263,28 @@ func (s *ServiceStopPostPublicTestSuite) TestPostNodeServiceStop() {
 			},
 		},
 		{
+			name:    "broadcast with a host that never answered",
+			request: gen.PostNodeServiceStopRequestObject{Hostname: "_all", Name: "nginx.service"},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(gomock.Any(), "_all", "node", job.OperationServiceStop, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusTimeout,
+							Error:    "timeout: agent did not respond",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeServiceStopResponseObject) {
+				r, ok := resp.(gen.PostNodeServiceStop200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.Timeout, r.Results[0].Status)
+				s.Contains(*r.Results[0].Error, "timeout: agent did not respond")
+			},
+		},
+		{
 			name:    "broadcast error collecting responses",
 			request: gen.PostNodeServiceStopRequestObject{Hostname: "_all", Name: "nginx.service"},
 			setupMock: func() {

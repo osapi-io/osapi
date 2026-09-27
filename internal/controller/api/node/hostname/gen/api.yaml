@@ -161,7 +161,7 @@ components:
           example: "my-linux-server"
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         labels:
           type: object
@@ -213,7 +213,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
         changed:
           type: boolean
           description: Whether the hostname was actually modified.

@@ -15,4 +15,5 @@ export const UserEntryStatus = {
   ok: 'ok',
   failed: 'failed',
   skipped: 'skipped',
+  timeout: 'timeout',
 } as const;

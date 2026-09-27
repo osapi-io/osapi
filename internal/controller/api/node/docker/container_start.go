@@ -138,6 +138,10 @@ func (s *Container) postNodeContainerDockerStartBroadcast(
 			item.Status = gen.DockerActionResultItemStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.DockerActionResultItemStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.DockerActionResultItemStatusOk
 			item.Changed = resp.Changed

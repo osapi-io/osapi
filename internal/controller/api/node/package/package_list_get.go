@@ -119,6 +119,14 @@ func (p *Package) getNodePackageBroadcast(
 				Status:   gen.PackageEntryStatusSkipped,
 				Error:    &e,
 			})
+		case job.StatusTimeout:
+			e := resp.Error
+			h := host
+			allResults = append(allResults, gen.PackageEntry{
+				Hostname: h,
+				Status:   gen.PackageEntryStatusTimeout,
+				Error:    &e,
+			})
 		default:
 			allResults = append(allResults, responseToPackageEntries(resp)...)
 		}

@@ -264,6 +264,30 @@ func (s *HostnameGetPublicTestSuite) TestGetNodeHostname() {
 			},
 		},
 		{
+			name:    "broadcast with a host that never answered",
+			request: gen.GetNodeHostnameRequestObject{Hostname: "_all"},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeHostnameGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusTimeout,
+							Error:    "timeout: agent did not respond",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
+				r, ok := resp.(gen.GetNodeHostname200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("timeout: agent did not respond", *r.Results[0].Error)
+				s.Equal(gen.HostnameResponseStatusTimeout, r.Results[0].Status)
+			},
+		},
+		{
 			name:    "broadcast with failed host",
 			request: gen.GetNodeHostnameRequestObject{Hostname: "_all"},
 			setupMock: func() {

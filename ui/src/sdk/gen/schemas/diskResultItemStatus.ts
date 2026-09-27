@@ -15,4 +15,5 @@ export const DiskResultItemStatus = {
   ok: 'ok',
   failed: 'failed',
   skipped: 'skipped',
+  timeout: 'timeout',
 } as const;

@@ -143,6 +143,10 @@ func (s *Ntp) postNodeNtpBroadcast(
 			item.Status = gen.NtpMutationResultStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.NtpMutationResultStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.NtpMutationResultStatusOk
 			item.Changed = resp.Changed

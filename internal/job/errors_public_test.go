@@ -84,6 +84,21 @@ func (s *ErrorsPublicTestSuite) TestResponseError() {
 			},
 		},
 		{
+			name: "an agent that never answered",
+			resp: &job.Response{
+				Status:    job.StatusTimeout,
+				Error:     "timeout: agent did not respond",
+				ErrorCode: job.ErrorCodeTimeout,
+				Hostname:  "web-02",
+			},
+			validateFunc: func(err error) {
+				// Distinct from a failure: nobody knows whether the operation
+				// ran, so an operator has to go and look.
+				s.Require().ErrorIs(err, job.ErrTimeout)
+				s.Require().NotErrorIs(err, job.ErrNotFound)
+			},
+		},
+		{
 			name: "a failure with no cause the API distinguishes",
 			resp: &job.Response{
 				Error: "apt-get returned 100",

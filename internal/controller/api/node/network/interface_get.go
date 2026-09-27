@@ -141,6 +141,10 @@ func (s *Network) getNodeNetworkInterfaceByNameBroadcast(
 			item.Status = gen.InterfaceGetEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.InterfaceGetEntryStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.InterfaceGetEntryStatusOk
 			var entry iface.InterfaceEntry

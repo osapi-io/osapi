@@ -15,4 +15,5 @@ export const RouteMutationEntryStatus = {
   ok: 'ok',
   failed: 'failed',
   skipped: 'skipped',
+  timeout: 'timeout',
 } as const;

@@ -183,6 +183,12 @@ func (s *Network) putNodeNetworkDNSBroadcast(
 			falseVal := false
 			item.Error = &e
 			item.Changed = &falseVal
+		case job.StatusTimeout:
+			item.Status = gen.DNSUpdateResultItemStatusTimeout
+			e := resp.Error
+			falseVal := false
+			item.Error = &e
+			item.Changed = &falseVal
 		default:
 			item.Status = gen.DNSUpdateResultItemStatusOk
 			changed := resp.Changed == nil || *resp.Changed

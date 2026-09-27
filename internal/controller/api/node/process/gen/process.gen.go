@@ -25,6 +25,7 @@ const (
 	ProcessEntryStatusFailed  ProcessEntryStatus = "failed"
 	ProcessEntryStatusOk      ProcessEntryStatus = "ok"
 	ProcessEntryStatusSkipped ProcessEntryStatus = "skipped"
+	ProcessEntryStatusTimeout ProcessEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the ProcessEntryStatus enum.
@@ -36,6 +37,8 @@ func (e ProcessEntryStatus) Valid() bool {
 		return true
 	case ProcessEntryStatusSkipped:
 		return true
+	case ProcessEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -46,6 +49,7 @@ const (
 	ProcessGetEntryStatusFailed  ProcessGetEntryStatus = "failed"
 	ProcessGetEntryStatusOk      ProcessGetEntryStatus = "ok"
 	ProcessGetEntryStatusSkipped ProcessGetEntryStatus = "skipped"
+	ProcessGetEntryStatusTimeout ProcessGetEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the ProcessGetEntryStatus enum.
@@ -56,6 +60,8 @@ func (e ProcessGetEntryStatus) Valid() bool {
 	case ProcessGetEntryStatusOk:
 		return true
 	case ProcessGetEntryStatusSkipped:
+		return true
+	case ProcessGetEntryStatusTimeout:
 		return true
 	default:
 		return false
@@ -97,6 +103,7 @@ const (
 	Failed  ProcessSignalResultStatus = "failed"
 	Ok      ProcessSignalResultStatus = "ok"
 	Skipped ProcessSignalResultStatus = "skipped"
+	Timeout ProcessSignalResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the ProcessSignalResultStatus enum.
@@ -107,6 +114,8 @@ func (e ProcessSignalResultStatus) Valid() bool {
 	case Ok:
 		return true
 	case Skipped:
+		return true
+	case Timeout:
 		return true
 	default:
 		return false

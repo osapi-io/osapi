@@ -147,6 +147,10 @@ func (s *Container) postNodeContainerDockerPullBroadcast(
 			item.Status = gen.DockerPullResultItemStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.DockerPullResultItemStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.DockerPullResultItemStatusOk
 			ok := dockerPullItemFromResponse(resp)

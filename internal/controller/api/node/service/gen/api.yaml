@@ -630,7 +630,7 @@ components:
           description: Hostname of the agent that reported this entry.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         services:
           type: array
@@ -653,7 +653,7 @@ components:
           description: Hostname of the agent that reported this entry.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         service:
           $ref: '#/components/schemas/ServiceInfo'
@@ -673,7 +673,7 @@ components:
           description: Hostname of the agent that processed this operation.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         name:
           type: string

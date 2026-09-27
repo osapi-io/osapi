@@ -119,6 +119,14 @@ func (u *User) getNodeGroupBroadcast(
 				Status:   gen.GroupEntryStatusSkipped,
 				Error:    &e,
 			})
+		case job.StatusTimeout:
+			e := resp.Error
+			h := host
+			allResults = append(allResults, gen.GroupEntry{
+				Hostname: h,
+				Status:   gen.GroupEntryStatusTimeout,
+				Error:    &e,
+			})
 		default:
 			allResults = append(allResults, responseToGroupEntries(resp)...)
 		}

@@ -331,6 +331,44 @@ func (s *LogUnitPublicTestSuite) TestGetNodeLogUnit() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodeLogUnitRequestObject{
+				Hostname: "_all",
+				Name:     "nginx.service",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationLogQueryUnit,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Hostname: "server1",
+							Data:     json.RawMessage(`[]`),
+						},
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "agent unreachable",
+							Hostname: "server2",
+						},
+						"server3": {
+							Status:   job.StatusTimeout,
+							Error:    "timeout: agent did not respond",
+							Hostname: "server3",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeLogUnitResponseObject) {
+				r, ok := resp.(gen.GetNodeLogUnit200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 3)
+			},
+		},
+		{
 			name: "broadcast error collecting responses",
 			request: gen.GetNodeLogUnitRequestObject{
 				Hostname: "_all",

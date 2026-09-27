@@ -281,6 +281,44 @@ func (s *UserListGetPublicTestSuite) TestGetNodeUser() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodeUserRequestObject{
+				Hostname: "_all",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "user", job.OperationUserList, nil).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Data: json.RawMessage(
+									`[{"name":"root","uid":0,"gid":0,"home":"/root","shell":"/bin/bash","locked":false}]`,
+								),
+							},
+							"server2": {
+								Hostname: "server2",
+								Status:   job.StatusFailed,
+								Error:    "connection timeout",
+							},
+							"server3": {
+								Hostname: "server3",
+								Status:   job.StatusTimeout,
+								Error:    "unsupported",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeUserResponseObject) {
+				r, ok := resp.(gen.GetNodeUser200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 3)
+			},
+		},
+		{
 			name: "broadcast job client error",
 			request: gen.GetNodeUserRequestObject{
 				Hostname: "_all",

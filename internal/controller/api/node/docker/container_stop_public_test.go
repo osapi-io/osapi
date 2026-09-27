@@ -354,6 +354,40 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStop() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.PostNodeContainerDockerStopRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+				Body:     nil,
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"docker",
+						job.OperationDockerStop,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusTimeout,
+							Error:    "timeout: agent did not respond",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerStop202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 1)
+				s.Equal(gen.DockerActionResultItemStatusTimeout, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("timeout: agent did not respond", *r.Results[0].Error)
+			},
+		},
+		{
 			name: "broadcast error collecting responses",
 			request: gen.PostNodeContainerDockerStopRequestObject{
 				Hostname: "_all",

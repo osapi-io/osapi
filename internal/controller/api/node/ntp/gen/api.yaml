@@ -305,7 +305,7 @@ components:
           description: Hostname of the agent that reported this entry.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         synchronized:
           type: boolean
@@ -355,7 +355,7 @@ components:
           description: Hostname of the agent that processed this operation.
         status:
           type: string
-          enum: [ok, failed, skipped]
+          enum: [ok, failed, skipped, timeout]
           description: The status of the operation for this host.
         changed:
           type: boolean

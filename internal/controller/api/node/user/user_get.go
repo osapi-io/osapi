@@ -162,6 +162,10 @@ func (u *User) getNodeUserByNameBroadcast(
 			item.Status = gen.UserEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.UserEntryStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.UserEntryStatusOk
 			var entry userProv.User

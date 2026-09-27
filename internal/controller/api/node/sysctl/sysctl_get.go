@@ -146,6 +146,10 @@ func (s *Sysctl) getNodeSysctlByKeyBroadcast(
 			item.Status = gen.SysctlEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.SysctlEntryStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.SysctlEntryStatusOk
 			var entry sysctlProv.Entry

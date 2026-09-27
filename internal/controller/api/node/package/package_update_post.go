@@ -132,6 +132,10 @@ func (p *Package) postNodePackageUpdateBroadcast(
 			item.Status = gen.PackageMutationResultStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.PackageMutationResultStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.PackageMutationResultStatusOk
 			var result aptProv.Result

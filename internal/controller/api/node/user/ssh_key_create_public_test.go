@@ -312,6 +312,60 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSSHKey() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.PostNodeUserSSHKeyRequestObject{
+				Hostname: "_all",
+				Name:     "testuser",
+				Body: &gen.SSHKeyAddRequest{
+					Key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAITest user@host",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"user",
+						job.OperationSSHKeyAdd,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Changed:  ptr.To(true),
+								Data:     json.RawMessage(`{"changed":true}`),
+							},
+							"server2": {
+								Hostname: "server2",
+								Status:   job.StatusFailed,
+								Error:    "connection timeout",
+							},
+							"server3": {
+								Hostname: "server3",
+								Status:   job.StatusTimeout,
+								Error:    "unsupported",
+							},
+						}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.PostNodeUserSSHKey200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]gen.SSHKeyMutationEntry)
+				for _, res := range r.Results {
+					byHost[res.Hostname] = res
+				}
+
+				s.Equal(gen.SSHKeyMutationEntryStatusOk, byHost["server1"].Status)
+				s.Equal(gen.SSHKeyMutationEntryStatusFailed, byHost["server2"].Status)
+				s.Contains(*byHost["server2"].Error, "connection timeout")
+				s.Equal(gen.SSHKeyMutationEntryStatusTimeout, byHost["server3"].Status)
+			},
+		},
+		{
 			name: "broadcast job client error",
 			request: gen.PostNodeUserSSHKeyRequestObject{
 				Hostname: "_all",

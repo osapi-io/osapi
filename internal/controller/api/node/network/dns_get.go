@@ -146,6 +146,10 @@ func (s *Network) getNodeNetworkDNSBroadcast(
 			item.Status = gen.DNSConfigResponseStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.DNSConfigResponseStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.DNSConfigResponseStatusOk
 			var cfg dns.GetResult

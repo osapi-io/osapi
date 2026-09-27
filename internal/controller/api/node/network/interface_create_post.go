@@ -198,6 +198,12 @@ func buildInterfaceMutationResults(
 			falseVal := false
 			item.Error = &e
 			item.Changed = &falseVal
+		case job.StatusTimeout:
+			item.Status = gen.InterfaceMutationEntryStatusTimeout
+			e := resp.Error
+			falseVal := false
+			item.Error = &e
+			item.Changed = &falseVal
 		default:
 			item.Status = gen.InterfaceMutationEntryStatusOk
 			changed := resp.Changed == nil || *resp.Changed

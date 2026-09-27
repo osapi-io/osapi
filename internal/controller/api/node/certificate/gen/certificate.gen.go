@@ -25,6 +25,7 @@ const (
 	CertificateCAEntryStatusFailed  CertificateCAEntryStatus = "failed"
 	CertificateCAEntryStatusOk      CertificateCAEntryStatus = "ok"
 	CertificateCAEntryStatusSkipped CertificateCAEntryStatus = "skipped"
+	CertificateCAEntryStatusTimeout CertificateCAEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the CertificateCAEntryStatus enum.
@@ -35,6 +36,8 @@ func (e CertificateCAEntryStatus) Valid() bool {
 	case CertificateCAEntryStatusOk:
 		return true
 	case CertificateCAEntryStatusSkipped:
+		return true
+	case CertificateCAEntryStatusTimeout:
 		return true
 	default:
 		return false
@@ -64,6 +67,7 @@ const (
 	CertificateCAMutationEntryStatusFailed  CertificateCAMutationEntryStatus = "failed"
 	CertificateCAMutationEntryStatusOk      CertificateCAMutationEntryStatus = "ok"
 	CertificateCAMutationEntryStatusSkipped CertificateCAMutationEntryStatus = "skipped"
+	CertificateCAMutationEntryStatusTimeout CertificateCAMutationEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the CertificateCAMutationEntryStatus enum.
@@ -74,6 +78,8 @@ func (e CertificateCAMutationEntryStatus) Valid() bool {
 	case CertificateCAMutationEntryStatusOk:
 		return true
 	case CertificateCAMutationEntryStatusSkipped:
+		return true
+	case CertificateCAMutationEntryStatusTimeout:
 		return true
 	default:
 		return false

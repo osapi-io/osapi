@@ -149,6 +149,10 @@ func (u *User) postNodeUserSSHKeyBroadcast(
 			item.Status = gen.SSHKeyMutationEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.SSHKeyMutationEntryStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.SSHKeyMutationEntryStatusOk
 			item.Changed = resp.Changed

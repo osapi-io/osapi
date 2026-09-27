@@ -267,6 +267,39 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodeScheduleCronByNameRequestObject{
+				Hostname: "_all",
+				Name:     "backup",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"schedule",
+						job.OperationCronGet,
+						map[string]string{"name": "backup"},
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusTimeout,
+							Error:    "timeout: agent did not respond",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
+				r, ok := resp.(gen.GetNodeScheduleCronByName200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.CronEntryStatusTimeout, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Contains(*r.Results[0].Error, "timeout: agent did not respond")
+			},
+		},
+		{
 			name: "broadcast error collecting responses",
 			request: gen.GetNodeScheduleCronByNameRequestObject{
 				Hostname: "_all",

@@ -125,6 +125,14 @@ func (s *Service) getNodeServiceBroadcast(
 				Status:   gen.ServiceListEntryStatusSkipped,
 				Error:    &e,
 			})
+		case job.StatusTimeout:
+			e := resp.Error
+			h := host
+			allResults = append(allResults, gen.ServiceListEntry{
+				Hostname: h,
+				Status:   gen.ServiceListEntryStatusTimeout,
+				Error:    &e,
+			})
 		default:
 			allResults = append(allResults, responseToServiceListEntries(resp)...)
 		}

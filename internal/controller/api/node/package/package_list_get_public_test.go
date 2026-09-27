@@ -321,6 +321,68 @@ func (s *PackageListGetPublicTestSuite) TestGetNodePackage() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodePackageRequestObject{
+				Hostname: "_all",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationPackageList,
+						nil,
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Data: json.RawMessage(
+									`[{"name":"curl","version":"7.68.0","status":"installed"}]`,
+								),
+							},
+							"server2": {
+								Status:   job.StatusFailed,
+								Error:    "timeout: agent did not respond",
+								Hostname: "server2",
+							},
+							"server3": {
+								Status:   job.StatusTimeout,
+								Error:    "timeout: agent did not respond",
+								Hostname: "server3",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodePackageResponseObject) {
+				r, ok := resp.(gen.GetNodePackage200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]*gen.PackageEntry)
+				for i := range r.Results {
+					byHost[r.Results[i].Hostname] = &r.Results[i]
+				}
+
+				s.Require().Contains(byHost, "server1")
+				s.Equal(gen.PackageEntryStatusOk, byHost["server1"].Status)
+				s.Nil(byHost["server1"].Error)
+
+				s.Require().Contains(byHost, "server2")
+				s.Equal(gen.PackageEntryStatusFailed, byHost["server2"].Status)
+				s.Contains(*byHost["server2"].Error, "timeout: agent did not respond")
+
+				s.Require().Contains(byHost, "server3")
+				s.Equal(gen.PackageEntryStatusTimeout, byHost["server3"].Status)
+				s.Contains(*byHost["server3"].Error, "timeout: agent did not respond")
+			},
+		},
+		{
 			name: "broadcast job client error",
 			request: gen.GetNodePackageRequestObject{
 				Hostname: "_all",

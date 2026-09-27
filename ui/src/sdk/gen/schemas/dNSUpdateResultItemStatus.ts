@@ -12,4 +12,5 @@ export const DNSUpdateResultItemStatus = {
   ok: 'ok',
   failed: 'failed',
   skipped: 'skipped',
+  timeout: 'timeout',
 } as const;

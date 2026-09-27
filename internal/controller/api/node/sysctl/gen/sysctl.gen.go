@@ -25,6 +25,7 @@ const (
 	SysctlEntryStatusFailed  SysctlEntryStatus = "failed"
 	SysctlEntryStatusOk      SysctlEntryStatus = "ok"
 	SysctlEntryStatusSkipped SysctlEntryStatus = "skipped"
+	SysctlEntryStatusTimeout SysctlEntryStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the SysctlEntryStatus enum.
@@ -36,6 +37,8 @@ func (e SysctlEntryStatus) Valid() bool {
 		return true
 	case SysctlEntryStatusSkipped:
 		return true
+	case SysctlEntryStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -46,6 +49,7 @@ const (
 	SysctlMutationResultStatusFailed  SysctlMutationResultStatus = "failed"
 	SysctlMutationResultStatusOk      SysctlMutationResultStatus = "ok"
 	SysctlMutationResultStatusSkipped SysctlMutationResultStatus = "skipped"
+	SysctlMutationResultStatusTimeout SysctlMutationResultStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the SysctlMutationResultStatus enum.
@@ -56,6 +60,8 @@ func (e SysctlMutationResultStatus) Valid() bool {
 	case SysctlMutationResultStatusOk:
 		return true
 	case SysctlMutationResultStatusSkipped:
+		return true
+	case SysctlMutationResultStatusTimeout:
 		return true
 	default:
 		return false

@@ -265,6 +265,39 @@ func (s *SysctlGetPublicTestSuite) TestGetNodeSysctlByKey() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodeSysctlByKeyRequestObject{
+				Hostname: "_all",
+				Key:      "net.ipv4.ip_forward",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationSysctlGet,
+						map[string]string{"key": "net.ipv4.ip_forward"},
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusTimeout,
+							Error:    "timeout: agent did not respond",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeSysctlByKeyResponseObject) {
+				r, ok := resp.(gen.GetNodeSysctlByKey200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.SysctlEntryStatusTimeout, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Contains(*r.Results[0].Error, "timeout: agent did not respond")
+			},
+		},
+		{
 			name: "broadcast error collecting responses",
 			request: gen.GetNodeSysctlByKeyRequestObject{
 				Hostname: "_all",

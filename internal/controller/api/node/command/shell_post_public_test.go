@@ -386,6 +386,46 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.PostNodeCommandShellRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeCommandShellJSONRequestBody{
+					Command: "echo hello",
+					Timeout: ptr.To(30),
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"command",
+						job.OperationCommandShellExecute,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusTimeout,
+								Error:    "timeout: agent did not respond",
+								Hostname: "server1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
+				r, ok := resp.(gen.PostNodeCommandShell202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("timeout: agent did not respond", *r.Results[0].Error)
+				s.Equal(gen.Timeout, r.Results[0].Status)
+			},
+		},
+		{
 			name: "broadcast with failed host",
 			request: gen.PostNodeCommandShellRequestObject{
 				Hostname: "_all",

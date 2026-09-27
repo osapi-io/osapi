@@ -278,6 +278,43 @@ func (s *LogSourcePublicTestSuite) TestGetNodeLogSource() {
 			},
 		},
 		{
+			name: "broadcast with a host that never answered",
+			request: gen.GetNodeLogSourceRequestObject{
+				Hostname: "_all",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationLogSources,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Hostname: "server1",
+							Data:     json.RawMessage(`["sshd"]`),
+						},
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "agent unreachable",
+							Hostname: "server2",
+						},
+						"server3": {
+							Status:   job.StatusTimeout,
+							Error:    "timeout: agent did not respond",
+							Hostname: "server3",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeLogSourceResponseObject) {
+				r, ok := resp.(gen.GetNodeLogSource200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 3)
+			},
+		},
+		{
 			name: "broadcast error collecting responses",
 			request: gen.GetNodeLogSourceRequestObject{
 				Hostname: "_all",

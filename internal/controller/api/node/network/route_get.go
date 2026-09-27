@@ -141,6 +141,10 @@ func (s *Network) getNodeNetworkRouteByInterfaceBroadcast(
 			item.Status = gen.RouteGetEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.RouteGetEntryStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.RouteGetEntryStatusOk
 			var entry route.Entry

@@ -142,6 +142,12 @@ func (s *Network) deleteNodeNetworkDNSBroadcast(
 			falseVal := false
 			item.Error = &e
 			item.Changed = &falseVal
+		case job.StatusTimeout:
+			item.Status = gen.DNSDeleteResultItemStatusTimeout
+			e := resp.Error
+			falseVal := false
+			item.Error = &e
+			item.Changed = &falseVal
 		default:
 			item.Status = gen.DNSDeleteResultItemStatusOk
 			changed := resp.Changed == nil || *resp.Changed

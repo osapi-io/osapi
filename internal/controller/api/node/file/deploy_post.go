@@ -196,6 +196,10 @@ func (s *File) postNodeFileDeployBroadcast(
 			item.Status = gen.FileDeployResultStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.FileDeployResultStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.FileDeployResultStatusOk
 			changed := resp.Changed == nil || *resp.Changed

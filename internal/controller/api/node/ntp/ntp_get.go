@@ -127,6 +127,10 @@ func (s *Ntp) getNodeNtpBroadcast(
 			item.Status = gen.NtpStatusEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.NtpStatusEntryStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			var status ntpProv.Status
 			if resp.Data != nil {

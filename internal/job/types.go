@@ -55,6 +55,7 @@ const (
 	StatusCompleted      = client.JobStatusCompleted
 	StatusFailed         = client.JobStatusFailed
 	StatusSkipped        = client.JobStatusSkipped
+	StatusTimeout        = client.JobStatusTimeout
 	StatusPartialFailure = client.JobStatusPartialFailure
 	StatusRetried        = client.JobStatusRetried
 )
@@ -69,6 +70,7 @@ var StatusPriority = map[string]int{
 	string(StatusStarted):      2,
 	string(StatusFailed):       3,
 	string(StatusSkipped):      3,
+	string(StatusTimeout):      3,
 	string(StatusCompleted):    4,
 	string(StatusRetried):      4,
 }

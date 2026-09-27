@@ -25,6 +25,7 @@ const (
 	HostnameResponseStatusFailed  HostnameResponseStatus = "failed"
 	HostnameResponseStatusOk      HostnameResponseStatus = "ok"
 	HostnameResponseStatusSkipped HostnameResponseStatus = "skipped"
+	HostnameResponseStatusTimeout HostnameResponseStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the HostnameResponseStatus enum.
@@ -36,6 +37,8 @@ func (e HostnameResponseStatus) Valid() bool {
 		return true
 	case HostnameResponseStatusSkipped:
 		return true
+	case HostnameResponseStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -46,6 +49,7 @@ const (
 	HostnameUpdateResultItemStatusFailed  HostnameUpdateResultItemStatus = "failed"
 	HostnameUpdateResultItemStatusOk      HostnameUpdateResultItemStatus = "ok"
 	HostnameUpdateResultItemStatusSkipped HostnameUpdateResultItemStatus = "skipped"
+	HostnameUpdateResultItemStatusTimeout HostnameUpdateResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the HostnameUpdateResultItemStatus enum.
@@ -56,6 +60,8 @@ func (e HostnameUpdateResultItemStatus) Valid() bool {
 	case HostnameUpdateResultItemStatusOk:
 		return true
 	case HostnameUpdateResultItemStatusSkipped:
+		return true
+	case HostnameUpdateResultItemStatusTimeout:
 		return true
 	default:
 		return false

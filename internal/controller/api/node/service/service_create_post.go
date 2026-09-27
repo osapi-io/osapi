@@ -147,6 +147,10 @@ func (s *Service) postNodeServiceCreateBroadcast(
 			item.Status = gen.Skipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.Timeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.Ok
 			var result serviceProv.CreateResult

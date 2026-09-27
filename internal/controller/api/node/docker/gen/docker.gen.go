@@ -25,6 +25,7 @@ const (
 	DockerActionResultItemStatusFailed  DockerActionResultItemStatus = "failed"
 	DockerActionResultItemStatusOk      DockerActionResultItemStatus = "ok"
 	DockerActionResultItemStatusSkipped DockerActionResultItemStatus = "skipped"
+	DockerActionResultItemStatusTimeout DockerActionResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DockerActionResultItemStatus enum.
@@ -36,6 +37,8 @@ func (e DockerActionResultItemStatus) Valid() bool {
 		return true
 	case DockerActionResultItemStatusSkipped:
 		return true
+	case DockerActionResultItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -46,6 +49,7 @@ const (
 	DockerDetailResponseStatusFailed  DockerDetailResponseStatus = "failed"
 	DockerDetailResponseStatusOk      DockerDetailResponseStatus = "ok"
 	DockerDetailResponseStatusSkipped DockerDetailResponseStatus = "skipped"
+	DockerDetailResponseStatusTimeout DockerDetailResponseStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DockerDetailResponseStatus enum.
@@ -57,6 +61,8 @@ func (e DockerDetailResponseStatus) Valid() bool {
 		return true
 	case DockerDetailResponseStatusSkipped:
 		return true
+	case DockerDetailResponseStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -67,6 +73,7 @@ const (
 	DockerExecResultItemStatusFailed  DockerExecResultItemStatus = "failed"
 	DockerExecResultItemStatusOk      DockerExecResultItemStatus = "ok"
 	DockerExecResultItemStatusSkipped DockerExecResultItemStatus = "skipped"
+	DockerExecResultItemStatusTimeout DockerExecResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DockerExecResultItemStatus enum.
@@ -78,6 +85,8 @@ func (e DockerExecResultItemStatus) Valid() bool {
 		return true
 	case DockerExecResultItemStatusSkipped:
 		return true
+	case DockerExecResultItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -88,6 +97,7 @@ const (
 	DockerListItemStatusFailed  DockerListItemStatus = "failed"
 	DockerListItemStatusOk      DockerListItemStatus = "ok"
 	DockerListItemStatusSkipped DockerListItemStatus = "skipped"
+	DockerListItemStatusTimeout DockerListItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DockerListItemStatus enum.
@@ -99,6 +109,8 @@ func (e DockerListItemStatus) Valid() bool {
 		return true
 	case DockerListItemStatusSkipped:
 		return true
+	case DockerListItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -109,6 +121,7 @@ const (
 	DockerPullResultItemStatusFailed  DockerPullResultItemStatus = "failed"
 	DockerPullResultItemStatusOk      DockerPullResultItemStatus = "ok"
 	DockerPullResultItemStatusSkipped DockerPullResultItemStatus = "skipped"
+	DockerPullResultItemStatusTimeout DockerPullResultItemStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DockerPullResultItemStatus enum.
@@ -120,6 +133,8 @@ func (e DockerPullResultItemStatus) Valid() bool {
 		return true
 	case DockerPullResultItemStatusSkipped:
 		return true
+	case DockerPullResultItemStatusTimeout:
+		return true
 	default:
 		return false
 	}
@@ -130,6 +145,7 @@ const (
 	DockerResponseStatusFailed  DockerResponseStatus = "failed"
 	DockerResponseStatusOk      DockerResponseStatus = "ok"
 	DockerResponseStatusSkipped DockerResponseStatus = "skipped"
+	DockerResponseStatusTimeout DockerResponseStatus = "timeout"
 )
 
 // Valid indicates whether the value is a known member of the DockerResponseStatus enum.
@@ -140,6 +156,8 @@ func (e DockerResponseStatus) Valid() bool {
 	case DockerResponseStatusOk:
 		return true
 	case DockerResponseStatusSkipped:
+		return true
+	case DockerResponseStatusTimeout:
 		return true
 	default:
 		return false

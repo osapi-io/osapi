@@ -144,6 +144,10 @@ func (s *Hostname) getNodeHostnameBroadcast(
 			item.Status = gen.HostnameResponseStatusSkipped
 			e := resp.Error
 			item.Error = &e
+		case job.StatusTimeout:
+			item.Status = gen.HostnameResponseStatusTimeout
+			e := resp.Error
+			item.Error = &e
 		default:
 			item.Status = gen.HostnameResponseStatusOk
 			var result struct {
