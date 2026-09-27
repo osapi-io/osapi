@@ -143,17 +143,19 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 				appConfig.Agent.Metrics.Port,
 				logger.With("component", "agent"),
 			)
-			s.SetReadinessFunc(func() error {
-				return agentServer.IsReady()
-			})
+			if s != nil {
+				s.SetReadinessFunc(func() error {
+					return agentServer.IsReady()
+				})
 
-			agentServer.SetMeterProvider(s.MeterProvider())
-			s.RegisterSubsystems(subsystemStatuses(agentSubs))
-			s.RegisterHeartbeatAge(agentServer.LastHeartbeatTime)
+				agentServer.SetMeterProvider(s.MeterProvider())
+				s.RegisterSubsystems(subsystemStatuses(agentSubs))
+				s.RegisterHeartbeatAge(agentServer.LastHeartbeatTime)
 
-			s.Start()
+				s.Start()
 
-			metricsServers = append(metricsServers, s)
+				metricsServers = append(metricsServers, s)
+			}
 		}
 
 		if appConfig.NATS.Server.Metrics.Enabled {
@@ -162,13 +164,15 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 				appConfig.NATS.Server.Metrics.Port,
 				logger.With("component", "nats"),
 			)
-			s.SetReadinessFunc(func() error {
-				return nil
-			})
-			s.RegisterSubsystems(subsystemStatuses(buildNATSSubComponents()))
-			s.Start()
+			if s != nil {
+				s.SetReadinessFunc(func() error {
+					return nil
+				})
+				s.RegisterSubsystems(subsystemStatuses(buildNATSSubComponents()))
+				s.Start()
 
-			metricsServers = append(metricsServers, s)
+				metricsServers = append(metricsServers, s)
+			}
 		}
 
 		composite := &compositeLifecycle{

@@ -50,8 +50,14 @@ var (
 	logger              = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	jsonOutput bool
 
-	// skipConfigCmds lists subcommands that don't need a config file.
-	skipConfigCmds = map[string]bool{"version": true}
+	// skipConfigCmds lists subcommands that don't need a config file. Matched
+	// against the resolved command and its parents, so `completion bash` is
+	// covered by `completion`.
+	skipConfigCmds = map[string]bool{
+		"version":    true,
+		"help":       true,
+		"completion": true,
+	}
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -102,9 +108,31 @@ func init() {
 	_ = viper.BindPFlag("osapiFile", rootCmd.PersistentFlags().Lookup("osapi-file"))
 }
 
+// skipConfig reports whether the command being run needs no config file.
+//
+// It asks Cobra which command the arguments resolve to rather than reading
+// os.Args[1] directly. Reading the raw argument missed `help` and `completion`,
+// which Cobra adds itself, so both exited 1 on a host with no config file. It
+// also misses a flag before the subcommand, and a subcommand of one that is
+// skipped, which is why the resolved command's parents are checked too.
+func skipConfig() bool {
+	cmd, _, err := rootCmd.Find(os.Args[1:])
+	if err != nil || cmd == nil {
+		return false
+	}
+
+	for c := cmd; c != nil; c = c.Parent() {
+		if skipConfigCmds[c.Name()] {
+			return true
+		}
+	}
+
+	return false
+}
+
 func initConfig() {
 	// Commands that don't need a config file.
-	if len(os.Args) > 1 && skipConfigCmds[os.Args[1]] {
+	if skipConfig() {
 		return
 	}
 
