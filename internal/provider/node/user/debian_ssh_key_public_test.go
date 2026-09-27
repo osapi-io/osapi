@@ -414,6 +414,33 @@ func (suite *DebianSSHKeyPublicTestSuite) TestAddKey() {
 			},
 		},
 		{
+			name:     "when the existing file has no trailing newline the key still lands on its own line",
+			username: "testuser",
+			passwd:   testPasswdSSH,
+			key: user.SSHKey{
+				RawLine: testKey2Line,
+			},
+			setupFS: func() {
+				// A file written by hand, or by an editor that does not add the
+				// final newline. Appending to it directly would join two keys
+				// into one unusable line.
+				suite.writeAuthorizedKeys("testuser", "/home/testuser", testKey1Line)
+			},
+			setupMock: func() {
+				suite.mockExec.EXPECT().
+					RunPrivilegedCmd(gomock.Any(), "chown", []string{"-R", "testuser:testuser", "/home/testuser/.ssh"}).
+					Return("", nil)
+			},
+			validateFunc: func(result *user.SSHKeyResult, err error) {
+				suite.NoError(err)
+				suite.Require().NotNil(result)
+				suite.True(result.Changed)
+
+				content := suite.readFile("/home/testuser/.ssh/authorized_keys")
+				suite.Equal(testKey1Line+"\n"+testKey2Line+"\n", content)
+			},
+		},
+		{
 			name:     "when key already exists returns changed false",
 			username: "testuser",
 			passwd:   testPasswdSSH,
