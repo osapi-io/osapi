@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Audit Logging | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/audit-logging"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Audit Logging | OSAPI"><meta data-rh="true" name="description" content="OSAPI records a structured audit trail of every API request. Audit entries"><meta data-rh="true" property="og:description" content="OSAPI records a structured audit trail of every API request. Audit entries"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/audit-logging"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/audit-logging" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/audit-logging" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Audit Logging","item":"https://osapi-io.github.io/osapi/sidebar/features/audit-logging"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.23430851.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.fe2e5bb5.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.e2450577.js" defer="defer"></script>
 </head>
 <body>
@@ -75,7 +75,39 @@ NATS JetStream stream. No application code needs to explicitly log audit events
 
 
 
-<table><thead><tr><th>Field</th><th>Description</th></tr></thead><tbody><tr><td><code>id</code></td><td>Unique entry identifier (UUID)</td></tr><tr><td><code>timestamp</code></td><td>When the request was made</td></tr><tr><td><code>user</code></td><td>Identity from the JWT <code>sub</code> claim</td></tr><tr><td><code>roles</code></td><td>Roles from the JWT token</td></tr><tr><td><code>method</code></td><td>HTTP method (<code>GET</code>, <code>POST</code>, etc.)</td></tr><tr><td><code>path</code></td><td>Request path (e.g., <code>/node/hostname</code>)</td></tr><tr><td><code>operation_id</code></td><td>OpenAPI operation ID (if available)</td></tr><tr><td><code>source_ip</code></td><td>Client IP address</td></tr><tr><td><code>response_code</code></td><td>HTTP response status code</td></tr><tr><td><code>duration_ms</code></td><td>Request processing time in milliseconds</td></tr><tr><td><code>trace_id</code></td><td>OpenTelemetry trace ID (when tracing is enabled)</td></tr></tbody></table>
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Description</th></tr></thead><tbody><tr><td><code>id</code></td><td>Unique entry identifier (UUID)</td></tr><tr><td><code>timestamp</code></td><td>When the request was made</td></tr><tr><td><code>user</code></td><td>Identity from the JWT <code>sub</code> claim</td></tr><tr><td><code>roles</code></td><td>Roles from the JWT token</td></tr><tr><td><code>method</code></td><td>HTTP method (<code>GET</code>, <code>POST</code>, etc.)</td></tr><tr><td><code>path</code></td><td>Request path (e.g., <code>/node/hostname</code>)</td></tr><tr><td><code>operation_id</code></td><td>OpenAPI operation ID (if available)</td></tr><tr><td><code>source_ip</code></td><td>Client IP address</td></tr><tr><td><code>response_code</code></td><td>HTTP response status code</td></tr><tr><td><code>duration_ms</code></td><td>Request processing time in milliseconds</td></tr><tr><td><code>trace_id</code></td><td>OpenTelemetry trace ID (when tracing is enabled)</td></tr><tr><td><code>job_id</code></td><td>The job the request created, when it created one</td></tr><tr><td><code>request_summary</code></td><td>What the request asked for, redacted (see below)</td></tr></tbody></table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-request-asked-for">What the request asked for<a href="#what-the-request-asked-for" class="hash-link" aria-label="Direct link to What the request asked for" title="Direct link to What the request asked for" translate="no"> ​</a></h3>
+<p>Who called <code>command/shell</code> against which host, without the command, is not an
+answer to &quot;what happened&quot;. For any method that changes something — <code>POST</code>,
+<code>PUT</code>, <code>PATCH</code>, <code>DELETE</code> — the entry records <code>request_summary</code>: the request body
+as JSON, with the values of sensitive fields replaced by <code>[redacted]</code>.</p>
+<ul>
+<li class=""><strong>Redacted fields</strong> are matched by name, case-insensitively, at every depth,
+so a password nested inside a list of users is redacted too: <code>password</code>,
+<code>password_hash</code>, <code>secret</code>, <code>token</code>, <code>private_key</code>, <code>key_data</code>, <code>stdin</code>,
+<code>content</code>, <code>authorization</code>.</li>
+<li class=""><strong>The list is a deny list, not an allow list.</strong> New fields are recorded by
+default, because a summary that only holds the fields somebody remembered
+answers nothing after an incident. A field carrying a secret is added to the
+list in the same change that adds the field.</li>
+<li class=""><strong>A summary is capped</strong> at 2 KB and marked <code>…[truncated]</code> when cut. A body
+over 64 KB is not read at all: the entry says so rather than holding an
+upload.</li>
+<li class=""><strong>A body that is not JSON</strong> is described — its content type and size — rather
+than stored.</li>
+<li class=""><strong>A read records nothing</strong>, since a <code>GET</code> carries nothing worth keeping.</li>
+</ul>
+<p><code>job_id</code> is what joins an entry to the job&#x27;s own status timeline, so &quot;who asked
+for this&quot; and &quot;what the agents did about it&quot; are one trail rather than two. A
+request that creates no job has no <code>job_id</code>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="viewing-audit-logs">Viewing Audit Logs<a href="#viewing-audit-logs" class="hash-link" aria-label="Direct link to Viewing Audit Logs" title="Direct link to Viewing Audit Logs" translate="no">​</a></h2>
 <p>Query audit entries through the API or CLI. You can list recent entries
 (paginated), get a specific entry by ID, or export all entries. See
@@ -109,6 +141,6 @@ includes this permission by default.</p>
 get, export)</li>
 <li class=""><a class="" href="/osapi/gen/api/audit-log-api-audit">API Reference</a> -- REST API documentation</li>
 <li class=""><a class="" href="/osapi/sidebar/usage/configuration">Configuration</a> -- full configuration reference</li>
-</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/agent-lifecycle"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Agent Lifecycle</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/health-checks"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Health Checks</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How It Works</a></li><li><a href="#viewing-audit-logs" class="table-of-contents__link toc-highlight">Viewing Audit Logs</a></li><li><a href="#export" class="table-of-contents__link toc-highlight">Export</a></li><li><a href="#retention" class="table-of-contents__link toc-highlight">Retention</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#permissions" class="table-of-contents__link toc-highlight">Permissions</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
+</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/agent-lifecycle"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Agent Lifecycle</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/health-checks"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Health Checks</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How It Works</a><ul><li><a href="#what-the-request-asked-for" class="table-of-contents__link toc-highlight">What the request asked for</a></li></ul></li><li><a href="#viewing-audit-logs" class="table-of-contents__link toc-highlight">Viewing Audit Logs</a></li><li><a href="#export" class="table-of-contents__link toc-highlight">Export</a></li><li><a href="#retention" class="table-of-contents__link toc-highlight">Retention</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#permissions" class="table-of-contents__link toc-highlight">Permissions</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
