@@ -32,6 +32,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	execMocks "github.com/osapi-io/osapi/internal/exec/mocks"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/file"
@@ -309,6 +310,7 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 				mockObj,
 				mockKV,
 				tc.hostname,
+				execMocks.NewMockManager(ctrl),
 			)
 			if tc.factsFn != nil {
 				p.SetFactsFunc(tc.factsFn)

@@ -59,9 +59,28 @@ three states: `in-sync`, `drifted`, or `missing`.
 
 Deploy follows the standard [job processing flow](job-system.md). The agent
 fetches the file from Object Store, computes its SHA-256, and checks the
-file-state KV for a previous deploy. If the SHA matches, the file is skipped
-(idempotent no-op). If the content differs, the agent writes the file to disk
-and updates the file-state KV with the new SHA-256.
+file-state KV for a previous deploy. If the content differs, the agent writes
+the file to disk and updates the file-state KV with the new SHA-256.
+
+The write is atomic. Content goes to a temporary file beside the target, is
+given the requested mode, and is renamed over it, so a reader — an `sshd`, an
+`nginx -t`, a `systemctl daemon-reload` — sees either the old file or the new
+one, never half of either. A write that fails part way leaves the target
+untouched and removes the temporary file.
+
+**Mode, owner and group are applied even when the content has not changed**, so
+a deploy that changes only the permissions takes effect and reports
+`changed: true`. Three things follow from how each is compared:
+
+- The mode is compared against the file on disk, so a mode changed by anything
+  is corrected.
+- An absent `mode` means "leave the permissions alone" rather than 0644. The
+  default applies to a file being created, because applying it to a file already
+  on disk would quietly widen permissions someone else set.
+- The owner and group are compared against the last deploy's recorded state, and
+  applied with `chown`, which the agent runs through its privilege escalation.
+  Ownership changed outside osapi is therefore not detected; a request that
+  changes the owner or the group is applied.
 
 You can target a specific host, broadcast to all hosts with `_all`, or route by
 label.
@@ -83,7 +102,9 @@ exist on disk, the operation returns `changed: false`.
 Every deploy operation computes a SHA-256 of the file content and compares it
 against the previously deployed SHA stored in the file-state KV bucket. If the
 hashes match, the file is not rewritten. This makes repeated deploys safe and
-efficient -- only actual changes hit the filesystem.
+efficient -- only actual changes hit the filesystem. The permissions are still
+checked, as described under File Deploy Flow above: identical content does not
+mean an identical file.
 
 The file-state KV has no TTL, so deploy state persists indefinitely until
 explicitly removed.

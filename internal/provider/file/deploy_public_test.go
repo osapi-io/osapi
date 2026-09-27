@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/avfs/avfs"
@@ -38,6 +39,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	execMocks "github.com/osapi-io/osapi/internal/exec/mocks"
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider/file"
@@ -72,6 +74,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 		name         string
 		setupFunc    func()
 		setupMock    func(*gomock.Controller, *filemocks.MockObjectStore, *jobmocks.MockKeyValue, *avfs.VFS)
+		setupExec    func(*execMocks.MockManager)
 		req          file.DeployRequest
 		want         *file.DeployResult
 		wantErr      bool
@@ -430,14 +433,16 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 					Get(gomock.Any(), gomock.Any()).
 					Return(nil, assert.AnError)
 
-				// Use failfs to block OpenFile (which WriteFile calls internally).
+				// Use failfs to block the temp file the atomic write opens
+				// beside the target.
 				vfs := failfs.New(memfs.New())
 				_ = vfs.SetFailFunc(func(
 					_ avfs.VFSBase,
 					fn avfs.FnVFS,
-					_ *failfs.FailParam,
+					param *failfs.FailParam,
 				) error {
-					if fn == avfs.FnOpenFile {
+					if fn == avfs.FnOpenFile &&
+						strings.Contains(param.Path, ".osapi-") {
 						return errors.New("write failed")
 					}
 
@@ -627,6 +632,377 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				suite.Equal(os.FileMode(0o755), info.Mode())
 			},
 		},
+		{
+			name: "when only the mode changed the file is chmodded",
+			setupMock: func(
+				ctrl *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				appFs *avfs.VFS,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
+
+				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
+				_ = (*appFs).WriteFile("/etc/nginx/nginx.conf", fileContent, 0o644)
+
+				stateBytes, _ := json.Marshal(job.FileState{
+					SHA256: existingSHA,
+					Path:   "/etc/nginx/nginx.conf",
+					Mode:   "0644",
+				})
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
+				mockEntry.EXPECT().Value().Return(stateBytes)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+
+				mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				Mode:        "0600",
+				ContentType: "raw",
+			},
+			want: &file.DeployResult{
+				Changed: true,
+				SHA256:  existingSHA,
+				Path:    "/etc/nginx/nginx.conf",
+			},
+			validateFunc: func(appFs avfs.VFS) {
+				info, err := appFs.Stat("/etc/nginx/nginx.conf")
+				suite.Require().NoError(err)
+				suite.Equal(os.FileMode(0o600), info.Mode().Perm())
+			},
+		},
+		{
+			name: "when an absent mode leaves the permissions alone",
+			setupMock: func(
+				ctrl *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				appFs *avfs.VFS,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
+
+				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
+				_ = (*appFs).WriteFile("/etc/nginx/nginx.conf", fileContent, 0o600)
+
+				stateBytes, _ := json.Marshal(job.FileState{
+					SHA256: existingSHA,
+					Path:   "/etc/nginx/nginx.conf",
+				})
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
+				mockEntry.EXPECT().Value().Return(stateBytes)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				ContentType: "raw",
+			},
+			want: &file.DeployResult{
+				Changed: false,
+				SHA256:  existingSHA,
+				Path:    "/etc/nginx/nginx.conf",
+			},
+			validateFunc: func(appFs avfs.VFS) {
+				info, err := appFs.Stat("/etc/nginx/nginx.conf")
+				suite.Require().NoError(err)
+				suite.Equal(os.FileMode(0o600), info.Mode().Perm())
+			},
+		},
+		{
+			name: "when the requested owner differs from the deployed one chown runs",
+			setupMock: func(
+				ctrl *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				appFs *avfs.VFS,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
+
+				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
+				_ = (*appFs).WriteFile("/etc/nginx/nginx.conf", fileContent, 0o644)
+
+				stateBytes, _ := json.Marshal(job.FileState{
+					SHA256: existingSHA,
+					Path:   "/etc/nginx/nginx.conf",
+					Owner:  "root",
+					Group:  "root",
+				})
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
+				mockEntry.EXPECT().Value().Return(stateBytes)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+
+				mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+			},
+			setupExec: func(mockExec *execMocks.MockManager) {
+				mockExec.EXPECT().
+					RunPrivilegedCmd(
+						gomock.Any(),
+						"chown",
+						[]string{"nginx:www-data", "/etc/nginx/nginx.conf"},
+					).
+					Return("", nil)
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				Owner:       "nginx",
+				Group:       "www-data",
+				ContentType: "raw",
+			},
+			want: &file.DeployResult{
+				Changed: true,
+				SHA256:  existingSHA,
+				Path:    "/etc/nginx/nginx.conf",
+			},
+		},
+		{
+			name: "when chown fails the deploy fails",
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				_ *avfs.VFS,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
+			},
+			setupExec: func(mockExec *execMocks.MockManager) {
+				mockExec.EXPECT().
+					RunPrivilegedCmd(gomock.Any(), "chown", gomock.Any()).
+					Return("", errors.New("operation not permitted"))
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				Owner:       "nginx",
+				ContentType: "raw",
+			},
+			wantErr:    true,
+			wantErrMsg: "failed to set ownership",
+		},
+		{
+			name: "when the file cannot be stat'd while enforcing the mode",
+			setupMock: func(
+				ctrl *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				appFs *avfs.VFS,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
+
+				base := memfs.New()
+				_ = base.MkdirAll("/etc/nginx", 0o755)
+				_ = base.WriteFile("/etc/nginx/nginx.conf", fileContent, 0o644)
+
+				vfs := failfs.New(base)
+
+				statCalls := 0
+
+				_ = vfs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					// The first Stat answers "the file is still there"; the
+					// second is the one enforcing the mode.
+					if fn == avfs.FnStat {
+						statCalls++
+						if statCalls > 1 {
+							return errors.New("stat failed")
+						}
+					}
+
+					return nil
+				})
+
+				*appFs = vfs
+
+				stateBytes, _ := json.Marshal(job.FileState{
+					SHA256: existingSHA,
+					Path:   "/etc/nginx/nginx.conf",
+				})
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
+				mockEntry.EXPECT().Value().Return(stateBytes)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				Mode:        "0600",
+				ContentType: "raw",
+			},
+			wantErr:    true,
+			wantErrMsg: "failed to stat file",
+		},
+		{
+			name: "when the mode cannot be applied",
+			setupMock: func(
+				ctrl *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				appFs *avfs.VFS,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
+
+				base := memfs.New()
+				_ = base.MkdirAll("/etc/nginx", 0o755)
+				_ = base.WriteFile("/etc/nginx/nginx.conf", fileContent, 0o644)
+
+				vfs := failfs.New(base)
+				_ = vfs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					if fn == avfs.FnChmod {
+						return errors.New("chmod failed")
+					}
+
+					return nil
+				})
+
+				*appFs = vfs
+
+				stateBytes, _ := json.Marshal(job.FileState{
+					SHA256: existingSHA,
+					Path:   "/etc/nginx/nginx.conf",
+				})
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
+				mockEntry.EXPECT().Value().Return(stateBytes)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				Mode:        "0600",
+				ContentType: "raw",
+			},
+			wantErr:    true,
+			wantErrMsg: "failed to set mode",
+		},
+		{
+			name: "when chown fails on a file whose content is already correct",
+			setupMock: func(
+				ctrl *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				appFs *avfs.VFS,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
+
+				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
+				_ = (*appFs).WriteFile("/etc/nginx/nginx.conf", fileContent, 0o644)
+
+				stateBytes, _ := json.Marshal(job.FileState{
+					SHA256: existingSHA,
+					Path:   "/etc/nginx/nginx.conf",
+					Owner:  "root",
+				})
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
+				mockEntry.EXPECT().Value().Return(stateBytes)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+			},
+			setupExec: func(mockExec *execMocks.MockManager) {
+				mockExec.EXPECT().
+					RunPrivilegedCmd(gomock.Any(), "chown", gomock.Any()).
+					Return("", errors.New("operation not permitted"))
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				Owner:       "nginx",
+				ContentType: "raw",
+			},
+			wantErr:    true,
+			wantErrMsg: "failed to set ownership",
+		},
+		{
+			name: "when recording a permission change fails",
+			setupMock: func(
+				ctrl *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				appFs *avfs.VFS,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
+
+				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
+				_ = (*appFs).WriteFile("/etc/nginx/nginx.conf", fileContent, 0o644)
+
+				stateBytes, _ := json.Marshal(job.FileState{
+					SHA256: existingSHA,
+					Path:   "/etc/nginx/nginx.conf",
+				})
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
+				mockEntry.EXPECT().Value().Return(stateBytes)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+
+				mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(0), errors.New("kv down"))
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				Mode:        "0600",
+				ContentType: "raw",
+			},
+			wantErr:    true,
+			wantErrMsg: "failed to update file state",
+		},
 	}
 
 	for _, tc := range tests {
@@ -642,8 +1018,14 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			mockKV := jobmocks.NewMockKeyValue(ctrl)
 			mockObj := filemocks.NewMockObjectStore(ctrl)
 
+			mockExec := execMocks.NewMockManager(ctrl)
+
 			if tc.setupMock != nil {
 				tc.setupMock(ctrl, mockObj, mockKV, &appFs)
+			}
+
+			if tc.setupExec != nil {
+				tc.setupExec(mockExec)
 			}
 
 			provider := file.New(
@@ -652,6 +1034,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				mockObj,
 				mockKV,
 				"test-host",
+				mockExec,
 			)
 
 			got, err := provider.Deploy(suite.ctx, tc.req)

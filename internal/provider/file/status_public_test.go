@@ -33,6 +33,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	execMocks "github.com/osapi-io/osapi/internal/exec/mocks"
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider/file"
@@ -222,6 +223,7 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 				suite.mockObj,
 				suite.mockKV,
 				"test-host",
+				execMocks.NewMockManager(suite.ctrl),
 			)
 
 			tc.validateFunc(provider.Status(suite.ctx, tc.req))

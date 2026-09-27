@@ -35,6 +35,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	execMocks "github.com/osapi-io/osapi/internal/exec/mocks"
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider/file"
@@ -258,7 +259,14 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 				providerFs = vfs
 			}
 
-			provider := file.New(suite.logger, providerFs, mockObj, mockKV, "test-host")
+			provider := file.New(
+				suite.logger,
+				providerFs,
+				mockObj,
+				mockKV,
+				"test-host",
+				execMocks.NewMockManager(ctrl),
+			)
 
 			got, err := provider.Undeploy(suite.ctx, tt.req)
 

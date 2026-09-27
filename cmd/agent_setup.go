@@ -87,7 +87,7 @@ func setupAgent(
 
 	// --- File provider (created early — DNS, sysctl, cron, etc. depend on it) ---
 	hostname, _ := job.GetAgentHostname(appConfig.Agent.Hostname)
-	fileProvider, fileStateKV := createFileProvider(ctx, log, b, namespace, hostname)
+	fileProvider, fileStateKV := createFileProvider(ctx, log, b, namespace, hostname, execManager)
 
 	// --- Node providers ---
 	var hostProvider nodeHost.Provider
@@ -361,6 +361,7 @@ func createFileProvider(
 	b *natsBundle,
 	namespace string,
 	hostname string,
+	execManager exec.Manager,
 ) (fileProv.Provider, jetstream.KeyValue) {
 	if appConfig.NATS.Objects.Bucket == "" || appConfig.NATS.FileState.Bucket == "" {
 		return nil, nil
@@ -396,7 +397,7 @@ func createFileProvider(
 		)
 	}
 
-	return fileProv.New(log, appFs, objStore, fileStateKV, hostname), fileStateKV
+	return fileProv.New(log, appFs, objStore, fileStateKV, hostname, execManager), fileStateKV
 }
 
 // createSysctlProvider creates a platform-specific sysctl provider. On Debian,
