@@ -298,7 +298,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			validateFunc: func(got *ntp.CreateResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(got)
-				suite.Contains(err.Error(), "ntp: write file: disk full")
+				suite.Contains(err.Error(), "ntp: write file: create temp file")
 			},
 		},
 		{
@@ -445,7 +445,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			validateFunc: func(got *ntp.UpdateResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(got)
-				suite.Contains(err.Error(), "ntp: write file: disk full")
+				suite.Contains(err.Error(), "ntp: write file: create temp file")
 			},
 		},
 		{

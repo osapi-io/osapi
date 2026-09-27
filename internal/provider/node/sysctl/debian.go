@@ -35,6 +35,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/exec"
+	"github.com/osapi-io/osapi/internal/fsutil"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/file"
@@ -198,26 +199,21 @@ func (d *Debian) deploy(
 
 	stateKey := file.BuildStateKey(d.hostname, confPath)
 
-	// Check for idempotency: if SHA matches and file exists, skip.
-	kvEntry, err := d.stateKV.Get(ctx, stateKey)
-	if err == nil {
-		var state job.FileState
-		if unmarshalErr := json.Unmarshal(kvEntry.Value(), &state); unmarshalErr == nil {
-			if state.SHA256 == sha && state.UndeployedAt == "" {
-				if _, statErr := d.fs.Stat(confPath); statErr == nil {
-					d.logger.Debug(
-						"sysctl entry unchanged, skipping deploy",
-						slog.String("key", entry.Key),
-						slog.String("path", confPath),
-					)
+	// Idempotency is decided by the file on disk rather than by what the last
+	// deploy recorded, so a drop-in edited by hand is rewritten instead of
+	// reported unchanged.
+	if onDisk, readErr := d.fs.ReadFile(confPath); readErr == nil &&
+		computeSHA256(onDisk) == sha {
+		d.logger.Debug(
+			"sysctl entry unchanged, skipping deploy",
+			slog.String("key", entry.Key),
+			slog.String("path", confPath),
+		)
 
-					return &CreateResult{
-						Key:     entry.Key,
-						Changed: false,
-					}, nil
-				}
-			}
-		}
+		return &CreateResult{
+			Key:     entry.Key,
+			Changed: false,
+		}, nil
 	}
 
 	// Ensure the directory exists.
@@ -225,8 +221,14 @@ func (d *Debian) deploy(
 		return nil, fmt.Errorf("sysctl %s: create directory: %w", opName, mkErr)
 	}
 
-	// Write the conf file.
-	if writeErr := d.fs.WriteFile(confPath, content, 0o644); writeErr != nil {
+	// Write the conf file atomically: sysctl --system reads the directory, and a
+	// half-written drop-in is a setting applied wrong or not at all.
+	if writeErr := fsutil.WriteFileAtomic(
+		d.fs,
+		confPath,
+		content,
+		0o644,
+	); writeErr != nil {
 		return nil, fmt.Errorf("sysctl %s: write file: %w", opName, writeErr)
 	}
 

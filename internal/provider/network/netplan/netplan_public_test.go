@@ -96,11 +96,6 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 		{
 			name: "when new file deploys successfully",
 			setup: func() {
-				// KV Get returns not found (new file).
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-
 				// netplan generate succeeds.
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
@@ -127,25 +122,9 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 			},
 		},
 		{
-			name: "when SHA matches and file exists (idempotent)",
+			name: "when the file on disk already holds the content (idempotent)",
 			setup: func() {
-				// Write the file so it exists on disk.
-				_ = suite.memFs.WriteFile(testPath, testContent, 0o644)
-
-				state := job.FileState{
-					Path:       testPath,
-					SHA256:     testSHA(),
-					Mode:       "0644",
-					DeployedAt: "2026-01-01T00:00:00Z",
-				}
-				stateBytes, _ := json.Marshal(state)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
-				mockEntry.EXPECT().Value().Return(stateBytes)
-
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(mockEntry, nil)
+				_ = suite.memFs.WriteFile(testPath, testContent, 0o600)
 			},
 			validateFunc: func(changed bool, err error) {
 				suite.Require().NoError(err)
@@ -153,25 +132,9 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 			},
 		},
 		{
-			name: "when SHA matches but file missing (rewrites)",
+			name: "when the file is missing it is written",
 			setup: func() {
-				// File does NOT exist on disk (not pre-created).
-				state := job.FileState{
-					Path:       testPath,
-					SHA256:     testSHA(),
-					Mode:       "0644",
-					DeployedAt: "2026-01-01T00:00:00Z",
-				}
-				stateBytes, _ := json.Marshal(state)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
-				mockEntry.EXPECT().Value().Return(stateBytes)
-
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(mockEntry, nil)
-
-				// Proceeds to write, generate, apply, put.
+				// Nothing on disk, whatever the record may remember.
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", nil)
@@ -190,12 +153,36 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 			},
 		},
 		{
+			name: "when the file on disk was edited it is rewritten",
+			setup: func() {
+				// The record would say this path holds the desired content; the
+				// disk says somebody changed it.
+				_ = suite.memFs.WriteFile(testPath, []byte("network: {}\n"), 0o600)
+
+				suite.mockExec.EXPECT().
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
+					Return("", nil)
+
+				suite.mockExec.EXPECT().
+					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
+					Return("", nil)
+
+				suite.mockStateKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+			},
+			validateFunc: func(changed bool, err error) {
+				suite.Require().NoError(err)
+				suite.True(changed)
+
+				data, readErr := suite.memFs.ReadFile(testPath)
+				suite.Require().NoError(readErr)
+				suite.Equal(testContent, data)
+			},
+		},
+		{
 			name: "when netplan generate fails (rolls back file)",
 			setup: func() {
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", errors.New("invalid YAML"))
@@ -213,10 +200,6 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 		{
 			name: "when netplan apply fails",
 			setup: func() {
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", nil)
@@ -234,10 +217,6 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 		{
 			name: "when write file fails",
 			setup: func() {
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-
 				// Use failfs to block writes.
 				baseFs := memfs.New()
 				_ = baseFs.MkdirAll("/etc/netplan", 0o755)
@@ -265,10 +244,6 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 		{
 			name: "when mkdir fails",
 			setup: func() {
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-
 				// Use failfs to block MkdirAll.
 				baseFs := memfs.New()
 				vfs := failfs.New(baseFs)
@@ -294,10 +269,6 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 		{
 			name: "when state put fails",
 			setup: func() {
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", nil)
@@ -319,10 +290,6 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 		{
 			name: "when marshal state fails",
 			setup: func() {
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", nil)

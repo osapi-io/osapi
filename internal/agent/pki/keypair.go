@@ -30,6 +30,8 @@ import (
 	"path/filepath"
 
 	"github.com/avfs/avfs"
+
+	"github.com/osapi-io/osapi/internal/fsutil"
 )
 
 const (
@@ -224,7 +226,7 @@ func (m *Manager) saveKeys(
 		Bytes: m.privateKey.Seed(),
 	})
 
-	if err := m.fs.WriteFile(privPath, privPEM, privateKeyMode); err != nil {
+	if err := fsutil.WriteFileAtomic(m.fs, privPath, privPEM, privateKeyMode); err != nil {
 		return fmt.Errorf("write private key: %w", err)
 	}
 
@@ -233,7 +235,7 @@ func (m *Manager) saveKeys(
 		Bytes: m.publicKey,
 	})
 
-	if err := m.fs.WriteFile(pubPath, pubPEM, publicKeyMode); err != nil {
+	if err := fsutil.WriteFileAtomic(m.fs, pubPath, pubPEM, publicKeyMode); err != nil {
 		return fmt.Errorf("write public key: %w", err)
 	}
 

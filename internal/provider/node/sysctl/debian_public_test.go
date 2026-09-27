@@ -117,12 +117,11 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				Value: "1",
 			},
 			setup: func() {
-				// First Get in Create (check if already managed) => not found.
-				// Second Get in deploy (idempotency check) => not found.
+				// Create reads the record once, to ask whether this key is
+				// already managed. Whether to write is decided from the disk.
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found")).
-					Times(2)
+					Return(nil, errors.New("not found"))
 				suite.mockStateKV.EXPECT().
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
@@ -356,12 +355,11 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				}
 				stateBytes, _ := json.Marshal(state)
 				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
-				mockEntry.EXPECT().Value().Return(stateBytes).Times(2)
+				mockEntry.EXPECT().Value().Return(stateBytes)
 
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
-					Return(mockEntry, nil).
-					Times(2)
+					Return(mockEntry, nil)
 				suite.mockStateKV.EXPECT().
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
@@ -386,8 +384,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			setup: func() {
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found")).
-					Times(2)
+					Return(nil, errors.New("not found"))
 				suite.mockStateKV.EXPECT().
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(0), errors.New("kv put error"))
@@ -410,8 +407,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			setup: func() {
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found")).
-					Times(2)
+					Return(nil, errors.New("not found"))
 				sysctl.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
 					return nil, errors.New("marshal error")
 				})
@@ -434,8 +430,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			setup: func() {
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found")).
-					Times(2)
+					Return(nil, errors.New("not found"))
 				suite.mockStateKV.EXPECT().
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
@@ -484,13 +479,12 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					"/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
 				)
 				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
-				mockEntry.EXPECT().Value().Return(stateBytes).Times(2)
+				mockEntry.EXPECT().Value().Return(stateBytes)
 
 				// First Get in Update (check managed), second Get in deploy (idempotency).
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
-					Return(mockEntry, nil).
-					Times(2)
+					Return(mockEntry, nil)
 				suite.mockStateKV.EXPECT().
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
@@ -719,12 +713,11 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 				}
 				stateBytes, _ := json.Marshal(state)
 				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
-				mockEntry.EXPECT().Value().Return(stateBytes).Times(2)
+				mockEntry.EXPECT().Value().Return(stateBytes)
 
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
-					Return(mockEntry, nil).
-					Times(2)
+					Return(mockEntry, nil)
 			},
 			validateFunc: func(
 				result *sysctl.UpdateResult,
@@ -749,12 +742,11 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 				)
 				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
 				// First Get in Update (check managed), second Get in deploy (idempotency).
-				mockEntry.EXPECT().Value().Return(stateBytes).Times(2)
+				mockEntry.EXPECT().Value().Return(stateBytes)
 
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
-					Return(mockEntry, nil).
-					Times(2)
+					Return(mockEntry, nil)
 
 				baseFs := memfs.New()
 				vfs := failfs.New(baseFs)
@@ -800,12 +792,11 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 				)
 				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
 				// First Get in Update (check managed), second Get in deploy (idempotency).
-				mockEntry.EXPECT().Value().Return(stateBytes).Times(2)
+				mockEntry.EXPECT().Value().Return(stateBytes)
 
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
-					Return(mockEntry, nil).
-					Times(2)
+					Return(mockEntry, nil)
 
 				baseFs := memfs.New()
 				_ = baseFs.MkdirAll("/etc/sysctl.d", 0o755)

@@ -75,9 +75,6 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
 				// KV Get returns not found (new file).
-				kv.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
 
 				// KV Put succeeds.
 				kv.EXPECT().
@@ -108,10 +105,6 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
 				kv.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-
-				kv.EXPECT().
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 
@@ -135,10 +128,6 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
 				kv.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-
-				kv.EXPECT().
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 
@@ -160,10 +149,6 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
 				mock := execmocks.NewSetResolvConfFiltersRootDNSDomainMockManager(suite.ctrl)
 				kv := jobmocks.NewMockKeyValue(suite.ctrl)
-
-				kv.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
 
 				kv.EXPECT().
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -234,10 +219,6 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				mock := execmocks.NewSetResolvConfNetplanGenerateErrorMockManager(suite.ctrl)
 				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
-				kv.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-
 				mock.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 					Return("", errors.New("invalid YAML"))
@@ -264,10 +245,6 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
 				mock := execmocks.NewSetResolvConfNetplanGenerateErrorMockManager(suite.ctrl)
 				kv := jobmocks.NewMockKeyValue(suite.ctrl)
-
-				kv.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
 
 				mock.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
@@ -355,15 +332,18 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestDeleteNetplan
 				mock := execmocks.NewPlainMockManager(suite.ctrl)
 				kv := jobmocks.NewMockKeyValue(suite.ctrl)
 
+				// Undeploy still reads the record, to mark it undeployed.
+				kv.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found")).
+					AnyTimes()
+
 				mock.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
 				// KV Get for state cleanup — return not found so
 				// the cleanup branch is skipped cleanly.
-				kv.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
 
 				return mock, kv
 			},

@@ -31,9 +31,13 @@ net.ipv4.ip_forward = 1
 
 After writing the file, the provider runs
 `sysctl -p /etc/sysctl.d/osapi-{key}.conf` to apply the value to the running
-kernel immediately. The file-state KV bucket tracks the SHA-256 of each deployed
-file so that updates are idempotent — if the value is unchanged, the file is not
-rewritten and `changed: false` is returned.
+kernel immediately. Updates are idempotent: the provider hashes the drop-in **on
+disk** and rewrites it only when it differs, returning `changed: false` when it
+does not. A drop-in edited by hand therefore counts as a difference and is
+restored, because the comparison reads the file rather than the file-state KV
+record of what was last deployed. The write itself is atomic — a temporary file
+beside the drop-in, renamed over it — so `sysctl --system` never reads a
+half-written setting.
 
 ### Delete Behavior
 
