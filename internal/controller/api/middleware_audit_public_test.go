@@ -22,10 +22,13 @@ package api_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/labstack/echo/v5"
@@ -46,12 +49,17 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 	tests := []struct {
 		name         string
 		path         string
+		method       string
+		body         string
+		contentType  string
+		jobID        string
 		subject      string
 		roles        []string
 		storeErr     error
 		wantWrite    bool
 		setupReq     func(req *http.Request) *http.Request
 		validateFunc func(entry audit.Entry)
+		validateBody func(seen string)
 	}{
 		{
 			name:      "authenticated request is logged",
@@ -122,6 +130,98 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 			storeErr:  fmt.Errorf("write failed"),
 			wantWrite: true,
 		},
+		{
+			name:        "a mutating request records what it asked for",
+			path:        "/api/node/command/shell",
+			method:      http.MethodPost,
+			body:        `{"command":"systemctl restart nginx","password":"hunter2"}`,
+			contentType: "application/json",
+			jobID:       "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+			subject:     "user@example.com",
+			roles:       []string{"admin"},
+			wantWrite:   true,
+			validateFunc: func(entry audit.Entry) {
+				s.Contains(entry.RequestSummary, "systemctl restart nginx")
+				s.NotContains(entry.RequestSummary, "hunter2")
+				s.Equal("7c9e6679-7425-40de-944b-e07fc1f90ae7", entry.JobID)
+			},
+			validateBody: func(seen string) {
+				// The handler still gets the body the middleware read.
+				s.Contains(seen, "systemctl restart nginx")
+			},
+		},
+		{
+			name:        "a request that creates no job records none",
+			path:        "/api/node/command/shell",
+			method:      http.MethodPost,
+			body:        `{"command":"ls"}`,
+			contentType: "application/json",
+			subject:     "user@example.com",
+			wantWrite:   true,
+			validateFunc: func(entry audit.Entry) {
+				s.Empty(entry.JobID)
+				s.Contains(entry.RequestSummary, "ls")
+			},
+		},
+		{
+			name:      "a read records no summary at all",
+			path:      "/api/node/hostname",
+			subject:   "user@example.com",
+			wantWrite: true,
+			validateFunc: func(entry audit.Entry) {
+				s.Empty(entry.RequestSummary)
+			},
+		},
+		{
+			name:        "a body that cannot be read says so",
+			path:        "/api/node/command/shell",
+			method:      http.MethodPost,
+			contentType: "application/json",
+			subject:     "user@example.com",
+			wantWrite:   true,
+			setupReq: func(req *http.Request) *http.Request {
+				req.Body = io.NopCloser(failingReader{})
+
+				return req
+			},
+			validateFunc: func(entry audit.Entry) {
+				// An entry that says nothing about what was asked reads the same
+				// as one where nothing was asked, so it says this instead.
+				s.Equal("[body unreadable]", entry.RequestSummary)
+			},
+		},
+		{
+			name:        "a request with no body at all",
+			path:        "/api/node/command/shell",
+			method:      http.MethodPost,
+			contentType: "application/json",
+			subject:     "user@example.com",
+			wantWrite:   true,
+			setupReq: func(req *http.Request) *http.Request {
+				req.Body = nil
+
+				return req
+			},
+			validateFunc: func(entry audit.Entry) {
+				s.Empty(entry.RequestSummary)
+			},
+		},
+		{
+			name:        "a body too large to record is described instead",
+			path:        "/api/node/command/shell",
+			method:      http.MethodPost,
+			body:        `{"note":"` + strings.Repeat("x", 70*1024) + `"}`,
+			contentType: "application/json",
+			subject:     "user@example.com",
+			wantWrite:   true,
+			validateFunc: func(entry audit.Entry) {
+				s.Contains(entry.RequestSummary, "not recorded")
+			},
+			validateBody: func(seen string) {
+				// The handler still gets all of it.
+				s.Greater(len(seen), 70*1024)
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -153,16 +253,52 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 
 			e := echo.New()
 			e.Use(api.ExportAuditMiddleware(store, logger))
-			e.GET(tt.path, func(c *echo.Context) error {
+
+			method := tt.method
+			if method == "" {
+				method = http.MethodGet
+			}
+
+			seenBody := ""
+
+			handler := func(c *echo.Context) error {
 				// Simulate scopeMiddleware setting context values.
 				if tt.subject != "" {
 					c.Set(api.ContextKeySubject, tt.subject)
 					c.Set(api.ContextKeyRoles, tt.roles)
 				}
-				return c.String(http.StatusOK, "ok")
-			})
 
-			req := httptest.NewRequest(http.MethodGet, tt.path, nil)
+				if c.Request().Body != nil {
+					read, _ := io.ReadAll(c.Request().Body)
+					seenBody = string(read)
+				}
+
+				// Stand in for a handler dispatching a job, which is what the
+				// job client does inside a real one.
+				if tt.jobID != "" {
+					audit.RecordJobID(c.Request().Context(), tt.jobID)
+				}
+
+				return c.String(http.StatusOK, "ok")
+			}
+
+			switch method {
+			case http.MethodPost:
+				e.POST(tt.path, handler)
+			default:
+				e.GET(tt.path, handler)
+			}
+
+			var reqBody io.Reader
+			if tt.body != "" {
+				reqBody = strings.NewReader(tt.body)
+			}
+
+			req := httptest.NewRequest(method, tt.path, reqBody)
+			if tt.contentType != "" {
+				req.Header.Set("Content-Type", tt.contentType)
+			}
+
 			if tt.setupReq != nil {
 				req = tt.setupReq(req)
 			}
@@ -178,6 +314,10 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 					tt.validateFunc(got)
 				}
 			}
+
+			if tt.validateBody != nil {
+				tt.validateBody(seenBody)
+			}
 		})
 	}
 }
@@ -186,4 +326,12 @@ func TestAuditMiddlewarePublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(AuditMiddlewarePublicTestSuite))
+}
+
+// failingReader is a request body that cannot be read, which is what a client
+// that disconnects mid-request leaves behind.
+type failingReader struct{}
+
+func (failingReader) Read([]byte) (int, error) {
+	return 0, errors.New("connection reset")
 }

@@ -31,19 +31,47 @@ sequenceDiagram
 
 Each audit entry contains:
 
-| Field           | Description                                      |
-| --------------- | ------------------------------------------------ |
-| `id`            | Unique entry identifier (UUID)                   |
-| `timestamp`     | When the request was made                        |
-| `user`          | Identity from the JWT `sub` claim                |
-| `roles`         | Roles from the JWT token                         |
-| `method`        | HTTP method (`GET`, `POST`, etc.)                |
-| `path`          | Request path (e.g., `/node/hostname`)            |
-| `operation_id`  | OpenAPI operation ID (if available)              |
-| `source_ip`     | Client IP address                                |
-| `response_code` | HTTP response status code                        |
-| `duration_ms`   | Request processing time in milliseconds          |
-| `trace_id`      | OpenTelemetry trace ID (when tracing is enabled) |
+| Field             | Description                                      |
+| ----------------- | ------------------------------------------------ |
+| `id`              | Unique entry identifier (UUID)                   |
+| `timestamp`       | When the request was made                        |
+| `user`            | Identity from the JWT `sub` claim                |
+| `roles`           | Roles from the JWT token                         |
+| `method`          | HTTP method (`GET`, `POST`, etc.)                |
+| `path`            | Request path (e.g., `/node/hostname`)            |
+| `operation_id`    | OpenAPI operation ID (if available)              |
+| `source_ip`       | Client IP address                                |
+| `response_code`   | HTTP response status code                        |
+| `duration_ms`     | Request processing time in milliseconds          |
+| `trace_id`        | OpenTelemetry trace ID (when tracing is enabled) |
+| `job_id`          | The job the request created, when it created one |
+| `request_summary` | What the request asked for, redacted (see below) |
+
+### What the request asked for
+
+Who called `command/shell` against which host, without the command, is not an
+answer to "what happened". For any method that changes something — `POST`,
+`PUT`, `PATCH`, `DELETE` — the entry records `request_summary`: the request body
+as JSON, with the values of sensitive fields replaced by `[redacted]`.
+
+- **Redacted fields** are matched by name, case-insensitively, at every depth,
+  so a password nested inside a list of users is redacted too: `password`,
+  `password_hash`, `secret`, `token`, `private_key`, `key_data`, `stdin`,
+  `content`, `authorization`.
+- **The list is a deny list, not an allow list.** New fields are recorded by
+  default, because a summary that only holds the fields somebody remembered
+  answers nothing after an incident. A field carrying a secret is added to the
+  list in the same change that adds the field.
+- **A summary is capped** at 2 KB and marked `…[truncated]` when cut. A body
+  over 64 KB is not read at all: the entry says so rather than holding an
+  upload.
+- **A body that is not JSON** is described — its content type and size — rather
+  than stored.
+- **A read records nothing**, since a `GET` carries nothing worth keeping.
+
+`job_id` is what joins an entry to the job's own status timeline, so "who asked
+for this" and "what the agents did about it" are one trail rather than two. A
+request that creates no job has no `job_id`.
 
 ## Viewing Audit Logs
 

@@ -47,4 +47,11 @@ type Entry struct {
 	DurationMs int64 `json:"duration_ms"`
 	// TraceID is the OpenTelemetry trace ID for correlation.
 	TraceID string `json:"trace_id,omitempty"`
+	// JobID is the job the request created, empty for a request that created
+	// none. It is what joins an audit entry to the job's own status timeline.
+	JobID string `json:"job_id,omitempty"`
+	// RequestSummary is what the request asked for, with sensitive values
+	// replaced. Recorded for methods that change something, because "who ran
+	// command/shell against which host" without the command is not an answer.
+	RequestSummary string `json:"request_summary,omitempty"`
 }

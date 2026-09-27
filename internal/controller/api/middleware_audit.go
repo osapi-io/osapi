@@ -21,8 +21,12 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"io"
 	"log/slog"
+	"net/http"
 	"strings"
 	"time"
 
@@ -32,6 +36,11 @@ import (
 
 	"github.com/osapi-io/osapi/internal/audit"
 )
+
+// maxAuditBodyBytes bounds what the middleware will read of a request body. A
+// file upload is a multipart stream that no audit entry should hold, and reading
+// one into memory to describe it is worse than saying it was too large.
+const maxAuditBodyBytes = 64 * 1024
 
 // excludedAuditPaths lists path prefixes that should not generate audit entries.
 var excludedAuditPaths = []string{
@@ -56,6 +65,20 @@ func auditMiddleware(
 			}
 
 			start := time.Now()
+
+			// Read the body before the handler consumes it, and put it back. Only
+			// for methods that change something: a GET carries nothing worth
+			// recording, and buffering every read would cost memory for nothing.
+			summary := ""
+			if isMutatingMethod(c.Request().Method) {
+				summary = summarizeRequest(c, logger)
+			}
+
+			// The sink collects the job ID the handler's dispatch creates, which
+			// the job client fills in as it publishes.
+			c.SetRequest(c.Request().WithContext(
+				audit.WithJobIDSink(c.Request().Context()),
+			))
 
 			err := next(c)
 
@@ -85,6 +108,9 @@ func auditMiddleware(
 				SourceIP:     c.RealIP(),
 				ResponseCode: responseCode,
 				DurationMs:   time.Since(start).Milliseconds(),
+				JobID:        audit.JobIDFrom(c.Request().Context()),
+
+				RequestSummary: summary,
 			}
 
 			spanCtx := trace.SpanContextFromContext(
@@ -109,4 +135,60 @@ func auditMiddleware(
 			return err
 		}
 	}
+}
+
+// isMutatingMethod reports whether a request can change something, which is what
+// makes its body worth recording.
+func isMutatingMethod(
+	method string,
+) bool {
+	switch method {
+	case http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
+		return true
+	}
+
+	return false
+}
+
+// summarizeRequest reads the request body, restores it for the handler, and
+// returns what the audit log should keep of it.
+//
+// A body that cannot be read is reported as such rather than silently omitted: an
+// audit entry that says nothing about what was asked is indistinguishable from one
+// where nothing was asked.
+func summarizeRequest(
+	c *echo.Context,
+	logger *slog.Logger,
+) string {
+	req := c.Request()
+	if req.Body == nil {
+		return ""
+	}
+
+	body, err := io.ReadAll(io.LimitReader(req.Body, maxAuditBodyBytes+1))
+	if err != nil {
+		logger.Warn(
+			"failed to read request body for audit",
+			slog.String("error", err.Error()),
+			slog.String("path", req.URL.Path),
+		)
+
+		return "[body unreadable]"
+	}
+
+	// Whatever was read has to go back, or the handler sees an empty body.
+	rest := req.Body
+	req.Body = struct {
+		io.Reader
+		io.Closer
+	}{
+		Reader: io.MultiReader(bytes.NewReader(body), rest),
+		Closer: rest,
+	}
+
+	if len(body) > maxAuditBodyBytes {
+		return fmt.Sprintf("[body over %d bytes, not recorded]", maxAuditBodyBytes)
+	}
+
+	return audit.Summarize(body, req.Header.Get("Content-Type"))
 }

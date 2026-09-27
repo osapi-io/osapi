@@ -1594,6 +1594,9 @@ type AuditEntry struct {
 	// Id Unique identifier for the audit entry.
 	Id openapi_types.UUID `json:"id"`
 
+	// JobId The job this request created, absent when it created none. Joins the entry to that job's own status timeline.
+	JobId *string `json:"job_id,omitempty"`
+
 	// Method HTTP method.
 	Method string `json:"method"`
 
@@ -1602,6 +1605,9 @@ type AuditEntry struct {
 
 	// Path Request URL path.
 	Path string `json:"path"`
+
+	// RequestSummary What the request asked for, with sensitive values replaced. Recorded for methods that change something.
+	RequestSummary *string `json:"request_summary,omitempty"`
 
 	// ResponseCode HTTP response status code.
 	ResponseCode int `json:"response_code"`
