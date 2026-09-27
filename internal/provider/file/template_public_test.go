@@ -28,7 +28,6 @@ import (
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -295,10 +294,6 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 				Return([]byte(tc.template), nil)
 
 			if !tc.wantErr {
-				mockKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, assert.AnError)
-
 				mockKV.EXPECT().
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)

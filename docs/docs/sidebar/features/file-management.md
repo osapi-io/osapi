@@ -58,9 +58,14 @@ three states: `in-sync`, `drifted`, or `missing`.
 ### File Deploy Flow
 
 Deploy follows the standard [job processing flow](job-system.md). The agent
-fetches the file from Object Store, computes its SHA-256, and checks the
-file-state KV for a previous deploy. If the content differs, the agent writes
-the file to disk and updates the file-state KV with the new SHA-256.
+fetches the file from Object Store, renders it if it is a template, and compares
+the result with **the file on disk**. If they differ — because the file is
+absent, or because somebody edited it — the agent writes it and records the new
+SHA-256.
+
+The comparison is against the disk, not against what the last deploy recorded. A
+config edited by hand still has the SHA the record remembers, so comparing
+against the record would call that unchanged and walk away from the drift.
 
 The write is atomic. Content goes to a temporary file beside the target, is
 given the requested mode, and is renamed over it, so a reader — an `sshd`, an
@@ -70,17 +75,22 @@ untouched and removes the temporary file.
 
 **Mode, owner and group are applied even when the content has not changed**, so
 a deploy that changes only the permissions takes effect and reports
-`changed: true`. Three things follow from how each is compared:
+`changed: true`. Each is compared against the file itself:
 
-- The mode is compared against the file on disk, so a mode changed by anything
-  is corrected.
+- The mode is compared with the permission bits on disk, so a mode changed by
+  anything is corrected.
+- The owner and group are compared with the file's actual uid and gid, after
+  resolving the requested names on the host. A name the host does not know fails
+  the deploy rather than passing silently; a numeric id is accepted as itself,
+  which is what a container image without a `passwd` entry needs. When they
+  differ, the agent runs `chown` through its privilege escalation.
 - An absent `mode` means "leave the permissions alone" rather than 0644. The
   default applies to a file being created, because applying it to a file already
-  on disk would quietly widen permissions someone else set.
-- The owner and group are compared against the last deploy's recorded state, and
-  applied with `chown`, which the agent runs through its privilege escalation.
-  Ownership changed outside osapi is therefore not detected; a request that
-  changes the owner or the group is applied.
+  on disk would quietly widen permissions someone else set. The same holds for
+  an absent `owner` or `group`.
+
+What osapi records is a log of what it did, never evidence of what is there now.
+Every decision above reads the system.
 
 You can target a specific host, broadcast to all hosts with `_all`, or route by
 label.
@@ -99,12 +109,15 @@ exist on disk, the operation returns `changed: false`.
 
 ### SHA-Based Idempotency
 
-Every deploy operation computes a SHA-256 of the file content and compares it
-against the previously deployed SHA stored in the file-state KV bucket. If the
-hashes match, the file is not rewritten. This makes repeated deploys safe and
-efficient -- only actual changes hit the filesystem. The permissions are still
-checked, as described under File Deploy Flow above: identical content does not
-mean an identical file.
+Every deploy computes a SHA-256 of the content it was asked to deploy and
+compares it with a SHA-256 of the file on disk. If they match, the file is not
+rewritten. This makes repeated deploys safe and efficient -- only actual
+differences hit the filesystem, and a file somebody edited counts as a
+difference. The permissions are checked either way, as described under File
+Deploy Flow above: identical content does not mean an identical file.
+
+The file-state KV records what was deployed, for `status`, staleness detection
+and audit. It is not consulted to decide whether to write.
 
 The file-state KV has no TTL, so deploy state persists indefinitely until
 explicitly removed.

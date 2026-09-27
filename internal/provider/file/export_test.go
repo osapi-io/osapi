@@ -20,7 +20,11 @@
 
 package file
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"io/fs"
+	"os"
+)
 
 // SetMarshalJSON overrides the marshal function for testing.
 func SetMarshalJSON(
@@ -33,3 +37,73 @@ func SetMarshalJSON(
 func ResetMarshalJSON() {
 	marshalJSON = json.Marshal
 }
+
+// SetOwnershipFuncs overrides how a file's ownership is read and how a name is
+// resolved, so a test can describe a system it does not have.
+func SetOwnershipFuncs(
+	own func(string) (int, int, error),
+	uid func(string) (int, error),
+	gid func(string) (int, error),
+) {
+	ownershipOf = own
+	lookupUID = uid
+	lookupGID = gid
+}
+
+// ResetOwnershipFuncs restores the real implementations.
+func ResetOwnershipFuncs() {
+	ownershipOf = realOwnershipOf
+	lookupUID = realLookupUID
+	lookupGID = realLookupGID
+	statFn = os.Stat
+}
+
+// SetStatFn overrides how a path is stat'd, so a test can hand back a FileInfo
+// from a platform whose stat structure this package cannot read.
+func SetStatFn(
+	fn func(string) (fs.FileInfo, error),
+) {
+	statFn = fn
+}
+
+// OwnershipMatches exposes the comparison between a file's ownership and the
+// ownership a deploy asked for.
+func OwnershipMatches(
+	path string,
+	wantUID int,
+	wantGID int,
+) (bool, error) {
+	return ownershipMatches(path, wantUID, wantGID)
+}
+
+// ErrOwnershipUnreadable is the sentinel for a platform that cannot report a
+// file's uid and gid.
+var ErrOwnershipUnreadable = errOwnershipUnreadable
+
+// OwnershipOf calls the real implementation, whatever the current override.
+func OwnershipOf(
+	path string,
+) (int, int, error) {
+	return realOwnershipOf(path)
+}
+
+// LookupUID and LookupGroupID call the real name resolvers.
+func LookupUID(name string) (int, error)     { return realLookupUID(name) }
+func LookupGroupID(name string) (int, error) { return realLookupGID(name) }
+
+// ResolveID exposes the request-name-to-id conversion.
+func ResolveID(
+	name string,
+	lookup func(string) (int, error),
+) (int, error) {
+	return resolveID(name, lookup)
+}
+
+// UnsetID is the id of an owner or group a request did not name.
+const UnsetID = unsetID
+
+var (
+	realOwnershipOf = ownershipOf
+	realLookupUID   = lookupUID
+	realLookupGID   = lookupGID
+)

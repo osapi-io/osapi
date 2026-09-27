@@ -76,47 +76,38 @@ func (p *Service) Deploy(
 	sha := computeSHA256(content)
 	stateKey := BuildStateKey(p.hostname, req.Path)
 
-	entry, err := p.stateKV.Get(ctx, stateKey)
-	if err == nil {
-		var state job.FileState
-		if unmarshalErr := json.Unmarshal(entry.Value(), &state); unmarshalErr == nil {
-			if state.SHA256 == sha {
-				if _, statErr := p.fs.Stat(req.Path); statErr == nil {
-					// The content is what it should be, which says nothing about
-					// the permissions or the ownership: a request that changes
-					// only the mode would otherwise never take effect.
-					changed, permErr := p.applyPermissions(ctx, req, state)
-					if permErr != nil {
-						return nil, permErr
-					}
+	// What matters is the file on disk, not what the last deploy recorded. A
+	// config edited by hand has the SHA the record remembers and the content
+	// nobody asked for, and comparing against the record would call that
+	// unchanged and walk away.
+	onDisk, readErr := p.fs.ReadFile(req.Path)
+	if readErr == nil && computeSHA256(onDisk) == sha {
+		// The content is right, which says nothing about the permissions or the
+		// ownership: a request that changes only the mode would otherwise never
+		// take effect.
+		changed, permErr := p.applyPermissions(ctx, req)
+		if permErr != nil {
+			return nil, permErr
+		}
 
-					p.logger.Debug(
-						"file content unchanged",
-						slog.String("path", req.Path),
-						slog.String("sha256", sha),
-						slog.Bool("permissions_changed", changed),
-					)
+		p.logger.Debug(
+			"file content unchanged",
+			slog.String("path", req.Path),
+			slog.String("sha256", sha),
+			slog.Bool("permissions_changed", changed),
+		)
 
-					if changed {
-						if err := p.putState(ctx, stateKey, req, sha, contentType); err != nil {
-							return nil, err
-						}
-					}
-
-					return &DeployResult{
-						Changed: changed,
-						SHA256:  sha,
-						Path:    req.Path,
-					}, nil
-				}
-
-				p.logger.Debug(
-					"file missing from disk, redeploying",
-					slog.String("path", req.Path),
-					slog.String("sha256", sha),
-				)
+		if changed {
+			if err := p.putState(ctx, stateKey, req, sha, contentType); err != nil {
+				return nil, err
 			}
 		}
+
+		return &DeployResult{
+			Changed: changed,
+			SHA256:  sha,
+			Path:    req.Path,
+		}, nil
 	}
 
 	mode := parseFileMode(req.Mode)
@@ -130,7 +121,7 @@ func (p *Service) Deploy(
 		return nil, fmt.Errorf("failed to write file %q: %w", req.Path, err)
 	}
 
-	if err := p.applyOwnership(ctx, req.Path, req.Owner, req.Group); err != nil {
+	if _, err := p.enforceOwnership(ctx, req); err != nil {
 		return nil, err
 	}
 
@@ -155,16 +146,13 @@ func (p *Service) Deploy(
 // applyPermissions brings an already-correct file's mode and ownership in line
 // with the request, and reports whether anything had to change.
 //
-// The mode is compared against the file on disk, so a mode changed by anything
-// is corrected. The ownership is compared against the last deploy's state,
-// because the uid and gid a name resolves to are not readable through the
-// filesystem abstraction this provider writes through: ownership changed outside
-// osapi is therefore not detected, while a request that changes the owner or the
-// group is applied.
+// Both are compared against the file itself rather than against what the last
+// deploy recorded, so a mode or an owner changed by anything at all is corrected.
+// What osapi remembers is a record of what it did, never evidence of what is
+// there now.
 func (p *Service) applyPermissions(
 	ctx context.Context,
 	req DeployRequest,
-	state job.FileState,
 ) (bool, error) {
 	changed := false
 
@@ -188,40 +176,64 @@ func (p *Service) applyPermissions(
 		}
 	}
 
-	if req.Owner != state.Owner || req.Group != state.Group {
-		if err := p.applyOwnership(ctx, req.Path, req.Owner, req.Group); err != nil {
-			return false, err
-		}
-
-		changed = true
+	ownershipChanged, err := p.enforceOwnership(ctx, req)
+	if err != nil {
+		return false, err
 	}
 
-	return changed, nil
+	return changed || ownershipChanged, nil
 }
 
-// applyOwnership sets the file's owner and group when the request names either.
-// It runs chown rather than calling the filesystem, because the agent reaches
-// privileged operations through sudo and is not itself root.
-func (p *Service) applyOwnership(
+// enforceOwnership applies the requested owner and group when the file does not
+// already have them, and reports whether it had to.
+func (p *Service) enforceOwnership(
 	ctx context.Context,
-	path string,
-	owner string,
-	group string,
-) error {
-	if owner == "" && group == "" {
-		return nil
+	req DeployRequest,
+) (bool, error) {
+	if req.Owner == "" && req.Group == "" {
+		return false, nil
 	}
 
-	spec := owner
-	if group != "" {
-		spec = owner + ":" + group
+	wantUID, err := resolveID(req.Owner, lookupUID)
+	if err != nil {
+		return false, fmt.Errorf("failed to resolve owner for %q: %w", req.Path, err)
 	}
 
-	if _, err := p.execManager.RunPrivilegedCmd(ctx, "chown", []string{spec, path}); err != nil {
-		return fmt.Errorf("failed to set ownership %q on %q: %w", spec, path, err)
+	wantGID, err := resolveID(req.Group, lookupGID)
+	if err != nil {
+		return false, fmt.Errorf("failed to resolve group for %q: %w", req.Path, err)
 	}
 
-	return nil
+	matches, err := ownershipMatches(req.Path, wantUID, wantGID)
+	if err != nil {
+		return false, fmt.Errorf("failed to read ownership of %q: %w", req.Path, err)
+	}
+
+	if matches {
+		return false, nil
+	}
+
+	// chown rather than the filesystem, because the agent reaches privileged
+	// operations through sudo and is not itself root.
+	spec := req.Owner
+	if req.Group != "" {
+		spec = req.Owner + ":" + req.Group
+	}
+
+	if _, err := p.execManager.RunPrivilegedCmd(
+		ctx,
+		"chown",
+		[]string{spec, req.Path},
+	); err != nil {
+		return false, fmt.Errorf(
+			"failed to set ownership %q on %q: %w",
+			spec,
+			req.Path,
+			err,
+		)
+	}
+
+	return true, nil
 }
 
 // putState records what was deployed, so the next deploy can tell what changed.
