@@ -677,3 +677,104 @@ func (s *TargetPublicTestSuite) TestValidTargetEnforcing() {
 		})
 	}
 }
+
+// TestPendingTarget covers the hint that tells an operator to accept a pending
+// agent, which is now derived from the target rather than from a variable two
+// concurrent requests could overwrite.
+func (s *TargetPublicTestSuite) TestPendingTarget() {
+	tests := []struct {
+		name         string
+		agents       []validation.AgentTarget
+		lister       bool
+		target       string
+		validateFunc func(string, bool)
+	}{
+		{
+			name:   "a pending agent named by hostname",
+			lister: true,
+			agents: []validation.AgentTarget{
+				{MachineID: "m1", Hostname: "web-01", State: "Pending"},
+			},
+			target: "web-01",
+			validateFunc: func(t string, ok bool) {
+				s.True(ok)
+				s.Equal("web-01", t)
+			},
+		},
+		{
+			name:   "a pending agent named by machine ID",
+			lister: true,
+			agents: []validation.AgentTarget{
+				{MachineID: "m1", Hostname: "web-01", State: "Pending"},
+			},
+			target: "m1",
+			validateFunc: func(t string, ok bool) {
+				s.True(ok)
+				s.Equal("m1", t)
+			},
+		},
+		{
+			name:   "a ready agent is not pending",
+			lister: true,
+			agents: []validation.AgentTarget{
+				{MachineID: "m1", Hostname: "web-01", State: "Ready"},
+			},
+			target:       "web-01",
+			validateFunc: func(_ string, ok bool) { s.False(ok) },
+		},
+		{
+			name:   "a target matching no agent at all",
+			lister: true,
+			agents: []validation.AgentTarget{
+				{MachineID: "m1", Hostname: "web-01", State: "Pending"},
+			},
+			target:       "web-99",
+			validateFunc: func(_ string, ok bool) { s.False(ok) },
+		},
+		{
+			name:   "a broadcast when every agent is pending",
+			lister: true,
+			agents: []validation.AgentTarget{
+				{MachineID: "m1", Hostname: "web-01", State: "Pending"},
+				{MachineID: "m2", Hostname: "web-02", State: "Pending"},
+			},
+			target: "_all",
+			validateFunc: func(t string, ok bool) {
+				s.True(ok)
+				s.Equal("_all", t)
+			},
+		},
+		{
+			name:   "a broadcast when one agent is ready",
+			lister: true,
+			agents: []validation.AgentTarget{
+				{MachineID: "m1", Hostname: "web-01", State: "Pending"},
+				{MachineID: "m2", Hostname: "web-02", State: "Ready"},
+			},
+			target:       "_any",
+			validateFunc: func(_ string, ok bool) { s.False(ok) },
+		},
+		{
+			name:         "no agents registered",
+			lister:       true,
+			agents:       []validation.AgentTarget{},
+			target:       "web-01",
+			validateFunc: func(_ string, ok bool) { s.False(ok) },
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			if tt.lister {
+				agents := tt.agents
+				validation.RegisterTargetValidator(
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return agents, nil
+					},
+				)
+			}
+
+			tt.validateFunc(validation.PendingTarget(tt.target))
+		})
+	}
+}
