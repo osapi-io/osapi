@@ -146,7 +146,7 @@ func (s *UserGetPublicTestSuite) TestGetNodeUserByName() {
 				s.mockJobClient.EXPECT().
 					Query(gomock.Any(), "server1", "user", job.OperationUserGet,
 						map[string]string{"name": "missing"}).
-					Return("", nil, fmt.Errorf("user not found: missing"))
+					Return("", nil, fmt.Errorf("user not found: missing: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.GetNodeUserByNameResponseObject) {
 				_, ok := resp.(gen.GetNodeUserByName404JSONResponse)

@@ -196,7 +196,7 @@ func (s *UserPasswordPublicTestSuite) TestPostNodeUserPassword() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					Modify(gomock.Any(), "server1", "user", job.OperationUserChangePassword, gomock.Any()).
-					Return("", nil, fmt.Errorf("user not found: missing"))
+					Return("", nil, fmt.Errorf("user not found: missing: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.PostNodeUserPasswordResponseObject) {
 				_, ok := resp.(gen.PostNodeUserPassword404JSONResponse)

@@ -148,9 +148,10 @@ func (s *ProcessGetPublicTestSuite) TestGetNodeProcessByPid() {
 						map[string]int{"pid": 99999},
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
-						Status:   job.StatusFailed,
-						Hostname: "server1",
-						Error:    "process not found",
+						Status:    job.StatusFailed,
+						Hostname:  "server1",
+						Error:     "process not found",
+						ErrorCode: job.ErrorCodeNotFound,
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeProcessByPidResponseObject) {
@@ -260,9 +261,10 @@ func (s *ProcessGetPublicTestSuite) TestGetNodeProcessByPid() {
 							),
 						},
 						"server2": {
-							Status:   job.StatusFailed,
-							Error:    "process not found",
-							Hostname: "server2",
+							Status:    job.StatusFailed,
+							Error:     "process not found",
+							ErrorCode: job.ErrorCodeNotFound,
+							Hostname:  "server2",
 						},
 					}, nil)
 			},

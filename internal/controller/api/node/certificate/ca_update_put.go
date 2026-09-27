@@ -24,7 +24,6 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 
@@ -32,6 +31,8 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	certProv "github.com/osapi-io/osapi/internal/provider/node/certificate"
 	"github.com/osapi-io/osapi/internal/validation"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // PutNodeCertificateCa updates a CA certificate on a target node.
@@ -74,7 +75,7 @@ func (s *Certificate) PutNodeCertificateCa(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") {
+		if apierr.IsMissing(err) {
 			return gen.PutNodeCertificateCa404JSONResponse{Error: &errMsg}, nil
 		}
 		return gen.PutNodeCertificateCa500JSONResponse{Error: &errMsg}, nil

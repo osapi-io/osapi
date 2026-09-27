@@ -27,6 +27,8 @@ import (
 	"log/slog"
 	"strconv"
 	"strings"
+
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 const (
@@ -70,7 +72,7 @@ func (d *Debian) GetGroup(
 		}
 	}
 
-	return nil, fmt.Errorf("group: %q not found", name)
+	return nil, fmt.Errorf("group %q: %w", name, provider.ErrNotFound)
 }
 
 // CreateGroup creates a new system group.

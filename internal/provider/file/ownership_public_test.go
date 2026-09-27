@@ -52,7 +52,7 @@ func (s *OwnershipPublicTestSuite) TestOwnershipOf() {
 		s.Equal(os.Getgid(), gid)
 	})
 
-	s.Run("a path that does not exist", func() {
+	s.Run("a path that: not found", func() {
 		_, _, err := file.OwnershipOf(filepath.Join(s.T().TempDir(), "absent"))
 		s.Require().Error(err)
 		s.Require().Contains(err.Error(), "stat")

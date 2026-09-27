@@ -193,7 +193,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 					Return(output, nil)
 			},
 			wantErr:     true,
-			errContains: "package: get \"removed-pkg\": not found",
+			errContains: "package \"removed-pkg\": not found",
 		},
 		{
 			name:    "when exec error",

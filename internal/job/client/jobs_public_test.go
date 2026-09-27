@@ -172,7 +172,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 		{
 			name:        "job not found",
 			jobID:       "nonexistent",
-			expectedErr: "job not found: nonexistent",
+			expectedErr: "job nonexistent: not found",
 			setupMocks: func() {
 				s.mockKV.EXPECT().
 					Get(gomock.Any(), "jobs.nonexistent").
@@ -1383,7 +1383,7 @@ func (s *JobsPublicTestSuite) TestDeleteJob() {
 			},
 			validateFunc: func(err error) {
 				s.Error(err)
-				s.Contains(err.Error(), "job not found: nonexistent")
+				s.Contains(err.Error(), "job nonexistent: not found")
 			},
 		},
 		{
@@ -1703,7 +1703,7 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 			},
 			validateFunc: func(_ *client.CreateJobResult, err error) {
 				s.Error(err)
-				s.Contains(err.Error(), "job not found: nonexistent")
+				s.Contains(err.Error(), "job nonexistent: not found")
 			},
 		},
 		{

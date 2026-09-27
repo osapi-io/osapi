@@ -20,7 +20,15 @@
 
 package audit
 
-import "context"
+import (
+	"context"
+	"errors"
+)
+
+// ErrNotFound means no audit entry exists under the identifier asked for. The
+// API answers 404, and it asks by cause rather than by reading the message,
+// which is how every other layer here reports a thing that is not there.
+var ErrNotFound = errors.New("audit entry not found")
 
 // Store defines the interface for audit log persistence.
 type Store interface {

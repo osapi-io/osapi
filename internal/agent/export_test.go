@@ -769,3 +769,11 @@ func ExportHandleEnrollmentResponse(
 ) {
 	a.handleEnrollmentResponse(msg)
 }
+
+// ExportClassifyProviderError exposes the classification that turns a provider's
+// error into the code a response carries.
+func ExportClassifyProviderError(
+	err error,
+) job.ErrorCode {
+	return classifyProviderError(err)
+}

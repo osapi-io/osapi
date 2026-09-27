@@ -24,13 +24,14 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/sysctl/gen"
 	"github.com/osapi-io/osapi/internal/job"
 	sysctlProv "github.com/osapi-io/osapi/internal/provider/node/sysctl"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // GetNodeSysctlByKey gets a single sysctl entry by key on a target node.
@@ -69,8 +70,7 @@ func (s *Sysctl) GetNodeSysctlByKey(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") ||
-			strings.Contains(errMsg, "not managed") {
+		if apierr.IsMissing(err) {
 			return gen.GetNodeSysctlByKey404JSONResponse{Error: &errMsg}, nil
 		}
 		return gen.GetNodeSysctlByKey500JSONResponse{Error: &errMsg}, nil

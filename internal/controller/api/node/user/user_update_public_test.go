@@ -176,7 +176,7 @@ func (s *UserUpdatePublicTestSuite) TestPutNodeUser() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					Modify(gomock.Any(), "server1", "user", job.OperationUserUpdate, gomock.Any()).
-					Return("", nil, fmt.Errorf("user not found: missing"))
+					Return("", nil, fmt.Errorf("user not found: missing: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.PutNodeUserResponseObject) {
 				_, ok := resp.(gen.PutNodeUser404JSONResponse)

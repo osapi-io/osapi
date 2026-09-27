@@ -141,7 +141,7 @@ func (s *GroupDeletePublicTestSuite) TestDeleteNodeGroup() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					Modify(gomock.Any(), "server1", "group", job.OperationGroupDelete, map[string]string{"name": "missing"}).
-					Return("", nil, fmt.Errorf("group not found: missing"))
+					Return("", nil, fmt.Errorf("group not found: missing: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.DeleteNodeGroupResponseObject) {
 				_, ok := resp.(gen.DeleteNodeGroup404JSONResponse)

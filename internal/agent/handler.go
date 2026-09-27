@@ -454,6 +454,7 @@ func (a *Agent) handleJobMessage(
 		)
 		response.Status = job.StatusSkipped
 		response.Error = err.Error()
+		response.ErrorCode = job.ErrorCodeUnsupported
 	} else if err != nil {
 		a.logger.ErrorContext(
 			ctx,
@@ -465,6 +466,7 @@ func (a *Agent) handleJobMessage(
 		)
 		response.Status = job.StatusFailed
 		response.Error = err.Error()
+		response.ErrorCode = classifyProviderError(err)
 	} else {
 		response.Status = job.StatusCompleted
 		response.Data = result
@@ -584,4 +586,24 @@ func (a *Agent) handleJobMessage(
 	// `job retry`, which creates a new job rather than relying on
 	// redelivery of this one.
 	return nil
+}
+
+// classifyProviderError names the cause of a provider failure, so the controller
+// can answer differently without reading the message back. A cause the provider
+// did not name leaves the code empty, which the API answers as a failure.
+func classifyProviderError(
+	err error,
+) job.ErrorCode {
+	switch {
+	case errors.Is(err, provider.ErrNotFound):
+		return job.ErrorCodeNotFound
+	case errors.Is(err, provider.ErrNotManaged):
+		return job.ErrorCodeNotManaged
+	case errors.Is(err, provider.ErrNotInstalled):
+		return job.ErrorCodeNotInstalled
+	case errors.Is(err, provider.ErrUnsupported):
+		return job.ErrorCodeUnsupported
+	}
+
+	return ""
 }

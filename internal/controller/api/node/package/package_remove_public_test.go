@@ -131,7 +131,7 @@ func (s *PackageRemovePublicTestSuite) TestDeleteNodePackage() {
 						job.OperationPackageRemove,
 						map[string]string{"name": "nonexistent"},
 					).
-					Return("", nil, fmt.Errorf("package not found: nonexistent"))
+					Return("", nil, fmt.Errorf("package not found: nonexistent: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.DeleteNodePackageResponseObject) {
 				r, ok := resp.(gen.DeleteNodePackage404JSONResponse)
@@ -155,7 +155,7 @@ func (s *PackageRemovePublicTestSuite) TestDeleteNodePackage() {
 						job.OperationPackageRemove,
 						map[string]string{"name": "removed-pkg"},
 					).
-					Return("", nil, fmt.Errorf("package not installed: removed-pkg"))
+					Return("", nil, fmt.Errorf("package not installed: removed-pkg: %w", job.ErrNotInstalled))
 			},
 			validateFunc: func(resp gen.DeleteNodePackageResponseObject) {
 				r, ok := resp.(gen.DeleteNodePackage404JSONResponse)

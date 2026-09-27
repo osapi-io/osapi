@@ -247,9 +247,10 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 						map[string]*job.Response{
 							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 							"server2": {
-								Status:   job.StatusFailed,
-								Error:    "interface not found",
-								Hostname: "server2",
+								Status:    job.StatusFailed,
+								Error:     "interface not found",
+								ErrorCode: job.ErrorCodeNotFound,
+								Hostname:  "server2",
 							},
 						},
 						nil,

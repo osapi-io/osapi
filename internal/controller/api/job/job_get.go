@@ -24,13 +24,14 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"k8s.io/utils/ptr"
 
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/job/gen"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // GetJobByID retrieves details of a specific job by its ID.
@@ -48,7 +49,7 @@ func (j *Job) GetJobByID(
 	qj, err := j.JobClient.GetJobStatus(ctx, jobID)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") {
+		if apierr.IsMissing(err) {
 			return gen.GetJobByID404JSONResponse{
 				Error: &errMsg,
 			}, nil

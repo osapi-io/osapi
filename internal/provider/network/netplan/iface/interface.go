@@ -29,6 +29,8 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/provider/network/netplan"
+
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 const (
@@ -108,7 +110,7 @@ func (d *Debian) Get(
 
 	iface, ok := status[name]
 	if !ok {
-		return nil, fmt.Errorf("interface %q: not found", name)
+		return nil, fmt.Errorf("interface %q: %w", name, provider.ErrNotFound)
 	}
 
 	dhcp := iface.IsDHCP()

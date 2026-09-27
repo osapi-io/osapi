@@ -91,7 +91,7 @@ func (d *Debian) Get(
 
 	pkgs := d.parsePackages(output)
 	if len(pkgs) == 0 {
-		return nil, fmt.Errorf("package: get %q: not found", name)
+		return nil, fmt.Errorf("package %q: %w", name, provider.ErrNotFound)
 	}
 
 	return &pkgs[0], nil

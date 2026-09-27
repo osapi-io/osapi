@@ -1087,7 +1087,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 
 				return s.newClientWithAllKVs(registryKV, nil, stateKV)
 			},
-			expectedErr: "agent not found: nonexistent",
+			expectedErr: "agent nonexistent: not found",
 		},
 		{
 			name:   "when hostname fallback ListAgents fails returns error",
@@ -1102,7 +1102,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 					Return(nil, errors.New("connection refused"))
 				return s.newClientWithAllKVs(registryKV, nil, nil)
 			},
-			expectedErr: "agent not found: server1",
+			expectedErr: "agent server1: not found",
 		},
 		{
 			name:   "when timeline available sets timeline on direct lookup",

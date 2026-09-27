@@ -182,7 +182,7 @@ func (d *Debian) Signal(
 
 	if err := d.signaler.Kill(pid, sig); err != nil {
 		if err == syscall.ESRCH {
-			return nil, fmt.Errorf("process: signal: process not found")
+			return nil, fmt.Errorf("process signal: %w", provider.ErrNotFound)
 		}
 
 		if err == syscall.EPERM {

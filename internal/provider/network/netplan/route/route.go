@@ -30,6 +30,8 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/file"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan/iface"
+
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // filteredRouteTypes are route types that represent kernel-internal
@@ -105,7 +107,7 @@ func (d *Debian) Get(
 
 	kvEntry, err := d.stateKV.Get(ctx, stateKey)
 	if err != nil {
-		return nil, fmt.Errorf("route %q: not found", interfaceName)
+		return nil, fmt.Errorf("route %q: %w", interfaceName, provider.ErrNotFound)
 	}
 
 	var state struct {
@@ -118,7 +120,7 @@ func (d *Debian) Get(
 	}
 
 	if state.UndeployedAt != "" {
-		return nil, fmt.Errorf("route %q: not found", interfaceName)
+		return nil, fmt.Errorf("route %q: %w", interfaceName, provider.ErrNotFound)
 	}
 
 	routesJSON, ok := state.Metadata["routes"]

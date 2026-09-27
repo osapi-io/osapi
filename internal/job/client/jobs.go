@@ -231,7 +231,7 @@ func (c *Client) GetJobStatus(
 	)
 	entry, err := c.kv.Get(ctx, jobKey)
 	if err != nil {
-		return nil, fmt.Errorf("job not found: %s", jobID)
+		return nil, fmt.Errorf("job %s: %w", jobID, job.ErrNotFound)
 	}
 
 	var jobData map[string]interface{}
@@ -428,7 +428,7 @@ func (c *Client) getJobStatusFromKeys(
 ) (*job.QueuedJob, error) {
 	entry, err := c.kv.Get(ctx, jobKey)
 	if err != nil {
-		return nil, fmt.Errorf("job not found: %s", jobID)
+		return nil, fmt.Errorf("job %s: %w", jobID, job.ErrNotFound)
 	}
 
 	var jobData map[string]interface{}
@@ -733,7 +733,7 @@ func (c *Client) RetryJob(
 
 	entry, err := c.kv.Get(ctx, jobKey)
 	if err != nil {
-		return nil, fmt.Errorf("job not found: %s", jobID)
+		return nil, fmt.Errorf("job %s: %w", jobID, job.ErrNotFound)
 	}
 
 	var jobData map[string]interface{}
@@ -744,7 +744,7 @@ func (c *Client) RetryJob(
 	// Extract operation data
 	operationData, ok := jobData["operation"].(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("job has no operation data: %s", jobID)
+		return nil, fmt.Errorf("job %s: %w", jobID, job.ErrNoOperationData)
 	}
 
 	// Create new job with the same operation data
@@ -796,7 +796,7 @@ func (c *Client) DeleteJob(
 	)
 	_, err := c.kv.Get(ctx, jobKey)
 	if err != nil {
-		return fmt.Errorf("job not found: %s", jobID)
+		return fmt.Errorf("job %s: %w", jobID, job.ErrNotFound)
 	}
 
 	if err := c.kv.Delete(ctx, jobKey); err != nil {

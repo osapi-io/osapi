@@ -25,6 +25,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // GetResolvConfByInterface retrieves the DNS configuration for a specific network interface
@@ -67,7 +69,7 @@ func (u *Debian) GetResolvConfByInterface(
 	// $ resolvectl status invalid
 	// Failed to resolve interface "invalid", ignoring: No such device
 	if strings.Contains(output, "No such device") {
-		return nil, fmt.Errorf("interface %q does not exist", interfaceName)
+		return nil, fmt.Errorf("interface %q: %w", interfaceName, provider.ErrNotFound)
 	}
 
 	config := &GetResult{}

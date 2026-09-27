@@ -107,7 +107,7 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByID() {
 			setupStore: func() {
 				s.mockStore.EXPECT().
 					Get(gomock.Any(), testID.String()).
-					Return(nil, fmt.Errorf("get audit entry: not found"))
+					Return(nil, fmt.Errorf("get audit entry: not found: %w", auditstore.ErrNotFound))
 			},
 			validateFunc: func(resp gen.GetAuditLogByIDResponseObject) {
 				_, ok := resp.(gen.GetAuditLogByID404JSONResponse)

@@ -116,6 +116,10 @@ type Response struct {
 	Data json.RawMessage `json:"data,omitempty"`
 	// Error contains error information if the job failed.
 	Error string `json:"error,omitempty"`
+	// ErrorCode names the cause of the failure, so the controller can answer
+	// differently without reading the message. Empty when the failure has no
+	// cause the API distinguishes.
+	ErrorCode ErrorCode `json:"error_code,omitempty"`
 	// Changed indicates whether the operation modified system state.
 	// Nil for query operations; set for mutation operations.
 	Changed *bool `json:"changed,omitempty"`

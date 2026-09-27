@@ -121,7 +121,7 @@ resolver #2
 			interfaceName: "en5",
 			validateFunc: func(_ any, err error) {
 				suite.Error(err)
-				suite.Contains(err.Error(), "does not exist")
+				suite.Contains(err.Error(), "not found")
 			},
 		},
 		{

@@ -98,7 +98,7 @@ func (s *StreamStore) Get(
 
 	msg, err := s.stream.GetLastMsgForSubject(ctx, subject)
 	if err != nil {
-		return nil, fmt.Errorf("get audit entry: not found: %w", err)
+		return nil, fmt.Errorf("get audit entry %s: %w: %w", id, ErrNotFound, err)
 	}
 
 	var entry Entry

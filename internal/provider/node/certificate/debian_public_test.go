@@ -323,7 +323,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			},
 		},
 		{
-			name: "when certificate does not exist",
+			name: "when certificate: not found",
 			entry: certificate.Entry{
 				Name:   "nonexistent",
 				Object: "some-cert",
@@ -335,7 +335,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "does not exist")
+				suite.Contains(err.Error(), "not found")
 			},
 		},
 		{

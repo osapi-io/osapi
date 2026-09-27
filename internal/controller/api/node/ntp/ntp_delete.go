@@ -24,13 +24,14 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/ntp/gen"
 	"github.com/osapi-io/osapi/internal/job"
 	ntpProv "github.com/osapi-io/osapi/internal/provider/node/ntp"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // DeleteNodeNtp deletes a managed NTP configuration on a target node.
@@ -63,7 +64,7 @@ func (s *Ntp) DeleteNodeNtp(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") {
+		if apierr.IsMissing(err) {
 			return gen.DeleteNodeNtp404JSONResponse{Error: &errMsg}, nil
 		}
 		return gen.DeleteNodeNtp500JSONResponse{Error: &errMsg}, nil

@@ -218,7 +218,10 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 			request: gen.GetJobByIDRequestObject{
 				Id: uuid.MustParse("770e8400-e29b-41d4-a716-446655440000"),
 			},
-			mockError:  fmt.Errorf("job not found: 770e8400-e29b-41d4-a716-446655440000"),
+			mockError: fmt.Errorf(
+				"job 770e8400-e29b-41d4-a716-446655440000: %w: not found",
+				jobtypes.ErrNotFound,
+			),
 			expectMock: true,
 			validateFunc: func(resp gen.GetJobByIDResponseObject) {
 				_, ok := resp.(gen.GetJobByID404JSONResponse)

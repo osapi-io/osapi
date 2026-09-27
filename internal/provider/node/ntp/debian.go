@@ -145,7 +145,7 @@ func (d *Debian) Update(
 ) (*UpdateResult, error) {
 	existing, err := d.fs.ReadFile(sourcesFile)
 	if err != nil {
-		return nil, fmt.Errorf("ntp: config not managed")
+		return nil, fmt.Errorf("ntp config: %w", provider.ErrNotManaged)
 	}
 
 	content := generateContent(config.Servers)
@@ -187,7 +187,7 @@ func (d *Debian) Delete(
 	ctx context.Context,
 ) (*DeleteResult, error) {
 	if _, err := d.fs.Stat(sourcesFile); err != nil {
-		return nil, fmt.Errorf("ntp: config not managed")
+		return nil, fmt.Errorf("ntp config: %w", provider.ErrNotManaged)
 	}
 
 	if removeErr := d.fs.Remove(sourcesFile); removeErr != nil {

@@ -734,7 +734,7 @@ func (suite *DebianPublicTestSuite) TestDeleteUser() {
 			setup: func() {
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "userdel", []string{"-r", "--", "nonexistent"}).
-					Return("", errors.New("user does not exist"))
+					Return("", errors.New("user: not found"))
 			},
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
@@ -1237,7 +1237,7 @@ func (suite *DebianPublicTestSuite) TestDeleteGroup() {
 			setup: func() {
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "groupdel", []string{"--", "nonexistent"}).
-					Return("", errors.New("group does not exist"))
+					Return("", errors.New("group: not found"))
 			},
 			validateFunc: func(result *user.GroupResult, err error) {
 				suite.Error(err)

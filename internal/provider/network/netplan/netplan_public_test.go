@@ -378,7 +378,7 @@ func (suite *NetplanPublicTestSuite) TestRemoveConfig() {
 			},
 		},
 		{
-			name: "when file does not exist",
+			name: "when file: not found",
 			setup: func() {
 				// No file on disk — nothing to do.
 			},

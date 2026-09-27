@@ -179,9 +179,10 @@ func (s *ProcessSignalPublicTestSuite) TestPostNodeProcessSignal() {
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
-						Status:   job.StatusFailed,
-						Hostname: "server1",
-						Error:    "process not found",
+						Status:    job.StatusFailed,
+						Hostname:  "server1",
+						Error:     "process not found",
+						ErrorCode: job.ErrorCodeNotFound,
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeProcessSignalResponseObject) {

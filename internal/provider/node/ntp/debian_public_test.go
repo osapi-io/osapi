@@ -432,7 +432,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			validateFunc: func(got *ntp.UpdateResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(got)
-				suite.Contains(err.Error(), "ntp: config not managed")
+				suite.Contains(err.Error(), "ntp config: not managed by osapi")
 			},
 		},
 		{
@@ -555,7 +555,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			validateFunc: func(got *ntp.DeleteResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(got)
-				suite.Contains(err.Error(), "ntp: config not managed")
+				suite.Contains(err.Error(), "ntp config: not managed by osapi")
 			},
 		},
 		{

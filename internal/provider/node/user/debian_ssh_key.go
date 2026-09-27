@@ -33,6 +33,8 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/fsutil"
+
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 const (
@@ -284,7 +286,7 @@ func (d *Debian) userHomeDir(
 		return "", fmt.Errorf("read %s: %w", passwdFile, err)
 	}
 
-	return "", fmt.Errorf("user %q not found", username)
+	return "", fmt.Errorf("user %q: %w", username, provider.ErrNotFound)
 }
 
 // parseAuthorizedKeys parses the content of an authorized_keys file into

@@ -22,13 +22,16 @@ package job
 
 import (
 	"context"
+	"errors"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/job/gen"
 	"github.com/osapi-io/osapi/internal/validation"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 // RetryJobByID creates a new job using the same operation data as an existing job.
@@ -58,12 +61,12 @@ func (j *Job) RetryJobByID(
 	result, err := j.JobClient.RetryJob(ctx, jobID, targetHostname)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") {
+		if apierr.IsMissing(err) {
 			return gen.RetryJobByID404JSONResponse{
 				Error: &errMsg,
 			}, nil
 		}
-		if strings.Contains(errMsg, "no operation data") {
+		if errors.Is(err, job.ErrNoOperationData) {
 			return gen.RetryJobByID400JSONResponse{
 				Error: &errMsg,
 			}, nil

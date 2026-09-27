@@ -206,9 +206,10 @@ func (s *NtpGetPublicTestSuite) TestGetNodeNtp() {
 							),
 						},
 						"server2": {
-							Status:   job.StatusFailed,
-							Error:    "chrony not installed",
-							Hostname: "server2",
+							Status:    job.StatusFailed,
+							Error:     "chrony not installed",
+							ErrorCode: job.ErrorCodeNotInstalled,
+							Hostname:  "server2",
 						},
 						"server3": {
 							Status:   job.StatusSkipped,

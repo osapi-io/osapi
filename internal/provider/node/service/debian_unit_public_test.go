@@ -298,7 +298,7 @@ func (suite *DebianUnitPublicTestSuite) TestUpdate() {
 			},
 		},
 		{
-			name: "when service unit does not exist",
+			name: "when service unit: not found",
 			entry: service.Entry{
 				Name:   "nonexistent",
 				Object: "some-unit",

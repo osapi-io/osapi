@@ -23,7 +23,6 @@ package certificate_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -216,7 +215,7 @@ func (s *CAUpdatePutPublicTestSuite) TestPutNodeCertificateCa() {
 						job.OperationCertificateCAUpdate,
 						gomock.Any(),
 					).
-					Return("", nil, errors.New("certificate not found"))
+					Return("", nil, fmt.Errorf("certificate not found: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.PutNodeCertificateCaResponseObject) {
 				r, ok := resp.(gen.PutNodeCertificateCa404JSONResponse)
@@ -243,7 +242,7 @@ func (s *CAUpdatePutPublicTestSuite) TestPutNodeCertificateCa() {
 						job.OperationCertificateCAUpdate,
 						gomock.Any(),
 					).
-					Return("", nil, errors.New("certificate does not exist"))
+					Return("", nil, fmt.Errorf("certificate does not exist: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.PutNodeCertificateCaResponseObject) {
 				r, ok := resp.(gen.PutNodeCertificateCa404JSONResponse)

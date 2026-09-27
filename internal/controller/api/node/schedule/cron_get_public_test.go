@@ -23,7 +23,6 @@ package schedule_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -212,9 +211,10 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 							),
 						},
 						"server2": {
-							Status:   job.StatusFailed,
-							Error:    "cron entry not found",
-							Hostname: "server2",
+							Status:    job.StatusFailed,
+							Error:     "cron entry not found",
+							ErrorCode: job.ErrorCodeNotFound,
+							Hostname:  "server2",
 						},
 					}, nil)
 			},
@@ -317,7 +317,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 						job.OperationCronGet,
 						map[string]string{"name": "nonexistent"},
 					).
-					Return("", nil, errors.New("cron entry not found"))
+					Return("", nil, fmt.Errorf("cron entry not found: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
 				r, ok := resp.(gen.GetNodeScheduleCronByName404JSONResponse)
@@ -341,7 +341,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 						job.OperationCronGet,
 						map[string]string{"name": "unmanaged"},
 					).
-					Return("", nil, errors.New("cron entry not managed"))
+					Return("", nil, fmt.Errorf("cron entry not managed: %w", job.ErrNotManaged))
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
 				r, ok := resp.(gen.GetNodeScheduleCronByName404JSONResponse)
@@ -365,7 +365,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 						job.OperationCronGet,
 						map[string]string{"name": "missing"},
 					).
-					Return("", nil, errors.New("cron entry does not exist"))
+					Return("", nil, fmt.Errorf("cron entry does not exist: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
 				r, ok := resp.(gen.GetNodeScheduleCronByName404JSONResponse)

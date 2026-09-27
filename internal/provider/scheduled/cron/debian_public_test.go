@@ -396,7 +396,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			},
 		},
 		{
-			name: "when entry does not exist",
+			name: "when entry: not found",
 			entry: cron.Entry{
 				Name:   "nonexistent",
 				Object: "some-script",

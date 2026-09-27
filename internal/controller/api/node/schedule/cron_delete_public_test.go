@@ -23,7 +23,6 @@ package schedule_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -219,9 +218,10 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
 						},
 						"server2": {
-							Status:   job.StatusFailed,
-							Error:    "cron entry not found",
-							Hostname: "server2",
+							Status:    job.StatusFailed,
+							Error:     "cron entry not found",
+							ErrorCode: job.ErrorCodeNotFound,
+							Hostname:  "server2",
 						},
 					}, nil)
 			},
@@ -316,7 +316,7 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 						job.OperationCronDelete,
 						gomock.Any(),
 					).
-					Return("", nil, errors.New("cron entry not found"))
+					Return("", nil, fmt.Errorf("cron entry not found: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.DeleteNodeScheduleCronResponseObject) {
 				r, ok := resp.(gen.DeleteNodeScheduleCron404JSONResponse)
@@ -340,7 +340,7 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 						job.OperationCronDelete,
 						gomock.Any(),
 					).
-					Return("", nil, errors.New("cron entry does not exist"))
+					Return("", nil, fmt.Errorf("cron entry does not exist: %w", job.ErrNotFound))
 			},
 			validateFunc: func(resp gen.DeleteNodeScheduleCronResponseObject) {
 				r, ok := resp.(gen.DeleteNodeScheduleCron404JSONResponse)

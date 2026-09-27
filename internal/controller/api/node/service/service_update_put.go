@@ -24,7 +24,6 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 
@@ -32,6 +31,8 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	serviceProv "github.com/osapi-io/osapi/internal/provider/node/service"
 	"github.com/osapi-io/osapi/internal/validation"
+
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 )
 
 // PutNodeService updates a service unit file on a target node.
@@ -74,7 +75,7 @@ func (s *Service) PutNodeService(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") {
+		if apierr.IsMissing(err) {
 			return gen.PutNodeService404JSONResponse{Error: &errMsg}, nil
 		}
 		return gen.PutNodeService500JSONResponse{Error: &errMsg}, nil
