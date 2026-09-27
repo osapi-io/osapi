@@ -132,7 +132,8 @@ func init() {
 // customHints maps validator tags to a hint appended to the default error.
 var customHints = map[string]func(fe validator.FieldError) string{
 	"valid_target": func(fe validator.FieldError) string {
-		if t, ok := IsPendingTarget(); ok {
+		target, _ := fe.Value().(string)
+		if t, ok := PendingTarget(target); ok {
 			if t == "_all" || t == "_any" {
 				return "all agents are pending PKI enrollment — accept them with: osapi client agent accept --hostname <hostname>"
 			}

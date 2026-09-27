@@ -214,19 +214,8 @@ func allAgentsPending() bool {
 		}
 	}
 
-	pendingTargetMu.Lock()
-	pendingTarget = "_all"
-	pendingTargetMu.Unlock()
-
 	return true
 }
-
-// pendingTarget is set when a target matches a pending agent.
-// Used by the error message formatter to provide a specific message.
-var (
-	pendingTargetMu sync.Mutex
-	pendingTarget   string
-)
 
 // matchesHostname checks whether any active agent has the given hostname
 // or machine ID. Returns false for agents in Pending state (awaiting
@@ -246,10 +235,6 @@ func matchesHostname(
 
 		if a.Hostname == target || a.MachineID == target {
 			if a.State == "Pending" {
-				pendingTargetMu.Lock()
-				pendingTarget = target
-				pendingTargetMu.Unlock()
-
 				return false
 			}
 
@@ -260,16 +245,47 @@ func matchesHostname(
 	return false
 }
 
-// IsPendingTarget returns true if the last validation failure was
-// due to a pending agent, and clears the flag.
-func IsPendingTarget() (string, bool) {
-	pendingTargetMu.Lock()
-	defer pendingTargetMu.Unlock()
+// PendingTarget reports whether target names an agent, or a whole fleet, that
+// is pending PKI enrollment, so an error message can say to accept it rather
+// than only that the target was invalid.
+//
+// It derives the answer from the target it is given. The previous version
+// recorded it in a package-level variable during validation and read it back
+// when formatting the message, which two concurrent requests could overwrite —
+// telling one operator to accept the other's agent.
+func PendingTarget(
+	target string,
+) (string, bool) {
+	if agentLister == nil {
+		return "", false
+	}
 
-	t := pendingTarget
-	pendingTarget = ""
+	agents, err := getAgents()
+	if err != nil || len(agents) == 0 {
+		return "", false
+	}
 
-	return t, t != ""
+	if target == "_any" || target == "_all" {
+		for _, a := range agents {
+			if a.State != "Pending" {
+				return "", false
+			}
+		}
+
+		return "_all", true
+	}
+
+	for _, a := range agents {
+		if a.Hostname == target || a.MachineID == target {
+			if a.State == "Pending" {
+				return target, true
+			}
+
+			return "", false
+		}
+	}
+
+	return "", false
 }
 
 // ResolveTarget resolves a target string to a machine ID for NATS subject
