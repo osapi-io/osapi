@@ -136,7 +136,12 @@ func (s *RunPrivilegedCmdWithStdinPublicTestSuite) TestRunPrivilegedCmdWithStdin
 				exec.SetExecutor(em, s.mockExecutor)
 			}
 
-			output, err := em.RunPrivilegedCmdWithStdin(context.Background(), tc.command, tc.args, tc.stdin)
+			output, err := em.RunPrivilegedCmdWithStdin(
+				context.Background(),
+				tc.command,
+				tc.args,
+				tc.stdin,
+			)
 
 			tc.validateFunc(output, err)
 		})

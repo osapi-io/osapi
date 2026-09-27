@@ -626,7 +626,11 @@ func (suite *StatusPublicTestSuite) TestSectionForInterface() {
 		suite.Run(tc.name, func() {
 			tc.setup()
 
-			result := netplan.SectionForInterface(context.Background(), suite.mockExec, tc.ifaceName)
+			result := netplan.SectionForInterface(
+				context.Background(),
+				suite.mockExec,
+				tc.ifaceName,
+			)
 
 			tc.validateFunc(result)
 		})
