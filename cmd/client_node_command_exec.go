@@ -56,18 +56,24 @@ var clientNodeCommandExecCmd = &cobra.Command{
 			return
 		}
 
+		rawResults := buildRawResults(resp.Data.Results)
+		// The remote exit code is the command's result, so it is this
+		// process's exit code on every output path. Computing it before the
+		// branches is what stops a path being added later that forgets to.
+		exitCode := cli.MaxExitCode(rawResults)
+
 		if jsonOutput {
 			fmt.Println(string(resp.RawJSON()))
+			exitWith(exitCode)
+
 			return
 		}
 
 		if showStdout || showStderr {
 			fmt.Println()
-			results := buildRawResults(resp.Data.Results)
-			cli.PrintRawOutput(os.Stdout, os.Stderr, results, showStdout, showStderr)
-			if code := cli.MaxExitCode(results); code != 0 {
-				os.Exit(code)
-			}
+			cli.PrintRawOutput(os.Stdout, os.Stderr, rawResults, showStdout, showStderr)
+			exitWith(exitCode)
+
 			return
 		}
 
@@ -101,7 +107,22 @@ var clientNodeCommandExecCmd = &cobra.Command{
 		cli.PrintCompactTable(
 			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
 		)
+		exitWith(exitCode)
 	},
+}
+
+// exitWith ends the process with a failing remote command's exit code.
+//
+// A remote command that failed must not leave this process reporting success:
+// a script or a CI step branching on the exit code would read the failure as a
+// pass. Only cmd/ may exit, which is why this lives here rather than in
+// internal/cli.
+func exitWith(
+	code int,
+) {
+	if code != 0 {
+		os.Exit(code)
+	}
 }
 
 func buildRawResults(
