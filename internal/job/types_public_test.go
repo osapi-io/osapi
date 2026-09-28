@@ -304,3 +304,34 @@ func TestTypesPublicTestSuite(
 ) {
 	suite.Run(t, new(TypesPublicTestSuite))
 }
+
+// TestNodeStatusResponsePartial covers the question a caller asks of a status
+// assembled from six independent reads.
+func (suite *TypesPublicTestSuite) TestNodeStatusResponsePartial() {
+	tests := []struct {
+		name         string
+		response     job.NodeStatusResponse
+		validateFunc func(bool)
+	}{
+		{
+			name:         "every read succeeded",
+			response:     job.NodeStatusResponse{Hostname: "web-01"},
+			validateFunc: func(partial bool) { suite.False(partial) },
+		},
+		{
+			name: "one read failed",
+			response: job.NodeStatusResponse{
+				Hostname:    "web-01",
+				FieldErrors: map[string]string{"memory_stats": "permission denied"},
+			},
+			validateFunc: func(partial bool) { suite.True(partial) },
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			response := tt.response
+			tt.validateFunc(response.Partial())
+		})
+	}
+}

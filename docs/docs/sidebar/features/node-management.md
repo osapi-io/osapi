@@ -44,6 +44,32 @@ API server publishes it to NATS, an agent picks it up and reads the requested
 system information, then writes the result back to NATS KV. The CLI polls for
 the result and displays it.
 
+### When part of a status cannot be read
+
+`node status` is assembled from six independent reads: hostname, OS info,
+uptime, disks, memory and load. One of them failing is not a reason to answer
+nothing, so the others are still returned — but the failure is named rather than
+left as a zero, because a zero-valued field is otherwise indistinguishable from
+a host with nothing to report.
+
+A status where a read failed carries `partial: true` and a `field_errors` object
+keyed by the field each failed read would have filled:
+
+```json
+{
+  "hostname": "web-01",
+  "uptime": "4 hours, 1 minute",
+  "partial": true,
+  "field_errors": {
+    "memory_stats": "open /proc/meminfo: permission denied"
+  }
+}
+```
+
+The row's `status` stays `ok`: the operation ran, and the agent answered. The
+CLI prints an **Unavailable** section listing each field and why it could not be
+read.
+
 Network and command operations are also nested under the node — see
 [Network Management](network-management.md) and
 [Command Execution](command-execution.md) for those domains.

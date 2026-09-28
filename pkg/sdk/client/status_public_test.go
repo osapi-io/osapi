@@ -67,6 +67,42 @@ func (suite *StatusPublicTestSuite) TestGet() {
 			},
 		},
 		{
+			name:   "when a read failed the SDK carries which one",
+			target: "_any",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(`{"results":[{"hostname":"web-01","partial":true,` +
+					`"field_errors":{"memory_stats":"permission denied"}}]}`))
+			},
+			validateFunc: func(resp *client.Response[client.Collection[client.NodeStatus]], err error) {
+				suite.NoError(err)
+				suite.Require().NotNil(resp)
+				suite.Require().Len(resp.Data.Results, 1)
+				suite.True(resp.Data.Results[0].Partial)
+				suite.Contains(
+					resp.Data.Results[0].FieldErrors["memory_stats"],
+					"permission denied",
+				)
+			},
+		},
+		{
+			name:   "when every read succeeded the SDK reports no field errors",
+			target: "_any",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(`{"results":[{"hostname":"web-01"}]}`))
+			},
+			validateFunc: func(resp *client.Response[client.Collection[client.NodeStatus]], err error) {
+				suite.NoError(err)
+				suite.Require().NotNil(resp)
+				suite.Require().Len(resp.Data.Results, 1)
+				suite.False(resp.Data.Results[0].Partial)
+				suite.Nil(resp.Data.Results[0].FieldErrors)
+			},
+		},
+		{
 			name:   "when server returns 403 returns AuthError",
 			target: "_any",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
