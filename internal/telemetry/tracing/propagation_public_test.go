@@ -23,14 +23,14 @@ package tracing_test
 import (
 	"context"
 	"net/http"
-	"strings"
 	"testing"
+
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/stretchr/testify/suite"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/osapi-io/osapi/internal/telemetry/tracing"
 )
@@ -48,149 +48,6 @@ func (s *PropagationPublicTestSuite) SetupTest() {
 	tp := sdktrace.NewTracerProvider()
 	otel.SetTracerProvider(tp)
 	otel.SetTextMapPropagator(propagation.TraceContext{})
-}
-
-func (s *PropagationPublicTestSuite) TestInjectExtractRoundtrip() {
-	tests := []struct {
-		name         string
-		setupCtx     func() context.Context
-		validateFunc func(originalCtx context.Context, data map[string]interface{})
-	}{
-		{
-			name: "when active span roundtrips trace context",
-			setupCtx: func() context.Context {
-				ctx, _ := otel.Tracer("test").Start(s.ctx, "test-span")
-
-				return ctx
-			},
-			validateFunc: func(originalCtx context.Context, data map[string]interface{}) {
-				// traceparent should be set in the map
-				s.Contains(data, "traceparent")
-				s.NotEmpty(data["traceparent"])
-
-				// Extract and verify trace ID matches
-				extractedCtx := tracing.ExtractTraceContext(context.Background(), data)
-				originalSC := trace.SpanContextFromContext(originalCtx)
-				extractedSC := trace.SpanContextFromContext(extractedCtx)
-
-				s.Equal(originalSC.TraceID(), extractedSC.TraceID())
-			},
-		},
-		{
-			name: "when no active span inject is noop",
-			setupCtx: func() context.Context {
-				return context.Background()
-			},
-			validateFunc: func(_ context.Context, data map[string]interface{}) {
-				s.NotContains(data, "traceparent")
-			},
-		},
-		{
-			name: "when no traceparent extract returns original context",
-			setupCtx: func() context.Context {
-				return context.Background()
-			},
-			validateFunc: func(_ context.Context, data map[string]interface{}) {
-				extractedCtx := tracing.ExtractTraceContext(context.Background(), data)
-				sc := trace.SpanContextFromContext(extractedCtx)
-				s.False(sc.IsValid())
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			ctx := tc.setupCtx()
-			data := make(map[string]interface{})
-			tracing.InjectTraceContext(ctx, data)
-			tc.validateFunc(ctx, data)
-		})
-	}
-}
-
-func (s *PropagationPublicTestSuite) TestHeaderInjectExtractRoundtrip() {
-	tests := []struct {
-		name         string
-		setupCtx     func() context.Context
-		validateFunc func(originalCtx context.Context, header http.Header)
-	}{
-		{
-			name: "when active span roundtrips trace context via headers",
-			setupCtx: func() context.Context {
-				ctx, _ := otel.Tracer("test").Start(s.ctx, "test-span")
-
-				return ctx
-			},
-			validateFunc: func(originalCtx context.Context, header http.Header) {
-				s.NotEmpty(header.Get("Traceparent"))
-
-				extractedCtx := tracing.ExtractTraceContextFromHeader(
-					context.Background(),
-					header,
-				)
-				originalSC := trace.SpanContextFromContext(originalCtx)
-				extractedSC := trace.SpanContextFromContext(extractedCtx)
-
-				s.Equal(originalSC.TraceID(), extractedSC.TraceID())
-			},
-		},
-		{
-			name: "when non-canonical header keys extracts trace context",
-			setupCtx: func() context.Context {
-				ctx, _ := otel.Tracer("test").Start(s.ctx, "test-span")
-
-				return ctx
-			},
-			validateFunc: func(originalCtx context.Context, header http.Header) {
-				// Simulate NATS JetStream delivering headers with lowercase keys
-				lowercaseHeader := http.Header{}
-				for k, v := range header {
-					lowercaseHeader[strings.ToLower(k)] = v
-				}
-
-				extractedCtx := tracing.ExtractTraceContextFromHeader(
-					context.Background(),
-					lowercaseHeader,
-				)
-				originalSC := trace.SpanContextFromContext(originalCtx)
-				extractedSC := trace.SpanContextFromContext(extractedCtx)
-
-				s.Equal(originalSC.TraceID(), extractedSC.TraceID())
-			},
-		},
-		{
-			name: "when no active span inject is noop",
-			setupCtx: func() context.Context {
-				return context.Background()
-			},
-			validateFunc: func(_ context.Context, header http.Header) {
-				s.Empty(header.Get("Traceparent"))
-			},
-		},
-		{
-			name: "when no traceparent extract returns original context",
-			setupCtx: func() context.Context {
-				return context.Background()
-			},
-			validateFunc: func(_ context.Context, header http.Header) {
-				extractedCtx := tracing.ExtractTraceContextFromHeader(
-					context.Background(),
-					header,
-				)
-				sc := trace.SpanContextFromContext(extractedCtx)
-				s.False(sc.IsValid())
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			ctx := tc.setupCtx()
-			header := make(http.Header)
-			tracing.InjectTraceContextToHeader(ctx, header)
-			tc.validateFunc(ctx, header)
-		})
-	}
 }
 
 func (s *PropagationPublicTestSuite) TestMapCarrierGet() {
@@ -330,4 +187,96 @@ func TestPropagationPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(PropagationPublicTestSuite))
+}
+
+// TestExtractFromHeader covers the header path, which the NATS consumer uses on
+// every job: JetStream delivers header keys in whatever casing the publisher used,
+// and http.Header.Get only finds the canonical form.
+func (s *PropagationPublicTestSuite) TestExtractFromHeader() {
+	const traceID = "4bf92f3577b34da6a3ce929d0e0e4736"
+
+	tests := []struct {
+		name         string
+		header       http.Header
+		validateFunc func(context.Context)
+	}{
+		{
+			name: "a canonical traceparent",
+			header: http.Header{
+				"Traceparent": []string{
+					"00-" + traceID + "-00f067aa0ba902b7-01",
+				},
+			},
+			validateFunc: func(ctx context.Context) {
+				sc := trace.SpanContextFromContext(ctx)
+				s.Require().True(sc.IsValid())
+				s.Equal(traceID, sc.TraceID().String())
+			},
+		},
+		{
+			name: "a lowercase traceparent, which is what JetStream delivers",
+			header: http.Header{
+				"traceparent": []string{
+					"00-" + traceID + "-00f067aa0ba902b7-01",
+				},
+			},
+			validateFunc: func(ctx context.Context) {
+				sc := trace.SpanContextFromContext(ctx)
+				s.Require().True(sc.IsValid())
+				s.Equal(traceID, sc.TraceID().String())
+			},
+		},
+		{
+			name:   "no trace context at all",
+			header: http.Header{},
+			validateFunc: func(ctx context.Context) {
+				sc := trace.SpanContextFromContext(ctx)
+				s.False(sc.IsValid())
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.validateFunc(tracing.ExtractTraceContextFromHeader(s.ctx, tt.header))
+		})
+	}
+}
+
+// TestExtractTraceContext covers the map path, which the agent uses when a job
+// carries its trace context in the payload rather than in headers.
+func (s *PropagationPublicTestSuite) TestExtractTraceContext() {
+	const traceID = "4bf92f3577b34da6a3ce929d0e0e4736"
+
+	tests := []struct {
+		name         string
+		data         map[string]interface{}
+		validateFunc func(context.Context)
+	}{
+		{
+			name: "a traceparent in the payload",
+			data: map[string]interface{}{
+				"traceparent": "00-" + traceID + "-00f067aa0ba902b7-01",
+			},
+			validateFunc: func(ctx context.Context) {
+				sc := trace.SpanContextFromContext(ctx)
+				s.Require().True(sc.IsValid())
+				s.Equal(traceID, sc.TraceID().String())
+			},
+		},
+		{
+			name: "no trace context at all",
+			data: map[string]interface{}{},
+			validateFunc: func(ctx context.Context) {
+				sc := trace.SpanContextFromContext(ctx)
+				s.False(sc.IsValid())
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.validateFunc(tracing.ExtractTraceContext(s.ctx, tt.data))
+		})
+	}
 }

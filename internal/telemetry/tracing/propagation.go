@@ -66,15 +66,6 @@ func (c mapCarrier) Keys() []string {
 	return keys
 }
 
-// InjectTraceContext injects the current span's trace context into a data map.
-// If there is no active span, this is a no-op.
-func InjectTraceContext(
-	ctx context.Context,
-	data map[string]interface{},
-) {
-	otel.GetTextMapPropagator().Inject(ctx, mapCarrier{data: data})
-}
-
 // ExtractTraceContext extracts trace context from a data map and returns
 // a new context with the extracted span context. If no trace context is
 // present, the original context is returned.
@@ -83,15 +74,6 @@ func ExtractTraceContext(
 	data map[string]interface{},
 ) context.Context {
 	return otel.GetTextMapPropagator().Extract(ctx, mapCarrier{data: data})
-}
-
-// InjectTraceContextToHeader injects the current span's trace context into
-// HTTP-compatible headers (usable with nats.Header via type conversion).
-func InjectTraceContextToHeader(
-	ctx context.Context,
-	header http.Header,
-) {
-	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(header))
 }
 
 // ExtractTraceContextFromHeader extracts trace context from HTTP-compatible

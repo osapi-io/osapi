@@ -84,6 +84,9 @@ a deploy that changes only the permissions takes effect and reports
   the deploy rather than passing silently; a numeric id is accepted as itself,
   which is what a container image without a `passwd` entry needs. When they
   differ, the agent runs `chown` through its privilege escalation.
+- A `mode` must be three or four octal digits. An unparsable one fails the
+  request rather than becoming 0644, which used to grant more than was asked for
+  while reporting success.
 - An absent `mode` means "leave the permissions alone" rather than 0644. The
   default applies to a file being created, because applying it to a file already
   on disk would quietly widen permissions someone else set. The same holds for

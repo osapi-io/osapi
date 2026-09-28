@@ -22,6 +22,7 @@ package enrollment
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -206,13 +207,20 @@ func (w *Watcher) RejectByHostname(
 
 // findPendingBy scans all pending agents and returns the first one
 // matching the predicate. Returns nil if no match is found.
+// findPendingBy scans the enrollment bucket for the first pending agent the
+// predicate accepts.
+//
+// It reads every key, which is right while a pending queue holds the handful of
+// agents an operator is about to accept. A deployment that leaves hundreds pending
+// wants an index — hostname and fingerprint to machine ID — rather than a faster
+// scan.
 func (w *Watcher) findPendingBy(
 	ctx context.Context,
 	match func(PendingAgent) bool,
 ) (*PendingAgent, error) {
 	lister, err := w.enrollmentKV.ListKeys(ctx)
 	if err != nil {
-		if err == jetstream.ErrNoKeysFound {
+		if errors.Is(err, jetstream.ErrNoKeysFound) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("list enrollment keys: %w", err)

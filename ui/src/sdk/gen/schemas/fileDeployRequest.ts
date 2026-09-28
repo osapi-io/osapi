@@ -12,7 +12,10 @@ export interface FileDeployRequest {
   object_name: string;
   /** Destination path on the target filesystem. */
   path: string;
-  /** File permission mode (e.g., "0644"). */
+  /**
+     * File permission mode as three or four octal digits (e.g., "0644").
+     * @pattern ^[0-7]{3,4}$
+     */
   mode?: string;
   /** File owner user. */
   owner?: string;
