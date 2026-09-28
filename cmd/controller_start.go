@@ -91,12 +91,12 @@ var controllerStartCmd = &cobra.Command{
 		}
 
 		sm.Start()
-		cli.RunServer(ctx, sm, func() {
+		cli.RunServer(ctx, sm, func(shutdownCtx context.Context) {
 			if metricsServer != nil {
-				metricsServer.Stop(context.Background())
+				metricsServer.Stop(shutdownCtx)
 			}
 
-			_ = shutdownTracer(context.Background())
+			_ = shutdownTracer(shutdownCtx)
 			cli.CloseNATSClient(b.nc)
 		})
 	},

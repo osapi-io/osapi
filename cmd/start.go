@@ -184,12 +184,12 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 		}
 
 		composite.Start()
-		cli.RunServer(ctx, composite, func() {
+		cli.RunServer(ctx, composite, func(shutdownCtx context.Context) {
 			for _, s := range metricsServers {
-				s.Stop(context.Background())
+				s.Stop(shutdownCtx)
 			}
 
-			_ = shutdownTracer(context.Background())
+			_ = shutdownTracer(shutdownCtx)
 			cli.CloseNATSClient(agentBundle.nc)
 			cli.CloseNATSClient(controllerBundle.nc)
 		})

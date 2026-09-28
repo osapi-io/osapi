@@ -74,9 +74,9 @@ Configures streams, consumers, and KV buckets needed by the job system.
 		}
 
 		var ns cli.Lifecycle = &natsLifecycle{server: s}
-		cli.RunServer(ctx, ns, func() {
+		cli.RunServer(ctx, ns, func(shutdownCtx context.Context) {
 			if metricsServer != nil {
-				metricsServer.Stop(context.Background())
+				metricsServer.Stop(shutdownCtx)
 			}
 		})
 	},
