@@ -73,15 +73,33 @@ func (suite *LifecyclePublicTestSuite) TestRunServer() {
 			ctx, cancel := context.WithCancel(context.Background())
 
 			cleanupRan := 0
-			cleanupFns := make([]func(), tc.cleanupCount)
+
+			// Every cleanup records the context it was handed, because the point
+			// of the change is that it gets a bounded one rather than
+			// context.Background().
+			var deadlines []bool
+
+			cleanupFns := make([]func(context.Context), tc.cleanupCount)
 			for i := range cleanupFns {
-				cleanupFns[i] = func() { cleanupRan++ }
+				cleanupFns[i] = func(shutdownCtx context.Context) {
+					cleanupRan++
+
+					_, hasDeadline := shutdownCtx.Deadline()
+					deadlines = append(deadlines, hasDeadline)
+				}
 			}
 
 			cancel()
 			cli.RunServer(ctx, mockServer, cleanupFns...)
 
 			tc.validateFunc(cleanupRan)
+
+			for _, hasDeadline := range deadlines {
+				suite.True(
+					hasDeadline,
+					"cleanup must be bounded: an unreachable collector otherwise blocks SIGTERM",
+				)
+			}
 		})
 	}
 }

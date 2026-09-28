@@ -33,24 +33,38 @@ type Lifecycle interface {
 	Stop(ctx context.Context)
 }
 
-// RunServer blocks until ctx is cancelled, then shuts down the server
-// with a timeout and runs cleanup functions.
+// ShutdownTimeout bounds everything a shutdown does: stopping the server and
+// then every cleanup function, against one clock.
+//
+// The cleanups are where the network is: a metrics provider and an OTLP exporter
+// both flush on the way out, and an unreachable collector makes that flush block.
+// Handing them a context.Background() — which is what they used to get — is how
+// SIGTERM stops terminating the process.
+const ShutdownTimeout = 10 * time.Second
+
+// RunServer blocks until ctx is cancelled, then shuts down the server and runs
+// the cleanup functions, all within ShutdownTimeout.
+//
+// Cleanup receives the same context the server did, so one budget covers the
+// whole shutdown rather than each phase having its own and the total being
+// unbounded. A cleanup that ignores its context can still overrun; the ones here
+// pass it to the calls that block.
 func RunServer(
 	ctx context.Context,
 	server Lifecycle,
-	cleanupFns ...func(),
+	cleanupFns ...func(context.Context),
 ) {
 	<-ctx.Done()
 
 	shutdownCtx, cancel := context.WithTimeout(
 		context.Background(),
-		10*time.Second,
+		ShutdownTimeout,
 	)
 	defer cancel()
 
 	server.Stop(shutdownCtx)
 
 	for _, fn := range cleanupFns {
-		fn()
+		fn(shutdownCtx)
 	}
 }

@@ -78,12 +78,12 @@ It processes jobs as they become available.
 		}
 
 		a.Start()
-		cli.RunServer(ctx, a, func() {
+		cli.RunServer(ctx, a, func(shutdownCtx context.Context) {
 			if metricsServer != nil {
-				metricsServer.Stop(context.Background())
+				metricsServer.Stop(shutdownCtx)
 			}
 
-			_ = shutdownTracer(context.Background())
+			_ = shutdownTracer(shutdownCtx)
 			cli.CloseNATSClient(b.nc)
 		})
 	},
