@@ -67,7 +67,15 @@ The enrollment process follows a Salt-style accept/reject model:
    SHA256 fingerprint.
 
 3. **Pending state** -- the controller stores the request in a JetStream KV
-   bucket. The agent enters pending state and waits.
+   bucket. The agent enters pending state and waits, **republishing its request
+   on every heartbeat** until it is accepted. The first request travels over
+   core NATS, which has no delivery guarantee: a controller that was down or a
+   publish that failed would otherwise leave the agent pending with the
+   controller having never heard of it, and a pending agent does not consume
+   jobs, so that state lasted until somebody restarted the process. Republishing
+   also recovers a controller that lost its pending entries. It is safe because
+   acceptance is keyed by machine ID — the controller overwrites the pending
+   entry rather than accumulating one per attempt.
 
 4. **Admin accepts** -- an administrator reviews pending agents and accepts or
    rejects them via the CLI. On acceptance, the controller replies with its own

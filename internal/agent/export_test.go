@@ -726,6 +726,14 @@ func ExportPublishEnrollmentRequest(
 	return a.publishEnrollmentRequest()
 }
 
+// ExportRetryEnrollmentIfPending exposes the republish a pending agent performs
+// on each heartbeat.
+func ExportRetryEnrollmentIfPending(
+	a *Agent,
+) {
+	a.retryEnrollmentIfPending()
+}
+
 // SetMarshalJSONEnrollment overrides the marshalJSONEnrollment function for testing.
 func SetMarshalJSONEnrollment(
 	fn func(interface{}) ([]byte, error),

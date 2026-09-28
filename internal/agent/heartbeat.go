@@ -97,6 +97,7 @@ func (a *Agent) startHeartbeat(
 				}
 
 				a.writeRegistration(ctx, machineID, hostname)
+				a.retryEnrollmentIfPending()
 
 				a.heartbeatLogger.Info(
 					"heartbeat refreshed",

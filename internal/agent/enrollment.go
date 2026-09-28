@@ -111,6 +111,42 @@ func (a *Agent) handlePKIEnrollment(
 	return nil
 }
 
+// retryEnrollmentIfPending asks again for an agent still waiting to be accepted.
+//
+// The first request is published once, over core NATS, with no delivery guarantee
+// and nothing to retry it: a controller that was down, a broker that dropped it,
+// or a publish that simply failed left the agent Pending with the controller
+// having never heard of it. Since Start only consumes jobs when the agent is not
+// Pending, that state was permanent until somebody restarted the process.
+//
+// Republishing is safe because acceptance is keyed by machine ID: the controller
+// overwrites the pending entry rather than accumulating them, and an operator who
+// has already accepted this agent sees nothing new. It also recovers the case
+// where the controller lost its pending entries and the agent is the only thing
+// that still knows it wants in.
+//
+// Called from the heartbeat, which runs while Pending precisely so the agent stays
+// visible.
+func (a *Agent) retryEnrollmentIfPending() {
+	if a.State() != job.AgentStatePending {
+		return
+	}
+
+	if err := a.publishEnrollmentRequest(); err != nil {
+		a.pkiLogger.Warn(
+			"failed to republish enrollment request",
+			slog.String("error", err.Error()),
+		)
+
+		return
+	}
+
+	a.pkiLogger.Info(
+		"enrollment request republished, still waiting to be accepted",
+		slog.String("machine_id", a.machineID),
+	)
+}
+
 // publishEnrollmentRequest sends the agent's enrollment request to the
 // controller via core NATS (not JetStream).
 func (a *Agent) publishEnrollmentRequest() error {
