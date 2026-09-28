@@ -35,8 +35,10 @@ type RawResult struct {
 }
 
 // PrintRawOutput writes raw command output to the given writers.
-// For single results, output is printed without hostname prefix.
-// For multiple results, each line is prefixed with a styled hostname.
+//
+// Every line is prefixed with a styled hostname, including a single result: a
+// command run against one host today is run against ten tomorrow, and output that
+// changes shape with the number of hosts cannot be parsed by anything downstream.
 // showStdout/showStderr control which streams are printed.
 func PrintRawOutput(
 	stdout io.Writer,

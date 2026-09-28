@@ -8205,7 +8205,10 @@ components:
             validate: required,min=1
         mode:
           type: string
-          description: File permission mode (e.g., "0644").
+          pattern: ^[0-7]{3,4}$
+          description: File permission mode as three or four octal digits (e.g., "0644").
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,file_mode
         owner:
           type: string
           description: File owner user.

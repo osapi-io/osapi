@@ -94,7 +94,7 @@ func (u *Debian) UpdateResolvConfByInterface(
 	// Apply via the shared Netplan helper (handles write, validate,
 	// apply, and KV state tracking with SHA-based idempotency).
 	changed, applyErr := netplan.ApplyConfig(
-		context.TODO(),
+		ctx,
 		u.logger,
 		u.fs,
 		u.stateKV,

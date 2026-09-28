@@ -229,6 +229,7 @@ func (s *WatcherPublicTestSuite) TestDetectTransitions() {
 			tt.setupPrev()
 
 			notify.WatcherDetectTransitions(
+				context.Background(),
 				s.watcher,
 				tt.key,
 				tt.componentType,

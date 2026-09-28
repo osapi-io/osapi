@@ -508,6 +508,12 @@ func (c *Client) publishAndCollect(
 			slog.String("error", err.Error()),
 		)
 	} else {
+		// A snapshot, taken before the job is published. An agent that joins in
+		// the window between here and the first response is not expected, so it
+		// is not waited for and gets no timeout row: its own response still
+		// arrives and is collected if it answers in time. Re-listing mid-collect
+		// would trade that for a broadcast whose expected set changes while it
+		// is being satisfied.
 		expectedHostnames = job.ExpectedAgentHostnames(agents, target)
 		c.logger.DebugContext(
 			ctx, "broadcast expected agent count",

@@ -23,6 +23,7 @@ package enrollment
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -212,7 +213,7 @@ func (w *Watcher) ListPending(
 	lister, err := w.enrollmentKV.ListKeys(ctx)
 	if err != nil {
 		// jetstream.ErrNoKeysFound means the bucket is empty.
-		if err == jetstream.ErrNoKeysFound {
+		if errors.Is(err, jetstream.ErrNoKeysFound) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("list enrollment keys: %w", err)

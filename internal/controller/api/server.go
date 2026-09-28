@@ -135,6 +135,15 @@ func (s *Server) Start() {
 }
 
 // Stop gracefully shuts down the Echo server.
+// Stop asks the server to drain and returns without waiting for it.
+//
+// Cancelling is what starts the drain; StartConfig.GracefulTimeout bounds how long
+// Echo waits, and the goroutine in Start reports the outcome. A caller must not
+// treat this returning as "every in-flight request finished" — the only caller,
+// cli.RunServer, then runs cleanup within its own budget, which is what bounds the
+// process rather than this call.
+//
+// The context is unused for the same reason: there is nothing here to cancel.
 func (s *Server) Stop(
 	_ context.Context,
 ) {

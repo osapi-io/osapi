@@ -26,6 +26,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"sort"
 	"strings"
 	"time"
 
@@ -634,14 +635,10 @@ func (c *Client) computeStatusFromEvents(
 		}
 	}
 
-	// Sort timeline by timestamp
-	for i := 0; i < len(timeline)-1; i++ {
-		for j := i + 1; j < len(timeline); j++ {
-			if timeline[i].Timestamp.After(timeline[j].Timestamp) {
-				timeline[i], timeline[j] = timeline[j], timeline[i]
-			}
-		}
-	}
+	// Sort timeline by timestamp.
+	sort.SliceStable(timeline, func(i, j int) bool {
+		return timeline[i].Timestamp.Before(timeline[j].Timestamp)
+	})
 	result.Timeline = timeline
 
 	// Build agent states with detailed information

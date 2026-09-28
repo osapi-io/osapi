@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -89,6 +90,20 @@ func init() {
 		return err == nil
 	})
 
+	// file_mode validates a file permission mode as three or four octal digits,
+	// which is what a provider can actually apply. An unparsable mode used to
+	// become 0644 further down, quietly granting more than was asked for.
+	_ = instance.RegisterValidation("file_mode", func(fl validator.FieldLevel) bool {
+		mode := fl.Field().String()
+		if len(mode) < 3 || len(mode) > 4 {
+			return false
+		}
+
+		_, err := strconv.ParseUint(mode, 8, 32)
+
+		return err == nil
+	})
+
 	// cron_schedule validates a standard 5-field cron expression
 	// (minute hour day-of-month month day-of-week).
 	cronParser := cronparser.NewParser(
@@ -150,6 +165,12 @@ var customHints = map[string]func(fe validator.FieldError) string{
 	"go_duration": func(fe validator.FieldError) string {
 		return fmt.Sprintf(
 			"%q is not a valid Go duration (e.g., 30s, 5m, 1h)",
+			fe.Value(),
+		)
+	},
+	"file_mode": func(fe validator.FieldError) string {
+		return fmt.Sprintf(
+			"%q is not a valid file mode (expected three or four octal digits, e.g., 0644)",
 			fe.Value(),
 		)
 	},

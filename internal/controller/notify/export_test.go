@@ -85,13 +85,14 @@ func WatcherSetKV(
 
 // WatcherDetectTransitions exposes the private detectTransitions method for testing.
 func WatcherDetectTransitions(
+	ctx context.Context,
 	w *Watcher,
 	key string,
 	componentType string,
 	hostname string,
 	conditions []job.Condition,
 ) {
-	w.detectTransitions(key, componentType, hostname, conditions)
+	w.detectTransitions(ctx, key, componentType, hostname, conditions)
 }
 
 // WatcherHandleEntry exposes the private handleEntry method for testing.

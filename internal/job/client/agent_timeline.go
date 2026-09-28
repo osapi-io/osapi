@@ -23,6 +23,7 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"sort"
@@ -30,6 +31,8 @@ import (
 	"time"
 
 	"github.com/osapi-io/osapi/internal/job"
+
+	"github.com/nats-io/nats.go/jetstream"
 )
 
 // WriteAgentTimelineEvent writes an append-only timeline event
@@ -88,8 +91,14 @@ func (c *Client) GetAgentTimeline(
 
 	keys, err := c.stateKV.Keys(ctx)
 	if err != nil {
-		// No keys found is not an error for timeline
-		return []job.TimelineEvent{}, nil
+		// An empty bucket is an empty timeline. Anything else is a bucket that
+		// could not be read, and reporting that as "no events" tells an operator
+		// the agent has no history when the truth is that nobody knows.
+		if errors.Is(err, jetstream.ErrNoKeysFound) {
+			return []job.TimelineEvent{}, nil
+		}
+
+		return nil, fmt.Errorf("list timeline keys for %q: %w", hostname, err)
 	}
 
 	var events []job.TimelineEvent

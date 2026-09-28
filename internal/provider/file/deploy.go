@@ -110,7 +110,10 @@ func (p *Service) Deploy(
 		}, nil
 	}
 
-	mode := parseFileMode(req.Mode)
+	mode, err := parseFileMode(req.Mode)
+	if err != nil {
+		return nil, err
+	}
 
 	dir := p.fs.Dir(req.Path)
 	if err := p.fs.MkdirAll(dir, 0o755); err != nil {
@@ -160,7 +163,10 @@ func (p *Service) applyPermissions(
 	// belongs to a file being created, and applying it to one already on disk
 	// would quietly widen permissions someone else set.
 	if req.Mode != "" {
-		want := parseFileMode(req.Mode)
+		want, err := parseFileMode(req.Mode)
+		if err != nil {
+			return false, err
+		}
 
 		info, err := p.fs.Stat(req.Path)
 		if err != nil {
@@ -289,18 +295,21 @@ func BuildStateKey(
 }
 
 // parseFileMode parses a string file mode (e.g., "0644") into an os.FileMode.
-// Returns 0644 as the default if the string is empty or invalid.
+//
+// An absent mode means the 0644 a new file is created with. An unparsable one is
+// an error: it used to become 0644 as well, which silently granted more than the
+// request asked for and reported success for a mode nobody applied.
 func parseFileMode(
 	mode string,
-) os.FileMode {
+) (os.FileMode, error) {
 	if mode == "" {
-		return 0o644
+		return 0o644, nil
 	}
 
 	parsed, err := strconv.ParseUint(mode, 8, 32)
 	if err != nil {
-		return 0o644
+		return 0, fmt.Errorf("invalid file mode %q: %w", mode, err)
 	}
 
-	return os.FileMode(parsed)
+	return os.FileMode(parsed), nil
 }

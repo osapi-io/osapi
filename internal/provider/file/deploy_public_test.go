@@ -452,20 +452,19 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			wantErrMsg: "failed to update file state",
 		},
 		{
-			name: "when mode is invalid defaults to 0644",
+			name: "when the mode cannot be parsed on a file already correct",
 			setupMock: func(
 				_ *gomock.Controller,
 				mockObj *filemocks.MockObjectStore,
-				mockKV *jobmocks.MockKeyValue,
-				_ *avfs.VFS,
+				_ *jobmocks.MockKeyValue,
+				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
 					GetBytes(gomock.Any(), gomock.Any()).
 					Return(fileContent, nil)
 
-				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(uint64(1), nil)
+				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
+				_ = (*appFs).WriteFile("/etc/nginx/nginx.conf", fileContent, 0o644)
 			},
 			req: file.DeployRequest{
 				ObjectName:  "nginx.conf",
@@ -473,16 +472,31 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				Mode:        "not-octal",
 				ContentType: "raw",
 			},
-			want: &file.DeployResult{
-				Changed: true,
-				SHA256:  existingSHA,
-				Path:    "/etc/nginx/nginx.conf",
+			wantErr:    true,
+			wantErrMsg: "invalid file mode",
+		},
+		{
+			name: "when the mode cannot be parsed the deploy fails",
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				_ *jobmocks.MockKeyValue,
+				_ *avfs.VFS,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 			},
-			validateFunc: func(appFs avfs.VFS) {
-				info, err := appFs.Stat("/etc/nginx/nginx.conf")
-				suite.Require().NoError(err)
-				suite.Equal(os.FileMode(0o644), info.Mode())
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				Mode:        "not-octal",
+				ContentType: "raw",
 			},
+			wantErr: true,
+			// It used to become 0644, which granted more than was asked for and
+			// reported success for a mode nobody applied.
+			wantErrMsg: "invalid file mode",
 		},
 		{
 			name: "when mode is set",

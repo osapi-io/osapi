@@ -1008,3 +1008,94 @@ func TestValidationPublicTestSuite(
 ) {
 	suite.Run(t, new(ValidationPublicTestSuite))
 }
+
+// TestFileMode covers the mode a provider can actually apply. An unparsable one
+// used to become 0644 further down, granting more than was asked for.
+func (s *ValidationPublicTestSuite) TestFileMode() {
+	tests := []struct {
+		name         string
+		field        string
+		contains     []string
+		validateFunc func(string, bool)
+	}{
+		{
+			name:  "four octal digits",
+			field: "0644",
+			validateFunc: func(_ string, ok bool) {
+				s.True(ok)
+			},
+		},
+		{
+			name:  "three octal digits",
+			field: "755",
+			validateFunc: func(_ string, ok bool) {
+				s.True(ok)
+			},
+		},
+		{
+			name:  "a digit that is not octal",
+			field: "0999",
+			validateFunc: func(_ string, ok bool) {
+				s.False(ok)
+			},
+		},
+		{
+			name:  "not a number at all",
+			field: "rwxr-xr-x",
+			validateFunc: func(_ string, ok bool) {
+				s.False(ok)
+			},
+		},
+		{
+			name:  "too short to be a mode",
+			field: "64",
+			validateFunc: func(_ string, ok bool) {
+				s.False(ok)
+			},
+		},
+		{
+			name:  "too long to be a mode",
+			field: "06440",
+			validateFunc: func(_ string, ok bool) {
+				s.False(ok)
+			},
+		},
+		{
+			name:  "empty passes with omitempty",
+			field: "",
+			validateFunc: func(_ string, ok bool) {
+				s.True(ok)
+			},
+		},
+		{
+			name:  "an invalid mode explains itself",
+			field: "rwx",
+			contains: []string{
+				"file_mode",
+				"three or four octal digits",
+			},
+			validateFunc: func(errMsg string, ok bool) {
+				s.False(ok)
+				s.Contains(errMsg, "file_mode")
+				s.Contains(errMsg, "three or four octal digits")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			switch {
+			case len(tt.contains) > 0:
+				type modeReq struct {
+					Mode string `validate:"required,file_mode"`
+				}
+
+				tt.validateFunc(validation.Struct(modeReq{Mode: tt.field}))
+			case tt.field == "":
+				tt.validateFunc(validation.Var(tt.field, "omitempty,file_mode"))
+			default:
+				tt.validateFunc(validation.Var(tt.field, "file_mode"))
+			}
+		})
+	}
+}

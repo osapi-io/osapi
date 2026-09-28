@@ -104,8 +104,8 @@ type FileDeployRequest struct {
 	// Group File owner group.
 	Group *string `json:"group,omitempty"`
 
-	// Mode File permission mode (e.g., "0644").
-	Mode *string `json:"mode,omitempty"`
+	// Mode File permission mode as three or four octal digits (e.g., "0644").
+	Mode *string `json:"mode,omitempty" validate:"omitempty,file_mode"`
 
 	// ObjectName Name of the file in the Object Store.
 	ObjectName string `json:"object_name" validate:"required,min=1,max=255"`

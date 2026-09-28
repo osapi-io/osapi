@@ -133,7 +133,7 @@ func (w *Watcher) handleEntry(
 		return
 	}
 
-	w.detectTransitions(key, componentType, displayName, conditions)
+	w.detectTransitions(ctx, key, componentType, displayName, conditions)
 }
 
 // resolveDisplayName returns the hostname from an agent registration value,
@@ -219,6 +219,7 @@ func (w *Watcher) extractConditions(
 // detectTransitions compares the current conditions against the previously
 // seen conditions for a key and calls Notify for any transitions.
 func (w *Watcher) detectTransitions(
+	ctx context.Context,
 	key string,
 	componentType string,
 	hostname string,
@@ -247,7 +248,7 @@ func (w *Watcher) detectTransitions(
 
 		if state == nil {
 			// New condition — fire.
-			_ = w.notifier.Notify(context.Background(), ConditionEvent{
+			_ = w.notifier.Notify(ctx, ConditionEvent{
 				ComponentType: componentType,
 				Hostname:      hostname,
 				Condition:     condType,
@@ -261,7 +262,7 @@ func (w *Watcher) detectTransitions(
 		} else if state.active && w.renotifyInterval > 0 &&
 			now.Sub(state.lastNotified) >= w.renotifyInterval {
 			// Still active and renotify interval elapsed — re-fire.
-			_ = w.notifier.Notify(context.Background(), ConditionEvent{
+			_ = w.notifier.Notify(ctx, ConditionEvent{
 				ComponentType: componentType,
 				Hostname:      hostname,
 				Condition:     condType,
@@ -275,7 +276,7 @@ func (w *Watcher) detectTransitions(
 	// Resolved conditions (in prev, not in current).
 	for condType, state := range prev {
 		if !current[condType] && state.active {
-			_ = w.notifier.Notify(context.Background(), ConditionEvent{
+			_ = w.notifier.Notify(ctx, ConditionEvent{
 				ComponentType: componentType,
 				Hostname:      hostname,
 				Condition:     condType,

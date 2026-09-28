@@ -34,6 +34,8 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+
+	"github.com/nats-io/nats.go/jetstream"
 )
 
 type AgentTimelinePublicTestSuite struct {
@@ -256,15 +258,29 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 			},
 		},
 		{
-			name:     "when no keys found returns empty slice",
+			name:     "when the bucket is empty returns an empty timeline",
 			hostname: "server1",
 			useState: true,
 			setupMocks: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
 					Keys(gomock.Any()).
-					Return(nil, errors.New("nats: no keys found"))
+					Return(nil, jetstream.ErrNoKeysFound)
 			},
 			expectedCount: 0,
+		},
+		{
+			name:     "when the bucket cannot be read the failure is reported",
+			hostname: "server1",
+			useState: true,
+			setupMocks: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("nats: connection closed"))
+			},
+			expectError: true,
+			// An agent with no history and a backend nobody can read are not the
+			// same answer.
+			errorMsg: "list timeline keys",
 		},
 		{
 			name:        "when stateKV is nil returns error",
