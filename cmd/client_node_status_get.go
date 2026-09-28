@@ -22,6 +22,8 @@ package cmd
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
@@ -153,6 +155,22 @@ func displayNodeStatusDetail(
 			Rows:    diskRows,
 		},
 	}
+
+	// A read that failed is named, so a zero above is not mistaken for a host
+	// with nothing to report.
+	if len(data.FieldErrors) > 0 {
+		fieldRows := make([][]string, 0, len(data.FieldErrors))
+		for _, field := range slices.Sorted(maps.Keys(data.FieldErrors)) {
+			fieldRows = append(fieldRows, []string{field, data.FieldErrors[field]})
+		}
+
+		sections = append(sections, cli.Section{
+			Title:   "Unavailable",
+			Headers: []string{"FIELD", "REASON"},
+			Rows:    fieldRows,
+		})
+	}
+
 	cli.PrintCompactTable(sections)
 }
 

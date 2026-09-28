@@ -115,6 +115,35 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 			},
 		},
 		{
+			name:    "a read that failed is reported, not left as a zero",
+			request: gen.GetNodeStatusRequestObject{Hostname: "_any"},
+			setupMock: func() {
+				statusResp := job.NodeStatusResponse{
+					Hostname: "test-host",
+					Uptime:   time.Hour,
+					FieldErrors: map[string]string{
+						"memory_stats": "open /proc/meminfo: permission denied",
+					},
+				}
+				data, _ := json.Marshal(statusResp)
+				s.mockJobClient.EXPECT().
+					Query(gomock.Any(), "_any", "node", job.OperationNodeStatusGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "test-host",
+						Data:     json.RawMessage(data),
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeStatusResponseObject) {
+				r, ok := resp.(gen.GetNodeStatus200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Require().NotNil(r.Results[0].Partial)
+				s.True(*r.Results[0].Partial)
+				s.Require().NotNil(r.Results[0].FieldErrors)
+				s.Contains((*r.Results[0].FieldErrors)["memory_stats"], "permission denied")
+			},
+		},
+		{
 			name:      "validation error empty hostname",
 			request:   gen.GetNodeStatusRequestObject{Hostname: ""},
 			setupMock: func() {},

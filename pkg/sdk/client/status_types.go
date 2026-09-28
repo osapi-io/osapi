@@ -35,6 +35,12 @@ type NodeStatus struct {
 	LoadAverage *LoadAverage `json:"load_average,omitempty"`
 	Memory      *Memory      `json:"memory,omitempty"`
 	OSInfo      *OSInfo      `json:"os_info,omitempty"`
+	// Partial is true when one or more of the reads behind this status failed.
+	// The fields they would have filled are absent or zero-valued.
+	Partial bool `json:"partial,omitempty"`
+	// FieldErrors names the reads that failed, keyed by the field each would
+	// have filled.
+	FieldErrors map[string]string `json:"field_errors,omitempty"`
 }
 
 // nodeStatusCollectionFromGen converts a gen.NodeStatusCollectionResponse to a Collection[NodeStatus].
@@ -53,6 +59,8 @@ func nodeStatusCollectionFromGen(
 			LoadAverage: loadAverageFromGen(r.LoadAverage),
 			Memory:      memoryFromGen(r.Memory),
 			OSInfo:      osInfoFromGen(r.OsInfo),
+			Partial:     derefBool(r.Partial),
+			FieldErrors: fieldErrorsFromGen(r.FieldErrors),
 		})
 	}
 
@@ -60,4 +68,20 @@ func nodeStatusCollectionFromGen(
 		Results: results,
 		JobID:   jobIDFromGen(g.JobId),
 	}
+}
+
+// fieldErrorsFromGen copies the per-field read errors, if any.
+func fieldErrorsFromGen(
+	g *map[string]string,
+) map[string]string {
+	if g == nil {
+		return nil
+	}
+
+	out := make(map[string]string, len(*g))
+	for field, message := range *g {
+		out[field] = message
+	}
+
+	return out
 }

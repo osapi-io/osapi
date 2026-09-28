@@ -311,6 +311,9 @@ type NodeStatusResponse struct {
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
+	// FieldErrors The reads that failed, keyed by the field they would have filled. Absent when every read succeeded.
+	FieldErrors *map[string]string `json:"field_errors,omitempty"`
+
 	// Hostname The hostname of the system.
 	Hostname string `json:"hostname"`
 
@@ -322,6 +325,9 @@ type NodeStatusResponse struct {
 
 	// OsInfo Operating system information.
 	OsInfo *OSInfoResponse `json:"os_info,omitempty"`
+
+	// Partial True when one or more of the reads behind this status failed. The fields they would have filled are absent or zero-valued, and field_errors says which and why.
+	Partial *bool `json:"partial,omitempty"`
 
 	// Status The status of the operation for this host.
 	Status NodeStatusResponseStatus `json:"status"`

@@ -7,6 +7,7 @@
 import type { DisksResponse } from './disksResponse';
 import type { LoadAverageResponse } from './loadAverageResponse';
 import type { MemoryResponse } from './memoryResponse';
+import type { NodeStatusResponseFieldErrors } from './nodeStatusResponseFieldErrors';
 import type { NodeStatusResponseStatus } from './nodeStatusResponseStatus';
 import type { OSInfoResponse } from './oSInfoResponse';
 
@@ -25,4 +26,8 @@ export interface NodeStatusResponse {
   changed?: boolean;
   /** Error message if the agent failed. */
   error?: string;
+  /** True when one or more of the reads behind this status failed. The fields they would have filled are absent or zero-valued, and field_errors says which and why. */
+  partial?: boolean;
+  /** The reads that failed, keyed by the field they would have filled. Absent when every read succeeded. */
+  field_errors?: NodeStatusResponseFieldErrors;
 }

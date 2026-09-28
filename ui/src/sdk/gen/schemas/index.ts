@@ -187,6 +187,7 @@ export * from './nodeCondition';
 export * from './nodeConditionType';
 export * from './nodeStatusCollectionResponse';
 export * from './nodeStatusResponse';
+export * from './nodeStatusResponseFieldErrors';
 export * from './nodeStatusResponseStatus';
 export * from './ntpCollectionResponse';
 export * from './ntpCreateRequest';

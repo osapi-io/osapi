@@ -203,6 +203,20 @@ func buildNodeStatusResponse(
 		}
 	}
 
+	// A read that failed is reported rather than left as a zero value, which a
+	// caller cannot tell from a host that has nothing to report.
+	if status.Partial() {
+		partial := true
+		resp.Partial = &partial
+
+		fieldErrors := make(map[string]string, len(status.FieldErrors))
+		for field, message := range status.FieldErrors {
+			fieldErrors[field] = message
+		}
+
+		resp.FieldErrors = &fieldErrors
+	}
+
 	return &resp
 }
 

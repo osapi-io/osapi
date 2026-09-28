@@ -190,12 +190,40 @@ func getNodeStatus(
 ) (json.RawMessage, error) {
 	logger.Debug("executing node.GetStatus")
 
-	hostname, _ := hostProvider.GetHostname()
-	osInfo, _ := hostProvider.GetOSInfo()
-	uptime, _ := hostProvider.GetUptime()
-	diskUsage, _ := diskProvider.GetLocalUsageStats()
-	memInfo, _ := memProvider.GetStats()
-	loadAvg, _ := loadProvider.GetAverageStats()
+	// Six independent reads. One failing is not a reason to answer nothing, so
+	// each is recorded under the field it would have filled and the rest are
+	// returned: a zero-valued field otherwise reads as a host with nothing to
+	// report.
+	fieldErrors := map[string]string{}
+
+	record := func(field string, err error) {
+		if err != nil {
+			fieldErrors[field] = err.Error()
+			logger.Warn(
+				"node status read failed",
+				slog.String("field", field),
+				slog.String("error", err.Error()),
+			)
+		}
+	}
+
+	hostname, err := hostProvider.GetHostname()
+	record("hostname", err)
+
+	osInfo, err := hostProvider.GetOSInfo()
+	record("os_info", err)
+
+	uptime, err := hostProvider.GetUptime()
+	record("uptime", err)
+
+	diskUsage, err := diskProvider.GetLocalUsageStats()
+	record("disk_usage", err)
+
+	memInfo, err := memProvider.GetStats()
+	record("memory_stats", err)
+
+	loadAvg, err := loadProvider.GetAverageStats()
+	record("load_averages", err)
 
 	result := map[string]interface{}{
 		"hostname":      hostname,
@@ -205,6 +233,10 @@ func getNodeStatus(
 		"memory_stats":  memInfo,
 		"load_averages": loadAvg,
 		"changed":       false,
+	}
+
+	if len(fieldErrors) > 0 {
+		result["field_errors"] = fieldErrors
 	}
 
 	return json.Marshal(result)

@@ -738,4 +738,15 @@ type NodeStatusResponse struct {
 	MemoryStats *mem.Result `json:"memory_stats"`
 	// DiskUsage from the disk provider
 	DiskUsage []disk.Result `json:"disk_usage"`
+	// FieldErrors names the reads that failed, by the field they would have
+	// filled. A status is assembled from six independent providers and one of
+	// them failing is not a reason to answer nothing, but it is a reason to say
+	// so: a zero-valued field is otherwise indistinguishable from a host with
+	// nothing to report.
+	FieldErrors map[string]string `json:"field_errors,omitempty"`
+}
+
+// Partial reports whether any read behind this status failed.
+func (r *NodeStatusResponse) Partial() bool {
+	return len(r.FieldErrors) > 0
 }
