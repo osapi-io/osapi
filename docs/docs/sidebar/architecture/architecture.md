@@ -193,8 +193,8 @@ configure them — see the Features section:
 
 - [System Architecture](system-architecture.md) — package layout, handler
   structure, provider pattern, and code-level details
-- [Job Architecture](job-architecture.md) — KV-first design, subject routing,
-  agent pipeline, and multi-host processing
+- [Running Jobs](job-architecture.md) — targeting, statuses, polling, and what
+  to monitor
 - [Configuration](../usage/configuration.md) — full `osapi.yaml` reference with
   every supported field
 - [API Design Guidelines](api-guidelines.md) — REST conventions and endpoint

@@ -112,6 +112,6 @@ reading a hostname requires `node:read`, while updating DNS requires
 - [CLI Reference](../usage/cli/client/job/job.mdx) -- job commands
 - [API Reference](/gen/api/job-management-api-job-operations) -- REST API
   documentation
-- [Job Architecture](../architecture/job-architecture.md) -- KV-first design,
-  subject routing, agent pipeline
+- [Running Jobs](../architecture/job-architecture.md) -- targeting, statuses,
+  polling, and what to monitor
 - [Architecture](../architecture/architecture.md) -- system design overview
