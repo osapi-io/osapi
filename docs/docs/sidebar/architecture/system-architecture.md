@@ -9,168 +9,10 @@ and modifying host configuration and uses NATS JetStream for distributed,
 asynchronous job processing. Operators interact with the system through a CLI
 that can either hit the REST API directly or manage the job queue.
 
-## Component Map
-
-The system is organized into six layers, top to bottom:
-
-| Layer                      | Package                                 | Role                                                                                     |
-| -------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------- |
-| **CLI**                    | `cmd/`                                  | Cobra command tree (thin wiring)                                                         |
-| **SDK Client**             | `pkg/sdk/client`                        | OpenAPI-generated client used by CLI                                                     |
-| **REST API**               | `internal/controller/api/`              | Echo server with JWT middleware                                                          |
-| **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status                                                   |
-| **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses`, KV `agent-registry`                   |
-| **Agent / Provider Layer** | `internal/agent/`, `internal/provider/` | Consumes jobs, executes providers, evaluates conditions, drain lifecycle, heartbeat      |
-| **Notifications**          | `internal/controller/notify/`           | Watches registry KV for condition transitions; dispatches events via pluggable notifiers |
-
-```mermaid
-graph TD
-    CLI["CLI (cmd/)"] --> SDK["SDK Client (pkg/sdk/client)"]
-    SDK --> API["REST API (internal/controller/api/)"]
-    API --> JobClient["Job Client (internal/job/client/)"]
-    JobClient --> NATS["NATS JetStream"]
-    NATS --> Agent["Agent (internal/agent/)"]
-    Agent --> Provider["Provider Layer (internal/provider/)"]
-```
-
-The CLI talks to the REST API through the SDK client. The REST API delegates
-state-changing operations to the job client, which stores jobs in NATS KV and
-publishes notifications to the JOBS stream. Agents pick up notifications,
-execute the matching provider, and write results back to KV.
-
-## Entry Points
-
-The `osapi` binary exposes four top-level command groups:
-
-- **`osapi controller start`** — starts the REST controller (Echo + JWT
-  middleware)
-- **`osapi agent start`** — starts an agent that subscribes to NATS subjects and
-  processes operations
-- **`osapi nats server start`** — starts an embedded NATS server with JetStream
-  enabled
-- **`osapi client`** — CLI client that talks to the REST API (node, job, health,
-  agent, and audit subcommands)
-
-## Layers
-
-### CLI (`cmd/`)
-
-The CLI is a [Cobra][] command tree. Each file maps to a single command (e.g.,
-`client_job_get.go` implements `osapi client job get`). The CLI layer is thin
-wiring: it parses flags, reads config via Viper, and delegates to the
-appropriate internal package.
-
-### REST API (`internal/controller/api/`)
-
-The controller is built on [Echo][] with handlers generated from an OpenAPI spec
-via [oapi-codegen][] (`*.gen.go` files). Domain handlers are organized into
-subpackages:
-
-Browse `internal/controller/api/` for current domain handlers. Each domain has
-its own subpackage with generated OpenAPI code, handler implementations, and
-tests. Node-targeted domains live under `internal/controller/api/node/`,
-controller-only domains are top-level (e.g., `job/`, `health/`, `audit/`).
-
-All state-changing operations are dispatched as jobs through the job client
-layer rather than executed inline. Responses follow a uniform collection
-envelope documented in the [API Design Guidelines](api-guidelines.md).
-
-### Job System (`internal/job/`)
-
-The job system implements a **KV-first, stream-notification architecture** on
-NATS JetStream. Core types live in `internal/job/`, with two subpackages:
-
-| Package                | Purpose                                        |
-| ---------------------- | ---------------------------------------------- |
-| `internal/job/client/` | High-level operations (create, status, query)  |
-| `internal/agent/`      | Consumer pipeline (subscribe, handle, process) |
-
-Subject routing uses dot-notation hierarchies (`jobs.query.*`, `jobs.modify.*`)
-with support for load-balanced (`_any`), broadcast (`_all`), direct-host, and
-label-based targeting. The agent pipeline lives in `internal/agent/`.
-
-For submitting and watching jobs see [Running Jobs](job-architecture.md).
-
-### Provider Layer (`internal/provider/`)
-
-Providers implement the actual system operations behind a common interface. Each
-provider is selected at runtime through a platform-aware factory pattern.
-
-Browse `internal/provider/` for current providers. Each domain has its own
-subdirectory with platform-specific implementations (Debian, Darwin, Linux).
-
-Providers are stateless and OS-family-specific. OSAPI follows Ansible's OS
-family naming — the Debian family includes Ubuntu, Debian, and Raspbian. Darwin
-(macOS) providers are also available for development. When a provider does not
-support the current OS family, it returns `provider.ErrUnsupported` and the job
-is marked as `skipped`. Adding a new operation means implementing the provider
-interface and registering it in the agent's processor dispatch.
-
-#### Meta Providers
-
-Some providers don't write files directly — they delegate to the file provider.
-These are called **meta providers**. The cron provider is the first example:
-users upload a script to the Object Store, then `cron create` deploys it to the
-correct path (`/etc/cron.d/` or `/etc/cron.{interval}/`) with the correct
-permissions via the file provider's `Deploy()` method.
-
-This gives meta providers SHA tracking, idempotency, drift detection, and Go
-template rendering for free. The `file.Deployer` interface is the narrow
-contract meta providers depend on:
-
-```go
-type Deployer interface {
-    Deploy(ctx, DeployRequest) (*DeployResult, error)
-    Undeploy(ctx, UndeployRequest) (*UndeployResult, error)
-}
-```
-
-The pattern extends to providers like sysctl (which manages `/etc/sysctl.d/`
-conf files), service (which manages systemd unit files in
-`/etc/systemd/system/`), and certificate (which manages CA certificates in
-`/usr/local/share/ca-certificates/`) — any provider that writes configuration
-files to well-known paths.
-
-#### Protected Objects
-
-Objects in the NATS Object Store with the `osapi/` name prefix are protected
-from user uploads and deletes (403). These are managed exclusively by the agent,
-which seeds embedded templates on startup and updates them when a new osapi
-version ships with changes. Meta providers reference these templates at deploy
-time.
-
-### Agent Lifecycle (`internal/agent/`)
-
-All three runtime components — the controller, NATS server, and each agent —
-heartbeat into a shared registry KV bucket (`agent-registry`) at regular
-intervals. Each heartbeat record includes process metrics (CPU percent, RSS
-bytes, goroutine count) collected by `internal/provider/process`. This gives
-operators a unified view of component health via `/health/status`.
-
-Agents additionally evaluate **node conditions** on each heartbeat tick (10s)
-and support **graceful drain** for maintenance. Conditions are threshold-based
-booleans (MemoryPressure, HighLoad, DiskPressure) computed from heartbeat
-metrics.
-
-The drain mechanism uses NATS consumer subscribe/unsubscribe. When an operator
-drains an agent, the API writes a `drain.{hostname}` key to the state KV bucket
-(`agent-state`, no TTL). The agent detects this on its next heartbeat,
-unsubscribes from all NATS JetStream consumers (stopping new job delivery), and
-transitions through `Draining` → `Cordoned` as in-flight jobs complete. Undrain
-deletes the key and the agent resubscribes.
-
-State transitions are recorded as append-only timeline events in the state KV
-bucket, following the same pattern used for job lifecycle events. See
-[Agent Lifecycle](../features/agent-lifecycle.md) for details.
-
-### Configuration (`internal/config/`)
-
-Configuration is managed by [Viper][] and loaded from an `osapi.yaml` file.
-Environment variables override file values using the `OSAPI_` prefix with
-underscore-separated keys (e.g., `OSAPI_API_SERVER_PORT`).
-
-See [Configuration](../usage/configuration.md) for the full `osapi.yaml`
-reference with every supported field.
+This page covers what an operator needs in order to run and call OSAPI: the
+health check endpoints, how requests are authenticated and authorized, and what
+the system depends on. How the code is laid out internally is a contributor's
+question and is answered in the specifications repository — see Further Reading.
 
 ## Health Checks (`internal/controller/api/health/`)
 
@@ -238,32 +80,6 @@ osapi client health ready        # readiness
 osapi client health status       # system status with metrics (requires auth)
 ```
 
-## Request Flow
-
-A typical operation (e.g., getting the hostname) follows these steps:
-
-```mermaid
-sequenceDiagram
-    participant CLI
-    participant API as REST API
-    participant JC as Job Client
-    participant NATS as NATS JetStream
-    participant Agent
-    participant Provider
-
-    CLI->>API: GET /api/v1/node/{hostname}/hostname
-    API->>JC: CreateJob()
-    JC->>NATS: store job in KV (job-queue)
-    JC->>NATS: publish notification to JOBS stream
-    NATS->>Agent: deliver stream notification
-    Agent->>NATS: fetch immutable job from KV
-    Agent->>Provider: execute operation
-    Provider-->>Agent: result
-    Agent->>NATS: write status events + result to KV
-    API->>NATS: read computed status from KV
-    API-->>CLI: 200 (result + job_id)
-```
-
 ## Security
 
 ### Authentication
@@ -311,9 +127,9 @@ disables CORS headers entirely.
 
 - [Running Jobs](job-architecture.md) — targeting, statuses, polling, and what
   to monitor
-- [API Design Guidelines](api-guidelines.md) — REST conventions, collection
-  envelopes, and endpoint patterns
-- [Guiding Principles](principles.md) — design philosophy and project values
+- [Adding an API Domain](../development/adding-an-api-domain.md) — the layers,
+  the API design guidelines, and the design principles, stated in the
+  specifications repository and indexed there
 - [Contributing](https://github.com/osapi-io/osapi/blob/main/CONTRIBUTING.md) —
   setup, building, testing, and the conventions code follows
 
