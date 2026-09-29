@@ -232,7 +232,7 @@ func (s *FileService) Delete(
 
 // Stale lists deployments where the deployed file content no longer
 // matches the current object store content.
-func (s *FileService) Stale(
+func (s *FileService) ListStale(
 	ctx context.Context,
 ) (*Response[StaleList], error) {
 	resp, err := s.client.GetFileStaleWithResponse(ctx)
@@ -262,7 +262,7 @@ func (s *FileService) Stale(
 // Changed computes the SHA-256 of the provided content and compares
 // it against the stored hash in the Object Store. Returns true if
 // the content differs or the file does not exist yet.
-func (s *FileService) Changed(
+func (s *FileService) GetChanged(
 	ctx context.Context,
 	name string,
 	file io.Reader,

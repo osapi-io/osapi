@@ -19,7 +19,7 @@ remove, exec, and pull operations.
 | `Remove(ctx, hostname, id, p)`         | Remove a container               |
 | `Exec(ctx, hostname, id, opts)`        | Execute a command in a container |
 | `Pull(ctx, hostname, opts)`            | Pull a container image           |
-| `ImageRemove(ctx, hostname, image, p)` | Remove a container image         |
+| `RemoveImage(ctx, hostname, image, p)` | Remove a container image         |
 
 ## Request Types
 
@@ -34,7 +34,7 @@ import `gen`.
 | `DockerRemoveParams`      | Force                                                |
 | `DockerPullOpts`          | Image                                                |
 | `DockerExecOpts`          | Command                                              |
-| `DockerImageRemoveParams` | Force                                                |
+| `DockerRemoveImageParams` | Force                                                |
 
 ## Usage
 
@@ -78,8 +78,8 @@ resp, err := c.Docker.Remove(ctx, "_any", "web", &client.DockerRemoveParams{
 })
 
 // Remove an image
-resp, err := c.Docker.ImageRemove(ctx, "_any", "nginx:latest",
-    &client.DockerImageRemoveParams{Force: true},
+resp, err := c.Docker.RemoveImage(ctx, "_any", "nginx:latest",
+    &client.DockerRemoveImageParams{Force: true},
 )
 ```
 

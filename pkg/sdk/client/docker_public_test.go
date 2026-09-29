@@ -1276,7 +1276,7 @@ func (suite *DockerPublicTestSuite) TestImageRemove() {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		params       *client.DockerImageRemoveParams
+		params       *client.DockerRemoveImageParams
 		validateFunc func(*client.Response[client.Collection[client.DockerActionResult]], error)
 	}{
 		{
@@ -1317,7 +1317,7 @@ func (suite *DockerPublicTestSuite) TestImageRemove() {
 					),
 				)
 			},
-			params: &client.DockerImageRemoveParams{
+			params: &client.DockerRemoveImageParams{
 				Force: true,
 			},
 			validateFunc: func(
@@ -1405,7 +1405,7 @@ func (suite *DockerPublicTestSuite) TestImageRemove() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Docker.ImageRemove(
+			resp, err := sut.Docker.RemoveImage(
 				suite.ctx,
 				"_any",
 				"nginx:latest",

@@ -40,7 +40,7 @@ Requires authentication.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
-		resp, err := sdkClient.Health.Status(ctx)
+		resp, err := sdkClient.Health.GetStatus(ctx)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

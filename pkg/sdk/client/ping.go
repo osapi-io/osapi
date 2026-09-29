@@ -33,7 +33,7 @@ type PingService struct {
 }
 
 // Do sends an ICMP ping to the specified address from the target host.
-func (s *PingService) Do(
+func (s *PingService) Send(
 	ctx context.Context,
 	target string,
 	address string,

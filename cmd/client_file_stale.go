@@ -41,7 +41,7 @@ Requires file:read permission.
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 
-		resp, err := sdkClient.File.Stale(ctx)
+		resp, err := sdkClient.File.ListStale(ctx)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return
