@@ -18,15 +18,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package power
+package validation
 
-import "github.com/osapi-io/osapi/internal/validation"
-
-// validateHostname validates a `{hostname}` path parameter addressing managed
-// machines, delegating to the one implementation in internal/validation so this
-// package and its siblings cannot drift apart.
-func validateHostname(
+// TargetHostname validates a `{hostname}` path parameter that addresses managed
+// machines. It accepts a literal hostname, the reserved routing values `_any` and
+// `_all`, or a `key:value` label selector — whatever `valid_target` admits. Returns
+// the error message and false when the value is not a usable target.
+//
+// This exists because oapi-codegen generates no validate tags for path parameters
+// in strict-server mode, an upstream limitation, so a path parameter is validated
+// by hand in the handler.
+//
+// It lives here rather than in a handler package because two packages need the same
+// check: node-targeted domains under internal/controller/api/node and the power
+// domain below it. It is deliberately NOT what the agent domain uses — an agent
+// endpoint addresses one enrolled agent by its literal hostname, where a routing
+// value would be meaningless, so that domain validates differently and says so.
+func TargetHostname(
 	hostname string,
 ) (string, bool) {
-	return validation.TargetHostname(hostname)
+	return Var(hostname, "required,min=1,valid_target")
 }

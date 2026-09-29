@@ -35,7 +35,7 @@ func (a *Agent) RejectAgent(
 	ctx context.Context,
 	request gen.RejectAgentRequestObject,
 ) (gen.RejectAgentResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateAgentHostname(request.Hostname); !ok {
 		return gen.RejectAgent400JSONResponse{Error: &errMsg}, nil
 	}
 

@@ -33,7 +33,7 @@ func (a *Agent) GetAgentDetails(
 	ctx context.Context,
 	request gen.GetAgentDetailsRequestObject,
 ) (gen.GetAgentDetailsResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateAgentHostname(request.Hostname); !ok {
 		return gen.GetAgentDetails400JSONResponse{Error: &errMsg}, nil
 	}
 
