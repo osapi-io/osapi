@@ -89,7 +89,7 @@ Subject routing uses dot-notation hierarchies (`jobs.query.*`, `jobs.modify.*`)
 with support for load-balanced (`_any`), broadcast (`_all`), direct-host, and
 label-based targeting. The agent pipeline lives in `internal/agent/`.
 
-For the full deep dive see [Job System Architecture](job-architecture.md).
+For submitting and watching jobs see [Running Jobs](job-architecture.md).
 
 ### Provider Layer (`internal/provider/`)
 
@@ -309,8 +309,8 @@ disables CORS headers entirely.
 
 ## Further Reading
 
-- [Job System Architecture](job-architecture.md) — deep dive into the KV-first
-  job system, subject routing, and agent pipeline
+- [Running Jobs](job-architecture.md) — targeting, statuses, polling, and what
+  to monitor
 - [API Design Guidelines](api-guidelines.md) — REST conventions, collection
   envelopes, and endpoint patterns
 - [Guiding Principles](principles.md) — design philosophy and project values
