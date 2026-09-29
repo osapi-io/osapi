@@ -9,9 +9,8 @@ the client library and any new SDK packages.
 
 :::note
 
-The rules this page illustrates — method naming, keeping generated types out of
-public signatures, JSON tags on result fields, and error handling — are stated
-in
+The rules this page illustrates — keeping generated types out of public
+signatures, JSON tags on result fields, and error handling — are stated in
 [005-building-a-domain](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md),
 FR-019 and FR-020. This page shows them working; the specification is where they
 are stated.
@@ -21,6 +20,13 @@ capability that bound `osapi-orchestrator` too, and that the specification won
 any disagreement. No such capability was ever written. FR-019 records that, and
 a cross-repository SDK standard remains work nobody has done rather than a rule
 already agreed.
+
+**Method naming is not stated anywhere**, and that is worth saying rather than
+leaving to be discovered. The claim above listed it among the rules the
+specification states, and so did the version before it; neither this page nor
+the specification states a convention for it. Follow the existing services until
+somebody decides what the rule is — do not read the absence as "anything goes",
+and do not take a method name you find here for a rule merely because it exists.
 
 :::
 
