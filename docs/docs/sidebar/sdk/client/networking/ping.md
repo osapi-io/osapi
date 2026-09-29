@@ -8,9 +8,9 @@ Network ping operations.
 
 ## Methods
 
-| Method                     | Description |
-| -------------------------- | ----------- |
-| `Do(ctx, target, address)` | Ping a host |
+| Method                       | Description |
+| ---------------------------- | ----------- |
+| `Send(ctx, target, address)` | Ping a host |
 
 ## Usage
 
@@ -20,7 +20,7 @@ import "github.com/osapi-io/osapi/pkg/sdk/client"
 c := client.New("http://localhost:8080", token)
 
 // Ping a host from all agents
-resp, err := c.Ping.Do(ctx, "_all", "8.8.8.8")
+resp, err := c.Ping.Send(ctx, "_all", "8.8.8.8")
 for _, r := range resp.Data.Results {
     fmt.Printf("Ping (%s): sent=%d received=%d loss=%.1f%%\n",
         r.Hostname, r.PacketsSent, r.PacketsReceived, r.PacketLoss)

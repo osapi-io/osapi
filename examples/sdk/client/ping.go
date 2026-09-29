@@ -48,7 +48,7 @@ func main() {
 	ctx := context.Background()
 	target := "_all"
 
-	resp, err := c.Ping.Do(ctx, target, "8.8.8.8")
+	resp, err := c.Ping.Send(ctx, target, "8.8.8.8")
 	if err != nil {
 		log.Fatalf("ping: %v", err)
 	}

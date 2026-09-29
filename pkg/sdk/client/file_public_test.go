@@ -794,7 +794,7 @@ func (suite *FilePublicTestSuite) TestStale() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.File.Stale(suite.ctx)
+			resp, err := sut.File.ListStale(suite.ctx)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -923,7 +923,7 @@ func (suite *FilePublicTestSuite) TestChanged() {
 				file = bytes.NewReader(fileContent)
 			}
 
-			resp, err := sut.File.Changed(
+			resp, err := sut.File.GetChanged(
 				suite.ctx,
 				"nginx.conf",
 				file,

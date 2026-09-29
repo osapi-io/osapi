@@ -33,7 +33,7 @@ type HealthService struct {
 }
 
 // Liveness checks if the API server process is alive.
-func (s *HealthService) Liveness(
+func (s *HealthService) GetLiveness(
 	ctx context.Context,
 ) (*Response[HealthStatus], error) {
 	resp, err := s.client.GetHealthWithResponse(ctx)
@@ -54,7 +54,7 @@ func (s *HealthService) Liveness(
 // Ready checks if the API server and its dependencies are ready to
 // serve traffic. A 503 response is treated as success with the
 // ServiceUnavailable flag set.
-func (s *HealthService) Ready(
+func (s *HealthService) GetReady(
 	ctx context.Context,
 ) (*Response[ReadyStatus], error) {
 	resp, err := s.client.GetHealthReadyWithResponse(ctx)
@@ -92,7 +92,7 @@ func (s *HealthService) Ready(
 // Status returns detailed system status including component health,
 // NATS info, stream stats, and job queue counts. Requires authentication.
 // A 503 response is treated as success with the ServiceUnavailable flag set.
-func (s *HealthService) Status(
+func (s *HealthService) GetStatus(
 	ctx context.Context,
 ) (*Response[SystemStatus], error) {
 	resp, err := s.client.GetHealthStatusWithResponse(ctx)

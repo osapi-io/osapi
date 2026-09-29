@@ -72,8 +72,8 @@ type DockerPullOpts struct {
 	Image string
 }
 
-// DockerImageRemoveParams contains parameters for removing an image.
-type DockerImageRemoveParams struct {
+// DockerRemoveImageParams contains parameters for removing an image.
+type DockerRemoveImageParams struct {
 	// Force forces removal even if the image is in use.
 	Force bool
 }

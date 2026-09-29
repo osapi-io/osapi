@@ -320,11 +320,11 @@ func (s *DockerService) Exec(
 }
 
 // ImageRemove removes a container image from the target host.
-func (s *DockerService) ImageRemove(
+func (s *DockerService) RemoveImage(
 	ctx context.Context,
 	hostname string,
 	imageName string,
-	params *DockerImageRemoveParams,
+	params *DockerRemoveImageParams,
 ) (*Response[Collection[DockerActionResult]], error) {
 	var genParams *gen.DeleteNodeContainerDockerImageParams
 	if params != nil {

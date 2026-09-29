@@ -148,11 +148,11 @@ func main() {
 	}
 
 	// Remove the image.
-	imgRemove, err := c.Docker.ImageRemove(
+	imgRemove, err := c.Docker.RemoveImage(
 		ctx,
 		target,
 		"nginx:alpine",
-		&client.DockerImageRemoveParams{Force: true},
+		&client.DockerRemoveImageParams{Force: true},
 	)
 	if err != nil {
 		log.Fatalf("image remove: %v", err)

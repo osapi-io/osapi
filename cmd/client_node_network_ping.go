@@ -39,7 +39,7 @@ var clientNodeNetworkPingCmd = &cobra.Command{
 		host, _ := cmd.Flags().GetString("target")
 		address, _ := cmd.Flags().GetString("address")
 
-		resp, err := sdkClient.Ping.Do(ctx, host, address)
+		resp, err := sdkClient.Ping.Send(ctx, host, address)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

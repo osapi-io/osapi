@@ -36,7 +36,7 @@ var clientHealthReadyCmd = &cobra.Command{
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
-		resp, err := sdkClient.Health.Ready(ctx)
+		resp, err := sdkClient.Health.GetReady(ctx)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

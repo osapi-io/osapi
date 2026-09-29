@@ -40,12 +40,12 @@ var clientContainerDockerImageRemoveCmd = &cobra.Command{
 		imageName, _ := cmd.Flags().GetString("image")
 		force, _ := cmd.Flags().GetBool("force")
 
-		var params *client.DockerImageRemoveParams
+		var params *client.DockerRemoveImageParams
 		if force {
-			params = &client.DockerImageRemoveParams{Force: true}
+			params = &client.DockerRemoveImageParams{Force: true}
 		}
 
-		resp, err := sdkClient.Docker.ImageRemove(
+		resp, err := sdkClient.Docker.RemoveImage(
 			ctx,
 			host,
 			imageName,

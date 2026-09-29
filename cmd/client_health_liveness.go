@@ -36,7 +36,7 @@ var clientHealthLivenessCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 
-		resp, err := sdkClient.Health.Liveness(ctx)
+		resp, err := sdkClient.Health.GetLiveness(ctx)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

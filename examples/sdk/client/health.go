@@ -49,7 +49,7 @@ func main() {
 	ctx := context.Background()
 
 	// Liveness — is the API process running?
-	live, err := c.Health.Liveness(ctx)
+	live, err := c.Health.GetLiveness(ctx)
 	if err != nil {
 		log.Fatalf("liveness: %v", err)
 	}
@@ -57,7 +57,7 @@ func main() {
 	fmt.Printf("Liveness: %s\n", live.Data.Status)
 
 	// Readiness — is the API ready to serve requests?
-	ready, err := c.Health.Ready(ctx)
+	ready, err := c.Health.GetReady(ctx)
 	if err != nil {
 		log.Fatalf("readiness: %v", err)
 	}
@@ -65,7 +65,7 @@ func main() {
 	fmt.Printf("Readiness: %s\n", ready.Data.Status)
 
 	// Status — detailed system info (requires auth).
-	status, err := c.Health.Status(ctx)
+	status, err := c.Health.GetStatus(ctx)
 	if err != nil {
 		log.Fatalf("status: %v", err)
 	}

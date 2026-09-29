@@ -144,7 +144,7 @@ func (suite *PingPublicTestSuite) TestDo() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Ping.Do(suite.ctx, tc.target, tc.address)
+			resp, err := sut.Ping.Send(suite.ctx, tc.target, tc.address)
 			tc.validateFunc(resp, err)
 		})
 	}

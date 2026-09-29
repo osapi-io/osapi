@@ -111,7 +111,7 @@ func (suite *HealthPublicTestSuite) TestLiveness() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Health.Liveness(suite.ctx)
+			resp, err := sut.Health.GetLiveness(suite.ctx)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -220,7 +220,7 @@ func (suite *HealthPublicTestSuite) TestReady() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Health.Ready(suite.ctx)
+			resp, err := sut.Health.GetReady(suite.ctx)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -362,7 +362,7 @@ func (suite *HealthPublicTestSuite) TestStatus() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Health.Status(suite.ctx)
+			resp, err := sut.Health.GetStatus(suite.ctx)
 			tc.validateFunc(resp, err)
 		})
 	}

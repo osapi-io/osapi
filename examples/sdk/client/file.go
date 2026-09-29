@@ -65,7 +65,7 @@ func main() {
 		upload.Data.Name, upload.Data.SHA256, upload.Data.Size, upload.Data.Changed)
 
 	// Check if the file has changed without uploading.
-	chk, err := c.File.Changed(ctx, "app.conf", bytes.NewReader(content))
+	chk, err := c.File.GetChanged(ctx, "app.conf", bytes.NewReader(content))
 	if err != nil {
 		log.Fatalf("changed: %v", err)
 	}
@@ -136,7 +136,7 @@ func main() {
 	}
 
 	// Check for stale deployments (objects updated since deploy).
-	stale, err := c.File.Stale(ctx)
+	stale, err := c.File.ListStale(ctx)
 	if err != nil {
 		log.Fatalf("stale: %v", err)
 	}
