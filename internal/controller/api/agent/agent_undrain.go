@@ -35,7 +35,7 @@ func (a *Agent) UndrainAgent(
 	ctx context.Context,
 	request gen.UndrainAgentRequestObject,
 ) (gen.UndrainAgentResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateAgentHostname(request.Hostname); !ok {
 		return gen.UndrainAgent400JSONResponse{Error: &errMsg}, nil
 	}
 

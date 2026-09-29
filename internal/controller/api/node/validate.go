@@ -22,13 +22,11 @@ package node
 
 import "github.com/osapi-io/osapi/internal/validation"
 
-// validateHostname validates a hostname path parameter using the shared
-// validator. Returns the error message and false if invalid.
-//
-// This exists because oapi-codegen does not generate validate tags on
-// path parameters in strict-server mode (upstream limitation).
+// validateHostname validates a `{hostname}` path parameter addressing managed
+// machines, delegating to the one implementation in internal/validation so this
+// package and its siblings cannot drift apart.
 func validateHostname(
 	hostname string,
 ) (string, bool) {
-	return validation.Var(hostname, "required,min=1,valid_target")
+	return validation.TargetHostname(hostname)
 }

@@ -22,12 +22,18 @@ package agent
 
 import "github.com/osapi-io/osapi/internal/validation"
 
-// validateHostname validates a hostname path parameter using the shared
-// validator. Returns the error message and false if invalid.
+// validateAgentHostname validates a `{hostname}` path parameter that names one
+// enrolled agent. It accepts a literal hostname only: an agent endpoint addresses a
+// specific machine, so the reserved routing values `_any` and `_all` and label
+// selectors are not meaningful here and are not admitted.
 //
-// This exists because oapi-codegen does not generate validate tags on
-// path parameters in strict-server mode (upstream limitation).
-func validateHostname(
+// This is deliberately a different check from validation.TargetHostname, which the
+// node-targeted domains use. The two were once identically named functions with
+// identical comments and different rules, which read as duplication and was not.
+//
+// It exists at all because oapi-codegen generates no validate tags for path
+// parameters in strict-server mode, an upstream limitation.
+func validateAgentHostname(
 	hostname string,
 ) (string, bool) {
 	return validation.Var(hostname, "required,min=1,max=255")

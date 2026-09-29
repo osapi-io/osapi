@@ -35,7 +35,7 @@ func (a *Agent) AcceptAgent(
 	ctx context.Context,
 	request gen.AcceptAgentRequestObject,
 ) (gen.AcceptAgentResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateAgentHostname(request.Hostname); !ok {
 		return gen.AcceptAgent400JSONResponse{Error: &errMsg}, nil
 	}
 
