@@ -191,14 +191,13 @@ configure them — see the Features section:
 
 ## Deep Dives
 
-- [System Architecture](system-architecture.md) — package layout, handler
-  structure, provider pattern, and code-level details
+- [System Architecture](system-architecture.md) — health check endpoints,
+  authentication, authorization, CORS, and external dependencies
 - [Running Jobs](job-architecture.md) — targeting, statuses, polling, and what
   to monitor
 - [Configuration](../usage/configuration.md) — full `osapi.yaml` reference with
   every supported field
-- [API Design Guidelines](api-guidelines.md) — REST conventions and endpoint
-  patterns
-- [Guiding Principles](principles.md) — design philosophy and project values
+- [Adding an API Domain](../development/adding-an-api-domain.md) — the layers,
+  the REST conventions, and the design principles, for a contributor
 - [Contributing](https://github.com/osapi-io/osapi/blob/main/CONTRIBUTING.md) —
   setup, building, testing, and the conventions code follows

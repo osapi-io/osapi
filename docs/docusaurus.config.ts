@@ -608,6 +608,25 @@ const config: Config = {
 
   plugins: [
     [
+      '@docusaurus/plugin-client-redirects',
+      {
+        // api-guidelines.md and principles.md were contributor documents in an
+        // operator's navigation. Their rules are now stated once in the
+        // specifications repository (005-building-a-domain, FR-014, FR-015,
+        // FR-022), and these addresses keep working for anyone holding a link.
+        redirects: [
+          {
+            from: '/sidebar/architecture/api-guidelines',
+            to: '/sidebar/development/adding-an-api-domain'
+          },
+          {
+            from: '/sidebar/architecture/principles',
+            to: '/sidebar/development/adding-an-api-domain'
+          }
+        ]
+      }
+    ],
+    [
       'docusaurus-plugin-openapi-docs',
       {
         id: 'openapi',
