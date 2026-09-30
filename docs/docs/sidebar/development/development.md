@@ -14,8 +14,8 @@ copy of it.
 Two guides remain in this section, because each covers a subject rather than the
 act of contributing:
 
-- [UI Development](ui-development.md) — the React dashboard's development
-  server, code style, and component conventions.
+- [UI Development](ui-development.md) — the React dashboard: the rules it is
+  built under, and where its commands live.
 - [Adding an API Domain](adding-an-api-domain.md) — the nine-step walkthrough
   taking a new domain from provider through to CLI.
 
