@@ -52,10 +52,12 @@ The UI is a React 19 SPA built with Vite and embedded into the Go binary via
 `index.html` for client-side routing. All API endpoints are prefixed with
 `/api/`.
 
-See [UI Architecture](../architecture/ui.md) for details on the embedding
-mechanism, component layers, and SDK generation flow.
+See [UI Architecture](../architecture/ui.md) for the configuration, the roles,
+and what each page shows. How the UI is embedded, structured and generated is
+stated in the
+[specifications repository](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/007-the-embedded-ui/spec.md).
 
 ## Development
 
-See [UI Development](../development/ui-development.md) for prerequisites, the
-dev server, code style, and component conventions.
+See [UI Development](../development/ui-development.md) for the index of the
+rules a contributor works under, and where the commands live.
