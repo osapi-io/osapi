@@ -1,7 +1,8 @@
 # Architecture
 
 The UI's architecture is stated in the osapi-io specifications repository, not
-here: https://github.com/osapi-io/specs/blob/main/components/osapi/specs/007-the-embedded-ui/spec.md
+here:
+https://github.com/osapi-io/specs/blob/main/components/osapi/specs/007-the-embedded-ui/spec.md
 
 This file is a pointer, not a summary. It exists because a contributor working
 in `ui/` looks for architecture beside the code, and an absent file sends them
