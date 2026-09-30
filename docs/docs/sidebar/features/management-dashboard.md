@@ -47,10 +47,9 @@ token with `osapi token generate` and paste it on the sign-in page. The token's
 
 ## Architecture
 
-The UI is a React 19 SPA built with Vite and embedded into the Go binary via
-`//go:embed`. The controller serves static assets at `/` and falls back to
-`index.html` for client-side routing. All API endpoints are prefixed with
-`/api/`.
+The controller serves the dashboard at `/` and falls back to `index.html` for
+client-side routing, so every API endpoint is prefixed with `/api/` to keep the
+two apart.
 
 See [UI Architecture](../architecture/ui.md) for the configuration, the roles,
 and what each page shows. How the UI is embedded, structured and generated is
