@@ -1,27 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 272 80" width="272" height="80" role="img" aria-label="osapi">
   <title>osapi</title>
-  <rect x="8" y="8" width="16" height="32" fill="#8a8a8a" opacity="0.25"/>
-  <rect x="8" y="40" width="16" height="32" fill="#ffa032"/>
+  <rect x="8" y="8" width="16" height="32" fill="#8a8a8a"/>
+  <rect x="8" y="40" width="16" height="32" fill="#00d5ff"/>
   <rect x="24" y="8" width="16" height="16" fill="#8a8a8a"/>
-  <rect x="24" y="56" width="16" height="16" fill="#ffa032"/>
-  <rect x="40" y="8" width="16" height="32" fill="#8a8a8a" opacity="0.25"/>
-  <rect x="40" y="40" width="16" height="32" fill="#ffa032"/>
-  <rect x="72" y="8" width="16" height="32" fill="#8a8a8a"/>
-  <rect x="72" y="56" width="16" height="16" fill="#ffa032"/>
+  <rect x="24" y="56" width="16" height="16" fill="#00d5ff"/>
+  <rect x="40" y="8" width="16" height="32" fill="#8a8a8a"/>
+  <rect x="40" y="40" width="16" height="32" fill="#45ae17"/>
+  <rect x="72" y="8" width="16" height="32" fill="#45ae17"/>
+  <rect x="72" y="56" width="16" height="16" fill="#ffd100"/>
   <rect x="88" y="8" width="16" height="16" fill="#8a8a8a"/>
-  <rect x="88" y="40" width="16" height="32" fill="#ffa032"/>
+  <rect x="88" y="40" width="16" height="32" fill="#ff00ff"/>
   <rect x="120" y="24" width="16" height="16" fill="#8a8a8a"/>
-  <rect x="120" y="40" width="16" height="32" fill="#ffa032"/>
+  <rect x="120" y="40" width="16" height="32" fill="#2300fd"/>
   <rect x="136" y="8" width="16" height="16" fill="#8a8a8a"/>
-  <rect x="136" y="40" width="16" height="16" fill="#ffa032"/>
+  <rect x="136" y="40" width="16" height="16" fill="#2300fd"/>
   <rect x="152" y="8" width="16" height="32" fill="#8a8a8a"/>
-  <rect x="152" y="40" width="16" height="32" fill="#ffa032" opacity="0.25"/>
+  <rect x="152" y="40" width="16" height="32" fill="#2300fd" opacity="0.25"/>
   <rect x="184" y="8" width="16" height="32" fill="#8a8a8a"/>
-  <rect x="184" y="40" width="16" height="32" fill="#ffa032"/>
+  <rect x="184" y="40" width="16" height="32" fill="#ffd100"/>
   <rect x="200" y="8" width="16" height="16" fill="#8a8a8a"/>
-  <rect x="200" y="40" width="16" height="16" fill="#ffa032"/>
+  <rect x="200" y="40" width="16" height="16" fill="#ffd100"/>
   <rect x="216" y="8" width="16" height="32" fill="#8a8a8a"/>
-  <rect x="216" y="40" width="16" height="16" fill="#ffa032"/>
+  <rect x="216" y="40" width="16" height="16" fill="#ffd100"/>
   <rect x="248" y="8" width="16" height="32" fill="#8a8a8a"/>
-  <rect x="248" y="40" width="16" height="32" fill="#ffa032"/>
+  <rect x="248" y="40" width="16" height="32" fill="#ff00ff"/>
 </svg>
