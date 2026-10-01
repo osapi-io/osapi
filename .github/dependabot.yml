@@ -14,3 +14,14 @@ updates:
       interval: "daily"
     commit-message:
       prefix: chore
+
+  # The modules under examples/sdk/ have their own go.mod and pin this
+  # repository's dependencies as indirect. Without them here, Dependabot bumps
+  # the root alone and `just go-mod-check` fails on every one for being untidy.
+  - package-ecosystem: "gomod"
+    directories:
+      - "examples/sdk/*"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: chore
