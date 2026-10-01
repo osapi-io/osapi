@@ -193,7 +193,11 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsHTTP() {
 						OSInfo:       &host.Result{Distribution: "Ubuntu", Version: "24.04"},
 						Uptime:       5 * time.Hour,
 						LoadAverages: &load.Result{Load1: 0.5, Load5: 0.3, Load15: 0.2},
-						MemoryStats:  &memory.Result{Total: 8388608, Free: 4194304, Cached: 2097152},
+						MemoryStats: &memory.Result{
+							Total:  8388608,
+							Free:   4194304,
+							Cached: 2097152,
+						},
 					}, nil)
 				return mock
 			},
