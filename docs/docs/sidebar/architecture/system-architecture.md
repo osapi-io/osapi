@@ -93,7 +93,7 @@ role-based expansion.
 ### Authorization
 
 Access control uses fine-grained `resource:verb` permissions. Each API endpoint
-declares a required permission (e.g., `node:read`, `cron:write`,
+declares a required permission (e.g., `node:read`, `schedule:write`,
 `command:execute`). Built-in roles (`admin`, `write`, `read`) expand to default
 permission sets, and custom roles can be defined in config. See
 [Authentication & RBAC](../features/authentication.md) for the full permission

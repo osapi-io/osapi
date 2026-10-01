@@ -133,8 +133,8 @@ const config: Config = {
             },
             {
               type: 'doc',
-              label: 'Cron Management',
-              docId: 'sidebar/features/cron-management'
+              label: 'Schedule Management',
+              docId: 'sidebar/features/schedule-management'
             },
             {
               type: 'doc',
@@ -264,7 +264,7 @@ const config: Config = {
             {
               type: 'doc',
               label: 'Cron',
-              docId: 'sidebar/sdk/client/services/cron'
+              docId: 'sidebar/sdk/client/services/schedule'
             },
             {
               type: 'html',

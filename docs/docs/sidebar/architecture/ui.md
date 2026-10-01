@@ -60,7 +60,7 @@ labels, and drain/undrain actions.
 
 ### Configure (`/configure`)
 
-Block-based operations builder: sidebar with block categories (Cron, File,
+Block-based operations builder: sidebar with block categories (Schedule, File,
 Docker, Command, DNS, Network), blocks gated by RBAC permissions, per-block
 target picker (`_all`, `_any`, hostname, labels), sequential apply with
 per-block spinners, and result rendering.
