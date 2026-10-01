@@ -180,7 +180,7 @@ func (suite *SchedulePublicTestSuite) TestScheduleList() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Cron.List(suite.ctx, "_any")
+			resp, err := sut.Schedule.List(suite.ctx, "_any")
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -355,7 +355,7 @@ func (suite *SchedulePublicTestSuite) TestScheduleGet() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Cron.Get(suite.ctx, "_any", "backup")
+			resp, err := sut.Schedule.Get(suite.ctx, "_any", "backup")
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -620,7 +620,7 @@ func (suite *SchedulePublicTestSuite) TestScheduleCreate() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Cron.Create(suite.ctx, "_any", tc.opts)
+			resp, err := sut.Schedule.Create(suite.ctx, "_any", tc.opts)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -862,7 +862,7 @@ func (suite *SchedulePublicTestSuite) TestScheduleUpdate() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Cron.Update(
+			resp, err := sut.Schedule.Update(
 				suite.ctx,
 				"_any",
 				"backup",
@@ -1015,7 +1015,7 @@ func (suite *SchedulePublicTestSuite) TestScheduleDelete() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Cron.Delete(suite.ctx, "_any", "backup")
+			resp, err := sut.Schedule.Delete(suite.ctx, "_any", "backup")
 			tc.validateFunc(resp, err)
 		})
 	}

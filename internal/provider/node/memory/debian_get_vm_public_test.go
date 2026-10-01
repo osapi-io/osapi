@@ -42,7 +42,7 @@ func (suite *DebianGetStatsPublicTestSuite) TestGetStats() {
 	tests := []struct {
 		name         string
 		setupMock    func() func() (*sysMem.VirtualMemoryStat, error)
-		validateFunc func(*mem.Result, error)
+		validateFunc func(*memory.Result, error)
 	}{
 		{
 			name: "when GetStats Ok",
@@ -55,10 +55,10 @@ func (suite *DebianGetStatsPublicTestSuite) TestGetStats() {
 					}, nil
 				}
 			},
-			validateFunc: func(got *mem.Result, err error) {
+			validateFunc: func(got *memory.Result, err error) {
 				suite.NoError(err)
 				suite.NotNil(got)
-				suite.Equal(&mem.Result{
+				suite.Equal(&memory.Result{
 					Total:  1024,
 					Free:   512,
 					Cached: 256,
@@ -66,13 +66,13 @@ func (suite *DebianGetStatsPublicTestSuite) TestGetStats() {
 			},
 		},
 		{
-			name: "when mem.VirtualMemory errors",
+			name: "when memory.VirtualMemory errors",
 			setupMock: func() func() (*sysMem.VirtualMemoryStat, error) {
 				return func() (*sysMem.VirtualMemoryStat, error) {
 					return nil, assert.AnError
 				}
 			},
-			validateFunc: func(got *mem.Result, err error) {
+			validateFunc: func(got *memory.Result, err error) {
 				suite.Error(err)
 				suite.ErrorContains(err, assert.AnError.Error())
 				suite.Nil(got)
@@ -82,7 +82,7 @@ func (suite *DebianGetStatsPublicTestSuite) TestGetStats() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			debian := mem.NewDebianProvider()
+			debian := memory.NewDebianProvider()
 
 			if tc.setupMock != nil {
 				debian.VirtualMemoryFn = tc.setupMock()
