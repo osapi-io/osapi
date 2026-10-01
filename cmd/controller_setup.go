@@ -52,7 +52,7 @@ import (
 	nodeAPI "github.com/osapi-io/osapi/internal/controller/api/node"
 	certificateAPI "github.com/osapi-io/osapi/internal/controller/api/node/certificate"
 	commandAPI "github.com/osapi-io/osapi/internal/controller/api/node/command"
-	dockerAPI "github.com/osapi-io/osapi/internal/controller/api/node/docker"
+	dockerAPI "github.com/osapi-io/osapi/internal/controller/api/node/container"
 	nodeFileAPI "github.com/osapi-io/osapi/internal/controller/api/node/file"
 	hostnameAPI "github.com/osapi-io/osapi/internal/controller/api/node/hostname"
 	logAPI "github.com/osapi-io/osapi/internal/controller/api/node/log"

@@ -34,7 +34,7 @@ import (
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
 	logProv "github.com/osapi-io/osapi/internal/provider/node/log"
-	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	"github.com/osapi-io/osapi/internal/provider/node/ntp"
 	"github.com/osapi-io/osapi/internal/provider/node/power"
 	processProv "github.com/osapi-io/osapi/internal/provider/node/process"
@@ -62,7 +62,7 @@ func (a *Agent) processJobOperation(
 func NewNodeProcessor(
 	hostProvider nodeHost.Provider,
 	diskProvider disk.Provider,
-	memProvider mem.Provider,
+	memoryProvider memory.Provider,
 	loadProvider load.Provider,
 	sysctlProvider sysctl.Provider,
 	ntpProvider ntp.Provider,
@@ -87,7 +87,7 @@ func NewNodeProcessor(
 			}
 			return getNodeHostname(hostProvider, appConfig, logger)
 		case "status":
-			return getNodeStatus(hostProvider, diskProvider, memProvider, loadProvider, logger)
+			return getNodeStatus(hostProvider, diskProvider, memoryProvider, loadProvider, logger)
 		case "uptime":
 			return getNodeUptime(hostProvider, logger)
 		case "os", "osinfo":
@@ -95,7 +95,7 @@ func NewNodeProcessor(
 		case "disk":
 			return getNodeDisk(diskProvider, logger)
 		case "memory", "mem":
-			return getNodeMemory(memProvider, logger)
+			return getNodeMemory(memoryProvider, logger)
 		case "load":
 			return getNodeLoad(loadProvider, logger)
 		case "sysctl":
@@ -184,7 +184,7 @@ func setNodeHostname(
 func getNodeStatus(
 	hostProvider nodeHost.Provider,
 	diskProvider disk.Provider,
-	memProvider mem.Provider,
+	memoryProvider memory.Provider,
 	loadProvider load.Provider,
 	logger *slog.Logger,
 ) (json.RawMessage, error) {
@@ -219,7 +219,7 @@ func getNodeStatus(
 	diskUsage, err := diskProvider.GetLocalUsageStats()
 	record("disk_usage", err)
 
-	memInfo, err := memProvider.GetStats()
+	memInfo, err := memoryProvider.GetStats()
 	record("memory_stats", err)
 
 	loadAvg, err := loadProvider.GetAverageStats()
@@ -300,12 +300,12 @@ func getNodeDisk(
 
 // getNodeMemory retrieves memory statistics.
 func getNodeMemory(
-	memProvider mem.Provider,
+	memoryProvider memory.Provider,
 	logger *slog.Logger,
 ) (json.RawMessage, error) {
-	logger.Debug("executing mem.GetStats")
+	logger.Debug("executing memory.GetStats")
 
-	memInfo, err := memProvider.GetStats()
+	memInfo, err := memoryProvider.GetStats()
 	if err != nil {
 		return nil, err
 	}

@@ -48,7 +48,7 @@ import (
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
-	memMocks "github.com/osapi-io/osapi/internal/provider/node/mem/mocks"
+	memoryMocks "github.com/osapi-io/osapi/internal/provider/node/memory/mocks"
 	processMocks "github.com/osapi-io/osapi/internal/telemetry/process/mocks"
 )
 
@@ -87,7 +87,7 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 		Return(nil, fmt.Errorf("host: %w", provider.ErrUnsupported)).
 		AnyTimes()
 	diskMock := diskMocks.NewDefaultMockProvider(s.mockCtrl)
-	memMock := memMocks.NewDefaultMockProvider(s.mockCtrl)
+	memMock := memoryMocks.NewDefaultMockProvider(s.mockCtrl)
 	loadMock := loadMocks.NewDefaultMockProvider(s.mockCtrl)
 
 	// Use plain DNS mock to avoid hardcoded interface expectations
@@ -128,7 +128,7 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 		streamName:      "test-stream",
 		hostProvider:    hostMock,
 		diskProvider:    diskMock,
-		memProvider:     memMock,
+		memoryProvider:  memMock,
 		loadProvider:    loadMock,
 		dnsProvider:     dnsMock,
 		pingProvider:    pingMock,
@@ -836,7 +836,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 					jobClient:       s.mockJobClient,
 					hostProvider:    hostMock,
 					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
 					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
@@ -864,7 +864,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 					jobClient:       s.mockJobClient,
 					hostProvider:    hostMock,
 					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
 					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
@@ -890,7 +890,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 					jobClient:       s.mockJobClient,
 					hostProvider:    hostMock,
 					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
 					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
@@ -916,7 +916,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 					jobClient:       s.mockJobClient,
 					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
 					diskProvider:    diskMock,
-					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
 					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
@@ -934,7 +934,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 			name:      "memory provider error",
 			operation: "memory.get",
 			createAgent: func() *agent.Agent {
-				memMock := memMocks.NewPlainMockProvider(s.mockCtrl)
+				memMock := memoryMocks.NewPlainMockProvider(s.mockCtrl)
 				memMock.EXPECT().GetStats().Return(nil, errors.New("memory unavailable"))
 				return newTestAgent(newTestAgentParams{
 					appFs:           memfs.New(),
@@ -942,7 +942,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 					jobClient:       s.mockJobClient,
 					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
 					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memProvider:     memMock,
+					memoryProvider:  memMock,
 					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
@@ -968,7 +968,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 					jobClient:       s.mockJobClient,
 					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
 					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
 					loadProvider:    loadMock,
 					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
@@ -1024,7 +1024,7 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperationErrors() {
 					jobClient:       s.mockJobClient,
 					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
 					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
 					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsProvider:     dnsMock,
 					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
@@ -1054,7 +1054,7 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperationErrors() {
 					jobClient:       s.mockJobClient,
 					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
 					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
 					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsProvider:     dnsMock,
 					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
@@ -1082,7 +1082,7 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperationErrors() {
 					jobClient:       s.mockJobClient,
 					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
 					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
 					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingProvider:    pingMock,

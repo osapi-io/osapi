@@ -79,7 +79,7 @@ func (suite *ClientPublicTestSuite) TestNew() {
 				suite.NotNil(c.Health)
 				suite.NotNil(c.Audit)
 				suite.NotNil(c.File)
-				suite.NotNil(c.Cron)
+				suite.NotNil(c.Schedule)
 			},
 		},
 		{

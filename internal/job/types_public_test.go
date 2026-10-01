@@ -30,7 +30,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
-	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 )
 
 type TypesPublicTestSuite struct {
@@ -225,7 +225,7 @@ func (suite *TypesPublicTestSuite) TestAgentInfoFactsFieldsJSONRoundTrip() {
 				},
 				Uptime:        time.Duration(3600) * time.Second,
 				LoadAverages:  &load.Result{Load1: 0.5, Load5: 0.3, Load15: 0.1},
-				MemoryStats:   &mem.Result{Total: 1024, Free: 512},
+				MemoryStats:   &memory.Result{Total: 1024, Free: 512},
 				AgentVersion:  "1.0.0",
 				Architecture:  "x86_64",
 				KernelVersion: "6.1.0-25-generic",

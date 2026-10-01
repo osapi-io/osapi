@@ -96,9 +96,9 @@ type Client struct {
 	// inspect, start, stop, remove, exec, pull).
 	Docker *DockerService
 
-	// Cron provides cron schedule management operations (list, get,
+	// Schedule provides scheduled task management operations (list, get,
 	// create, update, delete).
-	Cron *CronService
+	Schedule *ScheduleService
 
 	// Sysctl provides sysctl parameter management operations (list, get,
 	// set, delete).
@@ -223,7 +223,7 @@ func New(
 	c.Audit = &AuditService{client: httpClient}
 	c.File = &FileService{client: httpClient}
 	c.Docker = &DockerService{client: httpClient}
-	c.Cron = &CronService{client: httpClient}
+	c.Schedule = &ScheduleService{client: httpClient}
 	c.Sysctl = &SysctlService{client: httpClient}
 	c.NTP = &NTPService{client: httpClient}
 	c.Timezone = &TimezoneService{client: httpClient}

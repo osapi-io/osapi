@@ -28,7 +28,7 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/job"
-	"github.com/osapi-io/osapi/internal/provider/scheduled/cron"
+	"github.com/osapi-io/osapi/internal/provider/schedule/cron"
 )
 
 // NewScheduleProcessor returns a ProcessorFunc that handles schedule-related operations.
@@ -62,7 +62,7 @@ func processCronOperation(
 	// Extract sub-operation: "cron.list" -> "list"
 	parts := strings.Split(jobRequest.Operation, ".")
 	if len(parts) < 2 {
-		return nil, fmt.Errorf("invalid cron operation: %s", jobRequest.Operation)
+		return nil, fmt.Errorf("invalid schedule operation: %s", jobRequest.Operation)
 	}
 	subOp := parts[1]
 

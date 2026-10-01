@@ -46,7 +46,7 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
-	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
@@ -401,7 +401,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusValidationHTTP() {
 						Load5:  0.5,
 						Load15: 0.2,
 					},
-					MemoryStats: &mem.Result{
+					MemoryStats: &memory.Result{
 						Total:  8388608,
 						Free:   4194304,
 						Cached: 2097152,
@@ -601,7 +601,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusRBACHTTP() {
 						Load5:  0.5,
 						Load15: 0.2,
 					},
-					MemoryStats: &mem.Result{
+					MemoryStats: &memory.Result{
 						Total:  8388608,
 						Free:   4194304,
 						Cached: 2097152,

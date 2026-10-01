@@ -30,7 +30,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
-	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 )
 
 type ConditionPublicTestSuite struct {
@@ -191,14 +191,14 @@ func (s *ConditionPublicTestSuite) TestTransitionTime() {
 func (s *ConditionPublicTestSuite) TestEvaluateMemoryPressure() {
 	tests := []struct {
 		name         string
-		stats        *mem.Result
+		stats        *memory.Result
 		threshold    int
 		prev         []job.Condition
 		validateFunc func(job.Condition)
 	}{
 		{
 			name: "when usage above threshold returns true with reason",
-			stats: &mem.Result{
+			stats: &memory.Result{
 				Total:     8 * 1024 * 1024 * 1024, // 8 GB
 				Available: 1 * 1024 * 1024 * 1024, // 1 GB available = 87.5% used
 			},
@@ -214,7 +214,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateMemoryPressure() {
 		},
 		{
 			name: "when usage below threshold returns false",
-			stats: &mem.Result{
+			stats: &memory.Result{
 				Total:     8 * 1024 * 1024 * 1024, // 8 GB
 				Available: 6 * 1024 * 1024 * 1024, // 6 GB available = 25% used
 			},
@@ -239,7 +239,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateMemoryPressure() {
 		},
 		{
 			name: "when total is zero returns false",
-			stats: &mem.Result{
+			stats: &memory.Result{
 				Total:     0,
 				Available: 0,
 			},
@@ -253,7 +253,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateMemoryPressure() {
 		},
 		{
 			name: "when usage exactly at threshold returns false",
-			stats: &mem.Result{
+			stats: &memory.Result{
 				Total:     100,
 				Available: 20, // 80% used, threshold is 80 (> not >=)
 			},
@@ -511,7 +511,7 @@ func (s *ConditionPublicTestSuite) TestLastTransitionTimeTracking() {
 			name: "when status flips from false to true transition time updates",
 			evalFunc: func(prev []job.Condition) job.Condition {
 				return agent.ExportEvaluateMemoryPressure(
-					&mem.Result{
+					&memory.Result{
 						Total:     100,
 						Available: 10, // 90% used
 					},
@@ -536,7 +536,7 @@ func (s *ConditionPublicTestSuite) TestLastTransitionTimeTracking() {
 			name: "when status stays true transition time is preserved",
 			evalFunc: func(prev []job.Condition) job.Condition {
 				return agent.ExportEvaluateMemoryPressure(
-					&mem.Result{
+					&memory.Result{
 						Total:     100,
 						Available: 10, // 90% used
 					},
@@ -560,7 +560,7 @@ func (s *ConditionPublicTestSuite) TestLastTransitionTimeTracking() {
 			name: "when status flips from true to false transition time updates",
 			evalFunc: func(prev []job.Condition) job.Condition {
 				return agent.ExportEvaluateMemoryPressure(
-					&mem.Result{
+					&memory.Result{
 						Total:     100,
 						Available: 80, // 20% used
 					},
@@ -585,7 +585,7 @@ func (s *ConditionPublicTestSuite) TestLastTransitionTimeTracking() {
 			name: "when status stays false transition time is preserved",
 			evalFunc: func(prev []job.Condition) job.Condition {
 				return agent.ExportEvaluateMemoryPressure(
-					&mem.Result{
+					&memory.Result{
 						Total:     100,
 						Available: 80, // 20% used
 					},

@@ -36,9 +36,9 @@ import (
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
-	memMocks "github.com/osapi-io/osapi/internal/provider/node/mem/mocks"
-	"github.com/osapi-io/osapi/internal/provider/scheduled/cron"
-	cronMocks "github.com/osapi-io/osapi/internal/provider/scheduled/cron/mocks"
+	memoryMocks "github.com/osapi-io/osapi/internal/provider/node/memory/mocks"
+	"github.com/osapi-io/osapi/internal/provider/schedule/cron"
+	cronMocks "github.com/osapi-io/osapi/internal/provider/schedule/cron/mocks"
 )
 
 type ProcessorSchedulePublicTestSuite struct {
@@ -141,7 +141,7 @@ func (s *ProcessorSchedulePublicTestSuite) TestProcessCronOperation() {
 		validateFunc func(json.RawMessage, error)
 	}{
 		{
-			name: "invalid cron operation missing sub-operation",
+			name: "invalid schedule operation missing sub-operation",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
 				Category:  "schedule",
@@ -153,7 +153,7 @@ func (s *ProcessorSchedulePublicTestSuite) TestProcessCronOperation() {
 			},
 			validateFunc: func(result json.RawMessage, err error) {
 				s.Error(err)
-				s.Contains(err.Error(), "invalid cron operation: cron")
+				s.Contains(err.Error(), "invalid schedule operation: cron")
 				s.Nil(result)
 			},
 		},
@@ -555,12 +555,12 @@ func (s *ProcessorSchedulePublicTestSuite) TestProcessJobOperationScheduleCatego
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			a := newTestAgent(newTestAgentParams{
-				jobClient:    s.mockJobClient,
-				hostProvider: hostMocks.NewDefaultMockProvider(s.mockCtrl),
-				diskProvider: diskMocks.NewDefaultMockProvider(s.mockCtrl),
-				memProvider:  memMocks.NewDefaultMockProvider(s.mockCtrl),
-				loadProvider: loadMocks.NewDefaultMockProvider(s.mockCtrl),
-				cronProvider: tt.setupMock(),
+				jobClient:      s.mockJobClient,
+				hostProvider:   hostMocks.NewDefaultMockProvider(s.mockCtrl),
+				diskProvider:   diskMocks.NewDefaultMockProvider(s.mockCtrl),
+				memoryProvider: memoryMocks.NewDefaultMockProvider(s.mockCtrl),
+				loadProvider:   loadMocks.NewDefaultMockProvider(s.mockCtrl),
+				cronProvider:   tt.setupMock(),
 			})
 
 			tt.validateFunc(agent.ExportProcessJobOperation(a, tt.jobRequest))

@@ -47,7 +47,7 @@ import (
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
 	logProv "github.com/osapi-io/osapi/internal/provider/node/log"
-	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	ntpProv "github.com/osapi-io/osapi/internal/provider/node/ntp"
 	powerProv "github.com/osapi-io/osapi/internal/provider/node/power"
 	processProv "github.com/osapi-io/osapi/internal/provider/node/process"
@@ -55,7 +55,7 @@ import (
 	sysctlProv "github.com/osapi-io/osapi/internal/provider/node/sysctl"
 	timezoneProv "github.com/osapi-io/osapi/internal/provider/node/timezone"
 	userProv "github.com/osapi-io/osapi/internal/provider/node/user"
-	cronProv "github.com/osapi-io/osapi/internal/provider/scheduled/cron"
+	cronProv "github.com/osapi-io/osapi/internal/provider/schedule/cron"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 	"github.com/osapi-io/osapi/pkg/sdk/platform"
 )
@@ -114,14 +114,14 @@ func setupAgent(
 		diskProvider = disk.NewLinuxProvider()
 	}
 
-	var memProvider mem.Provider
+	var memoryProvider memory.Provider
 	switch plat {
 	case "debian":
-		memProvider = mem.NewDebianProvider()
+		memoryProvider = memory.NewDebianProvider()
 	case "darwin":
-		memProvider = mem.NewDarwinProvider()
+		memoryProvider = memory.NewDarwinProvider()
 	default:
-		memProvider = mem.NewLinuxProvider()
+		memoryProvider = memory.NewLinuxProvider()
 	}
 
 	var loadProvider load.Provider
@@ -235,7 +235,7 @@ func setupAgent(
 		agent.NewNodeProcessor(
 			hostProvider,
 			diskProvider,
-			memProvider,
+			memoryProvider,
 			loadProvider,
 			sysctlProvider,
 			ntpProvider,
@@ -251,7 +251,7 @@ func setupAgent(
 		),
 		hostProvider,
 		diskProvider,
-		memProvider,
+		memoryProvider,
 		loadProvider,
 		sysctlProvider,
 		ntpProvider,
@@ -313,7 +313,7 @@ func setupAgent(
 		streamName,
 		hostProvider,
 		diskProvider,
-		memProvider,
+		memoryProvider,
 		loadProvider,
 		netinfoProvider,
 		process.New(),

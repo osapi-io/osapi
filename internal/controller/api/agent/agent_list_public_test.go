@@ -44,7 +44,7 @@ import (
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
-	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 )
 
 type AgentListPublicTestSuite struct {
@@ -91,7 +91,7 @@ func (s *AgentListPublicTestSuite) TestListAgents() {
 					OSInfo:       &host.Result{Distribution: "Ubuntu", Version: "24.04"},
 					Uptime:       5 * time.Hour,
 					LoadAverages: &load.Result{Load1: 0.5, Load5: 0.3, Load15: 0.2},
-					MemoryStats:  &mem.Result{Total: 8388608, Free: 4194304, Cached: 2097152},
+					MemoryStats:  &memory.Result{Total: 8388608, Free: 4194304, Cached: 2097152},
 				},
 				{Hostname: "server2"},
 			},

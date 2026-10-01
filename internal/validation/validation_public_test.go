@@ -295,7 +295,7 @@ func (s *ValidationPublicTestSuite) TestIpOrFact() {
 	}
 }
 
-func (s *ValidationPublicTestSuite) TestCronSchedule() {
+func (s *ValidationPublicTestSuite) TestSchedule() {
 	tests := []struct {
 		name         string
 		field        string

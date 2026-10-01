@@ -84,11 +84,11 @@ const (
 
 // Schedule/Cron operations.
 const (
-	OpCronList   JobOperation = "schedule.cron.list"
-	OpCronGet    JobOperation = "schedule.cron.get"
-	OpCronCreate JobOperation = "schedule.cron.create"
-	OpCronUpdate JobOperation = "schedule.cron.update"
-	OpCronDelete JobOperation = "schedule.cron.delete"
+	OpScheduleList   JobOperation = "schedule.cron.list"
+	OpScheduleGet    JobOperation = "schedule.cron.get"
+	OpScheduleCreate JobOperation = "schedule.cron.create"
+	OpScheduleUpdate JobOperation = "schedule.cron.update"
+	OpScheduleDelete JobOperation = "schedule.cron.delete"
 )
 
 // Sysctl operations.
