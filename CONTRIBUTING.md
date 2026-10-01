@@ -10,11 +10,11 @@ workflow.
 - Read the [Code of Conduct](CODE_OF_CONDUCT.md). It applies to every
   interaction in this repo.
 
-- **Design records.** The conventions binding this repository are specified in
-  [osapi-io/specs](https://github.com/osapi-io/specs) under `components/osapi/`,
-  whose `.specify/memory/` is the standing record. Design reasoning for a change
-  lives there, not here. A design document kept in this repository goes stale
-  the moment the code moves past it, and nothing catches the drift.
+- **Design docs.** How this repository is built is documented in
+  [osapi-io/specs](https://github.com/osapi-io/specs) under `components/osapi/`.
+  Read it before changing behaviour, and change it when you do. A design doc
+  kept in this repository goes stale the moment the code moves past it, and
+  nothing catches the drift.
 
 - **Get familiar with the project.** Read the docs in this order:
 
@@ -69,11 +69,10 @@ marketplace:
 - **commit-commands.** provides `/commit` and `/commit-push-pr` slash commands
   that follow the project's commit conventions automatically.
 
-**Do not use superpowers.** Spec Kit governs specification, planning, and
-implementation, and the design record for a change lives in
-[osapi-io/specs](https://github.com/osapi-io/specs). A second workflow over that
-ground gives two answers to which artifact is authoritative, and the answer that
-loses is the one nobody reads. Nothing superpowers produces is committed.
+**Design happens in the design docs.** Write or change the page in
+[osapi-io/specs](https://github.com/osapi-io/specs) before building, and correct
+it where building proves it wrong. A design document kept in this repository
+goes stale the moment the code moves past it, and nothing catches the drift.
 
 ## Setup
 
@@ -446,39 +445,39 @@ change, and the reason for each is in the corpus behind the link.
 - **One endpoint never both creates and updates.** `POST` creates with the name
   in the body, `PUT /{name}` updates from the path. A combined endpoint leaves
   404 with no meaning.
-  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/domains.md)
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/domains.md)
 - **Creating something that already exists is not an error. Updating something
   that is absent is.** A create is idempotent and an update is not, because the
   caller issuing an update has asserted the thing exists.
-  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/providers.md)
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/providers.md)
 - **A permission missing from `DefaultRolePermissions` reaches nobody.** The
   permission exists, the handler checks it, no token can hold it, and nothing
   reports that the endpoint is unreachable.
-  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/permissions.md)
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/permissions.md)
 - **Revalidate in the provider anything that becomes a path, a filename or a
   command argument.** Validating at the handler is not enough: the job is stored
   and executed later, so the provider is a second caller arriving after the
   fact. GHSA-7fjw-v3g9-326g is what that cost.
-  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/providers.md)
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/providers.md)
 - **A secret reaches a command through stdin, never through an argument.** Use
   `RunPrivilegedCmdWithStdin`. Arguments are logged and visible in the process
   table. GHSA-6gc6-px2x-q95j is what that cost.
-  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/exec.md)
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md)
 - **A value beginning with a dash becomes a flag** if it reaches a command
   unguarded. The provider prevents that before calling `internal/exec`.
-  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/exec.md)
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md)
 - **Run every command through `internal/exec`.** Spawning a process directly
   loses the timeout, the argument logging, the stdin path for secrets and the
   testability, and nothing in the build will tell you.
-  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/exec.md)
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md)
 - **Ten minutes is a ceiling, not a fallback.** `internal/exec` wraps every
   command's context unconditionally, so a caller can ask for less and cannot ask
   for more. A job that legitimately needs twenty minutes does not get them.
-  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/exec.md)
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md)
 - **A field carrying a secret goes in the audit denylist.** Redaction matches on
   field name, so a new field is recorded as sent until it is added to
   `sensitiveFields`, and no test fails if you forget.
-  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/audit.md)
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/audit.md)
 
 ## UI contributions
 

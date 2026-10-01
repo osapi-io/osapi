@@ -10,7 +10,7 @@ fleet health, agents, jobs, and block-based operation composition without a
 separate frontend to deploy. This page is what an operator acts on — the setting
 that turns the UI off, the roles that decide what it shows, and the pages
 themselves. How it is built, embedded, structured and generated is stated in the
-[specifications repository](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/007-the-embedded-ui/spec.md),
+[specifications repository](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md),
 not here.
 
 ## Configuration

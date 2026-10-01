@@ -10,7 +10,7 @@ the client library and any new SDK packages.
 :::note
 
 This page shows the rules working. They are stated in the
-[SDK document](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/sdk.md):
+[SDK document](https://github.com/osapi-io/specs/blob/main/components/osapi/sdk.md):
 the five naming rules derived from the 117 existing methods, what a service
 owes, the package layout, and why every method returns `Response[T]`.
 
