@@ -10,11 +10,11 @@ workflow.
 - Read the [Code of Conduct](CODE_OF_CONDUCT.md). It applies to every
   interaction in this repo.
 
-- **Design records.** The conventions binding this repository are specified in
-  [osapi-io/specs](https://github.com/osapi-io/specs) under `components/osapi/`,
-  whose `.specify/memory/` is the standing record. Design reasoning for a change
-  lives there, not here. A design document kept in this repository goes stale
-  the moment the code moves past it, and nothing catches the drift.
+- **Design docs.** How this repository is built is documented in
+  [osapi-io/specs](https://github.com/osapi-io/specs) under `components/osapi/`.
+  Read it before changing behaviour, and change it when you do. A design doc
+  kept in this repository goes stale the moment the code moves past it, and
+  nothing catches the drift.
 
 - **Get familiar with the project.** Read the docs in this order:
 
@@ -69,11 +69,10 @@ marketplace:
 - **commit-commands.** provides `/commit` and `/commit-push-pr` slash commands
   that follow the project's commit conventions automatically.
 
-**Do not use superpowers.** Spec Kit governs specification, planning, and
-implementation, and the design record for a change lives in
-[osapi-io/specs](https://github.com/osapi-io/specs). A second workflow over that
-ground gives two answers to which artifact is authoritative, and the answer that
-loses is the one nobody reads. Nothing superpowers produces is committed.
+**Design happens in the design docs.** Write or change the page in
+[osapi-io/specs](https://github.com/osapi-io/specs) before building, and correct
+it where building proves it wrong. A design document kept in this repository
+goes stale the moment the code moves past it, and nothing catches the drift.
 
 ## Setup
 

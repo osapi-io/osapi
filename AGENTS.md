@@ -48,8 +48,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ## Task tracking
 
-**Do not use superpowers.** Spec Kit governs specification, planning, and
-implementation, and the design record for a change lives in
-[osapi-io/specs](https://github.com/osapi-io/specs). A second workflow over that
-ground gives two answers to which artifact is authoritative, and the answer that
-loses is the one nobody reads. Nothing superpowers produces is committed.
+**Design happens in the design docs.** Write or change the page in
+[osapi-io/specs](https://github.com/osapi-io/specs) before building, and correct
+it where building proves it wrong. A design document kept in this repository
+goes stale the moment the code moves past it, and nothing catches the drift.
