@@ -6,6 +6,23 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+    paths:
+      # Only run when something that can change the result changes. Docs-only
+      # pull requests do not need the Go matrix, and the lint, markdown and
+      # justfile workflows still run on them. No status check here is required
+      # by branch protection, so a skipped run does not block a merge.
+      - '**.go'
+      - '**/go.mod'
+      - '**/go.sum'
+      - '.golangci.yml'
+      - '.coverignore'
+      - 'justfile'
+      - '.mise.toml'
+      - 'ui/**'
+      - '**/gen/api.yaml'
+      - 'internal/controller/api/**/*.yaml'
+      - 'cfg.yaml'
+      - '.github/workflows/go.yml'
 
 jobs:
   build:
