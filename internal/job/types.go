@@ -27,7 +27,7 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
-	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -629,7 +629,7 @@ type AgentRegistration struct {
 	// LoadAverages contains the system load averages.
 	LoadAverages *load.Result `json:"load_averages,omitempty"`
 	// MemoryStats contains memory usage information.
-	MemoryStats *mem.Result `json:"memory_stats,omitempty"`
+	MemoryStats *memory.Result `json:"memory_stats,omitempty"`
 	// AgentVersion is the version of the agent binary.
 	AgentVersion string `json:"agent_version,omitempty"`
 	// Process holds process-level resource usage.
@@ -669,7 +669,7 @@ type AgentInfo struct {
 	// LoadAverages contains the system load averages.
 	LoadAverages *load.Result `json:"load_averages,omitempty"`
 	// MemoryStats contains memory usage information.
-	MemoryStats *mem.Result `json:"memory_stats,omitempty"`
+	MemoryStats *memory.Result `json:"memory_stats,omitempty"`
 	// AgentVersion is the version of the agent binary.
 	AgentVersion string `json:"agent_version,omitempty"`
 	// Architecture is the CPU architecture (e.g., x86_64, aarch64).
@@ -735,7 +735,7 @@ type NodeStatusResponse struct {
 	// LoadAverages from the load provider
 	LoadAverages *load.Result `json:"load_averages"`
 	// MemoryStats from the memory provider
-	MemoryStats *mem.Result `json:"memory_stats"`
+	MemoryStats *memory.Result `json:"memory_stats"`
 	// DiskUsage from the disk provider
 	DiskUsage []disk.Result `json:"disk_usage"`
 	// FieldErrors names the reads that failed, by the field they would have

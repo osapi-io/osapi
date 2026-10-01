@@ -214,7 +214,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandlePKIEnrollment() {
 				"",  // streamName
 				nil, // hostProvider
 				nil, // diskProvider
-				nil, // memProvider
+				nil, // memoryProvider
 				nil, // loadProvider
 				nil, // netinfoProvider
 				nil, // processProvider

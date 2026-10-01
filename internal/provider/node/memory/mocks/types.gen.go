@@ -12,7 +12,7 @@ package mocks
 import (
 	reflect "reflect"
 
-	mem "github.com/osapi-io/osapi/internal/provider/node/mem"
+	memory "github.com/osapi-io/osapi/internal/provider/node/memory"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -41,10 +41,10 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 }
 
 // GetStats mocks base method.
-func (m *MockProvider) GetStats() (*mem.Result, error) {
+func (m *MockProvider) GetStats() (*memory.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetStats")
-	ret0, _ := ret[0].(*mem.Result)
+	ret0, _ := ret[0].(*memory.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

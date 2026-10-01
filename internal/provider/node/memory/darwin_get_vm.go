@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,24 +18,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package mem
+package memory
 
-// Provider implements the methods to interact with various Mem components.
-type Provider interface {
-	// GetStats retrieves memory statistics of the system.
-	GetStats() (*Result, error)
-}
+// GetStats retrieves memory statistics of the system.
+// It returns a Stats struct with total, free, and cached memory in
+// bytes, and an error if something goes wrong.
+func (d *Darwin) GetStats() (*Result, error) {
+	memInfo, err := d.VirtualMemoryFn()
+	if err != nil {
+		return nil, err
+	}
 
-// Result holds memory information in bytes.
-type Result struct {
-	// Total memory in bytes
-	Total uint64
-	// Available memory in bytes (free + reclaimable)
-	Available uint64
-	// Free memory in bytes
-	Free uint64
-	// Cached memory in bytes
-	Cached uint64
-	// Changed indicates whether system state was modified.
-	Changed bool `json:"changed"`
+	return &Result{
+		Total:     memInfo.Total,
+		Available: memInfo.Available,
+		Free:      memInfo.Free,
+		Cached:    memInfo.Cached,
+	}, nil
 }

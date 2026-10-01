@@ -27,7 +27,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
-	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 )
 
 // findPrevCondition returns the previous condition of the given type,
@@ -60,7 +60,7 @@ func transitionTime(
 }
 
 func evaluateMemoryPressure(
-	stats *mem.Result,
+	stats *memory.Result,
 	threshold int,
 	prev []job.Condition,
 ) job.Condition {

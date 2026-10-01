@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package mem_test
+package memory_test
 
 import (
 	"testing"
@@ -26,7 +26,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/provider"
-	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 )
 
 type LinuxGetStatsPublicTestSuite struct {
@@ -40,11 +40,11 @@ func (suite *LinuxGetStatsPublicTestSuite) TearDownTest() {}
 func (suite *LinuxGetStatsPublicTestSuite) TestGetStats() {
 	tests := []struct {
 		name         string
-		validateFunc func(*mem.Result, error)
+		validateFunc func(*memory.Result, error)
 	}{
 		{
 			name: "returns not implemented error",
-			validateFunc: func(result *mem.Result, err error) {
+			validateFunc: func(result *memory.Result, err error) {
 				suite.Nil(result)
 				suite.ErrorIs(err, provider.ErrUnsupported)
 			},
@@ -53,7 +53,7 @@ func (suite *LinuxGetStatsPublicTestSuite) TestGetStats() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			linux := mem.NewLinuxProvider()
+			linux := memory.NewLinuxProvider()
 
 			tc.validateFunc(linux.GetStats())
 		})

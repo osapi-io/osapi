@@ -36,7 +36,7 @@ import (
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
-	memMocks "github.com/osapi-io/osapi/internal/provider/node/mem/mocks"
+	memoryMocks "github.com/osapi-io/osapi/internal/provider/node/memory/mocks"
 	"github.com/osapi-io/osapi/internal/provider/scheduled/cron"
 	cronMocks "github.com/osapi-io/osapi/internal/provider/scheduled/cron/mocks"
 )
@@ -555,12 +555,12 @@ func (s *ProcessorSchedulePublicTestSuite) TestProcessJobOperationScheduleCatego
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			a := newTestAgent(newTestAgentParams{
-				jobClient:    s.mockJobClient,
-				hostProvider: hostMocks.NewDefaultMockProvider(s.mockCtrl),
-				diskProvider: diskMocks.NewDefaultMockProvider(s.mockCtrl),
-				memProvider:  memMocks.NewDefaultMockProvider(s.mockCtrl),
-				loadProvider: loadMocks.NewDefaultMockProvider(s.mockCtrl),
-				cronProvider: tt.setupMock(),
+				jobClient:      s.mockJobClient,
+				hostProvider:   hostMocks.NewDefaultMockProvider(s.mockCtrl),
+				diskProvider:   diskMocks.NewDefaultMockProvider(s.mockCtrl),
+				memoryProvider: memoryMocks.NewDefaultMockProvider(s.mockCtrl),
+				loadProvider:   loadMocks.NewDefaultMockProvider(s.mockCtrl),
+				cronProvider:   tt.setupMock(),
 			})
 
 			tt.validateFunc(agent.ExportProcessJobOperation(a, tt.jobRequest))

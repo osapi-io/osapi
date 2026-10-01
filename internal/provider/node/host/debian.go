@@ -33,7 +33,7 @@ import (
 
 var _ provider.FactsSetter = (*Debian)(nil)
 
-// Debian implements the Mem interface for Debian.
+// Debian implements the Host interface for Debian.
 type Debian struct {
 	provider.FactsAware
 

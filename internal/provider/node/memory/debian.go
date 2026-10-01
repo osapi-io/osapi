@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2024 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,21 +18,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package mem
+package memory
 
-// GetStats retrieves memory statistics of the system.
-// It returns a Stats struct with total, free, and cached memory in
-// bytes, and an error if something goes wrong.
-func (d *Darwin) GetStats() (*Result, error) {
-	memInfo, err := d.VirtualMemoryFn()
-	if err != nil {
-		return nil, err
+import (
+	"github.com/shirou/gopsutil/v4/mem"
+
+	"github.com/osapi-io/osapi/internal/provider"
+)
+
+var _ provider.FactsSetter = (*Debian)(nil)
+
+// Debian implements the Memory interface for Debian.
+type Debian struct {
+	provider.FactsAware
+
+	VirtualMemoryFn func() (*mem.VirtualMemoryStat, error)
+}
+
+// NewDebianProvider factory to create a new Debian instance.
+func NewDebianProvider() *Debian {
+	return &Debian{
+		VirtualMemoryFn: mem.VirtualMemory,
 	}
-
-	return &Result{
-		Total:     memInfo.Total,
-		Available: memInfo.Available,
-		Free:      memInfo.Free,
-		Cached:    memInfo.Cached,
-	}, nil
 }

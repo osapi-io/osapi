@@ -18,8 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package mem provides memory usage statistics.
-package mem
+// Package memory provides memory usage statistics.
+package memory
 
 import (
 	"github.com/osapi-io/osapi/internal/provider"
@@ -27,7 +27,7 @@ import (
 
 var _ provider.FactsSetter = (*Linux)(nil)
 
-// Linux implements the Mem interface for Linux.
+// Linux implements the Memory interface for Linux.
 type Linux struct {
 	provider.FactsAware
 }

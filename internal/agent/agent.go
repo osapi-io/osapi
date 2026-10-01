@@ -39,7 +39,7 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
-	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 )
 
@@ -52,7 +52,7 @@ func New(
 	streamName string,
 	hostProvider nodeHost.Provider,
 	diskProvider disk.Provider,
-	memProvider mem.Provider,
+	memoryProvider memory.Provider,
 	loadProvider load.Provider,
 	netinfoProvider netinfo.Provider,
 	processProvider process.Provider,
@@ -70,7 +70,7 @@ func New(
 		streamName:      streamName,
 		hostProvider:    hostProvider,
 		diskProvider:    diskProvider,
-		memProvider:     memProvider,
+		memoryProvider:  memoryProvider,
 		loadProvider:    loadProvider,
 		netinfoProvider: netinfoProvider,
 		processProvider: processProvider,

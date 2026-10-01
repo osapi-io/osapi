@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package mem
+package memory
 
 import (
 	"github.com/shirou/gopsutil/v4/mem"
@@ -28,7 +28,7 @@ import (
 
 var _ provider.FactsSetter = (*Darwin)(nil)
 
-// Darwin implements the Mem interface for Darwin (macOS).
+// Darwin implements the Memory interface for Darwin (macOS).
 type Darwin struct {
 	provider.FactsAware
 

@@ -18,21 +18,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package mem
+package memory
+
+import (
+	"github.com/osapi-io/osapi/internal/provider"
+)
 
 // GetStats retrieves memory statistics of the system.
 // It returns a Stats struct with total, free, and cached memory in
 // bytes, and an error if something goes wrong.
-func (u *Debian) GetStats() (*Result, error) {
-	memInfo, err := u.VirtualMemoryFn()
-	if err != nil {
-		return nil, err
-	}
-
-	return &Result{
-		Total:     memInfo.Total,
-		Available: memInfo.Available,
-		Free:      memInfo.Free,
-		Cached:    memInfo.Cached,
-	}, nil
+func (l *Linux) GetStats() (*Result, error) {
+	return nil, provider.ErrUnsupported
 }

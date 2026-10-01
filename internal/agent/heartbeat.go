@@ -29,7 +29,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
-	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 )
 
@@ -145,8 +145,8 @@ func (a *Agent) writeRegistration(
 		reg.LoadAverages = avg
 	}
 
-	var memStats *mem.Result
-	if stats, err := a.memProvider.GetStats(); err == nil {
+	var memStats *memory.Result
+	if stats, err := a.memoryProvider.GetStats(); err == nil {
 		memStats = stats
 		reg.MemoryStats = stats
 	}

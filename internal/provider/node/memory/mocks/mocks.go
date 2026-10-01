@@ -18,15 +18,32 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package mem
+package mocks
 
 import (
-	"github.com/osapi-io/osapi/internal/provider"
+	"go.uber.org/mock/gomock"
+
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 )
 
-// GetStats retrieves memory statistics of the system.
-// It returns a Stats struct with total, free, and cached memory in
-// bytes, and an error if something goes wrong.
-func (l *Linux) GetStats() (*Result, error) {
-	return nil, provider.ErrUnsupported
+// NewPlainMockProvider creates a Mock without defaults.
+func NewPlainMockProvider(
+	ctrl *gomock.Controller,
+) *MockProvider {
+	return NewMockProvider(ctrl)
+}
+
+// NewDefaultMockProvider creates a Mock with defaults.
+func NewDefaultMockProvider(
+	ctrl *gomock.Controller,
+) *MockProvider {
+	mock := NewMockProvider(ctrl)
+
+	mock.EXPECT().GetStats().Return(&memory.Result{
+		Total:  8388608,
+		Free:   4194304,
+		Cached: 2097152,
+	}, nil).AnyTimes()
+
+	return mock
 }

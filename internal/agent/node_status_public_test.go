@@ -41,7 +41,7 @@ import (
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
 	logMocks "github.com/osapi-io/osapi/internal/provider/node/log/mocks"
-	memMocks "github.com/osapi-io/osapi/internal/provider/node/mem/mocks"
+	memoryMocks "github.com/osapi-io/osapi/internal/provider/node/memory/mocks"
 	ntpMocks "github.com/osapi-io/osapi/internal/provider/node/ntp/mocks"
 	powerMocks "github.com/osapi-io/osapi/internal/provider/node/power/mocks"
 	processMocks "github.com/osapi-io/osapi/internal/provider/node/process/mocks"
@@ -68,11 +68,11 @@ func (s *NodeStatusPublicTestSuite) SetupTest() {
 // processorWith builds a node processor whose host, disk, memory and load reads
 // behave as the test describes.
 func (s *NodeStatusPublicTestSuite) processorWith(
-	setup func(*hostMocks.MockProvider, *diskMocks.MockProvider, *memMocks.MockProvider, *loadMocks.MockProvider),
+	setup func(*hostMocks.MockProvider, *diskMocks.MockProvider, *memoryMocks.MockProvider, *loadMocks.MockProvider),
 ) agent.ProcessorFunc {
 	hostMock := hostMocks.NewMockProvider(s.mockCtrl)
 	diskMock := diskMocks.NewMockProvider(s.mockCtrl)
-	memMock := memMocks.NewMockProvider(s.mockCtrl)
+	memMock := memoryMocks.NewMockProvider(s.mockCtrl)
 	loadMock := loadMocks.NewMockProvider(s.mockCtrl)
 
 	setup(hostMock, diskMock, memMock, loadMock)
@@ -106,7 +106,7 @@ func (s *NodeStatusPublicTestSuite) TestGetNodeStatus() {
 
 	tests := []struct {
 		name         string
-		setup        func(*hostMocks.MockProvider, *diskMocks.MockProvider, *memMocks.MockProvider, *loadMocks.MockProvider)
+		setup        func(*hostMocks.MockProvider, *diskMocks.MockProvider, *memoryMocks.MockProvider, *loadMocks.MockProvider)
 		validateFunc func(map[string]any, error)
 	}{
 		{
@@ -114,7 +114,7 @@ func (s *NodeStatusPublicTestSuite) TestGetNodeStatus() {
 			setup: func(
 				h *hostMocks.MockProvider,
 				d *diskMocks.MockProvider,
-				m *memMocks.MockProvider,
+				m *memoryMocks.MockProvider,
 				l *loadMocks.MockProvider,
 			) {
 				h.EXPECT().GetHostname().Return("web-01", nil)
@@ -135,7 +135,7 @@ func (s *NodeStatusPublicTestSuite) TestGetNodeStatus() {
 			setup: func(
 				h *hostMocks.MockProvider,
 				d *diskMocks.MockProvider,
-				m *memMocks.MockProvider,
+				m *memoryMocks.MockProvider,
 				l *loadMocks.MockProvider,
 			) {
 				h.EXPECT().GetHostname().Return("web-01", nil)
@@ -165,7 +165,7 @@ func (s *NodeStatusPublicTestSuite) TestGetNodeStatus() {
 			setup: func(
 				h *hostMocks.MockProvider,
 				d *diskMocks.MockProvider,
-				m *memMocks.MockProvider,
+				m *memoryMocks.MockProvider,
 				l *loadMocks.MockProvider,
 			) {
 				h.EXPECT().GetHostname().Return("", errors.New("no hostname"))
