@@ -54,7 +54,7 @@ two apart.
 See [UI Architecture](../architecture/ui.md) for the configuration, the roles,
 and what each page shows. How the UI is embedded, structured and generated is
 stated in the
-[specifications repository](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/007-the-embedded-ui/spec.md).
+[specifications repository](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md).
 
 ## Development
 

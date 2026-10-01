@@ -22,18 +22,18 @@ part of this site. Every other cross-reference here is relative.
 
 ## The rules
 
-| What you need to know                                                            | Stated in                                                                                                |
-| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| What the UI is, and that it is one application rather than a frontend per domain | [FR-001](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/007-the-embedded-ui/spec.md) |
-| The setting that disables it, and what the controller serves when it is off      | [FR-002](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/007-the-embedded-ui/spec.md) |
-| The stack, stated as what each part is for                                       | [FR-003](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/007-the-embedded-ui/spec.md) |
-| The four kinds of component, and what decides which one you are writing          | [FR-004](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/007-the-embedded-ui/spec.md) |
-| That the API client is generated, and what editing it by hand costs              | [FR-005](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/007-the-embedded-ui/spec.md) |
-| The embedding mechanism, and the build order it forces                           | [FR-006](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/007-the-embedded-ui/spec.md) |
-| How the UI authenticates, and that it decodes the token without verifying it     | [FR-007](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/007-the-embedded-ui/spec.md) |
-| That the permission model is osapi's, cited rather than restated                 | [FR-008](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/007-the-embedded-ui/spec.md) |
-| Where the commands live, and why they are not listed as prose                    | [FR-009](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/007-the-embedded-ui/spec.md) |
-| Why `ui/` is excluded from the coverage gate                                     | [FR-010](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/007-the-embedded-ui/spec.md) |
+| What you need to know                                                            | Stated in                                                                    |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| What the UI is, and that it is one application rather than a frontend per domain | [FR-001](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md) |
+| The setting that disables it, and what the controller serves when it is off      | [FR-002](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md) |
+| The stack, stated as what each part is for                                       | [FR-003](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md) |
+| The four kinds of component, and what decides which one you are writing          | [FR-004](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md) |
+| That the API client is generated, and what editing it by hand costs              | [FR-005](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md) |
+| The embedding mechanism, and the build order it forces                           | [FR-006](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md) |
+| How the UI authenticates, and that it decodes the token without verifying it     | [FR-007](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md) |
+| That the permission model is osapi's, cited rather than restated                 | [FR-008](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md) |
+| Where the commands live, and why they are not listed as prose                    | [FR-009](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md) |
+| Why `ui/` is excluded from the coverage gate                                     | [FR-010](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md) |
 
 ## The commands
 

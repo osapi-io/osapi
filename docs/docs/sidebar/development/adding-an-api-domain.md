@@ -26,33 +26,25 @@ part of this site. Every other cross-reference here is relative.
 
 ## The rules
 
-| What you need to know                                                                    | Stated in                                                                                                          |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| What a domain consists of, and how to tell one is incomplete                             | [FR-001](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md)         |
-| What to cite rather than restate — the provider contract, the job system, agent identity | [FR-002, FR-003](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md) |
-| Which build orderings are forced by tooling, and which are convention                    | [FR-004, FR-005](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md) |
-| Where a domain's code goes, and what decides it                                          | [FR-006](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md)         |
-| The layers, the entry points, and the request path an operation takes                    | [FR-007, FR-008](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md) |
-| Agent wiring, and what must not change in order to add a domain                          | [FR-009, FR-010](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md) |
-| Validation: the three places a tag goes, and the one place it does nothing               | [FR-011, FR-012](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md) |
-| Verb mapping, and why a combined upsert endpoint is forbidden                            | [FR-013](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md)         |
-| The API design guidelines, and what `{hostname}` accepts                                 | [FR-014, FR-015](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md) |
-| Broadcast support, and the collection shape both paths return                            | [FR-016, FR-017](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md) |
-| Handler registration and startup wiring                                                  | [FR-018](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md)         |
-| The SDK service's obligations                                                            | [FR-019, FR-020](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md) |
-| The CLI's obligations                                                                    | [FR-021](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md)         |
-| The eight design principles, and what each constrains                                    | [FR-022, FR-023](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md) |
-| What verifies a finished domain                                                          | [FR-024](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md)         |
+Everything a domain has to satisfy is in the design docs, one document per
+subject.
 
-Provider rules are the
-[provider contract's](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/001-provider-contract/spec.md)
-and job delivery is the
-[job system's](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/004-job-system/spec.md).
-Neither is restated above.
+| Subject                                                                                  | Document                                                                                     |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| What a domain consists of, which layers it touches, and how to tell one is half-finished | [Building a domain](https://github.com/osapi-io/specs/blob/main/components/osapi/domains.md) |
+| Validation tags: the three places one goes and the one place it does nothing             | [Building a domain](https://github.com/osapi-io/specs/blob/main/components/osapi/domains.md) |
+| Verb mapping, and why one endpoint never both creates and updates                        | [Building a domain](https://github.com/osapi-io/specs/blob/main/components/osapi/domains.md) |
+| What a provider returns, and the three idempotency outcomes                              | [Providers](https://github.com/osapi-io/specs/blob/main/components/osapi/providers.md)       |
+| Why input is revalidated in the provider rather than trusted from the handler            | [Providers](https://github.com/osapi-io/specs/blob/main/components/osapi/providers.md)       |
+| Broadcast targeting, and the collection shape single and broadcast both return           | [The job system](https://github.com/osapi-io/specs/blob/main/components/osapi/job-system.md) |
+| What a new SDK service owes: four files, a client field, an example, a page              | [The Go SDK](https://github.com/osapi-io/specs/blob/main/components/osapi/sdk.md)            |
+| Where a new permission goes, and why missing one makes the endpoint unreachable          | [Permissions](https://github.com/osapi-io/specs/blob/main/components/osapi/permissions.md)   |
+| Running a command: the ceiling, the stdin path for secrets, the dash-leading rule        | [Running commands](https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md)     |
 
-Read FR-024 before running anything. A domain's last step writes eight
-documentation files, and those are checked by `just docusaurus-fmt-check` and
-`just docusaurus-build` — which run in `just test`, not in `just ready`.
+The nine steps below are the procedure. The documents above are the rules the
+procedure applies, and the short form of the ones you are most likely to break
+is in
+[CONTRIBUTING.md](https://github.com/osapi-io/osapi/blob/main/CONTRIBUTING.md).
 
 ## The sequence
 
