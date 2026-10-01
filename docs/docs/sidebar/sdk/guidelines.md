@@ -9,51 +9,17 @@ the client library and any new SDK packages.
 
 :::note
 
-The rules this page illustrates — keeping generated types out of public
-signatures, JSON tags on result fields, and error handling — are stated in
-[005-building-a-domain](https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md),
-FR-019 and FR-020. This page shows them working; the specification is where they
-are stated.
+This page shows the rules working. They are stated in the
+[SDK document](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/sdk.md):
+the five naming rules derived from the 117 existing methods, what a service
+owes, the package layout, and why every method returns `Response[T]`.
 
-Earlier versions of this page said the rules were specified in a `sdk-standards`
-capability that bound `osapi-orchestrator` too, and that the specification won
-any disagreement. No such capability was ever written. FR-019 records that, and
-a cross-repository SDK standard remains work nobody has done rather than a rule
-already agreed.
-
-**Method naming is not stated anywhere**, and that is worth saying rather than
-leaving to be discovered. The claim above listed it among the rules the
-specification states, and so did the version before it; neither this page nor
-the specification states a convention for it. Follow the existing services until
-somebody decides what the rule is — do not read the absence as "anything goes",
-and do not take a method name you find here for a rule merely because it exists.
+Method naming was stated nowhere for a long time, and earlier versions of this
+page deferred to an `sdk-standards` capability that was never written. Both are
+fixed: the rules exist now, and the document names the seven existing methods
+that break them.
 
 :::
-
-## Package Structure
-
-```
-pkg/sdk/
-  client/          # HTTP client wrapping generated OpenAPI code
-    gen/           # Generated code (DO NOT edit manually)
-    osapi.go       # Client constructor, service wiring
-    response.go    # Response[T], Collection[T], error helpers
-    errors.go      # Typed error hierarchy
-    node.go        # Request types (ExecRequest, ShellRequest, etc.)
-    node_types.go  # SDK result types + gen→SDK conversions
-    hostname.go    # HostnameService methods
-    disk.go        # DiskService methods
-    dns.go         # DNSService methods
-    command.go     # CommandService methods
-    cron.go        # CronService methods
-    ...            # One file per domain service
-  platform/        # Platform detection utilities
-```
-
-The orchestrator engine previously lived here but has been moved to
-[osapi-orchestrator][]'s `internal/engine/` package.
-
-[osapi-orchestrator]: https://github.com/osapi-io/osapi-orchestrator
 
 ## Never Expose Generated Types
 
@@ -134,20 +100,6 @@ indexing `Results[0]` directly.
 Every mutation result type must include `Changed bool`. The provider sets it,
 the agent extracts it via `extractChanged()`, the API passes it through, and the
 SDK exposes it. The full chain must be consistent.
-
-## Response Pattern
-
-All service methods return `*Response[T]`:
-
-```go
-type Response[T any] struct {
-    Data    T
-    rawJSON []byte
-}
-```
-
-- `Data` — the typed SDK result
-- `RawJSON()` — the raw HTTP response body for CLI `--json` mode
 
 ## Error Handling
 
