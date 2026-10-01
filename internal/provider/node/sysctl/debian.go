@@ -92,8 +92,11 @@ func NewDebianProvider(
 	}
 }
 
-// Create deploys a new sysctl conf file and applies it. Idempotent:
-// returns Changed: false if the key is already managed.
+// Create deploys a new sysctl conf file and applies it. Idempotent on content
+// rather than on existence: a drop-in already holding what was asked for
+// reports Changed: false, and one that has been edited, deleted, or holds a
+// different value is rewritten, because the operation's job is to make the
+// setting true.
 func (d *Debian) Create(
 	ctx context.Context,
 	entry Entry,
@@ -114,23 +117,9 @@ func (d *Debian) Create(
 		return nil, fmt.Errorf("sysctl create: %w", err)
 	}
 
-	confPath := confPath(entry.Key)
-	stateKey := file.BuildStateKey(d.hostname, confPath)
-
-	// Already managed — nothing to do.
-	kvEntry, err := d.stateKV.Get(ctx, stateKey)
-	if err == nil {
-		var state job.FileState
-		if unmarshalErr := json.Unmarshal(kvEntry.Value(), &state); unmarshalErr == nil {
-			if state.UndeployedAt == "" {
-				return &CreateResult{
-					Key:     entry.Key,
-					Changed: false,
-				}, nil
-			}
-		}
-	}
-
+	// Whether the file is recorded as managed does not decide anything. The
+	// record says what osapi last wrote, which is exactly what drift makes
+	// untrue, so deploy compares against the file on disk instead.
 	return d.deploy(ctx, entry, "create")
 }
 
