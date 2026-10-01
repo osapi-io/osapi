@@ -10,7 +10,7 @@ import {
 import { SearchBox } from "@/components/ui/search-box";
 import type {
   CommandResultItem,
-  CronMutationResult,
+  ScheduleMutationResult,
   DockerResponse,
   FileDeployResult,
   FileInfo,
@@ -361,7 +361,7 @@ function ListSearchBar({
 }
 
 // Cron list
-function CronListResult({
+function ScheduleListResult({
   data,
   onAction,
 }: {
@@ -369,7 +369,7 @@ function CronListResult({
   onAction?: (action: string, name: string) => void;
 }) {
   const { search, setSearch } = useListSearch();
-  type CronListEntry = {
+  type ScheduleListEntry = {
     hostname?: string;
     status?: string;
     name?: string;
@@ -378,8 +378,8 @@ function CronListResult({
     source?: string;
     error?: string;
   };
-  const entries = data.results as CronListEntry[];
-  const byHost = new Map<string, CronListEntry[]>();
+  const entries = data.results as ScheduleListEntry[];
+  const byHost = new Map<string, ScheduleListEntry[]>();
   for (const e of entries) {
     const h = e.hostname ?? "unknown";
     if (!byHost.has(h)) byHost.set(h, []);
@@ -403,10 +403,10 @@ function CronListResult({
         const isSkipped = hostEntry?.status === "skipped";
         const hostError = !isSkipped && items.find((e) => e.error && !e.name);
         const allCronEntries = isSkipped ? [] : items.filter((e) => e.name);
-        const cronEntries = allCronEntries.filter((e) =>
+        const scheduleEntries = allCronEntries.filter((e) =>
           matches(search, e.name, e.schedule, e.object, e.source),
         );
-        if (search && cronEntries.length === 0 && !isSkipped && !hostError)
+        if (search && scheduleEntries.length === 0 && !isSkipped && !hostError)
           return null;
         return (
           <div
@@ -424,10 +424,10 @@ function CronListResult({
             />
             {hostError && (
               <Text variant="error" as="p" className="px-4 pb-2">
-                {(hostError as CronListEntry).error}
+                {(hostError as ScheduleListEntry).error}
               </Text>
             )}
-            {cronEntries.map((e, i) => (
+            {scheduleEntries.map((e, i) => (
               <div
                 key={i}
                 className="flex items-center gap-4 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
@@ -1526,7 +1526,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     (type === "cron-create" || type === "cron-delete") &&
     Array.isArray(data.results)
   ) {
-    const results = data.results as CronMutationResult[];
+    const results = data.results as ScheduleMutationResult[];
     return (
       <CollectionResult
         jobId={data.job_id as string | undefined}
@@ -1545,7 +1545,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
 
   // Cron list — expanded with search
   if (type === "cron-list" && Array.isArray(data.results)) {
-    return <CronListResult data={data} onAction={onAction} />;
+    return <ScheduleListResult data={data} onAction={onAction} />;
   }
 
   // Docker create/start/stop/delete/pull/rm-image — action results
@@ -1842,7 +1842,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
 
   // Cron get — per-host single entry
   if (type === "cron-get" && Array.isArray(data.results)) {
-    type CronGetEntry = {
+    type ScheduleGetEntry = {
       hostname?: string;
       status?: string;
       name?: string;
@@ -1850,7 +1850,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
       object?: string;
       error?: string;
     };
-    const entries = data.results as CronGetEntry[];
+    const entries = data.results as ScheduleGetEntry[];
     return (
       <CollectionResult
         jobId={data.job_id as string | undefined}
@@ -1873,14 +1873,14 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
 
   // Cron update — mutation results
   if (type === "cron-update" && Array.isArray(data.results)) {
-    type CronUpdateEntry = {
+    type ScheduleUpdateEntry = {
       hostname?: string;
       status?: string;
       name?: string;
       changed?: boolean;
       error?: string;
     };
-    const results = data.results as CronUpdateEntry[];
+    const results = data.results as ScheduleUpdateEntry[];
     return (
       <CollectionResult
         jobId={data.job_id as string | undefined}

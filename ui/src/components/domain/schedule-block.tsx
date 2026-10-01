@@ -4,19 +4,19 @@ import { Dropdown } from "@/components/ui/dropdown";
 import { ObjectPicker } from "@/components/domain/object-picker";
 import type { BlockStatus } from "@/hooks/use-stack";
 
-interface CronBlockProps {
+interface ScheduleBlockProps {
   data: Record<string, unknown>;
   onChange: (data: Record<string, unknown>) => void;
   onStatusChange: (status: BlockStatus) => void;
   upstreamObjects?: string[];
 }
 
-export function CronBlock({
+export function ScheduleBlock({
   data,
   onChange,
   onStatusChange,
   upstreamObjects = [],
-}: CronBlockProps) {
+}: ScheduleBlockProps) {
   const name = (data.name as string) || "";
   const schedule = (data.schedule as string) || "";
   const object = (data.object as string) || "";

@@ -5,14 +5,14 @@ import { ContentArea } from "@/components/layout/content-area";
 import { BlockCard } from "@/components/domain/block-card";
 import { BlockStack } from "@/components/domain/block-stack";
 import { ResultCard } from "@/components/domain/result-card";
-import { CronBlock } from "@/components/domain/cron-block";
+import { ScheduleBlock } from "@/components/domain/schedule-block";
 import { CommandBlock } from "@/components/domain/command-block";
 import { DockerBlock } from "@/components/domain/docker-block";
 import { FileBlock } from "@/components/domain/file-block";
 import { FileUploadBlock } from "@/components/domain/file-upload-block";
 import { SingleInputBlock } from "@/components/domain/single-input-block";
 import { FileDeleteBlock } from "@/components/domain/file-delete-block";
-import { CronDeleteBlock } from "@/components/domain/cron-delete-block";
+import { ScheduleDeleteBlock } from "@/components/domain/schedule-delete-block";
 import { ContainerActionBlock } from "@/components/domain/container-action-block";
 import { DockerExecBlock } from "@/components/domain/docker-exec-block";
 import { DnsUpdateBlock } from "@/components/domain/dns-update-block";
@@ -45,12 +45,12 @@ import { useCommands } from "@/hooks/use-commands";
 import { useStacks } from "@/hooks/use-stacks";
 import { features } from "@/lib/features";
 import {
-  postNodeScheduleCron,
-  getNodeScheduleCron,
-  deleteNodeScheduleCron,
-  getNodeScheduleCronByName,
-  putNodeScheduleCron,
-} from "@/sdk/gen/schedule-management-api-cron-operations/schedule-management-api-cron-operations";
+  postNodeSchedule,
+  getNodeSchedule,
+  deleteNodeSchedule,
+  getNodeScheduleByName,
+  putNodeSchedule,
+} from "@/sdk/gen/schedule-management-api-schedule-operations/schedule-management-api-schedule-operations";
 import {
   getNodeService,
   getNodeServiceByName,
@@ -381,7 +381,7 @@ export function Configure() {
 
         switch (block.type) {
           case "cron-create":
-            result = await postNodeScheduleCron(t, {
+            result = await postNodeSchedule(t, {
               name: block.data.name as string,
               schedule: block.data.schedule as string,
               object: block.data.object as string,
@@ -391,19 +391,19 @@ export function Configure() {
             });
             break;
           case "cron-list":
-            result = await getNodeScheduleCron(t);
+            result = await getNodeSchedule(t);
             break;
           case "cron-delete":
-            result = await deleteNodeScheduleCron(t, block.data.name as string);
+            result = await deleteNodeSchedule(t, block.data.name as string);
             break;
           case "cron-get":
-            result = await getNodeScheduleCronByName(
+            result = await getNodeScheduleByName(
               t,
               block.data.name as string,
             );
             break;
           case "cron-update":
-            result = await putNodeScheduleCron(t, block.data.name as string, {
+            result = await putNodeSchedule(t, block.data.name as string, {
               schedule: block.data.schedule as string,
               object: block.data.object as string,
               content_type:
@@ -1029,7 +1029,7 @@ export function Configure() {
     switch (block.type) {
       case "cron-create":
         return (
-          <CronBlock
+          <ScheduleBlock
             data={block.data}
             onChange={(data) => updateBlockData(block.id, data)}
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
@@ -1040,7 +1040,7 @@ export function Configure() {
         return null;
       case "cron-delete":
         return (
-          <CronDeleteBlock
+          <ScheduleDeleteBlock
             data={block.data}
             onChange={(data) => updateBlockData(block.id, data)}
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
@@ -1059,7 +1059,7 @@ export function Configure() {
         );
       case "cron-update":
         return (
-          <CronBlock
+          <ScheduleBlock
             data={block.data}
             onChange={(data) => updateBlockData(block.id, data)}
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
@@ -1614,7 +1614,7 @@ export function Configure() {
     async (action: string, name: string) => {
       try {
         if (action === "cron-delete") {
-          await deleteNodeScheduleCron("_all", name);
+          await deleteNodeSchedule("_all", name);
         } else if (action === "file-delete") {
           await deleteFileByName(name);
         }

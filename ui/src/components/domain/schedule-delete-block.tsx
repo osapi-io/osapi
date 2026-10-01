@@ -1,18 +1,18 @@
 import { useEffect, useRef } from "react";
-import { CronPicker } from "@/components/domain/cron-picker";
+import { SchedulePicker } from "@/components/domain/schedule-picker";
 import type { BlockStatus } from "@/hooks/use-stack";
 
-interface CronDeleteBlockProps {
+interface ScheduleDeleteBlockProps {
   data: Record<string, unknown>;
   onChange: (data: Record<string, unknown>) => void;
   onStatusChange: (status: BlockStatus) => void;
 }
 
-export function CronDeleteBlock({
+export function ScheduleDeleteBlock({
   data,
   onChange,
   onStatusChange,
-}: CronDeleteBlockProps) {
+}: ScheduleDeleteBlockProps) {
   const name = (data.name as string) || "";
   const prevStatus = useRef<BlockStatus | null>(null);
 
@@ -25,7 +25,7 @@ export function CronDeleteBlock({
   }, [name, onStatusChange]);
 
   return (
-    <CronPicker
+    <SchedulePicker
       id="cron-delete-name"
       label="Cron Entry to Delete"
       value={name}

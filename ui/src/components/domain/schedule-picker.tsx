@@ -4,20 +4,20 @@ import { FormField } from "@/components/ui/form-field";
 import { PopoverPanel, PopoverItem } from "@/components/ui/popover";
 import { useOutsideClick } from "@/hooks/use-outside-click";
 import { usePopoverKeyboard } from "@/hooks/use-popover-keyboard";
-import { getNodeScheduleCron } from "@/sdk/gen/schedule-management-api-cron-operations/schedule-management-api-cron-operations";
-import type { CronEntry, CronCollectionResponse } from "@/sdk/gen/schemas";
+import { getNodeSchedule } from "@/sdk/gen/schedule-management-api-schedule-operations/schedule-management-api-schedule-operations";
+import type { ScheduleEntry, ScheduleCollectionResponse } from "@/sdk/gen/schemas";
 import { ChevronDown, Calendar } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-interface CronPickerProps {
+interface SchedulePickerProps {
   id: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
 }
 
-export function CronPicker({ id, label, value, onChange }: CronPickerProps) {
-  const [entries, setEntries] = useState<CronEntry[]>([]);
+export function SchedulePicker({ id, label, value, onChange }: SchedulePickerProps) {
+  const [entries, setEntries] = useState<ScheduleEntry[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const ref = useRef<HTMLDivElement>(null);
@@ -29,9 +29,9 @@ export function CronPicker({ id, label, value, onChange }: CronPickerProps) {
     let mounted = true;
     const fetch = async () => {
       try {
-        const result = await getNodeScheduleCron("_all");
+        const result = await getNodeSchedule("_all");
         if (mounted && result.status === 200) {
-          setEntries((result.data as CronCollectionResponse).results ?? []);
+          setEntries((result.data as ScheduleCollectionResponse).results ?? []);
         }
       } catch {
         // silent
