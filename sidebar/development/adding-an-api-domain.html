@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Adding an API Domain | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/development/adding-an-api-domain"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Adding an API Domain | OSAPI"><meta data-rh="true" name="description" content="A domain is a coherent area of system behaviour exposed as API endpoints. Adding"><meta data-rh="true" property="og:description" content="A domain is a coherent area of system behaviour exposed as API endpoints. Adding"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/development/adding-an-api-domain"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/adding-an-api-domain" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/adding-an-api-domain" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Development","item":"https://osapi-io.github.io/osapi/sidebar/development/"},{"@type":"ListItem","position":2,"name":"Adding an API Domain","item":"https://osapi-io.github.io/osapi/sidebar/development/adding-an-api-domain"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.42af6fc6.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.b429dfac.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.b82a2946.js" defer="defer"></script>
 </head>
 <body>
@@ -25,6 +25,8 @@ stated once, and the <code>add-a-domain</code> skill cites them. This page is th
 the specifications repository is separate from this one and is not published as
 part of this site. Every other cross-reference here is relative.</p></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-rules">The rules<a href="#the-rules" class="hash-link" aria-label="Direct link to The rules" title="Direct link to The rules" translate="no">​</a></h2>
+<p>Everything a domain has to satisfy is in the design docs, one document per
+subject.</p>
 
 
 
@@ -70,39 +72,11 @@ part of this site. Every other cross-reference here is relative.</p></div></div>
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>What you need to know</th><th>Stated in</th></tr></thead><tbody><tr><td>What a domain consists of, and how to tell one is incomplete</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md" target="_blank" rel="noopener noreferrer" class="">FR-001</a></td></tr><tr><td>What to cite rather than restate — the provider contract, the job system, agent identity</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md" target="_blank" rel="noopener noreferrer" class="">FR-002, FR-003</a></td></tr><tr><td>Which build orderings are forced by tooling, and which are convention</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md" target="_blank" rel="noopener noreferrer" class="">FR-004, FR-005</a></td></tr><tr><td>Where a domain&#x27;s code goes, and what decides it</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md" target="_blank" rel="noopener noreferrer" class="">FR-006</a></td></tr><tr><td>The layers, the entry points, and the request path an operation takes</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md" target="_blank" rel="noopener noreferrer" class="">FR-007, FR-008</a></td></tr><tr><td>Agent wiring, and what must not change in order to add a domain</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md" target="_blank" rel="noopener noreferrer" class="">FR-009, FR-010</a></td></tr><tr><td>Validation: the three places a tag goes, and the one place it does nothing</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md" target="_blank" rel="noopener noreferrer" class="">FR-011, FR-012</a></td></tr><tr><td>Verb mapping, and why a combined upsert endpoint is forbidden</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md" target="_blank" rel="noopener noreferrer" class="">FR-013</a></td></tr><tr><td>The API design guidelines, and what <code>{hostname}</code> accepts</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md" target="_blank" rel="noopener noreferrer" class="">FR-014, FR-015</a></td></tr><tr><td>Broadcast support, and the collection shape both paths return</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md" target="_blank" rel="noopener noreferrer" class="">FR-016, FR-017</a></td></tr><tr><td>Handler registration and startup wiring</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md" target="_blank" rel="noopener noreferrer" class="">FR-018</a></td></tr><tr><td>The SDK service&#x27;s obligations</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md" target="_blank" rel="noopener noreferrer" class="">FR-019, FR-020</a></td></tr><tr><td>The CLI&#x27;s obligations</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md" target="_blank" rel="noopener noreferrer" class="">FR-021</a></td></tr><tr><td>The eight design principles, and what each constrains</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md" target="_blank" rel="noopener noreferrer" class="">FR-022, FR-023</a></td></tr><tr><td>What verifies a finished domain</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/005-building-a-domain/spec.md" target="_blank" rel="noopener noreferrer" class="">FR-024</a></td></tr></tbody></table>
-<p>Provider rules are the
-<a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/001-provider-contract/spec.md" target="_blank" rel="noopener noreferrer" class="">provider contract&#x27;s</a>
-and job delivery is the
-<a href="https://github.com/osapi-io/specs/blob/main/components/osapi/specs/004-job-system/spec.md" target="_blank" rel="noopener noreferrer" class="">job system&#x27;s</a>.
-Neither is restated above.</p>
-<p>Read FR-024 before running anything. A domain&#x27;s last step writes eight
-documentation files, and those are checked by <code>just docusaurus-fmt-check</code> and
-<code>just docusaurus-build</code> — which run in <code>just test</code>, not in <code>just ready</code>.</p>
+<table><thead><tr><th>Subject</th><th>Document</th></tr></thead><tbody><tr><td>What a domain consists of, which layers it touches, and how to tell one is half-finished</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/domains.md" target="_blank" rel="noopener noreferrer" class="">Building a domain</a></td></tr><tr><td>Validation tags: the three places one goes and the one place it does nothing</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/domains.md" target="_blank" rel="noopener noreferrer" class="">Building a domain</a></td></tr><tr><td>Verb mapping, and why one endpoint never both creates and updates</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/domains.md" target="_blank" rel="noopener noreferrer" class="">Building a domain</a></td></tr><tr><td>What a provider returns, and the three idempotency outcomes</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/providers.md" target="_blank" rel="noopener noreferrer" class="">Providers</a></td></tr><tr><td>Why input is revalidated in the provider rather than trusted from the handler</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/providers.md" target="_blank" rel="noopener noreferrer" class="">Providers</a></td></tr><tr><td>Broadcast targeting, and the collection shape single and broadcast both return</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/job-system.md" target="_blank" rel="noopener noreferrer" class="">The job system</a></td></tr><tr><td>What a new SDK service owes: four files, a client field, an example, a page</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/sdk.md" target="_blank" rel="noopener noreferrer" class="">The Go SDK</a></td></tr><tr><td>Where a new permission goes, and why missing one makes the endpoint unreachable</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/permissions.md" target="_blank" rel="noopener noreferrer" class="">Permissions</a></td></tr><tr><td>Running a command: the ceiling, the stdin path for secrets, the dash-leading rule</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md" target="_blank" rel="noopener noreferrer" class="">Running commands</a></td></tr></tbody></table>
+<p>The nine steps below are the procedure. The documents above are the rules the
+procedure applies, and the short form of the ones you are most likely to break
+is in
+<a href="https://github.com/osapi-io/osapi/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer" class="">CONTRIBUTING.md</a>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-sequence">The sequence<a href="#the-sequence" class="hash-link" aria-label="Direct link to The sequence" title="Direct link to The sequence" translate="no">​</a></h2>
 <p>The <code>add-a-domain</code> skill carries the build order, the file layouts and the
 scaffolding to copy, and it cites the same requirements. Invoke it by name in
