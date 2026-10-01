@@ -438,6 +438,48 @@ The principle: **pick an existing domain and `find`/`grep` for it across the
 codebase. Your new domain should appear in all the same places.** If something
 exists for `sysctl` but not for yours, it is missing.
 
+### Rules a domain has to follow
+
+These bind every domain. Each is stated here because you need it to make the
+change, and the reason for each is in the corpus behind the link.
+
+- **One endpoint never both creates and updates.** `POST` creates with the name
+  in the body, `PUT /{name}` updates from the path. A combined endpoint leaves
+  404 with no meaning.
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/domains.md)
+- **Creating something that already exists is not an error. Updating something
+  that is absent is.** A create is idempotent and an update is not, because the
+  caller issuing an update has asserted the thing exists.
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/providers.md)
+- **A permission missing from `DefaultRolePermissions` reaches nobody.** The
+  permission exists, the handler checks it, no token can hold it, and nothing
+  reports that the endpoint is unreachable.
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/permissions.md)
+- **Revalidate in the provider anything that becomes a path, a filename or a
+  command argument.** Validating at the handler is not enough: the job is stored
+  and executed later, so the provider is a second caller arriving after the
+  fact. GHSA-7fjw-v3g9-326g is what that cost.
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/providers.md)
+- **A secret reaches a command through stdin, never through an argument.** Use
+  `RunPrivilegedCmdWithStdin`. Arguments are logged and visible in the process
+  table. GHSA-6gc6-px2x-q95j is what that cost.
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/exec.md)
+- **A value beginning with a dash becomes a flag** if it reaches a command
+  unguarded. The provider prevents that before calling `internal/exec`.
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/exec.md)
+- **Run every command through `internal/exec`.** Spawning a process directly
+  loses the timeout, the argument logging, the stdin path for secrets and the
+  testability, and nothing in the build will tell you.
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/exec.md)
+- **Ten minutes is a ceiling, not a fallback.** `internal/exec` wraps every
+  command's context unconditionally, so a caller can ask for less and cannot ask
+  for more. A job that legitimately needs twenty minutes does not get them.
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/exec.md)
+- **A field carrying a secret goes in the audit denylist.** Redaction matches on
+  field name, so a new field is recorded as sent until it is added to
+  `sensitiveFields`, and no test fails if you forget.
+  [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/.specify/memory/architecture/audit.md)
+
 ## UI contributions
 
 The React management dashboard lives in `ui/` and is embedded into the Go binary
