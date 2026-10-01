@@ -44,7 +44,7 @@ import (
 	diskProv "github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
-	memProv "github.com/osapi-io/osapi/internal/provider/node/mem"
+	memProv "github.com/osapi-io/osapi/internal/provider/node/memory"
 	"github.com/osapi-io/osapi/internal/provider/node/ntp"
 	"github.com/osapi-io/osapi/internal/provider/node/power"
 	"github.com/osapi-io/osapi/internal/provider/node/sysctl"
@@ -470,7 +470,7 @@ func SetAgentAppConfig(
 		a.registry.processors["node"] = NewNodeProcessor(
 			a.hostProvider,
 			a.diskProvider,
-			a.memProvider,
+			a.memoryProvider,
 			a.loadProvider,
 			sysctl.Provider(nil),
 			ntp.Provider(nil),
@@ -508,7 +508,7 @@ func SetAgentHostProvider(
 		a.registry.processors["node"] = NewNodeProcessor(
 			p,
 			a.diskProvider,
-			a.memProvider,
+			a.memoryProvider,
 			a.loadProvider,
 			sysctl.Provider(nil),
 			ntp.Provider(nil),
@@ -559,7 +559,7 @@ func ExportGetDiskProvider(
 func ExportGetMemProvider(
 	a *Agent,
 ) memProv.Provider {
-	return a.memProvider
+	return a.memoryProvider
 }
 
 // ExportGetLoadProvider returns the load provider from the registry for testing.

@@ -24,33 +24,33 @@ info:
   title: Schedule Management API
   version: 1.0.0
 tags:
-  - name: cron_operations
-    x-displayName: Node/Schedule/Cron
-    description: Cron drop-in file management on a target node.
+  - name: schedule_operations
+    x-displayName: Node/Schedule
+    description: Scheduled task management on a target node.
 
 paths:
   # -- Cron collection -------------------------------------------------
 
-  /api/node/{hostname}/schedule/cron:
+  /api/node/{hostname}/schedule:
     get:
-      summary: List all cron entries
+      summary: List all scheduled entries
       description: >
-        List all cron drop-in entries on the target node.
+        List all scheduled entries on the target node.
       tags:
-        - cron_operations
-      operationId: GetNodeScheduleCron
+        - schedule_operations
+      operationId: GetNodeSchedule
       security:
         - BearerAuth:
-            - cron:read
+            - schedule:read
       parameters:
         - $ref: '#/components/parameters/Hostname'
       responses:
         '200':
-          description: List of cron entries.
+          description: List of scheduled entries.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CronCollectionResponse'
+                $ref: '#/components/schemas/ScheduleCollectionResponse'
         '400':
           description: Bad request - validation error.
           content:
@@ -70,38 +70,38 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
-          description: Error listing cron entries.
+          description: Error listing scheduled entries.
           content:
             application/json:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
     post:
-      summary: Create a cron entry
+      summary: Create a scheduled entry
       description: >
-        Create a new cron drop-in entry on the target node.
+        Create a new scheduled entry on the target node.
       tags:
-        - cron_operations
-      operationId: PostNodeScheduleCron
+        - schedule_operations
+      operationId: PostNodeSchedule
       security:
         - BearerAuth:
-            - cron:write
+            - schedule:write
       parameters:
         - $ref: '#/components/parameters/Hostname'
       requestBody:
-        description: Cron entry creation parameters.
+        description: Scheduled entry creation parameters.
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CronCreateRequest'
+              $ref: '#/components/schemas/ScheduleCreateRequest'
       responses:
         '200':
-          description: Cron entry created.
+          description: Scheduled entry created.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CronCreateResponse'
+                $ref: '#/components/schemas/ScheduleCreateResponse'
         '400':
           description: Invalid request payload.
           content:
@@ -121,7 +121,7 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
-          description: Error creating cron entry.
+          description: Error creating scheduled entry.
           content:
             application/json:
               schema:
@@ -129,27 +129,27 @@ paths:
 
   # -- Cron individual entry -------------------------------------------
 
-  /api/node/{hostname}/schedule/cron/{name}:
+  /api/node/{hostname}/schedule/{name}:
     get:
-      summary: Get a cron entry
+      summary: Get a scheduled entry
       description: >
-        Get a specific cron drop-in entry by name on the target node.
+        Get a specific scheduled entry by name on the target node.
       tags:
-        - cron_operations
-      operationId: GetNodeScheduleCronByName
+        - schedule_operations
+      operationId: GetNodeScheduleByName
       security:
         - BearerAuth:
-            - cron:read
+            - schedule:read
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/CronName'
+        - $ref: '#/components/parameters/ScheduleName'
       responses:
         '200':
-          description: Cron entry detail.
+          description: Scheduled entry detail.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CronGetResponse'
+                $ref: '#/components/schemas/ScheduleGetResponse'
         '400':
           description: Bad request - validation error.
           content:
@@ -169,45 +169,45 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
-          description: Cron entry not found.
+          description: Scheduled entry not found.
           content:
             application/json:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
-          description: Error retrieving cron entry.
+          description: Error retrieving scheduled entry.
           content:
             application/json:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
     put:
-      summary: Update a cron entry
+      summary: Update a scheduled entry
       description: >
-        Update an existing cron drop-in entry on the target node.
+        Update an existing scheduled entry on the target node.
       tags:
-        - cron_operations
-      operationId: PutNodeScheduleCron
+        - schedule_operations
+      operationId: PutNodeSchedule
       security:
         - BearerAuth:
-            - cron:write
+            - schedule:write
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/CronName'
+        - $ref: '#/components/parameters/ScheduleName'
       requestBody:
-        description: Cron entry update parameters.
+        description: Scheduled entry update parameters.
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CronUpdateRequest'
+              $ref: '#/components/schemas/ScheduleUpdateRequest'
       responses:
         '200':
-          description: Cron entry updated.
+          description: Scheduled entry updated.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CronUpdateResponse'
+                $ref: '#/components/schemas/ScheduleUpdateResponse'
         '400':
           description: Invalid request payload.
           content:
@@ -227,38 +227,38 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
-          description: Cron entry not found.
+          description: Scheduled entry not found.
           content:
             application/json:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
-          description: Error updating cron entry.
+          description: Error updating scheduled entry.
           content:
             application/json:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
     delete:
-      summary: Delete a cron entry
+      summary: Delete a scheduled entry
       description: >
-        Delete a cron drop-in entry from the target node.
+        Delete a scheduled entry from the target node.
       tags:
-        - cron_operations
-      operationId: DeleteNodeScheduleCron
+        - schedule_operations
+      operationId: DeleteNodeSchedule
       security:
         - BearerAuth:
-            - cron:write
+            - schedule:write
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/CronName'
+        - $ref: '#/components/parameters/ScheduleName'
       responses:
         '200':
-          description: Cron entry deleted.
+          description: Scheduled entry deleted.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CronDeleteResponse'
+                $ref: '#/components/schemas/ScheduleDeleteResponse'
         '400':
           description: Bad request - validation error.
           content:
@@ -278,13 +278,13 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
-          description: Cron entry not found.
+          description: Scheduled entry not found.
           content:
             application/json:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
-          description: Error deleting cron entry.
+          description: Error deleting scheduled entry.
           content:
             application/json:
               schema:
@@ -310,12 +310,12 @@ components:
         type: string
         minLength: 1
 
-    CronName:
+    ScheduleName:
       name: name
       in: path
       required: true
       description: >
-        Cron entry name. Must contain only alphanumeric characters,
+        Scheduled entry name. Must contain only alphanumeric characters,
         underscores, and hyphens.
       # NOTE: x-oapi-codegen-extra-tags on path params do not generate
       # validate tags in strict-server mode. Validation is handled
@@ -339,7 +339,7 @@ components:
 
     # -- Request schemas -------------------------------------------------
 
-    CronCreateRequest:
+    ScheduleCreateRequest:
       type: object
       required:
         - name
@@ -348,7 +348,7 @@ components:
         name:
           type: string
           description: >
-            Name for the cron drop-in entry. Used as the file name
+            Name for the scheduled entry. Used as the file name
             under /etc/cron.d/ or /etc/cron.{interval}/.
           x-oapi-codegen-extra-tags:
             validate: "required,min=1,max=64"
@@ -356,7 +356,7 @@ components:
           type: string
           description: >
             Name of the uploaded file in the object store to deploy
-            as the cron entry content.
+            as the scheduled entry content.
           x-oapi-codegen-extra-tags:
             validate: "required,min=1"
         schedule:
@@ -402,7 +402,7 @@ components:
             Template variables. Only used when content_type is
             "template".
 
-    CronUpdateRequest:
+    ScheduleUpdateRequest:
       type: object
       properties:
         object:
@@ -437,9 +437,9 @@ components:
 
     # -- Response schemas ------------------------------------------------
 
-    CronEntry:
+    ScheduleEntry:
       type: object
-      description: A cron drop-in entry.
+      description: A scheduled entry.
       properties:
         hostname:
           type: string
@@ -450,7 +450,7 @@ components:
           description: The status of the operation for this host.
         name:
           type: string
-          description: Cron entry name.
+          description: Scheduled entry name.
         object:
           type: string
           description: Object store name for the deployed content.
@@ -475,7 +475,7 @@ components:
             "weekly", or "monthly".
         user:
           type: string
-          description: User the cron entry runs as.
+          description: User the scheduled entry runs as.
         error:
           type: string
           description: Error message if the agent failed to retrieve this entry.
@@ -483,7 +483,7 @@ components:
         - hostname
         - status
 
-    CronCollectionResponse:
+    ScheduleCollectionResponse:
       type: object
       properties:
         job_id:
@@ -494,13 +494,13 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/CronEntry'
+            $ref: '#/components/schemas/ScheduleEntry'
       required:
         - results
 
-    CronGetResponse:
+    ScheduleGetResponse:
       type: object
-      description: Collection response for a single cron entry get operation.
+      description: Collection response for a single scheduled entry get operation.
       properties:
         job_id:
           type: string
@@ -510,11 +510,11 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/CronEntry'
+            $ref: '#/components/schemas/ScheduleEntry'
       required:
         - results
 
-    CronMutationResult:
+    ScheduleMutationResult:
       type: object
       description: Result of a cron create, update, or delete operation for one host.
       properties:
@@ -527,7 +527,7 @@ components:
           description: The status of the operation for this host.
         name:
           type: string
-          description: Cron entry name.
+          description: Scheduled entry name.
         changed:
           type: boolean
           description: Whether the operation modified system state.
@@ -538,7 +538,7 @@ components:
         - hostname
         - status
 
-    CronCreateResponse:
+    ScheduleCreateResponse:
       type: object
       properties:
         job_id:
@@ -549,11 +549,11 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/CronMutationResult'
+            $ref: '#/components/schemas/ScheduleMutationResult'
       required:
         - results
 
-    CronUpdateResponse:
+    ScheduleUpdateResponse:
       type: object
       properties:
         job_id:
@@ -564,11 +564,11 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/CronMutationResult'
+            $ref: '#/components/schemas/ScheduleMutationResult'
       required:
         - results
 
-    CronDeleteResponse:
+    ScheduleDeleteResponse:
       type: object
       properties:
         job_id:
@@ -579,6 +579,6 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/CronMutationResult'
+            $ref: '#/components/schemas/ScheduleMutationResult'
       required:
         - results

@@ -56,7 +56,7 @@ import (
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
-	memMocks "github.com/osapi-io/osapi/internal/provider/node/mem/mocks"
+	memoryMocks "github.com/osapi-io/osapi/internal/provider/node/memory/mocks"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 	processMocks "github.com/osapi-io/osapi/internal/telemetry/process/mocks"
 )
@@ -128,7 +128,7 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 		streamName:      "test-stream",
 		hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
 		diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
-		memProvider:     memMocks.NewDefaultMockProvider(s.mockCtrl),
+		memoryProvider:  memoryMocks.NewDefaultMockProvider(s.mockCtrl),
 		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
 		dnsProvider:     dnsMock,
 		pingProvider:    pingMock,

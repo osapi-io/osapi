@@ -41,7 +41,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/api/node/gen"
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
-	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
@@ -89,7 +89,7 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemory() {
 			name:    "success",
 			request: gen.GetNodeMemoryRequestObject{Hostname: "_any"},
 			setupMock: func() {
-				memResult := mem.Result{
+				memResult := memory.Result{
 					Total:  8192,
 					Free:   4096,
 					Cached: 2048,
@@ -160,8 +160,8 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemory() {
 			name:    "broadcast all success",
 			request: gen.GetNodeMemoryRequestObject{Hostname: "_all"},
 			setupMock: func() {
-				mem1 := mem.Result{Total: 8192, Free: 4096, Cached: 2048}
-				mem2 := mem.Result{Total: 16384, Free: 8192, Cached: 4096}
+				mem1 := memory.Result{Total: 8192, Free: 4096, Cached: 2048}
+				mem2 := memory.Result{Total: 16384, Free: 8192, Cached: 4096}
 				data1, _ := json.Marshal(mem1)
 				data2, _ := json.Marshal(mem2)
 				s.mockJobClient.EXPECT().
@@ -185,7 +185,7 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemory() {
 			name:    "broadcast all with errors",
 			request: gen.GetNodeMemoryRequestObject{Hostname: "_all"},
 			setupMock: func() {
-				mem1 := mem.Result{Total: 8192, Free: 4096, Cached: 2048}
+				mem1 := memory.Result{Total: 8192, Free: 4096, Cached: 2048}
 				data1, _ := json.Marshal(mem1)
 				s.mockJobClient.EXPECT().
 					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeMemoryGet, gomock.Any()).
@@ -323,7 +323,7 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemoryValidationHTTP() {
 			path: "/api/node/server1/memory",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
-				memResult := mem.Result{Total: 8192, Free: 4096, Cached: 2048}
+				memResult := memory.Result{Total: 8192, Free: 4096, Cached: 2048}
 				data, _ := json.Marshal(memResult)
 				mock.EXPECT().
 					Query(gomock.Any(), "server1", "node", job.OperationNodeMemoryGet, gomock.Any()).
@@ -446,7 +446,7 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemoryRBACHTTP() {
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
-				memResult := mem.Result{Total: 8192, Free: 4096, Cached: 2048}
+				memResult := memory.Result{Total: 8192, Free: 4096, Cached: 2048}
 				data, _ := json.Marshal(memResult)
 				mock.EXPECT().
 					Query(gomock.Any(), "server1", "node", job.OperationNodeMemoryGet, gomock.Any()).

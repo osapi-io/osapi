@@ -154,138 +154,6 @@ func (e CommandResultItemStatus) Valid() bool {
 	}
 }
 
-// Defines values for CronCreateRequestContentType.
-const (
-	CronCreateRequestContentTypeRaw      CronCreateRequestContentType = "raw"
-	CronCreateRequestContentTypeTemplate CronCreateRequestContentType = "template"
-)
-
-// Valid indicates whether the value is a known member of the CronCreateRequestContentType enum.
-func (e CronCreateRequestContentType) Valid() bool {
-	switch e {
-	case CronCreateRequestContentTypeRaw:
-		return true
-	case CronCreateRequestContentTypeTemplate:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for CronCreateRequestInterval.
-const (
-	CronCreateRequestIntervalDaily   CronCreateRequestInterval = "daily"
-	CronCreateRequestIntervalHourly  CronCreateRequestInterval = "hourly"
-	CronCreateRequestIntervalMonthly CronCreateRequestInterval = "monthly"
-	CronCreateRequestIntervalWeekly  CronCreateRequestInterval = "weekly"
-)
-
-// Valid indicates whether the value is a known member of the CronCreateRequestInterval enum.
-func (e CronCreateRequestInterval) Valid() bool {
-	switch e {
-	case CronCreateRequestIntervalDaily:
-		return true
-	case CronCreateRequestIntervalHourly:
-		return true
-	case CronCreateRequestIntervalMonthly:
-		return true
-	case CronCreateRequestIntervalWeekly:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for CronEntryInterval.
-const (
-	CronEntryIntervalDaily   CronEntryInterval = "daily"
-	CronEntryIntervalHourly  CronEntryInterval = "hourly"
-	CronEntryIntervalMonthly CronEntryInterval = "monthly"
-	CronEntryIntervalWeekly  CronEntryInterval = "weekly"
-)
-
-// Valid indicates whether the value is a known member of the CronEntryInterval enum.
-func (e CronEntryInterval) Valid() bool {
-	switch e {
-	case CronEntryIntervalDaily:
-		return true
-	case CronEntryIntervalHourly:
-		return true
-	case CronEntryIntervalMonthly:
-		return true
-	case CronEntryIntervalWeekly:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for CronEntryStatus.
-const (
-	CronEntryStatusFailed  CronEntryStatus = "failed"
-	CronEntryStatusOk      CronEntryStatus = "ok"
-	CronEntryStatusSkipped CronEntryStatus = "skipped"
-	CronEntryStatusTimeout CronEntryStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the CronEntryStatus enum.
-func (e CronEntryStatus) Valid() bool {
-	switch e {
-	case CronEntryStatusFailed:
-		return true
-	case CronEntryStatusOk:
-		return true
-	case CronEntryStatusSkipped:
-		return true
-	case CronEntryStatusTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for CronMutationResultStatus.
-const (
-	CronMutationResultStatusFailed  CronMutationResultStatus = "failed"
-	CronMutationResultStatusOk      CronMutationResultStatus = "ok"
-	CronMutationResultStatusSkipped CronMutationResultStatus = "skipped"
-	CronMutationResultStatusTimeout CronMutationResultStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the CronMutationResultStatus enum.
-func (e CronMutationResultStatus) Valid() bool {
-	switch e {
-	case CronMutationResultStatusFailed:
-		return true
-	case CronMutationResultStatusOk:
-		return true
-	case CronMutationResultStatusSkipped:
-		return true
-	case CronMutationResultStatusTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for CronUpdateRequestContentType.
-const (
-	CronUpdateRequestContentTypeRaw      CronUpdateRequestContentType = "raw"
-	CronUpdateRequestContentTypeTemplate CronUpdateRequestContentType = "template"
-)
-
-// Valid indicates whether the value is a known member of the CronUpdateRequestContentType enum.
-func (e CronUpdateRequestContentType) Valid() bool {
-	switch e {
-	case CronUpdateRequestContentTypeRaw:
-		return true
-	case CronUpdateRequestContentTypeTemplate:
-		return true
-	default:
-		return false
-	}
-}
-
 // Defines values for DNSConfigResponseStatus.
 const (
 	DNSConfigResponseStatusFailed  DNSConfigResponseStatus = "failed"
@@ -1312,6 +1180,138 @@ func (e SSHKeyMutationEntryStatus) Valid() bool {
 	}
 }
 
+// Defines values for ScheduleCreateRequestContentType.
+const (
+	ScheduleCreateRequestContentTypeRaw      ScheduleCreateRequestContentType = "raw"
+	ScheduleCreateRequestContentTypeTemplate ScheduleCreateRequestContentType = "template"
+)
+
+// Valid indicates whether the value is a known member of the ScheduleCreateRequestContentType enum.
+func (e ScheduleCreateRequestContentType) Valid() bool {
+	switch e {
+	case ScheduleCreateRequestContentTypeRaw:
+		return true
+	case ScheduleCreateRequestContentTypeTemplate:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ScheduleCreateRequestInterval.
+const (
+	ScheduleCreateRequestIntervalDaily   ScheduleCreateRequestInterval = "daily"
+	ScheduleCreateRequestIntervalHourly  ScheduleCreateRequestInterval = "hourly"
+	ScheduleCreateRequestIntervalMonthly ScheduleCreateRequestInterval = "monthly"
+	ScheduleCreateRequestIntervalWeekly  ScheduleCreateRequestInterval = "weekly"
+)
+
+// Valid indicates whether the value is a known member of the ScheduleCreateRequestInterval enum.
+func (e ScheduleCreateRequestInterval) Valid() bool {
+	switch e {
+	case ScheduleCreateRequestIntervalDaily:
+		return true
+	case ScheduleCreateRequestIntervalHourly:
+		return true
+	case ScheduleCreateRequestIntervalMonthly:
+		return true
+	case ScheduleCreateRequestIntervalWeekly:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ScheduleEntryInterval.
+const (
+	ScheduleEntryIntervalDaily   ScheduleEntryInterval = "daily"
+	ScheduleEntryIntervalHourly  ScheduleEntryInterval = "hourly"
+	ScheduleEntryIntervalMonthly ScheduleEntryInterval = "monthly"
+	ScheduleEntryIntervalWeekly  ScheduleEntryInterval = "weekly"
+)
+
+// Valid indicates whether the value is a known member of the ScheduleEntryInterval enum.
+func (e ScheduleEntryInterval) Valid() bool {
+	switch e {
+	case ScheduleEntryIntervalDaily:
+		return true
+	case ScheduleEntryIntervalHourly:
+		return true
+	case ScheduleEntryIntervalMonthly:
+		return true
+	case ScheduleEntryIntervalWeekly:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ScheduleEntryStatus.
+const (
+	ScheduleEntryStatusFailed  ScheduleEntryStatus = "failed"
+	ScheduleEntryStatusOk      ScheduleEntryStatus = "ok"
+	ScheduleEntryStatusSkipped ScheduleEntryStatus = "skipped"
+	ScheduleEntryStatusTimeout ScheduleEntryStatus = "timeout"
+)
+
+// Valid indicates whether the value is a known member of the ScheduleEntryStatus enum.
+func (e ScheduleEntryStatus) Valid() bool {
+	switch e {
+	case ScheduleEntryStatusFailed:
+		return true
+	case ScheduleEntryStatusOk:
+		return true
+	case ScheduleEntryStatusSkipped:
+		return true
+	case ScheduleEntryStatusTimeout:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ScheduleMutationResultStatus.
+const (
+	ScheduleMutationResultStatusFailed  ScheduleMutationResultStatus = "failed"
+	ScheduleMutationResultStatusOk      ScheduleMutationResultStatus = "ok"
+	ScheduleMutationResultStatusSkipped ScheduleMutationResultStatus = "skipped"
+	ScheduleMutationResultStatusTimeout ScheduleMutationResultStatus = "timeout"
+)
+
+// Valid indicates whether the value is a known member of the ScheduleMutationResultStatus enum.
+func (e ScheduleMutationResultStatus) Valid() bool {
+	switch e {
+	case ScheduleMutationResultStatusFailed:
+		return true
+	case ScheduleMutationResultStatusOk:
+		return true
+	case ScheduleMutationResultStatusSkipped:
+		return true
+	case ScheduleMutationResultStatusTimeout:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ScheduleUpdateRequestContentType.
+const (
+	ScheduleUpdateRequestContentTypeRaw      ScheduleUpdateRequestContentType = "raw"
+	ScheduleUpdateRequestContentTypeTemplate ScheduleUpdateRequestContentType = "template"
+)
+
+// Valid indicates whether the value is a known member of the ScheduleUpdateRequestContentType enum.
+func (e ScheduleUpdateRequestContentType) Valid() bool {
+	switch e {
+	case ScheduleUpdateRequestContentTypeRaw:
+		return true
+	case ScheduleUpdateRequestContentTypeTemplate:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ServiceGetEntryStatus.
 const (
 	ServiceGetEntryStatusFailed  ServiceGetEntryStatus = "failed"
@@ -2018,149 +2018,6 @@ type CreateJobResponse struct {
 
 	// Timestamp Creation timestamp.
 	Timestamp *string `json:"timestamp,omitempty"`
-}
-
-// CronCollectionResponse defines model for CronCollectionResponse.
-type CronCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []CronEntry         `json:"results"`
-}
-
-// CronCreateRequest defines model for CronCreateRequest.
-type CronCreateRequest struct {
-	// ContentType Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars.
-	ContentType *CronCreateRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
-
-	// Interval Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
-	Interval *CronCreateRequestInterval `json:"interval,omitempty" validate:"required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly daily weekly monthly"`
-
-	// Name Name for the cron drop-in entry. Used as the file name under /etc/cron.d/ or /etc/cron.{interval}/.
-	Name string `json:"name" validate:"required,min=1,max=64"`
-
-	// Object Name of the uploaded file in the object store to deploy as the cron entry content.
-	Object string `json:"object" validate:"required,min=1"`
-
-	// Schedule Cron schedule expression (e.g., "*/5 * * * *"). Mutually exclusive with interval — provide exactly one.
-	Schedule *string `json:"schedule,omitempty" validate:"required_without=Interval,excluded_with=Interval,omitempty,cron_schedule"`
-
-	// User User to run the command as. Only applies when using schedule (cron.d entries include a user field).
-	User *string `json:"user,omitempty"`
-
-	// Vars Template variables. Only used when content_type is "template".
-	Vars *map[string]interface{} `json:"vars,omitempty"`
-}
-
-// CronCreateRequestContentType Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars.
-type CronCreateRequestContentType string
-
-// CronCreateRequestInterval Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
-type CronCreateRequestInterval string
-
-// CronCreateResponse defines model for CronCreateResponse.
-type CronCreateResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
-	Results []CronMutationResult `json:"results"`
-}
-
-// CronDeleteResponse defines model for CronDeleteResponse.
-type CronDeleteResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
-	Results []CronMutationResult `json:"results"`
-}
-
-// CronEntry A cron drop-in entry.
-type CronEntry struct {
-	// Error Error message if the agent failed to retrieve this entry.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname Hostname of the agent that reported this entry.
-	Hostname string `json:"hostname"`
-
-	// Interval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
-	Interval *CronEntryInterval `json:"interval,omitempty"`
-
-	// Name Cron entry name.
-	Name *string `json:"name,omitempty"`
-
-	// Object Object store name for the deployed content.
-	Object *string `json:"object,omitempty"`
-
-	// Schedule Cron schedule expression. Present for /etc/cron.d/ entries.
-	Schedule *string `json:"schedule,omitempty"`
-
-	// Source Where the entry lives: "cron.d", "hourly", "daily", "weekly", or "monthly".
-	Source *string `json:"source,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status CronEntryStatus `json:"status"`
-
-	// User User the cron entry runs as.
-	User *string `json:"user,omitempty"`
-}
-
-// CronEntryInterval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
-type CronEntryInterval string
-
-// CronEntryStatus The status of the operation for this host.
-type CronEntryStatus string
-
-// CronGetResponse Collection response for a single cron entry get operation.
-type CronGetResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []CronEntry         `json:"results"`
-}
-
-// CronMutationResult Result of a cron create, update, or delete operation for one host.
-type CronMutationResult struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname Hostname of the agent that processed this operation.
-	Hostname string `json:"hostname"`
-
-	// Name Cron entry name.
-	Name *string `json:"name,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status CronMutationResultStatus `json:"status"`
-}
-
-// CronMutationResultStatus The status of the operation for this host.
-type CronMutationResultStatus string
-
-// CronUpdateRequest defines model for CronUpdateRequest.
-type CronUpdateRequest struct {
-	// ContentType Content type: "raw" or "template".
-	ContentType *CronUpdateRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
-
-	// Object New object to deploy (redeploy with updated content).
-	Object *string `json:"object,omitempty" validate:"omitempty,min=1"`
-
-	// Schedule Cron schedule expression (e.g., "*/5 * * * *").
-	Schedule *string `json:"schedule,omitempty" validate:"omitempty,cron_schedule"`
-
-	// User User to run the command as.
-	User *string `json:"user,omitempty"`
-
-	// Vars Template variables.
-	Vars *map[string]interface{} `json:"vars,omitempty"`
-}
-
-// CronUpdateRequestContentType Content type: "raw" or "template".
-type CronUpdateRequestContentType string
-
-// CronUpdateResponse defines model for CronUpdateResponse.
-type CronUpdateResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
-	Results []CronMutationResult `json:"results"`
 }
 
 // DNSConfigCollectionResponse defines model for DNSConfigCollectionResponse.
@@ -4110,6 +3967,149 @@ type SSHKeyMutationResponse struct {
 	Results []SSHKeyMutationEntry `json:"results"`
 }
 
+// ScheduleCollectionResponse defines model for ScheduleCollectionResponse.
+type ScheduleCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []ScheduleEntry     `json:"results"`
+}
+
+// ScheduleCreateRequest defines model for ScheduleCreateRequest.
+type ScheduleCreateRequest struct {
+	// ContentType Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars.
+	ContentType *ScheduleCreateRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
+
+	// Interval Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
+	Interval *ScheduleCreateRequestInterval `json:"interval,omitempty" validate:"required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly daily weekly monthly"`
+
+	// Name Name for the scheduled entry. Used as the file name under /etc/cron.d/ or /etc/cron.{interval}/.
+	Name string `json:"name" validate:"required,min=1,max=64"`
+
+	// Object Name of the uploaded file in the object store to deploy as the scheduled entry content.
+	Object string `json:"object" validate:"required,min=1"`
+
+	// Schedule Cron schedule expression (e.g., "*/5 * * * *"). Mutually exclusive with interval — provide exactly one.
+	Schedule *string `json:"schedule,omitempty" validate:"required_without=Interval,excluded_with=Interval,omitempty,cron_schedule"`
+
+	// User User to run the command as. Only applies when using schedule (cron.d entries include a user field).
+	User *string `json:"user,omitempty"`
+
+	// Vars Template variables. Only used when content_type is "template".
+	Vars *map[string]interface{} `json:"vars,omitempty"`
+}
+
+// ScheduleCreateRequestContentType Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars.
+type ScheduleCreateRequestContentType string
+
+// ScheduleCreateRequestInterval Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
+type ScheduleCreateRequestInterval string
+
+// ScheduleCreateResponse defines model for ScheduleCreateResponse.
+type ScheduleCreateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID      `json:"job_id,omitempty"`
+	Results []ScheduleMutationResult `json:"results"`
+}
+
+// ScheduleDeleteResponse defines model for ScheduleDeleteResponse.
+type ScheduleDeleteResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID      `json:"job_id,omitempty"`
+	Results []ScheduleMutationResult `json:"results"`
+}
+
+// ScheduleEntry A scheduled entry.
+type ScheduleEntry struct {
+	// Error Error message if the agent failed to retrieve this entry.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that reported this entry.
+	Hostname string `json:"hostname"`
+
+	// Interval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
+	Interval *ScheduleEntryInterval `json:"interval,omitempty"`
+
+	// Name Scheduled entry name.
+	Name *string `json:"name,omitempty"`
+
+	// Object Object store name for the deployed content.
+	Object *string `json:"object,omitempty"`
+
+	// Schedule Cron schedule expression. Present for /etc/cron.d/ entries.
+	Schedule *string `json:"schedule,omitempty"`
+
+	// Source Where the entry lives: "cron.d", "hourly", "daily", "weekly", or "monthly".
+	Source *string `json:"source,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status ScheduleEntryStatus `json:"status"`
+
+	// User User the scheduled entry runs as.
+	User *string `json:"user,omitempty"`
+}
+
+// ScheduleEntryInterval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
+type ScheduleEntryInterval string
+
+// ScheduleEntryStatus The status of the operation for this host.
+type ScheduleEntryStatus string
+
+// ScheduleGetResponse Collection response for a single scheduled entry get operation.
+type ScheduleGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []ScheduleEntry     `json:"results"`
+}
+
+// ScheduleMutationResult Result of a cron create, update, or delete operation for one host.
+type ScheduleMutationResult struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that processed this operation.
+	Hostname string `json:"hostname"`
+
+	// Name Scheduled entry name.
+	Name *string `json:"name,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status ScheduleMutationResultStatus `json:"status"`
+}
+
+// ScheduleMutationResultStatus The status of the operation for this host.
+type ScheduleMutationResultStatus string
+
+// ScheduleUpdateRequest defines model for ScheduleUpdateRequest.
+type ScheduleUpdateRequest struct {
+	// ContentType Content type: "raw" or "template".
+	ContentType *ScheduleUpdateRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
+
+	// Object New object to deploy (redeploy with updated content).
+	Object *string `json:"object,omitempty" validate:"omitempty,min=1"`
+
+	// Schedule Cron schedule expression (e.g., "*/5 * * * *").
+	Schedule *string `json:"schedule,omitempty" validate:"omitempty,cron_schedule"`
+
+	// User User to run the command as.
+	User *string `json:"user,omitempty"`
+
+	// Vars Template variables.
+	Vars *map[string]interface{} `json:"vars,omitempty"`
+}
+
+// ScheduleUpdateRequestContentType Content type: "raw" or "template".
+type ScheduleUpdateRequestContentType string
+
+// ScheduleUpdateResponse defines model for ScheduleUpdateResponse.
+type ScheduleUpdateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID      `json:"job_id,omitempty"`
+	Results []ScheduleMutationResult `json:"results"`
+}
+
 // ServiceCreateRequest defines model for ServiceCreateRequest.
 type ServiceCreateRequest struct {
 	// Name Service unit name.
@@ -4656,9 +4656,6 @@ type UserUpdateRequest struct {
 // CertName defines model for CertName.
 type CertName = string
 
-// CronName defines model for CronName.
-type CronName = string
-
 // DockerId defines model for DockerId.
 type DockerId = string
 
@@ -4685,6 +4682,9 @@ type RouteInterfaceName = string
 
 // SSHKeyFingerprint defines model for SSHKeyFingerprint.
 type SSHKeyFingerprint = string
+
+// ScheduleName defines model for ScheduleName.
+type ScheduleName = string
 
 // ServiceName defines model for ServiceName.
 type ServiceName = string
@@ -4892,11 +4892,11 @@ type PostNodePowerShutdownJSONRequestBody = PowerRequest
 // PostNodeProcessSignalJSONRequestBody defines body for PostNodeProcessSignal for application/json ContentType.
 type PostNodeProcessSignalJSONRequestBody = ProcessSignalRequest
 
-// PostNodeScheduleCronJSONRequestBody defines body for PostNodeScheduleCron for application/json ContentType.
-type PostNodeScheduleCronJSONRequestBody = CronCreateRequest
+// PostNodeScheduleJSONRequestBody defines body for PostNodeSchedule for application/json ContentType.
+type PostNodeScheduleJSONRequestBody = ScheduleCreateRequest
 
-// PutNodeScheduleCronJSONRequestBody defines body for PutNodeScheduleCron for application/json ContentType.
-type PutNodeScheduleCronJSONRequestBody = CronUpdateRequest
+// PutNodeScheduleJSONRequestBody defines body for PutNodeSchedule for application/json ContentType.
+type PutNodeScheduleJSONRequestBody = ScheduleUpdateRequest
 
 // PostNodeServiceJSONRequestBody defines body for PostNodeService for application/json ContentType.
 type PostNodeServiceJSONRequestBody = ServiceCreateRequest
@@ -5309,24 +5309,24 @@ type ClientInterface interface {
 
 	PostNodeProcessSignal(ctx context.Context, hostname Hostname, pid Pid, body PostNodeProcessSignalJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNodeScheduleCron request
-	GetNodeScheduleCron(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeSchedule request
+	GetNodeSchedule(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostNodeScheduleCronWithBody request with any body
-	PostNodeScheduleCronWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostNodeScheduleWithBody request with any body
+	PostNodeScheduleWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostNodeScheduleCron(ctx context.Context, hostname Hostname, body PostNodeScheduleCronJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostNodeSchedule(ctx context.Context, hostname Hostname, body PostNodeScheduleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteNodeScheduleCron request
-	DeleteNodeScheduleCron(ctx context.Context, hostname Hostname, name CronName, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteNodeSchedule request
+	DeleteNodeSchedule(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNodeScheduleCronByName request
-	GetNodeScheduleCronByName(ctx context.Context, hostname Hostname, name CronName, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeScheduleByName request
+	GetNodeScheduleByName(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PutNodeScheduleCronWithBody request with any body
-	PutNodeScheduleCronWithBody(ctx context.Context, hostname Hostname, name CronName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PutNodeScheduleWithBody request with any body
+	PutNodeScheduleWithBody(ctx context.Context, hostname Hostname, name ScheduleName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutNodeScheduleCron(ctx context.Context, hostname Hostname, name CronName, body PutNodeScheduleCronJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutNodeSchedule(ctx context.Context, hostname Hostname, name ScheduleName, body PutNodeScheduleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeService request
 	GetNodeService(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -6787,8 +6787,8 @@ func (c *Client) PostNodeProcessSignal(ctx context.Context, hostname Hostname, p
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeScheduleCron(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeScheduleCronRequest(c.Server, hostname)
+func (c *Client) GetNodeSchedule(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeScheduleRequest(c.Server, hostname)
 	if err != nil {
 		return nil, err
 	}
@@ -6799,8 +6799,8 @@ func (c *Client) GetNodeScheduleCron(ctx context.Context, hostname Hostname, req
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeScheduleCronWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeScheduleCronRequestWithBody(c.Server, hostname, contentType, body)
+func (c *Client) PostNodeScheduleWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeScheduleRequestWithBody(c.Server, hostname, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -6811,8 +6811,8 @@ func (c *Client) PostNodeScheduleCronWithBody(ctx context.Context, hostname Host
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeScheduleCron(ctx context.Context, hostname Hostname, body PostNodeScheduleCronJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeScheduleCronRequest(c.Server, hostname, body)
+func (c *Client) PostNodeSchedule(ctx context.Context, hostname Hostname, body PostNodeScheduleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeScheduleRequest(c.Server, hostname, body)
 	if err != nil {
 		return nil, err
 	}
@@ -6823,8 +6823,8 @@ func (c *Client) PostNodeScheduleCron(ctx context.Context, hostname Hostname, bo
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteNodeScheduleCron(ctx context.Context, hostname Hostname, name CronName, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteNodeScheduleCronRequest(c.Server, hostname, name)
+func (c *Client) DeleteNodeSchedule(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeScheduleRequest(c.Server, hostname, name)
 	if err != nil {
 		return nil, err
 	}
@@ -6835,8 +6835,8 @@ func (c *Client) DeleteNodeScheduleCron(ctx context.Context, hostname Hostname, 
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeScheduleCronByName(ctx context.Context, hostname Hostname, name CronName, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeScheduleCronByNameRequest(c.Server, hostname, name)
+func (c *Client) GetNodeScheduleByName(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeScheduleByNameRequest(c.Server, hostname, name)
 	if err != nil {
 		return nil, err
 	}
@@ -6847,8 +6847,8 @@ func (c *Client) GetNodeScheduleCronByName(ctx context.Context, hostname Hostnam
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutNodeScheduleCronWithBody(ctx context.Context, hostname Hostname, name CronName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutNodeScheduleCronRequestWithBody(c.Server, hostname, name, contentType, body)
+func (c *Client) PutNodeScheduleWithBody(ctx context.Context, hostname Hostname, name ScheduleName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeScheduleRequestWithBody(c.Server, hostname, name, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -6859,8 +6859,8 @@ func (c *Client) PutNodeScheduleCronWithBody(ctx context.Context, hostname Hostn
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutNodeScheduleCron(ctx context.Context, hostname Hostname, name CronName, body PutNodeScheduleCronJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutNodeScheduleCronRequest(c.Server, hostname, name, body)
+func (c *Client) PutNodeSchedule(ctx context.Context, hostname Hostname, name ScheduleName, body PutNodeScheduleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeScheduleRequest(c.Server, hostname, name, body)
 	if err != nil {
 		return nil, err
 	}
@@ -11001,8 +11001,8 @@ func NewPostNodeProcessSignalRequestWithBody(server string, hostname Hostname, p
 	return req, nil
 }
 
-// NewGetNodeScheduleCronRequest generates requests for GetNodeScheduleCron
-func NewGetNodeScheduleCronRequest(server string, hostname Hostname) (*http.Request, error) {
+// NewGetNodeScheduleRequest generates requests for GetNodeSchedule
+func NewGetNodeScheduleRequest(server string, hostname Hostname) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -11017,7 +11017,7 @@ func NewGetNodeScheduleCronRequest(server string, hostname Hostname) (*http.Requ
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/api/node/%s/schedule/cron", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/schedule", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -11035,19 +11035,19 @@ func NewGetNodeScheduleCronRequest(server string, hostname Hostname) (*http.Requ
 	return req, nil
 }
 
-// NewPostNodeScheduleCronRequest calls the generic PostNodeScheduleCron builder with application/json body
-func NewPostNodeScheduleCronRequest(server string, hostname Hostname, body PostNodeScheduleCronJSONRequestBody) (*http.Request, error) {
+// NewPostNodeScheduleRequest calls the generic PostNodeSchedule builder with application/json body
+func NewPostNodeScheduleRequest(server string, hostname Hostname, body PostNodeScheduleJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostNodeScheduleCronRequestWithBody(server, hostname, "application/json", bodyReader)
+	return NewPostNodeScheduleRequestWithBody(server, hostname, "application/json", bodyReader)
 }
 
-// NewPostNodeScheduleCronRequestWithBody generates requests for PostNodeScheduleCron with any type of body
-func NewPostNodeScheduleCronRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostNodeScheduleRequestWithBody generates requests for PostNodeSchedule with any type of body
+func NewPostNodeScheduleRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -11062,7 +11062,7 @@ func NewPostNodeScheduleCronRequestWithBody(server string, hostname Hostname, co
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/api/node/%s/schedule/cron", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/schedule", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -11082,8 +11082,8 @@ func NewPostNodeScheduleCronRequestWithBody(server string, hostname Hostname, co
 	return req, nil
 }
 
-// NewDeleteNodeScheduleCronRequest generates requests for DeleteNodeScheduleCron
-func NewDeleteNodeScheduleCronRequest(server string, hostname Hostname, name CronName) (*http.Request, error) {
+// NewDeleteNodeScheduleRequest generates requests for DeleteNodeSchedule
+func NewDeleteNodeScheduleRequest(server string, hostname Hostname, name ScheduleName) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -11105,7 +11105,7 @@ func NewDeleteNodeScheduleCronRequest(server string, hostname Hostname, name Cro
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/api/node/%s/schedule/cron/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/schedule/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -11123,8 +11123,8 @@ func NewDeleteNodeScheduleCronRequest(server string, hostname Hostname, name Cro
 	return req, nil
 }
 
-// NewGetNodeScheduleCronByNameRequest generates requests for GetNodeScheduleCronByName
-func NewGetNodeScheduleCronByNameRequest(server string, hostname Hostname, name CronName) (*http.Request, error) {
+// NewGetNodeScheduleByNameRequest generates requests for GetNodeScheduleByName
+func NewGetNodeScheduleByNameRequest(server string, hostname Hostname, name ScheduleName) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -11146,7 +11146,7 @@ func NewGetNodeScheduleCronByNameRequest(server string, hostname Hostname, name 
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/api/node/%s/schedule/cron/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/schedule/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -11164,19 +11164,19 @@ func NewGetNodeScheduleCronByNameRequest(server string, hostname Hostname, name 
 	return req, nil
 }
 
-// NewPutNodeScheduleCronRequest calls the generic PutNodeScheduleCron builder with application/json body
-func NewPutNodeScheduleCronRequest(server string, hostname Hostname, name CronName, body PutNodeScheduleCronJSONRequestBody) (*http.Request, error) {
+// NewPutNodeScheduleRequest calls the generic PutNodeSchedule builder with application/json body
+func NewPutNodeScheduleRequest(server string, hostname Hostname, name ScheduleName, body PutNodeScheduleJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPutNodeScheduleCronRequestWithBody(server, hostname, name, "application/json", bodyReader)
+	return NewPutNodeScheduleRequestWithBody(server, hostname, name, "application/json", bodyReader)
 }
 
-// NewPutNodeScheduleCronRequestWithBody generates requests for PutNodeScheduleCron with any type of body
-func NewPutNodeScheduleCronRequestWithBody(server string, hostname Hostname, name CronName, contentType string, body io.Reader) (*http.Request, error) {
+// NewPutNodeScheduleRequestWithBody generates requests for PutNodeSchedule with any type of body
+func NewPutNodeScheduleRequestWithBody(server string, hostname Hostname, name ScheduleName, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -11198,7 +11198,7 @@ func NewPutNodeScheduleCronRequestWithBody(server string, hostname Hostname, nam
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/api/node/%s/schedule/cron/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/schedule/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -12767,24 +12767,24 @@ type ClientWithResponsesInterface interface {
 
 	PostNodeProcessSignalWithResponse(ctx context.Context, hostname Hostname, pid Pid, body PostNodeProcessSignalJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeProcessSignalResponse, error)
 
-	// GetNodeScheduleCronWithResponse request
-	GetNodeScheduleCronWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeScheduleCronResponse, error)
+	// GetNodeScheduleWithResponse request
+	GetNodeScheduleWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeScheduleResponse, error)
 
-	// PostNodeScheduleCronWithBodyWithResponse request with any body
-	PostNodeScheduleCronWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeScheduleCronResponse, error)
+	// PostNodeScheduleWithBodyWithResponse request with any body
+	PostNodeScheduleWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeScheduleResponse, error)
 
-	PostNodeScheduleCronWithResponse(ctx context.Context, hostname Hostname, body PostNodeScheduleCronJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeScheduleCronResponse, error)
+	PostNodeScheduleWithResponse(ctx context.Context, hostname Hostname, body PostNodeScheduleJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeScheduleResponse, error)
 
-	// DeleteNodeScheduleCronWithResponse request
-	DeleteNodeScheduleCronWithResponse(ctx context.Context, hostname Hostname, name CronName, reqEditors ...RequestEditorFn) (*DeleteNodeScheduleCronResponse, error)
+	// DeleteNodeScheduleWithResponse request
+	DeleteNodeScheduleWithResponse(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*DeleteNodeScheduleResponse, error)
 
-	// GetNodeScheduleCronByNameWithResponse request
-	GetNodeScheduleCronByNameWithResponse(ctx context.Context, hostname Hostname, name CronName, reqEditors ...RequestEditorFn) (*GetNodeScheduleCronByNameResponse, error)
+	// GetNodeScheduleByNameWithResponse request
+	GetNodeScheduleByNameWithResponse(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*GetNodeScheduleByNameResponse, error)
 
-	// PutNodeScheduleCronWithBodyWithResponse request with any body
-	PutNodeScheduleCronWithBodyWithResponse(ctx context.Context, hostname Hostname, name CronName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeScheduleCronResponse, error)
+	// PutNodeScheduleWithBodyWithResponse request with any body
+	PutNodeScheduleWithBodyWithResponse(ctx context.Context, hostname Hostname, name ScheduleName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeScheduleResponse, error)
 
-	PutNodeScheduleCronWithResponse(ctx context.Context, hostname Hostname, name CronName, body PutNodeScheduleCronJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeScheduleCronResponse, error)
+	PutNodeScheduleWithResponse(ctx context.Context, hostname Hostname, name ScheduleName, body PutNodeScheduleJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeScheduleResponse, error)
 
 	// GetNodeServiceWithResponse request
 	GetNodeServiceWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeServiceResponse, error)
@@ -15802,10 +15802,10 @@ func (r PostNodeProcessSignalResponse) ContentType() string {
 	return ""
 }
 
-type GetNodeScheduleCronResponse struct {
+type GetNodeScheduleResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *CronCollectionResponse
+	JSON200      *ScheduleCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -15813,7 +15813,7 @@ type GetNodeScheduleCronResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNodeScheduleCronResponse) Status() string {
+func (r GetNodeScheduleResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -15821,7 +15821,7 @@ func (r GetNodeScheduleCronResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeScheduleCronResponse) StatusCode() int {
+func (r GetNodeScheduleResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -15829,17 +15829,17 @@ func (r GetNodeScheduleCronResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeScheduleCronResponse) ContentType() string {
+func (r GetNodeScheduleResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type PostNodeScheduleCronResponse struct {
+type PostNodeScheduleResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *CronCreateResponse
+	JSON200      *ScheduleCreateResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -15847,7 +15847,7 @@ type PostNodeScheduleCronResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostNodeScheduleCronResponse) Status() string {
+func (r PostNodeScheduleResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -15855,7 +15855,7 @@ func (r PostNodeScheduleCronResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostNodeScheduleCronResponse) StatusCode() int {
+func (r PostNodeScheduleResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -15863,17 +15863,17 @@ func (r PostNodeScheduleCronResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostNodeScheduleCronResponse) ContentType() string {
+func (r PostNodeScheduleResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type DeleteNodeScheduleCronResponse struct {
+type DeleteNodeScheduleResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *CronDeleteResponse
+	JSON200      *ScheduleDeleteResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -15882,7 +15882,7 @@ type DeleteNodeScheduleCronResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r DeleteNodeScheduleCronResponse) Status() string {
+func (r DeleteNodeScheduleResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -15890,7 +15890,7 @@ func (r DeleteNodeScheduleCronResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r DeleteNodeScheduleCronResponse) StatusCode() int {
+func (r DeleteNodeScheduleResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -15898,17 +15898,17 @@ func (r DeleteNodeScheduleCronResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r DeleteNodeScheduleCronResponse) ContentType() string {
+func (r DeleteNodeScheduleResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetNodeScheduleCronByNameResponse struct {
+type GetNodeScheduleByNameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *CronGetResponse
+	JSON200      *ScheduleGetResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -15917,7 +15917,7 @@ type GetNodeScheduleCronByNameResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNodeScheduleCronByNameResponse) Status() string {
+func (r GetNodeScheduleByNameResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -15925,7 +15925,7 @@ func (r GetNodeScheduleCronByNameResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeScheduleCronByNameResponse) StatusCode() int {
+func (r GetNodeScheduleByNameResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -15933,17 +15933,17 @@ func (r GetNodeScheduleCronByNameResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeScheduleCronByNameResponse) ContentType() string {
+func (r GetNodeScheduleByNameResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type PutNodeScheduleCronResponse struct {
+type PutNodeScheduleResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *CronUpdateResponse
+	JSON200      *ScheduleUpdateResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -15952,7 +15952,7 @@ type PutNodeScheduleCronResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PutNodeScheduleCronResponse) Status() string {
+func (r PutNodeScheduleResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -15960,7 +15960,7 @@ func (r PutNodeScheduleCronResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PutNodeScheduleCronResponse) StatusCode() int {
+func (r PutNodeScheduleResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -15968,7 +15968,7 @@ func (r PutNodeScheduleCronResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PutNodeScheduleCronResponse) ContentType() string {
+func (r PutNodeScheduleResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -17921,65 +17921,65 @@ func (c *ClientWithResponses) PostNodeProcessSignalWithResponse(ctx context.Cont
 	return ParsePostNodeProcessSignalResponse(rsp)
 }
 
-// GetNodeScheduleCronWithResponse request returning *GetNodeScheduleCronResponse
-func (c *ClientWithResponses) GetNodeScheduleCronWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeScheduleCronResponse, error) {
-	rsp, err := c.GetNodeScheduleCron(ctx, hostname, reqEditors...)
+// GetNodeScheduleWithResponse request returning *GetNodeScheduleResponse
+func (c *ClientWithResponses) GetNodeScheduleWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeScheduleResponse, error) {
+	rsp, err := c.GetNodeSchedule(ctx, hostname, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNodeScheduleCronResponse(rsp)
+	return ParseGetNodeScheduleResponse(rsp)
 }
 
-// PostNodeScheduleCronWithBodyWithResponse request with arbitrary body returning *PostNodeScheduleCronResponse
-func (c *ClientWithResponses) PostNodeScheduleCronWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeScheduleCronResponse, error) {
-	rsp, err := c.PostNodeScheduleCronWithBody(ctx, hostname, contentType, body, reqEditors...)
+// PostNodeScheduleWithBodyWithResponse request with arbitrary body returning *PostNodeScheduleResponse
+func (c *ClientWithResponses) PostNodeScheduleWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeScheduleResponse, error) {
+	rsp, err := c.PostNodeScheduleWithBody(ctx, hostname, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeScheduleCronResponse(rsp)
+	return ParsePostNodeScheduleResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostNodeScheduleCronWithResponse(ctx context.Context, hostname Hostname, body PostNodeScheduleCronJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeScheduleCronResponse, error) {
-	rsp, err := c.PostNodeScheduleCron(ctx, hostname, body, reqEditors...)
+func (c *ClientWithResponses) PostNodeScheduleWithResponse(ctx context.Context, hostname Hostname, body PostNodeScheduleJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeScheduleResponse, error) {
+	rsp, err := c.PostNodeSchedule(ctx, hostname, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeScheduleCronResponse(rsp)
+	return ParsePostNodeScheduleResponse(rsp)
 }
 
-// DeleteNodeScheduleCronWithResponse request returning *DeleteNodeScheduleCronResponse
-func (c *ClientWithResponses) DeleteNodeScheduleCronWithResponse(ctx context.Context, hostname Hostname, name CronName, reqEditors ...RequestEditorFn) (*DeleteNodeScheduleCronResponse, error) {
-	rsp, err := c.DeleteNodeScheduleCron(ctx, hostname, name, reqEditors...)
+// DeleteNodeScheduleWithResponse request returning *DeleteNodeScheduleResponse
+func (c *ClientWithResponses) DeleteNodeScheduleWithResponse(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*DeleteNodeScheduleResponse, error) {
+	rsp, err := c.DeleteNodeSchedule(ctx, hostname, name, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteNodeScheduleCronResponse(rsp)
+	return ParseDeleteNodeScheduleResponse(rsp)
 }
 
-// GetNodeScheduleCronByNameWithResponse request returning *GetNodeScheduleCronByNameResponse
-func (c *ClientWithResponses) GetNodeScheduleCronByNameWithResponse(ctx context.Context, hostname Hostname, name CronName, reqEditors ...RequestEditorFn) (*GetNodeScheduleCronByNameResponse, error) {
-	rsp, err := c.GetNodeScheduleCronByName(ctx, hostname, name, reqEditors...)
+// GetNodeScheduleByNameWithResponse request returning *GetNodeScheduleByNameResponse
+func (c *ClientWithResponses) GetNodeScheduleByNameWithResponse(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*GetNodeScheduleByNameResponse, error) {
+	rsp, err := c.GetNodeScheduleByName(ctx, hostname, name, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNodeScheduleCronByNameResponse(rsp)
+	return ParseGetNodeScheduleByNameResponse(rsp)
 }
 
-// PutNodeScheduleCronWithBodyWithResponse request with arbitrary body returning *PutNodeScheduleCronResponse
-func (c *ClientWithResponses) PutNodeScheduleCronWithBodyWithResponse(ctx context.Context, hostname Hostname, name CronName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeScheduleCronResponse, error) {
-	rsp, err := c.PutNodeScheduleCronWithBody(ctx, hostname, name, contentType, body, reqEditors...)
+// PutNodeScheduleWithBodyWithResponse request with arbitrary body returning *PutNodeScheduleResponse
+func (c *ClientWithResponses) PutNodeScheduleWithBodyWithResponse(ctx context.Context, hostname Hostname, name ScheduleName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeScheduleResponse, error) {
+	rsp, err := c.PutNodeScheduleWithBody(ctx, hostname, name, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutNodeScheduleCronResponse(rsp)
+	return ParsePutNodeScheduleResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutNodeScheduleCronWithResponse(ctx context.Context, hostname Hostname, name CronName, body PutNodeScheduleCronJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeScheduleCronResponse, error) {
-	rsp, err := c.PutNodeScheduleCron(ctx, hostname, name, body, reqEditors...)
+func (c *ClientWithResponses) PutNodeScheduleWithResponse(ctx context.Context, hostname Hostname, name ScheduleName, body PutNodeScheduleJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeScheduleResponse, error) {
+	rsp, err := c.PutNodeSchedule(ctx, hostname, name, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutNodeScheduleCronResponse(rsp)
+	return ParsePutNodeScheduleResponse(rsp)
 }
 
 // GetNodeServiceWithResponse request returning *GetNodeServiceResponse
@@ -23009,22 +23009,22 @@ func ParsePostNodeProcessSignalResponse(rsp *http.Response) (*PostNodeProcessSig
 	return response, nil
 }
 
-// ParseGetNodeScheduleCronResponse parses an HTTP response from a GetNodeScheduleCronWithResponse call
-func ParseGetNodeScheduleCronResponse(rsp *http.Response) (*GetNodeScheduleCronResponse, error) {
+// ParseGetNodeScheduleResponse parses an HTTP response from a GetNodeScheduleWithResponse call
+func ParseGetNodeScheduleResponse(rsp *http.Response) (*GetNodeScheduleResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNodeScheduleCronResponse{
+	response := &GetNodeScheduleResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest CronCollectionResponse
+		var dest ScheduleCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -23063,22 +23063,22 @@ func ParseGetNodeScheduleCronResponse(rsp *http.Response) (*GetNodeScheduleCronR
 	return response, nil
 }
 
-// ParsePostNodeScheduleCronResponse parses an HTTP response from a PostNodeScheduleCronWithResponse call
-func ParsePostNodeScheduleCronResponse(rsp *http.Response) (*PostNodeScheduleCronResponse, error) {
+// ParsePostNodeScheduleResponse parses an HTTP response from a PostNodeScheduleWithResponse call
+func ParsePostNodeScheduleResponse(rsp *http.Response) (*PostNodeScheduleResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostNodeScheduleCronResponse{
+	response := &PostNodeScheduleResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest CronCreateResponse
+		var dest ScheduleCreateResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -23117,83 +23117,22 @@ func ParsePostNodeScheduleCronResponse(rsp *http.Response) (*PostNodeScheduleCro
 	return response, nil
 }
 
-// ParseDeleteNodeScheduleCronResponse parses an HTTP response from a DeleteNodeScheduleCronWithResponse call
-func ParseDeleteNodeScheduleCronResponse(rsp *http.Response) (*DeleteNodeScheduleCronResponse, error) {
+// ParseDeleteNodeScheduleResponse parses an HTTP response from a DeleteNodeScheduleWithResponse call
+func ParseDeleteNodeScheduleResponse(rsp *http.Response) (*DeleteNodeScheduleResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteNodeScheduleCronResponse{
+	response := &DeleteNodeScheduleResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest CronDeleteResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetNodeScheduleCronByNameResponse parses an HTTP response from a GetNodeScheduleCronByNameWithResponse call
-func ParseGetNodeScheduleCronByNameResponse(rsp *http.Response) (*GetNodeScheduleCronByNameResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetNodeScheduleCronByNameResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest CronGetResponse
+		var dest ScheduleDeleteResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -23239,22 +23178,83 @@ func ParseGetNodeScheduleCronByNameResponse(rsp *http.Response) (*GetNodeSchedul
 	return response, nil
 }
 
-// ParsePutNodeScheduleCronResponse parses an HTTP response from a PutNodeScheduleCronWithResponse call
-func ParsePutNodeScheduleCronResponse(rsp *http.Response) (*PutNodeScheduleCronResponse, error) {
+// ParseGetNodeScheduleByNameResponse parses an HTTP response from a GetNodeScheduleByNameWithResponse call
+func ParseGetNodeScheduleByNameResponse(rsp *http.Response) (*GetNodeScheduleByNameResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PutNodeScheduleCronResponse{
+	response := &GetNodeScheduleByNameResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest CronUpdateResponse
+		var dest ScheduleGetResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutNodeScheduleResponse parses an HTTP response from a PutNodeScheduleWithResponse call
+func ParsePutNodeScheduleResponse(rsp *http.Response) (*PutNodeScheduleResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutNodeScheduleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ScheduleUpdateResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

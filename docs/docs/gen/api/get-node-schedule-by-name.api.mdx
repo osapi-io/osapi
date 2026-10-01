@@ -1,0 +1,70 @@
+---
+id: get-node-schedule-by-name
+title: "Get a scheduled entry"
+description: "Get a specific scheduled entry by name on the target node."
+sidebar_label: "Get a scheduled entry"
+hide_title: true
+hide_table_of_contents: true
+api: eJztWG1v2zYQ/isHYh8SjH5J53SrgX1wu7bLsHZBm6LAEs+gxbPFWCJVknKjGvrvw5GS47ctWYsCK5BPkmze2/PcHclbMYkusarwymg2ZC/RgwBXYKJmKgGXpCjLDCWg9raCaQVa5AhGg08RvLBz9KCNxO6VZpx5MXdseMneNnKTV0KLOeao/WR0fjZp9U1MgVaQTcfGnK2/zmT04bWR2Op4Wr0WOTLOHCalVb5iw8sVe4rCoh2VPiV7rd6hRSHZuB5zVggrcvRoXVhPbrMhS43zOqpTFG8hfMo4s/ihVBYlG3pbIt8B5SKGKeaoPbQaOFh0aJcowZrSKz2HpchKhKOJ0BWHiciyYw7GQiammIHDDBNvLBwtsBqGpccRtJuOEYXqJEbiHHUHb7wVnYjkii1FpqTw5HvrJM+V/vmEh38mkQJW84BBLkjGVwWtd94qPWec5Ur/jnpOUJ3UNV+D8Z+BeLuTDqSgC69K5yEx2gulweisApEVqdBljlYlkKTCioSI4FBqidYlxqLjILSEtCpS1O5LgLh/7JQU3qOlUP66FJ1Po86f/c6TSWf8/XespqSx6AqjHQaLj/p9evw7BBK9UFmXcUYIoPYkIooiU0nI6N61I7nVvotmeo2JZ7sYPzMZJYoyGlpvYGYsVaXS8wz3apJSc11A5Ehh6dOrGMW1mU6UPATNzNhceDZkZanknh8XKcK1mcLZL1A6lOANFNYk6Bz4VDkgEtB5Mog3Ii8y0n162sefBv1+Bx89mXYGJ3LQET+ePO4MBo8fn54OBv1+v098WXRl5t2GV8JaUVEyeszd3SiNdmHYD3xd6gdC31b2a7MSzCy0tVjoPhUeLBbGegqfYm4sUcJ54Ut3SDXqMqeWZBYEsVAZErZuoYoivHmVoyk9tb19wKPa1o81qyEBggcUVHDgfpEdLFgSb2C9U8EfYR04byzG1h9dQZBYZKZCCU3ed9s6JHt3K35mjV5zCHhTWHSOEhjOqa9qHwz10Ce9xBrdlb0QgsLQK2rqWh7tUmR3mzpHq4xUCbQicJSa0mYVBykUPT4iLuiZG+3TrDr+JydWrYZ6y5tb0qNe8oAUM86iZupDUTUbE0qmtMk9MHqfosUAdmQvU0t0Q7hiEZErxuGqMRnfg9X4Gg3Tu7Fw1Zq/Yg16pUN7twPvHEayd3uOLbUD4QLnaK25h67ntAxydE7MEdRmpcUqoQ5jkUBd4na51Zv70uXmHt6U4ZjKyocO1Gb8c5Jl9a5s23gOSLxE/6ZpuCRXczY4tAE8FbLtfdCBZleiGg04fNFGsN2/7onrCDa+284RZGMHM0lSWotyu1G/2Ic8YhkojZvawfa2Y1xKRa8iazZCB2JqSn/rxEGzskQyrdF/NHYBTUsMpmnz37BLBTdHe3B3ikGSwJaR036fyGvpDXm3R+zJPrHvtCh9aqz6hBI6MDo/gwVWsM6eB2K/BWJ/2Cf2hbFTJSVq6MCZduVsphJFfadAm6uw67gHdr8Jdgd3H8i1oV271PKhFX8LnJ4e2mPjWaGBg27WBw77D9T+v6mtOcvRp4YmOjSh4HHEMGQ9UagejYx6q/YkV/dagnur8B2mPXYZhzfj29EPFXseidscAK0DSb0vWDMOoO9pWMR48/KivfH+9v4iHCuVnpkg3oQxCufR26EVnQIYZ+RIROSk2++GG2xhnM9FSLVmmtKMzrYzdRfS1W3efvGsLYbs8cb3ikyoeK634UIUob5kolCMM5JhnA03D87tRY2zYfhpzMO5moRWq6lw+M5mdU0/fyjRVpGGpbBKTAmpyxWTytG7ZMOZyNzurGgz0KM3zRnqGL7yKO0gJu2EQRMbYTUbMsbZAqvNiSANxj4rpq88FfuMmGI8dNVMUUi66V2umr9GSYKF3xDaa540B1tX7svnF4wzsV1lO1UVtB90aLWKKy7MAnVdr/3z9E0O1vXfM0LQXg==
+sidebar_class_name: "get api-method"
+info_path: gen/api/agent-management-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get a scheduled entry"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/node/{hostname}/schedule/{name}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Get a specific scheduled entry by name on the target node.
+
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-node-schedule-by-name.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-node-schedule-by-name.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-node-schedule-by-name.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

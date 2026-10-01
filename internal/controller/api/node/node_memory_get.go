@@ -29,7 +29,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/gen"
 	"github.com/osapi-io/osapi/internal/job"
-	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 )
 
 // GetNodeMemory get the node memory stats API endpoint.
@@ -82,7 +82,7 @@ func (s *Node) GetNodeMemory(
 		}, nil
 	}
 
-	var memStats mem.Result
+	var memStats memory.Result
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &memStats)
 	}
@@ -136,7 +136,7 @@ func (s *Node) getNodeMemoryBroadcast(
 			item.Error = &e
 		default:
 			item.Status = gen.MemoryResultItemStatusOk
-			var memStats mem.Result
+			var memStats memory.Result
 			if resp.Data != nil {
 				_ = json.Unmarshal(resp.Data, &memStats)
 			}
@@ -154,10 +154,10 @@ func (s *Node) getNodeMemoryBroadcast(
 	}, nil
 }
 
-// buildMemoryResultItem converts mem.Result to a MemoryResultItem.
+// buildMemoryResultItem converts memory.Result to a MemoryResultItem.
 func buildMemoryResultItem(
 	hostname string,
-	memStats *mem.Result,
+	memStats *memory.Result,
 ) *gen.MemoryResultItem {
 	changed := false
 	item := &gen.MemoryResultItem{

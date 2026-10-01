@@ -39,12 +39,12 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
-	"github.com/osapi-io/osapi/internal/provider/node/mem"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	ntpProv "github.com/osapi-io/osapi/internal/provider/node/ntp"
 	powerProv "github.com/osapi-io/osapi/internal/provider/node/power"
 	sysctlProv "github.com/osapi-io/osapi/internal/provider/node/sysctl"
 	timezoneProv "github.com/osapi-io/osapi/internal/provider/node/timezone"
-	cronProv "github.com/osapi-io/osapi/internal/provider/scheduled/cron"
+	cronProv "github.com/osapi-io/osapi/internal/provider/schedule/cron"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 )
 
@@ -58,7 +58,7 @@ type newTestAgentParams struct {
 	streamName       string
 	hostProvider     nodeHost.Provider
 	diskProvider     disk.Provider
-	memProvider      mem.Provider
+	memoryProvider   memory.Provider
 	loadProvider     load.Provider
 	dnsProvider      dns.Provider
 	pingProvider     ping.Provider
@@ -101,7 +101,7 @@ func newTestAgent(
 		agent.NewNodeProcessor(
 			p.hostProvider,
 			p.diskProvider,
-			p.memProvider,
+			p.memoryProvider,
 			p.loadProvider,
 			p.sysctlProvider,
 			p.ntpProvider,
@@ -115,7 +115,7 @@ func newTestAgent(
 			p.appConfig,
 			logger,
 		),
-		p.hostProvider, p.diskProvider, p.memProvider, p.loadProvider,
+		p.hostProvider, p.diskProvider, p.memoryProvider, p.loadProvider,
 	)
 
 	registry.Register(
@@ -156,7 +156,7 @@ func newTestAgent(
 		streamName,
 		p.hostProvider,
 		p.diskProvider,
-		p.memProvider,
+		p.memoryProvider,
 		p.loadProvider,
 		p.netinfoProvider,
 		p.processProvider,

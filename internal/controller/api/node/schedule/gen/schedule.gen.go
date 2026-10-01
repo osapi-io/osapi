@@ -20,157 +20,160 @@ const (
 	BearerAuthScopes bearerAuthContextKey = "BearerAuth.Scopes"
 )
 
-// Defines values for CronCreateRequestContentType.
+// Defines values for ScheduleCreateRequestContentType.
 const (
-	CronCreateRequestContentTypeRaw      CronCreateRequestContentType = "raw"
-	CronCreateRequestContentTypeTemplate CronCreateRequestContentType = "template"
+	ScheduleCreateRequestContentTypeRaw      ScheduleCreateRequestContentType = "raw"
+	ScheduleCreateRequestContentTypeTemplate ScheduleCreateRequestContentType = "template"
 )
 
-// Valid indicates whether the value is a known member of the CronCreateRequestContentType enum.
-func (e CronCreateRequestContentType) Valid() bool {
+// Valid indicates whether the value is a known member of the ScheduleCreateRequestContentType enum.
+func (e ScheduleCreateRequestContentType) Valid() bool {
 	switch e {
-	case CronCreateRequestContentTypeRaw:
+	case ScheduleCreateRequestContentTypeRaw:
 		return true
-	case CronCreateRequestContentTypeTemplate:
+	case ScheduleCreateRequestContentTypeTemplate:
 		return true
 	default:
 		return false
 	}
 }
 
-// Defines values for CronCreateRequestInterval.
+// Defines values for ScheduleCreateRequestInterval.
 const (
-	CronCreateRequestIntervalDaily   CronCreateRequestInterval = "daily"
-	CronCreateRequestIntervalHourly  CronCreateRequestInterval = "hourly"
-	CronCreateRequestIntervalMonthly CronCreateRequestInterval = "monthly"
-	CronCreateRequestIntervalWeekly  CronCreateRequestInterval = "weekly"
+	ScheduleCreateRequestIntervalDaily   ScheduleCreateRequestInterval = "daily"
+	ScheduleCreateRequestIntervalHourly  ScheduleCreateRequestInterval = "hourly"
+	ScheduleCreateRequestIntervalMonthly ScheduleCreateRequestInterval = "monthly"
+	ScheduleCreateRequestIntervalWeekly  ScheduleCreateRequestInterval = "weekly"
 )
 
-// Valid indicates whether the value is a known member of the CronCreateRequestInterval enum.
-func (e CronCreateRequestInterval) Valid() bool {
+// Valid indicates whether the value is a known member of the ScheduleCreateRequestInterval enum.
+func (e ScheduleCreateRequestInterval) Valid() bool {
 	switch e {
-	case CronCreateRequestIntervalDaily:
+	case ScheduleCreateRequestIntervalDaily:
 		return true
-	case CronCreateRequestIntervalHourly:
+	case ScheduleCreateRequestIntervalHourly:
 		return true
-	case CronCreateRequestIntervalMonthly:
+	case ScheduleCreateRequestIntervalMonthly:
 		return true
-	case CronCreateRequestIntervalWeekly:
+	case ScheduleCreateRequestIntervalWeekly:
 		return true
 	default:
 		return false
 	}
 }
 
-// Defines values for CronEntryInterval.
+// Defines values for ScheduleEntryInterval.
 const (
-	CronEntryIntervalDaily   CronEntryInterval = "daily"
-	CronEntryIntervalHourly  CronEntryInterval = "hourly"
-	CronEntryIntervalMonthly CronEntryInterval = "monthly"
-	CronEntryIntervalWeekly  CronEntryInterval = "weekly"
+	ScheduleEntryIntervalDaily   ScheduleEntryInterval = "daily"
+	ScheduleEntryIntervalHourly  ScheduleEntryInterval = "hourly"
+	ScheduleEntryIntervalMonthly ScheduleEntryInterval = "monthly"
+	ScheduleEntryIntervalWeekly  ScheduleEntryInterval = "weekly"
 )
 
-// Valid indicates whether the value is a known member of the CronEntryInterval enum.
-func (e CronEntryInterval) Valid() bool {
+// Valid indicates whether the value is a known member of the ScheduleEntryInterval enum.
+func (e ScheduleEntryInterval) Valid() bool {
 	switch e {
-	case CronEntryIntervalDaily:
+	case ScheduleEntryIntervalDaily:
 		return true
-	case CronEntryIntervalHourly:
+	case ScheduleEntryIntervalHourly:
 		return true
-	case CronEntryIntervalMonthly:
+	case ScheduleEntryIntervalMonthly:
 		return true
-	case CronEntryIntervalWeekly:
+	case ScheduleEntryIntervalWeekly:
 		return true
 	default:
 		return false
 	}
 }
 
-// Defines values for CronEntryStatus.
+// Defines values for ScheduleEntryStatus.
 const (
-	CronEntryStatusFailed  CronEntryStatus = "failed"
-	CronEntryStatusOk      CronEntryStatus = "ok"
-	CronEntryStatusSkipped CronEntryStatus = "skipped"
-	CronEntryStatusTimeout CronEntryStatus = "timeout"
+	ScheduleEntryStatusFailed  ScheduleEntryStatus = "failed"
+	ScheduleEntryStatusOk      ScheduleEntryStatus = "ok"
+	ScheduleEntryStatusSkipped ScheduleEntryStatus = "skipped"
+	ScheduleEntryStatusTimeout ScheduleEntryStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the CronEntryStatus enum.
-func (e CronEntryStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the ScheduleEntryStatus enum.
+func (e ScheduleEntryStatus) Valid() bool {
 	switch e {
-	case CronEntryStatusFailed:
+	case ScheduleEntryStatusFailed:
 		return true
-	case CronEntryStatusOk:
+	case ScheduleEntryStatusOk:
 		return true
-	case CronEntryStatusSkipped:
+	case ScheduleEntryStatusSkipped:
 		return true
-	case CronEntryStatusTimeout:
+	case ScheduleEntryStatusTimeout:
 		return true
 	default:
 		return false
 	}
 }
 
-// Defines values for CronMutationResultStatus.
+// Defines values for ScheduleMutationResultStatus.
 const (
-	CronMutationResultStatusFailed  CronMutationResultStatus = "failed"
-	CronMutationResultStatusOk      CronMutationResultStatus = "ok"
-	CronMutationResultStatusSkipped CronMutationResultStatus = "skipped"
-	CronMutationResultStatusTimeout CronMutationResultStatus = "timeout"
+	ScheduleMutationResultStatusFailed  ScheduleMutationResultStatus = "failed"
+	ScheduleMutationResultStatusOk      ScheduleMutationResultStatus = "ok"
+	ScheduleMutationResultStatusSkipped ScheduleMutationResultStatus = "skipped"
+	ScheduleMutationResultStatusTimeout ScheduleMutationResultStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the CronMutationResultStatus enum.
-func (e CronMutationResultStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the ScheduleMutationResultStatus enum.
+func (e ScheduleMutationResultStatus) Valid() bool {
 	switch e {
-	case CronMutationResultStatusFailed:
+	case ScheduleMutationResultStatusFailed:
 		return true
-	case CronMutationResultStatusOk:
+	case ScheduleMutationResultStatusOk:
 		return true
-	case CronMutationResultStatusSkipped:
+	case ScheduleMutationResultStatusSkipped:
 		return true
-	case CronMutationResultStatusTimeout:
+	case ScheduleMutationResultStatusTimeout:
 		return true
 	default:
 		return false
 	}
 }
 
-// Defines values for CronUpdateRequestContentType.
+// Defines values for ScheduleUpdateRequestContentType.
 const (
-	CronUpdateRequestContentTypeRaw      CronUpdateRequestContentType = "raw"
-	CronUpdateRequestContentTypeTemplate CronUpdateRequestContentType = "template"
+	ScheduleUpdateRequestContentTypeRaw      ScheduleUpdateRequestContentType = "raw"
+	ScheduleUpdateRequestContentTypeTemplate ScheduleUpdateRequestContentType = "template"
 )
 
-// Valid indicates whether the value is a known member of the CronUpdateRequestContentType enum.
-func (e CronUpdateRequestContentType) Valid() bool {
+// Valid indicates whether the value is a known member of the ScheduleUpdateRequestContentType enum.
+func (e ScheduleUpdateRequestContentType) Valid() bool {
 	switch e {
-	case CronUpdateRequestContentTypeRaw:
+	case ScheduleUpdateRequestContentTypeRaw:
 		return true
-	case CronUpdateRequestContentTypeTemplate:
+	case ScheduleUpdateRequestContentTypeTemplate:
 		return true
 	default:
 		return false
 	}
 }
 
-// CronCollectionResponse defines model for CronCollectionResponse.
-type CronCollectionResponse struct {
+// ErrorResponse defines model for ErrorResponse.
+type ErrorResponse = externalRef0.ErrorResponse
+
+// ScheduleCollectionResponse defines model for ScheduleCollectionResponse.
+type ScheduleCollectionResponse struct {
 	// JobId The job ID used to process this request.
 	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []CronEntry         `json:"results"`
+	Results []ScheduleEntry     `json:"results"`
 }
 
-// CronCreateRequest defines model for CronCreateRequest.
-type CronCreateRequest struct {
+// ScheduleCreateRequest defines model for ScheduleCreateRequest.
+type ScheduleCreateRequest struct {
 	// ContentType Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars.
-	ContentType *CronCreateRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
+	ContentType *ScheduleCreateRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
 
 	// Interval Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
-	Interval *CronCreateRequestInterval `json:"interval,omitempty" validate:"required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly daily weekly monthly"`
+	Interval *ScheduleCreateRequestInterval `json:"interval,omitempty" validate:"required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly daily weekly monthly"`
 
-	// Name Name for the cron drop-in entry. Used as the file name under /etc/cron.d/ or /etc/cron.{interval}/.
+	// Name Name for the scheduled entry. Used as the file name under /etc/cron.d/ or /etc/cron.{interval}/.
 	Name string `json:"name" validate:"required,min=1,max=64"`
 
-	// Object Name of the uploaded file in the object store to deploy as the cron entry content.
+	// Object Name of the uploaded file in the object store to deploy as the scheduled entry content.
 	Object string `json:"object" validate:"required,min=1"`
 
 	// Schedule Cron schedule expression (e.g., "*/5 * * * *"). Mutually exclusive with interval — provide exactly one.
@@ -183,28 +186,28 @@ type CronCreateRequest struct {
 	Vars *map[string]interface{} `json:"vars,omitempty"`
 }
 
-// CronCreateRequestContentType Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars.
-type CronCreateRequestContentType string
+// ScheduleCreateRequestContentType Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars.
+type ScheduleCreateRequestContentType string
 
-// CronCreateRequestInterval Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
-type CronCreateRequestInterval string
+// ScheduleCreateRequestInterval Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
+type ScheduleCreateRequestInterval string
 
-// CronCreateResponse defines model for CronCreateResponse.
-type CronCreateResponse struct {
+// ScheduleCreateResponse defines model for ScheduleCreateResponse.
+type ScheduleCreateResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
-	Results []CronMutationResult `json:"results"`
+	JobId   *openapi_types.UUID      `json:"job_id,omitempty"`
+	Results []ScheduleMutationResult `json:"results"`
 }
 
-// CronDeleteResponse defines model for CronDeleteResponse.
-type CronDeleteResponse struct {
+// ScheduleDeleteResponse defines model for ScheduleDeleteResponse.
+type ScheduleDeleteResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
-	Results []CronMutationResult `json:"results"`
+	JobId   *openapi_types.UUID      `json:"job_id,omitempty"`
+	Results []ScheduleMutationResult `json:"results"`
 }
 
-// CronEntry A cron drop-in entry.
-type CronEntry struct {
+// ScheduleEntry A scheduled entry.
+type ScheduleEntry struct {
 	// Error Error message if the agent failed to retrieve this entry.
 	Error *string `json:"error,omitempty"`
 
@@ -212,9 +215,9 @@ type CronEntry struct {
 	Hostname string `json:"hostname"`
 
 	// Interval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
-	Interval *CronEntryInterval `json:"interval,omitempty"`
+	Interval *ScheduleEntryInterval `json:"interval,omitempty"`
 
-	// Name Cron entry name.
+	// Name Scheduled entry name.
 	Name *string `json:"name,omitempty"`
 
 	// Object Object store name for the deployed content.
@@ -227,27 +230,27 @@ type CronEntry struct {
 	Source *string `json:"source,omitempty"`
 
 	// Status The status of the operation for this host.
-	Status CronEntryStatus `json:"status"`
+	Status ScheduleEntryStatus `json:"status"`
 
-	// User User the cron entry runs as.
+	// User User the scheduled entry runs as.
 	User *string `json:"user,omitempty"`
 }
 
-// CronEntryInterval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
-type CronEntryInterval string
+// ScheduleEntryInterval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
+type ScheduleEntryInterval string
 
-// CronEntryStatus The status of the operation for this host.
-type CronEntryStatus string
+// ScheduleEntryStatus The status of the operation for this host.
+type ScheduleEntryStatus string
 
-// CronGetResponse Collection response for a single cron entry get operation.
-type CronGetResponse struct {
+// ScheduleGetResponse Collection response for a single scheduled entry get operation.
+type ScheduleGetResponse struct {
 	// JobId The job ID used to process this request.
 	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []CronEntry         `json:"results"`
+	Results []ScheduleEntry     `json:"results"`
 }
 
-// CronMutationResult Result of a cron create, update, or delete operation for one host.
-type CronMutationResult struct {
+// ScheduleMutationResult Result of a cron create, update, or delete operation for one host.
+type ScheduleMutationResult struct {
 	// Changed Whether the operation modified system state.
 	Changed *bool `json:"changed,omitempty"`
 
@@ -257,20 +260,20 @@ type CronMutationResult struct {
 	// Hostname Hostname of the agent that processed this operation.
 	Hostname string `json:"hostname"`
 
-	// Name Cron entry name.
+	// Name Scheduled entry name.
 	Name *string `json:"name,omitempty"`
 
 	// Status The status of the operation for this host.
-	Status CronMutationResultStatus `json:"status"`
+	Status ScheduleMutationResultStatus `json:"status"`
 }
 
-// CronMutationResultStatus The status of the operation for this host.
-type CronMutationResultStatus string
+// ScheduleMutationResultStatus The status of the operation for this host.
+type ScheduleMutationResultStatus string
 
-// CronUpdateRequest defines model for CronUpdateRequest.
-type CronUpdateRequest struct {
+// ScheduleUpdateRequest defines model for ScheduleUpdateRequest.
+type ScheduleUpdateRequest struct {
 	// ContentType Content type: "raw" or "template".
-	ContentType *CronUpdateRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
+	ContentType *ScheduleUpdateRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
 
 	// Object New object to deploy (redeploy with updated content).
 	Object *string `json:"object,omitempty" validate:"omitempty,min=1"`
@@ -285,51 +288,48 @@ type CronUpdateRequest struct {
 	Vars *map[string]interface{} `json:"vars,omitempty"`
 }
 
-// CronUpdateRequestContentType Content type: "raw" or "template".
-type CronUpdateRequestContentType string
+// ScheduleUpdateRequestContentType Content type: "raw" or "template".
+type ScheduleUpdateRequestContentType string
 
-// CronUpdateResponse defines model for CronUpdateResponse.
-type CronUpdateResponse struct {
+// ScheduleUpdateResponse defines model for ScheduleUpdateResponse.
+type ScheduleUpdateResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
-	Results []CronMutationResult `json:"results"`
+	JobId   *openapi_types.UUID      `json:"job_id,omitempty"`
+	Results []ScheduleMutationResult `json:"results"`
 }
-
-// ErrorResponse defines model for ErrorResponse.
-type ErrorResponse = externalRef0.ErrorResponse
-
-// CronName defines model for CronName.
-type CronName = string
 
 // Hostname defines model for Hostname.
 type Hostname = string
 
+// ScheduleName defines model for ScheduleName.
+type ScheduleName = string
+
 // bearerAuthContextKey is the context key for BearerAuth security scheme
 type bearerAuthContextKey string
 
-// PostNodeScheduleCronJSONRequestBody defines body for PostNodeScheduleCron for application/json ContentType.
-type PostNodeScheduleCronJSONRequestBody = CronCreateRequest
+// PostNodeScheduleJSONRequestBody defines body for PostNodeSchedule for application/json ContentType.
+type PostNodeScheduleJSONRequestBody = ScheduleCreateRequest
 
-// PutNodeScheduleCronJSONRequestBody defines body for PutNodeScheduleCron for application/json ContentType.
-type PutNodeScheduleCronJSONRequestBody = CronUpdateRequest
+// PutNodeScheduleJSONRequestBody defines body for PutNodeSchedule for application/json ContentType.
+type PutNodeScheduleJSONRequestBody = ScheduleUpdateRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// List all cron entries
-	// (GET /api/node/{hostname}/schedule/cron)
-	GetNodeScheduleCron(ctx *echo.Context, hostname Hostname) error
-	// Create a cron entry
-	// (POST /api/node/{hostname}/schedule/cron)
-	PostNodeScheduleCron(ctx *echo.Context, hostname Hostname) error
-	// Delete a cron entry
-	// (DELETE /api/node/{hostname}/schedule/cron/{name})
-	DeleteNodeScheduleCron(ctx *echo.Context, hostname Hostname, name CronName) error
-	// Get a cron entry
-	// (GET /api/node/{hostname}/schedule/cron/{name})
-	GetNodeScheduleCronByName(ctx *echo.Context, hostname Hostname, name CronName) error
-	// Update a cron entry
-	// (PUT /api/node/{hostname}/schedule/cron/{name})
-	PutNodeScheduleCron(ctx *echo.Context, hostname Hostname, name CronName) error
+	// List all scheduled entries
+	// (GET /api/node/{hostname}/schedule)
+	GetNodeSchedule(ctx *echo.Context, hostname Hostname) error
+	// Create a scheduled entry
+	// (POST /api/node/{hostname}/schedule)
+	PostNodeSchedule(ctx *echo.Context, hostname Hostname) error
+	// Delete a scheduled entry
+	// (DELETE /api/node/{hostname}/schedule/{name})
+	DeleteNodeSchedule(ctx *echo.Context, hostname Hostname, name ScheduleName) error
+	// Get a scheduled entry
+	// (GET /api/node/{hostname}/schedule/{name})
+	GetNodeScheduleByName(ctx *echo.Context, hostname Hostname, name ScheduleName) error
+	// Update a scheduled entry
+	// (PUT /api/node/{hostname}/schedule/{name})
+	PutNodeSchedule(ctx *echo.Context, hostname Hostname, name ScheduleName) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -337,8 +337,8 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
-// GetNodeScheduleCron converts echo context to params.
-func (w *ServerInterfaceWrapper) GetNodeScheduleCron(ctx *echo.Context) error {
+// GetNodeSchedule converts echo context to params.
+func (w *ServerInterfaceWrapper) GetNodeSchedule(ctx *echo.Context) error {
 	var err error
 	// ------------- Path parameter "hostname" -------------
 	var hostname Hostname
@@ -348,15 +348,15 @@ func (w *ServerInterfaceWrapper) GetNodeScheduleCron(ctx *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
 	}
 
-	ctx.Set(string(BearerAuthScopes), []string{"cron:read"})
+	ctx.Set(string(BearerAuthScopes), []string{"schedule:read"})
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetNodeScheduleCron(ctx, hostname)
+	err = w.Handler.GetNodeSchedule(ctx, hostname)
 	return err
 }
 
-// PostNodeScheduleCron converts echo context to params.
-func (w *ServerInterfaceWrapper) PostNodeScheduleCron(ctx *echo.Context) error {
+// PostNodeSchedule converts echo context to params.
+func (w *ServerInterfaceWrapper) PostNodeSchedule(ctx *echo.Context) error {
 	var err error
 	// ------------- Path parameter "hostname" -------------
 	var hostname Hostname
@@ -366,15 +366,15 @@ func (w *ServerInterfaceWrapper) PostNodeScheduleCron(ctx *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
 	}
 
-	ctx.Set(string(BearerAuthScopes), []string{"cron:write"})
+	ctx.Set(string(BearerAuthScopes), []string{"schedule:write"})
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostNodeScheduleCron(ctx, hostname)
+	err = w.Handler.PostNodeSchedule(ctx, hostname)
 	return err
 }
 
-// DeleteNodeScheduleCron converts echo context to params.
-func (w *ServerInterfaceWrapper) DeleteNodeScheduleCron(ctx *echo.Context) error {
+// DeleteNodeSchedule converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteNodeSchedule(ctx *echo.Context) error {
 	var err error
 	// ------------- Path parameter "hostname" -------------
 	var hostname Hostname
@@ -385,22 +385,22 @@ func (w *ServerInterfaceWrapper) DeleteNodeScheduleCron(ctx *echo.Context) error
 	}
 
 	// ------------- Path parameter "name" -------------
-	var name CronName
+	var name ScheduleName
 
 	err = runtime.BindStyledParameterWithOptions("simple", "name", ctx.Param("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter name: %s", err))
 	}
 
-	ctx.Set(string(BearerAuthScopes), []string{"cron:write"})
+	ctx.Set(string(BearerAuthScopes), []string{"schedule:write"})
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.DeleteNodeScheduleCron(ctx, hostname, name)
+	err = w.Handler.DeleteNodeSchedule(ctx, hostname, name)
 	return err
 }
 
-// GetNodeScheduleCronByName converts echo context to params.
-func (w *ServerInterfaceWrapper) GetNodeScheduleCronByName(ctx *echo.Context) error {
+// GetNodeScheduleByName converts echo context to params.
+func (w *ServerInterfaceWrapper) GetNodeScheduleByName(ctx *echo.Context) error {
 	var err error
 	// ------------- Path parameter "hostname" -------------
 	var hostname Hostname
@@ -411,22 +411,22 @@ func (w *ServerInterfaceWrapper) GetNodeScheduleCronByName(ctx *echo.Context) er
 	}
 
 	// ------------- Path parameter "name" -------------
-	var name CronName
+	var name ScheduleName
 
 	err = runtime.BindStyledParameterWithOptions("simple", "name", ctx.Param("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter name: %s", err))
 	}
 
-	ctx.Set(string(BearerAuthScopes), []string{"cron:read"})
+	ctx.Set(string(BearerAuthScopes), []string{"schedule:read"})
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetNodeScheduleCronByName(ctx, hostname, name)
+	err = w.Handler.GetNodeScheduleByName(ctx, hostname, name)
 	return err
 }
 
-// PutNodeScheduleCron converts echo context to params.
-func (w *ServerInterfaceWrapper) PutNodeScheduleCron(ctx *echo.Context) error {
+// PutNodeSchedule converts echo context to params.
+func (w *ServerInterfaceWrapper) PutNodeSchedule(ctx *echo.Context) error {
 	var err error
 	// ------------- Path parameter "hostname" -------------
 	var hostname Hostname
@@ -437,17 +437,17 @@ func (w *ServerInterfaceWrapper) PutNodeScheduleCron(ctx *echo.Context) error {
 	}
 
 	// ------------- Path parameter "name" -------------
-	var name CronName
+	var name ScheduleName
 
 	err = runtime.BindStyledParameterWithOptions("simple", "name", ctx.Param("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter name: %s", err))
 	}
 
-	ctx.Set(string(BearerAuthScopes), []string{"cron:write"})
+	ctx.Set(string(BearerAuthScopes), []string{"schedule:write"})
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PutNodeScheduleCron(ctx, hostname, name)
+	err = w.Handler.PutNodeSchedule(ctx, hostname, name)
 	return err
 }
 
@@ -498,25 +498,25 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 		Handler: si,
 	}
 
-	router.GET(options.BaseURL+"/api/node/:hostname/schedule/cron", wrapper.GetNodeScheduleCron, options.OperationMiddlewares["GetNodeScheduleCron"]...)
-	router.POST(options.BaseURL+"/api/node/:hostname/schedule/cron", wrapper.PostNodeScheduleCron, options.OperationMiddlewares["PostNodeScheduleCron"]...)
-	router.DELETE(options.BaseURL+"/api/node/:hostname/schedule/cron/:name", wrapper.DeleteNodeScheduleCron, options.OperationMiddlewares["DeleteNodeScheduleCron"]...)
-	router.GET(options.BaseURL+"/api/node/:hostname/schedule/cron/:name", wrapper.GetNodeScheduleCronByName, options.OperationMiddlewares["GetNodeScheduleCronByName"]...)
-	router.PUT(options.BaseURL+"/api/node/:hostname/schedule/cron/:name", wrapper.PutNodeScheduleCron, options.OperationMiddlewares["PutNodeScheduleCron"]...)
+	router.GET(options.BaseURL+"/api/node/:hostname/schedule", wrapper.GetNodeSchedule, options.OperationMiddlewares["GetNodeSchedule"]...)
+	router.POST(options.BaseURL+"/api/node/:hostname/schedule", wrapper.PostNodeSchedule, options.OperationMiddlewares["PostNodeSchedule"]...)
+	router.DELETE(options.BaseURL+"/api/node/:hostname/schedule/:name", wrapper.DeleteNodeSchedule, options.OperationMiddlewares["DeleteNodeSchedule"]...)
+	router.GET(options.BaseURL+"/api/node/:hostname/schedule/:name", wrapper.GetNodeScheduleByName, options.OperationMiddlewares["GetNodeScheduleByName"]...)
+	router.PUT(options.BaseURL+"/api/node/:hostname/schedule/:name", wrapper.PutNodeSchedule, options.OperationMiddlewares["PutNodeSchedule"]...)
 
 }
 
-type GetNodeScheduleCronRequestObject struct {
+type GetNodeScheduleRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
 }
 
-type GetNodeScheduleCronResponseObject interface {
-	VisitGetNodeScheduleCronResponse(w http.ResponseWriter) error
+type GetNodeScheduleResponseObject interface {
+	VisitGetNodeScheduleResponse(w http.ResponseWriter) error
 }
 
-type GetNodeScheduleCron200JSONResponse CronCollectionResponse
+type GetNodeSchedule200JSONResponse ScheduleCollectionResponse
 
-func (response GetNodeScheduleCron200JSONResponse) VisitGetNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response GetNodeSchedule200JSONResponse) VisitGetNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -528,9 +528,9 @@ func (response GetNodeScheduleCron200JSONResponse) VisitGetNodeScheduleCronRespo
 	return err
 }
 
-type GetNodeScheduleCron400JSONResponse externalRef0.ErrorResponse
+type GetNodeSchedule400JSONResponse externalRef0.ErrorResponse
 
-func (response GetNodeScheduleCron400JSONResponse) VisitGetNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response GetNodeSchedule400JSONResponse) VisitGetNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -542,9 +542,9 @@ func (response GetNodeScheduleCron400JSONResponse) VisitGetNodeScheduleCronRespo
 	return err
 }
 
-type GetNodeScheduleCron401JSONResponse externalRef0.ErrorResponse
+type GetNodeSchedule401JSONResponse externalRef0.ErrorResponse
 
-func (response GetNodeScheduleCron401JSONResponse) VisitGetNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response GetNodeSchedule401JSONResponse) VisitGetNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -556,9 +556,9 @@ func (response GetNodeScheduleCron401JSONResponse) VisitGetNodeScheduleCronRespo
 	return err
 }
 
-type GetNodeScheduleCron403JSONResponse externalRef0.ErrorResponse
+type GetNodeSchedule403JSONResponse externalRef0.ErrorResponse
 
-func (response GetNodeScheduleCron403JSONResponse) VisitGetNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response GetNodeSchedule403JSONResponse) VisitGetNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -570,9 +570,9 @@ func (response GetNodeScheduleCron403JSONResponse) VisitGetNodeScheduleCronRespo
 	return err
 }
 
-type GetNodeScheduleCron500JSONResponse externalRef0.ErrorResponse
+type GetNodeSchedule500JSONResponse externalRef0.ErrorResponse
 
-func (response GetNodeScheduleCron500JSONResponse) VisitGetNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response GetNodeSchedule500JSONResponse) VisitGetNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -584,18 +584,18 @@ func (response GetNodeScheduleCron500JSONResponse) VisitGetNodeScheduleCronRespo
 	return err
 }
 
-type PostNodeScheduleCronRequestObject struct {
+type PostNodeScheduleRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Body     *PostNodeScheduleCronJSONRequestBody
+	Body     *PostNodeScheduleJSONRequestBody
 }
 
-type PostNodeScheduleCronResponseObject interface {
-	VisitPostNodeScheduleCronResponse(w http.ResponseWriter) error
+type PostNodeScheduleResponseObject interface {
+	VisitPostNodeScheduleResponse(w http.ResponseWriter) error
 }
 
-type PostNodeScheduleCron200JSONResponse CronCreateResponse
+type PostNodeSchedule200JSONResponse ScheduleCreateResponse
 
-func (response PostNodeScheduleCron200JSONResponse) VisitPostNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response PostNodeSchedule200JSONResponse) VisitPostNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -607,9 +607,9 @@ func (response PostNodeScheduleCron200JSONResponse) VisitPostNodeScheduleCronRes
 	return err
 }
 
-type PostNodeScheduleCron400JSONResponse externalRef0.ErrorResponse
+type PostNodeSchedule400JSONResponse externalRef0.ErrorResponse
 
-func (response PostNodeScheduleCron400JSONResponse) VisitPostNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response PostNodeSchedule400JSONResponse) VisitPostNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -621,9 +621,9 @@ func (response PostNodeScheduleCron400JSONResponse) VisitPostNodeScheduleCronRes
 	return err
 }
 
-type PostNodeScheduleCron401JSONResponse externalRef0.ErrorResponse
+type PostNodeSchedule401JSONResponse externalRef0.ErrorResponse
 
-func (response PostNodeScheduleCron401JSONResponse) VisitPostNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response PostNodeSchedule401JSONResponse) VisitPostNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -635,9 +635,9 @@ func (response PostNodeScheduleCron401JSONResponse) VisitPostNodeScheduleCronRes
 	return err
 }
 
-type PostNodeScheduleCron403JSONResponse externalRef0.ErrorResponse
+type PostNodeSchedule403JSONResponse externalRef0.ErrorResponse
 
-func (response PostNodeScheduleCron403JSONResponse) VisitPostNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response PostNodeSchedule403JSONResponse) VisitPostNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -649,9 +649,9 @@ func (response PostNodeScheduleCron403JSONResponse) VisitPostNodeScheduleCronRes
 	return err
 }
 
-type PostNodeScheduleCron500JSONResponse externalRef0.ErrorResponse
+type PostNodeSchedule500JSONResponse externalRef0.ErrorResponse
 
-func (response PostNodeScheduleCron500JSONResponse) VisitPostNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response PostNodeSchedule500JSONResponse) VisitPostNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -663,18 +663,18 @@ func (response PostNodeScheduleCron500JSONResponse) VisitPostNodeScheduleCronRes
 	return err
 }
 
-type DeleteNodeScheduleCronRequestObject struct {
-	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     CronName `json:"name" validate:"required,min=1"`
+type DeleteNodeScheduleRequestObject struct {
+	Hostname Hostname     `json:"hostname" validate:"required,min=1,valid_target"`
+	Name     ScheduleName `json:"name" validate:"required,min=1"`
 }
 
-type DeleteNodeScheduleCronResponseObject interface {
-	VisitDeleteNodeScheduleCronResponse(w http.ResponseWriter) error
+type DeleteNodeScheduleResponseObject interface {
+	VisitDeleteNodeScheduleResponse(w http.ResponseWriter) error
 }
 
-type DeleteNodeScheduleCron200JSONResponse CronDeleteResponse
+type DeleteNodeSchedule200JSONResponse ScheduleDeleteResponse
 
-func (response DeleteNodeScheduleCron200JSONResponse) VisitDeleteNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response DeleteNodeSchedule200JSONResponse) VisitDeleteNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -686,9 +686,9 @@ func (response DeleteNodeScheduleCron200JSONResponse) VisitDeleteNodeScheduleCro
 	return err
 }
 
-type DeleteNodeScheduleCron400JSONResponse externalRef0.ErrorResponse
+type DeleteNodeSchedule400JSONResponse externalRef0.ErrorResponse
 
-func (response DeleteNodeScheduleCron400JSONResponse) VisitDeleteNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response DeleteNodeSchedule400JSONResponse) VisitDeleteNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -700,9 +700,9 @@ func (response DeleteNodeScheduleCron400JSONResponse) VisitDeleteNodeScheduleCro
 	return err
 }
 
-type DeleteNodeScheduleCron401JSONResponse externalRef0.ErrorResponse
+type DeleteNodeSchedule401JSONResponse externalRef0.ErrorResponse
 
-func (response DeleteNodeScheduleCron401JSONResponse) VisitDeleteNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response DeleteNodeSchedule401JSONResponse) VisitDeleteNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -714,9 +714,9 @@ func (response DeleteNodeScheduleCron401JSONResponse) VisitDeleteNodeScheduleCro
 	return err
 }
 
-type DeleteNodeScheduleCron403JSONResponse externalRef0.ErrorResponse
+type DeleteNodeSchedule403JSONResponse externalRef0.ErrorResponse
 
-func (response DeleteNodeScheduleCron403JSONResponse) VisitDeleteNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response DeleteNodeSchedule403JSONResponse) VisitDeleteNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -728,9 +728,9 @@ func (response DeleteNodeScheduleCron403JSONResponse) VisitDeleteNodeScheduleCro
 	return err
 }
 
-type DeleteNodeScheduleCron404JSONResponse externalRef0.ErrorResponse
+type DeleteNodeSchedule404JSONResponse externalRef0.ErrorResponse
 
-func (response DeleteNodeScheduleCron404JSONResponse) VisitDeleteNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response DeleteNodeSchedule404JSONResponse) VisitDeleteNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -742,102 +742,9 @@ func (response DeleteNodeScheduleCron404JSONResponse) VisitDeleteNodeScheduleCro
 	return err
 }
 
-type DeleteNodeScheduleCron500JSONResponse externalRef0.ErrorResponse
+type DeleteNodeSchedule500JSONResponse externalRef0.ErrorResponse
 
-func (response DeleteNodeScheduleCron500JSONResponse) VisitDeleteNodeScheduleCronResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeScheduleCronByNameRequestObject struct {
-	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     CronName `json:"name" validate:"required,min=1"`
-}
-
-type GetNodeScheduleCronByNameResponseObject interface {
-	VisitGetNodeScheduleCronByNameResponse(w http.ResponseWriter) error
-}
-
-type GetNodeScheduleCronByName200JSONResponse CronGetResponse
-
-func (response GetNodeScheduleCronByName200JSONResponse) VisitGetNodeScheduleCronByNameResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeScheduleCronByName400JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeScheduleCronByName400JSONResponse) VisitGetNodeScheduleCronByNameResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeScheduleCronByName401JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeScheduleCronByName401JSONResponse) VisitGetNodeScheduleCronByNameResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeScheduleCronByName403JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeScheduleCronByName403JSONResponse) VisitGetNodeScheduleCronByNameResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeScheduleCronByName404JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeScheduleCronByName404JSONResponse) VisitGetNodeScheduleCronByNameResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(404)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeScheduleCronByName500JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeScheduleCronByName500JSONResponse) VisitGetNodeScheduleCronByNameResponse(w http.ResponseWriter) error {
+func (response DeleteNodeSchedule500JSONResponse) VisitDeleteNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -849,19 +756,18 @@ func (response GetNodeScheduleCronByName500JSONResponse) VisitGetNodeScheduleCro
 	return err
 }
 
-type PutNodeScheduleCronRequestObject struct {
-	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     CronName `json:"name" validate:"required,min=1"`
-	Body     *PutNodeScheduleCronJSONRequestBody
+type GetNodeScheduleByNameRequestObject struct {
+	Hostname Hostname     `json:"hostname" validate:"required,min=1,valid_target"`
+	Name     ScheduleName `json:"name" validate:"required,min=1"`
 }
 
-type PutNodeScheduleCronResponseObject interface {
-	VisitPutNodeScheduleCronResponse(w http.ResponseWriter) error
+type GetNodeScheduleByNameResponseObject interface {
+	VisitGetNodeScheduleByNameResponse(w http.ResponseWriter) error
 }
 
-type PutNodeScheduleCron200JSONResponse CronUpdateResponse
+type GetNodeScheduleByName200JSONResponse ScheduleGetResponse
 
-func (response PutNodeScheduleCron200JSONResponse) VisitPutNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response GetNodeScheduleByName200JSONResponse) VisitGetNodeScheduleByNameResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -873,9 +779,9 @@ func (response PutNodeScheduleCron200JSONResponse) VisitPutNodeScheduleCronRespo
 	return err
 }
 
-type PutNodeScheduleCron400JSONResponse externalRef0.ErrorResponse
+type GetNodeScheduleByName400JSONResponse externalRef0.ErrorResponse
 
-func (response PutNodeScheduleCron400JSONResponse) VisitPutNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response GetNodeScheduleByName400JSONResponse) VisitGetNodeScheduleByNameResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -887,9 +793,9 @@ func (response PutNodeScheduleCron400JSONResponse) VisitPutNodeScheduleCronRespo
 	return err
 }
 
-type PutNodeScheduleCron401JSONResponse externalRef0.ErrorResponse
+type GetNodeScheduleByName401JSONResponse externalRef0.ErrorResponse
 
-func (response PutNodeScheduleCron401JSONResponse) VisitPutNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response GetNodeScheduleByName401JSONResponse) VisitGetNodeScheduleByNameResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -901,9 +807,9 @@ func (response PutNodeScheduleCron401JSONResponse) VisitPutNodeScheduleCronRespo
 	return err
 }
 
-type PutNodeScheduleCron403JSONResponse externalRef0.ErrorResponse
+type GetNodeScheduleByName403JSONResponse externalRef0.ErrorResponse
 
-func (response PutNodeScheduleCron403JSONResponse) VisitPutNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response GetNodeScheduleByName403JSONResponse) VisitGetNodeScheduleByNameResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -915,9 +821,9 @@ func (response PutNodeScheduleCron403JSONResponse) VisitPutNodeScheduleCronRespo
 	return err
 }
 
-type PutNodeScheduleCron404JSONResponse externalRef0.ErrorResponse
+type GetNodeScheduleByName404JSONResponse externalRef0.ErrorResponse
 
-func (response PutNodeScheduleCron404JSONResponse) VisitPutNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response GetNodeScheduleByName404JSONResponse) VisitGetNodeScheduleByNameResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -929,9 +835,103 @@ func (response PutNodeScheduleCron404JSONResponse) VisitPutNodeScheduleCronRespo
 	return err
 }
 
-type PutNodeScheduleCron500JSONResponse externalRef0.ErrorResponse
+type GetNodeScheduleByName500JSONResponse externalRef0.ErrorResponse
 
-func (response PutNodeScheduleCron500JSONResponse) VisitPutNodeScheduleCronResponse(w http.ResponseWriter) error {
+func (response GetNodeScheduleByName500JSONResponse) VisitGetNodeScheduleByNameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutNodeScheduleRequestObject struct {
+	Hostname Hostname     `json:"hostname" validate:"required,min=1,valid_target"`
+	Name     ScheduleName `json:"name" validate:"required,min=1"`
+	Body     *PutNodeScheduleJSONRequestBody
+}
+
+type PutNodeScheduleResponseObject interface {
+	VisitPutNodeScheduleResponse(w http.ResponseWriter) error
+}
+
+type PutNodeSchedule200JSONResponse ScheduleUpdateResponse
+
+func (response PutNodeSchedule200JSONResponse) VisitPutNodeScheduleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutNodeSchedule400JSONResponse externalRef0.ErrorResponse
+
+func (response PutNodeSchedule400JSONResponse) VisitPutNodeScheduleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutNodeSchedule401JSONResponse externalRef0.ErrorResponse
+
+func (response PutNodeSchedule401JSONResponse) VisitPutNodeScheduleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutNodeSchedule403JSONResponse externalRef0.ErrorResponse
+
+func (response PutNodeSchedule403JSONResponse) VisitPutNodeScheduleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutNodeSchedule404JSONResponse externalRef0.ErrorResponse
+
+func (response PutNodeSchedule404JSONResponse) VisitPutNodeScheduleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutNodeSchedule500JSONResponse externalRef0.ErrorResponse
+
+func (response PutNodeSchedule500JSONResponse) VisitPutNodeScheduleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -945,21 +945,21 @@ func (response PutNodeScheduleCron500JSONResponse) VisitPutNodeScheduleCronRespo
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
-	// List all cron entries
-	// (GET /api/node/{hostname}/schedule/cron)
-	GetNodeScheduleCron(ctx context.Context, request GetNodeScheduleCronRequestObject) (GetNodeScheduleCronResponseObject, error)
-	// Create a cron entry
-	// (POST /api/node/{hostname}/schedule/cron)
-	PostNodeScheduleCron(ctx context.Context, request PostNodeScheduleCronRequestObject) (PostNodeScheduleCronResponseObject, error)
-	// Delete a cron entry
-	// (DELETE /api/node/{hostname}/schedule/cron/{name})
-	DeleteNodeScheduleCron(ctx context.Context, request DeleteNodeScheduleCronRequestObject) (DeleteNodeScheduleCronResponseObject, error)
-	// Get a cron entry
-	// (GET /api/node/{hostname}/schedule/cron/{name})
-	GetNodeScheduleCronByName(ctx context.Context, request GetNodeScheduleCronByNameRequestObject) (GetNodeScheduleCronByNameResponseObject, error)
-	// Update a cron entry
-	// (PUT /api/node/{hostname}/schedule/cron/{name})
-	PutNodeScheduleCron(ctx context.Context, request PutNodeScheduleCronRequestObject) (PutNodeScheduleCronResponseObject, error)
+	// List all scheduled entries
+	// (GET /api/node/{hostname}/schedule)
+	GetNodeSchedule(ctx context.Context, request GetNodeScheduleRequestObject) (GetNodeScheduleResponseObject, error)
+	// Create a scheduled entry
+	// (POST /api/node/{hostname}/schedule)
+	PostNodeSchedule(ctx context.Context, request PostNodeScheduleRequestObject) (PostNodeScheduleResponseObject, error)
+	// Delete a scheduled entry
+	// (DELETE /api/node/{hostname}/schedule/{name})
+	DeleteNodeSchedule(ctx context.Context, request DeleteNodeScheduleRequestObject) (DeleteNodeScheduleResponseObject, error)
+	// Get a scheduled entry
+	// (GET /api/node/{hostname}/schedule/{name})
+	GetNodeScheduleByName(ctx context.Context, request GetNodeScheduleByNameRequestObject) (GetNodeScheduleByNameResponseObject, error)
+	// Update a scheduled entry
+	// (PUT /api/node/{hostname}/schedule/{name})
+	PutNodeSchedule(ctx context.Context, request PutNodeScheduleRequestObject) (PutNodeScheduleResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx *echo.Context, request any) (any, error)
@@ -974,140 +974,140 @@ type strictHandler struct {
 	middlewares []StrictMiddlewareFunc
 }
 
-// GetNodeScheduleCron operation middleware
-func (sh *strictHandler) GetNodeScheduleCron(ctx *echo.Context, hostname Hostname) error {
-	var request GetNodeScheduleCronRequestObject
+// GetNodeSchedule operation middleware
+func (sh *strictHandler) GetNodeSchedule(ctx *echo.Context, hostname Hostname) error {
+	var request GetNodeScheduleRequestObject
 
 	request.Hostname = hostname
 
 	handler := func(ctx *echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetNodeScheduleCron(ctx.Request().Context(), request.(GetNodeScheduleCronRequestObject))
+		return sh.ssi.GetNodeSchedule(ctx.Request().Context(), request.(GetNodeScheduleRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetNodeScheduleCron")
+		handler = middleware(handler, "GetNodeSchedule")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(GetNodeScheduleCronResponseObject); ok {
-		return validResponse.VisitGetNodeScheduleCronResponse(ctx.Response())
+	} else if validResponse, ok := response.(GetNodeScheduleResponseObject); ok {
+		return validResponse.VisitGetNodeScheduleResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}
 	return nil
 }
 
-// PostNodeScheduleCron operation middleware
-func (sh *strictHandler) PostNodeScheduleCron(ctx *echo.Context, hostname Hostname) error {
-	var request PostNodeScheduleCronRequestObject
+// PostNodeSchedule operation middleware
+func (sh *strictHandler) PostNodeSchedule(ctx *echo.Context, hostname Hostname) error {
+	var request PostNodeScheduleRequestObject
 
 	request.Hostname = hostname
 
-	var body PostNodeScheduleCronJSONRequestBody
+	var body PostNodeScheduleJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
 		return err
 	}
 	request.Body = &body
 
 	handler := func(ctx *echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PostNodeScheduleCron(ctx.Request().Context(), request.(PostNodeScheduleCronRequestObject))
+		return sh.ssi.PostNodeSchedule(ctx.Request().Context(), request.(PostNodeScheduleRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PostNodeScheduleCron")
+		handler = middleware(handler, "PostNodeSchedule")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(PostNodeScheduleCronResponseObject); ok {
-		return validResponse.VisitPostNodeScheduleCronResponse(ctx.Response())
+	} else if validResponse, ok := response.(PostNodeScheduleResponseObject); ok {
+		return validResponse.VisitPostNodeScheduleResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}
 	return nil
 }
 
-// DeleteNodeScheduleCron operation middleware
-func (sh *strictHandler) DeleteNodeScheduleCron(ctx *echo.Context, hostname Hostname, name CronName) error {
-	var request DeleteNodeScheduleCronRequestObject
+// DeleteNodeSchedule operation middleware
+func (sh *strictHandler) DeleteNodeSchedule(ctx *echo.Context, hostname Hostname, name ScheduleName) error {
+	var request DeleteNodeScheduleRequestObject
 
 	request.Hostname = hostname
 	request.Name = name
 
 	handler := func(ctx *echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.DeleteNodeScheduleCron(ctx.Request().Context(), request.(DeleteNodeScheduleCronRequestObject))
+		return sh.ssi.DeleteNodeSchedule(ctx.Request().Context(), request.(DeleteNodeScheduleRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "DeleteNodeScheduleCron")
+		handler = middleware(handler, "DeleteNodeSchedule")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(DeleteNodeScheduleCronResponseObject); ok {
-		return validResponse.VisitDeleteNodeScheduleCronResponse(ctx.Response())
+	} else if validResponse, ok := response.(DeleteNodeScheduleResponseObject); ok {
+		return validResponse.VisitDeleteNodeScheduleResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}
 	return nil
 }
 
-// GetNodeScheduleCronByName operation middleware
-func (sh *strictHandler) GetNodeScheduleCronByName(ctx *echo.Context, hostname Hostname, name CronName) error {
-	var request GetNodeScheduleCronByNameRequestObject
+// GetNodeScheduleByName operation middleware
+func (sh *strictHandler) GetNodeScheduleByName(ctx *echo.Context, hostname Hostname, name ScheduleName) error {
+	var request GetNodeScheduleByNameRequestObject
 
 	request.Hostname = hostname
 	request.Name = name
 
 	handler := func(ctx *echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetNodeScheduleCronByName(ctx.Request().Context(), request.(GetNodeScheduleCronByNameRequestObject))
+		return sh.ssi.GetNodeScheduleByName(ctx.Request().Context(), request.(GetNodeScheduleByNameRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetNodeScheduleCronByName")
+		handler = middleware(handler, "GetNodeScheduleByName")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(GetNodeScheduleCronByNameResponseObject); ok {
-		return validResponse.VisitGetNodeScheduleCronByNameResponse(ctx.Response())
+	} else if validResponse, ok := response.(GetNodeScheduleByNameResponseObject); ok {
+		return validResponse.VisitGetNodeScheduleByNameResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}
 	return nil
 }
 
-// PutNodeScheduleCron operation middleware
-func (sh *strictHandler) PutNodeScheduleCron(ctx *echo.Context, hostname Hostname, name CronName) error {
-	var request PutNodeScheduleCronRequestObject
+// PutNodeSchedule operation middleware
+func (sh *strictHandler) PutNodeSchedule(ctx *echo.Context, hostname Hostname, name ScheduleName) error {
+	var request PutNodeScheduleRequestObject
 
 	request.Hostname = hostname
 	request.Name = name
 
-	var body PutNodeScheduleCronJSONRequestBody
+	var body PutNodeScheduleJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
 		return err
 	}
 	request.Body = &body
 
 	handler := func(ctx *echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PutNodeScheduleCron(ctx.Request().Context(), request.(PutNodeScheduleCronRequestObject))
+		return sh.ssi.PutNodeSchedule(ctx.Request().Context(), request.(PutNodeScheduleRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PutNodeScheduleCron")
+		handler = middleware(handler, "PutNodeSchedule")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(PutNodeScheduleCronResponseObject); ok {
-		return validResponse.VisitPutNodeScheduleCronResponse(ctx.Response())
+	} else if validResponse, ok := response.(PutNodeScheduleResponseObject); ok {
+		return validResponse.VisitPutNodeScheduleResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}
