@@ -13,7 +13,7 @@ require (
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0
-	github.com/labstack/echo-opentelemetry v0.0.3
+	github.com/labstack/echo-opentelemetry v0.0.4
 	github.com/labstack/echo/v5 v5.4.0
 	github.com/lmittmann/tint v1.2.0
 	github.com/nats-io/nats-server/v2 v2.15.0
