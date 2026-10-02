@@ -183,7 +183,7 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 			},
 			validateFunc: func(got *file.StatusResult, err error) {
 				suite.Error(err)
-				suite.ErrorContains(err, "failed to parse file state")
+				suite.ErrorContains(err, "file status: parse file state")
 				suite.Nil(got)
 			},
 		},

@@ -51,7 +51,7 @@ func (p *Service) Undeploy(
 	}
 
 	if err := p.fs.Remove(req.Path); err != nil {
-		return nil, fmt.Errorf("failed to remove file %q: %w", req.Path, err)
+		return nil, fmt.Errorf("file undeploy: remove file %q: %w", req.Path, err)
 	}
 
 	stateKey := BuildStateKey(p.hostname, req.Path)

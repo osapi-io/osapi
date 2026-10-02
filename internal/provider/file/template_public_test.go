@@ -166,7 +166,7 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 			wantErr:  true,
 			validateFunc: func(got *file.DeployResult, err error, _ avfs.VFS) {
 				suite.Error(err)
-				suite.ErrorContains(err, "failed to render template")
+				suite.ErrorContains(err, "file deploy: render template")
 				suite.Nil(got)
 			},
 		},
@@ -177,7 +177,7 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 			wantErr:  true,
 			validateFunc: func(got *file.DeployResult, err error, _ avfs.VFS) {
 				suite.Error(err)
-				suite.ErrorContains(err, "failed to render template")
+				suite.ErrorContains(err, "file deploy: render template")
 				suite.Nil(got)
 			},
 		},
@@ -189,7 +189,7 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 			wantErr:  true,
 			validateFunc: func(got *file.DeployResult, err error, _ avfs.VFS) {
 				suite.Error(err)
-				suite.ErrorContains(err, "failed to render template")
+				suite.ErrorContains(err, "file deploy: render template")
 				suite.Nil(got)
 			},
 		},

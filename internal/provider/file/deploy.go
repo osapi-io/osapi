@@ -48,7 +48,7 @@ func (p *Service) Deploy(
 ) (*DeployResult, error) {
 	content, err := p.objStore.GetBytes(ctx, req.ObjectName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get object %q: %w", req.ObjectName, err)
+		return nil, fmt.Errorf("file deploy: get object %q: %w", req.ObjectName, err)
 	}
 
 	// When ContentType is not explicitly set, resolve it from the object's
@@ -69,7 +69,7 @@ func (p *Service) Deploy(
 	if contentType == "template" {
 		content, err = p.renderTemplate(content, req.Vars)
 		if err != nil {
-			return nil, fmt.Errorf("failed to render template: %w", err)
+			return nil, fmt.Errorf("file deploy: render template: %w", err)
 		}
 	}
 
@@ -117,11 +117,11 @@ func (p *Service) Deploy(
 
 	dir := p.fs.Dir(req.Path)
 	if err := p.fs.MkdirAll(dir, 0o755); err != nil {
-		return nil, fmt.Errorf("failed to create directory %q: %w", dir, err)
+		return nil, fmt.Errorf("file deploy: create directory %q: %w", dir, err)
 	}
 
 	if err := fsutil.WriteFileAtomic(p.fs, req.Path, content, mode); err != nil {
-		return nil, fmt.Errorf("failed to write file %q: %w", req.Path, err)
+		return nil, fmt.Errorf("file deploy: write file %q: %w", req.Path, err)
 	}
 
 	if _, err := p.enforceOwnership(ctx, req); err != nil {
@@ -170,12 +170,12 @@ func (p *Service) applyPermissions(
 
 		info, err := p.fs.Stat(req.Path)
 		if err != nil {
-			return false, fmt.Errorf("failed to stat file %q: %w", req.Path, err)
+			return false, fmt.Errorf("file deploy: stat file %q: %w", req.Path, err)
 		}
 
 		if info.Mode().Perm() != want.Perm() {
 			if err := p.fs.Chmod(req.Path, want); err != nil {
-				return false, fmt.Errorf("failed to set mode on %q: %w", req.Path, err)
+				return false, fmt.Errorf("file deploy: set mode on %q: %w", req.Path, err)
 			}
 
 			changed = true
@@ -202,17 +202,17 @@ func (p *Service) enforceOwnership(
 
 	wantUID, err := resolveID(req.Owner, lookupUID)
 	if err != nil {
-		return false, fmt.Errorf("failed to resolve owner for %q: %w", req.Path, err)
+		return false, fmt.Errorf("file deploy: resolve owner for %q: %w", req.Path, err)
 	}
 
 	wantGID, err := resolveID(req.Group, lookupGID)
 	if err != nil {
-		return false, fmt.Errorf("failed to resolve group for %q: %w", req.Path, err)
+		return false, fmt.Errorf("file deploy: resolve group for %q: %w", req.Path, err)
 	}
 
 	matches, err := ownershipMatches(req.Path, wantUID, wantGID)
 	if err != nil {
-		return false, fmt.Errorf("failed to read ownership of %q: %w", req.Path, err)
+		return false, fmt.Errorf("file deploy: read ownership of %q: %w", req.Path, err)
 	}
 
 	if matches {
@@ -232,7 +232,7 @@ func (p *Service) enforceOwnership(
 		[]string{spec, req.Path},
 	); err != nil {
 		return false, fmt.Errorf(
-			"failed to set ownership %q on %q: %w",
+			"file deploy: set ownership %q on %q: %w",
 			spec,
 			req.Path,
 			err,
@@ -264,11 +264,11 @@ func (p *Service) putState(
 
 	stateBytes, err := marshalJSON(state)
 	if err != nil {
-		return fmt.Errorf("failed to marshal file state: %w", err)
+		return fmt.Errorf("file deploy: marshal file state: %w", err)
 	}
 
 	if _, err := p.stateKV.Put(ctx, stateKey, stateBytes); err != nil {
-		return fmt.Errorf("failed to update file state: %w", err)
+		return fmt.Errorf("file deploy: update file state: %w", err)
 	}
 
 	return nil

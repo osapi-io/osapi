@@ -44,7 +44,7 @@ func (p *Service) renderTemplate(
 ) ([]byte, error) {
 	tmpl, err := template.New("file").Option("missingkey=error").Parse(string(rawTemplate))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse template: %w", err)
+		return nil, fmt.Errorf("file template: parse template: %w", err)
 	}
 
 	ctx := TemplateContext{
@@ -55,7 +55,7 @@ func (p *Service) renderTemplate(
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, ctx); err != nil {
-		return nil, fmt.Errorf("failed to execute template: %w", err)
+		return nil, fmt.Errorf("file template: execute template: %w", err)
 	}
 
 	return buf.Bytes(), nil
