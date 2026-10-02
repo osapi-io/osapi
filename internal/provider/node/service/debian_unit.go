@@ -62,12 +62,12 @@ func (d *Debian) Create(
 		Metadata:   map[string]string{"source": "custom"},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("service: create: %w", err)
+		return nil, fmt.Errorf("service create: %w", err)
 	}
 
 	if result.Changed {
 		if err := d.daemonReload(ctx); err != nil {
-			return nil, fmt.Errorf("service: create: %w", err)
+			return nil, fmt.Errorf("service create: %w", err)
 		}
 	}
 
@@ -97,7 +97,7 @@ func (d *Debian) Update(
 		existing := d.buildEntryFromState(ctx, entry.Name, filePath)
 		if existing == nil {
 			return nil, fmt.Errorf(
-				"service: update: failed to read existing state for %q",
+				"service update: failed to read existing state for %q",
 				entry.Name,
 			)
 		}
@@ -116,12 +116,12 @@ func (d *Debian) Update(
 		Metadata:   map[string]string{"source": "custom"},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("service: update: %w", err)
+		return nil, fmt.Errorf("service update: %w", err)
 	}
 
 	if result.Changed {
 		if err := d.daemonReload(ctx); err != nil {
-			return nil, fmt.Errorf("service: update: %w", err)
+			return nil, fmt.Errorf("service update: %w", err)
 		}
 	}
 
@@ -177,12 +177,12 @@ func (d *Debian) Delete(
 		Path: filePath,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("service: delete: %w", err)
+		return nil, fmt.Errorf("service delete: %w", err)
 	}
 
 	if result.Changed {
 		if err := d.daemonReload(ctx); err != nil {
-			return nil, fmt.Errorf("service: delete: %w", err)
+			return nil, fmt.Errorf("service delete: %w", err)
 		}
 	}
 
@@ -205,7 +205,7 @@ func (d *Debian) daemonReload(
 ) error {
 	_, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"daemon-reload"})
 	if err != nil {
-		return fmt.Errorf("daemon-reload: %w", err)
+		return fmt.Errorf("service reload: daemon-reload: %w", err)
 	}
 
 	return nil

@@ -90,7 +90,7 @@ func (d *Debian) CreateGroup(
 
 	_, err := d.execManager.RunPrivilegedCmd(ctx, "groupadd", args)
 	if err != nil {
-		return nil, fmt.Errorf("group: groupadd failed: %w", err)
+		return nil, fmt.Errorf("group create: groupadd: %w", err)
 	}
 
 	d.logger.Info(
@@ -120,7 +120,7 @@ func (d *Debian) UpdateGroup(
 
 	_, err := d.execManager.RunPrivilegedCmd(ctx, "gpasswd", []string{"-M", members, "--", name})
 	if err != nil {
-		return nil, fmt.Errorf("group: gpasswd failed: %w", err)
+		return nil, fmt.Errorf("group update: gpasswd: %w", err)
 	}
 
 	d.logger.Info(
@@ -147,7 +147,7 @@ func (d *Debian) DeleteGroup(
 
 	_, err := d.execManager.RunPrivilegedCmd(ctx, "groupdel", []string{"--", name})
 	if err != nil {
-		return nil, fmt.Errorf("group: groupdel failed: %w", err)
+		return nil, fmt.Errorf("group delete: groupdel: %w", err)
 	}
 
 	d.logger.Info(
