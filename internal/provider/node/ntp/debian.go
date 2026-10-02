@@ -77,14 +77,14 @@ func (d *Debian) Get(
 ) (*Status, error) {
 	trackingOutput, err := d.execManager.RunCmd(ctx, "chronyc", []string{"tracking"})
 	if err != nil {
-		return nil, fmt.Errorf("ntp: chronyc tracking: %w", err)
+		return nil, fmt.Errorf("ntp get: chronyc tracking: %w", err)
 	}
 
 	status := parseTracking(trackingOutput)
 
 	sourcesOutput, err := d.execManager.RunCmd(ctx, "chronyc", []string{"sources", "-c"})
 	if err != nil {
-		return nil, fmt.Errorf("ntp: chronyc sources: %w", err)
+		return nil, fmt.Errorf("ntp list: chronyc sources: %w", err)
 	}
 
 	status.Servers = parseSources(sourcesOutput)
@@ -113,7 +113,7 @@ func (d *Debian) Create(
 	}
 
 	if mkErr := d.fs.MkdirAll(sourcesDir, 0o755); mkErr != nil {
-		return nil, fmt.Errorf("ntp: create directory: %w", mkErr)
+		return nil, fmt.Errorf("ntp create: create directory: %w", mkErr)
 	}
 
 	if writeErr := fsutil.WriteFileAtomic(
@@ -122,7 +122,7 @@ func (d *Debian) Create(
 		content,
 		0o644,
 	); writeErr != nil {
-		return nil, fmt.Errorf("ntp: write file: %w", writeErr)
+		return nil, fmt.Errorf("ntp create: write file: %w", writeErr)
 	}
 
 	d.reloadSources(ctx)
@@ -145,7 +145,7 @@ func (d *Debian) Update(
 ) (*UpdateResult, error) {
 	existing, err := d.fs.ReadFile(sourcesFile)
 	if err != nil {
-		return nil, fmt.Errorf("ntp config: %w", provider.ErrNotManaged)
+		return nil, fmt.Errorf("ntp update: %w", provider.ErrNotManaged)
 	}
 
 	content := generateContent(config.Servers)
@@ -167,7 +167,7 @@ func (d *Debian) Update(
 		content,
 		0o644,
 	); writeErr != nil {
-		return nil, fmt.Errorf("ntp: write file: %w", writeErr)
+		return nil, fmt.Errorf("ntp create: write file: %w", writeErr)
 	}
 
 	d.reloadSources(ctx)
@@ -187,11 +187,11 @@ func (d *Debian) Delete(
 	ctx context.Context,
 ) (*DeleteResult, error) {
 	if _, err := d.fs.Stat(sourcesFile); err != nil {
-		return nil, fmt.Errorf("ntp config: %w", provider.ErrNotManaged)
+		return nil, fmt.Errorf("ntp update: %w", provider.ErrNotManaged)
 	}
 
 	if removeErr := d.fs.Remove(sourcesFile); removeErr != nil {
-		return nil, fmt.Errorf("ntp: remove file: %w", removeErr)
+		return nil, fmt.Errorf("ntp delete: remove file: %w", removeErr)
 	}
 
 	d.reloadSources(ctx)

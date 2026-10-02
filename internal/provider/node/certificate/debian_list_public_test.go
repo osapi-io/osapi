@@ -171,7 +171,7 @@ func (suite *DebianListPublicTestSuite) TestList() {
 			) {
 				suite.Error(err)
 				suite.Nil(entries)
-				suite.Contains(err.Error(), "list certificates")
+				suite.Contains(err.Error(), "certificate list")
 			},
 		},
 		{

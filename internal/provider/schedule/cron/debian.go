@@ -93,7 +93,7 @@ func (d *Debian) List(
 	// Scan /etc/cron.d/ for schedule-based entries.
 	cronDirEntries, err := d.fs.ReadDir(cronDir)
 	if err != nil {
-		return nil, fmt.Errorf("list cron entries: %w", err)
+		return nil, fmt.Errorf("schedule list: %w", err)
 	}
 
 	for _, dirEntry := range cronDirEntries {
@@ -152,18 +152,18 @@ func (d *Debian) Get(
 
 	filePath, _ := d.findEntryPath(name)
 	if filePath == "" {
-		return nil, fmt.Errorf("cron entry %q: %w", name, provider.ErrNotFound)
+		return nil, fmt.Errorf("schedule %q: %w", name, provider.ErrNotFound)
 	}
 
 	if !d.isManagedFile(ctx, filePath) {
-		return nil, fmt.Errorf("cron entry %q: %w", name, provider.ErrNotManaged)
+		return nil, fmt.Errorf("schedule %q: %w", name, provider.ErrNotManaged)
 	}
 
 	source := d.sourceForPath(filePath)
 
 	entry := d.buildEntryFromState(ctx, name, filePath, source)
 	if entry == nil {
-		return nil, fmt.Errorf("cron entry %q: failed to read state", name)
+		return nil, fmt.Errorf("schedule %q: read state", name)
 	}
 
 	return entry, nil
@@ -204,7 +204,7 @@ func (d *Debian) Create(
 		Metadata:    buildCronMetadata(entry),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("create cron entry: %w", err)
+		return nil, fmt.Errorf("schedule create: %w", err)
 	}
 
 	return &CreateResult{
@@ -224,7 +224,7 @@ func (d *Debian) Update(
 
 	filePath, perm := d.findEntryPath(entry.Name)
 	if filePath == "" {
-		return nil, fmt.Errorf("cron entry %q: %w", entry.Name, provider.ErrNotManaged)
+		return nil, fmt.Errorf("schedule %q: %w", entry.Name, provider.ErrNotManaged)
 	}
 
 	// If no new object was specified, preserve the current one.
@@ -248,7 +248,7 @@ func (d *Debian) Update(
 		Metadata:    buildCronMetadata(entry),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("update cron entry: %w", err)
+		return nil, fmt.Errorf("schedule update: %w", err)
 	}
 
 	return &UpdateResult{
@@ -278,7 +278,7 @@ func (d *Debian) Delete(
 		Path: filePath,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("delete cron entry: %w", err)
+		return nil, fmt.Errorf("schedule delete: %w", err)
 	}
 
 	return &DeleteResult{
@@ -417,10 +417,10 @@ func validateName(
 	name string,
 ) error {
 	if name == "" {
-		return fmt.Errorf("invalid cron entry name: empty")
+		return fmt.Errorf("schedule: name must not be empty")
 	}
 	if !validName.MatchString(name) {
-		return fmt.Errorf("invalid cron entry name %q: must match %s", name, validName.String())
+		return fmt.Errorf("schedule: name %q must match %s", name, validName.String())
 	}
 
 	return nil

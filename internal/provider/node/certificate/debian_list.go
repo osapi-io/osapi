@@ -34,7 +34,7 @@ func (d *Debian) List(
 ) ([]Entry, error) {
 	systemCAs, err := d.listSystemCAs()
 	if err != nil {
-		return nil, fmt.Errorf("list certificates: %w", err)
+		return nil, fmt.Errorf("certificate list: %w", err)
 	}
 
 	customCAs := d.listCustomCAs(ctx)

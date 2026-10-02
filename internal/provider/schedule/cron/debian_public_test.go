@@ -218,7 +218,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "create cron entry")
+				suite.Contains(err.Error(), "schedule create")
 			},
 		},
 		{
@@ -234,7 +234,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid cron entry name")
+				suite.Contains(err.Error(), "schedule: name")
 			},
 		},
 		{
@@ -392,7 +392,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid cron entry name")
+				suite.Contains(err.Error(), "schedule: name")
 			},
 		},
 		{
@@ -433,7 +433,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "update cron entry")
+				suite.Contains(err.Error(), "schedule update")
 			},
 		},
 		{
@@ -459,7 +459,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "update cron entry")
+				suite.Contains(err.Error(), "schedule update")
 			},
 		},
 	}
@@ -536,7 +536,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "delete cron entry")
+				suite.Contains(err.Error(), "schedule delete")
 			},
 		},
 		{
@@ -549,7 +549,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid cron entry name")
+				suite.Contains(err.Error(), "schedule: name")
 			},
 		},
 	}
@@ -759,7 +759,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 			) {
 				suite.Error(err)
 				suite.Nil(entries)
-				suite.Contains(err.Error(), "list cron entries")
+				suite.Contains(err.Error(), "schedule list")
 			},
 		},
 	}
@@ -857,7 +857,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			) {
 				suite.Error(err)
 				suite.Nil(entry)
-				suite.Contains(err.Error(), "invalid cron entry name")
+				suite.Contains(err.Error(), "schedule: name")
 			},
 		},
 		{
@@ -870,7 +870,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			) {
 				suite.Error(err)
 				suite.Nil(entry)
-				suite.Contains(err.Error(), "invalid cron entry name")
+				suite.Contains(err.Error(), "schedule: name")
 			},
 		},
 		{
@@ -961,7 +961,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			) {
 				suite.Error(err)
 				suite.Nil(entry)
-				suite.Contains(err.Error(), "failed to read state")
+				suite.Contains(err.Error(), "read state")
 			},
 		},
 		{
@@ -997,7 +997,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			) {
 				suite.Error(err)
 				suite.Nil(entry)
-				suite.Contains(err.Error(), "failed to read state")
+				suite.Contains(err.Error(), "read state")
 			},
 		},
 		{
