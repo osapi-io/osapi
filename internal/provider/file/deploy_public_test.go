@@ -102,7 +102,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				ContentType: "raw",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to marshal file state",
+			wantErrMsg: "file deploy: marshal file state",
 		},
 		{
 			name: "when deploy succeeds (new file)",
@@ -247,7 +247,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				ContentType: "raw",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to get object",
+			wantErrMsg: "file deploy: get object",
 		},
 		{
 			name: "when content type is template",
@@ -391,7 +391,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				ContentType: "raw",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to write file",
+			wantErrMsg: "file deploy: write file",
 		},
 		{
 			name: "when mkdir fails",
@@ -425,7 +425,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				ContentType: "raw",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to create directory",
+			wantErrMsg: "file deploy: create directory",
 		},
 		{
 			name: "when state KV put fails",
@@ -449,7 +449,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				ContentType: "raw",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to update file state",
+			wantErrMsg: "file deploy: update file state",
 		},
 		{
 			name: "when the mode cannot be parsed on a file already correct",
@@ -681,7 +681,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				ContentType: "raw",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to resolve owner",
+			wantErrMsg: "file deploy: resolve owner",
 		},
 		{
 			name: "when the host does not know the requested group",
@@ -712,7 +712,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				ContentType: "raw",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to resolve group",
+			wantErrMsg: "file deploy: resolve group",
 		},
 		{
 			name: "when the file ownership cannot be read at all",
@@ -743,7 +743,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				ContentType: "raw",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to read ownership",
+			wantErrMsg: "file deploy: read ownership",
 		},
 		{
 			name: "when the platform cannot report ownership it is applied anyway",
@@ -888,7 +888,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				ContentType: "raw",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to set ownership",
+			wantErrMsg: "file deploy: set ownership",
 		},
 		{
 			name: "when the file cannot be stat'd while enforcing the mode",
@@ -929,7 +929,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				ContentType: "raw",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to stat file",
+			wantErrMsg: "file deploy: stat file",
 		},
 		{
 			name: "when the mode cannot be applied",
@@ -969,7 +969,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				ContentType: "raw",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to set mode",
+			wantErrMsg: "file deploy: set mode",
 		},
 		{
 			name: "when chown fails on a file whose content is already correct",
@@ -1005,7 +1005,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				ContentType: "raw",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to set ownership",
+			wantErrMsg: "file deploy: set ownership",
 		},
 		{
 			name: "when recording a permission change fails",
@@ -1033,7 +1033,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				ContentType: "raw",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to update file state",
+			wantErrMsg: "file deploy: update file state",
 		},
 	}
 

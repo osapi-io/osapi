@@ -47,7 +47,7 @@ func (p *Service) Status(
 
 	var state job.FileState
 	if err := json.Unmarshal(entry.Value(), &state); err != nil {
-		return nil, fmt.Errorf("failed to parse file state: %w", err)
+		return nil, fmt.Errorf("file status: parse file state: %w", err)
 	}
 
 	data, err := p.fs.ReadFile(req.Path)

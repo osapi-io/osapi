@@ -195,7 +195,7 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 			},
 			req:        file.UndeployRequest{Path: "/etc/cron.d/locked"},
 			wantErr:    true,
-			wantErrMsg: "failed to remove file",
+			wantErrMsg: "file undeploy: remove file",
 			useFailFs:  true,
 		},
 		{
