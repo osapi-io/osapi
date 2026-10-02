@@ -155,7 +155,7 @@ configure them — see the Features section:
 - [File Management](../features/file-management.md) — upload, deploy, templates
 - [Container Management](../features/container-management.md) — Docker
   lifecycle, exec, pull
-- [Cron Management](../features/cron-management.md) — cron drop-in file
+- [Schedule Management](../features/schedule-management.md) — cron drop-in file
   management
 - [Sysctl Management](../features/sysctl-management.md) — kernel parameter
   management

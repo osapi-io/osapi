@@ -2,7 +2,7 @@
 sidebar_position: 9
 ---
 
-# Cron Management
+# Schedule Management
 
 OSAPI manages cron entries on target hosts. It supports two placement modes:
 
@@ -11,10 +11,10 @@ OSAPI manages cron entries on target hosts. It supports two placement modes:
 - **Periodic interval** — writes to `/etc/cron.{hourly,daily,weekly,monthly}/`
   as executable scripts
 
-Cron entries reference scripts stored in the NATS Object Store by name. Upload a
-script first with the file management commands, then create a cron entry
-pointing at it. This separates script content from scheduling configuration and
-enables versioned updates.
+Scheduled entries reference scripts stored in the NATS Object Store by name.
+Upload a script first with the file management commands, then create a cron
+entry pointing at it. This separates script content from scheduling
+configuration and enables versioned updates.
 
 ## How It Works
 
@@ -88,8 +88,8 @@ deploy time with `--vars`:
 osapi client node file upload --name backup-script.tmpl \
   --content-type template --file ./backup.sh.tmpl
 
-# Create a cron entry that renders the template on deploy
-osapi client node schedule cron create --target web-01 \
+# Create a scheduled entry that renders the template on deploy
+osapi client node schedule create --target web-01 \
   --name backup --schedule "0 2 * * *" \
   --object backup-script.tmpl \
   --vars "retention_days=30,s3_bucket=my-bucket"
@@ -116,30 +116,30 @@ osapi client node file upload --name backup-script \
   --file ./backup.sh
 
 # Create with a custom schedule (/etc/cron.d/)
-osapi client node schedule cron create --target web-01 \
+osapi client node schedule create --target web-01 \
   --name backup --schedule "0 2 * * *" \
   --object backup-script --user root
 
 # Create with an interval (/etc/cron.daily/)
-osapi client node schedule cron create --target web-01 \
+osapi client node schedule create --target web-01 \
   --name logrotate --interval daily \
   --object logrotate-script
 
 # List all managed cron entries
-osapi client node schedule cron list --target web-01
+osapi client node schedule list --target web-01
 
 # Get a specific entry
-osapi client node schedule cron get --target web-01 --name backup
+osapi client node schedule get --target web-01 --name backup
 
 # Update: upload a new script version and redeploy
 osapi client node file upload --name backup-script \
   --file ./backup-v2.sh --force
-osapi client node schedule cron update --target web-01 \
+osapi client node schedule update --target web-01 \
   --name backup --schedule "0 3 * * *" \
   --object backup-script
 
 # Delete an entry (undeploys file from disk; state preserved in KV)
-osapi client node schedule cron delete --target web-01 --name backup
+osapi client node schedule delete --target web-01 --name backup
 ```
 
 All commands support `--json` for raw JSON output.
@@ -181,13 +181,13 @@ OS family detection.
 
 ## Permissions
 
-| Operation              | Permission   |
-| ---------------------- | ------------ |
-| List, Get              | `cron:read`  |
-| Create, Update, Delete | `cron:write` |
+| Operation              | Permission       |
+| ---------------------- | ---------------- |
+| List, Get              | `schedule:read`  |
+| Create, Update, Delete | `schedule:write` |
 
-All built-in roles (`admin`, `write`, `read`) include `cron:read`. The `admin`
-and `write` roles also include `cron:write`.
+All built-in roles (`admin`, `write`, `read`) include `schedule:read`. The
+`admin` and `write` roles also include `schedule:write`.
 
 ## Naming Rules
 
@@ -217,6 +217,7 @@ and `/node/{hostname}/schedule/timer`.
 
 - [File Management](file-management.md) — uploading scripts and template
   rendering
-- [CLI Reference](../usage/cli/client/node/schedule/cron.md) — cron commands
+- [CLI Reference](../usage/cli/client/node/schedule/schedule.md) — schedule
+  commands
 - [Platform Detection](../sdk/platform/detection.md) — OS family detection
 - [Configuration](../usage/configuration.md) — full configuration reference

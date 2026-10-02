@@ -22,7 +22,7 @@ resp, err := client.Hostname.Get(ctx, "_any")
 | Service                        | Description                  |
 | ------------------------------ | ---------------------------- |
 | [Service](services/service.md) | Service management (systemd) |
-| [Cron](services/cron.md)       | Cron schedule management     |
+| [Cron](services/schedule.md)   | Cron schedule management     |
 
 ### Software
 

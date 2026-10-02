@@ -2,16 +2,17 @@
 sidebar_position: 1
 ---
 
-# Cron
+# Schedule
 
-Manage cron drop-in files in `/etc/cron.d/` on target hosts.
+Manage scheduled entries on target hosts. On Debian family hosts these are cron
+drop-in files in `/etc/cron.d/`.
 
 ## List
 
-List all osapi-managed cron entries:
+List all osapi-managed scheduled entries:
 
 ```bash
-$ osapi client node schedule cron list --target web-01
+$ osapi client node schedule list --target web-01
 
   HOSTNAME  STATUS  NAME           SCHEDULE     OBJECT          USER
   web-01    ok      backup-daily   0 2 * * *    backup-script   root
@@ -25,7 +26,7 @@ $ osapi client node schedule cron list --target web-01
 Get a specific cron entry by name:
 
 ```bash
-$ osapi client node schedule cron get --target web-01 --name backup-daily
+$ osapi client node schedule get --target web-01 --name backup-daily
 
   HOSTNAME  STATUS  NAME           SCHEDULE     OBJECT          USER
   web-01    ok      backup-daily   0 2 * * *    backup-script   root
@@ -46,7 +47,7 @@ $ osapi client file upload --name backup-script \
 Then create the cron entry using `--object` to reference the uploaded file:
 
 ```bash
-$ osapi client node schedule cron create --target web-01 \
+$ osapi client node schedule create --target web-01 \
     --name backup-daily \
     --schedule "0 2 * * *" \
     --object backup-script \
@@ -68,7 +69,7 @@ should be rendered with agent facts before being written to disk.
 Update an existing cron entry:
 
 ```bash
-$ osapi client node schedule cron update --target web-01 \
+$ osapi client node schedule update --target web-01 \
     --name backup-daily \
     --schedule "0 3 * * *"
 
@@ -85,7 +86,7 @@ Only the fields you specify are updated. If nothing changed, `Changed: false`.
 Delete a cron entry:
 
 ```bash
-$ osapi client node schedule cron delete --target web-01 --name backup-daily
+$ osapi client node schedule delete --target web-01 --name backup-daily
 
   HOSTNAME  STATUS   NAME          CHANGED
   web-01    changed  backup-daily  true
@@ -98,6 +99,6 @@ $ osapi client node schedule cron delete --target web-01 --name backup-daily
 All commands support `--json` for raw JSON output:
 
 ```bash
-$ osapi client node schedule cron list --target web-01 --json
+$ osapi client node schedule list --target web-01 --json
 {"results":[{"name":"backup-daily","schedule":"0 2 * * *","user":"root","object":"backup-script"}],"job_id":"..."}
 ```

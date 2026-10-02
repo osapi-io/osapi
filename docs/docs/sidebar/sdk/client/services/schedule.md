@@ -85,10 +85,10 @@ resp, err := c.Cron.Delete(ctx, "web-01", "backup-daily")
 
 ## Permissions
 
-| Operation              | Permission   |
-| ---------------------- | ------------ |
-| List, Get              | `cron:read`  |
-| Create, Update, Delete | `cron:write` |
+| Operation              | Permission       |
+| ---------------------- | ---------------- |
+| List, Get              | `schedule:read`  |
+| Create, Update, Delete | `schedule:write` |
 
 Cron management is supported on the Debian OS family (Ubuntu, Debian, Raspbian).
 On unsupported platforms (Darwin, generic Linux), operations return
