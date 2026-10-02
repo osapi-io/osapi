@@ -34,7 +34,7 @@ func (d *Debian) Start(
 	name string,
 ) (*ActionResult, error) {
 	if err := validateName(name); err != nil {
-		return nil, fmt.Errorf("service: start: %w", err)
+		return nil, fmt.Errorf("service start: %w", err)
 	}
 
 	unitName := managedPrefix + name + ".service"
@@ -47,7 +47,7 @@ func (d *Debian) Start(
 	}
 
 	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"start", unitName}); err != nil {
-		return nil, fmt.Errorf("service: start: %w", err)
+		return nil, fmt.Errorf("service start: %w", err)
 	}
 
 	return &ActionResult{Name: name, Changed: true}, nil
@@ -60,7 +60,7 @@ func (d *Debian) Stop(
 	name string,
 ) (*ActionResult, error) {
 	if err := validateName(name); err != nil {
-		return nil, fmt.Errorf("service: stop: %w", err)
+		return nil, fmt.Errorf("service stop: %w", err)
 	}
 
 	unitName := managedPrefix + name + ".service"
@@ -73,7 +73,7 @@ func (d *Debian) Stop(
 	}
 
 	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"stop", unitName}); err != nil {
-		return nil, fmt.Errorf("service: stop: %w", err)
+		return nil, fmt.Errorf("service stop: %w", err)
 	}
 
 	return &ActionResult{Name: name, Changed: true}, nil
@@ -85,7 +85,7 @@ func (d *Debian) Restart(
 	name string,
 ) (*ActionResult, error) {
 	if err := validateName(name); err != nil {
-		return nil, fmt.Errorf("service: restart: %w", err)
+		return nil, fmt.Errorf("service restart: %w", err)
 	}
 
 	unitName := managedPrefix + name + ".service"
@@ -93,7 +93,7 @@ func (d *Debian) Restart(
 	d.logger.Debug("executing service.Restart", slog.String("name", unitName))
 
 	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"restart", unitName}); err != nil {
-		return nil, fmt.Errorf("service: restart: %w", err)
+		return nil, fmt.Errorf("service restart: %w", err)
 	}
 
 	return &ActionResult{Name: name, Changed: true}, nil
@@ -106,7 +106,7 @@ func (d *Debian) Enable(
 	name string,
 ) (*ActionResult, error) {
 	if err := validateName(name); err != nil {
-		return nil, fmt.Errorf("service: enable: %w", err)
+		return nil, fmt.Errorf("service enable: %w", err)
 	}
 
 	unitName := managedPrefix + name + ".service"
@@ -119,7 +119,7 @@ func (d *Debian) Enable(
 	}
 
 	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"enable", unitName}); err != nil {
-		return nil, fmt.Errorf("service: enable: %w", err)
+		return nil, fmt.Errorf("service enable: %w", err)
 	}
 
 	return &ActionResult{Name: name, Changed: true}, nil
@@ -132,7 +132,7 @@ func (d *Debian) Disable(
 	name string,
 ) (*ActionResult, error) {
 	if err := validateName(name); err != nil {
-		return nil, fmt.Errorf("service: disable: %w", err)
+		return nil, fmt.Errorf("service disable: %w", err)
 	}
 
 	unitName := managedPrefix + name + ".service"
@@ -145,7 +145,7 @@ func (d *Debian) Disable(
 	}
 
 	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"disable", unitName}); err != nil {
-		return nil, fmt.Errorf("service: disable: %w", err)
+		return nil, fmt.Errorf("service disable: %w", err)
 	}
 
 	return &ActionResult{Name: name, Changed: true}, nil

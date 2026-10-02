@@ -130,7 +130,7 @@ func (suite *DebianActionPublicTestSuite) TestStart() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "service: start:")
+				suite.Contains(err.Error(), "service start:")
 			},
 		},
 		{
@@ -143,7 +143,7 @@ func (suite *DebianActionPublicTestSuite) TestStart() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid service name")
+				suite.Contains(err.Error(), "service: name")
 			},
 		},
 	}
@@ -222,7 +222,7 @@ func (suite *DebianActionPublicTestSuite) TestStop() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "service: stop:")
+				suite.Contains(err.Error(), "service stop:")
 			},
 		},
 		{
@@ -235,7 +235,7 @@ func (suite *DebianActionPublicTestSuite) TestStop() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid service name")
+				suite.Contains(err.Error(), "service: name")
 			},
 		},
 	}
@@ -290,7 +290,7 @@ func (suite *DebianActionPublicTestSuite) TestRestart() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "service: restart:")
+				suite.Contains(err.Error(), "service restart:")
 			},
 		},
 		{
@@ -303,7 +303,7 @@ func (suite *DebianActionPublicTestSuite) TestRestart() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid service name")
+				suite.Contains(err.Error(), "service: name")
 			},
 		},
 	}
@@ -382,7 +382,7 @@ func (suite *DebianActionPublicTestSuite) TestEnable() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "service: enable:")
+				suite.Contains(err.Error(), "service enable:")
 			},
 		},
 		{
@@ -395,7 +395,7 @@ func (suite *DebianActionPublicTestSuite) TestEnable() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid service name")
+				suite.Contains(err.Error(), "service: name")
 			},
 		},
 	}
@@ -474,7 +474,7 @@ func (suite *DebianActionPublicTestSuite) TestDisable() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "service: disable:")
+				suite.Contains(err.Error(), "service disable:")
 			},
 		},
 		{
@@ -487,7 +487,7 @@ func (suite *DebianActionPublicTestSuite) TestDisable() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid service name")
+				suite.Contains(err.Error(), "service: name")
 			},
 		},
 	}

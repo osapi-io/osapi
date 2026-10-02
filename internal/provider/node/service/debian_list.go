@@ -57,12 +57,12 @@ func (d *Debian) List(
 		"--output=json",
 	})
 	if err != nil {
-		return nil, fmt.Errorf("service: list: %w", err)
+		return nil, fmt.Errorf("service list: %w", err)
 	}
 
 	var units []systemctlUnit
 	if err := json.Unmarshal([]byte(unitsJSON), &units); err != nil {
-		return nil, fmt.Errorf("service: list: parse units: %w", err)
+		return nil, fmt.Errorf("service list: parse units: %w", err)
 	}
 
 	enabledMap := d.buildEnabledMap(ctx)

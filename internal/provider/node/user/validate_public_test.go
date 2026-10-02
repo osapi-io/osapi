@@ -50,7 +50,7 @@ func (s *ValidatePasswordInputPublicTestSuite) TestValidatePasswordInput() {
 			passwordHash: "$6$abcd$deadbeef",
 			validateFunc: func(err error) {
 				s.Error(err)
-				s.Contains(err.Error(), "invalid user name: must not contain a colon or line break")
+				s.Contains(err.Error(), "name must not contain a colon or line break")
 			},
 		},
 		{
@@ -59,7 +59,7 @@ func (s *ValidatePasswordInputPublicTestSuite) TestValidatePasswordInput() {
 			passwordHash: "$6$abcd$deadbeef",
 			validateFunc: func(err error) {
 				s.Error(err)
-				s.Contains(err.Error(), "invalid user name: must not contain a colon or line break")
+				s.Contains(err.Error(), "name must not contain a colon or line break")
 			},
 		},
 		{

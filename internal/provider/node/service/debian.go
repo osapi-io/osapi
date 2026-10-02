@@ -78,11 +78,11 @@ func validateName(
 	name string,
 ) error {
 	if name == "" {
-		return fmt.Errorf("invalid service name: empty")
+		return fmt.Errorf("service: name must not be empty")
 	}
 	if !validName.MatchString(name) {
 		return fmt.Errorf(
-			"invalid service name %q: must match %s",
+			"service: name %q must match %s",
 			name,
 			validName.String(),
 		)

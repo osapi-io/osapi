@@ -128,12 +128,12 @@ func (d *Debian) CreateUser(
 
 	_, err := d.execManager.RunPrivilegedCmd(ctx, "useradd", args)
 	if err != nil {
-		return nil, fmt.Errorf("user: useradd failed: %w", err)
+		return nil, fmt.Errorf("user create: useradd: %w", err)
 	}
 
 	if opts.PasswordHash != "" {
 		if err := d.setPassword(ctx, opts.Name, opts.PasswordHash); err != nil {
-			return nil, fmt.Errorf("user: set password failed: %w", err)
+			return nil, fmt.Errorf("user set-password: %w", err)
 		}
 	}
 
@@ -170,7 +170,7 @@ func (d *Debian) UpdateUser(
 
 	_, err := d.execManager.RunPrivilegedCmd(ctx, "usermod", args)
 	if err != nil {
-		return nil, fmt.Errorf("user: usermod failed: %w", err)
+		return nil, fmt.Errorf("user update: usermod: %w", err)
 	}
 
 	d.logger.Info(
@@ -197,7 +197,7 @@ func (d *Debian) DeleteUser(
 
 	_, err := d.execManager.RunPrivilegedCmd(ctx, "userdel", []string{"-r", "--", name})
 	if err != nil {
-		return nil, fmt.Errorf("user: userdel failed: %w", err)
+		return nil, fmt.Errorf("user delete: userdel: %w", err)
 	}
 
 	d.logger.Info(
@@ -411,7 +411,7 @@ func (d *Debian) setPassword(
 		name+":"+passwordHash+"\n",
 	)
 	if err != nil {
-		return fmt.Errorf("chpasswd failed: %w", err)
+		return fmt.Errorf("chpasswd: %w", err)
 	}
 
 	return nil
@@ -431,15 +431,15 @@ func validatePasswordInput(
 	passwordHash string,
 ) error {
 	if strings.ContainsAny(name, ":\r\n") {
-		return fmt.Errorf("invalid user name: must not contain a colon or line break")
+		return fmt.Errorf("name must not contain a colon or line break")
 	}
 
 	if strings.ContainsAny(passwordHash, ":\r\n") {
-		return fmt.Errorf("invalid password hash: must not contain a colon or line break")
+		return fmt.Errorf("password hash must not contain a colon or line break")
 	}
 
 	if !strings.HasPrefix(passwordHash, "$") {
-		return fmt.Errorf("invalid password hash: must be a crypt hash")
+		return fmt.Errorf("password hash must be a crypt hash")
 	}
 
 	return nil

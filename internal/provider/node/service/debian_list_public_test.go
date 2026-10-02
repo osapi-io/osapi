@@ -142,7 +142,7 @@ func (suite *DebianListPublicTestSuite) TestList() {
 			) {
 				suite.Error(err)
 				suite.Nil(infos)
-				suite.Contains(err.Error(), "service: list:")
+				suite.Contains(err.Error(), "service list:")
 			},
 		},
 		{
@@ -229,7 +229,7 @@ func (suite *DebianListPublicTestSuite) TestList() {
 			) {
 				suite.Error(err)
 				suite.Nil(infos)
-				suite.Contains(err.Error(), "service: list: parse units:")
+				suite.Contains(err.Error(), "service list: parse units:")
 			},
 		},
 		{

@@ -147,7 +147,7 @@ func (suite *DebianGetPublicTestSuite) TestGet() {
 			) {
 				suite.Error(err)
 				suite.Nil(info)
-				suite.Contains(err.Error(), "service: get:")
+				suite.Contains(err.Error(), "service get:")
 			},
 		},
 		{
@@ -208,7 +208,7 @@ func (suite *DebianGetPublicTestSuite) TestGet() {
 			) {
 				suite.Error(err)
 				suite.Nil(info)
-				suite.Contains(err.Error(), "invalid service name")
+				suite.Contains(err.Error(), "service: name")
 			},
 		},
 		{
@@ -221,7 +221,7 @@ func (suite *DebianGetPublicTestSuite) TestGet() {
 			) {
 				suite.Error(err)
 				suite.Nil(info)
-				suite.Contains(err.Error(), "invalid service name: empty")
+				suite.Contains(err.Error(), "service: name must not be empty")
 			},
 		},
 	}
