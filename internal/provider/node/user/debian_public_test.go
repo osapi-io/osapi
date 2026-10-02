@@ -481,7 +481,7 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "useradd failed")
+				suite.Contains(err.Error(), "user create: useradd")
 			},
 		},
 		{
@@ -496,12 +496,12 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 					Return("", nil)
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmdWithStdin(gomock.Any(), "chpasswd", []string{"-e"}, "newuser:$6$abcd$deadbeef\n").
-					Return("", errors.New("chpasswd failed"))
+					Return("", errors.New("chpasswd"))
 			},
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "set password failed")
+				suite.Contains(err.Error(), "user set-password")
 			},
 		},
 		{
@@ -514,7 +514,7 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid password hash")
+				suite.Contains(err.Error(), "password hash must")
 				suite.NotContains(err.Error(), "pwned")
 			},
 		},
@@ -528,7 +528,7 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid password hash: must be a crypt hash")
+				suite.Contains(err.Error(), "password hash must be a crypt hash")
 			},
 		},
 		{
@@ -678,7 +678,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "usermod failed")
+				suite.Contains(err.Error(), "user update: usermod")
 			},
 		},
 		{
@@ -739,7 +739,7 @@ func (suite *DebianPublicTestSuite) TestDeleteUser() {
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "userdel failed")
+				suite.Contains(err.Error(), "user delete: userdel")
 			},
 		},
 		{
@@ -800,7 +800,7 @@ func (suite *DebianPublicTestSuite) TestChangePassword() {
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "chpasswd failed")
+				suite.Contains(err.Error(), "chpasswd")
 			},
 		},
 		{
@@ -826,7 +826,7 @@ func (suite *DebianPublicTestSuite) TestChangePassword() {
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid password hash")
+				suite.Contains(err.Error(), "password hash must")
 				suite.NotContains(err.Error(), "pwned")
 			},
 		},
@@ -838,7 +838,7 @@ func (suite *DebianPublicTestSuite) TestChangePassword() {
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid password hash")
+				suite.Contains(err.Error(), "password hash must")
 			},
 		},
 		{
@@ -849,7 +849,7 @@ func (suite *DebianPublicTestSuite) TestChangePassword() {
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid password hash: must be a crypt hash")
+				suite.Contains(err.Error(), "password hash must be a crypt hash")
 			},
 		},
 		{
@@ -1114,7 +1114,7 @@ func (suite *DebianPublicTestSuite) TestCreateGroup() {
 			validateFunc: func(result *user.GroupResult, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "groupadd failed")
+				suite.Contains(err.Error(), "group create: groupadd")
 			},
 		},
 		{
@@ -1181,7 +1181,7 @@ func (suite *DebianPublicTestSuite) TestUpdateGroup() {
 			validateFunc: func(result *user.GroupResult, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "gpasswd failed")
+				suite.Contains(err.Error(), "group update: gpasswd")
 			},
 		},
 		{
@@ -1242,7 +1242,7 @@ func (suite *DebianPublicTestSuite) TestDeleteGroup() {
 			validateFunc: func(result *user.GroupResult, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "groupdel failed")
+				suite.Contains(err.Error(), "group delete: groupdel")
 			},
 		},
 		{

@@ -49,12 +49,12 @@ func (d *Debian) Get(
 		"--no-pager",
 	})
 	if err != nil {
-		return nil, fmt.Errorf("service: get: %w", err)
+		return nil, fmt.Errorf("service get: %w", err)
 	}
 
 	props, err := parseProperties(output)
 	if err != nil {
-		return nil, fmt.Errorf("service: get: %w", err)
+		return nil, fmt.Errorf("service get: %w", err)
 	}
 
 	pid, _ := strconv.Atoi(props["MainPID"])

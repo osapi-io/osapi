@@ -183,7 +183,7 @@ func (suite *DebianUnitPublicTestSuite) TestCreate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "service: create")
+				suite.Contains(err.Error(), "service create")
 			},
 		},
 		{
@@ -206,7 +206,7 @@ func (suite *DebianUnitPublicTestSuite) TestCreate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "daemon-reload")
+				suite.Contains(err.Error(), "service reload: daemon-reload")
 			},
 		},
 		{
@@ -222,7 +222,7 @@ func (suite *DebianUnitPublicTestSuite) TestCreate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid service name")
+				suite.Contains(err.Error(), "service: name")
 			},
 		},
 		{
@@ -335,7 +335,7 @@ func (suite *DebianUnitPublicTestSuite) TestUpdate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "service: update")
+				suite.Contains(err.Error(), "service update")
 			},
 		},
 		{
@@ -389,7 +389,7 @@ func (suite *DebianUnitPublicTestSuite) TestUpdate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "daemon-reload")
+				suite.Contains(err.Error(), "service reload: daemon-reload")
 			},
 		},
 		{
@@ -405,7 +405,7 @@ func (suite *DebianUnitPublicTestSuite) TestUpdate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid service name")
+				suite.Contains(err.Error(), "service: name")
 			},
 		},
 		{
@@ -593,7 +593,7 @@ func (suite *DebianUnitPublicTestSuite) TestDelete() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "service: delete")
+				suite.Contains(err.Error(), "service delete")
 			},
 		},
 		{
@@ -624,7 +624,7 @@ func (suite *DebianUnitPublicTestSuite) TestDelete() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "daemon-reload")
+				suite.Contains(err.Error(), "service reload: daemon-reload")
 			},
 		},
 		{
@@ -673,7 +673,7 @@ func (suite *DebianUnitPublicTestSuite) TestDelete() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid service name")
+				suite.Contains(err.Error(), "service: name")
 			},
 		},
 	}
