@@ -155,7 +155,7 @@ Leap status     : Not synchronised`
 			validateFunc: func(got *ntp.Status, err error) {
 				suite.Require().Error(err)
 				suite.Nil(got)
-				suite.Contains(err.Error(), "ntp: chronyc tracking: command not found")
+				suite.Contains(err.Error(), "ntp get: chronyc tracking: command not found")
 			},
 		},
 		{
@@ -171,7 +171,7 @@ Leap status     : Not synchronised`
 			validateFunc: func(got *ntp.Status, err error) {
 				suite.Require().Error(err)
 				suite.Nil(got)
-				suite.Contains(err.Error(), "ntp: chronyc sources: connection refused")
+				suite.Contains(err.Error(), "ntp list: chronyc sources: connection refused")
 			},
 		},
 	}
@@ -296,7 +296,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			validateFunc: func(got *ntp.CreateResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(got)
-				suite.Contains(err.Error(), "ntp: create directory: permission denied")
+				suite.Contains(err.Error(), "ntp create: create directory: permission denied")
 			},
 		},
 		{
@@ -330,7 +330,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			validateFunc: func(got *ntp.CreateResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(got)
-				suite.Contains(err.Error(), "ntp: write file: create temp file")
+				suite.Contains(err.Error(), "ntp create: write file: create temp file")
 			},
 		},
 		{
@@ -432,7 +432,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			validateFunc: func(got *ntp.UpdateResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(got)
-				suite.Contains(err.Error(), "ntp config: not managed by osapi")
+				suite.Contains(err.Error(), "ntp update: not managed by osapi")
 			},
 		},
 		{
@@ -477,7 +477,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			validateFunc: func(got *ntp.UpdateResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(got)
-				suite.Contains(err.Error(), "ntp: write file: create temp file")
+				suite.Contains(err.Error(), "ntp create: write file: create temp file")
 			},
 		},
 		{
@@ -555,7 +555,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			validateFunc: func(got *ntp.DeleteResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(got)
-				suite.Contains(err.Error(), "ntp config: not managed by osapi")
+				suite.Contains(err.Error(), "ntp update: not managed by osapi")
 			},
 		},
 		{
@@ -587,7 +587,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			validateFunc: func(got *ntp.DeleteResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(got)
-				suite.Contains(err.Error(), "ntp: remove file: permission denied")
+				suite.Contains(err.Error(), "ntp delete: remove file: permission denied")
 			},
 		},
 		{

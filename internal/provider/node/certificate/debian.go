@@ -104,12 +104,12 @@ func (d *Debian) Create(
 		Metadata:   map[string]string{"source": "custom"},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("create certificate: %w", err)
+		return nil, fmt.Errorf("certificate create: %w", err)
 	}
 
 	if result.Changed {
 		if err := d.updateCACertificates(ctx); err != nil {
-			return nil, fmt.Errorf("create certificate: %w", err)
+			return nil, fmt.Errorf("certificate create: %w", err)
 		}
 	}
 
@@ -153,12 +153,12 @@ func (d *Debian) Update(
 		Metadata:   map[string]string{"source": "custom"},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("update certificate: %w", err)
+		return nil, fmt.Errorf("certificate update: %w", err)
 	}
 
 	if result.Changed {
 		if err := d.updateCACertificates(ctx); err != nil {
-			return nil, fmt.Errorf("update certificate: %w", err)
+			return nil, fmt.Errorf("certificate update: %w", err)
 		}
 	}
 
@@ -190,12 +190,12 @@ func (d *Debian) Delete(
 		Path: filePath,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("delete certificate: %w", err)
+		return nil, fmt.Errorf("certificate delete: %w", err)
 	}
 
 	if result.Changed {
 		if err := d.updateCACertificates(ctx); err != nil {
-			return nil, fmt.Errorf("delete certificate: %w", err)
+			return nil, fmt.Errorf("certificate delete: %w", err)
 		}
 	}
 
@@ -218,7 +218,7 @@ func (d *Debian) updateCACertificates(
 ) error {
 	_, err := d.execManager.RunPrivilegedCmd(ctx, "update-ca-certificates", nil)
 	if err != nil {
-		return fmt.Errorf("update-ca-certificates: %w", err)
+		return fmt.Errorf("certificate update: update-ca-certificates: %w", err)
 	}
 
 	return nil
@@ -275,11 +275,11 @@ func validateName(
 	name string,
 ) error {
 	if name == "" {
-		return fmt.Errorf("invalid certificate name: empty")
+		return fmt.Errorf("certificate: name must not be empty")
 	}
 	if !validName.MatchString(name) {
 		return fmt.Errorf(
-			"invalid certificate name %q: must match %s",
+			"certificate: name %q must match %s",
 			name,
 			validName.String(),
 		)

@@ -192,7 +192,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "create certificate")
+				suite.Contains(err.Error(), "certificate create")
 			},
 		},
 		{
@@ -231,7 +231,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid certificate name")
+				suite.Contains(err.Error(), "certificate: name")
 			},
 		},
 		{
@@ -247,7 +247,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid certificate name")
+				suite.Contains(err.Error(), "certificate: name")
 			},
 		},
 		{
@@ -360,7 +360,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "update certificate")
+				suite.Contains(err.Error(), "certificate update")
 			},
 		},
 		{
@@ -430,7 +430,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid certificate name")
+				suite.Contains(err.Error(), "certificate: name")
 			},
 		},
 		{
@@ -606,7 +606,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "delete certificate")
+				suite.Contains(err.Error(), "certificate delete")
 			},
 		},
 		{
@@ -644,7 +644,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid certificate name")
+				suite.Contains(err.Error(), "certificate: name")
 			},
 		},
 	}
