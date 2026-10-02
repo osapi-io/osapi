@@ -408,7 +408,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid sysctl value")
+				suite.Contains(err.Error(), "value must not contain line breaks")
 			},
 		},
 		{
@@ -424,7 +424,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid sysctl value")
+				suite.Contains(err.Error(), "value must not contain line breaks")
 			},
 		},
 		{
@@ -731,7 +731,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid sysctl value")
+				suite.Contains(err.Error(), "value must not contain line breaks")
 			},
 		},
 		{
@@ -747,7 +747,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid sysctl value")
+				suite.Contains(err.Error(), "value must not contain line breaks")
 			},
 		},
 		{
@@ -1355,7 +1355,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 			) {
 				suite.Error(err)
 				suite.Nil(entries)
-				suite.Contains(err.Error(), "list sysctl entries")
+				suite.Contains(err.Error(), "sysctl list")
 			},
 		},
 		{

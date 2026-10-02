@@ -358,7 +358,7 @@ func (d *Debian) List(
 ) ([]Entry, error) {
 	dirEntries, err := d.fs.ReadDir(sysctlDir)
 	if err != nil {
-		return nil, fmt.Errorf("list sysctl entries: %w", err)
+		return nil, fmt.Errorf("sysctl list: %w", err)
 	}
 
 	var result []Entry
@@ -520,7 +520,7 @@ func validateValue(
 	value string,
 ) error {
 	if strings.ContainsAny(value, "\r\n") {
-		return fmt.Errorf("invalid sysctl value: must not contain line breaks")
+		return fmt.Errorf("value must not contain line breaks")
 	}
 
 	return nil
