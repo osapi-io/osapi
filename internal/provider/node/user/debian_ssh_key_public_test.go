@@ -361,7 +361,7 @@ func (suite *DebianSSHKeyPublicTestSuite) TestListKeys() {
 			validateFunc: func(keys []user.SSHKey, err error) {
 				suite.Error(err)
 				suite.Nil(keys)
-				suite.Contains(err.Error(), "invalid user name")
+				suite.Contains(err.Error(), "must match")
 			},
 		},
 	}
@@ -721,7 +721,7 @@ func (suite *DebianSSHKeyPublicTestSuite) TestAddKey() {
 			validateFunc: func(result *user.SSHKeyResult, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid user name")
+				suite.Contains(err.Error(), "must match")
 			},
 		},
 	}
@@ -944,7 +944,7 @@ func (suite *DebianSSHKeyPublicTestSuite) TestRemoveKey() {
 			validateFunc: func(result *user.SSHKeyResult, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid user name")
+				suite.Contains(err.Error(), "must match")
 			},
 		},
 	}

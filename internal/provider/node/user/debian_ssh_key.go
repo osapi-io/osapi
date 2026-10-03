@@ -52,7 +52,7 @@ func (d *Debian) ListKeys(
 ) ([]SSHKey, error) {
 	_ = ctx
 
-	if err := validateAccountName("user", username); err != nil {
+	if err := validateAccountName(username); err != nil {
 		return nil, fmt.Errorf("ssh key: list: %w", err)
 	}
 
@@ -90,7 +90,7 @@ func (d *Debian) AddKey(
 ) (*SSHKeyResult, error) {
 	_ = ctx
 
-	if err := validateAccountName("user", username); err != nil {
+	if err := validateAccountName(username); err != nil {
 		return nil, fmt.Errorf("ssh key: add: %w", err)
 	}
 
@@ -181,7 +181,7 @@ func (d *Debian) RemoveKey(
 ) (*SSHKeyResult, error) {
 	_ = ctx
 
-	if err := validateAccountName("user", username); err != nil {
+	if err := validateAccountName(username); err != nil {
 		return nil, fmt.Errorf("ssh key: remove: %w", err)
 	}
 

@@ -351,7 +351,7 @@ func (suite *DebianPublicTestSuite) TestGetUser() {
 			validateFunc: func(result *user.User, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid user name")
+				suite.Contains(err.Error(), "must match")
 			},
 		},
 		{
@@ -540,7 +540,7 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid user name")
+				suite.Contains(err.Error(), "must match")
 			},
 		},
 	}
@@ -691,7 +691,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid user name")
+				suite.Contains(err.Error(), "must match")
 			},
 		},
 	}
@@ -749,7 +749,7 @@ func (suite *DebianPublicTestSuite) TestDeleteUser() {
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid user name")
+				suite.Contains(err.Error(), "must match")
 			},
 		},
 	}
@@ -860,7 +860,7 @@ func (suite *DebianPublicTestSuite) TestChangePassword() {
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid user name")
+				suite.Contains(err.Error(), "must match")
 			},
 		},
 	}
@@ -1024,7 +1024,7 @@ func (suite *DebianPublicTestSuite) TestGetGroup() {
 			validateFunc: func(result *user.Group, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid group name")
+				suite.Contains(err.Error(), "name \"Invalid\" must match")
 			},
 		},
 	}
@@ -1126,7 +1126,7 @@ func (suite *DebianPublicTestSuite) TestCreateGroup() {
 			validateFunc: func(result *user.GroupResult, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid group name")
+				suite.Contains(err.Error(), "name \"Invalid\" must match")
 			},
 		},
 	}
@@ -1194,7 +1194,7 @@ func (suite *DebianPublicTestSuite) TestUpdateGroup() {
 			validateFunc: func(result *user.GroupResult, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid group name")
+				suite.Contains(err.Error(), "name \"Invalid\" must match")
 			},
 		},
 	}
@@ -1252,7 +1252,7 @@ func (suite *DebianPublicTestSuite) TestDeleteGroup() {
 			validateFunc: func(result *user.GroupResult, err error) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "invalid group name")
+				suite.Contains(err.Error(), "name \"Invalid\" must match")
 			},
 		},
 	}

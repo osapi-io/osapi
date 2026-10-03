@@ -44,16 +44,14 @@ var accountNamePattern = regexp.MustCompile(`^[a-z_][a-z0-9_-]*\$?$`)
 const accountNameMaxLength = 32
 
 // validateAccountName rejects a user or group name that does not match
-// accountNamePattern or exceeds accountNameMaxLength. kind names the
-// resource in the error message ("user" or "group").
+// accountNamePattern or exceeds accountNameMaxLength. The caller names the
+// resource, so this message does not.
 func validateAccountName(
-	kind string,
 	name string,
 ) error {
 	if len(name) > accountNameMaxLength || !accountNamePattern.MatchString(name) {
 		return fmt.Errorf(
-			"invalid %s name %q: must match %s and be at most %d characters",
-			kind,
+			"name %q must match %s and be at most %d characters",
 			name,
 			accountNamePattern.String(),
 			accountNameMaxLength,
