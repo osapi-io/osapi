@@ -446,6 +446,30 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogHTTP() {
 			},
 		},
 		{
+			name: "when lines below the minimum returns 400",
+			path: "/api/node/server1/log?lines=0",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "min")
+			},
+		},
+		{
+			name: "when lines above the maximum returns 400",
+			path: "/api/node/server1/log?lines=10001",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "max")
+			},
+		},
+		{
 			name: "when invalid priority returns 400",
 			path: "/api/node/server1/log?priority=bogus",
 			setupJobMock: func() *jobmocks.MockJobClient {
