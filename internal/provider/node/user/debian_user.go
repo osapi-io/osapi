@@ -75,7 +75,7 @@ func (d *Debian) GetUser(
 ) (*User, error) {
 	_ = ctx
 
-	if err := validateAccountName("user", name); err != nil {
+	if err := validateAccountName(name); err != nil {
 		return nil, fmt.Errorf("user: %w", err)
 	}
 
@@ -112,7 +112,7 @@ func (d *Debian) CreateUser(
 ) (*Result, error) {
 	_ = ctx
 
-	if err := validateAccountName("user", opts.Name); err != nil {
+	if err := validateAccountName(opts.Name); err != nil {
 		return nil, fmt.Errorf("user: %w", err)
 	}
 
@@ -156,7 +156,7 @@ func (d *Debian) UpdateUser(
 ) (*Result, error) {
 	_ = ctx
 
-	if err := validateAccountName("user", name); err != nil {
+	if err := validateAccountName(name); err != nil {
 		return nil, fmt.Errorf("user: %w", err)
 	}
 
@@ -191,7 +191,7 @@ func (d *Debian) DeleteUser(
 ) (*Result, error) {
 	_ = ctx
 
-	if err := validateAccountName("user", name); err != nil {
+	if err := validateAccountName(name); err != nil {
 		return nil, fmt.Errorf("user: %w", err)
 	}
 
@@ -219,7 +219,7 @@ func (d *Debian) ChangePassword(
 ) (*Result, error) {
 	_ = ctx
 
-	if err := validateAccountName("user", name); err != nil {
+	if err := validateAccountName(name); err != nil {
 		return nil, fmt.Errorf("user: %w", err)
 	}
 

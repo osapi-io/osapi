@@ -57,7 +57,7 @@ func (d *Debian) GetGroup(
 ) (*Group, error) {
 	_ = ctx
 
-	if err := validateAccountName("group", name); err != nil {
+	if err := validateAccountName(name); err != nil {
 		return nil, fmt.Errorf("group: %w", err)
 	}
 
@@ -82,7 +82,7 @@ func (d *Debian) CreateGroup(
 ) (*GroupResult, error) {
 	_ = ctx
 
-	if err := validateAccountName("group", opts.Name); err != nil {
+	if err := validateAccountName(opts.Name); err != nil {
 		return nil, fmt.Errorf("group: %w", err)
 	}
 
@@ -112,7 +112,7 @@ func (d *Debian) UpdateGroup(
 ) (*GroupResult, error) {
 	_ = ctx
 
-	if err := validateAccountName("group", name); err != nil {
+	if err := validateAccountName(name); err != nil {
 		return nil, fmt.Errorf("group: %w", err)
 	}
 
@@ -141,7 +141,7 @@ func (d *Debian) DeleteGroup(
 ) (*GroupResult, error) {
 	_ = ctx
 
-	if err := validateAccountName("group", name); err != nil {
+	if err := validateAccountName(name); err != nil {
 		return nil, fmt.Errorf("group: %w", err)
 	}
 
