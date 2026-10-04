@@ -399,6 +399,28 @@ func (s *ProcessGetPublicTestSuite) TestGetNodeProcessByPidValidationHTTP() {
 			},
 		},
 		{
+			name: "when the pid is zero returns 400",
+			path: "/api/node/server1/process/0",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "required")
+			},
+		},
+		{
+			name: "when the pid is minus one returns 400",
+			path: "/api/node/server1/process/-1",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "min")
+			},
+		},
+		{
 			name: "when target agent not found",
 			path: "/api/node/nonexistent/process/1234",
 			setupJobMock: func() *jobmocks.MockJobClient {

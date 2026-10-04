@@ -484,6 +484,42 @@ func (s *ProcessSignalPublicTestSuite) TestPostNodeProcessSignalValidationHTTP()
 			},
 		},
 		{
+			name: "when the pid is zero returns 400",
+			path: "/api/node/server1/process/0/signal",
+			body: `{"signal":"KILL"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "required")
+			},
+		},
+		{
+			name: "when the pid is minus one returns 400",
+			path: "/api/node/server1/process/-1/signal",
+			body: `{"signal":"KILL"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "min")
+			},
+		},
+		{
+			name: "when the pid is a process group returns 400",
+			path: "/api/node/server1/process/-42/signal",
+			body: `{"signal":"KILL"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "min")
+			},
+		},
+		{
 			name: "when target agent not found",
 			path: "/api/node/nonexistent/process/1234/signal",
 			body: `{"signal":"TERM"}`,

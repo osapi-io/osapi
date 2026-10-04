@@ -33,6 +33,27 @@ import (
 )
 
 // allowedSignals maps signal names to their syscall equivalents.
+// validatePid rejects a pid that kill(2) would not read as one process.
+//
+// kill(2) overloads the sign: 0 means every process in the caller's process
+// group, -1 means every process the caller may signal, and anything below -1
+// means a whole process group. The agent usually runs as root, so a value
+// below 1 turns one signal into a host-wide one. The API validates this too,
+// and this is the copy that matters, because this is the frame that calls
+// kill(2).
+func validatePid(
+	pid int,
+) error {
+	if pid < 1 {
+		return fmt.Errorf(
+			"process: pid %d must be greater than zero, a lower value signals a process group rather than a process",
+			pid,
+		)
+	}
+
+	return nil
+}
+
 var allowedSignals = map[string]syscall.Signal{
 	"TERM": syscall.SIGTERM,
 	"KILL": syscall.SIGKILL,
@@ -156,6 +177,10 @@ func (d *Debian) Get(
 	_ context.Context,
 	pid int,
 ) (*Info, error) {
+	if err := validatePid(pid); err != nil {
+		return nil, err
+	}
+
 	p, err := d.lister.NewProcess(int32(pid))
 	if err != nil {
 		return nil, fmt.Errorf("process: get: %w", err)
@@ -175,6 +200,10 @@ func (d *Debian) Signal(
 	pid int,
 	signal string,
 ) (*SignalResult, error) {
+	if err := validatePid(pid); err != nil {
+		return nil, err
+	}
+
 	sig, ok := allowedSignals[signal]
 	if !ok {
 		return nil, fmt.Errorf("process: signal: invalid signal %q", signal)
