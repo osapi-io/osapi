@@ -28,6 +28,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/api/agent/gen"
 
 	"github.com/osapi-io/osapi/internal/controller/enrollment"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // AcceptAgent handles POST /agent/{hostname}/accept.
@@ -36,6 +37,10 @@ func (a *Agent) AcceptAgent(
 	request gen.AcceptAgentRequestObject,
 ) (gen.AcceptAgentResponseObject, error) {
 	if errMsg, ok := validateAgentHostname(request.Hostname); !ok {
+		return gen.AcceptAgent400JSONResponse{Error: &errMsg}, nil
+	}
+
+	if errMsg, ok := validation.Struct(request.Params); !ok {
 		return gen.AcceptAgent400JSONResponse{Error: &errMsg}, nil
 	}
 
