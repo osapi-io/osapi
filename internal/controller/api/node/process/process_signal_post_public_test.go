@@ -472,6 +472,18 @@ func (s *ProcessSignalPublicTestSuite) TestPostNodeProcessSignalValidationHTTP()
 			},
 		},
 		{
+			name: "when signal is not one of the six returns 400",
+			path: "/api/node/server1/process/1234/signal",
+			body: `{"signal":"SIGBOOM"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "oneof")
+			},
+		},
+		{
 			name: "when target agent not found",
 			path: "/api/node/nonexistent/process/1234/signal",
 			body: `{"signal":"TERM"}`,

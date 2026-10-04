@@ -519,6 +519,17 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDockerValidationHTTP(
 			},
 		},
 		{
+			name: "when state is not one of the three returns 400",
+			path: "/api/node/server1/container/docker?state=paused",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "oneof")
+			},
+		},
+		{
 			name: "when target agent not found",
 			path: "/api/node/nonexistent/container/docker",
 			setupJobMock: func() *jobmocks.MockJobClient {

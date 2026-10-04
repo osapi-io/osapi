@@ -625,6 +625,74 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployValidationHTTP() {
 			},
 		},
 		{
+			name: "when mode is not octal returns 400",
+			path: "/api/node/server1/file/deploy",
+			body: `{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf",` +
+				`"content_type":"raw","mode":"rwxr-xr-x"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "file_mode")
+				s.Contains(rec.Body.String(), "not a valid file mode")
+			},
+		},
+		{
+			name: "when mode has too many digits returns 400",
+			path: "/api/node/server1/file/deploy",
+			body: `{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf",` +
+				`"content_type":"raw","mode":"06440"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "file_mode")
+			},
+		},
+		{
+			name: "when mode is not a valid octal digit returns 400",
+			path: "/api/node/server1/file/deploy",
+			body: `{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf",` +
+				`"content_type":"raw","mode":"999"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "file_mode")
+			},
+		},
+		{
+			name: "when content type is neither raw nor template returns 400",
+			path: "/api/node/server1/file/deploy",
+			body: `{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf",` +
+				`"content_type":"jinja"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "ContentType")
+				s.Contains(rec.Body.String(), "oneof")
+			},
+		},
+		{
+			name: "when object name exceeds the maximum returns 400",
+			path: "/api/node/server1/file/deploy",
+			body: `{"object_name":"` + strings.Repeat("a", 256) +
+				`","path":"/etc/nginx/nginx.conf","content_type":"raw"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "ObjectName")
+				s.Contains(rec.Body.String(), "max")
+			},
+		},
+		{
 			name: "when target agent not found",
 			path: "/api/node/nonexistent/file/deploy",
 			body: `{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf","content_type":"raw"}`,

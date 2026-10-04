@@ -402,6 +402,27 @@ func (s *UserCreatePublicTestSuite) TestPostNodeUserValidationHTTP() {
 			wantCode: http.StatusBadRequest,
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "Name")
+				s.Contains(rec.Body.String(), "required")
+			},
+		},
+		{
+			name:     "when name does not match the account pattern",
+			body:     `{"name":"Bad User"}`,
+			wantCode: http.StatusBadRequest,
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "account_name")
+				s.Contains(rec.Body.String(), "not a valid account name")
+			},
+		},
+		{
+			name:     "when name starts with a hyphen",
+			body:     `{"name":"-rf"}`,
+			wantCode: http.StatusBadRequest,
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "account_name")
 			},
 		},
 	}
