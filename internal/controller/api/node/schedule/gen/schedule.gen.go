@@ -171,7 +171,7 @@ type ScheduleCreateRequest struct {
 	Interval *ScheduleCreateRequestInterval `json:"interval,omitempty" validate:"required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly daily weekly monthly"`
 
 	// Name Name for the scheduled entry. Used as the file name under /etc/cron.d/ or /etc/cron.{interval}/.
-	Name string `json:"name" validate:"required,min=1,max=64"`
+	Name string `json:"name" validate:"required,max=64,resource_name"`
 
 	// Object Name of the uploaded file in the object store to deploy as the scheduled entry content.
 	Object string `json:"object" validate:"required,min=1"`
@@ -665,7 +665,7 @@ func (response PostNodeSchedule500JSONResponse) VisitPostNodeScheduleResponse(w 
 
 type DeleteNodeScheduleRequestObject struct {
 	Hostname Hostname     `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     ScheduleName `json:"name" validate:"required,min=1"`
+	Name     ScheduleName `json:"name" validate:"required,resource_name"`
 }
 
 type DeleteNodeScheduleResponseObject interface {
@@ -758,7 +758,7 @@ func (response DeleteNodeSchedule500JSONResponse) VisitDeleteNodeScheduleRespons
 
 type GetNodeScheduleByNameRequestObject struct {
 	Hostname Hostname     `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     ScheduleName `json:"name" validate:"required,min=1"`
+	Name     ScheduleName `json:"name" validate:"required,resource_name"`
 }
 
 type GetNodeScheduleByNameResponseObject interface {
@@ -851,7 +851,7 @@ func (response GetNodeScheduleByName500JSONResponse) VisitGetNodeScheduleByNameR
 
 type PutNodeScheduleRequestObject struct {
 	Hostname Hostname     `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     ScheduleName `json:"name" validate:"required,min=1"`
+	Name     ScheduleName `json:"name" validate:"required,resource_name"`
 	Body     *PutNodeScheduleJSONRequestBody
 }
 

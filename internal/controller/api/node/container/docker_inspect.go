@@ -41,7 +41,7 @@ func (s *Container) GetNodeContainerDockerByID(
 		return gen.GetNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Var(request.Id, "required,min=1"); !ok {
+	if errMsg, ok := validation.Var(request.Id, "required,container_id"); !ok {
 		return gen.GetNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
 	}
 

@@ -264,7 +264,7 @@ components:
       # validate tags in strict-server mode. Validation is handled
       # manually in the handler.
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,resource_name
       schema:
         type: string
         minLength: 1
@@ -293,7 +293,7 @@ components:
           description: Certificate name (used as filename).
           example: "internal-corp-ca"
           x-oapi-codegen-extra-tags:
-            validate: "required,min=1"
+            validate: "required,resource_name"
         object:
           type: string
           description: Object Store reference for the PEM file.

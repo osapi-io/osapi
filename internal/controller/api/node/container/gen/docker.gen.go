@@ -1184,7 +1184,7 @@ func (response PostNodeContainerDockerPull500JSONResponse) VisitPostNodeContaine
 
 type DeleteNodeContainerDockerByIDRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Id       DockerId `json:"id" validate:"required,min=1"`
+	Id       DockerId `json:"id" validate:"required,container_id"`
 	Params   DeleteNodeContainerDockerByIDParams
 }
 
@@ -1278,7 +1278,7 @@ func (response DeleteNodeContainerDockerByID500JSONResponse) VisitDeleteNodeCont
 
 type GetNodeContainerDockerByIDRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Id       DockerId `json:"id" validate:"required,min=1"`
+	Id       DockerId `json:"id" validate:"required,container_id"`
 }
 
 type GetNodeContainerDockerByIDResponseObject interface {
@@ -1371,7 +1371,7 @@ func (response GetNodeContainerDockerByID500JSONResponse) VisitGetNodeContainerD
 
 type PostNodeContainerDockerExecRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Id       DockerId `json:"id" validate:"required,min=1"`
+	Id       DockerId `json:"id" validate:"required,container_id"`
 	Body     *PostNodeContainerDockerExecJSONRequestBody
 }
 
@@ -1465,7 +1465,7 @@ func (response PostNodeContainerDockerExec500JSONResponse) VisitPostNodeContaine
 
 type PostNodeContainerDockerStartRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Id       DockerId `json:"id" validate:"required,min=1"`
+	Id       DockerId `json:"id" validate:"required,container_id"`
 }
 
 type PostNodeContainerDockerStartResponseObject interface {
@@ -1558,7 +1558,7 @@ func (response PostNodeContainerDockerStart500JSONResponse) VisitPostNodeContain
 
 type PostNodeContainerDockerStopRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Id       DockerId `json:"id" validate:"required,min=1"`
+	Id       DockerId `json:"id" validate:"required,container_id"`
 	Body     *PostNodeContainerDockerStopJSONRequestBody
 }
 

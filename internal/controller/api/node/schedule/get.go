@@ -43,6 +43,10 @@ func (s *Schedule) GetNodeScheduleByName(
 		return gen.GetNodeScheduleByName400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validateName(request.Name); !ok {
+		return gen.GetNodeScheduleByName400JSONResponse{Error: &errMsg}, nil
+	}
+
 	hostname := request.Hostname
 	name := request.Name
 

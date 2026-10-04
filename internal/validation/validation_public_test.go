@@ -641,6 +641,79 @@ func (s *ValidationPublicTestSuite) TestSysctlKey() {
 	})
 }
 
+func (s *ValidationPublicTestSuite) TestResourceName() {
+	tests := []struct {
+		name  string
+		field string
+		valid bool
+	}{
+		{name: "when alphanumeric", field: "backup", valid: true},
+		{name: "when it has hyphens and underscores", field: "nightly_db-backup", valid: true},
+		{name: "when it has digits", field: "backup2", valid: true},
+		{name: "when it is a traversal", field: "../../etc/passwd", valid: false},
+		{name: "when it has a slash", field: "a/b", valid: false},
+		{name: "when it has a dot", field: "backup.sh", valid: false},
+		{name: "when it has a space", field: "my backup", valid: false},
+		{name: "when empty", field: "", valid: false},
+		// A leading hyphen is accepted, matching the providers' own validName.
+		// The name only ever becomes a path segment, never a command argument,
+		// so there is no option to be mistaken for.
+		{name: "when it starts with a hyphen", field: "-rf", valid: true},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			_, ok := validation.Var(tt.field, "resource_name")
+			s.Equal(tt.valid, ok)
+		})
+	}
+
+	s.Run("invalid name shows hint through struct validation", func() {
+		type nameReq struct {
+			Name string `validate:"required,resource_name"`
+		}
+
+		errMsg, ok := validation.Struct(nameReq{Name: "../etc/passwd"})
+		s.False(ok)
+		s.Contains(errMsg, "resource_name")
+		s.Contains(errMsg, "not a valid name")
+	})
+}
+
+func (s *ValidationPublicTestSuite) TestContainerID() {
+	tests := []struct {
+		name  string
+		field string
+		valid bool
+	}{
+		{name: "when a short id", field: "a1b2c3d4e5f6", valid: true},
+		{name: "when a name with a dot", field: "web.1", valid: true},
+		{name: "when a name with a hyphen", field: "web-01", valid: true},
+		{name: "when it starts with a hyphen", field: "-f", valid: false},
+		{name: "when it starts with a dot", field: ".hidden", valid: false},
+		{name: "when it has a slash", field: "a/b", valid: false},
+		{name: "when empty", field: "", valid: false},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			_, ok := validation.Var(tt.field, "container_id")
+			s.Equal(tt.valid, ok)
+		})
+	}
+
+	s.Run("invalid id shows hint through struct validation", func() {
+		type idReq struct {
+			ID string `validate:"required,container_id"`
+		}
+
+		errMsg, ok := validation.Struct(idReq{ID: "-f"})
+		s.False(ok)
+		s.Contains(errMsg, "container_id")
+		s.Contains(errMsg, "not a valid container name or ID")
+	})
+}
+
 func (s *ValidationPublicTestSuite) TestNoLinebreak() {
 	tests := []struct {
 		name         string

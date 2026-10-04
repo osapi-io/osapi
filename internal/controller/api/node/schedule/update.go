@@ -44,6 +44,10 @@ func (s *Schedule) PutNodeSchedule(
 		return gen.PutNodeSchedule400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validateName(request.Name); !ok {
+		return gen.PutNodeSchedule400JSONResponse{Error: &errMsg}, nil
+	}
+
 	if errMsg, ok := validation.Struct(request.Body); !ok {
 		return gen.PutNodeSchedule400JSONResponse{Error: &errMsg}, nil
 	}

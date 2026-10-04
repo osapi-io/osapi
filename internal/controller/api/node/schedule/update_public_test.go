@@ -621,6 +621,18 @@ func (s *ScheduleUpdatePublicTestSuite) TestPutNodeScheduleValidationHTTP() {
 				s.Contains(rec.Body.String(), "valid_target")
 			},
 		},
+		{
+			name: "when the name does not match the declared pattern returns 400",
+			path: "/api/node/server1/schedule/backup.sh",
+			body: `{"schedule":"0 3 * * *"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "resource_name")
+			},
+		},
 	}
 
 	for _, tc := range tests {

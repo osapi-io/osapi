@@ -63,6 +63,19 @@ var accountNamePattern = regexp.MustCompile(`^[a-z_][a-z0-9_-]*\$?$`)
 // historical utmp/wtmp field width Debian tools enforce by default.
 const accountNameMaxLength = 32
 
+// resourceNamePattern matches a name osapi uses as a file name: letters,
+// digits, underscores, and hyphens only. It mirrors the validName regex the
+// schedule and certificate providers enforce, so a name the provider will
+// reject is rejected on the request path instead of becoming a job. Slashes
+// and dots are rejected, so the name cannot escape the directory it is
+// written into.
+var resourceNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
+// containerIDPattern matches a container name or ID as the container runtime
+// accepts it. The first character must be a letter or digit so the value
+// cannot be mistaken for a command-line option.
+var containerIDPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_.-]*$`)
+
 func init() {
 	// alphanum_or_fact accepts alphanumeric values or @fact. prefixed references
 	// with a known fact key. Fact references are resolved agent-side.
@@ -119,6 +132,20 @@ func init() {
 	// key is used to build a file path.
 	_ = instance.RegisterValidation("sysctl_key", func(fl validator.FieldLevel) bool {
 		return sysctlKeyPattern.MatchString(fl.Field().String())
+	})
+
+	// resource_name validates a name osapi writes as a file name, rejecting
+	// path separators, dots, and anything else that could escape the
+	// directory. The same pattern is enforced again in the provider, which is
+	// the contract; this one exists so the caller is told their input was
+	// wrong rather than told the host failed.
+	_ = instance.RegisterValidation("resource_name", func(fl validator.FieldLevel) bool {
+		return resourceNamePattern.MatchString(fl.Field().String())
+	})
+
+	// container_id validates a container name or ID.
+	_ = instance.RegisterValidation("container_id", func(fl validator.FieldLevel) bool {
+		return containerIDPattern.MatchString(fl.Field().String())
 	})
 
 	// no_linebreak rejects values containing a carriage return or line feed,
@@ -185,6 +212,20 @@ var customHints = map[string]func(fe validator.FieldError) string{
 			"%q is not a valid sysctl key (expected: %s)",
 			fe.Value(),
 			sysctlKeyPattern.String(),
+		)
+	},
+	"resource_name": func(fe validator.FieldError) string {
+		return fmt.Sprintf(
+			"%q is not a valid name (expected: %s)",
+			fe.Value(),
+			resourceNamePattern.String(),
+		)
+	},
+	"container_id": func(fe validator.FieldError) string {
+		return fmt.Sprintf(
+			"%q is not a valid container name or ID (expected: %s)",
+			fe.Value(),
+			containerIDPattern.String(),
 		)
 	},
 	"no_linebreak": func(_ validator.FieldError) string {

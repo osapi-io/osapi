@@ -319,9 +319,9 @@ components:
         underscores, and hyphens.
       # NOTE: x-oapi-codegen-extra-tags on path params do not generate
       # validate tags in strict-server mode. Validation is handled
-      # manually in the handler.
+      # manually in the handler via validateName().
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,resource_name
       schema:
         type: string
         minLength: 1
@@ -351,7 +351,7 @@ components:
             Name for the scheduled entry. Used as the file name
             under /etc/cron.d/ or /etc/cron.{interval}/.
           x-oapi-codegen-extra-tags:
-            validate: "required,min=1,max=64"
+            validate: "required,max=64,resource_name"
         object:
           type: string
           description: >
