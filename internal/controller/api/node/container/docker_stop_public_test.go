@@ -479,6 +479,17 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStopValidation
 				s.Contains(rec.Body.String(), "not found")
 			},
 		},
+		{
+			name: "when the id does not match the declared pattern returns 400",
+			path: "/api/node/server1/container/docker/.hidden/stop",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "container_id")
+			},
+		},
 	}
 
 	for _, tc := range tests {

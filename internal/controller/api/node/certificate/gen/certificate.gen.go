@@ -96,7 +96,7 @@ type CertificateCACollectionResponse struct {
 // CertificateCACreateRequest defines model for CertificateCACreateRequest.
 type CertificateCACreateRequest struct {
 	// Name Certificate name (used as filename).
-	Name string `json:"name" validate:"required,min=1"`
+	Name string `json:"name" validate:"required,resource_name"`
 
 	// Object Object Store reference for the PEM file.
 	Object string `json:"object" validate:"required,min=1"`
@@ -509,7 +509,7 @@ func (response PostNodeCertificateCa500JSONResponse) VisitPostNodeCertificateCaR
 
 type DeleteNodeCertificateCaRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     CertName `json:"name" validate:"required,min=1"`
+	Name     CertName `json:"name" validate:"required,resource_name"`
 }
 
 type DeleteNodeCertificateCaResponseObject interface {
@@ -588,7 +588,7 @@ func (response DeleteNodeCertificateCa500JSONResponse) VisitDeleteNodeCertificat
 
 type PutNodeCertificateCaRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     CertName `json:"name" validate:"required,min=1"`
+	Name     CertName `json:"name" validate:"required,resource_name"`
 	Body     *PutNodeCertificateCaJSONRequestBody
 }
 

@@ -40,7 +40,7 @@ func (s *Container) PostNodeContainerDockerStop(
 		return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Var(request.Id, "required,min=1"); !ok {
+	if errMsg, ok := validation.Var(request.Id, "required,container_id"); !ok {
 		return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
 	}
 

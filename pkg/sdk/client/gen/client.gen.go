@@ -1808,7 +1808,7 @@ type CertificateCACollectionResponse struct {
 // CertificateCACreateRequest defines model for CertificateCACreateRequest.
 type CertificateCACreateRequest struct {
 	// Name Certificate name (used as filename).
-	Name string `json:"name" validate:"required,min=1"`
+	Name string `json:"name" validate:"required,resource_name"`
 
 	// Object Object Store reference for the PEM file.
 	Object string `json:"object" validate:"required,min=1"`
@@ -3983,7 +3983,7 @@ type ScheduleCreateRequest struct {
 	Interval *ScheduleCreateRequestInterval `json:"interval,omitempty" validate:"required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly daily weekly monthly"`
 
 	// Name Name for the scheduled entry. Used as the file name under /etc/cron.d/ or /etc/cron.{interval}/.
-	Name string `json:"name" validate:"required,min=1,max=64"`
+	Name string `json:"name" validate:"required,max=64,resource_name"`
 
 	// Object Name of the uploaded file in the object store to deploy as the scheduled entry content.
 	Object string `json:"object" validate:"required,min=1"`

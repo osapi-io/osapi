@@ -7487,7 +7487,7 @@ components:
           description: Certificate name (used as filename).
           example: internal-corp-ca
           x-oapi-codegen-extra-tags:
-            validate: required,min=1
+            validate: required,resource_name
         object:
           type: string
           description: Object Store reference for the PEM file.
@@ -9760,7 +9760,7 @@ components:
             Name for the scheduled entry. Used as the file name under
             /etc/cron.d/ or /etc/cron.{interval}/.
           x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=64
+            validate: required,max=64,resource_name
         object:
           type: string
           description: >
@@ -10878,7 +10878,7 @@ components:
         Certificate name. Must contain only alphanumeric characters,
         underscores, and hyphens.
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,resource_name
       schema:
         type: string
         minLength: 1
@@ -10892,7 +10892,7 @@ components:
         character and may contain letters, digits, underscores, dots, and
         hyphens.
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,container_id
       schema:
         type: string
         minLength: 1
@@ -10960,7 +10960,7 @@ components:
         Scheduled entry name. Must contain only alphanumeric characters,
         underscores, and hyphens.
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,resource_name
       schema:
         type: string
         minLength: 1

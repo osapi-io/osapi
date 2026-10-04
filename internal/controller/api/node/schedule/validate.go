@@ -32,3 +32,12 @@ func validateHostname(
 ) (string, bool) {
 	return validation.Var(hostname, "required,min=1,valid_target")
 }
+
+// validateName validates a name path parameter against the pattern the
+// provider enforces, so a name the provider will reject never becomes a job.
+// Same upstream limitation as validateHostname.
+func validateName(
+	name string,
+) (string, bool) {
+	return validation.Var(name, "required,resource_name")
+}

@@ -673,6 +673,19 @@ func (s *ScheduleCreatePublicTestSuite) TestPostNodeScheduleValidationHTTP() {
 			},
 		},
 		{
+			name: "when the name does not match the declared pattern returns 400",
+			path: "/api/node/server1/schedule",
+			body: `{"name":"../../etc/cron.d/evil","schedule":"0 2 * * *","object":"backup-script"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "Name")
+				s.Contains(rec.Body.String(), "resource_name")
+			},
+		},
+		{
 			name: "when neither schedule nor interval returns 400",
 			path: "/api/node/server1/schedule",
 			body: `{"name":"backup","object":"backup-script"}`,
