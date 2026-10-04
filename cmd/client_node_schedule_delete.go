@@ -28,10 +28,10 @@ import (
 	"github.com/osapi-io/osapi/internal/cli"
 )
 
-// clientNodeScheduleDeleteCmd represents the cron delete command.
+// clientNodeScheduleDeleteCmd represents the schedule delete command.
 var clientNodeScheduleDeleteCmd = &cobra.Command{
 	Use:   "delete",
-	Short: "Delete a cron entry",
+	Short: "Delete a scheduled entry",
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
@@ -79,7 +79,7 @@ func init() {
 	clientNodeScheduleCmd.AddCommand(clientNodeScheduleDeleteCmd)
 
 	clientNodeScheduleDeleteCmd.PersistentFlags().
-		String("name", "", "Name of the cron entry to delete (required)")
+		String("name", "", "Name of the scheduled entry to delete (required)")
 
 	_ = clientNodeScheduleDeleteCmd.MarkPersistentFlagRequired("name")
 }

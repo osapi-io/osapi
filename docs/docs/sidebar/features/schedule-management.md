@@ -4,7 +4,8 @@ sidebar_position: 9
 
 # Schedule Management
 
-OSAPI manages cron entries on target hosts. It supports two placement modes:
+OSAPI manages scheduled entries on target hosts. It supports two placement
+modes:
 
 - **Custom schedule** — writes to `/etc/cron.d/{name}` with a 5-field cron
   expression
@@ -12,17 +13,17 @@ OSAPI manages cron entries on target hosts. It supports two placement modes:
   as executable scripts
 
 Scheduled entries reference scripts stored in the NATS Object Store by name.
-Upload a script first with the file management commands, then create a cron
-entry pointing at it. This separates script content from scheduling
-configuration and enables versioned updates.
+Upload a script first with the file management commands, then create an entry
+pointing at it. This separates script content from scheduling configuration and
+enables versioned updates.
 
 ## How It Works
 
 ### Object-Based Workflow
 
 The cron provider is a **meta provider**: it does not embed script content
-directly. Instead, each cron entry holds an `object` name that references a file
-in the NATS Object Store. When the agent deploys or updates a cron entry, it:
+directly. Instead, each entry holds an `object` name that references a file in
+the NATS Object Store. When the agent deploys or updates an entry, it:
 
 1. Fetches the named object from the Object Store.
 2. Writes the script content to the appropriate path under `/etc/cron.d/` or
@@ -74,7 +75,7 @@ deployed file as a header comment. This means:
   marker.
 - The list and get operations query the file-state KV to discover managed
   entries; manually created files are left untouched.
-- State persists in the KV until explicitly removed — deleting a cron entry
+- State persists in the KV until explicitly removed — deleting an entry
   undeploys the file from disk but preserves the file-state record.
 
 ### Template Support
@@ -102,9 +103,9 @@ Template variables are merged with the agent's system facts and hostname. See
 
 | Operation | Description                            |
 | --------- | -------------------------------------- |
-| List      | List all osapi-managed cron entries    |
+| List      | List all osapi-managed entries         |
 | Get       | Get a specific entry by name           |
-| Create    | Upload script, then create cron entry  |
+| Create    | Upload script, then create the entry   |
 | Update    | Upload new script version, then update |
 | Delete    | Undeploy cron file from disk           |
 
@@ -125,7 +126,7 @@ osapi client node schedule create --target web-01 \
   --name logrotate --interval daily \
   --object logrotate-script
 
-# List all managed cron entries
+# List all managed entries
 osapi client node schedule list --target web-01
 
 # Get a specific entry
@@ -158,15 +159,15 @@ Files are created as root (the agent runs as root). Names must not contain dots
 
 ## Undeploy Behavior
 
-Deleting a cron entry **undeploys** the file: it is removed from the filesystem,
-but the file-state KV record is preserved. This means:
+Deleting an entry **undeploys** the file: it is removed from the filesystem, but
+the file-state KV record is preserved. This means:
 
 - Re-creating the entry with the same name and object will detect the prior
   state and only write the file if the content differs.
 - The KV record serves as an audit trail of what was last deployed.
 
 To remove the file-state record entirely, delete the corresponding file-state
-entry via the file management API after removing the cron entry.
+entry via the file management API after removing the scheduled entry.
 
 ## Supported Platforms
 

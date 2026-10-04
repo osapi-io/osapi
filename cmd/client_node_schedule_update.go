@@ -29,10 +29,10 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
-// clientNodeScheduleUpdateCmd represents the cron update command.
+// clientNodeScheduleUpdateCmd represents the schedule update command.
 var clientNodeScheduleUpdateCmd = &cobra.Command{
 	Use:   "update",
-	Short: "Update a cron entry",
+	Short: "Update a scheduled entry",
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
@@ -89,7 +89,7 @@ func init() {
 	clientNodeScheduleCmd.AddCommand(clientNodeScheduleUpdateCmd)
 
 	clientNodeScheduleUpdateCmd.PersistentFlags().
-		String("name", "", "Name of the cron entry to update (required)")
+		String("name", "", "Name of the scheduled entry to update (required)")
 	clientNodeScheduleUpdateCmd.PersistentFlags().
 		String("object", "", "New object to deploy")
 	clientNodeScheduleUpdateCmd.PersistentFlags().

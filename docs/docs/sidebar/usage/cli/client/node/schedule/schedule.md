@@ -23,7 +23,7 @@ $ osapi client node schedule list --target web-01
 
 ## Get
 
-Get a specific cron entry by name:
+Get a specific scheduled entry by name:
 
 ```bash
 $ osapi client node schedule get --target web-01 --name backup-daily
@@ -36,7 +36,7 @@ $ osapi client node schedule get --target web-01 --name backup-daily
 
 ## Create
 
-Upload the script to the Object Store first, then create the cron entry
+Upload the script to the Object Store first, then create the scheduled entry
 referencing it by object name:
 
 ```bash
@@ -44,7 +44,7 @@ $ osapi client file upload --name backup-script \
     --file /usr/local/bin/backup.sh
 ```
 
-Then create the cron entry using `--object` to reference the uploaded file:
+Then create the entry using `--object` to reference the uploaded file:
 
 ```bash
 $ osapi client node schedule create --target web-01 \
@@ -66,7 +66,7 @@ should be rendered with agent facts before being written to disk.
 
 ## Update
 
-Update an existing cron entry:
+Update an existing scheduled entry:
 
 ```bash
 $ osapi client node schedule update --target web-01 \
@@ -83,7 +83,7 @@ Only the fields you specify are updated. If nothing changed, `Changed: false`.
 
 ## Delete
 
-Delete a cron entry:
+Delete a scheduled entry:
 
 ```bash
 $ osapi client node schedule delete --target web-01 --name backup-daily
