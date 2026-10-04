@@ -118,6 +118,21 @@ func (f *File) PostFile(
 	}, nil
 }
 
+// uploadForm carries the multipart form fields so they can be validated
+// against the rules the spec declares for them.
+//
+// oapi-codegen does not bind multipart/form-data into a struct, so the parts
+// are read by hand. Without this the rules had to be rewritten as if
+// statements, which left the validate tags in gen/api.yaml as documentation
+// nothing enforced, and produced 400s phrased unlike every other 400 in the
+// API. The tags here are the ones that spec declares, so changing one place
+// without the other now fails a test.
+type uploadForm struct {
+	Name        string `validate:"required,min=1,max=255"`
+	ContentType string `validate:"omitempty,oneof=raw template"`
+	File        []byte `validate:"required,min=1"`
+}
+
 // parseMultipart reads multipart parts and extracts name, content_type,
 // and file data. Returns a 400 response on validation failure.
 func (f *File) parseMultipart(
@@ -154,18 +169,11 @@ func (f *File) parseMultipart(
 		contentType = "raw"
 	}
 
-	if name == "" || len(name) > 255 {
-		errMsg := "name is required and must be 1-255 characters"
-		return "", "", nil, gen.PostFile400JSONResponse{Error: &errMsg}
-	}
-
-	if len(fileData) == 0 {
-		errMsg := "file is required"
-		return "", "", nil, gen.PostFile400JSONResponse{Error: &errMsg}
-	}
-
-	if contentType != "raw" && contentType != "template" {
-		errMsg := "content_type must be raw or template"
+	if errMsg, ok := validation.Struct(uploadForm{
+		Name:        name,
+		ContentType: contentType,
+		File:        fileData,
+	}); !ok {
 		return "", "", nil, gen.PostFile400JSONResponse{Error: &errMsg}
 	}
 

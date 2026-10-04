@@ -155,7 +155,7 @@ type PostFileMultipartBody struct {
 	ContentType *PostFileMultipartBodyContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
 
 	// File The file content.
-	File openapi_types.File `json:"file"`
+	File openapi_types.File `json:"file" validate:"required,min=1"`
 
 	// Name The name of the file in the Object Store.
 	Name string `json:"name" validate:"required,min=1,max=255"`

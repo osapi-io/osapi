@@ -185,6 +185,7 @@ func (s *AgentEnrollRejectPublicTestSuite) TestRejectAgentHTTP() {
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusBadRequest, rec.Code)
 				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "'max'")
 			},
 		},
 		{

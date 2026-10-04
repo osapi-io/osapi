@@ -399,6 +399,8 @@ func (s *JobListPublicTestSuite) TestListJobsValidationHTTP() {
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusBadRequest, rec.Code)
 				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "Limit")
+				s.Contains(rec.Body.String(), "'min'")
 			},
 		},
 		{
@@ -410,6 +412,8 @@ func (s *JobListPublicTestSuite) TestListJobsValidationHTTP() {
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusBadRequest, rec.Code)
 				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "Offset")
+				s.Contains(rec.Body.String(), "'min'")
 			},
 		},
 		{
@@ -421,6 +425,8 @@ func (s *JobListPublicTestSuite) TestListJobsValidationHTTP() {
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusBadRequest, rec.Code)
 				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "Limit")
+				s.Contains(rec.Body.String(), "'min'")
 			},
 		},
 		{
@@ -432,6 +438,8 @@ func (s *JobListPublicTestSuite) TestListJobsValidationHTTP() {
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusBadRequest, rec.Code)
 				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "Limit")
+				s.Contains(rec.Body.String(), "'max'")
 			},
 		},
 		{

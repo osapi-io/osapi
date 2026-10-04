@@ -357,7 +357,8 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 				r, ok := resp.(gen.PostFile400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "name is required")
+				s.Contains(*r.Error, "Name")
+				s.Contains(*r.Error, "required")
 			},
 		},
 		{
@@ -370,7 +371,8 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 				r, ok := resp.(gen.PostFile400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "name is required and must be 1-255 characters")
+				s.Contains(*r.Error, "Name")
+				s.Contains(*r.Error, "max")
 			},
 		},
 		{
@@ -383,7 +385,8 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 				r, ok := resp.(gen.PostFile400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "file is required")
+				s.Contains(*r.Error, "File")
+				s.Contains(*r.Error, "required")
 			},
 		},
 		{
@@ -396,7 +399,8 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 				r, ok := resp.(gen.PostFile400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "content_type must be raw or template")
+				s.Contains(*r.Error, "ContentType")
+				s.Contains(*r.Error, "oneof")
 			},
 		},
 		{
@@ -490,7 +494,8 @@ func (s *FileUploadPublicTestSuite) TestPostFileValidationHTTP() {
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusBadRequest, rec.Code)
-				s.Contains(rec.Body.String(), "name is required")
+				s.Contains(rec.Body.String(), "Name")
+				s.Contains(rec.Body.String(), "required")
 			},
 		},
 		{

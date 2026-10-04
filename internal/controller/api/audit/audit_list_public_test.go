@@ -383,6 +383,8 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsValidationHTTP() {
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusBadRequest, rec.Code)
 				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "Limit")
+				s.Contains(rec.Body.String(), "'min'")
 			},
 		},
 		{
@@ -392,6 +394,8 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsValidationHTTP() {
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusBadRequest, rec.Code)
 				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "Limit")
+				s.Contains(rec.Body.String(), "'max'")
 			},
 		},
 		{
@@ -400,6 +404,8 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsValidationHTTP() {
 			setupStore: func(_ *auditmocks.MockStore) {},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "Offset")
+				s.Contains(rec.Body.String(), "'min'")
 			},
 		},
 	}

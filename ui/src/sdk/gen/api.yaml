@@ -757,6 +757,8 @@ paths:
                   type: string
                   format: binary
                   description: The file content.
+                  x-oapi-codegen-extra-tags:
+                    validate: required,min=1
               required:
                 - name
                 - file
