@@ -33,3 +33,14 @@ func SetMarshalJSON(
 func ResetMarshalJSON() {
 	marshalJSON = json.Marshal
 }
+
+// SensitiveFields exposes the redaction deny list so a test can check it
+// against what the OpenAPI specifications actually declare.
+func SensitiveFields() map[string]bool {
+	out := make(map[string]bool, len(sensitiveFields))
+	for k, v := range sensitiveFields {
+		out[k] = v
+	}
+
+	return out
+}
