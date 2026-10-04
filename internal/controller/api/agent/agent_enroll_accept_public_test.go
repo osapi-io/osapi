@@ -216,9 +216,27 @@ func (s *AgentEnrollAcceptPublicTestSuite) TestAcceptAgentHTTP() {
 	tests := []struct {
 		name         string
 		hostname     string
+		query        string
 		setupMocks   func() (*jobmocks.MockJobClient, *agentmocks.MockEnrollmentManager)
 		validateFunc func(*httptest.ResponseRecorder)
 	}{
+		{
+			name:     "when fingerprint exceeds max length returns 400",
+			hostname: "web-01",
+			query:    "?fingerprint=" + strings.Repeat("a", 256),
+			setupMocks: func() (*jobmocks.MockJobClient, *agentmocks.MockEnrollmentManager) {
+				return jobmocks.NewMockJobClient(
+						s.mockCtrl,
+					), agentmocks.NewMockEnrollmentManager(
+						s.mockCtrl,
+					)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "Fingerprint")
+				s.Contains(rec.Body.String(), "'max'")
+			},
+		},
 		{
 			name:     "when hostname exceeds max length returns 400",
 			hostname: strings.Repeat("a", 256),
@@ -279,7 +297,7 @@ func (s *AgentEnrollAcceptPublicTestSuite) TestAcceptAgentHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				fmt.Sprintf("/api/agent/%s/accept", tc.hostname),
+				fmt.Sprintf("/api/agent/%s/accept%s", tc.hostname, tc.query),
 				nil,
 			)
 			rec := httptest.NewRecorder()
