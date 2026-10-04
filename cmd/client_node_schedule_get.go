@@ -28,10 +28,10 @@ import (
 	"github.com/osapi-io/osapi/internal/cli"
 )
 
-// clientNodeScheduleGetCmd represents the cron get command.
+// clientNodeScheduleGetCmd represents the schedule get command.
 var clientNodeScheduleGetCmd = &cobra.Command{
 	Use:   "get",
-	Short: "Get a cron entry by name",
+	Short: "Get a scheduled entry by name",
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
@@ -79,7 +79,7 @@ func init() {
 	clientNodeScheduleCmd.AddCommand(clientNodeScheduleGetCmd)
 
 	clientNodeScheduleGetCmd.PersistentFlags().
-		String("name", "", "Name of the cron entry (required)")
+		String("name", "", "Name of the scheduled entry (required)")
 
 	_ = clientNodeScheduleGetCmd.MarkPersistentFlagRequired("name")
 }

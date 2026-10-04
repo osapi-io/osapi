@@ -29,10 +29,10 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
-// clientNodeScheduleCreateCmd represents the cron create command.
+// clientNodeScheduleCreateCmd represents the schedule create command.
 var clientNodeScheduleCreateCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create a cron entry",
+	Short: "Create a scheduled entry",
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
@@ -92,7 +92,7 @@ func init() {
 	clientNodeScheduleCmd.AddCommand(clientNodeScheduleCreateCmd)
 
 	clientNodeScheduleCreateCmd.PersistentFlags().
-		String("name", "", "Name for the cron drop-in entry (required)")
+		String("name", "", "Name for the scheduled entry (required)")
 	clientNodeScheduleCreateCmd.PersistentFlags().
 		String("object", "", "Name of the uploaded file in the object store (required)")
 	clientNodeScheduleCreateCmd.PersistentFlags().

@@ -263,7 +263,7 @@ const config: Config = {
             },
             {
               type: 'doc',
-              label: 'Cron',
+              label: 'Schedule',
               docId: 'sidebar/sdk/client/services/schedule'
             },
             {

@@ -19,10 +19,10 @@ resp, err := client.Hostname.Get(ctx, "_any")
 
 ## Services
 
-| Service                        | Description                  |
-| ------------------------------ | ---------------------------- |
-| [Service](services/service.md) | Service management (systemd) |
-| [Cron](services/schedule.md)   | Cron schedule management     |
+| Service                          | Description                  |
+| -------------------------------- | ---------------------------- |
+| [Service](services/service.md)   | Service management (systemd) |
+| [Schedule](services/schedule.md) | Scheduled entry management   |
 
 ### Software
 

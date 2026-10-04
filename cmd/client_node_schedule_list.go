@@ -28,10 +28,10 @@ import (
 	"github.com/osapi-io/osapi/internal/cli"
 )
 
-// clientNodeScheduleListCmd represents the cron list command.
+// clientNodeScheduleListCmd represents the schedule list command.
 var clientNodeScheduleListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List all cron entries",
+	Short: "List all scheduled entries",
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
