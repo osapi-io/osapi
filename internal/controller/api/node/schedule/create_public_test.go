@@ -659,6 +659,85 @@ func (s *ScheduleCreatePublicTestSuite) TestPostNodeScheduleValidationHTTP() {
 			},
 		},
 		{
+			name: "when name exceeds the maximum returns 400",
+			path: "/api/node/server1/schedule",
+			body: `{"name":"` + strings.Repeat("a", 65) +
+				`","schedule":"0 2 * * *","object":"backup-script"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "Name")
+				s.Contains(rec.Body.String(), "max")
+			},
+		},
+		{
+			name: "when neither schedule nor interval returns 400",
+			path: "/api/node/server1/schedule",
+			body: `{"name":"backup","object":"backup-script"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "required_without")
+			},
+		},
+		{
+			name: "when both schedule and interval returns 400",
+			path: "/api/node/server1/schedule",
+			body: `{"name":"backup","object":"backup-script",` +
+				`"schedule":"0 2 * * *","interval":"daily"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "excluded_with")
+			},
+		},
+		{
+			name: "when schedule is not a cron expression returns 400",
+			path: "/api/node/server1/schedule",
+			body: `{"name":"backup","object":"backup-script","schedule":"not-a-cron"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "cron_schedule")
+				s.Contains(rec.Body.String(), "not a valid cron expression")
+			},
+		},
+		{
+			name: "when interval is not one of the four returns 400",
+			path: "/api/node/server1/schedule",
+			body: `{"name":"backup","object":"backup-script","interval":"fortnightly"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "Interval")
+				s.Contains(rec.Body.String(), "oneof")
+			},
+		},
+		{
+			name: "when content type is neither raw nor template returns 400",
+			path: "/api/node/server1/schedule",
+			body: `{"name":"backup","object":"backup-script",` +
+				`"schedule":"0 2 * * *","content_type":"jinja"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "ContentType")
+				s.Contains(rec.Body.String(), "oneof")
+			},
+		},
+		{
 			name: "when target agent not found",
 			path: "/api/node/nonexistent/schedule",
 			body: `{"name":"backup","schedule":"0 2 * * *","object":"backup-script"}`,
