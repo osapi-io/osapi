@@ -570,6 +570,44 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 			},
 		},
 		{
+			name: "when neither servers nor search domains returns 400",
+			path: "/api/node/server1/network/dns",
+			body: `{"interface_name":"eth0"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "required_without")
+			},
+		},
+		{
+			name: "when a server is not an IP address returns 400",
+			path: "/api/node/server1/network/dns",
+			body: `{"servers":["not-an-ip"],"interface_name":"eth0"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "Servers[0]")
+				s.Contains(rec.Body.String(), "'ip'")
+			},
+		},
+		{
+			name: "when a search domain is not a hostname returns 400",
+			path: "/api/node/server1/network/dns",
+			body: `{"search_domains":["not a hostname"],"interface_name":"eth0"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "SearchDomains[0]")
+				s.Contains(rec.Body.String(), "hostname")
+			},
+		},
+		{
 			name: "when missing interface name",
 			path: "/api/node/server1/network/dns",
 			body: `{"servers":["1.1.1.1"]}`,
