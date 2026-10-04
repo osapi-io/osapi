@@ -581,7 +581,7 @@ func (s *ScheduleUpdatePublicTestSuite) TestPutNodeScheduleValidationHTTP() {
 			},
 		},
 		{
-			name: "when invalid cron schedule",
+			name: "when schedule is not a cron expression returns 400",
 			path: "/api/node/server1/schedule/backup",
 			body: `{"schedule":"not-a-cron"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -591,6 +591,21 @@ func (s *ScheduleUpdatePublicTestSuite) TestPutNodeScheduleValidationHTTP() {
 				s.Equal(http.StatusBadRequest, rec.Code)
 				s.Contains(rec.Body.String(), `"error"`)
 				s.Contains(rec.Body.String(), "Schedule")
+				s.Contains(rec.Body.String(), "cron_schedule")
+				s.Contains(rec.Body.String(), "not a valid cron expression")
+			},
+		},
+		{
+			name: "when content type is neither raw nor template returns 400",
+			path: "/api/node/server1/schedule/backup",
+			body: `{"content_type":"jinja"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "ContentType")
+				s.Contains(rec.Body.String(), "oneof")
 			},
 		},
 		{
