@@ -289,6 +289,20 @@ func (s *JobRetryPublicTestSuite) TestRetryJobByIDValidationHTTP() {
 				s.Equal(http.StatusBadRequest, rec.Code)
 				s.Contains(rec.Body.String(), `"error"`)
 				s.Contains(rec.Body.String(), "TargetHostname")
+				s.Contains(rec.Body.String(), "'min'")
+			},
+		},
+		{
+			name:  "when target hostname names no active agent",
+			jobID: "550e8400-e29b-41d4-a716-446655440000",
+			body:  `{"target_hostname":"nonexistent"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "TargetHostname")
+				s.Contains(rec.Body.String(), "valid_target")
 			},
 		},
 	}

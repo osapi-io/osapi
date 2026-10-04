@@ -64,8 +64,9 @@ paths:
                   type: string
                   description: The name of the file in the Object Store.
                   example: "nginx.conf"
-                  # NOTE: multipart form fields are parsed manually in
-                  # the handler; these tags are for documentation only.
+                  # NOTE: oapi-codegen does not bind multipart/form-data, so
+                  # the handler reads the parts and validates them against
+                  # these tags via the uploadForm struct.
                   x-oapi-codegen-extra-tags:
                     validate: "required,min=1,max=255"
                 content_type:
@@ -78,14 +79,17 @@ paths:
                   enum:
                     - raw
                     - template
-                  # NOTE: multipart form fields are parsed manually in
-                  # the handler; these tags are for documentation only.
+                  # NOTE: oapi-codegen does not bind multipart/form-data, so
+                  # the handler reads the parts and validates them against
+                  # these tags via the uploadForm struct.
                   x-oapi-codegen-extra-tags:
                     validate: "omitempty,oneof=raw template"
                 file:
                   type: string
                   format: binary
                   description: The file content.
+                  x-oapi-codegen-extra-tags:
+                    validate: "required,min=1"
               required:
                 - name
                 - file
