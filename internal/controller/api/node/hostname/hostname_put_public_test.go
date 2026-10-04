@@ -492,7 +492,20 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostnameHTTP() {
 			},
 		},
 		{
-			name: "when empty hostname path returns 400",
+			name: "when new hostname exceeds the maximum returns 400",
+			path: "/api/node/server1/hostname",
+			body: `{"hostname":"` + strings.Repeat("a", 254) + `"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "Hostname")
+				s.Contains(rec.Body.String(), "max")
+			},
+		},
+		{
+			name: "when hostname path is not a valid target returns 400",
 			path: "/api/node/%20/hostname",
 			body: `{"hostname":"new-hostname"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -501,6 +514,7 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostnameHTTP() {
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusBadRequest, rec.Code)
 				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "valid_target")
 			},
 		},
 	}

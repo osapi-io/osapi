@@ -345,16 +345,27 @@ func (s *HostnameGetPublicTestSuite) TestGetNodeHostnameValidationHTTP() {
 		validateFunc func(*httptest.ResponseRecorder)
 	}{
 		{
-			name: "when empty hostname returns 400",
+			name: "when hostname is not a valid target returns 400",
 			path: "/api/node/%20/hostname",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusBadRequest, rec.Code)
-				for _, str := range []string{`"error"`} {
-					s.Contains(rec.Body.String(), str)
-				}
+				s.Contains(rec.Body.String(), `"error"`)
+				s.Contains(rec.Body.String(), "valid_target")
+			},
+		},
+		{
+			name: "when hostname names an unknown agent returns 400",
+			path: "/api/node/no-such-agent/hostname",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "valid_target")
+				s.Contains(rec.Body.String(), "not found")
 			},
 		},
 		{
