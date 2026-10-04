@@ -473,6 +473,84 @@ func (s *NetworkInterfaceCreatePostPublicTestSuite) TestPostNetworkInterfaceVali
 			},
 		},
 		{
+			name: "when gateway4 is not an IPv4 address returns 400",
+			path: "/api/node/server1/network/interface/eth0",
+			body: `{"gateway4":"not-an-ip"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "Gateway4")
+				s.Contains(rec.Body.String(), "ipv4")
+			},
+		},
+		{
+			name: "when gateway4 is given an IPv6 address returns 400",
+			path: "/api/node/server1/network/interface/eth0",
+			body: `{"gateway4":"2001:db8::1"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "Gateway4")
+				s.Contains(rec.Body.String(), "ipv4")
+			},
+		},
+		{
+			name: "when gateway6 is not an IPv6 address returns 400",
+			path: "/api/node/server1/network/interface/eth0",
+			body: `{"gateway6":"not-an-ip"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "Gateway6")
+				s.Contains(rec.Body.String(), "ipv6")
+			},
+		},
+		{
+			name: "when gateway6 is given an IPv4 address returns 400",
+			path: "/api/node/server1/network/interface/eth0",
+			body: `{"gateway6":"192.168.1.1"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "Gateway6")
+				s.Contains(rec.Body.String(), "ipv6")
+			},
+		},
+		{
+			name: "when mtu is below the minimum returns 400",
+			path: "/api/node/server1/network/interface/eth0",
+			body: `{"mtu":67}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "Mtu")
+				s.Contains(rec.Body.String(), "min")
+			},
+		},
+		{
+			name: "when mtu is above the maximum returns 400",
+			path: "/api/node/server1/network/interface/eth0",
+			body: `{"mtu":9001}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusBadRequest, rec.Code)
+				s.Contains(rec.Body.String(), "Mtu")
+				s.Contains(rec.Body.String(), "max")
+			},
+		},
+		{
 			name: "when target agent not found",
 			path: "/api/node/nonexistent/network/interface/eth0",
 			body: `{"dhcp4":true}`,
