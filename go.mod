@@ -21,7 +21,7 @@ require (
 	github.com/oapi-codegen/runtime v1.7.0
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/osapi-io/nats-client v0.0.0-20260412170202-5d1c1a26fa5a
-	github.com/osapi-io/nats-server v0.0.0-20260216201410-1f33dfc63848
+	github.com/osapi-io/nats-server v1.1.0
 	github.com/prometheus-community/pro-bing v0.9.1
 	github.com/prometheus/client_golang v1.24.1
 	github.com/robfig/cron/v3 v3.0.1
