@@ -245,6 +245,24 @@ func (suite *DebianPublicTestSuite) TestGet() {
 		wantErrMsg   string
 		validateFunc func(result *process.Info)
 	}{
+		// setupMock sets no expectation, so the controller fails the test if
+		// NewProcess is called at all. kill(2) is not reached from Get, but the
+		// guard is here because the API and the provider validate the same
+		// bound, and a pid below 1 is not a process either way.
+		{
+			name:       "when pid is zero it never reaches the lister",
+			pid:        0,
+			setupMock:  func() {},
+			wantErr:    true,
+			wantErrMsg: "pid 0 must be greater than zero",
+		},
+		{
+			name:       "when pid is negative it never reaches the lister",
+			pid:        -1,
+			setupMock:  func() {},
+			wantErr:    true,
+			wantErrMsg: "pid -1 must be greater than zero",
+		},
 		{
 			name: "when successful returns process info",
 			pid:  42,
