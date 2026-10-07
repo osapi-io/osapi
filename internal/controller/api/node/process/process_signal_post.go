@@ -42,6 +42,10 @@ func (s *Process) PostNodeProcessSignal(
 		return gen.PostNodeProcessSignal400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validatePid(request.Pid); !ok {
+		return gen.PostNodeProcessSignal400JSONResponse{Error: &errMsg}, nil
+	}
+
 	if errMsg, ok := validation.Struct(request.Body); !ok {
 		return gen.PostNodeProcessSignal400JSONResponse{Error: &errMsg}, nil
 	}

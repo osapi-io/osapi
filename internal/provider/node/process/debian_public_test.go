@@ -245,6 +245,24 @@ func (suite *DebianPublicTestSuite) TestGet() {
 		wantErrMsg   string
 		validateFunc func(result *process.Info)
 	}{
+		// setupMock sets no expectation, so the controller fails the test if
+		// NewProcess is called at all. kill(2) is not reached from Get, but the
+		// guard is here because the API and the provider validate the same
+		// bound, and a pid below 1 is not a process either way.
+		{
+			name:       "when pid is zero it never reaches the lister",
+			pid:        0,
+			setupMock:  func() {},
+			wantErr:    true,
+			wantErrMsg: "pid 0 must be greater than zero",
+		},
+		{
+			name:       "when pid is negative it never reaches the lister",
+			pid:        -1,
+			setupMock:  func() {},
+			wantErr:    true,
+			wantErrMsg: "pid -1 must be greater than zero",
+		},
 		{
 			name: "when successful returns process info",
 			pid:  42,
@@ -393,6 +411,42 @@ func (suite *DebianPublicTestSuite) TestSignal() {
 			},
 			wantErr:    true,
 			wantErrMsg: "process: signal: unexpected error",
+		},
+		// Each of these would reach kill(2) as a process-group signal rather
+		// than a process signal. setupMock sets no expectation, so the mock
+		// controller fails the test if Kill is called at all, which is the
+		// assertion that matters: the signal is never sent.
+		{
+			name:       "when pid is zero it never reaches kill",
+			pid:        0,
+			signal:     "KILL",
+			setupMock:  func() {},
+			wantErr:    true,
+			wantErrMsg: "pid 0 must be greater than zero",
+		},
+		{
+			name:       "when pid is minus one it never reaches kill",
+			pid:        -1,
+			signal:     "KILL",
+			setupMock:  func() {},
+			wantErr:    true,
+			wantErrMsg: "pid -1 must be greater than zero",
+		},
+		{
+			name:       "when pid is a process group it never reaches kill",
+			pid:        -42,
+			signal:     "TERM",
+			setupMock:  func() {},
+			wantErr:    true,
+			wantErrMsg: "pid -42 must be greater than zero",
+		},
+		{
+			name:       "the pid is checked before the signal name",
+			pid:        -1,
+			signal:     "NOT-A-SIGNAL",
+			setupMock:  func() {},
+			wantErr:    true,
+			wantErrMsg: "pid -1 must be greater than zero",
 		},
 	}
 

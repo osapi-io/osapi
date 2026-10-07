@@ -41,6 +41,10 @@ func (s *Process) GetNodeProcessByPid(
 		return gen.GetNodeProcessByPid400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validatePid(request.Pid); !ok {
+		return gen.GetNodeProcessByPid400JSONResponse{Error: &errMsg}, nil
+	}
+
 	hostname := request.Hostname
 	pid := request.Pid
 
