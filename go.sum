@@ -385,7 +385,6 @@ github.com/golang/mock v1.4.1/go.mod h1:UOMv5ysSaYNkG+OFQykRIcU/QvvxJf3p21QfJ2Bt
 github.com/golang/mock v1.4.3/go.mod h1:UOMv5ysSaYNkG+OFQykRIcU/QvvxJf3p21QfJ2Bt3cw=
 github.com/golang/mock v1.4.4/go.mod h1:l3mdAwkq5BuhzHwde/uurv3sEJeZMXNpwsxVWU71h+4=
 github.com/golang/mock v1.5.0/go.mod h1:CWnOUgYIOo4TcNZ0wHX3YZCqsaM1I1Jvs6v3mP3KVu8=
-github.com/golang/mock v1.6.0 h1:ErTB+efbowRARo13NNdxyJji2egdxLGQhRaY+DUumQc=
 github.com/golang/mock v1.6.0/go.mod h1:p6yTPP+5HYm5mzsMV8JkE6ZKdX+/wYM6Hr+LicevLPs=
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/golang/protobuf v1.3.1/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
@@ -741,8 +740,8 @@ github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opencontainers/image-spec v1.1.1 h1:y0fUlFfIZhPF1W537XOLg0/fcx6zcHCJwooC2xJA040=
 github.com/opencontainers/image-spec v1.1.1/go.mod h1:qpqAh3Dmcf36wStyyWU+kCeDgrGnAve2nCC8+7h8Q0M=
-github.com/osapi-io/nats-client v0.0.0-20260412170202-5d1c1a26fa5a h1:JqWuCIwxxip6QcTUrVvAAXe2w1kV9fGkzlzp9SCA0jk=
-github.com/osapi-io/nats-client v0.0.0-20260412170202-5d1c1a26fa5a/go.mod h1:JrlF5QcwMnjxc5ng7dvm8AuH92MmTIeyPqY9eDdLRgk=
+github.com/osapi-io/nats-client v1.0.1 h1:mMghRVakQ7v01eLjwlrAZnBhCSjrYIpz+neQWB+OC9M=
+github.com/osapi-io/nats-client v1.0.1/go.mod h1:PF5GTm0d6GM2fttDt0Prj0h22GKpry1Q2MwcF1EEuxQ=
 github.com/osapi-io/nats-server v1.1.0 h1:plerqk29UH3YNrkubnf4CjUGjC99BLMDQ7BpFAauFAk=
 github.com/osapi-io/nats-server v1.1.0/go.mod h1:DVMGoEo9oKgAtr9j7HEcp0Vqsowk5JC7XPWhVIMvQxs=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
