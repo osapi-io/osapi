@@ -17,7 +17,7 @@ require (
 	github.com/labstack/echo/v5 v5.4.2
 	github.com/lmittmann/tint v1.2.1
 	github.com/nats-io/nats-server/v2 v2.15.1
-	github.com/nats-io/nats.go v1.54.0
+	github.com/nats-io/nats.go v1.55.0
 	github.com/oapi-codegen/runtime v1.7.0
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/osapi-io/nats-client v1.0.1
