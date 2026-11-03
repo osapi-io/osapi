@@ -1,6 +1,6 @@
 module github.com/osapi-io/osapi/examples/sdk/client
 
-go 1.26.0
+go 1.27.1
 
 replace github.com/osapi-io/osapi => ../../../
 
