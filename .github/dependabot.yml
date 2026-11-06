@@ -48,3 +48,15 @@ updates:
       semver-major-days: 14
     commit-message:
       prefix: chore
+
+  # The base image is pinned by digest. Dependabot proposes a new digest when
+  # the tag moves, so the image cannot change between builds unreviewed.
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+    commit-message:
+      prefix: chore
