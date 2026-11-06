@@ -5,6 +5,9 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     commit-message:
       prefix: chore
 
@@ -12,6 +15,9 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     commit-message:
       prefix: chore
 
@@ -23,5 +29,8 @@ updates:
       - "examples/sdk/*"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     commit-message:
       prefix: chore
