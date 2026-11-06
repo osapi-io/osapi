@@ -25,3 +25,17 @@ updates:
       interval: "daily"
     commit-message:
       prefix: chore
+
+  # The documentation site and the UI lock their npm packages with bun. Without
+  # an entry here nothing bumps them and none of them raises an alert.
+  - package-ecosystem: "bun"
+    directories:
+      - "/docs"
+      - "/ui"
+    schedule:
+      interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+    commit-message:
+      prefix: chore
