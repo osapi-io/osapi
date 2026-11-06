@@ -45,6 +45,15 @@ updates:
     cooldown:
       default-days: 7
       semver-major-days: 14
+    # react and react-dom must be the same version. Bumped apart, the docs
+    # build fails and the UI throws "Incompatible React versions" at runtime.
+    groups:
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
     commit-message:
       prefix: chore
 
