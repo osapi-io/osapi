@@ -48,7 +48,7 @@ Route format: TO:VIA or TO:VIA:METRIC
 
 		opts, err := parseRouteFlags(routeStrs)
 		if err != nil {
-			fmt.Println("Error:", err)
+			cli.HandleError(err, logger)
 			return
 		}
 
@@ -59,7 +59,7 @@ Route format: TO:VIA or TO:VIA:METRIC
 		}
 
 		if jsonOutput {
-			fmt.Println(string(resp.RawJSON()))
+			cli.PrintJSON(resp.RawJSON())
 			return
 		}
 

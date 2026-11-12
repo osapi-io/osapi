@@ -46,7 +46,7 @@ Reports whether the file is in-sync, drifted, or missing.`,
 		}
 
 		if jsonOutput {
-			fmt.Println(string(resp.RawJSON()))
+			cli.PrintJSON(resp.RawJSON())
 			return
 		}
 

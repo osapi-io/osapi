@@ -21,12 +21,28 @@
 package cli
 
 import (
+	"fmt"
+	"io"
 	"log/slog"
 	"os"
 )
 
 // osExit allows tests to override os.Exit.
 var osExit = os.Exit
+
+// errOut is where errors for a person are printed. Tests replace it.
+var errOut io.Writer = os.Stderr
+
+// jsonOutput is set by --json. Errors then stay structured log lines rather
+// than styled text, so a program reading them sees no color or decoration.
+var jsonOutput bool
+
+// SetJSONOutput records whether --json is in effect.
+func SetJSONOutput(
+	enabled bool,
+) {
+	jsonOutput = enabled
+}
 
 // LogFatal logs a fatal error message along with optional structured data
 // and then exits the program with a status code of 1.
@@ -36,6 +52,23 @@ func LogFatal(
 	err error,
 	kvPairs ...any,
 ) {
+	if !jsonOutput {
+		msg := message
+		if err != nil {
+			msg += ": " + err.Error()
+		}
+		_, _ = fmt.Fprintln(errOut, Failure(errOut, msg))
+		for i := 0; i+1 < len(kvPairs); i += 2 {
+			_, _ = fmt.Fprintln(
+				errOut,
+				Mute(errOut, fmt.Sprintf("  %v: %v", kvPairs[i], kvPairs[i+1])),
+			)
+		}
+		osExit(1)
+
+		return
+	}
+
 	if err != nil {
 		kvPairs = append(kvPairs, slog.Any("error", err))
 	}

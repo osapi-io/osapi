@@ -66,7 +66,7 @@ var clientFileUploadCmd = &cobra.Command{
 				out, _ := json.Marshal(resp.Data)
 				rawJSON = out
 			}
-			fmt.Println(string(rawJSON))
+			cli.PrintJSON(rawJSON)
 			return
 		}
 

@@ -53,7 +53,7 @@ var clientJobDeleteCmd = &cobra.Command{
 				"timestamp": time.Now().Format(time.RFC3339),
 			}
 			resultJSON, _ := json.Marshal(result)
-			fmt.Println(string(resultJSON))
+			cli.PrintJSON(resultJSON)
 			return
 		}
 

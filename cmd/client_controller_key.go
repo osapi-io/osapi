@@ -60,7 +60,7 @@ var clientControllerKeyFingerprintCmd = &cobra.Command{
 
 		fingerprint := mgr.Fingerprint()
 		if fingerprint == "" {
-			fmt.Println("No controller key found.")
+			cli.PrintNote("No controller key found.")
 			return
 		}
 

@@ -43,7 +43,7 @@ var clientControllerStatusCmd = &cobra.Command{
 		}
 
 		if jsonOutput {
-			fmt.Println(string(resp.RawJSON()))
+			cli.PrintJSON(resp.RawJSON())
 			return
 		}
 

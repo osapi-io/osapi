@@ -21,6 +21,7 @@
 package cli
 
 import (
+	"io"
 	"os"
 
 	"github.com/shirou/gopsutil/v4/host"
@@ -62,4 +63,17 @@ func ExportResolveStatus(
 	r ResultRow,
 ) string {
 	return resolveStatus(r)
+}
+
+// SetErrOut overrides where errors for a person are printed, for testing.
+func SetErrOut(
+	w io.Writer,
+) {
+	errOut = w
+}
+
+// ResetErrOut restores errOut to stderr and turns --json off.
+func ResetErrOut() {
+	errOut = os.Stderr
+	jsonOutput = false
 }
