@@ -1588,6 +1588,18 @@ func (suite *UIPublicTestSuite) TestPrintSummary() {
 			},
 		},
 		{
+			name: "when reference section does not print summary line",
+			section: cli.Section{
+				Reference: true,
+				Rows: [][]string{
+					{"sysctl", "list"},
+				},
+			},
+			validateFunc: func(output string) {
+				assert.NotContains(suite.T(), output, "hosts:")
+			},
+		},
+		{
 			name: "when no rows does not print summary line",
 			section: cli.Section{
 				Rows: [][]string{},
