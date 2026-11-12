@@ -332,6 +332,8 @@ func TestAuditMiddlewarePublicTestSuite(
 // that disconnects mid-request leaves behind.
 type failingReader struct{}
 
-func (failingReader) Read([]byte) (int, error) {
+func (failingReader) Read(
+	_ []byte,
+) (int, error) {
 	return 0, errors.New("connection reset")
 }

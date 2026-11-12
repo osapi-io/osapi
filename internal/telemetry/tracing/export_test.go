@@ -43,8 +43,18 @@ func ExportNewMapCarrier(
 // noopClient implements otlptrace.Client for testing.
 type noopClient struct{}
 
-func (noopClient) Start(_ context.Context) error { return nil }
-func (noopClient) Stop(_ context.Context) error  { return nil }
+func (noopClient) Start(
+	_ context.Context,
+) error {
+	return nil
+}
+
+func (noopClient) Stop(
+	_ context.Context,
+) error {
+	return nil
+}
+
 func (noopClient) UploadTraces(
 	_ context.Context,
 	_ []*tracepb.ResourceSpans,

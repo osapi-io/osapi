@@ -78,13 +78,19 @@ func (s *ServerPublicTestSuite) TestNew() {
 	}
 }
 
-func (s *ServerPublicTestSuite) TestStartAndStop() {
+func (s *ServerPublicTestSuite) TestStart() {
 	tests := []struct {
-		name         string
+		name string
+		// listen returns the port to serve on and a function releasing
+		// anything the row held open.
+		listen       func() (int, func())
 		validateFunc func(port int)
 	}{
 		{
 			name: "serves metrics endpoint",
+			listen: func() (int, func()) {
+				return s.getFreePort(), func() {}
+			},
 			validateFunc: func(port int) {
 				url := fmt.Sprintf("http://127.0.0.1:%d/metrics", port)
 
@@ -101,6 +107,9 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 		},
 		{
 			name: "returns 404 for unknown paths",
+			listen: func() (int, func()) {
+				return s.getFreePort(), func() {}
+			},
 			validateFunc: func(port int) {
 				url := fmt.Sprintf("http://127.0.0.1:%d/unknown", port)
 
@@ -111,25 +120,128 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 				s.Equal(404, resp.StatusCode)
 			},
 		},
+		{
+			name: "logs error when port is already in use",
+			listen: func() (int, func()) {
+				// Occupy a port on the same interface the server will bind to.
+				l, err := net.Listen("tcp", "127.0.0.1:0")
+				s.Require().NoError(err)
+
+				return l.Addr().(*net.TCPAddr).Port, func() { _ = l.Close() }
+			},
+			validateFunc: func(_ int) {},
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			port := s.getFreePort()
+			port, release := tc.listen()
+			defer release()
+
 			srv := metrics.New("127.0.0.1", port, slog.Default())
+			s.Require().NotNil(srv)
 			srv.Start()
 
 			time.Sleep(100 * time.Millisecond)
 
 			tc.validateFunc(port)
 
-			ctx, cancel := context.WithTimeout(
-				context.Background(),
-				5*time.Second,
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			srv.Stop(ctx)
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestStop() {
+	tests := []struct {
+		name string
+		// setup prepares the started server before Stop.
+		setup func(srv *metrics.Server, port int)
+		// stopCtx is the context Stop is called with.
+		stopCtx func() (context.Context, context.CancelFunc)
+		// stopTwice calls Stop a second time on the stopped server.
+		stopTwice bool
+	}{
+		{
+			name:  "stops a running server",
+			setup: func(_ *metrics.Server, _ int) {},
+			stopCtx: func() (context.Context, context.CancelFunc) {
+				return context.WithTimeout(context.Background(), 5*time.Second)
+			},
+		},
+		{
+			name:  "handles shutdown after already stopped",
+			setup: func(_ *metrics.Server, _ int) {},
+			stopCtx: func() (context.Context, context.CancelFunc) {
+				return context.WithTimeout(context.Background(), 5*time.Second)
+			},
+			// The second stop exercises the error paths, since the server
+			// and meter provider are already shut down.
+			stopTwice: true,
+		},
+		{
+			name: "logs error when shutdown cannot close active connections",
+			setup: func(_ *metrics.Server, port int) {
+				// Start a request that holds a connection open.
+				go func() {
+					//nolint:gosec
+					resp, err := http.Get(
+						fmt.Sprintf("http://127.0.0.1:%d/slow", port),
+					)
+					if err == nil {
+						_ = resp.Body.Close()
+					}
+				}()
+
+				time.Sleep(50 * time.Millisecond)
+			},
+			// An already-expired context, so Shutdown cannot wait for the
+			// active connection to close.
+			stopCtx: func() (context.Context, context.CancelFunc) {
+				return context.WithDeadline(context.Background(), time.Now().Add(-time.Second))
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			port := s.getFreePort()
+			srv := metrics.New("127.0.0.1", port, slog.Default())
+			s.Require().NotNil(srv)
+
+			// A slow handler that holds a connection open, for the row
+			// that needs one.
+			metrics.ExportServerAddRoute(
+				srv,
+				"/slow",
+				func(c *echo.Context) error {
+					c.Response().WriteHeader(http.StatusOK)
+					// v5's Response() is a bare http.ResponseWriter, so
+					// Flush comes from the interface rather than a method
+					// on Echo's wrapper.
+					if f, ok := c.Response().(http.Flusher); ok {
+						f.Flush()
+					}
+
+					time.Sleep(5 * time.Second)
+
+					return nil
+				},
 			)
+
+			srv.Start()
+			time.Sleep(100 * time.Millisecond)
+
+			tc.setup(srv, port)
+
+			ctx, cancel := tc.stopCtx()
 			defer cancel()
 
 			srv.Stop(ctx)
+			if tc.stopTwice {
+				srv.Stop(ctx)
+			}
 		})
 	}
 }
@@ -330,38 +442,6 @@ func (s *ServerPublicTestSuite) TestRegisterHeartbeatAge() {
 	}
 }
 
-func (s *ServerPublicTestSuite) TestStartListenError() {
-	tests := []struct {
-		name         string
-		validateFunc func()
-	}{
-		{
-			name: "logs error when port is already in use",
-			validateFunc: func() {
-				// Occupy a port on the same interface the server will bind to.
-				l, err := net.Listen("tcp", "127.0.0.1:0")
-				s.Require().NoError(err)
-
-				port := l.Addr().(*net.TCPAddr).Port
-
-				srv := metrics.New("127.0.0.1", port, slog.Default())
-				s.Require().NotNil(srv)
-
-				srv.Start()
-				time.Sleep(100 * time.Millisecond)
-
-				_ = l.Close()
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc()
-		})
-	}
-}
-
 func (s *ServerPublicTestSuite) TestNewPrometheusError() {
 	tests := []struct {
 		name         string
@@ -387,98 +467,6 @@ func (s *ServerPublicTestSuite) TestNewPrometheusError() {
 			port := s.getFreePort()
 			srv := metrics.New("127.0.0.1", port, slog.Default())
 			tc.validateFunc(srv)
-		})
-	}
-}
-
-func (s *ServerPublicTestSuite) TestStopErrors() {
-	tests := []struct {
-		name         string
-		validateFunc func()
-	}{
-		{
-			name: "handles shutdown after already stopped",
-			validateFunc: func() {
-				port := s.getFreePort()
-				srv := metrics.New("127.0.0.1", port, slog.Default())
-				s.Require().NotNil(srv)
-
-				srv.Start()
-				time.Sleep(100 * time.Millisecond)
-
-				ctx, cancel := context.WithTimeout(
-					context.Background(),
-					5*time.Second,
-				)
-				defer cancel()
-
-				// First stop succeeds.
-				srv.Stop(ctx)
-
-				// Second stop exercises the error paths since
-				// the server and meter provider are already shut down.
-				srv.Stop(ctx)
-			},
-		},
-		{
-			name: "logs error when shutdown cannot close active connections",
-			validateFunc: func() {
-				port := s.getFreePort()
-
-				// Add a slow handler that holds the connection open.
-				srv := metrics.New("127.0.0.1", port, slog.Default())
-				s.Require().NotNil(srv)
-
-				metrics.ExportServerAddRoute(
-					srv,
-					"/slow",
-					func(c *echo.Context) error {
-						c.Response().WriteHeader(http.StatusOK)
-						// v5's Response() is a bare http.ResponseWriter, so
-						// Flush comes from the interface rather than a method
-						// on Echo's wrapper.
-						if f, ok := c.Response().(http.Flusher); ok {
-							f.Flush()
-						}
-
-						time.Sleep(5 * time.Second)
-
-						return nil
-					},
-				)
-
-				srv.Start()
-				time.Sleep(100 * time.Millisecond)
-
-				// Start a request that holds a connection open.
-				go func() {
-					//nolint:gosec
-					resp, err := http.Get(
-						fmt.Sprintf("http://127.0.0.1:%d/slow", port),
-					)
-					if err == nil {
-						_ = resp.Body.Close()
-					}
-				}()
-
-				time.Sleep(50 * time.Millisecond)
-
-				// Stop with an already-expired context so Shutdown
-				// can't wait for the active connection to close.
-				ctx, cancel := context.WithDeadline(
-					context.Background(),
-					time.Now().Add(-time.Second),
-				)
-				defer cancel()
-
-				srv.Stop(ctx)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc()
 		})
 	}
 }

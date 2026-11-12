@@ -268,7 +268,9 @@ func dig(
 	return current
 }
 
-func TestRedactionGuardPublicTestSuite(t *testing.T) {
+func TestRedactionGuardPublicTestSuite(
+	t *testing.T,
+) {
 	t.Parallel()
 	suite.Run(t, new(RedactionGuardPublicTestSuite))
 }

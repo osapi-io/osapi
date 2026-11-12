@@ -43,7 +43,11 @@ type natsLifecycle struct {
 
 func (n *natsLifecycle) Start() {}
 
-func (n *natsLifecycle) Stop(_ context.Context) { n.server.Stop() }
+func (n *natsLifecycle) Stop(
+	_ context.Context,
+) {
+	n.server.Stop()
+}
 
 // setupNATSServer starts the embedded NATS server and configures JetStream
 // infrastructure (streams, KV buckets, DLQ). It is used by the standalone
