@@ -50,6 +50,8 @@ jobs:
         run: |
           just go-deps
           just react-deps
+      - name: Lint UI
+        run: just react-lint
       - name: Build UI
         run: just react-build
       - name: Linux tuning
