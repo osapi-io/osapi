@@ -16,6 +16,7 @@ require (
 	github.com/labstack/echo-opentelemetry v0.0.4
 	github.com/labstack/echo/v5 v5.4.4
 	github.com/lmittmann/tint v1.2.1
+	github.com/muesli/termenv v0.16.0
 	github.com/nats-io/nats-server/v2 v2.15.2
 	github.com/nats-io/nats.go v1.55.0
 	github.com/oapi-codegen/runtime v1.8.0
@@ -213,7 +214,6 @@ require (
 	github.com/moricho/tparallel v0.3.2 // indirect
 	github.com/morikuni/aec v1.1.0 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
-	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nakabonne/nestif v0.3.1 // indirect
 	github.com/nats-io/jwt/v2 v2.8.2 // indirect

@@ -48,7 +48,7 @@ Requires file:read permission.
 		}
 
 		if jsonOutput {
-			fmt.Println(string(resp.RawJSON()))
+			cli.PrintJSON(resp.RawJSON())
 			return
 		}
 
@@ -56,7 +56,7 @@ Requires file:read permission.
 		cli.PrintKV("Total", strconv.Itoa(resp.Data.Total))
 
 		if len(resp.Data.Stale) == 0 {
-			fmt.Println("  All deployments are in sync.")
+			cli.PrintNote("All deployments are in sync.")
 			return
 		}
 

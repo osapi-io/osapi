@@ -93,7 +93,7 @@ func displayJobListJSON(
 		"jobs":           jobs,
 	}
 	resultJSON, _ := json.Marshal(result)
-	fmt.Println(string(resultJSON))
+	cli.PrintJSON(resultJSON)
 }
 
 func displayJobListSummary(

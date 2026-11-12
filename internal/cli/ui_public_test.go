@@ -22,6 +22,7 @@ package cli_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -924,12 +925,34 @@ func (suite *UIPublicTestSuite) TestHandleError() {
 			cli.SetOsExit(func(code int) { exitCode = code })
 			defer cli.ResetOsExit()
 
-			var buf bytes.Buffer
-			logger := slog.New(slog.NewTextHandler(&buf, nil))
+			defer cli.ResetErrOut()
 
+			// With --json the error is a structured log line.
+			var logBuf bytes.Buffer
+			logger := slog.New(slog.NewTextHandler(&logBuf, nil))
+			cli.SetJSONOutput(true)
 			cli.HandleError(tc.err, logger)
+			tc.validateFunc(logBuf.String(), exitCode)
 
-			tc.validateFunc(buf.String(), exitCode)
+			// Without it the error is one line for a person, and no log.
+			exitCode = 0
+			logBuf.Reset()
+			var errBuf bytes.Buffer
+			cli.SetErrOut(&errBuf)
+			cli.SetJSONOutput(false)
+			cli.HandleError(tc.err, logger)
+			tc.validateFunc(errBuf.String(), exitCode)
+			assert.True(suite.T(), strings.HasPrefix(errBuf.String(), "[err] "))
+			assert.Empty(suite.T(), logBuf.String())
+
+			var apiErr *client.APIError
+			if errors.As(tc.err, &apiErr) {
+				assert.Contains(
+					suite.T(),
+					errBuf.String(),
+					fmt.Sprintf("api error (%d): ", apiErr.StatusCode),
+				)
+			}
 		})
 	}
 }

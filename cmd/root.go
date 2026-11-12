@@ -67,12 +67,7 @@ var rootCmd = &cobra.Command{
 	Long: `A CRUD API for managing Linux systems, responsible for ensuring that
 the system's configuration matches the desired state.
 
-┌─┐┌─┐┌─┐┌─┐┬
-│ │└─┐├─┤├─┘│
-└─┘└─┘┴ ┴┴  ┴
-
-https://github.com/osapi-io/osapi
-`,
+https://github.com/osapi-io/osapi`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -89,14 +84,16 @@ func Execute() {
 		cancel()
 	}()
 
-	err := rootCmd.ExecuteContext(ctx)
+	cmd, err := rootCmd.ExecuteContextC(ctx)
 	if err != nil {
+		cli.PrintError(os.Stderr, cmd, err, jsonOutput)
 		os.Exit(1)
 	}
 }
 
 func init() {
-	cobra.OnInitialize(initConfig, initLogger)
+	cobra.OnInitialize(func() { cli.SetJSONOutput(jsonOutput) }, initConfig, initLogger)
+	cli.ApplyTheme(rootCmd)
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Enable or disable debug mode")
 	rootCmd.PersistentFlags().BoolVarP(&jsonOutput, "json", "j", false, "Enable JSON output")
@@ -241,4 +238,5 @@ func initLogger() {
 
 	handler = tracing.NewTraceHandler(handler)
 	logger = slog.New(handler)
+	cli.SetJSONOutput(jsonOutput)
 }

@@ -61,7 +61,7 @@ var clientNodeCommandShellCmd = &cobra.Command{
 		exitCode := cli.MaxExitCode(rawResults)
 
 		if jsonOutput {
-			fmt.Println(string(resp.RawJSON()))
+			cli.PrintJSON(resp.RawJSON())
 			exitWith(exitCode)
 
 			return

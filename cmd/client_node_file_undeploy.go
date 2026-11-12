@@ -50,7 +50,7 @@ The object store entry is preserved; only the file on disk is removed.`,
 		}
 
 		if jsonOutput {
-			fmt.Println(string(resp.RawJSON()))
+			cli.PrintJSON(resp.RawJSON())
 			return
 		}
 

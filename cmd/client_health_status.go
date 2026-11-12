@@ -47,7 +47,7 @@ Requires authentication.
 		}
 
 		if jsonOutput {
-			fmt.Println(string(resp.RawJSON()))
+			cli.PrintJSON(resp.RawJSON())
 			return
 		}
 
@@ -104,7 +104,7 @@ func displayComponentTable(
 	}
 
 	if len(filtered) == 0 {
-		fmt.Println("\n  No components found.")
+		cli.PrintNote("No components found.")
 
 		return
 	}

@@ -42,13 +42,13 @@ var clientFileListCmd = &cobra.Command{
 		}
 
 		if jsonOutput {
-			fmt.Println(string(resp.RawJSON()))
+			cli.PrintJSON(resp.RawJSON())
 			return
 		}
 
 		files := resp.Data.Files
 		if len(files) == 0 {
-			fmt.Println("No files found.")
+			cli.PrintNote("No files found.")
 			return
 		}
 

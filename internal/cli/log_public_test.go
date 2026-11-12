@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"fmt"
 	"log/slog"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -90,13 +91,27 @@ func (suite *LogPublicTestSuite) TestLogFatal() {
 			var exitCode int
 			cli.SetOsExit(func(code int) { exitCode = code })
 
+			defer cli.ResetErrOut()
+
+			// With --json the error is a structured log line.
 			var buf bytes.Buffer
 			logger := slog.New(slog.NewTextHandler(&buf, nil))
-
+			cli.SetJSONOutput(true)
 			cli.LogFatal(logger, tc.message, tc.err, tc.kvPairs...)
-
 			assert.Equal(suite.T(), tc.wantCode, exitCode)
 			tc.validateFunc(buf.String())
+
+			// Without it the error is a line for a person, details beneath.
+			exitCode = 0
+			buf.Reset()
+			var errBuf bytes.Buffer
+			cli.SetErrOut(&errBuf)
+			cli.SetJSONOutput(false)
+			cli.LogFatal(logger, tc.message, tc.err, tc.kvPairs...)
+			assert.Equal(suite.T(), tc.wantCode, exitCode)
+			tc.validateFunc(errBuf.String())
+			assert.True(suite.T(), strings.HasPrefix(errBuf.String(), "[err] "+tc.message))
+			assert.Empty(suite.T(), buf.String())
 		})
 	}
 }

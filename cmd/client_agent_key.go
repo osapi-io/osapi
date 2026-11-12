@@ -60,7 +60,7 @@ var clientAgentKeyFingerprintCmd = &cobra.Command{
 
 		fingerprint := mgr.Fingerprint()
 		if fingerprint == "" {
-			fmt.Println("No agent key found.")
+			cli.PrintNote("No agent key found.")
 			return
 		}
 

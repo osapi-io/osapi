@@ -52,13 +52,13 @@ Shows each agent's hostname, status, labels, age, load, and OS.`,
 		}
 
 		if jsonOutput {
-			fmt.Println(string(resp.RawJSON()))
+			cli.PrintJSON(resp.RawJSON())
 			return
 		}
 
 		agents := resp.Data.Agents
 		if len(agents) == 0 {
-			fmt.Println("No active agents found.")
+			cli.PrintNote("No active agents found.")
 			return
 		}
 
@@ -141,13 +141,13 @@ func listPendingAgents(
 	}
 
 	if jsonOutput {
-		fmt.Println(string(resp.RawJSON()))
+		cli.PrintJSON(resp.RawJSON())
 		return
 	}
 
 	agents := resp.Data.Agents
 	if len(agents) == 0 {
-		fmt.Println("No pending agents found.")
+		cli.PrintNote("No pending agents found.")
 		return
 	}
 

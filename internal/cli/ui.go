@@ -35,27 +35,6 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
-// Theme colors for terminal UI rendering.
-var (
-	Purple    = lipgloss.Color("99")
-	Gray      = lipgloss.Color("245")
-	LightGray = lipgloss.Color("241")
-	White     = lipgloss.Color("15")
-	Red       = lipgloss.Color("#ef4444") // matches UI --color-status-error
-	Yellow    = lipgloss.Color("222")     // warm amber
-	Green     = lipgloss.Color("#67ea94") // matches UI --color-status-ready
-	Teal      = lipgloss.Color("#06ffa5")
-)
-
-// Reusable inline styles for compact key-value output.
-var (
-	labelStyle = lipgloss.NewStyle().Bold(true).Foreground(Purple)
-	valueStyle = lipgloss.NewStyle().Foreground(Teal)
-
-	// DimStyle is a muted style for secondary text.
-	DimStyle = lipgloss.NewStyle().Foreground(Gray)
-)
-
 // Section represents a header with its corresponding rows.
 type Section struct {
 	Title    string
@@ -184,33 +163,28 @@ func printJSONBlock(
 	title string,
 	jsonStr string,
 ) {
-	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(Purple)
-	dataStyle := lipgloss.NewStyle().Foreground(Teal)
-
-	fmt.Printf("\n  %s:\n", titleStyle.Render(title))
-	fmt.Printf("  %s\n", dataStyle.Render(jsonStr))
+	fmt.Printf("\n  %s:\n", titleStyle().Render(title))
+	fmt.Printf("  %s\n", ValueStyle.Render(jsonStr))
 }
 
 // PrintCompactTable renders a compact column-aligned table (kubectl-style).
-// Headers are uppercase purple, data rows are teal, with 2-space indent.
+// Headers are uppercase and bold, data rows are in the value style, with a
+// 2-space indent.
 // Multi-line cell values are flattened to a single line and long values
 // are truncated with an ellipsis.
 func PrintCompactTable(
 	sections []Section,
 ) {
-	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(Purple)
-	evenStyle := lipgloss.NewStyle().Foreground(Teal)
-	oddStyle := lipgloss.NewStyle().Foreground(White)
-	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(Purple)
-
 	const colGap = 2
 
 	for _, section := range sections {
 		if section.Title != "" {
-			fmt.Printf("\n  %s:\n", titleStyle.Render(section.Title))
+			fmt.Printf("\n  %s:\n", titleStyle().Render(section.Title))
 		} else {
 			fmt.Println()
 		}
+
+		headerStyle := labelStyle()
 
 		// Flatten multi-line cells to single lines for compact display
 		flatRows := make([][]string, len(section.Rows))
@@ -255,12 +229,9 @@ func PrintCompactTable(
 		}
 		fmt.Println(hdr.String())
 
-		// Build data rows with alternating colors
-		for r, row := range flatRows {
-			rowStyle := evenStyle
-			if r%2 != 0 {
-				rowStyle = oddStyle
-			}
+		// Build data rows in the value style.
+		for _, row := range flatRows {
+			rowStyle := ValueStyle
 			var line strings.Builder
 			line.WriteString("  ")
 			for i := range section.Headers {
@@ -322,28 +293,23 @@ func printSummary(
 		counts[status]++
 	}
 
-	greenStyle := lipgloss.NewStyle().Foreground(Green)
-	yellowStyle := lipgloss.NewStyle().Foreground(Yellow)
-	redStyle := lipgloss.NewStyle().Foreground(Red)
-	grayStyle := lipgloss.NewStyle().Foreground(Gray)
-
 	var parts []string
 	if n := counts["ok"]; n > 0 {
-		parts = append(parts, greenStyle.Render(fmt.Sprintf("%d ok", n)))
+		parts = append(parts, OKStyle.Render(fmt.Sprintf("%d ok", n)))
 	}
 	if n := counts["changed"]; n > 0 {
-		parts = append(parts, greenStyle.Render(fmt.Sprintf("%d changed", n)))
+		parts = append(parts, OKStyle.Render(fmt.Sprintf("%d changed", n)))
 	}
 	if n := counts["skip"]; n > 0 {
-		parts = append(parts, yellowStyle.Render(fmt.Sprintf("%d skipped", n)))
+		parts = append(parts, WarnStyle.Render(fmt.Sprintf("%d skipped", n)))
 	}
 	if n := counts["err"]; n > 0 {
-		parts = append(parts, redStyle.Render(fmt.Sprintf("%d failed", n)))
+		parts = append(parts, ErrStyle.Render(fmt.Sprintf("%d failed", n)))
 	}
 
 	summary := fmt.Sprintf("%d hosts: %s", totalHosts, strings.Join(parts, ", "))
 	if section.Duration != "" {
-		summary += grayStyle.Render(fmt.Sprintf(" in %s", section.Duration))
+		summary += DimStyle.Render(fmt.Sprintf(" in %s", section.Duration))
 	}
 
 	fmt.Printf("\n  %s\n", summary)
@@ -377,10 +343,6 @@ func PrintErrors(
 		return
 	}
 
-	errStyle := lipgloss.NewStyle().Foreground(Red)
-	skipStyle := lipgloss.NewStyle().Foreground(Yellow)
-	labelStyle := lipgloss.NewStyle().Bold(true).Foreground(Purple)
-
 	// Find longest hostname for alignment.
 	maxHost := 0
 	for _, e := range errors {
@@ -389,11 +351,11 @@ func PrintErrors(
 		}
 	}
 
-	fmt.Printf("\n  %s\n", labelStyle.Render("Details:"))
+	fmt.Printf("\n  %s\n", titleStyle().Render("Details:"))
 	for _, e := range errors {
-		style := errStyle
+		style := ErrStyle
 		if e.Status == "skip" {
-			style = skipStyle
+			style = WarnStyle
 		}
 		fmt.Printf(
 			"  %s  %s\n",
@@ -420,7 +382,7 @@ func PrintKV(
 	rendered := make([]string, 0, len(pairs)/2)
 	maxWidth := KVMinColWidth
 	for i := 0; i < len(pairs); i += 2 {
-		pair := labelStyle.Render(pairs[i]+":") + " " + valueStyle.Render(pairs[i+1])
+		pair := labelStyle().Render(pairs[i]+":") + " " + ValueStyle.Render(pairs[i+1])
 		rendered = append(rendered, pair)
 		if w := lipgloss.Width(pair); w > maxWidth {
 			maxWidth = w
@@ -614,6 +576,19 @@ func HandleError(
 	err error,
 	logger *slog.Logger,
 ) {
+	if !jsonOutput {
+		var apiErr *client.APIError
+		if errors.As(err, &apiErr) {
+			msg := fmt.Sprintf("api error (%d): %s", apiErr.StatusCode, apiErr.Message)
+			_, _ = fmt.Fprintln(errOut, Failure(errOut, msg))
+		} else {
+			_, _ = fmt.Fprintln(errOut, Failure(errOut, err.Error()))
+		}
+		osExit(1)
+
+		return
+	}
+
 	var apiErr *client.APIError
 	if errors.As(err, &apiErr) {
 		logger.Error(

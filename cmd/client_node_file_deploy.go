@@ -66,7 +66,7 @@ SHA-256 idempotency ensures unchanged files are not rewritten.`,
 		}
 
 		if jsonOutput {
-			fmt.Println(string(resp.RawJSON()))
+			cli.PrintJSON(resp.RawJSON())
 			return
 		}
 

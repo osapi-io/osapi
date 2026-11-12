@@ -52,7 +52,7 @@ response status, and duration. Requires audit:read permission.
 		}
 
 		if jsonOutput {
-			fmt.Println(string(resp.RawJSON()))
+			cli.PrintJSON(resp.RawJSON())
 			return
 		}
 
@@ -60,7 +60,7 @@ response status, and duration. Requires audit:read permission.
 		cli.PrintKV("Total", strconv.Itoa(resp.Data.TotalItems))
 
 		if len(resp.Data.Items) == 0 {
-			fmt.Println("  No audit entries found.")
+			cli.PrintNote("No audit entries found.")
 			return
 		}
 
