@@ -24,6 +24,9 @@ on:
       - 'cfg.yaml'
       - '.github/workflows/go.yml'
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
