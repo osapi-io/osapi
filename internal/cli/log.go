@@ -33,7 +33,7 @@ var osExit = os.Exit
 // errOut is where errors for a person are printed. Tests replace it.
 var errOut io.Writer = os.Stderr
 
-// jsonOutput is set by --json. Errors then stay structured log lines rather
+// jsonOutput is set by --json. Errors are then the JSON error document rather
 // than styled text, so a program reading them sees no color or decoration.
 var jsonOutput bool
 
@@ -47,7 +47,7 @@ func SetJSONOutput(
 // LogFatal logs a fatal error message along with optional structured data
 // and then exits the program with a status code of 1.
 func LogFatal(
-	logger *slog.Logger,
+	_ *slog.Logger,
 	message string,
 	err error,
 	kvPairs ...any,
@@ -69,13 +69,18 @@ func LogFatal(
 		return
 	}
 
+	msg := message
 	if err != nil {
-		kvPairs = append(kvPairs, slog.Any("error", err))
+		msg += ": " + err.Error()
 	}
-	logger.Error(
-		message,
-		kvPairs...,
-	)
+	doc := ErrorDocument{Error: msg, Code: CodeFatal}
+	for i := 0; i+1 < len(kvPairs); i += 2 {
+		if doc.Details == nil {
+			doc.Details = map[string]string{}
+		}
+		doc.Details[fmt.Sprint(kvPairs[i])] = fmt.Sprint(kvPairs[i+1])
+	}
+	WriteErrorJSON(errOut, doc)
 
 	osExit(1)
 }

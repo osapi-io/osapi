@@ -22,6 +22,7 @@ package cli_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -927,12 +928,18 @@ func (suite *UIPublicTestSuite) TestHandleError() {
 
 			defer cli.ResetErrOut()
 
-			// With --json the error is a structured log line.
+			// With --json the error is one JSON document, and no log.
 			var logBuf bytes.Buffer
 			logger := slog.New(slog.NewTextHandler(&logBuf, nil))
+			var jsonBuf bytes.Buffer
+			cli.SetErrOut(&jsonBuf)
 			cli.SetJSONOutput(true)
 			cli.HandleError(tc.err, logger)
-			tc.validateFunc(logBuf.String(), exitCode)
+			tc.validateFunc(jsonBuf.String(), exitCode)
+			var doc cli.ErrorDocument
+			suite.Require().NoError(json.Unmarshal(jsonBuf.Bytes(), &doc))
+			assert.NotEmpty(suite.T(), doc.Code)
+			assert.Empty(suite.T(), logBuf.String())
 
 			// Without it the error is one line for a person, and no log.
 			exitCode = 0

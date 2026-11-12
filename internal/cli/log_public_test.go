@@ -22,6 +22,7 @@ package cli_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -93,13 +94,19 @@ func (suite *LogPublicTestSuite) TestLogFatal() {
 
 			defer cli.ResetErrOut()
 
-			// With --json the error is a structured log line.
+			// With --json the error is one JSON document, and no log.
 			var buf bytes.Buffer
 			logger := slog.New(slog.NewTextHandler(&buf, nil))
+			var jsonBuf bytes.Buffer
+			cli.SetErrOut(&jsonBuf)
 			cli.SetJSONOutput(true)
 			cli.LogFatal(logger, tc.message, tc.err, tc.kvPairs...)
 			assert.Equal(suite.T(), tc.wantCode, exitCode)
-			tc.validateFunc(buf.String())
+			tc.validateFunc(jsonBuf.String())
+			var doc cli.ErrorDocument
+			suite.Require().NoError(json.Unmarshal(jsonBuf.Bytes(), &doc))
+			assert.Equal(suite.T(), cli.CodeFatal, doc.Code)
+			assert.Empty(suite.T(), buf.String())
 
 			// Without it the error is a line for a person, details beneath.
 			exitCode = 0
