@@ -46,13 +46,49 @@ func (s *HostnamePublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *HostnamePublicTestSuite) TestGetAgentHostnameProviderError() {
+func (s *HostnamePublicTestSuite) TearDownSubTest() {
+	job.ResetDefaultHostnameProvider()
+	job.ResetHostInfoFn()
+}
+
+func (s *HostnamePublicTestSuite) TestGetAgentHostname() {
 	tests := []struct {
-		name         string
-		validateFunc func(string, error)
+		name               string
+		configuredHostname string
+		setup              func()
+		validateFunc       func(string, error)
 	}{
 		{
-			name: "falls back to unknown when provider errors",
+			name:               "configured hostname takes precedence",
+			configuredHostname: "configured-agent",
+			setup:              func() {},
+			validateFunc: func(hostname string, err error) {
+				s.NoError(err)
+				s.Equal("configured-agent", hostname)
+			},
+		},
+		{
+			name:               "empty configured hostname falls back to system",
+			configuredHostname: "",
+			setup:              func() {},
+			validateFunc: func(hostname string, err error) {
+				s.NoError(err)
+				s.NotEmpty(hostname, "System hostname should not be empty")
+				s.NotEqual(
+					"unknown",
+					hostname,
+					"Should get actual system hostname, not unknown fallback",
+				)
+			},
+		},
+		{
+			name:               "falls back to unknown when provider errors",
+			configuredHostname: "",
+			setup: func() {
+				mockProvider := hostnamemocks.NewMockHostnameProvider(s.mockCtrl)
+				mockProvider.EXPECT().Hostname().Return("", errors.New("provider error"))
+				job.SetDefaultHostnameProvider(mockProvider)
+			},
 			validateFunc: func(hostname string, err error) {
 				s.NoError(err)
 				s.Equal("unknown", hostname)
@@ -62,64 +98,9 @@ func (s *HostnamePublicTestSuite) TestGetAgentHostnameProviderError() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			mockProvider := hostnamemocks.NewMockHostnameProvider(s.mockCtrl)
-			mockProvider.EXPECT().Hostname().Return("", errors.New("provider error"))
+			tt.setup()
 
-			job.SetDefaultHostnameProvider(mockProvider)
-			defer job.ResetDefaultHostnameProvider()
-
-			tt.validateFunc(job.GetAgentHostname(""))
-		})
-	}
-}
-
-func (s *HostnamePublicTestSuite) TestGetAgentHostname() {
-	tests := []struct {
-		name               string
-		configuredHostname string
-		expectError        bool
-		expectedResult     string
-		validateFunc       func(string)
-	}{
-		{
-			name:               "configured hostname takes precedence",
-			configuredHostname: "configured-agent",
-			expectError:        false,
-			expectedResult:     "configured-agent",
-			validateFunc: func(hostname string) {
-				s.Equal("configured-agent", hostname)
-			},
-		},
-		{
-			name:               "empty configured hostname falls back to system",
-			configuredHostname: "",
-			expectError:        false,
-			validateFunc: func(hostname string) {
-				s.NotEmpty(hostname, "System hostname should not be empty")
-				s.NotEqual(
-					"unknown",
-					hostname,
-					"Should get actual system hostname, not unknown fallback",
-				)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			hostname, err := job.GetAgentHostname(tt.configuredHostname)
-
-			if tt.expectError {
-				s.Error(err)
-			} else {
-				s.NoError(err)
-				if tt.validateFunc != nil {
-					tt.validateFunc(hostname)
-				}
-				if tt.expectedResult != "" {
-					s.Equal(tt.expectedResult, hostname)
-				}
-			}
+			tt.validateFunc(job.GetAgentHostname(tt.configuredHostname))
 		})
 	}
 }
@@ -279,52 +260,24 @@ func (s *HostnamePublicTestSuite) TestGetLocalHostnameWithProvider() {
 func (s *HostnamePublicTestSuite) TestGopsutilHostnameProvider() {
 	tests := []struct {
 		name         string
+		setup        func()
 		validateFunc func(string, error)
 	}{
 		{
-			name: "should return non-empty hostname without error",
+			name:  "should return non-empty hostname without error",
+			setup: func() {},
 			validateFunc: func(hostname string, err error) {
 				s.NoError(err)
 				s.NotEmpty(hostname)
 			},
 		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			provider := job.ExportNewGopsutilHostnameProvider()
-			hostname, err := provider.Hostname()
-
-			tt.validateFunc(hostname, err)
-		})
-	}
-}
-
-func (s *HostnamePublicTestSuite) TestHostnameProviderInterface() {
-	tests := []struct {
-		name     string
-		provider job.HostnameProvider
-	}{
-		{
-			name:     "gopsutilHostnameProvider implements interface",
-			provider: job.ExportNewGopsutilHostnameProvider(),
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			_ = tt.provider
-		})
-	}
-}
-
-func (s *HostnamePublicTestSuite) TestGopsutilHostnameProviderError() {
-	tests := []struct {
-		name         string
-		validateFunc func(string, error)
-	}{
 		{
 			name: "returns error when host.Info fails",
+			setup: func() {
+				job.SetHostInfoFn(func() (*hostpkg.InfoStat, error) {
+					return nil, errors.New("host info failed")
+				})
+			},
 			validateFunc: func(hostname string, err error) {
 				s.Error(err)
 				s.Empty(hostname)
@@ -334,10 +287,7 @@ func (s *HostnamePublicTestSuite) TestGopsutilHostnameProviderError() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			job.SetHostInfoFn(func() (*hostpkg.InfoStat, error) {
-				return nil, errors.New("host info failed")
-			})
-			defer job.ResetHostInfoFn()
+			tt.setup()
 
 			provider := job.ExportNewGopsutilHostnameProvider()
 			tt.validateFunc(provider.Hostname())

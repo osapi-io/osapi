@@ -42,11 +42,24 @@ type FileExporterPublicTestSuite struct {
 
 	ctx    context.Context
 	tmpDir string
+
+	origMarshal  func(any) ([]byte, error)
+	origOpenFile func(string) (io.WriteCloser, error)
+}
+
+func (suite *FileExporterPublicTestSuite) SetupSuite() {
+	suite.origMarshal = export.MarshalJSONFunc()
+	suite.origOpenFile = export.OpenFileFunc()
 }
 
 func (suite *FileExporterPublicTestSuite) SetupTest() {
 	suite.ctx = context.Background()
 	suite.tmpDir = suite.T().TempDir()
+}
+
+func (suite *FileExporterPublicTestSuite) TearDownSubTest() {
+	export.SetMarshalJSONFunc(suite.origMarshal)
+	export.SetOpenFileFunc(suite.origOpenFile)
 }
 
 func (suite *FileExporterPublicTestSuite) newEntry(
@@ -153,15 +166,22 @@ func (suite *FileExporterPublicTestSuite) TestOpen() {
 
 func (suite *FileExporterPublicTestSuite) TestWrite() {
 	tests := []struct {
-		name         string
-		setupWriter  func() (cleanup func())
+		name string
+		// setupWriter swaps a package function before Open; TearDownSubTest
+		// puts it back.
+		setupWriter func()
+		// exporter builds the exporter under test; nil means an opened
+		// file exporter.
+		exporter     func() *export.FileExporter
 		writeCount   int
 		validateFunc func(err error)
 	}{
 		{
-			name:        "when exporter not opened returns error",
-			setupWriter: nil,
-			writeCount:  1,
+			name: "when exporter not opened returns error",
+			exporter: func() *export.FileExporter {
+				return export.NewFileExporter("unused.jsonl")
+			},
+			writeCount: 1,
 			validateFunc: func(err error) {
 				suite.Error(err)
 				suite.Contains(err.Error(), "exporter not opened")
@@ -169,12 +189,10 @@ func (suite *FileExporterPublicTestSuite) TestWrite() {
 		},
 		{
 			name: "when marshal fails returns error",
-			setupWriter: func() (cleanup func()) {
-				orig := export.MarshalJSONFunc()
+			setupWriter: func() {
 				export.SetMarshalJSONFunc(func(_ any) ([]byte, error) {
 					return nil, fmt.Errorf("marshal error")
 				})
-				return func() { export.SetMarshalJSONFunc(orig) }
 			},
 			writeCount: 1,
 			validateFunc: func(err error) {
@@ -184,12 +202,10 @@ func (suite *FileExporterPublicTestSuite) TestWrite() {
 		},
 		{
 			name: "when underlying writer fails on buffer flush returns write error",
-			setupWriter: func() (cleanup func()) {
-				orig := export.OpenFileFunc()
+			setupWriter: func() {
 				export.SetOpenFileFunc(func(_ string) (io.WriteCloser, error) {
 					return &failWriter{}, nil
 				})
-				return func() { export.SetOpenFileFunc(orig) }
 			},
 			// Each entry is ~200 bytes; 30 writes (~6KB) overflows
 			// the 4096-byte bufio buffer, triggering a flush to the
@@ -200,18 +216,39 @@ func (suite *FileExporterPublicTestSuite) TestWrite() {
 				suite.Contains(err.Error(), "writ")
 			},
 		},
+		{
+			name: "when WriteByte triggers flush failure returns newline error",
+			exporter: func() *export.FileExporter {
+				// A buffer sized exactly to the JSON: Write(data) fills it,
+				// then WriteByte('\n') finds Available()==0 and flushes into
+				// the failing writer.
+				data, err := json.Marshal(suite.newEntry("user0@example.com"))
+				suite.Require().NoError(err)
+
+				return export.NewFileExporterWithWriter(
+					bufio.NewWriterSize(&failWriter{}, len(data)),
+				)
+			},
+			writeCount: 1,
+			validateFunc: func(err error) {
+				suite.Error(err)
+				suite.Contains(err.Error(), "writing newline")
+			},
+		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			sut := export.NewFileExporter("unused.jsonl")
-
 			if tc.setupWriter != nil {
-				cleanup := tc.setupWriter()
-				defer cleanup()
+				tc.setupWriter()
+			}
 
-				err := sut.Open(suite.ctx)
-				suite.Require().NoError(err)
+			var sut *export.FileExporter
+			if tc.exporter != nil {
+				sut = tc.exporter()
+			} else {
+				sut = export.NewFileExporter("unused.jsonl")
+				suite.Require().NoError(sut.Open(suite.ctx))
 			}
 
 			var writeErr error
@@ -224,51 +261,6 @@ func (suite *FileExporterPublicTestSuite) TestWrite() {
 				}
 			}
 			tc.validateFunc(writeErr)
-		})
-	}
-}
-
-func (suite *FileExporterPublicTestSuite) TestWriteNewlineError() {
-	entry := client.AuditEntry{
-		ID:           "550e8400-e29b-41d4-a716-446655440000",
-		Timestamp:    time.Date(2026, 2, 21, 10, 30, 0, 0, time.UTC),
-		User:         "user@example.com",
-		Roles:        []string{"admin"},
-		Method:       "GET",
-		Path:         "/node/hostname",
-		SourceIP:     "127.0.0.1",
-		ResponseCode: 200,
-		DurationMs:   42,
-	}
-
-	tests := []struct {
-		name         string
-		validateFunc func(err error)
-	}{
-		{
-			name: "when WriteByte triggers flush failure returns newline error",
-			validateFunc: func(err error) {
-				suite.Error(err)
-				suite.Contains(err.Error(), "writing newline")
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			// Marshal to get the exact byte size of the JSON data.
-			data, err := json.Marshal(entry)
-			suite.Require().NoError(err)
-
-			// Create a bufio.Writer with a buffer sized exactly to the
-			// JSON data. Write(data) fills the buffer completely, then
-			// WriteByte('\n') finds Available()==0 and calls Flush(),
-			// which hits the failing underlying writer.
-			fw := &failWriter{}
-			e := export.NewFileExporterWithWriter(bufio.NewWriterSize(fw, len(data)))
-
-			err = e.Write(suite.ctx, entry)
-			tt.validateFunc(err)
 		})
 	}
 }

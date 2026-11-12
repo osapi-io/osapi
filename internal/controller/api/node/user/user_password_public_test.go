@@ -49,7 +49,10 @@ import (
 
 // hashLooksValid reports whether hash is a plausible SHA-512 crypt hash
 // rather than the plaintext password that was hashed.
-func hashLooksValid(hash, plaintext string) bool {
+func hashLooksValid(
+	hash string,
+	plaintext string,
+) bool {
 	return strings.HasPrefix(hash, "$6$") && hash != plaintext
 }
 

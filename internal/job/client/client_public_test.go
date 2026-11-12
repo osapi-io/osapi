@@ -1233,6 +1233,15 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISigner() {
 				s.Equal(job.StatusCompleted, resp.Status)
 			},
 		},
+		{
+			name: "when signing marshal fails returns sign error",
+			setupMocks: func() {
+				client.SetSigningMarshalFn(func(_ any) ([]byte, error) {
+					return nil, errors.New("marshal boom")
+				})
+			},
+			expectedErr: "failed to sign job data",
+		},
 	}
 
 	for _, tt := range tests {
@@ -1267,52 +1276,6 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISigner() {
 			if tt.validateFunc != nil {
 				tt.validateFunc(jobID, resp)
 			}
-		})
-	}
-}
-
-func (s *ClientPublicTestSuite) TestQueryWithPKISignerSignError() {
-	const (
-		target    = "server1"
-		category  = "node"
-		operation = job.OperationType("node.hostname.get")
-	)
-
-	signer, _ := newSigner(gomock.NewController(s.T()))
-
-	tests := []struct {
-		name         string
-		setupFn      func()
-		validateFunc func(string, *job.Response, error)
-	}{
-		{
-			name: "when signing marshal fails returns sign error",
-			setupFn: func() {
-				client.SetSigningMarshalFn(func(_ any) ([]byte, error) {
-					return nil, errors.New("marshal boom")
-				})
-			},
-			validateFunc: func(_ string, _ *job.Response, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "failed to sign job data")
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			tt.setupFn()
-
-			opts := &client.Options{
-				Timeout:    30 * time.Second,
-				KVBucket:   s.mockKV,
-				StreamName: "JOBS",
-				PKISigner:  signer,
-			}
-			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
-			s.Require().NoError(err)
-
-			tt.validateFunc(c.Query(s.ctx, target, category, operation, nil))
 		})
 	}
 }

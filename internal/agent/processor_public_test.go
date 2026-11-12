@@ -522,9 +522,16 @@ func (s *ProcessorPublicTestSuite) TestProcessJobOperation() {
 
 func (s *ProcessorPublicTestSuite) TestSystemOperations() {
 	tests := []struct {
-		name         string
-		operation    string
-		labels       map[string]string
+		name      string
+		operation string
+		labels    map[string]string
+		// jobType defaults to a query.
+		jobType job.Type
+		// data defaults to an empty object.
+		data string
+		// createAgent builds an agent with the providers a row needs;
+		// nil uses the suite's agent.
+		createAgent  func() *agent.Agent
 		validateFunc func(json.RawMessage, error)
 	}{
 		{
@@ -588,17 +595,9 @@ func (s *ProcessorPublicTestSuite) TestSystemOperations() {
 				s.Equal(false, response["changed"])
 			},
 		},
-	}
-
-	// Hostname update tests (TypeModify).
-	modifyTests := []struct {
-		name         string
-		operation    string
-		data         string
-		validateFunc func(json.RawMessage, error)
-	}{
 		{
 			name:      "update hostname returns unsupported",
+			jobType:   job.TypeModify,
 			operation: "hostname.update",
 			data:      `{"hostname": "new-host"}`,
 			validateFunc: func(_ json.RawMessage, err error) {
@@ -608,6 +607,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperations() {
 		},
 		{
 			name:      "update hostname succeeds",
+			jobType:   job.TypeModify,
 			operation: "hostname.update",
 			data:      `{"hostname": "success-host"}`,
 			validateFunc: func(result json.RawMessage, err error) {
@@ -623,6 +623,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperations() {
 		},
 		{
 			name:      "update hostname with invalid data",
+			jobType:   job.TypeModify,
 			operation: "hostname.update",
 			data:      `invalid json`,
 			validateFunc: func(_ json.RawMessage, err error) {
@@ -630,200 +631,6 @@ func (s *ProcessorPublicTestSuite) TestSystemOperations() {
 				s.Contains(err.Error(), "invalid hostname update data")
 			},
 		},
-	}
-
-	for _, tt := range modifyTests {
-		s.Run(tt.name, func() {
-			request := job.Request{
-				Type:      job.TypeModify,
-				Category:  "node",
-				Operation: tt.operation,
-				Data:      json.RawMessage(tt.data),
-			}
-
-			tt.validateFunc(agent.ExportProcessNodeOperation(s.testAgent, request))
-		})
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			cfg := agent.GetAgentAppConfig(s.testAgent)
-			cfg.Agent.Labels = tt.labels
-			agent.SetAgentAppConfig(s.testAgent, cfg)
-
-			request := job.Request{
-				Type:      job.TypeQuery,
-				Category:  "node",
-				Operation: tt.operation,
-				Data:      json.RawMessage(`{}`),
-			}
-
-			tt.validateFunc(agent.ExportProcessNodeOperation(s.testAgent, request))
-		})
-	}
-}
-
-func (s *ProcessorPublicTestSuite) TestNetworkOperations() {
-	tests := []struct {
-		name         string
-		operation    string
-		data         string
-		validateFunc func(json.RawMessage, error)
-	}{
-		{
-			name:      "DNS query with interface",
-			operation: "dns.get",
-			data:      `{"interface": "eth0"}`,
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
-			name:      "DNS query without interface",
-			operation: "dns.get",
-			data:      `{}`,
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
-			name:      "ping with valid address",
-			operation: "ping.do",
-			data:      `{"address": "127.0.0.1"}`,
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
-			name:      "ping without address",
-			operation: "ping.execute",
-			data:      `{}`,
-			validateFunc: func(_ json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "missing ping address")
-			},
-		},
-		{
-			name:      "unsupported network operation",
-			operation: "unknown.get",
-			data:      `{}`,
-			validateFunc: func(_ json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "unsupported network operation")
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			request := job.Request{
-				Type:      job.TypeQuery,
-				Category:  "network",
-				Operation: tt.operation,
-				Data:      json.RawMessage(tt.data),
-			}
-
-			tt.validateFunc(agent.ExportProcessNetworkOperation(s.testAgent, request))
-		})
-	}
-}
-
-func (s *ProcessorPublicTestSuite) TestProviderFactoryMethods() {
-	tests := []struct {
-		name         string
-		getProvider  func() interface{}
-		validateFunc func(interface{})
-	}{
-		{
-			name:        "getHostProvider",
-			getProvider: func() interface{} { return agent.ExportGetHostProvider(s.testAgent) },
-			validateFunc: func(provider interface{}) {
-				s.NotNil(provider)
-			},
-		},
-		{
-			name:        "getDiskProvider",
-			getProvider: func() interface{} { return agent.ExportGetDiskProvider(s.testAgent) },
-			validateFunc: func(provider interface{}) {
-				s.NotNil(provider)
-			},
-		},
-		{
-			name:        "getMemProvider",
-			getProvider: func() interface{} { return agent.ExportGetMemProvider(s.testAgent) },
-			validateFunc: func(provider interface{}) {
-				s.NotNil(provider)
-			},
-		},
-		{
-			name:        "getLoadProvider",
-			getProvider: func() interface{} { return agent.ExportGetLoadProvider(s.testAgent) },
-			validateFunc: func(provider interface{}) {
-				s.NotNil(provider)
-			},
-		},
-		{
-			name:        "getDNSProvider",
-			getProvider: func() interface{} { return agent.ExportGetDNSProvider(s.testAgent) },
-			validateFunc: func(provider interface{}) {
-				s.NotNil(provider)
-			},
-		},
-		{
-			name:        "getPingProvider",
-			getProvider: func() interface{} { return agent.ExportGetPingProvider(s.testAgent) },
-			validateFunc: func(provider interface{}) {
-				s.NotNil(provider)
-			},
-		},
-		{
-			name:        "getCommandProvider",
-			getProvider: func() interface{} { return agent.ExportGetCommandProvider(s.testAgent) },
-			validateFunc: func(provider interface{}) {
-				s.NotNil(provider)
-			},
-		},
-		{
-			name:        "getFileProvider",
-			getProvider: func() interface{} { return agent.ExportGetFileProvider(s.testAgent) },
-			validateFunc: func(provider interface{}) {
-				s.NotNil(provider)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			tt.validateFunc(tt.getProvider())
-		})
-	}
-}
-
-func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
-	tests := []struct {
-		name         string
-		operation    string
-		createAgent  func() *agent.Agent
-		validateFunc func(json.RawMessage, error)
-	}{
 		{
 			name:      "hostname provider error",
 			operation: "hostname.get",
@@ -986,12 +793,29 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			a := tt.createAgent()
+			a := s.testAgent
+			if tt.createAgent != nil {
+				a = tt.createAgent()
+			} else {
+				cfg := agent.GetAgentAppConfig(a)
+				cfg.Agent.Labels = tt.labels
+				agent.SetAgentAppConfig(a, cfg)
+			}
+
+			jobType := tt.jobType
+			if jobType == "" {
+				jobType = job.TypeQuery
+			}
+			data := tt.data
+			if data == "" {
+				data = `{}`
+			}
+
 			request := job.Request{
-				Type:      job.TypeQuery,
+				Type:      jobType,
 				Category:  "node",
 				Operation: tt.operation,
-				Data:      json.RawMessage(`{}`),
+				Data:      json.RawMessage(data),
 			}
 
 			tt.validateFunc(agent.ExportProcessNodeOperation(a, request))
@@ -999,15 +823,78 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 	}
 }
 
-func (s *ProcessorPublicTestSuite) TestNetworkOperationErrors() {
+func (s *ProcessorPublicTestSuite) TestNetworkOperations() {
 	tests := []struct {
-		name         string
-		operation    string
-		jobType      job.Type
-		data         string
+		name      string
+		operation string
+		// jobType defaults to a query.
+		jobType job.Type
+		data    string
+		// createAgent builds an agent with the providers a row needs;
+		// nil uses the suite's agent.
 		createAgent  func() *agent.Agent
 		validateFunc func(json.RawMessage, error)
 	}{
+		{
+			name:      "DNS query with interface",
+			operation: "dns.get",
+			data:      `{"interface": "eth0"}`,
+			validateFunc: func(result json.RawMessage, err error) {
+				s.NoError(err)
+				s.NotNil(result)
+
+				var response map[string]interface{}
+				decodeErr := json.Unmarshal(result, &response)
+				s.NoError(decodeErr)
+				s.Equal(false, response["changed"])
+			},
+		},
+		{
+			name:      "DNS query without interface",
+			operation: "dns.get",
+			data:      `{}`,
+			validateFunc: func(result json.RawMessage, err error) {
+				s.NoError(err)
+				s.NotNil(result)
+
+				var response map[string]interface{}
+				decodeErr := json.Unmarshal(result, &response)
+				s.NoError(decodeErr)
+				s.Equal(false, response["changed"])
+			},
+		},
+		{
+			name:      "ping with valid address",
+			operation: "ping.do",
+			data:      `{"address": "127.0.0.1"}`,
+			validateFunc: func(result json.RawMessage, err error) {
+				s.NoError(err)
+				s.NotNil(result)
+
+				var response map[string]interface{}
+				decodeErr := json.Unmarshal(result, &response)
+				s.NoError(decodeErr)
+				s.Equal(false, response["changed"])
+			},
+		},
+		{
+			name:      "ping without address",
+			operation: "ping.execute",
+			data:      `{}`,
+			validateFunc: func(_ json.RawMessage, err error) {
+				s.Error(err)
+				s.Contains(err.Error(), "missing ping address")
+			},
+		},
+		{
+			name:      "unsupported network operation",
+			operation: "unknown.get",
+			data:      `{}`,
+			validateFunc: func(_ json.RawMessage, err error) {
+				s.Error(err)
+				s.Contains(err.Error(), "unsupported network operation")
+			},
+		},
 		{
 			name:      "DNS get error",
 			operation: "dns.get",
@@ -1100,15 +987,95 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperationErrors() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			a := tt.createAgent()
+			a := s.testAgent
+			if tt.createAgent != nil {
+				a = tt.createAgent()
+			}
+
+			jobType := tt.jobType
+			if jobType == "" {
+				jobType = job.TypeQuery
+			}
+
 			request := job.Request{
-				Type:      tt.jobType,
+				Type:      jobType,
 				Category:  "network",
 				Operation: tt.operation,
 				Data:      json.RawMessage(tt.data),
 			}
 
 			tt.validateFunc(agent.ExportProcessNetworkOperation(a, request))
+		})
+	}
+}
+
+func (s *ProcessorPublicTestSuite) TestProviderFactoryMethods() {
+	tests := []struct {
+		name         string
+		getProvider  func() interface{}
+		validateFunc func(interface{})
+	}{
+		{
+			name:        "getHostProvider",
+			getProvider: func() interface{} { return agent.ExportGetHostProvider(s.testAgent) },
+			validateFunc: func(provider interface{}) {
+				s.NotNil(provider)
+			},
+		},
+		{
+			name:        "getDiskProvider",
+			getProvider: func() interface{} { return agent.ExportGetDiskProvider(s.testAgent) },
+			validateFunc: func(provider interface{}) {
+				s.NotNil(provider)
+			},
+		},
+		{
+			name:        "getMemProvider",
+			getProvider: func() interface{} { return agent.ExportGetMemProvider(s.testAgent) },
+			validateFunc: func(provider interface{}) {
+				s.NotNil(provider)
+			},
+		},
+		{
+			name:        "getLoadProvider",
+			getProvider: func() interface{} { return agent.ExportGetLoadProvider(s.testAgent) },
+			validateFunc: func(provider interface{}) {
+				s.NotNil(provider)
+			},
+		},
+		{
+			name:        "getDNSProvider",
+			getProvider: func() interface{} { return agent.ExportGetDNSProvider(s.testAgent) },
+			validateFunc: func(provider interface{}) {
+				s.NotNil(provider)
+			},
+		},
+		{
+			name:        "getPingProvider",
+			getProvider: func() interface{} { return agent.ExportGetPingProvider(s.testAgent) },
+			validateFunc: func(provider interface{}) {
+				s.NotNil(provider)
+			},
+		},
+		{
+			name:        "getCommandProvider",
+			getProvider: func() interface{} { return agent.ExportGetCommandProvider(s.testAgent) },
+			validateFunc: func(provider interface{}) {
+				s.NotNil(provider)
+			},
+		},
+		{
+			name:        "getFileProvider",
+			getProvider: func() interface{} { return agent.ExportGetFileProvider(s.testAgent) },
+			validateFunc: func(provider interface{}) {
+				s.NotNil(provider)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.validateFunc(tt.getProvider())
 		})
 	}
 }

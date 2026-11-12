@@ -88,8 +88,17 @@ func OwnershipOf(
 }
 
 // LookupUID and LookupGroupID call the real name resolvers.
-func LookupUID(name string) (int, error)     { return realLookupUID(name) }
-func LookupGroupID(name string) (int, error) { return realLookupGID(name) }
+func LookupUID(
+	name string,
+) (int, error) {
+	return realLookupUID(name)
+}
+
+func LookupGroupID(
+	name string,
+) (int, error) {
+	return realLookupGID(name)
+}
 
 // ResolveID exposes the request-name-to-id conversion.
 func ResolveID(

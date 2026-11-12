@@ -616,7 +616,11 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogRBACHTTP() {
 	}
 }
 
-func stringPtr(s string) *string { return &s }
+func stringPtr(
+	s string,
+) *string {
+	return &s
+}
 
 func TestLogQueryPublicTestSuite(
 	t *testing.T,
