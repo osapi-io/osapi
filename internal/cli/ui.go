@@ -42,6 +42,9 @@ type Section struct {
 	Rows     [][]string
 	Errors   []ErrorEntry
 	Duration string // e.g. "286ms" — shown in summary line
+	// Reference marks a table that is not per-host results, such as a
+	// behavior's methods, so no host summary line is printed under it.
+	Reference bool
 }
 
 // ResultRow is a per-host result used by BuildBroadcastTable and
@@ -262,6 +265,10 @@ func PrintCompactTable(
 func printSummary(
 	section Section,
 ) {
+	if section.Reference {
+		return
+	}
+
 	// Count unique hostnames and their statuses from the rows.
 	// STATUS is always the second column (index 1).
 	hostStatuses := make(map[string]string)
@@ -571,10 +578,11 @@ func IntToSafeString(
 	return "N/A"
 }
 
-// HandleError logs the error and exits with code 1.
+// HandleError reports err and exits 1: one line for a person, or under --json
+// the error document with the API's status code named.
 func HandleError(
 	err error,
-	logger *slog.Logger,
+	_ *slog.Logger,
 ) {
 	if !jsonOutput {
 		var apiErr *client.APIError
@@ -589,18 +597,17 @@ func HandleError(
 		return
 	}
 
+	doc := ErrorDocument{Error: err.Error(), Code: CodeError}
 	var apiErr *client.APIError
 	if errors.As(err, &apiErr) {
-		logger.Error(
-			"api error",
-			slog.Int("code", apiErr.StatusCode),
-			slog.String("error", apiErr.Message),
-		)
-		osExit(1)
+		doc = ErrorDocument{
+			Error:  apiErr.Message,
+			Code:   APICode(apiErr.StatusCode),
+			Status: apiErr.StatusCode,
+		}
 	}
-
-	logger.Error("unexpected error", slog.String("error", err.Error()))
-	osExit(1)
+	WriteErrorJSON(errOut, doc)
+	osExit(ExitError)
 }
 
 // DisplayJobDetail displays detailed job information from domain types.

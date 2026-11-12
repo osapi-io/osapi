@@ -22,6 +22,7 @@ package cli_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
@@ -56,7 +57,7 @@ func newRoot() (*cobra.Command, *cobra.Command) {
 	root.AddCommand(child)
 	root.PersistentFlags().BoolP("json", "j", false, "Enable JSON output")
 
-	cli.ApplyTheme(root)
+	cli.ApplyTheme(root, "1.2.3")
 
 	return root, child
 }
@@ -189,7 +190,23 @@ func (suite *HelpPublicTestSuite) TestPrintError() {
 			args: []string{"get", "--nope"},
 			json: true,
 			validateFunc: func(out string) {
-				assert.Equal(suite.T(), "Error: unknown flag: --nope\n", out)
+				assert.JSONEq(
+					suite.T(),
+					`{"error":"unknown flag: --nope","code":"usage_error"}`,
+					out,
+				)
+			},
+		},
+		{
+			name: "when json and a runtime error the code is generic",
+			err:  errors.New("connection refused"),
+			json: true,
+			validateFunc: func(out string) {
+				assert.JSONEq(
+					suite.T(),
+					`{"error":"connection refused","code":"error"}`,
+					out,
+				)
 			},
 		},
 	}
@@ -218,6 +235,83 @@ func (suite *HelpPublicTestSuite) TestUsageErrorUnwrap() {
 
 	assert.Equal(suite.T(), "unknown flag: --nope", fmt.Sprint(err))
 	assert.NotNil(suite.T(), errors.Unwrap(err))
+}
+
+func (suite *HelpPublicTestSuite) TestHelpJSON() {
+	tests := []struct {
+		name         string
+		args         []string
+		validateFunc func(cli.HelpDocument)
+	}{
+		{
+			name: "when the root is described it carries the error contract",
+			args: []string{"--help", "--json"},
+			validateFunc: func(doc cli.HelpDocument) {
+				assert.Equal(suite.T(), "1.2.3", doc.Version)
+				assert.Equal(suite.T(), "osapi", doc.Command.Path)
+				assert.Contains(suite.T(), doc.Command.Long, `"code"`)
+				names := make([]string, 0, len(doc.Command.Subcommands))
+				for _, s := range doc.Command.Subcommands {
+					names = append(names, s.Name)
+				}
+				assert.Equal(suite.T(), []string{"completion", "get"}, names)
+			},
+		},
+		{
+			name: "when a command is described its required flag is marked",
+			args: []string{"get", "--help", "--json"},
+			validateFunc: func(doc cli.HelpDocument) {
+				assert.Equal(suite.T(), "osapi get", doc.Command.Path)
+				assert.True(suite.T(), doc.Command.Runnable)
+				byName := map[string]cli.HelpFlag{}
+				for _, f := range doc.Command.Flags {
+					byName[f.Name] = f
+				}
+				assert.True(suite.T(), byName["key"].Required)
+				assert.False(suite.T(), byName["key"].Inherited)
+				assert.True(suite.T(), byName["json"].Inherited)
+				assert.NotContains(suite.T(), byName, "hidden")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			root, child := newRoot()
+			child.Flags().String("hidden", "", "not shown")
+			_ = child.Flags().MarkHidden("hidden")
+			var out bytes.Buffer
+			root.SetOut(&out)
+			root.SetArgs(tc.args)
+
+			suite.Require().NoError(root.Execute())
+
+			var doc cli.HelpDocument
+			suite.Require().NoError(json.Unmarshal(out.Bytes(), &doc))
+			tc.validateFunc(doc)
+		})
+	}
+}
+
+func (suite *HelpPublicTestSuite) TestExitCodeAndAPICode() {
+	root, _ := newRoot()
+	root.SetArgs([]string{"get", "--nope"})
+	_, err := root.ExecuteC()
+
+	assert.Equal(suite.T(), cli.ExitUsage, cli.ExitCode(err))
+	assert.Equal(suite.T(), cli.ExitError, cli.ExitCode(errors.New("boom")))
+
+	for status, want := range map[int]string{
+		400: cli.CodeInvalidRequest,
+		401: cli.CodeUnauthorized,
+		403: cli.CodeForbidden,
+		404: cli.CodeNotFound,
+		409: cli.CodeConflict,
+		503: cli.CodeServerError,
+		418: cli.CodeAPIError,
+	} {
+		assert.Equal(suite.T(), want, cli.APICode(status))
+	}
 }
 
 func TestHelpPublicTestSuite(
