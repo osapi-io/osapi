@@ -24,6 +24,9 @@ on:
       - 'cfg.yaml'
       - '.github/workflows/go-int.yml'
 
+permissions:
+  contents: read
+
 jobs:
   integration:
     runs-on: ubuntu-latest
