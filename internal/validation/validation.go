@@ -29,6 +29,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/behavior"
+
 	"github.com/go-playground/validator/v10"
 	cronparser "github.com/robfig/cron/v3"
 
@@ -153,6 +155,12 @@ func init() {
 	_ = instance.RegisterValidation("no_linebreak", func(fl validator.FieldLevel) bool {
 		return !strings.ContainsAny(fl.Field().String(), "\r\n")
 	})
+
+	// The JSON Schema each custom validator means, so a behavior's generated
+	// spec validates what the server does. A tag without one fails schema
+	// generation rather than being dropped.
+	behavior.ValidatorSchema("sysctl_key", behavior.Pattern(sysctlKeyPattern.String()))
+	behavior.ValidatorSchema("no_linebreak", behavior.Pattern(`^[^\r\n]*$`))
 
 	// account_name validates a system user or group name: it rejects a
 	// leading hyphen, path separators, colons, whitespace, and control

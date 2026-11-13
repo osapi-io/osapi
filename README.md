@@ -6,7 +6,7 @@
   </picture>
 </p>
 
-<p align="center">A CRUD API for managing Linux systems.</p>
+<p align="center">Typed, repeatable operations for Linux hosts.</p>
 
 <p align="center">
   <a href="https://github.com/osapi-io/osapi/releases/latest"><img alt="release" src="https://img.shields.io/github/release/osapi-io/osapi.svg?style=for-the-badge"></a>
@@ -29,11 +29,20 @@
 </p>
 
 <p align="center">
-Install one binary, point it at a config file, and get a REST API, a CLI,
-a Go SDK and an embedded dashboard over a fleet of Linux hosts. Work reaches
-a host by being queued rather than called, so a request becomes a job and an
-agent runs it.
+Give an agent a fleet of Linux hosts without handing it a shell. Every change
+is a typed operation, checked before it is queued, safe to run twice, and
+recorded.
 </p>
+
+|                        |                                                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Any harness**        | `osapi init` installs osapi's skill for Claude Code or Codex.                                                |
+| **Typed operations**   | Every operation declares its input and output. `osapi behavior describe` and `osapi help --json` print them. |
+| **Repeatable**         | Running an operation twice is safe, and every result says whether anything changed.                          |
+| **One host or many**   | Target a hostname, any host, every host, or a label like `group:web`.                                        |
+| **Queued, not called** | A request becomes a job, and the agent on each host runs it. A slow host never blocks the caller.            |
+| **Four ways in**       | A REST API, a CLI, a Go SDK and an embedded dashboard, over the same operations.                             |
+| **See what happened**  | An audit log, job history and OpenTelemetry.                                                                 |
 
 ## Documentation
 

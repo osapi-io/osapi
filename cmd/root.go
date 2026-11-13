@@ -87,13 +87,13 @@ func Execute() {
 	cmd, err := rootCmd.ExecuteContextC(ctx)
 	if err != nil {
 		cli.PrintError(os.Stderr, cmd, err, jsonOutput)
-		os.Exit(1)
+		os.Exit(cli.ExitCode(err))
 	}
 }
 
 func init() {
 	cobra.OnInitialize(func() { cli.SetJSONOutput(jsonOutput) }, initConfig, initLogger)
-	cli.ApplyTheme(rootCmd)
+	cli.ApplyTheme(rootCmd, displayVersion())
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Enable or disable debug mode")
 	rootCmd.PersistentFlags().BoolVarP(&jsonOutput, "json", "j", false, "Enable JSON output")
@@ -239,4 +239,14 @@ func initLogger() {
 	handler = tracing.NewTraceHandler(handler)
 	logger = slog.New(handler)
 	cli.SetJSONOutput(jsonOutput)
+}
+
+// displayVersion is the version help reports: the release version, or "dev"
+// for a build without one.
+func displayVersion() string {
+	if version == "" {
+		return "dev"
+	}
+
+	return version
 }

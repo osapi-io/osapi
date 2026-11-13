@@ -107,9 +107,11 @@ func IsUsageError(
 }
 
 // ApplyTheme styles help and errors for root and every command under it.
-// The banner is printed above the root's help only.
+// The banner is printed above the root's help only. With --json, help is the
+// command described as JSON instead, for an agent to read.
 func ApplyTheme(
 	root *cobra.Command,
+	version string,
 ) {
 	out := os.Stdout
 
@@ -128,6 +130,14 @@ func ApplyTheme(
 
 	defaultHelp := root.HelpFunc()
 	root.SetHelpFunc(func(c *cobra.Command, args []string) {
+		if wantsJSON(c) {
+			// The document is plain structs and strings, so it always marshals.
+			out, _ := HelpJSON(c, version)
+			_, _ = fmt.Fprintln(c.OutOrStdout(), string(out))
+
+			return
+		}
+
 		if c == root {
 			w := c.OutOrStdout()
 			if banner := Banner(w); banner != "" {
@@ -142,8 +152,7 @@ func ApplyTheme(
 
 // PrintError writes err for a person: a red cross and the message, then a
 // pointer to the command's help when the invocation itself was wrong. With
-// jsonOutput it prints cobra's plain "Error:" line instead, so nothing that
-// parses the output sees color or decoration.
+// jsonOutput it writes the JSON error document instead.
 func PrintError(
 	w io.Writer,
 	cmd *cobra.Command,
@@ -151,7 +160,11 @@ func PrintError(
 	jsonOutput bool,
 ) {
 	if jsonOutput {
-		_, _ = fmt.Fprintln(w, "Error:", err.Error())
+		code := CodeError
+		if IsUsageError(err) {
+			code = CodeUsage
+		}
+		WriteErrorJSON(w, ErrorDocument{Error: err.Error(), Code: code})
 
 		return
 	}
