@@ -142,8 +142,8 @@ styles are enforced by CI.
 ```bash
 just md-fmt-check         # Check formatting outside the site
 just md-fmt               # Auto-fix formatting outside the site
-just docusaurus-fmt-check # Check site formatting
-just docusaurus-fmt       # Auto-fix site formatting
+just docs-fmt-check # Check site formatting
+just docs-fmt       # Auto-fix site formatting
 ```
 
 ## Code standards
@@ -494,8 +494,8 @@ Markdown under `docs/docs/`, wrapped at 80 characters. Formatting is covered
 under [Code style](#documentation).
 
 ```bash
-just docusaurus-start     # Start local docs server
-just docusaurus-build     # Build docs for production
+just docs-start     # Start local docs server
+just docs-build     # Build docs for production
 ```
 
 ## Before committing

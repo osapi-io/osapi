@@ -1,44 +1,16 @@
-# Template
+# Documentation site
 
-This template is built for [Docusaurus 3](https://docusaurus.io/), a modern
-static website generator.
-
-### Usage
-
-```bash
-npx create-docusaurus@3.5.2 my-website --package-manager yarn
-```
-
-> When prompted to select a template choose `Git repository`.
-
-Template Repository URL:
+The osapi documentation site, built with [Docusaurus](https://docusaurus.io/)
+and published to GitHub Pages. Run everything from the repository root through
+the shared `docs` recipes, not with `yarn` or `npm` in this directory:
 
 ```bash
-https://github.com/PaloAltoNetworks/docusaurus-template-openapi-docs.git
+just docs-start      # Development server on http://localhost:3001
+just docs-build      # Production build into docs/build
+just docs-generate   # Regenerate the API reference from the OpenAPI spec
+just docs-fmt        # Format the site with Prettier
 ```
 
-> When asked how the template repo should be cloned choose "copy" (unless you
-> know better).
-
-```bash
-cd my-website
-yarn
-```
-
-### Local Development
-
-```bash
-yarn start
-```
-
-This command starts a local development server and opens up a browser window.
-Most changes are reflected live without having to restart the server.
-
-### Build
-
-```bash
-yarn build
-```
-
-This command generates static content into the `build` directory and can be
-served using any static contents hosting service.
+`just --list` shows the rest under `[docs]`. See the
+[Documentation section](../CONTRIBUTING.md#documentation) of the contributing
+guide for how pages are organized.

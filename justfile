@@ -48,7 +48,7 @@ fetch:
 # Install all dependencies
 deps:
     just go-deps
-    just docusaurus-deps
+    just docs-deps
     just react-deps
 
 # Build production binary (includes embedded UI)
@@ -58,7 +58,7 @@ build:
 
 # Run all tests
 #
-# docusaurus-fmt-check belongs here, not only in CI. A change merged from a
+# docs-fmt-check belongs here, not only in CI. A change merged from a
 # security advisory's private fork runs no Actions at all, so this recipe is
 # the only pre-merge gate those fixes get. Three of them left five pages
 # unformatted and broke Docusaurus Lint on main in September 2026.
@@ -67,7 +67,7 @@ build:
 # not install, and Markdown Lint already runs it with uv available.
 test: linux-tune
     just just-fmt-check
-    just docusaurus-fmt-check
+    just docs-fmt-check
     just react-build
     just go-test
 
@@ -75,7 +75,7 @@ test: linux-tune
 generate:
     bunx @redocly/cli@{{ redocly_version }} join --prefix-tags-with-info-prop title -o internal/controller/api/gen/api.yaml internal/controller/api/*/gen/api.yaml internal/controller/api/node/*/gen/api.yaml
     just go-generate
-    just docusaurus-generate
+    just docs-generate
     cp internal/controller/api/gen/api.yaml ui/src/sdk/gen/api.yaml
     just react-generate
 
@@ -83,7 +83,7 @@ generate:
 ready:
     just generate
     just just-fmt
-    just docusaurus-fmt
+    just docs-fmt
     just md-fmt
     just go-fmt
     just go-vet

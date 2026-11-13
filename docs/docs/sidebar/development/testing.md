@@ -11,12 +11,15 @@ under "Testing".
 That file is the single source, so this page is a pointer rather than a second
 copy of it.
 
-To list every available recipe, including those from the shared justfile
-modules:
+To list every available recipe, including the shared ones:
 
 ```bash
-just --list --list-submodules
+just --list
 ```
+
+The shared recipes are grouped by their prefix, so the list reads by tool:
+`[go]`, `[react]`, `[docs]`, `[md]` and `[just]`, after this repository's own
+`test`, `ready` and `generate`.
 
 <!-- prettier-ignore-start -->
 [contributing]: https://github.com/osapi-io/osapi/blob/main/CONTRIBUTING.md

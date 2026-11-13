@@ -25,4 +25,4 @@ jobs:
       - name: Fetch justfiles
         run: just fetch
       - name: Test build website
-        run: just docusaurus-build
+        run: just docs-build

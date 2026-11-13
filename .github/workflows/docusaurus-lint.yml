@@ -25,4 +25,4 @@ jobs:
       - name: Fetch justfiles
         run: just fetch
       - name: Lint the site
-        run: just docusaurus-fmt-check
+        run: just docs-fmt-check
