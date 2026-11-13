@@ -38,9 +38,9 @@ part of this site. Every other cross-reference here is relative.
 ## The commands
 
 They are in the justfile, not here. `just --list` shows every recipe; the ones
-this directory uses are prefixed `react-`. Build through `just build`,
-`just ready` or `just test` rather than a recipe directly — each builds the UI
-before the binary, which is the order FR-006 explains.
+this directory uses are prefixed `react-` and listed under `[react]`. Build
+through `just build`, `just ready` or `just test` rather than a recipe directly
+— each builds the UI before the binary, which is the order FR-006 explains.
 
 ## Related
 
