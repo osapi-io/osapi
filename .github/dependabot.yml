@@ -10,27 +10,26 @@ updates:
     commit-message:
       prefix: chore
 
-  - package-ecosystem: "gomod"
-    directory: "/"
-    schedule:
-      interval: "daily"
-    cooldown:
-      default-days: 7
-      semver-major-days: 14
-    commit-message:
-      prefix: chore
-
-  # The modules under examples/sdk/ have their own go.mod and pin this
-  # repository's dependencies as indirect. Without them here, Dependabot bumps
-  # the root alone and `just go-mod-check` fails on every one for being untidy.
+  # The modules under examples/sdk/ have their own go.mod and replace this
+  # repository with a relative path, so a dependency the root moves, moves in
+  # each of them too. Listed with the root and grouped by dependency name, one
+  # pull request bumps every module at once and leaves them all tidy. As two
+  # entries, the root was bumped alone and `just go-mod-check` failed on the
+  # examples.
   - package-ecosystem: "gomod"
     directories:
-      - "examples/sdk/*"
+      - "/"
+      - "/examples/sdk/*"
     schedule:
       interval: "daily"
     cooldown:
       default-days: 7
       semver-major-days: 14
+    groups:
+      go-modules:
+        group-by: dependency-name
+        patterns:
+          - "*"
     commit-message:
       prefix: chore
 
