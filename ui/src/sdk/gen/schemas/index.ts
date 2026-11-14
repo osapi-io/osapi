@@ -222,6 +222,8 @@ export * from './processSignalResult';
 export * from './processSignalResultStatus';
 export * from './readyResponse';
 export * from './rejectAgent200';
+export * from './removeAgent200';
+export * from './removeAgentParams';
 export * from './retryJobRequest';
 export * from './routeConfigRequest';
 export * from './routeGetEntry';

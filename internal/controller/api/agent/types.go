@@ -35,6 +35,7 @@ type EnrollmentManager interface {
 	AcceptByHostname(ctx context.Context, hostname string) error
 	AcceptByFingerprint(ctx context.Context, fingerprint string) error
 	RejectByHostname(ctx context.Context, hostname string, reason string) error
+	RemoveByHostname(ctx context.Context, hostname string, machineID string) (string, error)
 }
 
 // Agent implementation of the Agent APIs operations.

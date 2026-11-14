@@ -50,7 +50,8 @@ $ osapi client agent list --pending
   def456...     web-04    SHA256:ef56ab78cd...   2m ago
 ```
 
-Use `agent accept` and `agent reject` to manage pending enrollment requests.
+Use `agent accept` and `agent reject` to manage pending enrollment requests, and
+`agent remove` to remove an enrolled agent.
 
 ---
 

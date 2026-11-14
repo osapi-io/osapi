@@ -17,6 +17,7 @@ Agent discovery, details, and lifecycle management.
 | `ListPending(ctx)`                   | List agents awaiting PKI enrollment   |
 | `Accept(ctx, hostname, fingerprint)` | Accept a pending enrollment request   |
 | `Reject(ctx, hostname)`              | Reject a pending enrollment request   |
+| `Remove(ctx, hostname, machineID)`   | Remove an enrolled agent's stored key |
 
 ## Usage
 
@@ -62,6 +63,10 @@ resp, err := c.Agent.Accept(ctx, "web-01", "SHA256:ab12cd34...")
 
 // Reject
 resp, err := c.Agent.Reject(ctx, "web-01")
+
+// Remove an enrolled agent. Pass a machine ID when two agents share the
+// hostname; otherwise the call returns a ConflictError naming both.
+resp, err := c.Agent.Remove(ctx, "web-01", "")
 ```
 
 ## Examples
@@ -95,4 +100,4 @@ for PKI enrollment operations.
 ## Permissions
 
 Requires `agent:read` for List, Get, and ListPending. Drain, Undrain, Accept,
-and Reject require `agent:write`.
+Reject, and Remove require `agent:write`.

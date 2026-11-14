@@ -720,6 +720,95 @@ func (suite *AgentPublicTestSuite) TestReject() {
 	}
 }
 
+func (suite *AgentPublicTestSuite) TestRemove() {
+	tests := []struct {
+		name         string
+		handler      http.HandlerFunc
+		serverURL    string
+		machineID    string
+		validateFunc func(*client.Response[client.MessageResponse], error)
+	}{
+		{
+			name: "when removing the agent returns success",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				suite.Equal(http.MethodDelete, r.Method)
+				suite.Equal("/api/agent/web-01", r.URL.Path)
+				suite.Empty(r.URL.Query().Get("machine_id"))
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(`{"message":"agent web-01 (machine-001) removed"}`))
+			},
+			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+				suite.NoError(err)
+				suite.Equal("agent web-01 (machine-001) removed", resp.Data.Message)
+			},
+		},
+		{
+			name:      "when a machine ID is given it is sent",
+			machineID: "machine-002",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				suite.Equal("machine-002", r.URL.Query().Get("machine_id"))
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(`{"message":"ok"}`))
+			},
+			validateFunc: func(_ *client.Response[client.MessageResponse], err error) {
+				suite.NoError(err)
+			},
+		},
+		{
+			name: "when two agents share the hostname returns ConflictError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusConflict)
+				_, _ = w.Write([]byte(`{"error":"machine IDs a, b"}`))
+			},
+			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+				suite.Nil(resp)
+				var target *client.ConflictError
+				suite.True(errors.As(err, &target))
+				suite.Equal("machine IDs a, b", target.Message)
+			},
+		},
+		{
+			name:      "when client HTTP error returns wrapped error",
+			serverURL: "http://127.0.0.1:0",
+			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+				suite.Nil(resp)
+				suite.ErrorContains(err, "remove agent web-01")
+			},
+		},
+		{
+			name: "when response JSON200 is nil returns UnexpectedStatusError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "text/plain")
+				w.WriteHeader(http.StatusOK)
+			},
+			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+				suite.Nil(resp)
+				var target *client.UnexpectedStatusError
+				suite.True(errors.As(err, &target))
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			url := tc.serverURL
+			if tc.handler != nil {
+				server := httptest.NewServer(tc.handler)
+				defer server.Close()
+				url = server.URL
+			}
+
+			sut := client.New(url, "test-token", client.WithLogger(slog.Default()))
+
+			resp, err := sut.Agent.Remove(suite.ctx, "web-01", tc.machineID)
+			tc.validateFunc(resp, err)
+		})
+	}
+}
+
 func TestAgentPublicTestSuite(
 	t *testing.T,
 ) {

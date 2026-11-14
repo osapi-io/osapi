@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"slices"
 	"testing"
 	"time"
 
@@ -259,6 +260,164 @@ func (s *KeyStorePublicTestSuite) TestRemoveAgentKey() {
 			tc.setupMock()
 
 			tc.validateFunc(s.watcher.RemoveAgentKey(s.ctx, tc.machineID))
+		})
+	}
+}
+
+func (s *KeyStorePublicTestSuite) TestRemoveByHostname() {
+	// listing returns the bucket's keys: a pending entry, which is skipped, and
+	// one accepted record per given machine ID and hostname.
+	listing := func(records map[string]string) {
+		keys := make(chan string, len(records)+1)
+		keys <- "enrollment.machine-pending"
+		ids := make([]string, 0, len(records))
+		for id := range records {
+			ids = append(ids, id)
+		}
+		slices.Sort(ids)
+		for _, id := range ids {
+			keys <- "accepted." + id
+		}
+		close(keys)
+
+		lister := jobMocks.NewMockKeyLister(s.mockCtrl)
+		lister.EXPECT().Keys().Return(keys)
+		s.mockKV.EXPECT().ListKeys(gomock.Any()).Return(lister, nil)
+
+		for _, id := range ids {
+			entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+			entry.EXPECT().Value().Return(s.makeAcceptedJSON(id, records[id]))
+			s.mockKV.EXPECT().Get(gomock.Any(), "accepted."+id).Return(entry, nil)
+		}
+	}
+
+	tests := []struct {
+		name        string
+		hostname    string
+		machineID   string
+		setupMock   func()
+		wantID      string
+		wantErrIs   error
+		wantErrText string
+	}{
+		{
+			name:     "removes the one accepted agent with the hostname",
+			hostname: "web-01",
+			setupMock: func() {
+				listing(map[string]string{"machine-001": "web-01", "machine-002": "db-01"})
+				s.mockKV.EXPECT().Delete(gomock.Any(), "accepted.machine-001").Return(nil)
+			},
+			wantID: "machine-001",
+		},
+		{
+			name:     "refuses to guess when two accepted agents share the hostname",
+			hostname: "web-01",
+			setupMock: func() {
+				listing(map[string]string{"machine-001": "web-01", "machine-002": "web-01"})
+			},
+			wantErrIs:   enrollment.ErrAmbiguousHostname,
+			wantErrText: "machine-001, machine-002",
+		},
+		{
+			name:      "removes the named one when two share the hostname",
+			hostname:  "web-01",
+			machineID: "machine-002",
+			setupMock: func() {
+				listing(map[string]string{"machine-001": "web-01", "machine-002": "web-01"})
+				s.mockKV.EXPECT().Delete(gomock.Any(), "accepted.machine-002").Return(nil)
+			},
+			wantID: "machine-002",
+		},
+		{
+			name:      "is not found when the machine ID has another hostname",
+			hostname:  "web-01",
+			machineID: "machine-002",
+			setupMock: func() {
+				listing(map[string]string{"machine-001": "web-01", "machine-002": "db-01"})
+			},
+			wantErrIs: enrollment.ErrNoAcceptedAgent,
+		},
+		{
+			name:     "is not found when the bucket is empty",
+			hostname: "web-01",
+			setupMock: func() {
+				s.mockKV.EXPECT().ListKeys(gomock.Any()).Return(nil, jetstream.ErrNoKeysFound)
+			},
+			wantErrIs: enrollment.ErrNoAcceptedAgent,
+		},
+		{
+			name:     "fails when the keys cannot be listed",
+			hostname: "web-01",
+			setupMock: func() {
+				s.mockKV.EXPECT().ListKeys(gomock.Any()).Return(nil, errors.New("list error"))
+			},
+			wantErrText: "list enrollment keys: list error",
+		},
+		{
+			name:     "fails when a record cannot be read",
+			hostname: "web-01",
+			setupMock: func() {
+				keys := make(chan string, 1)
+				keys <- "accepted.machine-001"
+				close(keys)
+				lister := jobMocks.NewMockKeyLister(s.mockCtrl)
+				lister.EXPECT().Keys().Return(keys)
+				s.mockKV.EXPECT().ListKeys(gomock.Any()).Return(lister, nil)
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "accepted.machine-001").
+					Return(nil, errors.New("get error"))
+			},
+			wantErrText: "get accepted agent accepted.machine-001: get error",
+		},
+		{
+			name:     "fails when a record cannot be decoded",
+			hostname: "web-01",
+			setupMock: func() {
+				keys := make(chan string, 1)
+				keys <- "accepted.machine-001"
+				close(keys)
+				lister := jobMocks.NewMockKeyLister(s.mockCtrl)
+				lister.EXPECT().Keys().Return(keys)
+				s.mockKV.EXPECT().ListKeys(gomock.Any()).Return(lister, nil)
+				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return([]byte("not json"))
+				s.mockKV.EXPECT().Get(gomock.Any(), "accepted.machine-001").Return(entry, nil)
+			},
+			wantErrText: "unmarshal accepted agent accepted.machine-001",
+		},
+		{
+			name:     "fails when the delete fails",
+			hostname: "web-01",
+			setupMock: func() {
+				listing(map[string]string{"machine-001": "web-01"})
+				s.mockKV.EXPECT().
+					Delete(gomock.Any(), "accepted.machine-001").
+					Return(errors.New("delete error"))
+			},
+			wantErrText: "remove accepted agent machine-001: delete error",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.setupMock()
+
+			id, err := s.watcher.RemoveByHostname(s.ctx, tc.hostname, tc.machineID)
+
+			if tc.wantErrIs == nil && tc.wantErrText == "" {
+				s.Require().NoError(err)
+				s.Equal(tc.wantID, id)
+
+				return
+			}
+			s.Require().Error(err)
+			s.Empty(id)
+			if tc.wantErrIs != nil {
+				s.ErrorIs(err, tc.wantErrIs)
+			}
+			if tc.wantErrText != "" {
+				s.Contains(err.Error(), tc.wantErrText)
+			}
 		})
 	}
 }
