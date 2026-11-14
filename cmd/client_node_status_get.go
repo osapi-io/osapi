@@ -51,10 +51,7 @@ var clientNodeStatusGetCmd = &cobra.Command{
 			return
 		}
 
-		if resp.Data.JobID != "" {
-			fmt.Println()
-			cli.PrintKV("Job ID", resp.Data.JobID)
-		}
+		cli.PrintJobID(resp.Data.JobID)
 
 		displayNodeStatusCollection(host, &resp.Data)
 	},
@@ -81,10 +78,10 @@ func displayNodeStatusCollection(
 		}
 		memory := ""
 		if s.Memory != nil {
-			memory = fmt.Sprintf(
-				"%d GB / %d GB",
-				s.Memory.Used/1024/1024/1024,
-				s.Memory.Total/1024/1024/1024,
+			memory = cli.FormatBytes(
+				int(s.Memory.Used),
+			) + " of " + cli.FormatBytes(
+				int(s.Memory.Total),
 			)
 		}
 		var errPtr *string
@@ -131,10 +128,10 @@ func displayNodeStatusDetail(
 
 	if data.Memory != nil {
 		cli.PrintKV("Memory", fmt.Sprintf(
-			"%d GB used / %d GB total / %d GB free",
-			data.Memory.Used/1024/1024/1024,
-			data.Memory.Total/1024/1024/1024,
-			data.Memory.Free/1024/1024/1024,
+			"%s used of %s, %s free",
+			cli.FormatBytes(int(data.Memory.Used)),
+			cli.FormatBytes(int(data.Memory.Total)),
+			cli.FormatBytes(int(data.Memory.Free)),
 		))
 	}
 
@@ -142,9 +139,9 @@ func displayNodeStatusDetail(
 	for _, disk := range data.Disks {
 		diskRows = append(diskRows, []string{
 			disk.Name,
-			fmt.Sprintf("%d GB", disk.Total/1024/1024/1024),
-			fmt.Sprintf("%d GB", disk.Used/1024/1024/1024),
-			fmt.Sprintf("%d GB", disk.Free/1024/1024/1024),
+			cli.FormatBytes(int(disk.Total)),
+			cli.FormatBytes(int(disk.Used)),
+			cli.FormatBytes(int(disk.Free)),
 		})
 	}
 

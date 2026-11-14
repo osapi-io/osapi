@@ -30,6 +30,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job"
@@ -120,6 +121,9 @@ func (a *Agent) SetMeterProvider(
 		"job_duration_seconds",
 		metric.WithDescription("Job execution duration in seconds"),
 	)
+
+	// Behaviors record their calls through the same provider.
+	behavior.SetMeterProvider(mp)
 }
 
 // LastHeartbeatTime returns the timestamp of the last successful

@@ -22,6 +22,7 @@ package cli_test
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"strings"
 	"testing"
@@ -266,6 +267,72 @@ func (suite *ThemePublicTestSuite) TestPrintJSONAndNote() {
 			assert.Equal(suite.T(), tc.want, captureStdout(tc.print))
 		})
 	}
+}
+
+func (suite *ThemePublicTestSuite) TestCount() {
+	tests := []struct {
+		name string
+		n    int
+		kind string
+		want string
+	}{
+		{name: "when the count is zero", n: 0, kind: "failed", want: "0 failed"},
+		{name: "when the kind has a status color", n: 2, kind: "failed", want: "2 failed"},
+		{name: "when the kind is plain", n: 5, kind: "total", want: "5 total"},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			suite.Contains(cli.Count(tc.n, tc.kind), tc.want[:1])
+			suite.Contains(cli.Count(tc.n, tc.kind), tc.kind)
+		})
+	}
+}
+
+func (suite *ThemePublicTestSuite) TestRenderCell() {
+	tests := []struct {
+		name   string
+		header string
+		cell   string
+		want   string
+	}{
+		{name: "when a status", header: "STATUS", cell: "ok", want: "ok"},
+		{name: "when a hostname", header: "HOSTNAME", cell: "web-01", want: "web-01"},
+		{name: "when a nested hostname", header: "HOSTNAME", cell: "├─ facts", want: "facts"},
+		{name: "when no condition", header: "CONDITIONS", cell: "-", want: "-"},
+		{
+			name:   "when a condition is set",
+			header: "CONDITIONS",
+			cell:   "DiskPressure",
+			want:   "DiskPressure",
+		},
+		{name: "when an ID", header: "JOB ID", cell: "abc", want: "abc"},
+		{name: "when a name", header: "NAME", cell: "sysctl", want: "sysctl"},
+		{name: "when an HTTP method", header: "METHOD", cell: "GET", want: "GET"},
+		{name: "when a write", header: "VERB", cell: "write", want: "write"},
+		{name: "when a read", header: "VERB", cell: "read", want: "read"},
+		{name: "when a route", header: "ROUTE", cell: "GET /api/{hostname}/x", want: "/x"},
+		{
+			name:   "when a route with an open brace",
+			header: "ROUTE",
+			cell:   "/api/{broken",
+			want:   "/api/{broken",
+		},
+		{name: "when any other column", header: "VALUE", cell: "10", want: "10"},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			suite.Contains(cli.ExportRenderCell(tc.header, tc.cell), tc.want)
+		})
+	}
+}
+
+func (suite *ThemePublicTestSuite) TestCapture() {
+	cli.SetPipe(func() (*os.File, *os.File, error) { return nil, nil, errors.New("no pipe") })
+	defer cli.ResetPipe()
+
+	suite.Empty(cli.Capture(func() {}))
 }
 
 func TestThemePublicTestSuite(

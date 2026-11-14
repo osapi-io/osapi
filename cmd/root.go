@@ -23,11 +23,9 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -41,7 +39,6 @@ import (
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/telemetry/tracing"
-	"github.com/osapi-io/osapi/internal/validation"
 )
 
 var (
@@ -57,6 +54,8 @@ var (
 		"version":    true,
 		"help":       true,
 		"completion": true,
+		"config":     true,
+		"roles":      true,
 	}
 )
 
@@ -84,7 +83,10 @@ func Execute() {
 		cancel()
 	}()
 
+	cli.GuardGroups(rootCmd)
+
 	cmd, err := rootCmd.ExecuteContextC(ctx)
+	cli.FlushKV()
 	if err != nil {
 		cli.PrintError(os.Stderr, cmd, err, jsonOutput)
 		os.Exit(cli.ExitCode(err))
@@ -103,6 +105,12 @@ func init() {
 
 	_ = viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	_ = viper.BindPFlag("osapiFile", rootCmd.PersistentFlags().Lookup("osapi-file"))
+
+	// The environment is read before any command resolves its config file, so
+	// OSAPI_OSAPIFILE picks the file as -f does. config.Read sets the same up
+	// again for the file's keys, but by then the path has been chosen.
+	viper.SetEnvPrefix(config.EnvPrefix)
+	viper.AutomaticEnv()
 }
 
 // skipConfig reports whether the command being run needs no config file.
@@ -133,89 +141,14 @@ func initConfig() {
 		return
 	}
 
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
-	viper.SetConfigType("yaml")
-	viper.AutomaticEnv()
-	viper.SetEnvPrefix("osapi")
-
-	// Controller defaults
-	viper.SetDefault("controller.api.port", 8080)
-	viper.SetDefault("controller.api.job_timeout", "30s")
-	viper.SetDefault("controller.metrics.port", 9090)
-
-	// NATS server defaults
-	viper.SetDefault("nats.api.port", 4222)
-	viper.SetDefault("nats.api.host", "localhost")
-
-	// NATS connection defaults (controller + agent)
-	viper.SetDefault("controller.api.nats.port", 4222)
-	viper.SetDefault("controller.api.nats.host", "localhost")
-	viper.SetDefault("agent.nats.port", 4222)
-	viper.SetDefault("agent.nats.host", "localhost")
-
-	// NATS infrastructure defaults
-	viper.SetDefault("nats.stream.name", "JOBS")
-	viper.SetDefault("nats.stream.subjects", "jobs.>")
-	viper.SetDefault("nats.kv.bucket", "job-queue")
-	viper.SetDefault("nats.kv.response_bucket", "job-responses")
-	viper.SetDefault("nats.registry.bucket", "agent-registry")
-	viper.SetDefault("nats.registry.ttl", "30s")
-
-	// Agent defaults
-	viper.SetDefault("agent.max_jobs", 10)
-	viper.SetDefault("agent.queue_group", "job-agents")
-	viper.SetDefault("agent.facts.interval", "60s")
-	viper.SetDefault("agent.conditions.memory_pressure_threshold", 90)
-	viper.SetDefault("agent.conditions.high_load_multiplier", 2.0)
-	viper.SetDefault("agent.conditions.disk_pressure_threshold", 90)
-	viper.SetDefault("agent.consumer.max_deliver", 5)
-	viper.SetDefault("agent.consumer.ack_wait", "2m")
-	viper.SetDefault("agent.consumer.max_ack_pending", 1000)
-	viper.SetDefault("agent.consumer.replay_policy", "instant")
-
-	// PKI defaults.
-	viper.SetDefault("agent.pki.enabled", false)
-	viper.SetDefault("agent.pki.key_dir", "/etc/osapi/pki")
-	viper.SetDefault("controller.pki.enabled", false)
-	viper.SetDefault("controller.pki.key_dir", "/etc/osapi/pki")
-	viper.SetDefault("controller.pki.auto_accept", false)
-	viper.SetDefault("controller.pki.rotation_grace_period", "24h")
-
-	// Enrollment KV defaults.
-	viper.SetDefault("nats.enrollment.bucket", "agent-enrollment")
-	viper.SetDefault("nats.enrollment.storage", "file")
-	viper.SetDefault("nats.enrollment.replicas", 1)
-
-	viper.SetConfigFile(viper.GetString("osapiFile"))
-
-	if err := viper.ReadInConfig(); err != nil {
-		cli.LogFatal(logger, "failed to read config", err, "osapiFile", viper.ConfigFileUsed())
-	}
-
-	if err := viper.Unmarshal(&appConfig); err != nil {
-		cli.LogFatal(logger, "failed to unmarshal config", err, "osapiFile", viper.ConfigFileUsed())
-	}
-
-	if errMsg, ok := validation.Struct(appConfig); !ok {
-		cli.LogFatal(
-			logger,
-			"invalid config",
-			fmt.Errorf("%s", errMsg),
-			"osapiFile",
-			viper.ConfigFileUsed(),
-		)
+	if err := config.Load(viper.GetViper(), viper.GetString("osapiFile"), &appConfig); err != nil {
+		cli.LogFatal(logger, "invalid config", err, "osapiFile", viper.GetString("osapiFile"))
 	}
 
 	// Auto-enable tracing in debug mode so trace_id appears in log lines.
 	// No exporter is set — just log correlation, no span dumps.
 	if appConfig.Debug && !appConfig.Telemetry.Tracing.Enabled {
 		appConfig.Telemetry.Tracing.Enabled = true
-	}
-
-	err := config.Validate(&appConfig)
-	if err != nil {
-		cli.LogFatal(logger, "validation failed", err, "osapiFile", viper.ConfigFileUsed())
 	}
 }
 

@@ -30,8 +30,8 @@ import (
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/exec"
-	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/file"
 )
@@ -230,14 +230,14 @@ func (d *Debian) isManagedFile(
 	ctx context.Context,
 	path string,
 ) bool {
-	stateKey := file.BuildStateKey(d.hostname, path)
+	stateKey := managedfile.StateKey(d.hostname, path)
 	entry, err := d.stateKV.Get(ctx, stateKey)
 	if err != nil {
 		return false
 	}
 
 	// Check that the state entry is not undeployed.
-	var state job.FileState
+	var state managedfile.State
 	if err := json.Unmarshal(entry.Value(), &state); err != nil {
 		return false
 	}
@@ -251,14 +251,14 @@ func (d *Debian) buildEntryFromState(
 	name string,
 	path string,
 ) *Entry {
-	stateKey := file.BuildStateKey(d.hostname, path)
+	stateKey := managedfile.StateKey(d.hostname, path)
 
 	kvEntry, err := d.stateKV.Get(ctx, stateKey)
 	if err != nil {
 		return nil
 	}
 
-	var state job.FileState
+	var state managedfile.State
 	if err := json.Unmarshal(kvEntry.Value(), &state); err != nil {
 		return nil
 	}

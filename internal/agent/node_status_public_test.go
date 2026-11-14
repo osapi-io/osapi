@@ -33,6 +33,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
+	sysctlMocks "github.com/osapi-io/osapi/internal/behaviors/sysctl/mocks"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	aptMocks "github.com/osapi-io/osapi/internal/provider/node/apt/mocks"
@@ -46,7 +47,6 @@ import (
 	powerMocks "github.com/osapi-io/osapi/internal/provider/node/power/mocks"
 	processMocks "github.com/osapi-io/osapi/internal/provider/node/process/mocks"
 	serviceMocks "github.com/osapi-io/osapi/internal/provider/node/service/mocks"
-	sysctlMocks "github.com/osapi-io/osapi/internal/provider/node/sysctl/mocks"
 	timezoneMocks "github.com/osapi-io/osapi/internal/provider/node/timezone/mocks"
 	userMocks "github.com/osapi-io/osapi/internal/provider/node/user/mocks"
 )

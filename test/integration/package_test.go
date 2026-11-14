@@ -116,7 +116,7 @@ func (s *PackageSmokeSuite) TestPackageRemove() {
 		{
 			name: "removes a package",
 			args: []string{
-				"client", "node", "package", "remove",
+				"client", "node", "package", "uninstall",
 				"--name", "tree", "--json",
 			},
 			validateFunc: func(

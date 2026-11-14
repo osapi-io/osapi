@@ -1,0 +1,69 @@
+---
+id: post-node-sysctl
+title: "Manage a kernel parameter and apply it"
+description: "Writes osapi-<key>.conf to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. Running it again with the same value changes nothing and reports changed: false. Use update to change a parameter osapi already manages."
+sidebar_label: "Manage a kernel parameter and apply it"
+hide_title: true
+hide_table_of_contents: true
+api: eJztWGFvG0UQ/SujFRItOjsOOIVaCCmFVgQBrZKUSiQmGt+OfVvf7V535xJc6/47mt07x4lNi1CRQPSTz3ezuzPvvZmbubXSFHJvajbOqol65Q1TABewNoOvl7T6Zpg7Owd2MKMCr43zYRhWIedyqI3P4IA4P+hvwGwFmubYlJwBWg1Y16WhAIbhxnAByRAG9RBOG2uNXcgjXKCxyYALgoAVwTWWDUFeoF1QAOu4EGPZ01PtPIfumZ7AHMtAQ3gZCJpaI5N4m54CQo0eK2LyKSjA0hPqFVRocUFhqDLFuAhqcqGSd1euJo+CR1DTTG3+nWg1US9c4J+dprNoqjIVKG+84ZWaXKzVE0JP/rjh4na7yY1AqqbtNFMbX0I0t1iRmqjCBY6XmTLCQY1cqEx5etMYT1pN2DeU3SPqHP2CBDqyDP0OGXgK5K9Jg3cNC2IJxwdXaFcZXGFZPszAeShxRiUEKiln5+HBklaTaPpQAAl5QRWqyVrxqhYXA3tjFypTlbE/kl1IgIethCReUuAnTq/E/q6TJ7ZuWNjoeM89IdNwT3C5s0yWZYuomTxCfvA6yD7rXYfc7DXlrDJVeyGIDQV5uqTVPq/vevVio4iEWWjyAjCAJR6a+no8NPXV3Pkb9FoOQGbysu63Cxy8PR78Oho8nt5eDq8G088+uQ9NpiKa73fml8iPQER877TfLi/95aWV3dt2G7KLGGd/xDRTbLiUM5Iqv40onyZiVNumxaF2NiSUPh+Ndrl6inkBnFQlevo0iJhiJsfMvCmIC/KSr13mCY8fiLfXbnZl9D605s5XyGqimsboHfTOC4LXbgYn30ETSAuOtXc5hQBcGIkggiCe0u9Y1RGlo6MRfTUejQb0+ePZYHyoxwP88vDRYDx+9OjoaDwejUYjlTBrSg5bXqH3KMAbpirsi+qud6dxA5g7D85SRHW4E/om+98rle87S3DzWCdT7nOBLEHrJhcAUtRy7lBiCIzchH17k20qkZJbCspoShJ4w9LUdbxiU5FrWOS1i3natndkUyJjqNGFFGub/Z2MlGWdxLaWzpwrCe3O2ledLsURObVXp+xC3jv//uOfihlUFAIuCMw2ugmY4U4CbtXsDuKdNPyp4QhKUoFq72/Ry+tP8zdlbJfA4305+wR1L3EYSKk3OvEQA/+A+fkXgTyGrf+9OuLaJFOX5433qXLc5uOziLHkrif2hq57fUUBaWI05V4J3ztcayOXWEK3BnDm5P3TO7H3WJ3KryW+cX4Jnezj0bnT22lpLNOC/N4ilIKUBXcOORqNhLye3yi0HWIPd4l9abHhwnnzljQM4PjFCSxpBRv5fCT2v0DsF7vEPnN+ZrQmCwM4saGZz01upNDU5CsTQuw6P7L772f3aF897tuR3DWllqEFZgS+sdJxG+5fzPceE37ITuoj5f8Q5W2mKuLCyRRYu9A164WaqAOszYGl3/nAOk0H6743aLu5eGtKPBMWE1Hbs+LG8YK57uev2PREI5V1F8/6ZviHV+exJRF1nN5OYE/7aLpJ6JaAbhrpb7Qyas5dPLmL+PmZvGU2Q/5e7KJFY6Sn9a7aGMvMb2ykNGTQDaCN1eRhgw3MKBhNqU1DqwcyFjNZ2VOIuCYf0kGHw9Ew9t+CcoVR/d2k/FOc2QFhSd5SuTXb9x8bVmB2+vD1bW79T79vJHGxSLQu0VhBt/GlQJM0fKGwNipTwpT8SDplarLd5SYpT7PY+sqK9XqGgV76sm3l9puGvHwFmYrYvMGZqOpirbQJcq3VJMbxDm4enHbtzUP4R79u7IWjn/DsaitbVDe/3Lb77bTNVEGoycfo0uNvUwyDc9nkdvlOHW+zfsVxnlPN77SdbhWcF8/PzqUKdF9ZqljulMcb+ZSCN8lVV6ePVpN1urdWJdpFgwuxTXtKzcC7JedeiYlR7QVjvU4W525Jtm032LD8F2Da9g/Q4gwl
+sidebar_class_name: "post api-method"
+info_path: gen/api-next/osapi-behaviors
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Manage a kernel parameter and apply it"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/next/node/{hostname}/sysctl"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Writes osapi-&lt;key&gt;.conf to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. Running it again with the same value changes nothing and reports changed: false. Use update to change a parameter osapi already manages.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./post-node-sysctl.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./post-node-sysctl.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./post-node-sysctl.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

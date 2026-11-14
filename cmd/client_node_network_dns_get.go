@@ -21,8 +21,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
@@ -37,7 +35,7 @@ var clientNodeNetworkDNSGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
-		interfaceName, _ := cmd.Flags().GetString("interface-name")
+		interfaceName, _ := cmd.Flags().GetString("interface")
 
 		resp, err := sdkClient.DNS.Get(ctx, host, interfaceName)
 		if err != nil {
@@ -50,10 +48,7 @@ var clientNodeNetworkDNSGetCmd = &cobra.Command{
 			return
 		}
 
-		if resp.Data.JobID != "" {
-			fmt.Println()
-			cli.PrintKV("Job ID", resp.Data.JobID)
-		}
+		cli.PrintJobID(resp.Data.JobID)
 
 		results := make([]cli.ResultRow, 0, len(resp.Data.Results))
 		for _, cfg := range resp.Data.Results {
@@ -85,7 +80,7 @@ func init() {
 	clientNodeNetworkDNSCmd.AddCommand(clientNodeNetworkDNSGetCmd)
 
 	clientNodeNetworkDNSGetCmd.PersistentFlags().
-		String("interface-name", "", "Name of the network interface to retrieve DNS server configurations (required)")
+		String("interface", "", "Name of the network interface to retrieve DNS server configurations (required)")
 
-	_ = clientNodeNetworkDNSGetCmd.MarkPersistentFlagRequired("interface-name")
+	_ = clientNodeNetworkDNSGetCmd.MarkPersistentFlagRequired("interface")
 }

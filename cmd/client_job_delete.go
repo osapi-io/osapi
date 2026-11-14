@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"time"
 
@@ -37,7 +36,7 @@ var clientJobDeleteCmd = &cobra.Command{
 	Short: "Delete a job",
 	Long:  `Deletes a specific job by its ID via the REST API.`,
 	Run: func(cmd *cobra.Command, _ []string) {
-		jobID, _ := cmd.Flags().GetString("job-id")
+		jobID, _ := cmd.Flags().GetString("id")
 		ctx := cmd.Context()
 
 		err := sdkClient.Job.Delete(ctx, jobID)
@@ -57,7 +56,7 @@ var clientJobDeleteCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println()
+		cli.PrintHeading("Job")
 		cli.PrintKV("Job ID", jobID, "Status", "Deleted")
 
 		logger.Info(
@@ -71,7 +70,7 @@ func init() {
 	clientJobCmd.AddCommand(clientJobDeleteCmd)
 
 	clientJobDeleteCmd.PersistentFlags().
-		StringP("job-id", "", "", "Job ID to delete")
+		StringP("id", "", "", "Job ID to delete")
 
-	_ = clientJobDeleteCmd.MarkPersistentFlagRequired("job-id")
+	_ = clientJobDeleteCmd.MarkPersistentFlagRequired("id")
 }

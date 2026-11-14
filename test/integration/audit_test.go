@@ -117,7 +117,7 @@ func (s *AuditSmokeSuite) TestAuditGet() {
 	}{
 		{
 			name: "returns audit entry details for known id",
-			args: []string{"client", "audit", "get", "--audit-id", auditID, "--json"},
+			args: []string{"client", "audit", "get", "--id", auditID, "--json"},
 			validateFunc: func(
 				stdout string,
 				exitCode int,

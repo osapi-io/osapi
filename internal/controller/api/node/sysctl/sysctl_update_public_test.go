@@ -36,13 +36,13 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
+	sysctlProv "github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/api"
 	apisysctl "github.com/osapi-io/osapi/internal/controller/api/node/sysctl"
 	"github.com/osapi-io/osapi/internal/controller/api/node/sysctl/gen"
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
-	sysctlProv "github.com/osapi-io/osapi/internal/provider/node/sysctl"
 	"github.com/osapi-io/osapi/internal/validation"
 )
 

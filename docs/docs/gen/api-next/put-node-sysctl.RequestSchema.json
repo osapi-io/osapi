@@ -1,0 +1,1 @@
+{"title":"Body","body":{"description":"Input to sysctl update.","required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"value":{"type":"string","description":"Value to set","pattern":"^[^\\r\\n]*$"}},"required":["value"],"title":"SysctlUpdateRequest"}}}}}

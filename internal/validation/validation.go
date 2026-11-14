@@ -27,9 +27,10 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/behavior"
+	"github.com/osapi-io/osapi/internal/behavior"
 
 	"github.com/go-playground/validator/v10"
 	cronparser "github.com/robfig/cron/v3"
@@ -162,6 +163,11 @@ func init() {
 	behavior.ValidatorSchema("sysctl_key", behavior.Pattern(sysctlKeyPattern.String()))
 	behavior.ValidatorSchema("no_linebreak", behavior.Pattern(`^[^\r\n]*$`))
 
+	// A behavior can declare its own rule with behavior.Validator; each one
+	// is registered here, whether its behavior was defined before this ran
+	// or after.
+	behavior.OnRule(registerRule)
+
 	// account_name validates a system user or group name: it rejects a
 	// leading hyphen, path separators, colons, whitespace, and control
 	// characters, so the value cannot be mistaken for a command-line option
@@ -180,6 +186,9 @@ func init() {
 }
 
 // customHints maps validator tags to a hint appended to the default error.
+// hintsMu guards customHints, which a behavior's rule adds to.
+var hintsMu sync.RWMutex
+
 var customHints = map[string]func(fe validator.FieldError) string{
 	"valid_target": func(fe validator.FieldError) string {
 		target, _ := fe.Value().(string)
@@ -290,7 +299,10 @@ func formatErrors(
 	msgs := make([]string, 0, len(errs))
 	for _, fe := range errs {
 		msg := fe.Error()
-		if fn, ok := customHints[fe.Tag()]; ok {
+		hintsMu.RLock()
+		fn, ok := customHints[fe.Tag()]
+		hintsMu.RUnlock()
+		if ok {
 			msg = fmt.Sprintf("%s: %s", msg, fn(fe))
 		}
 		msgs = append(msgs, msg)
@@ -340,4 +352,19 @@ func AtLeastOneField(
 // Instance returns the shared validator for registering custom validators.
 func Instance() *validator.Validate {
 	return instance
+}
+
+// registerRule adds a rule a behavior declared to the validator, and its
+// message to the hints a failure reads.
+func registerRule(
+	r behavior.Rule,
+) {
+	_ = instance.RegisterValidation(r.Tag, func(fl validator.FieldLevel) bool {
+		return r.Check(fl.Field().String())
+	})
+	hintsMu.Lock()
+	defer hintsMu.Unlock()
+	customHints[r.Tag] = func(fe validator.FieldError) string {
+		return fmt.Sprintf("%q %s", fe.Value(), r.Message)
+	}
 }

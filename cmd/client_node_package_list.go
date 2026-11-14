@@ -21,8 +21,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
@@ -31,8 +29,14 @@ import (
 // clientNodePackageListCmd represents the package list command.
 var clientNodePackageListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List installed packages",
-	Run: func(cmd *cobra.Command, _ []string) {
+	Short: "List installed packages, or with --updates those with an update",
+	Run: func(cmd *cobra.Command, args []string) {
+		if updates, _ := cmd.Flags().GetBool("updates"); updates {
+			clientNodePackageListUpdatesCmd.Run(cmd, args)
+
+			return
+		}
+
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
 
@@ -47,10 +51,7 @@ var clientNodePackageListCmd = &cobra.Command{
 			return
 		}
 
-		if resp.Data.JobID != "" {
-			fmt.Println()
-			cli.PrintKV("Job ID", resp.Data.JobID)
-		}
+		cli.PrintJobID(resp.Data.JobID)
 
 		results := make([]cli.ResultRow, 0, len(resp.Data.Results))
 		for _, r := range resp.Data.Results {
@@ -85,4 +86,7 @@ var clientNodePackageListCmd = &cobra.Command{
 
 func init() {
 	clientNodePackageCmd.AddCommand(clientNodePackageListCmd)
+
+	clientNodePackageListCmd.Flags().
+		Bool("updates", false, "List only packages with an update available")
 }

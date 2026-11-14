@@ -33,8 +33,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	execMocks "github.com/osapi-io/osapi/internal/exec/mocks"
-	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider/file"
 	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
@@ -82,7 +82,7 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 				_ = suite.appFs.MkdirAll("/etc/nginx", 0o755)
 				_ = suite.appFs.WriteFile("/etc/nginx/nginx.conf", fileContent, 0o644)
 
-				existingState := job.FileState{
+				existingState := managedfile.State{
 					SHA256: fileSHA,
 					Path:   "/etc/nginx/nginx.conf",
 				}
@@ -114,7 +114,7 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 				_ = suite.appFs.MkdirAll("/etc/nginx", 0o755)
 				_ = suite.appFs.WriteFile("/etc/nginx/nginx.conf", driftedContent, 0o644)
 
-				existingState := job.FileState{
+				existingState := managedfile.State{
 					SHA256: fileSHA,
 					Path:   "/etc/nginx/nginx.conf",
 				}
@@ -143,7 +143,7 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 		{
 			name: "when file missing on disk",
 			setupMock: func() {
-				existingState := job.FileState{
+				existingState := managedfile.State{
 					SHA256: fileSHA,
 					Path:   "/etc/nginx/nginx.conf",
 				}

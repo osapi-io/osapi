@@ -45,6 +45,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/api"
 	agentAPI "github.com/osapi-io/osapi/internal/controller/api/agent"
 	auditAPI "github.com/osapi-io/osapi/internal/controller/api/audit"
+	behaviorAPI "github.com/osapi-io/osapi/internal/controller/api/behavior"
 	factsAPI "github.com/osapi-io/osapi/internal/controller/api/facts"
 	"github.com/osapi-io/osapi/internal/controller/api/file"
 	"github.com/osapi-io/osapi/internal/controller/api/health"
@@ -778,6 +779,10 @@ func registerControllerHandlers(
 	handlers = append(handlers, dockerAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, scheduleAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, sysctlAPI.Handler(log, jc, signingKey, customRoles)...)
+	// Behaviors: each one's generated routes, registered by the gen packages
+	// internal/behaviors/all/gen imports, served under /api/next beside the
+	// hand-written routes.
+	handlers = append(handlers, behaviorAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, ntpAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, powerAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, timezoneAPI.Handler(log, jc, signingKey, customRoles)...)

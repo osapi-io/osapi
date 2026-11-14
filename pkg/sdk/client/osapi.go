@@ -148,6 +148,7 @@ type Client struct {
 	Route *RouteService
 
 	httpClient    *gen.ClientWithResponses
+	hc            *http.Client
 	baseURL       string
 	logger        *slog.Logger
 	baseTransport http.RoundTripper
@@ -206,6 +207,7 @@ func New(
 	httpClient, _ := gen.NewClientWithResponses(baseURL, gen.WithHTTPClient(hc))
 
 	c.httpClient = httpClient
+	c.hc = hc
 	c.Agent = &AgentService{client: httpClient}
 	c.Status = &StatusService{client: httpClient}
 	c.Hostname = &HostnameService{client: httpClient}

@@ -20,7 +20,11 @@
 
 package config
 
-import "github.com/go-playground/validator/v10"
+import (
+	"reflect"
+
+	"github.com/go-playground/validator/v10"
+)
 
 // SetRegisterValidatorsFn overrides the registerValidatorsFn variable for testing.
 func SetRegisterValidatorsFn(
@@ -32,4 +36,12 @@ func SetRegisterValidatorsFn(
 // ResetRegisterValidatorsFn restores the registerValidatorsFn variable to its default.
 func ResetRegisterValidatorsFn() {
 	registerValidatorsFn = registerValidators
+}
+
+// KeysOf walks t the way Keys walks Config, for testing fields Config does
+// not have.
+func KeysOf(
+	t reflect.Type,
+) []Key {
+	return walk(t, "", reflect.Value{})
 }

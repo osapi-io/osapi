@@ -1,0 +1,69 @@
+---
+id: get-node-sysctl
+title: "List the kernel parameters osapi manages"
+description: "Lists only the parameters osapi wrote, one osapi-<key>.conf file each in behaviors.sysctl.dir, with each one's current runtime value."
+sidebar_label: "List the kernel parameters osapi manages"
+hide_title: true
+hide_table_of_contents: true
+api: eJztV99v2zYQ/lcO99IWkB2nc7LNGAakXdqlKNaiTbGHwAho8WwxlkiVPCb1DP3vw1GW4x8CuocN6IA+mZLvyO+++466W6OmkHtTs3EWJ/jWBA7gbLkCLghq5VVFTD6AC6o28OAdUwbOUvti8MuSVr8Oc2fnMDclAam8AGNhRoW6N86HYViFnMuhNj6DB8NFa+IsPQmQR+/JMvho2VQE96qMNMQMWS0CTm6wdb51NXklEANOM9w+XWmc4GviP5ymj8kSMwyUR294hZObNb4g5clfRC4ed5t4UhqnzTTDx/iStVUV4QQLFzgtMzRCSq24wAw9fY7Gk8YJ+0jZAXPXyi+IQS0knm6HDDwF8vekwbvIxi7aEOHprbKrDG5VWT7LwHko1YxKCFRSzs7D0yWtJsn0mdAR8oIqhZM18qoWiIG9sQvMsDL2LdmFxHfaSEieQu1soCDWz0cj+dlHein8cwtXgD4JgjKWLCflzjJZFi9V16XJE9End0Fc18dA3OyOcsYMay9pYdMefOdmt0b3AZ47XynGCcZoNB6xWBDcuRlc/QYxkAZ2UHuXUwjAhRGgnyOFhJS+qKouZe+zsxH9NB6NBvT859lgfKrHA/Xj6flgPD4/Pzsbj0ej0QibRE0sOeygUt6rlaSZqQp9Ue2je2fpmLH9wLfa6Ql9f7PfN5bg5qnWWuVwoVhC1jGX8NuY26OaDAMrjqFvb7KxEom7pXCsTElCbliauk4rKS8XWcrnmPF22w7Itrxg7nwLQaJKAJa0+npk77uqgsREk2FS8tcdX/ZdB+JP3jv/df9LMYOKQlALArPLa0vJEJtmt5Bvdmt9Q+5UyOIkrPZOubTsV9gcenZqOrJ/6UqpYuPsh00tinOT4bivGl8o3akaBhKx0S35KeZ/sST/IYcXsPPcSSL5ttp0ebq09X4Jvkr0Srl6Ym/ovhNVUo0mVqbs1e3B4VobWaoSNj6gZi7yI4jeY3UkOdoSPzi/hI3W09G507vCM5ZpQb733mmDFIe9Q85GI0lel+OksaPEnh4n9pNVkQvnzV+kYQAX769gSSvYSuh7Yv8Pif3hOLGvnJ8ZrcnCAK5siPO5yY3cMTX5yoSQ2pTv2f32s3vWdx93HUjuYqnBOoYZyQdJmjTD3df44G9S+vtN/e2nvMmwIi6cjA0LSsRLaz/BE1WbE0tf+MQ6TSfrritoTsLhWPFRktjmaXe42OIumOuuY5fnWTLCbLN41bW/b/68Ts2IsXOX3Deo332UL8V2fOqNP1lEUzLMvau2xqBpbmxKS8hgM3dEq8nDNkCYUTCaUpoKZfXgwRtmsrKnkHlPPrQHnQ5Hw9Q21y5wpZKCNwOSTIlphyV5S+XxmFgpqxZ0BH79WCHfzqTZpo0l+XWpjJWQoy8FbauOG1S1wQyFPvkRnWY42e0cW5FMs9ROisd6PVOBPvmyaeT150heBtKptMLeqJmk+maN2gRZa5zMVRkOZ8pdup5+2PQNz+A/nTR76eimJSuz0qaXR9xMA48tdDNtMixIafIpuvbvizynmnccj65GGVu3dfn68hozVPtFdVBEafdeUOt1a3HtlmSbZouR5VkANs3fOG7iVQ==
+sidebar_class_name: "get api-method"
+info_path: gen/api-next/osapi-behaviors
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List the kernel parameters osapi manages"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/next/node/{hostname}/sysctl"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Lists only the parameters osapi wrote, one osapi-&lt;key&gt;.conf file each in behaviors.sysctl.dir, with each one's current runtime value.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-node-sysctl.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-node-sysctl.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-node-sysctl.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

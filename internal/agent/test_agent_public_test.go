@@ -27,6 +27,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/agent"
+	sysctlProv "github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job/client"
@@ -42,7 +43,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	ntpProv "github.com/osapi-io/osapi/internal/provider/node/ntp"
 	powerProv "github.com/osapi-io/osapi/internal/provider/node/power"
-	sysctlProv "github.com/osapi-io/osapi/internal/provider/node/sysctl"
 	timezoneProv "github.com/osapi-io/osapi/internal/provider/node/timezone"
 	cronProv "github.com/osapi-io/osapi/internal/provider/schedule/cron"
 	"github.com/osapi-io/osapi/internal/telemetry/process"

@@ -32,8 +32,14 @@ import (
 var clientFileListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List stored files",
-	Long:  `List all files stored in the OSAPI Object Store.`,
-	Run: func(cmd *cobra.Command, _ []string) {
+	Long:  `List all files stored in the OSAPI Object Store. With --stale, list\nonly the deployments whose file changed since they were deployed.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if stale, _ := cmd.Flags().GetBool("stale"); stale {
+			clientFileListStaleCmd.Run(cmd, args)
+
+			return
+		}
+
 		ctx := cmd.Context()
 		resp, err := sdkClient.File.List(ctx)
 		if err != nil {
@@ -48,7 +54,8 @@ var clientFileListCmd = &cobra.Command{
 
 		files := resp.Data.Files
 		if len(files) == 0 {
-			cli.PrintNote("No files found.")
+			cli.PrintHeading("Files (0)")
+			cli.PrintNote("None. Upload one with osapi client file upload.")
 			return
 		}
 
@@ -75,4 +82,7 @@ var clientFileListCmd = &cobra.Command{
 
 func init() {
 	clientFileCmd.AddCommand(clientFileListCmd)
+
+	clientFileListCmd.Flags().
+		Bool("stale", false, "List only deployments whose file changed since they were deployed")
 }

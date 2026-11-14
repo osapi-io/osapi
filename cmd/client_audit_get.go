@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -40,7 +39,7 @@ Requires audit:read permission.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
-		auditID, _ := cmd.Flags().GetString("audit-id")
+		auditID, _ := cmd.Flags().GetString("id")
 
 		resp, err := sdkClient.Audit.Get(ctx, auditID)
 		if err != nil {
@@ -55,7 +54,7 @@ Requires audit:read permission.
 
 		entry := &resp.Data
 
-		fmt.Println()
+		cli.PrintHeading("Audit entry")
 		cli.PrintKV("ID", entry.ID)
 		cli.PrintKV("Timestamp", entry.Timestamp.Format("2006-01-02 15:04:05"))
 		cli.PrintKV("User", entry.User)
@@ -81,7 +80,7 @@ func init() {
 	clientAuditCmd.AddCommand(clientAuditGetCmd)
 
 	clientAuditGetCmd.PersistentFlags().
-		StringP("audit-id", "", "", "Audit entry ID to retrieve")
+		StringP("id", "", "", "Audit entry ID to retrieve")
 
-	_ = clientAuditGetCmd.MarkPersistentFlagRequired("audit-id")
+	_ = clientAuditGetCmd.MarkPersistentFlagRequired("id")
 }
