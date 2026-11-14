@@ -21,10 +21,16 @@
 package cli_test
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/nats-io/jwt/v2"
+	natsserver "github.com/nats-io/nats-server/v2/server"
 	"github.com/nats-io/nats.go/jetstream"
+	"github.com/nats-io/nkeys"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -133,6 +139,19 @@ func (suite *NATSPublicTestSuite) TestBuildNATSAuthOptions() {
 			},
 		},
 		{
+			name: "when creds returns creds auth",
+			auth: config.NATSAuth{
+				Type:      "creds",
+				CredsFile: "/path/to/user.creds",
+			},
+			validateFunc: func(got natsclient.AuthOptions) {
+				assert.Equal(suite.T(), natsclient.AuthOptions{
+					AuthType:  natsclient.CredsAuth,
+					CredsFile: "/path/to/user.creds",
+				}, got)
+			},
+		},
+		{
 			name: "when none returns no auth",
 			auth: config.NATSAuth{
 				Type: "none",
@@ -159,6 +178,166 @@ func (suite *NATSPublicTestSuite) TestBuildNATSAuthOptions() {
 			got := cli.BuildNATSAuthOptions(tc.auth)
 
 			tc.validateFunc(got)
+		})
+	}
+}
+
+// resolverFile writes what `nsc generate config --mem-resolver` writes for an
+// operator and one system account, and returns its path and the account's
+// public key.
+func (suite *NATSPublicTestSuite) resolverFile() (string, string) {
+	op, err := nkeys.CreateOperator()
+	suite.Require().NoError(err)
+	opPub, _ := op.PublicKey()
+	opJWT, err := jwt.NewOperatorClaims(opPub).Encode(op)
+	suite.Require().NoError(err)
+
+	acct, err := nkeys.CreateAccount()
+	suite.Require().NoError(err)
+	acctPub, _ := acct.PublicKey()
+	acctJWT, err := jwt.NewAccountClaims(acctPub).Encode(op)
+	suite.Require().NoError(err)
+
+	path := filepath.Join(suite.T().TempDir(), "resolver.conf")
+	content := fmt.Sprintf("operator: %s\nsystem_account: %s\nresolver: MEMORY\n"+
+		"resolver_preload: {\n  %s: %s\n}\n", opJWT, acctPub, acctPub, acctJWT)
+	suite.Require().NoError(os.WriteFile(path, []byte(content), 0o600))
+
+	return path, acctPub
+}
+
+func (suite *NATSPublicTestSuite) TestBuildNATSServerOptions() {
+	resolver, sysAccount := suite.resolverFile()
+	noOperator := filepath.Join(suite.T().TempDir(), "empty.conf")
+	suite.Require().NoError(os.WriteFile(noOperator, []byte("port: 4222\n"), 0o600))
+
+	tests := []struct {
+		name         string
+		auth         config.NATSServerAuth
+		wantErr      string
+		validateFunc func(*natsserver.Options)
+	}{
+		{
+			name: "when operator, the resolver file's operator and accounts are trusted",
+			auth: config.NATSServerAuth{Type: "operator", ResolverFile: resolver},
+			validateFunc: func(o *natsserver.Options) {
+				suite.Len(o.TrustedOperators, 1)
+				suite.Equal(sysAccount, o.SystemAccount)
+				suite.NotNil(o.AccountResolver)
+			},
+		},
+		{
+			name:    "when operator without a resolver file",
+			auth:    config.NATSServerAuth{Type: "operator"},
+			wantErr: "operator auth needs resolver_file",
+		},
+		{
+			name:    "when the resolver file cannot be read",
+			auth:    config.NATSServerAuth{Type: "operator", ResolverFile: "/nonexistent.conf"},
+			wantErr: "read /nonexistent.conf",
+		},
+		{
+			name:    "when the resolver file names no operator",
+			auth:    config.NATSServerAuth{Type: "operator", ResolverFile: noOperator},
+			wantErr: "names no operator",
+		},
+		{
+			name: "when user_pass, its users",
+			auth: config.NATSServerAuth{
+				Type:  "user_pass",
+				Users: []config.NATSServerUser{{Username: "osapi", Password: "secret"}},
+			},
+			validateFunc: func(o *natsserver.Options) {
+				suite.Require().Len(o.Users, 1)
+				suite.Equal("osapi", o.Users[0].Username)
+			},
+		},
+		{
+			name: "when nkey, its public keys",
+			auth: config.NATSServerAuth{Type: "nkey", NKeys: []string{"UABC"}},
+			validateFunc: func(o *natsserver.Options) {
+				suite.Require().Len(o.Nkeys, 1)
+				suite.Equal("UABC", o.Nkeys[0].Nkey)
+			},
+		},
+		{
+			name: "when none, no auth",
+			auth: config.NATSServerAuth{Type: "none"},
+			validateFunc: func(o *natsserver.Options) {
+				suite.Empty(o.Users)
+				suite.Empty(o.TrustedOperators)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got, err := cli.BuildNATSServerOptions("0.0.0.0", 4222, "/var/lib/nats", tc.auth)
+
+			if tc.wantErr != "" {
+				suite.ErrorContains(err, tc.wantErr)
+
+				return
+			}
+			suite.Require().NoError(err)
+			suite.Equal("0.0.0.0", got.Host)
+			suite.Equal(4222, got.Port)
+			suite.True(got.JetStream)
+			suite.Equal("/var/lib/nats", got.StoreDir)
+			tc.validateFunc(got)
+		})
+	}
+}
+
+func (suite *NATSPublicTestSuite) TestBuildNATSServerClientAuth() {
+	tests := []struct {
+		name string
+		auth config.NATSServerAuth
+		want natsclient.AuthOptions
+	}{
+		{
+			name: "when user_pass, as its first user",
+			auth: config.NATSServerAuth{
+				Type:  "user_pass",
+				Users: []config.NATSServerUser{{Username: "osapi", Password: "secret"}},
+			},
+			want: natsclient.AuthOptions{
+				AuthType: natsclient.UserPassAuth,
+				Username: "osapi",
+				Password: "secret",
+			},
+		},
+		{
+			name: "when user_pass with no users, without auth",
+			auth: config.NATSServerAuth{Type: "user_pass"},
+			want: natsclient.AuthOptions{AuthType: natsclient.NoAuth},
+		},
+		{
+			name: "when nkey, with its seed",
+			auth: config.NATSServerAuth{Type: "nkey", NKeyFile: "/etc/osapi/server.nk"},
+			want: natsclient.AuthOptions{
+				AuthType: natsclient.NKeyAuth,
+				NKeyFile: "/etc/osapi/server.nk",
+			},
+		},
+		{
+			name: "when operator, with its credentials",
+			auth: config.NATSServerAuth{Type: "operator", CredsFile: "/etc/osapi/server.creds"},
+			want: natsclient.AuthOptions{
+				AuthType:  natsclient.CredsAuth,
+				CredsFile: "/etc/osapi/server.creds",
+			},
+		},
+		{
+			name: "when none, without auth",
+			auth: config.NATSServerAuth{Type: "none"},
+			want: natsclient.AuthOptions{AuthType: natsclient.NoAuth},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			suite.Equal(tc.want, cli.BuildNATSServerClientAuth(tc.auth))
 		})
 	}
 }

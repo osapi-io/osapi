@@ -21,271 +21,53 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"log/slog"
-	"time"
-
-	natsserver "github.com/nats-io/nats-server/v2/server"
-	"github.com/nats-io/nats.go/jetstream"
-	natsclient "github.com/osapi-io/nats-client/pkg/client"
-	natsembedded "github.com/osapi-io/nats-server/pkg/server"
+	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 )
 
-// natsLifecycle adapts the embedded NATS server to the Lifecycle interface.
-type natsLifecycle struct {
-	server *natsembedded.Server
-}
+// natsSetupCmd creates osapi's streams and buckets on a NATS server osapi does
+// not run, such as an existing cluster, through the controller's connection.
+// `nats server start` does the same for its embedded server.
+var natsSetupCmd = &cobra.Command{
+	Use:   "setup",
+	Short: "Create osapi's streams and buckets on a NATS server",
+	Long: `Create the JetStream streams and key-value buckets osapi needs on a NATS
+server it does not run, such as an existing cluster. It connects as the
+controller does, with controller.nats: its host, port, namespace and auth, so
+a server in operator (JWT) mode is reached with the controller's credentials.
 
-func (n *natsLifecycle) Start() {}
+Each stream and bucket is created or updated to match the config, so running
+it again changes nothing. osapi nats server start does the same for its
+embedded server, so this is needed only when the server is someone else's.`,
+	Example: `  osapi nats setup -f /etc/osapi/osapi.yaml`,
+	Run: func(cmd *cobra.Command, _ []string) {
+		n := appConfig.Controller.NATS
+		job.Init(n.Namespace)
+		log := logger.With("component", "nats")
 
-func (n *natsLifecycle) Stop(
-	_ context.Context,
-) {
-	n.server.Stop()
-}
-
-// setupNATSServer starts the embedded NATS server and configures JetStream
-// infrastructure (streams, KV buckets, DLQ). It is used by the standalone
-// NATS server start and combined start commands.
-func setupNATSServer(
-	ctx context.Context,
-	log *slog.Logger,
-) *natsembedded.Server {
-	host := appConfig.NATS.Server.Host
-	port := appConfig.NATS.Server.Port
-	storeDir := appConfig.NATS.Server.StoreDir
-	namespace := appConfig.NATS.Server.Namespace
-	serverAuth := appConfig.NATS.Server.Auth
-
-	serverOpts := buildNATSServerOpts(host, port, storeDir, serverAuth)
-
-	opts := &natsembedded.Options{
-		Options:      serverOpts,
-		ReadyTimeout: 5 * time.Second,
-	}
-
-	s := natsembedded.New(log, opts)
-	if err := s.Start(); err != nil {
-		cli.LogFatal(log, "failed to start embedded NATS server", err)
-	}
-
-	if err := setupJetStream(ctx, log, host, port, namespace, serverAuth); err != nil {
-		s.Stop()
-		cli.LogFatal(log, "failed to setup JetStream infrastructure", err)
-	}
-
-	log.Info(
-		"embedded NATS server running",
-		"host", host,
-		"port", port,
-		"store_dir", storeDir,
-		"namespace", namespace,
-		"auth.type", serverAuth.Type,
-	)
-
-	return s
-}
-
-func setupJetStream(
-	ctx context.Context,
-	log *slog.Logger,
-	host string,
-	port int,
-	namespace string,
-	serverAuth config.NATSServerAuth,
-) error {
-	var nc NATSClient = natsclient.New(log, &natsclient.Options{
-		Host: host,
-		Port: port,
-		Auth: buildSetupAuth(serverAuth),
-		Name: "osapi-nats-setup",
-	})
-
-	if err := nc.Connect(); err != nil {
-		return fmt.Errorf("connect to NATS: %w", err)
-	}
-	defer cli.CloseNATSClient(nc)
-
-	// Apply namespace to infrastructure names
-	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
-	streamSubjects := job.ApplyNamespaceToSubjects(namespace, appConfig.NATS.Stream.Subjects)
-
-	// Create JOBS stream
-	streamMaxAge, _ := time.ParseDuration(appConfig.NATS.Stream.MaxAge)
-	streamStorage := cli.ParseJetstreamStorageType(appConfig.NATS.Stream.Storage)
-
-	var streamDiscard jetstream.DiscardPolicy
-	if appConfig.NATS.Stream.Discard == "new" {
-		streamDiscard = jetstream.DiscardNew
-	} else {
-		streamDiscard = jetstream.DiscardOld
-	}
-
-	streamConfig := jetstream.StreamConfig{
-		Name:     streamName,
-		Subjects: []string{streamSubjects},
-		MaxAge:   streamMaxAge,
-		MaxMsgs:  appConfig.NATS.Stream.MaxMsgs,
-		Storage:  streamStorage,
-		Replicas: appConfig.NATS.Stream.Replicas,
-		Discard:  streamDiscard,
-	}
-
-	if err := nc.CreateOrUpdateStreamWithConfig(ctx, streamConfig); err != nil {
-		return fmt.Errorf("create JOBS stream: %w", err)
-	}
-
-	// Create KV buckets with configured settings
-	jobKVConfig := cli.BuildJobKVConfig(namespace, appConfig.NATS.KV)
-	if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, jobKVConfig); err != nil {
-		return fmt.Errorf("create KV bucket %s: %w", jobKVConfig.Bucket, err)
-	}
-
-	responseKVConfig := cli.BuildResponseKVConfig(namespace, appConfig.NATS.KV)
-	if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, responseKVConfig); err != nil {
-		return fmt.Errorf("create KV bucket %s: %w", responseKVConfig.Bucket, err)
-	}
-
-	// Create audit stream with configured settings
-	if appConfig.NATS.Audit.Stream != "" {
-		auditStreamConfig := cli.BuildAuditStreamConfig(
-			namespace,
-			appConfig.NATS.Audit,
-		)
-		if err := nc.CreateOrUpdateStreamWithConfig(
-			ctx,
-			auditStreamConfig,
+		if err := setupJetStream(
+			cmd.Context(),
+			log,
+			n.Host,
+			n.Port,
+			n.Namespace,
+			cli.BuildNATSAuthOptions(n.Auth),
 		); err != nil {
-			return fmt.Errorf(
-				"create audit stream %s: %w",
-				auditStreamConfig.Name,
-				err,
-			)
+			cli.LogFatal(log, "failed to set up JetStream infrastructure", err)
 		}
-	}
 
-	// Create registry KV bucket with configured settings
-	if appConfig.NATS.Registry.Bucket != "" {
-		registryKVConfig := cli.BuildRegistryKVConfig(namespace, appConfig.NATS.Registry)
-		if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, registryKVConfig); err != nil {
-			return fmt.Errorf("create registry KV bucket %s: %w", registryKVConfig.Bucket, err)
-		}
-	}
-
-	// Create facts KV bucket with configured settings
-	if appConfig.NATS.Facts.Bucket != "" {
-		factsKVConfig := cli.BuildFactsKVConfig(namespace, appConfig.NATS.Facts)
-		if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, factsKVConfig); err != nil {
-			return fmt.Errorf("create facts KV bucket %s: %w", factsKVConfig.Bucket, err)
-		}
-	}
-
-	// Create state KV bucket with configured settings (no TTL)
-	if appConfig.NATS.State.Bucket != "" {
-		stateKVConfig := cli.BuildStateKVConfig(namespace, appConfig.NATS.State)
-		if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, stateKVConfig); err != nil {
-			return fmt.Errorf("create state KV bucket %s: %w", stateKVConfig.Bucket, err)
-		}
-	}
-
-	// Create Object Store bucket for file content
-	if appConfig.NATS.Objects.Bucket != "" {
-		objStoreConfig := cli.BuildObjectStoreConfig(namespace, appConfig.NATS.Objects)
-		if _, err := nc.CreateOrUpdateObjectStore(ctx, objStoreConfig); err != nil {
-			return fmt.Errorf("create Object Store bucket %s: %w", objStoreConfig.Bucket, err)
-		}
-	}
-
-	// Create file-state KV bucket for deployment SHA tracking
-	if appConfig.NATS.FileState.Bucket != "" {
-		fileStateKVConfig := cli.BuildFileStateKVConfig(namespace, appConfig.NATS.FileState)
-		if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, fileStateKVConfig); err != nil {
-			return fmt.Errorf("create file-state KV bucket %s: %w", fileStateKVConfig.Bucket, err)
-		}
-	}
-
-	// Create DLQ stream
-	dlqMaxAge, _ := time.ParseDuration(appConfig.NATS.DLQ.MaxAge)
-	dlqStorage := cli.ParseJetstreamStorageType(appConfig.NATS.DLQ.Storage)
-
-	dlqStreamConfig := jetstream.StreamConfig{
-		Name: streamName + "-DLQ",
-		Subjects: []string{
-			"$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES." + streamName + ".*",
-		},
-		Storage:  dlqStorage,
-		MaxAge:   dlqMaxAge,
-		MaxMsgs:  appConfig.NATS.DLQ.MaxMsgs,
-		Replicas: appConfig.NATS.DLQ.Replicas,
-		Metadata: map[string]string{
-			"dead_letter_queue": "true",
-		},
-	}
-
-	if err := nc.CreateOrUpdateStreamWithConfig(ctx, dlqStreamConfig); err != nil {
-		return fmt.Errorf("create DLQ stream: %w", err)
-	}
-
-	log.Info("jetstream infrastructure configured successfully")
-
-	return nil
+		log.Info(
+			"JetStream infrastructure ready",
+			"host", n.Host,
+			"port", n.Port,
+			"namespace", n.Namespace,
+			"auth.type", n.Auth.Type,
+		)
+	},
 }
 
-func buildNATSServerOpts(
-	host string,
-	port int,
-	storeDir string,
-	serverAuth config.NATSServerAuth,
-) *natsserver.Options {
-	opts := &natsserver.Options{
-		Host:      host,
-		Port:      port,
-		JetStream: true,
-		StoreDir:  storeDir,
-		NoSigs:    true,
-		NoLog:     false,
-	}
-
-	switch serverAuth.Type {
-	case "user_pass":
-		users := make([]*natsserver.User, 0, len(serverAuth.Users))
-		for _, u := range serverAuth.Users {
-			users = append(users, &natsserver.User{
-				Username: u.Username,
-				Password: u.Password,
-			})
-		}
-		opts.Users = users
-	case "nkey":
-		nkeys := make([]*natsserver.NkeyUser, 0, len(serverAuth.NKeys))
-		for _, nk := range serverAuth.NKeys {
-			nkeys = append(nkeys, &natsserver.NkeyUser{
-				Nkey: nk,
-			})
-		}
-		opts.Nkeys = nkeys
-	}
-
-	return opts
-}
-
-func buildSetupAuth(
-	serverAuth config.NATSServerAuth,
-) natsclient.AuthOptions {
-	if serverAuth.Type == "user_pass" && len(serverAuth.Users) > 0 {
-		return natsclient.AuthOptions{
-			AuthType: natsclient.UserPassAuth,
-			Username: serverAuth.Users[0].Username,
-			Password: serverAuth.Users[0].Password,
-		}
-	}
-
-	return natsclient.AuthOptions{
-		AuthType: natsclient.NoAuth,
-	}
+func init() {
+	natsCmd.AddCommand(natsSetupCmd)
 }

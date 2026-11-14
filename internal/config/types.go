@@ -71,24 +71,37 @@ type TracingConfig struct {
 
 // NATSAuth holds client-side authentication settings for connecting to NATS.
 type NATSAuth struct {
-	// Type is the auth method: "none", "user_pass", or "nkey".
-	Type string `mapstructure:"type"      doc:"Authentication type: 'none', 'user_pass', or 'nkey'."`
+	// Type is the auth method: "none", "user_pass", "nkey", or "creds".
+	Type string `mapstructure:"type"       doc:"Authentication type: 'none', 'user_pass', 'nkey', or 'creds'."`
 	// Username for user_pass auth.
-	Username string `mapstructure:"username"  doc:"Username for user_pass auth."`
+	Username string `mapstructure:"username"   doc:"Username for user_pass auth."`
 	// Password for user_pass auth.
-	Password string `mapstructure:"password"  doc:"Password for user_pass auth."                         mask:"password"`
+	Password string `mapstructure:"password"   doc:"Password for user_pass auth."                                        mask:"password"`
 	// NKeyFile path to the NKey seed file for nkey auth.
-	NKeyFile string `mapstructure:"nkey_file" doc:"Path to the NKey seed file for nkey auth."`
+	NKeyFile string `mapstructure:"nkey_file"  doc:"Path to the NKey seed file for nkey auth."`
+	// CredsFile path to a NATS credentials file, a user JWT and its seed, for
+	// creds auth against a server in operator (JWT) mode.
+	CredsFile string `mapstructure:"creds_file" doc:"Path to a NATS credentials file (user JWT and seed) for creds auth."`
 }
 
 // NATSServerAuth holds server-side authentication settings for the embedded NATS server.
 type NATSServerAuth struct {
-	// Type is the auth method: "none", "user_pass", or "nkey".
-	Type string `mapstructure:"type"  doc:"Auth method: 'none', 'user_pass' or 'nkey'."`
+	// Type is the auth method: "none", "user_pass", "nkey", or "operator".
+	Type string `mapstructure:"type"          doc:"Auth method: 'none', 'user_pass', 'nkey' or 'operator'."`
+	// ResolverFile is, for operator auth, the server's half of an operator:
+	// its JWT, the system account and each account's JWT, as
+	// `nsc generate config --mem-resolver` writes it.
+	ResolverFile string `mapstructure:"resolver_file" doc:"For operator auth: the operator, system account and account JWTs, as nsc generate config --mem-resolver writes them."`
+	// NKeyFile is, for nkey auth, a seed whose public key is in NKeys: the
+	// identity the server's own setup and heartbeat connect with.
+	NKeyFile string `mapstructure:"nkey_file"     doc:"For nkey auth: a seed among nkeys, which the server's own setup and heartbeat connect with."`
+	// CredsFile is, for operator auth, the credentials the server's own setup
+	// and heartbeat connect with: a user in an account with JetStream.
+	CredsFile string `mapstructure:"creds_file"    doc:"For operator auth: a credentials file the server's own setup and heartbeat connect with."`
 	// Users allowed to connect (for user_pass auth).
-	Users []NATSServerUser `mapstructure:"users" doc:"Users allowed to connect (for user_pass auth)."`
+	Users []NATSServerUser `mapstructure:"users"         doc:"Users allowed to connect (for user_pass auth)."`
 	// NKeys is a list of allowed public NKeys (for nkey auth).
-	NKeys []string `mapstructure:"nkeys" doc:"Allowed public NKeys, for nkey auth."`
+	NKeys []string `mapstructure:"nkeys"         doc:"Allowed public NKeys, for nkey auth."`
 }
 
 // NATSServerUser represents an allowed username/password pair for the NATS server.

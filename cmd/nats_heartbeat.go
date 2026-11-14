@@ -61,7 +61,7 @@ func startNATSHeartbeat(
 	var nc NATSClient = natsclient.New(log, &natsclient.Options{
 		Host: host,
 		Port: port,
-		Auth: buildSetupAuth(serverAuth),
+		Auth: cli.BuildNATSServerClientAuth(serverAuth),
 		Name: "osapi-nats-heartbeat",
 	})
 

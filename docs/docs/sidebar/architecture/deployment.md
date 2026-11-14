@@ -51,8 +51,11 @@ A fleet in the hundreds, or one whose state must survive losing a host, uses a
 NATS cluster rather than the embedded server: JetStream with file storage and
 replicas, set in each store's section of `nats`. The controller and agents need
 only its address and credentials in `controller.nats` and `agent.nats`; the
-embedded server is not started. [State and storage](state.md) lists what each
-store holds and what it costs to lose.
+embedded server is not started, so run `osapi nats setup` once to create osapi's
+streams and buckets there. A cluster in operator (JWT) mode gives each process
+its own credentials file, `auth.type: creds`, so adding a host is issuing it a
+credential rather than changing the server. [State and storage](state.md) lists
+what each store holds and what it costs to lose.
 
 ## Several deployments on one NATS
 
