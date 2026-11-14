@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Deployment | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/deployment"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Deployment | OSAPI"><meta data-rh="true" name="description" content="The three processes are the same binary, so a deployment is a choice of where"><meta data-rh="true" property="og:description" content="The three processes are the same binary, so a deployment is a choice of where"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/deployment"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/deployment" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/deployment" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"Deployment","item":"https://osapi-io.github.io/osapi/sidebar/architecture/deployment"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.e8064dca.css">
-<script src="/osapi/assets/js/runtime~main.8bfe1a14.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.dc5e9f9b.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.ef2e756b.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.93152fbd.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -42,8 +42,11 @@ than running it as root.</li>
 NATS cluster rather than the embedded server: JetStream with file storage and
 replicas, set in each store&#x27;s section of <code>nats</code>. The controller and agents need
 only its address and credentials in <code>controller.nats</code> and <code>agent.nats</code>; the
-embedded server is not started. <a class="" href="/osapi/sidebar/architecture/state">State and storage</a> lists what each
-store holds and what it costs to lose.</p>
+embedded server is not started, so run <code>osapi nats setup</code> once to create osapi&#x27;s
+streams and buckets there. A cluster in operator (JWT) mode gives each process
+its own credentials file, <code>auth.type: creds</code>, so adding a host is issuing it a
+credential rather than changing the server. <a class="" href="/osapi/sidebar/architecture/state">State and storage</a> lists
+what each store holds and what it costs to lose.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="several-deployments-on-one-nats">Several deployments on one NATS<a href="#several-deployments-on-one-nats" class="hash-link" aria-label="Direct link to Several deployments on one NATS" title="Direct link to Several deployments on one NATS" translate="no">​</a></h2>
 <p>Separate fleets, such as staging and production, can share a NATS cluster by
 setting a different namespace in each one&#x27;s <code>nats.server.namespace</code>,
