@@ -64,11 +64,13 @@ Each NATS connection supports pluggable authentication. Set the `auth.type`
 field in the relevant section (`nats.server`, `controller.nats`, or
 `agent.nats`):
 
-| Type        | Description                          | Extra Fields           |
-| ----------- | ------------------------------------ | ---------------------- |
-| `none`      | No authentication (default)          | —                      |
-| `user_pass` | Username and password                | `username`, `password` |
-| `nkey`      | NKey-based auth (server and clients) | See examples below     |
+| Type        | Description                          | Extra Fields                  |
+| ----------- | ------------------------------------ | ----------------------------- |
+| `none`      | No authentication (default)          | —                             |
+| `user_pass` | Username and password                | `username`, `password`        |
+| `nkey`      | NKey-based auth (server and clients) | See examples below            |
+| `creds`     | A NATS credentials file (clients)    | `creds_file`                  |
+| `operator`  | NATS operator mode (the server)      | `resolver_file`, `creds_file` |
 
 ### Server-Side Auth
 
@@ -84,6 +86,10 @@ nats:
           password: '<secret>'
 ```
 
+With `type: nkey`, set `nkey_file` to a seed whose public key is among `nkeys`:
+the server's own setup and heartbeat connect with it, since they need to
+authenticate like any other client.
+
 ### Client-Side Auth
 
 Controller and agent connections (`controller.nats.auth`, `agent.nats.auth`)
@@ -97,6 +103,37 @@ controller:
       username: osapi
       password: '<secret>'
 ```
+
+Against a NATS server in operator (decentralized JWT) mode, each process
+authenticates with its own credentials file: a user JWT, signed by the account,
+and the user's seed. The JWT carries the user's permissions and expiry, so
+adding a host means issuing it a credential, with no change on the server.
+
+```yaml
+agent:
+  nats:
+    auth:
+      type: creds
+      creds_file: /etc/osapi/agent.creds
+```
+
+The embedded server runs in operator mode with `type: operator`. Its
+`resolver_file` holds the operator's JWT, the system account and each account's
+JWT, as `nsc generate config --mem-resolver` writes it, and its `creds_file` is
+the user its own setup and heartbeat connect as:
+
+```yaml
+nats:
+  server:
+    auth:
+      type: operator
+      resolver_file: /etc/osapi/resolver.conf
+      creds_file: /etc/osapi/nats.creds
+```
+
+Against a NATS server osapi does not run,
+[`osapi nats setup`](cli/nats/setup.md) creates osapi's streams and buckets with
+the controller's connection.
 
 ## Permissions
 

@@ -22,7 +22,11 @@
 package cli
 
 import (
+	"errors"
+	"fmt"
 	"time"
+
+	natsserver "github.com/nats-io/nats-server/v2/server"
 
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
@@ -70,11 +74,101 @@ func BuildNATSAuthOptions(
 			AuthType: natsclient.NKeyAuth,
 			NKeyFile: auth.NKeyFile,
 		}
+	case "creds":
+		return natsclient.AuthOptions{
+			AuthType:  natsclient.CredsAuth,
+			CredsFile: auth.CredsFile,
+		}
 	default:
 		return natsclient.AuthOptions{
 			AuthType: natsclient.NoAuth,
 		}
 	}
+}
+
+// BuildNATSServerOptions is the embedded server's options: host, port and
+// JetStream, and the authentication serverAuth describes. For operator auth the
+// options start from serverAuth.ResolverFile, read by NATS's own config parser,
+// so the trusted operator, the system account and the preloaded account JWTs
+// are exactly what nsc wrote; the host, port and JetStream settings are laid
+// over them.
+func BuildNATSServerOptions(
+	host string,
+	port int,
+	storeDir string,
+	serverAuth config.NATSServerAuth,
+) (*natsserver.Options, error) {
+	opts := &natsserver.Options{}
+	if serverAuth.Type == "operator" {
+		if serverAuth.ResolverFile == "" {
+			return nil, errors.New("operator auth needs resolver_file")
+		}
+		read, err := natsserver.ProcessConfigFile(serverAuth.ResolverFile)
+		if err != nil {
+			return nil, fmt.Errorf("read %s: %w", serverAuth.ResolverFile, err)
+		}
+		if len(read.TrustedOperators) == 0 {
+			return nil, fmt.Errorf("%s names no operator", serverAuth.ResolverFile)
+		}
+		opts = read
+	}
+
+	opts.Host = host
+	opts.Port = port
+	opts.JetStream = true
+	opts.StoreDir = storeDir
+	opts.NoSigs = true
+	opts.NoLog = false
+
+	switch serverAuth.Type {
+	case "user_pass":
+		users := make([]*natsserver.User, 0, len(serverAuth.Users))
+		for _, u := range serverAuth.Users {
+			users = append(users, &natsserver.User{
+				Username: u.Username,
+				Password: u.Password,
+			})
+		}
+		opts.Users = users
+	case "nkey":
+		nkeys := make([]*natsserver.NkeyUser, 0, len(serverAuth.NKeys))
+		for _, nk := range serverAuth.NKeys {
+			nkeys = append(nkeys, &natsserver.NkeyUser{Nkey: nk})
+		}
+		opts.Nkeys = nkeys
+	}
+
+	return opts, nil
+}
+
+// BuildNATSServerClientAuth is how the embedded server's own setup and
+// heartbeat connect to it: as its first user for user_pass, with nkey_file for
+// nkey, with creds_file for operator, and without auth otherwise.
+func BuildNATSServerClientAuth(
+	serverAuth config.NATSServerAuth,
+) natsclient.AuthOptions {
+	switch serverAuth.Type {
+	case "user_pass":
+		if len(serverAuth.Users) > 0 {
+			return natsclient.AuthOptions{
+				AuthType: natsclient.UserPassAuth,
+				Username: serverAuth.Users[0].Username,
+				Password: serverAuth.Users[0].Password,
+			}
+		}
+	case "nkey":
+		return natsclient.AuthOptions{
+			AuthType: natsclient.NKeyAuth,
+			NKeyFile: serverAuth.NKeyFile,
+		}
+	case "operator":
+		return natsclient.AuthOptions{
+			AuthType:  natsclient.CredsAuth,
+			CredsFile: serverAuth.CredsFile,
+		}
+	}
+
+	return natsclient.AuthOptions{AuthType: natsclient.NoAuth}
 }
 
 // BuildJobKVConfig builds a jetstream.KeyValueConfig from job KV config values.
