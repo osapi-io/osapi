@@ -5,7 +5,7 @@ Delete the OSAPI-managed DNS configuration for a network interface. Removes the
 
 ```bash
 $ osapi client node network dns delete \
-    --interface-name eth0
+    --interface eth0
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
@@ -19,7 +19,7 @@ When targeting all hosts:
 
 ```bash
 $ osapi client node network dns delete \
-    --interface-name eth0 \
+    --interface eth0 \
     --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
@@ -43,15 +43,15 @@ Use `--json` to get the full API response:
 
 ```bash
 $ osapi client node network dns delete \
-    --interface-name eth0 --json
+    --interface eth0 --json
 {"results":[{"hostname":"web-01","changed":true,
 "status":"ok"}],"job_id":"..."}
 ```
 
 ## Flags
 
-| Flag               | Description                                              | Default  |
-| ------------------ | -------------------------------------------------------- | -------- |
-| `--interface-name` | Name of the network interface                            | required |
-| `-T, --target`     | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`       | Output raw JSON response                                 |          |
+| Flag           | Description                                              | Default  |
+| -------------- | -------------------------------------------------------- | -------- |
+| `--interface`  | Name of the network interface                            | required |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
+| `-j, --json`   | Output raw JSON response                                 |          |

@@ -63,15 +63,14 @@ var clientJobListCmd = &cobra.Command{
 			return
 		}
 
+		displayJobListTable(jobs, totalItems, statusFilter)
 		displayJobListSummary(
 			totalItems,
 			statusCounts,
-			statusFilter,
 			limitFlag,
 			offsetFlag,
 			len(jobs),
 		)
-		displayJobListTable(jobs)
 	},
 }
 
@@ -96,50 +95,56 @@ func displayJobListJSON(
 	cli.PrintJSON(resultJSON)
 }
 
+// displayJobListSummary prints the summary line under the jobs table: the
+// total by status, then, in gray, the page the table shows.
 func displayJobListSummary(
 	totalItems int,
 	statusCounts map[string]int,
-	statusFilter string,
 	limitFlag int,
 	offsetFlag int,
 	jobCount int,
 ) {
-	showing := "All jobs"
-	if statusFilter != "" {
-		showing = fmt.Sprintf("%s (%d)", statusFilter, totalItems)
+	noun := "jobs"
+	if totalItems == 1 {
+		noun = "job"
 	}
+	line := fmt.Sprintf("%d %s: %s", totalItems, noun, strings.Join([]string{
+		cli.Count(statusCounts["completed"], "completed"),
+		cli.Count(statusCounts["failed"], "failed"),
+		cli.Count(statusCounts["partial_failure"], "partial"),
+		cli.Count(statusCounts["submitted"], "submitted"),
+	}, ", "))
+
+	var page []string
+	if offsetFlag > 0 {
+		page = append(page, fmt.Sprintf("offset %d", offsetFlag))
+	}
+	if limitFlag > 0 && jobCount >= limitFlag {
+		page = append(page, fmt.Sprintf("limit %d", limitFlag))
+	}
+	if len(page) > 0 {
+		line += "   " + cli.DimStyle.Render(strings.Join(page, ", "))
+	}
+
 	fmt.Println()
-	cli.PrintKV("Total", fmt.Sprintf("%d", totalItems), "Showing", showing)
-	cli.PrintKV(
-		"Submitted", fmt.Sprintf("%d", statusCounts["submitted"]),
-		"Completed", fmt.Sprintf("%d", statusCounts["completed"]),
-		"Failed", fmt.Sprintf("%d", statusCounts["failed"]),
-		"Partial", fmt.Sprintf("%d", statusCounts["partial_failure"]),
-	)
-	if offsetFlag > 0 || (limitFlag > 0 && jobCount >= limitFlag) {
-		parts := []string{}
-		if offsetFlag > 0 {
-			parts = append(parts, fmt.Sprintf("offset %d", offsetFlag))
-		}
-		if limitFlag > 0 && jobCount >= limitFlag {
-			parts = append(parts, fmt.Sprintf("limit %d", limitFlag))
-		}
-		cli.PrintKV("Filter", cli.DimStyle.Render(strings.Join(parts, ", ")))
-	}
+	fmt.Println("  " + line)
 }
 
 func displayJobListTable(
 	jobs []client.JobDetail,
+	totalItems int,
+	statusFilter string,
 ) {
-	if len(jobs) == 0 {
-		return
+	title := fmt.Sprintf("Jobs (%d of %d)", len(jobs), totalItems)
+	if statusFilter != "" {
+		title = fmt.Sprintf("Jobs %s (%d of %d)", statusFilter, len(jobs), totalItems)
 	}
 
-	jobRows := [][]string{}
+	jobRows := make([][]string, 0, len(jobs))
 	for _, j := range jobs {
 		created := j.Created
 		if t, err := time.Parse(time.RFC3339, created); err == nil {
-			created = t.Format("2006-01-02 15:04")
+			created = t.Local().Format("2006-01-02 15:04:05")
 		}
 
 		operationSummary := "Unknown"
@@ -160,7 +165,8 @@ func displayJobListTable(
 
 	sections := []cli.Section{
 		{
-			Title: "Jobs",
+			Title: title,
+			Empty: "None.",
 			Headers: []string{
 				"JOB ID",
 				"STATUS",

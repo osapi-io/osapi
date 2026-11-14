@@ -1,0 +1,5 @@
+
+[1;38;2;0;213;255mMethods (2):[0m
+  [38;2;10;143;176mNAME    [0m[38;2;10;143;176mVERB   [0m[38;2;10;143;176mROUTE                                  [0m[38;2;10;143;176mPERMISSION[0m
+  [1mget[0m     read   [1mGET[0m /api/node/[38;2;138;138;138m{hostname}[0m/sysctl/[38;2;138;138;138m{key}[0m  [38;2;138;138;138msysctl:read[0m
+  [1mcreate[0m  [1mwrite[0m  [1mPOST[0m /api/node/[38;2;138;138;138m{hostname}[0m/sysctl       [38;2;138;138;138msysctl:write[0m

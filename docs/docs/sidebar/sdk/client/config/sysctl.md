@@ -10,13 +10,13 @@ hosts via `/etc/sysctl.d/` conf files. Access via `client.Sysctl.List()`,
 
 ## Methods
 
-| Method                             | Description                 |
-| ---------------------------------- | --------------------------- |
-| `List(ctx, hostname)`              | List all managed parameters |
-| `Get(ctx, hostname, key)`          | Get a parameter by key      |
-| `Create(ctx, hostname, opts)`      | Create a new managed entry  |
-| `Update(ctx, hostname, key, opts)` | Update an existing entry    |
-| `Delete(ctx, hostname, key)`       | Delete a managed entry      |
+| Method                             | Description                           |
+| ---------------------------------- | ------------------------------------- |
+| `List(ctx, hostname)`              | Every parameter and its current value |
+| `Get(ctx, hostname, key)`          | Any parameter's current value         |
+| `Create(ctx, hostname, opts)`      | Set a parameter and manage it         |
+| `Update(ctx, hostname, key, opts)` | The same, by key                      |
+| `Delete(ctx, hostname, key)`       | Stop managing it                      |
 
 ## Request Types
 
@@ -32,7 +32,7 @@ import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
-// List all managed sysctl entries
+// List every parameter and its current value
 resp, err := c.Sysctl.List(ctx, "web-01")
 for _, entry := range resp.Data.Results {
     fmt.Printf("%s = %s\n", entry.Key, entry.Value)

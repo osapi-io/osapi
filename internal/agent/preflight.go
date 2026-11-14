@@ -26,9 +26,12 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	osexec "os/exec"
+	"slices"
 	"strconv"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/exec"
 )
 
@@ -39,7 +42,8 @@ type PreflightResult struct {
 	Error  string
 }
 
-// sudoCommands lists binaries that require sudo access for agent operations.
+// sudoCommands lists binaries the hand-written domains run with sudo. A
+// behavior declares its own with behavior.Sudo; requiredSudo adds them.
 var sudoCommands = []string{
 	"systemctl",
 	"sysctl",
@@ -116,7 +120,7 @@ func checkSudoAccess(
 ) []PreflightResult {
 	var results []PreflightResult
 
-	for _, cmd := range sudoCommands {
+	for _, cmd := range requiredSudo() {
 		name := fmt.Sprintf("sudo:%s", cmd)
 
 		_, err := execManager.RunCmd(ctx, "sudo", []string{"-n", "which", cmd})
@@ -223,4 +227,43 @@ func readCapEff() (uint64, error) {
 	}
 
 	return 0, fmt.Errorf("CapEff not found in %s", procStatusPath)
+}
+
+// requiredSudo is every program the agent runs with sudo: the hand-written
+// domains', then each registered behavior's, without repeats.
+func requiredSudo() []string {
+	all := slices.Clone(sudoCommands)
+	for _, b := range behavior.All() {
+		for _, p := range b.Sudo {
+			if !slices.Contains(all, p) {
+				all = append(all, p)
+			}
+		}
+	}
+
+	return all
+}
+
+// lookPath finds a program on the agent's PATH. Overridable in tests via
+// export_test.go.
+var lookPath = osexec.LookPath
+
+// MissingPrograms is each program a registered behavior declares with
+// behavior.Runs that is not on the agent's PATH, once. A missing one fails
+// only the behavior that runs it, so the agent warns rather than refusing to
+// start.
+func MissingPrograms() []string {
+	var missing []string
+	for _, b := range behavior.All() {
+		for _, p := range b.Runs {
+			if slices.Contains(missing, p) {
+				continue
+			}
+			if _, err := lookPath(p); err != nil {
+				missing = append(missing, p)
+			}
+		}
+	}
+
+	return missing
 }

@@ -125,7 +125,8 @@ nats:
 Each audit entry includes a `trace_id` field when distributed tracing is
 enabled, allowing correlation with OpenTelemetry traces.
 
-See [Configuration](../usage/configuration.md#natsaudit) for the full reference.
+See [Configuration](../usage/configuration.md#every-setting) for the full
+reference.
 
 ## Permissions
 

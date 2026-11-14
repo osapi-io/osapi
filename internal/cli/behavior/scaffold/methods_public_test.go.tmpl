@@ -1,0 +1,133 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package {{.Name}}_test
+
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
+
+	"github.com/osapi-io/osapi/internal/behaviors/{{.Path}}"
+	"github.com/osapi-io/osapi/internal/behaviors/{{.Path}}/mocks"
+)
+
+type MethodsPublicTestSuite struct {
+	suite.Suite
+
+	ctrl *gomock.Controller
+	mock *mocks.MockProvider
+}
+
+func (s *MethodsPublicTestSuite) SetupSubTest() {
+	s.ctrl = gomock.NewController(s.T())
+	s.mock = mocks.NewMockProvider(s.ctrl)
+}
+
+func (s *MethodsPublicTestSuite) TearDownSubTest() {
+	s.ctrl.Finish()
+}
+
+func (s *MethodsPublicTestSuite) TestGet() {
+	tests := []struct {
+		name  string
+		value string
+		err   error
+		want  {{.Name}}.Entry
+	}{
+		{
+			name:  "when the provider reads the value",
+			value: "hello",
+			want:  {{.Name}}.Entry{Value: "hello"},
+		},
+		{
+			name: "when the provider fails",
+			err:  errors.New("permission denied"),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.mock.EXPECT().Get(gomock.Any()).Return(tc.value, tc.err)
+
+			got, err := {{.Name}}.Get(context.Background(), s.mock, {{.Name}}.GetInput{})
+
+			if tc.err != nil {
+				s.ErrorIs(err, tc.err)
+
+				return
+			}
+			s.Require().NoError(err)
+			s.Equal(tc.want, got)
+		})
+	}
+}
+
+func (s *MethodsPublicTestSuite) TestUpdate() {
+	tests := []struct {
+		name    string
+		changed bool
+		err     error
+		want    {{.Name}}.Result
+	}{
+		{
+			name:    "when the provider writes the value",
+			changed: true,
+			want:    {{.Name}}.Result{Changed: true},
+		},
+		{
+			name: "when the value is already set",
+			want: {{.Name}}.Result{},
+		},
+		{
+			name: "when the provider fails",
+			err:  errors.New("permission denied"),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.mock.EXPECT().Set(gomock.Any(), "hello").Return(tc.changed, tc.err)
+
+			got, err := {{.Name}}.Update(
+				context.Background(),
+				s.mock,
+				{{.Name}}.UpdateInput{Value: "hello"},
+			)
+
+			if tc.err != nil {
+				s.ErrorIs(err, tc.err)
+
+				return
+			}
+			s.Require().NoError(err)
+			s.Equal(tc.want, got)
+		})
+	}
+}
+
+func TestMethodsPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(MethodsPublicTestSuite))
+}

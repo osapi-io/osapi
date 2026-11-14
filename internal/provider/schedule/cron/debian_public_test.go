@@ -33,7 +33,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider/file"
 	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
@@ -56,7 +56,7 @@ func managedStateJSONWithMetadata(
 	path string,
 	metadata map[string]string,
 ) []byte {
-	state := job.FileState{
+	state := managedfile.State{
 		ObjectName: objectName,
 		Path:       path,
 		SHA256:     "abc123",
@@ -908,7 +908,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 					[]byte("content"),
 					0o644,
 				)
-				undeployedState, _ := json.Marshal(job.FileState{
+				undeployedState, _ := json.Marshal(managedfile.State{
 					ObjectName:   "backup-script",
 					Path:         "/etc/cron.d/backup",
 					SHA256:       "abc123",

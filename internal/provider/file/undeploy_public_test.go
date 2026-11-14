@@ -35,8 +35,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	execMocks "github.com/osapi-io/osapi/internal/exec/mocks"
-	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider/file"
 	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
@@ -87,7 +87,7 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 				_ = appFs.MkdirAll("/etc/cron.d", 0o755)
 				_ = appFs.WriteFile("/etc/cron.d/backup", []byte("content"), 0o644)
 
-				stateJSON, _ := json.Marshal(job.FileState{
+				stateJSON, _ := json.Marshal(managedfile.State{
 					ObjectName: "backup-script",
 					Path:       "/etc/cron.d/backup",
 					SHA256:     "abc123",
@@ -117,7 +117,7 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 				_ = appFs.MkdirAll("/etc/cron.d", 0o755)
 				_ = appFs.WriteFile("/etc/cron.d/backup", []byte("content"), 0o644)
 
-				stateJSON, _ := json.Marshal(job.FileState{
+				stateJSON, _ := json.Marshal(managedfile.State{
 					ObjectName: "backup-script",
 					Path:       "/etc/cron.d/backup",
 					SHA256:     "abc123",

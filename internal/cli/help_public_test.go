@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/charmbracelet/lipgloss"
@@ -171,15 +172,16 @@ func (suite *HelpPublicTestSuite) TestPrintError() {
 		validateFunc func(string)
 	}{
 		{
-			name: "when a usage error points at the help",
+			name: "when a usage error prints the command's usage",
 			args: []string{"get", "--nope"},
 			validateFunc: func(out string) {
 				assert.Contains(suite.T(), out, "[err] unknown flag: --nope")
-				assert.Contains(suite.T(), out, "Run 'osapi get --help' for usage.")
+				assert.Contains(suite.T(), out, "Usage:\n  osapi get [flags]")
+				assert.Contains(suite.T(), out, "--key string")
 			},
 		},
 		{
-			name: "when a runtime error has no help pointer",
+			name: "when a runtime error prints no usage",
 			err:  errors.New("connection refused"),
 			validateFunc: func(out string) {
 				assert.Equal(suite.T(), "[err] connection refused\n", out)
@@ -318,4 +320,53 @@ func TestHelpPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(HelpPublicTestSuite))
+}
+
+func (suite *HelpPublicTestSuite) TestGuardGroups() {
+	tests := []struct {
+		name      string
+		args      []string
+		wantErr   string
+		wantUsage bool
+		wantHelp  bool
+	}{
+		{
+			name:      "when a group gets a word it does not know",
+			args:      []string{"group", "lst"},
+			wantErr:   `unknown command "lst" for "root group"`,
+			wantUsage: true,
+		},
+		{name: "when a group runs bare its help prints", args: []string{"group"}, wantHelp: true},
+		{name: "when a subcommand runs it is untouched", args: []string{"group", "list"}},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			root := &cobra.Command{Use: "root"}
+			group := &cobra.Command{Use: "group", Short: "A group"}
+			group.AddCommand(&cobra.Command{Use: "list", Run: func(*cobra.Command, []string) {}})
+			root.AddCommand(group)
+			root.SilenceErrors = true
+			root.SilenceUsage = true
+			cli.GuardGroups(root)
+
+			var out strings.Builder
+			root.SetOut(&out)
+			root.SetArgs(tc.args)
+			_, err := root.ExecuteC()
+
+			if tc.wantErr != "" {
+				suite.EqualError(err, tc.wantErr)
+				suite.Equal(tc.wantUsage, cli.IsUsageError(err))
+
+				return
+			}
+			suite.NoError(err)
+			if tc.wantHelp {
+				suite.Contains(out.String(), "A group")
+			}
+			doc, _ := cli.HelpJSON(group, "dev")
+			suite.Contains(string(doc), `"runnable": false`, "a guarded group is still a group")
+		})
+	}
 }

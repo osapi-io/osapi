@@ -31,7 +31,31 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/behavior"
 )
+
+// vaultIn is a behavior's input with a field it tags secret, under a name the
+// fixed list does not have.
+type vaultIn struct {
+	Name       string `json:"name"`
+	Passphrase string `json:"passphrase" secret:"true"`
+}
+
+type vaultOut struct{}
+
+type vaultProvider struct{}
+
+func unlock(
+	_ context.Context,
+	_ vaultProvider,
+	_ vaultIn,
+) (vaultOut, error) {
+	return vaultOut{}, nil
+}
+
+var _ = behavior.Register(behavior.Define("vault", "Unlocks a vault", behavior.Node,
+	behavior.Read("get", unlock),
+))
 
 // SummaryPublicTestSuite covers what an audit entry keeps of a request: enough to
 // answer what ran, never a secret, never without bound.
@@ -63,6 +87,16 @@ func (s *SummaryPublicTestSuite) TestSummarize() {
 				s.NotContains(got, "hunter2")
 				s.Contains(got, "[redacted]")
 				s.Contains(got, "deploy")
+			},
+		},
+		{
+			name:        "a field a behavior tags secret is not recorded",
+			body:        `{"name":"main","passphrase":"correct horse"}`,
+			contentType: "application/json",
+			validateFunc: func(got string) {
+				s.NotContains(got, "correct horse")
+				s.Contains(got, "[redacted]")
+				s.Contains(got, "main")
 			},
 		},
 		{

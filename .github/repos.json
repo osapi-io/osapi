@@ -44,7 +44,7 @@
   "repos": [
     {
       "name": "osapi",
-      "description": "A Linux system management API with async job processing over NATS JetStream.",
+      "description": "Typed, repeatable operations for Linux hosts. Give your agent a fleet, not a shell.",
       "topics": [
         "golang",
         "linux",

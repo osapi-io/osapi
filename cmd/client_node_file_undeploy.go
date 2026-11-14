@@ -21,8 +21,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 
@@ -54,10 +52,7 @@ The object store entry is preserved; only the file on disk is removed.`,
 			return
 		}
 
-		if resp.Data.JobID != "" {
-			fmt.Println()
-			cli.PrintKV("Job ID", resp.Data.JobID)
-		}
+		cli.PrintJobID(resp.Data.JobID)
 
 		results := make([]cli.ResultRow, 0, len(resp.Data.Results))
 		for _, r := range resp.Data.Results {

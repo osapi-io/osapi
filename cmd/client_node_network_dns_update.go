@@ -21,8 +21,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
@@ -39,7 +37,7 @@ var clientNodeNetworkDNSUpdateCmd = &cobra.Command{
 		host, _ := cmd.Flags().GetString("target")
 		servers, _ := cmd.Flags().GetStringSlice("servers")
 		searchDomains, _ := cmd.Flags().GetStringSlice("search-domains")
-		interfaceName, _ := cmd.Flags().GetString("interface-name")
+		interfaceName, _ := cmd.Flags().GetString("interface")
 		overrideDHCP, _ := cmd.Flags().GetBool("override-dhcp")
 
 		resp, err := sdkClient.DNS.Update(
@@ -60,10 +58,7 @@ var clientNodeNetworkDNSUpdateCmd = &cobra.Command{
 			return
 		}
 
-		if resp.Data.JobID != "" {
-			fmt.Println()
-			cli.PrintKV("Job ID", resp.Data.JobID)
-		}
+		cli.PrintJobID(resp.Data.JobID)
 
 		results := make([]cli.ResultRow, 0, len(resp.Data.Results))
 		for _, r := range resp.Data.Results {
@@ -94,11 +89,11 @@ func init() {
 	clientNodeNetworkDNSUpdateCmd.PersistentFlags().
 		StringSlice("search-domains", []string{}, "List of DNS search domains (comma-separated)")
 	clientNodeNetworkDNSUpdateCmd.PersistentFlags().
-		String("interface-name", "", "Name of the network interface to retrieve DNS server configurations (required)")
+		String("interface", "", "Name of the network interface to retrieve DNS server configurations (required)")
 
 	clientNodeNetworkDNSUpdateCmd.PersistentFlags().
 		Bool("override-dhcp", false, "When true, disables DHCP-provided DNS servers so only the configured servers are used")
 
 	clientNodeNetworkDNSUpdateCmd.MarkFlagsOneRequired("servers", "search-domains")
-	_ = clientNodeNetworkDNSUpdateCmd.MarkPersistentFlagRequired("interface-name")
+	_ = clientNodeNetworkDNSUpdateCmd.MarkPersistentFlagRequired("interface")
 }

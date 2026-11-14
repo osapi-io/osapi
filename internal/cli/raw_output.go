@@ -47,6 +47,7 @@ func PrintRawOutput(
 	showStdout bool,
 	showStderr bool,
 ) {
+	FlushKV()
 	printRaw(stdout, stderr, results, showStdout, showStderr, true)
 }
 
@@ -59,6 +60,7 @@ func PrintRawOutputPlain(
 	showStdout bool,
 	showStderr bool,
 ) {
+	FlushKV()
 	printRaw(stdout, stderr, results, showStdout, showStderr, false)
 }
 

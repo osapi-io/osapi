@@ -49,10 +49,7 @@ var clientNodeNetworkInterfaceGetCmd = &cobra.Command{
 			return
 		}
 
-		if resp.Data.JobID != "" {
-			fmt.Println()
-			cli.PrintKV("Job ID", resp.Data.JobID)
-		}
+		cli.PrintJobID(resp.Data.JobID)
 
 		for _, r := range resp.Data.Results {
 			if r.Error != "" {

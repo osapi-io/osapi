@@ -248,11 +248,11 @@ osapi client node service create \
 
 When an object is re-uploaded to the Object Store with new content, existing
 deployments become stale — the deployed file no longer matches the source. The
-`file stale` command detects this by comparing the SHA-256 hash of each
+`file list --stale` detects this by comparing the SHA-256 hash of each
 deployment against the current object content.
 
 ```bash
-osapi client file stale
+osapi client file list --stale
 ```
 
 This is a controller-side check that does not contact agents. It compares the

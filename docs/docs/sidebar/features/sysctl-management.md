@@ -49,36 +49,40 @@ file.
 
 ### List and Get
 
-The list operation queries the file-state KV bucket for all entries deployed by
-OSAPI (keys with the `sysctl:` prefix). Manually created files under
-`/etc/sysctl.d/` are not visible. The get operation fetches a specific entry by
-key from the same KV bucket.
+List and get read the kernel, not osapi's records. List returns every parameter
+under `/proc/sys`, as `sysctl -a` does, and get returns any parameter's current
+value, whoever set it. A host has about a thousand parameters.
+
+sysctl is a [behavior](../behaviors/sysctl/sysctl.md), served under
+`osapi client next node sysctl` and `/api/next` beside these commands until its
+cutover. There, each entry also says whether osapi manages it, and list takes a
+`--prefix`, such as `net.ipv4`, to return one part of the tree.
 
 ## Operations
 
-| Operation | Description                                            |
-| --------- | ------------------------------------------------------ |
-| List      | List all OSAPI-managed sysctl parameters               |
-| Get       | Get a specific parameter by key                        |
-| Create    | Create a new drop-in file and apply (idempotent)       |
-| Update    | Update an existing drop-in file (fails if not managed) |
-| Delete    | Remove the drop-in file                                |
+| Operation | Description                                                 |
+| --------- | ----------------------------------------------------------- |
+| List      | List every parameter and its current value                  |
+| Get       | Get any parameter's current value                           |
+| Create    | Write a drop-in and apply it (idempotent)                   |
+| Update    | The same as create, addressed by key; manages it if not yet |
+| Delete    | Remove the drop-in; the value stays until reboot            |
 
 ## CLI Usage
 
 ```bash
-# List all managed parameters on a host
+# List every parameter on a host
 osapi client node sysctl list --target web-01
 
 # Get a specific parameter
 osapi client node sysctl get --target web-01 \
   --key net.ipv4.ip_forward
 
-# Create a parameter (idempotent: returns unchanged if already managed)
+# Set a parameter and manage it (idempotent: unchanged if already set)
 osapi client node sysctl create --target web-01 \
   --key net.ipv4.ip_forward --value 1
 
-# Update an existing parameter
+# Set it by key, whether or not osapi managed it before
 osapi client node sysctl update --target web-01 \
   --key net.ipv4.ip_forward --value 0
 
@@ -113,10 +117,10 @@ Skipped and failed hosts appear with their error in the output.
 
 ## Idempotent Updates
 
-Both create and update operations compare the new value against the SHA-256
-stored in the file-state KV. If the parameter value is unchanged, the response
-returns `changed: false`. It is safe to run these operations repeatedly without
-generating unnecessary filesystem writes or `sysctl -p` invocations.
+Both create and update compare the drop-in on disk with what they would write.
+If it already holds the value, the response returns `changed: false`. It is safe
+to run these operations repeatedly without generating unnecessary filesystem
+writes or `sysctl -p` invocations.
 
 ## Key Naming
 

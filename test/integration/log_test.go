@@ -72,9 +72,9 @@ func (s *LogSmokeSuite) TestLogQuery() {
 	}
 }
 
-// TestLogUnit verifies the log unit endpoint is reachable and returns
+// TestLogQueryUnit verifies the log query --unit command is reachable and returns
 // a valid JSON response with a results array.
-func (s *LogSmokeSuite) TestLogUnit() {
+func (s *LogSmokeSuite) TestLogQueryUnit() {
 	tests := []struct {
 		name         string
 		args         []string
@@ -83,9 +83,9 @@ func (s *LogSmokeSuite) TestLogUnit() {
 		{
 			name: "unit endpoint responds",
 			args: []string{
-				"client", "node", "log", "unit",
+				"client", "node", "log", "query",
 				"--target", "_any",
-				"--name", "sshd.service",
+				"--unit", "sshd.service",
 				"--json",
 			},
 			validateFunc: func(

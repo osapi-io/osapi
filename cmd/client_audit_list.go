@@ -56,14 +56,6 @@ response status, and duration. Requires audit:read permission.
 			return
 		}
 
-		fmt.Println()
-		cli.PrintKV("Total", strconv.Itoa(resp.Data.TotalItems))
-
-		if len(resp.Data.Items) == 0 {
-			cli.PrintNote("No audit entries found.")
-			return
-		}
-
 		rows := make([][]string, 0, len(resp.Data.Items))
 		for _, entry := range resp.Data.Items {
 			traceID := ""
@@ -85,7 +77,11 @@ response status, and duration. Requires audit:read permission.
 
 		cli.PrintCompactTable([]cli.Section{
 			{
-				Title: "Audit Entries",
+				Title: fmt.Sprintf(
+					"Audit entries (%d of %d)",
+					len(resp.Data.Items),
+					resp.Data.TotalItems,
+				),
 				Headers: []string{
 					"ID",
 					"TIMESTAMP",

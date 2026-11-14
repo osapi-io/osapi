@@ -75,7 +75,7 @@ Query DNS configuration on the primary network interface:
 
 ```bash
 osapi client node network dns get \
-  --interface-name @fact.interface.primary
+  --interface @fact.interface.primary
 ```
 
 Echo the hostname on the remote host:
@@ -127,7 +127,7 @@ string, it accepts a fact reference.
 
 This includes:
 
-- **Standalone strings** — `--interface-name @fact.interface.primary`
+- **Standalone strings** — `--interface @fact.interface.primary`
 - **Arrays** — `--servers "1.1.1.1,@fact.custom.dns_server"` resolves the fact
   while keeping the literal IP
 - **Nested maps** — references inside JSON objects are resolved recursively
@@ -137,7 +137,7 @@ This includes:
 # Fact reference in an array field
 osapi client node network dns update \
   --servers 1.1.1.1 --servers @fact.custom.backup_dns \
-  --interface-name @fact.interface.primary
+  --interface @fact.interface.primary
 
 # Each agent resolves its own facts, so broadcast works:
 # web-01 might resolve @fact.interface.primary to "eth0"

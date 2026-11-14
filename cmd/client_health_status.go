@@ -163,30 +163,26 @@ func displayComponentTable(
 func displayStatusHealth(
 	data *client.SystemStatus,
 ) {
-	fmt.Println()
-
+	cli.PrintHeading("Controller")
 	cli.PrintKV("Status", data.Status)
 	cli.PrintKV("Version", data.Version)
 	cli.PrintKV("Uptime", data.Uptime)
 
+	cli.PrintHeading("Components")
 	displayComponentTable(data.Registry, "", data.Components)
-	if len(data.Registry) > 0 {
-		fmt.Println()
-	}
 
 	// Agent details are shown in the component table above.
 	// Use "osapi client agent list" for labels and detailed info.
 
-	if data.Consumers != nil {
-		cli.PrintKV("Consumers", fmt.Sprintf("%d total", data.Consumers.Total))
-	}
-
+	cli.PrintHeading("Storage")
 	if data.Jobs != nil {
-		cli.PrintKV("Jobs", fmt.Sprintf(
-			"%d total, %d completed, %d unprocessed, %d failed, %d dlq",
-			data.Jobs.Total, data.Jobs.Completed,
-			data.Jobs.Unprocessed, data.Jobs.Failed, data.Jobs.Dlq,
-		))
+		cli.PrintKV("Jobs", strings.Join([]string{
+			cli.Count(data.Jobs.Total, "total"),
+			cli.Count(data.Jobs.Completed, "completed"),
+			cli.Count(data.Jobs.Unprocessed, "unprocessed"),
+			cli.Count(data.Jobs.Failed, "failed"),
+			cli.Count(data.Jobs.Dlq, "dlq"),
+		}, ", "))
 	}
 
 	// Streams
@@ -215,8 +211,8 @@ func displayStatusHealth(
 
 	// Consumers last — the table can be long with many agents
 	if data.Consumers != nil {
-		fmt.Println()
-		cli.PrintKV("Consumers", fmt.Sprintf("%d total", data.Consumers.Total))
+		cli.PrintHeading("Consumers")
+		cli.PrintKV("Total", fmt.Sprintf("%d", data.Consumers.Total))
 		if len(data.Consumers.Consumers) > 0 {
 			rows := make([][]string, 0, len(data.Consumers.Consumers))
 			for _, c := range data.Consumers.Consumers {

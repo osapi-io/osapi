@@ -26,7 +26,7 @@ For interface and route management details, see
 interface via `resolvectl`. Updates generate a persistent Netplan configuration
 file (`/etc/netplan/osapi-dns.yaml`) targeting the primary interface, validate
 with `netplan generate`, and apply with `netplan apply`. This ensures DNS
-changes survive reboots. The `--interface-name` parameter supports
+changes survive reboots. The `--interface` parameter supports
 [fact references](system-facts.md) — use `@fact.interface.primary` to
 automatically target the default route interface. Use `--override-dhcp` to
 disable DHCP-provided DNS servers so only the explicitly configured servers are

@@ -21,13 +21,14 @@
 package cli
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
@@ -45,6 +46,10 @@ type Section struct {
 	// Reference marks a table that is not per-host results, such as a
 	// behavior's methods, so no host summary line is printed under it.
 	Reference bool
+	// Empty is what an empty list says instead of rows: what to do next,
+	// such as "None. Upload one with osapi client file upload." Defaults to
+	// "None.".
+	Empty string
 }
 
 // ResultRow is a per-host result used by BuildBroadcastTable and
@@ -124,16 +129,28 @@ func buildTable(
 	var errors []ErrorEntry
 	rows := make([][]string, 0, len(results))
 
-	for _, r := range results {
+	// Hosts print in name order, so a fleet prints the same way every run.
+	sorted := append([]ResultRow(nil), results...)
+	sort.SliceStable(sorted, func(i, j int) bool { return sorted[i].Hostname < sorted[j].Hostname })
+
+	for _, r := range sorted {
 		status := resolveStatus(r)
 
-		// Collect errors and skip reasons for rendering below the table.
-		if r.Error != nil {
+		// A host that was skipped or failed has no data to show, so it is
+		// listed once under Details with its reason rather than as a row of
+		// empty columns.
+		if r.Error != nil || status == "skip" || status == "err" {
+			msg := ""
+			if r.Error != nil {
+				msg = *r.Error
+			}
 			errors = append(errors, ErrorEntry{
 				Hostname: r.Hostname,
-				Message:  *r.Error,
+				Message:  msg,
 				Status:   status,
 			})
+
+			continue
 		}
 
 		row := []string{r.Hostname, status}
@@ -158,17 +175,30 @@ func BoolToSafeString(
 	return ""
 }
 
+// PrintHeading prints a section heading the way help prints one: a blank
+// line, then the title and a colon at the left margin in the next logo color,
+// with the block it heads indented under it.
+func PrintHeading(
+	title string,
+) {
+	printHeading(titleStyle(), title)
+}
+
+// headed is set by a heading and cleared by the block under it, so an
+// untitled table straight after a heading does not open with a blank line.
+var headed bool
+
+func printHeading(
+	style lipgloss.Style,
+	title string,
+) {
+	FlushKV()
+	fmt.Printf("\n%s\n", style.Render(title+":"))
+	headed = true
+}
+
 // compactMaxColWidth is the maximum column width before truncation.
 const compactMaxColWidth = 79
-
-// printJSONBlock prints a titled JSON block without truncation.
-func printJSONBlock(
-	title string,
-	jsonStr string,
-) {
-	fmt.Printf("\n  %s:\n", titleStyle().Render(title))
-	fmt.Printf("  %s\n", ValueStyle.Render(jsonStr))
-}
 
 // PrintCompactTable renders a compact column-aligned table (kubectl-style).
 // Headers are uppercase and bold, data rows are in the value style, with a
@@ -178,13 +208,40 @@ func printJSONBlock(
 func PrintCompactTable(
 	sections []Section,
 ) {
+	FlushKV()
 	const colGap = 2
 
 	for _, section := range sections {
-		if section.Title != "" {
-			fmt.Printf("\n  %s:\n", titleStyle().Render(section.Title))
-		} else {
+		// A table of per-host results is headed Results unless it says
+		// otherwise, so every command's output reads like help: a colored
+		// heading, then the block indented under it.
+		title := section.Title
+		if title == "" && len(section.Headers) > 0 &&
+			strings.EqualFold(section.Headers[0], "hostname") {
+			title = "Results"
+		}
+		switch {
+		case title != "":
+			PrintHeading(title)
+		case !headed:
 			fmt.Println()
+		}
+		headed = false
+
+		// An empty table prints no header row. Per-host results go
+		// straight to their summary and details; any other list says so.
+		if len(section.Rows) == 0 {
+			if len(section.Errors) == 0 {
+				empty := section.Empty
+				if empty == "" {
+					empty = "None."
+				}
+				fmt.Println("  " + DimStyle.Render(empty))
+			}
+			printSummary(section)
+			PrintErrors(section.Errors)
+
+			continue
 		}
 
 		headerStyle := labelStyle()
@@ -232,9 +289,8 @@ func PrintCompactTable(
 		}
 		fmt.Println(hdr.String())
 
-		// Build data rows in the value style.
-		for _, row := range flatRows {
-			rowStyle := ValueStyle
+		// Build data rows.
+		for r, row := range flatRows {
 			var line strings.Builder
 			line.WriteString("  ")
 			for i := range section.Headers {
@@ -246,10 +302,23 @@ func PrintCompactTable(
 				if len(cell) > widths[i] {
 					cell = cell[:widths[i]-1] + "…"
 				}
-				if i < len(section.Headers)-1 {
-					line.WriteString(rowStyle.Render(fmt.Sprintf("%-*s", widths[i]+colGap, cell)))
+				// Style the cell, then pad it, so the padding is never colored
+				// and a cell styled in two parts still lines up. A hostname
+				// repeated from the row above is gray, so each host's rows
+				// read as one block.
+				if i == 0 && r > 0 && strings.EqualFold(section.Headers[0], "hostname") &&
+					len(flatRows[r-1]) > 0 && flatRows[r-1][0] == cell {
+					line.WriteString(DimStyle.Render(cell))
 				} else {
-					line.WriteString(rowStyle.Render(cell))
+					line.WriteString(renderCell(section.Headers[i], cell))
+				}
+				if i < len(section.Headers)-1 {
+					line.WriteString(
+						strings.Repeat(
+							" ",
+							max(widths[i]+colGap-utf8.RuneCountInString(cell), colGap),
+						),
+					)
 				}
 			}
 			fmt.Println(line.String())
@@ -283,10 +352,14 @@ func printSummary(
 		}
 	}
 
-	// Also count error hosts not in the table.
+	// Count hosts listed under Details by their own status.
 	for _, e := range section.Errors {
 		if _, ok := hostStatuses[e.Hostname]; !ok {
-			hostStatuses[e.Hostname] = "err"
+			status := e.Status
+			if status != "skip" {
+				status = "err"
+			}
+			hostStatuses[e.Hostname] = status
 		}
 	}
 
@@ -314,12 +387,39 @@ func printSummary(
 		parts = append(parts, ErrStyle.Render(fmt.Sprintf("%d failed", n)))
 	}
 
-	summary := fmt.Sprintf("%d hosts: %s", totalHosts, strings.Join(parts, ", "))
+	// A table whose rows are not per-host results, such as the agent list,
+	// has nothing to count.
+	if len(parts) == 0 {
+		return
+	}
+
+	noun := "hosts"
+	if totalHosts == 1 {
+		noun = "host"
+	}
+	summary := fmt.Sprintf("%d %s: %s", totalHosts, noun, strings.Join(parts, ", "))
 	if section.Duration != "" {
 		summary += DimStyle.Render(fmt.Sprintf(" in %s", section.Duration))
 	}
+	if pendingJobID != "" {
+		summary += "   " + DimStyle.Render("job "+pendingJobID)
+		pendingJobID = ""
+	}
 
 	fmt.Printf("\n  %s\n", summary)
+}
+
+// pendingJobID is the job a result came from, set by PrintJobID and printed
+// at the end of the result's summary line.
+var pendingJobID string
+
+// PrintJobID records the job a command's result came from. The result's
+// summary line ends with it, in gray, rather than it floating above the
+// Results heading.
+func PrintJobID(
+	id string,
+) {
+	pendingJobID = id
 }
 
 // statusWeight returns a numeric weight for status ordering.
@@ -346,6 +446,7 @@ func statusWeight(
 func PrintErrors(
 	errors []ErrorEntry,
 ) {
+	FlushKV()
 	if len(errors) == 0 {
 		return
 	}
@@ -358,27 +459,35 @@ func PrintErrors(
 		}
 	}
 
-	fmt.Printf("\n  %s\n", titleStyle().Render("Details:"))
+	// Each entry says what happened, skipped or failed, in its status color,
+	// then why. The title takes neither of the logo colors close to amber and
+	// green, so it never matches the entries under it.
+	printHeading(titleStyleAbove("warn", "ok"), "Details")
 	for _, e := range errors {
-		style := ErrStyle
+		outcome, style := "failed", ErrStyle
 		if e.Status == "skip" {
-			style = WarnStyle
+			outcome, style = "skipped", WarnStyle
 		}
 		fmt.Printf(
-			"  %s  %s\n",
-			style.Render(fmt.Sprintf("%-*s", maxHost, e.Hostname)),
-			style.Render(e.Message),
+			"  %s  %s  %s\n",
+			NameStyle.Render(fmt.Sprintf("%-*s", maxHost, e.Hostname)),
+			style.Render(fmt.Sprintf("%-7s", outcome)),
+			ValueStyle.Render(e.Message),
 		)
 	}
 }
 
-// KVMinColWidth is the minimum visual width for each key-value column.
-// A consistent minimum ensures columns align across consecutive PrintKV calls.
-const KVMinColWidth = 20
-
 // PrintKV prints labeled key-value pairs on a single indented line.
 // Pairs are padded to equal column widths for alignment.
-// Arguments alternate between labels and values: label1, val1, label2, val2, ...
+// kvBlock holds key-value pairs until something else prints, so a block
+// built from several PrintKV calls is aligned as one: every value starts in
+// the same column.
+var kvBlock [][2]string
+
+// PrintKV adds key-value pairs to the current block. The block prints, one
+// pair per line, a label in the block's tint, a colon, then the value lined up
+// with the others, as soon as anything else prints or the command ends. A
+// Status value takes its status's color.
 func PrintKV(
 	pairs ...string,
 ) {
@@ -386,26 +495,38 @@ func PrintKV(
 		return
 	}
 
-	rendered := make([]string, 0, len(pairs)/2)
-	maxWidth := KVMinColWidth
 	for i := 0; i < len(pairs); i += 2 {
-		pair := labelStyle().Render(pairs[i]+":") + " " + ValueStyle.Render(pairs[i+1])
-		rendered = append(rendered, pair)
-		if w := lipgloss.Width(pair); w > maxWidth {
-			maxWidth = w
+		kvBlock = append(kvBlock, [2]string{pairs[i], pairs[i+1]})
+	}
+}
+
+// FlushKV prints the pending key-value block. Every other printer calls it
+// first, and cmd's Execute calls it when a command returns, so a block always
+// prints before whatever follows it.
+func FlushKV() {
+	if len(kvBlock) == 0 {
+		return
+	}
+
+	width := 0
+	for _, kv := range kvBlock {
+		if w := lipgloss.Width(kv[0]) + 1; w > width {
+			width = w
 		}
 	}
 
-	var line strings.Builder
-	line.WriteString("  ")
-	for i, pair := range rendered {
-		line.WriteString(pair)
-		if i < len(rendered)-1 {
-			pad := maxWidth - lipgloss.Width(pair) + 4
-			line.WriteString(strings.Repeat(" ", pad))
+	block := kvBlock
+	kvBlock = nil
+	for _, kv := range block {
+		label, raw := kv[0], kv[1]
+		value := ValueStyle.Render(raw)
+		if strings.EqualFold(label, "status") {
+			value = statusStyle(raw).Render(raw)
 		}
+		pad := strings.Repeat(" ", width-lipgloss.Width(label+":")+2)
+		fmt.Println("  " + labelStyle().Render(label+":") + pad + value)
 	}
-	fmt.Println(line.String())
+	headed = false
 }
 
 // FormatAge formats a duration as a human-readable age string.
@@ -584,6 +705,7 @@ func HandleError(
 	err error,
 	_ *slog.Logger,
 ) {
+	FlushKV()
 	if !jsonOutput {
 		var apiErr *client.APIError
 		if errors.As(err, &apiErr) {
@@ -616,16 +738,16 @@ func DisplayJobDetail(
 	resp *client.JobDetail,
 ) {
 	// Display job metadata
-	fmt.Println()
+	PrintHeading("Job")
 	PrintKV("Job ID", resp.ID, "Status", resp.Status)
 	if resp.Hostname != "" {
 		PrintKV("Hostname", resp.Hostname)
 	}
 	if resp.Created != "" {
-		PrintKV("Created", resp.Created)
+		PrintKV("Created", FormatTime(resp.Created))
 	}
 	if resp.UpdatedAt != "" {
-		PrintKV("Updated At", resp.UpdatedAt)
+		PrintKV("Updated", FormatTime(resp.UpdatedAt))
 	}
 	if resp.Error != "" {
 		PrintKV("Error", resp.Error)
@@ -668,10 +790,9 @@ func DisplayJobDetail(
 		}
 	}
 
-	// Display the operation request as an untruncated JSON block
+	// The request, as key-value pairs rather than raw JSON.
 	if resp.Operation != nil {
-		jobOperationJSON, _ := json.MarshalIndent(resp.Operation, "  ", "  ")
-		printJSONBlock("Job Request", string(jobOperationJSON))
+		printObject("Request", resp.Operation)
 	}
 
 	var sections []Section
@@ -679,16 +800,9 @@ func DisplayJobDetail(
 	// Display agent responses (for broadcast jobs)
 	if len(resp.Responses) > 0 {
 		responseRows := make([][]string, 0, len(resp.Responses))
-		for hostname, response := range resp.Responses {
-			var dataStr string
-			if response.Data != nil {
-				dataJSON, _ := json.MarshalIndent(response.Data, "", "  ")
-				dataStr = string(dataJSON)
-			} else {
-				dataStr = "(no data)"
-			}
-
-			row := []string{hostname, response.Status, dataStr, response.Error}
+		for _, hostname := range sortedKeys(resp.Responses) {
+			response := resp.Responses[hostname]
+			row := []string{hostname, response.Status, Summarize(response.Data), response.Error}
 			responseRows = append(responseRows, row)
 		}
 
@@ -702,10 +816,11 @@ func DisplayJobDetail(
 	// Display agent states (for broadcast jobs)
 	if len(resp.AgentStates) > 0 {
 		stateRows := make([][]string, 0, len(resp.AgentStates))
-		for hostname, state := range resp.AgentStates {
+		for _, hostname := range sortedKeys(resp.AgentStates) {
+			state := resp.AgentStates[hostname]
 			stateRows = append(
 				stateRows,
-				[]string{hostname, state.Status, state.Duration, state.Error},
+				[]string{hostname, state.Status, FormatDuration(state.Duration), state.Error},
 			)
 		}
 
@@ -724,9 +839,6 @@ func DisplayJobDetail(
 			[]string{te.Timestamp, te.Event, te.Hostname, te.Message, te.Error},
 		)
 	}
-	if len(timelineRows) == 0 {
-		timelineRows = [][]string{{"No events"}}
-	}
 	sections = append(sections, Section{
 		Title:   "Timeline",
 		Headers: []string{"TIMESTAMP", "EVENT", "HOSTNAME", "MESSAGE", "ERROR"},
@@ -737,9 +849,116 @@ func DisplayJobDetail(
 		PrintCompactTable([]Section{sec})
 	}
 
-	// Display result as an untruncated JSON block after tables
+	// The result, as key-value pairs rather than raw JSON.
 	if resp.Result != nil {
-		resultJSON, _ := json.MarshalIndent(resp.Result, "  ", "  ")
-		printJSONBlock("Job Result", string(resultJSON))
+		printObject("Result", resp.Result)
 	}
+}
+
+// printObject prints a nested value under a heading as key-value pairs, its
+// fields in name order and each nested value summarized, with a note that
+// --json prints all of it. Human output never shows raw JSON.
+func printObject(
+	title string,
+	v any,
+) {
+	PrintHeading(title)
+
+	m, ok := v.(map[string]any)
+	if !ok {
+		PrintKV("Value", Summarize(v))
+	} else {
+		for _, k := range sortedKeys(m) {
+			PrintKV(k, Summarize(m[k]))
+		}
+	}
+	PrintNote("--json prints all of it.")
+}
+
+// Summarize renders a value for one cell or key-value pair: a scalar as
+// itself, a list by its length and an object by its field count, and nothing
+// as "none".
+func Summarize(
+	v any,
+) string {
+	switch t := v.(type) {
+	case nil:
+		return "none"
+	case []any:
+		return Plural(len(t), "item", "items")
+	case map[string]any:
+		return Plural(len(t), "field", "fields")
+	case float64:
+		if t == float64(int64(t)) {
+			return strconv.FormatInt(int64(t), 10)
+		}
+
+		return strconv.FormatFloat(t, 'f', -1, 64)
+	default:
+		return fmt.Sprint(t)
+	}
+}
+
+// Plural renders a count with the noun that agrees with it: 1 key, 2 keys.
+func Plural(
+	n int,
+	one string,
+	many string,
+) string {
+	if n == 1 {
+		return "1 " + one
+	}
+
+	return strconv.Itoa(n) + " " + many
+}
+
+// FormatTime renders an RFC 3339 time as local "2006-01-02 15:04:05", the
+// one format human output uses. A value that does not parse is returned as
+// it is.
+func FormatTime(
+	s string,
+) string {
+	t, err := time.Parse(time.RFC3339Nano, s)
+	if err != nil {
+		return s
+	}
+
+	return t.Local().Format("2006-01-02 15:04:05")
+}
+
+// FormatDuration rounds a Go duration string to what a reader can use:
+// 6.168625ms is 6ms, 1.234567s is 1.2s, 184s is 3m4s. A value that does not
+// parse is returned as it is.
+func FormatDuration(
+	s string,
+) string {
+	d, err := time.ParseDuration(s)
+	if err != nil {
+		return s
+	}
+
+	switch {
+	case d < time.Millisecond:
+		return d.Round(time.Microsecond).String()
+	case d < time.Second:
+		return d.Round(time.Millisecond).String()
+	case d < time.Minute:
+		return d.Round(100 * time.Millisecond).String()
+	default:
+		return d.Round(time.Second).String()
+	}
+}
+
+// sortedKeys returns a map's keys in order, so maps print the same way every
+// run.
+func sortedKeys[V any](
+	m map[string]V,
+) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	return keys
 }

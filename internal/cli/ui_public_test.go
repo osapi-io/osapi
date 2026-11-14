@@ -24,10 +24,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -44,6 +46,222 @@ import (
 
 type UIPublicTestSuite struct {
 	suite.Suite
+}
+
+func (suite *UIPublicTestSuite) TestSummarize() {
+	tests := []struct {
+		name string
+		v    any
+		want string
+	}{
+		{name: "when there is nothing", v: nil, want: "none"},
+		{name: "when it is a list", v: []any{1, 2}, want: "2 items"},
+		{name: "when it is an object", v: map[string]any{"a": 1}, want: "1 field"},
+		{name: "when it is a whole number", v: float64(3), want: "3"},
+		{name: "when it is a fraction", v: 0.25, want: "0.25"},
+		{name: "when it is text", v: "ok", want: "ok"},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			suite.Equal(tc.want, cli.Summarize(tc.v))
+		})
+	}
+}
+
+func (suite *UIPublicTestSuite) TestPlural() {
+	suite.Equal("1 key", cli.Plural(1, "key", "keys"))
+	suite.Equal("2 keys", cli.Plural(2, "key", "keys"))
+}
+
+func (suite *UIPublicTestSuite) TestFormatTime() {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{
+			name: "when the time parses it is local",
+			in:   "2026-11-13T02:15:13.549Z",
+			want: time.Date(2026, 11, 13, 2, 15, 13, 0, time.UTC).
+				Local().
+				Format("2006-01-02 15:04:05"),
+		},
+		{name: "when it does not parse it is kept", in: "yesterday", want: "yesterday"},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			suite.Equal(tc.want, cli.FormatTime(tc.in))
+		})
+	}
+}
+
+func (suite *UIPublicTestSuite) TestFormatDuration() {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{name: "when under a millisecond", in: "123.456µs", want: "123µs"},
+		{name: "when under a second", in: "6.168625ms", want: "6ms"},
+		{name: "when under a minute", in: "1.234567s", want: "1.2s"},
+		{name: "when a minute or more", in: "184.4s", want: "3m4s"},
+		{name: "when it does not parse it is kept", in: "soon", want: "soon"},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			suite.Equal(tc.want, cli.FormatDuration(tc.in))
+		})
+	}
+}
+
+func (suite *UIPublicTestSuite) TestPrintObject() {
+	tests := []struct {
+		name string
+		v    any
+		want string
+	}{
+		{
+			name: "when an object",
+			v:    map[string]any{"type": "node.sysctl.get", "data": nil},
+			want: "type",
+		},
+		{name: "when not an object", v: []any{1}, want: "Value"},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			out := cli.Capture(func() { cli.ExportPrintObject("Request", tc.v) })
+			suite.Contains(out, tc.want)
+			suite.Contains(out, "--json prints all of it.")
+		})
+	}
+}
+
+// update rewrites the golden files from the current renderer:
+//
+//	go test ./internal/cli -run TestUIPublicTestSuite/TestShapes -update
+var update = flag.Bool("update", false, "rewrite the golden output files")
+
+// TestShapes renders every shape of command output the style guide defines
+// and compares it, colors included, with a committed file. A change to the
+// renderer that alters any shape fails here, and the diff shows how.
+func (suite *UIPublicTestSuite) TestShapes() {
+	ok := func(host string, fields ...string) cli.ResultRow {
+		return cli.ResultRow{Hostname: host, Status: "ok", Fields: fields}
+	}
+	skipped := func(host string) cli.ResultRow {
+		return cli.ResultRow{
+			Hostname: host,
+			Status:   "skipped",
+			Error:    ptr.To("operation not supported on this OS family"),
+		}
+	}
+	failed := func(host string) cli.ResultRow {
+		return cli.ResultRow{Hostname: host, Status: "failed", Error: ptr.To("permission denied")}
+	}
+	results := func(rows []cli.ResultRow, headers ...string) func() {
+		return func() {
+			cli.PrintJobID("550e8400-e29b-41d4-a716-446655440000")
+			tr := cli.BuildBroadcastTable(rows, headers)
+			cli.PrintCompactTable(
+				[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+			)
+		}
+	}
+
+	tests := []struct {
+		name   string
+		render func()
+	}{
+		{
+			name:   "one host",
+			render: results([]cli.ResultRow{ok("web-01", "vm.swappiness", "10")}, "KEY", "VALUE"),
+		},
+		{
+			name: "several hosts in name order",
+			render: results([]cli.ResultRow{
+				ok("web-02", "vm.swappiness", "10"),
+				ok("web-01", "vm.swappiness", "10"),
+				ok("db-01", "vm.swappiness", "1"),
+			}, "KEY", "VALUE"),
+		},
+		{
+			name: "a list across hosts grouped by host",
+			render: results([]cli.ResultRow{
+				ok("web-01", "net.ipv4.ip_forward", "1"),
+				ok("web-01", "vm.swappiness", "10"),
+				ok("web-02", "net.ipv4.ip_forward", "1"),
+				ok("web-02", "vm.swappiness", "10"),
+			}, "KEY", "VALUE"),
+		},
+		{
+			name: "mixed ok skipped and failed",
+			render: results([]cli.ResultRow{
+				ok("web-01", "vm.swappiness", "10"),
+				skipped("mac-01"),
+				failed("web-02"),
+			}, "KEY", "VALUE"),
+		},
+		{
+			name:   "every host skipped",
+			render: results([]cli.ResultRow{skipped("mac-01"), skipped("mac-02")}, "KEY", "VALUE"),
+		},
+		{
+			name: "an empty list",
+			render: func() {
+				cli.PrintCompactTable([]cli.Section{{
+					Title:     "Files (0)",
+					Headers:   []string{"NAME", "SIZE"},
+					Reference: true,
+					Empty:     "None. Upload one with osapi client file upload.",
+				}})
+			},
+		},
+		{
+			name: "a key-value block",
+			render: func() {
+				cli.PrintHeading("Agent")
+				cli.PrintKV("Hostname", "web-01", "Status", "Ready")
+				cli.PrintKV("Primary interface", "eth0")
+				cli.PrintKV("OS", "debian 13.6")
+			},
+		},
+		{
+			name: "a reference table with routes",
+			render: func() {
+				cli.PrintCompactTable([]cli.Section{{
+					Title:     "Methods (2)",
+					Headers:   []string{"NAME", "VERB", "ROUTE", "PERMISSION"},
+					Reference: true,
+					Rows: [][]string{
+						{"get", "read", "GET /api/node/{hostname}/sysctl/{key}", "sysctl:read"},
+						{"create", "write", "POST /api/node/{hostname}/sysctl", "sysctl:write"},
+					},
+				}})
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := cli.Capture(tt.render)
+			path := filepath.Join("testdata", "golden", filepath.Clean(tt.name)+".ansi")
+
+			if *update {
+				suite.Require().NoError(os.MkdirAll(filepath.Dir(path), 0o755))
+				suite.Require().NoError(os.WriteFile(path, []byte(got), 0o644))
+
+				return
+			}
+
+			want, err := os.ReadFile(path)
+			suite.Require().NoError(err, "no golden file; run with -update")
+			suite.Equal(string(want), got)
+		})
+	}
 }
 
 func TestUIPublicTestSuite(
@@ -141,7 +359,7 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 			},
 		},
 		{
-			name: "when some results have errors shows err status",
+			name: "when some results have errors leaves them out of the rows",
 			results: []cli.ResultRow{
 				{Hostname: "web-01", Status: "ok", Fields: []string{"val1"}},
 				{Hostname: "web-02", Status: "failed", Error: &errMsg, Fields: []string{""}},
@@ -151,12 +369,11 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 			validateFunc: func(got [][]string) {
 				assert.Equal(suite.T(), [][]string{
 					{"web-01", "ok", "val1"},
-					{"web-02", "err", ""},
 				}, got)
 			},
 		},
 		{
-			name: "when skipped host shows skip status",
+			name: "when a host is skipped leaves it out of the rows",
 			results: []cli.ResultRow{
 				{Hostname: "web-01", Status: "ok", Fields: []string{"val1"}},
 				{Hostname: "web-02", Status: "skipped", Error: &errMsg},
@@ -166,12 +383,11 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 			validateFunc: func(got [][]string) {
 				assert.Equal(suite.T(), [][]string{
 					{"web-01", "ok", "val1"},
-					{"web-02", "skip"},
 				}, got)
 			},
 		},
 		{
-			name: "when skipped host with fields is included in rows",
+			name: "when a skipped host has fields still leaves it out of the rows",
 			results: []cli.ResultRow{
 				{Hostname: "web-01", Status: "ok", Fields: []string{"val1"}},
 				{Hostname: "web-02", Status: "skipped", Fields: []string{"partial"}},
@@ -181,7 +397,6 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 			validateFunc: func(got [][]string) {
 				assert.Equal(suite.T(), [][]string{
 					{"web-01", "ok", "val1"},
-					{"web-02", "skip", "partial"},
 				}, got)
 			},
 		},
@@ -199,7 +414,7 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 			},
 		},
 		{
-			name: "when all results have errors shows err status",
+			name: "when every host failed has no rows",
 			results: []cli.ResultRow{
 				{Hostname: "web-01", Status: "failed", Error: &errMsg, Fields: []string{""}},
 				{Hostname: "web-02", Status: "failed", Error: &errMsg, Fields: []string{""}},
@@ -207,10 +422,7 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 			fieldHeaders: []string{"DATA"},
 			wantHeaders:  []string{"HOSTNAME", "STATUS", "DATA"},
 			validateFunc: func(got [][]string) {
-				assert.Equal(suite.T(), [][]string{
-					{"web-01", "err", ""},
-					{"web-02", "err", ""},
-				}, got)
+				assert.Equal(suite.T(), [][]string{}, got)
 			},
 		},
 		{
@@ -229,7 +441,7 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 			},
 		},
 		{
-			name: "when changed and errors both present shows all rows",
+			name: "when changed and errors both present shows only the changed row",
 			results: []cli.ResultRow{
 				{
 					Hostname: "web-01",
@@ -250,7 +462,6 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 			validateFunc: func(got [][]string) {
 				assert.Equal(suite.T(), [][]string{
 					{"web-01", "changed", "val1"},
-					{"web-02", "err", ""},
 				}, got)
 			},
 		},
@@ -370,7 +581,6 @@ func (suite *UIPublicTestSuite) TestBuildMutationTable() {
 			validateFunc: func(got [][]string) {
 				assert.Equal(suite.T(), [][]string{
 					{"web-01", "ok"},
-					{"web-02", "err"},
 				}, got)
 			},
 		},
@@ -466,7 +676,6 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTableResult() {
 			wantHeaders: []string{"HOSTNAME", "STATUS", "DATA"},
 			wantRows: [][]string{
 				{"web-01", "ok", "val1"},
-				{"web-02", "err", ""},
 			},
 			validateFunc: func(got []cli.ErrorEntry) {
 				assert.Equal(suite.T(), []cli.ErrorEntry{
@@ -500,7 +709,6 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTableResult() {
 			wantHeaders: []string{"HOSTNAME", "STATUS", "DATA"},
 			wantRows: [][]string{
 				{"web-01", "ok", "val1"},
-				{"web-02", "skip"},
 			},
 			validateFunc: func(got []cli.ErrorEntry) {
 				assert.Equal(suite.T(), []cli.ErrorEntry{
@@ -518,8 +726,6 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTableResult() {
 			fieldHdrs:   []string{"DATA"},
 			wantHeaders: []string{"HOSTNAME", "STATUS", "DATA"},
 			wantRows: [][]string{
-				{"web-01", "err"},
-				{"web-02", "err"},
 				{"web-03", "ok", "ok"},
 			},
 			validateFunc: func(got []cli.ErrorEntry) {
@@ -563,7 +769,6 @@ func (suite *UIPublicTestSuite) TestBuildMutationTableResult() {
 			wantHeaders: []string{"HOSTNAME", "STATUS"},
 			wantRows: [][]string{
 				{"web-01", "changed"},
-				{"web-02", "err"},
 			},
 			validateFunc: func(got []cli.ErrorEntry) {
 				assert.Equal(suite.T(), []cli.ErrorEntry{
@@ -966,8 +1171,10 @@ func (suite *UIPublicTestSuite) TestHandleError() {
 
 func (suite *UIPublicTestSuite) TestPrintKV() {
 	tests := []struct {
-		name         string
-		pairs        []string
+		name  string
+		pairs []string
+		// noHeading resets the heading color, as before any heading prints.
+		noHeading    bool
 		validateFunc func(string)
 	}{
 		{
@@ -982,6 +1189,14 @@ func (suite *UIPublicTestSuite) TestPrintKV() {
 			pairs: []string{"Name", "test", "Status", "ok"},
 			validateFunc: func(output string) {
 				assert.NotEmpty(suite.T(), output)
+			},
+		},
+		{
+			name:      "when no heading came before, the label still prints",
+			pairs:     []string{"Name", "x"},
+			noHeading: true,
+			validateFunc: func(output string) {
+				suite.Contains(output, "Name:")
 			},
 		},
 		{
@@ -1002,8 +1217,12 @@ func (suite *UIPublicTestSuite) TestPrintKV() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
+			if tc.noHeading {
+				cli.ResetTint()
+			}
 			tc.validateFunc(captureStdout(func() {
 				cli.PrintKV(tc.pairs...)
+				cli.FlushKV()
 			}))
 		})
 	}
@@ -1633,7 +1852,7 @@ func (suite *UIPublicTestSuite) TestPrintSummary() {
 				},
 			},
 			validateFunc: func(output string) {
-				assert.Contains(suite.T(), output, "1 hosts:")
+				assert.Contains(suite.T(), output, "1 host:")
 				assert.Contains(suite.T(), output, "1 failed")
 			},
 		},

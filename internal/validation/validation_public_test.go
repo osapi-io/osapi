@@ -28,7 +28,21 @@ import (
 
 	"github.com/go-playground/validator/v10"
 
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/validation"
+)
+
+// motdIn uses a validate tag a behavior declares, which the validator learns
+// when the behavior is defined, after it started.
+type motdIn struct {
+	Text string `json:"text" validate:"motd_text"`
+}
+
+var _ = behavior.Define("motd", "Message of the day",
+	behavior.Validator("motd_text",
+		func(v string) bool { return !strings.Contains(v, "\x1b") },
+		behavior.Pattern("^[^\\x1b]*$"),
+		"is not a valid message: it has an escape sequence"),
 )
 
 type ValidationPublicTestSuite struct {
@@ -65,6 +79,21 @@ func (s *ValidationPublicTestSuite) TestStruct() {
 				s.Equal(false, ok)
 				s.Contains(errMsg, "Name")
 				s.Contains(errMsg, "required")
+			},
+		},
+		{
+			name:  "when a value passes a rule a behavior declares",
+			input: motdIn{Text: "Back at 5pm."},
+			validateFunc: func(_ string, ok bool) {
+				s.True(ok)
+			},
+		},
+		{
+			name:  "when a value fails it, the message is the behavior's",
+			input: motdIn{Text: "\x1b[31mred"},
+			validateFunc: func(errMsg string, ok bool) {
+				s.False(ok)
+				s.Contains(errMsg, "is not a valid message: it has an escape sequence")
 			},
 		},
 		{

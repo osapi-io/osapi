@@ -1,0 +1,109 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package cmd
+
+import (
+	"github.com/spf13/cobra"
+
+	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
+)
+
+// clientContainerDockerImageCmd groups the image commands: docker image
+// delete.
+var clientContainerDockerImageCmd = &cobra.Command{
+	Use:   "image",
+	Short: "Manage container images",
+}
+
+// clientContainerDockerImageDeleteCmd represents the docker image delete command.
+var clientContainerDockerImageDeleteCmd = &cobra.Command{
+	Use:   "delete",
+	Short: "Delete a container image",
+	Long:  `Delete a container image from the target node.`,
+	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
+		host, _ := cmd.Flags().GetString("target")
+		imageName, _ := cmd.Flags().GetString("image")
+		force, _ := cmd.Flags().GetBool("force")
+
+		var params *client.DockerRemoveImageParams
+		if force {
+			params = &client.DockerRemoveImageParams{Force: true}
+		}
+
+		resp, err := sdkClient.Docker.RemoveImage(
+			ctx,
+			host,
+			imageName,
+			params,
+		)
+		if err != nil {
+			cli.HandleError(err, logger)
+			return
+		}
+
+		if jsonOutput {
+			cli.PrintJSON(resp.RawJSON())
+			return
+		}
+
+		cli.PrintJobID(resp.Data.JobID)
+
+		results := make([]cli.ResultRow, 0)
+		for _, r := range resp.Data.Results {
+			var errPtr *string
+			if r.Error != "" {
+				e := r.Error
+				errPtr = &e
+			}
+			changed := r.Changed
+			results = append(results, cli.ResultRow{
+				Hostname: r.Hostname,
+				Status:   r.Status,
+				Changed:  &changed,
+				Error:    errPtr,
+				Fields: []string{
+					r.Message,
+				},
+			})
+		}
+		tr := cli.BuildMutationTable(
+			results,
+			[]string{"MESSAGE"},
+		)
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
+	},
+}
+
+func init() {
+	clientContainerDockerCmd.AddCommand(clientContainerDockerImageCmd)
+	clientContainerDockerImageCmd.AddCommand(clientContainerDockerImageDeleteCmd)
+
+	clientContainerDockerImageDeleteCmd.PersistentFlags().
+		String("image", "", "Image name or ID to remove (required)")
+	clientContainerDockerImageDeleteCmd.PersistentFlags().
+		Bool("force", false, "Force removal even if image is in use")
+
+	_ = clientContainerDockerImageDeleteCmd.MarkPersistentFlagRequired("image")
+}

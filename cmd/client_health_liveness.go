@@ -21,8 +21,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
@@ -47,7 +45,7 @@ var clientHealthLivenessCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println()
+		cli.PrintHeading("Health")
 		cli.PrintKV("Status", resp.Data.Status)
 	},
 }

@@ -58,7 +58,8 @@ Shows each agent's hostname, status, labels, age, load, and OS.`,
 
 		agents := resp.Data.Agents
 		if len(agents) == 0 {
-			cli.PrintNote("No active agents found.")
+			cli.PrintHeading("Agents (0)")
+			cli.PrintNote("None. An agent appears here once it starts and connects.")
 			return
 		}
 
@@ -111,7 +112,7 @@ Shows each agent's hostname, status, labels, age, load, and OS.`,
 
 		sections := []cli.Section{
 			{
-				Title: fmt.Sprintf("Active Agents (%d)", resp.Data.Total),
+				Title: fmt.Sprintf("Agents (%d)", resp.Data.Total),
 				Headers: []string{
 					"MACHINE ID",
 					"HOSTNAME",
@@ -147,7 +148,8 @@ func listPendingAgents(
 
 	agents := resp.Data.Agents
 	if len(agents) == 0 {
-		cli.PrintNote("No pending agents found.")
+		cli.PrintHeading("Pending agents (0)")
+		cli.PrintNote("None.")
 		return
 	}
 
@@ -168,7 +170,7 @@ func listPendingAgents(
 
 	sections := []cli.Section{
 		{
-			Title: fmt.Sprintf("Pending Agents (%d)", resp.Data.Total),
+			Title: fmt.Sprintf("Pending agents (%d)", resp.Data.Total),
 			Headers: []string{
 				"MACHINE ID",
 				"HOSTNAME",

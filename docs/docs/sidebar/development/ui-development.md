@@ -44,9 +44,8 @@ through `just build`, `just ready` or `just test` rather than a recipe directly
 
 ## Related
 
-- [Contributing](contributing.md) — setup, building, and the conventions code
+- [Contributing](contributing.md): setup, building, and the conventions code
   follows
-- [UI Architecture](../architecture/ui.md) — what an operator configures and
-  sees
-- [Adding an API Domain](adding-an-api-domain.md) — the layers an endpoint
-  touches
+- [UI Architecture](../architecture/ui.md): what an operator configures and sees
+- [Your first behavior](your-first-behavior.md): building a behavior, whose API
+  the UI calls

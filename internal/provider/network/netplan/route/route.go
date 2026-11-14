@@ -27,7 +27,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/osapi-io/osapi/internal/provider/file"
+	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan/iface"
 
@@ -103,7 +103,7 @@ func (d *Debian) Get(
 
 	path := routeFilePath(interfaceName)
 
-	stateKey := file.BuildStateKey(d.hostname, path)
+	stateKey := managedfile.StateKey(d.hostname, path)
 
 	kvEntry, err := d.stateKV.Get(ctx, stateKey)
 	if err != nil {
