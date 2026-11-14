@@ -1,83 +1,65 @@
 # Contributing
 
-Contributions to OSAPI are very welcome, but we ask that you read this document
-before submitting a PR. It covers everything you need: prerequisites, setup, the
-conventions code follows, how to add an API domain, and the pull request
-workflow.
+Thank you for your contribution to osapi.
 
 ## Before you start
 
-- Read the [Code of Conduct](CODE_OF_CONDUCT.md). It applies to every
-  interaction in this repo.
-
-- **Design docs.** How this repository is built is documented in
-  [osapi-io/specs](https://github.com/osapi-io/specs) under `components/osapi/`.
-  Read it before changing behaviour, and change it when you do. A design doc
-  kept in this repository goes stale the moment the code moves past it, and
-  nothing catches the drift.
-
-- **Get familiar with the project.** Read the docs in this order:
-
-  1. [Guiding Principles][principles]. Design philosophy and project values
-  2. [Architecture][system-architecture]. The processes, where state lives, and
-     behaviors
-  3. [API Design Guidelines][api-guidelines]. REST conventions and endpoint
-     structure
-  4. [How a request runs][job-architecture]. Targeting, the KV-first job, the
-     agent's dispatch, statuses and broadcast
-
-- **Check existing work.** Is there an existing PR? Are there issues discussing
-  the feature/change you want to make? Please make sure you consider/address
-  these discussions in your work.
-
-- **Backwards compatibility.** Will your change break existing OSAPI files? It
-  is much more likely that your change will be merged if it is backwards
-  compatible. Is there an approach you can take that maintains this
-  compatibility? If not, consider opening an issue first so that API changes can
-  be discussed before you invest your time into a PR.
+- Read the [Code of Conduct](CODE_OF_CONDUCT.md). It applies to all
+  communication in this repository.
+- **Design pages.** The design pages of this repository are in
+  [osapi-io/specs](https://github.com/osapi-io/specs), under
+  `components/osapi/`. Read them before you change the behavior. When you change
+  the behavior, change the design page in the same work. A design page in this
+  repository becomes incorrect when the code changes. No check finds the
+  difference.
+- **Learn the project.** Read these pages in this order:
+  1. [Guiding Principles][principles]. The design philosophy and the values of
+     the project.
+  2. [Architecture][system-architecture]. The processes, where the state is, and
+     the behaviors.
+  3. [API Design Guidelines][api-guidelines]. The REST conventions and the
+     structure of an endpoint.
+  4. [How a request runs][job-architecture]. Targets, the KV-first job, the
+     dispatch in the agent, the statuses and broadcast.
+- **Examine the work that exists.** Look for a pull request or an issue about
+  the change. If you find one, use what it says in your work.
+- **Backward compatibility.** Make sure that your change does not stop a program
+  that uses osapi. A change that keeps compatibility is more likely to merge. If
+  your change cannot keep it, open an issue first. Then the maintainers can
+  discuss the API change before you do the work.
 
 ## Prerequisites
 
-Install tools using [mise]:
+Install the tools with [mise]:
 
 ```bash
 mise install
 ```
 
-- **[Go].** OSAPI is written in Go. We always support the latest two major Go
-  versions, so make sure your version is recent enough.
-- **[Node.js].** Runtime for tools like `@redocly/cli`, for building the
-  Docusaurus docs site, and for building the embedded React UI in `ui/`.
-- **[Bun].** JavaScript package manager and script runner used for the
-  Docusaurus docs and the React UI.
-- **[just].** Task runner used for building, testing, formatting, and other
-  development workflows.
-- **[uv].** Python package runner. `just md-fmt` formats repository markdown
-  with [mdformat] via `uvx`; nothing is installed into the repo.
-- **[NATS CLI].** Command-line tools for interacting with NATS. Useful for
-  debugging and monitoring during development. Install with
-  `brew install nats-io/nats-tools/nats`.
+- **[Go].** osapi is written in Go. The project supports the two latest major
+  versions of Go. Use one of them.
+- **[Node.js].** The runtime for tools such as `@redocly/cli`. It also builds
+  the Docusaurus site and the React UI in `ui/`.
+- **[Bun].** The JavaScript package manager and script runner for the Docusaurus
+  site and the React UI.
+- **[uv].** A Python package runner. `just md-fmt` uses it to run [mdformat]. It
+  installs nothing into the repository.
+- **[just].** The task runner. Use it to build, test and format.
+- **[NATS CLI].** Command-line tools for NATS. Use them to debug and monitor
+  during development. Install them with `brew install nats-io/nats-tools/nats`.
 
-### Claude Code
+### Coding agents
 
-If you use [Claude Code] for development, install this plugin from the default
-marketplace:
+This repository works with any coding agent that reads `AGENTS.md`. `CLAUDE.md`
+only points to `AGENTS.md`. Prepare your agent as its documentation tells you.
+This repository does not need a plugin or an extension.
 
-```
-/plugin install commit-commands@claude-plugins-official
-```
-
-- **commit-commands.** provides `/commit` and `/commit-push-pr` slash commands
-  that follow the project's commit conventions automatically.
-
-**Design happens in the design docs.** Write or change the page in
-[osapi-io/specs](https://github.com/osapi-io/specs) before building, and correct
-it where building proves it wrong. A design document kept in this repository
-goes stale the moment the code moves past it, and nothing catches the drift.
+Agents read the skills of this repository from `.claude/skills`.
+`.agents/skills` is a link to that directory, for agents that read that path.
 
 ## Setup
 
-Fetch shared justfiles and install all dependencies:
+Download the shared justfiles and install the dependencies:
 
 ```bash
 just fetch
@@ -86,60 +68,64 @@ just deps
 
 ## Project structure
 
-- **`cmd/`.** Cobra CLI commands (`client`, `node agent`, `controller.api`,
+- **`cmd/`.** The Cobra CLI commands (`client`, `node agent`, `controller.api`,
   `nats server`).
-- **`internal/controller/api/`.** Echo REST API. Node-targeted handlers nest
-  under `node/{domain}/`; controller-only handlers are top-level (`job/`,
-  `health/`). Each domain has its own `gen/` with an OpenAPI spec; the combined
-  spec is `internal/controller/api/gen/api.yaml`.
-- **`internal/job/`.** Job domain types and subject routing. `client/` holds the
-  high-level operations.
-- **`internal/agent/`.** Node agent: the consumer/handler/processor pipeline for
-  job execution.
-- **`internal/provider/`.** Operation implementations, organized by category
-  then domain.
-- **`internal/config/`.** Viper-based config from `osapi.yaml`.
-- **`internal/telemetry/`.** Tracing, metrics, and agent self-metrics.
-- **`internal/controller/notify/`.** Condition notification system.
-- **`internal/behaviors/`.** Behaviors: each one a directory whose definition
-  builds its routes, agent dispatch, commands, spec and docs.
-  [Building a behavior][building-a-behavior] gives the layout every one follows.
-- **`internal/behavior/`.** The framework behaviors are defined with, and its
-  tooling: the host a provider is built from, the test harnesses, the spec
-  builder and the generator.
-- **`pkg/sdk/`.** Go SDK for programmatic REST API access.
-- **`ui/`.** React 19 + TypeScript + Vite + Tailwind CSS v4, embedded into the
-  Go binary at build time.
+- **`internal/controller/api/`.** The Echo REST API. The handlers that target a
+  node are under `node/{domain}/`. The handlers for the controller only are at
+  the top level (`job/`, `health/`). Each domain has its own `gen/` with an
+  OpenAPI spec. The combined spec is `internal/controller/api/gen/api.yaml`.
+- **`internal/job/`.** The job domain types and the subject routes. `client/`
+  holds the high-level operations.
+- **`internal/agent/`.** The node agent: the consumer, handler and processor
+  pipeline that runs jobs.
+- **`internal/provider/`.** The implementations of the operations, in groups by
+  category, then by domain.
+- **`internal/config/`.** The configuration from `osapi.yaml`, read with Viper.
+- **`internal/telemetry/`.** Traces, metrics, and the metrics that the agent
+  records about itself.
+- **`internal/controller/notify/`.** The system that sends notifications about
+  conditions.
+- **`internal/behaviors/`.** The behaviors. Each behavior is a directory. Its
+  definition builds its routes, agent dispatch, commands, spec and docs.
+  [Building a behavior][building-a-behavior] gives the layout that each behavior
+  follows.
+- **`internal/behavior/`.** The framework that defines behaviors, and its tools:
+  the host that a provider is built from, the test harnesses, the spec builder
+  and the generator.
+- **`pkg/sdk/`.** The Go SDK. A program uses it to access the REST API.
+- **`ui/`.** React 19, TypeScript, Vite and Tailwind CSS v4. The build embeds
+  the UI in the Go binary.
 
 ### Where a package goes
 
-- **`pkg/` is what osapi promises to code outside it**, the SDK. It imports
-  nothing from `internal/`: `internal/` looks to `pkg/` for what it needs, never
-  the other way, and `just test` fails if a `pkg/` package reaches anything
+- **`pkg/` is what osapi promises to code outside it:** the SDK. `pkg/` imports
+  nothing from `internal/`. `internal/` can import `pkg/`, but `pkg/` cannot
+  import `internal/`. `just test` fails if a `pkg/` package imports a package
   under `internal/`.
-- **`internal/` is everything that makes osapi work**: the agent, the
-  controller, the job system, configuration, telemetry, and behaviors. Nothing
+- **`internal/` is all the code that makes osapi work:** the agent, the
+  controller, the job system, configuration, telemetry and behaviors. No code
   outside this module imports it, so it can change freely.
-- **A package that serves only one tree sits inside it**, such as
-  `internal/behavior/behaviortest`, the fake host only behaviors' tests use,
-  rather than beside unrelated packages at the top level.
-- **An interface lives where it is used.** `internal/behavior/host` declares
-  `Exec`, the part of the command runner a provider calls, rather than taking
-  the agent's own type.
-- **`cmd/` consumes `pkg/` and `internal/`.** It wires them together and holds
-  no logic of its own worth testing.
+- **A package that only one tree uses goes in that tree.** An example is
+  `internal/behavior/behaviortest`, the fake host that only the tests of
+  behaviors use. Do not put such a package at the top level, next to packages
+  that are not related.
+- **Declare an interface where you use it.** `internal/behavior/host` declares
+  `Exec`, the part of the command runner that a provider calls. It does not use
+  the type of the agent.
+- **`cmd/` imports `pkg/` and `internal/`.** It connects them. It holds no logic
+  of its own that needs a test.
 
-[Architecture][system-architecture] describes how the processes fit together.
-The package layout, handler structure and provider pattern are in the
-[specifications](https://github.com/osapi-io/specs/tree/main/components/osapi).
+[Architecture][system-architecture] tells how the processes work together. The
+[specifications](https://github.com/osapi-io/specs/tree/main/components/osapi)
+describe the package layout, the handler structure and the provider pattern.
 
-`nats-client` and `nats-server` are sibling repositories, consumed as pinned
-module versions in `go.mod`. There is no `replace` directive.
+`nats-client` and `nats-server` are sibling repositories. `go.mod` pins their
+module versions. `go.mod` has no `replace` directive.
 
 ## Code style
 
-Go code is formatted by [gofumpt] and linted using [golangci-lint], enforced by
-CI.
+[gofumpt] formats the Go code. [golangci-lint] examines the Go code for
+problems. CI makes sure that both pass.
 
 ```bash
 just go-fmt-check   # Check formatting
@@ -147,12 +133,12 @@ just go-fmt         # Auto-fix formatting
 just go-vet         # Run linter
 ```
 
-The linters that run are declared in `.golangci.yml`. Read them there rather
-than looking for a list here. A copied list goes stale the first time the
-configuration changes. Generated files (`*.gen.go`, `*.pb.go`) are excluded from
-formatting.
+`.golangci.yml` lists the linters that run. Read the list there. A copy of the
+list in a page becomes incorrect when the configuration changes. Formatting does
+not apply to generated files (`*.gen.go`, `*.pb.go`).
 
-TypeScript and CSS in `ui/` are formatted by [Prettier] and linted by [ESLint].
+[Prettier] formats the TypeScript and the CSS in `ui/`. [ESLint] examines them
+for problems.
 
 ```bash
 just react-fmt      # Auto-fix UI formatting
@@ -161,23 +147,34 @@ just react-lint     # Run ESLint
 
 ### Documentation
 
-Markdown outside the Docusaurus site is formatted with [mdformat] through `uvx`.
-The site itself is formatted by Prettier through the `docusaurus` module. Both
-styles are enforced by CI.
+[mdformat] formats the markdown files, through `uvx`. CI makes sure that the
+format is correct.
 
 ```bash
-just md-fmt-check         # Check formatting outside the site
-just md-fmt               # Auto-fix formatting outside the site
-just docs-fmt-check # Check site formatting
-just docs-fmt       # Auto-fix site formatting
+just md-fmt-check   # Check formatting
+just md-fmt         # Auto-fix formatting
 ```
+
+mdformat does not format the Docusaurus site under `docs/`. Prettier formats the
+site, through the `docusaurus` module. CI makes sure that this format is correct
+too. If you change a file under `docs/`, run `just docs-fmt-check`.
+
+```bash
+just docs-fmt-check   # Check formatting of the site
+just docs-fmt         # Auto-fix formatting of the site
+```
+
+Write each page in Simplified Technical English, as
+[the osapi-io constitution](https://github.com/osapi-io/specs/blob/main/CONSTITUTION.md)
+requires.
 
 ## Code standards
 
 ### Function signatures
 
-Functions with parameters use multi-line format, one parameter per line, with
-the closing parenthesis and the return types on a line of their own:
+If a function has parameters, write its signature on more than one line. Put
+each parameter on its own line. Put the last `)` and the return types on their
+own line:
 
 ```go
 func FunctionName(
@@ -187,51 +184,51 @@ func FunctionName(
 }
 ```
 
-Functions taking no parameters stay on one line:
+Write a function that has no parameters on one line:
 
 ```go
 func Name() string {
 }
 ```
 
-Adding a parameter then shows as one added line rather than a rewritten
+Then a new parameter shows as one added line in a diff, not as a changed
 signature.
 
-### File naming
+### File names
 
-Name a file for what it holds. Avoid `helpers.go`, `utils.go`, and names of that
-kind: they describe where code was put rather than what it is, and they
-accumulate whatever has no other home.
+Give a file the name of what it holds. Do not use `helpers.go`, `utils.go` or
+names of that type. They tell where code is, not what it is. They also collect
+code that has no other place.
 
-`types.go` holds only type declarations: structs, interfaces, constants, and
-aliases. A function belongs in a file named for what it does.
+`types.go` holds only type declarations: structs, interfaces, constants and
+aliases. Put a function in a file that has the name of what the function does.
 
-A test file is named for the production file it tests. Where tests grow too
-large to read, split the production file first so each test file keeps a
-counterpart, rather than splitting tests away from the file they cover.
+A test file has the name of the production file that it tests. If a test file
+becomes too large to read, split the production file first. Then each test file
+keeps its production file.
 
-A test file that holds no tests is named for what it holds, not for the fact
-that other tests use it. `support`, `fixture` and `helper` describe where the
-code was put; `sha256_public_test.go` and `test_agent_public_test.go` say what
-is in them. Where only one test file needs the code, it belongs in that file.
+A test file that holds no tests has the name of what it holds. Do not give it a
+name that tells only that other tests use it. `support`, `fixture` and `helper`
+tell where the code is. `sha256_public_test.go` and `test_agent_public_test.go`
+tell what the files hold. If only one test file uses the code, put the code in
+that file.
 
 ### Go patterns
 
-- Error wrapping: `fmt.Errorf("context: %w", err)`, so the chain names each
-  layer it passed through and stays inspectable with `errors.Is` and
-  `errors.As`.
-- Early returns rather than nesting the successful path inside conditionals.
-- Unused parameters: rename to `_`.
-- Import order: standard library, third party, then local, separated by blank
-  lines.
+- Wrap errors with `fmt.Errorf("context: %w", err)`. Then the chain names each
+  layer. `errors.Is` and `errors.As` can examine the chain.
+- Return early. Do not put the successful path inside conditions.
+- Give an unused parameter the name `_`.
+- Put imports in three groups, with a blank line between them: the standard
+  library, third-party packages, then local packages.
 
 ### Test doubles
 
-A double for an interface this organization defines is generated with `mockgen`
-and committed. Do not write a struct by hand to satisfy one.
+For an interface that this organization defines, generate the double with
+`mockgen` and commit it. Do not write a struct by hand for it.
 
-Generated mocks live in a `mocks` package beside the code they mock, produced by
-a `generate.go` holding the directive:
+A generated mock is in a `mocks` package next to the code that it mocks. A
+`generate.go` file in that package holds the directive:
 
 ```go
 package mocks
@@ -239,16 +236,16 @@ package mocks
 //go:generate go tool go.uber.org/mock/mockgen -source=../types.go -destination=types.gen.go -package=mocks
 ```
 
-The generator is resolved through the module's tool dependencies, so every
-checkout runs the version `go.mod` records. Destination files end in `.gen.go`
-and are committed. Do not use `gen/` for mocks. That name is taken by API code
-generation.
+The tool dependencies of the module supply the generator. Thus each checkout
+runs the version that `go.mod` records. The names of the generated files end in
+`.gen.go`. Commit these files. Do not put mocks in `gen/`. That name is for API
+code generation.
 
-When the interface is **unexported**, a sibling package cannot work: the mock
-has to import the package to name the types in the interface, and the package's
-own tests have to import the mock. Generate it into the package instead, with a
-destination scoped to tests so the mocking library stays out of the dependency
-graph of anything that imports the package:
+If the interface is **unexported**, a sibling package cannot hold the mock. The
+mock must import the package to name the types of the interface. The tests of
+the package must import the mock. Thus generate the mock into the package. Give
+the mock a destination that only tests use. Then the mock library is not a
+dependency of code that imports the package:
 
 ```go
 // generate.go, in the package that declares the interface
@@ -257,128 +254,130 @@ package thispackage
 //go:generate go tool go.uber.org/mock/mockgen -source=thing.go -destination=thing.gen_test.go -package=thispackage
 ```
 
-Either way the directives live in a `generate.go` that holds no code, and the
-generated file carries `.gen` so a reader knows not to edit it.
+In both cases, the directives are in a `generate.go` that holds no code. The
+name of the generated file has `.gen`, so a reader knows not to edit it.
 
-Where call sites would otherwise repeat the same expectations, write a
-constructor returning a configured mock rather than introducing a hand-written
-type. The generated mock is still what satisfies the interface.
+If many tests set the same expectations, write a constructor that returns a
+configured mock. Do not write a type by hand for it. The generated mock is still
+the type that satisfies the interface.
 
-Three doubles are written by hand, because generating them buys nothing:
+Write these three doubles by hand, because a generated one gives no advantage:
 
-- One standing in for a standard library interface: `net.Conn`, `fs.File`,
-  `io.Writer`, `slog.Handler`. Those do not move when our code does.
-- One carrying a real implementation of the behavior under test, such as signing
-  with a genuinely generated key pair.
-- A recorder for a dependency called from a goroutine the test cannot join,
-  where a generated mock would assert a call count at a moment the test cannot
-  establish. State that reason where the recorder is defined.
-
-The conventions below are specific to OSAPI.
+- A double for a standard library interface: `net.Conn`, `fs.File`, `io.Writer`,
+  `slog.Handler`. These interfaces do not change when our code changes.
+- A double that has a real implementation of the behavior under test, for
+  example signatures from a key pair that the test generates.
+- A recorder for a dependency that a goroutine calls, if the test cannot wait
+  for that goroutine. A generated mock counts the calls at a time that the test
+  cannot control. Write that reason where you define the recorder.
 
 ### File headers
 
-Every `.go` file MUST start with the MIT license header. See any existing Go
-file in the repo for the exact format. Build-tagged files put `//go:build` on
-line 1, blank line, then the header.
+Start each `.go` file with the MIT license header. Copy the format from a Go
+file in the repository. In a file with a build tag, put `//go:build` on line 1,
+then a blank line, then the header.
 
 ### Logging
 
-All logging uses Go's `log/slog` structured logger.
+All logs use `log/slog`, the structured logger of Go.
 
-- **Subsystem labels.** Every component that holds a logger MUST wrap it with
-  `logger.With(slog.String("subsystem", "..."))` at construction time, which
-  auto-tags every line from that component. Examples: `"agent"`, `"agent.seed"`,
+- **Subsystem labels.** When you construct a component that holds a logger, wrap
+  the logger with `logger.With(slog.String("subsystem", "..."))`. Then each line
+  from that component has the label. Examples: `"agent"`, `"agent.seed"`,
   `"api.schedule"`, `"provider.file"`, `"job.client"`, `"metrics"`,
   `"controller.heartbeat"`.
-- **Typed attributes.** Use `slog.String("key", val)`, `slog.Int`, `slog.Bool`,
-  `slog.Any`. Never use positional pairs like `"key", val`; they compile but
-  bypass type safety.
-- **Standard field names.** `error` for errors, `hostname` for hosts, `path` for
-  file paths, `job_id` for job IDs, `name` for entry names, `addr` for
-  addresses.
-- **Error fields.** `slog.String("error", err.Error())` for string context, or
-  `slog.Any("error", err)` to preserve the error type.
-- **Log levels.** `Debug` for operation dispatch and idempotency skips, `Info`
-  for lifecycle events and state changes, `Warn` for degraded but functional
-  states, `Error` for failures that need attention.
+- **Typed attributes.** Use `slog.String("key", val)`, `slog.Int`, `slog.Bool`
+  and `slog.Any`. Do not use positional pairs such as `"key", val`. They
+  compile, but they have no type safety.
+- **Standard field names.** Use `error` for errors, `hostname` for hosts, `path`
+  for file paths, `job_id` for job IDs, `name` for the names of entries and
+  `addr` for addresses.
+- **Error fields.** Use `slog.String("error", err.Error())` to log the error as
+  a string. Use `slog.Any("error", err)` to keep the type of the error.
+- **Log levels.** Use `Debug` for the dispatch of an operation, and for an
+  operation that the provider skips because there is no change. Use `Info` for
+  lifecycle events and state changes. Use `Warn` for a state that is degraded
+  but works. Use `Error` for a failure that needs attention.
 
 ### Lifecycle
 
-Components use a non-blocking lifecycle: `Start()` returns immediately, and
-`Stop(ctx)` shuts down with a deadline.
+A component has a lifecycle that does not block. `Start()` returns immediately.
+`Stop(ctx)` stops the component before a deadline.
 
 ### Filesystem access
 
-Use [avfs]: `memfs.New()` for in-memory work and `failfs.New()` for targeted
-error injection. Never use `afero`.
+Use [avfs]. Use `memfs.New()` for work in memory. Use `failfs.New()` to inject
+an error at a specified operation. Do not use `afero`.
 
-## Testing
+## Tests
 
 ```bash
 just test           # Run all tests (lint + unit + coverage)
-just go-unit        # Run unit tests only
-just go-unit-int    # Run integration tests
+just go-unit       # Run unit tests only
+just go-unit-cov   # Generate coverage report
+just go-unit-int   # Run integration tests
 go test -run TestName -v ./internal/job/...  # Run a single test
 ```
 
-Coverage is gated at 99.9%. `just test` fails if total coverage drops below it,
-so a change that adds untested code fails locally and in CI:
+The coverage target is 99.9%. `just test` fails when the total coverage is less
+than the target. Thus a change that adds code without tests fails on your
+machine and in CI:
 
 ```bash
 just go-unit-cov-check   # Report coverage and fail below the target
 ```
 
-The target is declared in `.github/codecov.yml` and in the shared `go` justfile
-module. Change both together.
+`.github/codecov.yml` and the shared `go` justfile module both declare the
+target. Change the two together.
 
-What the figure covers is narrowed by `.coverignore`, which excludes `/cmd/`,
-`/gen/`, `/mocks/`, `/ui/` and `main.go`. A percentage read without that file in
-mind will not match what the gate measures.
+`.coverignore` limits what the coverage measures. It excludes `/cmd/`, `/gen/`,
+`/mocks/`, `/ui/` and `main.go`. A percentage that includes these paths does not
+agree with the gate.
 
 ### Test file conventions
 
-- Public tests: `*_public_test.go` in the package's `_test` package, exercising
-  the exported surface. This is the default.
-- Internal tests: `*_test.go` in the same package, for what the exported surface
-  cannot reach.
-- Suite naming: `*_public_test.go` → `{Name}PublicTestSuite`, `*_test.go` →
-  `{Name}TestSuite`.
-- `testify/suite` with table-driven cases.
-- One suite method per function under test. Success, errors, and edge cases are
-  rows in one table, not separate methods.
-- `export_test.go` exposes unexported symbols to external tests, by alias or by
-  setter. Do not use an alias to re-cover behavior the caller's own test already
-  reaches; a helper with its own contract is what the pattern is for.
+- Public tests: `*_public_test.go`, in the `_test` package of the package. They
+  test the exported API. Write this type of test first.
+- Internal tests: `*_test.go`, in the same package. Use them only for what the
+  exported API cannot reach.
+- Suite names: `*_public_test.go` has `{Name}PublicTestSuite`, and `*_test.go`
+  has `{Name}TestSuite`.
+- Use `testify/suite` with table-driven cases.
+- Write one suite method for each function under test. Success, errors and edge
+  cases are rows in one table, not different methods.
+- `export_test.go` gives external tests access to unexported symbols, through an
+  alias or a setter. Do not use an alias to test again what the test of the
+  caller already reaches. Use it for a helper that has its own contract.
 
-External tests in this repository live in a `_test` package beside the code they
-cover, and tables carry `validateFunc` callbacks.
+In this repository, an external test is in a `_test` package next to the code
+that it tests. The tables have `validateFunc` callbacks.
 
 ### Test layers
 
-- **Unit tests** (`*_test.go`, `*_public_test.go`). Fast, mocked dependencies.
-  Public suites also carry HTTP wiring methods (`TestXxxHTTP`,
-  `TestXxxRBACHTTP`) that send raw HTTP through the full Echo middleware stack
-  with mocked backends.
-- **Integration tests** (`test/integration/`). Build and start a real `osapi`
-  binary and exercise CLI commands end-to-end. Guarded by a
-  `//go:build integration` tag. The harness allocates random ports, generates a
-  JWT, and starts the server, so no external setup is required.
+- **Unit tests** (`*_test.go`, `*_public_test.go`). They are fast and use mocked
+  dependencies. Public suites also have HTTP wiring methods (`TestXxxHTTP`,
+  `TestXxxRBACHTTP`). These methods send raw HTTP through the full Echo
+  middleware stack, with mocked backends.
+- **Integration tests** (`test/integration/`). They build and start a real
+  `osapi` binary and run CLI commands from end to end. A
+  `//go:build integration` tag guards them. The harness selects random ports,
+  generates a JWT and starts the server. Thus the tests need no external setup.
 
-A new API domain should include a `{domain}_test.go` smoke suite under
-`test/integration/`. Mutating tests MUST be guarded by `skipWrite(s.T())` so CI
-runs read-only tests by default; `OSAPI_INTEGRATION_WRITES=1` enables writes.
+For a new API domain, add a `{domain}_test.go` smoke suite under
+`test/integration/`. Guard each test that makes a change with
+`skipWrite(s.T())`. Then CI runs only the read-only tests by default. To enable
+the tests that write, set `OSAPI_INTEGRATION_WRITES=1`.
 
 ### Test helpers
 
-- Use `export_test.go` to expose an unexported variable or function to the
-  `_test` package, rather than writing an internal test or a hand-rolled stub.
-- The setter form is `SetXFn(fn)` with a matching `ResetXFn()`: the setter swaps
-  the dependency, the reset puts the original back.
-- Use `suite.TearDownSubTest()` to reset swapped variables between table-driven
-  sub-tests, not `defer` inside the loop.
+- Use `export_test.go` to give the `_test` package access to an unexported
+  variable or function. Do not write an internal test or a stub by hand for it.
+- The setter form is `SetXFn(fn)`, with a matching `ResetXFn()`. The setter
+  replaces the dependency. The reset puts the original back.
+- To reset replaced variables between table-driven sub-tests, use
+  `suite.TearDownSubTest()`. Do not use `defer` in the loop.
 - Platform stubs: test that the Darwin and Linux stubs return `ErrUnsupported`
-  for every method.
+  for each method.
 
 ## Building and running
 
@@ -388,42 +387,44 @@ export OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY=$(openssl rand -hex 32)
 ./osapi controller start -f configs/osapi.yaml
 ```
 
-`configs/osapi.yaml` ships with a placeholder `signing_key` that fails startup
-validation on purpose, so the env var above is required to run it locally. The
-env var overrides the file value; see [Configuration] for how `OSAPI_`
-environment variables map onto config keys.
+`configs/osapi.yaml` has a placeholder `signing_key`. The placeholder fails the
+startup validation on purpose. Thus you must set the environment variable above
+to run the controller on your machine. The environment variable overrides the
+value in the file. [Configuration] tells how `OSAPI_` environment variables map
+to configuration keys.
 
 **Always build through `just`.** The `//go:embed dist/*` directive in
-`ui/embed.go` requires `ui/dist/` to hold files at compile time, and
-`just build` runs `just react-build` first to satisfy it. Running
-`go build ./...` or `go test ./...` directly fails for this reason.
-`just build`, `just test`, and `just ready` all build the UI first.
+`ui/embed.go` requires files in `ui/dist/` at compile time. `just build` runs
+`just react-build` first to make these files. Thus `go build ./...` and
+`go test ./...` fail if you run them directly. `just build`, `just test` and
+`just ready` all build the UI first.
 
 ## Input validation
 
-All user input is validated through the `internal/validation` package, which
-wraps [go-playground/validator]. Rules are declared in OpenAPI specs via
-`x-oapi-codegen-extra-tags` and enforced at runtime by handler calls to
-`validation.Struct()` or `validation.Var()`.
+The `internal/validation` package validates all user input. It wraps
+[go-playground/validator]. The OpenAPI specs declare the rules through
+`x-oapi-codegen-extra-tags`. At runtime, the handlers call `validation.Struct()`
+or `validation.Var()` to apply the rules.
 
-Config struct fields in `internal/config/types.go` use the same `validate` tags.
-Validation runs at startup after `viper.Unmarshal()`, so an invalid value exits
-immediately with a clear error. Defaults are set via `viper.SetDefault()` in
-`cmd/root.go`, so most fields can be omitted. Use `go_duration` for Go duration
-strings, and add `required` to fields with no sensible default.
+The fields of the configuration structs in `internal/config/types.go` use the
+same `validate` tags. Validation runs at startup, after `viper.Unmarshal()`.
+Thus an invalid value stops the process immediately, with a clear error.
+`viper.SetDefault()` in `cmd/root.go` sets the defaults, so you can omit most
+fields. Use `go_duration` for Go duration strings. Add `required` to a field
+that has no sensible default.
 
 - **Required fields** use `validate:"required,..."`.
 - **Optional fields** use `validate:"omitempty,..."`.
 - **Enum constraints** use `validate:"oneof=a b c"`.
-- **Cross-field validation** uses `required_without` / `excluded_with` for
-  mutually exclusive fields, such as cron `schedule` versus `interval`.
+- **Cross-field validation** uses `required_without` or `excluded_with` for
+  fields that exclude each other, such as the cron `schedule` and `interval`.
 
 ### Update endpoints with all-optional fields
 
-When a PUT endpoint has all-optional fields (user update, group update, cron
+If all fields of a PUT endpoint are optional (user update, group update, cron
 update), call `validation.AtLeastOneField(request.Body)` after
-`validation.Struct()` to reject empty bodies with a 400. This prevents
-meaningless no-op updates and, worse, triggering destructive defaults.
+`validation.Struct()`. This call rejects an empty body with a 400. Without it,
+an update can do nothing. Worse, it can apply destructive defaults.
 
 ```go
 if errMsg, ok := validation.Struct(request.Body); !ok {
@@ -437,9 +438,9 @@ if errMsg, ok := validation.AtLeastOneField(request.Body); !ok {
 
 ### Defense in depth
 
-When `validation.Struct()` cannot currently fail because every field uses
-`omitempty`, keep the call and comment why. This guards against a later field
-addition silently breaking validation:
+If `validation.Struct()` cannot fail now because all fields use `omitempty`,
+keep the call. Add a comment that tells why. Then the call validates a field
+that someone adds later:
 
 ```go
 // Defense in depth: current fields use omitempty so validation
@@ -449,99 +450,101 @@ if errMsg, ok := validation.Struct(request.Body); !ok {
 }
 ```
 
-This applies to action endpoints (power, docker stop) where an empty body is
-valid, unlike update endpoints, which must use `AtLeastOneField`.
+This applies to action endpoints (power, docker stop), where an empty body is
+valid. Update endpoints are different. They must use `AtLeastOneField`.
 
 ## Adding a new API domain
 
-A new area of a host is a behavior: one directory under `internal/behaviors/`
-whose definition builds the routes, commands, spec, docs and telemetry.
-[Your first behavior][your-first-behavior] builds one from scratch.
+A new area of a host is a behavior: one directory under `internal/behaviors/`.
+The definition of the behavior builds the routes, commands, spec, docs and
+telemetry. [Your first behavior][your-first-behavior] builds one from the start.
 
-The hand-written domains that are not behaviors yet must stay consistent across
+The hand-written domains that are not behaviors yet must be consistent across
 all layers: provider, agent processor, API handler, SDK service, CLI commands,
-docs, and tests. The principle: **pick an existing domain and `find`/`grep` for
-it across the codebase. Your new domain should appear in all the same places.**
-If something exists for `sysctl` but not for yours, it is missing.
+docs and tests. **Select an existing domain. Search for it across the codebase
+with `find` and `grep`. Your new domain must be in all the same places.** If
+something exists for `sysctl` but not for your domain, it is missing.
 
 ### Rules a domain has to follow
 
-These bind every domain. Each is stated here because you need it to make the
-change, and the reason for each is in the corpus behind the link.
+These rules apply to all domains. This page states each rule because you need it
+to make the change. The page behind each link gives the reason.
 
-- **One endpoint never both creates and updates.** `POST` creates with the name
-  in the body, `PUT /{name}` updates from the path. A combined endpoint leaves
-  404 with no meaning.
+- **One endpoint does not both create and update.** `POST` creates, with the
+  name in the body. `PUT /{name}` updates, with the name from the path. If one
+  endpoint does both, a 404 has no meaning.
   [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/domains.md)
-- **Creating something that already exists is not an error. Updating something
-  that is absent is.** A create is idempotent and an update is not, because the
-  caller issuing an update has asserted the thing exists.
+- **A create of a thing that exists is not an error. An update of a thing that
+  is absent is an error.** A create is idempotent and an update is not. The
+  caller that sends an update has stated that the thing exists.
   [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/providers.md)
-- **A permission missing from the built-in roles reaches nobody.** The
-  permission exists, the handler checks it, no token can hold it, and nothing
-  reports that the endpoint is unreachable. A behavior's permissions are added
-  to the roles from its definition; a hand-written domain's go in
+- **A permission that the built-in roles do not include reaches nobody.** The
+  permission exists and the handler checks it, but no token can hold it. Nothing
+  reports that the endpoint is unreachable. A behavior adds its permissions to
+  the roles from its definition. For a hand-written domain, add them to
   `builtinRolePermissions`.
   [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/permissions.md)
-- **Revalidate in the provider anything that becomes a path, a filename or a
-  command argument.** Validating at the handler is not enough: the job is stored
-  and executed later, so the provider is a second caller arriving after the
-  fact. GHSA-7fjw-v3g9-326g is what that cost.
+- **In the provider, validate again each value that becomes a path, a filename
+  or a command argument.** Validation in the handler is not sufficient. The
+  system stores the job and runs it later, so the provider is a second caller
+  that comes after the handler. GHSA-7fjw-v3g9-326g was the result of this
+  error.
   [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/providers.md)
-- **A secret reaches a command through stdin, never through an argument.** Use
-  `RunPrivilegedCmdWithStdin`. Arguments are logged and visible in the process
-  table. GHSA-6gc6-px2x-q95j is what that cost.
+- **Send a secret to a command through stdin, never through an argument.** Use
+  `RunPrivilegedCmdWithStdin`. The logs record arguments, and the process table
+  shows them. GHSA-6gc6-px2x-q95j was the result of this error.
   [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md)
-- **A value beginning with a dash becomes a flag** if it reaches a command
-  unguarded. The provider prevents that before calling `internal/exec`.
+- **A value that starts with a dash becomes a flag** if it reaches a command
+  without a guard. The provider prevents that before it calls `internal/exec`.
   [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md)
-- **Run every command through `internal/exec`.** Spawning a process directly
-  loses the timeout, the argument logging, the stdin path for secrets and the
-  testability, and nothing in the build will tell you.
+- **Run every command through `internal/exec`.** If you start a process
+  directly, you lose the timeout, the argument logs, the stdin path for secrets
+  and the testability. Nothing in the build tells you.
   [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md)
-- **Ten minutes is a ceiling, not a fallback.** `internal/exec` wraps every
-  command's context unconditionally, so a caller can ask for less and cannot ask
-  for more. A job that legitimately needs twenty minutes does not get them.
+- **Ten minutes is a maximum, not a default.** `internal/exec` always wraps the
+  context of each command. A caller can ask for less time, but it cannot ask for
+  more. A job that needs twenty minutes does not get them.
   [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md)
-- **A field carrying a secret goes in the audit denylist.** Redaction matches on
-  field name, so a new field is recorded as sent until it is added to
-  `sensitiveFields`, and no test fails if you forget. A behavior tags the field
-  `secret:"true"` instead, which redacts it without editing the list.
+- **Put each field that holds a secret in the audit denylist.** Redaction
+  matches on the field name. Thus the audit log records a new field as sent,
+  until you add the field to `sensitiveFields`. No test fails if you forget. A
+  behavior tags the field `secret:"true"` instead. The tag redacts the field,
+  and you do not edit the list.
   [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/audit.md)
 
 ## UI contributions
 
-The React management dashboard lives in `ui/` and is embedded into the Go binary
-at build time. See [UI Development][ui-development] for prerequisites, the
-development server, code style, and component conventions, and
-[UI Architecture][ui-architecture] for the embedding mechanism, component
-layers, and SDK generation flow.
+The React management dashboard is in `ui/`. The build embeds it in the Go
+binary. [UI Development][ui-development] gives the prerequisites, the
+development server, the code style and the component conventions.
+[UI Architecture][ui-architecture] tells how the binary embeds the UI. It also
+gives the component layers and the flow that generates the SDK.
 
 ## Documentation
 
-OSAPI uses [Docusaurus] to host a documentation server. Content is written in
-Markdown under `docs/docs/`, wrapped at 80 characters. Formatting is covered
-under [Code style](#documentation).
+osapi uses [Docusaurus] for its documentation site. The pages are Markdown files
+under `docs/docs/`, wrapped at 80 characters. [Documentation](#documentation)
+under Code style tells how to format them.
 
 ```bash
 just docs-start     # Start local docs server
 just docs-build     # Build docs for production
 ```
 
-## Before committing
+## Before you commit
 
-Run `just ready` before committing. It regenerates code, formats, lints, and
-builds both the Go binary and the UI, so your commit matches what CI verifies:
+Run `just ready` before you commit. It makes sure that generated code, package
+documentation, format and lint are current. In this repository, it also builds
+the Go binary and the UI. Then your commit agrees with what CI checks:
 
 ```bash
 just ready
 ```
 
-## Branching
+## Branches
 
-All changes should be developed on feature branches. Create a branch from `main`
-using the naming convention `type/short-description`, where `type` matches the
-[Conventional Commits] type:
+Make all changes on a branch. Make the branch from `main`. Give it the name
+`type/short-description`, where `type` is the [Conventional Commits] type:
 
 - `feat/add-retry-logic`
 - `fix/null-pointer-crash`
@@ -549,59 +552,58 @@ using the naming convention `type/short-description`, where `type` matches the
 - `refactor/simplify-handler`
 - `chore/update-dependencies`
 
-When using Claude Code's `/commit` command, a branch will be created
-automatically if you are on `main`.
-
 ## Commit messages
 
-Follow [Conventional Commits] with the 50/72 rule:
+Use [Conventional Commits] with the 50/72 rule:
 
-- **Subject line**: max 50 characters, imperative mood, capitalized, no period
-- **Body**: wrap at 72 characters, separated from subject by a blank line
-- **Format**: `type(scope): description`
-- **Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
-- Summarize the "what" and "why", not the "how"
+- **Subject line.** 50 characters or fewer, in the imperative mood, with no
+  period at the end.
+- **Body.** Wrap it at 72 characters. Put a blank line between the subject and
+  the body.
+- **Format.** `type(scope): description`.
+- **Types.** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
+  `chore`.
+- Tell what changed and why, not how.
 
-Try to write meaningful commit messages and avoid having too many commits on a
-PR. Most PRs should likely have a single commit (although for bigger PRs it may
-be reasonable to split it in a few). Git squash and rebase is your friend!
+Write commit messages that help the reader. Keep the number of commits in a pull
+request small. Most pull requests have one commit. A large pull request can have
+a few. Use squash and rebase to combine commits.
 
-## Submitting a PR
+## Submit a pull request
 
-- **Describe your changes.** Say what changed and why. A reviewer should not
-  have to read the diff to learn the reason for it.
-- **Issue/PR links.** Link any previous work such as related issues or PRs.
-  Please describe how your changes differ to/extend this work.
-- **Examples.** Add any examples or screenshots that you think are useful to
-  demonstrate the effect of your changes.
-- **Draft PRs.** If your changes are incomplete, but you would like to discuss
-  them, open the PR as a draft and add a comment to start a discussion. Using
-  comments rather than the PR description allows the description to be updated
-  later while preserving any discussions.
+- **Describe your changes.** Tell what changed and why. Then a reviewer does not
+  have to read the diff to find the reason.
+- **Links to issues and pull requests.** Link to related issues and pull
+  requests. Tell how your change is different from that work, or how it adds to
+  it.
+- **Examples.** Add examples or screenshots that show the effect of your change.
+- **Draft pull requests.** If your change is not complete but you want to
+  discuss it, open the pull request as a draft. Start the discussion in a
+  comment, not in the description. Then you can change the description later and
+  keep the discussion.
 
 ## AI usage
 
-This repo is written with AI assistance. All contributions are subject to the
-[AI Usage Policy](AI_POLICY.md). Disclose the tool you used, and make sure you
-can explain what your change does without the aid of AI tools.
+We write this repository with the help of AI tools. The
+[AI Usage Policy](AI_POLICY.md) applies to all contributions. Tell which tool
+you used. Make sure that you can explain what your change does without the help
+of an AI tool.
 
 ## FAQ
 
-> I want to contribute, where do I start?
+> I want to contribute. Where do I start?
 
-All kinds of contributions are welcome, whether it's a typo fix or a shiny new
-feature. You can also contribute by upvoting/commenting on issues or helping to
-answer questions.
+All contributions are welcome, from a typo fix to a new feature. You can also
+vote or comment on issues, or help answer questions.
 
-> I'm stuck, where can I get help?
+> I need help. Where do I ask?
 
-If you have questions, open a [Discussion] on GitHub.
+Open a [Discussion] on GitHub.
 
 [api-guidelines]: docs/docs/sidebar/architecture/api-guidelines.md
 [avfs]: https://github.com/avfs/avfs
 [building-a-behavior]: docs/docs/sidebar/development/behaviors.md
 [bun]: https://bun.sh
-[claude code]: https://claude.ai/code
 [configuration]: docs/docs/sidebar/usage/configuration.md
 [conventional commits]: https://www.conventionalcommits.org
 [discussion]: https://github.com/osapi-io/osapi/discussions
