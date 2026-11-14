@@ -5,12 +5,12 @@ sidebar_position: 7
 # Observability
 
 Each of the three processes reports through the same four channels: traces,
-metrics, logs and a heartbeat into the registry. A request can be followed from
-the command that sent it to the agent that ran it, by one trace ID.
+metrics, logs and a heartbeat in the registry. One trace ID follows a request
+from the command that sent it to the agent that ran it.
 
 ## Traces
 
-osapi uses OpenTelemetry. A trace starts in the CLI and travels with the work:
+osapi uses OpenTelemetry. A trace starts in the CLI and goes with the work:
 
 ```mermaid
 graph LR
@@ -20,78 +20,90 @@ graph LR
 ```
 
 1. The CLI starts a span and sends `traceparent` with the request.
-2. The controller continues it in its HTTP middleware, and the NATS client
-   carries the context in the headers of the job notification.
-3. The agent continues it in a `job.process` span. A behavior's method adds a
-   `behavior.<name>.<method>` span under that, with the behavior, the method,
-   the outcome, whether it changed the host, and the input fields the behavior
-   marks for tracing.
+1. The HTTP middleware of the controller continues the trace. The NATS client
+   puts the trace context in the headers of the job notification.
+1. The agent continues the trace in a `job.process` span. A method of a behavior
+   adds a `behavior.<name>.<method>` span below it. That span has the behavior,
+   the method, the result, whether the host changed, and the input fields that
+   the behavior marks for traces.
 
-Tracing is off by default (`telemetry.tracing`). Turned on with no exporter,
-every log line carries `trace_id` and `span_id`, so one grep shows a request end
-to end. The `otlp` exporter sends spans over gRPC to a backend such as Jaeger or
-Tempo, and `stdout` prints them raw. `--debug` turns on tracing without an
-exporter.
+Tracing is off by default (`telemetry.tracing`). If you turn it on without an
+exporter, each log line has `trace_id` and `span_id`. Then one grep shows a
+request from start to end. The `otlp` exporter sends spans over gRPC to a
+backend, for example Jaeger or Tempo. The `stdout` exporter prints them.
+`--debug` turns on tracing without an exporter.
 
 ## Metrics
 
-Each process can run a metrics server on its own port, with `/metrics` in the
-Prometheus format and the `/health` and `/health/ready` probes beside it. The
-controller's is on 9090 by default; the agent's and the NATS server's are set by
-`agent.metrics` and `nats.server.metrics`. Metrics are recorded through
-OpenTelemetry and exported with the `osapi_` prefix, alongside the Go runtime
-and process metrics. The ones to watch first:
+Each process can run a metrics server on its own port. The server has `/metrics`
+in the Prometheus format, and the `/health` and `/health/ready` probes. The
+metrics server of the controller is on 9090 by default. `agent.metrics` and
+`nats.server.metrics` set the servers of the agent and the NATS server. osapi
+records metrics through OpenTelemetry and exports them with the `osapi_` prefix,
+together with the Go runtime and process metrics. Watch these metrics first:
 
-| Metric                            | From       | Watch for                                 |
-| --------------------------------- | ---------- | ----------------------------------------- |
-| `osapi_component_up`              | All        | 0: the process is not ready               |
-| `osapi_subsystem_up`              | All        | 0 on a subsystem, such as the notifier    |
-| `osapi_jobs_created_total`        | Controller | Request rate                              |
-| `osapi_jobs_processed_total`      | Agent      | The `failed` share, by status             |
-| `osapi_job_duration_seconds`      | Agent      | Slow operations                           |
-| `osapi_heartbeat_age_seconds`     | Agent      | Rising: the agent cannot reach NATS       |
-| `osapi_behavior_calls_total`      | Agent      | Calls per behavior, method and outcome    |
-| `osapi_behavior_duration_seconds` | Agent      | Per-method latency                        |
-| `osapi_behavior_changes_total`    | Agent      | How often a write actually changed a host |
+| Metric                            | From       | Watch for                                  |
+| --------------------------------- | ---------- | ------------------------------------------ |
+| `osapi_component_up`              | All        | 0: the process is not ready                |
+| `osapi_subsystem_up`              | All        | 0 on a subsystem, for example the notifier |
+| `osapi_jobs_created_total`        | Controller | The request rate                           |
+| `osapi_jobs_processed_total`      | Agent      | The `failed` part, by status               |
+| `osapi_job_duration_seconds`      | Agent      | Slow operations                            |
+| `osapi_heartbeat_age_seconds`     | Agent      | An increase: the agent cannot reach NATS   |
+| `osapi_behavior_calls_total`      | Agent      | Calls for each behavior, method and result |
+| `osapi_behavior_duration_seconds` | Agent      | The latency of each method                 |
+| `osapi_behavior_changes_total`    | Agent      | How often a write changed a host           |
 
-[Metrics](../features/metrics.md) lists every metric and its labels.
+[Metrics](../features/metrics.md) lists each metric and its labels.
 
 ## Logs
 
-Every process logs with Go's structured logger, one line per event. Each line
-names its subsystem, such as `agent.heartbeat`, `controller.api` or
-`provider.sysctl`, and uses the same field names everywhere: `hostname`,
-`job_id`, `path`, `error`. With tracing on, each line also carries the trace and
-span IDs. Debug lines show each operation dispatched and each change skipped
-because the host already had it; warnings mark a degraded but working state,
-such as a reload that failed after a file was written.
+Each process writes logs with the structured logger of Go, one line for each
+event. Each line names its subsystem, for example `agent.heartbeat`,
+`controller.api` or `provider.sysctl`. All lines use the same field names:
+`hostname`, `job_id`, `path` and `error`. With tracing on, each line also has
+the trace ID and the span ID.
+
+Debug lines show each operation that the agent dispatches, and each change that
+it skips because the host already has the state. Warnings show a state that is
+not normal but still operates. An operation that fails, for example a sysctl
+write that the kernel did not apply, is an error and fails the job.
 
 ## Health and the registry
 
-Every component writes a heartbeat to the registry every 10 seconds, listing the
-state of its parts: the controller's API, metrics, notifier and tracing, the
-agent's heartbeat and metrics, and the NATS server's. An entry that is not
-refreshed within `nats.registry.ttl` expires, and the component is unreachable.
+Each component writes a heartbeat to the registry every 10 seconds. The
+heartbeat gives the state of each part of the component:
 
-| Endpoint             | Answers                                          | Token needed  |
+- the API, the metrics, the notifier and tracing of the controller
+- the heartbeat and the metrics of the agent
+- the NATS server
+
+If a component does not write its entry again in `nats.registry.ttl`, the entry
+expires, and osapi shows the component as unreachable.
+
+| Endpoint             | Tells                                            | Token needed  |
 | -------------------- | ------------------------------------------------ | ------------- |
-| `/api/health`        | The controller process is up                     | No            |
+| `/api/health`        | The controller process runs                      | No            |
 | `/api/health/ready`  | The controller can reach NATS and its KV buckets | No            |
-| `/api/health/status` | Every component and its parts, across every host | `health:read` |
+| `/api/health/status` | Each component and its parts, on all hosts       | `health:read` |
 
-`osapi client health status` shows the last one, and `osapi client agent list`
+`osapi client health status` shows the last endpoint. `osapi client agent list`
 shows each agent with its conditions.
 
 ## Conditions and notifications
 
-Each component evaluates conditions on every heartbeat, such as memory, disk and
-load pressure on an agent, against thresholds in `agent.conditions`, and writes
-them with the heartbeat. The controller watches the registry and turns a
-condition that starts, stops, or a component whose heartbeat expired into a
-notification: fired, resolved or unreachable. An active condition is notified
-again at an interval, so it does not scroll away. Notifications go to the log
-today. An agent can also be drained, which stops it taking new work without
-stopping the process; the drain and its timeline persist in the agent state
+Each component examines its conditions at each heartbeat, for example memory,
+disk and load pressure on an agent. It compares them with the limits in
+`agent.conditions`, and writes them with the heartbeat.
+
+The controller watches the registry. It makes a notification when a condition
+starts (fired) or stops (resolved), or when the heartbeat of a component expires
+(unreachable). It sends the notification of an active condition again at an
+interval, so that the notification stays visible. Today, notifications go to the
+log.
+
+You can also drain an agent. A drained agent does not receive new work, but the
+process continues to run. The drain and its timeline stay in the agent state
 bucket.
 
 ## Design details
@@ -101,4 +113,5 @@ bucket.
   [Metrics](../features/metrics.md),
   [Health checks](../features/health-checks.md),
   [Notifications](../features/notifications.md) and
-  [Agent lifecycle](../features/agent-lifecycle.md), for configuring each.
+  [Agent lifecycle](../features/agent-lifecycle.md) tell how to configure each
+  one.

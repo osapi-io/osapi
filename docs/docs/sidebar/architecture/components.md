@@ -4,113 +4,128 @@ sidebar_position: 2
 
 # Components
 
-osapi is one binary that runs three processes. They can share a host or be
-spread across many. `osapi start` runs all three in one process, which is how a
-single host is usually set up; `osapi nats server start`,
-`osapi controller start` and `osapi agent start` run them apart.
+osapi is one binary that runs three processes. The processes can be on one host
+or on many hosts. `osapi start` runs the three processes in one process. Use it
+on a single host. `osapi nats server start`, `osapi controller start` and
+`osapi agent start` run each process alone.
 
 ## NATS server
 
-The NATS server is where everything else meets. It carries every job from the
-controller to the agents and every result back, and it holds osapi's state in
-JetStream: the jobs, their results, the agent registry, uploaded files and the
-audit log. [State and storage](state.md) lists each one.
+The NATS server connects all the other parts. It carries each job from the
+controller to the agents, and each result back. It also keeps the state of osapi
+in JetStream: the jobs, their results, the agent registry, the uploaded files
+and the audit log. [State and storage](state.md) lists each one.
 
-osapi embeds a NATS server with JetStream, so nothing else needs installing. It
-listens on port 4222 by default (`nats.server.port`) and keeps JetStream's files
-in `nats.server.store_dir`. A fleet larger than one site, or one that needs NATS
-to survive a host, uses an external NATS cluster instead: point
-`controller.nats` and `agent.nats` at it and do not start the embedded one.
+osapi has an embedded NATS server with JetStream, so you do not need to install
+NATS. The server listens on port 4222 by default (`nats.server.port`). It keeps
+the JetStream files in `nats.server.store_dir`.
 
-The server authenticates its clients with no auth, a user and password, or an
-NKey (`nats.server.auth`), and each client says which in its own `nats.auth`
-section.
+Use an external NATS cluster if the hosts are in more than one site, or if NATS
+must continue to operate when a host stops. Set `controller.nats` and
+`agent.nats` to the address of the cluster. Do not start the embedded server.
+
+The server authenticates its clients in one of these modes (`nats.server.auth`):
+
+- no authentication
+- a user name and a password
+- an NKey
+- operator mode, with a credentials file for each user
+
+Each client sets its own mode in its `nats.auth` section.
 
 ## Controller
 
-The controller is the control plane. It never runs a command on a host and needs
-no privileges on one. It runs:
+The controller is the control plane. It does not run a command on a host, and it
+needs no privileges on a host. It runs these parts:
 
-- **The REST API** on port 8080 (`controller.api.port`). It checks the token on
-  every request, validates the input, turns the request into a job and waits up
-  to `controller.api.job_timeout` (30 seconds) for the result. Routes are under
-  `/api/`: `/api/node/{hostname}/...` for work on hosts, and `/api/job`,
-  `/api/agent`, `/api/audit`, `/api/file` and `/api/health` for the controller's
-  own resources. [How a request runs](request-flow.md) follows one.
-- **The management UI**, embedded in the binary and served by the same HTTP
-  server when `controller.ui.enabled` is set. See [UI](ui.md).
-- **The audit log**: every authenticated request is recorded to its own stream.
-  See [Security](security.md#audit).
-- **Enrollment**, when PKI is on: it holds the agents waiting to be accepted and
-  signs every job it queues. See [Security](security.md#which-agent-may-answer).
-- **A heartbeat** into the registry, so `osapi client health status` can show
-  the controller and each of its parts, and **a condition watcher** that turns
-  changes in any component's conditions into notifications. See
-  [Observability](observability.md).
+- **The REST API** on port 8080 (`controller.api.port`). The API checks the
+  token of each request and validates the input. Then it makes a job from the
+  request and waits for the result. It waits up to `controller.api.job_timeout`
+  (30 seconds). The routes are under `/api/`. `/api/node/{hostname}/...` is for
+  work on hosts. `/api/job`, `/api/agent`, `/api/audit`, `/api/file` and
+  `/api/health` are for the resources of the controller.
+  [How a request runs](request-flow.md) follows one request.
+- **The management UI.** It is in the binary, and the same HTTP server sends it
+  when `controller.ui.enabled` is set. Refer to [UI](ui.md).
+- **The audit log.** The controller records each authenticated request in its
+  own stream. Refer to [Security](security.md#audit).
+- **Enrollment**, when PKI is on. The controller keeps the agents that wait for
+  acceptance, and it signs each job that it puts on the queue. Refer to
+  [Security](security.md#which-agent-can-answer).
+- **A heartbeat** in the registry. With it, `osapi client health status` shows
+  the controller and each of its parts.
+- **A condition watcher.** It sends a notification when the conditions of a
+  component change. Refer to [Observability](observability.md).
 - **A metrics server** on its own port, 9090 by default
   (`controller.metrics.port`), with `/metrics`, `/health` and `/health/ready`.
 
 ## Agent
 
-The agent runs on each managed host and does the work. At startup it:
+The agent runs on each managed host and does the work. When it starts, it does
+these steps:
 
-- reads its **machine ID** from `/etc/machine-id` (or the platform UUID on
-  macOS), and refuses to start without one. The machine ID is the agent's
-  identity; the hostname is only its display name and may change;
-- when PKI is on, generates or loads its keypair and **enrolls** with the
-  controller, waiting until an administrator accepts it;
-- when privilege escalation is on, runs a **preflight**: it exits when sudo
-  needs a password, and warns for each installed program with no sudo rule and
-  each missing capability;
-- builds the **provider** for each behavior and domain on its platform, and logs
-  which behaviors are unsupported here;
-- subscribes to the job subjects for its machine ID, `_any`, `_all` and each of
-  its labels.
+1. It reads its **machine ID** from `/etc/machine-id`, or the platform UUID on
+   macOS. If it has no machine ID, it does not start. The machine ID is the
+   identity of the agent. The hostname is only a display name, and it can
+   change.
+1. If PKI is on, it makes or loads its key pair and **enrolls** with the
+   controller. It waits until an administrator accepts it.
+1. If privilege escalation is on, it runs a **preflight**. If sudo needs a
+   password, the agent stops. The agent shows a warning for each installed
+   program that has no sudo rule, and for each missing capability.
+1. It makes the **provider** for each behavior and domain on its platform. It
+   writes to the log the behaviors that its platform does not support.
+1. It subscribes to the job subjects for its machine ID, for `_any`, for `_all`
+   and for each of its labels.
 
-While it runs, it writes a heartbeat to the registry every 10 seconds, collects
-**facts** about the host (interfaces, routes, memory and the like) every 60
-seconds (`agent.facts.interval`), evaluates its conditions such as disk and
-memory pressure, and takes up to `agent.max_jobs` jobs at once.
+While the agent runs, it does these tasks:
 
-The agent runs as an unprivileged user by default. Operations that change the
-host then fail with a permission error rather than doing anything unexpected. To
-let it change the host, either run it as root or turn on
-`agent.privilege_escalation`, which runs only the writes through sudo with a
-fixed sudoers drop-in; [agent hardening](../features/agent-hardening.md) has the
-entries.
+- It writes a heartbeat to the registry every 10 seconds.
+- It collects **facts** about the host every 60 seconds
+  (`agent.facts.interval`), for example the interfaces, the routes and the
+  memory.
+- It examines its conditions, for example disk pressure and memory pressure.
+- It runs up to `agent.max_jobs` jobs at the same time.
 
-## Which process needs what
+By default, the agent runs as a user without privileges. An operation that
+changes the host then fails with a permission error. The operation does not do
+something that you do not expect. To let the agent change the host, run it as
+root, or enable `agent.privilege_escalation`. Privilege escalation runs only the
+writes through sudo, with a fixed sudoers drop-in.
+[Agent hardening](../features/agent-hardening.md) gives the entries.
 
-| Process     | Listens on                            | Needs on the host                                 | Holds state in                 |
-| ----------- | ------------------------------------- | ------------------------------------------------- | ------------------------------ |
-| NATS server | 4222, and a metrics port              | A directory for JetStream                         | JetStream                      |
-| Controller  | 8080 for the API and UI, 9090 metrics | Nothing privileged                                | NATS                           |
-| Agent       | A metrics port, when enabled          | Root, or sudo for the writes it is configured for | NATS, and the files it manages |
+## What each process needs
+
+| Process     | Listens on                            | Needs on the host                               | Keeps state in                 |
+| ----------- | ------------------------------------- | ----------------------------------------------- | ------------------------------ |
+| NATS server | 4222, and a metrics port              | A directory for JetStream                       | JetStream                      |
+| Controller  | 8080 for the API and UI, 9090 metrics | No privileges                                   | NATS                           |
+| Agent       | A metrics port, when it is enabled    | Root, or sudo for the writes that you configure | NATS, and the files it manages |
 
 ## Built on
 
-| Dependency                    | Purpose                                      |
-| ----------------------------- | -------------------------------------------- |
-| [Echo][]                      | HTTP framework for the REST API              |
-| [Cobra][] / [Viper][]         | CLI framework and configuration              |
-| [NATS][] / JetStream          | Messaging, KV store, stream processing       |
-| [oapi-codegen][]              | OpenAPI strict-server code generation        |
-| [OpenTelemetry][]             | Distributed tracing and Prometheus metrics   |
-| [gopsutil][]                  | Cross-platform system metrics                |
-| [pro-bing][]                  | ICMP ping implementation                     |
-| [golang-jwt][]                | JWT creation and validation                  |
-| `nats-client` / `nats-server` | Sibling repos, pinned by version in `go.mod` |
+| Dependency                    | Purpose                                             |
+| ----------------------------- | --------------------------------------------------- |
+| [Echo][]                      | The HTTP framework of the REST API                  |
+| [Cobra][] / [Viper][]         | The CLI framework and the configuration             |
+| [NATS][] / JetStream          | Messages, the KV store and streams                  |
+| [oapi-codegen][]              | Code generation for the OpenAPI strict server       |
+| [OpenTelemetry][]             | Distributed traces and Prometheus metrics           |
+| [gopsutil][]                  | System metrics on more than one platform            |
+| [pro-bing][]                  | The ICMP ping implementation                        |
+| [golang-jwt][]                | JWT creation and validation                         |
+| `nats-client` / `nats-server` | Related repositories, pinned by version in `go.mod` |
 
 ## Design details
 
 - [The job system](https://github.com/osapi-io/specs/blob/main/components/osapi/job-system.md)
   and
-  [transport](https://github.com/osapi-io/specs/blob/main/components/osapi/transport.md),
-  for how the processes talk.
+  [transport](https://github.com/osapi-io/specs/blob/main/components/osapi/transport.md)
+  tell how the processes communicate.
 - [Providers](https://github.com/osapi-io/specs/blob/main/components/osapi/providers.md)
   and
-  [running commands](https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md),
-  for what the agent does on a host.
+  [running commands](https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md)
+  tell what the agent does on a host.
 
 [Cobra]: https://github.com/spf13/cobra
 [Echo]: https://echo.labstack.com
