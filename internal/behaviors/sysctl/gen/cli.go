@@ -39,7 +39,7 @@ var sysctlGetCmd = &cobra.Command{
 }
 
 var sysctlCreateCmd = &cobra.Command{
-	Long: "Writes osapi-<key>.conf to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. Running it again with the same value changes nothing and reports changed: false.",
+	Long: "Writes osapi-<key>.conf to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. It fails when sysctl -p fails, because the value is not set. Running it again with the same value changes nothing and reports changed: false, unless the kernel holds another value, as after a failed apply: then it applies again.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		key, _ := cmd.Flags().GetString("key")
 		value, _ := cmd.Flags().GetString("value")

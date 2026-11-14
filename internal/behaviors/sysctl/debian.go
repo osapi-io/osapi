@@ -202,7 +202,10 @@ func (d *Debian) deploy(
 	if err != nil {
 		return nil, fmt.Errorf("sysctl %s: %w", opName, err)
 	}
-	if !result.Changed {
+	// An unchanged file is applied again when the kernel holds another value,
+	// so a run whose apply failed is finished by the next run rather than
+	// reported unchanged.
+	if !result.Changed && !d.differs(entry) {
 		d.logger.Debug(
 			"sysctl entry unchanged, skipping deploy",
 			slog.String("key", entry.Key),
@@ -215,14 +218,9 @@ func (d *Debian) deploy(
 		}, nil
 	}
 
-	// Apply the sysctl conf file.
+	// A file the kernel did not take is a failure: the value is not set.
 	if _, execErr := d.execManager.RunPrivilegedCmd(ctx, "sysctl", []string{"-p", confPath}); execErr != nil {
-		d.logger.Warn(
-			"sysctl apply failed after deploy",
-			slog.String("key", entry.Key),
-			slog.String("path", confPath),
-			slog.String("error", execErr.Error()),
-		)
+		return nil, fmt.Errorf("sysctl %s: apply %s: %w", opName, confPath, execErr)
 	}
 
 	d.logger.Info(
@@ -263,11 +261,7 @@ func (d *Debian) Delete(
 	// Reload sysctl defaults.
 	if changed {
 		if _, execErr := d.execManager.RunPrivilegedCmd(ctx, "sysctl", []string{"--system"}); execErr != nil {
-			d.logger.Warn(
-				"sysctl reload failed after delete",
-				slog.String("key", key),
-				slog.String("error", execErr.Error()),
-			)
+			return nil, fmt.Errorf("sysctl delete: reload: %w", execErr)
 		}
 	}
 
@@ -376,6 +370,20 @@ func (d *Debian) Get(
 	default:
 		return nil, fmt.Errorf("sysctl entry %q: %w", key, readErr)
 	}
+}
+
+// differs reports whether the kernel holds a value other than entry's. A
+// parameter the kernel does not have, or cannot be read, does not differ:
+// applying it again would fail the same way.
+func (d *Debian) differs(
+	entry Entry,
+) bool {
+	data, err := d.fs.ReadFile(ProcDir + "/" + strings.ReplaceAll(entry.Key, ".", "/"))
+	if err != nil {
+		return false
+	}
+
+	return value(data) != strings.Join(strings.Fields(entry.Value), " ")
 }
 
 // managed is every parameter osapi manages, with the value it wrote: one
