@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Agent Hardening | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/agent-hardening"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Agent Hardening | OSAPI"><meta data-rh="true" name="description" content="OSAPI supports running the agent as an unprivileged user with config-driven"><meta data-rh="true" property="og:description" content="OSAPI supports running the agent as an unprivileged user with config-driven"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/agent-hardening"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/agent-hardening" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/agent-hardening" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Agent Hardening","item":"https://osapi-io.github.io/osapi/sidebar/features/agent-hardening"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.e8064dca.css">
-<script src="/osapi/assets/js/runtime~main.8d56706e.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.e3ab710c.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.93152fbd.js" defer="defer"></script>
 </head>
 <body>
@@ -117,21 +117,26 @@ preserved across restarts:</p>
 <code>setcap</code> on the binary. <code>NoNewPrivileges=no</code> is required so that <code>sudo</code> (if also
 used) can elevate correctly.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="preflight-checks">Preflight Checks<a href="#preflight-checks" class="hash-link" aria-label="Direct link to Preflight Checks" title="Direct link to Preflight Checks" translate="no">​</a></h2>
-<p>When <code>enabled</code> is true, the agent automatically runs a verification pass during
-<code>agent start</code> before subscribing to NATS. Checks are sequential: sudo first,
-then capabilities. If any check fails, the agent logs the failure and exits with
-a non-zero status.</p>
-<p>The sudo check runs <code>sudo -n &lt;command&gt; --version</code> (or <code>sudo -n which &lt;command&gt;</code>
-for commands that do not support <code>--version</code>). The <code>-n</code> flag makes <code>sudo</code> fail
-immediately if a password prompt would be required, confirming that the sudoers
-entry is present and correct.</p>
+<p>When <code>enabled</code> is true, the agent runs a check during <code>agent start</code>, before it
+subscribes to NATS.</p>
+<p>The agent lists its sudo rules once with <code>sudo -n -l</code>. The <code>-n</code> flag makes sudo
+fail at once if it needs a password. If that fails, sudo is not usable, and the
+agent logs the error and exits.</p>
+<p>Then the agent finds a rule for each program it runs with sudo, by the program&#x27;s
+name. It skips a program that is not installed. It does not check the rule&#x27;s
+arguments, so a narrow rule such as
+<code>/usr/sbin/sysctl -p /etc/sysctl.d/osapi-*.conf</code> counts as a rule for <code>sysctl</code>.
+A program with no rule is a warning, not an error: the agent starts, and only
+the operations that run that program fail.</p>
+<p>The agent also checks each capability above. A missing capability is a warning
+too.</p>
 <p>The programs checked are the ones above, plus every program a behavior declares
 with <code>behavior.Sudo</code>. A behavior&#x27;s page under
 <a class="" href="/osapi/sidebar/behaviors">Behaviors</a> names the programs it runs with sudo,
 and <code>osapi behavior get --name &lt;name&gt;</code> lists them, so a new behavior&#x27;s sudoers
 entry is found there rather than here.</p>
-<p>Example output:</p>
-<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">OSAPI Agent Preflight Check</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">─────────────────────────────</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">Sudo access:</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  ✓ systemctl    ✓ sysctl       ✓ timedatectl</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  ✓ hostnamectl  ✓ chronyc      ✓ useradd</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  ✓ usermod      ✓ userdel      ✓ groupadd</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  ✓ groupdel     ✓ gpasswd      ✓ chown</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  ✓ apt-get      ✓ shutdown     ✓ update-ca-certificates</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  ✗ sh (sudoers rule missing)</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">Capabilities:</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  ✓ CAP_DAC_READ_SEARCH   ✓ CAP_DAC_OVERRIDE</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  ✓ CAP_CHOWN             ✓ CAP_FOWNER</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  ✓ CAP_KILL              ✓ CAP_NET_ADMIN</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">Result: FAILED (1 error)</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  - sudo: sh not configured in /etc/sudoers.d/osapi-agent</span><br></div></code></pre></div></div>
+<p>Example log, with no rule for <code>useradd</code>:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">WRN preflight check failed check=sudo:useradd error=&quot;no sudo rule runs useradd; operations that need it fail&quot;</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">INF preflight checks done</span><br></div></code></pre></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="command-reference">Command Reference<a href="#command-reference" class="hash-link" aria-label="Direct link to Command Reference" title="Direct link to Command Reference" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="write-operations-use-runprivilegedcmd">Write Operations (use <code>RunPrivilegedCmd</code>)<a href="#write-operations-use-runprivilegedcmd" class="hash-link" aria-label="Direct link to write-operations-use-runprivilegedcmd" title="Direct link to write-operations-use-runprivilegedcmd" translate="no">​</a></h3>
 
