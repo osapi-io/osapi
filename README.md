@@ -48,63 +48,14 @@ Why it's better:
 
 ## Getting started
 
-Install the binary, or run the signed image from `ghcr.io/osapi-io/osapi`:
-
-```bash
-go install github.com/osapi-io/osapi@latest
-```
-
-Start the queue, the controller and an agent in one process, then create a token
-as [Getting Started] shows:
-
-```bash
-osapi start
-```
-
-`osapi config list` shows every setting with the value in effect and where it
-came from, and `osapi config validate` checks a config file before you start.
-
-In the repository you work from, install the skills and start your agent there.
-One skill changes hosts; the other runs osapi itself:
-
-```bash
-osapi init                  # Claude Code (default)
-osapi init --tool codex     # Codex
-```
-
-Then just ask:
-
-- _"Set vm.swappiness to 10 on every host in group:web and tell me which ones
-  changed"_
-- _"Which hosts have package updates waiting?"_
-- _"Point eth0 on web-01 at 1.1.1.1 for DNS and show me before and after"_
-- _"Find every host under disk or memory pressure"_
-
-The agent reads each operation's schema, runs it with `--json`, and checks every
-host's result. Nothing logs in to a host.
-
-## Core concepts
-
-A [behavior][behaviors] is one area of a host osapi manages, such as kernel
-parameters, declared once as a typed Go definition in [`internal/behaviors/`].
-Its API route, CLI command, permission, spec, docs and telemetry are built from
-that definition. sysctl is the first, served under `osapi client next` while it
-proves out, and the other domains move over one at a time. A behavior can
-declare its own settings, which join the config beside osapi's own.
-
-A job is every request. It goes on an embedded NATS queue, and the agent on each
-targeted host runs it and reports its own result: `ok`, `failed`, `skipped` when
-the host cannot do it, or `timeout`, and for a change whether the host changed.
-
-An agent runs on each host and reports facts, conditions and heartbeats, so the
-controller knows which hosts are up and what they are.
-
-There are four ways in, a REST API, a CLI, a Go SDK and an embedded dashboard,
-over the same operations and the same permissions.
+The [docs][getting started] walk through it: start osapi, give your agent its
+skills with `osapi init`, ask for what you want, and run the same operations
+from the CLI. They also cover building a behavior, by hand or with an agent.
 
 ## Documentation
 
 - [Getting Started]
+- [Working with an agent]
 - [Behaviors]
 - [API]
 - [Usage]
@@ -142,4 +93,4 @@ The [MIT] License.
 [sdk]: https://osapi-io.github.io/osapi/sidebar/sdk
 [specs]: https://github.com/osapi-io/specs
 [usage]: https://osapi-io.github.io/osapi/sidebar/usage
-[`internal/behaviors/`]: internal/behaviors/
+[working with an agent]: https://osapi-io.github.io/osapi/sidebar/usage/agents
