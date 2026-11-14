@@ -7,7 +7,6 @@
 
 /**
  * Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
-
  */
 export type ScheduleCreateRequestInterval = typeof ScheduleCreateRequestInterval[keyof typeof ScheduleCreateRequestInterval];
 

@@ -17,11 +17,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * List all scheduled entries on the target node.
-
- * @summary List all scheduled entries
- */
 export type getNodeScheduleResponse200 = {
   data: ScheduleCollectionResponse
   status: 200
@@ -64,7 +59,11 @@ export const getGetNodeScheduleUrl = (hostname: string,) => {
   return `/api/node/${hostname}/schedule`
 }
 
-export const getNodeSchedule = async (hostname: string, options?: RequestInit): Promise<getNodeScheduleResponse> => {
+/**
+ * List all scheduled entries on the target node.
+ * @summary List all scheduled entries
+ */
+export const getNodeSchedule = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeScheduleResponse> => {
 
   return apiFetch<getNodeScheduleResponse>(getGetNodeScheduleUrl(hostname),
   {
@@ -76,11 +75,6 @@ export const getNodeSchedule = async (hostname: string, options?: RequestInit): 
 );}
 
 
-/**
- * Create a new scheduled entry on the target node.
-
- * @summary Create a scheduled entry
- */
 export type postNodeScheduleResponse200 = {
   data: ScheduleCreateResponse
   status: 200
@@ -123,25 +117,37 @@ export const getPostNodeScheduleUrl = (hostname: string,) => {
   return `/api/node/${hostname}/schedule`
 }
 
+/**
+ * Create a new scheduled entry on the target node.
+ * @summary Create a scheduled entry
+ */
 export const postNodeSchedule = async (hostname: string,
-    scheduleCreateRequest: ScheduleCreateRequest, options?: RequestInit): Promise<postNodeScheduleResponse> => {
+    scheduleCreateRequest: ScheduleCreateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeScheduleResponse> => {
 
-  return apiFetch<postNodeScheduleResponse>(getPostNodeScheduleUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeScheduleResponse>(getPostNodeScheduleUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      scheduleCreateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(scheduleCreateRequest)
   }
 );}
 
 
-/**
- * Get a specific scheduled entry by name on the target node.
-
- * @summary Get a scheduled entry
- */
 export type getNodeScheduleByNameResponse200 = {
   data: ScheduleGetResponse
   status: 200
@@ -190,8 +196,12 @@ export const getGetNodeScheduleByNameUrl = (hostname: string,
   return `/api/node/${hostname}/schedule/${name}`
 }
 
+/**
+ * Get a specific scheduled entry by name on the target node.
+ * @summary Get a scheduled entry
+ */
 export const getNodeScheduleByName = async (hostname: string,
-    name: string, options?: RequestInit): Promise<getNodeScheduleByNameResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeScheduleByNameResponse> => {
 
   return apiFetch<getNodeScheduleByNameResponse>(getGetNodeScheduleByNameUrl(hostname,name),
   {
@@ -203,11 +213,6 @@ export const getNodeScheduleByName = async (hostname: string,
 );}
 
 
-/**
- * Update an existing scheduled entry on the target node.
-
- * @summary Update a scheduled entry
- */
 export type putNodeScheduleResponse200 = {
   data: ScheduleUpdateResponse
   status: 200
@@ -256,26 +261,38 @@ export const getPutNodeScheduleUrl = (hostname: string,
   return `/api/node/${hostname}/schedule/${name}`
 }
 
+/**
+ * Update an existing scheduled entry on the target node.
+ * @summary Update a scheduled entry
+ */
 export const putNodeSchedule = async (hostname: string,
     name: string,
-    scheduleUpdateRequest: ScheduleUpdateRequest, options?: RequestInit): Promise<putNodeScheduleResponse> => {
+    scheduleUpdateRequest: ScheduleUpdateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeScheduleResponse> => {
 
-  return apiFetch<putNodeScheduleResponse>(getPutNodeScheduleUrl(hostname,name),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<putNodeScheduleResponse>(getPutNodeScheduleUrl(hostname,name),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      scheduleUpdateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(scheduleUpdateRequest)
   }
 );}
 
 
-/**
- * Delete a scheduled entry from the target node.
-
- * @summary Delete a scheduled entry
- */
 export type deleteNodeScheduleResponse200 = {
   data: ScheduleDeleteResponse
   status: 200
@@ -324,8 +341,12 @@ export const getDeleteNodeScheduleUrl = (hostname: string,
   return `/api/node/${hostname}/schedule/${name}`
 }
 
+/**
+ * Delete a scheduled entry from the target node.
+ * @summary Delete a scheduled entry
+ */
 export const deleteNodeSchedule = async (hostname: string,
-    name: string, options?: RequestInit): Promise<deleteNodeScheduleResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeScheduleResponse> => {
 
   return apiFetch<deleteNodeScheduleResponse>(getDeleteNodeScheduleUrl(hostname,name),
   {

@@ -6,7 +6,6 @@
  */
 
 export interface SysctlUpdateRequest {
-  /** New value for the sysctl parameter.
-   */
+  /** New value for the sysctl parameter. */
   value: string;
 }

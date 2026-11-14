@@ -7,6 +7,5 @@
 
 /**
  * Template variables. Only used when content_type is "template".
-
  */
 export type ScheduleCreateRequestVars = { [key: string]: unknown };

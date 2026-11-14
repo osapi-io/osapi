@@ -7,19 +7,17 @@
 import type { GetJobsStatus } from './getJobsStatus';
 
 export type GetJobsParams = {
-/**
- * Filter jobs by status.
- */
-status?: GetJobsStatus;
-/**
- * Maximum number of jobs per page (1-100).
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
-/**
- * Number of jobs to skip for pagination.
- * @minimum 0
- */
-offset?: number;
+  /** Filter jobs by status. */
+  status?: GetJobsStatus;
+  /**
+   * Maximum number of jobs per page (1-100).
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
+  /**
+   * Number of jobs to skip for pagination.
+   * @minimum 0
+   */
+  offset?: number;
 };

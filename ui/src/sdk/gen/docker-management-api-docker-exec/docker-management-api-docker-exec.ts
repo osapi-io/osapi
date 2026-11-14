@@ -12,11 +12,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Execute a command inside a running container on the target node.
-
- * @summary Execute a command in a container
- */
 export type postNodeContainerDockerExecResponse202 = {
   data: DockerExecCollectionResponse
   status: 202
@@ -65,17 +60,34 @@ export const getPostNodeContainerDockerExecUrl = (hostname: string,
   return `/api/node/${hostname}/container/docker/${id}/exec`
 }
 
+/**
+ * Execute a command inside a running container on the target node.
+ * @summary Execute a command in a container
+ */
 export const postNodeContainerDockerExec = async (hostname: string,
     id: string,
-    dockerExecRequest: DockerExecRequest, options?: RequestInit): Promise<postNodeContainerDockerExecResponse> => {
+    dockerExecRequest: DockerExecRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeContainerDockerExecResponse> => {
 
-  return apiFetch<postNodeContainerDockerExecResponse>(getPostNodeContainerDockerExecUrl(hostname,id),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeContainerDockerExecResponse>(getPostNodeContainerDockerExecUrl(hostname,id),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      dockerExecRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(dockerExecRequest)
   }
 );}
 

@@ -13,10 +13,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Returns a paginated list of audit log entries, newest first.
- * @summary List audit log entries
- */
 export type getAuditLogsResponse200 = {
   data: ListAuditResponse
   status: 200
@@ -57,7 +53,7 @@ export const getGetAuditLogsUrl = (params?: GetAuditLogsParams,) => {
   Object.entries(params || {}).forEach(([key, value]) => {
 
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : String(value))
     }
   });
 
@@ -66,7 +62,11 @@ export const getGetAuditLogsUrl = (params?: GetAuditLogsParams,) => {
   return stringifiedParams.length > 0 ? `/api/audit?${stringifiedParams}` : `/api/audit`
 }
 
-export const getAuditLogs = async (params?: GetAuditLogsParams, options?: RequestInit): Promise<getAuditLogsResponse> => {
+/**
+ * Returns a paginated list of audit log entries, newest first.
+ * @summary List audit log entries
+ */
+export const getAuditLogs = async (params?: GetAuditLogsParams, options?: Parameters<typeof apiFetch>[1]): Promise<getAuditLogsResponse> => {
 
   return apiFetch<getAuditLogsResponse>(getGetAuditLogsUrl(params),
   {
@@ -78,10 +78,6 @@ export const getAuditLogs = async (params?: GetAuditLogsParams, options?: Reques
 );}
 
 
-/**
- * Returns all audit log entries without pagination for export.
- * @summary Export all audit log entries
- */
 export type getAuditExportResponse200 = {
   data: ListAuditResponse
   status: 200
@@ -119,7 +115,11 @@ export const getGetAuditExportUrl = () => {
   return `/api/audit/export`
 }
 
-export const getAuditExport = async ( options?: RequestInit): Promise<getAuditExportResponse> => {
+/**
+ * Returns all audit log entries without pagination for export.
+ * @summary Export all audit log entries
+ */
+export const getAuditExport = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getAuditExportResponse> => {
 
   return apiFetch<getAuditExportResponse>(getGetAuditExportUrl(),
   {
@@ -131,10 +131,6 @@ export const getAuditExport = async ( options?: RequestInit): Promise<getAuditEx
 );}
 
 
-/**
- * Returns a single audit log entry by ID.
- * @summary Get a single audit log entry
- */
 export type getAuditLogByIDResponse200 = {
   data: AuditEntryResponse
   status: 200
@@ -177,7 +173,11 @@ export const getGetAuditLogByIDUrl = (id: string,) => {
   return `/api/audit/${id}`
 }
 
-export const getAuditLogByID = async (id: string, options?: RequestInit): Promise<getAuditLogByIDResponse> => {
+/**
+ * Returns a single audit log entry by ID.
+ * @summary Get a single audit log entry
+ */
+export const getAuditLogByID = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<getAuditLogByIDResponse> => {
 
   return apiFetch<getAuditLogByIDResponse>(getGetAuditLogByIDUrl(id),
   {

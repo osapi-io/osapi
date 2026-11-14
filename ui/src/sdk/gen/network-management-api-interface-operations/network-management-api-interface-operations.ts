@@ -14,11 +14,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * List all network interfaces on the target node.
-
- * @summary List network interfaces
- */
 export type getNodeNetworkInterfaceResponse200 = {
   data: InterfaceListResponse
   status: 200
@@ -61,7 +56,11 @@ export const getGetNodeNetworkInterfaceUrl = (hostname: string,) => {
   return `/api/node/${hostname}/network/interface`
 }
 
-export const getNodeNetworkInterface = async (hostname: string, options?: RequestInit): Promise<getNodeNetworkInterfaceResponse> => {
+/**
+ * List all network interfaces on the target node.
+ * @summary List network interfaces
+ */
+export const getNodeNetworkInterface = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeNetworkInterfaceResponse> => {
 
   return apiFetch<getNodeNetworkInterfaceResponse>(getGetNodeNetworkInterfaceUrl(hostname),
   {
@@ -73,11 +72,6 @@ export const getNodeNetworkInterface = async (hostname: string, options?: Reques
 );}
 
 
-/**
- * Get detailed configuration for a specific network interface on the target node.
-
- * @summary Get network interface details
- */
 export type getNodeNetworkInterfaceByNameResponse200 = {
   data: InterfaceGetResponse
   status: 200
@@ -126,8 +120,12 @@ export const getGetNodeNetworkInterfaceByNameUrl = (hostname: string,
   return `/api/node/${hostname}/network/interface/${name}`
 }
 
+/**
+ * Get detailed configuration for a specific network interface on the target node.
+ * @summary Get network interface details
+ */
 export const getNodeNetworkInterfaceByName = async (hostname: string,
-    name: string, options?: RequestInit): Promise<getNodeNetworkInterfaceByNameResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeNetworkInterfaceByNameResponse> => {
 
   return apiFetch<getNodeNetworkInterfaceByNameResponse>(getGetNodeNetworkInterfaceByNameUrl(hostname,name),
   {
@@ -139,11 +137,6 @@ export const getNodeNetworkInterfaceByName = async (hostname: string,
 );}
 
 
-/**
- * Create a managed Netplan configuration for a network interface on the target node.
-
- * @summary Create interface configuration
- */
 export type postNodeNetworkInterfaceResponse200 = {
   data: InterfaceMutationResponse
   status: 200
@@ -187,26 +180,38 @@ export const getPostNodeNetworkInterfaceUrl = (hostname: string,
   return `/api/node/${hostname}/network/interface/${name}`
 }
 
+/**
+ * Create a managed Netplan configuration for a network interface on the target node.
+ * @summary Create interface configuration
+ */
 export const postNodeNetworkInterface = async (hostname: string,
     name: string,
-    interfaceConfigRequest: InterfaceConfigRequest, options?: RequestInit): Promise<postNodeNetworkInterfaceResponse> => {
+    interfaceConfigRequest: InterfaceConfigRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeNetworkInterfaceResponse> => {
 
-  return apiFetch<postNodeNetworkInterfaceResponse>(getPostNodeNetworkInterfaceUrl(hostname,name),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeNetworkInterfaceResponse>(getPostNodeNetworkInterfaceUrl(hostname,name),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      interfaceConfigRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(interfaceConfigRequest)
   }
 );}
 
 
-/**
- * Update the managed Netplan configuration for a network interface on the target node.
-
- * @summary Update interface configuration
- */
 export type putNodeNetworkInterfaceResponse200 = {
   data: InterfaceMutationResponse
   status: 200
@@ -255,26 +260,38 @@ export const getPutNodeNetworkInterfaceUrl = (hostname: string,
   return `/api/node/${hostname}/network/interface/${name}`
 }
 
+/**
+ * Update the managed Netplan configuration for a network interface on the target node.
+ * @summary Update interface configuration
+ */
 export const putNodeNetworkInterface = async (hostname: string,
     name: string,
-    interfaceConfigRequest: InterfaceConfigRequest, options?: RequestInit): Promise<putNodeNetworkInterfaceResponse> => {
+    interfaceConfigRequest: InterfaceConfigRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeNetworkInterfaceResponse> => {
 
-  return apiFetch<putNodeNetworkInterfaceResponse>(getPutNodeNetworkInterfaceUrl(hostname,name),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<putNodeNetworkInterfaceResponse>(getPutNodeNetworkInterfaceUrl(hostname,name),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      interfaceConfigRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(interfaceConfigRequest)
   }
 );}
 
 
-/**
- * Delete the managed Netplan configuration for a network interface on the target node.
-
- * @summary Delete interface configuration
- */
 export type deleteNodeNetworkInterfaceResponse200 = {
   data: InterfaceMutationResponse
   status: 200
@@ -318,8 +335,12 @@ export const getDeleteNodeNetworkInterfaceUrl = (hostname: string,
   return `/api/node/${hostname}/network/interface/${name}`
 }
 
+/**
+ * Delete the managed Netplan configuration for a network interface on the target node.
+ * @summary Delete interface configuration
+ */
 export const deleteNodeNetworkInterface = async (hostname: string,
-    name: string, options?: RequestInit): Promise<deleteNodeNetworkInterfaceResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeNetworkInterfaceResponse> => {
 
   return apiFetch<deleteNodeNetworkInterfaceResponse>(getDeleteNodeNetworkInterfaceUrl(hostname,name),
   {

@@ -9,9 +9,8 @@ import type { PostFileBodyContentType } from './postFileBodyContentType';
 export type PostFileBody = {
   /** The name of the file in the Object Store. */
   name: string;
-  /** How the file should be treated during deploy. "raw" writes bytes as-is; "template" renders with Go text/template and agent facts.
-   */
+  /** How the file should be treated during deploy. "raw" writes bytes as-is; "template" renders with Go text/template and agent facts. */
   content_type?: PostFileBodyContentType;
   /** The file content. */
-  file: Blob;
+  file: Blob | File;
 };

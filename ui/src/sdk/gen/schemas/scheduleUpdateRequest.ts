@@ -8,18 +8,14 @@ import type { ScheduleUpdateRequestContentType } from './scheduleUpdateRequestCo
 import type { ScheduleUpdateRequestVars } from './scheduleUpdateRequestVars';
 
 export interface ScheduleUpdateRequest {
-  /** New object to deploy (redeploy with updated content).
-   */
+  /** New object to deploy (redeploy with updated content). */
   object?: string;
-  /** Cron schedule expression (e.g., "*\/5 * * * *").
-   */
+  /** Cron schedule expression (e.g., "*\/5 * * * *"). */
   schedule?: string;
   /** User to run the command as. */
   user?: string;
-  /** Content type: "raw" or "template".
-   */
+  /** Content type: "raw" or "template". */
   content_type?: ScheduleUpdateRequestContentType;
-  /** Template variables.
-   */
+  /** Template variables. */
   vars?: ScheduleUpdateRequestVars;
 }

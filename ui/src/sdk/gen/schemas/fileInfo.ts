@@ -12,8 +12,7 @@ export interface FileInfo {
   sha256: string;
   /** File size in bytes. */
   size: number;
-  /** How the file should be treated during deploy (raw or template).
-   */
+  /** How the file should be treated during deploy (raw or template). */
   content_type: string;
   /** Source of the file: 'system' or 'user'. */
   source: string;

@@ -6,7 +6,6 @@
  */
 
 export interface SSHKeyAddRequest {
-  /** Full SSH public key line (e.g., "ssh-ed25519 AAAA... user@host").
-   */
+  /** Full SSH public key line (e.g., "ssh-ed25519 AAAA... user@host"). */
   key: string;
 }

@@ -17,11 +17,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * List all managed sysctl entries on the target node.
-
- * @summary List all managed sysctl entries
- */
 export type getNodeSysctlResponse200 = {
   data: SysctlCollectionResponse
   status: 200
@@ -64,7 +59,11 @@ export const getGetNodeSysctlUrl = (hostname: string,) => {
   return `/api/node/${hostname}/sysctl`
 }
 
-export const getNodeSysctl = async (hostname: string, options?: RequestInit): Promise<getNodeSysctlResponse> => {
+/**
+ * List all managed sysctl entries on the target node.
+ * @summary List all managed sysctl entries
+ */
+export const getNodeSysctl = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeSysctlResponse> => {
 
   return apiFetch<getNodeSysctlResponse>(getGetNodeSysctlUrl(hostname),
   {
@@ -76,11 +75,6 @@ export const getNodeSysctl = async (hostname: string, options?: RequestInit): Pr
 );}
 
 
-/**
- * Create a new sysctl kernel parameter on the target node. Idempotent: returns changed=false if the key is already managed.
-
- * @summary Create a sysctl parameter
- */
 export type postNodeSysctlResponse200 = {
   data: SysctlCreateResponse
   status: 200
@@ -123,25 +117,37 @@ export const getPostNodeSysctlUrl = (hostname: string,) => {
   return `/api/node/${hostname}/sysctl`
 }
 
+/**
+ * Create a new sysctl kernel parameter on the target node. Idempotent: returns changed=false if the key is already managed.
+ * @summary Create a sysctl parameter
+ */
 export const postNodeSysctl = async (hostname: string,
-    sysctlCreateRequest: SysctlCreateRequest, options?: RequestInit): Promise<postNodeSysctlResponse> => {
+    sysctlCreateRequest: SysctlCreateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeSysctlResponse> => {
 
-  return apiFetch<postNodeSysctlResponse>(getPostNodeSysctlUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeSysctlResponse>(getPostNodeSysctlUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      sysctlCreateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(sysctlCreateRequest)
   }
 );}
 
 
-/**
- * Get a specific managed sysctl entry by key on the target node.
-
- * @summary Get a sysctl entry
- */
 export type getNodeSysctlByKeyResponse200 = {
   data: SysctlGetResponse
   status: 200
@@ -190,8 +196,12 @@ export const getGetNodeSysctlByKeyUrl = (hostname: string,
   return `/api/node/${hostname}/sysctl/${key}`
 }
 
+/**
+ * Get a specific managed sysctl entry by key on the target node.
+ * @summary Get a sysctl entry
+ */
 export const getNodeSysctlByKey = async (hostname: string,
-    key: string, options?: RequestInit): Promise<getNodeSysctlByKeyResponse> => {
+    key: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeSysctlByKeyResponse> => {
 
   return apiFetch<getNodeSysctlByKeyResponse>(getGetNodeSysctlByKeyUrl(hostname,key),
   {
@@ -203,11 +213,6 @@ export const getNodeSysctlByKey = async (hostname: string,
 );}
 
 
-/**
- * Update an existing sysctl kernel parameter on the target node. Fails if the key is not currently managed. This operation is idempotent — updating with the same value results in no change.
-
- * @summary Update a sysctl parameter
- */
 export type putNodeSysctlResponse200 = {
   data: SysctlUpdateResponse
   status: 200
@@ -256,26 +261,38 @@ export const getPutNodeSysctlUrl = (hostname: string,
   return `/api/node/${hostname}/sysctl/${key}`
 }
 
+/**
+ * Update an existing sysctl kernel parameter on the target node. Fails if the key is not currently managed. This operation is idempotent — updating with the same value results in no change.
+ * @summary Update a sysctl parameter
+ */
 export const putNodeSysctl = async (hostname: string,
     key: string,
-    sysctlUpdateRequest: SysctlUpdateRequest, options?: RequestInit): Promise<putNodeSysctlResponse> => {
+    sysctlUpdateRequest: SysctlUpdateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeSysctlResponse> => {
 
-  return apiFetch<putNodeSysctlResponse>(getPutNodeSysctlUrl(hostname,key),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<putNodeSysctlResponse>(getPutNodeSysctlUrl(hostname,key),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      sysctlUpdateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(sysctlUpdateRequest)
   }
 );}
 
 
-/**
- * Delete a managed sysctl entry from the target node.
-
- * @summary Delete a managed sysctl entry
- */
 export type deleteNodeSysctlResponse200 = {
   data: SysctlDeleteResponse
   status: 200
@@ -324,8 +341,12 @@ export const getDeleteNodeSysctlUrl = (hostname: string,
   return `/api/node/${hostname}/sysctl/${key}`
 }
 
+/**
+ * Delete a managed sysctl entry from the target node.
+ * @summary Delete a managed sysctl entry
+ */
 export const deleteNodeSysctl = async (hostname: string,
-    key: string, options?: RequestInit): Promise<deleteNodeSysctlResponse> => {
+    key: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeSysctlResponse> => {
 
   return apiFetch<deleteNodeSysctlResponse>(getDeleteNodeSysctlUrl(hostname,key),
   {

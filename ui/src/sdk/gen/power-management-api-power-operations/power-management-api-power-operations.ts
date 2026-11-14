@@ -13,11 +13,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Reboot the target node. An optional delay (in seconds) and message can be provided.
-
- * @summary Reboot node
- */
 export type postNodePowerRebootResponse200 = {
   data: PowerRebootResponse
   status: 200
@@ -60,25 +55,37 @@ export const getPostNodePowerRebootUrl = (hostname: string,) => {
   return `/api/node/${hostname}/power/reboot`
 }
 
+/**
+ * Reboot the target node. An optional delay (in seconds) and message can be provided.
+ * @summary Reboot node
+ */
 export const postNodePowerReboot = async (hostname: string,
-    powerRequest?: PowerRequest, options?: RequestInit): Promise<postNodePowerRebootResponse> => {
+    powerRequest?: PowerRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodePowerRebootResponse> => {
 
-  return apiFetch<postNodePowerRebootResponse>(getPostNodePowerRebootUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodePowerRebootResponse>(getPostNodePowerRebootUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      powerRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(powerRequest)
   }
 );}
 
 
-/**
- * Shutdown the target node. An optional delay (in seconds) and message can be provided.
-
- * @summary Shutdown node
- */
 export type postNodePowerShutdownResponse200 = {
   data: PowerShutdownResponse
   status: 200
@@ -121,16 +128,33 @@ export const getPostNodePowerShutdownUrl = (hostname: string,) => {
   return `/api/node/${hostname}/power/shutdown`
 }
 
+/**
+ * Shutdown the target node. An optional delay (in seconds) and message can be provided.
+ * @summary Shutdown node
+ */
 export const postNodePowerShutdown = async (hostname: string,
-    powerRequest?: PowerRequest, options?: RequestInit): Promise<postNodePowerShutdownResponse> => {
+    powerRequest?: PowerRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodePowerShutdownResponse> => {
 
-  return apiFetch<postNodePowerShutdownResponse>(getPostNodePowerShutdownUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodePowerShutdownResponse>(getPostNodePowerShutdownUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      powerRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(powerRequest)
   }
 );}
 

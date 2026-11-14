@@ -7,6 +7,5 @@
 
 /**
  * Template variables.
-
  */
 export type ScheduleUpdateRequestVars = { [key: string]: unknown };

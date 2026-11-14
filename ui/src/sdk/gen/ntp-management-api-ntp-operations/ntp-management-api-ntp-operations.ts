@@ -16,11 +16,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Get NTP sync status and configured servers on the target node.
-
- * @summary Get NTP status
- */
 export type getNodeNtpResponse200 = {
   data: NtpCollectionResponse
   status: 200
@@ -63,7 +58,11 @@ export const getGetNodeNtpUrl = (hostname: string,) => {
   return `/api/node/${hostname}/ntp`
 }
 
-export const getNodeNtp = async (hostname: string, options?: RequestInit): Promise<getNodeNtpResponse> => {
+/**
+ * Get NTP sync status and configured servers on the target node.
+ * @summary Get NTP status
+ */
+export const getNodeNtp = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeNtpResponse> => {
 
   return apiFetch<getNodeNtpResponse>(getGetNodeNtpUrl(hostname),
   {
@@ -75,11 +74,6 @@ export const getNodeNtp = async (hostname: string, options?: RequestInit): Promi
 );}
 
 
-/**
- * Deploy a managed NTP server configuration on the target node. Idempotent: returns changed=false if already managed.
-
- * @summary Create NTP configuration
- */
 export type postNodeNtpResponse200 = {
   data: NtpCreateResponse
   status: 200
@@ -122,25 +116,37 @@ export const getPostNodeNtpUrl = (hostname: string,) => {
   return `/api/node/${hostname}/ntp`
 }
 
+/**
+ * Deploy a managed NTP server configuration on the target node. Idempotent: returns changed=false if already managed.
+ * @summary Create NTP configuration
+ */
 export const postNodeNtp = async (hostname: string,
-    ntpCreateRequest: NtpCreateRequest, options?: RequestInit): Promise<postNodeNtpResponse> => {
+    ntpCreateRequest: NtpCreateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeNtpResponse> => {
 
-  return apiFetch<postNodeNtpResponse>(getPostNodeNtpUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeNtpResponse>(getPostNodeNtpUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      ntpCreateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ntpCreateRequest)
   }
 );}
 
 
-/**
- * Replace the managed NTP server configuration on the target node. Fails if not currently managed.
-
- * @summary Update NTP configuration
- */
 export type putNodeNtpResponse200 = {
   data: NtpUpdateResponse
   status: 200
@@ -188,25 +194,37 @@ export const getPutNodeNtpUrl = (hostname: string,) => {
   return `/api/node/${hostname}/ntp`
 }
 
+/**
+ * Replace the managed NTP server configuration on the target node. Fails if not currently managed.
+ * @summary Update NTP configuration
+ */
 export const putNodeNtp = async (hostname: string,
-    ntpUpdateRequest: NtpUpdateRequest, options?: RequestInit): Promise<putNodeNtpResponse> => {
+    ntpUpdateRequest: NtpUpdateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeNtpResponse> => {
 
-  return apiFetch<putNodeNtpResponse>(getPutNodeNtpUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<putNodeNtpResponse>(getPutNodeNtpUrl(hostname),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      ntpUpdateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ntpUpdateRequest)
   }
 );}
 
 
-/**
- * Remove the managed NTP server configuration from the target node.
-
- * @summary Delete NTP configuration
- */
 export type deleteNodeNtpResponse200 = {
   data: NtpDeleteResponse
   status: 200
@@ -254,7 +272,11 @@ export const getDeleteNodeNtpUrl = (hostname: string,) => {
   return `/api/node/${hostname}/ntp`
 }
 
-export const deleteNodeNtp = async (hostname: string, options?: RequestInit): Promise<deleteNodeNtpResponse> => {
+/**
+ * Remove the managed NTP server configuration from the target node.
+ * @summary Delete NTP configuration
+ */
+export const deleteNodeNtp = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeNtpResponse> => {
 
   return apiFetch<deleteNodeNtpResponse>(getDeleteNodeNtpUrl(hostname),
   {

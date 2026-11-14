@@ -6,9 +6,6 @@
  */
 
 export type PostFileParams = {
-/**
- * When true, bypass the digest check and always write the file. Returns changed=true regardless of whether the content differs from the existing object.
-
- */
-force?: boolean;
+  /** When true, bypass the digest check and always write the file. Returns changed=true regardless of whether the content differs from the existing object. */
+  force?: boolean;
 };

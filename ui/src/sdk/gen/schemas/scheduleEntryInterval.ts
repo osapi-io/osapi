@@ -7,7 +7,6 @@
 
 /**
  * Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
-
  */
 export type ScheduleEntryInterval = typeof ScheduleEntryInterval[keyof typeof ScheduleEntryInterval];
 

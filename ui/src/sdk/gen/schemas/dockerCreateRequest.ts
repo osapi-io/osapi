@@ -18,13 +18,10 @@ export interface DockerCreateRequest {
   command?: string[];
   /** Environment variables in KEY=VALUE format. */
   env?: string[];
-  /** Port mappings in host_port:container_port format.
-   */
+  /** Port mappings in host_port:container_port format. */
   ports?: string[];
-  /** Volume mounts in host_path:container_path format.
-   */
+  /** Volume mounts in host_path:container_path format. */
   volumes?: string[];
-  /** Whether to start the container immediately after creation. Defaults to true.
-   */
+  /** Whether to start the container immediately after creation. Defaults to true. */
   auto_start?: boolean;
 }

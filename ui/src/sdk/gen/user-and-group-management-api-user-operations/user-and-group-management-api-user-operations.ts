@@ -18,11 +18,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * List all user accounts on the target node.
-
- * @summary List all users
- */
 export type getNodeUserResponse200 = {
   data: UserCollectionResponse
   status: 200
@@ -65,7 +60,11 @@ export const getGetNodeUserUrl = (hostname: string,) => {
   return `/api/node/${hostname}/user`
 }
 
-export const getNodeUser = async (hostname: string, options?: RequestInit): Promise<getNodeUserResponse> => {
+/**
+ * List all user accounts on the target node.
+ * @summary List all users
+ */
+export const getNodeUser = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeUserResponse> => {
 
   return apiFetch<getNodeUserResponse>(getGetNodeUserUrl(hostname),
   {
@@ -77,11 +76,6 @@ export const getNodeUser = async (hostname: string, options?: RequestInit): Prom
 );}
 
 
-/**
- * Create a new user account on the target node.
-
- * @summary Create a user
- */
 export type postNodeUserResponse200 = {
   data: UserMutationResponse
   status: 200
@@ -124,25 +118,37 @@ export const getPostNodeUserUrl = (hostname: string,) => {
   return `/api/node/${hostname}/user`
 }
 
+/**
+ * Create a new user account on the target node.
+ * @summary Create a user
+ */
 export const postNodeUser = async (hostname: string,
-    userCreateRequest: UserCreateRequest, options?: RequestInit): Promise<postNodeUserResponse> => {
+    userCreateRequest: UserCreateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeUserResponse> => {
 
-  return apiFetch<postNodeUserResponse>(getPostNodeUserUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeUserResponse>(getPostNodeUserUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      userCreateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(userCreateRequest)
   }
 );}
 
 
-/**
- * Get a specific user account by name on the target node.
-
- * @summary Get a user
- */
 export type getNodeUserByNameResponse200 = {
   data: UserCollectionResponse
   status: 200
@@ -191,8 +197,12 @@ export const getGetNodeUserByNameUrl = (hostname: string,
   return `/api/node/${hostname}/user/${name}`
 }
 
+/**
+ * Get a specific user account by name on the target node.
+ * @summary Get a user
+ */
 export const getNodeUserByName = async (hostname: string,
-    name: string, options?: RequestInit): Promise<getNodeUserByNameResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeUserByNameResponse> => {
 
   return apiFetch<getNodeUserByNameResponse>(getGetNodeUserByNameUrl(hostname,name),
   {
@@ -204,11 +214,6 @@ export const getNodeUserByName = async (hostname: string,
 );}
 
 
-/**
- * Update an existing user account on the target node.
-
- * @summary Update a user
- */
 export type putNodeUserResponse200 = {
   data: UserMutationResponse
   status: 200
@@ -257,26 +262,38 @@ export const getPutNodeUserUrl = (hostname: string,
   return `/api/node/${hostname}/user/${name}`
 }
 
+/**
+ * Update an existing user account on the target node.
+ * @summary Update a user
+ */
 export const putNodeUser = async (hostname: string,
     name: string,
-    userUpdateRequest: UserUpdateRequest, options?: RequestInit): Promise<putNodeUserResponse> => {
+    userUpdateRequest: UserUpdateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeUserResponse> => {
 
-  return apiFetch<putNodeUserResponse>(getPutNodeUserUrl(hostname,name),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<putNodeUserResponse>(getPutNodeUserUrl(hostname,name),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      userUpdateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(userUpdateRequest)
   }
 );}
 
 
-/**
- * Delete a user account from the target node.
-
- * @summary Delete a user
- */
 export type deleteNodeUserResponse200 = {
   data: UserMutationResponse
   status: 200
@@ -325,8 +342,12 @@ export const getDeleteNodeUserUrl = (hostname: string,
   return `/api/node/${hostname}/user/${name}`
 }
 
+/**
+ * Delete a user account from the target node.
+ * @summary Delete a user
+ */
 export const deleteNodeUser = async (hostname: string,
-    name: string, options?: RequestInit): Promise<deleteNodeUserResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeUserResponse> => {
 
   return apiFetch<deleteNodeUserResponse>(getDeleteNodeUserUrl(hostname,name),
   {
@@ -338,11 +359,6 @@ export const deleteNodeUser = async (hostname: string,
 );}
 
 
-/**
- * Change the password for a user account on the target node.
-
- * @summary Change user password
- */
 export type postNodeUserPasswordResponse200 = {
   data: UserMutationResponse
   status: 200
@@ -391,26 +407,38 @@ export const getPostNodeUserPasswordUrl = (hostname: string,
   return `/api/node/${hostname}/user/${name}/password`
 }
 
+/**
+ * Change the password for a user account on the target node.
+ * @summary Change user password
+ */
 export const postNodeUserPassword = async (hostname: string,
     name: string,
-    userPasswordRequest: UserPasswordRequest, options?: RequestInit): Promise<postNodeUserPasswordResponse> => {
+    userPasswordRequest: UserPasswordRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeUserPasswordResponse> => {
 
-  return apiFetch<postNodeUserPasswordResponse>(getPostNodeUserPasswordUrl(hostname,name),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeUserPasswordResponse>(getPostNodeUserPasswordUrl(hostname,name),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      userPasswordRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(userPasswordRequest)
   }
 );}
 
 
-/**
- * List SSH authorized keys for a user on the target node.
-
- * @summary List SSH authorized keys
- */
 export type getNodeUserSSHKeyResponse200 = {
   data: SSHKeyCollectionResponse
   status: 200
@@ -454,8 +482,12 @@ export const getGetNodeUserSSHKeyUrl = (hostname: string,
   return `/api/node/${hostname}/user/${name}/ssh-key`
 }
 
+/**
+ * List SSH authorized keys for a user on the target node.
+ * @summary List SSH authorized keys
+ */
 export const getNodeUserSSHKey = async (hostname: string,
-    name: string, options?: RequestInit): Promise<getNodeUserSSHKeyResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeUserSSHKeyResponse> => {
 
   return apiFetch<getNodeUserSSHKeyResponse>(getGetNodeUserSSHKeyUrl(hostname,name),
   {
@@ -467,11 +499,6 @@ export const getNodeUserSSHKey = async (hostname: string,
 );}
 
 
-/**
- * Add an SSH authorized key for a user on the target node.
-
- * @summary Add SSH authorized key
- */
 export type postNodeUserSSHKeyResponse200 = {
   data: SSHKeyMutationResponse
   status: 200
@@ -515,26 +542,38 @@ export const getPostNodeUserSSHKeyUrl = (hostname: string,
   return `/api/node/${hostname}/user/${name}/ssh-key`
 }
 
+/**
+ * Add an SSH authorized key for a user on the target node.
+ * @summary Add SSH authorized key
+ */
 export const postNodeUserSSHKey = async (hostname: string,
     name: string,
-    sSHKeyAddRequest: SSHKeyAddRequest, options?: RequestInit): Promise<postNodeUserSSHKeyResponse> => {
+    sSHKeyAddRequest: SSHKeyAddRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeUserSSHKeyResponse> => {
 
-  return apiFetch<postNodeUserSSHKeyResponse>(getPostNodeUserSSHKeyUrl(hostname,name),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeUserSSHKeyResponse>(getPostNodeUserSSHKeyUrl(hostname,name),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      sSHKeyAddRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(sSHKeyAddRequest)
   }
 );}
 
 
-/**
- * Remove an SSH authorized key by fingerprint for a user on the target node.
-
- * @summary Remove SSH authorized key
- */
 export type deleteNodeUserSSHKeyResponse200 = {
   data: SSHKeyMutationResponse
   status: 200
@@ -579,9 +618,13 @@ export const getDeleteNodeUserSSHKeyUrl = (hostname: string,
   return `/api/node/${hostname}/user/${name}/ssh-key/${fingerprint}`
 }
 
+/**
+ * Remove an SSH authorized key by fingerprint for a user on the target node.
+ * @summary Remove SSH authorized key
+ */
 export const deleteNodeUserSSHKey = async (hostname: string,
     name: string,
-    fingerprint: string, options?: RequestInit): Promise<deleteNodeUserSSHKeyResponse> => {
+    fingerprint: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeUserSSHKeyResponse> => {
 
   return apiFetch<deleteNodeUserSSHKeyResponse>(getDeleteNodeUserSSHKeyUrl(hostname,name,fingerprint),
   {

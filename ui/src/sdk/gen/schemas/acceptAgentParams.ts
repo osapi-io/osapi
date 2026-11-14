@@ -6,9 +6,9 @@
  */
 
 export type AcceptAgentParams = {
-/**
- * Accept by fingerprint instead of hostname.
- * @maxLength 255
- */
-fingerprint?: string;
+  /**
+   * Accept by fingerprint instead of hostname.
+   * @maxLength 255
+   */
+  fingerprint?: string;
 };

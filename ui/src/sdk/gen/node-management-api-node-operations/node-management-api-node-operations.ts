@@ -15,10 +15,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Get disk usage information for the target node.
- * @summary Retrieve disk usage
- */
 export type getNodeDiskResponse200 = {
   data: DiskCollectionResponse
   status: 200
@@ -61,7 +57,11 @@ export const getGetNodeDiskUrl = (hostname: string,) => {
   return `/api/node/${hostname}/disk`
 }
 
-export const getNodeDisk = async (hostname: string, options?: RequestInit): Promise<getNodeDiskResponse> => {
+/**
+ * Get disk usage information for the target node.
+ * @summary Retrieve disk usage
+ */
+export const getNodeDisk = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeDiskResponse> => {
 
   return apiFetch<getNodeDiskResponse>(getGetNodeDiskUrl(hostname),
   {
@@ -73,10 +73,6 @@ export const getNodeDisk = async (hostname: string, options?: RequestInit): Prom
 );}
 
 
-/**
- * Get memory usage information for the target node.
- * @summary Retrieve memory stats
- */
 export type getNodeMemoryResponse200 = {
   data: MemoryCollectionResponse
   status: 200
@@ -119,7 +115,11 @@ export const getGetNodeMemoryUrl = (hostname: string,) => {
   return `/api/node/${hostname}/memory`
 }
 
-export const getNodeMemory = async (hostname: string, options?: RequestInit): Promise<getNodeMemoryResponse> => {
+/**
+ * Get memory usage information for the target node.
+ * @summary Retrieve memory stats
+ */
+export const getNodeMemory = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeMemoryResponse> => {
 
   return apiFetch<getNodeMemoryResponse>(getGetNodeMemoryUrl(hostname),
   {
@@ -131,10 +131,6 @@ export const getNodeMemory = async (hostname: string, options?: RequestInit): Pr
 );}
 
 
-/**
- * Get load average information for the target node.
- * @summary Retrieve load averages
- */
 export type getNodeLoadResponse200 = {
   data: LoadCollectionResponse
   status: 200
@@ -177,7 +173,11 @@ export const getGetNodeLoadUrl = (hostname: string,) => {
   return `/api/node/${hostname}/load`
 }
 
-export const getNodeLoad = async (hostname: string, options?: RequestInit): Promise<getNodeLoadResponse> => {
+/**
+ * Get load average information for the target node.
+ * @summary Retrieve load averages
+ */
+export const getNodeLoad = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeLoadResponse> => {
 
   return apiFetch<getNodeLoadResponse>(getGetNodeLoadUrl(hostname),
   {
@@ -189,10 +189,6 @@ export const getNodeLoad = async (hostname: string, options?: RequestInit): Prom
 );}
 
 
-/**
- * Get operating system information for the target node.
- * @summary Retrieve OS info
- */
 export type getNodeOSResponse200 = {
   data: OSInfoCollectionResponse
   status: 200
@@ -235,7 +231,11 @@ export const getGetNodeOSUrl = (hostname: string,) => {
   return `/api/node/${hostname}/os`
 }
 
-export const getNodeOS = async (hostname: string, options?: RequestInit): Promise<getNodeOSResponse> => {
+/**
+ * Get operating system information for the target node.
+ * @summary Retrieve OS info
+ */
+export const getNodeOS = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeOSResponse> => {
 
   return apiFetch<getNodeOSResponse>(getGetNodeOSUrl(hostname),
   {
@@ -247,10 +247,6 @@ export const getNodeOS = async (hostname: string, options?: RequestInit): Promis
 );}
 
 
-/**
- * Get uptime information for the target node.
- * @summary Retrieve uptime
- */
 export type getNodeUptimeResponse200 = {
   data: UptimeCollectionResponse
   status: 200
@@ -293,7 +289,11 @@ export const getGetNodeUptimeUrl = (hostname: string,) => {
   return `/api/node/${hostname}/uptime`
 }
 
-export const getNodeUptime = async (hostname: string, options?: RequestInit): Promise<getNodeUptimeResponse> => {
+/**
+ * Get uptime information for the target node.
+ * @summary Retrieve uptime
+ */
+export const getNodeUptime = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeUptimeResponse> => {
 
   return apiFetch<getNodeUptimeResponse>(getGetNodeUptimeUrl(hostname),
   {

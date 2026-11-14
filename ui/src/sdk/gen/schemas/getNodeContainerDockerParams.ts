@@ -7,16 +7,12 @@
 import type { GetNodeContainerDockerState } from './getNodeContainerDockerState';
 
 export type GetNodeContainerDockerParams = {
-/**
- * Filter containers by state. Defaults to "all".
-
- */
-state?: GetNodeContainerDockerState;
-/**
- * Maximum number of containers to return.
-
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
+  /** Filter containers by state. Defaults to "all". */
+  state?: GetNodeContainerDockerState;
+  /**
+   * Maximum number of containers to return.
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
 };

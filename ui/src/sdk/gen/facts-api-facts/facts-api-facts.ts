@@ -11,11 +11,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Returns the list of fact keys that can be used in @fact. references. Includes built-in keys and any custom keys registered by agents.
-
- * @summary List available fact keys
- */
 export type getFactKeysResponse200 = {
   data: FactKeysResponse
   status: 200
@@ -53,7 +48,11 @@ export const getGetFactKeysUrl = () => {
   return `/api/facts/keys`
 }
 
-export const getFactKeys = async ( options?: RequestInit): Promise<getFactKeysResponse> => {
+/**
+ * Returns the list of fact keys that can be used in @fact. references. Includes built-in keys and any custom keys registered by agents.
+ * @summary List available fact keys
+ */
+export const getFactKeys = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getFactKeysResponse> => {
 
   return apiFetch<getFactKeysResponse>(getGetFactKeysUrl(),
   {

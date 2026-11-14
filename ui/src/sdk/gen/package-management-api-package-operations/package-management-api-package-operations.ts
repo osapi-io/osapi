@@ -14,11 +14,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * List all installed packages on the target node.
-
- * @summary List installed packages
- */
 export type getNodePackageResponse200 = {
   data: PackageCollectionResponse
   status: 200
@@ -61,7 +56,11 @@ export const getGetNodePackageUrl = (hostname: string,) => {
   return `/api/node/${hostname}/package`
 }
 
-export const getNodePackage = async (hostname: string, options?: RequestInit): Promise<getNodePackageResponse> => {
+/**
+ * List all installed packages on the target node.
+ * @summary List installed packages
+ */
+export const getNodePackage = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodePackageResponse> => {
 
   return apiFetch<getNodePackageResponse>(getGetNodePackageUrl(hostname),
   {
@@ -73,11 +72,6 @@ export const getNodePackage = async (hostname: string, options?: RequestInit): P
 );}
 
 
-/**
- * Install a package on the target node.
-
- * @summary Install a package
- */
 export type postNodePackageResponse200 = {
   data: PackageMutationResponse
   status: 200
@@ -120,25 +114,37 @@ export const getPostNodePackageUrl = (hostname: string,) => {
   return `/api/node/${hostname}/package`
 }
 
+/**
+ * Install a package on the target node.
+ * @summary Install a package
+ */
 export const postNodePackage = async (hostname: string,
-    packageInstallRequest: PackageInstallRequest, options?: RequestInit): Promise<postNodePackageResponse> => {
+    packageInstallRequest: PackageInstallRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodePackageResponse> => {
 
-  return apiFetch<postNodePackageResponse>(getPostNodePackageUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodePackageResponse>(getPostNodePackageUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      packageInstallRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(packageInstallRequest)
   }
 );}
 
 
-/**
- * Get details for a specific installed package by name on the target node.
-
- * @summary Get a package
- */
 export type getNodePackageByNameResponse200 = {
   data: PackageCollectionResponse
   status: 200
@@ -187,8 +193,12 @@ export const getGetNodePackageByNameUrl = (hostname: string,
   return `/api/node/${hostname}/package/${name}`
 }
 
+/**
+ * Get details for a specific installed package by name on the target node.
+ * @summary Get a package
+ */
 export const getNodePackageByName = async (hostname: string,
-    name: string, options?: RequestInit): Promise<getNodePackageByNameResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodePackageByNameResponse> => {
 
   return apiFetch<getNodePackageByNameResponse>(getGetNodePackageByNameUrl(hostname,name),
   {
@@ -200,11 +210,6 @@ export const getNodePackageByName = async (hostname: string,
 );}
 
 
-/**
- * Remove a package from the target node.
-
- * @summary Remove a package
- */
 export type deleteNodePackageResponse200 = {
   data: PackageMutationResponse
   status: 200
@@ -253,8 +258,12 @@ export const getDeleteNodePackageUrl = (hostname: string,
   return `/api/node/${hostname}/package/${name}`
 }
 
+/**
+ * Remove a package from the target node.
+ * @summary Remove a package
+ */
 export const deleteNodePackage = async (hostname: string,
-    name: string, options?: RequestInit): Promise<deleteNodePackageResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodePackageResponse> => {
 
   return apiFetch<deleteNodePackageResponse>(getDeleteNodePackageUrl(hostname,name),
   {
@@ -266,11 +275,6 @@ export const deleteNodePackage = async (hostname: string,
 );}
 
 
-/**
- * Refresh package sources (apt update) on the target node.
-
- * @summary Update package sources
- */
 export type postNodePackageUpdateResponse200 = {
   data: PackageMutationResponse
   status: 200
@@ -313,7 +317,11 @@ export const getPostNodePackageUpdateUrl = (hostname: string,) => {
   return `/api/node/${hostname}/package/update`
 }
 
-export const postNodePackageUpdate = async (hostname: string, options?: RequestInit): Promise<postNodePackageUpdateResponse> => {
+/**
+ * Refresh package sources (apt update) on the target node.
+ * @summary Update package sources
+ */
+export const postNodePackageUpdate = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<postNodePackageUpdateResponse> => {
 
   return apiFetch<postNodePackageUpdateResponse>(getPostNodePackageUpdateUrl(hostname),
   {
@@ -325,11 +333,6 @@ export const postNodePackageUpdate = async (hostname: string, options?: RequestI
 );}
 
 
-/**
- * List packages with available updates on the target node.
-
- * @summary List available updates
- */
 export type getNodePackageUpdateResponse200 = {
   data: UpdateCollectionResponse
   status: 200
@@ -372,7 +375,11 @@ export const getGetNodePackageUpdateUrl = (hostname: string,) => {
   return `/api/node/${hostname}/package/update`
 }
 
-export const getNodePackageUpdate = async (hostname: string, options?: RequestInit): Promise<getNodePackageUpdateResponse> => {
+/**
+ * List packages with available updates on the target node.
+ * @summary List available updates
+ */
+export const getNodePackageUpdate = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodePackageUpdateResponse> => {
 
   return apiFetch<getNodePackageUpdateResponse>(getGetNodePackageUpdateUrl(hostname),
   {

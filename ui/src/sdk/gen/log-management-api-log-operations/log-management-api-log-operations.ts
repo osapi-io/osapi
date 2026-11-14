@@ -14,11 +14,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Retrieve log entries from the target node's system journal.
-
- * @summary Get system log entries
- */
 export type getNodeLogResponse200 = {
   data: LogCollectionResponse
   status: 200
@@ -60,7 +55,7 @@ export const getGetNodeLogUrl = (hostname: string,
   Object.entries(params || {}).forEach(([key, value]) => {
 
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : String(value))
     }
   });
 
@@ -69,8 +64,12 @@ export const getGetNodeLogUrl = (hostname: string,
   return stringifiedParams.length > 0 ? `/api/node/${hostname}/log?${stringifiedParams}` : `/api/node/${hostname}/log`
 }
 
+/**
+ * Retrieve log entries from the target node's system journal.
+ * @summary Get system log entries
+ */
 export const getNodeLog = async (hostname: string,
-    params?: GetNodeLogParams, options?: RequestInit): Promise<getNodeLogResponse> => {
+    params?: GetNodeLogParams, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeLogResponse> => {
 
   return apiFetch<getNodeLogResponse>(getGetNodeLogUrl(hostname,params),
   {
@@ -82,11 +81,6 @@ export const getNodeLog = async (hostname: string,
 );}
 
 
-/**
- * List unique syslog identifiers (log sources) available in the journal on the target node.
-
- * @summary List log sources
- */
 export type getNodeLogSourceResponse200 = {
   data: LogSourceCollectionResponse
   status: 200
@@ -129,7 +123,11 @@ export const getGetNodeLogSourceUrl = (hostname: string,) => {
   return `/api/node/${hostname}/log/source`
 }
 
-export const getNodeLogSource = async (hostname: string, options?: RequestInit): Promise<getNodeLogSourceResponse> => {
+/**
+ * List unique syslog identifiers (log sources) available in the journal on the target node.
+ * @summary List log sources
+ */
+export const getNodeLogSource = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeLogSourceResponse> => {
 
   return apiFetch<getNodeLogSourceResponse>(getGetNodeLogSourceUrl(hostname),
   {
@@ -141,11 +139,6 @@ export const getNodeLogSource = async (hostname: string, options?: RequestInit):
 );}
 
 
-/**
- * Retrieve log entries for a specific systemd unit on the target node.
-
- * @summary Get log entries for a systemd unit
- */
 export type getNodeLogUnitResponse200 = {
   data: LogCollectionResponse
   status: 200
@@ -188,7 +181,7 @@ export const getGetNodeLogUnitUrl = (hostname: string,
   Object.entries(params || {}).forEach(([key, value]) => {
 
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : String(value))
     }
   });
 
@@ -197,9 +190,13 @@ export const getGetNodeLogUnitUrl = (hostname: string,
   return stringifiedParams.length > 0 ? `/api/node/${hostname}/log/unit/${name}?${stringifiedParams}` : `/api/node/${hostname}/log/unit/${name}`
 }
 
+/**
+ * Retrieve log entries for a specific systemd unit on the target node.
+ * @summary Get log entries for a systemd unit
+ */
 export const getNodeLogUnit = async (hostname: string,
     name: string,
-    params?: GetNodeLogUnitParams, options?: RequestInit): Promise<getNodeLogUnitResponse> => {
+    params?: GetNodeLogUnitParams, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeLogUnitResponse> => {
 
   return apiFetch<getNodeLogUnitResponse>(getGetNodeLogUnitUrl(hostname,name,params),
   {

@@ -13,10 +13,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Get the current hostname and labels of the node.
- * @summary Retrieve node hostname
- */
 export type getNodeHostnameResponse200 = {
   data: HostnameCollectionResponse
   status: 200
@@ -59,7 +55,11 @@ export const getGetNodeHostnameUrl = (hostname: string,) => {
   return `/api/node/${hostname}/hostname`
 }
 
-export const getNodeHostname = async (hostname: string, options?: RequestInit): Promise<getNodeHostnameResponse> => {
+/**
+ * Get the current hostname and labels of the node.
+ * @summary Retrieve node hostname
+ */
+export const getNodeHostname = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeHostnameResponse> => {
 
   return apiFetch<getNodeHostnameResponse>(getGetNodeHostnameUrl(hostname),
   {
@@ -71,10 +71,6 @@ export const getNodeHostname = async (hostname: string, options?: RequestInit): 
 );}
 
 
-/**
- * Set the system hostname on the target node.
- * @summary Update node hostname
- */
 export type putNodeHostnameResponse202 = {
   data: HostnameUpdateCollectionResponse
   status: 202
@@ -117,16 +113,33 @@ export const getPutNodeHostnameUrl = (hostname: string,) => {
   return `/api/node/${hostname}/hostname`
 }
 
+/**
+ * Set the system hostname on the target node.
+ * @summary Update node hostname
+ */
 export const putNodeHostname = async (hostname: string,
-    hostnameUpdateRequest: HostnameUpdateRequest, options?: RequestInit): Promise<putNodeHostnameResponse> => {
+    hostnameUpdateRequest: HostnameUpdateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeHostnameResponse> => {
 
-  return apiFetch<putNodeHostnameResponse>(getPutNodeHostnameUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<putNodeHostnameResponse>(getPutNodeHostnameUrl(hostname),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      hostnameUpdateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(hostnameUpdateRequest)
   }
 );}
 

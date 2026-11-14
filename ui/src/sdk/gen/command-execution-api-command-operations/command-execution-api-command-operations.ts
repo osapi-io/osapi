@@ -13,11 +13,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Execute a command directly without a shell. This is the safer option as it does not interpret shell metacharacters.
-
- * @summary Execute a command
- */
 export type postNodeCommandExecResponse202 = {
   data: CommandResultCollectionResponse
   status: 202
@@ -60,25 +55,37 @@ export const getPostNodeCommandExecUrl = (hostname: string,) => {
   return `/api/node/${hostname}/command/exec`
 }
 
+/**
+ * Execute a command directly without a shell. This is the safer option as it does not interpret shell metacharacters.
+ * @summary Execute a command
+ */
 export const postNodeCommandExec = async (hostname: string,
-    commandExecRequest: CommandExecRequest, options?: RequestInit): Promise<postNodeCommandExecResponse> => {
+    commandExecRequest: CommandExecRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeCommandExecResponse> => {
 
-  return apiFetch<postNodeCommandExecResponse>(getPostNodeCommandExecUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeCommandExecResponse>(getPostNodeCommandExecUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      commandExecRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(commandExecRequest)
   }
 );}
 
 
-/**
- * Execute a command through /bin/sh -c. Supports shell features like pipes, redirects, and variable expansion.
-
- * @summary Execute a shell command
- */
 export type postNodeCommandShellResponse202 = {
   data: CommandResultCollectionResponse
   status: 202
@@ -121,16 +128,33 @@ export const getPostNodeCommandShellUrl = (hostname: string,) => {
   return `/api/node/${hostname}/command/shell`
 }
 
+/**
+ * Execute a command through /bin/sh -c. Supports shell features like pipes, redirects, and variable expansion.
+ * @summary Execute a shell command
+ */
 export const postNodeCommandShell = async (hostname: string,
-    commandShellRequest: CommandShellRequest, options?: RequestInit): Promise<postNodeCommandShellResponse> => {
+    commandShellRequest: CommandShellRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeCommandShellResponse> => {
 
-  return apiFetch<postNodeCommandShellResponse>(getPostNodeCommandShellUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeCommandShellResponse>(getPostNodeCommandShellUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      commandShellRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(commandShellRequest)
   }
 );}
 

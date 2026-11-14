@@ -14,11 +14,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * List all network routes on the target node.
-
- * @summary List network routes
- */
 export type getNodeNetworkRouteResponse200 = {
   data: RouteListResponse
   status: 200
@@ -61,7 +56,11 @@ export const getGetNodeNetworkRouteUrl = (hostname: string,) => {
   return `/api/node/${hostname}/network/route`
 }
 
-export const getNodeNetworkRoute = async (hostname: string, options?: RequestInit): Promise<getNodeNetworkRouteResponse> => {
+/**
+ * List all network routes on the target node.
+ * @summary List network routes
+ */
+export const getNodeNetworkRoute = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeNetworkRouteResponse> => {
 
   return apiFetch<getNodeNetworkRouteResponse>(getGetNodeNetworkRouteUrl(hostname),
   {
@@ -73,11 +72,6 @@ export const getNodeNetworkRoute = async (hostname: string, options?: RequestIni
 );}
 
 
-/**
- * Get routes associated with a specific network interface on the target node.
-
- * @summary Get routes for an interface
- */
 export type getNodeNetworkRouteByInterfaceResponse200 = {
   data: RouteGetResponse
   status: 200
@@ -126,8 +120,12 @@ export const getGetNodeNetworkRouteByInterfaceUrl = (hostname: string,
   return `/api/node/${hostname}/network/route/${interfaceName}`
 }
 
+/**
+ * Get routes associated with a specific network interface on the target node.
+ * @summary Get routes for an interface
+ */
 export const getNodeNetworkRouteByInterface = async (hostname: string,
-    interfaceName: string, options?: RequestInit): Promise<getNodeNetworkRouteByInterfaceResponse> => {
+    interfaceName: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeNetworkRouteByInterfaceResponse> => {
 
   return apiFetch<getNodeNetworkRouteByInterfaceResponse>(getGetNodeNetworkRouteByInterfaceUrl(hostname,interfaceName),
   {
@@ -139,11 +137,6 @@ export const getNodeNetworkRouteByInterface = async (hostname: string,
 );}
 
 
-/**
- * Create managed route configuration for a network interface on the target node.
-
- * @summary Create routes for an interface
- */
 export type postNodeNetworkRouteResponse200 = {
   data: RouteMutationResponse
   status: 200
@@ -187,26 +180,38 @@ export const getPostNodeNetworkRouteUrl = (hostname: string,
   return `/api/node/${hostname}/network/route/${interfaceName}`
 }
 
+/**
+ * Create managed route configuration for a network interface on the target node.
+ * @summary Create routes for an interface
+ */
 export const postNodeNetworkRoute = async (hostname: string,
     interfaceName: string,
-    routeConfigRequest: RouteConfigRequest, options?: RequestInit): Promise<postNodeNetworkRouteResponse> => {
+    routeConfigRequest: RouteConfigRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeNetworkRouteResponse> => {
 
-  return apiFetch<postNodeNetworkRouteResponse>(getPostNodeNetworkRouteUrl(hostname,interfaceName),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeNetworkRouteResponse>(getPostNodeNetworkRouteUrl(hostname,interfaceName),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      routeConfigRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(routeConfigRequest)
   }
 );}
 
 
-/**
- * Update the managed route configuration for a network interface on the target node.
-
- * @summary Update routes for an interface
- */
 export type putNodeNetworkRouteResponse200 = {
   data: RouteMutationResponse
   status: 200
@@ -255,26 +260,38 @@ export const getPutNodeNetworkRouteUrl = (hostname: string,
   return `/api/node/${hostname}/network/route/${interfaceName}`
 }
 
+/**
+ * Update the managed route configuration for a network interface on the target node.
+ * @summary Update routes for an interface
+ */
 export const putNodeNetworkRoute = async (hostname: string,
     interfaceName: string,
-    routeConfigRequest: RouteConfigRequest, options?: RequestInit): Promise<putNodeNetworkRouteResponse> => {
+    routeConfigRequest: RouteConfigRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeNetworkRouteResponse> => {
 
-  return apiFetch<putNodeNetworkRouteResponse>(getPutNodeNetworkRouteUrl(hostname,interfaceName),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<putNodeNetworkRouteResponse>(getPutNodeNetworkRouteUrl(hostname,interfaceName),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      routeConfigRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(routeConfigRequest)
   }
 );}
 
 
-/**
- * Delete the managed route configuration for a network interface on the target node.
-
- * @summary Delete routes for an interface
- */
 export type deleteNodeNetworkRouteResponse200 = {
   data: RouteMutationResponse
   status: 200
@@ -318,8 +335,12 @@ export const getDeleteNodeNetworkRouteUrl = (hostname: string,
   return `/api/node/${hostname}/network/route/${interfaceName}`
 }
 
+/**
+ * Delete the managed route configuration for a network interface on the target node.
+ * @summary Delete routes for an interface
+ */
 export const deleteNodeNetworkRoute = async (hostname: string,
-    interfaceName: string, options?: RequestInit): Promise<deleteNodeNetworkRouteResponse> => {
+    interfaceName: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeNetworkRouteResponse> => {
 
   return apiFetch<deleteNodeNetworkRouteResponse>(getDeleteNodeNetworkRouteUrl(hostname,interfaceName),
   {

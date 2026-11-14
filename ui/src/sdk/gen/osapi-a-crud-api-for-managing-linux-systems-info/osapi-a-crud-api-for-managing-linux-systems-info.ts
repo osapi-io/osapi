@@ -10,10 +10,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Get the current version of the software running on the system.
- * @summary Retrieve the software version
- */
 export type getApiVersionResponse400 = {
   data: ErrorResponse
   status: 400
@@ -34,7 +30,11 @@ export const getGetApiVersionUrl = () => {
   return `/api/version`
 }
 
-export const getApiVersion = async ( options?: RequestInit): Promise<getApiVersionResponse> => {
+/**
+ * Get the current version of the software running on the system.
+ * @summary Retrieve the software version
+ */
+export const getApiVersion = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getApiVersionResponse> => {
 
   return apiFetch<getApiVersionResponse>(getGetApiVersionUrl(),
   {

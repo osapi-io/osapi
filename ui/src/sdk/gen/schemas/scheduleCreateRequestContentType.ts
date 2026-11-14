@@ -7,7 +7,6 @@
 
 /**
  * Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars.
-
  */
 export type ScheduleCreateRequestContentType = typeof ScheduleCreateRequestContentType[keyof typeof ScheduleCreateRequestContentType];
 

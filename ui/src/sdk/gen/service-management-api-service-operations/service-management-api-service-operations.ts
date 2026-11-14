@@ -15,11 +15,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * List all systemd services on the target node.
-
- * @summary List all services
- */
 export type getNodeServiceResponse200 = {
   data: ServiceListResponse
   status: 200
@@ -62,7 +57,11 @@ export const getGetNodeServiceUrl = (hostname: string,) => {
   return `/api/node/${hostname}/service`
 }
 
-export const getNodeService = async (hostname: string, options?: RequestInit): Promise<getNodeServiceResponse> => {
+/**
+ * List all systemd services on the target node.
+ * @summary List all services
+ */
+export const getNodeService = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeServiceResponse> => {
 
   return apiFetch<getNodeServiceResponse>(getGetNodeServiceUrl(hostname),
   {
@@ -74,11 +73,6 @@ export const getNodeService = async (hostname: string, options?: RequestInit): P
 );}
 
 
-/**
- * Create a new systemd service unit file on the target node.
-
- * @summary Create a service unit file
- */
 export type postNodeServiceResponse200 = {
   data: ServiceMutationResponse
   status: 200
@@ -121,25 +115,37 @@ export const getPostNodeServiceUrl = (hostname: string,) => {
   return `/api/node/${hostname}/service`
 }
 
+/**
+ * Create a new systemd service unit file on the target node.
+ * @summary Create a service unit file
+ */
 export const postNodeService = async (hostname: string,
-    serviceCreateRequest: ServiceCreateRequest, options?: RequestInit): Promise<postNodeServiceResponse> => {
+    serviceCreateRequest: ServiceCreateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeServiceResponse> => {
 
-  return apiFetch<postNodeServiceResponse>(getPostNodeServiceUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeServiceResponse>(getPostNodeServiceUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      serviceCreateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(serviceCreateRequest)
   }
 );}
 
 
-/**
- * Get detailed information about a specific service on the target node.
-
- * @summary Get service details
- */
 export type getNodeServiceByNameResponse200 = {
   data: ServiceGetResponse
   status: 200
@@ -188,8 +194,12 @@ export const getGetNodeServiceByNameUrl = (hostname: string,
   return `/api/node/${hostname}/service/${name}`
 }
 
+/**
+ * Get detailed information about a specific service on the target node.
+ * @summary Get service details
+ */
 export const getNodeServiceByName = async (hostname: string,
-    name: string, options?: RequestInit): Promise<getNodeServiceByNameResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeServiceByNameResponse> => {
 
   return apiFetch<getNodeServiceByNameResponse>(getGetNodeServiceByNameUrl(hostname,name),
   {
@@ -201,11 +211,6 @@ export const getNodeServiceByName = async (hostname: string,
 );}
 
 
-/**
- * Update an existing systemd service unit file on the target node.
-
- * @summary Update a service unit file
- */
 export type putNodeServiceResponse200 = {
   data: ServiceMutationResponse
   status: 200
@@ -254,26 +259,38 @@ export const getPutNodeServiceUrl = (hostname: string,
   return `/api/node/${hostname}/service/${name}`
 }
 
+/**
+ * Update an existing systemd service unit file on the target node.
+ * @summary Update a service unit file
+ */
 export const putNodeService = async (hostname: string,
     name: string,
-    serviceUpdateRequest: ServiceUpdateRequest, options?: RequestInit): Promise<putNodeServiceResponse> => {
+    serviceUpdateRequest: ServiceUpdateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeServiceResponse> => {
 
-  return apiFetch<putNodeServiceResponse>(getPutNodeServiceUrl(hostname,name),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<putNodeServiceResponse>(getPutNodeServiceUrl(hostname,name),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      serviceUpdateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(serviceUpdateRequest)
   }
 );}
 
 
-/**
- * Delete a systemd service unit file from the target node.
-
- * @summary Delete a service unit file
- */
 export type deleteNodeServiceResponse200 = {
   data: ServiceMutationResponse
   status: 200
@@ -317,8 +334,12 @@ export const getDeleteNodeServiceUrl = (hostname: string,
   return `/api/node/${hostname}/service/${name}`
 }
 
+/**
+ * Delete a systemd service unit file from the target node.
+ * @summary Delete a service unit file
+ */
 export const deleteNodeService = async (hostname: string,
-    name: string, options?: RequestInit): Promise<deleteNodeServiceResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeServiceResponse> => {
 
   return apiFetch<deleteNodeServiceResponse>(getDeleteNodeServiceUrl(hostname,name),
   {
@@ -330,11 +351,6 @@ export const deleteNodeService = async (hostname: string,
 );}
 
 
-/**
- * Start a systemd service on the target node.
-
- * @summary Start a service
- */
 export type postNodeServiceStartResponse200 = {
   data: ServiceMutationResponse
   status: 200
@@ -378,8 +394,12 @@ export const getPostNodeServiceStartUrl = (hostname: string,
   return `/api/node/${hostname}/service/${name}/start`
 }
 
+/**
+ * Start a systemd service on the target node.
+ * @summary Start a service
+ */
 export const postNodeServiceStart = async (hostname: string,
-    name: string, options?: RequestInit): Promise<postNodeServiceStartResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeServiceStartResponse> => {
 
   return apiFetch<postNodeServiceStartResponse>(getPostNodeServiceStartUrl(hostname,name),
   {
@@ -391,11 +411,6 @@ export const postNodeServiceStart = async (hostname: string,
 );}
 
 
-/**
- * Stop a systemd service on the target node.
-
- * @summary Stop a service
- */
 export type postNodeServiceStopResponse200 = {
   data: ServiceMutationResponse
   status: 200
@@ -439,8 +454,12 @@ export const getPostNodeServiceStopUrl = (hostname: string,
   return `/api/node/${hostname}/service/${name}/stop`
 }
 
+/**
+ * Stop a systemd service on the target node.
+ * @summary Stop a service
+ */
 export const postNodeServiceStop = async (hostname: string,
-    name: string, options?: RequestInit): Promise<postNodeServiceStopResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeServiceStopResponse> => {
 
   return apiFetch<postNodeServiceStopResponse>(getPostNodeServiceStopUrl(hostname,name),
   {
@@ -452,11 +471,6 @@ export const postNodeServiceStop = async (hostname: string,
 );}
 
 
-/**
- * Restart a systemd service on the target node.
-
- * @summary Restart a service
- */
 export type postNodeServiceRestartResponse200 = {
   data: ServiceMutationResponse
   status: 200
@@ -500,8 +514,12 @@ export const getPostNodeServiceRestartUrl = (hostname: string,
   return `/api/node/${hostname}/service/${name}/restart`
 }
 
+/**
+ * Restart a systemd service on the target node.
+ * @summary Restart a service
+ */
 export const postNodeServiceRestart = async (hostname: string,
-    name: string, options?: RequestInit): Promise<postNodeServiceRestartResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeServiceRestartResponse> => {
 
   return apiFetch<postNodeServiceRestartResponse>(getPostNodeServiceRestartUrl(hostname,name),
   {
@@ -513,11 +531,6 @@ export const postNodeServiceRestart = async (hostname: string,
 );}
 
 
-/**
- * Enable a systemd service on the target node so it starts on boot.
-
- * @summary Enable a service
- */
 export type postNodeServiceEnableResponse200 = {
   data: ServiceMutationResponse
   status: 200
@@ -561,8 +574,12 @@ export const getPostNodeServiceEnableUrl = (hostname: string,
   return `/api/node/${hostname}/service/${name}/enable`
 }
 
+/**
+ * Enable a systemd service on the target node so it starts on boot.
+ * @summary Enable a service
+ */
 export const postNodeServiceEnable = async (hostname: string,
-    name: string, options?: RequestInit): Promise<postNodeServiceEnableResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeServiceEnableResponse> => {
 
   return apiFetch<postNodeServiceEnableResponse>(getPostNodeServiceEnableUrl(hostname,name),
   {
@@ -574,11 +591,6 @@ export const postNodeServiceEnable = async (hostname: string,
 );}
 
 
-/**
- * Disable a systemd service on the target node so it does not start on boot.
-
- * @summary Disable a service
- */
 export type postNodeServiceDisableResponse200 = {
   data: ServiceMutationResponse
   status: 200
@@ -622,8 +634,12 @@ export const getPostNodeServiceDisableUrl = (hostname: string,
   return `/api/node/${hostname}/service/${name}/disable`
 }
 
+/**
+ * Disable a systemd service on the target node so it does not start on boot.
+ * @summary Disable a service
+ */
 export const postNodeServiceDisable = async (hostname: string,
-    name: string, options?: RequestInit): Promise<postNodeServiceDisableResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeServiceDisableResponse> => {
 
   return apiFetch<postNodeServiceDisableResponse>(getPostNodeServiceDisableUrl(hostname,name),
   {

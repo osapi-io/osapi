@@ -12,11 +12,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Send a ping to a remote server to verify network connectivity.
-
- * @summary Ping a remote server
- */
 export type postNodeNetworkPingResponse200 = {
   data: PingCollectionResponse
   status: 200
@@ -59,16 +54,33 @@ export const getPostNodeNetworkPingUrl = (hostname: string,) => {
   return `/api/node/${hostname}/network/ping`
 }
 
+/**
+ * Send a ping to a remote server to verify network connectivity.
+ * @summary Ping a remote server
+ */
 export const postNodeNetworkPing = async (hostname: string,
-    postNodeNetworkPingBody: PostNodeNetworkPingBody, options?: RequestInit): Promise<postNodeNetworkPingResponse> => {
+    postNodeNetworkPingBody: PostNodeNetworkPingBody, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeNetworkPingResponse> => {
 
-  return apiFetch<postNodeNetworkPingResponse>(getPostNodeNetworkPingUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeNetworkPingResponse>(getPostNodeNetworkPingUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      postNodeNetworkPingBody,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(postNodeNetworkPingBody)
   }
 );}
 

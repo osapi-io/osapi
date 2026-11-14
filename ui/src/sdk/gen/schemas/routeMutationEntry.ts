@@ -8,7 +8,6 @@ import type { RouteMutationEntryStatus } from './routeMutationEntryStatus';
 
 /**
  * Result of a route mutation operation for one host.
-
  */
 export interface RouteMutationEntry {
   /** Hostname of the agent that processed this operation. */

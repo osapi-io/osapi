@@ -13,11 +13,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Get the current system timezone on the target node.
-
- * @summary Get system timezone
- */
 export type getNodeTimezoneResponse200 = {
   data: TimezoneCollectionResponse
   status: 200
@@ -60,7 +55,11 @@ export const getGetNodeTimezoneUrl = (hostname: string,) => {
   return `/api/node/${hostname}/timezone`
 }
 
-export const getNodeTimezone = async (hostname: string, options?: RequestInit): Promise<getNodeTimezoneResponse> => {
+/**
+ * Get the current system timezone on the target node.
+ * @summary Get system timezone
+ */
+export const getNodeTimezone = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeTimezoneResponse> => {
 
   return apiFetch<getNodeTimezoneResponse>(getGetNodeTimezoneUrl(hostname),
   {
@@ -72,11 +71,6 @@ export const getNodeTimezone = async (hostname: string, options?: RequestInit): 
 );}
 
 
-/**
- * Set the system timezone on the target node. Idempotent: returns changed false when the timezone already matches.
-
- * @summary Update system timezone
- */
 export type putNodeTimezoneResponse200 = {
   data: TimezoneUpdateResponse
   status: 200
@@ -119,16 +113,33 @@ export const getPutNodeTimezoneUrl = (hostname: string,) => {
   return `/api/node/${hostname}/timezone`
 }
 
+/**
+ * Set the system timezone on the target node. Idempotent: returns changed false when the timezone already matches.
+ * @summary Update system timezone
+ */
 export const putNodeTimezone = async (hostname: string,
-    timezoneUpdateRequest: TimezoneUpdateRequest, options?: RequestInit): Promise<putNodeTimezoneResponse> => {
+    timezoneUpdateRequest: TimezoneUpdateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeTimezoneResponse> => {
 
-  return apiFetch<putNodeTimezoneResponse>(getPutNodeTimezoneUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<putNodeTimezoneResponse>(getPutNodeTimezoneUrl(hostname),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      timezoneUpdateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(timezoneUpdateRequest)
   }
 );}
 
