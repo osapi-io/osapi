@@ -60,9 +60,10 @@ The agent runs as an unprivileged user unless told otherwise. With
 `agent.privilege_escalation` on, it runs the commands that change the host
 through `sudo`, and reads without it, and the sudoers drop-in lists exactly
 which programs and arguments it may run. Linux capabilities can stand in for
-sudo where they cover the operation. At startup a preflight checks every program
-the agent will need sudo for, behaviors' included, and every capability, and the
-agent refuses to start if one is missing.
+sudo where they cover the operation. At startup a preflight lists the sudo rules
+once. The agent refuses to start only when sudo needs a password. A program with
+no rule, or a missing capability, is a warning, and fails only the operations
+that need it.
 
 Input that becomes a file path, a filename or a command argument is checked
 twice: by the API before a job is queued, and by the provider on the host before
