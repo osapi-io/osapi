@@ -13,6 +13,8 @@ import type {
   ListAgentsResponse,
   ListPendingAgentsResponse,
   RejectAgent200,
+  RemoveAgent200,
+  RemoveAgentParams,
   UndrainAgent200
 } from '../schemas';
 
@@ -128,6 +130,83 @@ export const getAgentDetails = async (hostname: string, options?: Parameters<typ
   {
     ...options,
     method: 'GET'
+
+
+  }
+);}
+
+
+export type removeAgentResponse200 = {
+  data: RemoveAgent200
+  status: 200
+}
+
+export type removeAgentResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type removeAgentResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type removeAgentResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type removeAgentResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type removeAgentResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type removeAgentResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type removeAgentResponseSuccess = (removeAgentResponse200) & {
+  headers: Headers;
+};
+export type removeAgentResponseError = (removeAgentResponse400 | removeAgentResponse401 | removeAgentResponse403 | removeAgentResponse404 | removeAgentResponse409 | removeAgentResponse500) & {
+  headers: Headers;
+};
+
+export type removeAgentResponse = (removeAgentResponseSuccess | removeAgentResponseError)
+
+export const getRemoveAgentUrl = (hostname: string,
+    params?: RemoveAgentParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/agent/${hostname}?${stringifiedParams}` : `/api/agent/${hostname}`
+}
+
+/**
+ * Remove an accepted agent's stored public key. Its responses and registration stop verifying at once, so targeting no longer resolves it. The agent does not enroll again by itself: remove its controller key on the host and restart it. Two machines may share a hostname; when they do, name one with machine_id.
+ * @summary Remove an enrolled agent
+ */
+export const removeAgent = async (hostname: string,
+    params?: RemoveAgentParams, options?: Parameters<typeof apiFetch>[1]): Promise<removeAgentResponse> => {
+
+  return apiFetch<removeAgentResponse>(getRemoveAgentUrl(hostname,params),
+  {
+    ...options,
+    method: 'DELETE'
 
 
   }

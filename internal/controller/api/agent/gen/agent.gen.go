@@ -313,6 +313,12 @@ type TimelineEvent struct {
 // bearerAuthContextKey is the context key for BearerAuth security scheme
 type bearerAuthContextKey string
 
+// RemoveAgentParams defines parameters for RemoveAgent.
+type RemoveAgentParams struct {
+	// MachineId The machine ID to remove, when more than one accepted agent has the hostname.
+	MachineId *string `form:"machine_id,omitempty" json:"machine_id,omitempty" validate:"omitempty,min=1,max=255"`
+}
+
 // AcceptAgentParams defines parameters for AcceptAgent.
 type AcceptAgentParams struct {
 	// Fingerprint Accept by fingerprint instead of hostname.
@@ -327,6 +333,9 @@ type ServerInterface interface {
 	// List agents awaiting enrollment
 	// (GET /api/agent/pending)
 	GetAgentsPending(ctx *echo.Context) error
+	// Remove an enrolled agent
+	// (DELETE /api/agent/{hostname})
+	RemoveAgent(ctx *echo.Context, hostname string, params RemoveAgentParams) error
 	// Get agent details
 	// (GET /api/agent/{hostname})
 	GetAgentDetails(ctx *echo.Context, hostname string) error
@@ -368,6 +377,33 @@ func (w *ServerInterfaceWrapper) GetAgentsPending(ctx *echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetAgentsPending(ctx)
+	return err
+}
+
+// RemoveAgent converts echo context to params.
+func (w *ServerInterfaceWrapper) RemoveAgent(ctx *echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(string(BearerAuthScopes), []string{"agent:write"})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RemoveAgentParams
+	// ------------- Optional query parameter "machine_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "machine_id", ctx.QueryParams(), &params.MachineId, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter machine_id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RemoveAgent(ctx, hostname, params)
 	return err
 }
 
@@ -519,6 +555,7 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 
 	router.GET(options.BaseURL+"/api/agent", wrapper.GetAgents, options.OperationMiddlewares["getAgents"]...)
 	router.GET(options.BaseURL+"/api/agent/pending", wrapper.GetAgentsPending, options.OperationMiddlewares["getAgentsPending"]...)
+	router.DELETE(options.BaseURL+"/api/agent/:hostname", wrapper.RemoveAgent, options.OperationMiddlewares["removeAgent"]...)
 	router.GET(options.BaseURL+"/api/agent/:hostname", wrapper.GetAgentDetails, options.OperationMiddlewares["getAgentDetails"]...)
 	router.POST(options.BaseURL+"/api/agent/:hostname/accept", wrapper.AcceptAgent, options.OperationMiddlewares["acceptAgent"]...)
 	router.POST(options.BaseURL+"/api/agent/:hostname/drain", wrapper.DrainAgent, options.OperationMiddlewares["drainAgent"]...)
@@ -642,6 +679,115 @@ func (response GetAgentsPending403JSONResponse) VisitGetAgentsPendingResponse(w 
 type GetAgentsPending500JSONResponse externalRef0.ErrorResponse
 
 func (response GetAgentsPending500JSONResponse) VisitGetAgentsPendingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RemoveAgentRequestObject struct {
+	Hostname string `json:"hostname" validate:"required,min=1,max=255"`
+	Params   RemoveAgentParams
+}
+
+type RemoveAgentResponseObject interface {
+	VisitRemoveAgentResponse(w http.ResponseWriter) error
+}
+
+type RemoveAgent200JSONResponse struct {
+	Message string `json:"message"`
+}
+
+func (response RemoveAgent200JSONResponse) VisitRemoveAgentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RemoveAgent400JSONResponse externalRef0.ErrorResponse
+
+func (response RemoveAgent400JSONResponse) VisitRemoveAgentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RemoveAgent401JSONResponse externalRef0.ErrorResponse
+
+func (response RemoveAgent401JSONResponse) VisitRemoveAgentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RemoveAgent403JSONResponse externalRef0.ErrorResponse
+
+func (response RemoveAgent403JSONResponse) VisitRemoveAgentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RemoveAgent404JSONResponse externalRef0.ErrorResponse
+
+func (response RemoveAgent404JSONResponse) VisitRemoveAgentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RemoveAgent409JSONResponse externalRef0.ErrorResponse
+
+func (response RemoveAgent409JSONResponse) VisitRemoveAgentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RemoveAgent500JSONResponse externalRef0.ErrorResponse
+
+func (response RemoveAgent500JSONResponse) VisitRemoveAgentResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -1130,6 +1276,9 @@ type StrictServerInterface interface {
 	// List agents awaiting enrollment
 	// (GET /api/agent/pending)
 	GetAgentsPending(ctx context.Context, request GetAgentsPendingRequestObject) (GetAgentsPendingResponseObject, error)
+	// Remove an enrolled agent
+	// (DELETE /api/agent/{hostname})
+	RemoveAgent(ctx context.Context, request RemoveAgentRequestObject) (RemoveAgentResponseObject, error)
 	// Get agent details
 	// (GET /api/agent/{hostname})
 	GetAgentDetails(ctx context.Context, request GetAgentDetailsRequestObject) (GetAgentDetailsResponseObject, error)
@@ -1199,6 +1348,32 @@ func (sh *strictHandler) GetAgentsPending(ctx *echo.Context) error {
 		return err
 	} else if validResponse, ok := response.(GetAgentsPendingResponseObject); ok {
 		return validResponse.VisitGetAgentsPendingResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RemoveAgent operation middleware
+func (sh *strictHandler) RemoveAgent(ctx *echo.Context, hostname string, params RemoveAgentParams) error {
+	var request RemoveAgentRequestObject
+
+	request.Hostname = hostname
+	request.Params = params
+
+	handler := func(ctx *echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RemoveAgent(ctx.Request().Context(), request.(RemoveAgentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RemoveAgent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RemoveAgentResponseObject); ok {
+		return validResponse.VisitRemoveAgentResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

@@ -97,3 +97,18 @@ func (mr *MockEnrollmentManagerMockRecorder) RejectByHostname(ctx, hostname, rea
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RejectByHostname", reflect.TypeOf((*MockEnrollmentManager)(nil).RejectByHostname), ctx, hostname, reason)
 }
+
+// RemoveByHostname mocks base method.
+func (m *MockEnrollmentManager) RemoveByHostname(ctx context.Context, hostname, machineID string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveByHostname", ctx, hostname, machineID)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RemoveByHostname indicates an expected call of RemoveByHostname.
+func (mr *MockEnrollmentManagerMockRecorder) RemoveByHostname(ctx, hostname, machineID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveByHostname", reflect.TypeOf((*MockEnrollmentManager)(nil).RemoveByHostname), ctx, hostname, machineID)
+}

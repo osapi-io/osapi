@@ -1,0 +1,76 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package agent
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	"github.com/osapi-io/osapi/internal/controller/api/agent/gen"
+	"github.com/osapi-io/osapi/internal/controller/enrollment"
+	"github.com/osapi-io/osapi/internal/validation"
+)
+
+// RemoveAgent handles DELETE /agent/{hostname}. It removes an accepted
+// agent's stored key, so nothing it signs verifies afterwards.
+func (a *Agent) RemoveAgent(
+	ctx context.Context,
+	request gen.RemoveAgentRequestObject,
+) (gen.RemoveAgentResponseObject, error) {
+	if errMsg, ok := validateAgentHostname(request.Hostname); !ok {
+		return gen.RemoveAgent400JSONResponse{Error: &errMsg}, nil
+	}
+
+	if errMsg, ok := validation.Struct(request.Params); !ok {
+		return gen.RemoveAgent400JSONResponse{Error: &errMsg}, nil
+	}
+
+	if a.enrollment == nil {
+		errMsg := "enrollment not enabled"
+		return gen.RemoveAgent500JSONResponse{Error: &errMsg}, nil
+	}
+
+	machineID := ""
+	if request.Params.MachineId != nil {
+		machineID = *request.Params.MachineId
+	}
+
+	removed, err := a.enrollment.RemoveByHostname(ctx, request.Hostname, machineID)
+	switch {
+	case errors.Is(err, enrollment.ErrNoAcceptedAgent):
+		errMsg := fmt.Sprintf("no accepted agent with hostname %q", request.Hostname)
+		if machineID != "" {
+			errMsg += fmt.Sprintf(" and machine ID %q", machineID)
+		}
+		return gen.RemoveAgent404JSONResponse{Error: &errMsg}, nil
+	case errors.Is(err, enrollment.ErrAmbiguousHostname):
+		errMsg := err.Error() + "; name one with machine_id"
+		return gen.RemoveAgent409JSONResponse{Error: &errMsg}, nil
+	case err != nil:
+		errMsg := err.Error()
+		return gen.RemoveAgent500JSONResponse{Error: &errMsg}, nil
+	}
+
+	msg := fmt.Sprintf("agent %s (%s) removed", request.Hostname, removed)
+
+	return gen.RemoveAgent200JSONResponse{Message: msg}, nil
+}

@@ -228,3 +228,39 @@ func (s *AgentService) Reject(
 
 	return NewResponse(msg, resp.Body), nil
 }
+
+// Remove removes an accepted agent's stored key, so nothing it signs verifies
+// afterwards. machineID chooses one agent when more than one accepted agent
+// has the hostname; pass "" otherwise. Without it, a shared hostname returns a
+// ConflictError naming the machine IDs.
+func (s *AgentService) Remove(
+	ctx context.Context,
+	hostname string,
+	machineID string,
+) (*Response[MessageResponse], error) {
+	params := &gen.RemoveAgentParams{}
+	if machineID != "" {
+		params.MachineId = &machineID
+	}
+
+	resp, err := s.client.RemoveAgentWithResponse(ctx, hostname, params)
+	if err != nil {
+		return nil, fmt.Errorf("remove agent %s: %w", hostname, err)
+	}
+
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON409, resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(MessageResponse{Message: resp.JSON200.Message}, resp.Body), nil
+}

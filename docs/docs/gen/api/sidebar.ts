@@ -28,6 +28,12 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
+          id: "gen/api/remove-agent",
+          label: "Remove an enrolled agent",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
           id: "gen/api/get-agents-pending",
           label: "List agents awaiting enrollment",
           className: "api-method get",

@@ -124,6 +124,94 @@ paths:
             application/json:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+    delete:
+      operationId: removeAgent
+      summary: Remove an enrolled agent
+      description: >
+        Remove an accepted agent's stored public key. Its responses and
+        registration stop verifying at once, so targeting no longer resolves
+        it. The agent does not enroll again by itself: remove its controller
+        key on the host and restart it. Two machines may share a hostname;
+        when they do, name one with machine_id.
+      tags:
+        - agent_operations
+      security:
+        - BearerAuth:
+            - agent:write
+      parameters:
+        - name: hostname
+          in: path
+          required: true
+          # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+          # validate tags in strict-server mode. Validation is handled
+          # manually in the handler.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+          description: The hostname of the accepted agent to remove.
+        - name: machine_id
+          in: query
+          required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=255
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+          description: >
+            The machine ID to remove, when more than one accepted agent has the
+            hostname.
+      responses:
+        '200':
+          description: Agent removed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+        '400':
+          description: Invalid hostname or machine ID.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: No accepted agent with that hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: More than one accepted agent has the hostname; name one with machine_id.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error removing agent.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
   /api/agent/pending:
     get:
       operationId: getAgentsPending

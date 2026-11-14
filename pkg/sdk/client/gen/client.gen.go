@@ -4701,6 +4701,12 @@ type UserName = string
 // bearerAuthContextKey is the context key for BearerAuth security scheme
 type bearerAuthContextKey string
 
+// RemoveAgentParams defines parameters for RemoveAgent.
+type RemoveAgentParams struct {
+	// MachineId The machine ID to remove, when more than one accepted agent has the hostname.
+	MachineId *string `form:"machine_id,omitempty" json:"machine_id,omitempty" validate:"omitempty,min=1,max=255"`
+}
+
 // AcceptAgentParams defines parameters for AcceptAgent.
 type AcceptAgentParams struct {
 	// Fingerprint Accept by fingerprint instead of hostname.
@@ -5003,6 +5009,9 @@ type ClientInterface interface {
 
 	// GetAgentsPending request
 	GetAgentsPending(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RemoveAgent request
+	RemoveAgent(ctx context.Context, hostname string, params *RemoveAgentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetAgentDetails request
 	GetAgentDetails(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5445,6 +5454,18 @@ func (c *Client) GetAgents(ctx context.Context, reqEditors ...RequestEditorFn) (
 
 func (c *Client) GetAgentsPending(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAgentsPendingRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RemoveAgent(ctx context.Context, hostname string, params *RemoveAgentParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveAgentRequest(c.Server, hostname, params)
 	if err != nil {
 		return nil, err
 	}
@@ -7362,6 +7383,67 @@ func NewGetAgentsPendingRequest(server string) (*http.Request, error) {
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRemoveAgentRequest generates requests for RemoveAgent
+func NewRemoveAgentRequest(server string, hostname string, params *RemoveAgentParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/agent/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.MachineId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "machine_id", *params.MachineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -12462,6 +12544,9 @@ type ClientWithResponsesInterface interface {
 	// GetAgentsPendingWithResponse request
 	GetAgentsPendingWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAgentsPendingResponse, error)
 
+	// RemoveAgentWithResponse request
+	RemoveAgentWithResponse(ctx context.Context, hostname string, params *RemoveAgentParams, reqEditors ...RequestEditorFn) (*RemoveAgentResponse, error)
+
 	// GetAgentDetailsWithResponse request
 	GetAgentDetailsWithResponse(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*GetAgentDetailsResponse, error)
 
@@ -12949,6 +13034,44 @@ func (r GetAgentsPendingResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetAgentsPendingResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type RemoveAgentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Message string `json:"message"`
+	}
+	JSON400 *ErrorResponse
+	JSON401 *ErrorResponse
+	JSON403 *ErrorResponse
+	JSON404 *ErrorResponse
+	JSON409 *ErrorResponse
+	JSON500 *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r RemoveAgentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RemoveAgentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r RemoveAgentResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -16950,6 +17073,15 @@ func (c *ClientWithResponses) GetAgentsPendingWithResponse(ctx context.Context, 
 	return ParseGetAgentsPendingResponse(rsp)
 }
 
+// RemoveAgentWithResponse request returning *RemoveAgentResponse
+func (c *ClientWithResponses) RemoveAgentWithResponse(ctx context.Context, hostname string, params *RemoveAgentParams, reqEditors ...RequestEditorFn) (*RemoveAgentResponse, error) {
+	rsp, err := c.RemoveAgent(ctx, hostname, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveAgentResponse(rsp)
+}
+
 // GetAgentDetailsWithResponse request returning *GetAgentDetailsResponse
 func (c *ClientWithResponses) GetAgentDetailsWithResponse(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*GetAgentDetailsResponse, error) {
 	rsp, err := c.GetAgentDetails(ctx, hostname, reqEditors...)
@@ -18387,6 +18519,76 @@ func ParseGetAgentsPendingResponse(rsp *http.Response) (*GetAgentsPendingRespons
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRemoveAgentResponse parses an HTTP response from a RemoveAgentWithResponse call
+func ParseRemoveAgentResponse(rsp *http.Response) (*RemoveAgentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RemoveAgentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Message string `json:"message"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

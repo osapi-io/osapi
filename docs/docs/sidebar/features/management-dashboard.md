@@ -18,8 +18,8 @@ The dashboard provides a visual interface for fleet management:
 - **Configure** — block-based operations builder for composing and applying
   changes across targets
 - **Admin** — audit log viewer with export, job queue browser with retry/delete,
-  PKI enrollment management (accept/reject agents), and RBAC reference
-  (admin-only)
+  PKI enrollment management (accept, reject and remove agents), and RBAC
+  reference (admin-only)
 
 ## Enabling the UI
 
