@@ -60,7 +60,12 @@ The enrollment process follows a Salt-style accept/reject model:
 
 1. **Generate keypair** -- on first start, the agent generates an Ed25519
    keypair and saves it to `agent.pki.key_dir` (default `/etc/osapi/pki`).
-   Files: `agent.key` (mode 0600) and `agent.pub` (mode 0644).
+   Files: `agent.key` (mode 0600) and `agent.pub` (mode 0644). The user the
+   agent runs as must own the directory. The agent does not replace a key it
+   cannot read, or one half of a keypair: it logs the error and exits. A new key
+   is not the one the controller accepted, so a host with a replaced key drops
+   out of targeting until you enroll it again. If you change the agent's user,
+   change the directory's owner too (`chown -R osapi /etc/osapi/pki`).
 
 2. **Request enrollment** -- the agent publishes an enrollment request to the
    controller via NATS containing its machine ID, hostname, public key, and
