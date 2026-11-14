@@ -75,6 +75,7 @@ test: linux-tune
     just docs-fmt-check
     just behavior-gen-check
     just go-generate-check
+    just docs-gen-check
     just go-pkg-check
     just react-build
     just go-test
@@ -110,6 +111,23 @@ go-pkg-check:
     if [ -n "$leaks" ]; then
         echo "pkg/ imports internal/:" >&2
         echo "$leaks" >&2
+        exit 1
+    fi
+
+# The API reference pages under docs/docs/gen are generated from the joined
+# OpenAPI specs. Nothing compared them with the specs, so /api/next pages went
+# stale without a failure. Regenerate them and fail when a page changed.
+docs-gen-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pages() {
+        find docs/docs/gen -type f -print 2>/dev/null | sort | xargs shasum
+    }
+    before=$(pages)
+    just docs-generate > /dev/null
+    if [ "$before" != "$(pages)" ]; then
+        diff <(echo "$before") <(pages) || true
+        echo "API reference pages are stale: run just docs-generate and commit the result" >&2
         exit 1
     fi
 
