@@ -77,3 +77,36 @@ func ResetErrOut() {
 	errOut = os.Stderr
 	jsonOutput = false
 }
+
+// SetPipe overrides how Capture makes its pipe, for testing.
+func SetPipe(
+	fn func() (*os.File, *os.File, error),
+) {
+	pipe = fn
+}
+
+// ResetPipe restores Capture's pipe.
+func ResetPipe() {
+	pipe = os.Pipe
+}
+
+// ResetTint forgets the last heading's tint, as before any heading prints.
+func ResetTint() {
+	currentTint = ""
+}
+
+// ExportRenderCell exposes renderCell for testing.
+func ExportRenderCell(
+	header string,
+	cell string,
+) string {
+	return renderCell(header, cell)
+}
+
+// ExportPrintObject exposes printObject for testing.
+func ExportPrintObject(
+	title string,
+	v any,
+) {
+	printObject(title, v)
+}

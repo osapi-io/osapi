@@ -33,7 +33,7 @@ var clientJobGetCmd = &cobra.Command{
 	Long:  `Retrieves a job's details and current status via the REST API.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
-		jobID, _ := cmd.Flags().GetString("job-id")
+		jobID, _ := cmd.Flags().GetString("id")
 
 		resp, err := sdkClient.Job.Get(ctx, jobID)
 		if err != nil {
@@ -54,7 +54,7 @@ func init() {
 	clientJobCmd.AddCommand(clientJobGetCmd)
 
 	clientJobGetCmd.PersistentFlags().
-		StringP("job-id", "", "", "Job ID to retrieve")
+		StringP("id", "", "", "Job ID to retrieve")
 
-	_ = clientJobGetCmd.MarkPersistentFlagRequired("job-id")
+	_ = clientJobGetCmd.MarkPersistentFlagRequired("id")
 }

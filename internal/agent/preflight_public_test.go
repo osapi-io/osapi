@@ -32,6 +32,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
+	"github.com/osapi-io/osapi/internal/behavior"
 	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
 )
 
@@ -63,6 +64,8 @@ func (s *PreflightPublicTestSuite) SetupSubTest() {
 func (s *PreflightPublicTestSuite) TearDownSubTest() {
 	s.mockCtrl.Finish()
 	agent.ResetProcStatusPath()
+	agent.ResetLookPath()
+	behavior.Reset()
 }
 
 func (s *PreflightPublicTestSuite) TestCheckCapabilities() {
@@ -194,6 +197,31 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 		validateFunc func([]agent.PreflightResult, bool)
 	}{
 		{
+			name: "when a behavior declares a sudo program, it is checked once",
+			setup: func() {
+				behavior.Register(behavior.Define("motd", "Message of the day", behavior.Node,
+					behavior.Sudo("motdctl", "sysctl"),
+				))
+				s.mockExecMgr.EXPECT().
+					RunCmd(gomock.Any(), "sudo", gomock.Any()).
+					Return("/usr/bin/something", nil).
+					AnyTimes()
+
+				path := filepath.Join(s.tmpDir, "status_behavior")
+				err := os.WriteFile(path, []byte("CapEff:\t000000000000102f\n"), 0o644)
+				s.Require().NoError(err)
+				agent.SetProcStatusPath(path)
+			},
+			validateFunc: func(results []agent.PreflightResult, _ bool) {
+				names := map[string]int{}
+				for _, r := range results {
+					names[r.Name]++
+				}
+				s.Equal(1, names["sudo:motdctl"], "the behavior's program is checked")
+				s.Equal(1, names["sudo:sysctl"], "a program both declare is checked once")
+			},
+		},
+		{
 			name: "when both checks pass",
 			setup: func() {
 				s.mockExecMgr.EXPECT().
@@ -261,6 +289,53 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 				s.mockExecMgr,
 			)
 			tc.validateFunc(results, allPassed)
+		})
+	}
+}
+
+func (s *PreflightPublicTestSuite) TestMissingPrograms() {
+	tests := []struct {
+		name  string
+		setup func()
+		want  []string
+	}{
+		{
+			name: "when every declared program is installed",
+			setup: func() {
+				behavior.Register(behavior.Define("neighbors", "Neighbors", behavior.Node,
+					behavior.Runs("ip"),
+				))
+				agent.SetLookPath(func(string) (string, error) { return "/usr/sbin/ip", nil })
+			},
+		},
+		{
+			name: "when a program two behaviors declare is missing, it is named once",
+			setup: func() {
+				behavior.Register(behavior.Define("neighbors", "Neighbors", behavior.Node,
+					behavior.Runs("ip"),
+				))
+				behavior.Register(behavior.Define("routes", "Routes", behavior.Node,
+					behavior.Runs("ip"),
+				))
+				calls := 0
+				agent.SetLookPath(func(string) (string, error) {
+					calls++
+					s.Equal(1, calls, "a program is looked up once")
+
+					return "", fmt.Errorf("not found")
+				})
+			},
+			want: []string{"ip"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.setup()
+
+			got := agent.MissingPrograms()
+
+			s.Equal(tc.want, got)
 		})
 	}
 }

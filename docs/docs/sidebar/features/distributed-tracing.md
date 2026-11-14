@@ -99,7 +99,7 @@ with no authentication. This works for local or internal backends but not for
 cloud services (Grafana Cloud, Honeycomb, Datadog) that require TLS and API
 keys. Authenticated OTLP is planned. :::
 
-See [Configuration](../usage/configuration.md#telemetrytracing) for the full
+See [Configuration](../usage/configuration.md#every-setting) for the full
 reference.
 
 ## Related

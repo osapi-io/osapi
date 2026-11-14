@@ -80,7 +80,7 @@ func init() {
 	tokenGenerateCmd.PersistentFlags().
 		StringSliceP("permissions", "p", []string{},
 			fmt.Sprintf("Direct permissions (overrides role expansion; allowed: %s)",
-				strings.Join(authtoken.AllPermissions, ", ")))
+				strings.Join(authtoken.AllPermissions(), ", ")))
 
 	_ = tokenGenerateCmd.MarkPersistentFlagRequired("roles")
 	_ = tokenGenerateCmd.MarkPersistentFlagRequired("subject")
@@ -94,7 +94,7 @@ func init() {
 
 		permissions, _ := cmd.Flags().GetStringSlice("permissions")
 		if err := validatePermissions(permissions); err != nil {
-			cli.LogFatal(logger, "invalid permissions", err, "allowed", authtoken.AllPermissions)
+			cli.LogFatal(logger, "invalid permissions", err, "allowed", authtoken.AllPermissions())
 		}
 	}
 }
@@ -123,8 +123,9 @@ func validatePermissions(
 		return nil
 	}
 
-	allowedMap := make(map[string]struct{}, len(authtoken.AllPermissions))
-	for _, p := range authtoken.AllPermissions {
+	allowed := authtoken.AllPermissions()
+	allowedMap := make(map[string]struct{}, len(allowed))
+	for _, p := range allowed {
 		allowedMap[p] = struct{}{}
 	}
 

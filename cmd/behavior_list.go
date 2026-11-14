@@ -22,12 +22,13 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/pkg/behavior"
 )
 
 // behaviorSummary is one behavior in `behavior list --json`.
@@ -36,6 +37,8 @@ type behaviorSummary struct {
 	Group   string   `json:"group,omitempty"`
 	Doc     string   `json:"doc"`
 	Methods []string `json:"methods"`
+	// Internal is set for a behavior only other behaviors use.
+	Internal bool `json:"internal,omitempty"`
 }
 
 var behaviorListCmd = &cobra.Command{
@@ -54,7 +57,7 @@ var behaviorListCmd = &cobra.Command{
 				names = append(names, m.Name)
 			}
 			summaries = append(summaries, behaviorSummary{
-				Name: b.Name, Group: b.Group, Doc: b.Doc, Methods: names,
+				Name: b.Name, Group: b.Group, Doc: b.Doc, Methods: names, Internal: b.Internal,
 			})
 		}
 
@@ -66,17 +69,22 @@ var behaviorListCmd = &cobra.Command{
 		}
 
 		if len(summaries) == 0 {
-			cli.PrintNote("No behaviors registered.")
+			cli.PrintHeading("Behaviors (0)")
+			cli.PrintNote("None.")
 
 			return
 		}
 
 		rows := make([][]string, 0, len(summaries))
 		for _, s := range summaries {
-			rows = append(rows, []string{s.Name, s.Group, strings.Join(s.Methods, ", "), s.Doc})
+			doc := s.Doc
+			if s.Internal {
+				doc += " (internal)"
+			}
+			rows = append(rows, []string{s.Name, s.Group, strings.Join(s.Methods, ", "), doc})
 		}
 		cli.PrintCompactTable([]cli.Section{{
-			Title:     "Behaviors",
+			Title:     fmt.Sprintf("Behaviors (%d)", len(summaries)),
 			Headers:   []string{"NAME", "GROUP", "METHODS", "DESCRIPTION"},
 			Rows:      rows,
 			Reference: true,

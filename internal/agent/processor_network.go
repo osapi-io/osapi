@@ -42,6 +42,8 @@ func NewNetworkProcessor(
 	routeProvider route.Provider,
 	logger *slog.Logger,
 ) ProcessorFunc {
+	logger = logger.With(slog.String("subsystem", "agent.processor.network"))
+
 	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
 		// Extract base operation from dotted operation (e.g., "dns.get" -> "dns")
 		baseOperation := strings.Split(req.Operation, ".")[0]

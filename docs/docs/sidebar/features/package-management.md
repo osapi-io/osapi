@@ -71,13 +71,13 @@ osapi client node package get --target web-01 --name nginx
 osapi client node package install --target web-01 --name nginx
 
 # Remove a package
-osapi client node package remove --target web-01 --name nginx
+osapi client node package uninstall --target web-01 --name nginx
 
 # Refresh package sources (apt-get update)
 osapi client node package update --target web-01
 
 # List available updates
-osapi client node package updates --target web-01
+osapi client node package list --updates --target web-01
 
 # Broadcast install to all hosts
 osapi client node package install --target _all --name htop

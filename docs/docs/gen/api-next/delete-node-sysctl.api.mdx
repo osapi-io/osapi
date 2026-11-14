@@ -1,0 +1,69 @@
+---
+id: delete-node-sysctl
+title: "Stop managing a kernel parameter"
+description: "Removes osapi's file for it and reloads with sysctl --system, so a setting for the key in another file takes effect; otherwise the parameter keeps its current value until the next reboot. Deleting one osapi does not manage reports changed: false."
+sidebar_label: "Stop managing a kernel parameter"
+hide_title: true
+hide_table_of_contents: true
+api: eJztWG1v2zYQ/isHYkDbQbKdzulW7VOKpliGbiuaFAUWeAEtni3GEqmSR6euof8+HCU5jm20a9F+KJYvMRWR9/Lcc6c7roVCnztdk7ZGZOI1VnaJHqyXtX7gYaZLhJl1oAmkUeCwtFJ5uNFUgF/5nEpIU7/yhFUC3oIEj0TazOMpKhAWuAJtQBpLBbpWIskFesDZDHP6FeKLG+0x7q+lkxUSOlgg1h40eciDc2gIlrIMCMGQLuNeg+8JHE6tpQE8xxKjZmuwdQCURQ/GElTSyDmCw9o6lldIM0eVwUyWHgciESTnXmSXovXpytboJGPixSQRm6czJTIR9eCfVuF53CwS4TEPTtNKZJdr8QylQ3cSqLgVmN04TSgmzSQRGwd93G5khSIThfUUl4nQHIlaUiES4fBd0A6VyMgFTHbCdSHdHAnknMHpJSTg0KNbogJnQ0Skxe3hlTSrBK5kWT5KwDoo5RRL8FhiTtbBwwWusrj1EUPi8wIrKbK1oFXNJnpy2sxFIiptXqKZs4NHTZNsfFjg6rPMf7UJdWu3D3kB0oNBGuh6OR7o+mpm3Y106qP21JIIHUv851KmH07Sv0fp08ntcnCVTn78Yc/wCdvna2s8ehb7eDTin7s2nsq8AGpxZoQfeIY3lJS0SXBTYOS1pp5VjF1uDaEhFifrutR5pM/w2rPM9b4rdnqNObErjslGurXo2k6vtDrk8sy6SpLIRAiawdnhRYFwbadw9hyCRwVkoXY2R++BCs0evAvoiS3F97KqS5Z9fDzCX8ajUYqPn07T8ZEap/LnoyfpePzkyfHxeDwajUaiiZiFkvyWVdI5GSNPWPlDXu0WGRYQCwSnKqM62HN9kw8HnL8r7rduJ9hZLAptNlAhiZ1WIWcAWq9Z74B98CQp+EOy0YSK89YuGGWpS4zcW+i6jivSFdpAXBb2MW/F9oZsykZXC7XvfG2SmCqf9OxufvCxjmJbR6fWlijN3tm3HS/ZENbas5OloHPWfVr9KW+DCr3n2qm30W2BGYim2c7xy+0q1kE8YcgoEqwtl38EiqC0LBDNroieXnsH27r7ustYPtgkYnwoZ59J1VMcUi5+WrVxiI5/xfz8j0CewNZzz454tqWpzeMHTt3NxxcRY85dh+Q0Lnt+RQIpJKnLgxTeUa6U5qUsoTsDcmoD3RpxUK0KyKoN0o11C+hoH1XnVm2npTaEc3QHi1DrJB+4o+R4NOLg9fGNRNsL7NF+YN8YGaiwTn9ABSmcvDqL7cWGPveB/R4C+9N+YF9YN9VKoYEUzowPs5nONReaGl2lvY+d2H10v4fojveje9F/gwpu7mw/OMT+KSK5wNV9Vf4ewnt86HPbd5u5DaWK49YUwQUDcW7s+66d1yi/ZqN8H/JvFPImERVSYXnwVbEBa+etQmRiKGs95BF8aKzC4bpv/pphm+DD9QJXzdZ4fM7RbAO2PSRvHCiI6n7Qi71t3CSSbvGin3l+f3sRO09tZjYe78z/65w7gikWcqmt8weBiDuC5vnD2WqzGRTOtInx8Ql043MwCh1s3IQpeq3aW4pCGpXyUE9oWCajukTnW0VHg9Egzkq19VTJSOVuRj4nW7fXETyYS1igM1je3nrsGr2+TZH/8e1Myw9irtWl1IaxDa5keFoyXgpZa5EI1sk/nBmJyLbnkf6yJuPZa5LEWYUPrtdT6fGNK5uG//0uoOOLnEkiltJpOWVqXa6F0p7XSmTRrI+E6eHrrh99BN/0guYgKv1Ibnggj3tFJkQ3cN7OZ3xr80Uefd6dzReYyH+bSZOIAqVCF7Fv35zkOda0dWbvi8FXOpty9fz05enFqUiEvFtldqpKVHDQpPW63XFhF2iaZmMh8TPb2DT/Au9PYDk=
+sidebar_class_name: "delete api-method"
+info_path: gen/api-next/osapi-behaviors
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Stop managing a kernel parameter"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/api/next/node/{hostname}/sysctl/{key}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Removes osapi's file for it and reloads with sysctl --system, so a setting for the key in another file takes effect; otherwise the parameter keeps its current value until the next reboot. Deleting one osapi does not manage reports changed: false.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./delete-node-sysctl.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./delete-node-sysctl.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./delete-node-sysctl.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

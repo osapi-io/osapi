@@ -113,7 +113,7 @@ osapi client node network route delete \
 
 # Delete DNS config for an interface
 osapi client node network dns delete \
-  --target web-01 --interface-name eth0
+  --target web-01 --interface eth0
 
 # Broadcast interface create to all hosts
 osapi client node network interface create \

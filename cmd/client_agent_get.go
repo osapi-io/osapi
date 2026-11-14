@@ -59,7 +59,7 @@ var clientAgentGetCmd = &cobra.Command{
 func displayAgentGetDetail(
 	data *client.Agent,
 ) {
-	fmt.Println()
+	cli.PrintHeading("Agent")
 
 	kvArgs := []string{"Hostname", data.Hostname}
 	if data.MachineID != "" {
@@ -92,7 +92,7 @@ func displayAgentGetDetail(
 	}
 
 	if !data.RegisteredAt.IsZero() {
-		cli.PrintKV("Last Seen", cli.FormatAge(time.Since(data.RegisteredAt))+" ago")
+		cli.PrintKV("Last seen", cli.FormatAge(time.Since(data.RegisteredAt))+" ago")
 	}
 
 	if data.Architecture != "" {
@@ -128,15 +128,15 @@ func displayAgentGetDetail(
 	}
 
 	if data.ServiceMgr != "" {
-		cli.PrintKV("Service Mgr", data.ServiceMgr)
+		cli.PrintKV("Service manager", data.ServiceMgr)
 	}
 
 	if data.PackageMgr != "" {
-		cli.PrintKV("Package Mgr", data.PackageMgr)
+		cli.PrintKV("Package manager", data.PackageMgr)
 	}
 
 	if data.PrimaryInterface != "" {
-		cli.PrintKV("Primary Iface", data.PrimaryInterface)
+		cli.PrintKV("Primary interface", data.PrimaryInterface)
 	}
 
 	if len(data.Interfaces) > 0 {
@@ -198,9 +198,6 @@ func displayAgentGetDetail(
 			timelineRows,
 			[]string{te.Timestamp, te.Event, te.Hostname, te.Message, te.Error},
 		)
-	}
-	if len(timelineRows) == 0 {
-		timelineRows = [][]string{{"No events"}}
 	}
 	sections = append(sections, cli.Section{
 		Title:   "Timeline",

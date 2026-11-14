@@ -27,7 +27,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 )
 
 // Undeploy removes a deployed file from disk. The object store entry
@@ -54,11 +54,11 @@ func (p *Service) Undeploy(
 		return nil, fmt.Errorf("file undeploy: remove file %q: %w", req.Path, err)
 	}
 
-	stateKey := BuildStateKey(p.hostname, req.Path)
+	stateKey := managedfile.StateKey(p.hostname, req.Path)
 
 	entry, err := p.stateKV.Get(ctx, stateKey)
 	if err == nil {
-		var state job.FileState
+		var state managedfile.State
 		if unmarshalErr := json.Unmarshal(entry.Value(), &state); unmarshalErr == nil {
 			state.UndeployedAt = time.Now().UTC().Format(time.RFC3339)
 

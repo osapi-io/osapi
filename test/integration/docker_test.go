@@ -161,7 +161,7 @@ func (s *DockerSmokeSuite) TestDockerCreateListInspectStopRemove() {
 
 	// Remove (force, in case the container is running)
 	removeOut, _, removeCode := runCLI(
-		"client", "node", "container", "docker", "remove",
+		"client", "node", "container", "docker", "delete",
 		"--id", "integration-test-container",
 		"--force",
 		"--json",

@@ -31,8 +31,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/fsutil"
-	"github.com/osapi-io/osapi/internal/job"
 )
 
 // marshalJSON is a package-level variable for testing the marshal error path.
@@ -74,7 +74,7 @@ func (p *Service) Deploy(
 	}
 
 	sha := computeSHA256(content)
-	stateKey := BuildStateKey(p.hostname, req.Path)
+	stateKey := managedfile.StateKey(p.hostname, req.Path)
 
 	// What matters is the file on disk, not what the last deploy recorded. A
 	// config edited by hand has the SHA the record remembers and the content
@@ -250,7 +250,7 @@ func (p *Service) putState(
 	sha string,
 	contentType string,
 ) error {
-	state := job.FileState{
+	state := managedfile.State{
 		ObjectName:  req.ObjectName,
 		Path:        req.Path,
 		SHA256:      sha,
@@ -281,17 +281,6 @@ func computeSHA256(
 	h := sha256.Sum256(data)
 
 	return hex.EncodeToString(h[:])
-}
-
-// BuildStateKey returns the KV key for a file's deploy state.
-// Format: <hostname>.<sha256-of-path>.
-func BuildStateKey(
-	hostname string,
-	path string,
-) string {
-	pathHash := computeSHA256([]byte(path))
-
-	return hostname + "." + pathHash
 }
 
 // parseFileMode parses a string file mode (e.g., "0644") into an os.FileMode.

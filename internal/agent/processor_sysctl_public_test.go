@@ -31,10 +31,10 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
+	"github.com/osapi-io/osapi/internal/behaviors/sysctl"
+	sysctlMocks "github.com/osapi-io/osapi/internal/behaviors/sysctl/mocks"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
-	"github.com/osapi-io/osapi/internal/provider/node/sysctl"
-	sysctlMocks "github.com/osapi-io/osapi/internal/provider/node/sysctl/mocks"
 )
 
 type ProcessorSysctlPublicTestSuite struct {
@@ -150,7 +150,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlList() {
 			},
 			setupMock: func() sysctl.Provider {
 				m := sysctlMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().List(gomock.Any()).Return([]sysctl.Entry{
+				m.EXPECT().List(gomock.Any(), "").Return([]sysctl.Entry{
 					{Key: "net.ipv4.ip_forward", Value: "1"},
 					{Key: "vm.swappiness", Value: "10"},
 				}, nil)
@@ -177,7 +177,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlList() {
 			},
 			setupMock: func() sysctl.Provider {
 				m := sysctlMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().List(gomock.Any()).Return(nil, errors.New("permission denied"))
+				m.EXPECT().List(gomock.Any(), "").Return(nil, errors.New("permission denied"))
 				return m
 			},
 			validateFunc: func(result json.RawMessage, err error) {

@@ -27,6 +27,7 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/apt"
@@ -39,7 +40,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/power"
 	processProv "github.com/osapi-io/osapi/internal/provider/node/process"
 	serviceProv "github.com/osapi-io/osapi/internal/provider/node/service"
-	"github.com/osapi-io/osapi/internal/provider/node/sysctl"
 	"github.com/osapi-io/osapi/internal/provider/node/timezone"
 	"github.com/osapi-io/osapi/internal/provider/node/user"
 )
@@ -76,6 +76,8 @@ func NewNodeProcessor(
 	appConfig config.Config,
 	logger *slog.Logger,
 ) ProcessorFunc {
+	logger = logger.With(slog.String("subsystem", "agent.processor.node"))
+
 	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
 		// Extract base operation from dotted operation (e.g., "hostname.get" -> "hostname")
 		baseOperation := strings.Split(req.Operation, ".")[0]

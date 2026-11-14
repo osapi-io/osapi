@@ -49,11 +49,7 @@ var clientNodeProcessGetCmd = &cobra.Command{
 			return
 		}
 
-		if resp.Data.JobID != "" {
-			fmt.Println()
-			cli.PrintKV("Job ID", resp.Data.JobID)
-			fmt.Println()
-		}
+		cli.PrintJobID(resp.Data.JobID)
 
 		results := make([]cli.ResultRow, 0)
 		for _, r := range resp.Data.Results {

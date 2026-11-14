@@ -2,3 +2,7 @@
 build/
 docs/gen/
 node_modules/
+# Generated from behavior definitions by go generate; just behavior-gen-check
+# keeps them current, so Prettier must not rewrite them.
+docs/sidebar/behaviors/*/
+docs/sidebar/behaviors/_catalog.mdx

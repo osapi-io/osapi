@@ -25,7 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 )
 
 // Status checks the current state of a deployed file against its expected
@@ -35,7 +35,7 @@ func (p *Service) Status(
 	ctx context.Context,
 	req StatusRequest,
 ) (*StatusResult, error) {
-	stateKey := BuildStateKey(p.hostname, req.Path)
+	stateKey := managedfile.StateKey(p.hostname, req.Path)
 
 	entry, err := p.stateKV.Get(ctx, stateKey)
 	if err != nil {
@@ -45,7 +45,7 @@ func (p *Service) Status(
 		}, nil
 	}
 
-	var state job.FileState
+	var state managedfile.State
 	if err := json.Unmarshal(entry.Value(), &state); err != nil {
 		return nil, fmt.Errorf("file status: parse file state: %w", err)
 	}

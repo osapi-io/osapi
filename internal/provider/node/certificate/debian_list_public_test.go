@@ -33,7 +33,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 	"github.com/osapi-io/osapi/internal/provider/node/certificate"
@@ -47,7 +47,7 @@ func managedStateJSON(
 	objectName string,
 	path string,
 ) []byte {
-	state := job.FileState{
+	state := managedfile.State{
 		ObjectName: objectName,
 		Path:       path,
 		SHA256:     "abc123",
@@ -235,7 +235,7 @@ func (suite *DebianListPublicTestSuite) TestList() {
 					[]byte("cert"),
 					0o644,
 				)
-				undeployedState, _ := json.Marshal(job.FileState{
+				undeployedState, _ := json.Marshal(managedfile.State{
 					ObjectName:   "old-ca-cert",
 					Path:         "/usr/local/share/ca-certificates/osapi-old-ca.crt",
 					SHA256:       "abc123",

@@ -61,13 +61,17 @@ flowchart TD
 
 ## Roles and Permissions
 
-Built-in roles expand to these default permissions:
+There are three built-in roles, `admin`, `write` and `read`. To see every
+permission each grants, as the binary you run has them, list them:
 
-| Role    | Permissions                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `admin` | `agent:read`, `agent:write`, `node:read`, `node:write`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute`, `command:shell`, `file:read`, `file:write`, `docker:read`, `docker:write`, `docker:execute`, `schedule:read`, `schedule:write`, `sysctl:read`, `sysctl:write`, `ntp:read`, `ntp:write`, `timezone:read`, `timezone:write`, `power:execute`, `process:read`, `process:execute`, `user:read`, `user:write`, `package:read`, `package:write`, `log:read`, `certificate:read`, `certificate:write`, `service:read`, `service:write` |
-| `write` | `agent:read`, `node:read`, `node:write`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `file:read`, `file:write`, `docker:read`, `docker:write`, `schedule:read`, `schedule:write`, `sysctl:read`, `sysctl:write`, `ntp:read`, `ntp:write`, `timezone:read`, `timezone:write`, `process:read`, `user:read`, `user:write`, `package:read`, `package:write`, `log:read`, `certificate:read`, `certificate:write`, `service:read`, `service:write`                                                                                                                        |
-| `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`, `file:read`, `docker:read`, `schedule:read`, `sysctl:read`, `ntp:read`, `timezone:read`, `process:read`, `user:read`, `package:read`, `log:read`, `certificate:read`, `service:read`                                                                                                                                                                                                                                                                                                                                        |
+```bash
+osapi token roles
+```
+
+That list is the reference, because it changes as behaviors are added. A
+behavior's permissions are `<name>:read` and `<name>:write`: `admin` and `write`
+grant both, and `read` grants the read permission.
+[`token roles`](../usage/cli/token/roles.md) has its output.
 
 `command:execute` and `command:shell` are two distinct permissions: the former
 guards the argv-only `exec` endpoint, the latter guards the `/bin/sh -c` based

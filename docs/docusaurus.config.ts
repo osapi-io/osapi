@@ -614,14 +614,27 @@ const config: Config = {
         // operator's navigation. Their rules are now stated once in the
         // specifications repository (005-building-a-domain, FR-014, FR-015,
         // FR-022), and these addresses keep working for anyone holding a link.
+        // adding-an-api-domain became the behavior tutorial.
         redirects: [
           {
             from: '/sidebar/architecture/api-guidelines',
-            to: '/sidebar/development/adding-an-api-domain'
+            to: '/sidebar/development/your-first-behavior'
           },
           {
             from: '/sidebar/architecture/principles',
-            to: '/sidebar/development/adding-an-api-domain'
+            to: '/sidebar/development/your-first-behavior'
+          },
+          {
+            from: '/sidebar/development/adding-an-api-domain',
+            to: '/sidebar/development/your-first-behavior'
+          },
+          {
+            from: '/sidebar/architecture/job-architecture',
+            to: '/sidebar/architecture/request-flow'
+          },
+          {
+            from: '/sidebar/architecture/system-architecture',
+            to: '/sidebar/architecture/components'
           }
         ]
       }
@@ -635,6 +648,16 @@ const config: Config = {
           osapi: {
             specPath: '../internal/controller/api/gen/api.yaml',
             outputDir: 'docs/gen/api',
+            sidebarOptions: {
+              groupPathsBy: 'tag',
+              categoryLinkSource: 'tag'
+            }
+          } satisfies OpenApiPlugin.Options,
+          // Generated from behavior definitions and served under /api/next,
+          // beside the hand-written API above until each domain moves over.
+          next: {
+            specPath: '../internal/controller/api/next/gen/api.yaml',
+            outputDir: 'docs/gen/api-next',
             sidebarOptions: {
               groupPathsBy: 'tag',
               categoryLinkSource: 'tag'

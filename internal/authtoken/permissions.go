@@ -20,7 +20,12 @@
 
 package authtoken
 
-import "github.com/osapi-io/osapi/pkg/sdk/client"
+import (
+	"slices"
+
+	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
+)
 
 // Permission is a type alias for client.Permission.
 type Permission = client.Permission
@@ -66,8 +71,9 @@ const (
 	PermServiceWrite     = client.PermServiceWrite
 )
 
-// AllPermissions is the full set of known permissions.
-var AllPermissions = []Permission{
+// builtinPermissions are the hand-written domains' permissions. A behavior's
+// are not listed here: AllPermissions adds them from its definition.
+var builtinPermissions = []Permission{
 	PermAgentRead,
 	PermAgentWrite,
 	PermNodeRead,
@@ -107,8 +113,9 @@ var AllPermissions = []Permission{
 	PermServiceWrite,
 }
 
-// DefaultRolePermissions maps built-in role names to their granted permissions.
-var DefaultRolePermissions = map[string][]Permission{
+// builtinRolePermissions maps built-in role names to the hand-written domains'
+// permissions each grants. RolePermissions adds each behavior's.
+var builtinRolePermissions = map[string][]Permission{
 	client.RoleAdmin: {
 		PermAgentRead,
 		PermAgentWrite,
@@ -201,9 +208,72 @@ var DefaultRolePermissions = map[string][]Permission{
 	},
 }
 
+// AllPermissions is every permission osapi knows: the hand-written domains',
+// then each registered behavior's, one per verb its methods use. It is built
+// on each call rather than once, because behaviors register in their own
+// packages' init, which may run after this package's.
+func AllPermissions() []Permission {
+	all := slices.Clone(builtinPermissions)
+	for _, p := range behaviorPermissions(func(behavior.Verb) bool { return true }) {
+		if !slices.Contains(all, p) {
+			all = append(all, p)
+		}
+	}
+
+	return all
+}
+
+// RolePermissions is what a built-in role grants, and whether role is one.
+// admin and write get every behavior permission; read gets each behavior's
+// read permission.
+func RolePermissions(
+	role string,
+) ([]Permission, bool) {
+	perms, ok := builtinRolePermissions[role]
+	if !ok {
+		return nil, false
+	}
+
+	grants := func(behavior.Verb) bool { return true }
+	if role == client.RoleRead {
+		grants = func(v behavior.Verb) bool { return v == behavior.VerbRead }
+	}
+
+	out := slices.Clone(perms)
+	for _, p := range behaviorPermissions(grants) {
+		if !slices.Contains(out, p) {
+			out = append(out, p)
+		}
+	}
+
+	return out, true
+}
+
+// behaviorPermissions is the permission of every registered behavior's
+// methods whose verb keep accepts, without repeats.
+func behaviorPermissions(
+	keep func(behavior.Verb) bool,
+) []Permission {
+	var out []Permission
+	for _, b := range behavior.All() {
+		// Only a behavior served over the API has methods a token can call.
+		if !b.API {
+			continue
+		}
+		for _, m := range b.Methods {
+			p := b.Permission(m.Verb)
+			if keep(m.Verb) && !slices.Contains(out, p) {
+				out = append(out, p)
+			}
+		}
+	}
+
+	return out
+}
+
 // ResolvePermissions computes the effective permission set for a token.
 // If directPermissions is non-empty, it is returned directly (IdP override).
-// Otherwise roles are expanded through customRoles first, then DefaultRolePermissions.
+// Otherwise roles are expanded through customRoles first, then RolePermissions.
 func ResolvePermissions(
 	roles []string,
 	directPermissions []string,
@@ -229,7 +299,7 @@ func ResolvePermissions(
 			}
 		}
 		// Fall back to default role permissions
-		if perms, ok := DefaultRolePermissions[role]; ok {
+		if perms, ok := RolePermissions(role); ok {
 			for _, p := range perms {
 				set[p] = true
 			}

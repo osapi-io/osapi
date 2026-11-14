@@ -31,8 +31,8 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/controller/api/file/gen"
-	"github.com/osapi-io/osapi/internal/job"
 )
 
 // GetFileStale returns deployments where the source object has been updated
@@ -81,7 +81,7 @@ func (f *File) GetFileStale(
 			continue
 		}
 
-		var state job.FileState
+		var state managedfile.State
 		if err := json.Unmarshal(entry.Value(), &state); err != nil {
 			f.logger.Debug(
 				"skipping malformed state entry",

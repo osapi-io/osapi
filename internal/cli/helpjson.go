@@ -100,7 +100,7 @@ func HelpJSON(
 			Long:        c.Long,
 			Usage:       c.UseLine(),
 			Example:     c.Example,
-			Runnable:    c.Runnable(),
+			Runnable:    runnable(c),
 			Flags:       []HelpFlag{},
 			Subcommands: []HelpSubcommand{},
 		},

@@ -71,7 +71,7 @@ $ osapi client node user create --target web-01 \
 $ osapi client node user update --target web-01 --name deploy --lock
 
 # Change password
-$ osapi client node user password --target web-01 \
+$ osapi client node user set-password --target web-01 \
     --name deploy --password 'newpass123'
 
 # Delete a user
@@ -85,11 +85,11 @@ $ osapi client node user delete --target web-01 --name deploy
 $ osapi client node user ssh-key list --target web-01 --name deploy
 
 # Add an SSH key
-$ osapi client node user ssh-key add --target web-01 \
+$ osapi client node user ssh-key create --target web-01 \
     --name deploy --key 'ssh-ed25519 AAAA... user@laptop'
 
 # Remove an SSH key by fingerprint
-$ osapi client node user ssh-key remove --target web-01 \
+$ osapi client node user ssh-key delete --target web-01 \
     --name deploy --fingerprint 'SHA256:abc123...'
 ```
 

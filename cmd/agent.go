@@ -23,9 +23,11 @@ package cmd
 import (
 	"log/slog"
 
-	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/osapi-io/osapi/internal/behaviorcmd"
+	"github.com/osapi-io/osapi/internal/cli"
 )
 
 // agentCmd represents the agent command.
@@ -56,6 +58,11 @@ processes jobs, and reports status back to the control plane.`,
 
 func init() {
 	rootCmd.AddCommand(agentCmd)
+
+	// Each behavior's settings, as --<behavior>-<setting> flags bound to
+	// behaviors.<behavior>.<setting>. The agent runs the methods that read
+	// them, so the flags are here.
+	behaviorcmd.SettingFlags(agentCmd.PersistentFlags(), viper.GetViper())
 
 	// Agent configuration flags
 	agentCmd.PersistentFlags().

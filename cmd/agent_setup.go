@@ -29,6 +29,9 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/agent"
+	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/host"
+	sysctlBehavior "github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/exec"
@@ -52,7 +55,6 @@ import (
 	powerProv "github.com/osapi-io/osapi/internal/provider/node/power"
 	processProv "github.com/osapi-io/osapi/internal/provider/node/process"
 	serviceProv "github.com/osapi-io/osapi/internal/provider/node/service"
-	sysctlProv "github.com/osapi-io/osapi/internal/provider/node/sysctl"
 	timezoneProv "github.com/osapi-io/osapi/internal/provider/node/timezone"
 	userProv "github.com/osapi-io/osapi/internal/provider/node/user"
 	cronProv "github.com/osapi-io/osapi/internal/provider/schedule/cron"
@@ -305,6 +307,23 @@ func setupAgent(
 		certificateProvider,
 	)
 
+	// Behaviors run beside the categories above, served under /api/next.
+	// Each builds its own provider for this platform from what it declares.
+	behaviorProviders := agent.BuildBehaviorProviders(host.Host{
+		Platform:  plat,
+		Container: platform.IsContainer(),
+		Hostname:  hostname,
+		Logger:    log,
+		FS:        appFs,
+		Exec:      execManager,
+		FileState: fileStateKV,
+	}, log)
+	registry.Register(
+		job.CategoryBehavior,
+		agent.NewBehaviorProcessor(behaviorProviders, log),
+		behaviorProviders.All()...,
+	)
+
 	a := agent.New(
 		appFs,
 		appConfig,
@@ -401,7 +420,8 @@ func createFileProvider(
 }
 
 // createSysctlProvider creates a platform-specific sysctl provider. On Debian,
-// the sysctl provider writes conf files directly to /etc/sysctl.d/ and tracks
+// the sysctl provider writes conf files directly to behaviors.sysctl.dir,
+// /etc/sysctl.d/ by default, and tracks
 // state in the file-state KV. On other platforms, all operations return
 // ErrUnsupported.
 func createSysctlProvider(
@@ -410,20 +430,24 @@ func createSysctlProvider(
 	fileStateKV jetstream.KeyValue,
 	execManager exec.Manager,
 	hostname string,
-) sysctlProv.Provider {
+) sysctlBehavior.Provider {
 	plat := platform.Detect()
 
 	switch plat {
 	case "debian":
 		if fileStateKV == nil {
 			log.Warn("file state KV not available, sysctl operations disabled")
-			return sysctlProv.NewLinuxProvider()
+			return sysctlBehavior.NewLinuxProvider()
 		}
-		return sysctlProv.NewDebianProvider(log, fs, fileStateKV, execManager, hostname)
+		// behaviors.sysctl.dir, decoded when the config was read.
+		dir := behavior.Settings[sysctlBehavior.Settings](sysctlBehavior.Behavior).Dir
+
+		return sysctlBehavior.NewDebianProvider(log, fs, fileStateKV, execManager, hostname).
+			WithDir(dir)
 	case "darwin":
-		return sysctlProv.NewDarwinProvider()
+		return sysctlBehavior.NewDarwinProvider()
 	default:
-		return sysctlProv.NewLinuxProvider()
+		return sysctlBehavior.NewLinuxProvider()
 	}
 }
 

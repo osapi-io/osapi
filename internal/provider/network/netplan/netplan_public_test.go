@@ -36,8 +36,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
-	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan"
 )
@@ -349,7 +349,7 @@ func (suite *NetplanPublicTestSuite) TestRemoveConfig() {
 					Return("", nil)
 
 				// KV state exists for undeploy marking.
-				state := job.FileState{
+				state := managedfile.State{
 					Path:       testPath,
 					SHA256:     testSHA(),
 					Mode:       "0644",
@@ -439,7 +439,7 @@ func (suite *NetplanPublicTestSuite) TestRemoveConfig() {
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
 					Return("", nil)
 
-				state := job.FileState{
+				state := managedfile.State{
 					Path:       testPath,
 					SHA256:     testSHA(),
 					Mode:       "0644",

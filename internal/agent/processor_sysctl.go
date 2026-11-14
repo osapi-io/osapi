@@ -27,8 +27,8 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/job"
-	"github.com/osapi-io/osapi/internal/provider/node/sysctl"
 )
 
 // processSysctlOperation dispatches sysctl sub-operations.
@@ -74,7 +74,7 @@ func processSysctlList(
 ) (json.RawMessage, error) {
 	logger.Debug("executing sysctl.List")
 
-	entries, err := sysctlProvider.List(ctx)
+	entries, err := sysctlProvider.List(ctx, "")
 	if err != nil {
 		return nil, err
 	}

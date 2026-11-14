@@ -37,6 +37,19 @@ const sidebars: SidebarsConfig = {
       },
       // @ts-ignore
       items: require('./docs/gen/api/sidebar.js')
+    },
+    {
+      type: 'category',
+      label: 'API (next)',
+      link: {
+        type: 'generated-index',
+        title: 'API (next)',
+        description:
+          'The API generated from behavior definitions, served under /api/next.',
+        slug: '/category/api-next'
+      },
+      // @ts-ignore
+      items: require('./docs/gen/api-next/sidebar.js')
     }
     // {
     //   type: 'category',

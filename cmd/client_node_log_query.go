@@ -21,8 +21,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
@@ -33,8 +31,14 @@ import (
 var clientNodeLogQueryCmd = &cobra.Command{
 	Use:   "query",
 	Short: "Query journal entries",
-	Long:  `Query journal log entries on the target node.`,
-	Run: func(cmd *cobra.Command, _ []string) {
+	Long:  `Query journal log entries on the target node. With --unit, only entries\nfrom that systemd unit.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if unit, _ := cmd.Flags().GetString("unit"); unit != "" {
+			clientNodeLogQueryUnitCmd.Run(cmd, args)
+
+			return
+		}
+
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
 
@@ -66,11 +70,7 @@ var clientNodeLogQueryCmd = &cobra.Command{
 			return
 		}
 
-		if resp.Data.JobID != "" {
-			fmt.Println()
-			cli.PrintKV("Job ID", resp.Data.JobID)
-			fmt.Println()
-		}
+		cli.PrintJobID(resp.Data.JobID)
 
 		results := make([]cli.ResultRow, 0)
 		for _, r := range resp.Data.Results {
@@ -116,6 +116,9 @@ var clientNodeLogQueryCmd = &cobra.Command{
 
 func init() {
 	clientNodeLogCmd.AddCommand(clientNodeLogQueryCmd)
+
+	clientNodeLogQueryCmd.PersistentFlags().
+		String("unit", "", "Only entries from this systemd unit, such as ssh")
 
 	clientNodeLogQueryCmd.PersistentFlags().
 		Int("lines", 100, "Maximum number of log lines to return")

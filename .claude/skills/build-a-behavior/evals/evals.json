@@ -1,0 +1,158 @@
+{
+  "skill_name": "build-a-behavior",
+  "evals": [
+    {
+      "id": "motd",
+      "prompt": "Add a behavior to osapi that reads and sets the host's message of the day, /etc/motd. Name it motd.",
+      "behavior": "motd",
+      "expected_output": "internal/behaviors/motd with get and update, a Debian provider writing the file named by a setting, examples whose effects test the provider, and every check passing.",
+      "assertions": [
+        "behavior validate passes",
+        "the behavior is registered under its name",
+        "its package tests pass with 100% coverage",
+        "every test in internal/behaviors/all passes",
+        "every write example that changes the host declares an effect",
+        "generated files are current",
+        "lint reports no issues in the behavior",
+        "nothing outside the behavior, its registration and generated files changed"
+      ],
+      "kind": "build"
+    },
+    {
+      "id": "modules",
+      "prompt": "Add a behavior to osapi that manages kernel modules loaded at boot: list them, add one, remove one, each as a file under /etc/modules-load.d. Adding one should also load it with modprobe. Name it modules.",
+      "behavior": "modules",
+      "expected_output": "internal/behaviors/modules with list, create and delete, a keyed method, a Debian provider running modprobe with sudo declared, refusals for bad module names, and every check passing.",
+      "assertions": [
+        "behavior validate passes",
+        "the behavior is registered under its name",
+        "its package tests pass with 100% coverage",
+        "every test in internal/behaviors/all passes",
+        "every write example that changes the host declares an effect",
+        "generated files are current",
+        "lint reports no issues in the behavior",
+        "nothing outside the behavior, its registration and generated files changed",
+        "modprobe is declared with behavior.Sudo",
+        "at least one refusal is declared with Fails"
+      ],
+      "sudo": "modprobe",
+      "refusals": true,
+      "kind": "build"
+    },
+    {
+      "id": "aptpkg",
+      "kind": "build",
+      "prompt": "Add a building block to osapi that installs and removes Debian packages with apt-get, for other behaviors to use when they need a package on the host. Operators should not call it directly. Name it aptpkg.",
+      "behavior": "aptpkg",
+      "expected_output": "An internal behavior: no API, CLI, routes or gen/ directory, apt-get declared with Sudo, examples whose effects test the provider, and every check passing.",
+      "assertions": [
+        "behavior validate passes",
+        "the behavior is registered under its name",
+        "its package tests pass with 100% coverage",
+        "every test in internal/behaviors/all passes",
+        "generated files are current",
+        "lint reports no issues in the behavior",
+        "nothing outside the behavior, its registration and generated files changed",
+        "it is internal: no API, no CLI, no gen/ directory",
+        "apt-get is declared with behavior.Sudo"
+      ],
+      "internal": true,
+      "sudo": "apt-get"
+    },
+    {
+      "id": "issue",
+      "kind": "build",
+      "prompt": "Add a behavior to osapi that reads and sets the pre-login banner in /etc/issue.net. osapi should keep a record of the file it writes, the way it does for its sysctl files. Name it issue.",
+      "behavior": "issue",
+      "expected_output": "A served behavior that requires managedfile and writes the banner through it rather than writing the file itself, and every check passing.",
+      "assertions": [
+        "behavior validate passes",
+        "the behavior is registered under its name",
+        "its package tests pass with 100% coverage",
+        "every test in internal/behaviors/all passes",
+        "generated files are current",
+        "lint reports no issues in the behavior",
+        "nothing outside the behavior, its registration and generated files changed",
+        "it requires managedfile"
+      ],
+      "requires": "managedfile"
+    },
+    {
+      "id": "loadavg",
+      "kind": "build",
+      "prompt": "Add a read-only behavior to osapi that reports the host's 1, 5 and 15 minute load averages from /proc/loadavg. It should work on any Linux distribution. Name it loadavg.",
+      "behavior": "loadavg",
+      "expected_output": "A served behavior with one read method and a single provider declared for linux, so every distribution gets it and macOS reports skipped, and every check passing.",
+      "assertions": [
+        "behavior validate passes",
+        "the behavior is registered under its name",
+        "its package tests pass with 100% coverage",
+        "every test in internal/behaviors/all passes",
+        "generated files are current",
+        "lint reports no issues in the behavior",
+        "nothing outside the behavior, its registration and generated files changed",
+        "its only platform is linux"
+      ],
+      "platforms": "linux"
+    },
+    {
+      "id": "restart",
+      "kind": "refuse",
+      "prompt": "Add a behavior to osapi that restarts a systemd service on a host, given the service's name.",
+      "behavior": "restart",
+      "expected_output": "Nothing written. The session says a behavior cannot express an action method like restart yet, from the skill's Not yet list, rather than building around it.",
+      "assertions": [
+        "nothing in the checkout changed",
+        "the answer names the missing action method"
+      ]
+    },
+    {
+      "id": "swap",
+      "kind": "ask",
+      "prompt": "I want osapi to manage swap on my hosts.",
+      "behavior": "swap",
+      "expected_output": "Nothing written. The request leaves open what to manage (a swap file, a partition, swappiness, which sysctl already covers), which methods and which platforms, so the session asks before building.",
+      "assertions": [
+        "nothing in the checkout changed",
+        "the answer asks the user at least two questions"
+      ]
+    },
+    {
+      "id": "apptoken",
+      "kind": "build",
+      "prompt": "Add a behavior to osapi that writes the API token my app reads from /etc/myapp/token. The app runs as root, so the file should be owned by root and readable only by root. It should set the token, and report whether one is set without ever showing it. Debian only. Name it apptoken.",
+      "behavior": "apptoken",
+      "expected_output": "A served behavior whose token input is tagged secret, so it is kept out of the audit log, traces and spec examples, and whose read reports whether a token is set rather than the token.",
+      "assertions": [
+        "behavior validate passes",
+        "the behavior is registered under its name",
+        "its package tests pass with 100% coverage",
+        "every test in internal/behaviors/all passes",
+        "every write example that changes the host declares an effect",
+        "generated files are current",
+        "lint reports no issues in the behavior",
+        "the token input is tagged secret"
+      ],
+      "secret": true
+    },
+    {
+      "id": "neighbors",
+      "kind": "build",
+      "prompt": "Add a read-only behavior to osapi, in the network group, that lists the host's neighbor table (its ARP and NDP entries) from `ip neigh`. Name it neighbors.",
+      "behavior": "neighbors",
+      "dir": "network/neighbors",
+      "expected_output": "A grouped behavior under internal/behaviors/network/neighbors, declared with Under(\"network\") and served at /api/next/node/{hostname}/network/neighbors, with a list method parsing ip neigh's output.",
+      "assertions": [
+        "behavior validate passes",
+        "the behavior is registered under its name",
+        "its package tests pass with 100% coverage",
+        "every test in internal/behaviors/all passes",
+        "every write example that changes the host declares an effect",
+        "generated files are current",
+        "lint reports no issues in the behavior",
+        "it is under the network group"
+      ],
+      "group": "network"
+    }
+  ]
+}

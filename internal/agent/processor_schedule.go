@@ -36,6 +36,8 @@ func NewScheduleProcessor(
 	cronProvider cron.Provider,
 	logger *slog.Logger,
 ) ProcessorFunc {
+	logger = logger.With(slog.String("subsystem", "agent.processor.schedule"))
+
 	return func(_ context.Context, req job.Request) (json.RawMessage, error) {
 		if cronProvider == nil {
 			return nil, fmt.Errorf("cron provider not available")

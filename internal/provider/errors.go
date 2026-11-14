@@ -20,7 +20,7 @@
 
 package provider
 
-import "errors"
+import "github.com/osapi-io/osapi/internal/behavior"
 
 // The causes a provider can report that the API answers differently. A provider
 // returns one of these wrapped in an error that says which thing and where, and
@@ -29,23 +29,25 @@ import "errors"
 //
 // Anything else is a failure with no further meaning, which the API answers with
 // 500. Adding a sentinel is how a new distinction reaches an HTTP status; it is
-// never reached by matching on words.
+// never reached by matching on words. The values are internal/behavior's, which
+// behaviors return, so a hand-written provider and a behavior report the same
+// error.
 var (
 	// ErrUnsupported means the operation is not supported on the current OS
 	// family. The agent maps this to StatusSkipped instead of StatusFailed.
-	ErrUnsupported = errors.New("operation not supported on this OS family")
+	ErrUnsupported = behavior.ErrUnsupported
 
 	// ErrNotFound means the thing the request named is not on the host: a user,
 	// a group, a service, a cron entry, a sysctl key, a package.
-	ErrNotFound = errors.New("not found")
+	ErrNotFound = behavior.ErrNotFound
 
 	// ErrNotManaged means the thing exists on the host but osapi did not deploy
 	// it, so osapi will not change or remove it. Distinct from ErrNotFound
 	// because the answer to the operator is different: the file is there, and
 	// something else owns it.
-	ErrNotManaged = errors.New("not managed by osapi")
+	ErrNotManaged = behavior.ErrNotManaged
 
 	// ErrNotInstalled means a program an operation depends on is absent, so the
 	// operation cannot be carried out on this host at all.
-	ErrNotInstalled = errors.New("not installed")
+	ErrNotInstalled = behavior.ErrNotInstalled
 )

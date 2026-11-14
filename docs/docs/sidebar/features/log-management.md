@@ -51,10 +51,10 @@ osapi client node log query --target web-01 \
   --lines 50 --since 1h --priority err
 
 # Query journal entries for the sshd unit
-osapi client node log unit --target web-01 --name sshd.service
+osapi client node log query --target web-01 --unit sshd.service
 
 # List available log sources
-osapi client node log source --target web-01
+osapi client node log list-sources --target web-01
 
 # Broadcast log query to all hosts
 osapi client node log query --target _all --lines 20

@@ -1,6 +1,12 @@
-______________________________________________________________________
-
-## name: osapi description: > Operate Linux hosts through osapi: read and change kernel parameters, packages, services, users, files, DNS, NTP and the rest on one host, a group, or the whole fleet. Use when asked to inspect or configure a host osapi manages, to run an osapi command, or to find out what osapi can do. Do not use for changing osapi's own code.
+---
+name: osapi
+description: >
+  Operate Linux hosts through osapi: read and change kernel parameters,
+  packages, services, users, files, DNS, NTP and the rest on one host, a group,
+  or the whole fleet. Use when asked to inspect or configure a host osapi
+  manages, to run an osapi command, or to find out what osapi can do. Do not use
+  for changing osapi's own code.
+---
 
 # osapi
 
@@ -13,8 +19,8 @@ host.
 
 1. **Ask the binary, not memory.** Before running a command, run
    `osapi help <command...> --json` for its exact flags. Before building a
-   request, run `osapi behavior describe <behavior> <method> --json` for its
-   input and output schema. Flags and fields change between releases.
+   request, run `osapi behavior get --name <behavior> --method <method> --json`
+   for its input and output schema. Flags and fields change between releases.
 2. **Always pass `--json`.** Output is the API's response body. On failure,
    stderr is one document, `{"error", "code"}`. Match on `code`, never on the
    message. Exit 2 means the command was called wrongly; fix the call rather

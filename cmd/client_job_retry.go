@@ -36,8 +36,8 @@ var clientJobRetryCmd = &cobra.Command{
 	Long:  `Creates a new job using the same operation data as an existing job via the REST API.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
-		jobID, _ := cmd.Flags().GetString("job-id")
-		targetHostname, _ := cmd.Flags().GetString("target-hostname")
+		jobID, _ := cmd.Flags().GetString("id")
+		targetHostname, _ := cmd.Flags().GetString("target")
 
 		resp, err := sdkClient.Job.Retry(ctx, jobID, targetHostname)
 		if err != nil {
@@ -50,7 +50,7 @@ var clientJobRetryCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println()
+		cli.PrintHeading("Job")
 		cli.PrintKV("Job ID", resp.Data.JobID, "Status", resp.Data.Status)
 		if resp.Data.Revision != 0 {
 			cli.PrintKV("Revision", fmt.Sprintf("%d", resp.Data.Revision))
@@ -69,9 +69,9 @@ func init() {
 	clientJobCmd.AddCommand(clientJobRetryCmd)
 
 	clientJobRetryCmd.PersistentFlags().
-		StringP("job-id", "", "", "Job ID to retry")
+		StringP("id", "", "", "Job ID to retry")
 	clientJobRetryCmd.PersistentFlags().
-		StringP("target-hostname", "", "_any", "Override target hostname (_any, _all, or specific hostname)")
+		StringP("target", "T", "_any", "Target: _all, _any, hostname, or label (group:web.dev)")
 
-	_ = clientJobRetryCmd.MarkPersistentFlagRequired("job-id")
+	_ = clientJobRetryCmd.MarkPersistentFlagRequired("id")
 }

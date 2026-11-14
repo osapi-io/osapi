@@ -85,7 +85,7 @@ func (s *JobSmokeSuite) TestJobGet() {
 	}{
 		{
 			name: "returns job details for known job id",
-			args: []string{"client", "job", "get", "--job-id", jobID, "--json"},
+			args: []string{"client", "job", "get", "--id", jobID, "--json"},
 			validateFunc: func(
 				stdout string,
 				exitCode int,
@@ -131,7 +131,7 @@ func (s *JobSmokeSuite) TestJobDelete() {
 	}{
 		{
 			name: "deletes a job by id",
-			args: []string{"client", "job", "delete", "--job-id", triggerResp.JobID, "--json"},
+			args: []string{"client", "job", "delete", "--id", triggerResp.JobID, "--json"},
 			validateFunc: func(
 				stdout string,
 				exitCode int,
@@ -172,7 +172,7 @@ func (s *JobSmokeSuite) TestJobRetry() {
 	}{
 		{
 			name: "retries a job by id",
-			args: []string{"client", "job", "retry", "--job-id", triggerResp.JobID, "--json"},
+			args: []string{"client", "job", "retry", "--id", triggerResp.JobID, "--json"},
 			validateFunc: func(
 				stdout string,
 				exitCode int,

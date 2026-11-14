@@ -38,12 +38,12 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/api"
 	apifile "github.com/osapi-io/osapi/internal/controller/api/file"
 	"github.com/osapi-io/osapi/internal/controller/api/file/gen"
 	"github.com/osapi-io/osapi/internal/controller/api/file/mocks"
-	"github.com/osapi-io/osapi/internal/job"
 	jobMocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
 
@@ -139,7 +139,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 					Keys(gomock.Any()).
 					Return([]string{stateKey}, nil)
 
-				state := job.FileState{
+				state := managedfile.State{
 					ObjectName: "hello-echo",
 					Path:       "/etc/systemd/system/osapi-hello.service",
 					SHA256:     oldSHA,
@@ -180,7 +180,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 					Keys(gomock.Any()).
 					Return([]string{stateKey}, nil)
 
-				state := job.FileState{
+				state := managedfile.State{
 					ObjectName: "hello-echo",
 					Path:       "/etc/systemd/system/osapi-hello.service",
 					SHA256:     oldSHA,
@@ -214,7 +214,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 					Keys(gomock.Any()).
 					Return([]string{stateKey}, nil)
 
-				state := job.FileState{
+				state := managedfile.State{
 					ObjectName:   "hello-echo",
 					Path:         "/etc/systemd/system/osapi-hello.service",
 					SHA256:       oldSHA,
@@ -245,7 +245,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 					Keys(gomock.Any()).
 					Return([]string{stateKey}, nil)
 
-				state := job.FileState{
+				state := managedfile.State{
 					ObjectName: "hello-echo",
 					Path:       "/etc/systemd/system/osapi-hello.service",
 					SHA256:     oldSHA,
@@ -328,7 +328,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 					Keys(gomock.Any()).
 					Return([]string{certKey}, nil)
 
-				state := job.FileState{
+				state := managedfile.State{
 					ObjectName: "my-ca",
 					Path:       "/usr/local/share/ca-certificates/osapi-my-ca.crt",
 					SHA256:     oldSHA,
@@ -366,7 +366,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 					Keys(gomock.Any()).
 					Return([]string{cronKey}, nil)
 
-				state := job.FileState{
+				state := managedfile.State{
 					ObjectName: "backup-cron",
 					Path:       "/etc/cron.d/osapi-backup",
 					SHA256:     oldSHA,
@@ -404,7 +404,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 					Keys(gomock.Any()).
 					Return([]string{fileKey}, nil)
 
-				state := job.FileState{
+				state := managedfile.State{
 					ObjectName: "app-conf",
 					Path:       "/tmp/app.conf",
 					SHA256:     oldSHA,
@@ -441,7 +441,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 					Keys(gomock.Any()).
 					Return([]string{shortKey}, nil)
 
-				state := job.FileState{
+				state := managedfile.State{
 					ObjectName: "test",
 					Path:       "/tmp/test",
 					SHA256:     oldSHA,

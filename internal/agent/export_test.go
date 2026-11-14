@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"io/fs"
 	"log/slog"
+	osexec "os/exec"
 	"time"
 
 	"github.com/avfs/avfs"
@@ -33,6 +34,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/agent/identity"
 	"github.com/osapi-io/osapi/internal/agent/pki"
+	"github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/command"
@@ -47,7 +49,6 @@ import (
 	memProv "github.com/osapi-io/osapi/internal/provider/node/memory"
 	"github.com/osapi-io/osapi/internal/provider/node/ntp"
 	"github.com/osapi-io/osapi/internal/provider/node/power"
-	"github.com/osapi-io/osapi/internal/provider/node/sysctl"
 	"github.com/osapi-io/osapi/internal/provider/node/timezone"
 )
 
@@ -784,4 +785,16 @@ func ExportClassifyProviderError(
 	err error,
 ) job.ErrorCode {
 	return classifyProviderError(err)
+}
+
+// SetLookPath overrides how MissingPrograms finds a program.
+func SetLookPath(
+	fn func(string) (string, error),
+) {
+	lookPath = fn
+}
+
+// ResetLookPath restores the PATH lookup.
+func ResetLookPath() {
+	lookPath = osexec.LookPath
 }

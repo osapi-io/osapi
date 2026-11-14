@@ -24,6 +24,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/osapi-io/osapi/internal/behavior"
 )
 
 const (
@@ -84,7 +86,9 @@ func Summarize(
 	// marshalJSON is the package's existing seam, in stream_store.go. Reaching
 	// this failure needs it: a value that came from json.Unmarshal always
 	// marshals again.
-	encoded, err := marshalJSON(redactValue(parsed))
+	// A behavior's secret fields are redacted by name too, beside the fixed
+	// list, so a behavior never edits this file.
+	encoded, err := marshalJSON(redactValue(parsed, behavior.SecretFields()))
 	if err != nil {
 		return fmt.Sprintf("[unsummarizable json, %d bytes]", len(body))
 	}
@@ -113,19 +117,20 @@ func describeContentType(
 // password.
 func redactValue(
 	v any,
+	secrets map[string]bool,
 ) any {
 	switch value := v.(type) {
 	case map[string]any:
 		out := make(map[string]any, len(value))
 
 		for k, inner := range value {
-			if sensitiveFields[strings.ToLower(k)] {
+			if sensitiveFields[strings.ToLower(k)] || secrets[k] {
 				out[k] = redacted
 
 				continue
 			}
 
-			out[k] = redactValue(inner)
+			out[k] = redactValue(inner, secrets)
 		}
 
 		return out
@@ -133,7 +138,7 @@ func redactValue(
 		out := make([]any, 0, len(value))
 
 		for _, inner := range value {
-			out = append(out, redactValue(inner))
+			out = append(out, redactValue(inner, secrets))
 		}
 
 		return out

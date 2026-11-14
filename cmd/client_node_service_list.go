@@ -48,11 +48,7 @@ var clientNodeServiceListCmd = &cobra.Command{
 			return
 		}
 
-		if resp.Data.JobID != "" {
-			fmt.Println()
-			cli.PrintKV("Job ID", resp.Data.JobID)
-			fmt.Println()
-		}
+		cli.PrintJobID(resp.Data.JobID)
 
 		results := make([]cli.ResultRow, 0)
 		for _, r := range resp.Data.Results {
@@ -83,7 +79,7 @@ var clientNodeServiceListCmd = &cobra.Command{
 		}
 		tr := cli.BuildBroadcastTable(
 			results,
-			[]string{"NAME", "STATUS", "ENABLED"},
+			[]string{"NAME", "STATE", "ENABLED"},
 		)
 		cli.PrintCompactTable(
 			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},

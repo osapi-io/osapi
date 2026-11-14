@@ -21,9 +21,8 @@
 package cmd
 
 import (
-	"fmt"
-
 	goversion "github.com/caarlos0/go-version"
+	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -70,8 +69,23 @@ var (
 		Run: func(_ *cobra.Command, _ []string) {
 			v := buildVersion(version, commit, date, builtBy, treeState)
 
-			jsonOut, _ := v.JSONString()
-			fmt.Println(jsonOut)
+			if jsonOutput {
+				jsonOut, _ := v.JSONString()
+				cli.PrintJSON([]byte(jsonOut))
+
+				return
+			}
+
+			cli.PrintHeading("Version")
+			cli.PrintKV(
+				"Version", v.GitVersion,
+				"Commit", v.GitCommit,
+				"Tree", v.GitTreeState,
+				"Built", v.BuildDate,
+				"Built by", v.BuiltBy,
+				"Go", v.GoVersion,
+				"Platform", v.Platform,
+			)
 		},
 	}
 )

@@ -9,7 +9,7 @@ Under `--json`, a failure writes one document to stderr:
 | `code`                 | What to do                                                                           |
 | ---------------------- | ------------------------------------------------------------------------------------ |
 | `usage_error` (exit 2) | the command, a flag or a required flag is wrong; run `osapi help <command> --json`   |
-| `invalid_request`      | an input breaks its schema; run `osapi behavior describe <behavior> <method> --json` |
+| `invalid_request`      | an input breaks its schema; run `osapi behavior get --name <behavior> --method <method> --json` |
 | `unauthorized`         | the token is missing or invalid                                                      |
 | `forbidden`            | the token lacks the method's `permission`                                            |
 | `not_found`            | the resource or host does not exist                                                  |

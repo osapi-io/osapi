@@ -19,11 +19,12 @@ workflow.
 - **Get familiar with the project.** Read the docs in this order:
 
   1. [Guiding Principles][principles]. Design philosophy and project values
-  2. [System Architecture][system-architecture]. REST API, NATS, CLI
+  2. [Architecture][system-architecture]. The processes, where state lives, and
+     behaviors
   3. [API Design Guidelines][api-guidelines]. REST conventions and endpoint
      structure
-  4. [Job System Architecture][job-architecture]. KV-first job processing,
-     subject routing, and the agent pipeline
+  4. [How a request runs][job-architecture]. Targeting, the KV-first job, the
+     agent's dispatch, statuses and broadcast
 
 - **Check existing work.** Is there an existing PR? Are there issues discussing
   the feature/change you want to make? Please make sure you consider/address
@@ -100,12 +101,37 @@ just deps
 - **`internal/config/`.** Viper-based config from `osapi.yaml`.
 - **`internal/telemetry/`.** Tracing, metrics, and agent self-metrics.
 - **`internal/controller/notify/`.** Condition notification system.
+- **`internal/behaviors/`.** Behaviors: each one a directory whose definition
+  builds its routes, agent dispatch, commands, spec and docs.
+  [Building a behavior][building-a-behavior] gives the layout every one follows.
+- **`internal/behavior/`.** The framework behaviors are defined with, and its
+  tooling: the host a provider is built from, the test harnesses, the spec
+  builder and the generator.
 - **`pkg/sdk/`.** Go SDK for programmatic REST API access.
 - **`ui/`.** React 19 + TypeScript + Vite + Tailwind CSS v4, embedded into the
   Go binary at build time.
 
-[System Architecture][system-architecture] describes the package layout, handler
-structure, and provider pattern in full.
+### Where a package goes
+
+- **`pkg/` is what osapi promises to code outside it**, the SDK. It imports
+  nothing from `internal/`: `internal/` looks to `pkg/` for what it needs,
+  never the other way, and `just test` fails if a `pkg/` package reaches
+  anything under `internal/`.
+- **`internal/` is everything that makes osapi work**: the agent, the
+  controller, the job system, configuration, telemetry, and behaviors.
+  Nothing outside this module imports it, so it can change freely.
+- **A package that serves only one tree sits inside it**, such as
+  `internal/behavior/behaviortest`, the fake host only behaviors' tests use,
+  rather than beside unrelated packages at the top level.
+- **An interface lives where it is used.** `internal/behavior/host` declares
+  `Exec`, the part of the command runner a provider calls, rather than taking
+  the agent's own type.
+- **`cmd/` consumes `pkg/` and `internal/`.** It wires them together and holds
+  no logic of its own worth testing.
+
+[Architecture][system-architecture] describes how the processes fit together.
+The package layout, handler structure and provider pattern are in the
+[specifications](https://github.com/osapi-io/specs/tree/main/components/osapi).
 
 `nats-client` and `nats-server` are sibling repositories, consumed as pinned
 module versions in `go.mod`. There is no `replace` directive.
@@ -428,14 +454,15 @@ valid, unlike update endpoints, which must use `AtLeastOneField`.
 
 ## Adding a new API domain
 
-Every domain must be consistent across all layers: provider, agent processor,
-API handler, SDK service, CLI commands, docs, and tests. The
-[Adding an API Domain][adding-an-api-domain] guide walks the nine steps in
-order, from the provider implementation through to verification.
+A new area of a host is a behavior: one directory under `internal/behaviors/` whose
+definition builds the routes, commands, spec, docs and telemetry.
+[Your first behavior][your-first-behavior] builds one from scratch.
 
-The principle: **pick an existing domain and `find`/`grep` for it across the
-codebase. Your new domain should appear in all the same places.** If something
-exists for `sysctl` but not for yours, it is missing.
+The hand-written domains that are not behaviors yet must stay consistent across
+all layers: provider, agent processor, API handler, SDK service, CLI commands,
+docs, and tests. The principle: **pick an existing domain and `find`/`grep` for
+it across the codebase. Your new domain should appear in all the same places.**
+If something exists for `sysctl` but not for yours, it is missing.
 
 ### Rules a domain has to follow
 
@@ -450,9 +477,11 @@ change, and the reason for each is in the corpus behind the link.
   that is absent is.** A create is idempotent and an update is not, because the
   caller issuing an update has asserted the thing exists.
   [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/providers.md)
-- **A permission missing from `DefaultRolePermissions` reaches nobody.** The
+- **A permission missing from the built-in roles reaches nobody.** The
   permission exists, the handler checks it, no token can hold it, and nothing
-  reports that the endpoint is unreachable.
+  reports that the endpoint is unreachable. A behavior's permissions are added
+  to the roles from its definition; a hand-written domain's go in
+  `builtinRolePermissions`.
   [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/permissions.md)
 - **Revalidate in the provider anything that becomes a path, a filename or a
   command argument.** Validating at the handler is not enough: the job is stored
@@ -476,7 +505,8 @@ change, and the reason for each is in the corpus behind the link.
   [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md)
 - **A field carrying a secret goes in the audit denylist.** Redaction matches on
   field name, so a new field is recorded as sent until it is added to
-  `sensitiveFields`, and no test fails if you forget.
+  `sensitiveFields`, and no test fails if you forget. A behavior tags the field
+  `secret:"true"` instead, which redacts it without editing the list.
   [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/audit.md)
 
 ## UI contributions
@@ -567,9 +597,9 @@ answer questions.
 
 If you have questions, open a [Discussion] on GitHub.
 
-[adding-an-api-domain]: docs/docs/sidebar/development/adding-an-api-domain.md
 [api-guidelines]: docs/docs/sidebar/architecture/api-guidelines.md
 [avfs]: https://github.com/avfs/avfs
+[building-a-behavior]: docs/docs/sidebar/development/behaviors.md
 [bun]: https://bun.sh
 [claude code]: https://claude.ai/code
 [configuration]: docs/docs/sidebar/usage/configuration.md
@@ -581,7 +611,7 @@ If you have questions, open a [Discussion] on GitHub.
 [go-playground/validator]: https://github.com/go-playground/validator
 [gofumpt]: https://github.com/mvdan/gofumpt
 [golangci-lint]: https://golangci-lint.run
-[job-architecture]: docs/docs/sidebar/architecture/job-architecture.md
+[job-architecture]: docs/docs/sidebar/architecture/request-flow.md
 [just]: https://just.systems
 [mdformat]: https://pypi.org/project/mdformat/
 [mise]: https://mise.jdx.dev
@@ -589,7 +619,8 @@ If you have questions, open a [Discussion] on GitHub.
 [node.js]: https://nodejs.org
 [prettier]: https://prettier.io
 [principles]: docs/docs/sidebar/architecture/principles.md
-[system-architecture]: docs/docs/sidebar/architecture/system-architecture.md
+[system-architecture]: docs/docs/sidebar/architecture/architecture.md
 [ui-architecture]: docs/docs/sidebar/architecture/ui.md
 [ui-development]: docs/docs/sidebar/development/ui-development.md
 [uv]: https://docs.astral.sh/uv/
+[your-first-behavior]: docs/docs/sidebar/development/your-first-behavior.md

@@ -33,8 +33,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
-	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider/file"
 	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
@@ -47,7 +47,7 @@ func managedStateJSON(
 	objectName string,
 	path string,
 ) []byte {
-	state := job.FileState{
+	state := managedfile.State{
 		ObjectName: objectName,
 		Path:       path,
 		SHA256:     "abc123",

@@ -21,12 +21,49 @@
 package authtoken_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
+
+type motdProvider interface{ Message() string }
+
+type motdIn struct {
+	Text string `json:"text"`
+}
+
+type motdOut struct {
+	Text    string `json:"text"`
+	Changed bool   `json:"changed"`
+}
+
+func motd(
+	_ context.Context,
+	_ motdProvider,
+	in motdIn,
+) (motdOut, error) {
+	return motdOut{Text: in.Text}, nil
+}
+
+// A behavior registered in this test binary only, so its permissions are
+// not among the hand-written domains'.
+// hiddenperm is not served, so a token can never call it and it adds no
+// permission.
+var _ = behavior.Register(behavior.Define("hiddenperm", "Used by other behaviors", behavior.Node,
+	behavior.Internal,
+	behavior.Read("get", motd),
+))
+
+var _ = behavior.Register(behavior.Define("motdperm", "Message of the day", behavior.API,
+	behavior.Node,
+	behavior.Read("get", motd),
+	behavior.Write("update", motd),
+))
 
 type PermissionsPublicTestSuite struct {
 	suite.Suite
@@ -44,7 +81,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			name:  "admin role gets all permissions",
 			roles: []string{"admin"},
 			validateFunc: func(resolved map[string]bool) {
-				for _, p := range authtoken.AllPermissions {
+				for _, p := range authtoken.AllPermissions() {
 					s.True(resolved[p], "expected permission %s to be present", p)
 				}
 			},
@@ -115,7 +152,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			name:  "unknown role gets no permissions",
 			roles: []string{"unknown"},
 			validateFunc: func(resolved map[string]bool) {
-				for _, p := range authtoken.AllPermissions {
+				for _, p := range authtoken.AllPermissions() {
 					s.False(resolved[p], "expected permission %s to be absent", p)
 				}
 			},
@@ -124,7 +161,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			name:  "empty roles gets no permissions",
 			roles: []string{},
 			validateFunc: func(resolved map[string]bool) {
-				for _, p := range authtoken.AllPermissions {
+				for _, p := range authtoken.AllPermissions() {
 					s.False(resolved[p], "expected permission %s to be absent", p)
 				}
 			},
@@ -133,7 +170,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			name:  "nil roles gets no permissions",
 			roles: nil,
 			validateFunc: func(resolved map[string]bool) {
-				for _, p := range authtoken.AllPermissions {
+				for _, p := range authtoken.AllPermissions() {
 					s.False(resolved[p], "expected permission %s to be absent", p)
 				}
 			},
@@ -200,6 +237,14 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			},
 		},
 		{
+			name:  "a built-in role grants a behavior's permissions by verb",
+			roles: []string{"read"},
+			validateFunc: func(resolved map[string]bool) {
+				s.True(resolved["motdperm:read"])
+				s.False(resolved["motdperm:write"])
+			},
+		},
+		{
 			name:  "multiple roles merge permissions",
 			roles: []string{"read", "write"},
 			validateFunc: func(resolved map[string]bool) {
@@ -224,6 +269,72 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 				tt.directPermissions,
 				tt.customRoles,
 			))
+		})
+	}
+}
+
+func (s *PermissionsPublicTestSuite) TestAllPermissions() {
+	all := authtoken.AllPermissions()
+
+	s.Contains(all, authtoken.PermSysctlRead, "the hand-written domains' permissions")
+	s.Contains(all, "motdperm:read", "a behavior's, from its methods")
+	s.Contains(all, "motdperm:write")
+	s.NotContains(all, "hiddenperm:read", "a behavior with no API adds no permission")
+	seen := map[string]bool{}
+	for _, p := range all {
+		s.False(seen[p], "%s is listed twice", p)
+		seen[p] = true
+	}
+}
+
+func (s *PermissionsPublicTestSuite) TestRolePermissions() {
+	tests := []struct {
+		name         string
+		role         string
+		validateFunc func(perms []string, ok bool)
+	}{
+		{
+			name: "when admin, it gets a behavior's read and write",
+			role: client.RoleAdmin,
+			validateFunc: func(perms []string, ok bool) {
+				s.True(ok)
+				s.Contains(perms, "motdperm:read")
+				s.Contains(perms, "motdperm:write")
+				s.Contains(perms, authtoken.PermCommandShell)
+			},
+		},
+		{
+			name: "when write, it gets a behavior's read and write",
+			role: client.RoleWrite,
+			validateFunc: func(perms []string, ok bool) {
+				s.True(ok)
+				s.Contains(perms, "motdperm:read")
+				s.Contains(perms, "motdperm:write")
+				s.NotContains(perms, authtoken.PermCommandShell)
+			},
+		},
+		{
+			name: "when read, it gets only a behavior's read",
+			role: client.RoleRead,
+			validateFunc: func(perms []string, ok bool) {
+				s.True(ok)
+				s.Contains(perms, "motdperm:read")
+				s.NotContains(perms, "motdperm:write")
+			},
+		},
+		{
+			name: "when the role is not built in",
+			role: "auditor",
+			validateFunc: func(perms []string, ok bool) {
+				s.False(ok)
+				s.Nil(perms)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.validateFunc(authtoken.RolePermissions(tt.role))
 		})
 	}
 }

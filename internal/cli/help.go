@@ -33,7 +33,7 @@ import (
 // usageTemplate is cobra's default usage template with the headings, command
 // names and flag names styled. Without color it prints the same text as
 // cobra's, so anything that reads help output keeps working.
-const usageTemplate = `{{heading "Usage:"}}{{if .Runnable}}
+const usageTemplate = `{{heading "Usage:"}}{{if runnable .}}
   {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
   {{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
 
@@ -119,6 +119,7 @@ func ApplyTheme(
 	cobra.AddTemplateFunc("sub", func(s string) string { return Sub(out, s) })
 	cobra.AddTemplateFunc("mute", func(s string) string { return Mute(out, s) })
 	cobra.AddTemplateFunc("flags", func(s string) string { return Flags(out, s) })
+	cobra.AddTemplateFunc("runnable", runnable)
 
 	root.SetUsageTemplate(usageTemplate)
 	root.SilenceUsage = true
@@ -150,6 +151,49 @@ func ApplyTheme(
 	})
 }
 
+// groupAnnotation marks a command GuardGroups gave a run function only to
+// reject unknown words. It is still a group: help and help --json say so.
+const groupAnnotation = "osapi.group"
+
+// runnable is whether c does something of its own, rather than only group
+// others.
+func runnable(
+	c *cobra.Command,
+) bool {
+	return c.Runnable() && c.Annotations[groupAnnotation] == ""
+}
+
+// GuardGroups makes every command that only groups others reject a word it
+// does not know. Cobra checks for an unknown subcommand only at the root;
+// below it, a group given one prints its help and exits 0, so a typo such as
+// `osapi config lst` looks like success. A group run bare still prints its
+// help. Call it once every command is added.
+func GuardGroups(
+	root *cobra.Command,
+) {
+	for _, c := range root.Commands() {
+		GuardGroups(c)
+	}
+	if root.Runnable() || !root.HasSubCommands() || !root.HasParent() {
+		return
+	}
+
+	if root.Annotations == nil {
+		root.Annotations = map[string]string{}
+	}
+	root.Annotations[groupAnnotation] = "true"
+	root.Args = cobra.ArbitraryArgs
+	root.RunE = func(c *cobra.Command, args []string) error {
+		if len(args) > 0 {
+			return &usageError{
+				err: fmt.Errorf("unknown command %q for %q", args[0], c.CommandPath()),
+			}
+		}
+
+		return c.Help()
+	}
+}
+
 // PrintError writes err for a person: a red cross and the message, then a
 // pointer to the command's help when the invocation itself was wrong. With
 // jsonOutput it writes the JSON error document instead.
@@ -159,6 +203,7 @@ func PrintError(
 	err error,
 	jsonOutput bool,
 ) {
+	FlushKV()
 	if jsonOutput {
 		code := CodeError
 		if IsUsageError(err) {
@@ -171,8 +216,10 @@ func PrintError(
 
 	_, _ = fmt.Fprintln(w, Failure(w, err.Error()))
 
+	// A usage error is followed by the command's usage, as cobra prints it,
+	// in the theme: what was wrong, then how to call it.
 	if IsUsageError(err) && cmd != nil {
-		hint := fmt.Sprintf("Run '%s --help' for usage.", cmd.CommandPath())
-		_, _ = fmt.Fprintln(w, Mute(w, hint))
+		_, _ = fmt.Fprintln(w)
+		_, _ = fmt.Fprint(w, cmd.UsageString())
 	}
 }

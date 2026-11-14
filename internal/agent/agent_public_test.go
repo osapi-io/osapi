@@ -39,6 +39,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/agent/identity"
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/config"
 	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
 	"github.com/osapi-io/osapi/internal/job"
@@ -112,6 +113,8 @@ func (s *AgentPublicTestSuite) TearDownTest() {
 }
 
 func (s *AgentPublicTestSuite) TearDownSubTest() {
+	agent.ResetLookPath()
+	behavior.Reset()
 	// Restore the default identity mock between table rows so tests
 	// that override getIdentityFn (e.g., identity-fails) don't leak
 	// into subsequent rows (e.g., pending-state).
@@ -180,6 +183,33 @@ func (s *AgentPublicTestSuite) TestStart() {
 					Return(nil).
 					Times(6)
 
+				s.mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(context.Canceled).
+					Times(6)
+
+				return s.buildAgent()
+			},
+			stopFunc: func(a *agent.Agent) {
+				stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+
+				a.Stop(stopCtx)
+			},
+		},
+		{
+			name: "warns when a behavior's program is missing, and starts",
+			setupFunc: func() *agent.Agent {
+				behavior.Register(behavior.Define("neighbors", "Neighbors", behavior.Node,
+					behavior.Runs("ip"),
+				))
+				agent.SetLookPath(func(string) (string, error) {
+					return "", errors.New("not found")
+				})
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+					Return(nil).
+					Times(6)
 				s.mockJobClient.EXPECT().
 					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(context.Canceled).

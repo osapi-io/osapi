@@ -92,7 +92,7 @@ func writeExport(
 		}
 	}
 
-	fmt.Println()
+	cli.PrintHeading("Export")
 	cli.PrintKV(
 		"Exported", strconv.Itoa(len(items)),
 		"Total", strconv.Itoa(totalItems),

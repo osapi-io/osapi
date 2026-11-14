@@ -52,6 +52,7 @@ func LogFatal(
 	err error,
 	kvPairs ...any,
 ) {
+	FlushKV()
 	if !jsonOutput {
 		msg := message
 		if err != nil {

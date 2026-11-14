@@ -174,6 +174,12 @@ for commands that do not support `--version`). The `-n` flag makes `sudo` fail
 immediately if a password prompt would be required, confirming that the sudoers
 entry is present and correct.
 
+The programs checked are the ones above, plus every program a behavior declares
+with `behavior.Sudo`. A behavior's page under
+[Behaviors](../behaviors/behaviors.mdx) names the programs it runs with sudo,
+and `osapi behavior get --name <name>` lists them, so a new behavior's sudoers
+entry is found there rather than here.
+
 Example output:
 
 ```

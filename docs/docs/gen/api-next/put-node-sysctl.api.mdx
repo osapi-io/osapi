@@ -1,0 +1,69 @@
+---
+id: put-node-sysctl
+title: "Change a managed kernel parameter and apply it"
+description: "Fails if osapi does not manage the parameter yet; create it first. Setting the value it already has reports changed: false."
+sidebar_label: "Change a managed kernel parameter and apply it"
+hide_title: true
+hide_table_of_contents: true
+api: eJztWG1v2zYQ/isHYsDaQXaczelW7VPaNViGvQR5WYElbkCLZ4uxRKrkKalr6L8PR0qOE3l9Q4uhQL4ksk0en3vuuRPvVkKhz5yuSFsjUnEgdeFBz8B6WWlQFj0YS1BKI+cIlCNU0skSCR0skX6GzKEkBE0w087TEE6QSJt5WHstizr8JguHUi0hlx4cVtaRhyyXZo4qhZksPA5FIkjOvUjPhV/6jIpLW6GTDMyLSSLWnw6VSMVRTX9ahSdhpUiEx6x2mpYiPV+JZygduv2a8ltr6Y3ThGLSTBKxdsGH5UaWKFKRW0/hMRGauagk5SIRDl/X2qESKbkak3uEnUo3RwI5R0PQWUjAoUd3jQqcrQMbkYlHl9IsE7iURfE4AeugkFMswGOBGVkHjxa4TMPSx8yHz3IspUhXgpYVQ/TktJmLRJTa/I5mzg7uNk2y9mGBy4+Cf7QOZsTt6ywH6cEgDXV1PR7q6nJm3Y106p14KkmEji2+OpeDt/uDf0aDp5Pbx+HlYPLdNz3gk4gPPT2zasmG78I7NFVNQBZiDKGulKQglftuZdYQGmITsqoKnQWp7Fx5trPqI7fTK8yIkTsWFmn0/GvgfpuDd3H9HaLJuJDuef/q4sJdXBj2tmk2cZ63xieJIE0FW4/qPQtOHUceRNPEbb6yxkdQ349GfWpeyCwHiupj3X3LieXrghK40ZTDTY6Uo+PkaxONaftMNF3Z6aVW23iaWVdKEqmoa616vJ3mCFd2Coe/QO1RMYOVsxl6D5Rr9iCQwEjxjSyrwNLe3gh/Go9GA/z+6XQw3lXjgfxx98lgPH7yZG9vPB6NRiMROasL8huopHMy5ANh6bd5dRfdcTAAM+vAGgysDnuur6vEe0Xya7sS7CwUw1gjKJfETqs6YwKi13zukH3wJKn222yjqUsWkV0wy1IXGDJyoasqPJEu0dbE8upzHs12QNaVNLgaIERfmyQUkPd6drdq8LZWYhtbp9YWKE1v78tWlwyET+3UyVbQOevef/wLXgYles/vJL3JbiRm2Eu9jdreUtxLwz9qCqREFYjmvolOXv+ZvzFj2wQeb8vZZ1J1EocBvxK0inEIjn/G/PxAIvdh43OnjrA3ytRmWe1crBy3+XgQOObcdUhO43WnryAghcR3iA84XCnNj7KAdg/IqeVy34HYeqyKhdcg3Vi3gFb24ejMqs201IZwjm5rEYpO8oY7h+yNRhy8Lr5BaL3A7vYDe2ZkTbl1+i0qGMD+0SEscAlr+TwE9msI7A/9wB5YN9VKoYEBHBpfz2Y601xoKnSl9j5cTh+i+zVEd9yP7mn3DuK2xKxvmeH+FJhc4PKhKn8N4d3b9rrtbpuZrQsV2tgpgqsNN16aunvXvZ9Rfs6L8kPIv1DIm0SUSLnlWUBVt01YLlKxIyu9Y/AN7RircGfV3fyanZjdO6sFLpuNicEJhzJGa3NusEafE1Vd7xsutmGRSNqHg67h+e3labh2skSOb5vaF51L6+ayi0PDjfrMhqNaP/864avDFHN5ra3zWxkLK2rNjYqz5XoxKJxpEwLpE2inD7VR6GBNCUzRaxXHOLk0asAzEULDNpn+a3Q+HrQ7HA1DU1VZT6UMmm9HDM/DfR1kOxNSsEBnsNiYC0mjgJNmCbrXZK1uM+v/HjbF8BJLpSqkNuxu7QrGGLV0LmSlRSKYOv7Hqk5EutlLdOOnlPumSRL6DN64Wk2lxzNXNA1//bpGx6OpSSKupdNyytE+XwmlPT8rkQZY7+Dq0XF7l3wMX3TktJWVrp023Ex3KhZts3jbW/Ec6pM8+rgp1CdA5L/NpElEjlKhC9zHX55HPINT3n+7s1fz2be4Yz/LsKJ3rp1sFKejs1OuFe14qwyVUTh5wzMseRNB2ipOOdNV/G4lCmnmtZzz2miSK4u8W5juFaLg1FYaVqu44tQu0DTNmhXiz8xL0/wL92mhiA==
+sidebar_class_name: "put api-method"
+info_path: gen/api-next/osapi-behaviors
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Change a managed kernel parameter and apply it"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"put"}
+  path={"/api/next/node/{hostname}/sysctl/{key}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Fails if osapi does not manage the parameter yet; create it first. Setting the value it already has reports changed: false.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./put-node-sysctl.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./put-node-sysctl.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./put-node-sysctl.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

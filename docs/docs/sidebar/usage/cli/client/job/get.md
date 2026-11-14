@@ -3,7 +3,7 @@
 Get job details and status:
 
 ```bash
-$ osapi client job get --job-id 550e8400-e29b-41d4-a716-446655440000
+$ osapi client job get --id 550e8400-e29b-41d4-a716-446655440000
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000    Status: completed
   Hostname: server1
@@ -25,8 +25,8 @@ $ osapi client job get --job-id 550e8400-e29b-41d4-a716-446655440000
 
 ## Flags
 
-| Flag       | Description        | Default  |
-| ---------- | ------------------ | -------- |
-| `--job-id` | Job ID to retrieve | required |
+| Flag   | Description        | Default  |
+| ------ | ------------------ | -------- |
+| `--id` | Job ID to retrieve | required |
 
 Job status is retrieved from the API and reflects the current state of the job.

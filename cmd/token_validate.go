@@ -21,9 +21,7 @@
 package cmd
 
 import (
-	"fmt"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -56,7 +54,7 @@ This command ensures that the token is authentic, has not expired, and conforms 
 			cli.LogFatal(logger, "failed to validate token", err)
 		}
 
-		fmt.Println()
+		cli.PrintHeading("Token")
 		cli.PrintKV("Subject", claims.Subject, "Roles", strings.Join(claims.Roles, ", "))
 		if len(claims.Permissions) > 0 {
 			cli.PrintKV("Permissions", strings.Join(claims.Permissions, ", "))
@@ -67,12 +65,12 @@ This command ensures that the token is authentic, has not expired, and conforms 
 		for p := range resolved {
 			effectivePerms = append(effectivePerms, p)
 		}
-		cli.PrintKV("Effective Permissions", strings.Join(effectivePerms, ", "))
+		cli.PrintKV("Effective permissions", strings.Join(effectivePerms, ", "))
 
 		cli.PrintKV("Audience", strings.Join(claims.Audience, ", "))
 		cli.PrintKV(
-			"Issued", claims.IssuedAt.Format(time.RFC3339),
-			"Expires", claims.ExpiresAt.Format(time.RFC3339),
+			"Issued", claims.IssuedAt.Local().Format("2006-01-02 15:04:05"),
+			"Expires", claims.ExpiresAt.Local().Format("2006-01-02 15:04:05"),
 		)
 	},
 }

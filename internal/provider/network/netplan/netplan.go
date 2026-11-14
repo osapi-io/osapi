@@ -35,10 +35,9 @@ import (
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/fsutil"
-	"github.com/osapi-io/osapi/internal/job"
-	"github.com/osapi-io/osapi/internal/provider/file"
 )
 
 // marshalJSON is a package-level variable for testing the marshal error path.
@@ -60,7 +59,7 @@ func ApplyConfig(
 	metadata map[string]string,
 ) (bool, error) {
 	sha := ComputeSHA256(content)
-	stateKey := file.BuildStateKey(hostname, path)
+	stateKey := managedfile.StateKey(hostname, path)
 
 	// Idempotency is decided by the file on disk, not by what the last apply
 	// recorded: a config edited by hand still matches the record, and skipping on
@@ -104,7 +103,7 @@ func ApplyConfig(
 	}
 
 	// Persist state in KV.
-	state := job.FileState{
+	state := managedfile.State{
 		Path:       path,
 		SHA256:     sha,
 		Mode:       "0600",
@@ -159,11 +158,11 @@ func RemoveConfig(
 	}
 
 	// Best-effort state cleanup: mark as undeployed in KV.
-	stateKey := file.BuildStateKey(hostname, path)
+	stateKey := managedfile.StateKey(hostname, path)
 
 	kvEntry, err := stateKV.Get(ctx, stateKey)
 	if err == nil {
-		var state job.FileState
+		var state managedfile.State
 		if unmarshalErr := json.Unmarshal(kvEntry.Value(), &state); unmarshalErr == nil {
 			state.UndeployedAt = time.Now().UTC().Format(time.RFC3339)
 

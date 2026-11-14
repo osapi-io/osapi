@@ -40,6 +40,10 @@ const (
 	TypeModify = client.JobTypeModify
 )
 
+// CategoryBehavior is the job category every registered behavior runs under.
+// Its operation is "<behavior>.<method>", such as "sysctl.get".
+const CategoryBehavior = "behavior"
+
 // Status represents the current status of a job.
 // Status is a type alias for client.JobStatus so internal code and the SDK
 // share the same type. All status constants are defined in pkg/sdk/client/.
@@ -744,9 +748,4 @@ type NodeStatusResponse struct {
 	// so: a zero-valued field is otherwise indistinguishable from a host with
 	// nothing to report.
 	FieldErrors map[string]string `json:"field_errors,omitempty"`
-}
-
-// Partial reports whether any read behind this status failed.
-func (r *NodeStatusResponse) Partial() bool {
-	return len(r.FieldErrors) > 0
 }
