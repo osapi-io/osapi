@@ -199,6 +199,13 @@ User osapi may run the following commands on debian-1:
     (root) /usr/bin/timedatectl set-timezone *
 `
 
+// sudoListOdd has an empty rule line and a trailing comma, which the parser
+// skips rather than reading as a program.
+const sudoListOdd = `User osapi may run the following commands on debian-1:
+    (root) NOPASSWD:
+    (root) NOPASSWD: /usr/sbin/sysctl --system,
+`
+
 const sudoListAll = `User admin may run the following commands on debian-1:
     (ALL) NOPASSWD: ALL
 `
@@ -260,6 +267,15 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 			installed: []string{"useradd", "chronyc"},
 			wantOK:    true,
 			wantPass:  []string{"sudo:useradd", "sudo:chronyc"},
+		},
+		{
+			name:      "when a rule line is empty or ends in a comma, it is skipped",
+			sudoOut:   sudoListOdd,
+			capEff:    "000000000000102f",
+			installed: []string{"sysctl", "systemctl"},
+			wantOK:    true,
+			wantPass:  []string{"sudo:sysctl"},
+			wantFail:  []string{"sudo:systemctl"},
 		},
 		{
 			name:      "when sudo needs a password, preflight fails",
