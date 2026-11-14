@@ -4,81 +4,104 @@ sidebar_position: 6
 
 # Security
 
-Four things decide what can happen on a host: who a request is from, what that
-caller may do, which agent is allowed to answer, and what the agent itself may
-run. Every request leaves a record.
+Four things control what can occur on a host:
 
-## Who is asking
+- the identity of the client that sends a request
+- the operations that the client can do
+- the agent that can answer
+- the commands that the agent can run
 
-Every API request carries a JWT, signed with the controller's key
-(`controller.api.security.signing_key`, HS256). `osapi token generate` makes one
-with roles, a subject and optionally a fixed list of permissions;
-`osapi token validate` shows what a token grants. The CLI sends the token in
-`controller.client.security.bearer_token`. Only the liveness and readiness
-probes, `/api/health` and `/api/health/ready`, answer without one.
+Each request makes a record.
 
-## What they may do
+## Who sends the request
 
-Every operation needs one permission, such as `sysctl:read` or
-`command:execute`. A token gets permissions from its roles, or carries its own
-list instead:
+Each API request has a JWT. The key of the controller signs it
+(`controller.api.security.signing_key`, HS256). `osapi token generate` makes a
+token with roles, a subject and, if you want, a fixed list of permissions.
+`osapi token validate` shows what a token gives. The CLI sends the token in
+`controller.client.security.bearer_token`. Only the liveness probe and the
+readiness probe, `/api/health` and `/api/health/ready`, answer without a token.
+
+## What the client can do
+
+Each operation needs one permission, for example `sysctl:read` or
+`command:execute`. A token gets permissions from its roles, or it has its own
+list of permissions:
 
 - **Built-in roles**: `admin`, `write` and `read`. `osapi token roles` prints
-  every permission and which role grants it, as the binary you run has them.
-- **Custom roles**, defined in `controller.api.security.roles`, each a list of
-  permissions. A custom role with a built-in name replaces it.
-- **Behaviors** add their own permissions, `<name>:read` and `<name>:write`,
-  which `admin` and `write` grant in full and `read` grants the read of.
+  each permission and the role that gives it, as the binary that you run has
+  them.
+- **Custom roles.** You define them in `controller.api.security.roles`. Each one
+  is a list of permissions. A custom role with the name of a built-in role
+  replaces the built-in role.
+- **Behaviors** add their own permissions, `<name>:read` and `<name>:write`.
+  `admin` and `write` give the two permissions. `read` gives only the read
+  permission.
 
-Permissions are split by what an operation can do, not by area. Running an
-arbitrary command (`command:execute`) and a shell (`command:shell`) are
-separate, and only `admin` has either.
+osapi divides the permissions by what an operation can do, not by area. To run
+a command (`command:execute`) and to run a shell (`command:shell`) are two
+different permissions. Only `admin` has them.
 
-## Which agent may answer
+## Which agent can answer
 
-Every agent is identified by its **machine ID**, not its hostname. Jobs are
-routed to the machine ID, so renaming a host does not redirect its work.
+The **machine ID** of an agent identifies it. The hostname does not. osapi sends jobs to the machine ID. Thus, when a host gets a new name, its work
+does not go to a different host.
 
-With PKI on (`controller.pki.enabled` and `agent.pki.enabled`), an agent must be
-accepted before it gets any work:
+With PKI on (`controller.pki.enabled` and `agent.pki.enabled`), an agent gets no
+work until an administrator accepts it:
 
-1. On first start it generates an Ed25519 keypair in `agent.pki.key_dir`.
-2. It asks to enroll, and waits; `osapi client agent list --pending` lists it.
-3. An administrator accepts it, by hostname or by key fingerprint, or the
-   controller accepts every agent itself with `controller.pki.auto_accept`.
-4. From then on the controller signs every job, the agent refuses any job that
-   is not signed by the controller, and the agent signs its results and
-   heartbeats. An agent whose heartbeat is not signed by its accepted key, or
-   that claims a hostname it did not enroll as, stops being routed to.
+1. When the agent starts for the first time, it makes an Ed25519 key pair in
+   `agent.pki.key_dir`.
+1. It sends an enrollment request and waits.
+   `osapi client agent list --pending` shows it.
+1. An administrator accepts it, by hostname or by key fingerprint. Or the
+   controller accepts each agent itself, with `controller.pki.auto_accept`.
+1. After that, the controller signs each job. The agent refuses a job that the
+   controller did not sign. The agent signs its results and its heartbeats.
 
-Keys rotate with a grace period (`controller.pki.rotation_grace_period`) in
-which both the old and the new key are accepted.
+osapi stops sending work to an agent in two cases. The first case is a heartbeat
+that the accepted key of the agent did not sign. The second case is a hostname
+that is not the hostname that the agent enrolled with.
 
-## What the agent may run
+When a key changes, a grace period (`controller.pki.rotation_grace_period`)
+starts. During it, osapi accepts the old key and the new key.
 
-The agent runs as an unprivileged user unless told otherwise. With
+`osapi client agent remove` removes the stored key of an enrolled agent. After
+that, osapi does not accept anything that the agent signs.
+
+## What the agent can run
+
+By default, the agent runs as a user without privileges. With
 `agent.privilege_escalation` on, it runs the commands that change the host
-through `sudo`, and reads without it, and the sudoers drop-in lists exactly
-which programs and arguments it may run. Linux capabilities can stand in for
-sudo where they cover the operation. At startup a preflight lists the sudo rules
-once. The agent refuses to start only when sudo needs a password. A program with
-no rule, or a missing capability, is a warning, and fails only the operations
-that need it.
+through `sudo`. It runs reads without `sudo`. The sudoers drop-in lists the
+programs and arguments that the agent can run. Linux capabilities can replace
+sudo where they include the operation.
 
-Input that becomes a file path, a filename or a command argument is checked
-twice: by the API before a job is queued, and by the provider on the host before
-it is used, because a job is stored and run later. A secret reaches a command on
-its standard input, never as an argument. Every command runs through one place,
-with a timeout of at most ten minutes.
+When the agent starts, a preflight lists the sudo rules one time. The agent
+does not start only when sudo needs a password. A program without a rule, or a
+missing capability, gives a warning. Only the operations that need it fail.
+
+osapi stores a job and runs it later. Thus the API and the provider on the host
+both check input that becomes a file path, a file name or a command argument.
+The API checks it before it puts the job on the queue. The provider checks it
+before it uses it. A secret goes to a command on its standard input, never as
+an argument. All commands run through one place, with a timeout of ten minutes
+or less.
 
 ## Audit
 
-Every authenticated request is recorded, whatever its outcome: who made it, with
-which roles and permissions, the method and path, the status, the time it took
-and a summary of what it asked for. Fields that carry secrets, such as
-`password`, `token` and `secret`, are replaced with `[redacted]` in that
-summary. The record is a NATS stream kept for `nats.audit.max_age`;
-`osapi client audit list` and `osapi client audit export` read it.
+osapi records each authenticated request, whatever the result. The record
+gives:
+
+- the client, with its roles and permissions
+- the method, the path and the status
+- the time that the request took
+- a summary of the request
+
+In the summary, osapi replaces the fields that hold secrets, for example
+`password`, `token` and `secret`, with `[redacted]`. The record is a NATS stream
+that osapi keeps for `nats.audit.max_age`. `osapi client audit list` and
+`osapi client audit export` read it.
 
 ## Design details
 
@@ -90,4 +113,4 @@ summary. The record is a NATS stream kept for `nats.audit.max_age`;
 - [Authentication](../features/authentication.md),
   [Agent identity and PKI](../features/agent-identity.md),
   [Agent hardening](../features/agent-hardening.md) and
-  [Audit logging](../features/audit-logging.md), for configuring each.
+  [Audit logging](../features/audit-logging.md) tell how to configure each one.

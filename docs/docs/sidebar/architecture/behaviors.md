@@ -4,11 +4,11 @@ sidebar_position: 4
 
 # Behaviors
 
-A behavior is one thing osapi manages on a host, such as kernel parameters,
-written once as a Go definition in `internal/behaviors/<name>/`. Everything the
-rest of the system needs to offer it is built from that definition, so a
-behavior looks the same through the API, the CLI, the SDK, the docs and the
-agent.
+A behavior is one thing that osapi manages on a host, for example kernel
+parameters. A contributor writes it one time, as a Go definition in
+`internal/behaviors/<name>/`. osapi builds from that definition all the parts
+that the rest of the system needs. Thus a behavior looks the same in the API,
+the CLI, the SDK, the docs and the agent.
 
 ```mermaid
 graph TD
@@ -25,45 +25,51 @@ graph TD
 
 ## What a definition holds
 
-- **Methods**, each a read or a write with an input and an output type. The verb
-  and the name decide the HTTP method, the route, the command and the
-  permission: sysctl's `update` is `PUT /api/next/node/{hostname}/sysctl/{key}`,
-  `osapi client next node sysctl update`, and needs `sysctl:write`.
-- **Tags on the types**: names, descriptions and validation rules. They become
-  the request fields, the CLI flags, the spec's schemas and the table columns.
-- **Settings**, standing configuration of the agent under `behaviors.<name>`,
-  each with an environment variable and an `osapi agent start` flag.
-- **Requirements**: other behaviors it is built on, whose methods it calls on
-  the same host.
-- **Platforms**: how the provider that does the work is built on each one, such
-  as Debian. On a platform the behavior does not declare, its methods report
-  `skipped` rather than failing.
-- **The programs it runs with sudo**, which the agent's preflight checks.
-- **Examples and refusals**: sample calls with what each changes on the host,
-  and calls the method rejects. They are the docs pages and the tests.
+- **Methods.** Each method is a read or a write, with an input type and an
+  output type. The verb and the name set the HTTP method, the route, the command
+  and the permission. For example, the `update` method of sysctl is
+  `PUT /api/next/node/{hostname}/sysctl/{key}` and
+  `osapi client next node sysctl update`, and it needs `sysctl:write`.
+- **Tags on the types.** They give the names, the descriptions and the
+  validation rules. osapi makes from them the request fields, the CLI flags, the
+  schemas of the spec and the table columns.
+- **Settings.** These are the agent configuration of the behavior, under
+  `behaviors.<name>`. Each setting has an environment variable and an
+  `osapi agent start` flag.
+- **Requirements.** These are the other behaviors that the behavior uses. It
+  calls their methods on the same host.
+- **Platforms.** For each platform, for example Debian, the definition tells
+  how to make the provider that does the work. On a platform that the behavior
+  does not declare, its methods report `skipped`. They do not fail.
+- **The programs that it runs with sudo.** The preflight of the agent checks
+  them.
+- **Examples and refusals.** An example is a sample call with the changes that
+  it makes on the host. A refusal is a call that the method rejects. osapi makes
+  the docs pages and the tests from them.
 
 ## What it means for an operator
 
 - **The binary describes itself.** `osapi behavior list` and
-  `osapi behavior get --name <name>` show every behavior this build has: its
-  routes, permissions, platforms, settings and types. Nothing needs looking up
-  elsewhere, and the answer always matches the build you run.
-- **Permissions follow the methods.** A behavior's are `<name>:read` and
-  `<name>:write`; the built-in roles grant them, and `osapi token roles` lists
-  every permission each role has.
-- **Skipped is not failed.** A fleet that mixes platforms reports `skipped` from
-  the hosts a behavior does not run on, and the agent logs at startup which
-  behaviors it cannot run.
-- **Settings are agent configuration.** `osapi config list` shows them beside
-  the rest, with their environment variables and flags.
-- **Telemetry is the same for every behavior**: a span per call and three
-  metrics, described in [Observability](observability.md).
+  `osapi behavior get --name <name>` show each behavior that this build has:
+  its routes, permissions, platforms, settings and types. You do not need to
+  look in a different place, and the answer always agrees with the build that
+  you run.
+- **The permissions come from the methods.** The permissions of a behavior are
+  `<name>:read` and `<name>:write`. The built-in roles give them.
+  `osapi token roles` lists each permission of each role.
+- **Skipped is not failed.** In a fleet with more than one platform, the hosts
+  that a behavior does not run on report `skipped`. When the agent starts, it
+  writes to the log the behaviors that it cannot run.
+- **Settings are agent configuration.** `osapi config list` shows them with the
+  other settings, with their environment variables and flags.
+- **The telemetry is the same for each behavior**: one span for each call, and
+  three metrics. [Observability](observability.md) describes them.
 
 ## Behaviors built on other behaviors
 
-A behavior can be built on others. sysctl writes one file per kernel parameter,
-and keeping files osapi wrote apart from everyone else's is its own job, done by
-the `managedfile` behavior:
+A behavior can use other behaviors. sysctl writes one file for each kernel
+parameter. A different behavior, `managedfile`, keeps the files that osapi wrote
+apart from the files of other tools:
 
 ```mermaid
 graph LR
@@ -71,41 +77,44 @@ graph LR
     M --> F["File on disk, record in file-state"]
 ```
 
-- **The definition declares it**: sysctl's has `behavior.Requires(managedfile)`.
-- **The agent builds the required behavior's provider first** and hands it to
-  the one that requires it. A method then calls the other's methods directly, on
-  the same host inside the same job, so there is no second job and no extra
-  round trip.
-- **A required behavior with no provider on the platform** leaves the one that
-  requires it unsupported there too: its methods report `skipped`.
-- **`behavior validate`** fails a requirement that is not registered, and a
-  cycle.
-- **`behavior get` and the Behaviors pages** show what each behavior uses and
+- **The definition declares it.** The definition of sysctl has
+  `behavior.Requires(managedfile)`.
+- **The agent makes the provider of the required behavior first.** Then it
+  gives that provider to the behavior that requires it. A method calls the
+  methods of the other behavior directly, on the same host and in the same job.
+  Thus there is no second job and no extra round trip.
+- **A required behavior without a provider on the platform** makes the behavior
+  that requires it unsupported there too. Its methods report `skipped`.
+- **`behavior validate` fails** when a requirement is not registered, and when
+  requirements make a cycle.
+- **`behavior get` and the Behaviors pages** show what each behavior uses, and
   what uses it.
 
-A behavior that exists only to be built on is **internal**: `managedfile` has no
+A behavior that only other behaviors use is **internal**. `managedfile` has no
 route, no command and no permissions, because only other behaviors call it.
-`behavior list` and its docs page still show it, with what uses it.
+`behavior list` and its docs page still show it, with the behaviors that use it.
 
-Chaining across hosts or across steps, where one call's output feeds the next
-call's input, is a workflow rather than a requirement, and is
-osapi-orchestrator's job.
+A chain across hosts or across steps is a workflow, not a requirement. In a
+workflow, the output of one call is the input of the next call. osapi-orchestrator does
+workflows.
 
 ## Beside the hand-written domains
 
-Behaviors are new. Most of what osapi manages is still hand-written domains,
-each with its own handler, processor and commands. While each domain is moved,
-its behavior is marked `Next` and served beside it, under `/api/next` and
-`osapi client next`, so both can be compared on one server. At a domain's
-cutover the mark goes, the behavior moves to `/api` and `osapi client`, and the
-hand-written code is deleted; checks name what is left to delete. sysctl is the
-first, still marked. A new behavior that replaces nothing is served under `/api`
-from the start.
+Behaviors are new. Most of what osapi manages is still in domains that people
+wrote by hand. Each domain has its own handler, processor and commands. While a
+domain moves to a behavior, the behavior has the `Next` mark. osapi serves it
+next to the domain, under `/api/next` and `osapi client next`. Thus you can
+compare the two on one server.
+
+At the cutover of a domain, the mark goes. The behavior moves to `/api` and
+`osapi client`, and the hand-written code is deleted. Checks name the code that
+is left to delete. sysctl is the first behavior, and it still has the mark. A new
+behavior that replaces no domain is under `/api` from the start.
 
 ## Where to read more
 
-- [Behaviors](../behaviors/behaviors.mdx): the page of each behavior this build
-  ships, generated from its definition.
+- [Behaviors](../behaviors/behaviors.mdx): the page of each behavior in this
+  build, generated from its definition.
 - [Building a behavior](../development/behaviors.md) and
   [Your first behavior](../development/your-first-behavior.md), for a
   contributor.

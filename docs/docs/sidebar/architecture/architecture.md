@@ -5,12 +5,12 @@ sidebar_label: Overview
 
 # Architecture
 
-osapi manages Linux hosts through typed operations. A client asks the controller
-to do something to one host, a group or the whole fleet. The controller checks
-who is asking and what they asked for, and turns the request into a job on NATS.
-An agent on each host picks the job up, does the work, and writes back what
-happened. The controller never touches a host itself, so it needs no privileges
-on one.
+osapi manages Linux hosts through typed operations. A client sends a request to
+the controller for one host, a group of hosts or all the hosts. The controller
+checks the identity of the client and the request. Then it puts the request on
+NATS as a job. An agent on each host receives the job, does the work and sends
+back the result. The controller does not change a host itself. Thus the
+controller needs no privileges on a host.
 
 ```mermaid
 graph LR
@@ -25,11 +25,16 @@ graph LR
     A2 --- H2["Host"]
 ```
 
-What osapi can do to a host comes in units called behaviors: kernel parameters,
-packages, users, DNS and so on. A behavior is one definition in Go, and its API
-routes, CLI commands, OpenAPI spec, docs pages, settings, permissions and tests
-are all built from that definition. The older areas are hand-written domains
-that are being moved to behaviors one at a time; to a caller both look the same.
+osapi divides what it can do to a host into behaviors, for example kernel
+parameters, packages, users and DNS. A behavior is one definition in Go. osapi
+builds these parts of the behavior from that definition:
+
+- the API routes and the CLI commands
+- the OpenAPI spec and the docs pages
+- the settings, the permissions and the tests
+
+The older parts of osapi are domains that people wrote by hand. osapi moves them
+to behaviors one at a time. A behavior and a domain look the same to a client.
 
 ## This section
 
@@ -44,9 +49,9 @@ that are being moved to behaviors one at a time; to a caller both look the same.
 | [Deployment](deployment.md)           | One host, many hosts, an external NATS cluster, namespaces              |
 | [UI](ui.md)                           | The embedded management dashboard                                       |
 
-These pages describe the system as an operator runs it. How each part is
-designed, and why, is in the
-[osapi specifications](https://github.com/osapi-io/specs/tree/main/components/osapi);
-each page links to the parts it summarises. What each operation does is in
-[Features](../features/features.md), and every behavior has its own page under
+These pages tell how an operator runs the system. The design of each part, and
+the reason for it, is in the
+[osapi specifications](https://github.com/osapi-io/specs/tree/main/components/osapi).
+Each page links to the parts that it summarizes. [Features](../features/features.md)
+tells what each operation does. Each behavior has its own page under
 [Behaviors](../behaviors/behaviors.mdx).

@@ -4,26 +4,27 @@ sidebar_position: 8
 
 # Deployment
 
-The three processes are the same binary, so a deployment is a choice of where
-each runs and which NATS they share. Each reads `osapi.yaml`; every setting can
-also come from an `OSAPI_` environment variable, and `osapi config list` shows
-what a host ends up with.
+The three processes are the same binary. Thus a deployment is a decision about
+where each process runs and which NATS they share. Each process reads
+`osapi.yaml`. An `OSAPI_` environment variable can also set each setting.
+`osapi config list` shows the settings that a host has.
 
 ## One host
 
-All three processes on the machine being managed, as one process:
+Run the three processes on the managed machine, as one process:
 
 ```bash
 osapi start
 ```
 
 `osapi start` runs the embedded NATS server, the controller and an agent
-together. The CLI on the same host talks to the controller on localhost. This is
-the layout for a single appliance and for development.
+together. The CLI on the same host connects to the controller on localhost. Use
+this layout for a single appliance and for development.
 
 ## A fleet
 
-One controller, one NATS server or cluster, and an agent on every managed host:
+Use one controller, one NATS server or cluster, and an agent on each managed
+host:
 
 ```mermaid
 graph TD
@@ -34,45 +35,50 @@ graph TD
     N --> A3["Agent, db-01"]
 ```
 
-- Run `osapi nats server start` on the NATS host, or point at an existing
-  cluster, and `osapi controller start` where the API should be served. Both can
-  share a host.
-- Run `osapi agent start` on each managed host, with `agent.nats` pointing at
-  NATS. Give each agent labels, such as `group: web.prod`, to target groups.
-- Turn on PKI (`controller.pki.enabled`, `agent.pki.enabled`) so only agents an
-  administrator accepted get work, and set NATS authentication so only osapi's
-  processes can connect.
-- Give the agent `agent.privilege_escalation` and the sudoers drop-in, rather
-  than running it as root.
+1. Run `osapi nats server start` on the NATS host, or use a cluster that exists.
+1. Run `osapi controller start` on the host that serves the API. The controller
+   and NATS can be on the same host.
+1. Run `osapi agent start` on each managed host, with `agent.nats` set to the
+   address of NATS. Give each agent labels, for example `group: web.prod`, so
+   that you can target groups.
+1. Enable PKI (`controller.pki.enabled`, `agent.pki.enabled`). Then only agents
+   that an administrator accepted get work.
+1. Set NATS authentication. Then only the osapi processes can connect.
+1. Give the agent `agent.privilege_escalation` and the sudoers drop-in. Do not
+   run it as root.
 
 ## An external NATS cluster
 
-A fleet in the hundreds, or one whose state must survive losing a host, uses a
-NATS cluster rather than the embedded server: JetStream with file storage and
-replicas, set in each store's section of `nats`. The controller and agents need
-only its address and credentials in `controller.nats` and `agent.nats`; the
-embedded server is not started, so run `osapi nats setup` once to create osapi's
-streams and buckets there. A cluster in operator (JWT) mode gives each process
-its own credentials file, `auth.type: creds`, so adding a host is issuing it a
-credential rather than changing the server. [State and storage](state.md) lists
-what each store holds and what it costs to lose.
+Use a NATS cluster, not the embedded server, for a fleet of hundreds of hosts.
+Also use one when the state must stay when you lose a host. Use JetStream with file
+storage and replicas, and set them in the section of each store in `nats`.
 
-## Several deployments on one NATS
+The controller and the agents need only the address and the credentials of the
+cluster, in `controller.nats` and `agent.nats`. The embedded server does not
+start. Thus run `osapi nats setup` one time to make the streams and buckets of
+osapi on the cluster.
 
-Separate fleets, such as staging and production, can share a NATS cluster by
-setting a different namespace in each one's `nats.server.namespace`,
-`controller.nats.namespace` and `agent.nats.namespace`. The namespace prefixes
-every subject and store name, so the fleets never see each other's jobs or
-state.
+A cluster in operator (JWT) mode gives each process its own credentials file,
+`auth.type: creds`. To add a host, you give it a credential. You do not change
+the server. [State and storage](state.md) lists what each store holds, and what
+occurs when you lose it.
+
+## More than one deployment on one NATS
+
+Different fleets, for example staging and production, can share a NATS cluster.
+Set a different namespace for each fleet in `nats.server.namespace`,
+`controller.nats.namespace` and `agent.nats.namespace`. The namespace is a
+prefix on each subject and each store name. Thus a fleet does not see the jobs
+or the state of another fleet.
 
 ## In a container
 
-The controller and the NATS server run in a container without anything special.
-An agent in a container manages the container, not the host, and turns off what
-a container cannot do: NTP, timezone, power and service management report
-`skipped`. To manage a host, run the agent on the host.
+The controller and the NATS server run in a container without special
+configuration. An agent in a container manages the container, not the host. It
+disables what a container cannot do: NTP, timezone, power and service
+management report `skipped`. To manage a host, run the agent on the host.
 
-## Checking a deployment
+## Check a deployment
 
 ```bash
 osapi config validate          # the config file, checked the way start checks it
@@ -83,9 +89,9 @@ osapi behavior list            # what this build can manage
 
 ## Design details
 
-- [Configuration](https://github.com/osapi-io/specs/blob/main/components/osapi/configuration.md),
-  for how settings are read and checked.
-- [Transport](https://github.com/osapi-io/specs/blob/main/components/osapi/transport.md),
-  for how the processes connect to NATS.
-- [Configuration](../usage/configuration.md), for the commands that show and
-  check a host's settings.
+- [Configuration](https://github.com/osapi-io/specs/blob/main/components/osapi/configuration.md)
+  tells how osapi reads and checks the settings.
+- [Transport](https://github.com/osapi-io/specs/blob/main/components/osapi/transport.md)
+  tells how the processes connect to NATS.
+- [Configuration](../usage/configuration.md) gives the commands that show and
+  check the settings of a host.

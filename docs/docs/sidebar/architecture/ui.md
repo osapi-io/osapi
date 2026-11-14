@@ -2,22 +2,22 @@
 sidebar_position: 9
 ---
 
-# UI Architecture
+# UI architecture
 
-OSAPI ships with an embedded management dashboard: a React single-page
-application served from the same host and port as the REST API, giving operators
-fleet health, agents, jobs, and block-based operation composition without a
-separate frontend to deploy. This page is what an operator acts on — the setting
-that turns the UI off, the roles that decide what it shows, and the pages
-themselves. How it is built, embedded, structured and generated is stated in the
-[specifications repository](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md),
-not here.
+osapi has an embedded management dashboard. It is a React single-page
+application. The same host and port as the REST API serve it. It shows the
+fleet health, the agents and the jobs, and it lets you put operations together
+from blocks. You do not need to deploy a different frontend.
+
+This page tells what an operator controls: the setting that disables the UI,
+the roles that control what it shows, and the pages. The
+[specifications repository](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md)
+tells how the UI is built, embedded, structured and generated.
 
 ## Configuration
 
-The UI can be disabled by setting `controller.ui.enabled: false` in
-`osapi.yaml`. When disabled, the controller skips registering the SPA handler
-and serves only the REST API.
+To disable the UI, set `controller.ui.enabled: false` in `osapi.yaml`. Then the
+controller does not register the SPA handler, and it serves only the REST API.
 
 ```yaml
 controller:
@@ -25,62 +25,75 @@ controller:
     enabled: true # default: true
 ```
 
-The UI is served from the same host and port as the REST API
-(`controller.api.port`), so there is no additional network configuration.
+The UI uses the same host and port as the REST API (`controller.api.port`).
+Thus you need no more network configuration.
 
-## Authentication & Authorization
+## Authentication and authorization
 
-The UI uses the same JWT-based auth as the rest of OSAPI. Tokens are generated
-via `osapi token generate` and contain a `roles` claim with an array of role
-strings (`admin`, `write`, `read`).
+The UI uses the same JWT authentication as the rest of osapi.
+`osapi token generate` makes the tokens. A token has a `roles` claim with a list
+of role names (`admin`, `write`, `read`).
 
 ### RBAC model
 
-Three built-in roles with hierarchical permissions:
+Three built-in roles have permissions in levels:
 
-| Role     | JWT value | Permissions                            |
-| -------- | --------- | -------------------------------------- |
-| Admin    | `admin`   | All permissions including `audit:read` |
-| Operator | `write`   | Read + write + execute (no audit)      |
-| Viewer   | `read`    | Read-only access                       |
+| Role     | JWT value | Permissions                                |
+| -------- | --------- | ------------------------------------------ |
+| Admin    | `admin`   | All permissions, `audit:read` included     |
+| Operator | `write`   | Read, write and execute, but not audit     |
+| Viewer   | `read`    | Read only                                  |
 
-Permissions use `resource:verb` format matching osapi's Go model: `agent:read`,
-`file:write`, `command:execute`, `docker:execute`, etc. Configure blocks map to
-required permissions in `BLOCK_PERMISSIONS` (`ui/src/lib/permissions.ts`);
-unauthorized blocks are shown greyed out with a lock icon.
+A permission has the form `resource:verb`, as in the Go model of osapi, for
+example `agent:read`, `file:write`, `command:execute` and `docker:execute`.
+`BLOCK_PERMISSIONS` (`ui/src/lib/permissions.ts`) gives the permission that each
+Configure block needs. The UI shows a block without permission in gray, with a
+lock icon.
 
 ## Pages
 
 ### Dashboard (`/`)
 
-Fleet health overview: summary stat cards, controller and NATS server component
-health with hostnames and resource usage, JetStream stream and consumer counts,
-KV store and object store usage, and agent cards with status, conditions,
-labels, and drain/undrain actions.
+An overview of the fleet health:
+
+- cards with summary numbers
+- the health of the controller and the NATS server, with hostnames and resource
+  use
+- the counts of JetStream streams and consumers
+- the use of the KV stores and the object store
+- agent cards with the status, conditions and labels, and drain and undrain
+  actions
 
 ### Configure (`/configure`)
 
-Block-based operations builder: sidebar with block categories (Schedule, File,
-Docker, Command, DNS, Network), blocks gated by RBAC permissions, per-block
-target picker (`_all`, `_any`, hostname, labels), sequential apply with
-per-block spinners, and result rendering.
+A builder that puts operations together from blocks:
+
+- a sidebar with block categories (Schedule, File, Docker, Command, DNS,
+  Network)
+- blocks that the RBAC permissions control
+- a target picker for each block (`_all`, `_any`, a hostname, labels)
+- apply in sequence, with a spinner for each block
+- the results
 
 ### Roles (`/roles`)
 
-RBAC reference: current session info with role badge, role definitions table,
-full permission matrix, and block permissions table.
+An RBAC reference: the current session with a role badge, a table of the role
+definitions, the full permission matrix and the table of block permissions.
 
 ### Enrollment (`/admin/enrollment`)
 
-PKI enrollment management: lists pending agents with machine ID, fingerprint,
-and requested time. Accept and reject buttons for each agent. Empty state when
-no agents are pending. Below them, the enrolled agents, the ones whose key the
-controller stores, with a Remove button that needs a second click to confirm.
-Remove sends the card's machine ID, so it removes that agent even when another
-has the same hostname. Command bar commands for accept, reject and remove by
-hostname.
+PKI enrollment management:
+
+- The page lists the pending agents, with the machine ID, the fingerprint and
+  the time of the request. Each agent has Accept and Reject buttons. When no
+  agent is pending, the page shows an empty state.
+- Below them, the page lists the enrolled agents: the agents whose key the
+  controller stores. Each has a Remove button. To confirm, click it a second
+  time. Remove sends the machine ID of the card. Thus it removes that agent,
+  also when another agent has the same hostname.
+- The command bar has accept, reject and remove commands, by hostname.
 
 ### SignIn
 
-JWT token authentication: token paste field with validation, role extraction
-from JWT claims, and a CLI hint for `osapi token generate`.
+JWT authentication: a field to paste a token, with validation. The page reads
+the roles from the JWT claims, and shows a CLI hint for `osapi token generate`.
