@@ -51,23 +51,11 @@ mise install
 ### Coding agents
 
 This repository works with any coding agent that reads `AGENTS.md`. `CLAUDE.md`
-only points to `AGENTS.md`.
+only points to `AGENTS.md`. Prepare your agent as its documentation tells you.
+This repository does not need a plugin or an extension.
 
-Claude Code and Codex read the same skills. `.claude/skills` holds them, and
-`.agents/skills` is a link to that directory.
-
-For [Claude Code], install this plugin from the default marketplace:
-
-```
-/plugin install commit-commands@claude-plugins-official
-```
-
-- **commit-commands.** It gives the `/commit` and `/commit-push-pr` commands.
-  They follow the commit rules of this repository.
-
-Write or change the design page in
-[osapi-io/specs](https://github.com/osapi-io/specs) before you write the code.
-If the code shows that the page is incorrect, correct the page.
+Agents read the skills of this repository from `.claude/skills`.
+`.agents/skills` is a link to that directory, for agents that read that path.
 
 ## Setup
 
@@ -564,9 +552,6 @@ Make all changes on a branch. Make the branch from `main`. Give it the name
 - `refactor/simplify-handler`
 - `chore/update-dependencies`
 
-If you are on `main`, the `/commit` command of Claude Code makes the branch for
-you.
-
 ## Commit messages
 
 Use [Conventional Commits] with the 50/72 rule:
@@ -619,7 +604,6 @@ Open a [Discussion] on GitHub.
 [avfs]: https://github.com/avfs/avfs
 [building-a-behavior]: docs/docs/sidebar/development/behaviors.md
 [bun]: https://bun.sh
-[claude code]: https://claude.ai/code
 [configuration]: docs/docs/sidebar/usage/configuration.md
 [conventional commits]: https://www.conventionalcommits.org
 [discussion]: https://github.com/osapi-io/osapi/discussions
