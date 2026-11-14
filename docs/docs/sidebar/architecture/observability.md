@@ -35,25 +35,24 @@ backend, for example Jaeger or Tempo. The `stdout` exporter prints them.
 
 ## Metrics
 
-Each process can run a metrics server on its own port. The server has
-`/metrics` in the Prometheus format, and the `/health` and `/health/ready`
-probes. The metrics server of the controller is on 9090 by default.
-`agent.metrics` and `nats.server.metrics` set the servers of the agent and the
-NATS server. osapi records metrics through OpenTelemetry and exports them with
-the `osapi_` prefix, together with the Go runtime and process metrics. Watch
-these metrics first:
+Each process can run a metrics server on its own port. The server has `/metrics`
+in the Prometheus format, and the `/health` and `/health/ready` probes. The
+metrics server of the controller is on 9090 by default. `agent.metrics` and
+`nats.server.metrics` set the servers of the agent and the NATS server. osapi
+records metrics through OpenTelemetry and exports them with the `osapi_` prefix,
+together with the Go runtime and process metrics. Watch these metrics first:
 
-| Metric                            | From       | Watch for                                 |
-| --------------------------------- | ---------- | ----------------------------------------- |
-| `osapi_component_up`              | All        | 0: the process is not ready               |
+| Metric                            | From       | Watch for                                  |
+| --------------------------------- | ---------- | ------------------------------------------ |
+| `osapi_component_up`              | All        | 0: the process is not ready                |
 | `osapi_subsystem_up`              | All        | 0 on a subsystem, for example the notifier |
-| `osapi_jobs_created_total`        | Controller | The request rate                          |
-| `osapi_jobs_processed_total`      | Agent      | The `failed` part, by status              |
-| `osapi_job_duration_seconds`      | Agent      | Slow operations                           |
-| `osapi_heartbeat_age_seconds`     | Agent      | An increase: the agent cannot reach NATS  |
+| `osapi_jobs_created_total`        | Controller | The request rate                           |
+| `osapi_jobs_processed_total`      | Agent      | The `failed` part, by status               |
+| `osapi_job_duration_seconds`      | Agent      | Slow operations                            |
+| `osapi_heartbeat_age_seconds`     | Agent      | An increase: the agent cannot reach NATS   |
 | `osapi_behavior_calls_total`      | Agent      | Calls for each behavior, method and result |
-| `osapi_behavior_duration_seconds` | Agent      | The latency of each method                |
-| `osapi_behavior_changes_total`    | Agent      | How often a write changed a host          |
+| `osapi_behavior_duration_seconds` | Agent      | The latency of each method                 |
+| `osapi_behavior_changes_total`    | Agent      | How often a write changed a host           |
 
 [Metrics](../features/metrics.md) lists each metric and its labels.
 
@@ -82,14 +81,14 @@ heartbeat gives the state of each part of the component:
 If a component does not write its entry again in `nats.registry.ttl`, the entry
 expires, and osapi shows the component as unreachable.
 
-| Endpoint             | Tells                                               | Token needed  |
-| -------------------- | --------------------------------------------------- | ------------- |
-| `/api/health`        | The controller process runs                         | No            |
-| `/api/health/ready`  | The controller can reach NATS and its KV buckets    | No            |
-| `/api/health/status` | Each component and its parts, on all hosts          | `health:read` |
+| Endpoint             | Tells                                            | Token needed  |
+| -------------------- | ------------------------------------------------ | ------------- |
+| `/api/health`        | The controller process runs                      | No            |
+| `/api/health/ready`  | The controller can reach NATS and its KV buckets | No            |
+| `/api/health/status` | Each component and its parts, on all hosts       | `health:read` |
 
-`osapi client health status` shows the last endpoint.
-`osapi client agent list` shows each agent with its conditions.
+`osapi client health status` shows the last endpoint. `osapi client agent list`
+shows each agent with its conditions.
 
 ## Conditions and notifications
 
@@ -100,8 +99,8 @@ disk and load pressure on an agent. It compares them with the limits in
 The controller watches the registry. It makes a notification when a condition
 starts (fired) or stops (resolved), or when the heartbeat of a component expires
 (unreachable). It sends the notification of an active condition again at an
-interval, so that the notification stays visible. Today, notifications go to
-the log.
+interval, so that the notification stays visible. Today, notifications go to the
+log.
 
 You can also drain an agent. A drained agent does not receive new work, but the
 process continues to run. The drain and its timeline stay in the agent state

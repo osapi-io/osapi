@@ -52,6 +52,6 @@ to behaviors one at a time. A behavior and a domain look the same to a client.
 These pages tell how an operator runs the system. The design of each part, and
 the reason for it, is in the
 [osapi specifications](https://github.com/osapi-io/specs/tree/main/components/osapi).
-Each page links to the parts that it summarizes. [Features](../features/features.md)
-tells what each operation does. Each behavior has its own page under
-[Behaviors](../behaviors/behaviors.mdx).
+Each page links to the parts that it summarizes.
+[Features](../features/features.md) tells what each operation does. Each
+behavior has its own page under [Behaviors](../behaviors/behaviors.mdx).

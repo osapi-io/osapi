@@ -12,9 +12,9 @@ on a single host. `osapi nats server start`, `osapi controller start` and
 ## NATS server
 
 The NATS server connects all the other parts. It carries each job from the
-controller to the agents, and each result back. It also keeps the state of
-osapi in JetStream: the jobs, their results, the agent registry, the uploaded
-files and the audit log. [State and storage](state.md) lists each one.
+controller to the agents, and each result back. It also keeps the state of osapi
+in JetStream: the jobs, their results, the agent registry, the uploaded files
+and the audit log. [State and storage](state.md) lists each one.
 
 osapi has an embedded NATS server with JetStream, so you do not need to install
 NATS. The server listens on port 4222 by default (`nats.server.port`). It keeps
@@ -24,8 +24,7 @@ Use an external NATS cluster if the hosts are in more than one site, or if NATS
 must continue to operate when a host stops. Set `controller.nats` and
 `agent.nats` to the address of the cluster. Do not start the embedded server.
 
-The server authenticates its clients in one of these modes
-(`nats.server.auth`):
+The server authenticates its clients in one of these modes (`nats.server.auth`):
 
 - no authentication
 - a user name and a password
@@ -36,8 +35,8 @@ Each client sets its own mode in its `nats.auth` section.
 
 ## Controller
 
-The controller is the control plane. It does not run a command on a host, and
-it needs no privileges on a host. It runs these parts:
+The controller is the control plane. It does not run a command on a host, and it
+needs no privileges on a host. It runs these parts:
 
 - **The REST API** on port 8080 (`controller.api.port`). The API checks the
   token of each request and validates the input. Then it makes a job from the
@@ -90,30 +89,31 @@ While the agent runs, it does these tasks:
 
 By default, the agent runs as a user without privileges. An operation that
 changes the host then fails with a permission error. The operation does not do
-something that you do not expect. To let the agent change the host, run it as root, or enable `agent.privilege_escalation`. Privilege escalation runs only
-the writes through sudo, with a fixed sudoers drop-in.
+something that you do not expect. To let the agent change the host, run it as
+root, or enable `agent.privilege_escalation`. Privilege escalation runs only the
+writes through sudo, with a fixed sudoers drop-in.
 [Agent hardening](../features/agent-hardening.md) gives the entries.
 
 ## What each process needs
 
-| Process     | Listens on                            | Needs on the host                                 | Keeps state in                 |
-| ----------- | ------------------------------------- | ------------------------------------------------- | ------------------------------ |
-| NATS server | 4222, and a metrics port              | A directory for JetStream                         | JetStream                      |
-| Controller  | 8080 for the API and UI, 9090 metrics | No privileges                                     | NATS                           |
-| Agent       | A metrics port, when it is enabled    | Root, or sudo for the writes that you configure   | NATS, and the files it manages |
+| Process     | Listens on                            | Needs on the host                               | Keeps state in                 |
+| ----------- | ------------------------------------- | ----------------------------------------------- | ------------------------------ |
+| NATS server | 4222, and a metrics port              | A directory for JetStream                       | JetStream                      |
+| Controller  | 8080 for the API and UI, 9090 metrics | No privileges                                   | NATS                           |
+| Agent       | A metrics port, when it is enabled    | Root, or sudo for the writes that you configure | NATS, and the files it manages |
 
 ## Built on
 
-| Dependency                    | Purpose                                         |
-| ----------------------------- | ----------------------------------------------- |
-| [Echo][]                      | The HTTP framework of the REST API              |
-| [Cobra][] / [Viper][]         | The CLI framework and the configuration         |
-| [NATS][] / JetStream          | Messages, the KV store and streams              |
-| [oapi-codegen][]              | Code generation for the OpenAPI strict server   |
-| [OpenTelemetry][]             | Distributed traces and Prometheus metrics       |
-| [gopsutil][]                  | System metrics on more than one platform        |
-| [pro-bing][]                  | The ICMP ping implementation                    |
-| [golang-jwt][]                | JWT creation and validation                     |
+| Dependency                    | Purpose                                             |
+| ----------------------------- | --------------------------------------------------- |
+| [Echo][]                      | The HTTP framework of the REST API                  |
+| [Cobra][] / [Viper][]         | The CLI framework and the configuration             |
+| [NATS][] / JetStream          | Messages, the KV store and streams                  |
+| [oapi-codegen][]              | Code generation for the OpenAPI strict server       |
+| [OpenTelemetry][]             | Distributed traces and Prometheus metrics           |
+| [gopsutil][]                  | System metrics on more than one platform            |
+| [pro-bing][]                  | The ICMP ping implementation                        |
+| [golang-jwt][]                | JWT creation and validation                         |
 | `nats-client` / `nats-server` | Related repositories, pinned by version in `go.mod` |
 
 ## Design details

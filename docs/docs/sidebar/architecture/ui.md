@@ -5,12 +5,12 @@ sidebar_position: 9
 # UI architecture
 
 osapi has an embedded management dashboard. It is a React single-page
-application. The same host and port as the REST API serve it. It shows the
-fleet health, the agents and the jobs, and it lets you put operations together
-from blocks. You do not need to deploy a different frontend.
+application. The same host and port as the REST API serve it. It shows the fleet
+health, the agents and the jobs, and it lets you put operations together from
+blocks. You do not need to deploy a different frontend.
 
-This page tells what an operator controls: the setting that disables the UI,
-the roles that control what it shows, and the pages. The
+This page tells what an operator controls: the setting that disables the UI, the
+roles that control what it shows, and the pages. The
 [specifications repository](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md)
 tells how the UI is built, embedded, structured and generated.
 
@@ -25,8 +25,8 @@ controller:
     enabled: true # default: true
 ```
 
-The UI uses the same host and port as the REST API (`controller.api.port`).
-Thus you need no more network configuration.
+The UI uses the same host and port as the REST API (`controller.api.port`). Thus
+you need no more network configuration.
 
 ## Authentication and authorization
 
@@ -38,11 +38,11 @@ of role names (`admin`, `write`, `read`).
 
 Three built-in roles have permissions in levels:
 
-| Role     | JWT value | Permissions                                |
-| -------- | --------- | ------------------------------------------ |
-| Admin    | `admin`   | All permissions, `audit:read` included     |
-| Operator | `write`   | Read, write and execute, but not audit     |
-| Viewer   | `read`    | Read only                                  |
+| Role     | JWT value | Permissions                            |
+| -------- | --------- | -------------------------------------- |
+| Admin    | `admin`   | All permissions, `audit:read` included |
+| Operator | `write`   | Read, write and execute, but not audit |
+| Viewer   | `read`    | Read only                              |
 
 A permission has the form `resource:verb`, as in the Go model of osapi, for
 example `agent:read`, `file:write`, `command:execute` and `docker:execute`.

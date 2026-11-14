@@ -50,8 +50,8 @@ graph TD
 ## An external NATS cluster
 
 Use a NATS cluster, not the embedded server, for a fleet of hundreds of hosts.
-Also use one when the state must stay when you lose a host. Use JetStream with file
-storage and replicas, and set them in the section of each store in `nats`.
+Also use one when the state must stay when you lose a host. Use JetStream with
+file storage and replicas, and set them in the section of each store in `nats`.
 
 The controller and the agents need only the address and the credentials of the
 cluster, in `controller.nats` and `agent.nats`. The embedded server does not
@@ -75,8 +75,8 @@ or the state of another fleet.
 
 The controller and the NATS server run in a container without special
 configuration. An agent in a container manages the container, not the host. It
-disables what a container cannot do: NTP, timezone, power and service
-management report `skipped`. To manage a host, run the agent on the host.
+disables what a container cannot do: NTP, timezone, power and service management
+report `skipped`. To manage a host, run the agent on the host.
 
 ## Check a deployment
 

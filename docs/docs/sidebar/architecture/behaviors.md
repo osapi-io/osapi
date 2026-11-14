@@ -38,9 +38,9 @@ graph TD
   `osapi agent start` flag.
 - **Requirements.** These are the other behaviors that the behavior uses. It
   calls their methods on the same host.
-- **Platforms.** For each platform, for example Debian, the definition tells
-  how to make the provider that does the work. On a platform that the behavior
-  does not declare, its methods report `skipped`. They do not fail.
+- **Platforms.** For each platform, for example Debian, the definition tells how
+  to make the provider that does the work. On a platform that the behavior does
+  not declare, its methods report `skipped`. They do not fail.
 - **The programs that it runs with sudo.** The preflight of the agent checks
   them.
 - **Examples and refusals.** An example is a sample call with the changes that
@@ -50,10 +50,9 @@ graph TD
 ## What it means for an operator
 
 - **The binary describes itself.** `osapi behavior list` and
-  `osapi behavior get --name <name>` show each behavior that this build has:
-  its routes, permissions, platforms, settings and types. You do not need to
-  look in a different place, and the answer always agrees with the build that
-  you run.
+  `osapi behavior get --name <name>` show each behavior that this build has: its
+  routes, permissions, platforms, settings and types. You do not need to look in
+  a different place, and the answer always agrees with the build that you run.
 - **The permissions come from the methods.** The permissions of a behavior are
   `<name>:read` and `<name>:write`. The built-in roles give them.
   `osapi token roles` lists each permission of each role.
@@ -79,10 +78,10 @@ graph LR
 
 - **The definition declares it.** The definition of sysctl has
   `behavior.Requires(managedfile)`.
-- **The agent makes the provider of the required behavior first.** Then it
-  gives that provider to the behavior that requires it. A method calls the
-  methods of the other behavior directly, on the same host and in the same job.
-  Thus there is no second job and no extra round trip.
+- **The agent makes the provider of the required behavior first.** Then it gives
+  that provider to the behavior that requires it. A method calls the methods of
+  the other behavior directly, on the same host and in the same job. Thus there
+  is no second job and no extra round trip.
 - **A required behavior without a provider on the platform** makes the behavior
   that requires it unsupported there too. Its methods report `skipped`.
 - **`behavior validate` fails** when a requirement is not registered, and when
@@ -95,8 +94,8 @@ route, no command and no permissions, because only other behaviors call it.
 `behavior list` and its docs page still show it, with the behaviors that use it.
 
 A chain across hosts or across steps is a workflow, not a requirement. In a
-workflow, the output of one call is the input of the next call. osapi-orchestrator does
-workflows.
+workflow, the output of one call is the input of the next call.
+osapi-orchestrator does workflows.
 
 ## Beside the hand-written domains
 
@@ -108,8 +107,8 @@ compare the two on one server.
 
 At the cutover of a domain, the mark goes. The behavior moves to `/api` and
 `osapi client`, and the hand-written code is deleted. Checks name the code that
-is left to delete. sysctl is the first behavior, and it still has the mark. A new
-behavior that replaces no domain is under `/api` from the start.
+is left to delete. sysctl is the first behavior, and it still has the mark. A
+new behavior that replaces no domain is under `/api` from the start.
 
 ## Where to read more
 

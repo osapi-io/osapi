@@ -38,22 +38,23 @@ list of permissions:
   `admin` and `write` give the two permissions. `read` gives only the read
   permission.
 
-osapi divides the permissions by what an operation can do, not by area. To run
-a command (`command:execute`) and to run a shell (`command:shell`) are two
+osapi divides the permissions by what an operation can do, not by area. To run a
+command (`command:execute`) and to run a shell (`command:shell`) are two
 different permissions. Only `admin` has them.
 
 ## Which agent can answer
 
-The **machine ID** of an agent identifies it. The hostname does not. osapi sends jobs to the machine ID. Thus, when a host gets a new name, its work
-does not go to a different host.
+The **machine ID** of an agent identifies it. The hostname does not. osapi sends
+jobs to the machine ID. Thus, when a host gets a new name, its work does not go
+to a different host.
 
 With PKI on (`controller.pki.enabled` and `agent.pki.enabled`), an agent gets no
 work until an administrator accepts it:
 
 1. When the agent starts for the first time, it makes an Ed25519 key pair in
    `agent.pki.key_dir`.
-1. It sends an enrollment request and waits.
-   `osapi client agent list --pending` shows it.
+1. It sends an enrollment request and waits. `osapi client agent list --pending`
+   shows it.
 1. An administrator accepts it, by hostname or by key fingerprint. Or the
    controller accepts each agent itself, with `controller.pki.auto_accept`.
 1. After that, the controller signs each job. The agent refuses a job that the
@@ -77,21 +78,20 @@ through `sudo`. It runs reads without `sudo`. The sudoers drop-in lists the
 programs and arguments that the agent can run. Linux capabilities can replace
 sudo where they include the operation.
 
-When the agent starts, a preflight lists the sudo rules one time. The agent
-does not start only when sudo needs a password. A program without a rule, or a
+When the agent starts, a preflight lists the sudo rules one time. The agent does
+not start only when sudo needs a password. A program without a rule, or a
 missing capability, gives a warning. Only the operations that need it fail.
 
 osapi stores a job and runs it later. Thus the API and the provider on the host
 both check input that becomes a file path, a file name or a command argument.
 The API checks it before it puts the job on the queue. The provider checks it
-before it uses it. A secret goes to a command on its standard input, never as
-an argument. All commands run through one place, with a timeout of ten minutes
-or less.
+before it uses it. A secret goes to a command on its standard input, never as an
+argument. All commands run through one place, with a timeout of ten minutes or
+less.
 
 ## Audit
 
-osapi records each authenticated request, whatever the result. The record
-gives:
+osapi records each authenticated request, whatever the result. The record gives:
 
 - the client, with its roles and permissions
 - the method, the path and the status

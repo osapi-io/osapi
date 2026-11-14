@@ -48,12 +48,12 @@ entry.
 `--target` on the CLI, or `{hostname}` in the route, selects the agents that
 receive the job:
 
-| Target          | Sends the job to                                                 |
-| --------------- | ---------------------------------------------------------------- |
-| `web-01`        | That agent, by hostname or machine ID                            |
-| `_any`          | One agent that is free. The agents share a queue group           |
-| `_all`          | All agents                                                       |
-| `group:web.dev` | Each agent whose `group` label is `web.dev` or starts with it    |
+| Target          | Sends the job to                                              |
+| --------------- | ------------------------------------------------------------- |
+| `web-01`        | That agent, by hostname or machine ID                         |
+| `_any`          | One agent that is free. The agents share a queue group        |
+| `_all`          | All agents                                                    |
+| `group:web.dev` | Each agent whose `group` label is `web.dev` or starts with it |
 
 The controller changes a hostname to the machine ID of the agent before it
 publishes. Thus an agent continues to receive its work when its hostname
@@ -74,24 +74,24 @@ process them differently. When PKI is on, the controller signs the job. The
 agent checks the signature before it runs the job.
 
 The agent records each step as a status event on the job. Then it runs the
-operation and writes its result to the response bucket. osapi does not store
-the status of a job. It calculates the status from the events and the responses
-when you read the job:
+operation and writes its result to the response bucket. osapi does not store the
+status of a job. It calculates the status from the events and the responses when
+you read the job:
 
-| Status         | Meaning                                                              |
-| -------------- | -------------------------------------------------------------------- |
-| `submitted`    | The controller put the job on the queue                              |
-| `acknowledged` | An agent received the job                                            |
-| `started`      | The agent runs the job                                               |
-| `completed`    | The job ran and succeeded                                            |
-| `failed`       | The job ran and did not succeed                                      |
-| `skipped`      | The host cannot do the job, for example a Debian operation on macOS  |
-| `timeout`      | No answer in `controller.api.job_timeout`                            |
+| Status         | Meaning                                                             |
+| -------------- | ------------------------------------------------------------------- |
+| `submitted`    | The controller put the job on the queue                             |
+| `acknowledged` | An agent received the job                                           |
+| `started`      | The agent runs the job                                              |
+| `completed`    | The job ran and succeeded                                           |
+| `failed`       | The job ran and did not succeed                                     |
+| `skipped`      | The host cannot do the job, for example a Debian operation on macOS |
+| `timeout`      | No answer in `controller.api.job_timeout`                           |
 
 `timeout` is not `failed`. It does not tell if the operation ran. The agent can
 be gone, or it can still do the work and answer soon. A job sent to many agents
-also reports `processing` while some agents still run it, and
-`partial_failure` when some agents failed.
+also reports `processing` while some agents still run it, and `partial_failure`
+when some agents failed.
 
 If an agent receives a job and does not acknowledge it, the agent receives the
 job again, up to `agent.consumer.max_deliver` times. After that, the delivery
@@ -123,8 +123,8 @@ hundred. Each row has the name of the host and its status: `ok`, `failed`,
 `changed`. It is false when the host already had the requested state. Thus the
 same request, when you run it a second time, changes nothing.
 
-A broadcast waits for each agent that it expects. If an agent does not answer
-in the timeout, the result gets a `timeout` row for it. Thus the response always
+A broadcast waits for each agent that it expects. If an agent does not answer in
+the timeout, the result gets a `timeout` row for it. Thus the response always
 tells what happened on each host that the request targeted.
 
 ## Jobs after the request
