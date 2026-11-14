@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Schedule
 
-Manage scheduled entries on target hosts. On Debian family hosts these are cron
+Manage scheduled entries on target hosts. On Debian family hosts, these are cron
 drop-in files in `/etc/cron.d/`.
 
 ## List
@@ -36,15 +36,15 @@ $ osapi client node schedule get --target web-01 --name backup-daily
 
 ## Create
 
-Upload the script to the Object Store first, then create the scheduled entry
-referencing it by object name:
+Upload the script to the Object Store first. Then make the scheduled entry, and
+refer to the script by its object name:
 
 ```bash
 $ osapi client file upload --name backup-script \
     --file /usr/local/bin/backup.sh
 ```
 
-Then create the entry using `--object` to reference the uploaded file:
+Then make the entry, with `--object` to refer to the uploaded file:
 
 ```bash
 $ osapi client node schedule create --target web-01 \
@@ -59,10 +59,10 @@ $ osapi client node schedule create --target web-01 \
   1 host: 1 changed
 ```
 
-The `--user` flag defaults to `root` if omitted.
+If you do not give `--user`, the value is `root`.
 
-Use `--content-type template` if the object was uploaded as a Go template and
-should be rendered with agent facts before being written to disk.
+If the object is a Go template, use `--content-type template`. Then the agent
+renders it with its facts before it writes the file to disk.
 
 ## Update
 
@@ -79,7 +79,8 @@ $ osapi client node schedule update --target web-01 \
   1 host: 1 changed
 ```
 
-Only the fields you specify are updated. If nothing changed, `Changed: false`.
+The command updates only the fields that you give. If nothing changed, it
+returns `Changed: false`.
 
 ## Delete
 
@@ -96,7 +97,7 @@ $ osapi client node schedule delete --target web-01 --name backup-daily
 
 ## JSON Output
 
-All commands support `--json` for raw JSON output:
+All commands accept `--json` to give the raw JSON output:
 
 ```bash
 $ osapi client node schedule list --target web-01 --json

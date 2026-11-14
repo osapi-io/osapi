@@ -14,7 +14,7 @@ $ osapi client node network interface list --target web-01
   1 host: 1 ok
 ```
 
-Target all hosts to list interfaces across the fleet:
+Target all hosts to list the interfaces on all of the fleet:
 
 ```bash
 $ osapi client node network interface list --target _all

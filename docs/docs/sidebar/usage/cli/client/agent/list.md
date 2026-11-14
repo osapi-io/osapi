@@ -1,6 +1,7 @@
 # List
 
-List active agents in the fleet with status, labels, age, and system metrics:
+List the active agents in the fleet, with the status, labels, age and system
+metrics:
 
 ```bash
 $ osapi client agent list
@@ -13,9 +14,9 @@ $ osapi client agent list
   c3d4e5f6-a7b8-9012-cdef-123456789012  db-01     Cordoned  DiskPressure             -                      5d 2h   1.22       Ubuntu 24.04
 ```
 
-This command reads directly from the agent heartbeat registry -- no job is
-created. Each agent writes a heartbeat every 10 seconds with a 30-second TTL.
-Agents that stop heartbeating disappear from the list automatically.
+This command reads the agent heartbeat registry directly. It makes no job. Each
+agent writes a heartbeat every 10 seconds, with a 30-second TTL. When an agent
+stops its heartbeat, it goes from the list.
 
 | Column     | Source                                                          |
 | ---------- | --------------------------------------------------------------- |
@@ -30,15 +31,15 @@ Agents that stop heartbeating disappear from the list automatically.
 
 :::tip Full facts in JSON output
 
-`--json` output includes additional system facts collected by the agent:
-architecture, kernel version, FQDN, CPU count, network interfaces, service
-manager, and package manager. These fields are not shown in the table view.
+The `--json` output has more system facts that the agent collects: architecture,
+kernel version, FQDN, CPU count, network interfaces, service manager and package
+manager. The table view does not show these fields.
 
 :::
 
 ## Pending Agents
 
-When PKI is enabled, list agents awaiting enrollment with `--pending`:
+When PKI is enabled, list the agents that wait for enrollment with `--pending`:
 
 ```bash
 $ osapi client agent list --pending
@@ -55,5 +56,5 @@ Use `agent accept` and `agent reject` to manage pending enrollment requests, and
 
 ---
 
-Use `agent get --hostname X` for detailed information about a specific agent, or
-`node status` for deep system metrics gathered via the job system.
+Use `agent get --hostname X` to get the details of one agent. Use `node status`
+to get more system metrics through the job system.

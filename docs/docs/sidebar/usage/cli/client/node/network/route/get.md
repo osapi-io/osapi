@@ -1,6 +1,6 @@
 # Get
 
-Get the OSAPI-managed static routes for a specific interface:
+Get the static routes that osapi manages for one interface:
 
 ```bash
 $ osapi client node network route get \
@@ -15,7 +15,7 @@ $ osapi client node network route get \
   1 host: 1 ok
 ```
 
-When targeting all hosts:
+When you target all hosts:
 
 ```bash
 $ osapi client node network route get \

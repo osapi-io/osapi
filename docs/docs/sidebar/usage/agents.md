@@ -4,9 +4,9 @@ sidebar_position: 3
 
 # Working with an agent
 
-osapi is built to be driven by an AI agent such as Claude Code or Codex. The
-agent never logs in to a host. It runs osapi's CLI, which turns each request
-into a typed operation the controller checks before any host sees it.
+An AI coding agent can operate osapi. The agent never logs in to a host. It runs
+the osapi CLI. The CLI changes each request into a typed operation, and the
+controller checks it before a host sees it.
 
 ## Set it up
 
@@ -21,7 +21,8 @@ into a typed operation the controller checks before any host sees it.
 | `osapi`            | Read and change hosts: kernel parameters, packages, services, users, files, DNS, NTP and the rest    |
 | `osapi-operations` | Run osapi itself: start it, check its configuration, make and check tokens, find why it is unhealthy |
 
-Run `osapi init` again after upgrading osapi, so the skills match the binary.
+Run `osapi init` again after you upgrade osapi, so that the skills agree with
+the binary.
 
 ## What to ask
 
@@ -32,7 +33,7 @@ Ask for the outcome, not the commands:
 - _"Which hosts have package updates waiting?"_
 - _"Point eth0 on web-01 at 1.1.1.1 for DNS and show me before and after."_
 - _"Find every host under disk or memory pressure."_
-- _"Why is the agent on db-02 not picking up jobs?"_
+- _"Why does the agent on db-02 not get jobs?"_
 
 ## How the agent knows what to run
 
@@ -45,10 +46,11 @@ osapi behavior get --name sysctl --method update --json    # one method's input 
 osapi help --json                                          # every command, flag and error shape
 ```
 
-Then it runs the command with `--json` and reads each host's result: `ok` with
-whether the host `changed`, `failed` with the error, or `skipped` where the
-operation does not run on that platform. A write run again reports
-`changed: false`, so the agent can tell a change from a no-op.
+Then it runs the command with `--json` and reads the result of each host. The
+result is `ok`, with `changed` to tell if the host changed. It is `failed`, with
+the error. Or it is `skipped`, where the operation does not run on that
+platform. A write that runs again reports `changed: false`. Thus the agent can
+tell a change from no change.
 
 ## What it can do is what the token allows
 

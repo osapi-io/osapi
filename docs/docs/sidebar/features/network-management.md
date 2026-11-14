@@ -2,13 +2,13 @@
 sidebar_position: 2
 ---
 
-# Network Management
+# Network management
 
-OSAPI can query and update network configuration on managed hosts. Network
-operations run through the [job system](job-system.md), keeping the API server
-unprivileged while agents execute the actual changes.
+osapi can query and update the network configuration of managed hosts. Network
+operations use the [job system](job-system.md). Thus the API server needs no
+privileges, and the agents make the changes.
 
-## What It Manages
+## What it manages
 
 | Resource  | Operations           | Description                                  |
 | --------- | -------------------- | -------------------------------------------- |
@@ -20,41 +20,42 @@ unprivileged while agents execute the actual changes.
 For interface and route management details, see
 [Network Interface Management](network-interface-management.md).
 
-## How It Works
+## How it works
 
-**DNS** -- queries read the current nameserver configuration for a network
-interface via `resolvectl`. Updates generate a persistent Netplan configuration
-file (`/etc/netplan/osapi-dns.yaml`) targeting the primary interface, validate
-with `netplan generate`, and apply with `netplan apply`. This ensures DNS
-changes survive reboots. The `--interface` parameter supports
-[fact references](system-facts.md) — use `@fact.interface.primary` to
-automatically target the default route interface. Use `--override-dhcp` to
-disable DHCP-provided DNS servers so only the explicitly configured servers are
-used; when omitted, DHCP DNS servers are merged alongside configured ones
-(default Netplan behavior).
+**DNS.** A query reads the current nameserver configuration of a network
+interface with `resolvectl`. An update writes a Netplan configuration file
+(`/etc/netplan/osapi-dns.yaml`) for the primary interface. It validates the file
+with `netplan generate` and applies it with `netplan apply`. Thus DNS changes
+stay after a reboot.
+
+The `--interface` parameter accepts [fact references](system-facts.md). Use
+`@fact.interface.primary` to target the default route interface automatically.
+Use `--override-dhcp` to disable the DNS servers from DHCP, so that the host
+uses only the configured servers. Without it, the host uses the DHCP DNS servers
+and the configured servers together (the default of Netplan).
 
 :::note IPv6 Router Advertisement DNS
 
-`--override-dhcp` disables DNS from DHCPv4 and DHCPv6 but does **not** disable
-DNS from IPv6 Router Advertisements (RA/SLAAC). Disabling RA would break IPv6
-connectivity — the host would lose its default route, global address
-assignments, and prefix information. IPv6 RA-provided DNS servers may still
-appear in `resolvectl` output alongside the configured servers.
+`--override-dhcp` disables DNS from DHCPv4 and DHCPv6. It does **not** disable
+DNS from IPv6 Router Advertisements (RA/SLAAC). If you disable RA, the host
+loses IPv6: its default route, its global addresses and its prefix information.
+Thus DNS servers from IPv6 RA can still show in the `resolvectl` output, with
+the configured servers.
 
 :::
 
-**Ping** -- sends ICMP echo requests to a target host and reports the results.
+**Ping.** Sends ICMP echo requests to a target host and reports the results.
 
-See [CLI Reference](../usage/cli/client/node/network/network.mdx) for usage and
-examples, or the
+Refer to [CLI Reference](../usage/cli/client/node/network/network.mdx) for usage
+and examples, or the
 [API Reference](/gen/api/network-management-api-network-operations) for the REST
 endpoints.
 
 ## Configuration
 
-Network management uses the general job infrastructure. No domain-specific
-configuration is required. See [Configuration](../usage/configuration.md) for
-NATS, agent, and authentication settings.
+Network management uses the general job system. It needs no configuration of its
+own. Refer to [Configuration](../usage/configuration.md) for NATS, agent, and
+authentication settings.
 
 ## Permissions
 
@@ -70,10 +71,10 @@ The `read` role includes only `network:read`.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/network/network.mdx) -- network
+- [CLI Reference](../usage/cli/client/node/network/network.mdx): network
   commands
-- [System Facts](system-facts.md) -- available `@fact.*` references
-- [API Reference](/gen/api/network-management-api-network-operations) -- REST
-  API documentation
-- [Job System](job-system.md) -- how async job processing works
-- [Architecture](../architecture/architecture.md) -- system design overview
+- [System Facts](system-facts.md): available `@fact.*` references
+- [API Reference](/gen/api/network-management-api-network-operations): REST API
+  documentation
+- [Job System](job-system.md): how async job processing works
+- [Architecture](../architecture/architecture.md): system design overview

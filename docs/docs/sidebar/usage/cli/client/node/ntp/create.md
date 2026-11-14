@@ -1,9 +1,9 @@
 # Create
 
-Create NTP configuration on a target host. The server list is written to
-`/etc/chrony/conf.d/osapi-ntp.conf` and chrony is reloaded immediately.
-Idempotent: returns `changed: false` if already managed. Use `update` to change
-the server list:
+Make the NTP configuration on a target host. The agent writes the server list to
+`/etc/chrony/conf.d/osapi-ntp.conf` and reloads chrony immediately. If osapi
+already manages it, the command returns `changed: false`. To change the server
+list, use `update`:
 
 ```bash
 $ osapi client node ntp create --target web-01 \
@@ -32,7 +32,7 @@ $ osapi client node ntp create --target _all \
   2 hosts: 2 changed
 ```
 
-When some hosts are skipped (e.g., macOS agents):
+When some hosts are skipped, for example macOS agents:
 
 ```bash
 $ osapi client node ntp create --target _all \

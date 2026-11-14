@@ -1,7 +1,7 @@
 # Exec
 
-Execute a command directly without a shell interpreter. Arguments are passed to
-the executable as-is, without shell expansion or interpretation.
+Run a command directly, without a shell. The executable gets the arguments as
+they are, without shell expansion.
 
 ```bash
 $ osapi client node command exec --command ls --args "-la,/tmp"
@@ -14,10 +14,9 @@ $ osapi client node command exec --command ls --args "-la,/tmp"
   1 host: 1 ok
 ```
 
-Long output is truncated in the table view. Use `--json` for the full response
-data.
+The table view shortens long output. Use `--json` to get the full response.
 
-Execute a command in a specific working directory with a custom timeout:
+Run a command in a specific working directory, with a custom timeout:
 
 ```bash
 $ osapi client node command exec \
@@ -27,14 +26,14 @@ $ osapi client node command exec \
     --timeout 10
 ```
 
-Target by label to execute on a group of servers:
+Target a label to run on a group of servers:
 
 ```bash
 $ osapi client node command exec --command whoami --target group:web
 ```
 
-Use `@fact.*` references to inject live system values. Each agent resolves its
-own facts, so this works correctly with broadcast targeting:
+Use `@fact.*` references to put live system values in the command. Each agent
+resolves its own facts, so this works with broadcast targets:
 
 ```bash
 $ osapi client node command exec \
@@ -42,7 +41,7 @@ $ osapi client node command exec \
     --target _all
 ```
 
-See [System Facts](../../../../../features/system-facts.md) for all available
+Refer to [System Facts](../../../../../features/system-facts.md) for all
 `@fact.*` references.
 
 ## JSON Output
@@ -55,8 +54,8 @@ $ osapi client node command exec --command hostname --json
 
 ## Raw Output
 
-Use `--stdout` to print only the remote command's stdout, without the table
-wrapper:
+Use `--stdout` to print only the stdout of the remote command, without the
+table:
 
 ```bash
 $ osapi client node command exec --command ls --args "-la" --stdout
@@ -72,7 +71,7 @@ $ osapi client node command exec --command ls --args "/nonexistent" --stderr
 ls: cannot access '/nonexistent': No such file or directory
 ```
 
-Both flags can be combined. Each line is prefixed with the hostname:
+You can use the two flags together. Each line starts with the hostname:
 
 ```bash
 $ osapi client node command exec --command hostname --target _all --stdout
@@ -80,7 +79,8 @@ $ osapi client node command exec --command hostname --target _all --stdout
 [web-02] web-02.example.com
 ```
 
-The CLI exit code matches the remote command's exit code, making it scriptable:
+The exit code of the CLI is the exit code of the remote command. Thus you can
+use it in scripts:
 
 ```bash
 $ osapi client node command exec --command "test" --args "-f,/etc/hosts" --stdout && echo exists

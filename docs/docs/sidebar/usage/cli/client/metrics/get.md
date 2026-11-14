@@ -10,5 +10,5 @@ http_server_request_duration_seconds_bucket{...} 0
 ...
 ```
 
-The output is raw Prometheus exposition text, which can be piped to other tools
-for processing.
+The output is raw Prometheus exposition text. You can send it to other tools
+through a pipe.

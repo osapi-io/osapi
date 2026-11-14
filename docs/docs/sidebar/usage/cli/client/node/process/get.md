@@ -13,7 +13,7 @@ $ osapi client node process get --target web-01 --pid 1234
   1 host: 1 ok
 ```
 
-When targeting all hosts:
+When you target all hosts:
 
 ```bash
 $ osapi client node process get --target _all --pid 1

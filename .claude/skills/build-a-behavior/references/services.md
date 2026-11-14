@@ -1,20 +1,11 @@
 # The services a behavior uses
 
-osapi is a platform, and a behavior is a client of it. The agent hands every
-provider a `host.Host` with the services it may use, and the platform does the
-rest: messaging, storage, telemetry, permissions, audit. A behavior that uses
-these services the way this page shows gets tested by the fake host without
-writing a fake of its own, and a behavior that reaches around them cannot be.
+osapi is a platform, and a behavior is a client of it. The agent gives each provider a `host.Host` with the services that it can use. The platform does the other work: messages, storage, telemetry, permissions and audit. If a behavior uses these services as this page shows, the fake host tests it. You do not write a fake of your own. If a behavior goes around these services, the fake host cannot test it.
 
-In tests nothing real runs. The fake host's filesystem is in memory and its
-command runner is a generated mock that records each command line and answers
-with what the example declares, so a behavior for Debian that runs `dpkg-query`
-and writes `/etc` is tested on macOS and in CI, where neither exists. Only
+In tests, no real program runs. The filesystem of the fake host is in memory. Its command runner is a generated mock. The mock records each command line and gives the output that the example declares. Thus a behavior for Debian that runs `dpkg-query` and writes `/etc` gets tests on macOS and in CI, where neither exists. Only
 `just behavior-int-linux` runs the real commands, in a Debian container.
 
-`go doc ./internal/behavior/host Host` says what each service is, and
-`behavior get --name <name>` what a building block accepts. This page adds what
-neither says: how the tests stand in for each service, and what to copy.
+`go doc ./internal/behavior/host Host` tells what each service is. `behavior get --name <name>` tells what a building block accepts. This page tells the two things that they do not tell: how the tests replace each service, and what to copy.
 
 ## How the tests fake each service
 
@@ -26,48 +17,36 @@ neither says: how the tests stand in for each service, and what to copy.
 | `host.Settings[Settings](h)` | The defaults | |
 | `h.Platform`, `h.Hostname` | Each platform the behavior declares; `behaviortest.Hostname` | |
 
-The platform does these without a line in the behavior, so write none: a span
-and metrics per method, messaging, `@fact.<name>` references, permissions and
-audit. A secret input is tagged `secret:"true"` and reaches a program on stdin,
+The platform does these without code in the behavior. Thus do not write code for them:
+
+- a span and metrics for each method
+- messages
+- `@fact.<name>` references
+- permissions and audit A secret input is tagged `secret:"true"` and reaches a program on stdin,
 never as an argument.
 
 ## Where a behavior's state lives
 
-The provider's shape follows from where the truth about what it manages is. Find
-that first.
+The shape of the provider comes from the location of the truth about what it manages. Find that location first.
 
-**A file osapi writes.** Require `managedfile` and write through it; `behavior
-get --name managedfile` shows what it accepts, such as the file's owner and
-mode. It compares before writing, so a second run reports `changed: false`, and
-keeps the record the controller reports drift from. sysctl is this case, and
-`internal/behaviors/sysctl` the one to copy.
+**A file that osapi writes.** Require `managedfile` and write through it. `behavior get --name managedfile` shows what it accepts, for example the owner and the mode of the file. It compares before it writes. Thus a second run reports `changed: false`. It also keeps the record that the controller uses to report drift. sysctl is this case. Copy `internal/behaviors/sysctl`.
 
-**A file something else owns, read or edited.** Read and write `h.FS`. Compare
-before writing. An example uses `Exists` for the file as it was and `Wrote` for
+**A file that something else owns.** Read and write `h.FS`. Compare before you write. An example uses `Exists` for the file as it was and `Wrote` for
 the result.
 
 **What a program reports.** Run it with `h.Exec` and parse its output: a package
-manager, `systemctl`, `ip`. Query before acting, and act only when the query
-says the host differs. An example gives the query's answer with `Prints`, and
-its answer after the change with `PrintsAfter`, so the second run sees the
-change and reports `changed: false`.
+manager, `systemctl`, `ip`. Query before you act. Act only when the query shows that the host is different. An example gives the answer of the query with `Prints`. It gives the answer after the change with `PrintsAfter`. Thus the second run sees the change and reports `changed: false`.
 
 **The kernel's view, read only.** Read `/proc` or `/sys` through `h.FS`, declare
 the `linux` platform, and give examples their files with `Exists`.
 
 ## Input that reaches the host
 
-Every string a request carries is hostile until checked, and the probes check
-three ways it turns into an injection:
+Each string in a request is dangerous until the provider checks it. The probes check three ways that a string can become an injection:
 
-- **A path.** A field that becomes part of a path gets a `validate` pattern that
-  cannot climb out, such as `^[a-zA-Z0-9][a-zA-Z0-9._-]*$`, and the provider
+- **A path.** A field that becomes part of a path gets a `validate` pattern that cannot go out of its directory, for example `^[a-zA-Z0-9][a-zA-Z0-9._-]*$`, and the provider
   checks it again.
-- **A line in a file.** A field written into a line of a file refuses `\r` and
-  `\n`, or one value becomes two settings.
-- **A program's argument.** Pass `--` before a value that could start with `-`,
-  or refuse a leading `-`. Never build a `sh -c` script from input; run the
-  program with its arguments.
+- **A line in a file.** A field that goes into a line of a file refuses `\r` and `\n`. If it does not, one value becomes two settings.
+- **A program's argument.** Pass `--` before a value that can start with `-`, or refuse a value that starts with `-`. Do not build a `sh -c` script from input. Run the program with its arguments.
 
-Each refusal is declared with `.Fails`, so the docs page lists it and the tests
-check it.
+Declare each refusal with `.Fails`. Then the docs page lists it, and the tests check it.

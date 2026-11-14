@@ -9,12 +9,12 @@ A behavior is one directory, `internal/behaviors/<name>/`, plus one import in
 `internal/behaviors/all`. Everything else is generated or inferred from its
 definition.
 
-This skill is procedure and judgment, not a catalog. The platform describes
-itself: `behavior list` and `behavior get` say what every behavior, building
-blocks included, accepts and does; `go doc` says what every option and host
-service is. Ask them rather than remembering, and believe them over this skill.
-When what you need is not there, stop and say what is missing; that is a
-platform change for a person to decide, not something to wire around.
+This skill gives a procedure and decisions. It is not a catalog. The platform tells about itself:
+
+- `behavior list` and `behavior get` tell what each behavior accepts and does. This includes the building blocks.
+- `go doc` tells what each option and each host service is.
+
+Ask these tools. Do not use your memory. If a tool and this skill do not agree, the tool is correct. If the platform does not have what you need, stop and say what is missing. That is a platform change, and a person decides it. Do not add code around it.
 
 ## Before anything
 
@@ -24,7 +24,7 @@ below. Run tools through `mise exec --`, as the repository's AGENTS.md says.
 
 ## Find what you need
 
-Ask the code and the binary before reading prose. Each answers one question:
+Ask the code and the binary before you read prose. Each one answers one question:
 
 | Question                                         | Ask                                                       |
 | ------------------------------------------------ | --------------------------------------------------------- |
@@ -39,10 +39,7 @@ Ask the code and the binary before reading prose. Each answers one question:
 
 ## Decide first
 
-Settle these with the user before writing anything. Each answer is a
-declaration, so a wrong guess becomes a wrong API that someone then depends on.
-Ask only what the request leaves open, give your recommendation with each
-question, and say which declaration the answer becomes.
+Decide these with the user before you write code. Each answer becomes a declaration. Thus an incorrect guess becomes an incorrect API, and other code then uses that API. Ask only what the request does not tell you. Give your recommendation with each question. Say which declaration the answer becomes.
 
 | Ask | Why it matters | Answer becomes |
 | --- | --- | --- |
@@ -56,9 +53,7 @@ question, and say which declaration the answer becomes.
 | Is it one host, one step? | A behavior acts on one host inside one job | If it spans hosts or orders several steps, it is an osapi-orchestrator workflow, not a behavior |
 | Does it need anything under "Not yet" below? | The platform cannot express it, and wiring around that breaks the generated layers | Stop and tell the user what is missing |
 
-Then settle how it behaves, which decides the provider and its examples. Read
-[references/services.md](references/services.md) first, and pick the pattern
-its answers point to:
+Then decide how it operates. This decides the provider and its examples. Read [references/services.md](references/services.md) first. Then select the pattern that the answers identify:
 
 | Ask | Answer becomes |
 | --- | --- |
@@ -69,18 +64,15 @@ its answers point to:
 | Which inputs reach a path, a line in a file or a program's arguments? | Their `validate` patterns and the refusals declared with `.Fails` |
 | What should it refuse, and what does it answer when the thing is not there? | Refusals, and `behavior.ErrNotFound` for a 404 |
 
-Tests never run anything real: the fake host's filesystem is in memory and its
-commands answer with what the examples declare, so a behavior for Debian is
-built and tested on any machine. Do not skip an example because the program is
-not installed where you are.
+Tests do not run real programs. The filesystem of the fake host is in memory. Its commands give the output that the examples declare. Thus you can build and test a behavior for Debian on any machine. Do not skip an example because the program is not installed on your machine.
 
-When the request leaves open what the behavior manages, where its truth lives
-or which methods it has, ask before writing anything: a guess there becomes an
-API. The defaults below are for a user who has answered that they have no
-preference, not for a question nobody asked. When the user has no opinion,
-the defaults are: a new behavior only if nothing
-close exists; `API` and `CLI`; `debian`; inputs rather than settings; and no
-`Requires` unless an internal behavior already does part of the work.
+The request can leave these open: what the behavior manages, where its truth is, or which methods it has. Then ask before you write code, because a guess becomes an API. Use the defaults below only when the user says that they have no preference. Do not use them in place of a question. The defaults are:
+
+- a new behavior only if no close behavior exists
+- `API` and `CLI`
+- `debian`
+- inputs, not settings
+- no `Requires`, unless an internal behavior already does part of the work
 
 ## Build a new one
 
@@ -91,35 +83,29 @@ close exists; `API` and `CLI`; `debian`; inputs rather than settings; and no
    result builds, validates and passes every test before you change it.
 2. Change it in this order, because each depends on the one before:
    `settings.go`, `types.go`, `provider.go` and `<platform>.go`, `methods.go`,
-   then `behavior.go`. Reach the host only through `host.Host`, so the fake host
-   can test it, and compare before acting, so running twice reports
-   `changed: false`. A building block's own fields, such as what `managedfile`
+   then `behavior.go`. Use the host only through `host.Host`. Then the fake host can test it. Compare before you act. Then a second run reports `changed: false`. A building block's own fields, such as what `managedfile`
    accepts, come from `behavior get` on it.
-3. Give every method an example a reader would want, with the host it runs on
-   and what it changes there, and declare what it refuses with `.Fails`.
+3. Give each method a useful example. The example names the host that it runs on and the changes on that host. Declare what the method refuses with `.Fails`.
    `go doc ./internal/behavior Given` and `Effect` list the options. The examples run
    the provider on a fake host and become the generated HTTP and CLI tests.
 4. Keep a test for every file with code, named for it:
    `methods_public_test.go` on the mocked provider, and
-   `<platform>_public_test.go` for what an example cannot show. Run
-   `go generate ./internal/behaviors/<name>/mocks` after changing `provider.go`.
+   `<platform>_public_test.go` for what an example cannot show. After you change `provider.go`, run `go generate ./internal/behaviors/<name>/mocks`.
 5. Run the checks below until they pass.
 
 ## Design docs
 
-AGENTS.md puts design in `osapi-io/specs` before building. For a behavior, the
-definition is the design: its methods, types, settings, examples and refusals
-are what the generated docs page and `behavior get` publish, so a new behavior
-needs no specs page of its own. Change `components/osapi/behaviors.md` in specs
+AGENTS.md puts the design in `osapi-io/specs` before you build. For a behavior, the definition is the design. The generated docs page and `behavior get` publish its methods, types, settings, examples and refusals. Thus a new behavior does not need its own specs page. Change `components/osapi/behaviors.md` in specs
 only when the work changes the platform itself: a new option, rule, surface or
 check that every behavior gets.
 
 ## Migrate a hand-written domain
 
-Moving a domain is copying what works, not rewriting it. Follow
-[references/migrating.md](references/migrating.md): build the behavior beside
-the domain, move the provider and its tests unchanged, and account for every
-hand-written handler test case before the cutover deletes it.
+To move a domain, copy the code that works. Do not write it again. Follow [references/migrating.md](references/migrating.md):
+
+1. Build the behavior next to the domain.
+1. Move the provider and its tests without changes.
+1. Find a replacement for each hand-written handler test case before the cutover deletes it.
 
 ## Check it
 
@@ -165,23 +151,16 @@ definition or in `internal/behavior/gen`, never in `gen/`.
 
 ## Not yet
 
-These cannot be expressed yet. A request that needs one is answered by saying
-so and stopping, without building around it:
+The platform cannot express these yet. If a request needs one, say so and stop. Do not build around it:
 
 - **Action methods**, such as restart or reboot. `behavior validate` refuses a
   write that is not create, update or delete.
-- **Running what the caller supplies**, a command or a shell: there is no
-  `execute` permission.
+- **A command or a shell from the caller.** There is no `execute` permission.
 - **A resource under another**, with two keys in the path, such as a user's SSH
   keys.
 - **Streaming and uploads**, and the object store they would deploy from.
-- **A step on the controller** before the job is queued, such as hashing a
-  password.
+- **A step on the controller** before osapi queues the job. An example is a password hash.
 
-This list is the one catalog here, kept because finding these by building costs
-a session. It shrinks as `behavior validate` learns to say them.
+This list is the only catalog in this skill. It is here because a session that finds these by trial loses its time. The list becomes shorter when `behavior validate` learns to report them.
 
-Nothing outside the behavior's directory needs editing for a behavior, except
-a package `behavior-int-linux` says its image lacks. If you find you need to, such as in `cmd/agent_setup.go`, `internal/validation` or
-`internal/authtoken`, the platform is missing a declaration. Say so instead of
-wiring it by hand.
+A behavior needs no edits outside its directory. The only exception is a package that `behavior-int-linux` says is missing from its image. If you must edit other code, for example `cmd/agent_setup.go`, `internal/validation` or `internal/authtoken`, the platform does not have a declaration that you need. Say so. Do not add the code by hand.

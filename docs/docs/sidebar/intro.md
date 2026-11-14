@@ -10,10 +10,10 @@ title: Home
 
 # Give your agent a fleet, not a shell
 
-osapi manages Linux hosts through typed operations instead of a login. Every
-change is checked before it is queued, safe to run twice, and recorded. An agent
-drives it through skills `osapi init` installs; a person drives it through the
-same CLI.
+osapi manages Linux hosts through typed operations, not through a login. osapi
+checks each change before it puts the change on the queue. You can run each
+change twice safely, and osapi records each change. An agent uses osapi through
+the skills that `osapi init` installs. A person uses the same CLI.
 
 ## Install
 
@@ -25,9 +25,9 @@ Or download a prebuilt binary from the [releases][] page.
 
 ### Docker
 
-A multi-arch distroless image is published to [GitHub Container Registry][ghcr]
-on every commit to main. Images are signed with [cosign][] (keyless, via GitHub
-OIDC) and include an [SBOM][] attestation.
+Each commit to main publishes a multi-arch distroless image to the [GitHub
+Container Registry][ghcr]. [cosign][] signs the images without a key, through
+GitHub OIDC. Each image has an [SBOM][] attestation.
 
 ```bash
 docker pull ghcr.io/osapi-io/osapi:latest
@@ -42,7 +42,7 @@ cosign verify ghcr.io/osapi-io/osapi:latest \
   --certificate-identity-regexp github.com/osapi-io/osapi
 ```
 
-Verify build provenance and SBOM attestations via the GitHub CLI:
+Verify the build provenance and the SBOM attestations with the GitHub CLI:
 
 ```bash
 gh attestation verify oci://ghcr.io/osapi-io/osapi:latest \
@@ -79,8 +79,8 @@ osapi init --tool codex     # Codex
 ```
 
 It installs two skills: `osapi`, which operates hosts, and `osapi-operations`,
-which runs osapi itself. Run it again after upgrading osapi.
-[Working with an agent](usage/agents.md) says what each one does.
+which runs osapi itself. Run it again after you upgrade osapi.
+[Working with an agent](usage/agents.md) tells what each skill does.
 
 ### 3. Ask for what you want
 
@@ -95,10 +95,10 @@ operation for.
 
 ### 4. Or run it yourself
 
-The agent runs the same commands you can. Each operation is a
-[behavior](behaviors/behaviors.mdx): a typed definition whose API route,
-command, permission, docs and tests are generated from it. There is no model
-anywhere at run time; the same input does the same thing every time.
+The agent runs the same commands that you can run. Each operation is a
+[behavior](behaviors/behaviors.mdx): a typed definition. osapi generates its API
+route, command, permission, docs and tests from the definition. No model runs at
+run time. The same input always does the same thing.
 
 ```bash
 $ osapi client next node sysctl get --key vm.swappiness --target _all
@@ -109,8 +109,8 @@ Results:
   ubuntu-1  ok      vm.swappiness  60     false
 ```
 
-A write reports whether it changed the host, and running it again reports
-`changed: false`. sysctl is the first behavior and is served under
+A write reports if it changed the host. When you run it again, it reports
+`changed: false`. sysctl is the first behavior. osapi serves it under
 `osapi client next` while it replaces the older sysctl commands.
 
 ### 5. See what exists
@@ -125,26 +125,27 @@ knows what each field accepts.
 
 ### 6. Build a new behavior
 
-Ask an agent in a checkout of osapi, _"Add a behavior that manages the message
-of the day"_, and its `build-a-behavior` skill writes one: it asks what it needs
-to decide, writes the definition and the provider, and runs the checks. Or start
-one yourself with `osapi behavior new`. Either way the result is one directory,
-and its API, command, docs and tests are generated.
-[Building a behavior with an agent](development/building-with-an-agent.md) has
-the prompts and what to expect;
+Ask an agent in a checkout of osapi: _"Add a behavior that manages the message
+of the day"_. Its `build-a-behavior` skill writes the behavior. It asks about
+what it must decide, writes the definition and the provider, and runs the
+checks. Or start a behavior yourself with `osapi behavior new`. In both cases,
+the result is one directory, and osapi generates its API, command, docs and
+tests.
+[Building a behavior with an agent](development/building-with-an-agent.md) gives
+the prompts and what to expect.
 [Your first behavior](development/your-first-behavior.md) builds one by hand.
 
 ### 7. Build on what is there
 
-A behavior can be built on another. sysctl requires `managedfile`, an internal
-behavior that writes files and keeps a record of each, so sysctl gets drift
-detection without writing it. An internal behavior has no route or command of
-its own; only other behaviors call it, on the same host, in the same job.
+A behavior can use another behavior. sysctl requires `managedfile`, an internal
+behavior that writes files and keeps a record of each file. Thus sysctl finds
+drift without its own code for it. An internal behavior has no route or command
+of its own. Only other behaviors call it, on the same host and in the same job.
 
 ### 8. Safe by default
 
-Every method has a permission, every request is in the audit log, a secret input
-never reaches a log or a trace, and the agent checks at startup that it may run
+Each method has a permission. Each request is in the audit log. A secret input
+never goes to a log or a trace. When the agent starts, it checks that it can run
 what each behavior declares it runs with sudo.
 
 ### 9. One host or the fleet
@@ -155,17 +156,17 @@ does not run on its platform.
 
 ## Explore the Docs
 
-- [Behaviors](behaviors/behaviors.mdx) — every behavior, generated from its
+- [Behaviors](behaviors/behaviors.mdx): every behavior, generated from its
   definition
-- [Working with an agent](usage/agents.md) — `osapi init`, the skills, and the
+- [Working with an agent](usage/agents.md): `osapi init`, the skills, and the
   prompts
-- [Features](features/node-management.md) — what OSAPI can manage and how each
+- [Features](features/node-management.md): what OSAPI can manage and how each
   feature works
-- [Architecture](architecture/architecture.md) — how the three processes (NATS,
-  API server, agent) fit together
-- [Configuration](usage/configuration.md) — full `osapi.yaml` reference
-- [API](/category/api) — OpenAPI documentation for all endpoints
-- [CLI Usage](usage/usage.mdx) — command reference with examples
+- [Architecture](architecture/architecture.md): how the three processes (NATS,
+  API server, agent) work together
+- [Configuration](usage/configuration.md): full `osapi.yaml` reference
+- [API](/category/api): OpenAPI documentation for all endpoints
+- [CLI Usage](usage/usage.mdx): command reference with examples
 
 ## Alternatives
 

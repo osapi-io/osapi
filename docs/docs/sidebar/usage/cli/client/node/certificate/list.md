@@ -1,7 +1,7 @@
 # List
 
-List all CA certificates on a target host, including both system-provided and
-OSAPI-managed custom certificates:
+List all CA certificates on a target host: the certificates of the system and
+the custom certificates that osapi manages:
 
 ```bash
 $ osapi client node certificate list --target web-01
@@ -16,7 +16,7 @@ $ osapi client node certificate list --target web-01
   1 host: 1 ok
 ```
 
-Target all hosts to list certificates across the fleet:
+Target all hosts to list the certificates on all of the fleet:
 
 ```bash
 $ osapi client node certificate list --target _all

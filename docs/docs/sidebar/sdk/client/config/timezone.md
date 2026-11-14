@@ -4,9 +4,9 @@ sidebar_position: 3
 
 # Timezone
 
-The `Timezone` service provides methods for managing the system timezone on
-target hosts via `timedatectl`. Access via `client.Timezone.Get()`,
-`client.Timezone.Update()`.
+The `Timezone` service has methods that manage the system timezone on target
+hosts through `timedatectl`. Use `client.Timezone.Get()` and
+`client.Timezone.Update()`, for example.
 
 ## Methods
 

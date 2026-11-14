@@ -71,11 +71,11 @@ resp, err := c.Agent.Remove(ctx, "web-01", "")
 
 ## Examples
 
-See
+Refer to
 [`examples/sdk/client/agent.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/agent.go)
 for agent discovery and facts.
 
-See
+Refer to
 [`examples/sdk/client/enrollment.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/enrollment.go)
 for PKI enrollment operations.
 

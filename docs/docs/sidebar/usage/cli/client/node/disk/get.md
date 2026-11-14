@@ -15,7 +15,7 @@ $ osapi client node disk get
   1 host: 1 ok
 ```
 
-When targeting all hosts:
+When you target all hosts:
 
 ```bash
 $ osapi client node disk get --target _all
@@ -30,7 +30,7 @@ $ osapi client node disk get --target _all
   2 hosts: 2 ok
 ```
 
-Target by label to query a group of servers:
+Target a label to query a group of servers:
 
 ```bash
 $ osapi client node disk get --target group:web

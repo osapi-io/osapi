@@ -50,7 +50,7 @@ resp, err := c.Group.Delete(ctx, "web-01", "deploy")
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/group.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/group.go)
 for a complete working example.
 

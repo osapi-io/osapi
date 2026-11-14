@@ -29,7 +29,7 @@ $ osapi client node hostname update --name web-01 --target darwin-host
   darwin-host  host: operation not supported on this OS family
 ```
 
-When targeting all hosts:
+When you target all hosts:
 
 ```bash
 $ osapi client node hostname update --name web-01 --target _all

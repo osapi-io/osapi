@@ -355,7 +355,7 @@ that it tests. The tables have `validateFunc` callbacks.
 ### Test layers
 
 - **Unit tests** (`*_test.go`, `*_public_test.go`). They are fast and use mocked
-  dependencies. Public suites also have HTTP wiring methods (`TestXxxHTTP`,
+  dependencies. Public suites also have HTTP test methods (`TestXxxHTTP`,
   `TestXxxRBACHTTP`). These methods send raw HTTP through the full Echo
   middleware stack, with mocked backends.
 - **Integration tests** (`test/integration/`). They build and start a real
@@ -459,11 +459,12 @@ A new area of a host is a behavior: one directory under `internal/behaviors/`.
 The definition of the behavior builds the routes, commands, spec, docs and
 telemetry. [Your first behavior][your-first-behavior] builds one from the start.
 
-The hand-written domains that are not behaviors yet must be consistent across
-all layers: provider, agent processor, API handler, SDK service, CLI commands,
-docs and tests. **Select an existing domain. Search for it across the codebase
-with `find` and `grep`. Your new domain must be in all the same places.** If
-something exists for `sysctl` but not for your domain, it is missing.
+Each hand-written domain that is not a behavior yet must be consistent across
+all of its layers. The layers are the provider, the agent processor, the API
+handler, the SDK service, the CLI commands, the docs and the tests. **Select an
+existing domain. Search for it across the codebase with `find` and `grep`. Your
+new domain must be in all the same places.** If something exists for `sysctl`
+but not for your domain, it is missing.
 
 ### Rules a domain has to follow
 

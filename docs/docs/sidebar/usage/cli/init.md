@@ -1,7 +1,7 @@
 # Init
 
-Install osapi's agent skills into a repository, so an agent working there knows
-how to use osapi:
+Install the agent skills of osapi into a repository. Then an agent in that
+repository knows how to use osapi:
 
 ```bash
 $ osapi init                          # Claude Code, into the current directory
@@ -12,9 +12,9 @@ $ osapi init ./ops-repo --json        # another directory, with a JSON summary
 
 ## What it writes
 
-The skills compiled into this binary, for each `--tool`, and a short section in
-that tool's instructions file pointing at them: `CLAUDE.md` for Claude Code,
-`AGENTS.md` for Codex. Text outside osapi's section is never touched.
+The command writes the skills in this binary for each `--tool`. It also writes a
+short section, with links to the skills, in the instructions file of that tool:
+`CLAUDE.md` or `AGENTS.md`. It does not change text outside the osapi section.
 
 | Skill              | What the agent uses it for                                                                                  |
 | ------------------ | ----------------------------------------------------------------------------------------------------------- |
@@ -23,9 +23,9 @@ that tool's instructions file pointing at them: `CLAUDE.md` for Claude Code,
 
 ## Upgrading
 
-Run it again after upgrading osapi. It rewrites the skills to match the binary
-and removes files an older version shipped, so the agent never reads a skill
-that describes operations the binary no longer has.
+Run it again after you upgrade osapi. It writes the skills again to agree with
+the binary. It removes the files that an older version installed. Thus the agent
+does not read a skill about operations that the binary does not have now.
 
 ## Flags
 

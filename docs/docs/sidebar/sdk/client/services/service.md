@@ -4,8 +4,8 @@ sidebar_position: 5
 
 # Service
 
-Systemd service management on target hosts. List, inspect, start, stop, restart,
-enable, disable services, and manage unit files via the Object Store.
+Manage systemd services on target hosts. List, examine, start, stop, restart,
+enable and disable services. Manage unit files through the Object Store.
 
 ## Methods
 
@@ -119,7 +119,7 @@ resp, err := c.Service.Delete(ctx, "web-01", "myapp.service")
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/service.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/service.go)
 for a complete working example.
 

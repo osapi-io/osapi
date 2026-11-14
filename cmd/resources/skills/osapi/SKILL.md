@@ -5,7 +5,7 @@ description: >
   packages, services, users, files, DNS, NTP and the rest on one host, a group,
   or the whole fleet. Use when asked to inspect or configure a host osapi
   manages, to run an osapi command, or to find out what osapi can do. Do not use
-  for changing osapi's own code.
+  to change the code of osapi.
 ---
 
 # osapi
@@ -23,11 +23,8 @@ host.
    for its input and output schema. Flags and fields change between releases.
 2. **Always pass `--json`.** Output is the API's response body. On failure,
    stderr is one document, `{"error", "code"}`. Match on `code`, never on the
-   message. Exit 2 means the command was called wrongly; fix the call rather
-   than retrying it.
-3. **Read before you change.** Before an update or delete, run the matching
-   `get` or `list` on the same target, and confirm the host is in the state you
-   expect.
+   message. Exit 2 means that the call was incorrect. Fix the call. Do not try it again unchanged.
+3. **Read before you change.** Before an update or a delete, run the matching `get` or `list` on the same target. Make sure that the host is in the state that you expect.
 4. **Check every host's result.** A command against many hosts returns one
    result per host, each with its own `status`: `ok`, `failed`, `skipped` or
    `timeout`. A `skipped` host does not support the operation; it is not an

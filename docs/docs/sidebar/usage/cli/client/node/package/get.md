@@ -13,7 +13,7 @@ $ osapi client node package get --target web-01 --name nginx
   1 host: 1 ok
 ```
 
-Broadcast to see the package across all hosts:
+Broadcast to see the package on all hosts:
 
 ```bash
 $ osapi client node package get --target _all --name nginx

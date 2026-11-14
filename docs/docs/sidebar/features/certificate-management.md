@@ -2,44 +2,45 @@
 sidebar_position: 24
 ---
 
-# Certificate Management
+# Certificate management
 
-OSAPI provides management of custom CA certificates on managed hosts. CA
-certificates are deployed as PEM files via the Object Store and installed into
-the system trust store using `update-ca-certificates`. Both system-provided and
-OSAPI-managed custom certificates are visible through the list operation.
+osapi manages custom CA certificates on managed hosts. It deploys CA
+certificates as PEM files through the Object Store, and adds them to the system
+trust store with `update-ca-certificates`. The list operation shows the
+certificates of the system and the custom certificates that osapi manages.
 
-## How It Works
+## How it works
 
 The certificate provider manages custom CA certificates in
-`/usr/local/share/ca-certificates/` on Debian-family systems. Certificates are
-uploaded to the Object Store as PEM content and deployed to agents via the file
-provider's SHA-based idempotency tracking.
+`/usr/local/share/ca-certificates/` on Debian family systems. You upload a
+certificate to the Object Store as PEM content. The file provider deploys it to
+the agents, and compares SHA checksums so that it does not write a file that did
+not change.
 
 ### List
 
-Returns all CA certificates on the host, including both system-provided
-certificates (from `/usr/share/ca-certificates/`) and OSAPI-managed custom
-certificates (from `/usr/local/share/ca-certificates/`). Each entry includes a
-`source` field indicating whether it is `system` or `custom`, and custom
-certificates include the `object` reference used to deploy them.
+Returns all CA certificates on the host: the certificates of the system (from
+`/usr/share/ca-certificates/`) and the custom certificates that osapi manages
+(from `/usr/local/share/ca-certificates/`). Each entry has a `source` field,
+`system` or `custom`. A custom certificate also has the `object` reference that
+deployed it.
 
 ### Create
 
-Deploys a new custom CA certificate to the host. The PEM content must first be
-uploaded to the Object Store. The agent writes the file to
-`/usr/local/share/ca-certificates/{name}.crt` and runs `update-ca-certificates`
-to rebuild the system trust store. Idempotent **on content**: a certificate
-already on disk holding the same PEM reports `changed: false`, and one that has
-been replaced or edited is rewritten from the Object Store. `update` exists to
-point the host at a different object.
+Deploys a new custom CA certificate to the host. First, upload the PEM content
+to the Object Store. The agent writes the file to
+`/usr/local/share/ca-certificates/{name}.crt`, and runs `update-ca-certificates`
+to make the system trust store again. Create is idempotent **on the content**.
+If a certificate on disk has the same PEM, it reports `changed: false`. If
+somebody replaced or changed the certificate, the agent writes it again from the
+Object Store. Use `update` to point the host to a different object.
 
 ### Update
 
-Replaces an existing custom CA certificate with a new Object Store reference.
-The agent redeploys the PEM file and runs `update-ca-certificates`. If the
-content has not changed (same SHA), `changed: false` is returned and the trust
-store is not rebuilt. Fails if the certificate does not exist -- use `create`
+Replaces a custom CA certificate with a new Object Store reference. The agent
+deploys the PEM file again and runs `update-ca-certificates`. If the content did
+not change (the same SHA), it returns `changed: false` and does not make the
+trust store again. It fails if the certificate does not exist. Use `create`
 first.
 
 ### Delete
@@ -57,7 +58,7 @@ the trust store without the removed certificate.
 | Update    | Redeploy a custom CA certificate                 |
 | Delete    | Remove a custom CA certificate                   |
 
-## CLI Usage
+## CLI usage
 
 ```bash
 # Upload a CA certificate PEM to the Object Store
@@ -84,13 +85,13 @@ osapi client node certificate create --target _all \
   --name internal-ca --object internal-ca
 ```
 
-All commands support `--json` for raw JSON output.
+All commands accept `--json` to give the raw JSON output.
 
-## Broadcast Support
+## Broadcast support
 
-All certificate operations support broadcast targeting. Use `--target _all` to
-manage certificates on every registered agent, or use a label selector like
-`--target group:web` to target a subset.
+All certificate operations accept broadcast targets. Use `--target _all` to
+manage the certificates on all registered agents. Use a label selector, for
+example `--target group:web`, to target a part of the fleet.
 
 Responses always include per-host results:
 
@@ -104,7 +105,7 @@ Responses always include per-host results:
 
 Skipped and failed hosts appear with their error in the output.
 
-## Supported Platforms
+## Supported platforms
 
 | OS Family | Support |
 | --------- | ------- |
@@ -112,11 +113,12 @@ Skipped and failed hosts appear with their error in the output.
 | Darwin    | Skipped |
 | Linux     | Skipped |
 
-On unsupported platforms, certificate operations return `status: skipped`
-instead of failing. See [Platform Detection](../sdk/platform/detection.md) for
-details on OS family detection.
+On a platform that is not supported, certificate operations return
+`status: skipped`. They do not fail. Refer to
+[Platform Detection](../sdk/platform/detection.md) for how osapi finds the OS
+family.
 
-## Container Behavior
+## Container behavior
 
 Certificate operations work inside containers. The provider writes to
 `/usr/local/share/ca-certificates/` and runs `update-ca-certificates`, which
@@ -135,8 +137,8 @@ included in the `admin` and `write` roles.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/certificate/certificate.md) --
+- [CLI Reference](../usage/cli/client/node/certificate/certificate.md):
   certificate commands
-- [SDK Reference](../sdk/client/security/certificate.md) -- Certificate service
-- [Platform Detection](../sdk/platform/detection.md) -- OS family detection
-- [Configuration](../usage/configuration.md) -- full configuration reference
+- [SDK Reference](../sdk/client/security/certificate.md): Certificate service
+- [Platform Detection](../sdk/platform/detection.md): OS family detection
+- [Configuration](../usage/configuration.md): full configuration reference

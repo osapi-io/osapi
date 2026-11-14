@@ -18,7 +18,7 @@ var sysctlCmd = &cobra.Command{
 }
 
 var sysctlListCmd = &cobra.Command{
-	Long: "Lists every parameter the kernel shows under /proc/sys, with its current value, as sysctl -a does, and marks the ones osapi manages. A prefix, such as net.ipv4, narrows it to that part of the tree. A parameter osapi manages that the kernel does not have right now, such as one whose module is not loaded, is listed with the value osapi wrote.",
+	Long: "Lists every parameter the kernel shows under /proc/sys, with its current value, as sysctl -a does, and marks the ones osapi manages. A prefix, such as net.ipv4, limits the list to that part of the tree. The kernel can lack a parameter that osapi manages, for example when its module is not loaded. Then the list shows the value that osapi wrote.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		prefix, _ := cmd.Flags().GetString("prefix")
 
@@ -39,7 +39,7 @@ var sysctlGetCmd = &cobra.Command{
 }
 
 var sysctlCreateCmd = &cobra.Command{
-	Long: "Writes osapi-<key>.conf to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. It fails when sysctl -p fails, because the value is not set. Running it again with the same value changes nothing and reports changed: false, unless the kernel holds another value, as after a failed apply: then it applies again.",
+	Long: "Writes osapi-<key>.conf to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. It fails when sysctl -p fails, because the value is not set. A second run with the same value changes nothing and reports changed: false. If the kernel has a different value, for example after a failed apply, it applies the value again.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		key, _ := cmd.Flags().GetString("key")
 		value, _ := cmd.Flags().GetString("value")
@@ -69,13 +69,13 @@ var sysctlUpdateCmd = &cobra.Command{
 }
 
 var sysctlDeleteCmd = &cobra.Command{
-	Long: "Removes osapi's file for it and reloads with sysctl --system, so a setting for the key in another file takes effect; otherwise the parameter keeps its current value until the next reboot. Deleting one osapi does not manage reports changed: false.",
+	Long: "Removes the file that osapi wrote for it and reloads with sysctl --system. Then a setting for the key in a different file takes effect. If there is no such setting, the parameter keeps its current value until the next reboot. A delete of a parameter that osapi does not manage reports changed: false.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		key, _ := cmd.Flags().GetString("key")
 
 		behaviorcli.Run(cmd, sysctl.Behavior, "delete", sysctl.DeleteInput{Key: key})
 	},
-	Short: "Stop managing a kernel parameter",
+	Short: "Stop the management of a kernel parameter",
 	Use:   "delete",
 }
 

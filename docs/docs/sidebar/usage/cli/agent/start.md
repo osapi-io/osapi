@@ -6,13 +6,13 @@ Start the agent:
 $ osapi agent start
 ```
 
-The agent connects to NATS, subscribes to job streams, and processes jobs as
-they become available. It uses platform-specific providers to execute operations
-(node status, DNS queries, ping, etc.).
+The agent connects to NATS and subscribes to the job streams. It processes each
+job when the job arrives. It uses a provider for its platform to run each
+operation, for example node status, DNS queries and ping.
 
 ## Configuration
 
-Agent behavior is configured via `osapi.yaml` or CLI flags:
+`osapi.yaml` or CLI flags configure the agent:
 
 | Flag                  | Description                         | Default         |
 | --------------------- | ----------------------------------- | --------------- |
@@ -37,6 +37,6 @@ Agent behavior is configured via `osapi.yaml` or CLI flags:
 
 1. Connects to NATS and creates JetStream consumers
 2. Subscribes to query (`jobs.query.>`) and modify (`jobs.modify.>`) subjects
-3. Processes jobs by dispatching to the appropriate provider
+3. Processes each job: it sends the job to the correct provider
 4. Writes status events and results back to the KV store
 5. Gracefully shuts down on SIGINT/SIGTERM

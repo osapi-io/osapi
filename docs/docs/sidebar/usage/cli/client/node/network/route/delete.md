@@ -1,7 +1,7 @@
 # Delete
 
-Remove the OSAPI-managed static routes for an interface on a target host. Only
-OSAPI-managed files (with the `osapi-` prefix) can be deleted:
+Remove the static routes that osapi manages for an interface on a target host.
+You can delete only the files that osapi manages, with the `osapi-` prefix:
 
 ```bash
 $ osapi client node network route delete \

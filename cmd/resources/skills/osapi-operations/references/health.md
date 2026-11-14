@@ -22,5 +22,4 @@ A drained agent takes no new jobs: `client agent undrain` returns it.
 A job whose hosts all report `timeout` reached no agent in
 `controller.api.job_timeout`. Check `agent list` and the target.
 
-Start any component with `--debug` for its log, and look there before
-changing config.
+Start any component with `--debug` for its log, and read that log before you change the config.

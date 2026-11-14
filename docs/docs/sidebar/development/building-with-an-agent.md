@@ -5,18 +5,19 @@ sidebar_position: 5
 # Building a behavior with an agent
 
 A behavior is one directory, and an agent can write all of it. The osapi
-repository carries a skill, `build-a-behavior`, that holds the procedure and the
-judgment: what to ask before writing anything, which existing behavior to build
-on, which checks prove it works. This is how most behaviors are meant to be
-built. [Your first behavior](your-first-behavior.md) builds one by hand, and
-[Behaviors](behaviors.md) is the reference for every part.
+repository has a skill, `build-a-behavior`, with the procedure and the
+decisions: what to ask before you write, which behavior to build on, and which
+checks prove that it works. Use this to build most behaviors.
+[Your first behavior](your-first-behavior.md) builds one by hand.
+[Behaviors](behaviors.md) is the reference for each part.
 
 ## Set it up
 
-Open a checkout of osapi in Claude Code. The skill is in
-`.claude/skills/build-a-behavior/` and loads when the request is about a
-behavior. `osapi init` does not install it: it is for changing osapi, not for
-using it. Build the binary once, since it embeds the UI:
+Open a checkout of osapi with a coding agent. The skill is in
+`.claude/skills/build-a-behavior/`, and `.agents/skills` links to it. The agent
+loads the skill when the request is about a behavior. `osapi init` does not
+install it, because it is to change osapi, not to use it. Build the binary one
+time, because the binary embeds the UI:
 
 ```bash
 mise exec -- just build
@@ -24,7 +25,7 @@ mise exec -- just build
 
 ## What to ask
 
-Say what should be managed, not how:
+Say what osapi must manage, not how:
 
 - _"Add a behavior that manages the message of the day in /etc/motd."_
 - _"Add a behavior that lists the host's ARP and NDP neighbors, under network."_
@@ -39,21 +40,22 @@ Say what should be managed, not how:
 A wrong guess becomes an API someone depends on, so the agent settles these
 before it writes code, with a recommendation for each:
 
-- whether a behavior close to this already exists, to extend instead
-- whether operators call it, or only other behaviors (an internal one)
-- which platforms it runs on; every other platform reports `skipped`
+- whether a similar behavior exists, to extend it instead
+- whether operators call it, or only other behaviors (an internal behavior)
+- which platforms it runs on. All other platforms report `skipped`
 - whether part of the work already exists as an internal behavior to require
-- whether a value changes per call (an input) or per host (a setting)
+- whether a value changes with each call (an input) or with each host (a
+  setting)
 - which programs it runs, which with sudo, and whether an input is a secret
-- where the truth about the thing lives: a file osapi writes, a file something
-  else owns, a program's output, or `/proc`
-- what "already done" looks like, so a second run changes nothing
+- where the real state is: a file that osapi writes, a file that something else
+  owns, the output of a program, or `/proc`
+- how "already done" looks, so that a second run changes nothing
 
 ## What it writes, and how it proves it
 
-It runs `osapi behavior new`, then writes the settings, types, provider, methods
-and definition, with examples that are also the tests. Then it runs the same
-checks a person would:
+It runs `osapi behavior new`. Then it writes the settings, the types, the
+provider, the methods and the definition, with examples that are also the tests.
+Then it runs the same checks as a person:
 
 ```bash
 go generate ./internal/behaviors/all
@@ -63,29 +65,30 @@ mise exec -- just test            # every check, 100% coverage per behavior
 mise exec -- just behavior-int-linux
 ```
 
-Each failure names what to fix: an example whose output is wrong, a write that
+Each failure names what to fix: an example with a wrong output, a write that
 changes the host on its second run, a field that lets a path or an option
-through, a program run without being declared. The skill's table maps each one
-to its fix.
+through, or a program that runs without a declaration. The table of the skill
+gives the fix for each one.
 
-To review the result, read the definition in `internal/behaviors/<name>/`, then
-`osapi behavior get --name <name>` and its generated page under
-[Behaviors](../behaviors/behaviors.mdx). Everything else in the change is
-generated from those.
+To review the result, read the definition in `internal/behaviors/<name>/`. Then
+read `osapi behavior get --name <name>` and the generated page under
+[Behaviors](../behaviors/behaviors.mdx). osapi generates all of the rest of the
+change from those.
 
 ## What it will refuse
 
-Some things the platform cannot express yet, such as a method that is an action
-rather than a create, update or delete (a restart), running a command the caller
-supplies, or a resource nested under another. For those the agent stops and says
-what is missing instead of building around it. Each is a change to the platform,
-decided by a person.
+The platform cannot do some things yet. Examples are a method that is an action,
+for example a restart, and not a create, update or delete; a command that the
+caller gives; and a resource under another resource. For those, the agent stops
+and says what is missing. It does not build around the gap. Each one is a change
+to the platform, and a person decides it.
 
 ## Moving a hand-written domain
 
-A domain that is still hand-written moves in two steps. First its behavior is
-built beside it, marked `behavior.Next`, so it is served under `/api/next` and
-`osapi client next` while both run. Then the cutover removes the mark, and the
-checks name what is left to delete: the route check names the hand-written
-domain's directory, and the CLI refuses to start while a hand-written command
-has the behavior's name. The skill's `references/migrating.md` is the procedure.
+A hand-written domain moves in two steps. First, you build its behavior next to
+it, with the `behavior.Next` mark. Then osapi serves the behavior under
+`/api/next` and `osapi client next` while both run. Then the cutover removes the
+mark, and the checks name the code that is left to delete. The route check names
+the directory of the hand-written domain. The CLI does not start while a
+hand-written command has the name of the behavior. `references/migrating.md` of
+the skill gives the procedure.

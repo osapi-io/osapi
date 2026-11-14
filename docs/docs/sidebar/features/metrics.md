@@ -4,23 +4,22 @@ sidebar_position: 8
 
 # Metrics
 
-Each OSAPI component exposes a Prometheus-compatible `/metrics` endpoint on a
-dedicated port. Metrics are collected using OpenTelemetry with an isolated
-Prometheus registry per component, so each endpoint shows only that component's
-data.
+Each osapi component has a `/metrics` endpoint for Prometheus, on its own port.
+osapi collects metrics with OpenTelemetry. Each component has its own Prometheus
+registry. Thus each endpoint shows only the data of its component.
 
 ## Endpoints
 
 Each component's metrics server exposes three endpoints:
 
-| Endpoint        | Description                                       |
-| --------------- | ------------------------------------------------- |
-| `/metrics`      | Prometheus metrics in text exposition format      |
-| `/health`       | Liveness probe — always returns `{"status":"ok"}` |
-| `/health/ready` | Readiness probe — 200 when ready, 503 when not    |
+| Endpoint        | Description                                      |
+| --------------- | ------------------------------------------------ |
+| `/metrics`      | Prometheus metrics in text exposition format     |
+| `/health`       | Liveness probe. Always returns `{"status":"ok"}` |
+| `/health/ready` | Readiness probe. 200 when ready, 503 when not    |
 
-The health probes are unauthenticated and always available when the metrics
-server is enabled.
+The health probes need no authentication. They are always available when the
+metrics server is enabled.
 
 | Component  | Default Port | Config Key                 |
 | ---------- | ------------ | -------------------------- |
@@ -28,15 +27,15 @@ server is enabled.
 | Agent      | 9091         | `agent.metrics.port`       |
 | NATS       | 9092         | `nats.server.metrics.port` |
 
-## Application Metrics Reference
+## Application metrics reference
 
-All application metrics are instrumented through OpenTelemetry and exported via
-the OTEL Prometheus exporter with the `osapi` namespace. The `osapi_` prefix is
-applied automatically. OTEL scope labels (`otel_scope_name`, etc.) are included
-in the output for traceability.
+osapi records all application metrics through OpenTelemetry, and exports them
+through the OTEL Prometheus exporter with the `osapi` namespace. The exporter
+adds the `osapi_` prefix automatically. The output has the OTEL scope labels,
+for example `otel_scope_name`, so that you can find the source of a metric.
 
-Go runtime (goroutines, memory, GC) and process metrics (CPU, memory, file
-descriptors) are included on every component.
+Each component also has the Go runtime metrics (goroutines, memory, GC) and the
+process metrics (CPU, memory, file descriptors).
 
 | Metric                        | Type      | Labels    | Component  | Description                        |
 | ----------------------------- | --------- | --------- | ---------- | ---------------------------------- |
@@ -48,19 +47,19 @@ descriptors) are included on every component.
 | `osapi_job_duration_seconds`  | histogram |           | agent      | Job execution duration             |
 | `osapi_heartbeat_age_seconds` | gauge     |           | agent      | Seconds since last heartbeat write |
 
-The `osapi_subsystem_up` gauge has a `subsystem` label identifying which
-internal service it represents (e.g., `api`, `heartbeat`, `metrics`, `notifier`,
-`tracing`, `facts`). A value of 1 means the subsystem status is `ok`; 0 means
-`disabled` or `error`.
+The `osapi_subsystem_up` gauge has a `subsystem` label that names its internal
+service, for example `api`, `heartbeat`, `metrics`, `notifier`, `tracing` or
+`facts`. A value of 1 means that the status of the subsystem is `ok`. A value of
+0 means `disabled` or `error`.
 
-The controller also exposes HTTP request metrics from the OTEL middleware using
-standard `http.server.*` names (`http.server.request.duration`,
-`http.server.active_requests`, etc.).
+The controller also has HTTP request metrics from the OTEL middleware, with the
+standard `http.server.*` names, for example `http.server.request.duration` and
+`http.server.active_requests`.
 
-The NATS component exposes `osapi_component_up` and `osapi_subsystem_up` only —
-NATS has its own native monitoring.
+The NATS component has only `osapi_component_up` and `osapi_subsystem_up`. NATS
+has its own monitoring.
 
-## Health Probes
+## Health probes
 
 Each metrics server also serves lightweight health probes on the same port.
 These are always unauthenticated.
@@ -75,7 +74,7 @@ running. Use this to detect hung or crashed processes.
 Returns `200 OK` when the component is ready, or `503 Service Unavailable` when
 it is not. Use this to gate traffic until the component has fully started.
 
-### Kubernetes Example
+### Kubernetes example
 
 ```yaml
 livenessProbe:
@@ -116,7 +115,7 @@ scrape_configs:
 
 ## Configuration
 
-Each component's metrics server can be enabled or disabled independently:
+You can enable or disable the metrics server of each component separately:
 
 ```yaml
 controller:
@@ -142,6 +141,6 @@ settings and environment variable overrides.
 
 ## Related
 
-- [Health Checks](health-checks.md) -- liveness, readiness, and status probes
-- [Distributed Tracing](distributed-tracing.md) -- OpenTelemetry tracing
-- [Configuration](../usage/configuration.md) -- full configuration reference
+- [Health Checks](health-checks.md): liveness, readiness, and status probes
+- [Distributed Tracing](distributed-tracing.md): OpenTelemetry tracing
+- [Configuration](../usage/configuration.md): full configuration reference

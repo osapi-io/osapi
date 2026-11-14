@@ -2,50 +2,54 @@
 sidebar_position: 27
 ---
 
-# Network Interface Management
+# Network interface management
 
-OSAPI provides management of network interface configuration and static routes
-on managed hosts. Interfaces and routes are configured via Netplan drop-in
-files, giving persistent, reboot-safe configuration that integrates naturally
-with Ubuntu's network management stack.
+osapi manages the network interface configuration and the static routes of
+managed hosts. It configures interfaces and routes with Netplan drop-in files.
+Thus the configuration stays after a reboot, and it works with the network
+management of Ubuntu.
 
-## How It Works
+## How it works
 
 The interface and route providers write Netplan drop-in configuration files to
 `/etc/netplan/` on Debian-family systems. Each managed resource uses an `osapi-`
 filename prefix to identify OSAPI-owned files:
 
-- **Interfaces**: `osapi-{name}.yaml` — configures addresses, DHCP, gateway,
-  MTU, MAC, and Wake-on-LAN for the named interface.
-- **Routes**: `osapi-{name}-routes.yaml` — configures static routes for the
+- **Interfaces**: `osapi-{name}.yaml` configures the addresses, DHCP, gateway,
+  MTU, MAC and Wake-on-LAN of the named interface.
+- **Routes**: `osapi-{name}-routes.yaml` configures the static routes of the
   named interface.
 
-After writing each file, the agent runs `netplan generate` to validate syntax
-before applying. If validation fails, the file is rolled back and the job
-returns an error. This prevents bad configuration from breaking network
-connectivity.
+After it writes each file, the agent runs `netplan generate` to validate the
+syntax before it applies the file. If validation fails, the agent puts back the
+previous file, and the job returns an error. Thus a bad configuration does not
+stop the network connection.
 
-### DNS Delete
+### DNS delete
 
 The DNS provider also supports delete: removes the OSAPI-managed
 `/etc/netplan/osapi-dns.yaml` for the interface and runs `netplan apply`.
 Returns `changed: true` if the file existed.
 
-## Safety Features
+## Safety features
 
-- **Netplan generate validation** — all writes run `netplan generate` before
-  applying. If the generated config is invalid, the file is rolled back and the
-  job returns an error. The previous configuration is preserved.
-- **Default route protection** — the route provider refuses to delete routes
-  that would remove the default gateway, preventing loss of connectivity.
-- **OSAPI prefix** — only files with the `osapi-` prefix are managed. System
-  files created by installers or other tools are not touched.
-- **SHA-based idempotency** — `update` computes a SHA of the new content and
-  compares it with a SHA of the file on disk, skipping the write only when they
-  match and returning `changed: false`. A config edited by hand differs from the
-  content osapi would write, so it is restored rather than reported unchanged.
-- **Atomic writes** — the config goes to a temporary file beside the target and
-  is renamed over it, so `netplan generate` never reads a half-written file.
+- **Validation with netplan generate.** All writes run `netplan generate` before
+  they apply. If the generated configuration is not valid, the agent puts back
+  the previous file, and the job returns an error. The previous configuration
+  stays.
+- **Protection of the default route.** The route provider does not delete a
+  route if that removes the default gateway. Thus the host does not lose its
+  connection.
+- **The osapi prefix.** osapi manages only files with the `osapi-` prefix. It
+  does not touch system files from installers or other tools.
+- **SHA idempotency.** `update` calculates the SHA of the new content and
+  compares it with the SHA of the file on disk. Only when they are the same does
+  it skip the write and return `changed: false`. A configuration that somebody
+  changed by hand is different from the content that osapi writes. Thus osapi
+  puts it back, and does not report it as unchanged.
+- **Atomic writes.** The agent writes the configuration to a temporary file next
+  to the target, and renames it over the target. Thus `netplan generate` never
+  reads a file that is only partly written.
 
 ## Operations
 
@@ -63,7 +67,7 @@ Returns `changed: true` if the file existed.
 | Route Delete     | Remove OSAPI-managed routes for an interface     |
 | DNS Delete       | Remove OSAPI-managed DNS config for an interface |
 
-## CLI Usage
+## CLI usage
 
 ```bash
 # List all interfaces
@@ -120,13 +124,13 @@ osapi client node network interface create \
   --target _all --name eth1 --dhcp4
 ```
 
-All commands support `--json` for raw JSON output.
+All commands accept `--json` to give the raw JSON output.
 
-## Broadcast Support
+## Broadcast support
 
-All interface and route operations support broadcast targeting. Use
-`--target _all` to manage network configuration on every registered agent, or
-use a label selector like `--target group:web` to target a subset.
+All interface and route operations accept broadcast targets. Use `--target _all`
+to manage the network configuration on all registered agents. Use a label
+selector, for example `--target group:web`, to target a part of the fleet.
 
 Responses always include per-host results:
 
@@ -140,7 +144,7 @@ Responses always include per-host results:
 
 Skipped and failed hosts appear with their error in the output.
 
-## Supported Platforms
+## Supported platforms
 
 | OS Family | Support |
 | --------- | ------- |
@@ -148,12 +152,12 @@ Skipped and failed hosts appear with their error in the output.
 | Darwin    | Skipped |
 | Linux     | Skipped |
 
-On unsupported platforms, interface and route operations return
-`status: skipped` instead of failing. See
-[Platform Detection](../sdk/platform/detection.md) for details on OS family
-detection.
+On a platform that is not supported, interface and route operations return
+`status: skipped`. They do not fail. Refer to
+[Platform Detection](../sdk/platform/detection.md) for how osapi finds the OS
+family.
 
-## Container Behavior
+## Container behavior
 
 Interface and route operations return `status: skipped` inside containers.
 Netplan requires direct host access and is not available in standard container
@@ -176,12 +180,12 @@ included in the `admin` and `write` roles.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/network/interface/interface.md) --
+- [CLI Reference](../usage/cli/client/node/network/interface/interface.md):
   interface commands
-- [CLI Reference](../usage/cli/client/node/network/route/route.md) -- route
+- [CLI Reference](../usage/cli/client/node/network/route/route.md): route
   commands
-- [SDK Reference](../sdk/client/networking/interface.md) -- Interface service
-- [SDK Reference](../sdk/client/networking/route.md) -- Route service
-- [Network Management](network-management.md) -- DNS and ping
-- [Platform Detection](../sdk/platform/detection.md) -- OS family detection
-- [Configuration](../usage/configuration.md) -- full configuration reference
+- [SDK Reference](../sdk/client/networking/interface.md): Interface service
+- [SDK Reference](../sdk/client/networking/route.md): Route service
+- [Network Management](network-management.md): DNS and ping
+- [Platform Detection](../sdk/platform/detection.md): OS family detection
+- [Configuration](../usage/configuration.md): full configuration reference

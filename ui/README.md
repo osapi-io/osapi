@@ -16,7 +16,7 @@ SDK.
 - **Its client** is generated from osapi's OpenAPI spec by
   [orval](https://orval.dev/), into `src/sdk/gen/`.
 
-How it is built and run during development is in
-[UI development](../docs/docs/sidebar/development/ui-development.md), and how it
-is put together in [docs/architecture.md](docs/architecture.md). osapi's
-[license](../LICENSE) and [AI policy](../AI_POLICY.md) cover it.
+[UI development](../docs/docs/sidebar/development/ui-development.md) tells how
+to build and run it during development.
+[docs/architecture.md](docs/architecture.md) tells how its parts fit together.
+The osapi [license](../LICENSE) and [AI policy](../AI_POLICY.md) apply to it.

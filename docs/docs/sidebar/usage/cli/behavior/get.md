@@ -1,8 +1,8 @@
 # Get
 
-Show one behavior in full: where it is served, its platforms, the programs it
-runs with sudo, the behaviors it uses and is used by, its methods with their
-routes and permissions, its types, settings and telemetry.
+Show all of one behavior: where osapi serves it, its platforms, the programs
+that it runs with sudo, the behaviors that it uses and that use it, its methods
+with their routes and permissions, its types, its settings and its telemetry.
 
 ```bash
 $ osapi behavior get --name sysctl
@@ -59,8 +59,9 @@ host inside the same job. If a behavior it uses cannot run on a platform, this
 one reports `skipped` there too. **Used by** lists the behaviors built on this
 one.
 
-A behavior with `Internal: yes` exists only to be built on: it has no route, no
-command and no permission, and only the behaviors under Used by call it.
+A behavior with `Internal: yes` exists only for other behaviors to use. It has
+no route, no command and no permission. Only the behaviors under Used by call
+it.
 
 ```bash
 $ osapi behavior get --name managedfile

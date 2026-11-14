@@ -4,7 +4,7 @@ sidebar_position: 3
 
 # Features
 
-OSAPI provides a comprehensive set of features for managing Linux systems.
+osapi has these features to manage Linux systems.
 
 <!-- prettier-ignore-start -->
 
@@ -15,9 +15,9 @@ OSAPI provides a comprehensive set of features for managing Linux systems.
 | 🔌  | [Network Interface Management](network-interface-management.md) | Interface and route configuration via Netplan                             |
 | ⚙️  | [Command Execution](command-execution.md)      | Remote exec and shell across managed hosts                                                    |
 | 📁  | [File Management](file-management.md)          | Upload, deploy, and template files with SHA-based idempotency                                 |
-| 📊  | [System Facts](system-facts.md)                | Agent-collected system facts -- architecture, kernel, FQDN, CPUs, network interfaces          |
+| 📊  | [System Facts](system-facts.md)                | System facts that the agent collects: architecture, kernel, FQDN, CPUs, network interfaces          |
 | 🔄  | [Agent Lifecycle](agent-lifecycle.md)          | Node conditions, graceful drain/cordon for maintenance                                        |
-| ⚡  | [Job System](job-system.md)                    | NATS JetStream with KV-first architecture -- broadcast, load-balanced, and label-based routing |
+| ⚡  | [Job System](job-system.md)                    | NATS JetStream with a KV-first design: broadcast, load-balanced and label routing |
 | 💚  | [Health Checks](health-checks.md)              | Liveness, readiness, system status endpoints                                                  |
 | 📈  | [Metrics](metrics.md)                          | Prometheus `/metrics` endpoint                                                                |
 | 🔒  | [Agent Hardening](agent-hardening.md)          | Least-privilege mode with sudo escalation and capability verification                         |

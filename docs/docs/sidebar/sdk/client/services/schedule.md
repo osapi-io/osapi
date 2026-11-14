@@ -4,9 +4,9 @@ sidebar_position: 2
 
 # Schedule
 
-The `Schedule` service provides methods for managing scheduled entries on target
-hosts. On Debian family hosts these are cron drop-in files. Access via
-`client.Schedule.List()`, `client.Schedule.Create()`, etc.
+The `Schedule` service has methods that manage scheduled entries on target
+hosts. On Debian family hosts, these are cron drop-in files. Use
+`client.Schedule.List()` and `client.Schedule.Create()`, for example.
 
 ## Methods
 
@@ -93,5 +93,5 @@ resp, err := c.Schedule.Delete(ctx, "web-01", "backup-daily")
 
 Schedule management is supported on the Debian OS family (Ubuntu, Debian,
 Raspbian). On unsupported platforms (Darwin, generic Linux), operations return
-`status: skipped`. See [Platform Detection](../../platform/detection.md) for
-details.
+`status: skipped`. Refer to [Platform Detection](../../platform/detection.md)
+for details.

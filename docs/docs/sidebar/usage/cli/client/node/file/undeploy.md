@@ -1,7 +1,7 @@
 # Undeploy
 
-Remove a deployed file from disk on the target node. The object store entry is
-preserved so the file can be redeployed at any time.
+Remove a deployed file from disk on the target node. The object store entry
+stays, so you can deploy the file again at any time.
 
 ```bash
 $ osapi client node file undeploy \
@@ -16,8 +16,8 @@ $ osapi client node file undeploy \
   1 host: 1 changed
 ```
 
-If the file does not exist on disk, the operation is a no-op and
-`Changed: false` is returned.
+If the file does not exist on disk, the operation changes nothing and returns
+`Changed: false`.
 
 Undeploy from all hosts in a label group:
 
@@ -49,7 +49,7 @@ $ osapi client node file undeploy \
 
 :::note
 
-The object store entry is not deleted. Use `osapi client file delete` to remove
-the object from the store once it is no longer needed.
+The command does not delete the object store entry. When you do not need the
+object, use `osapi client file delete` to remove it from the store.
 
 :::

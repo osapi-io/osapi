@@ -1,41 +1,48 @@
 # Migrating a hand-written domain
 
-Moving a domain is copying what works, not rewriting it. sysctl was moved this
-way, and every step is checkable:
+To move a domain, copy the code that works. Do not write it again. sysctl moved
+this way, and you can check each step:
 
-1. **Build the behavior beside the domain**, marked `behavior.Next`, so it is
-   served under `/api/next` and `osapi client next` without clashing with the
-   hand-written routes and commands, and with the domain's method names, so its
-   routes, operationIds and permissions match. Add a row for it to
-   `migrating` in `internal/behavior/openapi/openapi_public_test.go`, which fails
-   until the generated spec describes the same API as the hand-written one.
-2. **Move the provider and its tests unchanged** from
-   `internal/provider/<category>/<domain>/` into `internal/behaviors/<name>/`, as
-   `<platform>.go` and `<platform>_public_test.go`, and point the hand-written
-   domain at them. A move with nothing deleted from the tests is the proof
-   nothing was lost; change behavior in a later commit, not in the move.
-3. **Wrap the provider**: `provider.go` declares its interface and the builder,
-   `methods.go` translates each method's input to provider calls. The provider's
-   own types move into `types.go`.
-4. **Account for every hand-written handler test case** in
-   `internal/controller/api/node/<domain>/`. Each becomes one of: a row the
-   generated HTTP tests already have (success, broadcast, skipped, failed,
-   timeout, 401, 403, 404, 500, bad target, missing field, bad JSON, wrong
-   type), an example, or a refusal declared with `.Fails`. List the ones you
-   mapped and how. A case with none of these is a gap: add the example or
-   refusal before going on.
-5. **Question the domain's semantics before the cutover locks them in.** A
-   hand-written domain can be wrong in ways its tests agree with. sysctl's
-   `list` and `get` reported only the parameters osapi wrote, so a fresh host
-   listed nothing; they were changed to read the kernel and mark what osapi
-   manages, and its parity row was dropped because its API then differed on
-   purpose. Make such a change after the move, in its own commit, and say in
-   the definition's prose what changed.
-6. **Leave the hand-written domain running** until the cutover. The cutover is
-   removing `behavior.Next` and following the failures: the route check names
-   the hand-written API domain to delete, the CLI refuses to start until the
-   hand-written commands are gone, and the compiler finds the processor's case
-   in `NewNodeProcessor`. Delete the hand-written spec and CLI docs pages and
-   any platform stubs nothing builds, run `mise exec -- just generate` so the
-   behavior's spec joins the main one and the SDK and UI clients are
-   regenerated, and fix what no longer compiles against them.
+1. **Build the behavior next to the domain.** Mark it `behavior.Next`. Then osapi
+   serves it under `/api/next` and `osapi client next`, and it does not conflict
+   with the hand-written routes and commands. Use the method names of the
+   domain. Then its routes, operationIds and permissions are the same. Add a
+   row for it to `migrating` in
+   `internal/behavior/openapi/openapi_public_test.go`. That test fails until the
+   generated spec describes the same API as the hand-written spec.
+2. **Move the provider and its tests without changes.** Move them from
+   `internal/provider/<category>/<domain>/` into `internal/behaviors/<name>/`,
+   as `<platform>.go` and `<platform>_public_test.go`. Point the hand-written
+   domain at them. If the move deletes nothing from the tests, it lost nothing.
+   Change the operation in a later commit, not in the move.
+3. **Wrap the provider.** `provider.go` declares its interface and the builder.
+   `methods.go` changes the input of each method into provider calls. The types
+   of the provider move into `types.go`.
+4. **Find a replacement for each hand-written handler test case** in
+   `internal/controller/api/node/<domain>/`. Each case becomes one of these:
+   - a row that the generated HTTP tests already have: success, broadcast,
+     skipped, failed, timeout, 401, 403, 404, 500, bad target, missing field,
+     bad JSON or wrong type
+   - an example
+   - a refusal that `.Fails` declares
+
+   List the cases that you mapped, and how. A case with no replacement is a
+   gap. Add the example or the refusal before you continue.
+5. **Examine the semantics of the domain before the cutover makes them
+   permanent.** A hand-written domain can be incorrect, and its tests can agree
+   with the error. The `list` and `get` of sysctl reported only the parameters
+   that osapi wrote. Thus a new host listed nothing. The change made them read
+   the kernel and mark the parameters that osapi manages. Its parity row went
+   away, because its API was then different on purpose. Make such a change
+   after the move, in its own commit. Say in the prose of the definition what
+   changed.
+6. **Keep the hand-written domain until the cutover.** For the cutover, remove
+   `behavior.Next` and fix each failure:
+   - The route check names the hand-written API domain. Delete it.
+   - The CLI does not start until you delete the hand-written commands.
+   - The compiler finds the case of the processor in `NewNodeProcessor`.
+
+   Delete the hand-written spec, the CLI docs pages and the platform stubs that
+   no build uses. Run `mise exec -- just generate`. It joins the spec of the
+   behavior to the main spec, and it generates the SDK and UI clients again.
+   Fix the code that does not compile against them.

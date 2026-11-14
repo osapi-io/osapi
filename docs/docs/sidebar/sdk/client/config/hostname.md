@@ -35,7 +35,7 @@ for _, r := range resp.Data.Results {
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/hostname.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/hostname.go)
 for a complete working example.
 

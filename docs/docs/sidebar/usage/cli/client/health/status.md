@@ -1,8 +1,9 @@
 # Status
 
-Show system status with a unified component table, per-component health, NATS
-connection info, stream and KV bucket statistics, consumer details, and job
-queue counts. This endpoint requires authentication.
+Show the system status. The output has: a table of all components, the health of
+each component, the NATS connection, statistics for the streams and the KV
+buckets, the consumers and the job queue counts. This endpoint needs
+authentication.
 
 ```bash
 $ osapi client health status
@@ -47,7 +48,7 @@ Connectivity checks show the controller's ability to reach NATS and KV
 dependencies. Use `osapi client agent list` for agent-specific details like
 labels and OS info.
 
-When a component is unhealthy, the overall status becomes `degraded` and the
+When a component is not healthy, the overall status is `degraded`, and the
 component shows the error:
 
 ```bash
@@ -71,7 +72,7 @@ $ osapi client health status
               └─ metrics                 ok http://0.0.0.0:9091
 ```
 
-Use `--json` for raw JSON output:
+Use `--json` to get the raw JSON output:
 
 ```bash
 $ osapi client health status --json

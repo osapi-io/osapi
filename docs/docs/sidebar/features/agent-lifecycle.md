@@ -2,17 +2,17 @@
 sidebar_position: 4
 ---
 
-# Agent Lifecycle
+# Agent lifecycle
 
-OSAPI agents report threshold-based **node conditions** and support graceful
-**drain/cordon** for maintenance. Both features are inspired by Kubernetes node
-management patterns.
+osapi agents report **node conditions** that compare values with limits. You can
+also **drain and cordon** an agent cleanly for maintenance. The two features
+come from the node management of Kubernetes.
 
-## Node Conditions
+## Node conditions
 
-Conditions are threshold-based booleans evaluated agent-side on every heartbeat
-(10 seconds). They surface "is anything wrong?" at a glance without requiring
-operators to interpret raw metrics.
+A condition is a boolean that compares a value with a limit. The agent
+calculates the conditions at each heartbeat (10 seconds). They show if something
+is wrong. The operator does not need to read the raw metrics.
 
 | Condition        | Default Threshold    | Data Source      |
 | ---------------- | -------------------- | ---------------- |
@@ -22,13 +22,14 @@ operators to interpret raw metrics.
 
 Each condition tracks:
 
-- **Status** -- `true` when the threshold is exceeded, `false` otherwise
-- **Reason** -- human-readable explanation (e.g., "memory 94% used, 15.1/16.0
-  GB")
-- **LastTransitionTime** -- when the condition last flipped between true and
-  false
+- **Status**: `true` when the value is more than the limit, `false` when it is
+  not
+- **Reason**: an explanation for a person, for example "memory 94% used,
+  15.1/16.0 GB"
+- **LastTransitionTime**: the last time that the condition changed between true
+  and false
 
-### CLI Display
+### CLI display
 
 `agent list` shows active conditions in the CONDITIONS column:
 
@@ -51,7 +52,7 @@ Conditions:
 
 ### Configuration
 
-Thresholds are configurable in `osapi.yaml`:
+Set the limits in `osapi.yaml`:
 
 ```yaml
 agent:
@@ -61,13 +62,13 @@ agent:
     disk_pressure_threshold: 90 # percent used
 ```
 
-## Agent Drain
+## Agent drain
 
-Drain allows operators to gracefully remove an agent from the job routing pool
-for maintenance without stopping the process. When an agent stops without
-draining, it vanishes from the registry and looks identical to a crash.
+A drain removes an agent cleanly from the agents that get jobs, for maintenance.
+The process continues to run. If an agent stops without a drain, it goes from
+the registry, and that looks the same as a crash.
 
-### State Machine
+### State machine
 
 Agents have an explicit scheduling state with three values:
 
@@ -77,28 +78,30 @@ Ready ──(drain)──> Draining ──(jobs done)──> Cordoned
   └──────────────(undrain)───────────────────────┘
 ```
 
-| State      | Meaning                                     |
-| ---------- | ------------------------------------------- |
-| `Ready`    | Accepting and processing jobs (default)     |
-| `Draining` | Finishing in-flight jobs, not accepting new |
-| `Cordoned` | Fully drained, idle, not accepting jobs     |
+| State      | Meaning                                         |
+| ---------- | ----------------------------------------------- |
+| `Ready`    | Accepts and processes jobs (default)            |
+| `Draining` | Completes its running jobs, accepts no new jobs |
+| `Cordoned` | Fully drained and idle, accepts no jobs         |
 
-### How It Works
+### How it works
 
-1. Operator calls `osapi client agent drain --hostname web-01`
-2. API writes a `drain.{hostname}` key to the state KV bucket
-3. Agent detects the drain flag on its next heartbeat tick (10s)
-4. Agent transitions to `Draining` and **unsubscribes from NATS JetStream
-   consumers** -- this is how it stops receiving new jobs
-5. In-flight jobs continue to completion
-6. Once all in-flight jobs finish, state becomes `Cordoned`
-7. Operator calls `osapi client agent undrain --hostname web-01`
-8. API deletes the drain key; agent resubscribes and transitions to `Ready`
+1. The operator runs `osapi client agent drain --hostname web-01`.
+1. The API writes a `drain.{hostname}` key to the state KV bucket.
+1. The agent finds the drain flag at its next heartbeat (10s).
+1. The agent changes to `Draining` and **stops its NATS JetStream
+   subscriptions**. Thus it gets no new jobs.
+1. The running jobs continue until they are complete.
+1. When all running jobs are complete, the state changes to `Cordoned`.
+1. The operator runs `osapi client agent undrain --hostname web-01`.
+1. The API deletes the drain key. The agent subscribes again and changes to
+   `Ready`.
 
 ### Timeline
 
-Every state transition is recorded as an append-only event in the state KV
-bucket (`agent-state`, no TTL). `agent get` shows the full transition history:
+The agent records each change of state as an event in the state KV bucket
+(`agent-state`, no TTL). It only adds events, and does not change them.
+`agent get` shows all the changes:
 
 ```
 Timeline:
@@ -108,25 +111,24 @@ Timeline:
   2026-03-05 12:00:00    undrain    web-01    Resumed accepting jobs
 ```
 
-### CLI Commands
+### CLI commands
 
 ```bash
 osapi client agent drain --hostname web-01     # start draining
 osapi client agent undrain --hostname web-01   # resume accepting jobs
 ```
 
-Both commands return the current state and a confirmation message.
+The two commands return the current state and a confirmation message.
 
 ## Permissions
 
-Node conditions are included in the standard `agent:read` responses. Drain and
-undrain operations require the `agent:write` permission, which is included in
-the `admin` role by default.
+The standard `agent:read` responses have the node conditions. Drain and undrain
+need the `agent:write` permission. The `admin` role has it by default.
 
 ## Related
 
-- [Agent CLI Reference](../usage/cli/client/agent/agent.mdx) -- agent fleet
+- [Agent CLI Reference](../usage/cli/client/agent/agent.mdx): agent fleet
   commands
-- [Node Management](node-management.md) -- node queries via the job system
-- [Job System](job-system.md) -- how async job processing works
-- [Configuration](../usage/configuration.md) -- full configuration reference
+- [Node Management](node-management.md): node queries via the job system
+- [Job System](job-system.md): how async job processing works
+- [Configuration](../usage/configuration.md): full configuration reference

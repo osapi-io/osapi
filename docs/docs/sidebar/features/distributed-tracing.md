@@ -2,14 +2,14 @@
 sidebar_position: 7
 ---
 
-# Distributed Tracing
+# Distributed tracing
 
-OSAPI uses [OpenTelemetry](https://opentelemetry.io/) to propagate a single
-trace ID through every component in a request flow. When tracing is enabled, you
-can follow a request from CLI to API server to agent by filtering logs on
+osapi uses [OpenTelemetry](https://opentelemetry.io/) to send one trace ID
+through each component of a request. When tracing is enabled, you can follow a
+request from the CLI to the API server to the agent. Filter the logs on
 `trace_id`.
 
-## How It Works
+## How it works
 
 ```mermaid
 sequenceDiagram
@@ -24,17 +24,17 @@ sequenceDiagram
     Agent->>Agent: extract context, create job.process span
 ```
 
-1. **CLI** creates a root span and injects `traceparent` into the HTTP request
-2. **API Server** continues the trace via `otelecho` middleware, then the
-   nats-client automatically injects trace context into NATS message headers
-   when publishing job notifications
-3. **Agent** extracts trace context from the NATS message headers and creates a
-   `job.process` span, linking its work to the original request
+1. The **CLI** makes a root span and adds `traceparent` to the HTTP request.
+1. The **API server** continues the trace in the `otelecho` middleware. Then,
+   when it publishes a job notification, the nats-client adds the trace context
+   to the NATS message headers automatically.
+1. The **agent** reads the trace context from the NATS message headers. It makes
+   a `job.process` span that connects its work to the original request.
 
 All structured log lines include `trace_id` and `span_id` when a span is active,
 so `grep trace_id=<hex>` shows the complete end-to-end flow.
 
-## Debugging with Traces
+## Debugging with traces
 
 To trace a request end-to-end:
 
@@ -43,7 +43,7 @@ To trace a request end-to-end:
 3. Find the `trace_id` in any component's log output
 4. Filter all logs: `grep trace_id=<hex>` across API server and agent output
 
-Example log output showing the same trace ID across components:
+This log output shows the same trace ID in each component:
 
 ```
 # API Server
@@ -57,21 +57,22 @@ INF job processing completed job_id=abc123 trace_id=e0fd287f... span_id=4d5e6f..
 
 ## Configuration
 
-Tracing is off by default. The `exporter` field controls where spans are sent:
+Tracing is off by default. The `exporter` field sets where osapi sends the
+spans:
 
-| `exporter` | Behavior                                                                                                                         |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| _(unset)_  | Log correlation only -- `trace_id` appears in structured logs but no spans are exported                                          |
-| `stdout`   | Raw OpenTelemetry span JSON dumped directly to stdout (bypasses the structured logger -- useful for one-off debugging but noisy) |
-| `otlp`     | Spans sent via gRPC to a tracing backend (Jaeger, Tempo, etc.)                                                                   |
+| `exporter` | Behavior                                                                                                                                          |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| _(unset)_  | Log correlation only. `trace_id` is in the structured logs, but osapi exports no spans                                                            |
+| `stdout`   | Raw OpenTelemetry span JSON, printed directly to stdout without the structured logger. Useful to find a problem one time, but the output is large |
+| `otlp`     | Spans sent via gRPC to a tracing backend (Jaeger, Tempo, etc.)                                                                                    |
 
 The `--debug` flag auto-enables tracing with **no exporter** (log correlation
 only). It does not enable the `stdout` exporter.
 
 ### Log correlation (recommended default)
 
-Enable tracing so `trace_id` and `span_id` appear in structured log lines. No
-spans are exported -- you correlate requests by grepping logs.
+Enable tracing so that `trace_id` and `span_id` are in the structured log lines.
+osapi exports no spans. To follow a request, search the logs with grep.
 
 ```yaml
 telemetry:
@@ -81,7 +82,7 @@ telemetry:
 
 ### OTLP export (production)
 
-Send spans to a self-hosted tracing backend like
+Send spans to a tracing backend that you run, for example
 [Jaeger](https://www.jaegertracing.io/) or
 [Grafana Tempo](https://grafana.com/oss/tempo/). The `otlp_endpoint` is the gRPC
 address of that backend.
@@ -94,16 +95,16 @@ telemetry:
     otlp_endpoint: localhost:4317
 ```
 
-:::note The OTLP exporter currently uses an insecure (non-TLS) gRPC connection
-with no authentication. This works for local or internal backends but not for
-cloud services (Grafana Cloud, Honeycomb, Datadog) that require TLS and API
-keys. Authenticated OTLP is planned. :::
+:::note Today, the OTLP exporter uses a gRPC connection without TLS and without
+authentication. This works for local and internal backends. It does not work for
+cloud services that need TLS and API keys, for example Grafana Cloud, Honeycomb
+and Datadog. Authenticated OTLP is planned. :::
 
-See [Configuration](../usage/configuration.md#every-setting) for the full
+Refer to [Configuration](../usage/configuration.md#every-setting) for the full
 reference.
 
 ## Related
 
-- [Configuration](../usage/configuration.md) -- full configuration reference
-- [Architecture](../architecture/architecture.md) -- system design overview
-- [Job System](job-system.md) -- how async job processing works
+- [Configuration](../usage/configuration.md): full configuration reference
+- [Architecture](../architecture/architecture.md): system design overview
+- [Job System](job-system.md): how async job processing works

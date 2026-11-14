@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Command
 
-Command execution operations -- direct exec and shell-interpreted commands.
+Command execution operations: direct exec, and commands through a shell.
 
 ## Methods
 
@@ -43,7 +43,7 @@ resp, err := c.Command.Shell(ctx, client.ShellRequest{
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/command.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/command.go)
 for a complete working example.
 

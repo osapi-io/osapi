@@ -15,7 +15,7 @@ $ osapi client node network route list --target web-01
   1 host: 1 ok
 ```
 
-Target all hosts to list routes across the fleet:
+Target all hosts to list the routes on all of the fleet:
 
 ```bash
 $ osapi client node network route list --target _all

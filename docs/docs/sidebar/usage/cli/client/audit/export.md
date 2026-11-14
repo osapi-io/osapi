@@ -1,8 +1,9 @@
 # Export
 
-Export all audit log entries to a file for long-term retention. Fetches all
-entries via the REST API export endpoint and writes each entry as a JSON line
-(JSONL format). Requires `audit:read` permission (admin role by default).
+Export all audit log entries to a file, to keep them for a long time. The
+command gets all entries through the export endpoint of the REST API, and writes
+each entry as a JSON line (JSONL). It needs the `audit:read` permission, which
+the admin role has by default.
 
 ```bash
 $ osapi client audit export --output audit.jsonl
@@ -28,7 +29,7 @@ complete audit entry:
 {"id":"661f1234-e29b-41d4-a716-446655440111","timestamp":"2026-02-21T10:29:55Z","user":"ops@example.com","roles":["admin"],"method":"POST","path":"/job","source_ip":"127.0.0.1","response_code":201,"duration_ms":15}
 ```
 
-JSONL is easy to process with standard tools:
+Standard tools can process JSONL:
 
 ```bash
 # Count entries

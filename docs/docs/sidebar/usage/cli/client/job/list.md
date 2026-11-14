@@ -1,6 +1,6 @@
 # List
 
-List jobs with queue summary and status breakdown:
+List jobs, with a summary of the queue and the count of each status:
 
 ```bash
 $ osapi client job list

@@ -1,8 +1,8 @@
 # Delete
 
-Delete a custom CA certificate from a target host. The certificate file is
-removed from `/usr/local/share/ca-certificates/` and `update-ca-certificates` is
-run to rebuild the trust store:
+Delete a custom CA certificate from a target host. The agent removes the
+certificate file from `/usr/local/share/ca-certificates/`. Then it runs
+`update-ca-certificates` to make the trust store again:
 
 ```bash
 $ osapi client node certificate delete --target web-01 \
@@ -16,7 +16,7 @@ $ osapi client node certificate delete --target web-01 \
   1 host: 1 changed
 ```
 
-If the certificate does not exist, `changed: false` is returned:
+If the certificate does not exist, the command returns `changed: false`:
 
 ```bash
 $ osapi client node certificate delete --target web-01 \

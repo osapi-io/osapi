@@ -7,26 +7,26 @@ import DocCardList from '@theme/DocCardList';
 
 # Behaviors
 
-A behavior is one thing osapi manages on a host, such as kernel parameters,
-defined once in Go. Its routes, commands, permissions, spec, docs and tests are
-built from that definition;
-[Behaviors in the architecture](../architecture/behaviors.md) explains how,
-including behaviors that only other behaviors use, and behaviors built on
-others.
+A behavior is one thing that osapi manages on a host, for example kernel
+parameters. You define it one time, in Go. osapi builds its routes, commands,
+permissions, spec, docs and tests from that definition.
+[Behaviors in the architecture](../architecture/behaviors.md) tells how. It also
+tells about behaviors that only other behaviors use, and about behaviors that
+use other behaviors.
 
 ## Every behavior in this build
 
 <Catalog />
 
-A behavior that is **internal** is not served: other behaviors require it and
+osapi does not serve an **internal** behavior. Other behaviors require it and
 call it on the same host. **Uses** and **Used by** show those chains.
 
 <DocCardList />
 
-## Seeing what a binary has
+## See what a binary has
 
-The binary describes its own behaviors, so the answer always matches the build
-you run:
+The binary describes its own behaviors. Thus the answer is always correct for
+the build that you run:
 
 ```bash
 osapi behavior list                               # every behavior, internal ones marked
@@ -35,9 +35,9 @@ osapi behavior get --name sysctl --method create  # one method's input and outpu
 osapi behavior validate                           # the rules every definition must meet
 ```
 
-`behavior get --json` prints each method's input and output as JSON Schema, with
-the route, the command, the permission, examples and refusals, which is what an
-agent reads before it calls one.
+`behavior get --json` prints the input and the output of each method as JSON
+Schema. It also prints the route, the command, the permission, the examples and
+the refusals. An agent reads this before it calls a method.
 
 ## Where they are defined
 

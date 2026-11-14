@@ -1,7 +1,7 @@
 # Validate
 
 Load a config file and the environment the way `osapi start` does, and run the
-same checks, without starting anything. Exits 1 when the config is not valid.
+same checks. The command starts nothing. Exits 1 when the config is not valid.
 
 ```bash
 $ osapi config validate -f ./osapi.yaml

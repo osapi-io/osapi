@@ -4,6 +4,6 @@ sidebar_position: 1
 
 # Interface
 
-Manage network interface configuration on target hosts via Netplan.
+Manage the network interface configuration of target hosts through Netplan.
 
 <DocCardList />

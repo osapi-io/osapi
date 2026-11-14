@@ -1,10 +1,10 @@
 # Create
 
-Deploy a custom CA certificate to a target host. The PEM content must first be
-uploaded to the Object Store. The certificate is written to
-`/usr/local/share/ca-certificates/{name}.crt` and the system trust store is
-rebuilt via `update-ca-certificates`. Fails if the name already exists -- use
-`update` to replace:
+Deploy a custom CA certificate to a target host. First, upload the PEM content
+to the Object Store. The agent writes the certificate to
+`/usr/local/share/ca-certificates/{name}.crt`. Then `update-ca-certificates`
+makes the system trust store again. The command fails if the name exists. To
+replace it, use `update`:
 
 ```bash
 $ osapi client node certificate create --target web-01 \
@@ -33,7 +33,7 @@ $ osapi client node certificate create --target _all \
   2 hosts: 2 changed
 ```
 
-When some hosts are skipped (e.g., macOS agents):
+When some hosts are skipped, for example macOS agents:
 
 ```bash
 $ osapi client node certificate create --target _all \

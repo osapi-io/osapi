@@ -13,7 +13,7 @@ $ osapi client node container docker image delete --image nginx:latest
   1 host: 1 changed
 ```
 
-Force remove an image that may be in use:
+Force the removal of an image that a container can use:
 
 ```bash
 $ osapi client node container docker image delete \

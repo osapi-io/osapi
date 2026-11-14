@@ -4,9 +4,9 @@ sidebar_position: 3
 
 # Process
 
-The `Process` service provides methods for listing processes, getting process
-details, and sending signals to processes on target hosts. Access via
-`client.Process.List()`, `client.Process.Get()`, and `client.Process.Signal()`.
+The `Process` service has methods that list processes, get process details and
+send signals to processes on target hosts. Use `client.Process.List()`,
+`client.Process.Get()` and `client.Process.Signal()`.
 
 ## Methods
 

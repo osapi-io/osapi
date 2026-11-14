@@ -8,7 +8,7 @@ $ osapi client health liveness
   Status: ok
 ```
 
-Use `--json` for raw JSON output:
+Use `--json` to get the raw JSON output:
 
 ```bash
 $ osapi client health liveness --json

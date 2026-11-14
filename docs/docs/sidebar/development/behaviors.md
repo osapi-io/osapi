@@ -4,19 +4,20 @@ sidebar_position: 7
 
 # Building a behavior
 
-A behavior is one thing osapi manages on a host, such as kernel parameters,
-written once as a Go definition. The API routes, the agent's dispatch, the CLI
-commands, the OpenAPI spec, the docs pages and the telemetry are all built from
-that definition, and so are the tests of every layer above the provider. A new
-behavior is one directory under `internal/behaviors/` and one import line, and
-`osapi behavior new` writes both.
+A behavior is one thing that osapi manages on a host, for example kernel
+parameters. You write it one time, as a Go definition. osapi builds these parts
+from the definition: the API routes, the dispatch of the agent, the CLI
+commands, the OpenAPI spec, the docs pages and the telemetry. It also builds the
+tests of each layer above the provider. A new behavior is one directory under
+`internal/behaviors/` and one import line. `osapi behavior new` writes both.
 
-A behavior is served under `/api` and `osapi client node`, beside the
-hand-written domains not yet moved. One that replaces a hand-written domain is
-marked `behavior.Next` while both exist, which serves it under `/api/next` and
-`osapi client next` instead, until that domain's cutover. sysctl is marked so
-today. `internal/behaviors/sysctl` is the reference, and
-`go doc ./internal/behavior` lists every option with examples that run as tests.
+osapi serves a behavior under `/api` and `osapi client node`, next to the
+hand-written domains that did not move yet. A behavior that replaces a
+hand-written domain has the `behavior.Next` mark while both exist. The mark
+serves it under `/api/next` and `osapi client next`, until the cutover of that
+domain. Today, sysctl has the mark. `internal/behaviors/sysctl` is the
+reference. `go doc ./internal/behavior` lists each option, with examples that
+run as tests.
 
 ## The layout
 
@@ -41,9 +42,9 @@ internal/behaviors/<name>/
     api.yaml                                   this behavior's part of the OpenAPI spec
 ```
 
-Every file with code has a test named for it. A platform's provider is
-`<platform>.go`, declared in the definition with `behavior.Platform`; on a
-platform without one, the methods report `skipped`.
+Each file with code has a test with its name. The provider of a platform is
+`<platform>.go`. The definition declares it with `behavior.Platform`. On a
+platform without a provider, the methods report `skipped`.
 
 `osapi behavior new` also registers the behavior with one blank import in
 `internal/behaviors/all/all.go`. Run
@@ -95,9 +96,9 @@ var Behavior = behavior.Register(behavior.Define(
 A behavior with neither `API` nor `CLI` is reachable only through the job system
 or another behavior.
 
-The name of a method decides more than its label: the HTTP method, the
-permission and the command all follow from it, so keep to `list`, `get`,
-`create`, `update` and `delete` where they fit.
+The name of a method decides more than its label. The HTTP method, the
+permission and the command come from it. Thus use `list`, `get`, `create`,
+`update` and `delete` when they fit.
 
 ## settings.go: the behavior's own config
 
@@ -112,12 +113,12 @@ type Settings struct {
 behavior.Define("sysctl", ..., behavior.Config(Settings{Dir: "/etc/sysctl.d"}), ...)
 ```
 
-The settings join osapi's config under `behaviors.<name>`. `osapi config list`
-shows them, `OSAPI_BEHAVIORS_<NAME>_<FIELD>` and the `osapi agent start` flag
-`--<name>-<field>` set them, and `config validate` checks their `validate` tags.
-A provider builder reads them with `host.Settings[Settings](h)`. Settings are
-standing configuration of the agent; a value that changes per call belongs in
-the method's input.
+The settings are in the osapi config under `behaviors.<name>`.
+`osapi config list` shows them. `OSAPI_BEHAVIORS_<NAME>_<FIELD>` and the
+`osapi agent start` flag `--<name>-<field>` set them. `config validate` checks
+their `validate` tags. A provider builder reads them with
+`host.Settings[Settings](h)`. Settings are the fixed configuration of the agent.
+A value that changes with each call goes in the input of the method.
 
 ## Built on other behaviors
 
@@ -140,18 +141,18 @@ func newDebian(h host.Host) (Provider, error) {
 managedfile.Update(ctx, d.files, managedfile.UpdateInput{Path: path, Content: c})
 ```
 
-The agent and the fake host both build a required behavior's provider before the
-one that requires it. A behavior that exists only to be built on is
-`behavior.Internal`: it has examples and tests like any other, and a docs page
-that says what uses it, but no route, command or permissions.
-`behavior validate` fails a requirement that is not registered, and a cycle.
-sysctl requires `managedfile` and is the example.
+The agent and the fake host both build the provider of a required behavior
+before the behavior that requires it. A behavior that only other behaviors use
+is `behavior.Internal`. It has examples and tests like the others, and a docs
+page that tells what uses it. It has no route, command or permissions.
+`behavior validate` fails when a requirement is not registered, and when
+requirements make a cycle. sysctl requires `managedfile`, and it is the example.
 
 ## types.go: the contract
 
-The input and output types carry the whole contract in their tags. Every field
-of an input becomes a request field, a CLI flag and a spec property; every field
-of an output becomes a JSON field and a table column.
+The tags of the input and output types hold all of the contract. Each field of
+an input becomes a request field, a CLI flag and a spec property. Each field of
+an output becomes a JSON field and a table column.
 
 | Tag                | On     | Becomes                                                                      |
 | ------------------ | ------ | ---------------------------------------------------------------------------- |
@@ -166,14 +167,14 @@ A write's output has a `changed` bool. The table shows it as the row's status,
 `changed` or `ok`, rather than as a column. An output that is a slice becomes
 one row per element.
 
-A `validate` rule of the behavior's own is declared in the definition with
-`behavior.Validator(tag, check, schema, message)`: the server runs `check`
-before a job is queued, the spec carries `schema`, and a failing value reads
-"`<value> <message>`". A tag without a schema fails spec generation, so the spec
-never checks less than the server does.
+The definition declares a `validate` rule of its own with
+`behavior.Validator(tag, check, schema, message)`. The server runs `check`
+before it puts a job on the queue. The spec has `schema`. A value that fails
+shows "`<value> <message>`". A tag without a schema fails the spec generation.
+Thus the spec never checks less than the server.
 
-With `CLI`, every input field must be a string, bool or number, because each is
-a flag; `osapi behavior validate` fails a field no flag can hold.
+With `CLI`, each input field must be a string, a bool or a number, because each
+field is a flag. `osapi behavior validate` fails a field that no flag can hold.
 
 ## methods.go and provider.go
 
@@ -189,8 +190,9 @@ returns its output type:
 func Get(ctx context.Context, p Provider, in GetInput) (Entry, error)
 ```
 
-Methods translate; the work is in the provider. `Provider` is the interface each
-platform implements, and the definition says how each platform's is built:
+Methods change the input for the provider, and the provider does the work.
+`Provider` is the interface of each platform. The definition tells how to build
+the provider of each platform:
 
 ```go
 behavior.Platform("debian", newDebian),
@@ -200,28 +202,31 @@ func newDebian(h host.Host) (Provider, error) {
 }
 ```
 
-`host.Host` is what the agent hands the builder at startup: the platform, the
-filesystem, the command runner, the file state store, the hostname and the
-behavior's settings. The agent logs which behaviors it built a provider for. On
-a platform the behavior does not declare, or when the builder returns
-`provider.ErrUnsupported`, its methods report `skipped`.
+The agent gives `host.Host` to the builder when the agent starts. It has the
+platform, the filesystem, the command runner, the file state store, the hostname
+and the settings of the behavior. The agent writes to the log the behaviors that
+it built a provider for. On a platform that the behavior does not declare, or
+when the builder returns `provider.ErrUnsupported`, its methods report
+`skipped`.
 
 ## What every behavior gets
 
 Written once in the platform, so a behavior writes none of it:
 
-- **Routes**: a generated handler per method in `gen/api_<method>.go` that
-  decodes the method's typed input from the path, query or body and checks its
-  tags, then hands it to the runtime in `internal/controller/api/behavior` for
-  the permission and target checks, broadcast to `_all`, `_any` or a label, and
-  the `{job_id, results[]}` envelope.
+- **Routes**: a generated handler for each method, in `gen/api_<method>.go`. It
+  decodes the typed input of the method from the path, the query or the body,
+  and checks its tags. Then it gives the input to the runtime in
+  `internal/controller/api/behavior`. The runtime checks the permission and the
+  target, does the broadcast to `_all`, `_any` or a label, and makes the
+  `{job_id, results[]}` envelope.
 - **Commands** with typed flags, the theme's table and `--json`.
-- **Telemetry**: a `behavior.<name>.<method>` span under the agent's job span,
-  and `osapi_behavior_calls_total`, `osapi_behavior_duration_seconds` and
-  `osapi_behavior_changes_total`, through the agent's OpenTelemetry provider.
-- **Permissions** `<name>:read` and `<name>:write`, granted by the built-in
-  roles: `admin` and `write` both, `read` the read. `osapi token roles` lists
-  them.
+- **Telemetry**: a `behavior.<name>.<method>` span under the job span of the
+  agent, and `osapi_behavior_calls_total`, `osapi_behavior_duration_seconds` and
+  `osapi_behavior_changes_total`, through the OpenTelemetry provider of the
+  agent.
+- **Permissions** `<name>:read` and `<name>:write`. The built-in roles give
+  them: `admin` and `write` give both, and `read` gives the read permission.
+  `osapi token roles` lists them.
 - **Audit entries**, through the same middleware as every route.
 
 ## Testing
@@ -248,7 +253,7 @@ Example("Turn on IP forwarding",
 | `behavior.Removed(path)`              | The call leaves the file gone                                                                            |
 | `behavior.Ran(prog, args...)`         | The call runs that command, with or without sudo                                                         |
 
-From those, every behavior gets these tests without writing them:
+From those, each behavior gets these tests, and you do not write them:
 
 | Layer       | Where                                            | Checks                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ----------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -259,29 +264,34 @@ From those, every behavior gets these tests without writing them:
 | Wiring      | `internal/behaviors/all/all_public_test.go`      | Every registered behavior validates, every route is mounted and every command attached                                                                                                                                                                                                                                                                                                                                        |
 | Live server | `test/integration/behavior_test.go`              | Every unkeyed read against a real agent; the write examples too with `OSAPI_INTEGRATION_WRITE_BEHAVIORS=1`; `just behavior-int-linux` runs them on Debian in a container, since CI's agent cannot write `/etc`                                                                                                                                                                                                                |
 
-The generated HTTP tests are tables of literal rows: the request, the token, the
-call the job client expects and its answer, and the status and body wanted.
-`internal/controller/api/behavior/apitest` runs them. A failing generated test
-is fixed in the definition or the generator, never in `gen/`.
+The generated HTTP tests are tables of rows. Each row has the request, the
+token, the call that the job client expects and its answer, and the expected
+status and body. `internal/controller/api/behavior/apitest` runs them. Fix a
+failing generated test in the definition or in the generator, never in `gen/`.
 
-The fake host is `internal/behavior/behaviortest`: an in-memory filesystem, a
-command runner that records what ran and prints what `Prints` says, and an
-in-memory file state store. Each platform's provider also has its own test,
-`<platform>_public_test.go`, for what an example cannot show, such as a parser's
-edge cases or a filesystem error.
+The fake host is `internal/behavior/behaviortest`. It has an in-memory
+filesystem, a command runner and an in-memory file state store. The command
+runner records what ran and prints what `Prints` says. The provider of each
+platform also has its own test, `<platform>_public_test.go`, for what an example
+cannot show, for example the edge cases of a parser or a filesystem error.
 
-The harness also probes every string input field of every example, one at a
-time, with three hostile values: a path that climbs out of its directory
-(`../../../../osapi-probe`), a value that starts a new line, and a value that
-reads as an option (`--osapi-probe`). A probe passes when the field's `validate`
-tags refuse it, as the API would, or the method fails, or it changes nothing it
-should not. It fails when it writes a file outside the directories the example
-writes, puts its line into a file beside other content, reaches a command as an
-option without a `--` before it, or reaches a `sh -c` script. An internal
-behavior is not probed, since its input comes from other behaviors.
+The harness also probes each string input field of each example, one at a time,
+with three hostile values:
+
+- a path that goes out of its directory (`../../../../osapi-probe`)
+- a value that starts a new line
+- a value that looks like an option (`--osapi-probe`)
+
+A probe passes when the `validate` tags of the field refuse it, as the API does,
+or when the method fails, or when it changes nothing that it must not change. A
+probe fails when it writes a file outside the directories that the example
+writes, puts its line in a file with other content, gets to a command as an
+option without a `--` before it, or gets to a `sh -c` script. The harness does
+not probe an internal behavior, because its input comes from other behaviors.
 
 A method also declares what it refuses, with `.Fails(doc, input, errorText)` and
-the same host options: an input it rejects, or a host it cannot act on.
+the same host options: an input that it rejects, or a host that it cannot
+change.
 
 ```go
 Fails("A parameter osapi stopped managing",
@@ -291,15 +301,16 @@ Fails("A parameter osapi stopped managing",
 ),
 ```
 
-The provider test checks each refusal fails with that text; the API test checks
-a refusal whose input breaks a `validate` tag gets a 400 without queueing a job;
-and the docs page lists them under "What it refuses".
+The provider test checks that each refusal fails with that text. The API test
+checks that a refusal whose input breaks a `validate` tag gets a 400, and that
+no job goes on the queue. The docs page lists the refusals under "What it
+refuses".
 
-On the fake host, every filesystem, command and store call the example makes
-fails in turn, and every store read returns a damaged record in turn, and the
-method must return an error rather than panic. With its examples and refusals,
-sysctl's own test reaches all of its Debian provider except a JSON encoding
-error that a struct of strings cannot produce.
+On the fake host, each filesystem, command and store call of the example fails
+in turn. Each store read returns a damaged record in turn. The method must
+return an error and must not panic. With its examples and refusals, the test of
+sysctl reaches all of its Debian provider. The only exception is a JSON encoding
+error that a struct of strings cannot cause.
 
 ## The checks
 
@@ -311,20 +322,24 @@ just behavior-gen-check             # fails when generated files are stale
 just behavior-cover-check           # fails when a behavior is below 100% coverage
 ```
 
-`osapi behavior validate` checks the name, placement, docs, methods, keys,
-schemas, that a write reports `changed`, that `CLI` comes with `API` and has a
-flag for every input field, that every example's input and output are the
-method's types, and that the behavior has a provider on some platform that fits
-every method. `just test` runs `behavior-gen-check`, so a behavior changed
-without `go generate` fails CI, and `behavior-cover-check`, so a behavior whose
-examples and tests miss a line fails it too.
+`osapi behavior validate` checks these things:
+
+- the name, the placement, the docs, the methods, the keys and the schemas
+- that a write reports `changed`
+- that `CLI` comes with `API`, and has a flag for each input field
+- that the input and the output of each example are the types of the method
+- that the behavior has a provider on a platform that fits each method
+
+`just test` runs `behavior-gen-check`. Thus a behavior that changed without
+`go generate` fails CI. It also runs `behavior-cover-check`. Thus a behavior
+whose examples and tests miss a line fails CI too.
 
 A behavior that replaces a hand-written domain also gets a row in the parity
-test until the cutover. `TestOpenAPIParity` in
-`internal/behavior/openapi/openapi_public_test.go`, beside the code that builds
-the spec, generates each listed behavior's spec and fails if its operations,
-scopes, parameters, response codes or schema fields differ from the hand-written
-spec's:
+test until the cutover. `TestOpenAPIParity` is in
+`internal/behavior/openapi/openapi_public_test.go`, next to the code that builds
+the spec. It generates the spec of each listed behavior. It fails if the
+operations, scopes, parameters, response codes or schema fields are different
+from the hand-written spec:
 
 ```go
 var migrating = []struct {
@@ -335,7 +350,7 @@ var migrating = []struct {
 }
 ```
 
-Add the row when you build the behavior; delete it with the hand-written spec at
+Add the row when you build the behavior. Delete it with the hand-written spec at
 the cutover.
 
 ## Generated, never edited
@@ -352,9 +367,9 @@ the cutover.
 | `docs/docs/gen/api-next/...`                      | the spec, by `just docs-generate`                                                            |
 
 `internal/behavior/gen` writes them. It builds Go with jen
-(`github.com/dave/jennifer`) rather than text templates, so the output always
-parses and its imports are managed, then formats it with goimports, gofumpt and
-golines like the rest of the repository. It builds the spec with kin-openapi's
-`openapi3` types, the library oapi-codegen reads specs with, and a test loads
-and validates the result. To change any generated file, change the behavior or
-the generator and run `go generate`.
+(`github.com/dave/jennifer`), not with text templates. Thus the output always
+parses, and jen manages its imports. Then it formats the output with goimports,
+gofumpt and golines, like the rest of the repository. It builds the spec with
+the `openapi3` types of kin-openapi, the library that oapi-codegen uses to read
+specs. A test loads and validates the result. To change a generated file, change
+the behavior or the generator, and run `go generate`.

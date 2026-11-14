@@ -4,7 +4,7 @@ sidebar_position: 4
 
 # Route
 
-Static network route management via Netplan.
+Manage static network routes through Netplan.
 
 ## Methods
 
@@ -124,7 +124,7 @@ for _, r := range resp.Data.Results {
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/route.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/route.go)
 for a complete working example.
 

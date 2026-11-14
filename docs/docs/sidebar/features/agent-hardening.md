@@ -3,17 +3,17 @@ sidebar_position: 20
 sidebar_label: Agent Hardening
 ---
 
-# Agent Hardening
+# Agent hardening
 
-OSAPI supports running the agent as an unprivileged user with config-driven
-privilege escalation for write operations. Reads run as the agent's own user.
-Writes use `sudo` when configured. Linux capabilities provide an alternative for
-file-level access without a full sudo setup. When either option is enabled, the
-agent automatically verifies the configuration at startup before accepting any
-jobs.
+osapi can run the agent as a user without privileges. Then a configuration
+setting gives privilege escalation for write operations. Reads run as the user
+of the agent. Writes use `sudo` when you configure it. Linux capabilities give
+access to files without a full sudo setup. When you enable one of these options,
+the agent verifies the configuration automatically when it starts, before it
+accepts jobs.
 
-When none of these options are enabled, the agent behaves as before — commands
-run as the current user, root or otherwise.
+When you enable none of these options, the agent runs commands as its current
+user, root or a different user.
 
 ## Configuration
 
@@ -29,20 +29,19 @@ agent:
 | --------- | ---- | ------- | ----------------------------------------------------------------- |
 | `enabled` | bool | false   | Activate sudo for write commands and capability checks at startup |
 
-## How It Works
+## How it works
 
-The exec manager exposes two execution paths:
+The exec manager has two ways to run a command:
 
-- **`RunCmd`** — runs the command as the agent's current user. Used for all read
-  operations (listing services, reading kernel parameters, querying package
-  state, etc.).
-- **`RunPrivilegedCmd`** — runs the command with `sudo` prepended when
-  `privilege_escalation.enabled: true`. When disabled, this is identical to
-  `RunCmd`.
+- **`RunCmd`** runs the command as the current user of the agent. All read
+  operations use it, for example to list services, read kernel parameters or get
+  the package state.
+- **`RunPrivilegedCmd`** runs the command with `sudo` in front of it when
+  `privilege_escalation.enabled: true`. When the setting is disabled, it is the
+  same as `RunCmd`.
 
 Providers call `RunCmd` for reads and `RunPrivilegedCmd` for writes. The
-providers themselves have no knowledge of whether `sudo` is enabled — the exec
-manager handles it transparently.
+providers do not know if `sudo` is enabled. The exec manager controls it.
 
 ```go
 // Read — always unprivileged
@@ -53,10 +52,10 @@ _, err := d.execManager.RunPrivilegedCmd(
     "systemctl", []string{"start", name})
 ```
 
-## Sudoers Drop-In
+## Sudoers drop-in
 
-Create `/etc/sudoers.d/osapi-agent` with the following content to allow the
-`osapi` system user to run write commands without a password:
+Make `/etc/sudoers.d/osapi-agent` with this content. Then the `osapi` system
+user can run write commands without a password:
 
 ```sudoers
 # Service management
@@ -102,13 +101,13 @@ osapi ALL=(root) NOPASSWD: /usr/sbin/update-ca-certificates
 osapi ALL=(root) NOPASSWD: /sbin/shutdown *
 ```
 
-Validate the file with `sudo visudo -c -f /etc/sudoers.d/osapi-agent` before
-reloading.
+Validate the file with `sudo visudo -c -f /etc/sudoers.d/osapi-agent` before you
+reload.
 
-## Linux Capabilities
+## Linux capabilities
 
-As an alternative to `sudo` for file-level access, grant the agent binary
-specific Linux capabilities:
+To give access to files without `sudo`, give the agent binary specific Linux
+capabilities:
 
 ```bash
 sudo setcap \
@@ -117,24 +116,24 @@ sudo setcap \
 ```
 
 When `privilege_escalation.enabled: true`, the agent reads `/proc/self/status`
-at startup and checks the `CapEff` bitmask for the required bits:
+when it starts, and checks the `CapEff` bitmask for the required bits:
 
 | Capability            | Bit | Purpose                                           |
 | --------------------- | --- | ------------------------------------------------- |
-| `CAP_DAC_READ_SEARCH` | 2   | Read restricted files (`/etc/shadow`, proc, etc)  |
-| `CAP_DAC_OVERRIDE`    | 1   | Write files regardless of owner (netplan, sysctl) |
+| `CAP_DAC_READ_SEARCH` | 2   | Read restricted files (`/etc/shadow`, proc)       |
+| `CAP_DAC_OVERRIDE`    | 1   | Write files of all owners (netplan, sysctl)       |
 | `CAP_CHOWN`           | 0   | Set file ownership to root:root (netplan configs) |
-| `CAP_FOWNER`          | 3   | Bypass permission checks on owned files           |
+| `CAP_FOWNER`          | 3   | Skip permission checks on owned files             |
 | `CAP_KILL`            | 5   | Signal any process                                |
 | `CAP_NET_ADMIN`       | 12  | Network configuration (interface, routes, DNS)    |
 
-If any required capability is missing the agent logs the failure and exits with
-a non-zero status.
+If a required capability is missing, the agent writes a warning to the log. Only
+the operations that need the capability fail.
 
-## Systemd Unit File
+## Systemd unit file
 
-The recommended way to run the agent as an unprivileged user with capabilities
-preserved across restarts:
+Use this unit file to run the agent as a user without privileges. The unit keeps
+the capabilities when the agent restarts:
 
 ```ini
 [Unit]
@@ -158,11 +157,11 @@ PrivateTmp=true
 WantedBy=multi-user.target
 ```
 
-`AmbientCapabilities` grants the capabilities to the process without requiring
-`setcap` on the binary. `NoNewPrivileges=no` is required so that `sudo` (if also
-used) can elevate correctly.
+`AmbientCapabilities` gives the capabilities to the process. Then the binary
+does not need `setcap`. If you also use `sudo`, set `NoNewPrivileges=no`, so
+that `sudo` can increase the privileges.
 
-## Preflight Checks
+## Preflight checks
 
 When `enabled` is true, the agent runs a check during `agent start`, before it
 subscribes to NATS.
@@ -181,11 +180,11 @@ the operations that run that program fail.
 The agent also checks each capability above. A missing capability is a warning
 too.
 
-The programs checked are the ones above, plus every program a behavior declares
-with `behavior.Sudo`. A behavior's page under
-[Behaviors](../behaviors/behaviors.mdx) names the programs it runs with sudo,
-and `osapi behavior get --name <name>` lists them, so a new behavior's sudoers
-entry is found there rather than here.
+The agent checks the programs above, and each program that a behavior declares
+with `behavior.Sudo`. The page of a behavior under
+[Behaviors](../behaviors/behaviors.mdx) names the programs that it runs with
+sudo. `osapi behavior get --name <name>` also lists them. Thus you find the
+sudoers entry of a new behavior there.
 
 Example log, with no rule for `useradd`:
 
@@ -194,9 +193,9 @@ WRN preflight check failed check=sudo:useradd error="no sudo rule runs useradd; 
 INF preflight checks done
 ```
 
-## Command Reference
+## Command reference
 
-### Write Operations (use `RunPrivilegedCmd`)
+### Write operations (use `RunPrivilegedCmd`)
 
 | Command                    | Domain      |
 | -------------------------- | ----------- |
@@ -217,7 +216,7 @@ INF preflight checks done
 | `shutdown -r/-h`           | Power       |
 | `sh -c "echo … chpasswd"`  | User        |
 
-### Read Operations (use `RunCmd`)
+### Read operations (use `RunCmd`)
 
 | Command                     | Domain   |
 | --------------------------- | -------- |
@@ -238,12 +237,12 @@ INF preflight checks done
 | `apt list --upgradable`     | Package  |
 | `date +%:z`                 | Timezone |
 
-## What Is Not Changed
+## What does not change
 
-- **Controller and NATS server** — already run unprivileged, no changes needed.
-- **`command exec` and `command shell`** — these endpoints execute arbitrary
-  user-provided commands and inherit whatever privileges the agent has. `exec`
-  is gated by the `command:execute` RBAC permission, and `shell` additionally
-  requires `command:shell`.
-- **Docker provider** — talks to the Docker API socket, not system commands. The
-  `osapi` user needs to be in the `docker` group.
+- **Controller and NATS server.** They already run without privileges. They need
+  no change.
+- **`command exec` and `command shell`.** These endpoints run commands that the
+  user gives, with all the privileges of the agent. `exec` needs the
+  `command:execute` RBAC permission. `shell` also needs `command:shell`.
+- **Docker provider.** It connects to the Docker API socket. It does not run
+  system commands. The `osapi` user must be in the `docker` group.

@@ -1,6 +1,6 @@
 # List
 
-List all files stored in the OSAPI Object Store:
+List all files in the osapi Object Store:
 
 ```bash
 $ osapi client file list
@@ -36,8 +36,8 @@ $ osapi client file list --json
 
 ## Stale deployments
 
-List deployments where the source object has been updated since the file was
-last deployed. Shows which files need redeployment. Requires `file:read`
+List the deployments whose source object changed after the last deploy of the
+file. The list shows the files that you must deploy again. Needs the `file:read`
 permission.
 
 ```bash
@@ -63,7 +63,7 @@ $ osapi client file list --stale
 
 ### JSON Output
 
-Use `--json` for raw JSON output:
+Use `--json` to get the raw JSON output:
 
 ```bash
 $ osapi client file list --stale --json

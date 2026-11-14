@@ -1,9 +1,9 @@
 # Update
 
-Update an existing custom CA certificate on a target host with a new Object
-Store reference. The PEM file is redeployed and `update-ca-certificates` is run
-to rebuild the trust store. Fails if the certificate does not exist -- use
-`create` first:
+Update a custom CA certificate on a target host with a new Object Store
+reference. The agent deploys the PEM file again and runs
+`update-ca-certificates` to make the trust store again. The command fails if the
+certificate does not exist. Use `create` first:
 
 ```bash
 $ osapi client node certificate update --target web-01 \
@@ -17,7 +17,8 @@ $ osapi client node certificate update --target web-01 \
   1 host: 1 changed
 ```
 
-If the content has not changed (same SHA), `changed: false` is returned:
+If the content did not change (the same SHA), the command returns
+`changed: false`:
 
 ```bash
 $ osapi client node certificate update --target web-01 \

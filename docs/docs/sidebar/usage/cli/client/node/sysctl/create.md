@@ -1,9 +1,9 @@
 # Create
 
-Create a new sysctl parameter on a target host. The value is written to
-`/etc/sysctl.d/osapi-{key}.conf` and applied immediately via `sysctl -p`.
-Idempotent: returns `changed: false` if already managed. Use `update` to change
-an existing parameter:
+Make a new sysctl parameter on a target host. The agent writes the value to
+`/etc/sysctl.d/osapi-{key}.conf` and applies it immediately with `sysctl -p`. If
+osapi already manages the parameter, the command returns `changed: false`. To
+change a parameter, use `update`:
 
 ```bash
 $ osapi client node sysctl create --target web-01 \
@@ -32,7 +32,7 @@ $ osapi client node sysctl create --target _all \
   2 hosts: 2 changed
 ```
 
-When some hosts are skipped (e.g., macOS agents):
+When some hosts are skipped, for example macOS agents:
 
 ```bash
 $ osapi client node sysctl create --target _all \

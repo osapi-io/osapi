@@ -6,9 +6,9 @@ sidebar_position: 6
 
 # Delete
 
-Stop managing a kernel parameter.
+Stop the management of a kernel parameter.
 
-Removes osapi's file for it and reloads with sysctl --system, so a setting for the key in another file takes effect; otherwise the parameter keeps its current value until the next reboot. Deleting one osapi does not manage reports changed: false.
+Removes the file that osapi wrote for it and reloads with sysctl --system. Then a setting for the key in a different file takes effect. If there is no such setting, the parameter keeps its current value until the next reboot. A delete of a parameter that osapi does not manage reports changed: false.
 
 ## Remove a parameter
 

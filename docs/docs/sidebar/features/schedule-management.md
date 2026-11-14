@@ -2,91 +2,91 @@
 sidebar_position: 9
 ---
 
-# Schedule Management
+# Schedule management
 
-OSAPI manages scheduled entries on target hosts. It supports two placement
-modes:
+osapi manages scheduled entries on target hosts. It has two placement modes:
 
-- **Custom schedule** — writes to `/etc/cron.d/{name}` with a 5-field cron
-  expression
-- **Periodic interval** — writes to `/etc/cron.{hourly,daily,weekly,monthly}/`
-  as executable scripts
+- **Custom schedule.** The provider writes `/etc/cron.d/{name}` with a 5-field
+  cron expression.
+- **Periodic interval.** The provider writes an executable script to
+  `/etc/cron.{hourly,daily,weekly,monthly}/`.
 
-Scheduled entries reference scripts stored in the NATS Object Store by name.
-Upload a script first with the file management commands, then create an entry
-pointing at it. This separates script content from scheduling configuration and
-enables versioned updates.
+A scheduled entry refers by name to a script in the NATS Object Store. First,
+upload a script with the file management commands. Then make an entry that
+points to it. Thus the script content and the schedule configuration are
+separate, and you can update a script as a new version.
 
-## How It Works
+## How it works
 
-### Object-Based Workflow
+### Object-based workflow
 
-The cron provider is a **meta provider**: it does not embed script content
-directly. Instead, each entry holds an `object` name that references a file in
-the NATS Object Store. When the agent deploys or updates an entry, it:
+The cron provider is a **meta provider**: it does not keep the script content.
+Each entry has an `object` name that refers to a file in the NATS Object Store.
+When the agent deploys or updates an entry, it does these steps:
 
-1. Fetches the named object from the Object Store.
-2. Writes the script content to the appropriate path under `/etc/cron.d/` or
+1. It gets the named object from the Object Store.
+1. It writes the script content to the correct path under `/etc/cron.d/` or
    `/etc/cron.{interval}/`.
-3. Records the deploy state in the file-state KV bucket (SHA-256, path,
-   timestamps).
+1. It records the deploy state in the file-state KV bucket (SHA-256, path,
+   times).
 
-Both `create` and `update` are idempotent on content: the agent compares the
-content it was asked to deploy with the file on disk and rewrites it only when
-they differ, so an entry edited by hand is restored. `create` is the one
-exception worth knowing: when an entry of the same name already exists under a
-different schedule, it reports `changed: false` rather than writing a second
-copy in another directory. Use `update` to move it.
+`create` and `update` are idempotent on the content. The agent compares the
+requested content with the file on disk, and writes the file only when they are
+different. Thus it puts back an entry that somebody changed by hand.
 
-### Custom Schedule (`/etc/cron.d/`)
+`create` has one exception. If an entry with the same name exists under a
+different schedule, `create` reports `changed: false`. It does not write a
+second copy in a different directory. Use `update` to move the entry.
 
-For entries with a `schedule` field, the provider writes a drop-in file. The
-file content comes from the referenced object in the Object Store:
+### Custom schedule (`/etc/cron.d/`)
+
+For an entry with a `schedule` field, the provider writes a drop-in file. The
+file content comes from the object in the Object Store:
 
 ```
 0 2 * * * root /usr/local/bin/backup.sh --full
 ```
 
-The file is owned by root with mode `0644`. No header comment is written;
-ownership is tracked via the file-state KV instead.
+root owns the file, and its mode is `0644`. The provider writes no header
+comment. The file-state KV records the ownership.
 
-### Periodic Interval (`/etc/cron.{interval}/`)
+### Periodic interval (`/etc/cron.{interval}/`)
 
-For entries with an `interval` field, the provider writes an executable script
-to the matching interval directory. The file content comes from the referenced
-object — it should include a `#!/bin/sh` shebang:
+For an entry with an `interval` field, the provider writes an executable script
+to the directory of that interval. The file content comes from the object. It
+must start with a `#!/bin/sh` line:
 
 ```bash
 #!/bin/sh
 /usr/sbin/logrotate /etc/logrotate.conf
 ```
 
-The file is written with mode `0755` so `run-parts` can execute it.
+The provider writes the file with mode `0755`, so that `run-parts` can run it.
 
-`schedule` and `interval` are mutually exclusive — provide exactly one. The API
-validates this and returns 400 if both or neither are provided.
+Give `schedule` or `interval`, not both. The API checks this. If you give both
+or neither, it returns 400.
 
-### File-State KV Tracking
+### File-state KV tracking
 
-Deploy state is recorded in the file-state KV bucket rather than embedded in the
-deployed file as a header comment. This means:
+The provider records the deploy state in the file-state KV bucket. It does not
+put a header comment in the deployed file. Thus:
 
-- Deployed cron files contain only the script content — no `# Managed by osapi`
-  marker.
-- The list and get operations query the file-state KV to discover managed
-  entries; manually created files are left untouched.
-- State persists in the KV until explicitly removed — deleting an entry
-  undeploys the file from disk but preserves the file-state record.
+- A deployed cron file has only the script content. It has no
+  `# Managed by osapi` marker.
+- The list and get operations read the file-state KV to find the managed
+  entries. They do not touch files that somebody made by hand.
+- The state stays in the KV until you remove it. When you delete an entry, the
+  agent removes the file from disk but keeps the file-state record.
 
-### Template Support
+### Template support
 
-If the referenced object was uploaded with `content_type: template`, the agent
-renders it as a Go `text/template` before writing to disk. Pass variables at
-deploy time with `--vars`:
+If the object has `content_type: template`, the agent renders it as a Go
+`text/template` before it writes the file to disk. Give variables at deploy time
+with `--vars`:
 
 ```bash
 # Upload a template script
-osapi client node file upload --name backup-script.tmpl \
+osapi client file upload --name backup-script.tmpl \
   --content-type template --file ./backup.sh.tmpl
 
 # Create a scheduled entry that renders the template on deploy
@@ -96,24 +96,24 @@ osapi client node schedule create --target web-01 \
   --vars "retention_days=30,s3_bucket=my-bucket"
 ```
 
-Template variables are merged with the agent's system facts and hostname. See
-[File Management](file-management.md) for the full template context reference.
+The agent merges the template variables with its system facts and its hostname.
+Refer to [File Management](file-management.md) for the full template context.
 
 ## Operations
 
-| Operation | Description                            |
-| --------- | -------------------------------------- |
-| List      | List all osapi-managed entries         |
-| Get       | Get a specific entry by name           |
-| Create    | Upload script, then create the entry   |
-| Update    | Upload new script version, then update |
-| Delete    | Undeploy cron file from disk           |
+| Operation | Description                                     |
+| --------- | ----------------------------------------------- |
+| List      | List all entries that osapi manages             |
+| Get       | Get one entry by name                           |
+| Create    | Upload the script, then make the entry          |
+| Update    | Upload a new version of the script, then update |
+| Delete    | Remove the cron file from disk                  |
 
-## CLI Usage
+## CLI usage
 
 ```bash
 # Upload a script to the Object Store first
-osapi client node file upload --name backup-script \
+osapi client file upload --name backup-script \
   --file ./backup.sh
 
 # Create with a custom schedule (/etc/cron.d/)
@@ -133,7 +133,7 @@ osapi client node schedule list --target web-01
 osapi client node schedule get --target web-01 --name backup
 
 # Update: upload a new script version and redeploy
-osapi client node file upload --name backup-script \
+osapi client file upload --name backup-script \
   --file ./backup-v2.sh --force
 osapi client node schedule update --target web-01 \
   --name backup --schedule "0 3 * * *" \
@@ -143,42 +143,42 @@ osapi client node schedule update --target web-01 \
 osapi client node schedule delete --target web-01 --name backup
 ```
 
-All commands support `--json` for raw JSON output.
+All commands accept `--json` to give the raw JSON output.
 
-## File Permissions
+## File permissions
 
-The provider sets file ownership and modes to match cron requirements:
+The provider sets the file owner and mode that cron needs:
 
-| Type     | Path                          | Mode | Notes                           |
-| -------- | ----------------------------- | ---- | ------------------------------- |
-| Schedule | `/etc/cron.d/{name}`          | 0644 | Not executable, root-owned      |
-| Interval | `/etc/cron.{interval}/{name}` | 0755 | Executable, `#!/bin/sh` shebang |
+| Type     | Path                          | Mode | Notes                               |
+| -------- | ----------------------------- | ---- | ----------------------------------- |
+| Schedule | `/etc/cron.d/{name}`          | 0644 | Not executable, root is the owner   |
+| Interval | `/etc/cron.{interval}/{name}` | 0755 | Executable, starts with `#!/bin/sh` |
 
-Files are created as root (the agent runs as root). Names must not contain dots
-— `run-parts` skips dotfiles.
+The agent writes the files as root. A name must not have dots, because
+`run-parts` does not run files with dots in their names.
 
-## Undeploy Behavior
+## Undeploy behavior
 
-Deleting an entry **undeploys** the file: it is removed from the filesystem, but
-the file-state KV record is preserved. This means:
+When you delete an entry, the agent **undeploys** the file. It removes the file
+from the filesystem, but keeps the file-state KV record. Thus:
 
-- Re-creating the entry with the same name and object will detect the prior
-  state and only write the file if the content differs.
-- The KV record serves as an audit trail of what was last deployed.
+- When you make the entry again with the same name and object, the agent finds
+  the previous state. It writes the file only if the content is different.
+- The KV record is an audit trail of the last deploy.
 
-To remove the file-state record entirely, delete the corresponding file-state
-entry via the file management API after removing the scheduled entry.
+To remove the file-state record, delete the file-state entry through the file
+management API after you remove the scheduled entry.
 
-## Supported Platforms
+## Supported platforms
 
-| OS Family | Support |
+| OS family | Support |
 | --------- | ------- |
 | Debian    | Full    |
 | Darwin    | Skipped |
 
-On unsupported platforms, cron operations return `status: skipped` instead of
-failing. See [Platform Detection](../sdk/platform/detection.md) for details on
-OS family detection.
+On a platform that is not supported, cron operations return `status: skipped`.
+They do not fail. Refer to [Platform Detection](../sdk/platform/detection.md)
+for how osapi finds the OS family.
 
 ## Permissions
 
@@ -187,38 +187,38 @@ OS family detection.
 | List, Get              | `schedule:read`  |
 | Create, Update, Delete | `schedule:write` |
 
-All built-in roles (`admin`, `write`, `read`) include `schedule:read`. The
-`admin` and `write` roles also include `schedule:write`.
+All built-in roles (`admin`, `write`, `read`) have `schedule:read`. The `admin`
+and `write` roles also have `schedule:write`.
 
-## Naming Rules
+## Naming rules
 
-Entry names must be alphanumeric with hyphens and underscores only (pattern:
-`^[a-zA-Z0-9_-]+$`). Names like `backup-daily`, `log_rotate`, and `health_check`
-are valid. Names containing `/`, `..`, or spaces are rejected.
+An entry name can have only letters, digits, hyphens and underscores (pattern:
+`^[a-zA-Z0-9_-]+$`). For example, `backup-daily`, `log_rotate` and
+`health_check` are valid. The API rejects names with `/`, `..` or spaces.
 
-## Idempotent Updates
+## Idempotent updates
 
-The update operation compares the new content against the existing file using
-the SHA-256 stored in the file-state KV. If the script content and scheduling
-parameters are unchanged, the response returns `changed: false`. This makes it
-safe to run updates repeatedly without generating unnecessary filesystem writes.
+The update operation compares the new content with the file that exists, through
+the SHA-256 in the file-state KV. If the script content and the schedule
+parameters did not change, the response is `changed: false`. Thus you can run an
+update many times, and it writes to the filesystem only when necessary.
 
-## Future: Crontab and Systemd Timers
+## Future: crontab and systemd timers
 
-Cron drop-in management is the first provider under the `schedule` domain.
-Future providers will add:
+Cron drop-in management is the first provider of the `schedule` domain. Future
+providers will add:
 
-- **Crontab** — user-level crontab management (`crontab -u <user>`)
-- **Systemd Timers** — systemd timer unit management
+- **Crontab**: user crontab management (`crontab -u <user>`)
+- **Systemd timers**: systemd timer unit management
 
-These will be separate API endpoints under `/node/{hostname}/schedule/crontab`
-and `/node/{hostname}/schedule/timer`.
+They will have separate API endpoints, `/node/{hostname}/schedule/crontab` and
+`/node/{hostname}/schedule/timer`.
 
 ## Related
 
-- [File Management](file-management.md) — uploading scripts and template
-  rendering
-- [CLI Reference](../usage/cli/client/node/schedule/schedule.md) — schedule
+- [File Management](file-management.md): upload scripts and render templates
+- [CLI Reference](../usage/cli/client/node/schedule/schedule.md): the schedule
   commands
-- [Platform Detection](../sdk/platform/detection.md) — OS family detection
-- [Configuration](../usage/configuration.md) — full configuration reference
+- [Platform Detection](../sdk/platform/detection.md): how osapi finds the OS
+  family
+- [Configuration](../usage/configuration.md): all configuration settings

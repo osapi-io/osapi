@@ -29,7 +29,7 @@ $ osapi client node log query --target web-01 \
   1 host: 1 ok
 ```
 
-When targeting all hosts:
+When you target all hosts:
 
 ```bash
 $ osapi client node log query --target _all --lines 5
@@ -115,7 +115,7 @@ $ osapi client node log query --target web-01 --unit nginx.service \
   1 host: 1 ok
 ```
 
-When targeting all hosts:
+When you target all hosts:
 
 ```bash
 $ osapi client node log query --target _all --unit sshd.service --lines 5

@@ -25,7 +25,7 @@ $ osapi client node container docker create \
     --volume "/data:/var/lib/data"
 ```
 
-Create a container without starting it immediately:
+Create a container, but do not start it now:
 
 ```bash
 $ osapi client node container docker create \

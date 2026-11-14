@@ -8,16 +8,17 @@ OSAPI monitors component health through condition evaluation and notifies when
 conditions change. The notification system watches the registry KV bucket for
 condition transitions and dispatches events through a pluggable backend.
 
-## How It Works
+## How it works
 
 Every component (agent, controller, NATS server) evaluates conditions on each
 heartbeat and writes them to the registry KV bucket. A watcher on the controller
 detects transitions:
 
-- **Fired**: a condition becomes active (e.g., `DiskPressure` crosses threshold)
-- **Resolved**: a condition becomes inactive (e.g., disk usage drops below
-  threshold)
-- **Unreachable**: a component's heartbeat expires (TTL timeout)
+- **Fired**: a condition becomes active, for example when `DiskPressure` goes
+  over the limit
+- **Resolved**: a condition becomes inactive, for example when the disk use goes
+  below the limit
+- **Unreachable**: the heartbeat of a component expires (the TTL ends)
 
 Active conditions are re-fired at a configurable interval so they remain visible
 in logs and alerts.
@@ -33,12 +34,12 @@ in logs and alerts.
 | `ProcessHighCPU`        | agent, api, nats | Process CPU usage exceeds configured percent threshold    |
 | `ComponentUnreachable`  | agent, api, nats | Heartbeat expired (TTL timeout)                           |
 
-Host-level conditions are evaluated on agents only. Process-level conditions are
-evaluated on all components. `ComponentUnreachable` is emitted by the watcher
-when a heartbeat TTL expires — it does not appear on the component's
-registration because the component is already gone.
+Only agents calculate the host conditions. All components calculate the process
+conditions. The watcher sends `ComponentUnreachable` when the TTL of a heartbeat
+expires. It is not in the registration of the component, because the component
+is already gone.
 
-## Notifier Backends
+## Notifier backends
 
 The notification system uses a pluggable `Notifier` interface. Currently one
 backend is available:
@@ -54,11 +55,11 @@ INF condition resolved component=agent hostname=web-01 condition=DiskPressure ac
 WRN condition fired   component=nats hostname=nats-01 condition=ComponentUnreachable active=true reason="heartbeat expired"
 ```
 
-### Future Backends
+### Future backends
 
-- **Slack** — post to a webhook URL
-- **Email** — send via SMTP
-- **Webhook** — POST to a configurable URL
+- **Slack**: post to a webhook URL
+- **Email**: send through SMTP
+- **Webhook**: POST to a URL that you set
 
 ## Re-notification
 
@@ -85,18 +86,19 @@ to `'0'` to disable re-notification.
 | `notifier`          | `OSAPI_CONTROLLER_NOTIFICATIONS_NOTIFIER`          | Backend: `"log"` (default)            |
 | `renotify_interval` | `OSAPI_CONTROLLER_NOTIFICATIONS_RENOTIFY_INTERVAL` | Re-fire interval (default: `"0"`)     |
 
-See [Configuration](../usage/configuration.md) for the full reference.
+Refer to [Configuration](../usage/configuration.md) for the full reference.
 
 ## Architecture
 
-The watcher runs as a background goroutine in the controller. It monitors the
-registry KV bucket using NATS KV Watch. On each update it compares the previous
-condition set to the current one and emits `ConditionEvent`s for transitions.
+The watcher is a background goroutine in the controller. It watches the registry
+KV bucket with NATS KV Watch. At each update, it compares the previous
+conditions with the current conditions, and sends a `ConditionEvent` for each
+change.
 
-The watcher is designed to be extractable into a separate process — its only
-dependency is NATS KV access and a `Notifier` implementation.
+The watcher can move to a separate process. It needs only access to NATS KV and
+a `Notifier` implementation.
 
 ## Permissions
 
-No specific permissions are required for notifications. The watcher reads the
-same registry KV bucket that the health status endpoint uses.
+Notifications need no permissions of their own. The watcher reads the same
+registry KV bucket as the health status endpoint.

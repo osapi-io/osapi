@@ -1,8 +1,8 @@
 # Update
 
-Replace an existing Netplan interface configuration on a target host. Fails if
-no OSAPI-managed configuration exists for that interface -- use `create` first.
-Returns `changed: false` if the content has not changed:
+Replace a Netplan interface configuration on a target host. The command fails if
+osapi does not manage a configuration for that interface. Use `create` first. If
+the content did not change, the command returns `changed: false`:
 
 ```bash
 $ osapi client node network interface update \
@@ -19,7 +19,7 @@ $ osapi client node network interface update \
   1 host: 1 changed
 ```
 
-When the configuration is unchanged, `changed` is false:
+When the configuration does not change, `changed` is false:
 
 ```bash
 $ osapi client node network interface update \

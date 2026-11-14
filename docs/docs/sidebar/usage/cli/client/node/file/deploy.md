@@ -1,7 +1,8 @@
 # Deploy
 
-Deploy a file from the Object Store to the target host's filesystem. SHA-256
-idempotency ensures unchanged files are not rewritten.
+Deploy a file from the Object Store to the filesystem of the target host. The
+agent compares SHA-256 checksums, so it does not write a file again when the
+file did not change.
 
 ```bash
 $ osapi client node file deploy --object app.conf --path /etc/app/app.conf
@@ -26,7 +27,7 @@ $ osapi client node file deploy \
 ```
 
 Deploy a template with variables. Each agent renders the template with its own
-facts and hostname:
+facts and its hostname:
 
 ```bash
 $ osapi client node file deploy \
@@ -40,9 +41,9 @@ $ osapi client node file deploy \
 
 ## Template Rendering
 
-When `--content-type template` is set, file content is processed as a Go
-[text/template](https://pkg.go.dev/text/template) before being written to disk.
-The template context provides three top-level fields:
+When you set `--content-type template`, the agent processes the content as a Go
+[text/template](https://pkg.go.dev/text/template) before it writes the file to
+disk. The template context has three top-level fields:
 
 | Field       | Type             | Description                                |
 | ----------- | ---------------- | ------------------------------------------ |
@@ -52,10 +53,10 @@ The template context provides three top-level fields:
 
 ### Available Facts
 
-Facts are collected automatically by each agent and include all fields from the
-agent's fact registration: `architecture`, `kernel_version`, `cpu_count`,
-`fqdn`, `service_mgr`, `package_mgr`, `primary_interface`, `interfaces`,
-`routes`, plus any custom facts. Access them with `index`:
+Each agent collects facts automatically. The facts are all the fields that the
+agent registers: `architecture`, `kernel_version`, `cpu_count`, `fqdn`,
+`service_mgr`, `package_mgr`, `primary_interface`, `interfaces`, `routes`, and
+the custom facts. Get them with `index`:
 
 ```text
 arch={{ index .Facts "architecture" }}
@@ -65,7 +66,7 @@ fqdn={{ index .Facts "fqdn" }}
 
 ### Template Examples
 
-Simple variable substitution:
+A simple variable:
 
 ```text
 listen = {{ .Vars.listen_address }}
@@ -82,7 +83,7 @@ log_level = debug
 {{ end }}
 ```
 
-Host-specific configuration using facts:
+Configuration for each host, from facts:
 
 ```text
 # Generated for {{ .Hostname }}
@@ -91,8 +92,8 @@ arch = {{ index .Facts "architecture" }}
 cpus = {{ index .Facts "cpu_count" }}
 ```
 
-Iterating over a list variable (`--var` values are strings, so pass lists via
-the SDK or orchestrator):
+A loop over a list variable. The values of `--var` are strings, so give lists
+through the SDK or the orchestrator:
 
 ```text
 {{ range .Vars.servers }}
@@ -100,7 +101,7 @@ upstream {{ . }};
 {{ end }}
 ```
 
-Target by label to deploy to a group of servers:
+Target a label to deploy to a group of servers:
 
 ```bash
 $ osapi client node file deploy \
@@ -109,8 +110,9 @@ $ osapi client node file deploy \
     --target group:web
 ```
 
-See [File Management](../../../../../features/file-management.md) for details on
-template rendering and SHA-based idempotency.
+Refer to [File Management](../../../../../features/file-management.md). It tells
+how the agent renders templates, and how the SHA checksums keep deploys
+idempotent.
 
 ## JSON Output
 

@@ -1,6 +1,6 @@
 # List
 
-List all OSAPI-managed sysctl parameters on a target host:
+List all sysctl parameters that osapi manages on a target host:
 
 ```bash
 $ osapi client node sysctl list --target web-01
@@ -15,7 +15,7 @@ $ osapi client node sysctl list --target web-01
   1 host: 1 ok
 ```
 
-Target all hosts to list parameters across the fleet:
+Target all hosts to list the parameters on all of the fleet:
 
 ```bash
 $ osapi client node sysctl list --target _all
@@ -31,7 +31,7 @@ $ osapi client node sysctl list --target _all
   2 hosts: 2 ok
 ```
 
-Target by label to list parameters on a group of servers:
+Target a label to list the parameters on a group of servers:
 
 ```bash
 $ osapi client node sysctl list --target group:web

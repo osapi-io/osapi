@@ -2,90 +2,89 @@
 sidebar_position: 5
 ---
 
-# System Facts
+# System facts
 
-Agents automatically collect **system facts** — typed properties about the host
-they run on — and publish them to a dedicated NATS KV bucket. Facts power two
-features: the `agent get` display and **fact references** (`@fact.*`) that let
-you inject live system values into job parameters.
+Agents collect **system facts** automatically. A fact is a typed property of the
+host that the agent runs on. The agent publishes the facts to a NATS KV bucket.
+Facts are used in two features: the `agent get` output, and **fact references**
+(`@fact.*`), which put live system values in job parameters.
 
-## What Gets Collected
+## What the agent collects
 
-Facts are gathered from providers every 60 seconds (configurable via
-`agent.facts.interval`) and stored in the `agent-facts` KV bucket with a
-5-minute TTL.
+The providers collect the facts every 60 seconds. `agent.facts.interval` sets
+this. The agent stores the facts in the `agent-facts` KV bucket, with a 5-minute
+TTL.
 
-| Fact              | Description                                     | Example Value        |
-| ----------------- | ----------------------------------------------- | -------------------- |
-| Architecture      | CPU architecture                                | `amd64`, `arm64`     |
-| Kernel Version    | OS kernel version string                        | `6.8.0-51-generic`   |
-| FQDN              | Fully qualified domain name                     | `web-01.example.com` |
-| CPU Count         | Number of logical CPUs                          | `8`                  |
-| Service Manager   | Init system                                     | `systemd`, `launchd` |
-| Package Manager   | System package manager                          | `apt`, `brew`        |
-| Interfaces        | Network interfaces with IPv4, IPv6, MAC, family | See below            |
-| Primary Interface | Interface name of the default route             | `eth0`, `en0`        |
-| Routes            | IP routing table entries                        | See below            |
+| Fact              | Description                                        | Example value        |
+| ----------------- | -------------------------------------------------- | -------------------- |
+| Architecture      | CPU architecture                                   | `amd64`, `arm64`     |
+| Kernel Version    | OS kernel version string                           | `6.8.0-51-generic`   |
+| FQDN              | Fully qualified domain name                        | `web-01.example.com` |
+| CPU Count         | Number of logical CPUs                             | `8`                  |
+| Service Manager   | Init system                                        | `systemd`, `launchd` |
+| Package Manager   | System package manager                             | `apt`, `brew`        |
+| Interfaces        | Network interfaces with IPv4, IPv6, MAC and family | Refer to below       |
+| Primary Interface | Interface name of the default route                | `eth0`, `en0`        |
+| Routes            | IP routing table entries                           | Refer to below       |
 
-### Network Interfaces
+### Network interfaces
 
-Each interface entry includes:
+Each interface entry has:
 
-- **Name** — interface name (e.g., `eth0`, `en0`)
-- **IPv4** — IPv4 address (if assigned)
-- **IPv6** — IPv6 address (if assigned)
-- **MAC** — hardware address
-- **Family** — `inet`, `inet6`, or `dual`
+- **Name**: the interface name, for example `eth0` or `en0`
+- **IPv4**: the IPv4 address, if it has one
+- **IPv6**: the IPv6 address, if it has one
+- **MAC**: the hardware address
+- **Family**: `inet`, `inet6` or `dual`
 
-Only non-loopback, up interfaces are included.
+The list has only interfaces that are up and that are not loopback interfaces.
 
 ### Routes
 
-Each route entry includes:
+Each route entry has:
 
-- **Destination** — target network or `default` / `0.0.0.0`
-- **Gateway** — next-hop address
-- **Interface** — outgoing interface name
-- **Mask** — CIDR mask (Linux only, e.g., `/24`)
-- **Metric** — route metric (Linux only)
-- **Flags** — route flags
+- **Destination**: the target network, or `default` / `0.0.0.0`
+- **Gateway**: the next-hop address
+- **Interface**: the name of the outgoing interface
+- **Mask**: the CIDR mask, for example `/24` (Linux only)
+- **Metric**: the route metric (Linux only)
+- **Flags**: the route flags
 
-## Fact References (`@fact.*`)
+## Fact references (`@fact.*`)
 
-Fact references let you use live system values in job parameters. When an agent
-processes a job, it replaces any `@fact.*` token in the request data with the
-corresponding value from its cached facts. This happens transparently — the CLI
-and API send the literal `@fact.*` string, and the agent resolves it before
-executing the operation.
+Fact references put live system values in job parameters. When an agent
+processes a job, it replaces each `@fact.*` token in the request data with the
+value from its cached facts. The CLI and the API send the `@fact.*` string as it
+is. The agent resolves it before it runs the operation.
 
-### Available References
+### Available references
 
-| Reference                 | Resolves To              | Example Value        |
-| ------------------------- | ------------------------ | -------------------- |
-| `@fact.hostname`          | Agent's hostname         | `web-01`             |
-| `@fact.arch`              | CPU architecture         | `amd64`              |
-| `@fact.kernel`            | Kernel version           | `6.8.0-51-generic`   |
-| `@fact.fqdn`              | Fully qualified hostname | `web-01.example.com` |
-| `@fact.interface.primary` | Default route interface  | `eth0`               |
-| `@fact.custom.<key>`      | Custom fact value        | _(user-defined)_     |
+| Reference                 | Resolves to                 | Example value        |
+| ------------------------- | --------------------------- | -------------------- |
+| `@fact.hostname`          | The hostname of the agent   | `web-01`             |
+| `@fact.arch`              | CPU architecture            | `amd64`              |
+| `@fact.kernel`            | Kernel version              | `6.8.0-51-generic`   |
+| `@fact.fqdn`              | Fully qualified hostname    | `web-01.example.com` |
+| `@fact.interface.primary` | The default route interface | `eth0`               |
+| `@fact.custom.<key>`      | A custom fact value         | _(user-defined)_     |
 
-### Usage Examples
+### Usage examples
 
-Query DNS configuration on the primary network interface:
+Get the DNS configuration of the primary network interface:
 
 ```bash
 osapi client node network dns get \
   --interface @fact.interface.primary
 ```
 
-Echo the hostname on the remote host:
+Print the hostname on the remote host:
 
 ```bash
 osapi client node command exec \
   --command echo --args "@fact.hostname"
 ```
 
-Use multiple references in a single command:
+Use more than one reference in one command:
 
 ```bash
 osapi client node command exec \
@@ -93,7 +92,7 @@ osapi client node command exec \
   --args "@fact.interface.primary on @fact.hostname"
 ```
 
-Use fact references with broadcast targeting:
+Use fact references with a broadcast target:
 
 ```bash
 osapi client node command exec \
@@ -101,37 +100,38 @@ osapi client node command exec \
   --target _all
 ```
 
-### How It Works
+### How it works
 
-1. The CLI sends the literal `@fact.*` string in the job request data
-2. The API server publishes the job to NATS as-is
-3. The agent receives the job and checks the request data for `@fact.*` tokens
-4. Each token is resolved against the agent's locally cached facts
-5. The resolved data is passed to the provider for execution
+1. The CLI sends the `@fact.*` string in the job request data.
+1. The API server publishes the job to NATS without a change.
+1. The agent receives the job and looks for `@fact.*` tokens in the request
+   data.
+1. The agent resolves each token from its local cached facts.
+1. The agent gives the resolved data to the provider, which runs the operation.
 
-Because resolution happens agent-side, fact references work correctly with
-broadcast (`_all`) and label-based routing — each agent substitutes its own
-values. For example, `@fact.interface.primary` resolves to `eth0` on one host
-and `en0` on another.
+The agent resolves the references. Thus fact references work with broadcast
+(`_all`) and with label targets: each agent puts in its own values. For example,
+`@fact.interface.primary` is `eth0` on one host and `en0` on a different host.
 
-If a referenced fact is not available (e.g., the agent hasn't collected facts
-yet, or the fact key doesn't exist), the job fails with an error describing
-which reference could not be resolved.
+If a fact is not available, the job fails with an error that names the reference
+that the agent could not resolve. For example, the agent did not collect facts
+yet, or the fact key does not exist.
 
-### Supported Contexts
+### Supported contexts
 
-Fact references work in **any string value** in any API request that reaches an
-agent. The agent resolves all `@fact.*` tokens before passing data to the
-provider — no special handling is needed per endpoint. If a field accepts a
-string, it accepts a fact reference.
+Fact references work in **all string values** of an API request that goes to an
+agent. The agent resolves all `@fact.*` tokens before it gives the data to the
+provider. No endpoint needs special code. If a field accepts a string, it
+accepts a fact reference.
 
 This includes:
 
-- **Standalone strings** — `--interface @fact.interface.primary`
-- **Arrays** — `--servers "1.1.1.1,@fact.custom.dns_server"` resolves the fact
-  while keeping the literal IP
-- **Nested maps** — references inside JSON objects are resolved recursively
-- **Any domain** — commands, DNS, sysctl, services, packages, etc.
+- **Single strings**: `--interface @fact.interface.primary`
+- **Arrays**: `--servers "1.1.1.1,@fact.custom.dns_server"` resolves the fact
+  and keeps the IP address as it is
+- **Nested maps**: the agent resolves references in JSON objects at all levels
+- **All domains**: commands, DNS, sysctl, services, packages and the other
+  domains
 
 ```bash
 # Fact reference in an array field
@@ -144,36 +144,38 @@ osapi client node network dns update \
 # web-02 might resolve it to "ens3"
 ```
 
-Non-string values (numbers, booleans) are not modified.
+The agent does not change values that are not strings, for example numbers and
+booleans.
 
-## Viewing Facts
+## See the facts
 
-Use `agent get` to see the full facts for a specific agent:
+Use `agent get` to see all the facts of one agent:
 
 ```bash
 osapi client agent get --hostname web-01
 ```
 
-The output includes architecture, kernel, FQDN, CPUs, service/package manager,
-network interfaces, and routes. Use `--json` for the complete structured data.
+The output has the architecture, kernel, FQDN, CPUs, service manager, package
+manager, network interfaces and routes. Use `--json` to get all the structured
+data.
 
 ## Configuration
 
 | Key                    | Description                          | Default       |
 | ---------------------- | ------------------------------------ | ------------- |
-| `agent.facts.interval` | How often facts are collected        | `60s`         |
-| `nats.facts.bucket`    | KV bucket name for facts storage     | `agent-facts` |
-| `nats.facts.ttl`       | TTL for facts entries                | `5m`          |
+| `agent.facts.interval` | How often the agent collects facts   | `60s`         |
+| `nats.facts.bucket`    | Name of the KV bucket for the facts  | `agent-facts` |
+| `nats.facts.ttl`       | TTL of the fact entries              | `5m`          |
 | `nats.facts.storage`   | Storage backend (`file` or `memory`) | `file`        |
 
-See [Configuration](../usage/configuration.md) for the full reference.
+Refer to [Configuration](../usage/configuration.md) for all the settings.
 
-## Platform Support
+## Platform support
 
-Facts are collected using platform-specific providers. All facts are available
-on both Linux and macOS:
+A provider for each platform collects the facts. All facts are available on
+Linux and on macOS:
 
-| Fact              | Linux Provider            | macOS Provider            |
+| Fact              | Linux provider            | macOS provider            |
 | ----------------- | ------------------------- | ------------------------- |
 | Architecture      | `gopsutil`                | `gopsutil`                |
 | Kernel Version    | `gopsutil`                | `gopsutil`                |
@@ -182,18 +184,20 @@ on both Linux and macOS:
 | Service Manager   | `gopsutil`                | `gopsutil`                |
 | Package Manager   | `gopsutil`                | `gopsutil`                |
 | Interfaces        | `net.Interfaces` (stdlib) | `net.Interfaces` (stdlib) |
-| Primary Interface | `/proc/net/route` parsing | `netstat -rn` parsing     |
-| Routes            | `/proc/net/route` parsing | `netstat -rn` parsing     |
+| Primary Interface | parses `/proc/net/route`  | parses `netstat -rn`      |
+| Routes            | parses `/proc/net/route`  | parses `netstat -rn`      |
 
-Provider errors are non-fatal — if a provider fails, the agent still publishes
-whatever facts it could gather. This means `@fact.interface.primary` may be
-unavailable if route collection fails, but `@fact.hostname` and `@fact.arch`
-will still work.
+A provider error does not stop the agent. If a provider fails, the agent still
+publishes the facts that it collected. Thus `@fact.interface.primary` can be
+unavailable when route collection fails, but `@fact.hostname` and `@fact.arch`
+still work.
 
 ## Related
 
-- [Agent CLI Reference](../usage/cli/client/agent/agent.mdx) -- view agent facts
-- [Command Execution](command-execution.md) -- use `@fact.*` in commands
-- [Network Management](network-management.md) -- use `@fact.*` in DNS queries
-- [Node Management](node-management.md) -- agent vs. node overview
-- [Configuration](../usage/configuration.md) -- facts interval and KV settings
+- [Agent CLI Reference](../usage/cli/client/agent/agent.mdx): see the facts of
+  an agent
+- [Command Execution](command-execution.md): use `@fact.*` in commands
+- [Network Management](network-management.md): use `@fact.*` in DNS queries
+- [Node Management](node-management.md): an overview of agent and node commands
+- [Configuration](../usage/configuration.md): the facts interval and the KV
+  settings

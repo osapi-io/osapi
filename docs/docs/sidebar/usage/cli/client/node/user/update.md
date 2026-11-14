@@ -1,6 +1,6 @@
 # Update
 
-Update an existing user account:
+Update a user account:
 
 ```bash
 $ osapi client node user update --target web-01 \
@@ -21,8 +21,8 @@ $ osapi client node user update --target web-01 --name deploy --lock
 $ osapi client node user update --target web-01 --name deploy --unlock
 ```
 
-The `--lock` and `--unlock` flags are mutually exclusive. At least one of
-`--shell`, `--home`, `--groups`, `--lock`, or `--unlock` must be specified.
+Do not use `--lock` and `--unlock` together. Give one or more of `--shell`,
+`--home`, `--groups`, `--lock` and `--unlock`.
 
 Broadcast to all hosts:
 

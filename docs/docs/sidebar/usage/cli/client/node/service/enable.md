@@ -1,7 +1,7 @@
 # Enable
 
-Enable a systemd service to start on boot. Returns `changed: true` if the
-service was not already enabled:
+Enable a systemd service so that it starts at boot. If the service was not
+enabled, the command returns `changed: true`:
 
 ```bash
 $ osapi client node service enable --target web-01 \
@@ -15,7 +15,7 @@ $ osapi client node service enable --target web-01 \
   1 host: 1 changed
 ```
 
-If the service is already enabled, `changed: false` is returned:
+If the service is already enabled, the command returns `changed: false`:
 
 ```bash
 $ osapi client node service enable --target web-01 \

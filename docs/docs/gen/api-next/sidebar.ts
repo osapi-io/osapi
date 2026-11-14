@@ -29,7 +29,7 @@ const sidebar: SidebarsConfig = {
         {
           type: "doc",
           id: "gen/api-next/delete-node-sysctl",
-          label: "Stop managing a kernel parameter",
+          label: "Stop the management of a kernel parameter",
           className: "api-method delete",
         },
         {

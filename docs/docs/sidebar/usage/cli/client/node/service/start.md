@@ -1,7 +1,7 @@
 # Start
 
-Start a systemd service on a target host. Returns `changed: true` if the service
-was not already running:
+Start a systemd service on a target host. If the service was not running, the
+command returns `changed: true`:
 
 ```bash
 $ osapi client node service start --target web-01 \
@@ -15,7 +15,7 @@ $ osapi client node service start --target web-01 \
   1 host: 1 changed
 ```
 
-If the service is already running, `changed: false` is returned:
+If the service already runs, the command returns `changed: false`:
 
 ```bash
 $ osapi client node service start --target web-01 \

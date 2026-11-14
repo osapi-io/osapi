@@ -2,16 +2,17 @@
 sidebar_position: 11
 ---
 
-# NTP Management
+# NTP management
 
-OSAPI manages NTP (Network Time Protocol) configuration on target hosts via
-chrony. Configuration is written as a drop-in file under `/etc/chrony/conf.d/`
-and chrony is reloaded to apply changes immediately. Both `create` and `update`
-are idempotent on content: they hash the drop-in on disk and rewrite it only
-when it differs from the configuration requested, so a file edited by hand is
-restored.
+osapi manages the NTP (Network Time Protocol) configuration of target hosts
+through chrony. The agent writes the configuration as a drop-in file under
+`/etc/chrony/conf.d/`, and reloads chrony to apply the change immediately.
+`create` and `update` are idempotent on the content. They calculate the hash of
+the drop-in on disk, and write it again only when it is different from the
+requested configuration. Thus the agent puts back a file that somebody changed
+by hand.
 
-## How It Works
+## How it works
 
 The NTP provider writes a single drop-in file:
 
@@ -26,21 +27,23 @@ server 0.pool.ntp.org iburst
 server 1.pool.ntp.org iburst
 ```
 
-After writing the file, chrony is signalled to reload its configuration so
-changes take effect without a full daemon restart. The file-state KV bucket
-tracks the SHA-256 of the deployed file — if the server list is unchanged, the
-file is not rewritten and `changed: false` is returned.
+After the agent writes the file, it tells chrony to reload its configuration.
+Thus the change takes effect without a full restart of the daemon. The
+file-state KV bucket records the SHA-256 of the deployed file. If the server
+list did not change, the agent does not write the file again, and returns
+`changed: false`.
 
-The get operation queries `chronyc tracking` and `chronyc sources` to report
-live sync status, stratum, estimated offset, and the current reference source.
-It also reads the deployed drop-in file to report the configured server list.
+The get operation runs `chronyc tracking` and `chronyc sources`. It reports the
+live sync status, the stratum, the estimated offset and the current reference
+source. It also reads the deployed drop-in file to report the configured server
+list.
 
-### Delete Behavior
+### Delete behavior
 
-Deleting the NTP configuration removes the drop-in file from
-`/etc/chrony/conf.d/osapi-ntp.conf` and signals chrony to reload. The system
-will fall back to whatever other chrony configuration remains — typically the
-distribution default.
+When you delete the NTP configuration, the agent removes the drop-in file
+`/etc/chrony/conf.d/osapi-ntp.conf` and tells chrony to reload. Then the system
+uses the other chrony configuration that stays, usually the default of the
+distribution.
 
 ## Operations
 
@@ -51,7 +54,7 @@ distribution default.
 | Update    | Replace the drop-in file (fails if not managed)       |
 | Delete    | Remove the drop-in file and reload chrony             |
 
-## CLI Usage
+## CLI usage
 
 ```bash
 # Get NTP status from a host
@@ -73,13 +76,13 @@ osapi client node ntp create --target _all \
 osapi client node ntp delete --target web-01
 ```
 
-All commands support `--json` for raw JSON output.
+All commands accept `--json` to give the raw JSON output.
 
-## Broadcast Support
+## Broadcast support
 
-All NTP operations support broadcast targeting. Use `--target _all` to apply
-configuration across every registered agent, or use a label selector like
-`--target group:web` to target a subset.
+All NTP operations accept broadcast targets. Use `--target _all` to apply
+configuration across all registered agents. Use a label selector, for example
+`--target group:web`, to target a part of the fleet.
 
 Responses always include per-host results. The get response includes sync status
 fields per host:
@@ -94,14 +97,14 @@ fields per host:
 
 Skipped and failed hosts appear with their error in the output.
 
-## Idempotent Updates
+## Idempotent updates
 
-Both create and update compare the new server list against the SHA-256 stored in
-the file-state KV. If the configuration is unchanged, the response returns
-`changed: false` and no filesystem write or chrony reload occurs. It is safe to
-run these operations repeatedly.
+Create and update compare the new server list with the SHA-256 in the file-state
+KV. If the configuration did not change, the response is `changed: false`. The
+agent does not write the file and does not reload chrony. You can run these
+operations many times safely.
 
-## Supported Platforms
+## Supported platforms
 
 | OS Family | Support |
 | --------- | ------- |
@@ -109,9 +112,9 @@ run these operations repeatedly.
 | Darwin    | Skipped |
 | Linux     | Skipped |
 
-On unsupported platforms, NTP operations return `status: skipped` instead of
-failing. See [Platform Detection](../sdk/platform/detection.md) for details on
-OS family detection.
+On a platform that is not supported, NTP operations return `status: skipped`.
+They do not fail. Refer to [Platform Detection](../sdk/platform/detection.md)
+for how osapi finds the OS family.
 
 ## Permissions
 
@@ -125,7 +128,7 @@ and `write` roles also include `ntp:write`.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/ntp/ntp.md) — NTP commands
-- [File Management](file-management.md) — file-state KV tracking
-- [Platform Detection](../sdk/platform/detection.md) — OS family detection
-- [Configuration](../usage/configuration.md) — full configuration reference
+- [CLI Reference](../usage/cli/client/node/ntp/ntp.md): NTP commands
+- [File Management](file-management.md): file-state KV tracking
+- [Platform Detection](../sdk/platform/detection.md): OS family detection
+- [Configuration](../usage/configuration.md): full configuration reference

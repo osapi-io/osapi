@@ -76,7 +76,7 @@ removeResp, err := c.User.RemoveKey(ctx, "web-01", "deploy", "SHA256:abc123...")
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/user.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/user.go)
 for a complete working example.
 

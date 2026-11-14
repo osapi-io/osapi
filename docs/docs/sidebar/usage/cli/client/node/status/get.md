@@ -17,7 +17,7 @@ $ osapi client node status get
   /boot  1 GB   0 GB   0%
 ```
 
-When targeting all hosts, a summary table is shown:
+When you target all hosts, the command shows a summary table:
 
 ```bash
 $ osapi client node status get --target _all
@@ -48,7 +48,7 @@ $ osapi client node status get --target _all
   server2   unsupported platform
 ```
 
-Target by label to query a group of servers:
+Target a label to query a group of servers:
 
 ```bash
 $ osapi client node status get --target group:web

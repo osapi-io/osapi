@@ -1,9 +1,6 @@
 # build-a-behavior evals
 
-Each eval gives a fresh Claude Code session one request, such as "add a
-behavior that manages /etc/motd", in a scratch copy of this checkout, with this
-skill and the osapi CLI available as in any checkout. The session never sees
-the checks. When it stops, `run.sh` checks what it left:
+Each eval gives one request to a new agent session (`run.sh` starts `claude -p`). An example request is "add a behavior that manages /etc/motd". The session runs in a scratch copy of this checkout, with this skill and the osapi CLI, as in each checkout. The session does not see the checks. When it stops, `run.sh` checks what it left:
 
 | Check                                        | How                                                  |
 | -------------------------------------------- | ---------------------------------------------------- |
@@ -17,12 +14,9 @@ the checks. When it stops, `run.sh` checks what it left:
 | Per eval: sudo declared, refusals declared   | a grep of the behavior's package                     |
 | Per eval: internal, requires, platforms      | `behavior get --json` and whether `gen/` exists      |
 
-An eval of kind `ask` gives a request too vague to build from. It passes when
-the session changes nothing and asks the user at least two questions.
+An eval of kind `ask` gives a request that is not clear enough to build. It passes when the session changes nothing and asks the user two or more questions.
 
-An eval of kind `refuse` asks for something the platform cannot express yet. It
-passes when the session changes nothing and its answer names what is missing,
-which is the skill's "Not yet" list doing its job.
+An eval of kind `refuse` asks for something that the platform cannot express yet. It passes when the session changes nothing and its answer names what is missing. This shows that the "Not yet" list of the skill works.
 
 | Eval      | Asks for                                         | Proves                                              |
 | --------- | ------------------------------------------------ | --------------------------------------------------- |
@@ -42,7 +36,4 @@ which is the skill's "Not yet" list doing its job.
 KEEP=1 OUT=/tmp/evals BUDGET=10 .claude/skills/build-a-behavior/evals/run.sh
 ```
 
-Each session's transcript is kept as `<id>.session.json`, with its turns, cost
-and final message, and `results.txt` has a PASS or FAIL per check. A failure is
-fixed in the skill or the CLI, never in the session's output, and the eval is
-run again.
+`run.sh` keeps the transcript of each session as `<id>.session.json`, with its turns, cost and last message. `results.txt` has a PASS or FAIL for each check. Fix a failure in the skill or the CLI, not in the output of the session. Then run the eval again.

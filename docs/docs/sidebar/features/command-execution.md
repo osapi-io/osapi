@@ -2,52 +2,52 @@
 sidebar_position: 3
 ---
 
-# Command Execution
+# Command execution
 
-OSAPI can execute arbitrary commands on managed hosts. Command execution runs
-through the [job system](job-system.md), so the API server never runs commands
-directly -- agents handle all execution.
+osapi can run any command on managed hosts. Command execution goes through the
+[job system](job-system.md). Thus the API server does not run commands. The
+agents run them.
 
-## What It Does
+## What it does
 
 | Operation | Description                                            |
 | --------- | ------------------------------------------------------ |
 | Exec      | Run a command directly without a shell interpreter     |
 | Shell     | Run a command through `/bin/sh -c` with shell features |
 
-**Exec** invokes the command binary directly with an explicit argument list. No
-shell interpretation occurs, so metacharacters like `|`, `>`, and `*` are passed
-literally. This is the safer option for structured automation.
+**Exec** runs the command binary directly, with an argument list. No shell reads
+the command. Thus characters like `|`, `>` and `*` go to the command as they
+are. This is the safer option for automation.
 
-**Shell** passes the command string to `/bin/sh -c`, enabling pipes, redirects,
-variable expansion, and other shell features. Use this for ad-hoc debugging or
-when you need shell syntax.
+**Shell** gives the command string to `/bin/sh -c`. Then you can use pipes,
+redirects, variable expansion and other shell features. Use it to find problems
+quickly, or when you need shell syntax.
 
-Both operations support a configurable working directory and a timeout (default
-30 seconds, maximum 300 seconds). Results include stdout, stderr, the exit code,
-and execution duration.
+The two operations take a working directory and a timeout (30 seconds by
+default, 300 seconds at most). The results have stdout, stderr, the exit code
+and the duration.
 
-## How It Works
+## How it works
 
-Command execution follows the same request flow as all OSAPI operations:
+Command execution uses the same request flow as all osapi operations:
 
-1. The CLI (or API client) posts a request to the API server.
-2. The API server creates a job and publishes it to NATS.
-3. An agent picks up the job, executes the command, and writes the result back
+1. The CLI or an API client sends a request to the API server.
+1. The API server makes a job and publishes it to NATS.
+1. An agent receives the job, executes the command, and writes the result back
    to NATS KV.
-4. The API server collects the result and returns it to the client.
+1. The API server collects the result and returns it to the client.
 
-You can target a specific host, broadcast to all hosts with `_all`, or route by
-label. See [CLI Reference](../usage/cli/client/node/command/command.mdx) for
-usage and examples, or the
+You can target one host, broadcast to all hosts with `_all`, or target a label.
+Refer to [CLI Reference](../usage/cli/client/node/command/command.mdx) for usage
+and examples, or the
 [API Reference](/gen/api/command-execution-api-command-operations) for the REST
 endpoints.
 
-## Fact References
+## Fact references
 
-Command arguments support `@fact.*` references that resolve to live system
-values on the executing agent. This is especially useful with broadcast
-targeting, where each agent substitutes its own values:
+Command arguments accept `@fact.*` references. The agent that runs the command
+changes them to live system values. This is useful with broadcast targets, where
+each agent puts in its own values:
 
 ```bash
 $ osapi client node command exec \
@@ -55,21 +55,21 @@ $ osapi client node command exec \
     --target _all
 ```
 
-See [System Facts](system-facts.md) for the full list of available references.
+Refer to [System Facts](system-facts.md) for the full list of available
+references.
 
-## Use Cases
+## Use cases
 
-- **Ad-hoc debugging** -- quickly check a process table, inspect a log file, or
+- **Find problems quickly.** Check a process table, examine a log file, or
   verify a configuration on a remote host without SSH.
-- **Automation fallback** -- run a one-off command that does not yet have a
-  dedicated OSAPI endpoint.
-- **Fleet-wide checks** -- broadcast a command to all hosts to verify a package
-  version, check disk space, or confirm a service is running.
+- **Fill a gap in automation.** Run a command that has no osapi endpoint yet.
+- **Checks on all of the fleet.** Broadcast a command to all hosts to verify a
+  package version, check the disk space, or make sure that a service runs.
 
-## Security Model
+## Security model
 
-Command execution is a privileged operation, split into two permissions so a
-role can be scoped to structured commands without also granting shell access:
+Command execution is a privileged operation. It has two permissions. Thus a role
+can run commands without shell access:
 
 - `command:execute` guards the `exec` endpoint (no shell interpretation).
 - `command:shell` guards the `shell` endpoint (`/bin/sh -c`, with pipes,
@@ -78,9 +78,9 @@ role can be scoped to structured commands without also granting shell access:
 Only the built-in `admin` role includes either permission by default. The
 `write` and `read` roles do not.
 
-> **Upgrading?** A custom role or token that was granted only `command:execute`
-> no longer reaches the `shell` endpoint -- it now also needs `command:shell`.
-> Add `command:shell` to any custom role or token that should keep shell access.
+> **Upgrade note.** A custom role or token that has only `command:execute`
+> cannot use the `shell` endpoint now. It also needs `command:shell`. Add
+> `command:shell` to each custom role or token that must keep shell access.
 
 To grant command execution to a custom role:
 
@@ -106,9 +106,9 @@ osapi token generate -r read -u user@example.com \
 
 ## Configuration
 
-Command execution uses the general job infrastructure. No domain-specific
-configuration is required. See [Configuration](../usage/configuration.md) for
-NATS, agent, and authentication settings.
+Command execution uses the general job system. It needs no configuration of its
+own. Refer to [Configuration](../usage/configuration.md) for NATS, agent, and
+authentication settings.
 
 ## Permissions
 
@@ -122,11 +122,11 @@ Grant them to other roles or tokens explicitly when needed.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/command/command.mdx) -- command
+- [CLI Reference](../usage/cli/client/node/command/command.mdx): command
   execution commands (exec, shell)
-- [System Facts](system-facts.md) -- available `@fact.*` references
-- [API Reference](/gen/api/command-execution-api-command-operations) -- REST API
+- [System Facts](system-facts.md): available `@fact.*` references
+- [API Reference](/gen/api/command-execution-api-command-operations): REST API
   documentation
-- [Job System](job-system.md) -- how async job processing works
-- [Authentication & RBAC](authentication.md) -- permissions and roles
-- [Architecture](../architecture/architecture.md) -- system design overview
+- [Job System](job-system.md): how async job processing works
+- [Authentication & RBAC](authentication.md): permissions and roles
+- [Architecture](../architecture/architecture.md): system design overview

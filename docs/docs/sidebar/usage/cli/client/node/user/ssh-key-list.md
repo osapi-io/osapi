@@ -14,7 +14,7 @@ $ osapi client node user ssh-key list --target web-01 --name deploy
   1 host: 1 ok
 ```
 
-When targeting all hosts:
+When you target all hosts:
 
 ```bash
 $ osapi client node user ssh-key list --target _all --name deploy
@@ -29,8 +29,8 @@ $ osapi client node user ssh-key list --target _all --name deploy
   2 hosts: 2 ok
 ```
 
-Hosts with no authorized keys are omitted from the output. Skipped hosts (e.g.,
-unsupported platforms) show with their error.
+The output does not show hosts without authorized keys. It shows skipped hosts,
+for example unsupported platforms, with their error.
 
 ## JSON Output
 

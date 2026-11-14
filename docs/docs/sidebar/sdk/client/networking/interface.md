@@ -4,7 +4,7 @@ sidebar_position: 3
 
 # Interface
 
-Network interface configuration management via Netplan.
+Manage the network interface configuration through Netplan.
 
 ## Methods
 
@@ -120,7 +120,7 @@ for _, r := range resp.Data.Results {
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/interface.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/interface.go)
 for a complete working example.
 

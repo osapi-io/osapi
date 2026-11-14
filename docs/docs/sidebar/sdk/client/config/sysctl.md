@@ -4,9 +4,9 @@ sidebar_position: 1
 
 # Sysctl
 
-The `Sysctl` service provides methods for managing kernel parameters on target
-hosts via `/etc/sysctl.d/` conf files. Access via `client.Sysctl.List()`,
-`client.Sysctl.Create()`, etc.
+The `Sysctl` service has methods that manage kernel parameters on target hosts,
+through `/etc/sysctl.d/` conf files. Use `client.Sysctl.List()` and
+`client.Sysctl.Create()`, for example.
 
 ## Methods
 

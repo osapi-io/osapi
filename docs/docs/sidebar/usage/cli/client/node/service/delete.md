@@ -1,8 +1,8 @@
 # Delete
 
-Delete a service unit file from a target host. The service is stopped and
-disabled if running, the unit file is removed from `/etc/systemd/system/`, and
-`systemctl daemon-reload` is run:
+Delete a service unit file from a target host. If the service runs, the agent
+stops and disables it. The agent removes the unit file from
+`/etc/systemd/system/` and runs `systemctl daemon-reload`:
 
 ```bash
 $ osapi client node service delete --target web-01 \
@@ -16,7 +16,7 @@ $ osapi client node service delete --target web-01 \
   1 host: 1 changed
 ```
 
-If the unit file does not exist, `changed: false` is returned:
+If the unit file does not exist, the command returns `changed: false`:
 
 ```bash
 $ osapi client node service delete --target web-01 \

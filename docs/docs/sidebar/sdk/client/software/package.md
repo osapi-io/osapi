@@ -4,8 +4,8 @@ sidebar_position: 4
 
 # Package
 
-The `Package` service provides methods for managing system packages on target
-hosts. Access via `client.Package.List()`, `client.Package.Install()`, etc.
+The `Package` service has methods that manage system packages on target hosts.
+Use `client.Package.List()` and `client.Package.Install()`, for example.
 
 ## Methods
 

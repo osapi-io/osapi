@@ -16,7 +16,7 @@ $ osapi client node network dns update \
   1 host: 1 changed
 ```
 
-When targeting all hosts:
+When you target all hosts:
 
 ```bash
 $ osapi client node network dns update \
@@ -36,7 +36,7 @@ $ osapi client node network dns update \
   server2   unsupported platform
 ```
 
-Target by label to update a group of servers:
+Target a label to update a group of servers:
 
 ```bash
 $ osapi client node network dns update \
@@ -45,7 +45,8 @@ $ osapi client node network dns update \
     --target group:web
 ```
 
-Override DHCP-provided DNS servers so only the configured servers are used:
+Replace the DNS servers from DHCP, so that the host uses only the configured
+servers:
 
 ```bash
 $ osapi client node network dns update \
@@ -64,4 +65,4 @@ $ osapi client node network dns update \
 | `--override-dhcp`  | Disable DHCP-provided DNS servers, use only configured values | `false`  |
 | `-T, --target`     | Target: `_any`, `_all`, hostname, or label (`group:web`)      | `_all`   |
 
-\*At least one of `--servers` or `--search-domains` must be provided.
+\*Give `--servers`, `--search-domains`, or both.
