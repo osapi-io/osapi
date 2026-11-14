@@ -190,105 +190,164 @@ func (s *PreflightPublicTestSuite) TestCheckCapabilities() {
 	}
 }
 
+const sudoListNarrow = `Matching Defaults entries for osapi on debian-1:
+    env_reset, secure_path=/usr/sbin\\:/usr/bin, !requiretty
+
+User osapi may run the following commands on debian-1:
+    (root) NOPASSWD: /usr/sbin/sysctl -p /etc/sysctl.d/osapi-*.conf, /usr/sbin/sysctl --system
+    (root) NOPASSWD: SETENV: /usr/bin/systemctl restart *
+    (root) /usr/bin/timedatectl set-timezone *
+`
+
+// sudoListOdd has an empty rule line and a trailing comma, which the parser
+// skips rather than reading as a program.
+const sudoListOdd = `User osapi may run the following commands on debian-1:
+    (root) NOPASSWD:
+    (root) NOPASSWD: /usr/sbin/sysctl --system,
+`
+
+const sudoListAll = `User admin may run the following commands on debian-1:
+    (ALL) NOPASSWD: ALL
+`
+
 func (s *PreflightPublicTestSuite) TestRunPreflight() {
+	installed := func(names ...string) func(string) (string, error) {
+		return func(p string) (string, error) {
+			for _, n := range names {
+				if n == p {
+					return "/usr/bin/" + p, nil
+				}
+			}
+
+			return "", fmt.Errorf("not found")
+		}
+	}
+
 	tests := []struct {
-		name         string
-		setup        func()
-		validateFunc func([]agent.PreflightResult, bool)
+		name      string
+		sudoOut   string
+		sudoErr   error
+		capEff    string
+		installed []string
+		behaviors func()
+		wantOK    bool
+		wantFail  []string
+		wantPass  []string
+		wantNone  []string
 	}{
 		{
-			name: "when a behavior declares a sudo program, it is checked once",
-			setup: func() {
+			name:      "when narrow rules cover the installed programs",
+			sudoOut:   sudoListNarrow,
+			capEff:    "000000000000102f",
+			installed: []string{"sysctl", "systemctl", "timedatectl"},
+			wantOK:    true,
+			wantPass:  []string{"sudo", "sudo:sysctl", "sudo:systemctl", "sudo:timedatectl"},
+		},
+		{
+			name:      "when a program is not installed, it is not checked",
+			sudoOut:   sudoListNarrow,
+			capEff:    "000000000000102f",
+			installed: []string{"sysctl"},
+			wantOK:    true,
+			wantNone:  []string{"sudo:chronyc", "sudo:systemctl"},
+		},
+		{
+			name:      "when an installed program has no rule, the check fails and the agent starts",
+			sudoOut:   sudoListNarrow,
+			capEff:    "000000000000102f",
+			installed: []string{"sysctl", "useradd"},
+			wantOK:    true,
+			wantFail:  []string{"sudo:useradd"},
+			wantPass:  []string{"sudo:sysctl"},
+		},
+		{
+			name:      "when a rule grants ALL, every installed program passes",
+			sudoOut:   sudoListAll,
+			capEff:    "000000000000102f",
+			installed: []string{"useradd", "chronyc"},
+			wantOK:    true,
+			wantPass:  []string{"sudo:useradd", "sudo:chronyc"},
+		},
+		{
+			name:      "when a rule line is empty or ends in a comma, it is skipped",
+			sudoOut:   sudoListOdd,
+			capEff:    "000000000000102f",
+			installed: []string{"sysctl", "systemctl"},
+			wantOK:    true,
+			wantPass:  []string{"sudo:sysctl"},
+			wantFail:  []string{"sudo:systemctl"},
+		},
+		{
+			name:      "when sudo needs a password, preflight fails",
+			sudoErr:   fmt.Errorf("exit status 1"),
+			capEff:    "000000000000102f",
+			installed: []string{"sysctl"},
+			wantOK:    false,
+			wantFail:  []string{"sudo"},
+			wantNone:  []string{"sudo:sysctl"},
+		},
+		{
+			name:      "when a capability is missing, the check fails and the agent starts",
+			sudoOut:   sudoListNarrow,
+			capEff:    "0000000000000000",
+			installed: []string{"sysctl"},
+			wantOK:    true,
+			wantFail:  []string{"cap:CAP_NET_ADMIN"},
+		},
+		{
+			name:      "when a behavior declares a sudo program, it is checked once",
+			sudoOut:   sudoListNarrow,
+			capEff:    "000000000000102f",
+			installed: []string{"motdctl", "sysctl"},
+			behaviors: func() {
 				behavior.Register(behavior.Define("motd", "Message of the day", behavior.Node,
 					behavior.Sudo("motdctl", "sysctl"),
 				))
-				s.mockExecMgr.EXPECT().
-					RunCmd(gomock.Any(), "sudo", gomock.Any()).
-					Return("/usr/bin/something", nil).
-					AnyTimes()
-
-				path := filepath.Join(s.tmpDir, "status_behavior")
-				err := os.WriteFile(path, []byte("CapEff:\t000000000000102f\n"), 0o644)
-				s.Require().NoError(err)
-				agent.SetProcStatusPath(path)
 			},
-			validateFunc: func(results []agent.PreflightResult, _ bool) {
-				names := map[string]int{}
-				for _, r := range results {
-					names[r.Name]++
-				}
-				s.Equal(1, names["sudo:motdctl"], "the behavior's program is checked")
-				s.Equal(1, names["sudo:sysctl"], "a program both declare is checked once")
-			},
-		},
-		{
-			name: "when both checks pass",
-			setup: func() {
-				s.mockExecMgr.EXPECT().
-					RunCmd(gomock.Any(), "sudo", gomock.Any()).
-					Return("/usr/bin/something", nil).
-					AnyTimes()
-
-				path := filepath.Join(s.tmpDir, "status_pass")
-				content := "Name:\tosapi\nCapEff:\t000000000000102f\n"
-				err := os.WriteFile(path, []byte(content), 0o644)
-				s.Require().NoError(err)
-				agent.SetProcStatusPath(path)
-			},
-			validateFunc: func(results []agent.PreflightResult, allPassed bool) {
-				s.True(allPassed)
-				s.NotEmpty(results)
-			},
-		},
-		{
-			name: "when sudo check fails",
-			setup: func() {
-				s.mockExecMgr.EXPECT().
-					RunCmd(gomock.Any(), "sudo", gomock.Any()).
-					Return("", fmt.Errorf("sudo failed")).
-					AnyTimes()
-
-				path := filepath.Join(s.tmpDir, "status_sudo_fail")
-				content := "Name:\tosapi\nCapEff:\t000000000000102f\n"
-				err := os.WriteFile(path, []byte(content), 0o644)
-				s.Require().NoError(err)
-				agent.SetProcStatusPath(path)
-			},
-			validateFunc: func(results []agent.PreflightResult, allPassed bool) {
-				s.False(allPassed)
-				s.NotEmpty(results)
-			},
-		},
-		{
-			name: "when caps check fails",
-			setup: func() {
-				s.mockExecMgr.EXPECT().
-					RunCmd(gomock.Any(), "sudo", gomock.Any()).
-					Return("/usr/bin/something", nil).
-					AnyTimes()
-
-				path := filepath.Join(s.tmpDir, "status_fail")
-				content := "Name:\tosapi\nCapEff:\t0000000000000000\n"
-				err := os.WriteFile(path, []byte(content), 0o644)
-				s.Require().NoError(err)
-				agent.SetProcStatusPath(path)
-			},
-			validateFunc: func(results []agent.PreflightResult, allPassed bool) {
-				s.False(allPassed)
-				s.NotEmpty(results)
-			},
+			wantOK:   true,
+			wantFail: []string{"sudo:motdctl"},
+			wantPass: []string{"sudo:sysctl"},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			tc.setup()
-			results, allPassed := agent.RunPreflight(
-				context.Background(),
-				s.logger,
-				s.mockExecMgr,
-			)
-			tc.validateFunc(results, allPassed)
+			if tc.behaviors != nil {
+				tc.behaviors()
+			}
+			agent.SetLookPath(installed(tc.installed...))
+			s.mockExecMgr.EXPECT().
+				RunCmd(gomock.Any(), "sudo", []string{"-n", "-l"}).
+				Return(tc.sudoOut, tc.sudoErr)
+
+			path := filepath.Join(s.tmpDir, "status")
+			err := os.WriteFile(path, []byte("Name:\tosapi\nCapEff:\t"+tc.capEff+"\n"), 0o644)
+			s.Require().NoError(err)
+			agent.SetProcStatusPath(path)
+
+			results, ok := agent.RunPreflight(context.Background(), s.logger, s.mockExecMgr)
+
+			s.Equal(tc.wantOK, ok)
+			count := map[string]int{}
+			passed := map[string]bool{}
+			for _, r := range results {
+				count[r.Name]++
+				passed[r.Name] = r.Passed
+				if !r.Passed {
+					s.NotEmpty(r.Error, r.Name)
+				}
+			}
+			for _, n := range tc.wantPass {
+				s.Equal(1, count[n], n)
+				s.True(passed[n], n)
+			}
+			for _, n := range tc.wantFail {
+				s.Equal(1, count[n], n)
+				s.False(passed[n], n)
+			}
+			for _, n := range tc.wantNone {
+				s.Zero(count[n], n)
+			}
 		})
 	}
 }

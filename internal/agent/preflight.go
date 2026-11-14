@@ -27,6 +27,7 @@ import (
 	"log/slog"
 	"os"
 	osexec "os/exec"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -35,11 +36,14 @@ import (
 	"github.com/osapi-io/osapi/internal/exec"
 )
 
-// PreflightResult holds the outcome of a single preflight check.
+// PreflightResult holds the outcome of a single preflight check. A failed
+// fatal check stops the agent; any other failed check is a warning, because
+// it fails only the operations that need it.
 type PreflightResult struct {
 	Name   string
 	Passed bool
 	Error  string
+	Fatal  bool
 }
 
 // sudoCommands lists binaries the hand-written domains run with sudo. A
@@ -60,7 +64,8 @@ var sudoCommands = []string{
 	"apt-get",
 	"shutdown",
 	"update-ca-certificates",
-	"sh",
+	"netplan",
+	"chpasswd",
 }
 
 // requiredCapabilities maps Linux capability names to their bit positions
@@ -78,74 +83,128 @@ var requiredCapabilities = map[string]int{
 // Overridable in tests via export_test.go.
 var procStatusPath = "/proc/self/status"
 
-// RunPreflight runs sudo and capability checks. When called, it always
-// checks both sudo access and Linux capabilities. Returns the combined
-// results and whether all checks passed.
+// RunPreflight checks what privilege escalation needs. It fails only when
+// sudo cannot run without a password at all. A program with no sudo rule, or
+// a missing capability, is a failed check that is not fatal: it fails the
+// operations that need it, and the agent still starts. A program that is not
+// installed is not checked, since nothing on the host can run it.
 func RunPreflight(
 	ctx context.Context,
 	logger *slog.Logger,
 	execManager exec.Manager,
 ) ([]PreflightResult, bool) {
-	allPassed := true
+	results := checkSudoAccess(ctx, logger, execManager)
+	results = append(results, checkCapabilities(logger)...)
 
-	sudoResults := checkSudoAccess(ctx, logger, execManager)
-	capResults := checkCapabilities(logger)
-
-	results := make([]PreflightResult, 0, len(sudoResults)+len(capResults))
-	results = append(results, sudoResults...)
-
-	for _, r := range sudoResults {
-		if !r.Passed {
-			allPassed = false
+	for _, r := range results {
+		if r.Fatal && !r.Passed {
+			return results, false
 		}
 	}
 
-	results = append(results, capResults...)
-
-	for _, r := range capResults {
-		if !r.Passed {
-			allPassed = false
-		}
-	}
-
-	return results, allPassed
+	return results, true
 }
 
-// checkSudoAccess verifies that the agent can run each required command
-// via sudo without a password prompt.
+// checkSudoAccess lists the agent's sudo rules once with sudo -n -l, then
+// checks each installed program the agent runs with sudo has a rule. The
+// rule's arguments are not checked: sudo -l with a program and no arguments
+// fails for a rule that limits them, so a narrow rule such as
+// "sysctl -p /etc/sysctl.d/osapi-*.conf" counts as a rule for sysctl.
 func checkSudoAccess(
 	ctx context.Context,
 	logger *slog.Logger,
 	execManager exec.Manager,
 ) []PreflightResult {
-	var results []PreflightResult
+	out, err := execManager.RunCmd(ctx, "sudo", []string{"-n", "-l"})
+	if err != nil {
+		logger.Debug("sudo preflight check failed", slog.String("error", err.Error()))
+
+		return []PreflightResult{{
+			Name:   "sudo",
+			Passed: false,
+			Fatal:  true,
+			Error: fmt.Sprintf(
+				"sudo -n -l: %s: sudo needs a password or grants this user nothing",
+				err.Error(),
+			),
+		}}
+	}
+
+	all, granted := parseSudoList(out)
+	results := []PreflightResult{{Name: "sudo", Passed: true, Fatal: true}}
 
 	for _, cmd := range requiredSudo() {
-		name := fmt.Sprintf("sudo:%s", cmd)
+		if _, err := lookPath(cmd); err != nil {
+			continue
+		}
 
-		_, err := execManager.RunCmd(ctx, "sudo", []string{"-n", "which", cmd})
-		if err != nil {
-			logger.Debug(
-				"sudo preflight check failed",
-				slog.String("command", cmd),
-				slog.String("error", err.Error()),
-			)
-			results = append(results, PreflightResult{
-				Name:   name,
-				Passed: false,
-				Error:  fmt.Sprintf("sudo -n which %s: %s", cmd, err.Error()),
-			})
+		name := fmt.Sprintf("sudo:%s", cmd)
+		if all || slices.Contains(granted, cmd) {
+			results = append(results, PreflightResult{Name: name, Passed: true})
 
 			continue
 		}
 
 		results = append(results, PreflightResult{
 			Name:   name,
-			Passed: true,
+			Passed: false,
+			Error:  fmt.Sprintf("no sudo rule runs %s; operations that need it fail", cmd),
 		})
 	}
 
 	return results
+}
+
+// parseSudoList reads the output of sudo -n -l. It returns whether a rule
+// grants ALL, and the base name of each program a rule names.
+func parseSudoList(
+	out string,
+) (bool, []string) {
+	var granted []string
+	inRules := false
+
+	for _, line := range strings.Split(out, "\n") {
+		if strings.Contains(line, "may run the following commands") {
+			inRules = true
+
+			continue
+		}
+		if !inRules || !strings.HasPrefix(line, " ") {
+			continue
+		}
+
+		rule := strings.TrimSpace(line)
+		// Drop the "(root) NOPASSWD:" prefix: the run-as list, then tags.
+		if strings.HasPrefix(rule, "(") {
+			if i := strings.Index(rule, ")"); i >= 0 {
+				rule = strings.TrimSpace(rule[i+1:])
+			}
+		}
+		for {
+			i := strings.Index(rule, ":")
+			sp := strings.Index(rule, " ")
+			if i < 0 || (sp >= 0 && sp < i) || strings.HasPrefix(rule, "/") {
+				break
+			}
+			rule = strings.TrimSpace(rule[i+1:])
+		}
+
+		for _, cmd := range strings.Split(rule, ",") {
+			fields := strings.Fields(cmd)
+			if len(fields) == 0 {
+				continue
+			}
+			if fields[0] == "ALL" {
+				return true, nil
+			}
+			base := filepath.Base(fields[0])
+			if !slices.Contains(granted, base) {
+				granted = append(granted, base)
+			}
+		}
+	}
+
+	return false, granted
 }
 
 // checkCapabilities verifies that the agent process has the required Linux

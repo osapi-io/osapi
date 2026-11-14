@@ -59,9 +59,9 @@ The agent runs on each managed host and does the work. At startup it:
   identity; the hostname is only its display name and may change;
 - when PKI is on, generates or loads its keypair and **enrolls** with the
   controller, waiting until an administrator accepts it;
-- when privilege escalation is on, runs a **preflight** that checks it may run
-  each privileged program with sudo and holds the capabilities it needs, and
-  exits if not;
+- when privilege escalation is on, runs a **preflight**: it exits when sudo
+  needs a password, and warns for each installed program with no sudo rule and
+  each missing capability;
 - builds the **provider** for each behavior and domain on its platform, and logs
   which behaviors are unsupported here;
 - subscribes to the job subjects for its machine ID, `_any`, `_all` and each of

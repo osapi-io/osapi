@@ -164,15 +164,22 @@ used) can elevate correctly.
 
 ## Preflight Checks
 
-When `enabled` is true, the agent automatically runs a verification pass during
-`agent start` before subscribing to NATS. Checks are sequential: sudo first,
-then capabilities. If any check fails, the agent logs the failure and exits with
-a non-zero status.
+When `enabled` is true, the agent runs a check during `agent start`, before it
+subscribes to NATS.
 
-The sudo check runs `sudo -n <command> --version` (or `sudo -n which <command>`
-for commands that do not support `--version`). The `-n` flag makes `sudo` fail
-immediately if a password prompt would be required, confirming that the sudoers
-entry is present and correct.
+The agent lists its sudo rules once with `sudo -n -l`. The `-n` flag makes sudo
+fail at once if it needs a password. If that fails, sudo is not usable, and the
+agent logs the error and exits.
+
+Then the agent finds a rule for each program it runs with sudo, by the program's
+name. It skips a program that is not installed. It does not check the rule's
+arguments, so a narrow rule such as
+`/usr/sbin/sysctl -p /etc/sysctl.d/osapi-*.conf` counts as a rule for `sysctl`.
+A program with no rule is a warning, not an error: the agent starts, and only
+the operations that run that program fail.
+
+The agent also checks each capability above. A missing capability is a warning
+too.
 
 The programs checked are the ones above, plus every program a behavior declares
 with `behavior.Sudo`. A behavior's page under
@@ -180,26 +187,11 @@ with `behavior.Sudo`. A behavior's page under
 and `osapi behavior get --name <name>` lists them, so a new behavior's sudoers
 entry is found there rather than here.
 
-Example output:
+Example log, with no rule for `useradd`:
 
 ```
-OSAPI Agent Preflight Check
-─────────────────────────────
-Sudo access:
-  ✓ systemctl    ✓ sysctl       ✓ timedatectl
-  ✓ hostnamectl  ✓ chronyc      ✓ useradd
-  ✓ usermod      ✓ userdel      ✓ groupadd
-  ✓ groupdel     ✓ gpasswd      ✓ chown
-  ✓ apt-get      ✓ shutdown     ✓ update-ca-certificates
-  ✗ sh (sudoers rule missing)
-
-Capabilities:
-  ✓ CAP_DAC_READ_SEARCH   ✓ CAP_DAC_OVERRIDE
-  ✓ CAP_CHOWN             ✓ CAP_FOWNER
-  ✓ CAP_KILL              ✓ CAP_NET_ADMIN
-
-Result: FAILED (1 error)
-  - sudo: sh not configured in /etc/sudoers.d/osapi-agent
+WRN preflight check failed check=sudo:useradd error="no sudo rule runs useradd; operations that need it fail"
+INF preflight checks done
 ```
 
 ## Command Reference
