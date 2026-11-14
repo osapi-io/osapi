@@ -1,20 +1,28 @@
 import { useCallback, useEffect, useState } from "react";
 import { ContentArea } from "@/components/layout/content-area";
 import { PendingAgentCard } from "@/components/domain/pending-agent-card";
+import { EnrolledAgentCard } from "@/components/domain/enrolled-agent-card";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Text } from "@/components/ui/text";
 import { useCommands } from "@/hooks/use-commands";
 import { ShieldAlert } from "lucide-react";
-import type { PendingAgentInfo } from "@/sdk/gen/schemas";
+import type {
+  AgentInfo,
+  ListAgentsResponse,
+  PendingAgentInfo,
+} from "@/sdk/gen/schemas";
 import {
+  getAgents,
   getAgentsPending,
   acceptAgent,
   rejectAgent,
+  removeAgent,
 } from "@/sdk/gen/agent-management-api-agent-operations/agent-management-api-agent-operations";
 
 export function Enrollment() {
   const [pendingAgents, setPendingAgents] = useState<PendingAgentInfo[]>([]);
+  const [enrolledAgents, setEnrolledAgents] = useState<AgentInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchPending = useCallback(async () => {
@@ -23,6 +31,19 @@ export function Enrollment() {
       if (resp.status === 200) {
         setPendingAgents(
           (resp.data as { agents?: PendingAgentInfo[] })?.agents ?? [],
+        );
+      }
+    } catch {
+      // silent
+    }
+    try {
+      // An agent whose key the controller stores is enrolled.
+      const resp = await getAgents();
+      if (resp.status === 200) {
+        setEnrolledAgents(
+          ((resp.data as ListAgentsResponse).agents ?? []).filter(
+            (a) => a.key_stored,
+          ),
         );
       }
     } catch {
@@ -62,15 +83,25 @@ export function Enrollment() {
           fetchPending();
         },
       })),
+      ...enrolledAgents.map((a) => ({
+        id: `pki:remove:${a.machine_id ?? a.hostname}`,
+        name: `remove ${a.hostname}`,
+        description: `Remove the enrolled agent ${a.hostname}; its key stops verifying`,
+        category: "actions",
+        action: async () => {
+          await removeAgent(a.hostname, { machine_id: a.machine_id });
+          fetchPending();
+        },
+      })),
     ],
-    [pendingAgents, fetchPending],
+    [pendingAgents, enrolledAgents, fetchPending],
   );
 
   return (
     <ContentArea>
       <PageHeader
         title="PKI Enrollment"
-        subtitle="Manage agent PKI enrollment requests"
+        subtitle="Accept, reject and remove agents' PKI enrollment"
       />
 
       {!loading && pendingAgents.length === 0 && (
@@ -91,6 +122,26 @@ export function Enrollment() {
               <PendingAgentCard
                 key={pa.machine_id}
                 agent={pa}
+                onRefresh={fetchPending}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      {enrolledAgents.length > 0 && (
+        <>
+          <Text variant="muted" as="p" className="mb-4 mt-8">
+            {enrolledAgents.length} enrolled agent
+            {enrolledAgents.length > 1 ? "s" : ""}. Removing one stops the
+            controller trusting it at once; to enroll it again, delete
+            controller.pub on the host and restart the agent.
+          </Text>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {enrolledAgents.map((a) => (
+              <EnrolledAgentCard
+                key={a.machine_id ?? a.hostname}
+                agent={a}
                 onRefresh={fetchPending}
               />
             ))}

@@ -74,7 +74,11 @@ full permission matrix, and block permissions table.
 
 PKI enrollment management: lists pending agents with machine ID, fingerprint,
 and requested time. Accept and reject buttons for each agent. Empty state when
-no agents are pending. Command bar commands for accept/reject by hostname.
+no agents are pending. Below them, the enrolled agents, the ones whose key the
+controller stores, with a Remove button that needs a second click to confirm.
+Remove sends the card's machine ID, so it removes that agent even when another
+has the same hostname. Command bar commands for accept, reject and remove by
+hostname.
 
 ### SignIn
 
