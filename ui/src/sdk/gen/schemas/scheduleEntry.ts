@@ -19,14 +19,11 @@ export interface ScheduleEntry {
   name?: string;
   /** Object store name for the deployed content. */
   object?: string;
-  /** Cron schedule expression. Present for /etc/cron.d/ entries.
-   */
+  /** Cron schedule expression. Present for /etc/cron.d/ entries. */
   schedule?: string;
-  /** Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
-   */
+  /** Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries. */
   interval?: ScheduleEntryInterval;
-  /** Where the entry lives: "cron.d", "hourly", "daily", "weekly", or "monthly".
-   */
+  /** Where the entry lives: "cron.d", "hourly", "daily", "weekly", or "monthly". */
   source?: string;
   /** User the scheduled entry runs as. */
   user?: string;

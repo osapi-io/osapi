@@ -7,7 +7,6 @@
 
 /**
  * Content type: "raw" or "template".
-
  */
 export type ScheduleUpdateRequestContentType = typeof ScheduleUpdateRequestContentType[keyof typeof ScheduleUpdateRequestContentType];
 

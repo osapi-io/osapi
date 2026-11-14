@@ -12,8 +12,7 @@ import type { CertificateCAInfoSource } from './certificateCAInfoSource';
 export interface CertificateCAInfo {
   /** Certificate name. */
   name?: string;
-  /** Where the certificate originated: "system" for distribution-provided, "custom" for user-installed.
-   */
+  /** Where the certificate originated: "system" for distribution-provided, "custom" for user-installed. */
   source?: CertificateCAInfoSource;
   /** Object store name for the deployed content. */
   object?: string;

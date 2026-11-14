@@ -13,10 +13,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Returns 200 if the process is alive. No checks performed.
- * @summary Liveness probe
- */
 export type getHealthResponse200 = {
   data: HealthResponse
   status: 200
@@ -37,7 +33,11 @@ export const getGetHealthUrl = () => {
   return `/api/health`
 }
 
-export const getHealth = async ( options?: RequestInit): Promise<getHealthResponse> => {
+/**
+ * Returns 200 if the process is alive. No checks performed.
+ * @summary Liveness probe
+ */
+export const getHealth = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getHealthResponse> => {
 
   return apiFetch<getHealthResponse>(getGetHealthUrl(),
   {
@@ -49,10 +49,6 @@ export const getHealth = async ( options?: RequestInit): Promise<getHealthRespon
 );}
 
 
-/**
- * Returns 200 when the service is ready to accept traffic.
- * @summary Readiness probe
- */
 export type getHealthReadyResponse200 = {
   data: ReadyResponse
   status: 200
@@ -80,7 +76,11 @@ export const getGetHealthReadyUrl = () => {
   return `/api/health/ready`
 }
 
-export const getHealthReady = async ( options?: RequestInit): Promise<getHealthReadyResponse> => {
+/**
+ * Returns 200 when the service is ready to accept traffic.
+ * @summary Readiness probe
+ */
+export const getHealthReady = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getHealthReadyResponse> => {
 
   return apiFetch<getHealthReadyResponse>(getGetHealthReadyUrl(),
   {
@@ -92,10 +92,6 @@ export const getHealthReady = async ( options?: RequestInit): Promise<getHealthR
 );}
 
 
-/**
- * Returns per-component health status with system metrics. Requires authentication.
- * @summary System status and component health
- */
 export type getHealthStatusResponse200 = {
   data: StatusResponse
   status: 200
@@ -133,7 +129,11 @@ export const getGetHealthStatusUrl = () => {
   return `/api/health/status`
 }
 
-export const getHealthStatus = async ( options?: RequestInit): Promise<getHealthStatusResponse> => {
+/**
+ * Returns per-component health status with system metrics. Requires authentication.
+ * @summary System status and component health
+ */
+export const getHealthStatus = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getHealthStatusResponse> => {
 
   return apiFetch<getHealthStatusResponse>(getGetHealthStatusUrl(),
   {

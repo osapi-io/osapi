@@ -6,8 +6,6 @@
  */
 
 export type DeleteNodeContainerDockerImageParams = {
-/**
- * Force removal even if the image is in use.
- */
-force?: boolean;
+  /** Force removal even if the image is in use. */
+  force?: boolean;
 };

@@ -18,10 +18,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Discover all active agents in the fleet.
- * @summary List active agents
- */
 export type getAgentsResponse200 = {
   data: ListAgentsResponse
   status: 200
@@ -59,7 +55,11 @@ export const getGetAgentsUrl = () => {
   return `/api/agent`
 }
 
-export const getAgents = async ( options?: RequestInit): Promise<getAgentsResponse> => {
+/**
+ * Discover all active agents in the fleet.
+ * @summary List active agents
+ */
+export const getAgents = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getAgentsResponse> => {
 
   return apiFetch<getAgentsResponse>(getGetAgentsUrl(),
   {
@@ -71,10 +71,6 @@ export const getAgents = async ( options?: RequestInit): Promise<getAgentsRespon
 );}
 
 
-/**
- * Get detailed information about a specific agent by hostname.
- * @summary Get agent details
- */
 export type getAgentDetailsResponse200 = {
   data: AgentInfo
   status: 200
@@ -122,7 +118,11 @@ export const getGetAgentDetailsUrl = (hostname: string,) => {
   return `/api/agent/${hostname}`
 }
 
-export const getAgentDetails = async (hostname: string, options?: RequestInit): Promise<getAgentDetailsResponse> => {
+/**
+ * Get detailed information about a specific agent by hostname.
+ * @summary Get agent details
+ */
+export const getAgentDetails = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getAgentDetailsResponse> => {
 
   return apiFetch<getAgentDetailsResponse>(getGetAgentDetailsUrl(hostname),
   {
@@ -134,10 +134,6 @@ export const getAgentDetails = async (hostname: string, options?: RequestInit): 
 );}
 
 
-/**
- * List all agents that have submitted enrollment requests but have not yet been accepted or rejected.
- * @summary List agents awaiting enrollment
- */
 export type getAgentsPendingResponse200 = {
   data: ListPendingAgentsResponse
   status: 200
@@ -175,7 +171,11 @@ export const getGetAgentsPendingUrl = () => {
   return `/api/agent/pending`
 }
 
-export const getAgentsPending = async ( options?: RequestInit): Promise<getAgentsPendingResponse> => {
+/**
+ * List all agents that have submitted enrollment requests but have not yet been accepted or rejected.
+ * @summary List agents awaiting enrollment
+ */
+export const getAgentsPending = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getAgentsPendingResponse> => {
 
   return apiFetch<getAgentsPendingResponse>(getGetAgentsPendingUrl(),
   {
@@ -187,11 +187,6 @@ export const getAgentsPending = async ( options?: RequestInit): Promise<getAgent
 );}
 
 
-/**
- * Accept a pending agent enrollment request. The agent can be identified by hostname (path parameter) or by fingerprint (query parameter).
-
- * @summary Accept a pending agent
- */
 export type acceptAgentResponse200 = {
   data: AcceptAgent200
   status: 200
@@ -238,7 +233,7 @@ export const getAcceptAgentUrl = (hostname: string,
   Object.entries(params || {}).forEach(([key, value]) => {
 
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : String(value))
     }
   });
 
@@ -247,8 +242,12 @@ export const getAcceptAgentUrl = (hostname: string,
   return stringifiedParams.length > 0 ? `/api/agent/${hostname}/accept?${stringifiedParams}` : `/api/agent/${hostname}/accept`
 }
 
+/**
+ * Accept a pending agent enrollment request. The agent can be identified by hostname (path parameter) or by fingerprint (query parameter).
+ * @summary Accept a pending agent
+ */
 export const acceptAgent = async (hostname: string,
-    params?: AcceptAgentParams, options?: RequestInit): Promise<acceptAgentResponse> => {
+    params?: AcceptAgentParams, options?: Parameters<typeof apiFetch>[1]): Promise<acceptAgentResponse> => {
 
   return apiFetch<acceptAgentResponse>(getAcceptAgentUrl(hostname,params),
   {
@@ -260,10 +259,6 @@ export const acceptAgent = async (hostname: string,
 );}
 
 
-/**
- * Reject a pending agent enrollment request.
- * @summary Reject a pending agent
- */
 export type rejectAgentResponse200 = {
   data: RejectAgent200
   status: 200
@@ -311,7 +306,11 @@ export const getRejectAgentUrl = (hostname: string,) => {
   return `/api/agent/${hostname}/reject`
 }
 
-export const rejectAgent = async (hostname: string, options?: RequestInit): Promise<rejectAgentResponse> => {
+/**
+ * Reject a pending agent enrollment request.
+ * @summary Reject a pending agent
+ */
+export const rejectAgent = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<rejectAgentResponse> => {
 
   return apiFetch<rejectAgentResponse>(getRejectAgentUrl(hostname),
   {
@@ -323,11 +322,6 @@ export const rejectAgent = async (hostname: string, options?: RequestInit): Prom
 );}
 
 
-/**
- * Stop the agent from accepting new jobs. In-flight jobs continue to completion.
-
- * @summary Drain an agent
- */
 export type drainAgentResponse200 = {
   data: DrainAgent200
   status: 200
@@ -375,7 +369,11 @@ export const getDrainAgentUrl = (hostname: string,) => {
   return `/api/agent/${hostname}/drain`
 }
 
-export const drainAgent = async (hostname: string, options?: RequestInit): Promise<drainAgentResponse> => {
+/**
+ * Stop the agent from accepting new jobs. In-flight jobs continue to completion.
+ * @summary Drain an agent
+ */
+export const drainAgent = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<drainAgentResponse> => {
 
   return apiFetch<drainAgentResponse>(getDrainAgentUrl(hostname),
   {
@@ -387,10 +385,6 @@ export const drainAgent = async (hostname: string, options?: RequestInit): Promi
 );}
 
 
-/**
- * Resume accepting jobs on a drained agent.
- * @summary Undrain an agent
- */
 export type undrainAgentResponse200 = {
   data: UndrainAgent200
   status: 200
@@ -438,7 +432,11 @@ export const getUndrainAgentUrl = (hostname: string,) => {
   return `/api/agent/${hostname}/undrain`
 }
 
-export const undrainAgent = async (hostname: string, options?: RequestInit): Promise<undrainAgentResponse> => {
+/**
+ * Resume accepting jobs on a drained agent.
+ * @summary Undrain an agent
+ */
+export const undrainAgent = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<undrainAgentResponse> => {
 
   return apiFetch<undrainAgentResponse>(getUndrainAgentUrl(hostname),
   {

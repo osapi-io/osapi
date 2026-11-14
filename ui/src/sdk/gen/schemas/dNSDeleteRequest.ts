@@ -6,7 +6,6 @@
  */
 
 export interface DNSDeleteRequest {
-  /** The name of the network interface to delete DNS configuration from.
-   */
+  /** The name of the network interface to delete DNS configuration from. */
   interface_name: string;
 }

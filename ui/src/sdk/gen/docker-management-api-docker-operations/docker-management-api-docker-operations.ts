@@ -18,11 +18,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Create a new container on the target node. Returns a job ID for tracking the asynchronous operation.
-
- * @summary Create a container
- */
 export type postNodeContainerDockerResponse202 = {
   data: DockerResultCollectionResponse
   status: 202
@@ -65,25 +60,37 @@ export const getPostNodeContainerDockerUrl = (hostname: string,) => {
   return `/api/node/${hostname}/container/docker`
 }
 
+/**
+ * Create a new container on the target node. Returns a job ID for tracking the asynchronous operation.
+ * @summary Create a container
+ */
 export const postNodeContainerDocker = async (hostname: string,
-    dockerCreateRequest: DockerCreateRequest, options?: RequestInit): Promise<postNodeContainerDockerResponse> => {
+    dockerCreateRequest: DockerCreateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeContainerDockerResponse> => {
 
-  return apiFetch<postNodeContainerDockerResponse>(getPostNodeContainerDockerUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeContainerDockerResponse>(getPostNodeContainerDockerUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      dockerCreateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(dockerCreateRequest)
   }
 );}
 
 
-/**
- * List containers on the target node, optionally filtered by state.
-
- * @summary List containers
- */
 export type getNodeContainerDockerResponse200 = {
   data: DockerListCollectionResponse
   status: 200
@@ -125,7 +132,7 @@ export const getGetNodeContainerDockerUrl = (hostname: string,
   Object.entries(params || {}).forEach(([key, value]) => {
 
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : String(value))
     }
   });
 
@@ -134,8 +141,12 @@ export const getGetNodeContainerDockerUrl = (hostname: string,
   return stringifiedParams.length > 0 ? `/api/node/${hostname}/container/docker?${stringifiedParams}` : `/api/node/${hostname}/container/docker`
 }
 
+/**
+ * List containers on the target node, optionally filtered by state.
+ * @summary List containers
+ */
 export const getNodeContainerDocker = async (hostname: string,
-    params?: GetNodeContainerDockerParams, options?: RequestInit): Promise<getNodeContainerDockerResponse> => {
+    params?: GetNodeContainerDockerParams, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeContainerDockerResponse> => {
 
   return apiFetch<getNodeContainerDockerResponse>(getGetNodeContainerDockerUrl(hostname,params),
   {
@@ -147,11 +158,6 @@ export const getNodeContainerDocker = async (hostname: string,
 );}
 
 
-/**
- * Get detailed information about a specific container.
-
- * @summary Inspect a container
- */
 export type getNodeContainerDockerByIDResponse200 = {
   data: DockerDetailCollectionResponse
   status: 200
@@ -200,8 +206,12 @@ export const getGetNodeContainerDockerByIDUrl = (hostname: string,
   return `/api/node/${hostname}/container/docker/${id}`
 }
 
+/**
+ * Get detailed information about a specific container.
+ * @summary Inspect a container
+ */
 export const getNodeContainerDockerByID = async (hostname: string,
-    id: string, options?: RequestInit): Promise<getNodeContainerDockerByIDResponse> => {
+    id: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeContainerDockerByIDResponse> => {
 
   return apiFetch<getNodeContainerDockerByIDResponse>(getGetNodeContainerDockerByIDUrl(hostname,id),
   {
@@ -213,11 +223,6 @@ export const getNodeContainerDockerByID = async (hostname: string,
 );}
 
 
-/**
- * Remove a container from the target node. Use the force query parameter to remove a running container.
-
- * @summary Remove a container
- */
 export type deleteNodeContainerDockerByIDResponse202 = {
   data: DockerActionCollectionResponse
   status: 202
@@ -265,7 +270,7 @@ export const getDeleteNodeContainerDockerByIDUrl = (hostname: string,
   Object.entries(params || {}).forEach(([key, value]) => {
 
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : String(value))
     }
   });
 
@@ -274,9 +279,13 @@ export const getDeleteNodeContainerDockerByIDUrl = (hostname: string,
   return stringifiedParams.length > 0 ? `/api/node/${hostname}/container/docker/${id}?${stringifiedParams}` : `/api/node/${hostname}/container/docker/${id}`
 }
 
+/**
+ * Remove a container from the target node. Use the force query parameter to remove a running container.
+ * @summary Remove a container
+ */
 export const deleteNodeContainerDockerByID = async (hostname: string,
     id: string,
-    params?: DeleteNodeContainerDockerByIDParams, options?: RequestInit): Promise<deleteNodeContainerDockerByIDResponse> => {
+    params?: DeleteNodeContainerDockerByIDParams, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeContainerDockerByIDResponse> => {
 
   return apiFetch<deleteNodeContainerDockerByIDResponse>(getDeleteNodeContainerDockerByIDUrl(hostname,id,params),
   {
@@ -288,11 +297,6 @@ export const deleteNodeContainerDockerByID = async (hostname: string,
 );}
 
 
-/**
- * Start a stopped container on the target node.
-
- * @summary Start a container
- */
 export type postNodeContainerDockerStartResponse202 = {
   data: DockerActionCollectionResponse
   status: 202
@@ -341,8 +345,12 @@ export const getPostNodeContainerDockerStartUrl = (hostname: string,
   return `/api/node/${hostname}/container/docker/${id}/start`
 }
 
+/**
+ * Start a stopped container on the target node.
+ * @summary Start a container
+ */
 export const postNodeContainerDockerStart = async (hostname: string,
-    id: string, options?: RequestInit): Promise<postNodeContainerDockerStartResponse> => {
+    id: string, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeContainerDockerStartResponse> => {
 
   return apiFetch<postNodeContainerDockerStartResponse>(getPostNodeContainerDockerStartUrl(hostname,id),
   {
@@ -354,11 +362,6 @@ export const postNodeContainerDockerStart = async (hostname: string,
 );}
 
 
-/**
- * Stop a running container on the target node. Optionally specify a timeout before the container is killed.
-
- * @summary Stop a container
- */
 export type postNodeContainerDockerStopResponse202 = {
   data: DockerActionCollectionResponse
   status: 202
@@ -407,17 +410,34 @@ export const getPostNodeContainerDockerStopUrl = (hostname: string,
   return `/api/node/${hostname}/container/docker/${id}/stop`
 }
 
+/**
+ * Stop a running container on the target node. Optionally specify a timeout before the container is killed.
+ * @summary Stop a container
+ */
 export const postNodeContainerDockerStop = async (hostname: string,
     id: string,
-    dockerStopRequest?: DockerStopRequest, options?: RequestInit): Promise<postNodeContainerDockerStopResponse> => {
+    dockerStopRequest?: DockerStopRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeContainerDockerStopResponse> => {
 
-  return apiFetch<postNodeContainerDockerStopResponse>(getPostNodeContainerDockerStopUrl(hostname,id),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeContainerDockerStopResponse>(getPostNodeContainerDockerStopUrl(hostname,id),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      dockerStopRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(dockerStopRequest)
   }
 );}
 

@@ -16,9 +16,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * @summary Deploy a file from Object Store to the host
- */
 export type postNodeFileDeployResponse202 = {
   data: FileDeployCollectionResponse
   status: 202
@@ -61,23 +58,36 @@ export const getPostNodeFileDeployUrl = (hostname: string,) => {
   return `/api/node/${hostname}/file/deploy`
 }
 
+/**
+ * @summary Deploy a file from Object Store to the host
+ */
 export const postNodeFileDeploy = async (hostname: string,
-    fileDeployRequest: FileDeployRequest, options?: RequestInit): Promise<postNodeFileDeployResponse> => {
+    fileDeployRequest: FileDeployRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeFileDeployResponse> => {
 
-  return apiFetch<postNodeFileDeployResponse>(getPostNodeFileDeployUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeFileDeployResponse>(getPostNodeFileDeployUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      fileDeployRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(fileDeployRequest)
   }
 );}
 
 
-/**
- * @summary Remove a deployed file from the host filesystem
- */
 export type postNodeFileUndeployResponse202 = {
   data: FileUndeployCollectionResponse
   status: 202
@@ -120,23 +130,36 @@ export const getPostNodeFileUndeployUrl = (hostname: string,) => {
   return `/api/node/${hostname}/file/undeploy`
 }
 
+/**
+ * @summary Remove a deployed file from the host filesystem
+ */
 export const postNodeFileUndeploy = async (hostname: string,
-    fileUndeployRequest: FileUndeployRequest, options?: RequestInit): Promise<postNodeFileUndeployResponse> => {
+    fileUndeployRequest: FileUndeployRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeFileUndeployResponse> => {
 
-  return apiFetch<postNodeFileUndeployResponse>(getPostNodeFileUndeployUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeFileUndeployResponse>(getPostNodeFileUndeployUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      fileUndeployRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(fileUndeployRequest)
   }
 );}
 
 
-/**
- * @summary Check deployment status of a file on the host
- */
 export type postNodeFileStatusResponse200 = {
   data: FileStatusCollectionResponse
   status: 200
@@ -179,16 +202,32 @@ export const getPostNodeFileStatusUrl = (hostname: string,) => {
   return `/api/node/${hostname}/file/status`
 }
 
+/**
+ * @summary Check deployment status of a file on the host
+ */
 export const postNodeFileStatus = async (hostname: string,
-    fileStatusRequest: FileStatusRequest, options?: RequestInit): Promise<postNodeFileStatusResponse> => {
+    fileStatusRequest: FileStatusRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeFileStatusResponse> => {
 
-  return apiFetch<postNodeFileStatusResponse>(getPostNodeFileStatusUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeFileStatusResponse>(getPostNodeFileStatusUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      fileStatusRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(fileStatusRequest)
   }
 );}
 

@@ -11,11 +11,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Get the current status of the node including hostname, uptime, load averages, memory, and disk usage.
-
- * @summary Retrieve node status
- */
 export type getNodeStatusResponse200 = {
   data: NodeStatusCollectionResponse
   status: 200
@@ -58,7 +53,11 @@ export const getGetNodeStatusUrl = (hostname: string,) => {
   return `/api/node/${hostname}`
 }
 
-export const getNodeStatus = async (hostname: string, options?: RequestInit): Promise<getNodeStatusResponse> => {
+/**
+ * Get the current status of the node including hostname, uptime, load averages, memory, and disk usage.
+ * @summary Retrieve node status
+ */
+export const getNodeStatus = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeStatusResponse> => {
 
   return apiFetch<getNodeStatusResponse>(getGetNodeStatusUrl(hostname),
   {

@@ -6,10 +6,8 @@
  */
 
 export interface SysctlCreateRequest {
-  /** Sysctl parameter key (e.g., net.ipv4.ip_forward).
-   */
+  /** Sysctl parameter key (e.g., net.ipv4.ip_forward). */
   key: string;
-  /** Value to set for the sysctl parameter.
-   */
+  /** Value to set for the sysctl parameter. */
   value: string;
 }

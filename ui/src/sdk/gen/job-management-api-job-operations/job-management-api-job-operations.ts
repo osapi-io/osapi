@@ -15,10 +15,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Retrieve jobs, optionally filtered by status.
- * @summary List jobs
- */
 export type getJobsResponse200 = {
   data: ListJobsResponse
   status: 200
@@ -59,7 +55,7 @@ export const getGetJobsUrl = (params?: GetJobsParams,) => {
   Object.entries(params || {}).forEach(([key, value]) => {
 
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : String(value))
     }
   });
 
@@ -68,7 +64,11 @@ export const getGetJobsUrl = (params?: GetJobsParams,) => {
   return stringifiedParams.length > 0 ? `/api/job?${stringifiedParams}` : `/api/job`
 }
 
-export const getJobs = async (params?: GetJobsParams, options?: RequestInit): Promise<getJobsResponse> => {
+/**
+ * Retrieve jobs, optionally filtered by status.
+ * @summary List jobs
+ */
+export const getJobs = async (params?: GetJobsParams, options?: Parameters<typeof apiFetch>[1]): Promise<getJobsResponse> => {
 
   return apiFetch<getJobsResponse>(getGetJobsUrl(params),
   {
@@ -80,10 +80,6 @@ export const getJobs = async (params?: GetJobsParams, options?: RequestInit): Pr
 );}
 
 
-/**
- * Retrieve details of a specific job by its ID.
- * @summary Get job detail
- */
 export type getJobByIDResponse200 = {
   data: JobDetailResponse
   status: 200
@@ -131,7 +127,11 @@ export const getGetJobByIDUrl = (id: string,) => {
   return `/api/job/${id}`
 }
 
-export const getJobByID = async (id: string, options?: RequestInit): Promise<getJobByIDResponse> => {
+/**
+ * Retrieve details of a specific job by its ID.
+ * @summary Get job detail
+ */
+export const getJobByID = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<getJobByIDResponse> => {
 
   return apiFetch<getJobByIDResponse>(getGetJobByIDUrl(id),
   {
@@ -143,10 +143,6 @@ export const getJobByID = async (id: string, options?: RequestInit): Promise<get
 );}
 
 
-/**
- * Delete a specific job by its ID.
- * @summary Delete a job
- */
 export type deleteJobByIDResponse204 = {
   data: void
   status: 204
@@ -194,7 +190,11 @@ export const getDeleteJobByIDUrl = (id: string,) => {
   return `/api/job/${id}`
 }
 
-export const deleteJobByID = async (id: string, options?: RequestInit): Promise<deleteJobByIDResponse> => {
+/**
+ * Delete a specific job by its ID.
+ * @summary Delete a job
+ */
+export const deleteJobByID = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteJobByIDResponse> => {
 
   return apiFetch<deleteJobByIDResponse>(getDeleteJobByIDUrl(id),
   {
@@ -206,10 +206,6 @@ export const deleteJobByID = async (id: string, options?: RequestInit): Promise<
 );}
 
 
-/**
- * Create a new job using the same operation data as an existing job. The original job is preserved. Returns the new job ID.
- * @summary Retry a job
- */
 export type retryJobByIDResponse201 = {
   data: CreateJobResponse
   status: 201
@@ -257,16 +253,33 @@ export const getRetryJobByIDUrl = (id: string,) => {
   return `/api/job/${id}/retry`
 }
 
+/**
+ * Create a new job using the same operation data as an existing job. The original job is preserved. Returns the new job ID.
+ * @summary Retry a job
+ */
 export const retryJobByID = async (id: string,
-    retryJobRequest?: RetryJobRequest, options?: RequestInit): Promise<retryJobByIDResponse> => {
+    retryJobRequest?: RetryJobRequest, options?: Parameters<typeof apiFetch>[1]): Promise<retryJobByIDResponse> => {
 
-  return apiFetch<retryJobByIDResponse>(getRetryJobByIDUrl(id),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<retryJobByIDResponse>(getRetryJobByIDUrl(id),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      retryJobRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(retryJobRequest)
   }
 );}
 

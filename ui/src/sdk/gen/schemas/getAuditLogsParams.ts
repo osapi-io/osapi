@@ -6,15 +6,15 @@
  */
 
 export type GetAuditLogsParams = {
-/**
- * Maximum number of entries to return.
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
-/**
- * Number of entries to skip.
- * @minimum 0
- */
-offset?: number;
+  /**
+   * Maximum number of entries to return.
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
+  /**
+   * Number of entries to skip.
+   * @minimum 0
+   */
+  offset?: number;
 };

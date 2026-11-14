@@ -6,7 +6,6 @@
  */
 
 export interface NtpCreateRequest {
-  /** List of NTP server addresses to configure.
-   */
+  /** List of NTP server addresses to configure. */
   servers: string[];
 }

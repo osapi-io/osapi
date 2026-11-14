@@ -9,25 +9,18 @@ import type { ScheduleCreateRequestInterval } from './scheduleCreateRequestInter
 import type { ScheduleCreateRequestVars } from './scheduleCreateRequestVars';
 
 export interface ScheduleCreateRequest {
-  /** Name for the scheduled entry. Used as the file name under /etc/cron.d/ or /etc/cron.{interval}/.
-   */
+  /** Name for the scheduled entry. Used as the file name under /etc/cron.d/ or /etc/cron.{interval}/. */
   name: string;
-  /** Name of the uploaded file in the object store to deploy as the scheduled entry content.
-   */
+  /** Name of the uploaded file in the object store to deploy as the scheduled entry content. */
   object: string;
-  /** Cron schedule expression (e.g., "*\/5 * * * *"). Mutually exclusive with interval — provide exactly one.
-   */
+  /** Cron schedule expression (e.g., "*\/5 * * * *"). Mutually exclusive with interval — provide exactly one. */
   schedule?: string;
-  /** Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
-   */
+  /** Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one. */
   interval?: ScheduleCreateRequestInterval;
-  /** User to run the command as. Only applies when using schedule (cron.d entries include a user field).
-   */
+  /** User to run the command as. Only applies when using schedule (cron.d entries include a user field). */
   user?: string;
-  /** Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars.
-   */
+  /** Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars. */
   content_type?: ScheduleCreateRequestContentType;
-  /** Template variables. Only used when content_type is "template".
-   */
+  /** Template variables. Only used when content_type is "template". */
   vars?: ScheduleCreateRequestVars;
 }

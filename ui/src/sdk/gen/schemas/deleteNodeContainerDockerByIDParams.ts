@@ -6,9 +6,6 @@
  */
 
 export type DeleteNodeContainerDockerByIDParams = {
-/**
- * Force removal of a running container.
-
- */
-force?: boolean;
+  /** Force removal of a running container. */
+  force?: boolean;
 };

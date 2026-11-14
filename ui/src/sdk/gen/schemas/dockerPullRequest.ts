@@ -6,7 +6,6 @@
  */
 
 export interface DockerPullRequest {
-  /** Image reference to pull (e.g., "nginx:latest", "docker.io/library/alpine:3.18").
-   */
+  /** Image reference to pull (e.g., "nginx:latest", "docker.io/library/alpine:3.18"). */
   image: string;
 }

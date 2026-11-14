@@ -14,11 +14,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * List all CA certificates on the target node.
-
- * @summary List all CA certificates
- */
 export type getNodeCertificateCaResponse200 = {
   data: CertificateCACollectionResponse
   status: 200
@@ -61,7 +56,11 @@ export const getGetNodeCertificateCaUrl = (hostname: string,) => {
   return `/api/node/${hostname}/certificate/ca`
 }
 
-export const getNodeCertificateCa = async (hostname: string, options?: RequestInit): Promise<getNodeCertificateCaResponse> => {
+/**
+ * List all CA certificates on the target node.
+ * @summary List all CA certificates
+ */
+export const getNodeCertificateCa = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeCertificateCaResponse> => {
 
   return apiFetch<getNodeCertificateCaResponse>(getGetNodeCertificateCaUrl(hostname),
   {
@@ -73,11 +72,6 @@ export const getNodeCertificateCa = async (hostname: string, options?: RequestIn
 );}
 
 
-/**
- * Install a new CA certificate on the target node.
-
- * @summary Create a CA certificate
- */
 export type postNodeCertificateCaResponse200 = {
   data: CertificateCAMutationResponse
   status: 200
@@ -120,25 +114,37 @@ export const getPostNodeCertificateCaUrl = (hostname: string,) => {
   return `/api/node/${hostname}/certificate/ca`
 }
 
+/**
+ * Install a new CA certificate on the target node.
+ * @summary Create a CA certificate
+ */
 export const postNodeCertificateCa = async (hostname: string,
-    certificateCACreateRequest: CertificateCACreateRequest, options?: RequestInit): Promise<postNodeCertificateCaResponse> => {
+    certificateCACreateRequest: CertificateCACreateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeCertificateCaResponse> => {
 
-  return apiFetch<postNodeCertificateCaResponse>(getPostNodeCertificateCaUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeCertificateCaResponse>(getPostNodeCertificateCaUrl(hostname),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      certificateCACreateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(certificateCACreateRequest)
   }
 );}
 
 
-/**
- * Update an existing CA certificate on the target node.
-
- * @summary Update a CA certificate
- */
 export type putNodeCertificateCaResponse200 = {
   data: CertificateCAMutationResponse
   status: 200
@@ -187,26 +193,38 @@ export const getPutNodeCertificateCaUrl = (hostname: string,
   return `/api/node/${hostname}/certificate/ca/${name}`
 }
 
+/**
+ * Update an existing CA certificate on the target node.
+ * @summary Update a CA certificate
+ */
 export const putNodeCertificateCa = async (hostname: string,
     name: string,
-    certificateCAUpdateRequest: CertificateCAUpdateRequest, options?: RequestInit): Promise<putNodeCertificateCaResponse> => {
+    certificateCAUpdateRequest: CertificateCAUpdateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeCertificateCaResponse> => {
 
-  return apiFetch<putNodeCertificateCaResponse>(getPutNodeCertificateCaUrl(hostname,name),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<putNodeCertificateCaResponse>(getPutNodeCertificateCaUrl(hostname,name),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      certificateCAUpdateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(certificateCAUpdateRequest)
   }
 );}
 
 
-/**
- * Delete a CA certificate from the target node.
-
- * @summary Delete a CA certificate
- */
 export type deleteNodeCertificateCaResponse200 = {
   data: CertificateCAMutationResponse
   status: 200
@@ -250,8 +268,12 @@ export const getDeleteNodeCertificateCaUrl = (hostname: string,
   return `/api/node/${hostname}/certificate/ca/${name}`
 }
 
+/**
+ * Delete a CA certificate from the target node.
+ * @summary Delete a CA certificate
+ */
 export const deleteNodeCertificateCa = async (hostname: string,
-    name: string, options?: RequestInit): Promise<deleteNodeCertificateCaResponse> => {
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeCertificateCaResponse> => {
 
   return apiFetch<deleteNodeCertificateCaResponse>(getDeleteNodeCertificateCaUrl(hostname,name),
   {

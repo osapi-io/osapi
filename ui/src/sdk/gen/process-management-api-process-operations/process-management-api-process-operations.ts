@@ -14,11 +14,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * List all running processes on the target node.
-
- * @summary List processes
- */
 export type getNodeProcessResponse200 = {
   data: ProcessCollectionResponse
   status: 200
@@ -61,7 +56,11 @@ export const getGetNodeProcessUrl = (hostname: string,) => {
   return `/api/node/${hostname}/process`
 }
 
-export const getNodeProcess = async (hostname: string, options?: RequestInit): Promise<getNodeProcessResponse> => {
+/**
+ * List all running processes on the target node.
+ * @summary List processes
+ */
+export const getNodeProcess = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeProcessResponse> => {
 
   return apiFetch<getNodeProcessResponse>(getGetNodeProcessUrl(hostname),
   {
@@ -73,11 +72,6 @@ export const getNodeProcess = async (hostname: string, options?: RequestInit): P
 );}
 
 
-/**
- * Get detailed information about a specific process by PID.
-
- * @summary Get process by PID
- */
 export type getNodeProcessByPidResponse200 = {
   data: ProcessGetResponse
   status: 200
@@ -126,8 +120,12 @@ export const getGetNodeProcessByPidUrl = (hostname: string,
   return `/api/node/${hostname}/process/${pid}`
 }
 
+/**
+ * Get detailed information about a specific process by PID.
+ * @summary Get process by PID
+ */
 export const getNodeProcessByPid = async (hostname: string,
-    pid: number, options?: RequestInit): Promise<getNodeProcessByPidResponse> => {
+    pid: number, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeProcessByPidResponse> => {
 
   return apiFetch<getNodeProcessByPidResponse>(getGetNodeProcessByPidUrl(hostname,pid),
   {
@@ -139,11 +137,6 @@ export const getNodeProcessByPid = async (hostname: string,
 );}
 
 
-/**
- * Send a signal to a process by PID on the target node.
-
- * @summary Send signal to process
- */
 export type postNodeProcessSignalResponse200 = {
   data: ProcessSignalResponse
   status: 200
@@ -192,17 +185,34 @@ export const getPostNodeProcessSignalUrl = (hostname: string,
   return `/api/node/${hostname}/process/${pid}/signal`
 }
 
+/**
+ * Send a signal to a process by PID on the target node.
+ * @summary Send signal to process
+ */
 export const postNodeProcessSignal = async (hostname: string,
     pid: number,
-    processSignalRequest: ProcessSignalRequest, options?: RequestInit): Promise<postNodeProcessSignalResponse> => {
+    processSignalRequest: ProcessSignalRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeProcessSignalResponse> => {
 
-  return apiFetch<postNodeProcessSignalResponse>(getPostNodeProcessSignalUrl(hostname,pid),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<postNodeProcessSignalResponse>(getPostNodeProcessSignalUrl(hostname,pid),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      processSignalRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(processSignalRequest)
   }
 );}
 

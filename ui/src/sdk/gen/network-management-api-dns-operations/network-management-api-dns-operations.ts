@@ -15,11 +15,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Retrieve the list of currently configured DNS servers for a specific network interface.
-
- * @summary List DNS servers
- */
 export type getNodeNetworkDNSByInterfaceResponse200 = {
   data: DNSConfigCollectionResponse
   status: 200
@@ -63,8 +58,12 @@ export const getGetNodeNetworkDNSByInterfaceUrl = (hostname: string,
   return `/api/node/${hostname}/network/dns/${interfaceName}`
 }
 
+/**
+ * Retrieve the list of currently configured DNS servers for a specific network interface.
+ * @summary List DNS servers
+ */
 export const getNodeNetworkDNSByInterface = async (hostname: string,
-    interfaceName: string, options?: RequestInit): Promise<getNodeNetworkDNSByInterfaceResponse> => {
+    interfaceName: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeNetworkDNSByInterfaceResponse> => {
 
   return apiFetch<getNodeNetworkDNSByInterfaceResponse>(getGetNodeNetworkDNSByInterfaceUrl(hostname,interfaceName),
   {
@@ -76,10 +75,6 @@ export const getNodeNetworkDNSByInterface = async (hostname: string,
 );}
 
 
-/**
- * Update the system's DNS server configuration.
- * @summary Update DNS servers
- */
 export type putNodeNetworkDNSResponse202 = {
   data: DNSUpdateCollectionResponse
   status: 202
@@ -122,25 +117,37 @@ export const getPutNodeNetworkDNSUrl = (hostname: string,) => {
   return `/api/node/${hostname}/network/dns`
 }
 
+/**
+ * Update the system's DNS server configuration.
+ * @summary Update DNS servers
+ */
 export const putNodeNetworkDNS = async (hostname: string,
-    dNSConfigUpdateRequest: DNSConfigUpdateRequest, options?: RequestInit): Promise<putNodeNetworkDNSResponse> => {
+    dNSConfigUpdateRequest: DNSConfigUpdateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeNetworkDNSResponse> => {
 
-  return apiFetch<putNodeNetworkDNSResponse>(getPutNodeNetworkDNSUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<putNodeNetworkDNSResponse>(getPutNodeNetworkDNSUrl(hostname),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      dNSConfigUpdateRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(dNSConfigUpdateRequest)
   }
 );}
 
 
-/**
- * Delete the managed DNS configuration from the target node, restoring the system default.
-
- * @summary Delete DNS configuration
- */
 export type deleteNodeNetworkDNSResponse200 = {
   data: DNSDeleteCollectionResponse
   status: 200
@@ -183,16 +190,33 @@ export const getDeleteNodeNetworkDNSUrl = (hostname: string,) => {
   return `/api/node/${hostname}/network/dns`
 }
 
+/**
+ * Delete the managed DNS configuration from the target node, restoring the system default.
+ * @summary Delete DNS configuration
+ */
 export const deleteNodeNetworkDNS = async (hostname: string,
-    dNSDeleteRequest: DNSDeleteRequest, options?: RequestInit): Promise<deleteNodeNetworkDNSResponse> => {
+    dNSDeleteRequest: DNSDeleteRequest, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeNetworkDNSResponse> => {
 
-  return apiFetch<deleteNodeNetworkDNSResponse>(getDeleteNodeNetworkDNSUrl(hostname),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<deleteNodeNetworkDNSResponse>(getDeleteNodeNetworkDNSUrl(hostname),
   {
     ...options,
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      dNSDeleteRequest,)
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(dNSDeleteRequest)
   }
 );}
 

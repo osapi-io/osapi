@@ -6,7 +6,6 @@
  */
 
 export type PostNodeNetworkPingBody = {
-  /** The IP address of the server to ping. Supports both IPv4 and IPv6. Also accepts @fact. references that are resolved agent-side.
-   */
+  /** The IP address of the server to ping. Supports both IPv4 and IPv6. Also accepts @fact. references that are resolved agent-side. */
   address: string;
 };

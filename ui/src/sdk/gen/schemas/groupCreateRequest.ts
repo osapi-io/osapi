@@ -6,8 +6,7 @@
  */
 
 export interface GroupCreateRequest {
-  /** Group name. Must start with a lowercase letter or underscore, followed by lowercase letters, digits, underscores, or hyphens, with an optional trailing `$`; 32 characters or fewer.
-   */
+  /** Group name. Must start with a lowercase letter or underscore, followed by lowercase letters, digits, underscores, or hyphens, with an optional trailing `$`; 32 characters or fewer. */
   name: string;
   /** Numeric group ID. If omitted, the system assigns one. */
   gid?: number;

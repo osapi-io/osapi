@@ -6,7 +6,6 @@
  */
 
 export interface PackageInstallRequest {
-  /** Name of the package to install.
-   */
+  /** Name of the package to install. */
   name: string;
 }

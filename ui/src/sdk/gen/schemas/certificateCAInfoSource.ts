@@ -7,7 +7,6 @@
 
 /**
  * Where the certificate originated: "system" for distribution-provided, "custom" for user-installed.
-
  */
 export type CertificateCAInfoSource = typeof CertificateCAInfoSource[keyof typeof CertificateCAInfoSource];
 

@@ -8,7 +8,6 @@
 export interface DockerStopRequest {
   /**
      * Seconds to wait before killing the container. Defaults to 10.
-
      * @minimum 0
      * @maximum 300
      */

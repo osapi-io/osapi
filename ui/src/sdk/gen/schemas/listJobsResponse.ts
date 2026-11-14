@@ -10,8 +10,7 @@ import type { ListJobsResponseStatusCounts } from './listJobsResponseStatusCount
 export interface ListJobsResponse {
   /** Total number of jobs matching the filter. */
   total_items?: number;
-  /** Count of all jobs by status (submitted, processing, completed, failed, partial_failure). Derived from key names during the listing pass — no extra reads.
-   */
+  /** Count of all jobs by status (submitted, processing, completed, failed, partial_failure). Derived from key names during the listing pass — no extra reads. */
   status_counts?: ListJobsResponseStatusCounts;
   items?: JobDetailResponse[];
 }

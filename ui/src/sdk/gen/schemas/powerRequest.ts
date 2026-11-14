@@ -8,11 +8,9 @@
 export interface PowerRequest {
   /**
      * Delay in seconds before the operation is executed.
-
      * @minimum 0
      */
   delay?: number;
-  /** Optional message to broadcast before the operation.
-   */
+  /** Optional message to broadcast before the operation. */
   message?: string;
 }

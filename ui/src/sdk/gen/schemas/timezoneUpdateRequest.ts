@@ -6,7 +6,6 @@
  */
 
 export interface TimezoneUpdateRequest {
-  /** IANA timezone name (e.g., "America/New_York", "UTC").
-   */
+  /** IANA timezone name (e.g., "America/New_York", "UTC"). */
   timezone: string;
 }

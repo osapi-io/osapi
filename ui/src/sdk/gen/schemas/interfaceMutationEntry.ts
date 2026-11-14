@@ -8,7 +8,6 @@ import type { InterfaceMutationEntryStatus } from './interfaceMutationEntryStatu
 
 /**
  * Result of an interface mutation operation for one host.
-
  */
 export interface InterfaceMutationEntry {
   /** Hostname of the agent that processed this operation. */

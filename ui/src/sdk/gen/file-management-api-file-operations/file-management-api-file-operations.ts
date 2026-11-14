@@ -17,10 +17,6 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-/**
- * Upload a file to the Object Store.
- * @summary Upload a file
- */
 export type postFileResponse201 = {
   data: FileUploadResponse
   status: 201
@@ -66,7 +62,7 @@ export const getPostFileUrl = (params?: PostFileParams,) => {
   Object.entries(params || {}).forEach(([key, value]) => {
 
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : String(value))
     }
   });
 
@@ -75,8 +71,12 @@ export const getPostFileUrl = (params?: PostFileParams,) => {
   return stringifiedParams.length > 0 ? `/api/file?${stringifiedParams}` : `/api/file`
 }
 
+/**
+ * Upload a file to the Object Store.
+ * @summary Upload a file
+ */
 export const postFile = async (postFileBody: PostFileBody,
-    params?: PostFileParams, options?: RequestInit): Promise<postFileResponse> => {
+    params?: PostFileParams, options?: Parameters<typeof apiFetch>[1]): Promise<postFileResponse> => {
     const formData = new FormData();
 formData.append(`name`, postFileBody.name);
 if(postFileBody.content_type !== undefined) {
@@ -89,16 +89,11 @@ formData.append(`file`, postFileBody.file);
     ...options,
     method: 'POST'
     ,
-    body:
-      formData,
+    body: formData
   }
 );}
 
 
-/**
- * List all files stored in the Object Store.
- * @summary List stored files
- */
 export type getFilesResponse200 = {
   data: FileListResponse
   status: 200
@@ -136,7 +131,11 @@ export const getGetFilesUrl = () => {
   return `/api/file`
 }
 
-export const getFiles = async ( options?: RequestInit): Promise<getFilesResponse> => {
+/**
+ * List all files stored in the Object Store.
+ * @summary List stored files
+ */
+export const getFiles = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getFilesResponse> => {
 
   return apiFetch<getFilesResponse>(getGetFilesUrl(),
   {
@@ -148,11 +147,6 @@ export const getFiles = async ( options?: RequestInit): Promise<getFilesResponse
 );}
 
 
-/**
- * Returns deployments where the source object in the Object Store has been updated since the file was last deployed. Controller-only check that compares state KV SHA-256 hashes against current object content.
-
- * @summary List stale file deployments
- */
 export type getFileStaleResponse200 = {
   data: StaleDeploymentsResponse
   status: 200
@@ -190,7 +184,11 @@ export const getGetFileStaleUrl = () => {
   return `/api/file/stale`
 }
 
-export const getFileStale = async ( options?: RequestInit): Promise<getFileStaleResponse> => {
+/**
+ * Returns deployments where the source object in the Object Store has been updated since the file was last deployed. Controller-only check that compares state KV SHA-256 hashes against current object content.
+ * @summary List stale file deployments
+ */
+export const getFileStale = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getFileStaleResponse> => {
 
   return apiFetch<getFileStaleResponse>(getGetFileStaleUrl(),
   {
@@ -202,10 +200,6 @@ export const getFileStale = async ( options?: RequestInit): Promise<getFileStale
 );}
 
 
-/**
- * Get metadata for a specific file in the Object Store.
- * @summary Get file metadata
- */
 export type getFileByNameResponse200 = {
   data: FileInfoResponse
   status: 200
@@ -253,7 +247,11 @@ export const getGetFileByNameUrl = (name: string,) => {
   return `/api/file/${name}`
 }
 
-export const getFileByName = async (name: string, options?: RequestInit): Promise<getFileByNameResponse> => {
+/**
+ * Get metadata for a specific file in the Object Store.
+ * @summary Get file metadata
+ */
+export const getFileByName = async (name: string, options?: Parameters<typeof apiFetch>[1]): Promise<getFileByNameResponse> => {
 
   return apiFetch<getFileByNameResponse>(getGetFileByNameUrl(name),
   {
@@ -265,10 +263,6 @@ export const getFileByName = async (name: string, options?: RequestInit): Promis
 );}
 
 
-/**
- * Delete a file from the Object Store.
- * @summary Delete a file
- */
 export type deleteFileByNameResponse200 = {
   data: FileDeleteResponse
   status: 200
@@ -316,7 +310,11 @@ export const getDeleteFileByNameUrl = (name: string,) => {
   return `/api/file/${name}`
 }
 
-export const deleteFileByName = async (name: string, options?: RequestInit): Promise<deleteFileByNameResponse> => {
+/**
+ * Delete a file from the Object Store.
+ * @summary Delete a file
+ */
+export const deleteFileByName = async (name: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteFileByNameResponse> => {
 
   return apiFetch<deleteFileByNameResponse>(getDeleteFileByNameUrl(name),
   {

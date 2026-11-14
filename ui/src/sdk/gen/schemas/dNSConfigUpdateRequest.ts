@@ -10,10 +10,8 @@ export interface DNSConfigUpdateRequest {
   servers?: string[];
   /** New list of search domains to configure. */
   search_domains?: string[];
-  /** The name of the network interface to apply DNS configuration to. Accepts alphanumeric names or @fact. references.
-   */
+  /** The name of the network interface to apply DNS configuration to. Accepts alphanumeric names or @fact. references. */
   interface_name: string;
-  /** When true, disables DHCP-provided DNS servers so only the configured servers are used. When false or omitted, DHCP DNS servers are merged alongside the configured ones (default Netplan behavior).
-   */
+  /** When true, disables DHCP-provided DNS servers so only the configured servers are used. When false or omitted, DHCP DNS servers are merged alongside the configured ones (default Netplan behavior). */
   override_dhcp?: boolean;
 }
