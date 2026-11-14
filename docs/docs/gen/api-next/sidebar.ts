@@ -4,7 +4,7 @@ const sidebar: SidebarsConfig = {
   apisidebar: [
     {
       type: "doc",
-      id: "gen/api-next/osapi-behaviors",
+      id: "gen/api-next/sysctl-api",
     },
     {
       type: "category",
@@ -17,7 +17,7 @@ const sidebar: SidebarsConfig = {
         {
           type: "doc",
           id: "gen/api-next/get-node-sysctl",
-          label: "List the kernel parameters osapi manages",
+          label: "List the kernel's parameters and which osapi manages",
           className: "api-method get",
         },
         {
@@ -28,21 +28,21 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
+          id: "gen/api-next/delete-node-sysctl",
+          label: "Stop managing a kernel parameter",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
           id: "gen/api-next/get-node-sysctl-by-key",
-          label: "Get a kernel parameter's current value",
+          label: "Get a kernel parameter's current value, and whether osapi manages it",
           className: "api-method get",
         },
         {
           type: "doc",
           id: "gen/api-next/put-node-sysctl",
-          label: "Change a managed kernel parameter and apply it",
+          label: "Set a kernel parameter, manage it, and apply it",
           className: "api-method put",
-        },
-        {
-          type: "doc",
-          id: "gen/api-next/delete-node-sysctl",
-          label: "Stop managing a kernel parameter",
-          className: "api-method delete",
         },
       ],
     },

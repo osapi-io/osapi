@@ -1,1 +1,1 @@
-{"title":"Body","body":{"description":"Input to sysctl update.","required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"value":{"type":"string","description":"Value to set","pattern":"^[^\\r\\n]*$"}},"required":["value"],"title":"SysctlUpdateRequest"}}}}}
+{"title":"Body","body":{"content":{"application/json":{"schema":{"properties":{"value":{"description":"Value to set","pattern":"^[^\\r\\n]*$","type":"string"}},"required":["value"],"type":"object","title":"SysctlUpdateRequest"}}},"description":"Input to sysctl update.","required":true}}
