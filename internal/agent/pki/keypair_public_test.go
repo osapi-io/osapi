@@ -26,8 +26,8 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
-	"sync/atomic"
 	"testing"
 
 	"github.com/avfs/avfs"
@@ -167,6 +167,43 @@ func (suite *KeypairPublicTestSuite) TestLoadOrGenerate() {
 			wantContains: "unexpected block type",
 		},
 		{
+			// The agent switched to a user that cannot read the key. A new key
+			// would not be the one the controller accepted, so the host would
+			// drop out of targeting with no error at the agent.
+			name: "when the private key cannot be read it is not replaced",
+			setup: func(m *pki.Manager) {
+				base := memfs.New()
+				seed := pki.New(base, "/keys", "agent")
+				require.NoError(suite.T(), seed.LoadOrGenerate())
+				vfs := failfs.New(base)
+				_ = vfs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					fp *failfs.FailParam,
+				) error {
+					if fn == avfs.FnReadFile && strings.HasSuffix(fp.Path, ".key") {
+						return errors.New("permission denied")
+					}
+					return nil
+				})
+				*m = *pki.New(vfs, "/keys", "agent")
+			},
+			wantErr:      true,
+			wantContains: "does not replace a key it cannot read",
+		},
+		{
+			name: "when only the private key exists it is not replaced",
+			setup: func(m *pki.Manager) {
+				base := memfs.New()
+				seed := pki.New(base, "/keys", "agent")
+				require.NoError(suite.T(), seed.LoadOrGenerate())
+				require.NoError(suite.T(), base.Remove("/keys/agent.pub"))
+				*m = *pki.New(base, "/keys", "agent")
+			},
+			wantErr:      true,
+			wantContains: "half a keypair",
+		},
+		{
 			name: "when key directory creation fails",
 			setup: func(m *pki.Manager) {
 				vfs := failfs.New(memfs.New())
@@ -192,9 +229,9 @@ func (suite *KeypairPublicTestSuite) TestLoadOrGenerate() {
 				_ = vfs.SetFailFunc(func(
 					_ avfs.VFSBase,
 					fn avfs.FnVFS,
-					_ *failfs.FailParam,
+					fp *failfs.FailParam,
 				) error {
-					if fn == avfs.FnOpenFile {
+					if fn == avfs.FnOpenFile && fp.Flag&os.O_CREATE != 0 {
 						return errors.New("disk full")
 					}
 					return nil
@@ -207,17 +244,16 @@ func (suite *KeypairPublicTestSuite) TestLoadOrGenerate() {
 		{
 			name: "when writing public key fails",
 			setup: func(m *pki.Manager) {
-				var callCount atomic.Int32
 				vfs := failfs.New(memfs.New())
 				_ = vfs.SetFailFunc(func(
 					_ avfs.VFSBase,
 					fn avfs.FnVFS,
-					_ *failfs.FailParam,
+					fp *failfs.FailParam,
 				) error {
-					if fn == avfs.FnOpenFile {
-						// Let early OpenFile calls succeed (private
-						// key write), then fail for the public key.
-						if callCount.Add(1) > 3 {
+					if fn == avfs.FnOpenFile && fp.Flag&os.O_CREATE != 0 {
+						// Let the private key write succeed, then fail
+						// for the public key.
+						if strings.Contains(fp.Path, ".pub") {
 							return errors.New("disk full")
 						}
 					}

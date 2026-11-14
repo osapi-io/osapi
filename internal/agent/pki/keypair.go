@@ -26,7 +26,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/pem"
+	"errors"
 	"fmt"
+	"io/fs"
 	"path/filepath"
 
 	"github.com/avfs/avfs"
@@ -67,8 +69,11 @@ func New(
 	}
 }
 
-// LoadOrGenerate loads existing PEM-encoded Ed25519 keys from disk,
-// or generates and saves a new keypair if none exists.
+// LoadOrGenerate loads existing PEM-encoded Ed25519 keys from disk, or
+// generates and saves a new keypair when neither file exists. A key file it
+// cannot read, or one half of a pair, is an error rather than a reason to
+// generate: a new key is not the one the controller accepted, so replacing it
+// drops the host out of targeting until an operator enrolls it again.
 func (m *Manager) LoadOrGenerate() error {
 	privPath := filepath.Join(m.keyDir, m.keyPrefix+".key")
 	pubPath := filepath.Join(m.keyDir, m.keyPrefix+".pub")
@@ -78,6 +83,25 @@ func (m *Manager) LoadOrGenerate() error {
 
 	if privErr == nil && pubErr == nil {
 		return m.loadKeys(privData, pubData)
+	}
+
+	for _, f := range []struct {
+		path string
+		err  error
+	}{{privPath, privErr}, {pubPath, pubErr}} {
+		if f.err != nil && !errors.Is(f.err, fs.ErrNotExist) {
+			return fmt.Errorf(
+				"read key %s: %w; the agent does not replace a key it cannot read",
+				f.path, f.err,
+			)
+		}
+	}
+
+	if privErr == nil || pubErr == nil {
+		return fmt.Errorf(
+			"only one of %s and %s exists; the agent does not replace half a keypair",
+			privPath, pubPath,
+		)
 	}
 
 	pub, priv, err := generateKeyPairFn()
