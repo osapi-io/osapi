@@ -12,5 +12,5 @@ just docs-fmt        # Format the site with Prettier
 ```
 
 `just --list` shows the rest under `[docs]`. See the
-[Documentation section](../CONTRIBUTING.md#documentation) of the contributing
+[Documentation section](../CONTRIBUTING.md#documentation-1) of the contributing
 guide for how pages are organized.

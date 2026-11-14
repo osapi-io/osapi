@@ -6,7 +6,7 @@ sidebar_position: 3
 
 How to run the unit and integration suites, the coverage gate, and the test
 conventions this repository follows are in [`CONTRIBUTING.md`][contributing]
-under "Testing".
+under "Tests".
 
 That file is the single source, so this page is a pointer rather than a second
 copy of it.
