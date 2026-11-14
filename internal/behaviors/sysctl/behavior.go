@@ -101,7 +101,9 @@ var Behavior = behavior.Register(behavior.Define(
 		Describe("Manage a kernel parameter and apply it").
 		Explain("Writes osapi-<key>.conf to behaviors.sysctl.dir, /etc/sysctl.d by default, "+
 			"and applies it with sysctl -p. "+
-			"Running it again with the same value changes nothing and reports changed: false.").
+			"It fails when sysctl -p fails, because the value is not set. "+
+			"Running it again with the same value changes nothing and reports changed: false, "+
+			"unless the kernel holds another value, as after a failed apply: then it applies again.").
 		Example("Turn on IP forwarding",
 			CreateInput{Key: "net.ipv4.ip_forward", Value: "1"},
 			MutationResult{Key: "net.ipv4.ip_forward", Changed: true},
@@ -133,7 +135,6 @@ var Behavior = behavior.Register(behavior.Define(
 		Example("A parameter osapi did not manage",
 			UpdateInput{Key: "vm.swappiness", Value: "10"},
 			MutationResult{Key: "vm.swappiness", Changed: true},
-			behavior.Exists(proc("vm.swappiness"), "60\n"),
 			behavior.Wrote(conf("vm.swappiness"), "vm.swappiness = 10\n"),
 			behavior.Ran("sysctl", "-p", conf("vm.swappiness")),
 		).

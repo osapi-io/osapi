@@ -542,7 +542,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when sysctl apply fails it still succeeds",
+			name: "when sysctl apply fails it fails",
 			entry: sysctl.Entry{
 				Key:   "net.ipv4.ip_forward",
 				Value: "1",
@@ -559,8 +559,65 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				result *sysctl.CreateResult,
 				err error,
 			) {
+				suite.Nil(result)
+				suite.ErrorContains(err, "apply /etc/sysctl.d/osapi-net.ipv4.ip_forward.conf")
+				suite.ErrorContains(err, "sysctl failed")
+			},
+		},
+		{
+			// A run whose apply failed left the file written. The next run
+			// finds the file unchanged, but the kernel still holds the old
+			// value, so it applies again rather than reporting no change.
+			name: "when the drop-in is unchanged but the kernel holds another value",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "1",
+			},
+			setup: func() {
+				suite.NoError(suite.memFs.WriteFile(
+					"/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
+					[]byte("net.ipv4.ip_forward = 1\n"),
+					0o644,
+				))
+				suite.NoError(suite.memFs.MkdirAll("/proc/sys/net/ipv4", 0o755))
+				suite.NoError(suite.memFs.WriteFile(
+					"/proc/sys/net/ipv4/ip_forward", []byte("0\n"), 0o644,
+				))
+				suite.mockExec.EXPECT().
+					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
+					Return("", nil)
+			},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
 				suite.NoError(err)
 				suite.True(result.Changed)
+			},
+		},
+		{
+			name: "when the drop-in is unchanged and the kernel holds the value",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ping_group_range",
+				Value: "0 2147483647",
+			},
+			setup: func() {
+				suite.NoError(suite.memFs.WriteFile(
+					"/etc/sysctl.d/osapi-net.ipv4.ping_group_range.conf",
+					[]byte("net.ipv4.ping_group_range = 0 2147483647\n"),
+					0o644,
+				))
+				suite.NoError(suite.memFs.MkdirAll("/proc/sys/net/ipv4", 0o755))
+				suite.NoError(suite.memFs.WriteFile(
+					"/proc/sys/net/ipv4/ping_group_range", []byte("0\t2147483647\n"), 0o644,
+				))
+			},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.NoError(err)
+				suite.False(result.Changed)
 			},
 		},
 	}
@@ -1131,7 +1188,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			},
 		},
 		{
-			name: "when sysctl reload fails it still succeeds",
+			name: "when sysctl reload fails it fails",
 			key:  "net.ipv4.ip_forward",
 			setup: func() {
 				_ = suite.memFs.WriteFile(
@@ -1160,8 +1217,8 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 				result *sysctl.DeleteResult,
 				err error,
 			) {
-				suite.NoError(err)
-				suite.True(result.Changed)
+				suite.Nil(result)
+				suite.ErrorContains(err, "sysctl delete: reload: sysctl failed")
 			},
 		},
 	}
