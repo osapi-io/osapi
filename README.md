@@ -74,6 +74,7 @@ The docs also tell how to build a behavior, by hand or with an agent.
 | [nats-client]        | A Go package for connecting to and interacting with a NATS server    |
 | [nats-server]        | A Go package for running an embedded NATS server                     |
 | [osapi-justfiles]    | Shared justfiles this repository fetches its recipes from            |
+| [osapi-lab]          | A fleet of real machines that runs a checkout of osapi               |
 | [osapi-orchestrator] | A Go package for orchestrating operations across OSAPI-managed hosts |
 | [specs]              | The design record for this repository, under `components/osapi/`     |
 
@@ -94,6 +95,7 @@ The [MIT] License.
 [nats-client]: https://github.com/osapi-io/nats-client
 [nats-server]: https://github.com/osapi-io/nats-server
 [osapi-justfiles]: https://github.com/osapi-io/osapi-justfiles
+[osapi-lab]: https://github.com/osapi-io/osapi-lab
 [osapi-orchestrator]: https://github.com/osapi-io/osapi-orchestrator
 [sdk]: https://osapi-io.github.io/osapi/sidebar/sdk
 [specs]: https://github.com/osapi-io/specs

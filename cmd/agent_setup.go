@@ -279,7 +279,7 @@ func setupAgent(
 
 	registry.Register(
 		"command",
-		agent.NewCommandProcessor(commandProvider, log),
+		agent.NewCommandProcessor(commandProvider, appConfig.Agent.Command.Enabled, log),
 		commandProvider,
 	)
 
@@ -291,7 +291,7 @@ func setupAgent(
 
 	registry.Register(
 		"docker",
-		agent.NewDockerProcessor(dockerProvider, log),
+		agent.NewDockerProcessor(dockerProvider, appConfig.Agent.Command.Enabled, log),
 		dockerProvider,
 	)
 

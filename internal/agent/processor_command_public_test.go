@@ -57,8 +57,35 @@ func (s *ProcessorCommandPublicTestSuite) TestProcessCommandOperation() {
 		setupMock    func(*commandMocks.MockProvider)
 		expectError  bool
 		errorMsg     string
+		disabled     bool
 		validateFunc func(json.RawMessage)
 	}{
+		{
+			name: "when disabled refuses exec",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "command",
+				Operation: "exec.execute",
+				Data:      json.RawMessage(`{"command":"ls"}`),
+			},
+			setupMock:   func(*commandMocks.MockProvider) {},
+			disabled:    true,
+			expectError: true,
+			errorMsg:    "agent.command.enabled",
+		},
+		{
+			name: "when disabled refuses shell",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "command",
+				Operation: "shell.execute",
+				Data:      json.RawMessage(`{"command":"id"}`),
+			},
+			setupMock:   func(*commandMocks.MockProvider) {},
+			disabled:    true,
+			expectError: true,
+			errorMsg:    "agent.command.enabled",
+		},
 		{
 			name: "successful exec operation",
 			jobRequest: job.Request{
@@ -198,7 +225,7 @@ func (s *ProcessorCommandPublicTestSuite) TestProcessCommandOperation() {
 			cmdMock := commandMocks.NewMockProvider(s.mockCtrl)
 			tt.setupMock(cmdMock)
 
-			processor := agent.NewCommandProcessor(cmdMock, slog.Default())
+			processor := agent.NewCommandProcessor(cmdMock, !tt.disabled, slog.Default())
 			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {

@@ -126,7 +126,7 @@ func newTestAgent(
 
 	registry.Register(
 		"command",
-		agent.NewCommandProcessor(p.commandProvider, logger),
+		agent.NewCommandProcessor(p.commandProvider, true, logger),
 		p.commandProvider,
 	)
 
@@ -138,7 +138,7 @@ func newTestAgent(
 
 	registry.Register(
 		"docker",
-		agent.NewDockerProcessor(p.dockerProvider, logger),
+		agent.NewDockerProcessor(p.dockerProvider, true, logger),
 		p.dockerProvider,
 	)
 
