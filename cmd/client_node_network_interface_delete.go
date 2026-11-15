@@ -30,6 +30,8 @@ import (
 var clientNodeNetworkInterfaceDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a network interface configuration",
+	Long: "osapi manages only the files with the `osapi-` prefix. You can delete only\n" +
+		"those files.",
 	Example: `  osapi client node network interface delete \
     --target web-01 --name eth0
   osapi client node network interface delete \

@@ -24,12 +24,17 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientNodeServiceStopCmd represents the service stop command.
 var clientNodeServiceStopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop a systemd service",
+	Annotations: map[string]string{
+		reference.Result: "If the service was running, the command returns `changed: true`. If the\n" +
+			"service is already stopped, it returns `changed: false`.",
+	},
 	Example: `  osapi client node service stop --target web-01 \
     --name nginx.service
   osapi client node service stop --target _all \

@@ -33,7 +33,8 @@ var clientNodeFileUndeployCmd = &cobra.Command{
 	Short: "Remove a deployed file from a host",
 	Long: "The object store entry stays, so you can deploy the file again at any time.\n" +
 		"If the file does not exist on disk, the operation changes nothing and\n" +
-		"returns `Changed: false`.",
+		"returns `Changed: false`. When you do not need the object, use `osapi client\n" +
+		"file delete` to remove it from the store.",
 	Example: `  osapi client node file undeploy \
     --target server1 \
     --path /etc/app/app.conf

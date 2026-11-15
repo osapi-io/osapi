@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -32,8 +33,11 @@ var clientNodeSysctlUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update a sysctl parameter",
 	Long: "The agent writes the value again to `/etc/sysctl.d/osapi-{key}.conf` and\n" +
-		"applies it immediately with `sysctl -p`. The command fails if osapi does not\n" +
-		"manage the key.",
+		"applies it immediately with `sysctl -p`.",
+	Annotations: map[string]string{
+		reference.Result: "The command fails if osapi does not manage the key. If the parameter\n" +
+			"already has the requested value, the command returns `changed: false`.",
+	},
 	Example: `  osapi client node sysctl update --target web-01 \
     --key net.ipv4.ip_forward --value 0
   osapi client node sysctl update --target _all \

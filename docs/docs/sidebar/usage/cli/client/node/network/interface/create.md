@@ -2,8 +2,6 @@
 
 Create a network interface configuration.
 
-The command fails if osapi already manages a configuration for that interface.
-
 ```bash
 osapi client node network interface create
 ```
@@ -20,6 +18,11 @@ osapi client node network interface create \
 osapi client node network interface create \
   --target _all --name eth1 --dhcp4
 ```
+
+## Result
+
+The command fails if osapi already manages a configuration for that interface.
+To replace it, use `update`.
 
 ## Flags
 

@@ -26,6 +26,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -36,8 +37,11 @@ var clientNodeUserSSHKeyCreateCmd = &cobra.Command{
 	Long: "The agent adds the key to the end of the `~/.ssh/authorized_keys` file of\n" +
 		"the user. If the file or the `~/.ssh` directory does not exist, the agent\n" +
 		"makes it. The permissions are `700` for the directory and `600` for the\n" +
-		"file. If the key already exists (the same fingerprint), the command returns\n" +
-		"`changed: false`.",
+		"file.",
+	Annotations: map[string]string{
+		reference.Result: "If the key already exists (the same fingerprint), the command returns\n" +
+			"`changed: false`.",
+	},
 	Example: `  osapi client node user ssh-key create --target web-01 \
     --name deploy --key 'ssh-ed25519 AAAA... user@laptop'
   osapi client node user ssh-key create --target _all \

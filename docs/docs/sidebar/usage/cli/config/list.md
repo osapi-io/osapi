@@ -5,7 +5,8 @@ List every setting, its value in effect and where it came from.
 Each value shows where it came from: `env`, `file`, `default` or `unset`. The
 file and the environment are read the way `osapi start` reads them. Without a
 config file, the values are the defaults and the environment. Passwords, signing
-keys and tokens print as `********`.
+keys and tokens print as `********`. `--json` carries the type, the default, the
+rules and the description of each key as well.
 
 ```bash
 osapi config list

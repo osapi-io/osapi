@@ -26,6 +26,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/internal/job"
 )
 
@@ -35,13 +36,16 @@ import (
 var natsSetupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Create osapi's streams and buckets on a NATS server",
-	Long: "It connects as the controller does, with `controller.nats`: its host, port,\n" +
-		"namespace and auth. Run it one time before you start the controller and the\n" +
-		"agents with that server. Run it again after you change the settings of a\n" +
-		"stream or a bucket. Each stream and bucket is created or updated to match\n" +
-		"the config, so running it again changes nothing. `osapi nats server start`\n" +
-		"does the same for the embedded server when the server starts. Thus a\n" +
-		"deployment that runs the NATS server of osapi does not need this command.",
+	Long: "It connects as the controller does, with `controller.nats`: its host,\n" +
+		"port, namespace and auth. Run it one time before you start the controller\n" +
+		"and the agents with that server.",
+	Annotations: map[string]string{
+		reference.Notes: "Run it again after you change the settings of a stream or a bucket. Each\n" +
+			"stream and bucket is created or updated to match the config, so running it\n" +
+			"again changes nothing. `osapi nats server start` does the same for the\n" +
+			"embedded server when the server starts. Thus a deployment that runs the\n" +
+			"NATS server of osapi does not need this command.",
+	},
 	Example: `  osapi nats setup -f /etc/osapi/osapi.yaml`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		n := appConfig.Controller.NATS

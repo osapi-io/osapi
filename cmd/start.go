@@ -29,6 +29,7 @@ import (
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/bus/server"
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/internal/controller"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
@@ -40,9 +41,15 @@ var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start all components (NATS, controller, agent)",
 	Long: "This runs the embedded NATS server, the API server and the agent together.\n" +
-		"Use it for a deployment on one host. The three components start in sequence.\n" +
-		"They stop cleanly on `SIGINT` / `SIGTERM`. For a deployment on more than one\n" +
+		"Use it for a deployment on one host. For a deployment on more than one\n" +
 		"host, start the NATS server, the controller and each agent alone.",
+	Annotations: map[string]string{
+		reference.Notes: "The NATS server starts first, and waits until it is ready. Then osapi\n" +
+			"makes the streams and buckets, starts the API server and starts the agent.\n" +
+			"On `SIGINT` or `SIGTERM`, the three components stop at the same time, in\n" +
+			"10 seconds or less. Then osapi closes the NATS connections and the\n" +
+			"telemetry exporters.",
+	},
 	Example: `  osapi start`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()

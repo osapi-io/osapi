@@ -3,8 +3,7 @@
 List audit log entries.
 
 The list shows recent API activity: the user, the HTTP method, the path, the
-response status and the duration. It needs the `audit:read` permission, which
-the admin role has by default.
+response status and the duration.
 
 ```bash
 osapi client audit list [flags]
@@ -17,6 +16,11 @@ osapi client audit list
 osapi client audit list --limit 10 --offset 20
 osapi client audit list --json
 ```
+
+## Permission
+
+It needs the `audit:read` permission. `osapi token roles` lists the roles that
+grant it.
 
 ## Flags
 

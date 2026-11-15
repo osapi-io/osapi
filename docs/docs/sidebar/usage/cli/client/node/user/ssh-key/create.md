@@ -4,8 +4,7 @@ Create an SSH authorized key.
 
 The agent adds the key to the end of the `~/.ssh/authorized_keys` file of the
 user. If the file or the `~/.ssh` directory does not exist, the agent makes it.
-The permissions are `700` for the directory and `600` for the file. If the key
-already exists (the same fingerprint), the command returns `changed: false`.
+The permissions are `700` for the directory and `600` for the file.
 
 ```bash
 osapi client node user ssh-key create
@@ -19,6 +18,11 @@ osapi client node user ssh-key create --target web-01 \
 osapi client node user ssh-key create --target _all \
   --name deploy --key 'ssh-ed25519 AAAA... user@laptop'
 ```
+
+## Result
+
+If the key already exists (the same fingerprint), the command returns
+`changed: false`.
 
 ## Flags
 

@@ -5,7 +5,8 @@ Drain an agent.
 The agent changes from `Ready` to `Draining`. When all its running jobs are
 complete, the state is `Cordoned`. The agent continues to run and to send
 heartbeats. It only stops the intake of new work from the job queue. Use
-`agent undrain` to accept jobs again.
+`agent undrain` to accept jobs again. The jobs that it runs now continue until
+they are complete.
 
 ```bash
 osapi client agent drain [flags]

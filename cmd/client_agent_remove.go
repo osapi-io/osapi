@@ -26,6 +26,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientAgentRemoveCmd represents the clientAgentRemove command.
@@ -34,15 +35,19 @@ var clientAgentRemoveCmd = &cobra.Command{
 	Short: "Remove an enrolled agent",
 	Long: "When PKI is enabled, the controller keeps the public key of each accepted\n" +
 		"agent. This command deletes it. After that, the controller does not verify\n" +
-		"the responses or the registration of the agent. Thus a target does not find\n" +
-		"the agent, and a broadcast gives it no row. The agent does not get a\n" +
-		"message. It keeps the controller key that it got at acceptance, and it does\n" +
-		"not enroll again by itself. To enroll it again, delete `controller.pub` from\n" +
-		"its key directory on the host (`/etc/osapi/pki` by default), and restart the\n" +
-		"agent. Then it sends a new request, and `agent accept` accepts it. Two\n" +
-		"machines can have the same hostname, because the identity of an agent is its\n" +
-		"machine ID. When more than one accepted agent has the hostname, the command\n" +
-		"fails and names their machine IDs.",
+		"the responses or the registration of the agent. Thus a target does not\n" +
+		"find the agent, and a broadcast gives it no row.",
+	Annotations: map[string]string{
+		reference.Result: "Two machines can have the same hostname, because the identity of an agent\n" +
+			"is its machine ID. When more than one accepted agent has the hostname, the\n" +
+			"command fails and names their machine IDs. Run it again with\n" +
+			"`--machine-id`.",
+		reference.Notes: "The agent does not get a message. It keeps the controller key that it got\n" +
+			"at acceptance, and it does not enroll again by itself. To enroll it again,\n" +
+			"delete `controller.pub` from its key directory on the host\n" +
+			"(`/etc/osapi/pki` by default), and restart the agent. Then it sends a new\n" +
+			"request, and `agent accept` accepts it.",
+	},
 	Example: `  osapi client agent remove --hostname web-01
   osapi client agent remove --hostname web-01 --machine-id 3f2a9c...`,
 	Run: func(cmd *cobra.Command, _ []string) {

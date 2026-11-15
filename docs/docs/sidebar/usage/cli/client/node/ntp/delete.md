@@ -2,6 +2,9 @@
 
 Delete NTP configuration.
 
+The agent removes the drop-in file from `/etc/chrony/conf.d/`, then reloads
+chrony. The system then uses the other chrony configuration that stays.
+
 ```bash
 osapi client node ntp delete
 ```
@@ -13,6 +16,10 @@ osapi client node ntp delete --target web-01
 osapi client node ntp delete --target _all
 osapi client node ntp delete --target web-01 --json
 ```
+
+## Result
+
+If the configuration does not exist, the command returns `changed: false`.
 
 ## Global flags
 

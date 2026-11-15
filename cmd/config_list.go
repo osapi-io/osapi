@@ -36,7 +36,8 @@ var configListCmd = &cobra.Command{
 	Long: "Each value shows where it came from: `env`, `file`, `default` or `unset`.\n" +
 		"The file and the environment are read the way `osapi start` reads them.\n" +
 		"Without a config file, the values are the defaults and the environment.\n" +
-		"Passwords, signing keys and tokens print as `********`.",
+		"Passwords, signing keys and tokens print as `********`. `--json` carries the\n" +
+		"type, the default, the rules and the description of each key as well.",
 	Example: `  osapi config list
   osapi config list -f ./osapi.yaml --json`,
 	Args: cobra.NoArgs,

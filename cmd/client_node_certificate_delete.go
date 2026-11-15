@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientNodeCertificateDeleteCmd represents the certificate delete command.
@@ -31,7 +32,11 @@ var clientNodeCertificateDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Remove a custom CA certificate",
 	Long: "The agent removes the certificate file from\n" +
-		"`/usr/local/share/ca-certificates/`.",
+		"`/usr/local/share/ca-certificates/`. Then it runs `update-ca-certificates`\n" +
+		"to make the trust store again.",
+	Annotations: map[string]string{
+		reference.Result: "If the certificate does not exist, the command returns `changed: false`.",
+	},
 	Example: `  osapi client node certificate delete --target web-01 \
     --name internal-ca
   osapi client node certificate delete --target _all \

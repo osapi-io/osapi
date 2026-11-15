@@ -24,12 +24,19 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientNodeNtpDeleteCmd represents the ntp delete command.
 var clientNodeNtpDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete NTP configuration",
+	Long: "The agent removes the drop-in file from `/etc/chrony/conf.d/`, then\n" +
+		"reloads chrony. The system then uses the other chrony configuration that\n" +
+		"stays.",
+	Annotations: map[string]string{
+		reference.Result: "If the configuration does not exist, the command returns `changed: false`.",
+	},
 	Example: `  osapi client node ntp delete --target web-01
   osapi client node ntp delete --target _all
   osapi client node ntp delete --target web-01 --json`,

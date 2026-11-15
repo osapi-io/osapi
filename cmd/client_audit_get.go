@@ -27,13 +27,16 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientAuditGetCmd represents the clientAuditGet command.
 var clientAuditGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get a single audit log entry",
-	Long:  "It needs the `audit:read` permission, which the admin role has by default.",
+	Annotations: map[string]string{
+		reference.Permission: "audit:read",
+	},
 	Example: `  osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000
   osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {

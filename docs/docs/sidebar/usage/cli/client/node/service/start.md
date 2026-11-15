@@ -17,6 +17,11 @@ osapi client node service start --target web-01 \
   --name nginx.service --json
 ```
 
+## Result
+
+If the service was not running, the command returns `changed: true`. If the
+service already runs, it returns `changed: false`.
+
 ## Flags
 
 | Flag     | Description                      | Default |

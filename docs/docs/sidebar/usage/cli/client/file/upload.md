@@ -4,6 +4,7 @@ Upload a file to the Object Store.
 
 An upload of the same content changes nothing (`Changed: false`). If the file
 exists with different content, the command rejects the upload with 409 Conflict.
+Use `--force` to replace the file.
 
 ```bash
 osapi client file upload

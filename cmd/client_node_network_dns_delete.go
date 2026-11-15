@@ -24,14 +24,19 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientNodeNetworkDNSDeleteCmd represents the DNS delete command.
 var clientNodeNetworkDNSDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete the DNS configuration",
-	Long: "If osapi does not manage a DNS configuration for the interface, the command\n" +
-		"returns `changed: false`.",
+	Long: "The agent removes the `/etc/netplan/osapi-dns.yaml` file and runs `netplan\n" +
+		"apply`.",
+	Annotations: map[string]string{
+		reference.Result: "If osapi does not manage a DNS configuration for the interface, the\n" +
+			"command returns `changed: false`.",
+	},
 	Example: `  osapi client node network dns delete \
     --interface eth0
   osapi client node network dns delete \

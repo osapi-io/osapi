@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -32,8 +33,11 @@ var clientNodeCertificateUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update a custom CA certificate",
 	Long: "The agent deploys the PEM file again and runs `update-ca-certificates` to\n" +
-		"make the trust store again. The command fails if the certificate does not\n" +
-		"exist.",
+		"make the trust store again.",
+	Annotations: map[string]string{
+		reference.Result: "The command fails if the certificate does not exist. If the content did\n" +
+			"not change (the same SHA), the command returns `changed: false`.",
+	},
 	Example: `  osapi client node certificate update --target web-01 \
     --name internal-ca --object internal-ca-v2
   osapi client node certificate update --target _all \

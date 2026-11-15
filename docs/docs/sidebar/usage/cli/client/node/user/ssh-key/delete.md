@@ -3,8 +3,7 @@
 Delete an SSH authorized key.
 
 The agent removes the key with the given SHA256 fingerprint from the
-`~/.ssh/authorized_keys` file of the user. If it does not find the fingerprint,
-the command returns `changed: false`.
+`~/.ssh/authorized_keys` file of the user.
 
 ```bash
 osapi client node user ssh-key delete
@@ -18,6 +17,10 @@ osapi client node user ssh-key delete --target web-01 \
 osapi client node user ssh-key delete --target _all \
   --name deploy --fingerprint 'SHA256:abc123...'
 ```
+
+## Result
+
+If it does not find the fingerprint, the command returns `changed: false`.
 
 ## Flags
 

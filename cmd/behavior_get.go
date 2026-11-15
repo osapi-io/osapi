@@ -32,6 +32,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/internal/config"
 )
 
@@ -101,13 +102,21 @@ type behaviorDescription struct {
 var behaviorGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Show a behavior: its surfaces, chain, methods, types and telemetry",
-	Long: "**Uses** lists the behaviors this one is built on. The agent builds their\n" +
-		"providers first, and the methods of this behavior call theirs on the same\n" +
-		"host, in the same job. If a behavior that it uses cannot run on a platform,\n" +
-		"this one reports `skipped` there too. **Used by** lists the behaviors built\n" +
-		"on this one. A behavior with `Internal: yes` has no route, no command and no\n" +
-		"permission. Use `--method` to show one method in full: its fields with their\n" +
-		"constraints, its output and its examples.",
+	Long: "It shows where osapi serves the behavior, its platforms, the programs that\n" +
+		"it runs with sudo, the behaviors that it uses and that use it, its methods\n" +
+		"with their routes and permissions, its types, its settings and its\n" +
+		"telemetry.",
+	Annotations: map[string]string{
+		reference.Notes: "**Uses** lists the behaviors this one is built on. The agent builds their\n" +
+			"providers first, and the methods of this behavior call theirs on the same\n" +
+			"host, in the same job. If a behavior that it uses cannot run on a\n" +
+			"platform, this one reports `skipped` there too. **Used by** lists the\n" +
+			"behaviors built on this one. A behavior with `Internal: yes` has no route,\n" +
+			"no command and no permission. Only the behaviors under **Used by** call\n" +
+			"it. Use `--method` to show one method in full: its fields with their\n" +
+			"constraints, its output and its examples. `--json` prints the same as one\n" +
+			"object, with `uses` and `used_by` as lists of names.",
+	},
 	Example: `  osapi behavior get --name sysctl
   osapi behavior get --name sysctl --method create
   osapi behavior get --name sysctl --method create --json`,

@@ -5,13 +5,7 @@ Remove an enrolled agent.
 When PKI is enabled, the controller keeps the public key of each accepted agent.
 This command deletes it. After that, the controller does not verify the
 responses or the registration of the agent. Thus a target does not find the
-agent, and a broadcast gives it no row. The agent does not get a message. It
-keeps the controller key that it got at acceptance, and it does not enroll again
-by itself. To enroll it again, delete `controller.pub` from its key directory on
-the host (`/etc/osapi/pki` by default), and restart the agent. Then it sends a
-new request, and `agent accept` accepts it. Two machines can have the same
-hostname, because the identity of an agent is its machine ID. When more than one
-accepted agent has the hostname, the command fails and names their machine IDs.
+agent, and a broadcast gives it no row.
 
 ```bash
 osapi client agent remove [flags]
@@ -23,6 +17,20 @@ osapi client agent remove [flags]
 osapi client agent remove --hostname web-01
 osapi client agent remove --hostname web-01 --machine-id 3f2a9c...
 ```
+
+## Result
+
+Two machines can have the same hostname, because the identity of an agent is its
+machine ID. When more than one accepted agent has the hostname, the command
+fails and names their machine IDs. Run it again with `--machine-id`.
+
+## Notes
+
+The agent does not get a message. It keeps the controller key that it got at
+acceptance, and it does not enroll again by itself. To enroll it again, delete
+`controller.pub` from its key directory on the host (`/etc/osapi/pki` by
+default), and restart the agent. Then it sends a new request, and `agent accept`
+accepts it.
 
 ## Flags
 

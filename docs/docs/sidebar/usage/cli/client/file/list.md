@@ -2,6 +2,9 @@
 
 List stored files.
 
+With `--stale`, the list shows the deployments whose object changed after the
+last deploy. Those are the files that you must deploy again.
+
 ```bash
 osapi client file list [flags]
 ```

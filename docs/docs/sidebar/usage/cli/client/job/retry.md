@@ -2,6 +2,9 @@
 
 Retry a failed or stuck job.
 
+The new job has the same operation as the old job. The original job stays in the
+history. Its timeline gets a `retried` event that links to the new job.
+
 ```bash
 osapi client job retry
 ```

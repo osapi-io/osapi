@@ -2,8 +2,7 @@
 
 Update routes for an interface.
 
-Give each route as `TO:VIA` or `TO:VIA:METRIC`. The command fails if osapi does
-not manage a route configuration for that interface. Use `create` first.
+Give each route as `TO:VIA` or `TO:VIA:METRIC`.
 
 ```bash
 osapi client node network route update
@@ -23,6 +22,12 @@ osapi client node network route update \
   --target _all --interface eth0 \
   --route 10.0.0.0/8:10.0.0.1
 ```
+
+## Result
+
+The command fails if osapi does not manage a route configuration for that
+interface. Use `create` first. If the content did not change, the command
+returns `changed: false`.
 
 ## Flags
 

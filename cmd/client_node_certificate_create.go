@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -33,8 +34,10 @@ var clientNodeCertificateCreateCmd = &cobra.Command{
 	Short: "Add a custom CA certificate",
 	Long: "First, upload the PEM content to the Object Store. The agent writes the\n" +
 		"certificate to `/usr/local/share/ca-certificates/{name}.crt`. Then\n" +
-		"`update-ca-certificates` makes the system trust store again. The command\n" +
-		"fails if the name exists.",
+		"`update-ca-certificates` makes the system trust store again.",
+	Annotations: map[string]string{
+		reference.Result: "The command fails if the name exists. To change it, use `update`.",
+	},
 	Example: `  osapi client node certificate create --target web-01 \
     --name internal-ca --object internal-ca
   osapi client node certificate create --target _all \

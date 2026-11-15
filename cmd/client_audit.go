@@ -22,13 +22,17 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientAuditCmd represents the clientAudit command.
 var clientAuditCmd = &cobra.Command{
 	Use:   "audit",
 	Short: "Read the audit log",
-	Long:  "It needs the `audit:read` permission, which the admin role has by default.",
+	Annotations: map[string]string{
+		reference.Permission: "audit:read",
+	},
 }
 
 func init() {

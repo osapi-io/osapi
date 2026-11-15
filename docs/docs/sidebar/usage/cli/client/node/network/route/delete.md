@@ -2,6 +2,8 @@
 
 Delete routes for an interface.
 
+You can delete only the files that osapi manages, with the `osapi-` prefix.
+
 ```bash
 osapi client node network route delete
 ```

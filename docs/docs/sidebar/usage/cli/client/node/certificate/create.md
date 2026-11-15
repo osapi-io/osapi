@@ -4,8 +4,7 @@ Add a custom CA certificate.
 
 First, upload the PEM content to the Object Store. The agent writes the
 certificate to `/usr/local/share/ca-certificates/{name}.crt`. Then
-`update-ca-certificates` makes the system trust store again. The command fails
-if the name exists.
+`update-ca-certificates` makes the system trust store again.
 
 ```bash
 osapi client node certificate create
@@ -21,6 +20,10 @@ osapi client node certificate create --target _all \
 osapi client node certificate create --target web-01 \
   --name internal-ca --object internal-ca --json
 ```
+
+## Result
+
+The command fails if the name exists. To change it, use `update`.
 
 ## Flags
 

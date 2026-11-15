@@ -17,6 +17,11 @@ osapi client node service restart --target web-01 \
   --name nginx.service --json
 ```
 
+## Result
+
+The command always returns `changed: true`, because the agent restarts the
+service in all states.
+
 ## Flags
 
 | Flag     | Description                        | Default |

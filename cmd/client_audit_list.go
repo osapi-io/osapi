@@ -27,6 +27,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 var (
@@ -38,9 +39,11 @@ var (
 var clientAuditListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List audit log entries",
-	Long: "The list shows recent API activity: the user, the HTTP method, the path, the\n" +
-		"response status and the duration. It needs the `audit:read` permission,\n" +
-		"which the admin role has by default.",
+	Long: "The list shows recent API activity: the user, the HTTP method, the path,\n" +
+		"the response status and the duration.",
+	Annotations: map[string]string{
+		reference.Permission: "audit:read",
+	},
 	Example: `  osapi client audit list
   osapi client audit list --limit 10 --offset 20
   osapi client audit list --json`,

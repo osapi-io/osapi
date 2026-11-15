@@ -8,7 +8,8 @@ table view shortens long output. Use `--json` to get the full response. Use
 [System Facts](../../../../../features/system-facts.md) for all `@fact.*`
 references. Use `--stdout` or `--stderr` to print only that output of the remote
 command. The exit code of the CLI is the exit code of the remote command. Thus
-you can use it in scripts.
+you can use it in scripts. Each agent resolves its own facts, so `@fact.*` works
+with a broadcast target.
 
 ```bash
 osapi client node command exec

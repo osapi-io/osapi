@@ -26,6 +26,7 @@ import (
 	"log/slog"
 	"strconv"
 
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 
@@ -43,8 +44,10 @@ var clientAuditExportCmd = &cobra.Command{
 	Use:   "export",
 	Short: "Export audit log entries to a file",
 	Long: "The command gets all entries through the export endpoint of the REST API,\n" +
-		"and writes each entry as a JSON line (JSONL). It needs the `audit:read`\n" +
-		"permission, which the admin role has by default.",
+		"and writes each entry as a JSON line (JSONL).",
+	Annotations: map[string]string{
+		reference.Permission: "audit:read",
+	},
 	Example: `  osapi client audit export --output audit.jsonl`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()

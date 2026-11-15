@@ -24,13 +24,19 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientNodeSysctlDeleteCmd represents the sysctl delete command.
 var clientNodeSysctlDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a sysctl parameter",
-	Long:  "The running kernel keeps the value.",
+	Long: "The agent removes its drop-in file from `/etc/sysctl.d/`. The running\n" +
+		"kernel keeps the value until the next reboot, or until you set a new\n" +
+		"value.",
+	Annotations: map[string]string{
+		reference.Result: "If the parameter does not exist, the command returns `changed: false`.",
+	},
 	Example: `  osapi client node sysctl delete --target web-01 \
     --key net.ipv4.ip_forward
   osapi client node sysctl delete --target _all \

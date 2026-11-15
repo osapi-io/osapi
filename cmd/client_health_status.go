@@ -25,6 +25,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 
@@ -36,12 +37,17 @@ var clientHealthStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "System status and component health",
 	Long: "The table has each component that registered: its status, its active\n" +
-		"conditions, its uptime, and the CPU and memory of its process. Each\n" +
-		"sub-component is under its component, with its address and its URL. The\n" +
-		"connectivity rows tell if the controller can reach NATS and the KV buckets.\n" +
-		"The output also has the NATS connection, the streams, the KV buckets, the\n" +
-		"consumers and the counts of the job queue. The command needs a token. Use\n" +
-		"`osapi client agent list` for the labels and the OS of each agent.",
+		"conditions, its uptime, and the CPU and memory of its process.",
+	Annotations: map[string]string{
+		reference.Permission: "health:read",
+		reference.Notes: "Each sub-component is under its component, with its address and its URL.\n" +
+			"The connectivity rows tell if the controller can reach NATS and the KV\n" +
+			"buckets. The output also has the NATS connection, the streams, the KV\n" +
+			"buckets, the consumers and the counts of the job queue. The command needs\n" +
+			"a token. Use `osapi client agent list` for the labels and the OS of each\n" +
+			"agent. When a component is not healthy, the overall status is `degraded`,\n" +
+			"and the component shows the error.",
+	},
 	Example: `  osapi client health status
   osapi client health status --json`,
 	Run: func(cmd *cobra.Command, _ []string) {

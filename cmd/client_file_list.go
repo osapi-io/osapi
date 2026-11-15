@@ -32,6 +32,8 @@ import (
 var clientFileListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List stored files",
+	Long: "With `--stale`, the list shows the deployments whose object changed after\n" +
+		"the last deploy. Those are the files that you must deploy again.",
 	Example: `  osapi client file list
   osapi client file list --json
   osapi client file list --stale`,

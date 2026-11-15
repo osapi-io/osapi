@@ -33,7 +33,8 @@ import (
 var clientNodePowerRebootCmd = &cobra.Command{
 	Use:   "reboot",
 	Short: "Reboot the target host",
-	Long:  "The agent runs `shutdown -r` with the configured delay.",
+	Long: "The agent runs `shutdown -r` with the configured delay. When `--delay` is 0,\n" +
+		"the host reboots immediately.",
 	Example: `  osapi client node power reboot --target web-01
   osapi client node power reboot --target web-01 \
     --delay 60 --message "Scheduled maintenance reboot"

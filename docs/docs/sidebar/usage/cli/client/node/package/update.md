@@ -2,7 +2,7 @@
 
 Refresh package sources.
 
-This is the same as `apt-get update`.
+This is the same as `apt-get update`. It does not upgrade packages.
 
 ```bash
 osapi client node package update

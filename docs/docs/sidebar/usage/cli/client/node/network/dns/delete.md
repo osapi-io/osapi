@@ -2,8 +2,8 @@
 
 Delete the DNS configuration.
 
-If osapi does not manage a DNS configuration for the interface, the command
-returns `changed: false`.
+The agent removes the `/etc/netplan/osapi-dns.yaml` file and runs
+`netplan apply`.
 
 ```bash
 osapi client node network dns delete
@@ -20,6 +20,11 @@ osapi client node network dns delete \
 osapi client node network dns delete \
   --interface eth0 --json
 ```
+
+## Result
+
+If osapi does not manage a DNS configuration for the interface, the command
+returns `changed: false`.
 
 ## Flags
 

@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -32,8 +33,10 @@ var clientNodeScheduleUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update a scheduled entry",
 	Long: "The command updates only the fields that you give. If nothing changed, it\n" +
-		"returns `Changed: false`. To change the values of a template, give each\n" +
-		"`--var key=value` again.",
+		"returns `Changed: false`.",
+	Annotations: map[string]string{
+		reference.Result: "To change the values of a template, give each `--var key=value` again.",
+	},
 	Example: `  osapi client node schedule update --target web-01 \
     --name backup-daily \
     --schedule "0 3 * * *"`,

@@ -26,6 +26,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientNodeUserSSHKeyDeleteCmd represents the user ssh-key delete command.
@@ -33,8 +34,10 @@ var clientNodeUserSSHKeyDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete an SSH authorized key",
 	Long: "The agent removes the key with the given SHA256 fingerprint from the\n" +
-		"`~/.ssh/authorized_keys` file of the user. If it does not find the\n" +
-		"fingerprint, the command returns `changed: false`.",
+		"`~/.ssh/authorized_keys` file of the user.",
+	Annotations: map[string]string{
+		reference.Result: "If it does not find the fingerprint, the command returns `changed: false`.",
+	},
 	Example: `  osapi client node user ssh-key delete --target web-01 \
     --name deploy --fingerprint 'SHA256:abc123...'
   osapi client node user ssh-key delete --target _all \

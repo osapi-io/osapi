@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -33,7 +34,10 @@ var clientNodeServiceCreateCmd = &cobra.Command{
 	Short: "Create a systemd service unit file",
 	Long: "First, upload the content of the unit file to the Object Store. The agent\n" +
 		"writes the file to `/etc/systemd/system/{name}` and runs `systemctl\n" +
-		"daemon-reload`. The command fails if the name exists.",
+		"daemon-reload`.",
+	Annotations: map[string]string{
+		reference.Result: "The command fails if the name exists. To replace it, use `update`.",
+	},
 	Example: `  osapi client node service create --target web-01 \
     --name myapp.service --object myapp-unit
   osapi client node service create --target _all \

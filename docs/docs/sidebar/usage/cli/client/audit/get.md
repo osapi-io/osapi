@@ -2,8 +2,6 @@
 
 Get a single audit log entry.
 
-It needs the `audit:read` permission, which the admin role has by default.
-
 ```bash
 osapi client audit get
 ```
@@ -14,6 +12,11 @@ osapi client audit get
 osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000
 osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000 --json
 ```
+
+## Permission
+
+It needs the `audit:read` permission. `osapi token roles` lists the roles that
+grant it.
 
 ## Flags
 

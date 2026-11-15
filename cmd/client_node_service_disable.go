@@ -24,12 +24,17 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientNodeServiceDisableCmd represents the service disable command.
 var clientNodeServiceDisableCmd = &cobra.Command{
 	Use:   "disable",
 	Short: "Disable a systemd service from starting on boot",
+	Annotations: map[string]string{
+		reference.Result: "If the service was enabled, the command returns `changed: true`. If the\n" +
+			"service is already disabled, it returns `changed: false`.",
+	},
 	Example: `  osapi client node service disable --target web-01 \
     --name nginx.service
   osapi client node service disable --target _all \

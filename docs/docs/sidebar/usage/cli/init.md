@@ -5,8 +5,6 @@ Install osapi's agent skills into a repository.
 The command writes the skills in this binary for each `--tool`. It also writes a
 short section, with links to the skills, in the instructions file of that tool:
 `CLAUDE.md` or `AGENTS.md`. It does not change text outside the osapi section.
-Run it again after you upgrade osapi. It writes the skills again to agree with
-the binary. It removes the files that an older version installed.
 
 ```bash
 osapi init [path] [flags]
@@ -19,6 +17,12 @@ osapi init
 osapi init --tool claude --tool codex
 osapi init ./ops-repo --json
 ```
+
+## Notes
+
+Run it again after you upgrade osapi. It writes the skills again to agree with
+the binary. It removes the files that an older version installed. Thus the agent
+does not read a skill about operations that the binary does not have now.
 
 ## Flags
 

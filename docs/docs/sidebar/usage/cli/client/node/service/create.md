@@ -3,8 +3,7 @@
 Create a systemd service unit file.
 
 First, upload the content of the unit file to the Object Store. The agent writes
-the file to `/etc/systemd/system/{name}` and runs `systemctl daemon-reload`. The
-command fails if the name exists.
+the file to `/etc/systemd/system/{name}` and runs `systemctl daemon-reload`.
 
 ```bash
 osapi client node service create
@@ -20,6 +19,10 @@ osapi client node service create --target _all \
 osapi client node service create --target web-01 \
   --name myapp.service --object myapp-unit --json
 ```
+
+## Result
+
+The command fails if the name exists. To replace it, use `update`.
 
 ## Flags
 

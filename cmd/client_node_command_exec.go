@@ -40,7 +40,8 @@ var clientNodeCommandExecCmd = &cobra.Command{
 		"[System Facts](../../../../../features/system-facts.md) for all `@fact.*`\n" +
 		"references. Use `--stdout` or `--stderr` to print only that output of the\n" +
 		"remote command. The exit code of the CLI is the exit code of the remote\n" +
-		"command. Thus you can use it in scripts.",
+		"command. Thus you can use it in scripts. Each agent resolves its own facts,\n" +
+		"so `@fact.*` works with a broadcast target.",
 	Example: `  osapi client node command exec --command ls --args "-la,/tmp"
   osapi client node command exec \
     --command cat \

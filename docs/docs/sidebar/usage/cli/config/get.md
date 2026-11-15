@@ -2,6 +2,10 @@
 
 Show one setting in full.
 
+It shows the value in effect and where it came from, the environment variable,
+the type, the default, the rules and the description. An environment variable
+wins over the file.
+
 ```bash
 osapi config get [flags]
 ```

@@ -28,6 +28,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -35,8 +36,13 @@ import (
 var clientNodeNetworkRouteCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create routes for an interface",
-	Long: "Give each route as `TO:VIA` or `TO:VIA:METRIC`. The command fails if osapi\n" +
-		"already manages a route configuration for that interface.",
+	Long: "Give each route as `TO:VIA` or `TO:VIA:METRIC`. `TO` is the destination in\n" +
+		"CIDR notation. `VIA` is the IP address of the gateway. `METRIC` is the\n" +
+		"priority of the route, and a lower value has priority.",
+	Annotations: map[string]string{
+		reference.Result: "The command fails if osapi already manages a route configuration for that\n" +
+			"interface. To replace it, use `update`.",
+	},
 	Example: `  osapi client node network route create \
     --target web-01 --interface eth0 \
     --route 10.0.0.0/8:192.168.1.1

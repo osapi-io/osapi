@@ -3,8 +3,7 @@
 Update a sysctl parameter.
 
 The agent writes the value again to `/etc/sysctl.d/osapi-{key}.conf` and applies
-it immediately with `sysctl -p`. The command fails if osapi does not manage the
-key.
+it immediately with `sysctl -p`.
 
 ```bash
 osapi client node sysctl update
@@ -20,6 +19,11 @@ osapi client node sysctl update --target _all \
 osapi client node sysctl update --target web-01 \
   --key vm.swappiness --value 20 --json
 ```
+
+## Result
+
+The command fails if osapi does not manage the key. If the parameter already has
+the requested value, the command returns `changed: false`.
 
 ## Flags
 

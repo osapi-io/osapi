@@ -23,6 +23,7 @@ package reference_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -55,6 +56,10 @@ func tree() *cobra.Command {
 		Example: "  osapi node status\n\n  osapi node status --target web",
 	}
 	group.PersistentFlags().String("target", "_all", "Target: <host> or {label}")
+	group.Annotations = map[string]string{
+		reference.Permission: "node:read",
+		reference.Notes:      "Each command sends a job.",
+	}
 
 	leaf := &cobra.Command{
 		Use:     "ssh-key",
@@ -62,6 +67,11 @@ func tree() *cobra.Command {
 		Long:    "Each `<key>` is one line. A key in <angle> brackets.",
 		Example: "    osapi node ssh-key --name a \\\n      --force",
 		Run:     func(*cobra.Command, []string) {},
+		Annotations: map[string]string{
+			reference.Result:     "It returns `changed: false` when the key <exists>.",
+			reference.Permission: "node:write",
+			reference.Notes:      "The agent writes the key file.",
+		},
 	}
 	leaf.Flags().String("name", "", "Name of the key")
 	leaf.Flags().String("required-one", "", "Needed")
@@ -131,6 +141,8 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 		s.Contains(group, "```bash\nosapi node status\n\nosapi node status --target web\n```")
 		s.Contains(group, "Target: &lt;host&gt; or &#123;label&#125;")
 		s.Contains(group, "`_all`")
+		s.Contains(group, "## Permission\n\nEach command needs the `node:read` permission.")
+		s.Contains(group, "## Notes\n\nEach command sends a job.")
 
 		leaf := s.read(dir, "node/ssh-key.md")
 		s.Contains(leaf, "# SSH Key\n")
@@ -142,6 +154,10 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 		s.Contains(leaf, "Replace the key \\| always")
 		s.Contains(leaf, "| `--count` | Count | `3` |")
 		s.NotContains(leaf, "--secret")
+		s.Contains(leaf, "## Result\n\nIt returns `changed: false` when the key &lt;exists&gt;.")
+		s.Contains(leaf, "## Permission\n\nIt needs the `node:write` permission.")
+		s.Contains(leaf, "## Notes\n\nThe agent writes the key file.")
+		s.Less(strings.Index(leaf, "## Notes"), strings.Index(leaf, "## Flags"))
 		s.Contains(leaf, "## Global flags")
 		s.Contains(leaf, "[Output](../output.md)")
 

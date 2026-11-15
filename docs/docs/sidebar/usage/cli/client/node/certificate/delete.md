@@ -3,6 +3,7 @@
 Remove a custom CA certificate.
 
 The agent removes the certificate file from `/usr/local/share/ca-certificates/`.
+Then it runs `update-ca-certificates` to make the trust store again.
 
 ```bash
 osapi client node certificate delete
@@ -18,6 +19,10 @@ osapi client node certificate delete --target _all \
 osapi client node certificate delete --target web-01 \
   --name internal-ca --json
 ```
+
+## Result
+
+If the certificate does not exist, the command returns `changed: false`.
 
 ## Flags
 

@@ -29,6 +29,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/internal/skills"
 )
 
@@ -45,9 +46,13 @@ var initCmd = &cobra.Command{
 	Long: "The command writes the skills in this binary for each `--tool`. It also\n" +
 		"writes a short section, with links to the skills, in the instructions file\n" +
 		"of that tool: `CLAUDE.md` or `AGENTS.md`. It does not change text outside\n" +
-		"the osapi section. Run it again after you upgrade osapi. It writes the\n" +
-		"skills again to agree with the binary. It removes the files that an older\n" +
-		"version installed.",
+		"the osapi section.",
+	Annotations: map[string]string{
+		reference.Notes: "Run it again after you upgrade osapi. It writes the skills again to agree\n" +
+			"with the binary. It removes the files that an older version installed.\n" +
+			"Thus the agent does not read a skill about operations that the binary does\n" +
+			"not have now.",
+	},
 	Example: `  osapi init
   osapi init --tool claude --tool codex
   osapi init ./ops-repo --json`,

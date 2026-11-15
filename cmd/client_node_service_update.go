@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -31,8 +32,11 @@ import (
 var clientNodeServiceUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update a systemd service unit file",
-	Long: "The agent deploys the unit file again and runs `systemctl daemon-reload`.\n" +
-		"The command fails if the unit file does not exist.",
+	Long:  "The agent deploys the unit file again and runs `systemctl daemon-reload`.",
+	Annotations: map[string]string{
+		reference.Result: "The command fails if the unit file does not exist. If the content did not\n" +
+			"change (the same SHA), the command returns `changed: false`.",
+	},
 	Example: `  osapi client node service update --target web-01 \
     --name myapp.service --object myapp-unit-v2
   osapi client node service update --target _all \

@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -31,8 +32,10 @@ import (
 var clientNodeNetworkInterfaceCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a network interface configuration",
-	Long: "The command fails if osapi already manages a configuration for that\n" +
-		"interface.",
+	Annotations: map[string]string{
+		reference.Result: "The command fails if osapi already manages a configuration for that\n" +
+			"interface. To replace it, use `update`.",
+	},
 	Example: `  osapi client node network interface create \
     --target web-01 --name eth0 \
     --address 192.168.1.100/24 \

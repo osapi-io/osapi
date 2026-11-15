@@ -3,8 +3,7 @@
 Update a scheduled entry.
 
 The command updates only the fields that you give. If nothing changed, it
-returns `Changed: false`. To change the values of a template, give each
-`--var key=value` again.
+returns `Changed: false`.
 
 ```bash
 osapi client node schedule update [flags]
@@ -17,6 +16,10 @@ osapi client node schedule update --target web-01 \
   --name backup-daily \
   --schedule "0 3 * * *"
 ```
+
+## Result
+
+To change the values of a template, give each `--var key=value` again.
 
 ## Flags
 

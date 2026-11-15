@@ -17,6 +17,11 @@ osapi client node service enable --target web-01 \
   --name nginx.service --json
 ```
 
+## Result
+
+If the service was not enabled, the command returns `changed: true`. If the
+service is already enabled, it returns `changed: false`.
+
 ## Flags
 
 | Flag     | Description                       | Default |

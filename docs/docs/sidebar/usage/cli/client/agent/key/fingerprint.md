@@ -2,9 +2,11 @@
 
 Show the local agent key fingerprint.
 
-Enrollment requests include this value. You can use it with
-`agent accept --fingerprint` to accept an agent by its fingerprint. If no key
-exists, the command makes a new key pair. Then it shows the fingerprint.
+osapi calculates the fingerprint from the Ed25519 public key of the agent, in
+the PKI key directory (`/etc/osapi/pki` by default). Enrollment requests include
+this value. You can use it with `agent accept --fingerprint` to accept an agent
+by its fingerprint. If no key exists, the command makes a new key pair. Then it
+shows the fingerprint.
 
 ```bash
 osapi client agent key fingerprint

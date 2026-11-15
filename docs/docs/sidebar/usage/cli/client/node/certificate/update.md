@@ -3,7 +3,7 @@
 Update a custom CA certificate.
 
 The agent deploys the PEM file again and runs `update-ca-certificates` to make
-the trust store again. The command fails if the certificate does not exist.
+the trust store again.
 
 ```bash
 osapi client node certificate update
@@ -19,6 +19,11 @@ osapi client node certificate update --target _all \
 osapi client node certificate update --target web-01 \
   --name internal-ca --object internal-ca-v2 --json
 ```
+
+## Result
+
+The command fails if the certificate does not exist. If the content did not
+change (the same SHA), the command returns `changed: false`.
 
 ## Flags
 

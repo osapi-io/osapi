@@ -50,7 +50,8 @@ var tokenRolesCmd = &cobra.Command{
 		"`controller.api.security.roles` gets a column of its own. Without a config\n" +
 		"file it shows the built-in roles only. A behavior's permissions are\n" +
 		"`<name>:read` and `<name>:write`, or the group's when it is nested under\n" +
-		"one. `admin` and `write` grant both, and `read` grants the read permission.",
+		"one. `admin` and `write` grant both, and `read` grants the read permission.\n" +
+		"Use this list, not a table in the docs.",
 	Example: `  osapi token roles
   osapi token roles --json`,
 	Args: cobra.NoArgs,

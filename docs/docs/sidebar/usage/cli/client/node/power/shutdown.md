@@ -2,7 +2,8 @@
 
 Shut down the target host.
 
-The agent runs `shutdown -h` with the configured delay.
+The agent runs `shutdown -h` with the configured delay. When `--delay` is 0, the
+host shuts down immediately.
 
 ```bash
 osapi client node power shutdown

@@ -3,8 +3,7 @@
 Create a sysctl parameter.
 
 The agent writes the value to `/etc/sysctl.d/osapi-{key}.conf` and applies it
-immediately with `sysctl -p`. If osapi already manages the parameter, the
-command returns `changed: false`.
+immediately with `sysctl -p`.
 
 ```bash
 osapi client node sysctl create
@@ -20,6 +19,11 @@ osapi client node sysctl create --target _all \
 osapi client node sysctl create --target web-01 \
   --key vm.swappiness --value 10 --json
 ```
+
+## Result
+
+If osapi already manages the parameter, the command returns `changed: false`. To
+change a parameter, use `update`.
 
 ## Flags
 

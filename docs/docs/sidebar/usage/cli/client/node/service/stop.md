@@ -17,6 +17,11 @@ osapi client node service stop --target web-01 \
   --name nginx.service --json
 ```
 
+## Result
+
+If the service was running, the command returns `changed: true`. If the service
+is already stopped, it returns `changed: false`.
+
 ## Flags
 
 | Flag     | Description                     | Default |

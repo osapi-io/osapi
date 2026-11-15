@@ -2,8 +2,9 @@
 
 Create routes for an interface.
 
-Give each route as `TO:VIA` or `TO:VIA:METRIC`. The command fails if osapi
-already manages a route configuration for that interface.
+Give each route as `TO:VIA` or `TO:VIA:METRIC`. `TO` is the destination in CIDR
+notation. `VIA` is the IP address of the gateway. `METRIC` is the priority of
+the route, and a lower value has priority.
 
 ```bash
 osapi client node network route create
@@ -23,6 +24,11 @@ osapi client node network route create \
   --target _all --interface eth0 \
   --route 10.0.0.0/8:192.168.1.1
 ```
+
+## Result
+
+The command fails if osapi already manages a route configuration for that
+interface. To replace it, use `update`.
 
 ## Flags
 

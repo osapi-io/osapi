@@ -19,10 +19,10 @@ osapi client node process signal --target web-01 \
 
 ## Flags
 
-| Flag       | Description                                     | Default |
-| ---------- | ----------------------------------------------- | ------- |
-| `--pid`    | Process ID to signal (required)                 |         |
-| `--signal` | Signal to send, e.g. TERM, KILL, HUP (required) |         |
+| Flag       | Description                                                   | Default |
+| ---------- | ------------------------------------------------------------- | ------- |
+| `--pid`    | Process ID to signal (required)                               |         |
+| `--signal` | Signal to send: TERM, KILL, HUP, INT, USR1 or USR2 (required) |         |
 
 ## Global flags
 

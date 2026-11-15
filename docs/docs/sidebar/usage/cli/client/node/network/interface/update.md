@@ -2,9 +2,6 @@
 
 Update a network interface configuration.
 
-The command fails if osapi does not manage a configuration for that interface.
-Use `create` first.
-
 ```bash
 osapi client node network interface update
 ```
@@ -23,6 +20,12 @@ osapi client node network interface update \
   --target web-01 --name eth0 \
   --address 192.168.1.200/24 --json
 ```
+
+## Result
+
+The command fails if osapi does not manage a configuration for that interface.
+Use `create` first. If the content did not change, the command returns
+`changed: false`.
 
 ## Flags
 

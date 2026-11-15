@@ -2,7 +2,8 @@
 
 Delete a systemd service unit file.
 
-If the service runs, the agent stops and disables it.
+If the service runs, the agent stops and disables it. The agent removes the unit
+file from `/etc/systemd/system/` and runs `systemctl daemon-reload`.
 
 ```bash
 osapi client node service delete
@@ -18,6 +19,10 @@ osapi client node service delete --target _all \
 osapi client node service delete --target web-01 \
   --name myapp.service --json
 ```
+
+## Result
+
+If the unit file does not exist, the command returns `changed: false`.
 
 ## Flags
 

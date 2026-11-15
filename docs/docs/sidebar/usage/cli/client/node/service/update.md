@@ -2,8 +2,7 @@
 
 Update a systemd service unit file.
 
-The agent deploys the unit file again and runs `systemctl daemon-reload`. The
-command fails if the unit file does not exist.
+The agent deploys the unit file again and runs `systemctl daemon-reload`.
 
 ```bash
 osapi client node service update
@@ -19,6 +18,11 @@ osapi client node service update --target _all \
 osapi client node service update --target web-01 \
   --name myapp.service --object myapp-unit-v2 --json
 ```
+
+## Result
+
+The command fails if the unit file does not exist. If the content did not change
+(the same SHA), the command returns `changed: false`.
 
 ## Flags
 

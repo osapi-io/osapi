@@ -28,6 +28,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientAgentListCmd represents the clientAgentList command.
@@ -36,10 +37,12 @@ var clientAgentListCmd = &cobra.Command{
 	Short: "List active agents",
 	Long: "This command reads the agent heartbeat registry directly. It makes no job.\n" +
 		"Each agent writes a heartbeat every 10 seconds, with a 30-second TTL. When\n" +
-		"an agent stops its heartbeat, it goes from the list. The `--json` output has\n" +
-		"more system facts that the agent collects: architecture, kernel version,\n" +
-		"FQDN, CPU count, network interfaces, service manager and package manager.\n" +
-		"The table view does not show these fields.",
+		"an agent stops its heartbeat, it goes from the list.",
+	Annotations: map[string]string{
+		reference.Notes: "The `--json` output has more system facts that the agent collects:\n" +
+			"architecture, kernel version, FQDN, CPU count, network interfaces, service\n" +
+			"manager and package manager. The table view does not show these fields.",
+	},
 	Example: `  osapi client agent list
   osapi client agent list --pending`,
 	Run: func(cmd *cobra.Command, _ []string) {

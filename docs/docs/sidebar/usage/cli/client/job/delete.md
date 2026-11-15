@@ -2,6 +2,8 @@
 
 Delete a job.
 
+The job goes from storage permanently.
+
 ```bash
 osapi client job delete
 ```

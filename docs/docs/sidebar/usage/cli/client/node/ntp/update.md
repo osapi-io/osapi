@@ -3,8 +3,7 @@
 Update NTP configuration.
 
 The agent writes the server list again to `/etc/chrony/conf.d/osapi-ntp.conf`
-and reloads chrony immediately. The command fails if osapi does not manage the
-NTP configuration.
+and reloads chrony immediately.
 
 ```bash
 osapi client node ntp update
@@ -20,6 +19,11 @@ osapi client node ntp update --target _all \
 osapi client node ntp update --target web-01 \
   --servers ntp.example.com --json
 ```
+
+## Result
+
+The command fails if osapi does not manage the NTP configuration. If the server
+list is the same, the command returns `changed: false`.
 
 ## Flags
 

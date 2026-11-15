@@ -3,8 +3,7 @@
 Create NTP configuration.
 
 The agent writes the server list to `/etc/chrony/conf.d/osapi-ntp.conf` and
-reloads chrony immediately. If osapi already manages it, the command returns
-`changed: false`.
+reloads chrony immediately.
 
 ```bash
 osapi client node ntp create
@@ -20,6 +19,11 @@ osapi client node ntp create --target _all \
 osapi client node ntp create --target _all \
   --servers 0.pool.ntp.org
 ```
+
+## Result
+
+If osapi already manages it, the command returns `changed: false`. To change the
+server list, use `update`.
 
 ## Flags
 

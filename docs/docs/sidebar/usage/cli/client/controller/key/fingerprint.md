@@ -2,9 +2,10 @@
 
 Show the local controller key fingerprint.
 
-Agents use this fingerprint to verify that jobs come from a trusted controller.
-If no key exists, the command makes a new key pair. Then it shows the
-fingerprint.
+osapi calculates the fingerprint from the Ed25519 public key of the controller,
+in the PKI key directory (`/etc/osapi/pki` by default). Agents use this
+fingerprint to verify that jobs come from a trusted controller. If no key
+exists, the command makes a new key pair. Then it shows the fingerprint.
 
 ```bash
 osapi client controller key fingerprint

@@ -2,6 +2,9 @@
 
 Delete a network interface configuration.
 
+osapi manages only the files with the `osapi-` prefix. You can delete only those
+files.
+
 ```bash
 osapi client node network interface delete
 ```

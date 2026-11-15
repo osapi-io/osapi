@@ -4,7 +4,8 @@ Remove a deployed file from a host.
 
 The object store entry stays, so you can deploy the file again at any time. If
 the file does not exist on disk, the operation changes nothing and returns
-`Changed: false`.
+`Changed: false`. When you do not need the object, use
+`osapi client file delete` to remove it from the store.
 
 ```bash
 osapi client node file undeploy

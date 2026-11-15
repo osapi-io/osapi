@@ -17,6 +17,11 @@ osapi client node service disable --target web-01 \
   --name nginx.service --json
 ```
 
+## Result
+
+If the service was enabled, the command returns `changed: true`. If the service
+is already disabled, it returns `changed: false`.
+
 ## Flags
 
 | Flag     | Description                        | Default |

@@ -35,6 +35,19 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// The keys of the annotations of a command that its page shows. --help does
+// not show them, so a page has detail that a terminal does not need.
+const (
+	// Result tells what the command reports: when it returns changed: true
+	// or false, and when it fails.
+	Result = "osapi.docs.result"
+	// Permission is the permission that the command needs, for example
+	// node:write.
+	Permission = "osapi.docs.permission"
+	// Notes is more detail for the docs site. Use it rarely.
+	Notes = "osapi.docs.notes"
+)
+
 // Keep names the pages in the directory that a person writes. Write does not
 // delete them.
 var Keep = []string{"output.md"}
@@ -208,6 +221,16 @@ func Page(
 			fmt.Fprintf(&b, "```bash\n%s\n```\n\n", strings.TrimRight(dedent(c.Example), "\n"))
 		}
 		b.WriteString("import DocCardList from '@theme/DocCardList';\n\n<DocCardList />\n")
+		if p := c.Annotations[Permission]; p != "" {
+			fmt.Fprintf(
+				&b,
+				"\n## Permission\n\nEach command needs the `%s` permission. `osapi token roles` lists the roles that grant it.\n",
+				p,
+			)
+		}
+		if n := c.Annotations[Notes]; n != "" {
+			fmt.Fprintf(&b, "\n## Notes\n\n%s\n", mdx(n))
+		}
 		if t := flagTable(c.LocalNonPersistentFlags(), c.PersistentFlags()); t != "" {
 			fmt.Fprintf(&b, "\n## Flags\n\n%s", t)
 		}
@@ -223,6 +246,19 @@ func Page(
 			"\n## Examples\n\n```bash\n%s\n```\n",
 			strings.TrimRight(dedent(c.Example), "\n"),
 		)
+	}
+	if r := c.Annotations[Result]; r != "" {
+		fmt.Fprintf(&b, "\n## Result\n\n%s\n", mdx(r))
+	}
+	if p := c.Annotations[Permission]; p != "" {
+		fmt.Fprintf(
+			&b,
+			"\n## Permission\n\nIt needs the `%s` permission. `osapi token roles` lists the roles that grant it.\n",
+			p,
+		)
+	}
+	if n := c.Annotations[Notes]; n != "" {
+		fmt.Fprintf(&b, "\n## Notes\n\n%s\n", mdx(n))
 	}
 	if t := flagTable(c.LocalFlags()); t != "" {
 		fmt.Fprintf(&b, "\n## Flags\n\n%s", t)
