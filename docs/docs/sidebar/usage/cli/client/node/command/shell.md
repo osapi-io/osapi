@@ -1,7 +1,7 @@
 # Shell
 
-Execute a command through `/bin/sh -c`. Supports shell features like pipes,
-redirects, and variable expansion.
+Run a command through `/bin/sh -c`. You can use shell features, for example
+pipes, redirects and variable expansion.
 
 ```bash
 $ osapi client node command shell --command "ls -la /tmp | grep log"
@@ -14,10 +14,9 @@ $ osapi client node command shell --command "ls -la /tmp | grep log"
   1 host: 1 ok
 ```
 
-Long output is truncated in the table view. Use `--json` for the full response
-data.
+The table view shortens long output. Use `--json` to get the full response.
 
-Use shell syntax like pipes and redirects:
+Use shell syntax, for example pipes and redirects:
 
 ```bash
 $ osapi client node command shell \
@@ -25,7 +24,7 @@ $ osapi client node command shell \
     --timeout 10
 ```
 
-Execute in a specific working directory:
+Run in a specific working directory:
 
 ```bash
 $ osapi client node command shell \
@@ -33,7 +32,7 @@ $ osapi client node command shell \
     --cwd /etc
 ```
 
-Target by label to execute on a group of servers:
+Target a label to run on a group of servers:
 
 ```bash
 $ osapi client node command shell \
@@ -51,7 +50,7 @@ $ osapi client node command shell --command "uname -r" --json
 
 ## Raw Output
 
-Use `--stdout` to print only the remote command's stdout:
+Use `--stdout` to print only the stdout of the remote command:
 
 ```bash
 $ osapi client node command shell --command "df -h / | tail -1" --stdout
@@ -65,7 +64,7 @@ $ osapi client node command shell --command "cat /nonexistent" --stderr
 cat: /nonexistent: No such file or directory
 ```
 
-Both flags can be combined. Each line is prefixed with the hostname:
+You can use the two flags together. Each line starts with the hostname:
 
 ```bash
 $ osapi client node command shell --command "uname -r" --target _all --stdout
@@ -73,7 +72,7 @@ $ osapi client node command shell --command "uname -r" --target _all --stdout
 [web-02] 5.15.0-91-generic
 ```
 
-The CLI exit code matches the remote command's exit code.
+The exit code of the CLI is the exit code of the remote command.
 
 ## Flags
 

@@ -32,7 +32,7 @@ for _, r := range resp.Data.Results {
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/load.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/load.go)
 for a complete working example.
 

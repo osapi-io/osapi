@@ -13,7 +13,7 @@ $ osapi client node sysctl get --target web-01 --key net.ipv4.ip_forward
   1 host: 1 ok
 ```
 
-When targeting all hosts:
+When you target all hosts:
 
 ```bash
 $ osapi client node sysctl get --target _all --key vm.swappiness

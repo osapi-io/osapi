@@ -37,7 +37,7 @@ resp, err := client.Job.Retry(ctx, "uuid-string", "_any")
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/job.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/job.go)
 for a complete working example.
 

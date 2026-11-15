@@ -29,4 +29,5 @@ $ osapi client job get --id 550e8400-e29b-41d4-a716-446655440000
 | ------ | ------------------ | -------- |
 | `--id` | Job ID to retrieve | required |
 
-Job status is retrieved from the API and reflects the current state of the job.
+The command gets the job status from the API. The status is the current state of
+the job.

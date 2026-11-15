@@ -4,11 +4,11 @@ sidebar_position: 6
 
 # Your first behavior
 
-In this tutorial, we will build a behavior: one that reads and sets a host's
-message of the day, `/etc/motd`. By the end it will have an API route, CLI
-commands, a docs page, telemetry, a setting and tests at every layer, and we
-will have written the types, the provider and some examples. osapi builds the
-rest from the definition, the tests included.
+In this tutorial, you build a behavior that reads and sets the message of the
+day of a host, `/etc/motd`. At the end, it has an API route, CLI commands, a
+docs page, telemetry, a setting and tests at each layer. You write the types,
+the provider and some examples. osapi builds the rest from the definition, the
+tests too.
 
 [Building a behavior](behaviors.md) is the reference for everything used here.
 This page is the walk through it.
@@ -26,16 +26,16 @@ and one setting, `behaviors.motd.path`, the file it manages.
 
 ## Before we start
 
-We need a checkout of osapi with its tools, as [Contributing](contributing.md)
-describes, and it should build and pass:
+You need a checkout of osapi with its tools, as [Contributing](contributing.md)
+tells. It must build and pass:
 
 ```bash
 just deps
 just test
 ```
 
-With an agent, the whole tutorial is one request. In Claude Code, the
-`build-a-behavior` skill in this repository carries these steps:
+With an agent, the full tutorial is one request. The `build-a-behavior` skill in
+this repository has these steps, and each coding agent in a checkout loads it:
 
 ```text
 Build a motd behavior that reads and sets /etc/motd.
@@ -46,15 +46,14 @@ Reading on is how you review what it wrote.
 
 ## Check what exists
 
-Before writing anything, we ask the binary what it already has:
+Before you write anything, ask the binary what it has:
 
 ```bash
 go run . behavior list
 ```
 
-A behavior is the binary's own registry, so this list is always current. If
-something close to `motd` were there, we would extend it rather than add a
-second.
+The list comes from the registry of the binary, so it is always current. If a
+behavior similar to `motd` is there, extend it. Do not add a second one.
 
 ## Create it
 
@@ -86,15 +85,15 @@ go run . behavior validate
 just test
 ```
 
-`gen/` now holds a handler for each method, `api_get.go` and `api_update.go`,
-the route table in `api.go`, the commands in `cli.go`, the spec in `api.yaml`,
-and a test beside each Go file.
+Now `gen/` has a handler for each method (`api_get.go` and `api_update.go`), the
+route table in `api.go`, the commands in `cli.go`, the spec in `api.yaml`, and a
+test next to each Go file.
 
 The rest of the tutorial turns that value into the message of the day.
 
 ## Point the setting at /etc/motd
 
-Settings are the agent's standing configuration, and each gets a default, an
+Settings are the fixed configuration of the agent. Each one gets a default, an
 environment variable and an `agent start` flag:
 
 ```go title="internal/behaviors/motd/settings.go"
@@ -107,13 +106,14 @@ type Settings struct {
 var defaults = Settings{Path: defaultPath}
 ```
 
-A value that changes with each call never goes here; that is the method's input.
+A value that changes with each call never goes here. It is the input of the
+method.
 
 ## The types
 
-The input and output types carry the whole contract in their tags: each input
-field becomes a flag and a request field, and each output field a column and a
-JSON field. The scaffold's `value` already fits, so we only describe it:
+The tags of the input and output types hold all of the contract. Each input
+field becomes a flag and a request field. Each output field becomes a column and
+a JSON field. The `value` of the scaffold already fits, so you only describe it:
 
 ```go title="internal/behaviors/motd/types.go"
 type UpdateInput struct {
@@ -164,10 +164,11 @@ report `skipped` rather than fail:
 behavior.Platform("debian", newDebian),
 ```
 
-A provider declares every program it runs: `behavior.Sudo("program")` for one it
-runs with sudo, which the agent's preflight checks, and
-`behavior.Runs("program")` for one it runs without, which the agent warns about
-when it is missing. The tests fail on a program run without its declaration.
+A provider declares each program that it runs. Use `behavior.Sudo("program")`
+for a program that it runs with sudo. The preflight of the agent checks it. Use
+`behavior.Runs("program")` for a program that it runs without sudo. The agent
+gives a warning when it is missing. The tests fail when a program runs without
+its declaration.
 
 ## The examples
 
@@ -188,10 +189,11 @@ behavior.Write("update", Update).
     ),
 ```
 
-`After` runs another method first, here `update`, so `get` has something to
-read. `Wrote` says the file holds exactly that text afterwards. A provider that
-runs commands names them with `Ran`, and one that reads a command's output gives
-it with `Prints`. What a method refuses is declared the same way, with
+`After` runs a different method first, here `update`, so that `get` has
+something to read. `Wrote` says that the file has exactly that text after the
+call. A provider that runs commands names them with `Ran`. A provider that reads
+the output of a command gives it with `Prints`. Declare what a method refuses in
+the same way, with
 `.Fails("No message", UpdateInput{}, "value must not be empty")`, when the
 provider checks for it.
 
@@ -216,12 +218,13 @@ setting's default, its environment variable `OSAPI_BEHAVIORS_MOTD_PATH` and its
 just test
 ```
 
-We wrote no test. The scaffold's tests cover its own code:
-`methods_public_test.go` calls each method on a mocked provider, and
+You wrote no test. The tests of the scaffold cover its own code.
+`methods_public_test.go` calls each method on a mock provider.
 `debian_public_test.go` runs the provider on an in-memory filesystem.
-`behavior_public_test.go` validates the definition and has one line,
+`behavior_public_test.go` validates the definition. It has one line,
 `behaviortest.Run(s.T(), motd.Behavior)`, that runs the examples and refusals
-through the methods and the provider. The rest is generated from the definition:
+through the methods and the provider. osapi generates the rest from the
+definition:
 
 | What                    | Checks                                                                                                                                                                                            |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -256,14 +259,14 @@ Notice the second `update` reports no change: the host already has that message.
 One directory, one import line, and a behavior with:
 
 - `GET` and `PUT` routes, permission checks granted to the built-in roles,
-  broadcast targeting and the `{job_id, results[]}` envelope;
-- `osapi client node motd get` and `update`, with typed flags;
-- an OpenAPI spec, under API (next);
+  broadcast targeting and the `{job_id, results[]}` envelope
+- `osapi client node motd get` and `update`, with typed flags
+- an OpenAPI spec, under API (next)
 - a docs page under Behaviors, with each example rendered as the CLI prints it
-  and what it changes on the host;
-- a provider the agent builds on Debian, skipped elsewhere;
-- a span and three metrics on every call;
-- a setting with a default, an environment variable, a flag and validation;
+  and what it changes on the host
+- a provider the agent builds on Debian, skipped elsewhere
+- a span and three metrics on every call
+- a setting with a default, an environment variable, a flag and validation
 - provider, API, CLI and integration tests, from the examples.
 
 Next: [Building a behavior](behaviors.md) has every option and tag, and
@@ -271,9 +274,9 @@ Next: [Building a behavior](behaviors.md) has every option and tag, and
 
 ## Changing a hand-written domain
 
-The domains that are not behaviors yet still have to be maintained. Their rules
-are in the specifications repository, stated once, and the `add-a-domain` skill
-there carries the build order and cites them:
+The domains that are not behaviors yet still need maintenance. Their rules are
+in the specifications repository, stated one time. The `add-a-domain` skill
+there gives the build order and links to the rules:
 
 | Subject                                                         | Document                                                                                     |
 | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |

@@ -15,7 +15,7 @@ $ osapi client node service list --target web-01
   1 host: 1 ok
 ```
 
-Target all hosts to list services across the fleet:
+Target all hosts to list the services on all of the fleet:
 
 ```bash
 $ osapi client node service list --target _all

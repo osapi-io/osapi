@@ -8,39 +8,40 @@ OSAPI uses JWT bearer tokens for authentication and fine-grained `resource:verb`
 permissions for authorization. Every API endpoint (except health probes)
 requires a valid token.
 
-## How It Works
+## How it works
 
-### JWT Signing
+### JWT signing
 
-OSAPI uses **HMAC-SHA256 (HS256)** symmetric signing. The same `signing_key` is
-used to both create and verify tokens:
+osapi uses **HMAC-SHA256 (HS256)** symmetric signatures. The same `signing_key`
+makes and verifies tokens:
 
 ```
 osapi token generate ──[signs with signing_key]──> JWT
 Client ──[sends JWT]──> API Server ──[verifies with signing_key]──> Allow/Deny
 ```
 
-Only someone who knows the signing key can create valid tokens. If the signing
-key is compromised, rotate it immediately -- all previously issued tokens become
+Only a person who knows the signing key can make valid tokens. If somebody else
+gets the signing key, change it immediately. Then all tokens made before become
 invalid.
 
-The key must be at least 32 characters; a shorter value fails config validation
-at startup. Generate one with `openssl rand -hex 32`.
+The key must have 32 characters or more. A shorter value fails the config
+validation when osapi starts. Make one with `openssl rand -hex 32`.
 
-### Token Structure
+### Token structure
 
 A token carries three pieces of authorization data:
 
-- **Roles** (`roles` claim, required) -- one or more of `admin`, `write`, `read`
-- **Permissions** (`permissions` claim, optional) -- direct `resource:verb`
-  grants that override role expansion
-- **Subject** (`sub` claim) -- user identity for audit logging
+- **Roles** (`roles` claim, required): one or more of `admin`, `write` and
+  `read`
+- **Permissions** (`permissions` claim, optional): direct `resource:verb`
+  permissions. They replace the permissions of the roles
+- **Subject** (`sub` claim): the identity of the user, for the audit log
 
-Generate tokens with the CLI. See [CLI Reference](../usage/cli/token/token.mdx)
-for usage and examples, or the [API Reference](/category/api) for the REST
-endpoints.
+Generate tokens with the CLI. Refer to
+[CLI Reference](../usage/cli/token/token.mdx) for usage and examples, or the
+[API Reference](/category/api) for the REST endpoints.
 
-### Permission Resolution
+### Permission resolution
 
 When a request arrives, the middleware resolves the caller's effective
 permissions:
@@ -59,7 +60,7 @@ flowchart TD
     G -->|No| I[403 Forbidden]
 ```
 
-## Roles and Permissions
+## Roles and permissions
 
 There are three built-in roles, `admin`, `write` and `read`. To see every
 permission each grants, as the binary you run has them, list them:
@@ -68,19 +69,20 @@ permission each grants, as the binary you run has them, list them:
 osapi token roles
 ```
 
-That list is the reference, because it changes as behaviors are added. A
-behavior's permissions are `<name>:read` and `<name>:write`: `admin` and `write`
-grant both, and `read` grants the read permission.
-[`token roles`](../usage/cli/token/roles.md) has its output.
+Use that list, because it changes when osapi gets new behaviors. The permissions
+of a behavior are `<name>:read` and `<name>:write`. `admin` and `write` give the
+two permissions. `read` gives the read permission.
+[`token roles`](../usage/cli/token/roles.md) shows its output.
 
-`command:execute` and `command:shell` are two distinct permissions: the former
-guards the argv-only `exec` endpoint, the latter guards the `/bin/sh -c` based
-`shell` endpoint. Only `admin` includes either by default. A custom role or
-token that grants `command:execute` does **not** also gain shell access -- add
-`command:shell` explicitly if it should. See
-[Command Execution](command-execution.md#security-model) for details.
+`command:execute` and `command:shell` are two different permissions.
+`command:execute` controls the `exec` endpoint, which takes an argument list.
+`command:shell` controls the `shell` endpoint, which uses `/bin/sh -c`. By
+default, only `admin` has them. A custom role or token with `command:execute`
+does **not** get shell access. If it must have shell access, add
+`command:shell`. Refer to
+[Command Execution](command-execution.md#security-model).
 
-### Custom Roles
+### Custom roles
 
 Define custom roles in the configuration to create new role names or override
 default permission mappings:
@@ -118,31 +120,31 @@ controller:
       bearer_token: '<jwt>'
 ```
 
-See [Configuration](../usage/configuration.md#permissions) for the full
-reference including custom roles and CORS settings.
+Refer to [Configuration](../usage/configuration.md#permissions) for all the
+settings, with custom roles and CORS.
 
-## Agent-Level Authentication (PKI)
+## Agent-Level authentication (PKI)
 
-JWT-based auth secures the REST API between clients and the controller. For
-agent-level trust -- ensuring that only approved agents process jobs and that
-jobs originate from a trusted controller -- OSAPI provides an optional PKI
-enrollment system.
+JWT authentication protects the REST API between the clients and the controller.
+For trust between the agents and the controller, osapi has an optional PKI
+enrollment system. It makes sure that only approved agents process jobs, and
+that the jobs come from a trusted controller.
 
-When PKI is enabled, each agent generates an Ed25519 key pair and submits an
-enrollment request. An administrator accepts or rejects the request,
-establishing cryptographic trust. The controller signs jobs with its private
-key, and agents verify the signature before processing.
+When PKI is enabled, each agent makes an Ed25519 key pair and sends an
+enrollment request. An administrator accepts or rejects the request. That gives
+cryptographic trust. The controller signs jobs with its private key. Agents
+verify the signature before they process a job.
 
 PKI is complementary to JWT auth: JWTs authenticate API callers, while PKI
-authenticates the agent-controller relationship over NATS. See
+authenticates the agent-controller relationship over NATS. Refer to
 [Agent Identity & PKI](agent-identity.md) for full details.
 
 ## Related
 
-- [Agent Identity & PKI](agent-identity.md) -- machine-ID identity, PKI
+- [Agent Identity & PKI](agent-identity.md): machine-ID identity, PKI
   enrollment, job signing
-- [CLI Reference](../usage/cli/token/token.mdx) -- token generation and
-  validation commands
-- [API Reference](/category/api) -- REST API documentation
-- [Configuration](../usage/configuration.md) -- full configuration reference
-- [Architecture](../architecture/architecture.md) -- system design overview
+- [CLI Reference](../usage/cli/token/token.mdx): token generation and validation
+  commands
+- [API Reference](/category/api): REST API documentation
+- [Configuration](../usage/configuration.md): full configuration reference
+- [Architecture](../architecture/architecture.md): system design overview

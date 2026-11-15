@@ -1,8 +1,8 @@
 # Update
 
-Update an existing sysctl parameter on a target host. The value is rewritten to
-`/etc/sysctl.d/osapi-{key}.conf` and applied immediately via `sysctl -p`. Fails
-if the key is not currently managed -- use `create` first:
+Update a sysctl parameter on a target host. The agent writes the value again to
+`/etc/sysctl.d/osapi-{key}.conf` and applies it immediately with `sysctl -p`.
+The command fails if osapi does not manage the key. Use `create` first:
 
 ```bash
 $ osapi client node sysctl update --target web-01 \
@@ -16,8 +16,8 @@ $ osapi client node sysctl update --target web-01 \
   1 host: 1 changed
 ```
 
-If the parameter already has the requested value, `changed: false` is returned
-and the file is not rewritten:
+If the parameter already has the requested value, the command returns
+`changed: false` and does not write the file again:
 
 ```bash
 $ osapi client node sysctl update --target web-01 \

@@ -13,7 +13,7 @@ $ osapi client node container docker stop --id a1b2c3d4e5f6
   1 host: 1 changed
 ```
 
-Stop with a custom timeout (seconds to wait before killing):
+Stop with a custom timeout, in seconds to wait before the container is killed:
 
 ```bash
 $ osapi client node container docker stop --id my-nginx --timeout 30

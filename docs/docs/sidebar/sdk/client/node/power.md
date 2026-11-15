@@ -4,8 +4,8 @@ sidebar_position: 2
 
 # Power
 
-The `Power` service provides methods for managing power state on target hosts
-via reboot and shutdown operations. Access via `client.Power.Reboot()` and
+The `Power` service has methods that manage power state on target hosts through
+reboot and shutdown operations. Use `client.Power.Reboot()` and
 `client.Power.Shutdown()`.
 
 ## Methods

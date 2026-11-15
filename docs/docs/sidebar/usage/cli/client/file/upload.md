@@ -1,6 +1,6 @@
 # Upload
 
-Upload a local file to the OSAPI Object Store for later deployment:
+Upload a local file to the osapi Object Store, to deploy it later:
 
 ```bash
 $ osapi client file upload --name app.conf --file /tmp/app.conf
@@ -19,9 +19,9 @@ $ osapi client file upload --name app.conf.tmpl --file /tmp/app.conf.tmpl \
     --content-type template
 ```
 
-Re-uploading the same content is a no-op (`Changed: false`). If the file already
-exists with different content, the upload is rejected with a 409 Conflict. Use
-`--force` to overwrite:
+An upload of the same content changes nothing (`Changed: false`). If the file
+exists with different content, the command rejects the upload with 409 Conflict.
+Use `--force` to replace the file:
 
 ```bash
 $ osapi client file upload --name app.conf --file /tmp/app.conf --force

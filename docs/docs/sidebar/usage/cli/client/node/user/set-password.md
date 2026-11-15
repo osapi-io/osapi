@@ -14,9 +14,9 @@ $ osapi client node user set-password --target web-01 \
   1 host: 1 changed
 ```
 
-The password is sent to the controller in plaintext over TLS. The controller
-hashes it before the job is stored; the agent and provider only ever see the
-hash, and the plaintext is never written to disk or logs.
+The client sends the password to the controller in plaintext over TLS. The
+controller hashes it before it stores the job. The agent and the provider see
+only the hash. osapi never writes the plaintext to disk or to logs.
 
 Broadcast to all hosts:
 

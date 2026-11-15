@@ -8,7 +8,7 @@ sidebar_position: 2
 
 List the kernel's parameters and which osapi manages.
 
-Lists every parameter the kernel shows under /proc/sys, with its current value, as sysctl -a does, and marks the ones osapi manages. A prefix, such as net.ipv4, narrows it to that part of the tree. A parameter osapi manages that the kernel does not have right now, such as one whose module is not loaded, is listed with the value osapi wrote.
+Lists every parameter the kernel shows under /proc/sys, with its current value, as sysctl -a does, and marks the ones osapi manages. A prefix, such as net.ipv4, limits the list to that part of the tree. The kernel can lack a parameter that osapi manages, for example when its module is not loaded. Then the list shows the value that osapi wrote.
 
 ## Every parameter, and which osapi manages
 

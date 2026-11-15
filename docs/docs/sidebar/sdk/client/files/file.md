@@ -4,8 +4,8 @@ sidebar_position: 1
 
 # File
 
-File management operations for the OSAPI Object Store. Upload, list, inspect,
-and delete files that can be deployed to agents via `Node.FileDeploy`.
+File management operations for the OSAPI Object Store. Upload, list, examine and
+delete files that you can deploy to agents with `Node.FileDeploy`.
 
 ## Methods
 
@@ -124,11 +124,11 @@ do not use targeting.
 
 ## Change Detection
 
-`Upload` computes a SHA-256 of the file content locally before uploading. If the
-hash matches the stored file, the upload is skipped and `Changed: false` is
-returned. Use `WithForce()` to bypass this check.
+`Upload` calculates the SHA-256 of the file content locally before it uploads
+the file. If the hash matches the stored file, the upload is skipped and
+`Changed: false` is returned. Use `WithForce()` to bypass this check.
 
-`Changed` performs the same SHA-256 comparison without uploading. It returns
+`Changed` does the same SHA-256 comparison, but does not upload. It returns
 `Changed: true` when the file does not exist or the content differs.
 
 ## Idempotency
@@ -139,7 +139,7 @@ reports `Changed: false`.
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/file.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/file.go)
 for a complete working example.
 

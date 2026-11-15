@@ -1,7 +1,7 @@
 # Get
 
-Get a single audit log entry by its UUID. Requires `audit:read` permission
-(admin role by default).
+Get one audit log entry by its UUID. It needs the `audit:read` permission, which
+the admin role has by default.
 
 ```bash
 $ osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000
@@ -22,7 +22,7 @@ $ osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000
 | ------ | -------------------------- | -------- |
 | `--id` | Audit entry ID to retrieve | required |
 
-Use `--json` for raw JSON output:
+Use `--json` to get the raw JSON output:
 
 ```bash
 $ osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000 --json

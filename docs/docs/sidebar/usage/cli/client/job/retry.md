@@ -15,6 +15,6 @@ $ osapi client job retry --id 550e8400-e29b-41d4-a716-446655440000
 | `--id`     | Job ID to retry         | required |
 | `--target` | Override target routing | `_any`   |
 
-Creates a new job using the same operation data as the original. The original
-job is preserved for history, and a "retried" event is added to its timeline
-linking to the new job.
+The command makes a new job with the same operation data as the original job.
+The original job stays in the history. Its timeline gets a "retried" event that
+links to the new job.

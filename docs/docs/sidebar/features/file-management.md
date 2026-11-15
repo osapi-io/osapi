@@ -2,156 +2,152 @@
 sidebar_position: 9
 ---
 
-# File Management
+# File management
 
-OSAPI can upload files to a central Object Store and deploy them to managed
-hosts with SHA-based idempotency. File operations run through the
-[job system](job-system.md), so the API server never writes to the filesystem
-directly -- agents handle all deployment.
+osapi uploads files to a central Object Store and deploys them to managed hosts.
+It compares SHA-256 checksums, so a deploy does not write a file that did not
+change. File operations use the [job system](job-system.md). Thus the API server
+does not write to a filesystem. The agents do all the deploys.
 
-## What It Does
+## What it does
 
-| Operation | Description                                            |
-| --------- | ------------------------------------------------------ |
-| Upload    | Store a file (base64-encoded) in the NATS Object Store |
-| List      | List all files stored in the Object Store              |
-| Get       | Retrieve metadata for a specific stored file           |
-| Delete    | Remove a file from the Object Store                    |
-| Deploy    | Deploy a file from Object Store to agent filesystem    |
-| Undeploy  | Remove a deployed file from disk (state preserved)     |
-| Status    | Check whether a deployed file is in-sync or drifted    |
+| Operation | Description                                                 |
+| --------- | ----------------------------------------------------------- |
+| Upload    | Store a file (base64-encoded) in the NATS Object Store      |
+| List      | List all files in the Object Store                          |
+| Get       | Get the metadata of one stored file                         |
+| Delete    | Remove a file from the Object Store                         |
+| Deploy    | Deploy a file from the Object Store to the agent filesystem |
+| Undeploy  | Remove a deployed file from disk. The state stays           |
+| Status    | Check if a deployed file is in sync or drifted              |
 
-**Upload / List / Get / Delete** manage files in the central NATS Object Store.
-Files are stored by name and tracked with SHA-256 checksums. These operations
-are synchronous REST calls -- they do not go through the job system.
+**Upload, List, Get and Delete** manage the files in the central NATS Object
+Store. osapi stores each file by name, with a SHA-256 checksum. These operations
+are synchronous REST calls. They do not use the job system.
 
-**Deploy** creates an asynchronous job that fetches the file from the Object
-Store and writes it to the target path on the agent's filesystem. Deploy
-supports optional file permissions (mode, owner, group) and Go template
-rendering.
+**Deploy** makes an asynchronous job. The job gets the file from the Object
+Store and writes it to the target path on the filesystem of the agent. A deploy
+can set the file permissions (mode, owner, group) and can render a Go template.
 
-**Undeploy** creates an asynchronous job that removes a previously deployed file
-from the agent's filesystem. The file-state KV record is preserved so the
-undeploy is auditable and a subsequent deploy can detect the change.
+**Undeploy** makes an asynchronous job that removes a deployed file from the
+filesystem of the agent. The file-state KV record stays. Thus you can audit the
+undeploy, and a later deploy can find the change.
 
-**Status** creates an asynchronous job that compares the current file on disk
-against its expected SHA-256 from the file-state KV bucket. It reports one of
-three states: `in-sync`, `drifted`, or `missing`.
+**Status** makes an asynchronous job. The job compares the file on disk with its
+expected SHA-256 from the file-state KV bucket. It reports one of three states:
+`in-sync`, `drifted` or `missing`.
 
-## How It Works
+## How it works
 
-### File Upload Flow
+### File upload flow
 
-1. The CLI (or SDK) computes a SHA-256 of the local file and queries the Object
-   Store to check whether it already holds the same content. If the SHA matches,
-   the upload is skipped entirely (no bytes sent over the network).
-2. If the file is new or the SHA differs, the CLI sends the file via a multipart
-   upload.
-3. On the server side, if a file with the same name already exists and the
-   content differs, the server rejects the upload with **409 Conflict** unless
-   `?force=true` is passed.
-4. If the content is identical, the server returns `changed: false` without
-   rewriting the object.
-5. With `--force`, both the SDK pre-check and the server-side digest guard are
-   bypassed — the file is always written and `changed: true` is returned.
+1. The CLI or the SDK calculates the SHA-256 of the local file. Then it asks the
+   Object Store if it already has the same content. If the SHA is the same, the
+   upload stops, and no bytes go over the network.
+1. If the file is new or the SHA is different, the CLI sends the file in a
+   multipart upload.
+1. On the server, if a file with the same name exists and the content is
+   different, the server rejects the upload with **409 Conflict**. To replace
+   the file, add `?force=true`.
+1. If the content is the same, the server returns `changed: false` and does not
+   write the object again.
+1. With `--force`, the SDK does not check first, and the server does not compare
+   the digests. The server always writes the file and returns `changed: true`.
 
-### File Deploy Flow
+### File deploy flow
 
-Deploy follows the standard [job processing flow](job-system.md). The agent
-fetches the file from Object Store, renders it if it is a template, and compares
-the result with **the file on disk**. If they differ — because the file is
-absent, or because somebody edited it — the agent writes it and records the new
-SHA-256.
+A deploy follows the standard [job processing flow](job-system.md). The agent
+gets the file from the Object Store and renders it if it is a template. Then it
+compares the result with **the file on disk**. If they are different, because
+the file is not there or because somebody changed it, the agent writes the file
+and records the new SHA-256.
 
-The comparison is against the disk, not against what the last deploy recorded. A
-config edited by hand still has the SHA the record remembers, so comparing
-against the record would call that unchanged and walk away from the drift.
+The agent compares with the disk, not with the record of the last deploy. A
+configuration that somebody changed by hand still has the SHA that the record
+keeps. A comparison with the record shows no change, and the drift stays.
 
-The write is atomic. Content goes to a temporary file beside the target, is
-given the requested mode, and is renamed over it, so a reader — an `sshd`, an
-`nginx -t`, a `systemctl daemon-reload` — sees either the old file or the new
-one, never half of either. A write that fails part way leaves the target
-untouched and removes the temporary file.
+The write is atomic. The agent writes the content to a temporary file next to
+the target, gives it the requested mode, and renames it over the target. Thus a
+reader, for example `sshd`, `nginx -t` or `systemctl daemon-reload`, sees the
+old file or the new file, never a part of a file. If a write fails, the target
+does not change, and the agent removes the temporary file.
 
-**Mode, owner and group are applied even when the content has not changed**, so
-a deploy that changes only the permissions takes effect and reports
-`changed: true`. Each is compared against the file itself:
+**The agent applies the mode, the owner and the group also when the content did
+not change.** Thus a deploy that changes only the permissions has an effect. It
+reports `changed: true`. The agent compares each one with the file:
 
-- The mode is compared with the permission bits on disk, so a mode changed by
-  anything is corrected.
-- The owner and group are compared with the file's actual uid and gid, after
-  resolving the requested names on the host. A name the host does not know fails
-  the deploy rather than passing silently; a numeric id is accepted as itself,
-  which is what a container image without a `passwd` entry needs. When they
-  differ, the agent runs `chown` through its privilege escalation.
-- A `mode` must be three or four octal digits. An unparsable one fails the
-  request rather than becoming 0644, which used to grant more than was asked for
-  while reporting success.
-- An absent `mode` means "leave the permissions alone" rather than 0644. The
-  default applies to a file being created, because applying it to a file already
-  on disk would quietly widen permissions someone else set. The same holds for
-  an absent `owner` or `group`.
+- It compares the mode with the permission bits on disk. Thus it corrects a mode
+  that something else changed.
+- It compares the owner and the group with the real uid and gid of the file,
+  after it finds the requested names on the host. A name that the host does not
+  know fails the deploy. A numeric id stays as it is. A container image without
+  a `passwd` entry needs that. When they are different, the agent runs `chown`
+  through its privilege escalation.
+- A `mode` must have three or four octal digits. A mode that the agent cannot
+  parse fails the request. Before, such a mode became 0644, which gave more
+  access than requested and still reported success.
+- When the request has no `mode`, the agent does not change the permissions. It
+  does not use 0644. The default applies only to a new file. On a file that
+  exists, it can give more access than somebody else set. The same applies when
+  the request has no `owner` or `group`.
 
-What osapi records is a log of what it did, never evidence of what is there now.
-Every decision above reads the system.
+The records of osapi are a log of what it did, not a proof of what is there now.
+Each decision above reads the system.
 
-You can target a specific host, broadcast to all hosts with `_all`, or route by
-label.
+You can target one host, broadcast to all hosts with `_all`, or target a label.
 
-### File Undeploy Flow
+### File undeploy flow
 
 ```bash
 osapi client node file undeploy --target HOST --path /etc/app/app.conf
 ```
 
-Undeploy follows the standard [job processing flow](job-system.md). The agent
-removes the file from the filesystem but preserves the file-state KV record so
-the operation is auditable. A subsequent deploy will write the file even if the
-content has not changed (since the file is now absent). If the file does not
-exist on disk, the operation returns `changed: false`.
+An undeploy follows the standard [job processing flow](job-system.md). The agent
+removes the file from the filesystem, but keeps the file-state KV record so that
+you can audit the operation. A later deploy writes the file also when the
+content did not change, because the file is not there now. If the file is not on
+disk, the operation returns `changed: false`.
 
-### SHA-Based Idempotency
+### SHA-based idempotency
 
-Every deploy computes a SHA-256 of the content it was asked to deploy and
-compares it with a SHA-256 of the file on disk. If they match, the file is not
-rewritten. This makes repeated deploys safe and efficient -- only actual
-differences hit the filesystem, and a file somebody edited counts as a
-difference. The permissions are checked either way, as described under File
-Deploy Flow above: identical content does not mean an identical file.
+Each deploy calculates the SHA-256 of the content to deploy, and compares it
+with the SHA-256 of the file on disk. If they are the same, the agent does not
+write the file again. Thus repeated deploys are safe and fast. Only real
+differences go to the filesystem, and a file that somebody changed is a
+difference. The agent checks the permissions in all cases, as File deploy flow
+tells. The same content does not mean the same file.
 
-The file-state KV records what was deployed, for `status`, staleness detection
-and audit. It is not consulted to decide whether to write.
+The file-state KV records what osapi deployed, for `status`, for stale detection
+and for audit. The agent does not use it to decide if it must write.
 
-The file-state KV has no TTL, so deploy state persists indefinitely until
-explicitly removed.
+The file-state KV has no TTL. Thus the deploy state stays until you remove it.
 
-## Protected Objects
+## Protected objects
 
-Files stored under the `osapi/` name prefix are protected. Both uploads and
-deletes to `osapi/*` names return **403 Forbidden**. These objects are managed
-exclusively by osapi itself — the agent seeds them on startup from embedded
-templates and updates them automatically when a new osapi version ships with
-changes.
+Files with the `osapi/` name prefix are protected. An upload or a delete of an
+`osapi/*` name returns **403 Forbidden**. Only osapi manages these objects. The
+agent adds them from embedded templates when it starts. It updates them
+automatically when a new version of osapi changes them.
 
-Protected objects are used by meta providers such as the cron provider, which
-references them at deploy time. The `osapi/` prefix is reserved; use any other
-prefix for your own files.
+Meta providers use protected objects, for example the cron provider, which
+refers to them at deploy time. The `osapi/` prefix is reserved. Use a different
+prefix for your files.
 
-## Template Rendering
+## Template rendering
 
-When `content_type` is set to `template`, the file content is processed as a Go
-`text/template` before being written to disk. The template context provides
+When `content_type` is `template`, the agent processes the content as a Go
+`text/template` before it writes the file to disk. The template context has
 three top-level fields:
 
-| Field       | Description                            |
-| ----------- | -------------------------------------- |
-| `.Facts`    | Agent's collected system facts (map)   |
-| `.Vars`     | User-supplied template variables (map) |
-| `.Hostname` | Target agent's hostname (string)       |
+| Field       | Description                                     |
+| ----------- | ----------------------------------------------- |
+| `.Facts`    | The system facts that the agent collected (map) |
+| `.Vars`     | The template variables from the user (map)      |
+| `.Hostname` | The hostname of the target agent (string)       |
 
-### Example Template
+### Example template
 
-A configuration file that adapts to each host:
+A configuration file that changes for each host:
 
 ```text
 # Generated for {{ .Hostname }}
@@ -171,58 +167,57 @@ osapi client node file deploy \
     --target _all
 ```
 
-Each agent renders the template with its own facts and hostname, so the same
-template produces host-specific configuration across a fleet.
+Each agent renders the template with its own facts and hostname. Thus the same
+template gives a different configuration for each host in a fleet.
 
-### Available Fact Keys
+### Available fact keys
 
-Facts are exposed as a flat map via JSON round-tripping of the agent's
-`FactsRegistration`. Use dot-syntax (`.Facts.key`) for keys that are valid Go
+The facts are a flat map. osapi makes it from the `FactsRegistration` of the
+agent, through JSON. Use dot syntax (`.Facts.key`) for keys that are valid Go
 identifiers:
 
-| Key                 | Type     | Description                  | Example          |
-| ------------------- | -------- | ---------------------------- | ---------------- |
-| `architecture`      | string   | CPU architecture             | `amd64`, `arm64` |
-| `kernel_version`    | string   | OS kernel version            | `6.8.0-51`       |
-| `cpu_count`         | number   | Logical CPU count            | `8`              |
-| `fqdn`              | string   | Fully qualified domain name  | `web-01.lan`     |
-| `service_mgr`       | string   | Init system                  | `systemd`        |
-| `package_mgr`       | string   | System package manager       | `apt`            |
-| `containerized`     | boolean  | Running inside a container   | `true`           |
-| `primary_interface` | string   | Default route interface name | `eth0`           |
-| `interfaces`        | []object | Network interfaces           | _(see below)_    |
-| `routes`            | []object | IP routing table             | _(see below)_    |
+| Key                 | Type     | Description                         | Example          |
+| ------------------- | -------- | ----------------------------------- | ---------------- |
+| `architecture`      | string   | CPU architecture                    | `amd64`, `arm64` |
+| `kernel_version`    | string   | OS kernel version                   | `6.8.0-51`       |
+| `cpu_count`         | number   | Logical CPU count                   | `8`              |
+| `fqdn`              | string   | Fully qualified domain name         | `web-01.lan`     |
+| `service_mgr`       | string   | Init system                         | `systemd`        |
+| `package_mgr`       | string   | System package manager              | `apt`            |
+| `containerized`     | boolean  | The agent runs in a container       | `true`           |
+| `primary_interface` | string   | Name of the default route interface | `eth0`           |
+| `interfaces`        | []object | Network interfaces                  | _(see below)_    |
+| `routes`            | []object | IP routing table                    | _(see below)_    |
 
-Access scalar facts with dot-syntax:
+Get a scalar fact with dot syntax:
 
 ```text
 arch = {{ .Facts.architecture }}
 cpus = {{ .Facts.cpu_count }}
 ```
 
-For keys with underscores, both `{{ .Facts.kernel_version }}` and
-`{{ index .Facts "kernel_version" }}` work.
+For keys with underscores, `{{ .Facts.kernel_version }}` and
+`{{ index .Facts "kernel_version" }}` both work.
 
 :::caution Missing key behavior
 
-Templates use Go's `missingkey=error` option. Accessing a key that doesn't exist
-via **dot-syntax** (e.g., `{{ .Vars.missing }}` or `{{ .Facts.bogus }}`) causes
-the deploy to **fail with an error** rather than silently rendering
-`<no value>`.
+Templates use the Go `missingkey=error` option. If you use dot syntax for a key
+that does not exist, for example `{{ .Vars.missing }}` or `{{ .Facts.bogus }}`,
+the deploy **fails with an error**. It does not write `<no value>`.
 
-However, `{{ index .Facts "nonexistent" }}` uses Go's built-in `index` function,
-which returns the zero value for the map's value type — rendering `<no value>`
-without an error. **Prefer dot-syntax over `index`** for fact access so that
-typos are caught at deploy time.
+But `{{ index .Facts "nonexistent" }}` uses the built-in Go `index` function. It
+returns the zero value of the map value type, and writes `<no value>` without an
+error. **Use dot syntax, not `index`**, to get facts. Then a typo fails at
+deploy time.
 
 :::
 
-### Meta Provider Templates
+### Meta provider templates
 
-Domains that use file deployment (service management, certificate management)
-inherit template support automatically. When the uploaded object has
-`content_type: template`, the file provider renders it at deploy time — the meta
-provider does not need to specify the content type.
+The domains that deploy files, for example service management and certificate
+management, get template support automatically. When the uploaded object has
+`content_type: template`, the file provider renders it at deploy time. The meta
+provider does not need to set the content type.
 
 For example, a systemd unit file template:
 
@@ -234,7 +229,7 @@ Description=App on {{ .Hostname }}
 ExecStart=/usr/bin/app --cpus {{ .Facts.cpu_count }}
 ```
 
-Upload as a template, then deploy via the service API:
+Upload it as a template. Then deploy it through the service API:
 
 ```bash
 osapi client file upload \
@@ -244,23 +239,22 @@ osapi client node service create \
     --target web-01 --name my-app --object my-unit
 ```
 
-## Staleness Detection
+## Staleness detection
 
-When an object is re-uploaded to the Object Store with new content, existing
-deployments become stale — the deployed file no longer matches the source. The
-`file list --stale` detects this by comparing the SHA-256 hash of each
-deployment against the current object content.
+When you upload an object again with new content, the deployments of it become
+stale. The deployed file is then different from the source. `file list --stale`
+finds this. It compares the SHA-256 of each deployment with the current content
+of the object.
 
 ```bash
 osapi client file list --stale
 ```
 
-This is a controller-side check that does not contact agents. It compares the
-file-state KV (which tracks what was deployed) against the Object Store (which
-has the current content). Use `file deploy` to bring stale deployments up to
-date.
+The controller does this check, and it does not contact the agents. It compares
+the file-state KV, which records what osapi deployed, with the Object Store,
+which has the current content. Use `file deploy` to update stale deployments.
 
-Stale detection covers all providers that use the file provider:
+Stale detection includes all providers that use the file provider:
 
 - Service unit files
 - CA certificates
@@ -269,15 +263,14 @@ Stale detection covers all providers that use the file provider:
 
 ## Configuration
 
-File management uses two NATS infrastructure components in addition to the
-general job infrastructure:
+File management uses two NATS parts in addition to the general job system:
 
-- **Object Store** (`nats.objects`) -- stores uploaded file content. Configured
-  with bucket name, max size, storage backend, and chunk size.
-- **File State KV** (`nats.file_state`) -- tracks deploy state (SHA-256, path,
-  timestamps) per host. Has no TTL -- state persists until explicitly removed.
+- **Object Store** (`nats.objects`) keeps the uploaded file content. Configure
+  its bucket name, maximum size, storage backend and chunk size.
+- **File State KV** (`nats.file_state`) records the deploy state (SHA-256, path,
+  times) for each host. It has no TTL. Thus the state stays until you remove it.
 
-See [Configuration](../usage/configuration.md) for the full reference.
+Refer to [Configuration](../usage/configuration.md) for all the settings.
 
 ```yaml
 nats:
@@ -296,14 +289,14 @@ nats:
 
 ## Permissions
 
-File operations require `file:*` permissions. The `admin` and `write` roles
-include both `file:read` and `file:write`. The `read` role includes only
-`file:read`. See the [API reference](/category/api) for the permission required
-by each endpoint.
+File operations need `file:*` permissions. The `admin` and `write` roles have
+`file:read` and `file:write`. The `read` role has only `file:read`. Refer to the
+[API reference](/category/api) for the permission of each endpoint.
 
 ## Related
 
-- [System Facts](system-facts.md) -- facts available in template context
-- [Job System](job-system.md) -- how async job processing works
-- [Authentication & RBAC](authentication.md) -- permissions and roles
-- [Architecture](../architecture/architecture.md) -- system design overview
+- [System Facts](system-facts.md): the facts in the template context
+- [Job System](job-system.md): how asynchronous jobs work
+- [Authentication & RBAC](authentication.md): permissions and roles
+- [Architecture](../architecture/architecture.md): an overview of the system
+  design

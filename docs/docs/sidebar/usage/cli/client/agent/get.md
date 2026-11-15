@@ -37,8 +37,8 @@ $ osapi client agent get --hostname web-01
     2026-03-05 10:05:23    cordoned   web-01    All jobs completed
 ```
 
-This command reads directly from the agent heartbeat registry -- no job is
-created. The data comes from the agent's most recent heartbeat write.
+This command reads the agent heartbeat registry directly. It makes no job. The
+data comes from the last heartbeat of the agent.
 
 | Field        | Description                                               |
 | ------------ | --------------------------------------------------------- |
@@ -66,9 +66,9 @@ created. The data comes from the agent's most recent heartbeat write.
 
 :::tip agent get vs. node status
 
-`agent get` shows lightweight data from the heartbeat registry (instant, no
-job). `node status` runs a full system inspection via the job system (includes
-disk usage, deeper metrics).
+`agent get` shows a small set of data from the heartbeat registry, at once and
+with no job. `node status` runs a full system inspection through the job system,
+with disk usage and more metrics.
 
 :::
 

@@ -21,7 +21,7 @@ $ osapi client node network interface get \
   State        up
 ```
 
-When targeting all hosts:
+When you target all hosts:
 
 ```bash
 $ osapi client node network interface get \

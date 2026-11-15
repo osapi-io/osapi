@@ -1,8 +1,8 @@
 # Create
 
-Create a new Netplan interface configuration on a target host. Fails if an
-OSAPI-managed configuration for that interface already exists -- use `update` to
-replace it:
+Make a new Netplan interface configuration on a target host. The command fails
+if osapi already manages a configuration for that interface. To replace it, use
+`update`:
 
 ```bash
 $ osapi client node network interface create \
@@ -47,7 +47,7 @@ $ osapi client node network interface create \
   2 hosts: 2 changed
 ```
 
-When some hosts are skipped (e.g., macOS agents):
+When some hosts are skipped, for example macOS agents:
 
 ```bash
 $ osapi client node network interface create \

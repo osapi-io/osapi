@@ -1,8 +1,8 @@
 # New
 
 Write a new behavior's standard files into an osapi checkout and register it.
-The result builds, validates and passes every test before you change anything;
-then change the types, the provider and the examples to what the behavior
+Before you change anything, the result builds, validates and passes every test.
+Then change the types, the provider and the examples to what the behavior
 manages. Writes nothing when the name is taken.
 
 ```bash

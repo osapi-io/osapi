@@ -29,7 +29,7 @@ for _, r := range resp.Data.Results {
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/memory.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/memory.go)
 for a complete working example.
 

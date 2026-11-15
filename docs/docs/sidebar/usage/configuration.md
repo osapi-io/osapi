@@ -5,8 +5,8 @@ sidebar_label: Configuration
 
 # Configuration
 
-OSAPI is configured through a YAML file and optional environment variable
-overrides.
+A YAML file configures osapi. As an option, environment variables can replace
+values of the file.
 
 ## Config File
 
@@ -33,30 +33,31 @@ without a config file. The source of each value is `env`, `file`, `default` or
 
 ## Environment variables
 
-Every key can be set with an environment variable instead: `OSAPI_`, then the
-key in capitals with its dots as underscores. `controller.api.port` is
-`OSAPI_CONTROLLER_API_PORT`. An environment variable wins over the file, and
-applies even when the file does not mention the key.
+An environment variable can set each key: `OSAPI_`, then the key in capitals,
+with underscores for its dots. `controller.api.port` is
+`OSAPI_CONTROLLER_API_PORT`. An environment variable has priority over the file.
+It applies also when the file does not have the key.
 
 ## Validation
 
-Configuration is checked before any component starts, and a bad value stops
-osapi with the field that failed. Check a file without starting anything:
+osapi checks the configuration before a component starts. A bad value stops
+osapi, with the field that failed. To check a file and start nothing:
 
 ```bash
 osapi config validate -f ./osapi.yaml
 ```
 
-Two keys have no default and must be set:
+Two keys have no default. You must set them:
 
 | Key                                       | Purpose                       |
 | ----------------------------------------- | ----------------------------- |
 | `controller.api.security.signing_key`     | HS256 key for signing JWTs    |
 | `controller.client.security.bearer_token` | JWT sent with client requests |
 
-Generate a signing key with `openssl rand -hex 32`; it must be at least 32
-characters. Generate a bearer token with `osapi token generate`. Durations are
-Go durations, such as `30s`, `5m` or `168h`; a `d` suffix is not accepted.
+Make a signing key with `openssl rand -hex 32`. It must have 32 characters or
+more. Make a bearer token with `osapi token generate`. Durations are Go
+durations, for example `30s`, `5m` or `168h`. osapi does not accept a `d`
+suffix.
 
 ## Authentication
 
@@ -86,9 +87,9 @@ nats:
           password: '<secret>'
 ```
 
-With `type: nkey`, set `nkey_file` to a seed whose public key is among `nkeys`:
-the server's own setup and heartbeat connect with it, since they need to
-authenticate like any other client.
+With `type: nkey`, set `nkey_file` to a seed whose public key is in `nkeys`. The
+setup and the heartbeat of the server connect with it, because they must
+authenticate like all other clients.
 
 ### Client-Side Auth
 
@@ -104,10 +105,11 @@ controller:
       password: '<secret>'
 ```
 
-Against a NATS server in operator (decentralized JWT) mode, each process
-authenticates with its own credentials file: a user JWT, signed by the account,
-and the user's seed. The JWT carries the user's permissions and expiry, so
-adding a host means issuing it a credential, with no change on the server.
+With a NATS server in operator (decentralized JWT) mode, each process
+authenticates with its own credentials file. The file has a user JWT, which the
+account signs, and the seed of the user. The JWT has the permissions and the
+expiry of the user. Thus, to add a host, you give it a credential. You do not
+change the server.
 
 ```yaml
 agent:
@@ -118,9 +120,9 @@ agent:
 ```
 
 The embedded server runs in operator mode with `type: operator`. Its
-`resolver_file` holds the operator's JWT, the system account and each account's
-JWT, as `nsc generate config --mem-resolver` writes it, and its `creds_file` is
-the user its own setup and heartbeat connect as:
+`resolver_file` has the JWT of the operator, the system account and the JWT of
+each account, as `nsc generate config --mem-resolver` writes them. Its
+`creds_file` is the user that its setup and heartbeat connect as:
 
 ```yaml
 nats:
@@ -171,9 +173,9 @@ controller:
 
 ### Direct Permissions
 
-Tokens can carry a `permissions` claim that overrides role-based expansion. When
-the claim is present, only the listed permissions are granted regardless of the
-token's roles. Generate a token with direct permissions:
+A token can have a `permissions` claim. It replaces the permissions of the
+roles. When the token has the claim, it gets only the listed permissions,
+whatever its roles are. Make a token with direct permissions:
 
 ```bash
 osapi token generate -r admin -u user@example.com \
@@ -192,6 +194,6 @@ NATS cluster without collisions.
 | `JOBS` (stream)         | `osapi-JOBS`            |
 | `job-queue` (KV bucket) | `osapi-job-queue`       |
 
-Set the same namespace value in `nats.server.namespace`,
-`controller.nats.namespace`, and `agent.nats.namespace` so all components agree
-on naming. An empty string disables prefixing.
+Set the same namespace in `nats.server.namespace`, `controller.nats.namespace`
+and `agent.nats.namespace`, so that all components use the same names. An empty
+string disables the prefix.

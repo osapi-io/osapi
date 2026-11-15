@@ -2,28 +2,28 @@
 sidebar_position: 21
 ---
 
-# Management Dashboard
+# Management dashboard
 
-OSAPI includes an embedded React management dashboard served directly from the
-controller binary. No separate web server, container image, or static file
-hosting is required — deploy the `osapi` binary and the UI is ready.
+osapi has an embedded React management dashboard. The controller binary serves
+it. You need no different web server, container image or static file host. When
+you deploy the `osapi` binary, the UI is ready.
 
 ## Overview
 
 The dashboard provides a visual interface for fleet management:
 
-- **Dashboard** — fleet health overview with agent cards (machine ID,
-  fingerprint, scheduling state), component status, JetStream metrics, and node
-  conditions
-- **Configure** — block-based operations builder for composing and applying
-  changes across targets
-- **Admin** — audit log viewer with export, job queue browser with retry/delete,
-  PKI enrollment management (accept, reject and remove agents), and RBAC
-  reference (admin-only)
+- **Dashboard**: an overview of the fleet health, with agent cards (machine ID,
+  fingerprint, scheduling state), the component status, JetStream metrics and
+  node conditions
+- **Configure**: a builder that puts operations together from blocks, and
+  applies the changes to the targets
+- **Admin**: the audit log with export, the job queue with retry and delete, PKI
+  enrollment (accept, reject and remove agents) and an RBAC reference (admin
+  only)
 
 ## Enabling the UI
 
-The dashboard is enabled by default. Disable it with:
+The dashboard is enabled by default. To disable it, set:
 
 ```yaml
 controller:
@@ -47,16 +47,16 @@ token with `osapi token generate` and paste it on the sign-in page. The token's
 
 ## Architecture
 
-The controller serves the dashboard at `/` and falls back to `index.html` for
-client-side routing, so every API endpoint is prefixed with `/api/` to keep the
-two apart.
+The controller serves the dashboard at `/`. For a path that it does not know, it
+sends `index.html`, so that the UI can route the page. Thus each API endpoint
+starts with `/api/`, to keep the two apart.
 
-See [UI Architecture](../architecture/ui.md) for the configuration, the roles,
-and what each page shows. How the UI is embedded, structured and generated is
-stated in the
-[specifications repository](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md).
+Refer to [UI Architecture](../architecture/ui.md) for the configuration, the
+roles and what each page shows. The
+[specifications repository](https://github.com/osapi-io/specs/blob/main/components/osapi/ui.md)
+tells how the UI is embedded, structured and generated.
 
 ## Development
 
-See [UI Development](../development/ui-development.md) for the index of the
+Refer to [UI Development](../development/ui-development.md) for the index of the
 rules a contributor works under, and where the commands live.

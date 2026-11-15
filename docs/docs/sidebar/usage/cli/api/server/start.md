@@ -22,32 +22,29 @@ data that the running user has permission to access. The API is designed to
 gracefully skip over partitions or other system resources where permission
 errors occur (e.g., due to lack of root access).
 
-If your goal is to run the API with minimal limitations, you will need to run
-the API daemon as `root`.
+To run the API with the fewest limits, run the API daemon as `root`.
 
-However, when run as a non-root user, the service will:
+When it runs as a user that is not root, the service does these things:
 
 - Collect and return available disk usage statistics for partitions it has
   permission to access
 - Skip partitions or system paths that result in "permission denied" errors
 - Attempt to send an "unprivileged" ping via UDP
 
-Running as a regular user maintains a secure, restricted mode, but some
-functionality (such as access to certain system directories and files) will be
-limited.
+A regular user keeps the service in a safe, limited mode. Some functions are
+limited, for example access to some system directories and files.
 
-If full access to system resources is required (e.g., to access all disk
-partitions or perform privileged operations), running the API daemon as `root`
-is necessary.
+If you need full access to system resources, run the API daemon as `root`.
+Examples are access to all disk partitions and privileged operations.
 
 ### ICMP Permissions
 
-The API can still send pings without requiring root access, but on Linux, this
-requires modifying system settings using the following sysctl command:
+The API can send pings without root access. On Linux, this needs a change to a
+system setting, with this sysctl command:
 
 ```bash
 $ sudo sysctl -w net.ipv4.ping_group_range="0 2147483647"
 ```
 
-Alternatively, running the API as root will allow full access to privileged
-operations like raw socket pinging.
+Or run the API as root. Then it has full access to privileged operations, for
+example pings on a raw socket.

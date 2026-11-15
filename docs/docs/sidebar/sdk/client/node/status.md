@@ -4,8 +4,7 @@ sidebar_position: 1
 
 # Status
 
-Aggregated node status including OS info, disk, memory, load averages, and
-uptime.
+The full node status: OS information, disk, memory, load averages and uptime.
 
 ## Methods
 
@@ -32,7 +31,7 @@ for _, r := range resp.Data.Results {
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/status.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/status.go)
 for a complete working example.
 

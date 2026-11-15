@@ -16,7 +16,7 @@ $ osapi client controller status
               └─ tracing                 ok
 ```
 
-Use `--json` for the full health status JSON response:
+Use `--json` to get the full health status as JSON:
 
 ```bash
 $ osapi client controller status --json

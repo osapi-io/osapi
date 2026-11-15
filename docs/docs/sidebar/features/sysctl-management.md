@@ -2,14 +2,14 @@
 sidebar_position: 10
 ---
 
-# Sysctl Management
+# Sysctl management
 
-OSAPI manages Linux kernel parameters on target hosts via `sysctl`. Each
-parameter is persisted to a drop-in file under `/etc/sysctl.d/` and applied
-immediately with `sysctl -p`. This makes changes durable across reboots while
-also taking effect instantly.
+osapi manages Linux kernel parameters on target hosts with `sysctl`. The agent
+writes each parameter to a drop-in file under `/etc/sysctl.d/` and applies it
+immediately with `sysctl -p`. Thus a change takes effect immediately, and it
+stays after a reboot.
 
-## How It Works
+## How it works
 
 The sysctl provider writes one file per parameter:
 
@@ -29,25 +29,29 @@ File content is a single `key = value` line:
 net.ipv4.ip_forward = 1
 ```
 
-After writing the file, the provider runs
+After the provider writes the file, it runs
 `sysctl -p /etc/sysctl.d/osapi-{key}.conf` to apply the value to the running
-kernel immediately. Updates are idempotent: the provider hashes the drop-in **on
-disk** and rewrites it only when it differs, returning `changed: false` when it
-does not. A drop-in edited by hand therefore counts as a difference and is
-restored, because the comparison reads the file rather than the file-state KV
-record of what was last deployed. The write itself is atomic — a temporary file
-beside the drop-in, renamed over it — so `sysctl --system` never reads a
-half-written setting.
+kernel immediately. If `sysctl -p` fails, the operation fails, because the
+kernel does not have the value.
 
-### Delete Behavior
+Updates are idempotent. The provider calculates the hash of the drop-in **on
+disk**, and writes it again only when it is different. When it is the same, it
+returns `changed: false`. A drop-in that somebody changed by hand is a
+difference, and the provider puts it back. The comparison reads the file, not
+the file-state KV record of the last deploy.
 
-Deleting a sysctl entry removes the drop-in file from
-`/etc/sysctl.d/osapi-{key}.conf`. The parameter value is **not** reset in the
-running kernel — the active value remains until the next reboot or until you set
-it explicitly. To revert a value, set it to its default before deleting the
-file.
+The write is atomic. The provider writes a temporary file next to the drop-in
+and renames it over the drop-in. Thus `sysctl --system` never reads a setting
+that is only partly written.
 
-### List and Get
+### Delete behavior
+
+When you delete a sysctl entry, the agent removes the drop-in file
+`/etc/sysctl.d/osapi-{key}.conf`. The running kernel keeps the value. It stays
+until the next reboot, or until you set a new value. To go back to the default,
+set the default value before you delete the file.
+
+### List and get
 
 List and get read the kernel, not osapi's records. List returns every parameter
 under `/proc/sys`, as `sysctl -a` does, and get returns any parameter's current
@@ -68,7 +72,7 @@ cutover. There, each entry also says whether osapi manages it, and list takes a
 | Update    | The same as create, addressed by key; manages it if not yet |
 | Delete    | Remove the drop-in; the value stays until reboot            |
 
-## CLI Usage
+## CLI usage
 
 ```bash
 # List every parameter on a host
@@ -95,13 +99,13 @@ osapi client node sysctl delete --target web-01 \
   --key net.ipv4.ip_forward
 ```
 
-All commands support `--json` for raw JSON output.
+All commands accept `--json` to give the raw JSON output.
 
-## Broadcast Support
+## Broadcast support
 
-All sysctl operations support broadcast targeting. Use `--target _all` to apply
-a parameter across every registered agent, or use a label selector like
-`--target group:web` to target a subset.
+All sysctl operations accept broadcast targets. Use `--target _all` to apply a
+parameter across all registered agents. Use a label selector, for example
+`--target group:web`, to target a part of the fleet.
 
 Responses always include per-host results:
 
@@ -115,23 +119,23 @@ Responses always include per-host results:
 
 Skipped and failed hosts appear with their error in the output.
 
-## Idempotent Updates
+## Idempotent updates
 
-Both create and update compare the drop-in on disk with what they would write.
-If it already holds the value, the response returns `changed: false`. It is safe
-to run these operations repeatedly without generating unnecessary filesystem
-writes or `sysctl -p` invocations.
+Create and update compare the drop-in on disk with the content to write. If the
+drop-in already has the value, the response is `changed: false`. You can run
+these operations many times safely. They do not write files or run `sysctl -p`
+without a need.
 
-## Key Naming
+## Key naming
 
-Sysctl keys follow the standard dot-notation format used by the Linux kernel:
-`net.ipv4.ip_forward`, `vm.swappiness`, `kernel.hostname`, etc. OSAPI accepts
-keys made up of letters, digits, dots, underscores, and hyphens, starting with a
-letter or digit (`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`), which covers every key that
-sysctl recognizes. The API and the agent's provider both validate the key and
-value shape before a change is applied.
+Sysctl keys use the standard dot notation of the Linux kernel, for example
+`net.ipv4.ip_forward`, `vm.swappiness` and `kernel.hostname`. osapi accepts keys
+with letters, digits, dots, underscores and hyphens. A key must start with a
+letter or a digit (`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`). This includes each key that
+sysctl knows. The API and the provider of the agent both validate the shape of
+the key and the value before they apply a change.
 
-## Supported Platforms
+## Supported platforms
 
 | OS Family | Support |
 | --------- | ------- |
@@ -139,9 +143,9 @@ value shape before a change is applied.
 | Darwin    | Skipped |
 | Linux     | Skipped |
 
-On unsupported platforms, sysctl operations return `status: skipped` instead of
-failing. See [Platform Detection](../sdk/platform/detection.md) for details on
-OS family detection.
+On a platform that is not supported, sysctl operations return `status: skipped`.
+They do not fail. Refer to [Platform Detection](../sdk/platform/detection.md)
+for how osapi finds the OS family.
 
 ## Permissions
 
@@ -155,7 +159,7 @@ and `write` roles also include `sysctl:write`.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/sysctl/sysctl.md) — sysctl commands
-- [File Management](file-management.md) — file-state KV tracking
-- [Platform Detection](../sdk/platform/detection.md) — OS family detection
-- [Configuration](../usage/configuration.md) — full configuration reference
+- [CLI Reference](../usage/cli/client/node/sysctl/sysctl.md): sysctl commands
+- [File Management](file-management.md): file-state KV tracking
+- [Platform Detection](../sdk/platform/detection.md): OS family detection
+- [Configuration](../usage/configuration.md): full configuration reference

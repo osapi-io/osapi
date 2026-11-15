@@ -1,7 +1,7 @@
 # Disable
 
-Disable a systemd service from starting on boot. Returns `changed: true` if the
-service was previously enabled:
+Disable a systemd service, so that it does not start at boot. If the service was
+enabled, the command returns `changed: true`:
 
 ```bash
 $ osapi client node service disable --target web-01 \
@@ -15,7 +15,7 @@ $ osapi client node service disable --target web-01 \
   1 host: 1 changed
 ```
 
-If the service is already disabled, `changed: false` is returned:
+If the service is already disabled, the command returns `changed: false`:
 
 ```bash
 $ osapi client node service disable --target web-01 \

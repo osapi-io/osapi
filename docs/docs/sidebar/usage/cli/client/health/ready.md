@@ -1,7 +1,7 @@
 # Ready
 
-Check if the API server is ready to accept traffic. This endpoint verifies that
-all dependencies (NATS, KV buckets) are reachable.
+Check if the API server is ready for traffic. This endpoint checks that it can
+reach all its dependencies, NATS and the KV buckets.
 
 ```bash
 $ osapi client health ready
@@ -18,7 +18,7 @@ $ osapi client health ready
   Error: NATS not connected
 ```
 
-Use `--json` for raw JSON output:
+Use `--json` to get the raw JSON output:
 
 ```bash
 $ osapi client health ready --json

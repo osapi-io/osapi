@@ -13,7 +13,7 @@ $ osapi client node service get --target web-01 --name nginx.service
   1 host: 1 ok
 ```
 
-Target all hosts to inspect the same service across the fleet:
+Target all hosts to examine the same service on all of the fleet:
 
 ```bash
 $ osapi client node service get --target _all --name nginx.service

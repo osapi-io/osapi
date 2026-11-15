@@ -2,14 +2,14 @@
 sidebar_position: 19
 ---
 
-# Power Management
+# Power management
 
-OSAPI manages power state on target hosts via systemd. Reboot and shutdown
-operations are scheduled through `shutdown(8)` and take effect after an optional
-delay. Operations are dispatched asynchronously through the job system so the
+osapi manages the power state of target hosts through systemd. The agent
+schedules reboot and shutdown with `shutdown(8)`. They take effect after an
+optional delay. The operations go asynchronously through the job system, so the
 controller returns immediately.
 
-## How It Works
+## How it works
 
 Power operations call `shutdown` on the agent host:
 
@@ -17,20 +17,19 @@ Power operations call `shutdown` on the agent host:
 - **Shutdown**: schedules `shutdown -h +N`
 
 The agent records the scheduled action and returns `changed: true` before the
-system goes down. If the operation is unsupported on the platform (e.g., macOS
-agents), the job returns `status: skipped`.
+system stops. If the platform does not support the operation, for example on
+macOS agents, the job returns `status: skipped`.
 
-### Minimum Delay
+### Minimum delay
 
-A minimum 1-minute delay is always enforced, even when `delay` is 0 or omitted.
-This ensures the agent has time to write the job result back to NATS, send the
-response to the API, and complete its graceful shutdown lifecycle before the
-system powers off.
+The delay is always 1 minute or more, also when `delay` is 0 or not given. Thus
+the agent has time to write the job result to NATS and to send the response to
+the API. Then it stops cleanly, before the system powers off.
 
-The `delay` field in the request body specifies seconds. The provider converts
-to minutes for the `shutdown` command (minimum 1 minute, rounded up). The actual
-delay in seconds is returned in the response so the caller knows when the action
-will take effect.
+The `delay` field in the request body is in seconds. The provider changes it to
+minutes for the `shutdown` command (1 minute or more, rounded up). The response
+gives the real delay in seconds. Thus the caller knows when the action takes
+effect.
 
 ## Operations
 
@@ -39,7 +38,7 @@ will take effect.
 | Reboot    | Schedule a host reboot with optional delay   |
 | Shutdown  | Schedule a host shutdown with optional delay |
 
-## CLI Usage
+## CLI usage
 
 ```bash
 # Reboot a host (1-minute minimum delay)
@@ -57,13 +56,13 @@ osapi client node power reboot --target _all \
   --delay 30 --message "Scheduled reboot"
 ```
 
-All commands support `--json` for raw JSON output.
+All commands accept `--json` to give the raw JSON output.
 
-## Broadcast Support
+## Broadcast support
 
-All power operations support broadcast targeting. Use `--target _all` to reboot
-or shut down every registered agent, or use a label selector like
-`--target group:web` to target a subset.
+All power operations accept broadcast targets. Use `--target _all` to reboot or
+stop all registered agents. Use a label selector, for example
+`--target group:web`, to target a part of the fleet.
 
 Responses always include per-host results:
 
@@ -77,7 +76,7 @@ Responses always include per-host results:
 
 Skipped and failed hosts appear with their error in the output.
 
-## Supported Platforms
+## Supported platforms
 
 | OS Family | Support |
 | --------- | ------- |
@@ -85,9 +84,9 @@ Skipped and failed hosts appear with their error in the output.
 | Darwin    | Skipped |
 | Linux     | Skipped |
 
-On unsupported platforms, power operations return `status: skipped` instead of
-failing. See [Platform Detection](../sdk/platform/detection.md) for details on
-OS family detection.
+On a platform that is not supported, power operations return `status: skipped`.
+They do not fail. Refer to [Platform Detection](../sdk/platform/detection.md)
+for how osapi finds the OS family.
 
 ## Permissions
 
@@ -100,6 +99,6 @@ includes this permission by default. Do not grant it to untrusted tokens.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/power/power.md) — power commands
-- [Platform Detection](../sdk/platform/detection.md) — OS family detection
-- [Configuration](../usage/configuration.md) — full configuration reference
+- [CLI Reference](../usage/cli/client/node/power/power.md): power commands
+- [Platform Detection](../sdk/platform/detection.md): OS family detection
+- [Configuration](../usage/configuration.md): full configuration reference

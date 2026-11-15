@@ -4,8 +4,8 @@ sidebar_position: 4
 
 # Log
 
-The `Log` service provides methods for querying the systemd journal on target
-hosts. Access via `client.Log`.
+The `Log` service has methods that query the systemd journal on target hosts.
+Use `client.Log`.
 
 ## Methods
 

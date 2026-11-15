@@ -15,7 +15,7 @@ $ osapi client node process list --target web-01
   1 host: 1 ok
 ```
 
-When targeting all hosts:
+When you target all hosts:
 
 ```bash
 $ osapi client node process list --target _all

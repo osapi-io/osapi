@@ -1,8 +1,8 @@
 # Update
 
-Update an existing service unit file on a target host with a new Object Store
-reference. The unit file is redeployed and `systemctl daemon-reload` is run.
-Fails if the unit file does not exist -- use `create` first:
+Update a service unit file on a target host with a new Object Store reference.
+The agent deploys the unit file again and runs `systemctl daemon-reload`. The
+command fails if the unit file does not exist. Use `create` first:
 
 ```bash
 $ osapi client node service update --target web-01 \
@@ -16,7 +16,8 @@ $ osapi client node service update --target web-01 \
   1 host: 1 changed
 ```
 
-If the content has not changed (same SHA), `changed: false` is returned:
+If the content did not change (the same SHA), the command returns
+`changed: false`:
 
 ```bash
 $ osapi client node service update --target web-01 \

@@ -1,7 +1,7 @@
 # Shutdown
 
-Schedule a shutdown on the target host. The agent calls `shutdown -h` with the
-configured delay. When `--delay` is 0, the shutdown happens immediately:
+Schedule a shutdown on the target host. The agent runs `shutdown -h` with the
+configured delay. When `--delay` is 0, the host shuts down immediately:
 
 ```bash
 $ osapi client node power shutdown --target web-01

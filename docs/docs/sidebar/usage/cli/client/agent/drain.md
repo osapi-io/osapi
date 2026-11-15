@@ -1,7 +1,7 @@
 # Drain
 
-Drain an agent to stop it from accepting new jobs. In-flight jobs continue to
-completion:
+Drain an agent so that it does not accept new jobs. The jobs that it runs now
+continue until they are complete:
 
 ```bash
 $ osapi client agent drain --hostname web-01
@@ -11,11 +11,11 @@ $ osapi client agent drain --hostname web-01
   Message: Agent drain initiated
 ```
 
-The agent transitions from `Ready` to `Draining`. Once all in-flight jobs
-finish, the state becomes `Cordoned`. The agent stays running and continues
-sending heartbeats -- it just stops pulling new work from the job queue.
+The agent changes from `Ready` to `Draining`. When all its running jobs are
+complete, the state is `Cordoned`. The agent continues to run and to send
+heartbeats. It only stops the intake of new work from the job queue.
 
-Use `agent undrain` to resume accepting jobs.
+Use `agent undrain` to accept jobs again.
 
 ## Flags
 

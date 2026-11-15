@@ -4,8 +4,8 @@ sidebar_position: 2
 
 # FileDeploy
 
-File deployment operations on target hosts -- deploy files from the Object Store
-to agents, check status, and undeploy.
+File deploy operations on target hosts: deploy files from the Object Store to
+agents, check the status and undeploy.
 
 ## Methods
 
@@ -62,7 +62,7 @@ resp, err := c.FileDeploy.Status(ctx, "web-01", "/etc/nginx/nginx.conf")
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/file_deploy.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/file_deploy.go)
 for a complete working example. See also
 [`examples/sdk/client/file.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/file.go)

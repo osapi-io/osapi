@@ -2,91 +2,97 @@
 sidebar_position: 25
 ---
 
-# Service Management
+# Service management
 
-OSAPI provides management of systemd services on managed hosts. Services can be
-listed, inspected, started, stopped, restarted, enabled, disabled, and managed
-through unit file CRUD operations. Unit files are deployed via the Object Store
-using the same SHA-based idempotency as file management.
+osapi manages systemd services on managed hosts. You can list, examine, start,
+stop, restart, enable and disable services. You can also create, update and
+delete unit files. osapi deploys unit files through the Object Store, with the
+same SHA checksums as file management.
 
-## How It Works
+## How it works
 
-The service provider interacts with `systemctl` on Debian-family systems to
-manage systemd service units.
+The service provider uses `systemctl` on Debian family systems to manage systemd
+service units.
 
 ### List
 
-Returns all systemd services on the host. Each entry includes the service name,
-active status, enabled state, description, and PID (if running).
+Returns all systemd services on the host. Each entry has the service name, the
+active status, the enabled state, the description and the PID, if the service
+runs.
 
 ### Get
 
-Returns detailed information about a specific service, including its name,
-active status, enabled state, description, and PID.
+Returns the details of one service: its name, active status, enabled state,
+description and PID.
 
 ### Start
 
-Starts a stopped service using `systemctl start`. Returns `changed: true` if the
-service was not already running, or `changed: false` if it was already active.
+Starts a stopped service with `systemctl start`. If the service was not running,
+it returns `changed: true`. If the service was already active, it returns
+`changed: false`.
 
 ### Stop
 
-Stops a running service using `systemctl stop`. Returns `changed: true` if the
-service was running, or `changed: false` if it was already stopped.
+Stops a running service with `systemctl stop`. If the service was running, it
+returns `changed: true`. If the service was already stopped, it returns
+`changed: false`.
 
 ### Restart
 
-Restarts a service using `systemctl restart`. Always returns `changed: true`
-because the service is restarted regardless of its current state.
+Restarts a service with `systemctl restart`. It always returns `changed: true`,
+because the agent restarts the service in all states.
 
 ### Enable
 
-Enables a service to start on boot using `systemctl enable`. Returns
-`changed: true` if the service was not already enabled.
+Enables a service with `systemctl enable`, so that it starts at boot. If the
+service was not enabled, it returns `changed: true`.
 
 ### Disable
 
-Disables a service from starting on boot using `systemctl disable`. Returns
-`changed: true` if the service was previously enabled.
+Disables a service with `systemctl disable`, so that it does not start at boot.
+If the service was enabled, it returns `changed: true`.
 
 ### Create
 
-Deploys a new service unit file to the host. The unit file content must first be
-uploaded to the Object Store. The agent writes the file to
-`/etc/systemd/system/{name}` and runs `systemctl daemon-reload` to pick up the
-new unit. Idempotent **on content**: a unit file already on disk holding the
-same content reports `changed: false`, and one that has been edited is rewritten
-from the Object Store. `update` exists to point the host at a different object.
+Deploys a new service unit file to the host. First, upload the content of the
+unit file to the Object Store. The agent writes the file to
+`/etc/systemd/system/{name}` and runs `systemctl daemon-reload` to load the new
+unit.
+
+Create is idempotent **on the content**. If a unit file on disk has the same
+content, it reports `changed: false`. If somebody changed the file, the agent
+writes it again from the Object Store. Use `update` to point the host to a
+different object.
 
 ### Update
 
-Replaces an existing service unit file with a new Object Store reference. The
-agent redeploys the unit file and runs `systemctl daemon-reload`. If the content
-has not changed (same SHA), `changed: false` is returned and the daemon is not
-reloaded. Fails if the unit file does not exist -- use `create` first.
+Replaces a service unit file with a new Object Store reference. The agent
+deploys the unit file again and runs `systemctl daemon-reload`. If the content
+did not change (the same SHA), it returns `changed: false` and does not reload
+the daemon. It fails if the unit file does not exist. Use `create` first.
 
 ### Delete
 
-Removes a service unit file from the host. The agent stops and disables the
-service if it is running, deletes the unit file from `/etc/systemd/system/`, and
-runs `systemctl daemon-reload`.
+Removes a service unit file from the host. If the service runs, the agent stops
+and disables it. Then the agent deletes the unit file from
+`/etc/systemd/system/` and runs `systemctl daemon-reload`.
 
 ## Operations
 
-| Operation | Description                                  |
-| --------- | -------------------------------------------- |
-| List      | List all systemd services                    |
-| Get       | Get details for a specific service           |
-| Start     | Start a service                              |
-| Stop      | Stop a service                               |
-| Restart   | Restart a service                            |
-| Enable    | Enable a service to start on boot            |
-| Disable   | Disable a service from starting on boot      |
-| Create    | Deploy a service unit file from Object Store |
-| Update    | Redeploy an existing service unit file       |
-| Delete    | Remove a service unit file and stop the unit |
+| Operation | Description                                          |
+| --------- | ---------------------------------------------------- |
+| List      | List all systemd services                            |
+| Get       | Get the details of one service                       |
+| Start     | Start a service                                      |
+| Stop      | Stop a service                                       |
+| Restart   | Restart a service                                    |
+| Enable    | Enable a service, so that it starts at boot          |
+| Disable   | Disable a service, so that it does not start at boot |
+| Create    | Deploy a service unit file from Object Store         |
+| Update    | Deploy a service unit file again                     |
+| Delete    | Remove a service unit file and stop the unit         |
 
-## CLI Usage
+## CLI usage
 
 ```bash
 # List all services on a host
@@ -126,15 +132,15 @@ osapi client node service delete --target web-01 \
 osapi client node service restart --target _all --name nginx.service
 ```
 
-All commands support `--json` for raw JSON output.
+All commands accept `--json` to give the raw JSON output.
 
-## Broadcast Support
+## Broadcast support
 
-All service operations support broadcast targeting. Use `--target _all` to
-manage services on every registered agent, or use a label selector like
-`--target group:web` to target a subset.
+All service operations accept broadcast targets. Use `--target _all` to manage
+the services on all registered agents. Use a label selector, for example
+`--target group:web`, to target a part of the fleet.
 
-Responses always include per-host results:
+Responses always have a result for each host:
 
 ```
   Job ID: 550e8400-e29b-41d4-a716-446655440000
@@ -144,25 +150,26 @@ Responses always include per-host results:
   web-02    nginx.service    true
 ```
 
-Skipped and failed hosts appear with their error in the output.
+The output shows skipped and failed hosts with their error.
 
-## Supported Platforms
+## Supported platforms
 
-| OS Family | Support |
+| OS family | Support |
 | --------- | ------- |
 | Debian    | Full    |
 | Darwin    | Skipped |
 | Linux     | Skipped |
 
-On unsupported platforms, service operations return `status: skipped` instead of
-failing. See [Platform Detection](../sdk/platform/detection.md) for details on
-OS family detection.
+On a platform that is not supported, service operations return
+`status: skipped`. They do not fail. Refer to
+[Platform Detection](../sdk/platform/detection.md) for how osapi finds the OS
+family.
 
-## Container Behavior
+## Container behavior
 
-Service operations return `status: skipped` inside containers. The provider
-returns `ErrUnsupported` because `systemctl` requires systemd as PID 1, which is
-not available in standard container environments.
+In a container, service operations return `status: skipped`. The provider
+returns `ErrUnsupported`, because `systemctl` needs systemd as PID 1. A standard
+container does not have it.
 
 ## Permissions
 
@@ -171,14 +178,15 @@ not available in standard container environments.
 | List, Get                                                     | `service:read`  |
 | Start, Stop, Restart, Enable, Disable, Create, Update, Delete | `service:write` |
 
-Service listing and inspection require `service:read`, included in all built-in
-roles (`admin`, `write`, `read`). Mutation and action operations require
-`service:write`, included in the `admin` and `write` roles.
+To list and examine services, you need `service:read`. All built-in roles
+(`admin`, `write`, `read`) have it. The operations that change services need
+`service:write`. The `admin` and `write` roles have it.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/service/service.md) -- service
+- [CLI Reference](../usage/cli/client/node/service/service.md): the service
   commands
-- [SDK Reference](../sdk/client/services/service.md) -- Service service
-- [Platform Detection](../sdk/platform/detection.md) -- OS family detection
-- [Configuration](../usage/configuration.md) -- full configuration reference
+- [SDK Reference](../sdk/client/services/service.md): the service of the SDK
+- [Platform Detection](../sdk/platform/detection.md): how osapi finds the OS
+  family
+- [Configuration](../usage/configuration.md): all configuration settings

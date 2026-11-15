@@ -50,7 +50,7 @@ resp, err := c.DNS.Delete(ctx, "web-01", "eth0")
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/dns.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/dns.go)
 for a complete working example.
 

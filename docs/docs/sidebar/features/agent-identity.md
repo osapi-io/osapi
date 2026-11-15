@@ -3,32 +3,31 @@ sidebar_position: 26
 sidebar_label: Agent Identity & PKI
 ---
 
-# Agent Identity & PKI
+# Agent identity and PKI
 
-OSAPI agents identify themselves using a persistent machine ID and support
-optional PKI enrollment for cryptographic trust between agents and the
-controller.
+An osapi agent identifies itself with a permanent machine ID. As an option, PKI
+enrollment gives cryptographic trust between the agents and the controller.
 
-## Machine Identity
+## Machine identity
 
-Every agent has two identity values:
+Each agent has two identity values:
 
-- **Machine ID** -- permanent identifier from `/etc/machine-id` (Linux) or
-  `IOPlatformUUID` (macOS). Used as the registry key and stable reference across
+- **Machine ID.** A permanent identifier from `/etc/machine-id` (Linux) or
+  `IOPlatformUUID` (macOS). It is the registry key. It does not change when the
   hostname changes.
-- **Hostname** -- mutable display name from the OS or `agent.hostname` config.
-  Used for human-friendly targeting and display.
+- **Hostname.** A display name from the OS or from the `agent.hostname` config.
+  It can change. Use it to target hosts and to read the output.
 
-The agent resolves its machine ID once at startup and refuses to start if it
-cannot be read. NATS subject routing uses the machine ID
-(`jobs.query.host.<machineID>`), so consumers never need to resubscribe when the
-hostname changes. The hostname is re-read on each heartbeat tick (10s) and
-updated in the registry for display.
+The agent reads its machine ID one time, when it starts. If it cannot read the
+machine ID, it does not start. NATS subjects use the machine ID
+(`jobs.query.host.<machineID>`). Thus the consumers do not subscribe again when
+the hostname changes. The agent reads the hostname again at each heartbeat (10s)
+and updates it in the registry.
 
-### CLI Targeting
+### CLI targeting
 
-Both hostname and machine ID work as targets. The controller resolves hostnames
-to machine IDs for NATS subject routing automatically:
+A hostname and a machine ID both work as targets. The controller changes a
+hostname to the machine ID for the NATS subject automatically:
 
 ```bash
 # Target by hostname
@@ -44,59 +43,64 @@ osapi client node hostname --target _all
 osapi client node hostname --target group:web.dev
 ```
 
-The `node list` and `node get` commands include the machine ID in their output
-so operators can identify agents across hostname changes. The management
-dashboard shows machine ID and fingerprint on agent cards, and pending agents
-are managed via the Admin > Enrollment page.
+The output of `node list` and `node get` has the machine ID. Thus an operator
+can identify an agent when its hostname changes. The management dashboard shows
+the machine ID and the fingerprint on the agent cards. Use the Admin >
+Enrollment page to manage pending agents.
 
-## PKI Enrollment
+## PKI enrollment
 
-When `pki.enabled` is true on both controller and agent, OSAPI uses Ed25519
-keypairs for cryptographic agent identity and job signing.
+When `pki.enabled` is true on the controller and on the agent, osapi uses
+Ed25519 key pairs. They give each agent a cryptographic identity, and they sign
+the jobs.
 
-### Enrollment Flow
+### Enrollment flow
 
-The enrollment process follows a Salt-style accept/reject model:
+Enrollment uses an accept and reject model, like Salt:
 
-1. **Generate keypair** -- on first start, the agent generates an Ed25519
-   keypair and saves it to `agent.pki.key_dir` (default `/etc/osapi/pki`).
-   Files: `agent.key` (mode 0600) and `agent.pub` (mode 0644). The user the
-   agent runs as must own the directory. The agent does not replace a key it
-   cannot read, or one half of a keypair: it logs the error and exits. A new key
-   is not the one the controller accepted, so a host with a replaced key drops
-   out of targeting until you enroll it again. If you change the agent's user,
-   change the directory's owner too (`chown -R osapi /etc/osapi/pki`).
+1. **The agent makes a key pair.** When the agent starts for the first time, it
+   makes an Ed25519 key pair. It saves the key pair in `agent.pki.key_dir`
+   (`/etc/osapi/pki` by default). The files are `agent.key` (mode 0600) and
+   `agent.pub` (mode 0644).
 
-2. **Request enrollment** -- the agent publishes an enrollment request to the
-   controller via NATS containing its machine ID, hostname, public key, and
-   SHA256 fingerprint.
+   The user that runs the agent must own the directory. The agent does not
+   replace a key that it cannot read, or half of a key pair. It writes the error
+   to the log and stops. A new key is not the key that the controller accepted.
+   Thus a host with a replaced key gets no work until you enroll it again. If
+   you change the user of the agent, also change the owner of the directory
+   (`chown -R osapi /etc/osapi/pki`).
 
-3. **Pending state** -- the controller stores the request in a JetStream KV
-   bucket. The agent enters pending state and waits, **republishing its request
-   on every heartbeat** until it is accepted. The first request travels over
-   core NATS, which has no delivery guarantee: a controller that was down or a
-   publish that failed would otherwise leave the agent pending with the
-   controller having never heard of it, and a pending agent does not consume
-   jobs, so that state lasted until somebody restarted the process. Republishing
-   also recovers a controller that lost its pending entries. It is safe because
-   acceptance is keyed by machine ID — the controller overwrites the pending
-   entry rather than accumulating one per attempt.
+1. **The agent sends an enrollment request.** It publishes a request to the
+   controller through NATS. The request has its machine ID, hostname, public key
+   and SHA256 fingerprint.
 
-4. **Admin accepts** -- an administrator reviews pending agents and accepts or
-   rejects them via the CLI. On acceptance, the controller replies with its own
-   public key.
+1. **The agent waits.** The controller stores the request in a JetStream KV
+   bucket. The agent goes into the pending state and waits. **It publishes its
+   request again at each heartbeat** until the controller accepts it.
 
-5. **Ready** -- the agent saves the controller's public key as `controller.pub`
-   and begins verifying job signatures. On subsequent restarts, the agent loads
-   the controller key from disk and skips enrollment.
+   The first request goes over core NATS, which does not guarantee delivery. If
+   the controller was down or a publish failed, the controller did not know the
+   agent, and the agent stayed pending. A pending agent does not take jobs. Thus
+   that state stayed until somebody restarted the process. The repeated request
+   also fixes a controller that lost its pending entries. It is safe, because
+   the controller keys acceptance by machine ID. The controller writes over the
+   pending entry. It does not add one entry for each attempt.
 
-### Auto-Accept Mode
+1. **An administrator accepts the agent.** An administrator examines the pending
+   agents, and accepts or rejects them with the CLI. When the controller accepts
+   an agent, it sends back its own public key.
 
-For development and testing, set `controller.pki.auto_accept: true`. The
-controller automatically accepts all enrollment requests without admin
-intervention. Do not use this in production.
+1. **The agent is ready.** The agent saves the public key of the controller as
+   `controller.pub`, and starts to verify job signatures. At the next restarts,
+   the agent loads the controller key from disk and does not enroll again.
 
-### CLI Commands
+### Auto-accept mode
+
+For development and tests, set `controller.pki.auto_accept: true`. Then the
+controller accepts all enrollment requests automatically, without an
+administrator. Do not use this in production.
+
+### CLI commands
 
 ```bash
 # List pending enrollment requests
@@ -122,11 +126,11 @@ osapi client agent key fingerprint
 osapi client controller key fingerprint
 ```
 
-## Job Signing
+## Job signing
 
-When `controller.pki.enabled` is true, the controller signs every job payload
-with its Ed25519 private key before storing it in the KV bucket. The payload is
-wrapped in a `SignedEnvelope`:
+When `controller.pki.enabled` is true, the controller signs each job payload
+with its Ed25519 private key before it stores the job in the KV bucket. The
+payload is in a `SignedEnvelope`:
 
 ```json
 {
@@ -136,144 +140,146 @@ wrapped in a `SignedEnvelope`:
 }
 ```
 
-Agents also sign their job responses with their own keypair before writing them
-to the KV bucket, using the same envelope shape.
+Agents also sign their job responses with their own key pair before they write
+them to the KV bucket. They use the same envelope.
 
-When PKI is disabled on either side, that side neither signs nor verifies --
-jobs and responses are stored and processed as plain JSON, with no envelope
-wrapping.
+When PKI is disabled on one side, that side does not sign and does not verify.
+osapi stores and processes the jobs and the responses as plain JSON, without an
+envelope.
 
-### Verification and failure behavior
+### Verification and failures
 
-When `agent.pki.enabled` is true, an agent verifies the envelope on every job it
-receives before running the operation. Verification is fail-closed: the job is
-rejected and never executed unless it fully passes. Three rejection reasons are
-logged and recorded as the job's termination reason, so an operator can tell
-them apart:
+When `agent.pki.enabled` is true, the agent verifies the envelope of each job
+before it runs the operation. Verification fails closed: the agent rejects the
+job and does not run it unless the job passes all checks. The agent writes one
+of three reasons to the log and records it as the termination reason of the job.
+Thus an operator can tell them apart:
 
-- **Not enrolled** -- the agent has no cached controller public key yet
-  (enrollment is still pending, or was never completed). This is reported
-  distinctly from a bad signature, since it means "not yet trusted" rather than
-  "this job was tampered with."
-- **Missing or malformed signature** -- the job data is not wrapped in a signed
-  envelope, or the envelope is missing a required field.
-- **Invalid signature** -- the envelope's signature does not verify against the
-  agent's cached controller key (or the previous key, during a rotation grace
-  period; see [Key Rotation](#key-rotation)).
+- **Not enrolled.** The agent has no controller public key yet, because
+  enrollment is pending or did not complete. osapi reports this separately from
+  a bad signature, because it means "not trusted yet", not "somebody changed
+  this job".
+- **Missing or malformed signature.** The job data is not in a signed envelope,
+  or the envelope has no value in a required field.
+- **Invalid signature.** The signature of the envelope does not verify with the
+  controller key of the agent, or with the previous key during a rotation grace
+  period. Refer to [Key rotation](#key-rotation).
 
-The controller likewise verifies the signature on an agent's job response before
-treating it as a result. A response that fails verification is treated as a
-failed or missing result, never as a successful one.
+The controller also verifies the signature on the job response of an agent
+before it uses it as a result. A response that fails verification is a failed or
+missing result, never a successful result.
 
-When PKI is disabled, none of the above applies -- there is no envelope to
-verify, so nothing is rejected on signature grounds.
+When PKI is disabled, none of this applies. There is no envelope to verify, so
+osapi rejects nothing because of a signature.
 
-## Registration Signing
+## Registration signing
 
-An agent's job responses are not the only thing it sends. Every heartbeat it
-rewrites its own entry in the agent registry, and that entry is what targeting
-reads: the hostname a job names, the labels a label target selects, and the
-scheduling state that decides whether the agent is eligible for work at all.
+An agent sends more than job responses. At each heartbeat, it writes its own
+entry in the agent registry again. Targeting reads that entry. It reads the
+hostname that a job names and the labels that a label target selects. It also
+reads the scheduling state, which decides if the agent can get work.
 
 When `agent.pki.enabled` is true, the agent signs the routing fields of its
-registration with its own keypair. The signature covers:
+registration with its own key pair. The signature includes:
 
-| Field         | Why it is signed                                               |
-| ------------- | -------------------------------------------------------------- |
-| `machine_id`  | Selects which stored key the signature is checked against      |
-| `hostname`    | A job names it, so a forged one redirects that host's work     |
-| `fingerprint` | Reported as this agent's key in the fleet view                 |
-| `state`       | A `Pending` agent is refused work; a forged `Ready` lifts that |
-| `labels`      | A label target routes on them, so a forged label attracts jobs |
+| Field         | Why the agent signs it                                              |
+| ------------- | ------------------------------------------------------------------- |
+| `machine_id`  | It selects the stored key that checks the signature                 |
+| `hostname`    | A job names it. A false one sends the work of that host elsewhere   |
+| `fingerprint` | The fleet view shows it as the key of this agent                    |
+| `state`       | osapi refuses work to a `Pending` agent. A false `Ready` stops that |
+| `labels`      | A label target uses them. A false label gets jobs                   |
 
-Everything else in a registration -- uptime, load, memory, conditions -- is
-reporting rather than routing, and is not signed. The signature is carried
-beside these fields, never inside the signed bytes.
+The other fields of a registration, for example uptime, load, memory and
+conditions, only report data. They do not route work, and the agent does not
+sign them. The signature is next to these fields, not in the signed bytes.
 
 ### What the controller checks
 
-When the controller holds a key for the agent, it verifies each registration
-before letting it decide anything:
+When the controller has a key for the agent, it verifies each registration
+before it uses the registration for a decision:
 
-1. The machine ID selects the stored record. A registration naming another agent
-   is checked against **that** agent's key, and fails unless it was signed by
-   it.
-2. The signature must verify against the key recorded when the agent's
-   enrollment was accepted.
-3. The hostname must match the one recorded at acceptance. An accepted agent is
-   not entitled to answer for a host it did not enrol as.
+1. The machine ID selects the stored record. The controller checks a
+   registration that names a different agent with the key of **that** agent. It
+   fails unless that agent signed it.
+1. The signature must verify with the key that the controller recorded when it
+   accepted the enrollment of the agent.
+1. The hostname must be the hostname that the controller recorded at acceptance.
+   An accepted agent cannot answer for a host that it did not enroll as.
 
-A registration that fails any of these is not an error returned to the agent.
-The agent keeps heartbeating and stays listed; it simply stops being
-authoritative. It is invisible to target resolution, to label matching, and to
-machine-ID targeting, and work aimed at that hostname continues to reach the
-agent that enrolled under it.
+When a registration fails a check, the controller does not return an error to
+the agent. The agent continues its heartbeats and stays in the list, but its
+registration does not decide anything. Target resolution, label matching and
+machine-ID targets do not see it. Work for that hostname continues to go to the
+agent that enrolled with it.
 
-Where more than one agent claims a hostname, resolution is deterministic: the
-lowest machine ID wins, rather than whichever entry the registry happened to
-list first.
+When more than one agent claims a hostname, the result is always the same: the
+lowest machine ID wins. The order of the registry list does not decide.
 
-### Seeing where a fleet stands
+### Check the state of a fleet
 
-`osapi client agent list` and `GET /agent` report two separate fields per agent:
+`osapi client agent list` and `GET /agent` report two separate fields for each
+agent:
 
-| Field        | Meaning                                                                |
-| ------------ | ---------------------------------------------------------------------- |
-| `key_stored` | The controller holds this agent's key, recorded at acceptance          |
-| `verified`   | What it last registered was signed by that key and claims its own host |
+| Field        | Meaning                                                           |
+| ------------ | ----------------------------------------------------------------- |
+| `key_stored` | The controller has the key of this agent, from acceptance         |
+| `verified`   | That key signed the last registration, and it claims its own host |
 
-They answer different questions. `key_stored: false` means the agent has not
-enrolled since the key store existed -- expected during a rollout, and fixed by
-re-enrolling it. `key_stored: true` with `verified: false` means the controller
-can check this agent and what arrived did not check out, which is worth
-investigating rather than waiting out.
+They answer different questions. `key_stored: false` means that the agent did
+not enroll after the key store started. This is normal during a rollout. To fix
+it, enroll the agent again. `key_stored: true` with `verified: false` means that
+the controller can check this agent, and the data that arrived did not pass the
+check. Examine it. Do not wait.
 
-## Key Rotation
+## Key rotation
 
-The controller can rotate its Ed25519 keypair. During a configurable grace
-period (default `24h`), agents accept signatures from both the old and new
-controller keys.
+The controller can change its Ed25519 key pair. During a grace period (`24h` by
+default), agents accept signatures from the old key and from the new key of the
+controller. You can configure the grace period.
 
-The rotation flow:
+To rotate the key:
 
-1. Generate a new controller keypair (replace files in
-   `controller.pki.key_dir`).
-2. Restart the controller. It loads the new key and begins signing with it.
-3. Agents that have already enrolled still hold the old controller public key.
-   The `VerifyWithGrace` method checks the signature against both the current
-   and previous controller keys.
-4. During the grace period (`controller.pki.rotation_grace_period`), agents
-   receive the new controller public key via an updated enrollment response and
-   transition to the new key.
-5. After the grace period, only the new key is accepted.
+1. Make a new controller key pair. Replace the files in
+   `controller.pki.key_dir`.
+1. Restart the controller. It loads the new key and starts to sign with it.
+1. The enrolled agents still have the old public key of the controller. The
+   `VerifyWithGrace` method checks the signature with the current key and with
+   the previous key of the controller.
+1. During the grace period (`controller.pki.rotation_grace_period`), the agents
+   get the new public key of the controller in an updated enrollment response.
+   Then they change to the new key.
+1. After the grace period, osapi accepts only the new key.
 
 ## Rollout
 
-Because agent-side verification is fail-closed, enabling `agent.pki.enabled` on
-a fleet is order-sensitive:
+Verification on the agent fails closed. Thus the order is important when you
+enable `agent.pki.enabled` on a fleet:
 
-1. Enable `controller.pki.enabled` first, and confirm agents complete enrollment
-   and show as accepted (`osapi client agent list`).
-2. Only then enable `agent.pki.enabled`. An agent that has not completed
-   enrollment holds no controller public key, so if PKI is enabled on it before
-   enrollment finishes, every job it receives is rejected as "not enrolled"
-   until enrollment completes.
+1. Enable `controller.pki.enabled` first. Make sure that the agents complete
+   enrollment and show as accepted (`osapi client agent list`).
+1. Then enable `agent.pki.enabled`. An agent that did not complete enrollment
+   has no public key of the controller. If you enable PKI on it before
+   enrollment completes, it rejects each job as "not enrolled" until enrollment
+   completes.
 
-Neither switch flips as a consequence of upgrading. An agent accepted before the
-key store existed has no stored key, so it reports `key_stored: false` and is
-not authoritative once the controller is verifying. Nothing starts refusing work
-at a moment nobody chose, and the order to follow is:
+An upgrade does not change these settings. An agent that the controller accepted
+before the key store started has no stored key. Thus it reports
+`key_stored: false`, and its registration does not decide anything when the
+controller verifies. Nothing starts to refuse work at a time that nobody
+selected. Do these steps in this order:
 
-1. Enable `controller.pki.enabled`. The controller begins recording each agent's
-   key as its enrollment is accepted.
-2. Read `osapi client agent list`. Every agent still showing `key_stored: false`
-   has not enrolled since the store existed.
-3. Re-enrol those agents, and watch the field flip as each is accepted.
-4. Once the fleet reports `key_stored: true` and `verified: true` throughout,
-   enable `agent.pki.enabled`.
+1. Enable `controller.pki.enabled`. The controller starts to record the key of
+   each agent when it accepts the enrollment.
+1. Read `osapi client agent list`. Each agent that still shows
+   `key_stored: false` did not enroll after the store started.
+1. Enroll those agents again. Watch the field change as the controller accepts
+   each one.
+1. When all of the fleet reports `key_stored: true` and `verified: true`, enable
+   `agent.pki.enabled`.
 
-Doing step 4 first is what produces a fleet that refuses work: the agents are
-verifying jobs before the controller can verify them back.
+If you do step 4 first, the fleet refuses work: the agents verify the jobs
+before the controller can verify the agents.
 
 ## Configuration
 
@@ -288,10 +294,10 @@ agent:
     key_dir: /etc/osapi/pki
 ```
 
-| Field     | Type   | Default          | Description                            |
-| --------- | ------ | ---------------- | -------------------------------------- |
-| `enabled` | bool   | `false`          | Activate PKI enrollment and job verify |
-| `key_dir` | string | `/etc/osapi/pki` | Directory for `agent.key`, `agent.pub` |
+| Field     | Type   | Default          | Description                                 |
+| --------- | ------ | ---------------- | ------------------------------------------- |
+| `enabled` | bool   | `false`          | Turn on PKI enrollment and job verification |
+| `key_dir` | string | `/etc/osapi/pki` | Directory for `agent.key` and `agent.pub`   |
 
 ### Controller PKI
 
@@ -308,18 +314,18 @@ controller:
     rotation_grace_period: 24h
 ```
 
-| Field                   | Type   | Default          | Description                              |
-| ----------------------- | ------ | ---------------- | ---------------------------------------- |
-| `enabled`               | bool   | `false`          | Activate PKI enrollment and job signing  |
-| `key_dir`               | string | `/etc/osapi/pki` | Directory for controller keypair         |
-| `auto_accept`           | bool   | `false`          | Auto-accept agent enrollments (dev/test) |
-| `rotation_grace_period` | string | `24h`            | Both keys accepted during rotation       |
+| Field                   | Type   | Default          | Description                                                    |
+| ----------------------- | ------ | ---------------- | -------------------------------------------------------------- |
+| `enabled`               | bool   | `false`          | Turn on PKI enrollment and job signing                         |
+| `key_dir`               | string | `/etc/osapi/pki` | Directory for the controller key pair                          |
+| `auto_accept`           | bool   | `false`          | Accept agent enrollments automatically (development and tests) |
+| `rotation_grace_period` | string | `24h`            | osapi accepts both keys during rotation                        |
 
-## What Is Not Changed
+## What does not change
 
-- **JWT authentication** -- HMAC-SHA256 JWT tokens for API authentication are
-  unchanged. PKI is an additional trust layer between the controller and agents,
-  not a replacement for JWT.
-- **NATS transport** -- NATS connections still use their own auth (`none`,
-  `user_pass`, or `nkey`). PKI operates at the job payload level, not the
-  transport level.
+- **JWT authentication.** The HMAC-SHA256 JWT tokens for API authentication do
+  not change. PKI is an additional trust layer between the controller and the
+  agents. It does not replace JWT.
+- **NATS transport.** NATS connections still use their own authentication
+  (`none`, `user_pass`, `nkey` or `creds`). PKI operates on the job payloads,
+  not on the transport.

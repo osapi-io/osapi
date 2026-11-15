@@ -37,7 +37,7 @@ unless the agent runs as root. `osapi agent start` checks this at startup.
 | [`get`](get.mdx) | read | `sysctl:read` | Get a kernel parameter's current value, and whether osapi manages it |
 | [`create`](create.mdx) | write | `sysctl:write` | Manage a kernel parameter and apply it |
 | [`update`](update.mdx) | write | `sysctl:write` | Set a kernel parameter, manage it, and apply it |
-| [`delete`](delete.mdx) | write | `sysctl:write` | Stop managing a kernel parameter |
+| [`delete`](delete.mdx) | write | `sysctl:write` | Stop the management of a kernel parameter |
 
 ## Settings
 

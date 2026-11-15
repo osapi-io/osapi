@@ -2,105 +2,101 @@
 sidebar_position: 10
 ---
 
-# Container Management
+# Container management
 
-OSAPI can manage containers on target hosts through a pluggable runtime driver
-architecture. Container operations run through the [job system](job-system.md),
-so the API server never interacts with the container runtime directly -- agents
-handle all execution.
+osapi manages containers on target hosts through runtime drivers that you can
+replace. Container operations use the [job system](job-system.md). Thus the API
+server does not connect to the container runtime. The agents do all the work.
 
-## What It Does
+## What it does
 
-| Operation | Description                                   |
-| --------- | --------------------------------------------- |
-| Create    | Create a new container from a specified image |
-| List      | List containers, optionally filtered by state |
-| Inspect   | Get detailed information about a container    |
-| Start     | Start a stopped container                     |
-| Stop      | Stop a running container                      |
-| Remove    | Remove a container                            |
-| Exec      | Execute a command inside a running container  |
-| Pull      | Pull a container image to the host            |
+| Operation | Description                                    |
+| --------- | ---------------------------------------------- |
+| Create    | Make a new container from an image             |
+| List      | List containers, with an optional state filter |
+| Inspect   | Get the details of a container                 |
+| Start     | Start a stopped container                      |
+| Stop      | Stop a running container                       |
+| Remove    | Remove a container                             |
+| Exec      | Run a command in a running container           |
+| Pull      | Pull a container image to the host             |
 
-**Create** builds a new container from a specified image with optional name,
-environment variables, port mappings, and volume mounts. By default, containers
-are started immediately after creation (`auto_start: true`).
+**Create** makes a new container from an image. As options, it takes a name,
+environment variables, port mappings and volume mounts. By default, the
+container starts immediately after osapi makes it (`auto_start: true`).
 
-**List** returns containers on the target host, filtered by state (`running`,
-`stopped`, or `all`). Results include container ID, name, image, state, and
-creation timestamp.
+**List** returns the containers on the target host, with a state filter
+(`running`, `stopped` or `all`). Each result has the container ID, name, image,
+state and creation time.
 
-**Inspect** retrieves detailed information about a specific container, including
-port mappings, volume mounts, environment variables, network settings, and
-health check status.
+**Inspect** gets the details of one container: the port mappings, volume mounts,
+environment variables, network settings and health check status.
 
-**Start** and **Stop** control the lifecycle of existing containers. Stop
-accepts an optional timeout (default 10 seconds) before forcibly killing the
+**Start** and **Stop** control the lifecycle of a container. Stop accepts an
+optional timeout (10 seconds by default). After the timeout, it kills the
 container.
 
 **Remove** deletes a container from the host. Use `--force` to remove a running
-container without stopping it first.
+container. Then you do not need to stop it first.
 
-**Exec** runs a command inside a running container and returns stdout, stderr,
-and the exit code. Supports optional environment variables and a working
-directory override.
+**Exec** runs a command in a running container. It returns stdout, stderr and
+the exit code. As options, it takes environment variables and a working
+directory.
 
-**Pull** downloads a container image to the host. Returns the image ID, tag, and
-size.
+**Pull** downloads a container image to the host. It returns the image ID, tag
+and size.
 
-## How It Works
+## How it works
 
-Container operations follow the same request flow as all OSAPI operations:
+Container operations use the same request flow as all osapi operations:
 
-1. The CLI (or API client) posts a request to the API server.
-2. The API server creates a job and publishes it to NATS.
-3. An agent picks up the job, executes the container operation through the
+1. The CLI or an API client sends a request to the API server.
+1. The API server makes a job and publishes it to NATS.
+1. An agent receives the job. It runs the container operation through the
    runtime driver, and writes the result back to NATS KV.
-4. The API server collects the result and returns it to the client.
+1. The API server collects the result and returns it to the client.
 
-You can target a specific host, broadcast to all hosts with `_all`, or route by
-label. See [CLI Reference](../usage/cli/client/node/container/container.mdx) for
-usage and examples, or the
+You can target one host, broadcast to all hosts with `_all`, or target a label.
+Refer to the [CLI Reference](../usage/cli/client/node/container/container.mdx)
+for usage and examples, or to the
 [API Reference](/gen/api/docker-management-api-docker-operations) for the REST
 endpoints.
 
-### Runtime Drivers
+### Runtime drivers
 
-OSAPI uses a pluggable runtime driver interface for container operations. The
-agent auto-detects which runtime is available on the host and selects the
-appropriate driver.
+osapi uses a runtime driver interface for container operations. The agent finds
+the runtime on the host automatically and selects the correct driver.
 
-| Driver | Detection                                          | Status  |
-| ------ | -------------------------------------------------- | ------- |
-| Docker | Checks for Docker socket at `/var/run/docker.sock` | Default |
+| Driver | Detection                                             | Status  |
+| ------ | ----------------------------------------------------- | ------- |
+| Docker | Looks for the Docker socket at `/var/run/docker.sock` | Default |
 
-The Docker driver communicates with the Docker daemon through its Unix socket.
-No additional configuration is required -- if Docker is installed and the agent
-has access to the socket, container operations work automatically.
+The Docker driver connects to the Docker daemon through its Unix socket. You do
+not need more configuration. If Docker is installed and the agent can use the
+socket, container operations work automatically.
 
 ## Configuration
 
-Container management uses the general job infrastructure. No domain-specific
-configuration sections are required in `osapi.yaml`.
+Container management uses the general job system. It needs no section of its own
+in `osapi.yaml`.
 
-The Docker runtime driver auto-detects the Docker socket at
-`/var/run/docker.sock`. Ensure the agent process has read/write access to the
-socket (typically by adding the agent user to the `docker` group).
+The Docker runtime driver finds the Docker socket at `/var/run/docker.sock`
+automatically. Make sure that the agent process can read and write the socket.
+Usually, you add the agent user to the `docker` group.
 
-See [Configuration](../usage/configuration.md) for NATS, agent, and
+Refer to [Configuration](../usage/configuration.md) for the NATS, agent and
 authentication settings.
 
 ## Permissions
 
-Container operations require `docker:*` permissions. The `admin` role includes
-`docker:read`, `docker:write`, and `docker:execute`. The `write` role includes
-`docker:read` and `docker:write`. The `read` role includes only `docker:read`.
-See the [API reference](/category/api) for the permission required by each
-endpoint.
+Container operations need `docker:*` permissions. The `admin` role has
+`docker:read`, `docker:write` and `docker:execute`. The `write` role has
+`docker:read` and `docker:write`. The `read` role has only `docker:read`. Refer
+to the [API reference](/category/api) for the permission of each endpoint.
 
-Container exec is a privileged operation similar to command execution. Only the
-`admin` role includes `docker:execute` by default. Grant it to other roles or
-tokens explicitly when needed:
+Container exec is a privileged operation, like command execution. By default,
+only the `admin` role has `docker:execute`. When necessary, give it to other
+roles or tokens:
 
 ```yaml
 controller:
@@ -115,7 +111,7 @@ controller:
             - health:read
 ```
 
-Or grant it directly on a token:
+Or give it directly on a token:
 
 ```bash
 osapi token generate -r write -u user@example.com \
@@ -124,22 +120,23 @@ osapi token generate -r write -u user@example.com \
 
 ## Orchestrator
 
-Container operations can be composed as a DAG using [osapi-orchestrator][]. See
-the
+You can put container operations together as a DAG with [osapi-orchestrator][].
+Refer to the
 [Docker operations](https://github.com/osapi-io/osapi-orchestrator/blob/main/docs/operations/docker/)
 and the
 [docker.go example](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/docker.go)
-for a complete container lifecycle workflow (pull, create, start, exec, inspect,
-stop, remove, image-remove).
+for a full container lifecycle: pull, create, start, exec, inspect, stop, remove
+and image-remove.
 
 [osapi-orchestrator]: https://github.com/osapi-io/osapi-orchestrator
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/container/container.mdx) -- container
-  management commands
-- [API Reference](/gen/api/docker-management-api-docker-operations) -- REST API
-  documentation
-- [Job System](job-system.md) -- how async job processing works
-- [Authentication & RBAC](authentication.md) -- permissions and roles
-- [Architecture](../architecture/architecture.md) -- system design overview
+- [CLI Reference](../usage/cli/client/node/container/container.mdx): the
+  container commands
+- [API Reference](/gen/api/docker-management-api-docker-operations): the REST
+  API
+- [Job System](job-system.md): how asynchronous jobs work
+- [Authentication & RBAC](authentication.md): permissions and roles
+- [Architecture](../architecture/architecture.md): an overview of the system
+  design

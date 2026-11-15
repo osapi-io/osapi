@@ -4,19 +4,18 @@ sidebar_position: 4
 
 # UI Development
 
-The embedded management dashboard lives in the `ui/` directory. It is a React
-single-page application whose API client is generated from the same OpenAPI
-specification the Go SDK is generated from, and whose production build is
-compiled into the controller binary.
+The embedded management dashboard is in the `ui/` directory. It is a React
+single-page application. Its API client comes from the same OpenAPI
+specification as the Go SDK. The controller binary has its production build.
 
 The rules are not on this page. They are in the specifications repository,
 stated once. This page is the index.
 
 :::note
 
-The links below are full GitHub addresses rather than relative links, because
-the specifications repository is separate from this one and is not published as
-part of this site. Every other cross-reference here is relative.
+The links below are full GitHub addresses, not relative links. The
+specifications repository is a different repository, and this site does not
+publish it. All other links on this page are relative.
 
 :::
 
@@ -37,15 +36,15 @@ part of this site. Every other cross-reference here is relative.
 
 ## The commands
 
-They are in the justfile, not here. `just --list` shows every recipe; the ones
-this directory uses are prefixed `react-` and listed under `[react]`. Build
-through `just build`, `just ready` or `just test` rather than a recipe directly
-— each builds the UI before the binary, which is the order FR-006 explains.
+The recipes are in the justfile, not on this page. `just --list` shows each
+recipe. The recipes of this directory start with `react-`, and the list shows
+them under `[react]`. Build with `just build`, `just ready` or `just test`, not
+with a `react-` recipe directly. Each of them builds the UI before the binary.
+The binary embeds the UI, so the UI must exist first.
 
 ## Related
 
-- [Contributing](contributing.md): setup, building, and the conventions code
-  follows
+- [Contributing](contributing.md): the setup, the build and the code conventions
 - [UI Architecture](../architecture/ui.md): what an operator configures and sees
-- [Your first behavior](your-first-behavior.md): building a behavior, whose API
-  the UI calls
+- [Your first behavior](your-first-behavior.md): build a behavior, whose API the
+  UI calls

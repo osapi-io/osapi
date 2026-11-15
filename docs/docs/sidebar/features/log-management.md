@@ -2,17 +2,17 @@
 sidebar_position: 23
 ---
 
-# Log Management
+# Log management
 
-OSAPI provides read-only access to the systemd journal on managed hosts. Log
-entries are retrieved via `journalctl` and returned as structured JSON with
-timestamp, unit, priority, message, PID, and hostname fields.
+osapi gives read-only access to the systemd journal on managed hosts. It gets
+the log entries with `journalctl`, and returns them as structured JSON with the
+timestamp, unit, priority, message, PID and hostname fields.
 
-## How It Works
+## How it works
 
-The log provider queries the systemd journal on the agent host at request time.
-Each request returns a live snapshot — up to the requested number of entries
-matching the given filters.
+The log provider reads the systemd journal on the agent host when the request
+arrives. Each request returns the current entries that match the filters, up to
+the requested number.
 
 ### Query
 
@@ -28,9 +28,9 @@ filters.
 
 ### Sources
 
-Returns a sorted list of unique syslog identifiers (log sources) available in
-the journal. The agent runs `journalctl --field=SYSLOG_IDENTIFIER`. Use this to
-discover what unit names are available before querying.
+Returns a sorted list of the different syslog identifiers (log sources) in the
+journal. The agent runs `journalctl --field=SYSLOG_IDENTIFIER`. Use it to find
+the unit names before you query.
 
 ## Operations
 
@@ -40,7 +40,7 @@ discover what unit names are available before querying.
 | QueryUnit | Query journal entries for a specific unit name |
 | Sources   | List available log sources (syslog IDs)        |
 
-## CLI Usage
+## CLI usage
 
 ```bash
 # Query last 100 log entries on a host (default)
@@ -60,13 +60,13 @@ osapi client node log list-sources --target web-01
 osapi client node log query --target _all --lines 20
 ```
 
-All commands support `--json` for raw JSON output.
+All commands accept `--json` to give the raw JSON output.
 
-## Broadcast Support
+## Broadcast support
 
-All log operations support broadcast targeting. Use `--target _all` to query
-logs on every registered agent, or use a label selector like
-`--target group:web` to target a subset.
+All log operations accept broadcast targets. Use `--target _all` to query the
+logs on all registered agents. Use a label selector, for example
+`--target group:web`, to target a part of the fleet.
 
 Responses always include per-host results:
 
@@ -81,7 +81,7 @@ Responses always include per-host results:
 
 Skipped and failed hosts appear with their error in the output.
 
-## Supported Platforms
+## Supported platforms
 
 | OS Family | Support |
 | --------- | ------- |
@@ -89,11 +89,11 @@ Skipped and failed hosts appear with their error in the output.
 | Darwin    | Skipped |
 | Linux     | Skipped |
 
-On unsupported platforms, log operations return `status: skipped` instead of
-failing. See [Platform Detection](../sdk/platform/detection.md) for details on
-OS family detection.
+On a platform that is not supported, log operations return `status: skipped`.
+They do not fail. Refer to [Platform Detection](../sdk/platform/detection.md)
+for how osapi finds the OS family.
 
-## Container Behavior
+## Container behavior
 
 Log operations return `status: skipped` inside containers. `journalctl` requires
 a running systemd instance which is not available in standard container
@@ -105,12 +105,12 @@ environments.
 | ------------------------- | ---------- |
 | Query, QueryUnit, Sources | `log:read` |
 
-Log querying requires `log:read`, included in all built-in roles (`admin`,
-`write`, `read`).
+To query logs, you need `log:read`. All built-in roles (`admin`, `write`,
+`read`) have it.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/log/log.md) -- log commands
-- [SDK Reference](../sdk/client/node/log.md) -- Log service
-- [Platform Detection](../sdk/platform/detection.md) -- OS family detection
-- [Configuration](../usage/configuration.md) -- full configuration reference
+- [CLI Reference](../usage/cli/client/node/log/log.md): log commands
+- [SDK Reference](../sdk/client/node/log.md): Log service
+- [Platform Detection](../sdk/platform/detection.md): OS family detection
+- [Configuration](../usage/configuration.md): full configuration reference

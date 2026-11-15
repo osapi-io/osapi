@@ -1,7 +1,7 @@
 # Restart
 
-Restart a systemd service on a target host. Always returns `changed: true`
-because the service is restarted regardless of its current state:
+Restart a systemd service on a target host. The command always returns
+`changed: true`, because the agent restarts the service in all states:
 
 ```bash
 $ osapi client node service restart --target web-01 \
@@ -30,7 +30,7 @@ $ osapi client node service restart --target _all \
   2 hosts: 2 changed
 ```
 
-When some hosts are skipped (e.g., macOS agents):
+When some hosts are skipped, for example macOS agents:
 
 ```bash
 $ osapi client node service restart --target _all \

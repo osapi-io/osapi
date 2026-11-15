@@ -29,7 +29,7 @@ resp, err := client.Audit.Export(ctx)
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/audit.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/audit.go)
 for a complete working example.
 

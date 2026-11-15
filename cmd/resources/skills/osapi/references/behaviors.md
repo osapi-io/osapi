@@ -36,9 +36,7 @@ And per method:
 - `permission`: what your token needs, such as `sysctl:write`.
 - `examples`: sample inputs with the output one host returns for each.
 
-A read (`verb: read`) changes nothing. A write is safe to repeat: creating
-something that exists, or deleting something absent, succeeds with
-`changed: false`. Updating something absent fails.
+A read (`verb: read`) changes nothing. You can safely do a write again. A create of something that exists succeeds with `changed: false`. A delete of something that is not there also succeeds with `changed: false`. Updating something absent fails.
 
 Controller commands that are not behaviors, `client job`, `client audit`,
 `client agent` and `client health`, are found with `osapi help client --json`.

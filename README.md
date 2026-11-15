@@ -48,9 +48,14 @@ Why it's better:
 
 ## Getting started
 
-The [docs][getting started] walk through it: start osapi, give your agent its
-skills with `osapi init`, ask for what you want, and run the same operations
-from the CLI. They also cover building a behavior, by hand or with an agent.
+The [docs][getting started] give these steps:
+
+1. Start osapi.
+2. Give your agent its skills with `osapi init`.
+3. Ask for what you want.
+4. Run the same operations from the CLI.
+
+The docs also tell how to build a behavior, by hand or with an agent.
 
 ## Documentation
 

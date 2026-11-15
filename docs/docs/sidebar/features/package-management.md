@@ -2,21 +2,19 @@
 sidebar_position: 15
 ---
 
-# Package Management
+# Package management
 
-OSAPI manages system packages on target hosts. It wraps the native package
-manager (`apt` on Debian-family systems) behind a consistent API that supports
-listing installed packages, installing, removing, refreshing sources, and
-checking for available updates.
+osapi manages system packages on target hosts. It puts one API in front of the
+package manager of the host (`apt` on Debian family systems). The API can list
+installed packages, install, remove, refresh the sources and check for updates.
 
-## How It Works
+## How it works
 
-The package provider delegates to the host's native package manager. On
-Debian-family systems this means `dpkg-query` for reads and `apt-get` for
-mutations. All operations run on the agent -- the controller never executes
-package commands directly.
+The package provider uses the package manager of the host. On Debian family
+systems, it uses `dpkg-query` for reads and `apt-get` for changes. All
+operations run on the agent. The controller does not run package commands.
 
-### List and Get
+### List and get
 
 The list operation queries the local package database for all installed
 packages. Each entry includes the package name, version, status, and installed
@@ -24,24 +22,24 @@ size. The get operation fetches a single package by name.
 
 ### Install
 
-Installs a package by name using `apt-get install`. If the package is already
+Installs a package by name with `apt-get install`. If the package is already
 installed, the operation returns `changed: false`. The agent runs
-`apt-get update` automatically before installing to ensure the latest version is
+`apt-get update` automatically before it installs, so that the latest version is
 available.
 
 ### Remove
 
-Removes a package by name using `apt-get remove`. If the package is not
+Removes a package by name with `apt-get remove`. If the package is not
 installed, the operation returns `changed: false`.
 
-### Update (Refresh Sources)
+### Update (Refresh sources)
 
-Refreshes the package source lists using `apt-get update`. This does not upgrade
-any packages -- it only updates the local cache of available packages from
-configured repositories. Returns `changed: true` when sources are refreshed
-successfully.
+Refreshes the package source lists with `apt-get update`. This does not upgrade
+packages. It only updates the local cache of available packages from the
+configured repositories. When the refresh is successful, it returns
+`changed: true`.
 
-### List Available Updates
+### List available updates
 
 Queries for packages that have newer versions available in the configured
 repositories. Returns each package name along with the current installed version
@@ -58,7 +56,7 @@ and the new available version.
 | Update    | Refresh package sources              |
 | Updates   | List packages with available updates |
 
-## CLI Usage
+## CLI usage
 
 ```bash
 # List all installed packages on a host
@@ -83,13 +81,13 @@ osapi client node package list --updates --target web-01
 osapi client node package install --target _all --name htop
 ```
 
-All commands support `--json` for raw JSON output.
+All commands accept `--json` to give the raw JSON output.
 
-## Broadcast Support
+## Broadcast support
 
-All package operations support broadcast targeting. Use `--target _all` to run
-on every registered agent, or use a label selector like `--target group:web` to
-target a subset.
+All package operations accept broadcast targets. Use `--target _all` to run on
+all registered agents. Use a label selector, for example `--target group:web`,
+to target a part of the fleet.
 
 Responses always include per-host results:
 
@@ -103,7 +101,7 @@ Responses always include per-host results:
 
 Skipped and failed hosts appear with their error in the output.
 
-## Supported Platforms
+## Supported platforms
 
 | OS Family | Support |
 | --------- | ------- |
@@ -111,9 +109,10 @@ Skipped and failed hosts appear with their error in the output.
 | Darwin    | Skipped |
 | Linux     | Skipped |
 
-On unsupported platforms, package operations return `status: skipped` instead of
-failing. See [Platform Detection](../sdk/platform/detection.md) for details on
-OS family detection.
+On a platform that is not supported, package operations return
+`status: skipped`. They do not fail. Refer to
+[Platform Detection](../sdk/platform/detection.md) for how osapi finds the OS
+family.
 
 ## Permissions
 
@@ -127,7 +126,6 @@ All built-in roles (`admin`, `write`, `read`) include `package:read`. The
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/package/package.md) -- package
-  commands
-- [Platform Detection](../sdk/platform/detection.md) -- OS family detection
-- [Configuration](../usage/configuration.md) -- full configuration reference
+- [CLI Reference](../usage/cli/client/node/package/package.md): package commands
+- [Platform Detection](../sdk/platform/detection.md): OS family detection
+- [Configuration](../usage/configuration.md): full configuration reference

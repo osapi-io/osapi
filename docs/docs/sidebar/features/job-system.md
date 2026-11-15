@@ -2,23 +2,24 @@
 sidebar_position: 3
 ---
 
-# Job System
+# Job system
 
-The job system is the backbone of OSAPI. Every state-reading or state-changing
-operation runs as an asynchronous job, allowing the API server to remain
-unprivileged while agents execute operations on target hosts.
+The job system is the base of osapi. Each operation that reads or changes state
+runs as an asynchronous job. Thus the API server needs no privileges, and the
+agents run the operations on the target hosts.
 
-## How It Works
+## How it works
 
 OSAPI uses a **KV-first, stream-notification** architecture built on NATS
 JetStream:
 
-1. The API server writes a job definition to a NATS KV bucket
-2. A notification is published to a NATS stream
-3. An agent receives the notification, reads the job from KV, and executes the
-   operation
-4. The agent writes the result to a response KV bucket
-5. The client polls the API server, which reads the result from KV
+1. The API server writes a job definition to a NATS KV bucket.
+1. The API server publishes a notification to a NATS stream.
+1. An agent receives the notification, reads the job from KV and runs the
+   operation.
+1. The agent writes the result to a response KV bucket.
+1. The client asks the API server for the result. The API server reads it from
+   KV.
 
 ```mermaid
 sequenceDiagram
@@ -37,9 +38,9 @@ sequenceDiagram
     Agent->>NATS: write result to KV
 ```
 
-## Job Routing
+## Job routing
 
-Jobs can be targeted to specific agents using routing modes:
+Use these routing modes to send jobs to specific agents:
 
 | Target        | Behavior                                        |
 | ------------- | ----------------------------------------------- |
@@ -48,11 +49,11 @@ Jobs can be targeted to specific agents using routing modes:
 | `hostname`    | Sent to a specific host                         |
 | `group:label` | Sent to all agents matching a label             |
 
-Agents register with their hostname and optional key-value labels. Labels
-support hierarchical matching with dot separators (e.g., `group:web.dev` matches
-agents with `group: web.dev.us-east`).
+Agents register with their hostname and optional key-value labels. Labels have
+levels with dots between them. A label target matches its prefix: for example,
+`group:web.dev` matches agents with `group: web.dev.us-east`.
 
-## Job Lifecycle
+## Job lifecycle
 
 Jobs progress through a defined set of states:
 
@@ -66,11 +67,11 @@ stateDiagram-v2
     Retryable --> Pending: retry
 ```
 
-Jobs are created implicitly when you call a domain endpoint. Once created, jobs
-can be listed, inspected, deleted, and retried through the job API and CLI. See
-[CLI Reference](../usage/cli/client/job/job.mdx) for usage and examples, or the
-[API Reference](/gen/api/job-management-api-job-operations) for the REST
-endpoints.
+When you call a domain endpoint, osapi makes a job automatically. After that,
+you can list, examine, delete and retry the job through the job API and the CLI.
+Refer to [CLI Reference](../usage/cli/client/job/job.mdx) for usage and
+examples, or the [API Reference](/gen/api/job-management-api-job-operations) for
+the REST endpoints.
 
 ## Configuration
 
@@ -90,8 +91,8 @@ agent:
     group: 'web.dev.us-east'
 ```
 
-See [Configuration](../usage/configuration.md) for the full reference including
-NATS stream, consumer, and DLQ settings.
+Refer to [Configuration](../usage/configuration.md) for all the settings, with
+the NATS stream, consumer and DLQ settings.
 
 ## Permissions
 
@@ -102,16 +103,15 @@ NATS stream, consumer, and DLQ settings.
 | Delete job    | `job:write`                                          |
 | Retry job     | `job:write`                                          |
 
-Jobs are created implicitly through typed domain endpoints, so the permission
-required to create a job depends on the operation being performed. For example,
-reading a hostname requires `node:read`, while updating DNS requires
-`network:write`.
+The typed domain endpoints make the jobs. Thus the permission to make a job
+comes from the operation. For example, to read a hostname you need `node:read`.
+To update DNS you need `network:write`.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/job/job.mdx) -- job commands
-- [API Reference](/gen/api/job-management-api-job-operations) -- REST API
+- [CLI Reference](../usage/cli/client/job/job.mdx): job commands
+- [API Reference](/gen/api/job-management-api-job-operations): REST API
   documentation
-- [Running Jobs](../architecture/request-flow.md) -- targeting, statuses,
-  polling, and what to monitor
-- [Architecture](../architecture/architecture.md) -- system design overview
+- [Running Jobs](../architecture/request-flow.md): targeting, statuses, polling,
+  and what to monitor
+- [Architecture](../architecture/architecture.md): system design overview

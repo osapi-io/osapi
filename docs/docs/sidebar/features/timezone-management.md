@@ -2,25 +2,25 @@
 sidebar_position: 12
 ---
 
-# Timezone Management
+# Timezone management
 
-OSAPI manages the system timezone on target hosts via `timedatectl`. The
-timezone is read and set atomically, and the update operation is idempotent --
-if the timezone already matches the requested value, no change is made and
-`changed: false` is returned.
+osapi manages the system timezone of target hosts with `timedatectl`. The agent
+reads and sets the timezone atomically. The update operation is idempotent. If
+the timezone already has the requested value, the agent changes nothing and
+returns `changed: false`.
 
-## How It Works
+## How it works
 
-The timezone provider uses `timedatectl` to query and set the system timezone.
-The get operation reads the current timezone name and UTC offset. The update
-operation compares the current timezone against the requested value and calls
-`timedatectl set-timezone` only when a change is needed.
+The timezone provider uses `timedatectl` to read and set the system timezone.
+The get operation reads the current timezone name and the UTC offset. The update
+operation compares the current timezone with the requested value. It calls
+`timedatectl set-timezone` only when a change is necessary.
 
 ### Get
 
-Runs `timedatectl show -p Timezone --value` to read the IANA timezone name
-(e.g., `America/New_York`) and `date +%:z` to read the current UTC offset (e.g.,
-`-05:00`).
+Runs `timedatectl show -p Timezone --value` to read the IANA timezone name, for
+example `America/New_York`, and `date +%:z` to read the current UTC offset, for
+example `-05:00`.
 
 ### Update
 
@@ -35,7 +35,7 @@ and returns `changed: true`.
 | Get       | Get the current timezone name and UTC offset                  |
 | Update    | Set the timezone (idempotent, returns changed: false if same) |
 
-## CLI Usage
+## CLI usage
 
 ```bash
 # Get timezone from a host
@@ -50,13 +50,13 @@ osapi client node timezone update --target _all \
   --timezone UTC
 ```
 
-All commands support `--json` for raw JSON output.
+All commands accept `--json` to give the raw JSON output.
 
-## Broadcast Support
+## Broadcast support
 
-All timezone operations support broadcast targeting. Use `--target _all` to
-query or update every registered agent, or use a label selector like
-`--target group:web` to target a subset.
+All timezone operations accept broadcast targets. Use `--target _all` to query
+or update all registered agents. Use a label selector, for example
+`--target group:web`, to target a part of the fleet.
 
 Responses always include per-host results:
 
@@ -70,13 +70,13 @@ Responses always include per-host results:
 
 Skipped and failed hosts appear with their error in the output.
 
-## Idempotent Updates
+## Idempotent updates
 
-The update operation compares the requested timezone against the current value.
-If they match, the response returns `changed: false` and no system call is made.
-It is safe to run this operation repeatedly.
+The update operation compares the requested timezone with the current value. If
+they are the same, the response is `changed: false`, and the agent makes no
+system call. You can run this operation many times safely.
 
-## Supported Platforms
+## Supported platforms
 
 | OS Family | Support |
 | --------- | ------- |
@@ -84,9 +84,10 @@ It is safe to run this operation repeatedly.
 | Darwin    | Skipped |
 | Linux     | Skipped |
 
-On unsupported platforms, timezone operations return `status: skipped` instead
-of failing. See [Platform Detection](../sdk/platform/detection.md) for details
-on OS family detection.
+On a platform that is not supported, timezone operations return
+`status: skipped`. They do not fail. Refer to
+[Platform Detection](../sdk/platform/detection.md) for how osapi finds the OS
+family.
 
 ## Permissions
 
@@ -100,5 +101,5 @@ All built-in roles (`admin`, `write`, `read`) include `timezone:read`. The
 
 ## Related
 
-- [NTP Management](ntp-management.md) -- NTP server configuration
-- [Configuration](../usage/configuration.md) -- full configuration reference
+- [NTP Management](ntp-management.md): NTP server configuration
+- [Configuration](../usage/configuration.md): full configuration reference

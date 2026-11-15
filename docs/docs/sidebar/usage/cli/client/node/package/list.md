@@ -15,7 +15,7 @@ $ osapi client node package list --target web-01
   1 host: 1 ok
 ```
 
-Target all hosts to list packages across the fleet:
+Target all hosts to list the packages on all of the fleet:
 
 ```bash
 $ osapi client node package list --target _all
@@ -48,7 +48,7 @@ $ osapi client node package list --target _all
   mac-01    unsupported platform
 ```
 
-Target by label to list packages on a group of servers:
+Target a label to list the packages on a group of servers:
 
 ```bash
 $ osapi client node package list --target group:web
@@ -74,7 +74,7 @@ $ osapi client node package list --target web-01 --json
 
 ## Updates available
 
-List packages that have newer versions available in the configured repositories:
+List the packages that have newer versions in the configured repositories:
 
 ```bash
 $ osapi client node package list --updates --target web-01
@@ -88,7 +88,7 @@ $ osapi client node package list --updates --target web-01
   1 host: 1 ok
 ```
 
-Broadcast to check for updates across all hosts:
+Broadcast to check for updates on all hosts:
 
 ```bash
 $ osapi client node package list --updates --target _all

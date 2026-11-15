@@ -28,12 +28,12 @@ The symptom is a check that fails here but passes in CI, on a file that nobody
 changed. If this occurs, find the version that ran. Do this before you accept
 the failure as real.
 
-## Never build with the Go toolchain directly
+## Do not build with the Go toolchain directly
 
-`go build ./...` and `go test ./...` fail in this repository. The UI is embedded
-via `//go:embed dist/*`, which requires `ui/dist/` to hold files at compile
-time. Use `just build`, `just test`, or `just ready`. Each builds the UI first.
-See [CONTRIBUTING.md](CONTRIBUTING.md#building-and-running).
+`go build ./...` and `go test ./...` fail in this repository. The build embeds
+the UI through `//go:embed dist/*`. Thus `ui/dist/` must hold files at compile
+time. Use `just build`, `just test` or `just ready`. Each one builds the UI
+first. Refer to [CONTRIBUTING.md](CONTRIBUTING.md#building-and-running).
 
 ## Where the rules come from
 

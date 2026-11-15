@@ -29,7 +29,7 @@ resp, err := client.Health.Status(ctx)
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/health.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/health.go)
 for a complete working example.
 

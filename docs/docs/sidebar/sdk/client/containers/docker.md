@@ -4,8 +4,8 @@ sidebar_position: 1
 
 # Docker
 
-Docker container lifecycle management — create, list, inspect, start, stop,
-remove, exec, and pull operations.
+Manage the lifecycle of Docker containers: create, list, inspect, start, stop,
+remove, exec and pull.
 
 ## Methods
 

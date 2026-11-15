@@ -57,7 +57,7 @@ resp, err := c.Certificate.Delete(ctx, "web-01", "internal-ca")
 
 ## Example
 
-See
+Refer to
 [`examples/sdk/client/certificate.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/certificate.go)
 for a complete working example.
 

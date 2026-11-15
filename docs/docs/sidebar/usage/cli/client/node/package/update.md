@@ -1,7 +1,7 @@
 # Update
 
-Refresh the package source lists on the target host. This is equivalent to
-running `apt-get update` -- it does not upgrade any packages:
+Refresh the package source lists on the target host. This is the same as
+`apt-get update`. It does not upgrade packages:
 
 ```bash
 $ osapi client node package update --target web-01
@@ -14,7 +14,7 @@ $ osapi client node package update --target web-01
   1 host: 1 changed
 ```
 
-Broadcast to refresh sources across all hosts:
+Broadcast to refresh the sources on all hosts:
 
 ```bash
 $ osapi client node package update --target _all

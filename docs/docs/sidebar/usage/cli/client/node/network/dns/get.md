@@ -13,7 +13,7 @@ $ osapi client node network dns get --interface eth0
   1 host: 1 ok
 ```
 
-When targeting all hosts:
+When you target all hosts:
 
 ```bash
 $ osapi client node network dns get --interface eth0 --target _all
@@ -44,7 +44,7 @@ $ osapi client node network dns get --interface eth0 --target _all
   server2   unsupported platform
 ```
 
-Target by label to query a group of servers:
+Target a label to query a group of servers:
 
 ```bash
 $ osapi client node network dns get --interface eth0 --target group:web

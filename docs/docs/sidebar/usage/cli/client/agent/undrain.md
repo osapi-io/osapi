@@ -1,6 +1,6 @@
 # Undrain
 
-Resume accepting jobs on a drained or cordoned agent:
+Let a drained or cordoned agent accept jobs again:
 
 ```bash
 $ osapi client agent undrain --hostname web-01
@@ -10,7 +10,7 @@ $ osapi client agent undrain --hostname web-01
   Message: Agent undrain initiated
 ```
 
-The agent re-subscribes to NATS JetStream consumers and transitions back to
+The agent subscribes to the NATS JetStream consumers again and changes back to
 `Ready`.
 
 ## Flags

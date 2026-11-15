@@ -2,17 +2,17 @@
 sidebar_position: 20
 ---
 
-# Process Management
+# Process management
 
-OSAPI provides read-only visibility into running processes and the ability to
-send signals to specific processes on managed hosts. Process information is
-collected via `/proc` on Linux and the system process table on other platforms.
+osapi shows the running processes on managed hosts, and can send signals to
+specific processes. The agent collects the process data from `/proc` on Linux,
+and from the system process table on other platforms.
 
-## How It Works
+## How it works
 
-The process provider reads process information from the operating system at
-request time. Unlike facts (which are collected periodically), process data is
-always live -- each request returns the current snapshot of running processes.
+The process provider reads the process data from the operating system when the
+request arrives. Facts are collected at intervals, but process data is always
+live. Each request returns the processes that run at that time.
 
 ### List
 
@@ -27,9 +27,9 @@ PID does not exist, the agent returns a 404 error.
 
 ### Signal
 
-Sends a POSIX signal to a process by PID. Supported signals: `TERM`, `KILL`,
-`HUP`, `INT`, `USR1`, `USR2`, `QUIT`, `STOP`, `CONT`. The agent calls
-`syscall.Kill()` and returns `changed: true` if the signal was delivered.
+Sends a POSIX signal to a process by PID. The signals are `TERM`, `KILL`, `HUP`,
+`INT`, `USR1`, `USR2`, `QUIT`, `STOP` and `CONT`. The agent calls
+`syscall.Kill()`. If the process got the signal, it returns `changed: true`.
 
 ## Operations
 
@@ -39,7 +39,7 @@ Sends a POSIX signal to a process by PID. Supported signals: `TERM`, `KILL`,
 | Get       | Get information about a process by PID |
 | Signal    | Send a signal to a process by PID      |
 
-## CLI Usage
+## CLI usage
 
 ```bash
 # List all processes on a host
@@ -56,13 +56,13 @@ osapi client node process signal --target web-01 \
 osapi client node process list --target _all
 ```
 
-All commands support `--json` for raw JSON output.
+All commands accept `--json` to give the raw JSON output.
 
-## Broadcast Support
+## Broadcast support
 
-All process operations support broadcast targeting. Use `--target _all` to list
-processes on every registered agent, or use a label selector like
-`--target group:web` to target a subset.
+All process operations accept broadcast targets. Use `--target _all` to list
+processes on all registered agents. Use a label selector, for example
+`--target group:web`, to target a part of the fleet.
 
 Responses always include per-host results:
 
@@ -77,7 +77,7 @@ Responses always include per-host results:
 
 Skipped and failed hosts appear with their error in the output.
 
-## Supported Platforms
+## Supported platforms
 
 | OS Family | Support |
 | --------- | ------- |
@@ -85,9 +85,10 @@ Skipped and failed hosts appear with their error in the output.
 | Darwin    | Skipped |
 | Linux     | Skipped |
 
-On unsupported platforms, process operations return `status: skipped` instead of
-failing. See [Platform Detection](../sdk/platform/detection.md) for details on
-OS family detection.
+On a platform that is not supported, process operations return
+`status: skipped`. They do not fail. Refer to
+[Platform Detection](../sdk/platform/detection.md) for how osapi finds the OS
+family.
 
 ## Permissions
 
@@ -102,8 +103,7 @@ role by default.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/process/process.md) -- process
-  commands
-- [SDK Reference](../sdk/client/node/process.md) -- Process service
-- [Platform Detection](../sdk/platform/detection.md) -- OS family detection
-- [Configuration](../usage/configuration.md) -- full configuration reference
+- [CLI Reference](../usage/cli/client/node/process/process.md): process commands
+- [SDK Reference](../sdk/client/node/process.md): Process service
+- [Platform Detection](../sdk/platform/detection.md): OS family detection
+- [Configuration](../usage/configuration.md): full configuration reference

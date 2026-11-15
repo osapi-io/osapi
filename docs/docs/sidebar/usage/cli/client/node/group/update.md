@@ -12,7 +12,7 @@ $ osapi client node group update --target web-01 \
   1 host: 1 changed
 ```
 
-The `--members` flag replaces the existing member list entirely.
+The `--members` flag replaces all of the member list.
 
 ## Flags
 

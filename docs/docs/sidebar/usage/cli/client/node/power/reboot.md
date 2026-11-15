@@ -1,7 +1,7 @@
 # Reboot
 
-Schedule a reboot on the target host. The agent calls `shutdown -r` with the
-configured delay. When `--delay` is 0, the reboot happens immediately:
+Schedule a reboot on the target host. The agent runs `shutdown -r` with the
+configured delay. When `--delay` is 0, the host reboots immediately:
 
 ```bash
 $ osapi client node power reboot --target web-01

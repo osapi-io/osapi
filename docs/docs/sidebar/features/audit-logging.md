@@ -2,18 +2,18 @@
 sidebar_position: 4
 ---
 
-# Audit Logging
+# Audit logging
 
 OSAPI records a structured audit trail of every API request. Audit entries
 capture who made the request, what they did, and how long it took. This provides
 accountability and supports compliance requirements.
 
-## How It Works
+## How it works
 
-The API server records audit entries automatically via middleware. Every
-authenticated request generates an audit entry that is stored in a dedicated
-NATS JetStream stream. No application code needs to explicitly log audit events
--- the middleware handles it transparently.
+A middleware in the API server records audit entries automatically. Each
+authenticated request makes an audit entry. osapi stores it in its own NATS
+JetStream stream. No application code needs to log audit events. The middleware
+does it.
 
 ```mermaid
 sequenceDiagram
@@ -49,43 +49,43 @@ Each audit entry contains:
 
 ### What the request asked for
 
-Who called `command/shell` against which host, without the command, is not an
-answer to "what happened". For any method that changes something — `POST`,
-`PUT`, `PATCH`, `DELETE` — the entry records `request_summary`: the request body
-as JSON, with the values of sensitive fields replaced by `[redacted]`.
+The client that called `command/shell` on a host, without the command, does not
+tell what happened. Thus, for each method that changes something (`POST`, `PUT`,
+`PATCH`, `DELETE`), the entry records `request_summary`. It is the request body
+as JSON. osapi replaces the values of sensitive fields with `[redacted]`.
 
-- **Redacted fields** are matched by name, case-insensitively, at every depth,
-  so a password nested inside a list of users is redacted too: `password`,
-  `password_hash`, `secret`, `token`, `private_key`, `key_data`, `stdin`,
-  `content`, `authorization`.
-- **The list is a deny list, not an allow list.** New fields are recorded by
-  default, because a summary that only holds the fields somebody remembered
-  answers nothing after an incident. A field carrying a secret is added to the
-  list in the same change that adds the field.
-- **A summary is capped** at 2 KB and marked `…[truncated]` when cut. A body
-  over 64 KB is not read at all: the entry says so rather than holding an
-  upload.
-- **A body that is not JSON** is described — its content type and size — rather
-  than stored.
-- **A read records nothing**, since a `GET` carries nothing worth keeping.
+- **Redacted fields.** osapi finds them by name, at all levels, and upper case
+  or lower case does not matter. Thus it also redacts a password in a list of
+  users: `password`, `password_hash`, `secret`, `token`, `private_key`,
+  `key_data`, `stdin`, `content`, `authorization`.
+- **The list is a deny list, not an allow list.** osapi records new fields by
+  default. A summary with only the fields that somebody remembered does not help
+  after an incident. When a change adds a field with a secret, the same change
+  adds the field to the list.
+- **A summary has a limit** of 2 KB. When osapi cuts it, it adds `…[truncated]`.
+  osapi does not read a body of more than 64 KB. The entry says so. It does not
+  keep the upload.
+- **A body that is not JSON.** osapi records its content type and size. It does
+  not store the body.
+- **A read records no summary.** A `GET` has nothing that osapi must keep.
 
-`job_id` is what joins an entry to the job's own status timeline, so "who asked
-for this" and "what the agents did about it" are one trail rather than two. A
-request that creates no job has no `job_id`.
+`job_id` connects an entry to the status timeline of its job. Thus "who asked
+for this" and "what the agents did" are one trail, not two. A request that makes
+no job has no `job_id`.
 
-## Viewing Audit Logs
+## Viewing audit logs
 
 Query audit entries through the API or CLI. You can list recent entries
-(paginated), get a specific entry by ID, or export all entries. See
+(paginated), get a specific entry by ID, or export all entries. Refer to
 [CLI Reference](../usage/cli/client/audit/audit.mdx) for usage and examples, or
 the [API Reference](/gen/api/audit-log-api-audit) for the REST endpoints.
 
 ## Export
 
-The export feature retrieves all audit entries and writes them to a local file
-in JSONL format (one JSON object per line). This is designed for long-term
-retention -- since audit entries in the NATS stream have a configurable
-`max_age` (default 30 days), exporting preserves them before they expire.
+Export gets all audit entries and writes them to a local file in JSONL format,
+one JSON object on each line. Use it to keep entries for a long time. The audit
+entries in the NATS stream have a `max_age` that you can set (30 days by
+default). An export keeps them before they expire.
 
 The export endpoint returns all entries in a single response. The CLI writes
 each entry as a JSON line to the output file. JSONL files are easy to process
@@ -104,10 +104,10 @@ cat audit.jsonl | jq .
 
 ## Retention
 
-Audit entries are stored in a NATS JetStream stream with configurable retention
-settings. When entries exceed the `max_age` or the stream reaches its size
-limit, older entries are automatically removed. Export entries before they
-expire if you need long-term retention.
+osapi stores audit entries in a NATS JetStream stream, with retention settings
+that you can set. When entries are older than `max_age`, or when the stream is
+at its size limit, NATS removes the oldest entries automatically. If you must
+keep entries for a long time, export them before they expire.
 
 ## Configuration
 
@@ -122,10 +122,10 @@ nats:
     replicas: 1 # Number of stream replicas
 ```
 
-Each audit entry includes a `trace_id` field when distributed tracing is
-enabled, allowing correlation with OpenTelemetry traces.
+When distributed tracing is enabled, each audit entry has a `trace_id` field.
+Use it to find the OpenTelemetry trace of the entry.
 
-See [Configuration](../usage/configuration.md#every-setting) for the full
+Refer to [Configuration](../usage/configuration.md#every-setting) for the full
 reference.
 
 ## Permissions
@@ -135,7 +135,7 @@ includes this permission by default.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/audit/audit.mdx) -- audit commands (list,
+- [CLI Reference](../usage/cli/client/audit/audit.mdx): audit commands (list,
   get, export)
-- [API Reference](/gen/api/audit-log-api-audit) -- REST API documentation
-- [Configuration](../usage/configuration.md) -- full configuration reference
+- [API Reference](/gen/api/audit-log-api-audit): REST API documentation
+- [Configuration](../usage/configuration.md): full configuration reference

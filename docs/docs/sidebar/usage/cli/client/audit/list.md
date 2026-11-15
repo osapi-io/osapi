@@ -1,8 +1,8 @@
 # List
 
-List audit log entries with pagination. Shows recent API activity including
-user, HTTP method, path, response status, and duration. Requires `audit:read`
-permission (admin role by default).
+List audit log entries, one page at a time. The list shows recent API activity:
+the user, the HTTP method, the path, the response status and the duration. It
+needs the `audit:read` permission, which the admin role has by default.
 
 ```bash
 $ osapi client audit list
@@ -23,7 +23,7 @@ Use `--limit` and `--offset` for pagination:
 $ osapi client audit list --limit 10 --offset 20
 ```
 
-Use `--json` for raw JSON output:
+Use `--json` to get the raw JSON output:
 
 ```bash
 $ osapi client audit list --json

@@ -29,7 +29,7 @@ OSAPI follows
 
 Distributions within the same family share the same provider implementations.
 For example, Ubuntu 24.04 and Debian 12 both use the `debian_*.go` providers
-because they share the same system interfaces (`/proc`, `/sys`, `ip`, etc.).
+because they use the same system interfaces (`/proc`, `/sys`, `ip`).
 
 ## How It Works
 
@@ -60,5 +60,5 @@ default:
 1. Add the family to `supportedFamilies` in `internal/cli/validate.go`
 2. Add the distribution mapping to `debianFamily` (or create a new map) in
    `pkg/sdk/platform/platform.go`
-3. Create provider files: `{family}_*.go` (e.g., `redhat_get_hostname.go`)
+3. Create provider files: `{family}_*.go` (for example `redhat_get_hostname.go`)
 4. Add a `case` to each provider switch in `internal/agent/factory.go`

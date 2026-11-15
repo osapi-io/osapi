@@ -14,11 +14,11 @@ $ osapi client node user ssh-key delete --target web-01 \
   1 host: 1 changed
 ```
 
-The key matching the given SHA256 fingerprint is removed from the user's
-`~/.ssh/authorized_keys` file. Returns `changed: false` if the fingerprint is
-not found.
+The agent removes the key with the given SHA256 fingerprint from the
+`~/.ssh/authorized_keys` file of the user. If it does not find the fingerprint,
+the command returns `changed: false`.
 
-When targeting all hosts:
+When you target all hosts:
 
 ```bash
 $ osapi client node user ssh-key delete --target _all \

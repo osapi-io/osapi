@@ -1,8 +1,8 @@
 # Update
 
-Replace the static routes for an interface on a target host. Fails if no
-OSAPI-managed routes configuration exists for that interface -- use `create`
-first. Returns `changed: false` if the content has not changed:
+Replace the static routes for an interface on a target host. The command fails
+if osapi does not manage a route configuration for that interface. Use `create`
+first. If the content did not change, the command returns `changed: false`:
 
 ```bash
 $ osapi client node network route update \
@@ -18,7 +18,7 @@ $ osapi client node network route update \
   1 host: 1 changed
 ```
 
-When the configuration is unchanged, `changed` is false:
+When the configuration does not change, `changed` is false:
 
 ```bash
 $ osapi client node network route update \
@@ -51,7 +51,7 @@ $ osapi client node network route update \
 
 ## Route Format
 
-Routes are specified as `TO:VIA` or `TO:VIA:METRIC`:
+Give each route as `TO:VIA` or `TO:VIA:METRIC`:
 
 | Format          | Example                      |
 | --------------- | ---------------------------- |

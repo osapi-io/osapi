@@ -13,7 +13,7 @@ $ osapi client node hostname get
   1 host: 1 ok
 ```
 
-When targeting all hosts:
+When you target all hosts:
 
 ```bash
 $ osapi client node hostname get --target _all
@@ -60,7 +60,7 @@ $ osapi client node hostname get --target darwin-host
   darwin-host  host: operation not supported on this OS family
 ```
 
-Target by label to query a group of servers:
+Target a label to query a group of servers:
 
 ```bash
 $ osapi client node hostname get --target group:web

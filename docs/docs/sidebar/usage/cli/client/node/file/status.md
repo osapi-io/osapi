@@ -1,7 +1,7 @@
 # Status
 
-Check the deployment status of a file on the target host. Reports whether the
-file is `in-sync`, `drifted`, or `missing`.
+Check the deploy status of a file on the target host. The command reports if the
+file is `in-sync`, `drifted` or `missing`.
 
 ```bash
 $ osapi client node file status --path /etc/app/app.conf
@@ -14,7 +14,7 @@ $ osapi client node file status --path /etc/app/app.conf
   1 host: 1 ok
 ```
 
-When a file has been modified on disk:
+When a file changed on disk:
 
 ```bash
 $ osapi client node file status --path /etc/app/app.conf
@@ -27,7 +27,7 @@ $ osapi client node file status --path /etc/app/app.conf
   1 host: 1 ok
 ```
 
-When a file has not been deployed or was deleted:
+When nobody deployed the file, or somebody deleted it:
 
 ```bash
 $ osapi client node file status --path /etc/app/app.conf

@@ -1,8 +1,8 @@
 # Create
 
-Create static routes for an interface on a target host. Routes are specified in
-`TO:VIA` or `TO:VIA:METRIC` format. Fails if an OSAPI-managed routes
-configuration for that interface already exists -- use `update` to replace it:
+Make static routes for an interface on a target host. Give each route as
+`TO:VIA` or `TO:VIA:METRIC`. The command fails if osapi already manages a route
+configuration for that interface. To replace it, use `update`:
 
 ```bash
 $ osapi client node network route create \
@@ -17,7 +17,7 @@ $ osapi client node network route create \
   1 host: 1 changed
 ```
 
-Create multiple routes at once:
+Make more than one route at the same time:
 
 ```bash
 $ osapi client node network route create \
@@ -64,15 +64,15 @@ When some hosts are skipped:
 
 ## Route Format
 
-Routes are specified as `TO:VIA` or `TO:VIA:METRIC`:
+Give each route as `TO:VIA` or `TO:VIA:METRIC`:
 
 | Format          | Example                      |
 | --------------- | ---------------------------- |
 | `TO:VIA`        | `10.0.0.0/8:192.168.1.1`     |
 | `TO:VIA:METRIC` | `10.0.0.0/8:192.168.1.1:100` |
 
-`TO` is the destination in CIDR notation. `VIA` is the gateway IP address.
-`METRIC` is the route priority (lower is preferred).
+`TO` is the destination in CIDR notation. `VIA` is the IP address of the
+gateway. `METRIC` is the priority of the route. A lower value has priority.
 
 ## JSON Output
 

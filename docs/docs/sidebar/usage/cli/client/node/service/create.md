@@ -1,9 +1,9 @@
 # Create
 
-Deploy a new service unit file to a target host. The unit file content must
-first be uploaded to the Object Store. The file is written to
-`/etc/systemd/system/{name}` and `systemctl daemon-reload` is run. Fails if the
-name already exists -- use `update` to replace:
+Deploy a new service unit file to a target host. First, upload the content of
+the unit file to the Object Store. The agent writes the file to
+`/etc/systemd/system/{name}` and runs `systemctl daemon-reload`. The command
+fails if the name exists. To replace it, use `update`:
 
 ```bash
 $ osapi client node service create --target web-01 \
@@ -32,7 +32,7 @@ $ osapi client node service create --target _all \
   2 hosts: 2 changed
 ```
 
-When some hosts are skipped (e.g., macOS agents):
+When some hosts are skipped, for example macOS agents:
 
 ```bash
 $ osapi client node service create --target _all \

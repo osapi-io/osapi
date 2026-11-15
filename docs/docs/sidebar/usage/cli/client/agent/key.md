@@ -1,7 +1,7 @@
 # Key
 
-Agent key management commands. The `key` subcommand group provides operations on
-the local agent's PKI key pair.
+Commands for the agent key. The `key` subcommands operate on the PKI key pair of
+the local agent.
 
 ## fingerprint
 
@@ -13,13 +13,13 @@ $ osapi client agent key fingerprint
   Fingerprint: SHA256:ab12cd34ef56...
 ```
 
-The fingerprint is derived from the agent's Ed25519 public key stored in the PKI
-key directory (default `/etc/osapi/pki`). This value is included in enrollment
-requests and can be used with `agent accept --fingerprint` for fingerprint-based
-acceptance.
+osapi calculates the fingerprint from the Ed25519 public key of the agent, in
+the PKI key directory (`/etc/osapi/pki` by default). Enrollment requests include
+this value. You can use it with `agent accept --fingerprint` to accept an agent
+by its fingerprint.
 
-If no key exists yet, the command generates a new key pair automatically before
-displaying the fingerprint.
+If no key exists, the command makes a new key pair. Then it shows the
+fingerprint.
 
 ### Flags
 

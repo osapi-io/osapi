@@ -11,8 +11,7 @@ default. The variable for a key is `OSAPI_` and the key in capitals with dots as
 underscores: `controller.api.port` is `OSAPI_CONTROLLER_API_PORT`.
 
 `config list` and `config get` report `source` for each key: `env`, `file`,
-`default` or `unset`. A value that is not what you set is usually an environment
-variable overriding the file.
+`default` or `unset`. If a value is not the value that you set, usually an environment variable replaces the value in the file.
 
 Two keys have no default: `controller.api.security.signing_key`, at least 32
 characters, from `openssl rand -hex 32`, and
@@ -20,5 +19,4 @@ characters, from `openssl rand -hex 32`, and
 
 Durations are Go durations, `30s`, `5m`, `168h`. A `d` suffix is rejected.
 
-`config validate` exits 1 with the field that failed. Fix that field and run it
-again before starting anything.
+`config validate` exits 1 with the field that failed. Fix that field and run it again. Do this before you start a component.

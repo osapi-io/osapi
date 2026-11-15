@@ -10,7 +10,7 @@ import (
 )
 
 // apiDelete serves DELETE /api/next/node/{hostname}/sysctl/{key}, which needs
-// sysctl:write: Stop managing a kernel parameter.
+// sysctl:write: Stop the management of a kernel parameter.
 func apiDelete(
 	s *behaviorapi.Server,
 ) echo.HandlerFunc {
