@@ -6,6 +6,8 @@ import { FormField } from "@/components/ui/form-field";
 import { Text } from "@/components/ui/text";
 import { InfoBox } from "@/components/ui/info-box";
 import { useAuth } from "@/hooks/use-auth";
+import { checkTokenFormat } from "@/lib/token-format";
+import { getHealthStatus } from "@/sdk/gen/health-check-api-health/health-check-api-health";
 import { Key, LogIn } from "lucide-react";
 
 export function SignIn() {
@@ -13,34 +15,40 @@ export function SignIn() {
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [checking, setChecking] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = value.trim();
     if (!trimmed) return;
 
-    // Basic JWT structure check (three dot-separated base64 parts)
-    const parts = trimmed.split(".");
-    if (parts.length !== 3) {
-      setError(
-        "Invalid token format. Expected a JWT (three dot-separated parts).",
-      );
+    const check = checkTokenFormat(trimmed);
+    if (!check.ok) {
+      setError(check.error);
       return;
     }
 
-    // Try to decode and check for roles
+    // Ask the server once. Only a 401 means it refused the token; a 403 or a
+    // 503 still means the signature and expiry are good.
+    setChecking(true);
     try {
-      const payload = JSON.parse(
-        atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
-      );
-      if (!payload.roles || !Array.isArray(payload.roles)) {
+      const res = await getHealthStatus({
+        headers: { Authorization: `Bearer ${trimmed}` },
+      });
+      if (res.status === 401) {
+        const reason = (res.data as { error?: string } | undefined)?.error;
         setError(
-          "Token is missing roles claim. Generate one with: osapi token generate",
+          `The server refused this token${reason ? `: ${reason}` : "."} Check that it was signed with this controller's signing key.`,
         );
         return;
       }
-    } catch {
-      setError("Failed to decode token payload.");
+    } catch (err) {
+      setError(
+        `Could not reach the API to check the token${err instanceof Error ? `: ${err.message}` : "."}`,
+      );
       return;
+    } finally {
+      setChecking(false);
     }
 
     setError(null);
@@ -89,11 +97,11 @@ export function SignIn() {
                 type="submit"
                 variant="primary"
                 size="lg"
-                disabled={!value.trim()}
+                disabled={!value.trim() || checking}
                 className="w-full"
               >
                 <LogIn className="h-4 w-4" />
-                Sign In
+                {checking ? "Checking..." : "Sign In"}
               </Button>
             </form>
 
