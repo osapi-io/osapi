@@ -55,11 +55,13 @@ Requires authentication.
 	},
 }
 
-// subComponent holds a name, status, and optional address for display under a parent.
+// subComponent holds a name, status, optional address and optional URL for
+// display under a parent.
 type subComponent struct {
 	name    string
 	status  string
 	address string
+	url     string
 }
 
 // subComponentsFor discovers sub-components for the given component type
@@ -78,7 +80,12 @@ func subComponentsFor(
 	for key, c := range components {
 		if strings.HasPrefix(key, prefix) {
 			name := strings.TrimPrefix(key, prefix)
-			result = append(result, subComponent{name: name, status: c.Status, address: c.Address})
+			result = append(result, subComponent{
+				name:    name,
+				status:  c.Status,
+				address: c.Address,
+				url:     c.URL,
+			})
 		}
 	}
 
@@ -136,7 +143,9 @@ func displayComponentTable(
 				prefix = "  └─ "
 			}
 
-			status := sc.status
+			// The status word in its status color, then the address dim,
+			// because nothing connects through it.
+			status := cli.RenderStatus(sc.status)
 			if sc.address != "" {
 				status += " " + cli.DimStyle.Render(sc.address)
 			}
@@ -150,6 +159,26 @@ func displayComponentTable(
 				"",
 				"",
 			})
+
+			// The url goes on a line of its own, so a long one is never cut
+			// and every row keeps the same shape. The tree line continues
+			// down to the next sibling; under the last one it stops.
+			if sc.url != "" {
+				branch := "  │"
+				if i == len(scs)-1 {
+					branch = ""
+				}
+
+				rows = append(rows, []string{
+					"",
+					branch,
+					cli.DimStyle.Render("↳") + " " + cli.URLStyle.Render(sc.url),
+					"",
+					"",
+					"",
+					"",
+				})
+			}
 		}
 	}
 

@@ -61,6 +61,7 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 						"controller.api": {
 							Status:  "ok",
 							Address: func() *string { s := "http://0.0.0.0:8080"; return &s }(),
+							Url:     func() *string { s := "https://hub.example.ts.net/"; return &s }(),
 						},
 					},
 					Nats: &gen.NATSInfo{
@@ -181,6 +182,8 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 
 				suite.Equal("ok", s.Components["controller.api"].Status)
 				suite.Equal("http://0.0.0.0:8080", s.Components["controller.api"].Address)
+				suite.Equal("https://hub.example.ts.net/", s.Components["controller.api"].URL)
+				suite.Empty(s.Components["nats"].URL)
 
 				suite.Require().NotNil(s.NATS)
 				suite.Equal("nats://localhost:4222", s.NATS.URL)

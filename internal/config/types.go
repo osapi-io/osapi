@@ -56,7 +56,10 @@ type MetricsServer struct {
 	// Host the metrics server binds to.
 	Host string `mapstructure:"host"    doc:"Host the metrics server binds to."`
 	// Port the metrics server listens on.
-	Port int `mapstructure:"port"    doc:"Port the metrics server listens on."          validate:"omitempty,min=1,max=65535"`
+	Port int `mapstructure:"port"    doc:"Port the metrics server listens on."                                                 validate:"omitempty,min=1,max=65535"`
+	// URL is where a person opens the metrics endpoint. Health shows it
+	// beside the bind address; osapi never requests it.
+	URL string `mapstructure:"url"     doc:"Where a person opens the metrics endpoint, shown by health beside the bind address." validate:"omitempty,http_url"`
 }
 
 // TracingConfig configuration settings for distributed tracing.
@@ -67,6 +70,9 @@ type TracingConfig struct {
 	Exporter string `mapstructure:"exporter"      doc:"Trace exporter: 'stdout' or 'otlp'."`
 	// OTLPEndpoint is the gRPC endpoint for the OTLP exporter (e.g., "localhost:4317").
 	OTLPEndpoint string `mapstructure:"otlp_endpoint" doc:"gRPC endpoint for the OTLP exporter, such as 'localhost:4317'."`
+	// URL is where a person views the traces, such as a Jaeger UI. osapi
+	// does not run that viewer; health only links to it.
+	URL string `mapstructure:"url"           doc:"Where a person views the traces, such as a Jaeger UI. Health shows it; osapi does not run the viewer." validate:"omitempty,http_url"`
 }
 
 // NATSAuth holds client-side authentication settings for connecting to NATS.
@@ -198,6 +204,9 @@ type NATSServer struct {
 	Host string `mapstructure:"host"           doc:"Host the embedded NATS server binds to."`
 	// Port the server will bind to.
 	Port int `mapstructure:"port"           doc:"Port the embedded NATS server listens on."`
+	// URL is where a person reaches the server, as nats:// or tls://. Health
+	// shows it beside the bind address.
+	URL string `mapstructure:"url"            doc:"Where a person reaches the NATS server, as nats:// or tls://, shown by health beside the bind address." validate:"omitempty,url,startswith=nats://|startswith=tls://"`
 	// StoreDir the directory for JetStream file storage.
 	StoreDir string `mapstructure:"store_dir"      doc:"Directory for JetStream file storage."`
 	// Namespace is a prefix for all NATS subjects and infrastructure names.
@@ -292,18 +301,27 @@ type Controller struct {
 type UIConfig struct {
 	// Enabled controls whether the embedded UI is served. Defaults to true.
 	Enabled *bool `mapstructure:"enabled" doc:"Serve the embedded UI (default: true)."`
+	// URL is where a person opens the UI. Health shows it beside the bind
+	// address of the API, whose listener serves the UI.
+	URL string `mapstructure:"url"     doc:"Where a person opens the UI, shown by health beside the bind address." validate:"omitempty,http_url"`
 }
 
 // APIServer holds the HTTP server config (port + security).
 type APIServer struct {
+	// Host the server binds to. Empty binds every interface. The UI uses the
+	// same listener.
+	Host string `mapstructure:"host"        doc:"Host the REST API server, and the UI on its listener, binds to. Empty binds every interface."`
+	// URL is where a person reaches the API. Health shows it beside the bind
+	// address; osapi never requests it.
+	URL string `mapstructure:"url"         doc:"Where a person reaches the API, shown by health beside the bind address."                                  validate:"omitempty,http_url"`
 	// Port the server will bind to.
-	Port int `mapstructure:"port"        validate:"min=1,max=65535"       doc:"Port the REST API server listens on."`
+	Port int `mapstructure:"port"        doc:"Port the REST API server listens on."                                                                      validate:"min=1,max=65535"`
 	// Security contains security-related configuration for the server, such as CORS and tokens.
 	Security ServerSecurity `mapstructure:"security"                                                                                                                                                     mask:"struct"`
 	// JobTimeout is how long the controller waits for agent responses
 	// before returning partial results. Uses Go duration format.
 	// Defaults to 30s when empty.
-	JobTimeout string `mapstructure:"job_timeout" validate:"omitempty,go_duration" doc:"How long to wait for agent responses before returning partial results. Go duration format (default: 30s)."`
+	JobTimeout string `mapstructure:"job_timeout" doc:"How long to wait for agent responses before returning partial results. Go duration format (default: 30s)." validate:"omitempty,go_duration"`
 }
 
 // Client configuration settings.

@@ -22,9 +22,10 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
+	"net"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -77,30 +78,58 @@ func startHeartbeat(
 func subComponents(
 	cfg config.Config,
 ) map[string]job.SubComponentInfo {
-	api := httpAddr("0.0.0.0", cfg.Controller.API.Port)
+	// An empty API host binds every interface, which is what 0.0.0.0 shows.
+	apiHost := cfg.Controller.API.Host
+	if apiHost == "" {
+		apiHost = "0.0.0.0"
+	}
+	api := httpAddr(apiHost, cfg.Controller.API.Port)
 
 	return map[string]job.SubComponentInfo{
-		"controller.api":       {Status: "ok", Address: api},
+		"controller.api": {
+			Status:  "ok",
+			Address: api,
+			URL:     cfg.Controller.API.URL,
+		},
 		"controller.heartbeat": {Status: "ok"},
 		"controller.metrics": {
 			Status:  enabledOrDisabled(cfg.Controller.Metrics.Enabled),
 			Address: httpAddr(cfg.Controller.Metrics.Host, cfg.Controller.Metrics.Port),
+			URL:     cfg.Controller.Metrics.URL,
 		},
 		"controller.pki":      {Status: enabledOrDisabled(cfg.Controller.PKI.Enabled)},
 		"controller.notifier": {Status: enabledOrDisabled(cfg.Controller.Notifications.Enabled)},
-		"controller.tracing":  {Status: enabledOrDisabled(cfg.Telemetry.Tracing.Enabled)},
+		"controller.tracing": {
+			Status:  enabledOrDisabled(cfg.Telemetry.Tracing.Enabled),
+			Address: tracingAddr(cfg.Telemetry.Tracing),
+			URL:     cfg.Telemetry.Tracing.URL,
+		},
 		"controller.ui": {
 			Status:  enabledOrDisabled(cfg.Controller.UI.UIEnabled()),
 			Address: api,
+			URL:     cfg.Controller.UI.URL,
 		},
 	}
+}
+
+// tracingAddr is where the controller sends its spans, the OTLP gRPC
+// endpoint. Tracing listens on nothing, so this is the one sub-component whose
+// address is a destination, not a bind address. stdout exports nowhere.
+func tracingAddr(
+	tc config.TracingConfig,
+) string {
+	if !tc.Enabled || tc.Exporter != "otlp" || tc.OTLPEndpoint == "" {
+		return ""
+	}
+
+	return "grpc://" + tc.OTLPEndpoint
 }
 
 func httpAddr(
 	host string,
 	port int,
 ) string {
-	return fmt.Sprintf("http://%s:%d", host, port)
+	return "http://" + net.JoinHostPort(host, strconv.Itoa(port))
 }
 
 func enabledOrDisabled(

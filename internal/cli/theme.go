@@ -71,7 +71,11 @@ var (
 	// DimStyle is for secondary text.
 	DimStyle = lipgloss.NewStyle().Foreground(LogoGray)
 	// OKStyle, WarnStyle and ErrStyle carry a result's status.
-	OKStyle   = lipgloss.NewStyle().Foreground(Green)
+	OKStyle = lipgloss.NewStyle().Foreground(Green)
+	// URLStyle marks a location a person opens, such as a sub-component's
+	// url in the health output. A color, not an underline: lipgloss
+	// underlines each character with its own escape sequence.
+	URLStyle  = lipgloss.NewStyle().Foreground(LogoCyan)
 	WarnStyle = lipgloss.NewStyle().Foreground(Yellow)
 	ErrStyle  = lipgloss.NewStyle().Foreground(Red)
 )
@@ -107,6 +111,16 @@ var statusStyles = map[string]lipgloss.Style{
 	"notready":  ErrStyle,
 	"unhealthy": ErrStyle,
 	"rejected":  ErrStyle,
+}
+
+// RenderStatus renders a status word, such as "ok" or "disabled", in its
+// status color. A caller that builds a STATUS cell from several styled parts
+// renders the status word with this, because the table does not restyle a
+// cell that already has styling.
+func RenderStatus(
+	status string,
+) string {
+	return statusStyle(status).Render(status)
 }
 
 // statusStyle returns the style for a status cell, or ValueStyle when the
@@ -190,8 +204,20 @@ func renderCell(
 
 	switch {
 	case h == "STATUS":
+		// A cell styled in parts, such as a status, a dim address and a
+		// url, keeps its own styling. Styling it again as a whole would end
+		// at the first reset inside it.
+		if strings.Contains(cell, "\x1b[") {
+			return cell
+		}
+
 		return statusStyle(cell).Render(cell)
 	case h == "HOSTNAME":
+		// A row that continues the one above it, such as a sub-component's
+		// url, has only the tree line.
+		if cell == "│" {
+			return DimStyle.Render(cell)
+		}
 		for _, b := range treeBranches {
 			if rest, ok := strings.CutPrefix(cell, b); ok {
 				return DimStyle.Render(b) + ValueStyle.Render(rest)

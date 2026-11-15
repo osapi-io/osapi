@@ -213,7 +213,12 @@ func (s *SetupPublicTestSuite) TestSubComponents() {
 	s.Run("when PKI and metrics are on reports them as ok", func() {
 		cfg := agentConfig(s.T())
 		cfg.Agent.PKI.Enabled = true
-		cfg.Agent.Metrics = config.MetricsServer{Enabled: true, Host: "127.0.0.1", Port: 9091}
+		cfg.Agent.Metrics = config.MetricsServer{
+			Enabled: true,
+			Host:    "127.0.0.1",
+			Port:    9091,
+			URL:     "http://vm.example:9091/metrics",
+		}
 
 		a, conn, err := agent.Setup(context.Background(), slog.Default(), memfs.New(), cfg)
 		s.Require().NoError(err)
@@ -223,6 +228,7 @@ func (s *SetupPublicTestSuite) TestSubComponents() {
 		s.Equal("ok", subs["agent.pki"].Status)
 		s.Equal("ok", subs["agent.metrics"].Status)
 		s.Equal("http://127.0.0.1:9091", subs["agent.metrics"].Address)
+		s.Equal("http://vm.example:9091/metrics", subs["agent.metrics"].URL)
 	})
 }
 

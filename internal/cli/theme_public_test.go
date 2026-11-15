@@ -335,6 +335,96 @@ func (suite *ThemePublicTestSuite) TestCapture() {
 	suite.Empty(cli.Capture(func() {}))
 }
 
+func (suite *ThemePublicTestSuite) TestStatusCellStyledInParts() {
+	const url = "http://hub.example.ts.net:8080/"
+
+	tests := []struct {
+		name         string
+		validateFunc func()
+	}{
+		{
+			name: "when a status cell already has styling keeps it",
+			validateFunc: func() {
+				withColor()
+				cell := cli.RenderStatus("ok") + " " +
+					cli.DimStyle.Render("http://0.0.0.0:8080") + " " +
+					cli.URLStyle.Render(url)
+
+				suite.Equal(cell, cli.ExportRenderCell("STATUS", cell))
+			},
+		},
+		{
+			name: "when a hostname cell is only a tree line renders it dim",
+			validateFunc: func() {
+				withColor()
+
+				suite.Equal(cli.DimStyle.Render("│"), cli.ExportRenderCell("HOSTNAME", "│"))
+			},
+		},
+		{
+			name: "when a status cell is plain colors it by its status word",
+			validateFunc: func() {
+				withColor()
+
+				suite.Equal(
+					cli.OKStyle.Render("ok"),
+					cli.ExportRenderCell("STATUS", "ok"),
+				)
+				suite.Equal(cli.OKStyle.Render("ok"), cli.RenderStatus("ok"))
+			},
+		},
+		{
+			name: "when a styled cell fits by visible width the table does not cut it",
+			validateFunc: func() {
+				withColor()
+				// 66 visible characters, under the 79 cap; with its escape
+				// sequences it is longer than 79 bytes.
+				cell := cli.RenderStatus("ok") + " " +
+					cli.DimStyle.Render("http://0.0.0.0:8080") + " " +
+					cli.URLStyle.Render("http://johns-hub.example.ts.net:8080/")
+				suite.Greater(len(cell), 79)
+
+				out := captureStdout(func() {
+					cli.PrintCompactTable([]cli.Section{{
+						Headers: []string{"NAME", "STATUS"},
+						Rows:    [][]string{{"api", cell}},
+					}})
+				})
+
+				suite.Contains(out, "johns-hub.example.ts.net:8080/")
+				suite.NotContains(out, "…")
+			},
+		},
+		{
+			name: "when a styled cell is wider than the cap cuts it by visible width",
+			validateFunc: func() {
+				withColor()
+				long := "http://" + strings.Repeat("a", 90) + ".example/"
+				cell := cli.RenderStatus("ok") + " " + cli.URLStyle.Render(long)
+
+				out := captureStdout(func() {
+					cli.PrintCompactTable([]cli.Section{{
+						Headers: []string{"NAME", "STATUS"},
+						Rows:    [][]string{{"api", cell}},
+					}})
+				})
+
+				suite.Contains(out, "…")
+				for _, line := range strings.Split(out, "\n") {
+					// The indent, NAME and its gap, then the capped column.
+					suite.LessOrEqual(lipgloss.Width(line), 2+len("NAME")+2+79, line)
+				}
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			tc.validateFunc()
+		})
+	}
+}
+
 func TestThemePublicTestSuite(
 	t *testing.T,
 ) {

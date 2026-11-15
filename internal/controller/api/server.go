@@ -23,9 +23,10 @@ package api
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
+	"strconv"
 	"time"
 
 	echootel "github.com/labstack/echo-opentelemetry"
@@ -109,7 +110,8 @@ func New(
 	return s
 }
 
-// Start starts the Echo server with the configured port.
+// Start starts the Echo server on the configured host and port. An empty
+// host binds every interface.
 func (s *Server) Start() {
 	// v5 drives the listener from a context rather than a Shutdown method,
 	// so Stop cancels this one.
@@ -120,7 +122,10 @@ func (s *Server) Start() {
 		s.logger.Info("starting server")
 
 		sc := echo.StartConfig{
-			Address:         fmt.Sprintf(":%d", s.appConfig.Controller.API.Port),
+			Address: net.JoinHostPort(
+				s.appConfig.Controller.API.Host,
+				strconv.Itoa(s.appConfig.Controller.API.Port),
+			),
 			HideBanner:      true,
 			GracefulTimeout: shutdownGracePeriod,
 		}

@@ -383,7 +383,11 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 							Status:   "Ready",
 							Age:      "1h",
 							SubComponents: map[string]health.SubComponentInfo{
-								"nats.server":    {Status: "ok", Address: "nats://localhost:4222"},
+								"nats.server": {
+									Status:  "ok",
+									Address: "nats://localhost:4222",
+									URL:     "nats://hub.example.ts.net:4222",
+								},
 								"nats.heartbeat": {Status: "ok"},
 								"nats.metrics":   {Status: "ok", Address: "http://0.0.0.0:9092"},
 							},
@@ -410,6 +414,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Equal("ok", natsServer.Status)
 				s.Require().NotNil(natsServer.Address)
 				s.Equal("nats://localhost:4222", *natsServer.Address)
+				s.Require().NotNil(natsServer.Url)
+				s.Equal("nats://hub.example.ts.net:4222", *natsServer.Url)
 
 				natsHB := r.Components["nats.heartbeat"]
 				s.Equal("ok", natsHB.Status)
@@ -605,7 +611,11 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusSubComponents() {
 		{
 			name: "sub-components with ports appear in response",
 			subs: map[string]health.SubComponentInfo{
-				"controller.api":       {Status: "ok", Address: "http://0.0.0.0:8080"},
+				"controller.api": {
+					Status:  "ok",
+					Address: "http://0.0.0.0:8080",
+					URL:     "https://hub.example.ts.net/",
+				},
 				"controller.heartbeat": {Status: "ok"},
 				"controller.metrics":   {Status: "ok", Address: "http://0.0.0.0:9090"},
 				"controller.notifier":  {Status: "disabled"},
@@ -618,10 +628,13 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusSubComponents() {
 				s.Equal("ok", api.Status)
 				s.Require().NotNil(api.Address)
 				s.Equal("http://0.0.0.0:8080", *api.Address)
+				s.Require().NotNil(api.Url)
+				s.Equal("https://hub.example.ts.net/", *api.Url)
 
 				hb := r.Components["controller.heartbeat"]
 				s.Equal("ok", hb.Status)
 				s.Nil(hb.Address)
+				s.Nil(hb.Url)
 
 				metrics := r.Components["controller.metrics"]
 				s.Equal("ok", metrics.Status)
