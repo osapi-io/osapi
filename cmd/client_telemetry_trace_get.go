@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -37,8 +38,9 @@ var clientTelemetryTraceGetCmd = &cobra.Command{
 	Short: "Show the span tree of a trace",
 	Long: "Shows each span of a trace as a tree: the request on the controller,\n" +
 		"the job, each agent that ran it with its host and status, and the\n" +
-		"commands, file changes and NATS calls under each. Each command prints\n" +
-		"the ID of its trace after its job ID.\n\n" +
+		"commands and file changes under each. The NATS calls, which record the\n" +
+		"job's progress, are left out and counted; --all shows them. Each\n" +
+		"command prints the ID of its trace after its job ID.\n\n" +
 		"The controller reads the trace from the tracing backend at\n" +
 		"`telemetry.tracing.url`, so this host needs no access to the backend.\n" +
 		"The backend gets the spans a few seconds after the request: a trace\n" +
@@ -47,6 +49,7 @@ var clientTelemetryTraceGetCmd = &cobra.Command{
 		reference.Permission: "trace:read",
 	},
 	Example: `  osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9
+  osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9 --all
   osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
@@ -87,12 +90,21 @@ var clientTelemetryTraceGetCmd = &cobra.Command{
 			cli.PrintKV("Failed spans", strconv.Itoa(failed))
 		}
 
+		all, _ := cmd.Flags().GetBool("all")
+		rows := cli.TraceRows(trace.Spans, all)
 		cli.PrintCompactTable([]cli.Section{{
-			Title:     "Spans (" + strconv.Itoa(len(trace.Spans)) + ")",
+			Title:     "Spans (" + strconv.Itoa(len(rows)) + ")",
 			Headers:   []string{"SPAN", "HOSTNAME", "DURATION", "STATUS", "DETAIL"},
-			Rows:      cli.TraceRows(trace.Spans),
+			Rows:      rows,
 			Reference: true,
 		}})
+		if calls, took := cli.NATSCalls(trace.Spans); !all && calls > 0 {
+			cli.PrintNote(fmt.Sprintf(
+				"%s left out, %s in all; --all shows them.",
+				cli.Plural(calls, "NATS call", "NATS calls"),
+				cli.FormatDuration(took.String()),
+			))
+		}
 	},
 }
 
@@ -101,6 +113,8 @@ func init() {
 
 	clientTelemetryTraceGetCmd.PersistentFlags().
 		StringP("id", "", "", "The trace ID, which a command prints after its job ID")
+	clientTelemetryTraceGetCmd.PersistentFlags().
+		Bool("all", false, "Show the NATS calls too, the reads and writes of the job queue")
 
 	_ = clientTelemetryTraceGetCmd.MarkPersistentFlagRequired("id")
 }

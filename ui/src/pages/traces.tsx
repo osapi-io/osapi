@@ -15,12 +15,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { getTrace } from "@/sdk/gen/telemetry-api-telemetry/telemetry-api-telemetry";
 import type { TraceResponse } from "@/sdk/gen/schemas";
-import { traceRows, formatMs, type TraceRow } from "@/lib/trace-tree";
+import {
+  traceRows,
+  natsCalls,
+  formatMs,
+  type TraceRow,
+} from "@/lib/trace-tree";
 
 function statusVariant(status: string) {
   switch (status) {
     case "ok":
     case "completed":
+    case "changed":
       return "ready" as const;
     case "skipped":
       return "applied" as const;
@@ -37,6 +43,7 @@ export function Traces() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [input, setInput] = useState(id ?? "");
+  const [showNATS, setShowNATS] = useState(false);
   // result is the answer for one trace ID. While the ID in the URL has no
   // answer yet, the page is loading.
   const [result, setResult] = useState<{
@@ -84,7 +91,8 @@ export function Traces() {
     );
   }
 
-  const rows = trace ? traceRows(trace.spans) : [];
+  const rows = trace ? traceRows(trace.spans, showNATS) : [];
+  const nats = trace ? natsCalls(trace.spans) : { count: 0, ms: 0 };
   const failed = trace?.spans.filter((s) => s.status === "error").length ?? 0;
   const services = [...new Set(trace?.spans.map((s) => s.service) ?? [])];
 
@@ -140,9 +148,22 @@ export function Traces() {
 
       {!loading && trace && (
         <div className="mb-4">
-          <SectionLabel icon={GitBranch}>
-            Spans ({trace.spans.length}) · {services.join(", ")}
-          </SectionLabel>
+          <div className="flex items-center justify-between">
+            <SectionLabel icon={GitBranch}>
+              Spans ({rows.length}) · {services.join(", ")}
+            </SectionLabel>
+            {nats.count > 0 && (
+              <label className="flex items-center gap-2 text-xs text-text-muted">
+                <input
+                  type="checkbox"
+                  checked={showNATS}
+                  onChange={(e) => setShowNATS(e.target.checked)}
+                />
+                Show {nats.count} NATS calls ({formatMs(nats.ms)}), the
+                bookkeeping of the job queue
+              </label>
+            )}
+          </div>
           <DataTable
             columns={[
               {

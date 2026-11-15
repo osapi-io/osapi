@@ -1,10 +1,12 @@
 import type { TraceSpan } from "@/sdk/gen/schemas";
 
-// The attributes a span's detail shows, the first one it has: what the span
-// acted on. Mirrors internal/cli/trace.go, so the CLI and the UI agree.
+// Mirrors internal/cli/trace.go, so the CLI and the UI show a trace the same
+// way.
+
+// The attributes a span's detail shows when it has nothing more specific:
+// what the span acted on.
 const DETAIL = [
   "file.path",
-  "nats.kv.key",
   "nats.object.name",
   "messaging.destination.name",
   "db.namespace",
@@ -25,20 +27,90 @@ export interface TraceRow {
 
 const startOf = (s: TraceSpan) => new Date(s.start_time).getTime();
 
+// isNATSSpan reports whether a span is a NATS call that nats-client made: the
+// bookkeeping of the job queue.
+export function isNATSSpan(name: string): boolean {
+  return ["kv.", "objectstore.", "stream.", "nats."].some((p) =>
+    name.startsWith(p),
+  );
+}
+
+// natsCalls counts the NATS spans and the time they took.
+export function natsCalls(spans: TraceSpan[]): { count: number; ms: number } {
+  const nats = spans.filter((s) => isNATSSpan(s.name));
+  return {
+    count: nats.length,
+    ms: nats.reduce((t, s) => t + s.duration_ms, 0),
+  };
+}
+
+// keyMeaning says what an osapi key is for, from its shape.
+function keyMeaning(key: string, bucket: string): string {
+  const parts = key.split(".");
+  if (parts[0] === "jobs" && parts.length === 2) return "job";
+  if (parts[0] === "status" && parts.length >= 3) return `status: ${parts[2]}`;
+  if (parts[0] === "responses" && key.endsWith(".>")) return "answers";
+  if (parts[0] === "responses") return "response";
+  if (parts[0] === "agents") return "registration";
+  if (parts[0] === "facts") return "facts";
+  if (parts[0] === "drain") return "drain flag";
+  if (parts[0] === "timeline" && parts.length >= 3)
+    return `timeline: ${parts[2]}`;
+  if (bucket.endsWith("file-state")) return "file record";
+  return key;
+}
+
+const INPUT = "osapi.behavior.input.";
+
+function spanStatus(s: TraceSpan): string {
+  if (s.name === "job.process" && s.attributes["job.status"]) {
+    return s.attributes["job.status"];
+  }
+  if (s.status === "error") return "error";
+  if (s.attributes["osapi.behavior.changed"] === "true") return "changed";
+  if (s.attributes["osapi.behavior.changed"] === "false") return "unchanged";
+  return "ok";
+}
+
+function spanDetail(s: TraceSpan): string {
+  const a = s.attributes;
+  if (s.status === "error" && s.status_message) return s.status_message;
+  const inputs = Object.keys(a)
+    .filter((k) => k.startsWith(INPUT))
+    .sort()
+    .map((k) => `${k.slice(INPUT.length)}=${a[k]}`)
+    .join(" ");
+  if (inputs) return inputs;
+  if (a["nats.kv.key"])
+    return keyMeaning(a["nats.kv.key"], a["db.namespace"] ?? "");
+  if (s.name === "kv.keys") return `list keys in ${a["db.namespace"] ?? ""}`;
+  return DETAIL.map((k) => a[k]).find((v) => v) ?? "";
+}
+
 // traceRows returns the spans as a tree: each child under its parent, in
-// start order. A span whose parent is not in the trace is a root. The host is
-// the agent of the nearest job.process at or above the span.
-export function traceRows(spans: TraceSpan[]): TraceRow[] {
-  const ids = new Set(spans.map((s) => s.span_id));
+// start order. Without all, the NATS spans are left out, and a span under one
+// moves up to the span above it.
+export function traceRows(spans: TraceSpan[], all: boolean): TraceRow[] {
+  const byId = new Map(spans.map((s) => [s.span_id, s]));
+  const parentOf = (s: TraceSpan): string => {
+    let p = s.parent_span_id ?? "";
+    for (;;) {
+      const ps = byId.get(p);
+      if (!ps) return "";
+      if (all || !isNATSSpan(ps.name)) return p;
+      p = ps.parent_span_id ?? "";
+    }
+  };
+  const shown = spans.filter((s) => all || !isNATSSpan(s.name));
   const children = new Map<string, TraceSpan[]>();
   const roots: TraceSpan[] = [];
-  for (const s of spans) {
-    const parent = s.parent_span_id ?? "";
-    if (!parent || !ids.has(parent)) {
+  for (const s of shown) {
+    const p = parentOf(s);
+    if (!p) {
       roots.push(s);
       continue;
     }
-    children.set(parent, [...(children.get(parent) ?? []), s]);
+    children.set(p, [...(children.get(p) ?? []), s]);
   }
   const byStart = (list: TraceSpan[]) =>
     [...list].sort((a, b) => startOf(a) - startOf(b));
@@ -51,26 +123,15 @@ export function traceRows(spans: TraceSpan[]): TraceRow[] {
   const walk = (s: TraceSpan, lead: string, branch: string, host: string) => {
     const agent = s.attributes["osapi.agent.hostname"];
     if (s.name === "job.process" && agent) host = agent;
-
-    let status: string = s.status;
-    if (s.name === "job.process" && s.attributes["job.status"]) {
-      status = s.attributes["job.status"];
-    }
-    const detail =
-      s.status === "error" && s.status_message
-        ? s.status_message
-        : (DETAIL.map((k) => s.attributes[k]).find((v) => v) ?? "");
-
     rows.push({
       span: s,
       lines: lead + branch,
       host,
-      status,
-      detail,
+      status: spanStatus(s),
+      detail: spanDetail(s),
       offset: (startOf(s) - begin) / total,
       width: Math.max(s.duration_ms / total, 0.002),
     });
-
     const next =
       lead + (branch === "├─ " ? "│  " : branch === "└─ " ? "   " : "");
     const kids = byStart(children.get(s.span_id) ?? []);

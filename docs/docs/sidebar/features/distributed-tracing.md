@@ -121,33 +121,38 @@ osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9
 
 ```text
 Trace:
-  ID:        26e448c9dbe1c4a8d216a98c675079c9
-  Started:   2026-11-15 14:28:04
-  Duration:  111ms
+  ID:        0f91d3706eb84f9b3d4c211d7e6ebbca
+  Started:   2026-11-15 15:18:49
+  Duration:  20ms
   Services:  osapi-controller, osapi-agent
 
-Spans (42):
-  SPAN                             HOSTNAME  DURATION  STATUS     DETAIL
-  GET /api/node/:hostname/package            111ms     ok         200
-  ├─ job.publish                             6ms       ok         osapi.jobs.query._all
-  │  ├─ kv.put                               660µs     ok         jobs.46cb73be-…
-  │  └─ nats.publish                         539µs     ok         osapi.jobs.query._all
-  │     └─ nats.process                      35ms      ok         osapi.jobs.query._all
-  │        └─ job.process          ubuntu-1  35ms      completed
-  │           ├─ exec dpkg-query   ubuntu-1  15ms      ok
-  │           └─ kv.put            ubuntu-1  3ms       ok         responses.46cb73be-…
-  └─ job.collect                             38ms      ok
-     └─ kv.watch                             5ms       ok         responses.46cb73be-….>
+Spans (8):
+  SPAN                                     HOSTNAME  DURATION  STATUS     DETAIL
+  POST /api/next/node/:hostname/sysctl               20ms      ok         200
+  ├─ job.publish                                     2ms       ok         osapi.jobs.modify.host.…
+  │  └─ job.process                        debian-1  11ms      completed
+  │     └─ behavior.sysctl.create          debian-1  5ms       changed    key=vm.swappiness
+  │        ├─ behavior.managedfile.update  debian-1  1ms       changed
+  │        │  └─ file.write                debian-1  147µs     ok         /etc/sysctl.d/osapi-vm.swappiness.conf
+  │        └─ exec sysctl                  debian-1  3ms       ok
+  └─ job.collect                                     12ms      ok
+  11 NATS calls left out, 20ms in all; --all shows them.
 ```
 
 - **HOSTNAME** is the agent of the `job.process` above the span.
-- **STATUS** is the job status on a `job.process`, and `ok` or `error` on the
-  other spans.
+- **STATUS** is the job status on a `job.process`, `changed` or `unchanged` on a
+  behavior write, and `ok` or `error` on the other spans.
 - **DETAIL** is the error of a failed span. On the other spans, it is what the
-  span acted on: a file, a key, a subject or a bucket.
+  span acted on: the inputs that a behavior records, a file, or a subject.
+
+The NATS calls are the bookkeeping of the job queue: the agent reads the job,
+writes its status as it goes, and writes its answer. The command leaves them out
+and counts them. `--all` shows them, and says what each key is for, for example
+`status: started`, `response` or `file record`, instead of the key.
 
 The **Traces** page of the UI, in the Admin menu, shows the same tree with a
-timing bar for each span. `/admin/traces/<id>` opens one trace.
+timing bar for each span, and a check box that shows the NATS calls.
+`/admin/traces/<id>` opens one trace.
 
 The controller reads the trace from the query API of Jaeger at
 `telemetry.tracing.url`, the address where a person opens Jaeger. Without that

@@ -84,7 +84,110 @@ func (s *TracePublicTestSuite) TestTraceRows() {
 		{"│     └─ file.write", "web-01", "1ms", "ok", "/etc/x.conf"},
 		{"└─ job.collect", "", "19ms", "ok", ""},
 		{"orphan", "", "1ms", "error", ""},
-	}, cli.TraceRows(traceSpans()))
+	}, cli.TraceRows(traceSpans(), true))
+}
+
+// natsTrace is a job on one agent through the queue, with NATS calls of each
+// key shape, a behavior write that requires another, and a command.
+func natsTrace() []client.TraceSpan {
+	at := func(ms int) time.Time {
+		return time.Date(2026, 11, 15, 12, 0, 0, 0, time.UTC).
+			Add(time.Duration(ms) * time.Millisecond)
+	}
+	span := func(id, parent, name string, ms int, attrs map[string]string) client.TraceSpan {
+		return client.TraceSpan{
+			ID: id, ParentID: parent, Name: name, Start: at(ms),
+			Duration: time.Millisecond, Attributes: attrs,
+		}
+	}
+	kv := func(key string) map[string]string { return map[string]string{"nats.kv.key": key} }
+
+	return []client.TraceSpan{
+		span("root", "", "POST /api/x", 0, map[string]string{"http.response.status_code": "200"}),
+		span("pub", "root", "job.publish", 1, map[string]string{}),
+		span("put", "pub", "kv.put", 2, kv("jobs.j1")),
+		span("reg", "pub", "kv.get", 3, kv("agents.m1")),
+		span("fct", "pub", "kv.get", 4, kv("facts.m1")),
+		span("drn", "pub", "kv.get", 5, kv("drain.m1")),
+		span("np", "pub", "nats.publish", 6, map[string]string{}),
+		span("rcv", "np", "nats.process", 7, map[string]string{}),
+		span(
+			"job",
+			"rcv",
+			"job.process",
+			8,
+			map[string]string{"osapi.agent.hostname": "web-01", "job.status": "completed"},
+		),
+		span("keys", "job", "kv.keys", 9, map[string]string{"db.namespace": "osapi-job-queue"}),
+		span("st", "job", "kv.put", 10, kv("status.j1.started.web-01.123")),
+		span("tl", "job", "kv.put", 11, kv("timeline.web-01.drain.123")),
+		span("beh", "job", "behavior.sysctl.create", 12, map[string]string{
+			"osapi.behavior.changed": "true", "osapi.behavior.input.key": "vm.swappiness",
+			"osapi.behavior.input.value": "10",
+		}),
+		span(
+			"mf",
+			"beh",
+			"behavior.managedfile.get",
+			13,
+			map[string]string{"osapi.behavior.changed": "false"},
+		),
+		span(
+			"rec",
+			"mf",
+			"kv.put",
+			14,
+			map[string]string{"nats.kv.key": "web-01.abc", "db.namespace": "osapi-file-state"},
+		),
+		span("odd", "job", "kv.get", 15, kv("other.key")),
+		span("ans", "job", "kv.put", 16, kv("responses.j1.web-01.123")),
+		span("col", "root", "job.collect", 17, map[string]string{}),
+		span("w", "col", "kv.watch", 18, kv("responses.j1.>")),
+	}
+}
+
+func (s *TracePublicTestSuite) TestTraceRowsWithoutNATS() {
+	s.Equal([][]string{
+		{"POST /api/x", "", "1ms", "ok", "200"},
+		{"├─ job.publish", "", "1ms", "ok", ""},
+		{"│  └─ job.process", "web-01", "1ms", "completed", ""},
+		{
+			"│     └─ behavior.sysctl.create",
+			"web-01",
+			"1ms",
+			"changed",
+			"key=vm.swappiness value=10",
+		},
+		{"│        └─ behavior.managedfile.get", "web-01", "1ms", "unchanged", ""},
+		{"└─ job.collect", "", "1ms", "ok", ""},
+	}, cli.TraceRows(natsTrace(), false), "a span under a NATS span moves up to the span above it")
+
+	n, took := cli.NATSCalls(natsTrace())
+	s.Equal(13, n)
+	s.Equal(13*time.Millisecond, took)
+}
+
+func (s *TracePublicTestSuite) TestKeyMeanings() {
+	details := map[string]string{}
+	for _, r := range cli.TraceRows(natsTrace(), true) {
+		details[strings.TrimLeft(r[0], "│├└─ ")+" "+r[4]] = r[4]
+	}
+	for _, want := range []string{
+		"kv.put job", "kv.get registration", "kv.get facts", "kv.get drain flag",
+		"kv.keys list keys in osapi-job-queue", "kv.put status: started", "kv.put timeline: drain",
+		"kv.put file record", "kv.get other.key", "kv.put response", "kv.watch answers",
+	} {
+		s.Contains(details, want)
+	}
+}
+
+func (s *TracePublicTestSuite) TestIsNATSSpan() {
+	for _, name := range []string{"kv.get", "objectstore.put", "stream.read", "nats.publish"} {
+		s.True(cli.IsNATSSpan(name), name)
+	}
+	for _, name := range []string{"job.process", "file.write", "exec kv"} {
+		s.False(cli.IsNATSSpan(name), name)
+	}
 }
 
 func (s *TracePublicTestSuite) TestTraceServices() {
