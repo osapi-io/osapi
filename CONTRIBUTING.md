@@ -70,6 +70,9 @@ just deps
 
 - **`cmd/`.** The Cobra CLI commands (`client`, `node agent`, `controller.api`,
   `nats server`).
+- **`internal/controller/`.** `controller.New` makes the controller process: the
+  NATS connection, the REST API with each handler, the heartbeat and the
+  watchers. A new API handler goes in `handlers.go`.
 - **`internal/controller/api/`.** The Echo REST API. The handlers that target a
   node are under `node/{domain}/`. The handlers for the controller only are at
   the top level (`job/`, `health/`). Each domain has its own `gen/` with an

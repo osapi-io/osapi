@@ -64,7 +64,7 @@ Configures streams, consumers, and KV buckets needed by the job system.
 					return nil
 				})
 				metricsServer.RegisterSubsystems(
-					subsystemStatuses(server.SubComponents(appConfig.NATS.Server)),
+					metrics.Subsystems(server.SubComponents(appConfig.NATS.Server)),
 				)
 				metricsServer.Start()
 			}

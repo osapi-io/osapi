@@ -1,0 +1,110 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package controller_test
+
+import (
+	"log/slog"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
+
+	auditmocks "github.com/osapi-io/osapi/internal/audit/mocks"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller"
+	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
+)
+
+type HandlersPublicTestSuite struct {
+	suite.Suite
+}
+
+func TestHandlersPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(HandlersPublicTestSuite))
+}
+
+func (s *HandlersPublicTestSuite) TestHandlers() {
+	ctrl := gomock.NewController(s.T())
+	var cfg config.Config
+	cfg.Controller.API.Security.SigningKey = "test-key"
+	cfg.Controller.API.Security.Roles = map[string]config.CustomRole{
+		"reader": {Permissions: []string{"node:read"}},
+	}
+	base := len(controller.ExportHandlers(slog.Default(), cfg, nil, nil))
+
+	tests := []struct {
+		name  string
+		cfg   func() config.Config
+		audit bool
+		files bool
+		want  int
+	}{
+		{
+			name:  "when the audit store is there adds the audit handler",
+			cfg:   func() config.Config { return cfg },
+			audit: true,
+			want:  base + 1,
+		},
+		{
+			name:  "when the Object Store is there adds the file handler",
+			cfg:   func() config.Config { return cfg },
+			files: true,
+			want:  base + 1,
+		},
+		{
+			name: "when the UI is off leaves the UI handler out",
+			cfg: func() config.Config {
+				c := cfg
+				enabled := false
+				c.Controller.UI.Enabled = &enabled
+				return c
+			},
+			want: base - 1,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var store *auditmocks.MockStore
+			if tc.audit {
+				store = auditmocks.NewMockStore(ctrl)
+			}
+			var objStore *filemocks.MockObjectStore
+			if tc.files {
+				objStore = filemocks.NewMockObjectStore(ctrl)
+			}
+
+			var got int
+			switch {
+			case tc.audit:
+				got = len(controller.ExportHandlers(slog.Default(), tc.cfg(), store, nil))
+			case tc.files:
+				got = len(controller.ExportHandlers(slog.Default(), tc.cfg(), nil, objStore))
+			default:
+				got = len(controller.ExportHandlers(slog.Default(), tc.cfg(), nil, nil))
+			}
+
+			s.Equal(tc.want, got)
+		})
+	}
+}

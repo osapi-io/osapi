@@ -74,7 +74,7 @@ It processes jobs as they become available.
 
 		if metricsServer != nil {
 			a.SetMeterProvider(metricsServer.MeterProvider())
-			metricsServer.RegisterSubsystems(subsystemStatuses(agentSubs))
+			metricsServer.RegisterSubsystems(metrics.Subsystems(agentSubs))
 			metricsServer.RegisterHeartbeatAge(a.LastHeartbeatTime)
 		}
 
@@ -84,7 +84,7 @@ It processes jobs as they become available.
 			}
 
 			_ = shutdownTracer(shutdownCtx)
-			bus.Close(b.nc)
+			bus.Close(b.NATS)
 		})
 	},
 }

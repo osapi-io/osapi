@@ -28,9 +28,8 @@ import (
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/bus/server"
 	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/internal/controller/api"
+	"github.com/osapi-io/osapi/internal/controller"
 	"github.com/osapi-io/osapi/internal/job"
-	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 	"github.com/osapi-io/osapi/internal/telemetry/tracing"
 )
@@ -69,9 +68,8 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 		// Create the controller metrics server before the API server so the
 		// MeterProvider can be injected into otelecho middleware.
 		var metricsServers []*metrics.Server
-		var controllerOpts []api.Option
-		var controllerMetrics *metrics.Server
-
+		var controllerOpts []controller.Option
+		
 		if appConfig.Controller.Metrics.Enabled {
 			s := metrics.New(
 				appConfig.Controller.Metrics.Host,
@@ -79,33 +77,30 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 				logger.With("component", "controller"),
 			)
 			if s != nil {
-				controllerMetrics = s
 				controllerOpts = append(
 					controllerOpts,
-					api.WithMeterProvider(s.MeterProvider()),
+					controller.WithMeterProvider(s.MeterProvider()),
 				)
 				metricsServers = append(metricsServers, s)
 			}
 		}
 
-		sm, controllerBundle := setupController(
-			ctx, logger.With("component", "controller"),
-			appConfig.Controller.NATS,
+		c, err := controller.New(
+			ctx,
+			logger.With("component", "controller"),
+			appConfig,
 			controllerOpts...,
 		)
-
-		if controllerMetrics != nil {
-			if jc, ok := controllerBundle.jobClient.(*jobclient.Client); ok {
-				jc.SetMeterProvider(controllerMetrics.MeterProvider())
-			}
+		if err != nil {
+			cli.LogFatal(logger, "failed to start the controller", err)
 		}
 
 		// Set readiness, register subsystems, and start controller metrics server.
 		for _, s := range metricsServers {
 			s.SetReadinessFunc(func() error {
-				return controllerBundle.checker.CheckHealth(context.Background())
+				return c.CheckHealth(context.Background())
 			})
-			s.RegisterSubsystems(subsystemStatuses(controllerBundle.subComponents))
+			s.RegisterSubsystems(metrics.Subsystems(c.SubComponents()))
 			s.Start()
 		}
 
@@ -127,7 +122,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 				})
 
 				agentServer.SetMeterProvider(s.MeterProvider())
-				s.RegisterSubsystems(subsystemStatuses(agentSubs))
+				s.RegisterSubsystems(metrics.Subsystems(agentSubs))
 				s.RegisterHeartbeatAge(agentServer.LastHeartbeatTime)
 
 				s.Start()
@@ -146,22 +141,21 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 				s.SetReadinessFunc(func() error {
 					return nil
 				})
-				s.RegisterSubsystems(subsystemStatuses(server.SubComponents(appConfig.NATS.Server)))
+				s.RegisterSubsystems(metrics.Subsystems(server.SubComponents(appConfig.NATS.Server)))
 				s.Start()
 
 				metricsServers = append(metricsServers, s)
 			}
 		}
 
-		components := []component{sm, agentServer, natsServer}
+		components := []component{c, agentServer, natsServer}
 		serve(ctx, components, func(shutdownCtx context.Context) {
 			for _, s := range metricsServers {
 				s.Stop(shutdownCtx)
 			}
 
 			_ = shutdownTracer(shutdownCtx)
-			bus.Close(agentBundle.nc)
-			bus.Close(controllerBundle.nc)
+			bus.Close(agentBundle.NATS)
 		})
 	},
 }
