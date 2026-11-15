@@ -126,10 +126,12 @@ just deps
   `internal/pki/`, `internal/bus/` or `internal/job/`.
 - **One kind of thing in a package.** Its name tells what it holds. Do not make
   a package named `util`, `common`, `helpers` or `shared`.
-- **No directory that only holds other packages.** Put a package under a
-  different package only when the parent is a real package that it belongs to,
-  for example `internal/behavior/command/`. A directory that has no Go code of
-  its own does not group packages.
+- **A directory can group packages that belong together.** An example is
+  `internal/telemetry/`, which holds `metrics`, `tracing`, `httplog` and
+  `process`. The name of the directory tells what the group is.
+- **Do not put many packages under one package.** A package is one thing. If
+  packages collect under it, find the group that they make, and give that group
+  its own directory.
 - **The name of a package is the last part of its path.** A name does not repeat
   the name of its package: `atomicfile.Write`, not `atomicfile.WriteFileAtomic`.
 - **Do not make a package that its callers must import with an alias.** If two
