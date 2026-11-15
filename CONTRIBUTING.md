@@ -260,7 +260,9 @@ that file.
 - A package holds one kind of thing, and its name tells what. Do not make a
   package named `util`, `common`, `helpers` or `shared`.
 - The name of a package is the last part of its path. An exported name does not
-  repeat it: `atomicfile.Write`, not `atomicfile.WriteFileAtomic`.
+  repeat it inside a longer name: `atomicfile.Write`, not
+  `atomicfile.WriteFileAtomic`. The main type can have the name of the package,
+  as `time.Time` does.
 - A caller does not need an alias. If two packages that a file imports have the
   same name, rename one of them. Mock packages are the exception. Each is named
   `mocks`, so a test that uses two of them gives one an alias. A clash with a
