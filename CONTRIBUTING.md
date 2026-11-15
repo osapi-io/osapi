@@ -95,8 +95,9 @@ just deps
   serves the generated routes.
 - **`internal/pki/`.** The keys and signatures of an agent and the controller.
   Both processes use it.
-- **`internal/bus/`.** The NATS options, and the buckets and streams that osapi
-  makes. Each process that connects to NATS uses it.
+- **`internal/bus/`.** The NATS options, the buckets and streams that osapi
+  makes, and the embedded NATS server. Each process that connects to NATS uses
+  it.
 - **`internal/atomicfile/`.** It writes a file so that a reader sees the old
   file or the new file, never a part.
 - **`internal/cli/`.** The output of the CLI: the theme, tables, help, errors

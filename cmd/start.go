@@ -60,7 +60,10 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 		job.Init(appConfig.Controller.NATS.Namespace)
 
 		natsLog := logger.With("component", "nats")
-		natsServer := setupNATSServer(ctx, natsLog)
+		natsServer, err := bus.NewServer(ctx, natsLog, appConfig.NATS)
+		if err != nil {
+			cli.LogFatal(natsLog, "failed to start NATS server", err)
+		}
 
 		// Create the controller metrics server before the API server so the
 		// MeterProvider can be injected into otelecho middleware.
@@ -149,7 +152,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			}
 		}
 
-		components := []component{sm, agentServer, &embeddedNATS{server: natsServer}}
+		components := []component{sm, agentServer, natsServer}
 		serve(ctx, components, func(shutdownCtx context.Context) {
 			for _, s := range metricsServers {
 				s.Stop(shutdownCtx)

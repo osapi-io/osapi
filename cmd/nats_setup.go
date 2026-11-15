@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/bus"
@@ -48,14 +49,12 @@ embedded server, so this is needed only when the server is someone else's.`,
 		job.Init(n.Namespace)
 		log := logger.With("component", "nats")
 
-		if err := setupJetStream(
-			cmd.Context(),
-			log,
-			n.Host,
-			n.Port,
-			n.Namespace,
-			bus.AuthOptions(n.Auth),
-		); err != nil {
+		if err := bus.Prepare(cmd.Context(), log, &natsclient.Options{
+			Host: n.Host,
+			Port: n.Port,
+			Auth: bus.AuthOptions(n.Auth),
+			Name: "osapi-nats-setup",
+		}, n.Namespace, appConfig.NATS); err != nil {
 			cli.LogFatal(log, "failed to set up JetStream infrastructure", err)
 		}
 

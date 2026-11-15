@@ -22,3 +22,4 @@
 package mocks
 
 //go:generate go tool go.uber.org/mock/mockgen -destination=./nats_connector.gen.go -package=mocks github.com/osapi-io/nats-client/pkg/client NATSConnector
+//go:generate go tool go.uber.org/mock/mockgen -source=../setup.go -destination=setup.gen.go -package=mocks
