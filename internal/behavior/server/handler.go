@@ -104,7 +104,7 @@ type Server struct {
 	customRoles map[string][]string
 }
 
-// NewServer returns the server the generated handlers run on.
+// New returns the server the generated handlers run on.
 func New(
 	logger *slog.Logger,
 	jobClient JobClient,

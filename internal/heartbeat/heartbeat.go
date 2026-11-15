@@ -18,8 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package controller provides the control plane process components.
-package controller
+// Package heartbeat writes the registration of a component that is not an agent,
+// for example the controller or the NATS server, to the registry KV bucket.
+package heartbeat
 
 import (
 	"context"
@@ -36,9 +37,9 @@ import (
 // heartbeatMarshalFn is the JSON marshal function (injectable for testing).
 var heartbeatMarshalFn = json.Marshal
 
-// ComponentHeartbeat writes ComponentRegistration to the registry KV
+// Heartbeat writes ComponentRegistration to the registry KV
 // on a configurable interval.
-type ComponentHeartbeat struct {
+type Heartbeat struct {
 	logger          *slog.Logger
 	registryKV      jetstream.KeyValue
 	hostname        string
@@ -52,36 +53,49 @@ type ComponentHeartbeat struct {
 	subComponents   map[string]job.SubComponentInfo
 }
 
-// NewComponentHeartbeat creates a heartbeat writer for a non-agent component.
-func NewComponentHeartbeat(
+// Options describe the component that a Heartbeat registers.
+type Options struct {
+	// RegistryKV is the bucket that gets the registration.
+	RegistryKV jetstream.KeyValue
+	// Hostname is the host that the component runs on.
+	Hostname string
+	// Version is the version of the component.
+	Version string
+	// Component is the kind of component, for example controller or nats.
+	Component string
+	// Process reads the CPU and the memory of the process.
+	Process process.Provider
+	// Interval is the time between two registrations.
+	Interval time.Duration
+	// Thresholds tell when the process reports a condition.
+	Thresholds process.ConditionThresholds
+	// SubComponents are the parts of the component that the registration names.
+	SubComponents map[string]job.SubComponentInfo
+}
+
+// New creates a heartbeat writer for a component that is not an agent.
+func New(
 	logger *slog.Logger,
-	registryKV jetstream.KeyValue,
-	hostname string,
-	version string,
-	componentType string,
-	processProvider process.Provider,
-	interval time.Duration,
-	thresholds process.ConditionThresholds,
-	subComponents map[string]job.SubComponentInfo,
-) *ComponentHeartbeat {
-	return &ComponentHeartbeat{
-		logger:          logger.With(slog.String("subsystem", "controller.heartbeat")),
-		registryKV:      registryKV,
-		hostname:        hostname,
-		version:         version,
-		componentType:   componentType,
-		processProvider: processProvider,
-		interval:        interval,
+	opts Options,
+) *Heartbeat {
+	return &Heartbeat{
+		logger:          logger.With(slog.String("subsystem", opts.Component+".heartbeat")),
+		registryKV:      opts.RegistryKV,
+		hostname:        opts.Hostname,
+		version:         opts.Version,
+		componentType:   opts.Component,
+		processProvider: opts.Process,
+		interval:        opts.Interval,
 		startedAt:       time.Now(),
-		thresholds:      thresholds,
-		subComponents:   subComponents,
+		thresholds:      opts.Thresholds,
+		subComponents:   opts.SubComponents,
 	}
 }
 
 // Start begins writing heartbeats. It writes an initial registration
 // immediately, then refreshes on each tick. On context cancellation it
 // deregisters and returns.
-func (h *ComponentHeartbeat) Start(
+func (h *Heartbeat) Start(
 	ctx context.Context,
 ) {
 	key := h.registryKey()
@@ -120,7 +134,7 @@ func (h *ComponentHeartbeat) Start(
 // writeRegistration marshals a ComponentRegistration and puts it to the
 // registry KV. Provider errors are non-fatal; the heartbeat still writes
 // with whatever data it gathered.
-func (h *ComponentHeartbeat) writeRegistration(
+func (h *Heartbeat) writeRegistration(
 	ctx context.Context,
 ) {
 	reg := job.ComponentRegistration{
@@ -168,7 +182,7 @@ func (h *ComponentHeartbeat) writeRegistration(
 }
 
 // deregister deletes the component's registration key on clean shutdown.
-func (h *ComponentHeartbeat) deregister() {
+func (h *Heartbeat) deregister() {
 	key := h.registryKey()
 	if err := h.registryKV.Delete(context.Background(), key); err != nil {
 		h.logger.Warn(
@@ -190,6 +204,6 @@ func (h *ComponentHeartbeat) deregister() {
 }
 
 // registryKey returns the KV key for this component's registration entry.
-func (h *ComponentHeartbeat) registryKey() string {
+func (h *Heartbeat) registryKey() string {
 	return h.componentType + "." + job.SanitizeHostname(h.hostname)
 }

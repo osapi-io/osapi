@@ -26,6 +26,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/bus"
+	"github.com/osapi-io/osapi/internal/bus/server"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/controller/api"
 	"github.com/osapi-io/osapi/internal/job"
@@ -60,7 +61,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 		job.Init(appConfig.Controller.NATS.Namespace)
 
 		natsLog := logger.With("component", "nats")
-		natsServer, err := bus.NewServer(ctx, natsLog, appConfig.NATS)
+		natsServer, err := server.New(ctx, natsLog, appConfig.NATS)
 		if err != nil {
 			cli.LogFatal(natsLog, "failed to start NATS server", err)
 		}
@@ -108,7 +109,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			s.Start()
 		}
 
-		startNATSHeartbeatFromKV(ctx, natsLog, controllerBundle.registryKV)
+		natsServer.StartHeartbeat(ctx, appConfig.Agent.ProcessConditions)
 
 		agentServer, agentBundle, agentSubs := setupAgent(
 			ctx, logger.With("component", "agent"), appConfig.Agent.NATS,
@@ -145,7 +146,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 				s.SetReadinessFunc(func() error {
 					return nil
 				})
-				s.RegisterSubsystems(subsystemStatuses(buildNATSSubComponents()))
+				s.RegisterSubsystems(subsystemStatuses(server.SubComponents(appConfig.NATS.Server)))
 				s.Start()
 
 				metricsServers = append(metricsServers, s)

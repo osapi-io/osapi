@@ -42,7 +42,6 @@ import (
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/config"
-	"github.com/osapi-io/osapi/internal/controller"
 	"github.com/osapi-io/osapi/internal/controller/api"
 	agentAPI "github.com/osapi-io/osapi/internal/controller/api/agent"
 	auditAPI "github.com/osapi-io/osapi/internal/controller/api/audit"
@@ -70,6 +69,7 @@ import (
 	uihandler "github.com/osapi-io/osapi/internal/controller/api/ui"
 	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	"github.com/osapi-io/osapi/internal/controller/notify"
+	"github.com/osapi-io/osapi/internal/heartbeat"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/pki"
@@ -988,7 +988,7 @@ func buildControllerSubComponents() map[string]job.SubComponentInfo {
 	}
 }
 
-// startControllerHeartbeat resolves the local hostname, creates a ComponentHeartbeat
+// startControllerHeartbeat resolves the local hostname, creates a heartbeat
 // for the API server, and starts it in a background goroutine. The heartbeat
 // deregisters when ctx is cancelled.
 func startControllerHeartbeat(
@@ -1006,20 +1006,19 @@ func startControllerHeartbeat(
 		hostname = "unknown"
 	}
 
-	hb := controller.NewComponentHeartbeat(
-		log,
-		registryKV,
-		hostname,
-		"0.1.0",
-		"controller",
-		process.New(),
-		10*time.Second,
-		process.ConditionThresholds{
+	hb := heartbeat.New(log, heartbeat.Options{
+		RegistryKV: registryKV,
+		Hostname:   hostname,
+		Version:    "0.1.0",
+		Component:  "controller",
+		Process:    process.New(),
+		Interval:   10 * time.Second,
+		Thresholds: process.ConditionThresholds{
 			MemoryPressureBytes: appConfig.Agent.ProcessConditions.MemoryPressureBytes,
 			HighCPUPercent:      appConfig.Agent.ProcessConditions.HighCPUPercent,
 		},
-		subComponents,
-	)
+		SubComponents: subComponents,
+	})
 
 	go hb.Start(ctx)
 }
