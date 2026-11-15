@@ -53,25 +53,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error retrieving hostname.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
     put:
       summary: Update node hostname
       description: Set the system hostname on the target node.
@@ -101,25 +101,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error updating hostname.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
 # -- Reusable components ---------------------------------------------------
 
@@ -149,7 +149,7 @@ components:
 
   schemas:
     ErrorResponse:
-      $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+      $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     HostnameResponse:
       type: object

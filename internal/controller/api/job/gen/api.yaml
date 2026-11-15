@@ -86,25 +86,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error listing jobs.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   /api/job/{id}:
     get:
@@ -138,31 +138,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Job not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error retrieving job.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     delete:
       summary: Delete a job
@@ -191,31 +191,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Job not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error deleting job.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   /api/job/{id}/retry:
     post:
@@ -257,36 +257,36 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Job not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error retrying job.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
 components:
   schemas:
     ErrorResponse:
-      $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+      $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     CreateJobResponse:
       type: object

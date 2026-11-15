@@ -14,7 +14,7 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
-	externalRef0 "github.com/osapi-io/osapi/internal/controller/api/common/gen"
+	externalRef0 "github.com/osapi-io/osapi/internal/controller/api/components/gen"
 )
 
 const (

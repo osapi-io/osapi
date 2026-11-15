@@ -54,25 +54,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error retrieving NTP status.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     post:
       summary: Create NTP configuration
@@ -106,25 +106,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error creating NTP configuration.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     put:
       summary: Update NTP configuration
@@ -158,31 +158,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: NTP configuration not found.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error updating NTP configuration.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     delete:
       summary: Delete NTP configuration
@@ -208,25 +208,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error deleting NTP configuration.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
 # -- Reusable components ------------------------------------------------
 
@@ -256,7 +256,7 @@ components:
 
   schemas:
     ErrorResponse:
-      $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+      $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     # -- Request schemas -------------------------------------------------
 

@@ -72,25 +72,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
   /api/audit/export:
     get:
       operationId: GetAuditExport
@@ -113,19 +113,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
   /api/audit/{id}:
     get:
       operationId: GetAuditLogByID
@@ -156,25 +156,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Audit entry not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
 components:
   securitySchemes:
@@ -185,7 +185,7 @@ components:
 
   schemas:
     ErrorResponse:
-      $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+      $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     AuditEntry:
       type: object

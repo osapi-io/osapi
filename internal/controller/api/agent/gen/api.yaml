@@ -50,19 +50,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error discovering agents.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
   /api/agent/{hostname}:
     get:
       summary: Get agent details
@@ -99,31 +99,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Agent not found
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error retrieving agent details.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
     delete:
       operationId: removeAgent
       summary: Remove an enrolled agent
@@ -181,37 +181,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: No accepted agent with that hostname.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '409':
           description: More than one accepted agent has the hostname; name one with machine_id.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error removing agent.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
   /api/agent/pending:
     get:
       operationId: getAgentsPending
@@ -234,19 +234,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error listing pending agents.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
   /api/agent/{hostname}/accept:
     post:
       operationId: acceptAgent
@@ -300,31 +300,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Pending agent not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error accepting agent.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
   /api/agent/{hostname}/reject:
     post:
       operationId: rejectAgent
@@ -366,31 +366,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Pending agent not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error rejecting agent.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
   /api/agent/{hostname}/drain:
     post:
       operationId: drainAgent
@@ -434,31 +434,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Agent not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '409':
           description: Agent already in requested state.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
   /api/agent/{hostname}/undrain:
     post:
       operationId: undrainAgent
@@ -500,31 +500,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Agent not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '409':
           description: Agent not in draining or cordoned state.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
 components:
   securitySchemes:
@@ -535,7 +535,7 @@ components:
 
   schemas:
     ErrorResponse:
-      $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+      $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     ListPendingAgentsResponse:
       type: object

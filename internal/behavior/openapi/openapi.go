@@ -37,12 +37,12 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior"
 )
 
-// commonSpec is the spec every API document shares ErrorResponse from, from
+// componentsSpec is the spec every API document shares ErrorResponse from, from
 // the repository root.
-const commonSpec = "internal/controller/api/common/gen/api.yaml"
+const componentsSpec = "internal/controller/api/components/gen/api.yaml"
 
 // errorRef is where every error response points: the document's own
-// ErrorResponse, which points at commonSpec.
+// ErrorResponse, which points at componentsSpec.
 const errorRef = "#/components/schemas/ErrorResponse"
 
 // OpenAPI builds one OpenAPI document, with kin-openapi's types, for every
@@ -55,7 +55,7 @@ func OpenAPI(
 	bs []*behavior.Behavior,
 	dir string,
 ) ([]byte, error) {
-	common, err := filepath.Rel(dir, commonSpec)
+	components, err := filepath.Rel(dir, componentsSpec)
 	if err != nil {
 		return nil, fmt.Errorf("spec: %w", err)
 	}
@@ -96,7 +96,7 @@ func OpenAPI(
 			},
 			Schemas: openapi3.Schemas{
 				"ErrorResponse": &openapi3.SchemaRef{
-					Ref: filepath.ToSlash(common) + "#/components/schemas/ErrorResponse",
+					Ref: filepath.ToSlash(components) + "#/components/schemas/ErrorResponse",
 				},
 			},
 		},

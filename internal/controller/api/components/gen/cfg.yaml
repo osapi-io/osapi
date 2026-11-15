@@ -20,7 +20,7 @@
 
 ---
 package: gen
-output: common.gen.go
+output: components.gen.go
 generate:
   models: true
   echo-server: false

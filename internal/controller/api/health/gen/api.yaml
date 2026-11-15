@@ -84,13 +84,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '503':
           description: One or more components unhealthy.
           content:
@@ -107,7 +107,7 @@ components:
 
   schemas:
     ErrorResponse:
-      $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+      $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     HealthResponse:
       type: object
