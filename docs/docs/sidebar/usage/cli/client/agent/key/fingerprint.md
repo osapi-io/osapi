@@ -1,9 +1,4 @@
-# Key
-
-Commands for the agent key. The `key` subcommands operate on the PKI key pair of
-the local agent.
-
-## fingerprint
+# Fingerprint
 
 Show the local agent's public key fingerprint:
 
@@ -21,7 +16,7 @@ by its fingerprint.
 If no key exists, the command makes a new key pair. Then it shows the
 fingerprint.
 
-### Flags
+## Flags
 
 | Flag     | Description     | Required |
 | -------- | --------------- | -------- |

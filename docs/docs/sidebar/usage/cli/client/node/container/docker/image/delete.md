@@ -1,4 +1,4 @@
-# Image delete
+# Delete
 
 Delete a container image from the target node:
 
