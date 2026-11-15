@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Distributed tracing | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/distributed-tracing"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Distributed tracing | OSAPI"><meta data-rh="true" name="description" content="osapi uses OpenTelemetry to send one trace ID"><meta data-rh="true" property="og:description" content="osapi uses OpenTelemetry to send one trace ID"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/distributed-tracing"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/distributed-tracing" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/distributed-tracing" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Distributed tracing","item":"https://osapi-io.github.io/osapi/sidebar/features/distributed-tracing"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.e2a33bfd.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.b3ed871e.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.8c57d8a4.js" defer="defer"></script>
 </head>
 <body>
@@ -19,15 +19,110 @@ request from the CLI to the API server to the agent. Filter the logs on
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-it-works">How it works<a href="#how-it-works" class="hash-link" aria-label="Direct link to How it works" title="Direct link to How it works" translate="no">​</a></h2>
 <!-- -->
 <ol>
-<li class="">The <strong>CLI</strong> makes a root span and adds <code>traceparent</code> to the HTTP request.</li>
-<li class="">The <strong>API server</strong> continues the trace in the <code>otelecho</code> middleware. Then,
-when it publishes a job notification, the nats-client adds the trace context
-to the NATS message headers automatically.</li>
-<li class="">The <strong>agent</strong> reads the trace context from the NATS message headers. It makes
-a <code>job.process</code> span that connects its work to the original request.</li>
+<li class="">
+<p>The <strong>API server</strong> starts the trace in the <code>otelecho</code> middleware. It opens
+<code>job.publish</code> when it stores and publishes the job. The nats-client adds the
+trace context to the headers of the NATS message.</p>
+</li>
+<li class="">
+<p>The <strong>agent</strong> reads the trace context from the headers. It opens
+<code>job.process</code> as a child of <code>job.publish</code>.</p>
+</li>
+<li class="">
+<p>The <strong>API server</strong> opens <code>job.collect</code> while it waits for the answers of the
+agents. It sends the trace back in the <code>traceresponse</code> header of the
+response.</p>
+</li>
+<li class="">
+<p>The <strong>CLI</strong> prints the trace ID at the end of the summary line, after the job
+ID:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">3 hosts: 2 ok, 1 skipped   job 8adc7e9f-040c-4d5b-8cb1-2e834158f746   trace 26e448c9dbe1c4a8d216a98c675079c9</span><br></div></code></pre></div></div>
+</li>
 </ol>
-<p>All structured log lines include <code>trace_id</code> and <code>span_id</code> when a span is active,
-so <code>grep trace_id=&lt;hex&gt;</code> shows the complete end-to-end flow.</p>
+<p>The CLI needs no tracing configuration for this, and no access to the tracing
+backend. Only the controller and the agents send spans. The Go SDK gives the
+same ID: <code>resp.TraceID()</code>.</p>
+<p>A person who develops osapi can also let the CLI send its own span. Give the CLI
+<code>telemetry.tracing</code> with an <code>exporter</code>. Then the trace starts at the command,
+for example <code>osapi client node package list</code>, and the controller continues it.
+The trace ID is the same in each component. Without an exporter, the CLI sends
+no trace context, so that a trace has no parent that never arrives.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-span-tree">The span tree<a href="#the-span-tree" class="hash-link" aria-label="Direct link to The span tree" title="Direct link to The span tree" translate="no">​</a></h2>
+<p>A request to one host, or a broadcast such as <code>--target _all</code>, makes this tree.
+A broadcast has one <code>job.process</code> for each agent:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi-controller  GET /api/node/:hostname/package</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">├─ job.publish</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│  ├─ osapi-agent  job.process     (web-01)</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│  │  └─ exec dpkg-query</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│  └─ osapi-agent  job.process     (web-02)</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│     └─ exec dpkg-query</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">└─ job.collect</span><br></div></code></pre></div></div>
+<p>A behavior adds <code>behavior.&lt;name&gt;.&lt;method&gt;</code> under <code>job.process</code>, and its commands
+are under that span.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Span</th><th>Service</th><th>Attributes that tell you the most</th></tr></thead><tbody><tr><td>the command</td><td><code>osapi-cli</code></td><td>The name is the command</td></tr><tr><td><code>GET /api/...</code></td><td><code>osapi-controller</code></td><td><code>http.route</code>, <code>http.response.status_code</code>, <code>osapi.target</code></td></tr><tr><td><code>job.publish</code></td><td><code>osapi-controller</code></td><td><code>job.id</code>, <code>job.type</code>, <code>osapi.target</code>, <code>messaging.destination.name</code></td></tr><tr><td><code>job.collect</code></td><td><code>osapi-controller</code></td><td><code>job.expected</code>, <code>job.answered</code>, <code>job.timed_out</code>; a <code>job.timeout</code> event names each silent agent</td></tr><tr><td><code>job.process</code></td><td><code>osapi-agent</code></td><td><code>osapi.agent.hostname</code>, <code>osapi.agent.machine_id</code>, <code>host.arch</code>, <code>job.status</code>, <code>job.changed</code></td></tr><tr><td><code>behavior.&lt;name&gt;.&lt;method&gt;</code></td><td><code>osapi-agent</code></td><td><code>osapi.behavior.name</code>, <code>osapi.behavior.method</code>, <code>osapi.behavior.outcome</code></td></tr><tr><td><code>exec &lt;program&gt;</code></td><td><code>osapi-agent</code></td><td><code>process.executable.name</code>, <code>osapi.exec.sudo</code>, <code>process.exit.code</code>. The arguments are not recorded</td></tr></tbody></table>
+<p>Each span has <code>service.version</code>, the version of the binary that made it.</p>
+<p>A span has the error status when its work failed: a failed job, a command that
+failed, or a <code>job.collect</code> with no answer. A host that skips a job is not an
+error. Its <code>job.process</code> has <code>job.status</code> <code>skipped</code> and a <code>job.skipped</code> event
+with the reason.</p>
+<p>The health endpoints and the files of the UI have no spans. A probe and the UI
+call them each few seconds, and their traces would hide the traces of the jobs.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="read-a-trace-in-jaeger">Read a trace in Jaeger<a href="#read-a-trace-in-jaeger" class="hash-link" aria-label="Direct link to Read a trace in Jaeger" title="Direct link to Read a trace in Jaeger" translate="no">​</a></h2>
+<ol>
+<li class="">Copy the trace ID from the summary line of the command.</li>
+<li class="">Put it in the search box at the top of Jaeger. Jaeger opens the trace.</li>
+<li class="">Each <code>job.process</code> shows its host in <code>osapi.agent.hostname</code>. A red span
+failed. Open it, and read the error in its status.</li>
+<li class="">Compare <code>job.expected</code> and <code>job.answered</code> on <code>job.collect</code>. When they are
+different, the <code>job.timeout</code> events name the agents that did not answer.</li>
+</ol>
+<p>To find traces without an ID, open <strong>Search</strong>. Set <strong>Service</strong> to
+<code>osapi-controller</code>, and set <strong>Tags</strong> to one of these:</p>
+<ul>
+<li class=""><code>job.id=&lt;the job ID&gt;</code>, for one job</li>
+<li class=""><code>osapi.agent.hostname=web-01</code>, for the work of one host</li>
+</ul>
+<p>An audit entry has <code>trace_id</code>. Put it in the search box of Jaeger to open the
+trace of that request.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="debugging-with-traces">Debugging with traces<a href="#debugging-with-traces" class="hash-link" aria-label="Direct link to Debugging with traces" title="Direct link to Debugging with traces" translate="no">​</a></h2>
 <p>To trace a request end-to-end:</p>
 <ol>
@@ -82,6 +177,6 @@ reference.</p><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="related">Rela
 <li class=""><a class="" href="/osapi/sidebar/usage/configuration">Configuration</a>: full configuration reference</li>
 <li class=""><a class="" href="/osapi/sidebar/architecture">Architecture</a>: system design overview</li>
 <li class=""><a class="" href="/osapi/sidebar/features/job-system">Job System</a>: how async job processing works</li>
-</ul></div></div></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/notifications"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Notifications</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/metrics"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Metrics</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a></li><li><a href="#debugging-with-traces" class="table-of-contents__link toc-highlight">Debugging with traces</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a><ul><li><a href="#log-correlation-recommended-default" class="table-of-contents__link toc-highlight">Log correlation (recommended default)</a></li><li><a href="#otlp-export-production" class="table-of-contents__link toc-highlight">OTLP export (production)</a></li></ul></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
+</ul></div></div></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/notifications"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Notifications</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/metrics"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Metrics</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a></li><li><a href="#the-span-tree" class="table-of-contents__link toc-highlight">The span tree</a></li><li><a href="#read-a-trace-in-jaeger" class="table-of-contents__link toc-highlight">Read a trace in Jaeger</a></li><li><a href="#debugging-with-traces" class="table-of-contents__link toc-highlight">Debugging with traces</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a><ul><li><a href="#log-correlation-recommended-default" class="table-of-contents__link toc-highlight">Log correlation (recommended default)</a></li><li><a href="#otlp-export-production" class="table-of-contents__link toc-highlight">OTLP export (production)</a></li></ul></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
