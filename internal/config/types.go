@@ -393,8 +393,8 @@ type PrivilegeEscalation struct {
 // supplies: command exec, command shell and docker exec.
 type AgentCommand struct {
 	// Enabled lets the agent run command exec, command shell and docker exec.
-	// The agent refuses those jobs when it is false, so a job that reaches the
-	// agent without the API refuses too.
+	// When it is false, the agent refuses those jobs. The agent makes the check,
+	// so it also refuses a job that gets to it without the API.
 	Enabled bool `mapstructure:"enabled" doc:"Run command exec, command shell and docker exec jobs. Off by default: each one runs a command the caller supplies, as the agent's user."`
 }
 
