@@ -118,9 +118,10 @@ go-pkg-check:
 
 # Write the CLI reference pages under docs/ from the cobra command tree, and
 # format them as the site formatter does.
-cli-docs-generate: _docs-bun-install
+cli-docs-generate:
+    just _docs-bun-install
     go run . cli-docs --dir docs/docs/sidebar/usage/cli
-    cd {{ docusaurus_dir }} && bun run prettier docs/sidebar/usage/cli --write --config prettier.config.js --ignore-path .prettierignore > /dev/null
+    cd docs && bun run prettier docs/sidebar/usage/cli --write --config prettier.config.js --ignore-path .prettierignore > /dev/null
 
 # The CLI reference pages are generated from the cobra command tree. A command
 # without a page, a page without a command, or a flag that changed fails here.
