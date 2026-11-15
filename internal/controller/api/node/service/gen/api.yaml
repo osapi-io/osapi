@@ -56,25 +56,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error listing services.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     post:
       summary: Create a service unit file
@@ -107,25 +107,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error creating service unit file.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   # -- Service individual entry ------------------------------------------------
 
@@ -155,31 +155,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Service not found.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error getting service.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     put:
       summary: Update a service unit file
@@ -213,31 +213,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Service not found.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error updating service unit file.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     delete:
       summary: Delete a service unit file
@@ -264,25 +264,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error deleting service unit file.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   # -- Service actions ---------------------------------------------------------
 
@@ -312,25 +312,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error starting service.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   /api/node/{hostname}/service/{name}/stop:
     post:
@@ -358,25 +358,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error stopping service.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   /api/node/{hostname}/service/{name}/restart:
     post:
@@ -404,25 +404,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error restarting service.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   /api/node/{hostname}/service/{name}/enable:
     post:
@@ -450,25 +450,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error enabling service.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   /api/node/{hostname}/service/{name}/disable:
     post:
@@ -497,25 +497,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error disabling service.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
 # -- Reusable components ------------------------------------------------------
 
@@ -560,7 +560,7 @@ components:
 
   schemas:
     ErrorResponse:
-      $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+      $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     # -- Request schemas -------------------------------------------------------
 

@@ -59,25 +59,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error listing users.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     post:
       summary: Create a user
@@ -110,25 +110,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error creating user.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   # -- User individual entry -----------------------------------------------
 
@@ -158,31 +158,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: User not found.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error retrieving user.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     put:
       summary: Update a user
@@ -216,31 +216,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: User not found.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error updating user.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     delete:
       summary: Delete a user
@@ -267,31 +267,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: User not found.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error deleting user.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   # -- User password -------------------------------------------------------
 
@@ -328,31 +328,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: User not found.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error changing password.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   # -- SSH Key management ------------------------------------------------
 
@@ -382,25 +382,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error listing SSH keys.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     post:
       summary: Add SSH authorized key
@@ -434,25 +434,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error adding SSH key.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   /api/node/{hostname}/user/{name}/ssh-key/{fingerprint}:
     delete:
@@ -482,25 +482,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error removing SSH key.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   # -- Group collection ----------------------------------------------------
 
@@ -529,25 +529,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error listing groups.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     post:
       summary: Create a group
@@ -580,25 +580,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error creating group.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   # -- Group individual entry ----------------------------------------------
 
@@ -628,31 +628,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Group not found.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error retrieving group.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     put:
       summary: Update a group
@@ -686,31 +686,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Group not found.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error updating group.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     delete:
       summary: Delete a group
@@ -737,31 +737,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Group not found.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error deleting group.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
 # -- Reusable components --------------------------------------------------
 
@@ -845,7 +845,7 @@ components:
 
   schemas:
     ErrorResponse:
-      $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+      $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     # -- Request schemas ---------------------------------------------------
 

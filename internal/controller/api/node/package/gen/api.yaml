@@ -56,25 +56,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error listing packages.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     post:
       summary: Install a package
@@ -107,25 +107,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error installing package.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   # -- Package by name ------------------------------------------------------
 
@@ -155,31 +155,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Package not found.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error retrieving package.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     delete:
       summary: Remove a package
@@ -206,31 +206,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Package not found.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error removing package.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   # -- Package update -------------------------------------------------------
 
@@ -259,25 +259,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error updating package sources.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     get:
       summary: List available updates
@@ -303,25 +303,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error listing available updates.
           content:
             application/json:
               schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
 # -- Reusable components ------------------------------------------------
 
@@ -366,7 +366,7 @@ components:
 
   schemas:
     ErrorResponse:
-      $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+      $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
     # -- Request schemas -------------------------------------------------
 

@@ -11,7 +11,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v5"
-	externalRef0 "github.com/osapi-io/osapi/internal/controller/api/common/gen"
+	externalRef0 "github.com/osapi-io/osapi/internal/controller/api/components/gen"
 )
 
 const (

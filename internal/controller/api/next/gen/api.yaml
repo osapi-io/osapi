@@ -24,7 +24,7 @@ components:
         type: string
   schemas:
     ErrorResponse:
-      $ref: ../../common/gen/api.yaml#/components/schemas/ErrorResponse
+      $ref: ../../components/gen/api.yaml#/components/schemas/ErrorResponse
     SysctlCollectionResponse:
       properties:
         job_id:

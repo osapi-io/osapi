@@ -28,7 +28,7 @@ import (
 	"github.com/labstack/echo/v5"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
-	"github.com/osapi-io/osapi/internal/controller/api/common/gen"
+	"github.com/osapi-io/osapi/internal/controller/api/components/gen"
 )
 
 // Context key constants for injecting user identity into handlers.
