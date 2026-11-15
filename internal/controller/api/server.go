@@ -139,9 +139,9 @@ func (s *Server) Start() {
 //
 // Cancelling is what starts the drain; StartConfig.GracefulTimeout bounds how long
 // Echo waits, and the goroutine in Start reports the outcome. A caller must not
-// treat this returning as "every in-flight request finished" — the only caller,
-// daemon.Run, then runs cleanup within its own budget, which is what bounds the
-// process rather than this call.
+// treat this returning as "every in-flight request finished" — the start
+// command then runs the cleanups within one shutdown budget. That budget bounds
+// the process, not this call.
 //
 // The context is unused for the same reason: there is nothing here to cancel.
 func (s *Server) Stop(

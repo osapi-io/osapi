@@ -33,7 +33,7 @@ import (
 	"github.com/nats-io/nats.go"
 
 	"github.com/osapi-io/osapi/internal/job"
-	agentpki "github.com/osapi-io/osapi/internal/pki"
+	"github.com/osapi-io/osapi/internal/pki"
 
 	"github.com/osapi-io/osapi/internal/atomicfile"
 )
@@ -50,7 +50,7 @@ func (a *Agent) handlePKIEnrollment(
 ) error {
 	keyDir := a.appConfig.Agent.PKI.KeyDir
 
-	m := agentpki.New(a.appFs, keyDir, "agent")
+	m := pki.New(a.appFs, keyDir, "agent")
 
 	if err := m.LoadOrGenerate(); err != nil {
 		return err
@@ -80,7 +80,7 @@ func (a *Agent) handlePKIEnrollment(
 
 	pubPEM, err := avfs.ReadFile(a.appFs, controllerPubPath)
 	if err == nil {
-		pubKey, parseErr := agentpki.ParsePublicKeyPEM(pubPEM)
+		pubKey, parseErr := pki.ParsePublicKeyPEM(pubPEM)
 		if parseErr != nil {
 			return fmt.Errorf("failed to parse controller public key: %w", parseErr)
 		}
@@ -154,7 +154,7 @@ func (a *Agent) publishEnrollmentRequest() error {
 		return fmt.Errorf("NATS client not available")
 	}
 
-	req := agentpki.EnrollmentRequest{
+	req := pki.EnrollmentRequest{
 		MachineID:   a.machineID,
 		Hostname:    a.hostname,
 		PublicKey:   a.pkiManager.PublicKey(),
@@ -167,7 +167,7 @@ func (a *Agent) publishEnrollmentRequest() error {
 	}
 
 	namespace := a.appConfig.Agent.NATS.Namespace
-	subject := agentpki.EnrollRequestSuffix
+	subject := pki.EnrollRequestSuffix
 	if namespace != "" {
 		subject = namespace + "." + subject
 	}
@@ -198,7 +198,7 @@ func (a *Agent) startEnrollmentListener(
 	}
 
 	namespace := a.appConfig.Agent.NATS.Namespace
-	subject := agentpki.EnrollResponsePrefix + "." + a.machineID
+	subject := pki.EnrollResponsePrefix + "." + a.machineID
 	if namespace != "" {
 		subject = namespace + "." + subject
 	}
@@ -235,7 +235,7 @@ func (a *Agent) startEnrollmentListener(
 func (a *Agent) handleEnrollmentResponse(
 	msg *nats.Msg,
 ) {
-	var resp agentpki.EnrollmentResponse
+	var resp pki.EnrollmentResponse
 	if err := json.Unmarshal(msg.Data, &resp); err != nil {
 		a.pkiLogger.Warn(
 			"failed to parse enrollment response",

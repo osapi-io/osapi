@@ -27,7 +27,6 @@ import (
 
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/internal/daemon"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 	"github.com/osapi-io/osapi/internal/telemetry/tracing"
@@ -79,8 +78,7 @@ It processes jobs as they become available.
 			metricsServer.RegisterHeartbeatAge(a.LastHeartbeatTime)
 		}
 
-		a.Start()
-		daemon.Run(ctx, a, func(shutdownCtx context.Context) {
+		serve(ctx, []component{a}, func(shutdownCtx context.Context) {
 			if metricsServer != nil {
 				metricsServer.Stop(shutdownCtx)
 			}

@@ -70,10 +70,9 @@ import (
 	uihandler "github.com/osapi-io/osapi/internal/controller/api/ui"
 	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	"github.com/osapi-io/osapi/internal/controller/notify"
-	"github.com/osapi-io/osapi/internal/daemon"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
-	agentPKI "github.com/osapi-io/osapi/internal/pki"
+	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 	"github.com/osapi-io/osapi/internal/validation"
@@ -82,7 +81,7 @@ import (
 
 // ServerManager responsible for Server operations.
 type ServerManager interface {
-	daemon.Lifecycle
+	component
 	// RegisterHandlers registers a list of handlers with the Echo instance.
 	RegisterHandlers(handlers []func(e *echo.Echo))
 }
@@ -851,7 +850,7 @@ func setupEnrollmentWatcher(
 
 	// Create controller PKI manager and load or generate keypair.
 	pkiFS := osfs.New()
-	pkiManager := agentPKI.New(pkiFS, appConfig.Controller.PKI.KeyDir, "controller")
+	pkiManager := pki.New(pkiFS, appConfig.Controller.PKI.KeyDir, "controller")
 	if err := pkiManager.LoadOrGenerate(); err != nil {
 		cli.LogFatal(enrollLog, "failed to load or generate controller keypair", err)
 	}

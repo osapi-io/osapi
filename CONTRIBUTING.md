@@ -97,8 +97,6 @@ just deps
   Both processes use it.
 - **`internal/bus/`.** The NATS options, and the buckets and streams that osapi
   makes. Each process that connects to NATS uses it.
-- **`internal/daemon/`.** It runs a server or an agent until its context ends,
-  then stops it.
 - **`internal/atomicfile/`.** It writes a file so that a reader sees the old
   file or the new file, never a part.
 - **`internal/cli/`.** The output of the CLI: the theme, tables, help, errors
@@ -350,7 +348,10 @@ All logs use `log/slog`, the structured logger of Go.
 ### Lifecycle
 
 A component has a lifecycle that does not block. `Start()` returns immediately.
-`Stop(ctx)` stops the component before a deadline.
+`Stop(ctx)` stops the component before a deadline. The `component` interface in
+`cmd/shutdown.go` has these two methods. A start command gives its components to
+`serve`. `serve` starts them, waits for the signal, then stops them with one
+context that ends after `shutdownTimeout`.
 
 ### Filesystem access
 

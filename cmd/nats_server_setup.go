@@ -35,14 +35,14 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 )
 
-// natsLifecycle adapts the embedded NATS server to the Lifecycle interface.
-type natsLifecycle struct {
+// embeddedNATS adapts the embedded NATS server to the component interface.
+type embeddedNATS struct {
 	server *natsembedded.Server
 }
 
-func (n *natsLifecycle) Start() {}
+func (n *embeddedNATS) Start() {}
 
-func (n *natsLifecycle) Stop(
+func (n *embeddedNATS) Stop(
 	_ context.Context,
 ) {
 	n.server.Stop()

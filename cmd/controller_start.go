@@ -28,7 +28,6 @@ import (
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/controller/api"
-	"github.com/osapi-io/osapi/internal/daemon"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
@@ -92,8 +91,7 @@ var controllerStartCmd = &cobra.Command{
 			metricsServer.Start()
 		}
 
-		sm.Start()
-		daemon.Run(ctx, sm, func(shutdownCtx context.Context) {
+		serve(ctx, []component{sm}, func(shutdownCtx context.Context) {
 			if metricsServer != nil {
 				metricsServer.Stop(shutdownCtx)
 			}

@@ -22,45 +22,17 @@ package cmd
 
 import (
 	"context"
-	"sync"
 
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/controller/api"
-	"github.com/osapi-io/osapi/internal/daemon"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 	"github.com/osapi-io/osapi/internal/telemetry/tracing"
 )
-
-// compositeLifecycle manages multiple Lifecycle components, starting them
-// sequentially and stopping them concurrently.
-type compositeLifecycle struct {
-	components []daemon.Lifecycle
-}
-
-func (c *compositeLifecycle) Start() {
-	for _, comp := range c.components {
-		comp.Start()
-	}
-}
-
-func (c *compositeLifecycle) Stop(
-	ctx context.Context,
-) {
-	var wg sync.WaitGroup
-	for _, comp := range c.components {
-		wg.Add(1)
-		go func(lc daemon.Lifecycle) {
-			defer wg.Done()
-			lc.Stop(ctx)
-		}(comp)
-	}
-	wg.Wait()
-}
 
 // startCmd represents the top-level start command.
 var startCmd = &cobra.Command{
@@ -177,16 +149,8 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			}
 		}
 
-		composite := &compositeLifecycle{
-			components: []daemon.Lifecycle{
-				sm,
-				agentServer,
-				&natsLifecycle{server: natsServer},
-			},
-		}
-
-		composite.Start()
-		daemon.Run(ctx, composite, func(shutdownCtx context.Context) {
+		components := []component{sm, agentServer, &embeddedNATS{server: natsServer}}
+		serve(ctx, components, func(shutdownCtx context.Context) {
 			for _, s := range metricsServers {
 				s.Stop(shutdownCtx)
 			}
