@@ -216,7 +216,7 @@ Written once in the platform, so a behavior writes none of it:
 - **Routes**: a generated handler for each method, in `gen/api_<method>.go`. It
   decodes the typed input of the method from the path, the query or the body,
   and checks its tags. Then it gives the input to the runtime in
-  `internal/controller/api/behavior`. The runtime checks the permission and the
+  `internal/behavior/server`. The runtime checks the permission and the
   target, does the broadcast to `_all`, `_any` or a label, and makes the
   `{job_id, results[]}` envelope.
 - **Commands** with typed flags, the theme's table and `--json`.
@@ -266,7 +266,7 @@ From those, each behavior gets these tests, and you do not write them:
 
 The generated HTTP tests are tables of rows. Each row has the request, the
 token, the call that the job client expects and its answer, and the expected
-status and body. `internal/controller/api/behavior/apitest` runs them. Fix a
+status and body. `internal/behavior/server/servertest` runs them. Fix a
 failing generated test in the definition or in the generator, never in `gen/`.
 
 The fake host is `internal/behavior/behaviortest`. It has an in-memory

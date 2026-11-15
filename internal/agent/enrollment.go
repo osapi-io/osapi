@@ -32,10 +32,10 @@ import (
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go"
 
-	agentpki "github.com/osapi-io/osapi/internal/agent/pki"
 	"github.com/osapi-io/osapi/internal/job"
+	agentpki "github.com/osapi-io/osapi/internal/pki"
 
-	"github.com/osapi-io/osapi/internal/fsutil"
+	"github.com/osapi-io/osapi/internal/atomicfile"
 )
 
 // marshalJSONEnrollment is a package-level variable for testing the marshal error path.
@@ -266,7 +266,7 @@ func (a *Agent) handleEnrollmentResponse(
 		Bytes: controllerPubKey,
 	})
 
-	if err := fsutil.WriteFileAtomic(a.appFs, controllerPubPath, pubPEM, 0o644); err != nil {
+	if err := atomicfile.Write(a.appFs, controllerPubPath, pubPEM, 0o644); err != nil {
 		a.pkiLogger.Error(
 			"failed to save controller public key",
 			slog.String("path", controllerPubPath),

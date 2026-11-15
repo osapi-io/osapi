@@ -35,11 +35,11 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/command"
+	"github.com/osapi-io/osapi/internal/behavior/server"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all/gen"
 	"github.com/osapi-io/osapi/internal/behaviors/sysctl"
-	behaviorcli "github.com/osapi-io/osapi/internal/cli/behavior"
-	behaviorapi "github.com/osapi-io/osapi/internal/controller/api/behavior"
 )
 
 // AllPublicTestSuite checks that every behavior all.go registers is valid
@@ -60,7 +60,7 @@ func (s *AllPublicTestSuite) TestEveryBehaviorIsValid() {
 
 func (s *AllPublicTestSuite) TestEveryRouteIsMounted() {
 	e := echo.New()
-	for _, register := range behaviorapi.Handler(slog.Default(), nil, "", nil) {
+	for _, register := range server.Handler(slog.Default(), nil, "", nil) {
 		register(e)
 	}
 	mounted := map[string]bool{}
@@ -73,7 +73,7 @@ func (s *AllPublicTestSuite) TestEveryRouteIsMounted() {
 			continue
 		}
 		for _, m := range b.Methods {
-			route := m.HTTPMethod() + " " + behaviorapi.Path(b, m)
+			route := m.HTTPMethod() + " " + server.Path(b, m)
 			s.Run(route, func() {
 				s.True(
 					mounted[route],
@@ -94,7 +94,7 @@ func (s *AllPublicTestSuite) TestEveryCommandIsAttached() {
 	nextNode := &cobra.Command{Use: "node"}
 	root.AddCommand(node, next)
 	next.AddCommand(nextNode)
-	s.Require().NoError(behaviorcli.Attach(node, nextNode, behaviorcli.Deps{}))
+	s.Require().NoError(command.Attach(node, nextNode, command.Deps{}))
 
 	for _, b := range behavior.All() {
 		if !b.CLI {

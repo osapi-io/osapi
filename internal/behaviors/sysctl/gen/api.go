@@ -5,15 +5,15 @@ package gen
 import (
 	"net/http"
 
-	behaviorapi "github.com/osapi-io/osapi/internal/controller/api/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/server"
 )
 
 // Routes are sysctl's API routes: each method's HTTP method, its path, the
 // permission a token needs, and its handler.
 func Routes(
-	s *behaviorapi.Server,
-) []behaviorapi.Route {
-	return []behaviorapi.Route{
+	s *server.Server,
+) []server.Route {
+	return []server.Route{
 		{
 			Method:     http.MethodGet,
 			Path:       "/api/next/node/:hostname/sysctl",
@@ -48,5 +48,5 @@ func Routes(
 }
 
 func init() {
-	behaviorapi.Register(Routes)
+	server.Register(Routes)
 }

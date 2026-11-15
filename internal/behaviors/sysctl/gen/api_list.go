@@ -5,16 +5,16 @@ package gen
 import (
 	"github.com/labstack/echo/v5"
 
+	"github.com/osapi-io/osapi/internal/behavior/server"
 	sysctl "github.com/osapi-io/osapi/internal/behaviors/sysctl"
-	behaviorapi "github.com/osapi-io/osapi/internal/controller/api/behavior"
 )
 
 // apiList serves GET /api/next/node/{hostname}/sysctl, which needs
 // sysctl:read: List the kernel's parameters and which osapi manages.
 func apiList(
-	s *behaviorapi.Server,
+	s *server.Server,
 ) echo.HandlerFunc {
-	return behaviorapi.Serve(s, sysctl.Behavior, "list", decodeList)
+	return server.Serve(s, sysctl.Behavior, "list", decodeList)
 }
 
 // decodeList builds ListInput from the request: prefix from the query, then
@@ -24,10 +24,10 @@ func decodeList(
 ) (sysctl.ListInput, string, bool) {
 	var in sysctl.ListInput
 
-	if msg, ok := behaviorapi.Query(c, "prefix", &in.Prefix); !ok {
+	if msg, ok := server.Query(c, "prefix", &in.Prefix); !ok {
 		return in, msg, false
 	}
-	if msg, ok := behaviorapi.Valid(in); !ok {
+	if msg, ok := server.Valid(in); !ok {
 		return in, msg, false
 	}
 

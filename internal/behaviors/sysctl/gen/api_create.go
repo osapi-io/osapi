@@ -5,16 +5,16 @@ package gen
 import (
 	"github.com/labstack/echo/v5"
 
+	"github.com/osapi-io/osapi/internal/behavior/server"
 	sysctl "github.com/osapi-io/osapi/internal/behaviors/sysctl"
-	behaviorapi "github.com/osapi-io/osapi/internal/controller/api/behavior"
 )
 
 // apiCreate serves POST /api/next/node/{hostname}/sysctl, which needs
 // sysctl:write: Manage a kernel parameter and apply it.
 func apiCreate(
-	s *behaviorapi.Server,
+	s *server.Server,
 ) echo.HandlerFunc {
-	return behaviorapi.Serve(s, sysctl.Behavior, "create", decodeCreate)
+	return server.Serve(s, sysctl.Behavior, "create", decodeCreate)
 }
 
 // decodeCreate builds CreateInput from the request: the JSON body, then checks
@@ -24,10 +24,10 @@ func decodeCreate(
 ) (sysctl.CreateInput, string, bool) {
 	var in sysctl.CreateInput
 
-	if msg, ok := behaviorapi.Body(c, &in); !ok {
+	if msg, ok := server.Body(c, &in); !ok {
 		return in, msg, false
 	}
-	if msg, ok := behaviorapi.Valid(in); !ok {
+	if msg, ok := server.Valid(in); !ok {
 		return in, msg, false
 	}
 

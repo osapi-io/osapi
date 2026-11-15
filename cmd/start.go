@@ -26,8 +26,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/controller/api"
+	"github.com/osapi-io/osapi/internal/daemon"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
@@ -37,7 +39,7 @@ import (
 // compositeLifecycle manages multiple Lifecycle components, starting them
 // sequentially and stopping them concurrently.
 type compositeLifecycle struct {
-	components []cli.Lifecycle
+	components []daemon.Lifecycle
 }
 
 func (c *compositeLifecycle) Start() {
@@ -52,7 +54,7 @@ func (c *compositeLifecycle) Stop(
 	var wg sync.WaitGroup
 	for _, comp := range c.components {
 		wg.Add(1)
-		go func(lc cli.Lifecycle) {
+		go func(lc daemon.Lifecycle) {
 			defer wg.Done()
 			lc.Stop(ctx)
 		}(comp)
@@ -176,7 +178,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 		}
 
 		composite := &compositeLifecycle{
-			components: []cli.Lifecycle{
+			components: []daemon.Lifecycle{
 				sm,
 				agentServer,
 				&natsLifecycle{server: natsServer},
@@ -184,14 +186,14 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 		}
 
 		composite.Start()
-		cli.RunServer(ctx, composite, func(shutdownCtx context.Context) {
+		daemon.Run(ctx, composite, func(shutdownCtx context.Context) {
 			for _, s := range metricsServers {
 				s.Stop(shutdownCtx)
 			}
 
 			_ = shutdownTracer(shutdownCtx)
-			cli.CloseNATSClient(agentBundle.nc)
-			cli.CloseNATSClient(controllerBundle.nc)
+			bus.Close(agentBundle.nc)
+			bus.Close(controllerBundle.nc)
 		})
 	},
 }

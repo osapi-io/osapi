@@ -32,8 +32,8 @@ import (
 
 	"github.com/avfs/avfs"
 
+	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/exec"
-	"github.com/osapi-io/osapi/internal/fsutil"
 	"github.com/osapi-io/osapi/internal/provider"
 )
 
@@ -116,7 +116,7 @@ func (d *Debian) Create(
 		return nil, fmt.Errorf("ntp create: create directory: %w", mkErr)
 	}
 
-	if writeErr := fsutil.WriteFileAtomic(
+	if writeErr := atomicfile.Write(
 		d.fs,
 		sourcesFile,
 		content,
@@ -161,7 +161,7 @@ func (d *Debian) Update(
 		return &UpdateResult{Changed: false}, nil
 	}
 
-	if writeErr := fsutil.WriteFileAtomic(
+	if writeErr := atomicfile.Write(
 		d.fs,
 		sourcesFile,
 		content,

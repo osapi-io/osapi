@@ -26,8 +26,8 @@ import (
 	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/spf13/cobra"
 
-	"github.com/osapi-io/osapi/internal/agent/pki"
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/pki"
 )
 
 // clientControllerKeyCmd represents the controller key parent command.

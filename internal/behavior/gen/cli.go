@@ -29,13 +29,13 @@ import (
 	"github.com/dave/jennifer/jen"
 
 	"github.com/osapi-io/osapi/internal/behavior"
-	behaviorcli "github.com/osapi-io/osapi/internal/cli/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/command"
 )
 
 const (
 	cobraPath       = "github.com/spf13/cobra"
-	behaviorcliPath = "github.com/osapi-io/osapi/internal/cli/behavior"
-	cmdtestPath     = "github.com/osapi-io/osapi/internal/cli/behavior/clitest"
+	commandPath     = "github.com/osapi-io/osapi/internal/behavior/command"
+	commandtestPath = "github.com/osapi-io/osapi/internal/behavior/command/commandtest"
 	suitePath       = "github.com/stretchr/testify/suite"
 )
 
@@ -56,7 +56,7 @@ var flagFuncs = map[reflect.Kind][2]string{
 
 // cliFlag is one input field's flag.
 type cliFlag struct {
-	behaviorcli.Flag
+	command.Flag
 	field reflect.StructField
 	local string
 }
@@ -67,7 +67,7 @@ func flags(
 	m *behavior.Method,
 ) ([]cliFlag, error) {
 	var out []cliFlag
-	for _, fl := range behaviorcli.Flags(m.In) {
+	for _, fl := range command.Flags(m.In) {
 		field := m.In.Field(fl.Index)
 		if _, ok := flagFuncs[field.Type.Kind()]; !ok {
 			return nil, fmt.Errorf(
@@ -103,7 +103,7 @@ func cliFile(
 	})
 
 	initBody := []jen.Code{
-		jen.Qual(behaviorcliPath, "Register").
+		jen.Qual(commandPath, "Register").
 			Call(jen.Lit(b.Group), jen.Lit(b.Next), jen.Id(parent)),
 	}
 
@@ -131,7 +131,7 @@ func cliFile(
 		if len(run) > 0 {
 			run = append(run, jen.Line())
 		}
-		run = append(run, jen.Qual(behaviorcliPath, "Run").Call(
+		run = append(run, jen.Qual(commandPath, "Run").Call(
 			jen.Id("cmd"),
 			jen.Qual(pkg, "Behavior"),
 			jen.Lit(m.Name),
@@ -184,17 +184,17 @@ func cliTestFile(
 	for _, m := range b.Methods {
 		cmdPath := strings.Fields(strings.TrimPrefix(b.CLICommand(m), commandPrefix(b)+" "))[1:]
 		for _, ex := range m.Examples {
-			method, path, body, err := behaviorcli.Build(b, m, "server1", ex.Input)
+			method, path, body, err := command.Build(b, m, "server1", ex.Input)
 			if err != nil {
 				return nil, fmt.Errorf("%s: example %q: %w", b.Operation(m), ex.Doc, err)
 			}
-			want := jen.Qual(cmdtestPath, "Request").Add(multi("{", "}",
+			want := jen.Qual(commandtestPath, "Request").Add(multi("{", "}",
 				jen.Id("Method").Op(":").Lit(method),
 				jen.Id("Path").Op(":").Lit(path),
 				jen.Id("Body").Op(":").Add(raw(string(body))),
 			))
 			args := append(append([]string{}, cmdPath...), "--target", "server1")
-			args = append(args, behaviorcli.Args(ex.Input)...)
+			args = append(args, command.Args(ex.Input)...)
 			argList := make([]jen.Code, 0, len(args))
 			for _, a := range args {
 				argList = append(argList, jen.Lit(a))
@@ -214,14 +214,14 @@ func cliTestFile(
 		jen.Id("tests").Op(":=").Index().Struct(
 			jen.Id("name").String(),
 			jen.Id("args").Index().String(),
-			jen.Id("want").Qual(cmdtestPath, "Request"),
+			jen.Id("want").Qual(commandtestPath, "Request"),
 		).Add(multi("{", "}", rows...)),
 		jen.Line(),
 		jen.For(jen.List(jen.Id("_"), jen.Id("tc")).Op(":=").Range().Id("tests")).Block(
 			jen.Id("s").Dot("Run").Call(jen.Id("tc").Dot("name"), jen.Func().Params().Block(
 				jen.Id("s").Dot("Equal").Call(
 					jen.Id("tc").Dot("want"),
-					jen.Qual(cmdtestPath, "Sent").
+					jen.Qual(commandtestPath, "Sent").
 						Call(jen.Id("s").Dot("T").Call(), jen.Id("tc").Dot("args")),
 				),
 			)),

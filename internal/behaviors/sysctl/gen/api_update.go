@@ -5,16 +5,16 @@ package gen
 import (
 	"github.com/labstack/echo/v5"
 
+	"github.com/osapi-io/osapi/internal/behavior/server"
 	sysctl "github.com/osapi-io/osapi/internal/behaviors/sysctl"
-	behaviorapi "github.com/osapi-io/osapi/internal/controller/api/behavior"
 )
 
 // apiUpdate serves PUT /api/next/node/{hostname}/sysctl/{key}, which needs
 // sysctl:write: Set a kernel parameter, manage it, and apply it.
 func apiUpdate(
-	s *behaviorapi.Server,
+	s *server.Server,
 ) echo.HandlerFunc {
-	return behaviorapi.Serve(s, sysctl.Behavior, "update", decodeUpdate)
+	return server.Serve(s, sysctl.Behavior, "update", decodeUpdate)
 }
 
 // decodeUpdate builds UpdateInput from the request: the JSON body, then key
@@ -24,13 +24,13 @@ func decodeUpdate(
 ) (sysctl.UpdateInput, string, bool) {
 	var in sysctl.UpdateInput
 
-	if msg, ok := behaviorapi.Body(c, &in); !ok {
+	if msg, ok := server.Body(c, &in); !ok {
 		return in, msg, false
 	}
-	if msg, ok := behaviorapi.Param(c, "key", &in.Key); !ok {
+	if msg, ok := server.Param(c, "key", &in.Key); !ok {
 		return in, msg, false
 	}
-	if msg, ok := behaviorapi.Valid(in); !ok {
+	if msg, ok := server.Valid(in); !ok {
 		return in, msg, false
 	}
 

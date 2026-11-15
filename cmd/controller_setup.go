@@ -37,15 +37,15 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
-	agentPKI "github.com/osapi-io/osapi/internal/agent/pki"
 	"github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/behavior/server"
+	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller"
 	"github.com/osapi-io/osapi/internal/controller/api"
 	agentAPI "github.com/osapi-io/osapi/internal/controller/api/agent"
 	auditAPI "github.com/osapi-io/osapi/internal/controller/api/audit"
-	behaviorAPI "github.com/osapi-io/osapi/internal/controller/api/behavior"
 	factsAPI "github.com/osapi-io/osapi/internal/controller/api/facts"
 	"github.com/osapi-io/osapi/internal/controller/api/file"
 	"github.com/osapi-io/osapi/internal/controller/api/health"
@@ -70,8 +70,10 @@ import (
 	uihandler "github.com/osapi-io/osapi/internal/controller/api/ui"
 	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	"github.com/osapi-io/osapi/internal/controller/notify"
+	"github.com/osapi-io/osapi/internal/daemon"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
+	agentPKI "github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 	"github.com/osapi-io/osapi/internal/validation"
@@ -80,7 +82,7 @@ import (
 
 // ServerManager responsible for Server operations.
 type ServerManager interface {
-	cli.Lifecycle
+	daemon.Lifecycle
 	// RegisterHandlers registers a list of handlers with the Echo instance.
 	RegisterHandlers(handlers []func(e *echo.Echo))
 }
@@ -270,7 +272,7 @@ func connectNATSBundle(
 	concreteNC := natsclient.New(log, &natsclient.Options{
 		Host: connCfg.Host,
 		Port: connCfg.Port,
-		Auth: cli.BuildNATSAuthOptions(connCfg.Auth),
+		Auth: bus.AuthOptions(connCfg.Auth),
 		Name: connCfg.ClientName,
 	})
 
@@ -280,13 +282,13 @@ func connectNATSBundle(
 
 	var nc NATSClient = concreteNC
 
-	jobKVConfig := cli.BuildJobKVConfig(namespace, appConfig.NATS.KV)
+	jobKVConfig := bus.JobKV(namespace, appConfig.NATS.KV)
 	jobsKV, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, jobKVConfig)
 	if err != nil {
 		cli.LogFatal(log, "failed to create KV bucket", err)
 	}
 
-	registryKVConfig := cli.BuildRegistryKVConfig(namespace, appConfig.NATS.Registry)
+	registryKVConfig := bus.RegistryKV(namespace, appConfig.NATS.Registry)
 	registryKV, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, registryKVConfig)
 	if err != nil {
 		cli.LogFatal(log, "failed to create registry KV bucket", err)
@@ -294,7 +296,7 @@ func connectNATSBundle(
 
 	var factsKV jetstream.KeyValue
 	if appConfig.NATS.Facts.Bucket != "" {
-		factsKVConfig := cli.BuildFactsKVConfig(namespace, appConfig.NATS.Facts)
+		factsKVConfig := bus.FactsKV(namespace, appConfig.NATS.Facts)
 		factsKV, err = nc.CreateOrUpdateKVBucketWithConfig(ctx, factsKVConfig)
 		if err != nil {
 			cli.LogFatal(log, "failed to create facts KV bucket", err)
@@ -303,7 +305,7 @@ func connectNATSBundle(
 
 	var stateKV jetstream.KeyValue
 	if appConfig.NATS.State.Bucket != "" {
-		stateKVConfig := cli.BuildStateKVConfig(namespace, appConfig.NATS.State)
+		stateKVConfig := bus.StateKV(namespace, appConfig.NATS.State)
 		stateKV, err = nc.CreateOrUpdateKVBucketWithConfig(ctx, stateKVConfig)
 		if err != nil {
 			cli.LogFatal(log, "failed to create state KV bucket", err)
@@ -313,7 +315,7 @@ func connectNATSBundle(
 	// Create or update Object Store bucket for file management API
 	var objStore file.ObjectStoreManager
 	if appConfig.NATS.Objects.Bucket != "" {
-		objStoreConfig := cli.BuildObjectStoreConfig(namespace, appConfig.NATS.Objects)
+		objStoreConfig := bus.ObjectStore(namespace, appConfig.NATS.Objects)
 		var objErr error
 		objStore, objErr = nc.CreateOrUpdateObjectStore(ctx, objStoreConfig)
 		if objErr != nil {
@@ -674,7 +676,7 @@ func createAuditStore(
 		return nil, nil
 	}
 
-	auditStreamConfig := cli.BuildAuditStreamConfig(
+	auditStreamConfig := bus.AuditStream(
 		namespace,
 		appConfig.NATS.Audit,
 	)
@@ -782,7 +784,7 @@ func registerControllerHandlers(
 	// Behaviors: each one's generated routes, registered by the gen packages
 	// internal/behaviors/all/gen imports, served under /api/next beside the
 	// hand-written routes.
-	handlers = append(handlers, behaviorAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, server.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, ntpAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, powerAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, timezoneAPI.Handler(log, jc, signingKey, customRoles)...)
@@ -837,7 +839,7 @@ func setupEnrollmentWatcher(
 	enrollLog := log
 
 	// Create enrollment KV bucket.
-	enrollmentKVConfig := cli.BuildEnrollmentKVConfig(namespace, appConfig.NATS.Enrollment)
+	enrollmentKVConfig := bus.EnrollmentKV(namespace, appConfig.NATS.Enrollment)
 	enrollmentKV, err := b.nc.CreateOrUpdateKVBucketWithConfig(ctx, enrollmentKVConfig)
 	if err != nil {
 		enrollLog.Warn(

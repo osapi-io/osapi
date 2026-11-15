@@ -31,8 +31,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
-	"github.com/osapi-io/osapi/internal/fsutil"
 )
 
 // marshalJSON is a package-level variable for testing the marshal error path.
@@ -120,7 +120,7 @@ func (p *Service) Deploy(
 		return nil, fmt.Errorf("file deploy: create directory %q: %w", dir, err)
 	}
 
-	if err := fsutil.WriteFileAtomic(p.fs, req.Path, content, mode); err != nil {
+	if err := atomicfile.Write(p.fs, req.Path, content, mode); err != nil {
 		return nil, fmt.Errorf("file deploy: write file %q: %w", req.Path, err)
 	}
 

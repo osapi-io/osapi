@@ -5,17 +5,17 @@ package gen
 import (
 	"github.com/labstack/echo/v5"
 
+	"github.com/osapi-io/osapi/internal/behavior/server"
 	sysctl "github.com/osapi-io/osapi/internal/behaviors/sysctl"
-	behaviorapi "github.com/osapi-io/osapi/internal/controller/api/behavior"
 )
 
 // apiGet serves GET /api/next/node/{hostname}/sysctl/{key}, which needs
 // sysctl:read: Get a kernel parameter's current value, and whether osapi
 // manages it.
 func apiGet(
-	s *behaviorapi.Server,
+	s *server.Server,
 ) echo.HandlerFunc {
-	return behaviorapi.Serve(s, sysctl.Behavior, "get", decodeGet)
+	return server.Serve(s, sysctl.Behavior, "get", decodeGet)
 }
 
 // decodeGet builds GetInput from the request: key from the path, then checks
@@ -25,10 +25,10 @@ func decodeGet(
 ) (sysctl.GetInput, string, bool) {
 	var in sysctl.GetInput
 
-	if msg, ok := behaviorapi.Param(c, "key", &in.Key); !ok {
+	if msg, ok := server.Param(c, "key", &in.Key); !ok {
 		return in, msg, false
 	}
-	if msg, ok := behaviorapi.Valid(in); !ok {
+	if msg, ok := server.Valid(in); !ok {
 		return in, msg, false
 	}
 

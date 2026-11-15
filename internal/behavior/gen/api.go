@@ -33,8 +33,8 @@ import (
 	"github.com/dave/jennifer/jen"
 
 	"github.com/osapi-io/osapi/internal/behavior"
-	behaviorcli "github.com/osapi-io/osapi/internal/cli/behavior"
-	behaviorapi "github.com/osapi-io/osapi/internal/controller/api/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/command"
+	"github.com/osapi-io/osapi/internal/behavior/server"
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
@@ -73,7 +73,7 @@ func apiFile(
 	for _, m := range b.Methods {
 		routes = append(routes, multi("{", "}",
 			jen.Id("Method").Op(":").Qual(httpPath, methodConst(m)),
-			jen.Id("Path").Op(":").Lit(behaviorapi.Path(b, m)),
+			jen.Id("Path").Op(":").Lit(server.Path(b, m)),
 			jen.Id("Permission").Op(":").Lit(b.Permission(m.Verb)),
 			jen.Id("Handler").Op(":").Id(handlerName(m)).Call(jen.Id("s")),
 		))
@@ -81,12 +81,12 @@ func apiFile(
 
 	comment(f, fmt.Sprintf("Routes are %s's API routes: each method's HTTP method, its path, the "+
 		"permission a token needs, and its handler.", b.Name))
-	f.Func().Id("Routes").Add(params(jen.Id("s").Op("*").Qual(apiPath, "Server"))).
-		Index().Qual(apiPath, "Route").Block(
-		jen.Return(jen.Index().Qual(apiPath, "Route").Add(multi("{", "}", routes...))),
+	f.Func().Id("Routes").Add(params(jen.Id("s").Op("*").Qual(serverPath, "Server"))).
+		Index().Qual(serverPath, "Route").Block(
+		jen.Return(jen.Index().Qual(serverPath, "Route").Add(multi("{", "}", routes...))),
 	)
 	f.Line()
-	f.Func().Id("init").Params().Block(jen.Qual(apiPath, "Register").Call(jen.Id("Routes")))
+	f.Func().Id("init").Params().Block(jen.Qual(serverPath, "Register").Call(jen.Id("Routes")))
 
 	return f
 }
@@ -103,15 +103,15 @@ func apiMethodFile(
 	comment(f, fmt.Sprintf("%s serves %s %s, which needs %s: %s.",
 		handlerName(m), m.HTTPMethod(), b.Route(m), b.Permission(m.Verb),
 		strings.TrimSuffix(m.Doc, ".")))
-	f.Func().Id(handlerName(m)).Add(params(jen.Id("s").Op("*").Qual(apiPath, "Server"))).
+	f.Func().Id(handlerName(m)).Add(params(jen.Id("s").Op("*").Qual(serverPath, "Server"))).
 		Qual(echoPath, "HandlerFunc").Block(
-		jen.Return(jen.Qual(apiPath, "Serve").Call(
+		jen.Return(jen.Qual(serverPath, "Serve").Call(
 			jen.Id("s"), jen.Qual(pkgPath(b), "Behavior"), jen.Lit(m.Name), jen.Id(decoderName(m)),
 		)),
 	)
 	f.Line()
 
-	fls := behaviorcli.Flags(m.In)
+	fls := command.Flags(m.In)
 	if len(fls) == 0 && m.In.NumField() == 0 {
 		comment(f, fmt.Sprintf("%s builds %s, which takes nothing from the request.",
 			decoderName(m), m.In.Name()))
@@ -134,14 +134,14 @@ func apiMethodFile(
 
 	if m.Verb == behavior.VerbWrite {
 		from = append(from, "the JSON body")
-		step(jen.Qual(apiPath, "Body").Call(jen.Id("c"), jen.Op("&").Id("in")))
+		step(jen.Qual(serverPath, "Body").Call(jen.Id("c"), jen.Op("&").Id("in")))
 	} else {
 		for _, fl := range fls {
 			if fl.JSON == m.KeyField {
 				continue
 			}
 			from = append(from, fl.JSON+" from the query")
-			step(jen.Qual(apiPath, "Query").Call(
+			step(jen.Qual(serverPath, "Query").Call(
 				jen.Id("c"), jen.Lit(fl.JSON), jen.Op("&").Id("in").Dot(m.In.Field(fl.Index).Name),
 			))
 		}
@@ -152,11 +152,11 @@ func apiMethodFile(
 			return nil, fmt.Errorf("%s: key %q is not an input field", b.Operation(m), m.KeyField)
 		}
 		from = append(from, m.KeyField+" from the path")
-		step(jen.Qual(apiPath, "Param").Call(
+		step(jen.Qual(serverPath, "Param").Call(
 			jen.Id("c"), jen.Lit(m.KeyField), jen.Op("&").Id("in").Dot(field.Name),
 		))
 	}
-	step(jen.Qual(apiPath, "Valid").Call(jen.Id("in")))
+	step(jen.Qual(serverPath, "Valid").Call(jen.Id("in")))
 
 	comment(f, fmt.Sprintf("%s builds %s from the request: %s, then checks its validate tags.",
 		decoderName(m), m.In.Name(), strings.Join(from, ", then ")))
@@ -179,7 +179,7 @@ func apiTestFile(
 	for _, m := range b.Methods {
 		rows = append(rows, multi("{", "}",
 			jen.Id("method").Op(":").Qual(httpPath, methodConst(m)),
-			jen.Id("path").Op(":").Lit(behaviorapi.Path(b, m)),
+			jen.Id("path").Op(":").Lit(server.Path(b, m)),
 			jen.Id("permission").Op(":").Lit(b.Permission(m.Verb)),
 		))
 	}
@@ -188,7 +188,7 @@ func apiTestFile(
 	f.Line()
 	f.Func().Params(jen.Id("s").Op("*").Id("APIPublicTestSuite")).Id("TestRoutes").Params().Block(
 		jen.Id("routes").Op(":=").Qual(pkgPath(b)+"/gen", "Routes").Call(
-			jen.Qual(apiPath, "NewServer").Call(
+			jen.Qual(serverPath, "New").Call(
 				jen.Qual("log/slog", "Default").Call(), jen.Nil(), jen.Lit(""), jen.Nil(),
 			),
 		),
@@ -267,11 +267,11 @@ func apiMethodTestFile(
 	f.Type().Id(name).Struct(
 		jen.Qual(suitePath, "Suite"),
 		jen.Line(),
-		jen.Id("api").Op("*").Qual(apitestPath, "Harness"),
+		jen.Id("api").Op("*").Qual(servertestPath, "Harness"),
 	)
 	f.Line()
 	f.Func().Params(jen.Id("s").Op("*").Id(name)).Id("SetupSuite").Params().Block(
-		jen.Id("s").Dot("api").Op("=").Qual(apitestPath, "New").Call(
+		jen.Id("s").Dot("api").Op("=").Qual(servertestPath, "New").Call(
 			jen.Id("s").Dot("T").Call(),
 			jen.Lit(strings.TrimPrefix(pkgPath(b), module+"/")+"/gen/"+specFile(b)),
 			jen.Qual(pkgPath(b)+"/gen", "Routes"),
@@ -284,7 +284,7 @@ func apiMethodTestFile(
 		f.Func().Params(jen.Id("s").Op("*").Id(name)).Id(test).Params().Block(
 			jen.Id("s").Dot("api").Dot("Run").Call(
 				jen.Id("s").Dot("T").Call(),
-				jen.Index().Qual(apitestPath, "Case").Add(multi("{", "}", render(cases)...)),
+				jen.Index().Qual(servertestPath, "Case").Add(multi("{", "}", render(cases)...)),
 			),
 		)
 	}
@@ -335,8 +335,8 @@ func responseCases(
 			" is broadcast, every host's result is returned"
 		all.job = jobCall(b, m, "_all", ex.Input,
 			completed("server1", string(out)),
-			jen.Qual(apitestPath, "Skipped").Call(jen.Lit("server2")),
-			jen.Qual(apitestPath, "Failed").Call(jen.Lit("server3"), jen.Lit("boom")),
+			jen.Qual(servertestPath, "Skipped").Call(jen.Lit("server2")),
+			jen.Qual(servertestPath, "Failed").Call(jen.Lit("server3"), jen.Lit("boom")),
 		)
 		all.code = http.StatusOK
 		all.wantBody = body(append(rows(m, "server1", out),
@@ -359,26 +359,46 @@ func responseCases(
 		c.name, c.job, c.code, c.wantBody = name, job, code, wantBody
 		cases = append(cases, c)
 	}
-	add(base, "when the host skips it, its row says skipped",
-		jobCall(b, m, "server1", input, jen.Qual(apitestPath, "Skipped").Call(jen.Lit("server1"))),
-		http.StatusOK, body([]map[string]any{failedRow("server1", "skipped", "unsupported")}))
+	add(
+		base,
+		"when the host skips it, its row says skipped",
+		jobCall(
+			b,
+			m,
+			"server1",
+			input,
+			jen.Qual(servertestPath, "Skipped").Call(jen.Lit("server1")),
+		),
+		http.StatusOK,
+		body([]map[string]any{failedRow("server1", "skipped", "unsupported")}),
+	)
 	add(base, "when the host fails it, its row says failed",
 		jobCall(b, m, "server1", input,
-			jen.Qual(apitestPath, "Failed").Call(jen.Lit("server1"), jen.Lit("boom"))),
+			jen.Qual(servertestPath, "Failed").Call(jen.Lit("server1"), jen.Lit("boom"))),
 		http.StatusOK, body([]map[string]any{failedRow("server1", "failed", "boom")}))
-	add(base, "when the host never answers, its row says timeout",
-		jobCall(b, m, "server1", input, jen.Qual(apitestPath, "TimedOut").Call(jen.Lit("server1"))),
-		http.StatusOK, body([]map[string]any{failedRow("server1", "timeout", "")}))
+	add(
+		base,
+		"when the host never answers, its row says timeout",
+		jobCall(
+			b,
+			m,
+			"server1",
+			input,
+			jen.Qual(servertestPath, "TimedOut").Call(jen.Lit("server1")),
+		),
+		http.StatusOK,
+		body([]map[string]any{failedRow("server1", "timeout", "")}),
+	)
 	add(base, "when the job client fails, it is a 500",
-		failing(jobCall(b, m, "server1", input), jen.Qual(apitestPath, "ErrUnreachable")),
+		failing(jobCall(b, m, "server1", input), jen.Qual(servertestPath, "ErrUnreachable")),
 		http.StatusInternalServerError, "")
 	add(all, "when broadcast and the job client fails, it is a 500",
-		failing(jobCall(b, m, "_all", input), jen.Qual(apitestPath, "ErrUnreachable")),
+		failing(jobCall(b, m, "_all", input), jen.Qual(servertestPath, "ErrUnreachable")),
 		http.StatusInternalServerError, "")
 	if m.KeyField != "" {
 		add(base, "when the host does not have it, it is a 404",
 			failing(jobCall(b, m, "server1", input),
-				jen.Qual(apitestPath, "NotFound").Call(jen.Lit("server1"))),
+				jen.Qual(servertestPath, "NotFound").Call(jen.Lit("server1"))),
 			http.StatusNotFound, "")
 	}
 
@@ -414,7 +434,7 @@ func validationCases(
 	}
 	add(empty, "when the target is empty, it is a 400")
 
-	for _, fl := range behaviorcli.Flags(m.In) {
+	for _, fl := range command.Flags(m.In) {
 		if !fl.Required || fl.JSON == m.KeyField {
 			continue
 		}
@@ -429,7 +449,7 @@ func validationCases(
 		c := base
 		c.body = "{"
 		add(c, "when the body is not JSON, it is a 400")
-		for _, fl := range behaviorcli.Flags(m.In) {
+		for _, fl := range command.Flags(m.In) {
 			if fl.JSON == m.KeyField {
 				continue
 			}
@@ -492,7 +512,7 @@ func rbacCases(
 	admin.name, admin.token, admin.code = "when the token has the admin role, the request runs",
 		"Admin", http.StatusOK
 	admin.job = jobCall(b, m, "server1", firstInput(m),
-		jen.Qual(apitestPath, "Skipped").Call(jen.Lit("server1")))
+		jen.Qual(servertestPath, "Skipped").Call(jen.Lit("server1")))
 	admin.wantBody = body([]map[string]any{failedRow("server1", "skipped", "unsupported")})
 	cases = append(cases, admin)
 
@@ -528,7 +548,7 @@ func request(
 		c.body = string(data)
 	} else {
 		q := url.Values{}
-		for _, fl := range behaviorcli.Flags(m.In) {
+		for _, fl := range command.Flags(m.In) {
 			if fv := v.Field(fl.Index); fl.JSON != m.KeyField && !fv.IsZero() {
 				q.Set(fl.JSON, fmt.Sprint(fv.Interface()))
 			}
@@ -542,7 +562,7 @@ func request(
 	return c, nil
 }
 
-// render is each case as an apitest.Case literal.
+// render is each case as an servertest.Case literal.
 func render(
 	cases []httpCase,
 ) []jen.Code {
@@ -550,12 +570,12 @@ func render(
 	for _, c := range cases {
 		fields := []jen.Code{
 			jen.Id("Name").Op(":").Lit(c.name),
-			jen.Id("Request").Op(":").Qual(apitestPath, "Request").Add(multi("{", "}",
+			jen.Id("Request").Op(":").Qual(servertestPath, "Request").Add(multi("{", "}",
 				jen.Id("Method").Op(":").Qual(httpPath, "Method"+title(strings.ToLower(c.method))),
 				jen.Id("Path").Op(":").Lit(c.path),
 				bodyField(c.body),
 			)),
-			jen.Id("Token").Op(":").Qual(apitestPath, c.token),
+			jen.Id("Token").Op(":").Qual(servertestPath, c.token),
 		}
 		if c.job != nil {
 			fields = append(fields, jen.Id("Job").Op(":").Add(c.job))
@@ -580,7 +600,7 @@ func bodyField(
 	return jen.Id("Body").Op(":").Add(raw(body))
 }
 
-// jobCall is the apitest call the job client expects for input on target.
+// jobCall is the servertest call the job client expects for input on target.
 func jobCall(
 	b *behavior.Behavior,
 	m *behavior.Method,
@@ -598,7 +618,7 @@ func jobCall(
 	}
 	args := append([]jen.Code{jen.Lit(target), jen.Lit(b.Operation(m)), in}, replies...)
 
-	return jen.Qual(apitestPath, fn).Add(multi("(", ")", args...))
+	return jen.Qual(servertestPath, fn).Add(multi("(", ")", args...))
 }
 
 func failing(
@@ -612,7 +632,7 @@ func completed(
 	host string,
 	data string,
 ) jen.Code {
-	return jen.Qual(apitestPath, "Completed").Call(jen.Lit(host), raw(data))
+	return jen.Qual(servertestPath, "Completed").Call(jen.Lit(host), raw(data))
 }
 
 // rows are the result rows the handler makes of one host's output, as
@@ -694,7 +714,7 @@ func fieldByJSON(
 	t reflect.Type,
 	name string,
 ) (reflect.StructField, bool) {
-	for _, fl := range behaviorcli.Flags(t) {
+	for _, fl := range command.Flags(t) {
 		if fl.JSON == name {
 			return t.Field(fl.Index), true
 		}

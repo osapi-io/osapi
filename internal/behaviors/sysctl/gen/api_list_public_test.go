@@ -8,201 +8,201 @@ import (
 
 	suite "github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/behavior/server/servertest"
 	sysctl "github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/behaviors/sysctl/gen"
-	apitest "github.com/osapi-io/osapi/internal/controller/api/behavior/apitest"
 )
 
 type APIListPublicTestSuite struct {
 	suite.Suite
 
-	api *apitest.Harness
+	api *servertest.Harness
 }
 
 func (s *APIListPublicTestSuite) SetupSuite() {
-	s.api = apitest.New(s.T(), "internal/behaviors/sysctl/gen/api.next.yaml", gen.Routes)
+	s.api = servertest.New(s.T(), "internal/behaviors/sysctl/gen/api.next.yaml", gen.Routes)
 }
 
 // TestList sends GET /api/next/node/{hostname}/sysctl and checks each answer's
 // response.
 func (s *APIListPublicTestSuite) TestList() {
-	s.api.Run(s.T(), []apitest.Case{
+	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"Every parameter, and which osapi manages\" is sent, the host's result is returned",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/server1/sysctl",
 			},
-			Token: apitest.Read,
-			Job: apitest.Query(
+			Token: servertest.Read,
+			Job: servertest.Query(
 				"server1",
 				"sysctl.list",
 				sysctl.ListInput{},
-				apitest.Completed("server1", `[{"key":"kernel.panic","value":"0","managed":false},{"key":"net.ipv4.ip_forward","value":"1","managed":true},{"key":"net.ipv4.ping_group_range","value":"0 2147483647","managed":false}]`),
+				servertest.Completed("server1", `[{"key":"kernel.panic","value":"0","managed":false},{"key":"net.ipv4.ip_forward","value":"1","managed":true},{"key":"net.ipv4.ping_group_range","value":"0 2147483647","managed":false}]`),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"kernel.panic","managed":false,"status":"ok","value":"0"},{"hostname":"server1","key":"net.ipv4.ip_forward","managed":true,"status":"ok","value":"1"},{"hostname":"server1","key":"net.ipv4.ping_group_range","managed":false,"status":"ok","value":"0 2147483647"}]}`,
 		},
 		{
 			Name: "when the example \"Every parameter, and which osapi manages\" is broadcast, every host's result is returned",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/_all/sysctl",
 			},
-			Token: apitest.Read,
-			Job: apitest.Query(
+			Token: servertest.Read,
+			Job: servertest.Query(
 				"_all",
 				"sysctl.list",
 				sysctl.ListInput{},
-				apitest.Completed("server1", `[{"key":"kernel.panic","value":"0","managed":false},{"key":"net.ipv4.ip_forward","value":"1","managed":true},{"key":"net.ipv4.ping_group_range","value":"0 2147483647","managed":false}]`),
-				apitest.Skipped("server2"),
-				apitest.Failed("server3", "boom"),
+				servertest.Completed("server1", `[{"key":"kernel.panic","value":"0","managed":false},{"key":"net.ipv4.ip_forward","value":"1","managed":true},{"key":"net.ipv4.ping_group_range","value":"0 2147483647","managed":false}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"kernel.panic","managed":false,"status":"ok","value":"0"},{"hostname":"server1","key":"net.ipv4.ip_forward","managed":true,"status":"ok","value":"1"},{"hostname":"server1","key":"net.ipv4.ping_group_range","managed":false,"status":"ok","value":"0 2147483647"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
 			Name: "when the example \"One part of the tree\" is sent, the host's result is returned",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/server1/sysctl?prefix=net.ipv4",
 			},
-			Token: apitest.Read,
-			Job: apitest.Query(
+			Token: servertest.Read,
+			Job: servertest.Query(
 				"server1",
 				"sysctl.list",
 				sysctl.ListInput{Prefix: "net.ipv4"},
-				apitest.Completed("server1", `[{"key":"net.ipv4.ip_forward","value":"1","managed":true},{"key":"net.ipv4.ping_group_range","value":"0 2147483647","managed":false}]`),
+				servertest.Completed("server1", `[{"key":"net.ipv4.ip_forward","value":"1","managed":true},{"key":"net.ipv4.ping_group_range","value":"0 2147483647","managed":false}]`),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"net.ipv4.ip_forward","managed":true,"status":"ok","value":"1"},{"hostname":"server1","key":"net.ipv4.ping_group_range","managed":false,"status":"ok","value":"0 2147483647"}]}`,
 		},
 		{
 			Name: "when the example \"One part of the tree\" is broadcast, every host's result is returned",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/_all/sysctl?prefix=net.ipv4",
 			},
-			Token: apitest.Read,
-			Job: apitest.Query(
+			Token: servertest.Read,
+			Job: servertest.Query(
 				"_all",
 				"sysctl.list",
 				sysctl.ListInput{Prefix: "net.ipv4"},
-				apitest.Completed("server1", `[{"key":"net.ipv4.ip_forward","value":"1","managed":true},{"key":"net.ipv4.ping_group_range","value":"0 2147483647","managed":false}]`),
-				apitest.Skipped("server2"),
-				apitest.Failed("server3", "boom"),
+				servertest.Completed("server1", `[{"key":"net.ipv4.ip_forward","value":"1","managed":true},{"key":"net.ipv4.ping_group_range","value":"0 2147483647","managed":false}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"net.ipv4.ip_forward","managed":true,"status":"ok","value":"1"},{"hostname":"server1","key":"net.ipv4.ping_group_range","managed":false,"status":"ok","value":"0 2147483647"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
 			Name: "when the example \"A managed parameter the kernel does not have right now\" is sent, the host's result is returned",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/server1/sysctl?prefix=net.bridge",
 			},
-			Token: apitest.Read,
-			Job: apitest.Query(
+			Token: servertest.Read,
+			Job: servertest.Query(
 				"server1",
 				"sysctl.list",
 				sysctl.ListInput{Prefix: "net.bridge"},
-				apitest.Completed("server1", `[{"key":"net.bridge.bridge-nf-call-iptables","value":"1","managed":true}]`),
+				servertest.Completed("server1", `[{"key":"net.bridge.bridge-nf-call-iptables","value":"1","managed":true}]`),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"net.bridge.bridge-nf-call-iptables","managed":true,"status":"ok","value":"1"}]}`,
 		},
 		{
 			Name: "when the example \"A managed parameter the kernel does not have right now\" is broadcast, every host's result is returned",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/_all/sysctl?prefix=net.bridge",
 			},
-			Token: apitest.Read,
-			Job: apitest.Query(
+			Token: servertest.Read,
+			Job: servertest.Query(
 				"_all",
 				"sysctl.list",
 				sysctl.ListInput{Prefix: "net.bridge"},
-				apitest.Completed("server1", `[{"key":"net.bridge.bridge-nf-call-iptables","value":"1","managed":true}]`),
-				apitest.Skipped("server2"),
-				apitest.Failed("server3", "boom"),
+				servertest.Completed("server1", `[{"key":"net.bridge.bridge-nf-call-iptables","value":"1","managed":true}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"net.bridge.bridge-nf-call-iptables","managed":true,"status":"ok","value":"1"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
 			Name: "when the host skips it, its row says skipped",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/server1/sysctl",
 			},
-			Token: apitest.Read,
-			Job: apitest.Query(
+			Token: servertest.Read,
+			Job: servertest.Query(
 				"server1",
 				"sysctl.list",
 				sysctl.ListInput{},
-				apitest.Skipped("server1"),
+				servertest.Skipped("server1"),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
 		},
 		{
 			Name: "when the host fails it, its row says failed",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/server1/sysctl",
 			},
-			Token: apitest.Read,
-			Job: apitest.Query(
+			Token: servertest.Read,
+			Job: servertest.Query(
 				"server1",
 				"sysctl.list",
 				sysctl.ListInput{},
-				apitest.Failed("server1", "boom"),
+				servertest.Failed("server1", "boom"),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
 		},
 		{
 			Name: "when the host never answers, its row says timeout",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/server1/sysctl",
 			},
-			Token: apitest.Read,
-			Job: apitest.Query(
+			Token: servertest.Read,
+			Job: servertest.Query(
 				"server1",
 				"sysctl.list",
 				sysctl.ListInput{},
-				apitest.TimedOut("server1"),
+				servertest.TimedOut("server1"),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
 		},
 		{
 			Name: "when the job client fails, it is a 500",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/server1/sysctl",
 			},
-			Token: apitest.Read,
-			Job: apitest.Query(
+			Token: servertest.Read,
+			Job: servertest.Query(
 				"server1",
 				"sysctl.list",
 				sysctl.ListInput{},
-			).Fails(apitest.ErrUnreachable),
+			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
 		},
 		{
 			Name: "when broadcast and the job client fails, it is a 500",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/_all/sysctl",
 			},
-			Token: apitest.Read,
-			Job: apitest.Query(
+			Token: servertest.Read,
+			Job: servertest.Query(
 				"_all",
 				"sysctl.list",
 				sysctl.ListInput{},
-			).Fails(apitest.ErrUnreachable),
+			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
 		},
 	})
@@ -211,32 +211,32 @@ func (s *APIListPublicTestSuite) TestList() {
 // TestListValidationHTTP sends requests the API refuses before any job is
 // queued.
 func (s *APIListPublicTestSuite) TestListValidationHTTP() {
-	s.api.Run(s.T(), []apitest.Case{
+	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the target is not an agent, it is a 400",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/nowhere/sysctl",
 			},
-			Token:    apitest.Read,
+			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
 		},
 		{
 			Name: "when the target is empty, it is a 400",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node//sysctl",
 			},
-			Token:    apitest.Read,
+			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
 		},
 		{
 			Name: "when sent a prefix that is not a parameter name, it is a 400",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/server1/sysctl?prefix=..%2Fetc",
 			},
-			Token:    apitest.Read,
+			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
 		},
 	})
@@ -244,37 +244,37 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 
 // TestListRBACHTTP sends tokens that do not grant sysctl:read.
 func (s *APIListPublicTestSuite) TestListRBACHTTP() {
-	s.api.Run(s.T(), []apitest.Case{
+	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when there is no token, it is a 401",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/server1/sysctl",
 			},
-			Token:    apitest.NoToken,
+			Token:    servertest.NoToken,
 			WantCode: http.StatusUnauthorized,
 		},
 		{
 			Name: "when the token lacks sysctl:read, it is a 403",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/server1/sysctl",
 			},
-			Token:    apitest.Lacking,
+			Token:    servertest.Lacking,
 			WantCode: http.StatusForbidden,
 		},
 		{
 			Name: "when the token has the admin role, the request runs",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/next/node/server1/sysctl",
 			},
-			Token: apitest.Admin,
-			Job: apitest.Query(
+			Token: servertest.Admin,
+			Job: servertest.Query(
 				"server1",
 				"sysctl.list",
 				sysctl.ListInput{},
-				apitest.Skipped("server1"),
+				servertest.Skipped("server1"),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,

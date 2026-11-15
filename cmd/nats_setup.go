@@ -23,6 +23,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/job"
 )
@@ -53,7 +54,7 @@ embedded server, so this is needed only when the server is someone else's.`,
 			n.Host,
 			n.Port,
 			n.Namespace,
-			cli.BuildNATSAuthOptions(n.Auth),
+			bus.AuthOptions(n.Auth),
 		); err != nil {
 			cli.LogFatal(log, "failed to set up JetStream infrastructure", err)
 		}

@@ -31,9 +31,9 @@ import (
 
 	"github.com/osapi-io/osapi/internal/agent"
 	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
-	"github.com/osapi-io/osapi/internal/agent/pki"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/pki"
 )
 
 // EnrollmentRetryPublicTestSuite covers the republish that keeps a lost enrollment

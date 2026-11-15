@@ -91,7 +91,18 @@ just deps
   follows.
 - **`internal/behavior/`.** The framework that defines behaviors, and its tools:
   the host that a provider is built from, the test harnesses, the spec builder
-  and the generator.
+  and the generator. `command/` runs the generated commands, and `server/`
+  serves the generated routes.
+- **`internal/pki/`.** The keys and signatures of an agent and the controller.
+  Both processes use it.
+- **`internal/bus/`.** The NATS options, and the buckets and streams that osapi
+  makes. Each process that connects to NATS uses it.
+- **`internal/daemon/`.** It runs a server or an agent until its context ends,
+  then stops it.
+- **`internal/atomicfile/`.** It writes a file so that a reader sees the old
+  file or the new file, never a part.
+- **`internal/cli/`.** The output of the CLI: the theme, tables, help, errors
+  and logs.
 - **`internal/skills/`.** The agent skills, in `resources/`, and the code that
   installs them (`osapi init`) and serves them (`osapi skill`). Each skill is
   one directory, with its references and its evals.
@@ -110,6 +121,22 @@ just deps
 - **`internal/` is all the code that makes osapi work:** the agent, the
   controller, the job system, configuration, telemetry and behaviors. No code
   outside this module imports it, so it can change freely.
+- **One process, one tree.** `internal/agent/` and `internal/controller/` never
+  import each other. Code that both use goes in a top-level package, for example
+  `internal/pki/`, `internal/bus/` or `internal/job/`.
+- **One kind of thing in a package.** Its name tells what it holds. Do not make
+  a package named `util`, `common`, `helpers` or `shared`.
+- **No directory that only holds other packages.** Put a package under a
+  different package only when the parent is a real package that it belongs to,
+  for example `internal/behavior/command/`. A directory that has no Go code of
+  its own does not group packages.
+- **The name of a package is the last part of its path.** A name does not repeat
+  the name of its package: `atomicfile.Write`, not `atomicfile.WriteFileAtomic`.
+- **Do not make a package that its callers must import with an alias.** If two
+  packages have the same name and a file imports both, rename one of them.
+- **Some old packages do not obey these rules yet.**
+  [#717](https://github.com/osapi-io/osapi/issues/717) lists them. Obey the
+  rules in a new package.
 - **A package that only one tree uses goes in that tree.** An example is
   `internal/behavior/behaviortest`, the fake host that only the tests of
   behaviors use. Do not put such a package at the top level, next to packages

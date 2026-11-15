@@ -32,7 +32,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	sysctlBehavior "github.com/osapi-io/osapi/internal/behaviors/sysctl"
-	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job"
@@ -62,8 +62,8 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/platform"
 )
 
-// Ensure cli import is used (for BuildFileStateKVConfig etc.)
-var _ = cli.BuildFileStateKVConfig
+// Ensure cli import is used (for FileStateKV etc.)
+var _ = bus.FileStateKV
 
 // dockerNewFn is injectable for testing.
 var dockerNewFn = dockerProv.New
@@ -397,7 +397,7 @@ func createFileProvider(
 		return nil, nil
 	}
 
-	fileStateKVConfig := cli.BuildFileStateKVConfig(namespace, appConfig.NATS.FileState)
+	fileStateKVConfig := bus.FileStateKV(namespace, appConfig.NATS.FileState)
 	fileStateKV, err := b.nc.CreateOrUpdateKVBucketWithConfig(ctx, fileStateKVConfig)
 	if err != nil {
 		log.Warn(

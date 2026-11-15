@@ -43,9 +43,9 @@ import (
 	"golang.org/x/tools/imports"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/command"
 	"github.com/osapi-io/osapi/internal/behavior/openapi"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
-	behaviorcli "github.com/osapi-io/osapi/internal/cli/behavior"
 	_ "github.com/osapi-io/osapi/internal/validation"
 )
 
@@ -116,8 +116,8 @@ func run(
 	for _, b := range behavior.All() {
 		// Every behavior has a docs page, internal ones included, so the
 		// docs list everything the binary has.
-		dir := behaviorcli.DocsDir(b)
-		if err := w.write(filepath.Join(dir, b.Name+".md"), []byte(behaviorcli.IndexPage(b))); err != nil {
+		dir := command.DocsDir(b)
+		if err := w.write(filepath.Join(dir, b.Name+".md"), []byte(command.IndexPage(b))); err != nil {
 			return err
 		}
 		if !b.API && !b.CLI {
@@ -136,7 +136,7 @@ func run(
 			continue
 		}
 		for i, m := range b.Methods {
-			page, err := behaviorcli.MethodPage(b, m, i+2)
+			page, err := command.MethodPage(b, m, i+2)
 			if err != nil {
 				return err
 			}
@@ -147,8 +147,8 @@ func run(
 		}
 	}
 
-	catalog := filepath.Join(filepath.Dir(behaviorcli.DocsDir(behavior.All()[0])), "_catalog.mdx")
-	if err := w.write(catalog, []byte(behaviorcli.CatalogPage(behavior.All()))); err != nil {
+	catalog := filepath.Join(filepath.Dir(command.DocsDir(behavior.All()[0])), "_catalog.mdx")
+	if err := w.write(catalog, []byte(command.CatalogPage(behavior.All()))); err != nil {
 		return err
 	}
 	if err := w.goFile("internal/behaviors/all/gen/gen.go", allFile(behavior.All())); err != nil {

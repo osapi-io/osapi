@@ -30,6 +30,7 @@ import (
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	natsembedded "github.com/osapi-io/nats-server/pkg/server"
 
+	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/job"
 )
@@ -60,7 +61,7 @@ func setupNATSServer(
 	namespace := appConfig.NATS.Server.Namespace
 	serverAuth := appConfig.NATS.Server.Auth
 
-	serverOpts, err := cli.BuildNATSServerOptions(host, port, storeDir, serverAuth)
+	serverOpts, err := bus.ServerOptions(host, port, storeDir, serverAuth)
 	if err != nil {
 		cli.LogFatal(log, "invalid NATS server auth", err)
 	}
@@ -75,7 +76,7 @@ func setupNATSServer(
 		cli.LogFatal(log, "failed to start embedded NATS server", err)
 	}
 
-	if err := setupJetStream(ctx, log, host, port, namespace, cli.BuildNATSServerClientAuth(serverAuth)); err != nil {
+	if err := setupJetStream(ctx, log, host, port, namespace, bus.ServerClientAuth(serverAuth)); err != nil {
 		s.Stop()
 		cli.LogFatal(log, "failed to setup JetStream infrastructure", err)
 	}
@@ -110,7 +111,7 @@ func setupJetStream(
 	if err := nc.Connect(); err != nil {
 		return fmt.Errorf("connect to NATS: %w", err)
 	}
-	defer cli.CloseNATSClient(nc)
+	defer bus.Close(nc)
 
 	// Apply namespace to infrastructure names
 	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
@@ -118,7 +119,7 @@ func setupJetStream(
 
 	// Create JOBS stream
 	streamMaxAge, _ := time.ParseDuration(appConfig.NATS.Stream.MaxAge)
-	streamStorage := cli.ParseJetstreamStorageType(appConfig.NATS.Stream.Storage)
+	streamStorage := bus.StorageType(appConfig.NATS.Stream.Storage)
 
 	var streamDiscard jetstream.DiscardPolicy
 	if appConfig.NATS.Stream.Discard == "new" {
@@ -142,19 +143,19 @@ func setupJetStream(
 	}
 
 	// Create KV buckets with configured settings
-	jobKVConfig := cli.BuildJobKVConfig(namespace, appConfig.NATS.KV)
+	jobKVConfig := bus.JobKV(namespace, appConfig.NATS.KV)
 	if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, jobKVConfig); err != nil {
 		return fmt.Errorf("create KV bucket %s: %w", jobKVConfig.Bucket, err)
 	}
 
-	responseKVConfig := cli.BuildResponseKVConfig(namespace, appConfig.NATS.KV)
+	responseKVConfig := bus.ResponseKV(namespace, appConfig.NATS.KV)
 	if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, responseKVConfig); err != nil {
 		return fmt.Errorf("create KV bucket %s: %w", responseKVConfig.Bucket, err)
 	}
 
 	// Create audit stream with configured settings
 	if appConfig.NATS.Audit.Stream != "" {
-		auditStreamConfig := cli.BuildAuditStreamConfig(
+		auditStreamConfig := bus.AuditStream(
 			namespace,
 			appConfig.NATS.Audit,
 		)
@@ -172,7 +173,7 @@ func setupJetStream(
 
 	// Create registry KV bucket with configured settings
 	if appConfig.NATS.Registry.Bucket != "" {
-		registryKVConfig := cli.BuildRegistryKVConfig(namespace, appConfig.NATS.Registry)
+		registryKVConfig := bus.RegistryKV(namespace, appConfig.NATS.Registry)
 		if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, registryKVConfig); err != nil {
 			return fmt.Errorf("create registry KV bucket %s: %w", registryKVConfig.Bucket, err)
 		}
@@ -180,7 +181,7 @@ func setupJetStream(
 
 	// Create facts KV bucket with configured settings
 	if appConfig.NATS.Facts.Bucket != "" {
-		factsKVConfig := cli.BuildFactsKVConfig(namespace, appConfig.NATS.Facts)
+		factsKVConfig := bus.FactsKV(namespace, appConfig.NATS.Facts)
 		if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, factsKVConfig); err != nil {
 			return fmt.Errorf("create facts KV bucket %s: %w", factsKVConfig.Bucket, err)
 		}
@@ -188,7 +189,7 @@ func setupJetStream(
 
 	// Create state KV bucket with configured settings (no TTL)
 	if appConfig.NATS.State.Bucket != "" {
-		stateKVConfig := cli.BuildStateKVConfig(namespace, appConfig.NATS.State)
+		stateKVConfig := bus.StateKV(namespace, appConfig.NATS.State)
 		if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, stateKVConfig); err != nil {
 			return fmt.Errorf("create state KV bucket %s: %w", stateKVConfig.Bucket, err)
 		}
@@ -196,7 +197,7 @@ func setupJetStream(
 
 	// Create Object Store bucket for file content
 	if appConfig.NATS.Objects.Bucket != "" {
-		objStoreConfig := cli.BuildObjectStoreConfig(namespace, appConfig.NATS.Objects)
+		objStoreConfig := bus.ObjectStore(namespace, appConfig.NATS.Objects)
 		if _, err := nc.CreateOrUpdateObjectStore(ctx, objStoreConfig); err != nil {
 			return fmt.Errorf("create Object Store bucket %s: %w", objStoreConfig.Bucket, err)
 		}
@@ -204,7 +205,7 @@ func setupJetStream(
 
 	// Create file-state KV bucket for deployment SHA tracking
 	if appConfig.NATS.FileState.Bucket != "" {
-		fileStateKVConfig := cli.BuildFileStateKVConfig(namespace, appConfig.NATS.FileState)
+		fileStateKVConfig := bus.FileStateKV(namespace, appConfig.NATS.FileState)
 		if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, fileStateKVConfig); err != nil {
 			return fmt.Errorf("create file-state KV bucket %s: %w", fileStateKVConfig.Bucket, err)
 		}
@@ -212,7 +213,7 @@ func setupJetStream(
 
 	// Create DLQ stream
 	dlqMaxAge, _ := time.ParseDuration(appConfig.NATS.DLQ.MaxAge)
-	dlqStorage := cli.ParseJetstreamStorageType(appConfig.NATS.DLQ.Storage)
+	dlqStorage := bus.StorageType(appConfig.NATS.DLQ.Storage)
 
 	dlqStreamConfig := jetstream.StreamConfig{
 		Name: streamName + "-DLQ",

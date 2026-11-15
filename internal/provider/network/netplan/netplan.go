@@ -35,9 +35,9 @@ import (
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/exec"
-	"github.com/osapi-io/osapi/internal/fsutil"
 )
 
 // marshalJSON is a package-level variable for testing the marshal error path.
@@ -82,7 +82,7 @@ func ApplyConfig(
 
 	// Write the config file. netplan reads the directory, so a half-written file
 	// is a config it may refuse or misparse.
-	if writeErr := fsutil.WriteFileAtomic(fs, path, content, 0o600); writeErr != nil {
+	if writeErr := atomicfile.Write(fs, path, content, 0o600); writeErr != nil {
 		return false, fmt.Errorf("netplan apply: write file: %w", writeErr)
 	}
 
