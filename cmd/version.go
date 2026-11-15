@@ -66,6 +66,8 @@ var (
 	versionCmd = &cobra.Command{
 		Use:   "version",
 		Short: "Display the version of osapi",
+		Example: `  osapi version
+  osapi version --json`,
 		Run: func(_ *cobra.Command, _ []string) {
 			v := buildVersion(version, commit, date, builtBy, treeState)
 

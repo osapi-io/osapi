@@ -27,7 +27,7 @@ import (
 // clientNodeMemoryCmd represents the clientNodeMemory command.
 var clientNodeMemoryCmd = &cobra.Command{
 	Use:   "memory",
-	Short: "Manage memory information",
+	Short: "Get the memory usage of target hosts",
 }
 
 func init() {

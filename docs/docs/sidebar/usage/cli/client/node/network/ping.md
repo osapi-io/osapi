@@ -1,6 +1,6 @@
 # Ping
 
-Ping the specified server.
+Ping an address from target hosts.
 
 ```bash
 osapi client node network ping

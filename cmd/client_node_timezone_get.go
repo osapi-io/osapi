@@ -30,8 +30,7 @@ import (
 var clientNodeTimezoneGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get system timezone",
-	Example: `  osapi client node timezone get [flags]
-  osapi client node timezone get
+	Example: `  osapi client node timezone get
   osapi client node timezone get --target web-01`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()

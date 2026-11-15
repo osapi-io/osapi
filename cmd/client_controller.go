@@ -27,7 +27,7 @@ import (
 // clientControllerCmd represents the controller parent command.
 var clientControllerCmd = &cobra.Command{
 	Use:   "controller",
-	Short: "Controller commands",
+	Short: "Read the health and the key of the controller",
 }
 
 func init() {

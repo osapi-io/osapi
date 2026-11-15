@@ -27,9 +27,7 @@ import (
 // clientHealthCmd represents the health parent command.
 var clientHealthCmd = &cobra.Command{
 	Use:   "health",
-	Short: "Health check commands",
-	Long: "`osapi client health` without a subcommand shows the subcommands. Use `osapi\n" +
-		"client health liveness` to do a liveness probe.",
+	Short: "Check the health of the controller",
 }
 
 func init() {

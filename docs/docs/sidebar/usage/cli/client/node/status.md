@@ -1,6 +1,6 @@
 # Status
 
-Status of the server.
+Get the status of target hosts.
 
 ```bash
 osapi client node status

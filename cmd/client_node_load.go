@@ -27,7 +27,7 @@ import (
 // clientNodeLoadCmd represents the clientNodeLoad command.
 var clientNodeLoadCmd = &cobra.Command{
 	Use:   "load",
-	Short: "Manage load average information",
+	Short: "Get the load averages of target hosts",
 }
 
 func init() {

@@ -27,7 +27,7 @@ import (
 // clientNodeUptimeCmd represents the clientNodeUptime command.
 var clientNodeUptimeCmd = &cobra.Command{
 	Use:   "uptime",
-	Short: "Manage uptime information",
+	Short: "Get the uptime of target hosts",
 }
 
 func init() {

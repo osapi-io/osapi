@@ -370,3 +370,45 @@ func (suite *HelpPublicTestSuite) TestGuardGroups() {
 		})
 	}
 }
+
+func (s *HelpPublicTestSuite) TestPlain() {
+	long := strings.Repeat("word ", 20)
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{
+			name: "when the text has a link keeps its text",
+			in:   "[File management](../features/file-management.md) tells how.",
+			want: "File management tells how.",
+		},
+		{
+			name: "when the text has code and bold removes the marks",
+			in:   "Give `--var key=value` and **Uses**.",
+			want: "Give --var key=value and Uses.",
+		},
+		{
+			name: "when a paragraph is long wraps it",
+			in:   strings.TrimSpace(long),
+			want: strings.TrimSpace(strings.Repeat("word ", 15)) + "\n" +
+				strings.TrimSpace(strings.Repeat("word ", 5)),
+		},
+		{
+			name: "when the text has two paragraphs keeps both",
+			in:   "One\ntwo.\n\nThree.",
+			want: "One two.\n\nThree.",
+		},
+		{
+			name: "when a word is longer than a line keeps it whole",
+			in:   strings.Repeat("x", 90) + " y",
+			want: strings.Repeat("x", 90) + "\ny",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, cli.Plain(tc.in))
+		})
+	}
+}

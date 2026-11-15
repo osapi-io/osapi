@@ -2,14 +2,13 @@
 
 System status and component health.
 
-The output has: a table of all components, the health of each component, the
-NATS connection, statistics for the streams and the KV buckets, the consumers
-and the job queue counts. This endpoint needs authentication. The component
-table shows all registered components with their health status, active
-conditions, uptime, and process resource usage. Sub-components are displayed
-nested under their parent with addresses where applicable. Connectivity checks
-show the controller's ability to reach NATS and KV dependencies. Use
-`osapi client agent list` for agent-specific details like labels and OS info.
+The table has each component that registered: its status, its active conditions,
+its uptime, and the CPU and memory of its process. Each sub-component is under
+its component, with its address and its URL. The connectivity rows tell if the
+controller can reach NATS and the KV buckets. The output also has the NATS
+connection, the streams, the KV buckets, the consumers and the counts of the job
+queue. The command needs a token. Use `osapi client agent list` for the labels
+and the OS of each agent.
 
 ```bash
 osapi client health status

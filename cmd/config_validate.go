@@ -40,7 +40,7 @@ type configCheck struct {
 var configValidateCmd = &cobra.Command{
 	Use:   "validate",
 	Short: "Check a config file before osapi starts with it",
-	Long:  "The command starts nothing. Exits 1 when the config is not valid.",
+	Long:  "The command starts nothing. It exits 1 when the config is not valid.",
 	Example: `  osapi config validate
   osapi config validate -f ./osapi.yaml --json`,
 	Args: cobra.NoArgs,

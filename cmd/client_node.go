@@ -28,8 +28,8 @@ import (
 var clientNodeCmd = &cobra.Command{
 	Use:   "node",
 	Short: "Send jobs to the agents of target hosts",
-	Long: "These commands send jobs to the agents of the target host. To find the\n" +
-		"agents in the registry, refer to the [Agent](../agent/agent.mdx) commands.",
+	Long: "To find the agents in the registry, use the [Agent](../agent/agent.mdx)\n" +
+		"commands.",
 }
 
 func init() {

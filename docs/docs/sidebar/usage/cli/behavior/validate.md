@@ -2,8 +2,8 @@
 
 Check every behavior against the rules the platform relies on.
 
-Exits 1 when anything fails, naming the behavior, the method and the rule. Each
-problem in `--json` has `behavior`, `method` (when the problem is in one),
+It exits 1 when a rule fails, and names the behavior, the method and the rule.
+Each problem in `--json` has `behavior`, `method` (when the problem is in one),
 `rule` and `message`. [The checks](../../../development/behaviors.md#the-checks)
 lists the rules.
 

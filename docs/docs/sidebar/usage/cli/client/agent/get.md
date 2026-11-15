@@ -3,10 +3,8 @@
 Get agent details.
 
 This command reads the agent heartbeat registry directly. It makes no job. The
-data comes from the last heartbeat of the agent. `agent get` shows a small set
-of data from the heartbeat registry, at once and with no job. `node status` runs
-a full system inspection through the job system, with disk usage and more
-metrics.
+data comes from the last heartbeat of the agent. `node status` runs a full
+inspection through the job system, with disk usage and more metrics.
 
 ```bash
 osapi client agent get [flags]

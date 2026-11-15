@@ -9,7 +9,6 @@ osapi client node timezone update
 ## Examples
 
 ```bash
-osapi client node timezone update [flags]
 osapi client node timezone update --target web-01 \
   --timezone America/New_York
 osapi client node timezone update --target _all \

@@ -35,15 +35,13 @@ import (
 var clientHealthStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "System status and component health",
-	Long: "The output has: a table of all components, the health of each component, the\n" +
-		"NATS connection, statistics for the streams and the KV buckets, the\n" +
-		"consumers and the job queue counts. This endpoint needs authentication. The\n" +
-		"component table shows all registered components with their health status,\n" +
-		"active conditions, uptime, and process resource usage. Sub-components are\n" +
-		"displayed nested under their parent with addresses where applicable.\n" +
-		"Connectivity checks show the controller's ability to reach NATS and KV\n" +
-		"dependencies. Use `osapi client agent list` for agent-specific details like\n" +
-		"labels and OS info.",
+	Long: "The table has each component that registered: its status, its active\n" +
+		"conditions, its uptime, and the CPU and memory of its process. Each\n" +
+		"sub-component is under its component, with its address and its URL. The\n" +
+		"connectivity rows tell if the controller can reach NATS and the KV buckets.\n" +
+		"The output also has the NATS connection, the streams, the KV buckets, the\n" +
+		"consumers and the counts of the job queue. The command needs a token. Use\n" +
+		"`osapi client agent list` for the labels and the OS of each agent.",
 	Example: `  osapi client health status
   osapi client health status --json`,
 	Run: func(cmd *cobra.Command, _ []string) {

@@ -31,8 +31,7 @@ import (
 var clientNodeTimezoneUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update system timezone",
-	Example: `  osapi client node timezone update [flags]
-  osapi client node timezone update --target web-01 \
+	Example: `  osapi client node timezone update --target web-01 \
     --timezone America/New_York
   osapi client node timezone update --target _all \
     --timezone UTC`,

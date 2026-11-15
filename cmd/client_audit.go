@@ -27,7 +27,7 @@ import (
 // clientAuditCmd represents the clientAudit command.
 var clientAuditCmd = &cobra.Command{
 	Use:   "audit",
-	Short: "Audit log endpoints",
+	Short: "Read the audit log",
 	Long:  "It needs the `audit:read` permission, which the admin role has by default.",
 }
 

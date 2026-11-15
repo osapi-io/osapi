@@ -9,7 +9,6 @@ osapi client node timezone get
 ## Examples
 
 ```bash
-osapi client node timezone get [flags]
 osapi client node timezone get
 osapi client node timezone get --target web-01
 ```

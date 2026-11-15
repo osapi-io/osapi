@@ -2,7 +2,7 @@
 
 Check a config file before osapi starts with it.
 
-The command starts nothing. Exits 1 when the config is not valid.
+The command starts nothing. It exits 1 when the config is not valid.
 
 ```bash
 osapi config validate

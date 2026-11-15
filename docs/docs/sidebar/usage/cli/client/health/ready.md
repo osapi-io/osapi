@@ -2,8 +2,7 @@
 
 Readiness probe.
 
-This endpoint checks that it can reach all its dependencies, NATS and the KV
-buckets.
+The command checks that the controller can reach NATS and the KV buckets.
 
 ```bash
 osapi client health ready

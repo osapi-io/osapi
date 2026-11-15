@@ -34,7 +34,7 @@ import (
 // clientNodeStatusGetCmd represents the clientNodeStatusGet command.
 var clientNodeStatusGetCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Status of the server",
+	Short: "Get the status of target hosts",
 	Example: `  osapi client node status
   osapi client node status --target _all`,
 	Run: func(cmd *cobra.Command, _ []string) {

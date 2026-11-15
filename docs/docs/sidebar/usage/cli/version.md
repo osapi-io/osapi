@@ -6,6 +6,13 @@ Display the version of osapi.
 osapi version
 ```
 
+## Examples
+
+```bash
+osapi version
+osapi version --json
+```
+
 ## Global flags
 
 | Flag               | Description                  | Default                 |
