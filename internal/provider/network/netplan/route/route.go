@@ -139,9 +139,10 @@ func (d *Debian) Get(
 	}, nil
 }
 
-// Create deploys new routes for an interface via Netplan. Fails if a
-// managed route file already exists for the interface, or if any route
-// targets the default gateway.
+// Create deploys new routes for an interface via Netplan. When a route file
+// already exists for the interface, it changes nothing and returns
+// Changed: false; Update replaces it. Fails if any route targets the default
+// gateway.
 func (d *Debian) Create(
 	ctx context.Context,
 	entry Entry,
