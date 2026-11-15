@@ -69,7 +69,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 		// MeterProvider can be injected into otelecho middleware.
 		var metricsServers []*metrics.Server
 		var controllerOpts []controller.Option
-		
+
 		if appConfig.Controller.Metrics.Enabled {
 			s := metrics.New(
 				appConfig.Controller.Metrics.Host,
@@ -141,7 +141,9 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 				s.SetReadinessFunc(func() error {
 					return nil
 				})
-				s.RegisterSubsystems(metrics.Subsystems(server.SubComponents(appConfig.NATS.Server)))
+				s.RegisterSubsystems(
+					metrics.Subsystems(server.SubComponents(appConfig.NATS.Server)),
+				)
 				s.Start()
 
 				metricsServers = append(metricsServers, s)
