@@ -26,25 +26,90 @@
 
 # Give your agent a fleet, not a shell
 
-osapi lets an AI agent manage Linux hosts through typed operations instead of a
-login. Every change is checked before it is queued, safe to run twice, and
-recorded. `osapi init` teaches your agent what osapi can do. Built for agents,
-there to empower humans.
+osapi lets an AI agent manage Linux hosts through typed operations, not through
+a login. Each operation is a **behavior**: one thing on a host, defined one
+time, with a fixed input and output. osapi checks each request before it queues
+it. A second run changes nothing. Each change is recorded.
 
-Why it's better:
+The agent does not guess commands. It asks osapi what exists, and osapi answers
+with the behaviors that this binary has. No model runs at run time. The same
+input always does the same thing.
 
-- It works in your harness. `osapi init` installs osapi's skills for Claude Code
-  or Codex.
-- Nothing is guessed. Every operation declares its input and output, and the
-  agent reads them from `osapi behavior get` and `osapi help --json`.
-- It is safe to run again. A repeated operation changes nothing the second time,
-  and every result says whether the host changed.
-- One host or the fleet: a hostname, any host, every host, or a label like
-  `group:web`.
-- A slow host never blocks you. A request becomes a job, and the agent on each
+## Why osapi
+
+- **The agent asks the binary.** `osapi behavior get` and `osapi help --json`
+  give each input, output and permission. The agent reads them before it acts.
+- **A second run is safe.** A write reports `changed: true` one time. After
+  that, it reports `changed: false`.
+- **One host or the fleet.** Target a hostname, any host, each host, or a label
+  such as `group:web`. Each host answers for itself.
+- **A slow host does not stop you.** A request becomes a job. The agent on each
   host runs it.
-- You can see exactly what happened. Every job is kept, with an audit log and
+- **You can see what occurred.** osapi keeps each job, an audit log, and
   OpenTelemetry traces.
+- **Root is a decision, not a default.** Command exec is off until you turn it
+  on. Work is under way so that the agent does not run as root: each behavior
+  declares the steps that need root, and an admin installs the sudoers rules for
+  the behaviors that a host needs.
+- **New behaviors are small.** A behavior is one directory. osapi generates its
+  API, CLI command, permission, docs and tests. An agent can build one with the
+  `build-a-behavior` skill.
+
+## What you can ask
+
+Install the skills with `osapi init`, then ask your agent:
+
+- _"Set vm.swappiness to 10 on each host in group:web, and tell me which hosts
+  changed."_
+- _"Which hosts have package updates?"_
+- _"Find each host with disk or memory pressure."_
+- _"Add a behavior that manages the message of the day."_
+
+The agent finds the behavior, runs it with `--json`, and reads the result of
+each host. You can run the same commands from the CLI.
+
+## Core concepts
+
+| Concept        | What it is                                                           |
+| -------------- | -------------------------------------------------------------------- |
+| Behavior       | One thing that osapi manages on a host, defined one time as typed Go |
+| Method         | A read or a write of a behavior, with a typed input and output       |
+| Building block | An internal behavior that other behaviors use, such as `managedfile` |
+| Job            | A request on the queue. The agent on each target host runs it        |
+| Target         | A hostname, `_any`, `_all`, or a label such as `group:web`           |
+| Skill          | What `osapi init` installs, so that an agent knows how to use osapi  |
+
+[Core concepts][concepts] tells more about each one.
+
+## Where osapi goes next
+
+osapi starts with behaviors on hosts. The next steps make it a platform for
+automation:
+
+- **Workflows.** A file with named, ordered behavior calls. osapi checks the
+  file before it runs. A step can run only where an earlier step changed
+  something. A second run reports `changed: false`.
+- **Behaviors on one system.** A behavior that runs on the controller, or on
+  your machine, and not on a fleet host. For example, it gets data from AWS. A
+  workflow then uses that data to configure the hosts.
+- **Scheduled workflows.** A workflow declares a schedule, and osapi runs it.
+- **More behaviors.** Each hand-written domain moves to a behavior, one at a
+  time.
+
+The [design pages][specs] in osapi-io/specs have the plans.
+
+## Alternatives
+
+[Cockpit] and [webmin] give a person a web console for one server. [Ansible]
+pushes configuration over SSH. osapi is built for an agent:
+
+- The agent asks osapi what exists, and gets typed answers for each host.
+- The agent can build a new behavior, and each osapi user then gets it.
+- There is no SSH. A request is a job, and a slow host does not block the
+  others.
+- Workflows of behaviors are next.
+
+[Why osapi][why] has the full comparison, and when to use the others.
 
 ## Getting started
 
@@ -60,6 +125,7 @@ The docs also tell how to build a behavior, by hand or with an agent.
 ## Documentation
 
 - [Getting Started]
+- [Core concepts][concepts]
 - [Working with an agent]
 - [Behaviors]
 - [API]
@@ -87,8 +153,11 @@ conventions, and the PR workflow.
 
 The [MIT] License.
 
+[ansible]: https://www.ansible.com/
 [api]: https://osapi-io.github.io/osapi/category/api
 [behaviors]: https://osapi-io.github.io/osapi/sidebar/behaviors/
+[cockpit]: https://cockpit-project.org/
+[concepts]: https://osapi-io.github.io/osapi/sidebar/concepts
 [getting started]: https://osapi-io.github.io/osapi/
 [gohai]: https://github.com/osapi-io/gohai
 [mit]: LICENSE
@@ -100,4 +169,6 @@ The [MIT] License.
 [sdk]: https://osapi-io.github.io/osapi/sidebar/sdk
 [specs]: https://github.com/osapi-io/specs
 [usage]: https://osapi-io.github.io/osapi/sidebar/usage
+[webmin]: https://webmin.com/
+[why]: https://osapi-io.github.io/osapi/#why-osapi
 [working with an agent]: https://osapi-io.github.io/osapi/sidebar/usage/agents

@@ -10,10 +10,18 @@ title: Home
 
 # Give your agent a fleet, not a shell
 
-osapi manages Linux hosts through typed operations, not through a login. osapi
-checks each change before it puts the change on the queue. You can run each
-change twice safely, and osapi records each change. An agent uses osapi through
-the skills that `osapi init` installs. A person uses the same CLI.
+osapi manages Linux hosts through typed operations, not through a login. Each
+operation is a **behavior**: one thing on a host, defined one time, with a fixed
+input and output. osapi checks each change before it puts the change on the
+queue. A second run changes nothing, and osapi records each change.
+
+An agent uses osapi through the skills that `osapi init` installs. The agent
+does not guess commands. It asks osapi which behaviors exist, and what each one
+accepts. A person uses the same CLI.
+
+osapi starts with behaviors on hosts. Next come workflows, behaviors that run on
+one system, and scheduled automation. [Core concepts](concepts.md) tells what
+each part is, and what comes next.
 
 ## Install
 
@@ -156,6 +164,8 @@ does not run on its platform.
 
 ## Explore the Docs
 
+- [Core concepts](concepts.md): behaviors, building blocks, jobs, targets,
+  skills, and what comes next
 - [Behaviors](behaviors/behaviors.mdx): every behavior, generated from its
   definition
 - [Working with an agent](usage/agents.md): `osapi init`, the skills, and the
@@ -170,10 +180,40 @@ does not run on its platform.
 
 ## Alternatives
 
-- [Cockpit][]
-- [webmin][]
+- [Cockpit][] and [webmin][] give a person a web console for one server.
+- [Ansible][] pushes configuration to hosts over SSH, from playbooks.
+
+### Why osapi
+
+- **Built for an agent.** The agent asks osapi which behaviors exist and what
+  each one accepts. It does not read a web page or guess a module. Each answer
+  is typed JSON, with a result for each host.
+- **The agent can build a behavior.** In a checkout of osapi, the
+  `build-a-behavior` skill writes a new behavior. A behavior is one directory.
+  osapi generates its API, CLI command, permission, docs and tests.
+- **Each behavior is shared.** When a behavior merges, each osapi user gets it:
+  in the API, the CLI and the docs. The agent finds it with
+  `osapi behavior get`.
+- **A fleet without SSH.** An agent on each host connects out to the message
+  bus. A request becomes a job. A slow host does not block the others.
+- **Safe to run again.** Each write reports `changed`. A second run reports
+  `changed: false`. Each host reports `ok`, `failed` or `skipped`.
+- **One host or many, through one API.** A web console manages one server. osapi
+  gives the same API, CLI, SDK and dashboard for one host or the fleet.
+- **A record of each change.** osapi keeps each job, an audit log and
+  OpenTelemetry traces. A secret input never goes to the log or a trace.
+- **Workflows are next.** A workflow will be ordered behavior calls in a file,
+  checked before it runs, and later on a schedule. Refer to
+  [Core concepts](concepts.md).
+
+### When to use the others
+
+osapi has fewer behaviors than Ansible has modules. If you need a module that
+osapi does not have yet, use Ansible for that task, or build the behavior. Use
+Cockpit or webmin when one person manages one server through a browser.
 
 <!-- prettier-ignore-start -->
+[Ansible]: https://www.ansible.com/
 [Cockpit]: https://cockpit-project.org/
 [webmin]: https://webmin.com/
 [releases]: https://github.com/osapi-io/osapi/releases

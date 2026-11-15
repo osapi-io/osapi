@@ -21,6 +21,13 @@ controller checks it before a host sees it.
 | `osapi`            | Read and change hosts: kernel parameters, packages, services, users, files, DNS, NTP and the rest    |
 | `osapi-operations` | Run osapi itself: start it, check its configuration, make and check tokens, find why it is unhealthy |
 
+`--tool` selects the agent tool. Repeat it for more than one tool:
+
+| `--tool`           | Skills go to            | Instructions file |
+| ------------------ | ----------------------- | ----------------- |
+| `claude` (default) | `.claude/skills/osapi/` | `CLAUDE.md`       |
+| `codex`            | `.agents/skills/osapi/` | `AGENTS.md`       |
+
 Run `osapi init` again after you upgrade osapi, so that the skills agree with
 the binary.
 
