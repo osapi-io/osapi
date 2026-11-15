@@ -142,6 +142,9 @@ just deps
 - **Declare an interface where you use it.** `internal/behavior/host` declares
   `Exec`, the part of the command runner that a provider calls. It does not use
   the type of the agent.
+- **Code in `internal/` returns an error. Only `cmd/` ends the process.** A
+  command calls `cli.LogFatal` with the error that it gets. Nothing in
+  `internal/` calls `LogFatal` or `os.Exit`.
 - **`cmd/` imports `pkg/` and `internal/`.** It connects them. It holds no logic
   of its own that needs a test.
 - **Embedded files go in `resources/` of the package that owns them.** The

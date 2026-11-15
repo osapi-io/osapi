@@ -86,32 +86,25 @@ func IsOSFamilySupported(
 	return "", false
 }
 
-// ValidateDistribution checks if the CLI is being run on a supported OS family.
+// ValidateDistribution returns an error if the host is not in a supported OS
+// family. IGNORE_LINUX skips the check.
 func ValidateDistribution(
 	logger *slog.Logger,
-) {
+) error {
 	info, err := hostInfoFn()
 	if err != nil {
-		LogFatal(logger, "failed to get host info", err)
+		return fmt.Errorf("get host info: %w", err)
 	}
 
 	if os.Getenv("IGNORE_LINUX") != "" {
-		return
+		return nil
 	}
 
 	family, supported := IsOSFamilySupported(info.Platform, info.PlatformVersion)
 	if !supported {
-		LogFatal(
-			logger,
-			"os family not supported",
-			fmt.Errorf(
-				"%s %s is not a supported distribution",
-				info.Platform,
-				info.PlatformVersion,
-			),
-			"distro",
+		return fmt.Errorf(
+			"os family not supported: %s %s is not a supported distribution",
 			info.Platform,
-			"version",
 			info.PlatformVersion,
 		)
 	}
@@ -122,4 +115,6 @@ func ValidateDistribution(
 		slog.String("distro", info.Platform),
 		slog.String("version", info.PlatformVersion),
 	)
+
+	return nil
 }

@@ -28,7 +28,6 @@ import (
 	"testing"
 
 	"github.com/shirou/gopsutil/v4/host"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli"
@@ -44,35 +43,28 @@ func TestValidatePublicTestSuite(
 	suite.Run(t, new(ValidatePublicTestSuite))
 }
 
-// exitSentinel is used to distinguish a controlled panic from osExit
-// from an unexpected panic during test execution.
-type exitSentinel struct{}
-
 type ValidateDistributionPublicTestSuite struct {
 	suite.Suite
 }
 
 func (suite *ValidateDistributionPublicTestSuite) TearDownTest() {
-	cli.ResetOsExit()
 	cli.ResetHostInfoFn()
 	_ = os.Unsetenv("IGNORE_LINUX")
 }
 
 func (suite *ValidateDistributionPublicTestSuite) TestValidateDistribution() {
 	tests := []struct {
-		name         string
-		ignoreLinux  bool
-		hostInfoFn   func() (*host.InfoStat, error)
-		validateFunc func(bool)
+		name        string
+		ignoreLinux bool
+		hostInfoFn  func() (*host.InfoStat, error)
+		wantErr     string
 	}{
 		{
-			name: "when host info fails calls LogFatal",
+			name: "when host info fails returns the error",
 			hostInfoFn: func() (*host.InfoStat, error) {
 				return nil, fmt.Errorf("host info failed")
 			},
-			validateFunc: func(got bool) {
-				assert.Equal(suite.T(), true, got)
-			},
+			wantErr: "get host info: host info failed",
 		},
 		{
 			name:        "when IGNORE_LINUX is set returns early",
@@ -83,33 +75,25 @@ func (suite *ValidateDistributionPublicTestSuite) TestValidateDistribution() {
 					PlatformVersion: "14.0",
 				}, nil
 			},
-			validateFunc: func(got bool) {
-				assert.Equal(suite.T(), false, got)
-			},
 		},
 		{
-			name: "when supported version does not exit",
+			name: "when the version is supported returns no error",
 			hostInfoFn: func() (*host.InfoStat, error) {
 				return &host.InfoStat{
 					Platform:        "ubuntu",
 					PlatformVersion: "24.04",
 				}, nil
 			},
-			validateFunc: func(got bool) {
-				assert.Equal(suite.T(), false, got)
-			},
 		},
 		{
-			name: "when unsupported version calls LogFatal",
+			name: "when the version is not supported returns the error",
 			hostInfoFn: func() (*host.InfoStat, error) {
 				return &host.InfoStat{
 					Platform:        "centos",
 					PlatformVersion: "8",
 				}, nil
 			},
-			validateFunc: func(got bool) {
-				assert.Equal(suite.T(), true, got)
-			},
+			wantErr: "os family not supported: centos 8 is not a supported distribution",
 		},
 	}
 
@@ -120,29 +104,16 @@ func (suite *ValidateDistributionPublicTestSuite) TestValidateDistribution() {
 			} else {
 				_ = os.Unsetenv("IGNORE_LINUX")
 			}
-
-			var exited bool
-			cli.SetOsExit(func(_ int) {
-				exited = true
-				panic(exitSentinel{})
-			})
 			cli.SetHostInfoFn(tc.hostInfoFn)
 
 			var buf bytes.Buffer
-			logger := slog.New(slog.NewTextHandler(&buf, nil))
+			err := cli.ValidateDistribution(slog.New(slog.NewTextHandler(&buf, nil)))
 
-			func() {
-				defer func() {
-					if r := recover(); r != nil {
-						if _, ok := r.(exitSentinel); !ok {
-							panic(r)
-						}
-					}
-				}()
-				cli.ValidateDistribution(logger)
-			}()
-
-			tc.validateFunc(exited)
+			if tc.wantErr != "" {
+				suite.EqualError(err, tc.wantErr)
+				return
+			}
+			suite.NoError(err)
 		})
 	}
 }

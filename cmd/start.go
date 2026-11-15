@@ -46,7 +46,9 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 
-		cli.ValidateDistribution(logger)
+		if err := cli.ValidateDistribution(logger); err != nil {
+			cli.LogFatal(logger, "unsupported host", err)
+		}
 
 		shutdownTracer, err := tracing.InitTracer(
 			ctx,
