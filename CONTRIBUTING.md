@@ -183,11 +183,13 @@ list in a page becomes incorrect when the configuration changes. Formatting does
 not apply to generated files (`*.gen.go`, `*.pb.go`).
 
 [Prettier] formats the TypeScript and the CSS in `ui/`. [ESLint] examines them
-for problems.
+for problems. `just test` checks the format, so CI makes sure that it is
+correct.
 
 ```bash
-just react-fmt      # Auto-fix UI formatting
-just react-lint     # Run ESLint
+just react-fmt-check   # Check UI formatting
+just react-fmt         # Auto-fix UI formatting
+just react-lint        # Run ESLint
 ```
 
 ### Documentation
