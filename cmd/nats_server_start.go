@@ -25,6 +25,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/osapi-io/osapi/internal/bus"
+	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 )
@@ -42,7 +44,10 @@ Configures streams, consumers, and KV buckets needed by the job system.
 		job.Init(appConfig.NATS.Server.Namespace)
 
 		log := logger.With("component", "nats")
-		s := setupNATSServer(ctx, log)
+		s, err := bus.NewServer(ctx, log, appConfig.NATS)
+		if err != nil {
+			cli.LogFatal(log, "failed to start NATS server", err)
+		}
 
 		startNATSHeartbeat(
 			ctx,
@@ -72,7 +77,7 @@ Configures streams, consumers, and KV buckets needed by the job system.
 			}
 		}
 
-		serve(ctx, []component{&embeddedNATS{server: s}}, func(shutdownCtx context.Context) {
+		serve(ctx, []component{s}, func(shutdownCtx context.Context) {
 			if metricsServer != nil {
 				metricsServer.Stop(shutdownCtx)
 			}
