@@ -1,0 +1,21 @@
+---
+sidebar_position: 1
+---
+
+# Schedule
+
+Manage scheduled entries on target hosts. On Debian family hosts, these are cron
+drop-in files in `/etc/cron.d/`.
+
+import DocCardList from '@theme/DocCardList';
+
+<DocCardList />
+
+## JSON output
+
+All commands accept `--json` to give the raw JSON output:
+
+```bash
+$ osapi client node schedule list --target web-01 --json
+{"results":[{"name":"backup-daily","schedule":"0 2 * * *","user":"root","object":"backup-script"}],"job_id":"..."}
+```

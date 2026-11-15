@@ -1,9 +1,4 @@
-# Key
-
-Commands for the controller key. The `key` subcommands operate on the PKI key
-pair of the local controller.
-
-## fingerprint
+# Fingerprint
 
 Show the local controller's public key fingerprint:
 
@@ -20,7 +15,7 @@ fingerprint to verify that jobs come from a trusted controller.
 If no key exists, the command makes a new key pair. Then it shows the
 fingerprint.
 
-### Flags
+## Flags
 
 | Flag     | Description     | Required |
 | -------- | --------------- | -------- |

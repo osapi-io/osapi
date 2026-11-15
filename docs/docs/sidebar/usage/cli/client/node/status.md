@@ -1,9 +1,9 @@
-# Get
+# Status
 
-Get the node status:
+Get the status of the target hosts:
 
 ```bash
-$ osapi client node status get
+$ osapi client node status
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
@@ -20,7 +20,7 @@ $ osapi client node status get
 When you target all hosts, the command shows a summary table:
 
 ```bash
-$ osapi client node status get --target _all
+$ osapi client node status --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
@@ -34,7 +34,7 @@ $ osapi client node status get --target _all
 When some hosts fail or are skipped:
 
 ```bash
-$ osapi client node status get --target _all
+$ osapi client node status --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
@@ -51,8 +51,8 @@ $ osapi client node status get --target _all
 Target a label to query a group of servers:
 
 ```bash
-$ osapi client node status get --target group:web
-$ osapi client node status get --target group:web.dev
+$ osapi client node status --target group:web
+$ osapi client node status --target group:web.dev
 ```
 
 ## Flags
