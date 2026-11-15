@@ -124,18 +124,10 @@ just deps
 - **One process, one tree.** `internal/agent/` and `internal/controller/` never
   import each other. Code that both use goes in a top-level package, for example
   `internal/pki/`, `internal/bus/` or `internal/job/`.
-- **One kind of thing in a package.** Its name tells what it holds. Do not make
-  a package named `util`, `common`, `helpers` or `shared`.
-- **A directory can group packages that belong together.** An example is
-  `internal/telemetry/`, which holds `metrics`, `tracing`, `httplog` and
-  `process`. The name of the directory tells what the group is.
-- **Do not put many packages under one package.** A package is one thing. If
-  packages collect under it, find the group that they make, and give that group
-  its own directory.
-- **The name of a package is the last part of its path.** A name does not repeat
-  the name of its package: `atomicfile.Write`, not `atomicfile.WriteFileAtomic`.
-- **Do not make a package that its callers must import with an alias.** If two
-  packages have the same name and a file imports both, rename one of them.
+- **The rules for each Go package are in [Go patterns](#go-patterns).** In
+  osapi, `internal/behavior/command/` and `internal/behavior/server/` are under
+  the framework that they belong to. `internal/telemetry/` groups `metrics`,
+  `tracing`, `httplog` and `process`.
 - **Some old packages do not obey these rules yet.**
   [#717](https://github.com/osapi-io/osapi/issues/717) lists them. Obey the
   rules in a new package.
@@ -267,6 +259,16 @@ that file.
 - Give an unused parameter the name `_`.
 - Put imports in three groups, with a blank line between them: the standard
   library, third-party packages, then local packages.
+- A package holds one kind of thing, and its name tells what. Do not make a
+  package named `util`, `common`, `helpers` or `shared`.
+- The name of a package is the last part of its path. An exported name does not
+  repeat it: `atomicfile.Write`, not `atomicfile.WriteFileAtomic`.
+- A caller does not need an alias. If two packages that a file imports have the
+  same name, rename one of them.
+- A directory can group packages that belong together. Do not put many packages
+  under one package.
+  [A Go package is one thing](https://github.com/osapi-io/specs/blob/main/CONSTITUTION.md#a-go-package-is-one-thing)
+  tells why.
 
 ### Test doubles
 
