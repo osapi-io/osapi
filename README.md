@@ -98,6 +98,19 @@ automation:
 
 The [design pages][specs] in osapi-io/specs have the plans.
 
+## Alternatives
+
+[Cockpit] and [webmin] give a person a web console for one server. [Ansible]
+pushes configuration over SSH. osapi is built for an agent:
+
+- The agent asks osapi what exists, and gets typed answers for each host.
+- The agent can build a new behavior, and each osapi user then gets it.
+- There is no SSH. A request is a job, and a slow host does not block the
+  others.
+- Workflows of behaviors are next.
+
+[Why osapi][why] has the full comparison, and when to use the others.
+
 ## Getting started
 
 The [docs][getting started] give these steps:
@@ -139,8 +152,10 @@ conventions, and the PR workflow.
 
 The [MIT] License.
 
+[ansible]: https://www.ansible.com/
 [api]: https://osapi-io.github.io/osapi/category/api
 [behaviors]: https://osapi-io.github.io/osapi/sidebar/behaviors/
+[cockpit]: https://cockpit-project.org/
 [concepts]: https://osapi-io.github.io/osapi/sidebar/concepts
 [getting started]: https://osapi-io.github.io/osapi/
 [gohai]: https://github.com/osapi-io/gohai
@@ -152,4 +167,6 @@ The [MIT] License.
 [sdk]: https://osapi-io.github.io/osapi/sidebar/sdk
 [specs]: https://github.com/osapi-io/specs
 [usage]: https://osapi-io.github.io/osapi/sidebar/usage
+[webmin]: https://webmin.com/
+[why]: https://osapi-io.github.io/osapi/#why-osapi
 [working with an agent]: https://osapi-io.github.io/osapi/sidebar/usage/agents
