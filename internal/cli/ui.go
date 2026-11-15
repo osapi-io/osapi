@@ -28,9 +28,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/google/uuid"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
@@ -262,10 +262,12 @@ func PrintCompactTable(
 		for i, h := range section.Headers {
 			widths[i] = len(h)
 		}
+		// Widths count visible characters: a cell styled in parts holds
+		// escape sequences that take no column.
 		for _, row := range flatRows {
 			for i, cell := range row {
-				if i < len(widths) && len(cell) > widths[i] {
-					widths[i] = len(cell)
+				if i < len(widths) && ansi.StringWidth(cell) > widths[i] {
+					widths[i] = ansi.StringWidth(cell)
 				}
 			}
 		}
@@ -298,9 +300,10 @@ func PrintCompactTable(
 				if i < len(row) {
 					cell = row[i]
 				}
-				// Truncate cells that exceed the column width
-				if len(cell) > widths[i] {
-					cell = cell[:widths[i]-1] + "…"
+				// Truncate cells that exceed the column width, by visible
+				// width, so an escape sequence is never cut in half.
+				if ansi.StringWidth(cell) > widths[i] {
+					cell = ansi.Truncate(cell, widths[i], "…")
 				}
 				// Style the cell, then pad it, so the padding is never colored
 				// and a cell styled in two parts still lines up. A hostname
@@ -316,7 +319,7 @@ func PrintCompactTable(
 					line.WriteString(
 						strings.Repeat(
 							" ",
-							max(widths[i]+colGap-utf8.RuneCountInString(cell), colGap),
+							max(widths[i]+colGap-ansi.StringWidth(cell), colGap),
 						),
 					)
 				}

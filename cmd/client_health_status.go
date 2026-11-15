@@ -143,14 +143,15 @@ func displayComponentTable(
 				prefix = "  └─ "
 			}
 
-			// The address is dim because nothing connects through it; the
-			// URL is where a person opens the sub-component.
-			status := sc.status
+			// Each part has its own style: the status word in its status
+			// color, the address dim because nothing connects through it,
+			// and the url underlined because a person opens it.
+			status := cli.RenderStatus(sc.status)
 			if sc.address != "" {
 				status += " " + cli.DimStyle.Render(sc.address)
 			}
 			if sc.url != "" {
-				status += " " + sc.url
+				status += " " + cli.URLStyle.Render(sc.url)
 			}
 
 			rows = append(rows, []string{
