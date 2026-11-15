@@ -217,7 +217,7 @@ They will have separate API endpoints, `/node/{hostname}/schedule/crontab` and
 ## Related
 
 - [File Management](file-management.md): upload scripts and render templates
-- [CLI Reference](../usage/cli/client/node/schedule/schedule.md): the schedule
+- [CLI Reference](../usage/cli/client/node/schedule/schedule.mdx): the schedule
   commands
 - [Platform Detection](../sdk/platform/detection.md): how osapi finds the OS
   family

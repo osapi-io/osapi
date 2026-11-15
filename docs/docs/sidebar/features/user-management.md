@@ -150,7 +150,7 @@ On a platform that is not supported, user and group operations return
 ## Related
 
 - [CLI Reference: User](../usage/cli/client/node/user/user.md)
-- [CLI Reference: SSH Key](../usage/cli/client/node/user/ssh-key.md)
+- [CLI Reference: SSH Key](../usage/cli/client/node/user/ssh-key/ssh-key.mdx)
 - [CLI Reference: Group](../usage/cli/client/node/group/group.md)
 - [SDK: User](../sdk/client/security/user.md)
 - [SDK: Group](../sdk/client/security/group.md)
