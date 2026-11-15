@@ -33,9 +33,24 @@ import (
 var clientNodeFileDeployCmd = &cobra.Command{
 	Use:   "deploy",
 	Short: "Deploy a file from Object Store to a host",
-	Long: `Deploy a file from the OSAPI Object Store to the target host's filesystem.
-The file is fetched from the Object Store and written to the specified path.
-SHA-256 idempotency ensures unchanged files are not rewritten.`,
+	Long: "The agent compares SHA-256 checksums, so it does not write a file again when\n" +
+		"the file did not change. [File\n" +
+		"management](../../../../../features/file-management.md) tells how the agent\n" +
+		"renders a template.",
+	Example: `  osapi client node file deploy --object app.conf --path /etc/app/app.conf
+  osapi client node file deploy \
+    --object app.conf \
+    --path /etc/app/app.conf \
+    --mode 0644 \
+    --owner root \
+    --group root
+  osapi client node file deploy \
+    --object app.conf.tmpl \
+    --path /etc/app/app.conf \
+    --content-type template \
+    --var listen_address=0.0.0.0:8080 \
+    --var max_workers=16 \
+    --target _all`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

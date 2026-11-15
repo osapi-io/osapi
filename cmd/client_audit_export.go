@@ -42,11 +42,10 @@ var (
 var clientAuditExportCmd = &cobra.Command{
 	Use:   "export",
 	Short: "Export audit log entries to a file",
-	Long: `Export all audit log entries to a file for long-term retention.
-
-Fetches all entries via the REST API export endpoint and writes each
-entry as a JSON line (JSONL format). Requires audit:read permission.
-`,
+	Long: "The command gets all entries through the export endpoint of the REST API,\n" +
+		"and writes each entry as a JSON line (JSONL). It needs the `audit:read`\n" +
+		"permission, which the admin role has by default.",
+	Example: `  osapi client audit export --output audit.jsonl`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		resp, err := sdkClient.Audit.Export(ctx)

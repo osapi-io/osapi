@@ -215,6 +215,16 @@ just docs-fmt-check   # Check formatting of the site
 just docs-fmt         # Auto-fix formatting of the site
 ```
 
+The CLI reference pages under `docs/docs/sidebar/usage/cli/` are generated from
+the cobra commands. Do not edit them. Change the `Short`, `Long`, `Example` or
+flags of the command in `cmd/`, then run `just cli-docs-generate`. `just test`
+fails when a page does not agree with its command. `output.md` is the one page
+in that directory that a person writes.
+
+```bash
+just cli-docs-generate   # Write the CLI reference pages
+```
+
 Write each page in Simplified Technical English, as
 [the osapi-io constitution](https://github.com/osapi-io/specs/blob/main/CONSTITUTION.md)
 requires.

@@ -1,13 +1,26 @@
 # List
 
-List all osapi-managed scheduled entries:
+List all scheduled entries.
 
 ```bash
-$ osapi client node schedule list --target web-01
-
-  HOSTNAME  STATUS  NAME           SCHEDULE     OBJECT          USER
-  web-01    ok      backup-daily   0 2 * * *    backup-script   root
-  web-01    ok      log-rotate     0 0 * * 0    logrotate-conf  root
-
-  1 host: 1 ok
+osapi client node schedule list
 ```
+
+## Examples
+
+```bash
+osapi client node schedule list --target web-01
+```
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

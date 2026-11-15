@@ -1,32 +1,29 @@
 # Validate
 
-Validate a JSON Web Token (JWT) by checking its signature, expiration, and
-claims:
+Validate a token for authenticity and claims.
 
 ```bash
-$ osapi token validate --token eyJhbGciOiJIUzI1NiIs...
-
-  Subject: user123            Roles: admin
-  Effective Permissions: node:read, network:read, network:write, job:read, job:write, health:read
-  Audience: osapi
-  Issued: 2026-01-15T08:00:00Z    Expires: 2026-07-15T08:00:00Z
+osapi token validate
 ```
 
-When a token carries direct permissions, they are shown separately and override
-role expansion:
+## Examples
 
 ```bash
-$ osapi token validate --token eyJhbGciOiJIUzI1NiIs...
-
-  Subject: svc@example.com    Roles: read
-  Permissions: node:read, health:read
-  Effective Permissions: node:read, health:read
-  Audience: osapi
-  Issued: 2026-01-15T08:00:00Z    Expires: 2026-07-15T08:00:00Z
+osapi token validate --token eyJhbGciOiJIUzI1NiIs...
 ```
 
 ## Flags
 
-| Flag          | Description      | Default  |
-| ------------- | ---------------- | -------- |
-| `-t, --token` | The token string | required |
+| Flag          | Description                 | Default |
+| ------------- | --------------------------- | ------- |
+| `-t, --token` | The Token string (required) |         |
+
+## Global flags
+
+| Flag               | Description                  | Default                 |
+| ------------------ | ---------------------------- | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode |                         |
+| `-j, --json`       | Enable JSON output           |                         |
+| `-f, --osapi-file` | Path to config file          | `/etc/osapi/osapi.yaml` |
+
+[Output](../output.md) tells how the result is printed, and what `--json` gives.

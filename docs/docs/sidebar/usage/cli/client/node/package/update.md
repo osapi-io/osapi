@@ -1,50 +1,30 @@
 # Update
 
-Refresh the package source lists on the target host. This is the same as
-`apt-get update`. It does not upgrade packages:
+Refresh package sources.
+
+This is the same as `apt-get update`.
 
 ```bash
-$ osapi client node package update --target web-01
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED
-  web-01    changed  true
-
-  1 host: 1 changed
+osapi client node package update
 ```
 
-Broadcast to refresh the sources on all hosts:
+## Examples
 
 ```bash
-$ osapi client node package update --target _all
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED
-  web-01    changed  true
-  web-02    changed  true
-  mac-01    skip
-
-  3 hosts: 2 changed, 1 skipped
-
-  Details:
-  mac-01    unsupported platform
+osapi client node package update --target web-01
+osapi client node package update --target _all
+osapi client node package update --target web-01 --json
 ```
 
-## JSON Output
+## Global flags
 
-Use `--json` to get the full API response:
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
 
-```bash
-$ osapi client node package update --target web-01 --json
-{"results":[{"hostname":"web-01","changed":true,"status":"ok"}],
-"job_id":"..."}
-```
-
-## Flags
-
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
-| `-j, --json`   | Output raw JSON response                                 |         |
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

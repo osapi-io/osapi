@@ -31,9 +31,9 @@ import (
 
 // clientJobRetryCmd represents the clientJobRetry command.
 var clientJobRetryCmd = &cobra.Command{
-	Use:   "retry",
-	Short: "Retry a failed or stuck job",
-	Long:  `Creates a new job using the same operation data as an existing job via the REST API.`,
+	Use:     "retry",
+	Short:   "Retry a failed or stuck job",
+	Example: `  osapi client job retry --id 550e8400-e29b-41d4-a716-446655440000`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		jobID, _ := cmd.Flags().GetString("id")

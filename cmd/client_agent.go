@@ -27,7 +27,8 @@ import (
 // clientAgentCmd represents the clientAgent command.
 var clientAgentCmd = &cobra.Command{
 	Use:   "agent",
-	Short: "The agent subcommand",
+	Short: "Manage the agents in the fleet: discovery, drain and PKI enrollment",
+	Long: "Most commands read the NATS KV heartbeat registry directly, and make no job.",
 }
 
 func init() {

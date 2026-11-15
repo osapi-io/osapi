@@ -30,6 +30,12 @@ import (
 var clientNodeServiceStartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start a systemd service",
+	Example: `  osapi client node service start --target web-01 \
+    --name nginx.service
+  osapi client node service start --target _all \
+    --name nginx.service
+  osapi client node service start --target web-01 \
+    --name nginx.service --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

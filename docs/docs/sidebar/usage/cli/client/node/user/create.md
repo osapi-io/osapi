@@ -1,49 +1,42 @@
 # Create
 
-Create a new user account:
+Create a user account.
 
 ```bash
-$ osapi client node user create --target web-01 \
-    --name deploy --shell /bin/bash --groups sudo,docker
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED  NAME
-  web-01    changed  true     deploy
-
-  1 host: 1 changed
+osapi client node user create
 ```
 
-Broadcast to all hosts:
+## Examples
 
 ```bash
-$ osapi client node user create --target _all \
-    --name deploy --shell /bin/bash --groups sudo,docker
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED  NAME
-  web-01    changed  true     deploy
-  web-02    changed  true     deploy
-  mac-01    skip
-
-  3 hosts: 2 changed, 1 skipped
-
-  Details:
-  mac-01    unsupported platform
+osapi client node user create --target web-01 \
+  --name deploy --shell /bin/bash --groups sudo,docker
+osapi client node user create --target _all \
+  --name deploy --shell /bin/bash --groups sudo,docker
 ```
 
 ## Flags
 
-| Flag           | Description                                                | Default |
-| -------------- | ---------------------------------------------------------- | ------- |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`)   | `_all`  |
-| `--name`       | Username for the new account (required)                    |         |
-| `--uid`        | Numeric user ID (system assigns if omitted)                |         |
-| `--gid`        | Primary group ID (system assigns if omitted)               |         |
-| `--home`       | Home directory path                                        |         |
-| `--shell`      | Login shell path                                           |         |
-| `--groups`     | Supplementary groups (comma-separated)                     |         |
-| `--password`   | Initial password (hashed by the controller before storage) |         |
-| `--system`     | Create a system account                                    | `false` |
-| `-j, --json`   | Output raw JSON response                                   |         |
+| Flag         | Description                                                | Default |
+| ------------ | ---------------------------------------------------------- | ------- |
+| `--gid`      | Primary group ID (system assigns if omitted)               |         |
+| `--groups`   | Supplementary groups (comma-separated)                     |         |
+| `--home`     | Home directory path                                        |         |
+| `--name`     | Username for the new account (required)                    |         |
+| `--password` | Initial password (hashed by the controller before storage) |         |
+| `--shell`    | Login shell path                                           |         |
+| `--system`   | Create a system account                                    |         |
+| `--uid`      | Numeric user ID (system assigns if omitted)                |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

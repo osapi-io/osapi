@@ -40,14 +40,10 @@ type validateResult struct {
 var behaviorValidateCmd = &cobra.Command{
 	Use:   "validate",
 	Short: "Check every behavior against the rules the platform relies on",
-	Long: `Checks each definition against the rules the generated routes, commands,
-spec and agent rely on: a name, placement and description; standard method
-verbs and unique routes; a key that is a field of the input; input and output
-types with a JSON Schema and no field that collides with the per-host result;
-a changed field on every write; examples and refusals that fit their method;
-settings the config can read; a provider for at least one platform that
-implements every method; required behaviors that are registered and form no
-cycle; and no secret input recorded on a span. Exits 1 when anything fails.`,
+	Long: "Exits 1 when anything fails, naming the behavior, the method and the rule.\n" +
+		"Each problem in `--json` has `behavior`, `method` (when the problem is in\n" +
+		"one), `rule` and `message`. [The\n" +
+		"checks](../../../development/behaviors.md#the-checks) lists the rules.",
 	Example: `  osapi behavior validate
   osapi behavior validate --json`,
 	Args: cobra.NoArgs,

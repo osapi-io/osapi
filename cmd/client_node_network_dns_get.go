@@ -30,8 +30,9 @@ import (
 var clientNodeNetworkDNSGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get the DNS configuration",
-	Long: `Get the servers current DNS configuration.
-`,
+	Example: `  osapi client node network dns get --interface eth0
+  osapi client node network dns get --interface eth0 --target _all
+  osapi client node network dns get --interface eth0 --target group:web`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

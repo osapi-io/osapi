@@ -28,8 +28,9 @@ import (
 
 // clientNodeScheduleDeleteCmd represents the schedule delete command.
 var clientNodeScheduleDeleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "Delete a scheduled entry",
+	Use:     "delete",
+	Short:   "Delete a scheduled entry",
+	Example: `  osapi client node schedule delete --target web-01 --name backup-daily`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -30,6 +30,9 @@ import (
 var clientNodePackageUninstallCmd = &cobra.Command{
 	Use:   "uninstall",
 	Short: "Uninstall a package",
+	Example: `  osapi client node package uninstall --target web-01 --name nginx
+  osapi client node package uninstall --target _all --name nginx
+  osapi client node package uninstall --target web-01 --name nginx --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

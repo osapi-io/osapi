@@ -30,7 +30,9 @@ import (
 var clientNodeCertificateListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List CA certificates",
-	Long:  `List all CA certificates on the target node.`,
+	Example: `  osapi client node certificate list --target web-01
+  osapi client node certificate list --target _all
+  osapi client node certificate list --target web-01 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

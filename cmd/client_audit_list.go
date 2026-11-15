@@ -38,11 +38,12 @@ var (
 var clientAuditListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List audit log entries",
-	Long: `List audit log entries with pagination.
-
-Displays a table of recent API activity including user, method, path,
-response status, and duration. Requires audit:read permission.
-`,
+	Long: "The list shows recent API activity: the user, the HTTP method, the path, the\n" +
+		"response status and the duration. It needs the `audit:read` permission,\n" +
+		"which the admin role has by default.",
+	Example: `  osapi client audit list
+  osapi client audit list --limit 10 --offset 20
+  osapi client audit list --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		resp, err := sdkClient.Audit.List(ctx, auditListLimit, auditListOffset)

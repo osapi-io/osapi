@@ -32,7 +32,8 @@ import (
 var clientFileGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get file metadata",
-	Long:  `Get metadata for a specific file stored in the OSAPI Object Store.`,
+	Example: `  osapi client file get --name app.conf
+  osapi client file get --name app.conf --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		name, _ := cmd.Flags().GetString("name")

@@ -1,64 +1,39 @@
 # Delete
 
-Delete a service unit file from a target host. If the service runs, the agent
-stops and disables it. The agent removes the unit file from
-`/etc/systemd/system/` and runs `systemctl daemon-reload`:
+Delete a systemd service unit file.
+
+If the service runs, the agent stops and disables it.
 
 ```bash
-$ osapi client node service delete --target web-01 \
-    --name myapp.service
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME             CHANGED
-  web-01    changed  myapp.service    true
-
-  1 host: 1 changed
+osapi client node service delete
 ```
 
-If the unit file does not exist, the command returns `changed: false`:
+## Examples
 
 ```bash
-$ osapi client node service delete --target web-01 \
-    --name myapp.service
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  NAME             CHANGED
-  web-01    ok      myapp.service    false
-
-  1 host: 1 ok
-```
-
-Broadcast to all hosts:
-
-```bash
-$ osapi client node service delete --target _all \
-    --name myapp.service
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME             CHANGED
-  web-01    changed  myapp.service    true
-  web-02    changed  myapp.service    true
-
-  2 hosts: 2 changed
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node service delete --target web-01 \
-    --name myapp.service --json
-{"results":[{"hostname":"web-01","name":"myapp.service","changed":true,"status":"ok"}],"job_id":"..."}
+osapi client node service delete --target web-01 \
+  --name myapp.service
+osapi client node service delete --target _all \
+  --name myapp.service
+osapi client node service delete --target web-01 \
+  --name myapp.service --json
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default  |
-| -------------- | -------------------------------------------------------- | -------- |
-| `--name`       | Service unit name to delete                              | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`   | Output raw JSON response                                 |          |
+| Flag     | Description                            | Default |
+| -------- | -------------------------------------- | ------- |
+| `--name` | Service unit name to delete (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

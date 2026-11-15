@@ -34,13 +34,17 @@ import (
 var clientAgentKeyCmd = &cobra.Command{
 	Use:   "key",
 	Short: "Agent key management",
+	Long: "The `key` subcommands operate on the PKI key pair of the local agent.",
 }
 
 // clientAgentKeyFingerprintCmd prints the local agent's key fingerprint.
 var clientAgentKeyFingerprintCmd = &cobra.Command{
 	Use:   "fingerprint",
 	Short: "Show the local agent key fingerprint",
-	Long:  `Read the local agent key and display its SHA256 fingerprint.`,
+	Long: "Enrollment requests include this value. You can use it with `agent accept\n" +
+		"--fingerprint` to accept an agent by its fingerprint. If no key exists, the\n" +
+		"command makes a new key pair. Then it shows the fingerprint.",
+	Example: `  osapi client agent key fingerprint`,
 	Run: func(_ *cobra.Command, _ []string) {
 		keyDir := appConfig.Agent.PKI.KeyDir
 		if keyDir == "" {

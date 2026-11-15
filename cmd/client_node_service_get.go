@@ -32,7 +32,10 @@ import (
 var clientNodeServiceGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get a systemd service",
-	Long:  `Get details of a specific systemd service on the target node.`,
+	Example: `  osapi client node service get --target web-01 --name nginx.service
+  osapi client node service get --target _all --name nginx.service
+  osapi client node service get --target web-01 \
+    --name nginx.service --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -1,21 +1,26 @@
 # Status
 
-Show health status for all registered agents:
+Agent component health.
 
 ```bash
-$ osapi client agent status
-
-  TYPE    HOSTNAME   STATUS  CONDITIONS    AGE    CPU    MEM
-  agent   web-01     Ready   DiskPressure  7h 6m  1.2%   96 MB
-          ├─ heartbeat               ok
-          └─ metrics                 ok http://0.0.0.0:9091
-  agent   web-02     Ready   -             3h 2m  0.8%   82 MB
-          ├─ heartbeat               ok
-          └─ metrics                 ok http://0.0.0.0:9091
+osapi client agent status
 ```
 
-Use `--json` to get the full health status as JSON:
+## Examples
 
 ```bash
-$ osapi client agent status --json
+osapi client agent status
+osapi client agent status --json
 ```
+
+## Global flags
+
+| Flag               | Description                    | Default                 |
+| ------------------ | ------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode   |                         |
+| `-j, --json`       | Enable JSON output             |                         |
+| `-f, --osapi-file` | Path to config file            | `/etc/osapi/osapi.yaml` |
+| `--url`            | URL the client will connect to | `http://0.0.0.0:8080`   |
+
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

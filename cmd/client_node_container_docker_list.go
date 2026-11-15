@@ -31,7 +31,9 @@ import (
 var clientContainerDockerListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List containers on target node",
-	Long:  `List containers on the target node, optionally filtered by state.`,
+	Example: `  osapi client node container docker list
+  osapi client node container docker list --state running
+  osapi client node container docker list --state stopped`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

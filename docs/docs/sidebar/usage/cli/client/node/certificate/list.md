@@ -1,53 +1,28 @@
 # List
 
-List all CA certificates on a target host: the certificates of the system and
-the custom certificates that osapi manages:
+List CA certificates.
 
 ```bash
-$ osapi client node certificate list --target web-01
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  NAME                    SOURCE
-  web-01    ok      mozilla/DigiCert.crt    system
-  web-01    ok      mozilla/GlobalSign.crt  system
-  web-01    ok      internal-ca             custom
-
-  1 host: 1 ok
+osapi client node certificate list
 ```
 
-Target all hosts to list the certificates on all of the fleet:
+## Examples
 
 ```bash
-$ osapi client node certificate list --target _all
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  NAME                    SOURCE
-  web-01    ok      mozilla/DigiCert.crt    system
-  web-01    ok      mozilla/GlobalSign.crt  system
-  web-01    ok      internal-ca             custom
-  web-02    ok      mozilla/DigiCert.crt    system
-  web-02    ok      mozilla/GlobalSign.crt  system
-
-  2 hosts: 2 ok
+osapi client node certificate list --target web-01
+osapi client node certificate list --target _all
+osapi client node certificate list --target web-01 --json
 ```
 
-## JSON Output
+## Global flags
 
-Use `--json` to get the full API response:
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
 
-```bash
-$ osapi client node certificate list --target web-01 --json
-{"results":[{"hostname":"web-01","status":"ok","certificates":[
-{"name":"mozilla/DigiCert.crt","source":"system"},
-{"name":"internal-ca","source":"custom","object":"internal-ca"}
-]}],"job_id":"..."}
-```
-
-## Flags
-
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
-| `-j, --json`   | Output raw JSON response                                 |         |
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

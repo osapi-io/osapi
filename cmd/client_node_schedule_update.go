@@ -31,6 +31,12 @@ import (
 var clientNodeScheduleUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update a scheduled entry",
+	Long: "The command updates only the fields that you give. If nothing changed, it\n" +
+		"returns `Changed: false`. To change the values of a template, give each\n" +
+		"`--var key=value` again.",
+	Example: `  osapi client node schedule update --target web-01 \
+    --name backup-daily \
+    --schedule "0 3 * * *"`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

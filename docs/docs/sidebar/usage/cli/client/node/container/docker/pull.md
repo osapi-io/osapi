@@ -1,55 +1,35 @@
 # Pull
 
-Pull a container image on the target node:
+Pull a container image.
 
 ```bash
-$ osapi client node container docker pull --image nginx:latest
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED  IMAGE ID            TAG     SIZE
-  server1   changed  true     sha256:a1b2c3d4...  latest  187.8 MiB
-
-  1 host: 1 changed
+osapi client node container docker pull
 ```
 
-Pull a specific image version:
+## Examples
 
 ```bash
-$ osapi client node container docker pull --image alpine:3.18
-```
-
-Pull from a custom registry:
-
-```bash
-$ osapi client node container docker pull \
-    --image registry.example.com/myapp:v1.2.3
-```
-
-Target a specific host:
-
-```bash
-$ osapi client node container docker pull --image redis:7 --target web-01
-```
-
-Pull on all hosts:
-
-```bash
-$ osapi client node container docker pull --image nginx:latest --target _all
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node container docker pull --image nginx:latest --json
+osapi client node container docker pull --image nginx:latest
+osapi client node container docker pull --image alpine:3.18
+osapi client node container docker pull \
+  --image registry.example.com/myapp:v1.2.3
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `--image`      | Image reference to pull (**required**)                   |         |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| Flag      | Description                        | Default |
+| --------- | ---------------------------------- | ------- |
+| `--image` | Image reference to pull (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../../output.md) tells how the result is printed, and what
+`--json` gives.

@@ -1,40 +1,33 @@
 # Delete
 
-Delete a user account:
+Delete a user account.
 
 ```bash
-$ osapi client node user delete --target web-01 --name deploy
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED  NAME
-  web-01    changed  true     deploy
-
-  1 host: 1 changed
+osapi client node user delete
 ```
 
-Broadcast to all hosts:
+## Examples
 
 ```bash
-$ osapi client node user delete --target _all --name deploy
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED  NAME
-  web-01    changed  true     deploy
-  web-02    changed  true     deploy
-  mac-01    skip
-
-  3 hosts: 2 changed, 1 skipped
-
-  Details:
-  mac-01    unsupported platform
+osapi client node user delete --target web-01 --name deploy
+osapi client node user delete --target _all --name deploy
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
-| `--name`       | Name of the user account to delete (required)            |         |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| Flag     | Description                                   | Default |
+| -------- | --------------------------------------------- | ------- |
+| `--name` | Name of the user account to delete (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

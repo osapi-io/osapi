@@ -30,6 +30,14 @@ import (
 var clientNodeCertificateDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Remove a custom CA certificate",
+	Long: "The agent removes the certificate file from\n" +
+		"`/usr/local/share/ca-certificates/`.",
+	Example: `  osapi client node certificate delete --target web-01 \
+    --name internal-ca
+  osapi client node certificate delete --target _all \
+    --name internal-ca
+  osapi client node certificate delete --target web-01 \
+    --name internal-ca --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -32,7 +32,9 @@ import (
 var clientNodeServiceListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List systemd services",
-	Long:  `List all systemd services on the target node.`,
+	Example: `  osapi client node service list --target web-01
+  osapi client node service list --target _all
+  osapi client node service list --target web-01 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

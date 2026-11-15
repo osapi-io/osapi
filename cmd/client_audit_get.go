@@ -33,10 +33,9 @@ import (
 var clientAuditGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get a single audit log entry",
-	Long: `Get a single audit log entry by its UUID.
-
-Requires audit:read permission.
-`,
+	Long: "It needs the `audit:read` permission, which the admin role has by default.",
+	Example: `  osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000
+  osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		auditID, _ := cmd.Flags().GetString("id")

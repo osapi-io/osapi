@@ -30,6 +30,9 @@ import (
 var clientNodeNtpDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete NTP configuration",
+	Example: `  osapi client node ntp delete --target web-01
+  osapi client node ntp delete --target _all
+  osapi client node ntp delete --target web-01 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

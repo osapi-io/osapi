@@ -30,6 +30,12 @@ import (
 var clientNodeNetworkInterfaceDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a network interface configuration",
+	Example: `  osapi client node network interface delete \
+    --target web-01 --name eth0
+  osapi client node network interface delete \
+    --target _all --name eth1
+  osapi client node network interface delete \
+    --target web-01 --name eth0 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

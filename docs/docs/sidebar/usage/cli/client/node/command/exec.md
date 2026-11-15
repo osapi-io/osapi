@@ -1,101 +1,51 @@
 # Exec
 
-Run a command directly, without a shell. The executable gets the arguments as
-they are, without shell expansion.
+Execute a command directly.
+
+The executable gets the arguments as they are, without shell expansion. The
+table view shortens long output. Use `--json` to get the full response. Use
+`@fact.*` references to put live system values in the command. Refer to
+[System Facts](../../../../../features/system-facts.md) for all `@fact.*`
+references. Use `--stdout` or `--stderr` to print only that output of the remote
+command. The exit code of the CLI is the exit code of the remote command. Thus
+you can use it in scripts.
 
 ```bash
-$ osapi client node command exec --command ls --args "-la,/tmp"
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  EXIT  STDOUT
-  web-01    ok      0     total 8 drwxrwxrwt 10 root r...
-
-  1 host: 1 ok
+osapi client node command exec
 ```
 
-The table view shortens long output. Use `--json` to get the full response.
-
-Run a command in a specific working directory, with a custom timeout:
+## Examples
 
 ```bash
-$ osapi client node command exec \
-    --command cat \
-    --args "config.yaml" \
-    --cwd /etc/osapi \
-    --timeout 10
-```
-
-Target a label to run on a group of servers:
-
-```bash
-$ osapi client node command exec --command whoami --target group:web
-```
-
-Use `@fact.*` references to put live system values in the command. Each agent
-resolves its own facts, so this works with broadcast targets:
-
-```bash
-$ osapi client node command exec \
-    --command ip --args "addr,show,dev,@fact.interface.primary" \
-    --target _all
-```
-
-Refer to [System Facts](../../../../../features/system-facts.md) for all
-`@fact.*` references.
-
-## JSON Output
-
-Use `--json` to get the full untruncated API response:
-
-```bash
-$ osapi client node command exec --command hostname --json
-```
-
-## Raw Output
-
-Use `--stdout` to print only the stdout of the remote command, without the
-table:
-
-```bash
-$ osapi client node command exec --command ls --args "-la" --stdout
-total 48
-drwxr-xr-x  12 john  staff  384 Mar  2 10:00 .
--rw-r--r--   1 john  staff 1234 Mar  2 09:30 main.go
-```
-
-Use `--stderr` to print only stderr:
-
-```bash
-$ osapi client node command exec --command ls --args "/nonexistent" --stderr
-ls: cannot access '/nonexistent': No such file or directory
-```
-
-You can use the two flags together. Each line starts with the hostname:
-
-```bash
-$ osapi client node command exec --command hostname --target _all --stdout
-[web-01] web-01.example.com
-[web-02] web-02.example.com
-```
-
-The exit code of the CLI is the exit code of the remote command. Thus you can
-use it in scripts:
-
-```bash
-$ osapi client node command exec --command "test" --args "-f,/etc/hosts" --stdout && echo exists
-exists
+osapi client node command exec --command ls --args "-la,/tmp"
+osapi client node command exec \
+  --command cat \
+  --args "config.yaml" \
+  --cwd /etc/osapi \
+  --timeout 10
+osapi client node command exec --command whoami --target group:web
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `--command`    | The command to execute (**required**)                    |         |
-| `--args`       | Command arguments (comma-separated)                      | `[]`    |
-| `--cwd`        | Working directory for the command                        |         |
-| `--timeout`    | Timeout in seconds (max 300)                             | `30`    |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
-| `--stdout`     | Print only remote stdout                                 |         |
-| `--stderr`     | Print only remote stderr                                 |         |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| Flag        | Description                              | Default |
+| ----------- | ---------------------------------------- | ------- |
+| `--args`    | Command arguments (comma-separated)      |         |
+| `--command` | The command to execute (required)        |         |
+| `--cwd`     | Working directory for the command        |         |
+| `--stderr`  | Print only remote stderr                 |         |
+| `--stdout`  | Print only remote stdout                 |         |
+| `--timeout` | Timeout in seconds (default 30, max 300) | `30`    |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

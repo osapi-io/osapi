@@ -31,6 +31,16 @@ import (
 var clientNodeCertificateCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Add a custom CA certificate",
+	Long: "First, upload the PEM content to the Object Store. The agent writes the\n" +
+		"certificate to `/usr/local/share/ca-certificates/{name}.crt`. Then\n" +
+		"`update-ca-certificates` makes the system trust store again. The command\n" +
+		"fails if the name exists.",
+	Example: `  osapi client node certificate create --target web-01 \
+    --name internal-ca --object internal-ca
+  osapi client node certificate create --target _all \
+    --name internal-ca --object internal-ca
+  osapi client node certificate create --target web-01 \
+    --name internal-ca --object internal-ca --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -1,23 +1,26 @@
 # Status
 
-Show health status for the controller:
+Controller component health.
 
 ```bash
-$ osapi client controller status
-
-  TYPE        HOSTNAME       STATUS  CONDITIONS  AGE    CPU    MEM
-  controller  controller-01  Ready   -           7h 6m  2.1%   128 MB
-              ├─ api                     ok http://0.0.0.0:8080
-              ├─ heartbeat               ok
-              ├─ kv (connectivity)       ok
-              ├─ metrics                 ok http://0.0.0.0:9090
-              ├─ nats (connectivity)     ok
-              ├─ notifier                ok
-              └─ tracing                 ok
+osapi client controller status
 ```
 
-Use `--json` to get the full health status as JSON:
+## Examples
 
 ```bash
-$ osapi client controller status --json
+osapi client controller status
+osapi client controller status --json
 ```
+
+## Global flags
+
+| Flag               | Description                    | Default                 |
+| ------------------ | ------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode   |                         |
+| `-j, --json`       | Enable JSON output             |                         |
+| `-f, --osapi-file` | Path to config file            | `/etc/osapi/osapi.yaml` |
+| `--url`            | URL the client will connect to | `http://0.0.0.0:8080`   |
+
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

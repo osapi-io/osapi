@@ -30,7 +30,9 @@ import (
 var clientNodeHostnameUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update the node's hostname",
-	Long:  `Set a new hostname on the target node using hostnamectl.`,
+	Example: `  osapi client node hostname update --name web-01
+  osapi client node hostname update --name web-01 --target darwin-host
+  osapi client node hostname update --name web-01 --target _all`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

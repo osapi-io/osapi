@@ -35,9 +35,12 @@ import (
 var natsServerStartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start the embedded NATS server",
-	Long: `Start the embedded NATS server with JetStream enabled.
-Configures streams, consumers, and KV buckets needed by the job system.
-`,
+	Long: "The server makes the streams, consumers and KV buckets that the job system\n" +
+		"needs. `osapi start` runs the same server, together with the controller and\n" +
+		"an agent, in one process. Use this command to run the bus as its own\n" +
+		"process. The `nats.server` section of the config sets the host, the port and\n" +
+		"the authentication. Refer to [Configuration](../../../configuration.md).",
+	Example: `  osapi nats server start`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 

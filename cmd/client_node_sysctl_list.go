@@ -30,6 +30,9 @@ import (
 var clientNodeSysctlListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all sysctl parameters",
+	Example: `  osapi client node sysctl list --target web-01
+  osapi client node sysctl list --target _all
+  osapi client node sysctl list --target group:web`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

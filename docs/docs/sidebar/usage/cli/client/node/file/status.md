@@ -1,57 +1,34 @@
 # Status
 
-Check the deploy status of a file on the target host. The command reports if the
-file is `in-sync`, `drifted` or `missing`.
+Check deployment status of a file on a host.
+
+The command reports if the file is `in-sync`, `drifted` or `missing`.
 
 ```bash
-$ osapi client node file status --path /etc/app/app.conf
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  PATH               FILE STATUS  SHA256
-  server1   ok      /etc/app/app.conf  in-sync      a1b2c3d4e5f6...
-
-  1 host: 1 ok
+osapi client node file status
 ```
 
-When a file changed on disk:
+## Examples
 
 ```bash
-$ osapi client node file status --path /etc/app/app.conf
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  PATH               FILE STATUS  SHA256
-  server1   ok      /etc/app/app.conf  drifted      9f8e7d6c5b4a...
-
-  1 host: 1 ok
-```
-
-When nobody deployed the file, or somebody deleted it:
-
-```bash
-$ osapi client node file status --path /etc/app/app.conf
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  PATH               FILE STATUS
-  server1   ok      /etc/app/app.conf  missing
-
-  1 host: 1 ok
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node file status --path /etc/app/app.conf --json
+osapi client node file status --path /etc/app/app.conf
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `--path`       | Filesystem path to check (**required**)                  |         |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| Flag     | Description                         | Default |
+| -------- | ----------------------------------- | ------- |
+| `--path` | Filesystem path to check (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

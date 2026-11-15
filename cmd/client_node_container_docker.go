@@ -26,7 +26,6 @@ import "github.com/spf13/cobra"
 var clientContainerDockerCmd = &cobra.Command{
 	Use:   "docker",
 	Short: "Docker container operations",
-	Long:  `Manage Docker containers on target nodes.`,
 }
 
 func init() {

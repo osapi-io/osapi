@@ -39,11 +39,11 @@ import (
 var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start all components (NATS, controller, agent)",
-	Long: `Start the embedded NATS server, controller, and agent in a single process.
-
-This is the recommended way to run OSAPI on a single host. All three components
-start in order (NATS → controller → agent) and shut down gracefully on SIGINT/SIGTERM.
-`,
+	Long: "This runs the embedded NATS server, the API server and the agent together.\n" +
+		"Use it for a deployment on one host. The three components start in sequence.\n" +
+		"They stop cleanly on `SIGINT` / `SIGTERM`. For a deployment on more than one\n" +
+		"host, start the NATS server, the controller and each agent alone.",
+	Example: `  osapi start`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 

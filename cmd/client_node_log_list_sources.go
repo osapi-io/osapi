@@ -30,7 +30,9 @@ import (
 var clientNodeLogListSourcesCmd = &cobra.Command{
 	Use:   "list-sources",
 	Short: "List available log sources",
-	Long:  `List unique syslog identifiers available in the journal on the target node.`,
+	Example: `  osapi client node log list-sources --target web-01
+  osapi client node log list-sources --target _all
+  osapi client node log list-sources --target web-01 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

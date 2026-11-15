@@ -1,26 +1,32 @@
 # Get
 
-Get metadata for a specific file in the Object Store:
+Get file metadata.
 
 ```bash
-$ osapi client file get --name app.conf
-
-  Name:   app.conf
-  SHA256: a1b2c3d4e5f6...
-  Size:   1234
+osapi client file get
 ```
 
-## JSON Output
-
-Use `--json` to get the full API response:
+## Examples
 
 ```bash
-$ osapi client file get --name app.conf --json
+osapi client file get --name app.conf
+osapi client file get --name app.conf --json
 ```
 
 ## Flags
 
-| Flag         | Description                                         | Default |
-| ------------ | --------------------------------------------------- | ------- |
-| `--name`     | Name of the file in the Object Store (**required**) |         |
-| `-j, --json` | Output raw JSON response                            |         |
+| Flag     | Description                                     | Default |
+| -------- | ----------------------------------------------- | ------- |
+| `--name` | Name of the file in the Object Store (required) |         |
+
+## Global flags
+
+| Flag               | Description                    | Default                 |
+| ------------------ | ------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode   |                         |
+| `-j, --json`       | Enable JSON output             |                         |
+| `-f, --osapi-file` | Path to config file            | `/etc/osapi/osapi.yaml` |
+| `--url`            | URL the client will connect to | `http://0.0.0.0:8080`   |
+
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

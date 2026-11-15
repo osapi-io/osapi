@@ -30,6 +30,12 @@ import (
 var clientNodeServiceDisableCmd = &cobra.Command{
 	Use:   "disable",
 	Short: "Disable a systemd service from starting on boot",
+	Example: `  osapi client node service disable --target web-01 \
+    --name nginx.service
+  osapi client node service disable --target _all \
+    --name nginx.service
+  osapi client node service disable --target web-01 \
+    --name nginx.service --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -27,7 +27,7 @@ import (
 // clientNodeHostnameCmd represents the clientNodeHostname command.
 var clientNodeHostnameCmd = &cobra.Command{
 	Use:   "hostname",
-	Short: "The hostname subcommand",
+	Short: "Get and set the hostname of target hosts",
 }
 
 func init() {

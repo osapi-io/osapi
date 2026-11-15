@@ -30,7 +30,8 @@ import (
 var clientHealthLivenessCmd = &cobra.Command{
 	Use:   "liveness",
 	Short: "Liveness probe",
-	Long:  `Check if the API server process is running.`,
+	Example: `  osapi client health liveness
+  osapi client health liveness --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 

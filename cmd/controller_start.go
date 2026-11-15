@@ -34,9 +34,9 @@ import (
 
 // controllerStartCmd represents the controller start command.
 var controllerStartCmd = &cobra.Command{
-	Use:   "start",
-	Short: "Start the controller",
-	Long:  `Start the control plane process (API server, heartbeat, notifications).`,
+	Use:     "start",
+	Short:   "Start the controller",
+	Example: `  osapi controller start`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 

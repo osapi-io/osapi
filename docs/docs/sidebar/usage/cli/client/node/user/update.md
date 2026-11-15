@@ -1,57 +1,43 @@
 # Update
 
-Update a user account:
-
-```bash
-$ osapi client node user update --target web-01 \
-    --name deploy --shell /bin/zsh
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED  NAME
-  web-01    changed  true     deploy
-
-  1 host: 1 changed
-```
-
-Lock or unlock an account:
-
-```bash
-$ osapi client node user update --target web-01 --name deploy --lock
-$ osapi client node user update --target web-01 --name deploy --unlock
-```
+Update a user account.
 
 Do not use `--lock` and `--unlock` together. Give one or more of `--shell`,
 `--home`, `--groups`, `--lock` and `--unlock`.
 
-Broadcast to all hosts:
+```bash
+osapi client node user update [flags]
+```
+
+## Examples
 
 ```bash
-$ osapi client node user update --target _all \
-    --name deploy --shell /bin/zsh
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED  NAME
-  web-01    changed  true     deploy
-  web-02    changed  true     deploy
-  mac-01    skip
-
-  3 hosts: 2 changed, 1 skipped
-
-  Details:
-  mac-01    unsupported platform
+osapi client node user update --target web-01 \
+  --name deploy --shell /bin/zsh
+osapi client node user update --target web-01 --name deploy --lock
+osapi client node user update --target web-01 --name deploy --unlock
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
-| `--name`       | Username to update (required)                            |         |
-| `--shell`      | New login shell path                                     |         |
-| `--home`       | New home directory path                                  |         |
-| `--groups`     | Supplementary groups (replaces existing)                 |         |
-| `--lock`       | Lock the account                                         | `false` |
-| `--unlock`     | Unlock the account                                       | `false` |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| Flag       | Description                              | Default |
+| ---------- | ---------------------------------------- | ------- |
+| `--groups` | Supplementary groups (replaces existing) |         |
+| `--home`   | New home directory path                  |         |
+| `--lock`   | Lock the account                         |         |
+| `--name`   | Username to update (required)            |         |
+| `--shell`  | New login shell path                     |         |
+| `--unlock` | Unlock the account                       |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

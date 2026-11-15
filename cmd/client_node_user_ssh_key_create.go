@@ -33,6 +33,15 @@ import (
 var clientNodeUserSSHKeyCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create an SSH authorized key",
+	Long: "The agent adds the key to the end of the `~/.ssh/authorized_keys` file of\n" +
+		"the user. If the file or the `~/.ssh` directory does not exist, the agent\n" +
+		"makes it. The permissions are `700` for the directory and `600` for the\n" +
+		"file. If the key already exists (the same fingerprint), the command returns\n" +
+		"`changed: false`.",
+	Example: `  osapi client node user ssh-key create --target web-01 \
+    --name deploy --key 'ssh-ed25519 AAAA... user@laptop'
+  osapi client node user ssh-key create --target _all \
+    --name deploy --key 'ssh-ed25519 AAAA... user@laptop'`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

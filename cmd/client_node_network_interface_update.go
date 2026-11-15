@@ -30,6 +30,18 @@ import (
 var clientNodeNetworkInterfaceUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update a network interface configuration",
+	Long: "The command fails if osapi does not manage a configuration for that\n" +
+		"interface. Use `create` first.",
+	Example: `  osapi client node network interface update \
+    --target web-01 --name eth0 \
+    --address 192.168.1.200/24 \
+    --gateway4 192.168.1.1 \
+    --mtu 9000
+  osapi client node network interface update \
+    --target _all --name eth0 --dhcp4
+  osapi client node network interface update \
+    --target web-01 --name eth0 \
+    --address 192.168.1.200/24 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

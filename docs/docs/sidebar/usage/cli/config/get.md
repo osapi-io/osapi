@@ -1,34 +1,30 @@
 # Get
 
-Show one setting in full: its value in effect and where it came from, its
-environment variable, type, default, rules and description.
+Show one setting in full.
 
 ```bash
-$ osapi config get --key controller.api.port
-
-Config:
-  File:  /etc/osapi/osapi.yaml (not found: defaults and environment only)
-
-Setting:
-  Key:          controller.api.port
-  Value:        8080
-  Source:       default
-  Env:          OSAPI_CONTROLLER_API_PORT
-  Type:         int
-  Default:      8080
-  Validate:     min=1,max=65535
-  Description:  Port the REST API server listens on.
+osapi config get [flags]
 ```
 
-An environment variable wins over the file:
+## Examples
 
 ```bash
-$ OSAPI_CONTROLLER_API_PORT=9000 osapi config get --key controller.api.port --json
-{"name":"controller.api.port","env":"OSAPI_CONTROLLER_API_PORT","type":"int","default":8080,"validate":"min=1,max=65535","doc":"Port the REST API server listens on.","value":9000,"source":"env"}
+osapi config get --key controller.api.port
+osapi config get --key agent.labels -f ./osapi.yaml --json
 ```
 
 ## Flags
 
-| Flag    | Description                                                   |
-| ------- | ------------------------------------------------------------- |
-| `--key` | The setting to show, such as `controller.api.port` (required) |
+| Flag    | Description                                                 | Default |
+| ------- | ----------------------------------------------------------- | ------- |
+| `--key` | The setting to show, such as controller.api.port (required) |         |
+
+## Global flags
+
+| Flag               | Description                  | Default                 |
+| ------------------ | ---------------------------- | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode |                         |
+| `-j, --json`       | Enable JSON output           |                         |
+| `-f, --osapi-file` | Path to config file          | `/etc/osapi/osapi.yaml` |
+
+[Output](../output.md) tells how the result is printed, and what `--json` gives.

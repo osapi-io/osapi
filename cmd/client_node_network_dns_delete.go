@@ -30,8 +30,15 @@ import (
 var clientNodeNetworkDNSDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete the DNS configuration",
-	Long: `Delete the DNS configuration for a network interface.
-`,
+	Long: "If osapi does not manage a DNS configuration for the interface, the command\n" +
+		"returns `changed: false`.",
+	Example: `  osapi client node network dns delete \
+    --interface eth0
+  osapi client node network dns delete \
+    --interface eth0 \
+    --target _all
+  osapi client node network dns delete \
+    --interface eth0 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -30,7 +30,9 @@ import (
 var clientNodeOSGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get OS information",
-	Long:  `Get operating system information from the target node.`,
+	Example: `  osapi client node os get
+  osapi client node os get --target _all
+  osapi client node os get --target group:web`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

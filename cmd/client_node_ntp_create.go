@@ -31,6 +31,15 @@ import (
 var clientNodeNtpCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create NTP configuration",
+	Long: "The agent writes the server list to `/etc/chrony/conf.d/osapi-ntp.conf` and\n" +
+		"reloads chrony immediately. If osapi already manages it, the command returns\n" +
+		"`changed: false`.",
+	Example: `  osapi client node ntp create --target web-01 \
+    --servers 0.pool.ntp.org --servers 1.pool.ntp.org
+  osapi client node ntp create --target _all \
+    --servers 0.pool.ntp.org --servers 1.pool.ntp.org
+  osapi client node ntp create --target _all \
+    --servers 0.pool.ntp.org`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

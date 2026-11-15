@@ -42,13 +42,12 @@ type initResult struct {
 var initCmd = &cobra.Command{
 	Use:   "init [path]",
 	Short: "Install osapi's agent skills into a repository",
-	Long: `Writes the skills compiled into this binary into the repository at path
-(the current directory by default), for each --tool, and a short section in the
-tool's instructions file pointing at them: CLAUDE.md for claude, AGENTS.md for
-codex. Text outside osapi's section is never touched.
-
-Run it again after upgrading osapi: it rewrites the skills to match the binary
-and removes files an older version shipped.`,
+	Long: "The command writes the skills in this binary for each `--tool`. It also\n" +
+		"writes a short section, with links to the skills, in the instructions file\n" +
+		"of that tool: `CLAUDE.md` or `AGENTS.md`. It does not change text outside\n" +
+		"the osapi section. Run it again after you upgrade osapi. It writes the\n" +
+		"skills again to agree with the binary. It removes the files that an older\n" +
+		"version installed.",
 	Example: `  osapi init
   osapi init --tool claude --tool codex
   osapi init ./ops-repo --json`,

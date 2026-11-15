@@ -30,6 +30,12 @@ import (
 var clientNodeServiceStopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop a systemd service",
+	Example: `  osapi client node service stop --target web-01 \
+    --name nginx.service
+  osapi client node service stop --target _all \
+    --name nginx.service
+  osapi client node service stop --target web-01 \
+    --name nginx.service --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

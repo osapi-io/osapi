@@ -32,7 +32,8 @@ import (
 var clientAgentStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Agent component health",
-	Long:  `Show health status for all registered agents.`,
+	Example: `  osapi client agent status
+  osapi client agent status --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 

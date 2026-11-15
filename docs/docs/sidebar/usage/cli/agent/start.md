@@ -1,42 +1,39 @@
 # Start
 
-Start the agent:
-
-```bash
-$ osapi agent start
-```
+Start the agent.
 
 The agent connects to NATS and subscribes to the job streams. It processes each
 job when the job arrives. It uses a provider for its platform to run each
 operation, for example node status, DNS queries and ping.
 
-## Configuration
+```bash
+osapi agent start
+```
 
-`osapi.yaml` or CLI flags configure the agent:
+## Examples
 
-| Flag                  | Description                         | Default         |
-| --------------------- | ----------------------------------- | --------------- |
-| `--agent-host`        | NATS server hostname                | `localhost`     |
-| `--agent-port`        | NATS server port                    | `4222`          |
-| `--agent-client-name` | NATS client name for identification | `osapi-agent`   |
-| `--agent-queue-group` | Queue group for load balancing      | `job-agents`    |
-| `--agent-hostname`    | Agent hostname for routing          | system hostname |
-| `--agent-max-jobs`    | Maximum concurrent jobs             | `10`            |
+```bash
+osapi agent start
+```
 
-## Consumer Settings
+## Global flags
 
-| Flag                         | Description                         | Default             |
-| ---------------------------- | ----------------------------------- | ------------------- |
-| `--consumer-max-deliver`     | Max delivery attempts before DLQ    | `5`                 |
-| `--consumer-ack-wait`        | Time to wait for acknowledgment     | `2m`                |
-| `--consumer-max-ack-pending` | Max unacknowledged messages         | `1000`              |
-| `--consumer-replay-policy`   | Replay policy (instant or original) | `instant`           |
-| `--consumer-back-off`        | Retry backoff intervals             | `30s,2m,5m,15m,30m` |
+| Flag                         | Description                                                                                                              | Default                 |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------- |
+| `--agent-client-name`        | NATS client name for agent                                                                                               | `osapi-agent`           |
+| `--agent-host`               | NATS server hostname for agent                                                                                           | `localhost`             |
+| `--agent-hostname`           | Agent hostname (defaults to system hostname)                                                                             |                         |
+| `--agent-max-jobs`           | Maximum concurrent jobs per agent                                                                                        | `10`                    |
+| `--agent-port`               | NATS server port for agent                                                                                               | `4222`                  |
+| `--agent-queue-group`        | NATS queue group for load balancing                                                                                      | `job-agents`            |
+| `--consumer-ack-wait`        | Time to wait for acknowledgment before retry                                                                             | `2m`                    |
+| `--consumer-back-off`        | Retry backoff intervals                                                                                                  | `[30s,2m,5m,15m,30m]`   |
+| `--consumer-max-ack-pending` | Maximum unacknowledged messages                                                                                          | `1000`                  |
+| `--consumer-max-deliver`     | Maximum delivery attempts before DLQ                                                                                     | `5`                     |
+| `--consumer-replay-policy`   | Replay policy: instant or original                                                                                       | `instant`               |
+| `-d, --debug`                | Enable or disable debug mode                                                                                             |                         |
+| `-j, --json`                 | Enable JSON output                                                                                                       |                         |
+| `-f, --osapi-file`           | Path to config file                                                                                                      | `/etc/osapi/osapi.yaml` |
+| `--sysctl-dir`               | Directory the agent writes osapi's kernel parameter files to, one osapi-&lt;key&gt;.conf per key. (behaviors.sysctl.dir) | `/etc/sysctl.d`         |
 
-## How It Works
-
-1. Connects to NATS and creates JetStream consumers
-2. Subscribes to query (`jobs.query.>`) and modify (`jobs.modify.>`) subjects
-3. Processes each job: it sends the job to the correct provider
-4. Writes status events and results back to the KV store
-5. Gracefully shuts down on SIGINT/SIGTERM
+[Output](../output.md) tells how the result is printed, and what `--json` gives.

@@ -31,7 +31,9 @@ import (
 var clientContainerDockerDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a container",
-	Long:  `Delete a container from the target node.`,
+	Example: `  osapi client node container docker delete --id a1b2c3d4e5f6
+  osapi client node container docker delete --id my-nginx --force
+  osapi client node container docker delete --id my-nginx --target web-01`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

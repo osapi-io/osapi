@@ -1,57 +1,41 @@
 # Delete
 
-Delete the DNS configuration that osapi manages for a network interface. The
-agent removes the `/etc/netplan/osapi-dns.yaml` file and runs `netplan apply`:
-
-```bash
-$ osapi client node network dns delete \
-    --interface eth0
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED
-  web-01    changed  true
-
-  1 host: 1 changed
-```
-
-When you target all hosts:
-
-```bash
-$ osapi client node network dns delete \
-    --interface eth0 \
-    --target _all
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED
-  server1   changed  true
-  server2   skip
-
-  2 hosts: 1 changed, 1 skipped
-
-  Details:
-  server2   unsupported platform
-```
+Delete the DNS configuration.
 
 If osapi does not manage a DNS configuration for the interface, the command
 returns `changed: false`.
 
-## JSON Output
+```bash
+osapi client node network dns delete
+```
 
-Use `--json` to get the full API response:
+## Examples
 
 ```bash
-$ osapi client node network dns delete \
-    --interface eth0 --json
-{"results":[{"hostname":"web-01","changed":true,
-"status":"ok"}],"job_id":"..."}
+osapi client node network dns delete \
+  --interface eth0
+osapi client node network dns delete \
+  --interface eth0 \
+  --target _all
+osapi client node network dns delete \
+  --interface eth0 --json
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default  |
-| -------------- | -------------------------------------------------------- | -------- |
-| `--interface`  | Name of the network interface                            | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`   | Output raw JSON response                                 |          |
+| Flag          | Description                              | Default |
+| ------------- | ---------------------------------------- | ------- |
+| `--interface` | Name of the network interface (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../../output.md) tells how the result is printed, and what
+`--json` gives.

@@ -28,6 +28,8 @@ import (
 var clientHealthCmd = &cobra.Command{
 	Use:   "health",
 	Short: "Health check commands",
+	Long: "`osapi client health` without a subcommand shows the subcommands. Use `osapi\n" +
+		"client health liveness` to do a liveness probe.",
 }
 
 func init() {

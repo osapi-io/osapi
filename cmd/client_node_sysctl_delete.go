@@ -30,6 +30,13 @@ import (
 var clientNodeSysctlDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a sysctl parameter",
+	Long: "The running kernel keeps the value.",
+	Example: `  osapi client node sysctl delete --target web-01 \
+    --key net.ipv4.ip_forward
+  osapi client node sysctl delete --target _all \
+    --key vm.swappiness
+  osapi client node sysctl delete --target web-01 \
+    --key net.ipv4.ip_forward --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

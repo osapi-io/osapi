@@ -30,6 +30,12 @@ import (
 var clientNodeServiceRestartCmd = &cobra.Command{
 	Use:   "restart",
 	Short: "Restart a systemd service",
+	Example: `  osapi client node service restart --target web-01 \
+    --name nginx.service
+  osapi client node service restart --target _all \
+    --name nginx.service
+  osapi client node service restart --target web-01 \
+    --name nginx.service --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

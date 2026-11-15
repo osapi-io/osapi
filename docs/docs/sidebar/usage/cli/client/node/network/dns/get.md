@@ -1,58 +1,34 @@
 # Get
 
-Get the node's DNS config:
+Get the DNS configuration.
 
 ```bash
-$ osapi client node network dns get --interface eth0
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  SERVERS                              SEARCH DOMAINS
-  web-01    ok      192.168.0.247, 2607:f428::1          example.com
-
-  1 host: 1 ok
+osapi client node network dns get
 ```
 
-When you target all hosts:
+## Examples
 
 ```bash
-$ osapi client node network dns get --interface eth0 --target _all
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  SERVERS                      SEARCH DOMAINS
-  server1   ok      192.168.0.247, 2607:f428::1  example.com
-  server2   ok      8.8.8.8, 1.1.1.1             local
-
-  2 hosts: 2 ok
-```
-
-When some hosts fail or are skipped:
-
-```bash
-$ osapi client node network dns get --interface eth0 --target _all
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  SERVERS                      SEARCH DOMAINS
-  server1   ok      192.168.0.247, 2607:f428::1  example.com
-  server2   skip
-
-  2 hosts: 1 ok, 1 skipped
-
-  Details:
-  server2   unsupported platform
-```
-
-Target a label to query a group of servers:
-
-```bash
-$ osapi client node network dns get --interface eth0 --target group:web
+osapi client node network dns get --interface eth0
+osapi client node network dns get --interface eth0 --target _all
+osapi client node network dns get --interface eth0 --target group:web
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default  |
-| -------------- | -------------------------------------------------------- | -------- |
-| `--interface`  | Name of the network interface to query DNS for           | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
+| Flag          | Description                                                                    | Default |
+| ------------- | ------------------------------------------------------------------------------ | ------- |
+| `--interface` | Name of the network interface to retrieve DNS server configurations (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../../output.md) tells how the result is printed, and what
+`--json` gives.

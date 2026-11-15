@@ -31,7 +31,10 @@ import (
 var clientNodeLogQueryCmd = &cobra.Command{
 	Use:   "query",
 	Short: "Query journal entries",
-	Long:  `Query journal log entries on the target node. With --unit, only entries\nfrom that systemd unit.`,
+	Example: `  osapi client node log query --target web-01
+  osapi client node log query --target web-01 \
+    --lines 50 --since 1h --priority err
+  osapi client node log query --target _all --lines 5`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if unit, _ := cmd.Flags().GetString("unit"); unit != "" {
 			clientNodeLogQueryUnitCmd.Run(cmd, args)

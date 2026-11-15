@@ -30,6 +30,8 @@ import (
 var clientNodeUserDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a user account",
+	Example: `  osapi client node user delete --target web-01 --name deploy
+  osapi client node user delete --target _all --name deploy`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -31,6 +31,15 @@ import (
 var clientNodeCertificateUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update a custom CA certificate",
+	Long: "The agent deploys the PEM file again and runs `update-ca-certificates` to\n" +
+		"make the trust store again. The command fails if the certificate does not\n" +
+		"exist.",
+	Example: `  osapi client node certificate update --target web-01 \
+    --name internal-ca --object internal-ca-v2
+  osapi client node certificate update --target _all \
+    --name internal-ca --object internal-ca-v2
+  osapi client node certificate update --target web-01 \
+    --name internal-ca --object internal-ca-v2 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

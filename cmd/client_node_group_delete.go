@@ -28,8 +28,9 @@ import (
 
 // clientNodeGroupDeleteCmd represents the group delete command.
 var clientNodeGroupDeleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "Delete a group",
+	Use:     "delete",
+	Short:   "Delete a group",
+	Example: `  osapi client node group delete --target web-01 --name deploy`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

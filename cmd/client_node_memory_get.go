@@ -32,7 +32,9 @@ import (
 var clientNodeMemoryGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get memory usage",
-	Long:  `Get memory usage information from the target node.`,
+	Example: `  osapi client node memory get
+  osapi client node memory get --target _all
+  osapi client node memory get --target group:web`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -30,8 +30,18 @@ import (
 var clientNodeNetworkDNSUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update the DNS configuration",
-	Long: `Update the current DNS configuration with the supplied options.
-`,
+	Example: `  osapi client node network dns update \
+    --servers "1.1.1.1,2.2.2.2" \
+    --search-domains "foo.bar,baz.qux" \
+    --interface eth0
+  osapi client node network dns update \
+    --servers "1.1.1.1,2.2.2.2" \
+    --interface eth0 \
+    --target _all
+  osapi client node network dns update \
+    --servers "1.1.1.1,2.2.2.2" \
+    --interface eth0 \
+    --target group:web`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

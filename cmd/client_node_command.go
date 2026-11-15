@@ -27,7 +27,7 @@ import (
 // clientNodeCommandCmd represents the clientNodeCommand command.
 var clientNodeCommandCmd = &cobra.Command{
 	Use:   "command",
-	Short: "The command subcommand",
+	Short: "Run a command on target hosts",
 }
 
 func init() {

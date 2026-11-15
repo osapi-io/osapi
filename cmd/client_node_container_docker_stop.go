@@ -31,7 +31,9 @@ import (
 var clientContainerDockerStopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop a running container",
-	Long:  `Stop a running container on the target node.`,
+	Example: `  osapi client node container docker stop --id a1b2c3d4e5f6
+  osapi client node container docker stop --id my-nginx --timeout 30
+  osapi client node container docker stop --id my-nginx --target web-01`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

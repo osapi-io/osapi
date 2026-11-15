@@ -27,7 +27,9 @@ import (
 // clientNodeCmd represents the clientNode command.
 var clientNodeCmd = &cobra.Command{
 	Use:   "node",
-	Short: "The node subcommand",
+	Short: "Send jobs to the agents of target hosts",
+	Long: "These commands send jobs to the agents of the target host. To find the\n" +
+		"agents in the registry, refer to the [Agent](../agent/agent.mdx) commands.",
 }
 
 func init() {

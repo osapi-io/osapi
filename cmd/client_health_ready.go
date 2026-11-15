@@ -30,8 +30,10 @@ import (
 var clientHealthReadyCmd = &cobra.Command{
 	Use:   "ready",
 	Short: "Readiness probe",
-	Long: `Check if the API server is ready to accept traffic.
-`,
+	Long: "This endpoint checks that it can reach all its dependencies, NATS and the KV\n" +
+		"buckets.",
+	Example: `  osapi client health ready
+  osapi client health ready --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		resp, err := sdkClient.Health.GetReady(ctx)

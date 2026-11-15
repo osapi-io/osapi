@@ -30,7 +30,9 @@ import (
 var clientNodeHostnameGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get the node's hostname",
-	Long:  `Get the hostname from the target node.`,
+	Example: `  osapi client node hostname get
+  osapi client node hostname get --target _all
+  osapi client node hostname get --target darwin-host`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -32,8 +32,9 @@ import (
 var clientNodeNetworkPingCmd = &cobra.Command{
 	Use:   "ping",
 	Short: "Ping the specified server",
-	Long: `Ping the specified server and return results.
-`,
+	Example: `  osapi client node network ping --address 8.8.8.8
+  osapi client node network ping --address 8.8.8.8 --target _all
+  osapi client node network ping --address 8.8.8.8 --target group:web`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -101,14 +101,13 @@ type behaviorDescription struct {
 var behaviorGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Show a behavior: its surfaces, chain, methods, types and telemetry",
-	Long: `Show a behavior: where it is served, its platforms, the programs it runs
-with and without sudo, its methods, types, settings and telemetry.
-
-Uses lists the behaviors it is built on: their providers are built first on
-the agent and its methods call theirs on the same host, in the same job. If a
-behavior it uses cannot run on a platform, this one reports skipped there too.
-Used by lists the behaviors built on this one. Internal: yes means it has no
-route, command or permission, and only the behaviors in Used by call it.`,
+	Long: "**Uses** lists the behaviors this one is built on. The agent builds their\n" +
+		"providers first, and the methods of this behavior call theirs on the same\n" +
+		"host, in the same job. If a behavior that it uses cannot run on a platform,\n" +
+		"this one reports `skipped` there too. **Used by** lists the behaviors built\n" +
+		"on this one. A behavior with `Internal: yes` has no route, no command and no\n" +
+		"permission. Use `--method` to show one method in full: its fields with their\n" +
+		"constraints, its output and its examples.",
 	Example: `  osapi behavior get --name sysctl
   osapi behavior get --name sysctl --method create
   osapi behavior get --name sysctl --method create --json`,

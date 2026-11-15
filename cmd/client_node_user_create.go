@@ -31,6 +31,10 @@ import (
 var clientNodeUserCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a user account",
+	Example: `  osapi client node user create --target web-01 \
+    --name deploy --shell /bin/bash --groups sudo,docker
+  osapi client node user create --target _all \
+    --name deploy --shell /bin/bash --groups sudo,docker`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

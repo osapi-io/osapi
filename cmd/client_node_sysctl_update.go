@@ -31,6 +31,15 @@ import (
 var clientNodeSysctlUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update a sysctl parameter",
+	Long: "The agent writes the value again to `/etc/sysctl.d/osapi-{key}.conf` and\n" +
+		"applies it immediately with `sysctl -p`. The command fails if osapi does not\n" +
+		"manage the key.",
+	Example: `  osapi client node sysctl update --target web-01 \
+    --key net.ipv4.ip_forward --value 0
+  osapi client node sysctl update --target _all \
+    --key vm.swappiness --value 20
+  osapi client node sysctl update --target web-01 \
+    --key vm.swappiness --value 20 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

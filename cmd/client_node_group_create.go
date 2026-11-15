@@ -29,8 +29,9 @@ import (
 
 // clientNodeGroupCreateCmd represents the group create command.
 var clientNodeGroupCreateCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create a group",
+	Use:     "create",
+	Short:   "Create a group",
+	Example: `  osapi client node group create --target web-01 --name deploy`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

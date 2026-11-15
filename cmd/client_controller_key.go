@@ -34,13 +34,17 @@ import (
 var clientControllerKeyCmd = &cobra.Command{
 	Use:   "key",
 	Short: "Controller key management",
+	Long: "The `key` subcommands operate on the PKI key pair of the local controller.",
 }
 
 // clientControllerKeyFingerprintCmd prints the local controller's key fingerprint.
 var clientControllerKeyFingerprintCmd = &cobra.Command{
 	Use:   "fingerprint",
 	Short: "Show the local controller key fingerprint",
-	Long:  `Read the local controller key and display its SHA256 fingerprint.`,
+	Long: "Agents use this fingerprint to verify that jobs come from a trusted\n" +
+		"controller. If no key exists, the command makes a new key pair. Then it\n" +
+		"shows the fingerprint.",
+	Example: `  osapi client controller key fingerprint`,
 	Run: func(_ *cobra.Command, _ []string) {
 		keyDir := appConfig.Controller.PKI.KeyDir
 		if keyDir == "" {

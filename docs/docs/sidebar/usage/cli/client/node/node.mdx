@@ -1,11 +1,16 @@
 # Node
 
-CLI for node operations: system queries, network management and commands. These
-commands send jobs to the agents of the target host.
+Send jobs to the agents of target hosts.
 
-To find the agents in the registry, refer to the [Agent](../agent/agent.mdx)
-commands.
+These commands send jobs to the agents of the target host. To find the agents in
+the registry, refer to the [Agent](../agent/agent.mdx) commands.
 
 import DocCardList from '@theme/DocCardList';
 
 <DocCardList />
+
+## Flags
+
+| Flag           | Description                                              | Default |
+| -------------- | -------------------------------------------------------- | ------- |
+| `-T, --target` | Target: \_all, \_any, hostname, or label (group:web.dev) | `_all`  |

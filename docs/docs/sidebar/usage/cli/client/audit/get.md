@@ -1,30 +1,34 @@
 # Get
 
-Get one audit log entry by its UUID. It needs the `audit:read` permission, which
-the admin role has by default.
+Get a single audit log entry.
+
+It needs the `audit:read` permission, which the admin role has by default.
 
 ```bash
-$ osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000
+osapi client audit get
+```
 
-  ID: 550e8400-e29b-41d4-a716-446655440000
-  Timestamp: 2026-02-21 10:30:00
-  User: ops@example.com
-  Roles: admin
-  Method: GET                   Path: /node/hostname
-  Status: 200                   Duration: 42ms
-  Source IP: 127.0.0.1
-  Trace ID: 4bf92f3577b34da6a3ce929d0e0e4736
+## Examples
+
+```bash
+osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000
+osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000 --json
 ```
 
 ## Flags
 
-| Flag   | Description                | Default  |
-| ------ | -------------------------- | -------- |
-| `--id` | Audit entry ID to retrieve | required |
+| Flag   | Description                           | Default |
+| ------ | ------------------------------------- | ------- |
+| `--id` | Audit entry ID to retrieve (required) |         |
 
-Use `--json` to get the raw JSON output:
+## Global flags
 
-```bash
-$ osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000 --json
-{"entry":{"id":"550e8400-e29b-41d4-a716-446655440000","timestamp":"2026-02-21T10:30:00Z","user":"ops@example.com","roles":["admin"],"method":"GET","path":"/node/hostname","source_ip":"127.0.0.1","response_code":200,"duration_ms":42,"trace_id":"4bf92f3577b34da6a3ce929d0e0e4736"}}
-```
+| Flag               | Description                    | Default                 |
+| ------------------ | ------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode   |                         |
+| `-j, --json`       | Enable JSON output             |                         |
+| `-f, --osapi-file` | Path to config file            | `/etc/osapi/osapi.yaml` |
+| `--url`            | URL the client will connect to | `http://0.0.0.0:8080`   |
+
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

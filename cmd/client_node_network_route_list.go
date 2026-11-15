@@ -32,7 +32,9 @@ import (
 var clientNodeNetworkRouteListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List network routes",
-	Long:  `List all network routes on the target node.`,
+	Example: `  osapi client node network route list --target web-01
+  osapi client node network route list --target _all
+  osapi client node network route list --target web-01 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

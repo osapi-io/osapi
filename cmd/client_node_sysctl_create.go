@@ -31,6 +31,15 @@ import (
 var clientNodeSysctlCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a sysctl parameter",
+	Long: "The agent writes the value to `/etc/sysctl.d/osapi-{key}.conf` and applies\n" +
+		"it immediately with `sysctl -p`. If osapi already manages the parameter, the\n" +
+		"command returns `changed: false`.",
+	Example: `  osapi client node sysctl create --target web-01 \
+    --key net.ipv4.ip_forward --value 1
+  osapi client node sysctl create --target _all \
+    --key vm.swappiness --value 10
+  osapi client node sysctl create --target web-01 \
+    --key vm.swappiness --value 10 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

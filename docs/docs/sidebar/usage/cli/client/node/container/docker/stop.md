@@ -1,43 +1,35 @@
 # Stop
 
-Stop a running container on the target node:
+Stop a running container.
 
 ```bash
-$ osapi client node container docker stop --id a1b2c3d4e5f6
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED  MESSAGE
-  server1   changed  true     container stopped
-
-  1 host: 1 changed
+osapi client node container docker stop
 ```
 
-Stop with a custom timeout, in seconds to wait before the container is killed:
+## Examples
 
 ```bash
-$ osapi client node container docker stop --id my-nginx --timeout 30
-```
-
-Target a specific host:
-
-```bash
-$ osapi client node container docker stop --id my-nginx --target web-01
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node container docker stop --id a1b2c3d4e5f6 --json
+osapi client node container docker stop --id a1b2c3d4e5f6
+osapi client node container docker stop --id my-nginx --timeout 30
+osapi client node container docker stop --id my-nginx --target web-01
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `--id`         | Container ID or name to stop (**required**)              |         |
-| `--timeout`    | Seconds to wait before killing the container             | `10`    |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| Flag        | Description                                  | Default |
+| ----------- | -------------------------------------------- | ------- |
+| `--id`      | Container ID to stop (required)              |         |
+| `--timeout` | Seconds to wait before killing the container | `10`    |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../../output.md) tells how the result is printed, and what
+`--json` gives.

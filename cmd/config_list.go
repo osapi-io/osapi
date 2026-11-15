@@ -33,13 +33,10 @@ import (
 var configListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List every setting, its value in effect and where it came from",
-	Long: `Lists every key osapi reads with the value in effect and its source:
-env, file, default or unset. The file and the environment are read the way
-osapi start reads them; without a config file the values are the defaults and
-the environment. Passwords, signing keys and tokens print as ********.
-
---json carries each key's type, default, rules and description too. osapi
-config get --key <key> shows one key in full.`,
+	Long: "Each value shows where it came from: `env`, `file`, `default` or `unset`.\n" +
+		"The file and the environment are read the way `osapi start` reads them.\n" +
+		"Without a config file, the values are the defaults and the environment.\n" +
+		"Passwords, signing keys and tokens print as `********`.",
 	Example: `  osapi config list
   osapi config list -f ./osapi.yaml --json`,
 	Args: cobra.NoArgs,

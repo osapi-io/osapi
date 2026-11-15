@@ -32,7 +32,11 @@ import (
 var clientAgentDrainCmd = &cobra.Command{
 	Use:   "drain",
 	Short: "Drain an agent",
-	Long:  `Stop an agent from accepting new jobs. In-flight jobs continue to completion.`,
+	Long: "The agent changes from `Ready` to `Draining`. When all its running jobs are\n" +
+		"complete, the state is `Cordoned`. The agent continues to run and to send\n" +
+		"heartbeats. It only stops the intake of new work from the job queue. Use\n" +
+		"`agent undrain` to accept jobs again.",
+	Example: `  osapi client agent drain --hostname web-01`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		hostname, _ := cmd.Flags().GetString("hostname")

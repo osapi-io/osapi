@@ -28,8 +28,9 @@ import (
 
 // clientNodeScheduleListCmd represents the schedule list command.
 var clientNodeScheduleListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List all scheduled entries",
+	Use:     "list",
+	Short:   "List all scheduled entries",
+	Example: `  osapi client node schedule list --target web-01`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

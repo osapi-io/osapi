@@ -1,22 +1,34 @@
 # Create
 
-Create a new group:
+Create a group.
 
 ```bash
-$ osapi client node group create --target web-01 --name deploy
+osapi client node group create
+```
 
-  HOSTNAME  STATUS   NAME     CHANGED
-  web-01    changed  deploy   true
+## Examples
 
-  1 host: 1 changed
+```bash
+osapi client node group create --target web-01 --name deploy
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
-| `--name`       | Group name (required)                                    |         |
-| `--gid`        | Numeric group ID (system assigns if omitted)             |         |
-| `--system`     | Create a system group                                    | `false` |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| Flag       | Description                                  | Default |
+| ---------- | -------------------------------------------- | ------- |
+| `--gid`    | Numeric group ID (system assigns if omitted) |         |
+| `--name`   | Group name (required)                        |         |
+| `--system` | Create a system group                        |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

@@ -31,6 +31,16 @@ import (
 var clientNodeNetworkInterfaceCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a network interface configuration",
+	Long: "The command fails if osapi already manages a configuration for that\n" +
+		"interface.",
+	Example: `  osapi client node network interface create \
+    --target web-01 --name eth0 \
+    --address 192.168.1.100/24 \
+    --gateway4 192.168.1.1
+  osapi client node network interface create \
+    --target web-01 --name eth1 --dhcp4
+  osapi client node network interface create \
+    --target _all --name eth1 --dhcp4`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

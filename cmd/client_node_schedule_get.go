@@ -28,8 +28,9 @@ import (
 
 // clientNodeScheduleGetCmd represents the schedule get command.
 var clientNodeScheduleGetCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Get a scheduled entry by name",
+	Use:     "get",
+	Short:   "Get a scheduled entry by name",
+	Example: `  osapi client node schedule get --target web-01 --name backup-daily`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

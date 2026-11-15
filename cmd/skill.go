@@ -42,9 +42,9 @@ func skillSources() (fs.FS, fs.FS) {
 var skillCmd = &cobra.Command{
 	Use:   "skill",
 	Short: "Show the agent skills that this binary has",
-	Long: `Shows the skills compiled into this binary. osapi init installs the skills
-that operate hosts. The skills that change osapi itself, such as
-build-a-behavior, are only served here: a checkout of osapi points to them.`,
+	Example: `  osapi skill list
+  osapi skill get --name build-a-behavior
+  osapi skill get --name build-a-behavior --reference references/services.md`,
 }
 
 var skillListCmd = &cobra.Command{
@@ -96,9 +96,6 @@ type skillFile struct {
 var skillGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Print a skill, or one of its reference files",
-	Long: `Prints the SKILL.md of a skill as markdown. With --reference, prints one of
-its reference files, for example references/services.md. An agent reads the
-output and obeys it.`,
 	Example: `  osapi skill get --name build-a-behavior
   osapi skill get --name build-a-behavior --reference references/services.md`,
 	Args: cobra.NoArgs,

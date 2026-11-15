@@ -27,7 +27,7 @@ import (
 // clientNodeNetworkCmd represents the clientNodeNetwork command.
 var clientNodeNetworkCmd = &cobra.Command{
 	Use:   "network",
-	Short: "The network subcommand",
+	Short: "Manage the network of target hosts: DNS, interfaces, routes and ping",
 }
 
 func init() {

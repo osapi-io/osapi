@@ -1,95 +1,49 @@
 # Create
 
-Make a new Netplan interface configuration on a target host. The command fails
-if osapi already manages a configuration for that interface. To replace it, use
-`update`:
+Create a network interface configuration.
+
+The command fails if osapi already manages a configuration for that interface.
 
 ```bash
-$ osapi client node network interface create \
-    --target web-01 --name eth0 \
-    --address 192.168.1.100/24 \
-    --gateway4 192.168.1.1
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME    CHANGED
-  web-01    changed  eth0    true
-
-  1 host: 1 changed
+osapi client node network interface create
 ```
 
-Create an interface with DHCP:
+## Examples
 
 ```bash
-$ osapi client node network interface create \
-    --target web-01 --name eth1 --dhcp4
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME    CHANGED
-  web-01    changed  eth1    true
-
-  1 host: 1 changed
-```
-
-Broadcast to all hosts at once:
-
-```bash
-$ osapi client node network interface create \
-    --target _all --name eth1 --dhcp4
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME    CHANGED
-  web-01    changed  eth1    true
-  web-02    changed  eth1    true
-
-  2 hosts: 2 changed
-```
-
-When some hosts are skipped, for example macOS agents:
-
-```bash
-$ osapi client node network interface create \
-    --target _all --name eth1 --dhcp4
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME    CHANGED
-  web-01    changed  eth1    true
-  mac-01    skip
-
-  2 hosts: 1 changed, 1 skipped
-
-  Details:
-  mac-01    unsupported platform
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node network interface create \
-    --target web-01 --name eth0 \
-    --address 192.168.1.100/24 \
-    --gateway4 192.168.1.1 --json
-{"results":[{"hostname":"web-01","name":"eth0",
-"changed":true,"status":"ok"}],"job_id":"..."}
+osapi client node network interface create \
+  --target web-01 --name eth0 \
+  --address 192.168.1.100/24 \
+  --gateway4 192.168.1.1
+osapi client node network interface create \
+  --target web-01 --name eth1 --dhcp4
+osapi client node network interface create \
+  --target _all --name eth1 --dhcp4
 ```
 
 ## Flags
 
-| Flag            | Description                                              | Default  |
-| --------------- | -------------------------------------------------------- | -------- |
-| `--name`        | Interface name                                           | required |
-| `--dhcp4`       | Enable DHCPv4                                            |          |
-| `--dhcp6`       | Enable DHCPv6                                            |          |
-| `--address`     | IP address in CIDR notation (repeatable)                 |          |
-| `--gateway4`    | IPv4 gateway address                                     |          |
-| `--gateway6`    | IPv6 gateway address                                     |          |
-| `--mtu`         | Maximum transmission unit                                |          |
-| `--mac-address` | Hardware MAC address                                     |          |
-| `--wakeonlan`   | Enable Wake-on-LAN                                       |          |
-| `-T, --target`  | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`    | Output raw JSON response                                 |          |
+| Flag            | Description                              | Default |
+| --------------- | ---------------------------------------- | ------- |
+| `--address`     | IP address in CIDR notation (repeatable) |         |
+| `--dhcp4`       | Enable DHCPv4                            |         |
+| `--dhcp6`       | Enable DHCPv6                            |         |
+| `--gateway4`    | IPv4 gateway address                     |         |
+| `--gateway6`    | IPv6 gateway address                     |         |
+| `--mac-address` | Hardware MAC address                     |         |
+| `--mtu`         | Maximum transmission unit                |         |
+| `--name`        | Interface name (required)                |         |
+| `--wakeonlan`   | Enable Wake-on-LAN                       |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../../output.md) tells how the result is printed, and what
+`--json` gives.

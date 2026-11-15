@@ -33,7 +33,16 @@ import (
 var clientContainerDockerExecCmd = &cobra.Command{
 	Use:   "exec",
 	Short: "Execute a command in a container",
-	Long:  `Execute a command inside a running container on the target node.`,
+	Example: `  osapi client node container docker exec --id my-nginx --command "ls,-la,/"
+  osapi client node container docker exec \
+    --id my-app \
+    --command "python,-c,import os; print(os.environ['MY_VAR'])" \
+    --env "MY_VAR=hello" \
+    --working-dir /app
+  osapi client node container docker exec \
+    --id my-nginx \
+    --command "nginx,-t" \
+    --target web-01`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

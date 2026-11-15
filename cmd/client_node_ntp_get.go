@@ -32,6 +32,9 @@ import (
 var clientNodeNtpGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get NTP configuration and sync status",
+	Example: `  osapi client node ntp get --target web-01
+  osapi client node ntp get --target _all
+  osapi client node ntp get --target web-01 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

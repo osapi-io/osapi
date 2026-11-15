@@ -30,6 +30,9 @@ import (
 var clientNodePackageInstallCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install a package",
+	Example: `  osapi client node package install --target web-01 --name nginx
+  osapi client node package install --target _all --name htop
+  osapi client node package install --target web-01 --name nginx --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

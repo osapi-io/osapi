@@ -1,63 +1,37 @@
 # Start
 
-Start a systemd service on a target host. If the service was not running, the
-command returns `changed: true`:
+Start a systemd service.
 
 ```bash
-$ osapi client node service start --target web-01 \
-    --name nginx.service
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME             CHANGED
-  web-01    changed  nginx.service    true
-
-  1 host: 1 changed
+osapi client node service start
 ```
 
-If the service already runs, the command returns `changed: false`:
+## Examples
 
 ```bash
-$ osapi client node service start --target web-01 \
-    --name nginx.service
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  NAME             CHANGED
-  web-01    ok      nginx.service    false
-
-  1 host: 1 ok
-```
-
-Broadcast start to all hosts:
-
-```bash
-$ osapi client node service start --target _all \
-    --name nginx.service
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME             CHANGED
-  web-01    changed  nginx.service    true
-  web-02    changed  nginx.service    true
-
-  2 hosts: 2 changed
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node service start --target web-01 \
-    --name nginx.service --json
-{"results":[{"hostname":"web-01","name":"nginx.service","changed":true,"status":"ok"}],"job_id":"..."}
+osapi client node service start --target web-01 \
+  --name nginx.service
+osapi client node service start --target _all \
+  --name nginx.service
+osapi client node service start --target web-01 \
+  --name nginx.service --json
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default  |
-| -------------- | -------------------------------------------------------- | -------- |
-| `--name`       | Service name to start                                    | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`   | Output raw JSON response                                 |          |
+| Flag     | Description                      | Default |
+| -------- | -------------------------------- | ------- |
+| `--name` | Service name to start (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

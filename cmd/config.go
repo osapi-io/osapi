@@ -29,11 +29,8 @@ import (
 var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "List, get and validate osapi's settings",
-	Long: `osapi reads its settings from a YAML file (--osapi-file, default
-/etc/osapi/osapi.yaml), then from OSAPI_ environment variables, which win over
-the file, then from built-in defaults. These commands list every setting with the
-value in effect and where it came from, show one in full, and check a file
-before osapi starts with it.`,
+	Long: "These commands load the config themselves. Thus they report a broken file,\n" +
+		"and the command does not stop.",
 }
 
 func init() {

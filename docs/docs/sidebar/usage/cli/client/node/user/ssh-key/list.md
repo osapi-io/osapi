@@ -1,52 +1,37 @@
 # List
 
-List SSH authorized keys for a user:
-
-```bash
-$ osapi client node user ssh-key list --target web-01 --name deploy
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  TYPE         FINGERPRINT      COMMENT
-  web-01    ok      ssh-ed25519  SHA256:abc123...  user@laptop
-  web-01    ok      ssh-rsa      SHA256:def456...  deploy-ci
-
-  1 host: 1 ok
-```
-
-When you target all hosts:
-
-```bash
-$ osapi client node user ssh-key list --target _all --name deploy
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  TYPE         FINGERPRINT      COMMENT
-  web-01    ok      ssh-ed25519  SHA256:abc123...  user@laptop
-  web-02    ok      ssh-ed25519  SHA256:abc123...  user@laptop
-  web-02    ok      ssh-rsa      SHA256:ghi789...  deploy-prod
-
-  2 hosts: 2 ok
-```
+List SSH authorized keys.
 
 The output does not show hosts without authorized keys. It shows skipped hosts,
 for example unsupported platforms, with their error.
 
-## JSON Output
+```bash
+osapi client node user ssh-key list
+```
 
-Use `--json` to get the full API response:
+## Examples
 
 ```bash
-$ osapi client node user ssh-key list --target web-01 --name deploy --json
-{"results":[{"hostname":"web-01","status":"ok","keys":[
-{"type":"ssh-ed25519","fingerprint":"SHA256:abc123...",
-"comment":"user@laptop"}]}],"job_id":"..."}
+osapi client node user ssh-key list --target web-01 --name deploy
+osapi client node user ssh-key list --target _all --name deploy
+osapi client node user ssh-key list --target web-01 --name deploy --json
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
-| `--name`       | Username to list SSH keys for (required)                 |         |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| Flag     | Description                              | Default |
+| -------- | ---------------------------------------- | ------- |
+| `--name` | Username to list SSH keys for (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../../output.md) tells how the result is printed, and what
+`--json` gives.

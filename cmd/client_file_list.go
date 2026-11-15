@@ -32,7 +32,9 @@ import (
 var clientFileListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List stored files",
-	Long:  `List all files stored in the OSAPI Object Store. With --stale, list\nonly the deployments whose file changed since they were deployed.`,
+	Example: `  osapi client file list
+  osapi client file list --json
+  osapi client file list --stale`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if stale, _ := cmd.Flags().GetBool("stale"); stale {
 			clientFileListStaleCmd.Run(cmd, args)

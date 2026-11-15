@@ -32,15 +32,10 @@ import (
 var behaviorCmd = &cobra.Command{
 	Use:   "behavior",
 	Short: "List, describe and validate the behaviors this binary has",
-	Long: `A behavior is what osapi can do to a host, such as manage kernel
-parameters. Each one is a typed definition, and its API routes, CLI commands,
-spec and docs are built from it. These commands read those definitions.
-
-A behavior can be built on others. One that declares behavior.Requires calls
-the required behaviors' methods directly, on the same host inside the same
-job; 'osapi behavior get' lists them under Uses, and the behaviors built on
-it under Used by. A behavior that exists only to be built on is internal: it
-has no route, command or permission, and only other behaviors call it.`,
+	Long: "A behavior is one thing osapi manages on a host, such as kernel parameters;\n" +
+		"see [Behaviors](../../../architecture/behaviors.md). These commands read the\n" +
+		"definitions in the binary. Thus they need no config file and no controller.\n" +
+		"What they print always agrees with the build that you run.",
 }
 
 func init() {

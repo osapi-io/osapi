@@ -31,7 +31,17 @@ import (
 var clientContainerDockerCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new container",
-	Long:  `Create a new container on the target node from the specified image.`,
+	Example: `  osapi client node container docker create --image nginx:latest
+  osapi client node container docker create \
+    --image nginx:latest \
+    --name my-nginx \
+    --env "PORT=8080" --env "DEBUG=true" \
+    --port "8080:80" --port "8443:443" \
+    --volume "/data:/var/lib/data"
+  osapi client node container docker create \
+    --image alpine:latest \
+    --name my-alpine \
+    --auto-start=false`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -32,6 +32,13 @@ import (
 var clientNodeUserSSHKeyDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete an SSH authorized key",
+	Long: "The agent removes the key with the given SHA256 fingerprint from the\n" +
+		"`~/.ssh/authorized_keys` file of the user. If it does not find the\n" +
+		"fingerprint, the command returns `changed: false`.",
+	Example: `  osapi client node user ssh-key delete --target web-01 \
+    --name deploy --fingerprint 'SHA256:abc123...'
+  osapi client node user ssh-key delete --target _all \
+    --name deploy --fingerprint 'SHA256:abc123...'`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -36,8 +36,8 @@ import (
 var controllerCmd = &cobra.Command{
 	Use:   "controller",
 	Short: "Manage the controller process",
-	Long: `Manage the control plane process. The controller runs the REST API,
-component heartbeat, and condition notification watcher.`,
+	Long: "The controller serves the REST API, writes its heartbeat, and watches\n" +
+		"conditions to send notifications.",
 	PersistentPreRun: func(_ *cobra.Command, _ []string) {
 		masker := masker.NewMaskerMarshaler()
 		maskedConfig, err := masker.Struct(&appConfig)

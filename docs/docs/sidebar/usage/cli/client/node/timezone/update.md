@@ -1,60 +1,36 @@
-# update
+# Update
 
-Update the system timezone on a target node.
-
-## Usage
+Update system timezone.
 
 ```bash
-osapi client node timezone update [flags]
+osapi client node timezone update
 ```
-
-## Flags
-
-| Flag         | Type   | Default | Description                                |
-| ------------ | ------ | ------- | ------------------------------------------ |
-| `--target`   | string | `_any`  | Target hostname, `_all`, or label selector |
-| `--timezone` | string |         | IANA timezone name (required)              |
-| `--json`     | bool   | `false` | Output raw JSON response                   |
 
 ## Examples
 
 ```bash
-# Set timezone on a specific host
+osapi client node timezone update [flags]
 osapi client node timezone update --target web-01 \
   --timezone America/New_York
-
-# Set timezone on all hosts
 osapi client node timezone update --target _all \
   --timezone UTC
-
-# Get raw JSON output
-osapi client node timezone update --target web-01 \
-  --timezone UTC --json
 ```
 
-## Output
+## Flags
 
-```
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
+| Flag         | Description                                           | Default |
+| ------------ | ----------------------------------------------------- | ------- |
+| `--timezone` | IANA timezone name (required, e.g., America/New_York) |         |
 
-  HOSTNAME  STATUS   CHANGED
-  web-01    changed  true
+## Global flags
 
-  1 host: 1 changed
-```
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
 
-## JSON Output
-
-```json
-{
-  "job_id": "550e8400-e29b-41d4-a716-446655440000",
-  "results": [
-    {
-      "hostname": "web-01",
-      "status": "ok",
-      "timezone": "America/New_York",
-      "changed": true
-    }
-  ]
-}
-```
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

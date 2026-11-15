@@ -31,6 +31,11 @@ import (
 var clientNodeTimezoneUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update system timezone",
+	Example: `  osapi client node timezone update [flags]
+  osapi client node timezone update --target web-01 \
+    --timezone America/New_York
+  osapi client node timezone update --target _all \
+    --timezone UTC`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

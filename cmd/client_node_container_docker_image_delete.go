@@ -38,7 +38,11 @@ var clientContainerDockerImageCmd = &cobra.Command{
 var clientContainerDockerImageDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a container image",
-	Long:  `Delete a container image from the target node.`,
+	Example: `  osapi client node container docker image delete --image nginx:latest
+  osapi client node container docker image delete \
+    --image nginx:latest --force
+  osapi client node container docker image delete \
+    --image redis:7 --target web-01`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
