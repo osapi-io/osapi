@@ -6,7 +6,14 @@ interface ComponentRowProps {
   name: string;
   status: string;
   address?: string;
+  // Where a person opens the component, from its url config key. An http or
+  // https url is a link; another scheme, such as nats://, is text.
+  url?: string;
   isLast?: boolean;
+}
+
+function isWebURL(url: string) {
+  return /^https?:\/\//i.test(url);
 }
 
 function isHealthy(status: string) {
@@ -17,6 +24,7 @@ export function ComponentRow({
   name,
   status,
   address,
+  url,
   isLast,
 }: ComponentRowProps) {
   const ok = isHealthy(status);
@@ -31,6 +39,19 @@ export function ComponentRow({
       <HealthDot status={ok} />
       <Text className="font-medium">{name}</Text>
       {address && <Text variant="muted">{address}</Text>}
+      {url &&
+        (isWebURL(url) ? (
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            {url}
+          </a>
+        ) : (
+          <Text>{url}</Text>
+        ))}
       <Text variant={ok ? "primary" : "error"} className="ml-auto">
         {status}
       </Text>

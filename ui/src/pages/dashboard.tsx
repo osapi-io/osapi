@@ -192,6 +192,7 @@ export function Dashboard() {
                           name={name}
                           status={comp.status}
                           address={comp.address}
+                          url={comp.url}
                           isLast={i === grouped.controller.length - 1}
                         />
                       ))}
@@ -211,6 +212,7 @@ export function Dashboard() {
                           name={name}
                           status={comp.status}
                           address={comp.address}
+                          url={comp.url}
                           isLast={i === grouped.nats.length - 1}
                         />
                       ))}
