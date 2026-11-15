@@ -34,6 +34,9 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 )
 
+// newFn makes the job client of Connect (injectable for testing).
+var newFn = New
+
 // Connection is a NATS connection with a job client and the buckets that the
 // job client uses. The controller and the agent each make one.
 type Connection struct {
@@ -100,7 +103,7 @@ func Connect(
 		}
 	}
 
-	c.Jobs, err = New(log, nc, &Options{
+	c.Jobs, err = newFn(log, nc, &Options{
 		Timeout:        timeout,
 		KVBucket:       c.JobsKV,
 		RegistryKV:     c.RegistryKV,

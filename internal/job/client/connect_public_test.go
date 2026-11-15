@@ -22,6 +22,7 @@ package client_test
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net"
 	"testing"
@@ -126,6 +127,19 @@ func (s *ConnectPublicTestSuite) TestConnect() {
 				}
 			},
 			wantErr: "connect to NATS: ",
+		},
+		{
+			name: "when the job client fails returns the error",
+			setup: func() (config.NATS, config.NATSConnection) {
+				client.SetNewFn(
+					func(*slog.Logger, client.NATSClient, *client.Options) (*client.Client, error) {
+						return nil, errors.New("no client")
+					},
+				)
+				s.T().Cleanup(client.ResetNewFn)
+				return s.startServer()
+			},
+			wantErr: "create job client: no client",
 		},
 		{
 			name: "when a bucket fails returns the error",

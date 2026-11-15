@@ -23,6 +23,7 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"time"
 )
 
@@ -95,4 +96,16 @@ func SetNowFn(
 // ResetNowFn restores nowFn to its default.
 func ResetNowFn() {
 	nowFn = time.Now
+}
+
+// SetNewFn replaces the function that Connect makes the job client with.
+func SetNewFn(
+	fn func(*slog.Logger, NATSClient, *Options) (*Client, error),
+) {
+	newFn = fn
+}
+
+// ResetNewFn puts back the function that Connect makes the job client with.
+func ResetNewFn() {
+	newFn = New
 }
