@@ -71,11 +71,11 @@ var (
 	// DimStyle is for secondary text.
 	DimStyle = lipgloss.NewStyle().Foreground(LogoGray)
 	// OKStyle, WarnStyle and ErrStyle carry a result's status.
-	OKStyle   = lipgloss.NewStyle().Foreground(Green)
+	OKStyle = lipgloss.NewStyle().Foreground(Green)
 	// URLStyle marks a location a person opens, such as a sub-component's
 	// url in the health output. A color, not an underline: lipgloss
 	// underlines each character with its own escape sequence.
-	URLStyle = lipgloss.NewStyle().Foreground(LogoCyan)
+	URLStyle  = lipgloss.NewStyle().Foreground(LogoCyan)
 	WarnStyle = lipgloss.NewStyle().Foreground(Yellow)
 	ErrStyle  = lipgloss.NewStyle().Foreground(Red)
 )
