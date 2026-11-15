@@ -673,25 +673,6 @@ func (suite *NTPPublicTestSuite) TestNtpDelete() {
 			},
 		},
 		{
-			name: "when server returns 404 returns NotFoundError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotFound)
-				_, _ = w.Write([]byte(`{"error":"ntp configuration not found"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.NtpMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusNotFound, target.StatusCode)
-			},
-		},
-		{
 			name: "when server returns 403 returns AuthError",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")

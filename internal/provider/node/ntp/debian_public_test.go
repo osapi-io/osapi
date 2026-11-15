@@ -549,13 +549,42 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			},
 		},
 		{
-			name:      "when config not managed returns error",
+			name:      "when no config exists returns changed false",
 			setupFs:   func() {},
+			setupMock: func() {},
+			validateFunc: func(got *ntp.DeleteResult, err error) {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(got)
+				suite.False(got.Changed)
+			},
+		},
+		{
+			name: "when stat fails returns error",
+			setupFs: func() {
+				vfs := failfs.New(memfs.New())
+				_ = vfs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					if fn == avfs.FnStat {
+						return errors.New("permission denied")
+					}
+
+					return nil
+				})
+				suite.memFs = vfs
+				suite.provider = ntp.NewDebianProvider(
+					suite.logger,
+					suite.memFs,
+					suite.mockExec,
+				)
+			},
 			setupMock: func() {},
 			validateFunc: func(got *ntp.DeleteResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(got)
-				suite.Contains(err.Error(), "ntp update: not managed by osapi")
+				suite.Contains(err.Error(), "ntp delete: permission denied")
 			},
 		},
 		{

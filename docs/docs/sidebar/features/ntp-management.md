@@ -43,7 +43,8 @@ list.
 When you delete the NTP configuration, the agent removes the drop-in file
 `/etc/chrony/conf.d/osapi-ntp.conf` and tells chrony to reload. Then the system
 uses the other chrony configuration that stays, usually the default of the
-distribution.
+distribution. If the drop-in file does not exist, the delete returns
+`changed: false`.
 
 ## Operations
 

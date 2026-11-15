@@ -132,52 +132,6 @@ func (s *NtpDeletePublicTestSuite) TestDeleteNodeNtp() {
 			},
 		},
 		{
-			name: "not found error",
-			request: gen.DeleteNodeNtpRequestObject{
-				Hostname: "server1",
-			},
-			setupMock: func() {
-				s.mockJobClient.EXPECT().
-					Modify(
-						gomock.Any(),
-						"server1",
-						"node",
-						job.OperationNtpDelete,
-						nil,
-					).
-					Return("", nil, fmt.Errorf("ntp configuration not found: %w", job.ErrNotFound))
-			},
-			validateFunc: func(resp gen.DeleteNodeNtpResponseObject) {
-				r, ok := resp.(gen.DeleteNodeNtp404JSONResponse)
-				s.True(ok)
-				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "not found")
-			},
-		},
-		{
-			name: "does not exist error",
-			request: gen.DeleteNodeNtpRequestObject{
-				Hostname: "server1",
-			},
-			setupMock: func() {
-				s.mockJobClient.EXPECT().
-					Modify(
-						gomock.Any(),
-						"server1",
-						"node",
-						job.OperationNtpDelete,
-						nil,
-					).
-					Return("", nil, fmt.Errorf("ntp configuration does not exist: %w", job.ErrNotFound))
-			},
-			validateFunc: func(resp gen.DeleteNodeNtpResponseObject) {
-				r, ok := resp.(gen.DeleteNodeNtp404JSONResponse)
-				s.True(ok)
-				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "does not exist")
-			},
-		},
-		{
 			name: "when job skipped",
 			request: gen.DeleteNodeNtpRequestObject{
 				Hostname: "server1",
