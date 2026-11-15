@@ -29,7 +29,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/osapi-io/osapi/cmd/resources"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/skills"
 )
@@ -37,10 +36,7 @@ import (
 // skillSources returns the skills that osapi init installs, and the skills
 // for a person who changes osapi itself.
 func skillSources() (fs.FS, fs.FS) {
-	installed, _ := fs.Sub(resources.Skills, "skills")
-	dev, _ := fs.Sub(resources.DevSkills, "dev-skills")
-
-	return installed, dev
+	return skills.Installed(), skills.Dev()
 }
 
 var skillCmd = &cobra.Command{

@@ -18,21 +18,32 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package resources holds files compiled into the osapi binary: the skills
-// `osapi init` writes into a repository.
-package resources
+package skills
 
-import "embed"
+import (
+	"embed"
+	"io/fs"
+)
 
-// Skills is the skills directory. Each subdirectory is one skill, written to
-// the tool's skills directory under the same name.
+// The skill files that this package owns. resources/skills has the skills
+// that osapi init installs. resources/dev-skills has the skills for a person
+// who changes osapi itself, such as build-a-behavior.
 //
-//go:embed skills
-var Skills embed.FS
+//go:embed resources/skills resources/dev-skills
+var resources embed.FS
 
-// DevSkills are the skills for a person who changes osapi itself, such as
-// build-a-behavior. osapi init does not install them, because only a checkout
-// of osapi can use them. osapi skill serves them.
-//
-//go:embed dev-skills
-var DevSkills embed.FS
+// Installed returns the skills that osapi init installs, one directory for each
+// skill.
+func Installed() fs.FS {
+	sub, _ := fs.Sub(resources, "resources/skills")
+
+	return sub
+}
+
+// Dev returns the skills for a person who changes osapi itself. osapi init does
+// not install them. osapi skill serves them.
+func Dev() fs.FS {
+	sub, _ := fs.Sub(resources, "resources/dev-skills")
+
+	return sub
+}

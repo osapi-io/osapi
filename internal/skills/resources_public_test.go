@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package resources_test
+package skills_test
 
 import (
 	"io/fs"
@@ -28,7 +28,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/osapi/cmd/resources"
+	"github.com/osapi-io/osapi/internal/skills"
 )
 
 type ResourcesPublicTestSuite struct {
@@ -41,25 +41,21 @@ type ResourcesPublicTestSuite struct {
 var frontmatter = regexp.MustCompile(`(?s)\A---\nname: ([a-z0-9-]+)\ndescription: .+?\n---\n`)
 
 func (s *ResourcesPublicTestSuite) TestSkillsHaveFrontmatter() {
-	for _, set := range []struct {
-		fsys fs.FS
-		dir  string
-	}{{resources.Skills, "skills"}, {resources.DevSkills, "dev-skills"}} {
-		s.checkFrontmatter(set.fsys, set.dir)
-	}
+	s.checkFrontmatter(skills.Installed(), "skills")
+	s.checkFrontmatter(skills.Dev(), "dev-skills")
 }
 
 func (s *ResourcesPublicTestSuite) checkFrontmatter(
 	fsys fs.FS,
 	dir string,
 ) {
-	dirs, err := fs.ReadDir(fsys, dir)
+	dirs, err := fs.ReadDir(fsys, ".")
 	s.Require().NoError(err)
 	s.Require().NotEmpty(dirs)
 
 	for _, d := range dirs {
 		s.Run(path.Join(dir, d.Name()), func() {
-			data, err := fs.ReadFile(fsys, path.Join(dir, d.Name(), "SKILL.md"))
+			data, err := fs.ReadFile(fsys, path.Join(d.Name(), "SKILL.md"))
 			s.Require().NoError(err)
 
 			m := frontmatter.FindSubmatch(data)

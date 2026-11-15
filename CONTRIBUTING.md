@@ -114,6 +114,18 @@ just deps
   the type of the agent.
 - **`cmd/` imports `pkg/` and `internal/`.** It connects them. It holds no logic
   of its own that needs a test.
+- **Embedded files go in `resources/` of the package that owns them.** The
+  package that reads the files also embeds them, with
+  `//go:embed resources/...`. Do not put embedded files in `cmd/`, or in a
+  package that only passes them to a different package. The current resources:
+  - `internal/skills/resources/`: the agent skills. `skills/` has the skills
+    that `osapi init` installs. `dev-skills/` has the skills that `osapi skill`
+    serves to a checkout of osapi.
+  - `internal/behavior/resources/scaffold/`: the templates that
+    `osapi behavior new` writes.
+  - `internal/agent/resources/templates/`: the protected `osapi/` objects that
+    the agent puts in the object store.
+  - `ui/dist/`: the build of the UI, which `ui` embeds.
 
 [Architecture][system-architecture] tells how the processes work together. The
 [specifications](https://github.com/osapi-io/specs/tree/main/components/osapi)

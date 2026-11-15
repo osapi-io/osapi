@@ -23,13 +23,11 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/osapi-io/osapi/cmd/resources"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/skills"
 )
@@ -74,7 +72,7 @@ and removes files an older version shipped.`,
 			tools = append(tools, t)
 		}
 
-		src, _ := fs.Sub(resources.Skills, "skills")
+		src := skills.Installed()
 		results, err := skills.Install(appFs, root, tools, src, displayVersion())
 		if err != nil {
 			return err

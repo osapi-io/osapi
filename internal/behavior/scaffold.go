@@ -34,7 +34,7 @@ import (
 	"text/template"
 )
 
-//go:embed scaffold
+//go:embed resources/scaffold
 var scaffoldFS embed.FS
 
 // scaffoldFiles is where the templates are read from; a test swaps it.
@@ -99,7 +99,7 @@ func Scaffold(
 	}
 
 	var tmpls []string
-	_ = fs.WalkDir(scaffoldFiles, "scaffold", func(p string, d fs.DirEntry, err error) error {
+	_ = fs.WalkDir(scaffoldFiles, "resources/scaffold", func(p string, d fs.DirEntry, err error) error {
 		if err == nil && !d.IsDir() && strings.HasSuffix(p, ".tmpl") {
 			tmpls = append(tmpls, p)
 		}
@@ -116,7 +116,7 @@ func Scaffold(
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", t, err)
 		}
-		rel := filepath.Join(dir, strings.TrimSuffix(strings.TrimPrefix(t, "scaffold/"), ".tmpl"))
+		rel := filepath.Join(dir, strings.TrimSuffix(strings.TrimPrefix(t, "resources/scaffold/"), ".tmpl"))
 		files = append(files, file{rel, src})
 	}
 	files = append(files, file{allFile, registered})

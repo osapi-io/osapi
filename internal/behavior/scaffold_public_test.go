@@ -28,7 +28,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	behaviorcli "github.com/osapi-io/osapi/internal/cli/behavior"
+	"github.com/osapi-io/osapi/internal/behavior"
 )
 
 const allGo = `// Package all registers every behavior.
@@ -45,7 +45,7 @@ type ScaffoldPublicTestSuite struct {
 }
 
 func (s *ScaffoldPublicTestSuite) TearDownSubTest() {
-	behaviorcli.ResetScaffoldFiles()
+	behavior.ResetScaffoldFiles()
 }
 
 // checkout makes a minimal osapi checkout: its go.mod and internal/behaviors/all.
@@ -66,7 +66,7 @@ func (s *ScaffoldPublicTestSuite) checkout(
 func template(
 	text string,
 ) fstest.MapFS {
-	return fstest.MapFS{"scaffold/x.go.tmpl": {Data: []byte(text)}}
+	return fstest.MapFS{"resources/scaffold/x.go.tmpl": {Data: []byte(text)}}
 }
 
 func (s *ScaffoldPublicTestSuite) TestScaffold() {
@@ -264,7 +264,7 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 		{
 			name: "when a template does not parse",
 			setup: func() string {
-				behaviorcli.SetScaffoldFiles(template("{{.Name"))
+				behavior.SetScaffoldFiles(template("{{.Name"))
 
 				return s.checkout(allGo)
 			},
@@ -275,7 +275,7 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 		{
 			name: "when a template names a missing field",
 			setup: func() string {
-				behaviorcli.SetScaffoldFiles(template("{{.Missing}}"))
+				behavior.SetScaffoldFiles(template("{{.Missing}}"))
 
 				return s.checkout(allGo)
 			},
@@ -286,7 +286,7 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 		{
 			name: "when a template is not Go",
 			setup: func() string {
-				behaviorcli.SetScaffoldFiles(template("package {{.Name}}\n\nfunc {"))
+				behavior.SetScaffoldFiles(template("package {{.Name}}\n\nfunc {"))
 
 				return s.checkout(allGo)
 			},
@@ -300,7 +300,7 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 		s.Run(tc.name, func() {
 			root := tc.setup()
 
-			files, err := behaviorcli.Scaffold(root, tc.group, tc.bname, tc.doc)
+			files, err := behavior.Scaffold(root, tc.group, tc.bname, tc.doc)
 
 			if tc.wantErr != "" {
 				s.ErrorContains(err, tc.wantErr)
