@@ -19,8 +19,8 @@ request is about a behavior, the agent loads the pointer. The pointer tells it
 to run `go run . skill get --name build-a-behavior`, and the binary prints the
 skill. Thus the binary is the only source of the skill. `osapi init` does not
 install it, because it is to change osapi, not to use it. Refer to
-[osapi skill](../usage/cli/skill.md). Build the binary one time, because the
-binary embeds the UI:
+[osapi skill](../usage/cli/skill/skill.mdx). Build the binary one time, because
+the binary embeds the UI:
 
 ```bash
 mise exec -- just build
