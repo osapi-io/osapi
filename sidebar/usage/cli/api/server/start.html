@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Start | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/cli/api/server/start"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Start | OSAPI"><meta data-rh="true" name="description" content="To start the server:"><meta data-rh="true" property="og:description" content="To start the server:"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/api/server/start"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/api/server/start" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/api/server/start" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/"},{"@type":"ListItem","position":3,"name":"API","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/api/"},{"@type":"ListItem","position":4,"name":"Server","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/api/server/"},{"@type":"ListItem","position":5,"name":"Start","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/api/server/start"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.e8064dca.css">
-<script src="/osapi/assets/js/runtime~main.b98c04ca.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.50eb9096.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.f9ac9376.js" defer="defer"></script>
 </head>
 <body>
@@ -37,26 +37,23 @@ security while reading data from Linux. This means that the API will only return
 data that the running user has permission to access. The API is designed to
 gracefully skip over partitions or other system resources where permission
 errors occur (e.g., due to lack of root access).</p>
-<p>If your goal is to run the API with minimal limitations, you will need to run
-the API daemon as <code>root</code>.</p>
-<p>However, when run as a non-root user, the service will:</p>
+<p>To run the API with the fewest limits, run the API daemon as <code>root</code>.</p>
+<p>When it runs as a user that is not root, the service does these things:</p>
 <ul>
 <li class="">Collect and return available disk usage statistics for partitions it has
 permission to access</li>
 <li class="">Skip partitions or system paths that result in &quot;permission denied&quot; errors</li>
 <li class="">Attempt to send an &quot;unprivileged&quot; ping via UDP</li>
 </ul>
-<p>Running as a regular user maintains a secure, restricted mode, but some
-functionality (such as access to certain system directories and files) will be
-limited.</p>
-<p>If full access to system resources is required (e.g., to access all disk
-partitions or perform privileged operations), running the API daemon as <code>root</code>
-is necessary.</p>
+<p>A regular user keeps the service in a safe, limited mode. Some functions are
+limited, for example access to some system directories and files.</p>
+<p>If you need full access to system resources, run the API daemon as <code>root</code>.
+Examples are access to all disk partitions and privileged operations.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="icmp-permissions">ICMP Permissions<a href="#icmp-permissions" class="hash-link" aria-label="Direct link to ICMP Permissions" title="Direct link to ICMP Permissions" translate="no">​</a></h3>
-<p>The API can still send pings without requiring root access, but on Linux, this
-requires modifying system settings using the following sysctl command:</p>
+<p>The API can send pings without root access. On Linux, this needs a change to a
+system setting, with this sysctl command:</p>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">$ sudo sysctl -w net.ipv4.ping_group_range=&quot;0 2147483647&quot;</span><br></div></code></pre></div></div>
-<p>Alternatively, running the API as root will allow full access to privileged
-operations like raw socket pinging.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/usage/cli/api/server"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Server</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/usage/cli/behavior"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Behavior</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#flags" class="table-of-contents__link toc-highlight">Flags</a></li><li><a href="#least-privilege-mode" class="table-of-contents__link toc-highlight">Least Privilege Mode</a><ul><li><a href="#icmp-permissions" class="table-of-contents__link toc-highlight">ICMP Permissions</a></li></ul></li></ul></div></div></div></div></main></div></div></div></div>
+<p>Or run the API as root. Then it has full access to privileged operations, for
+example pings on a raw socket.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/usage/cli/api/server"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Server</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/usage/cli/behavior"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Behavior</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#flags" class="table-of-contents__link toc-highlight">Flags</a></li><li><a href="#least-privilege-mode" class="table-of-contents__link toc-highlight">Least Privilege Mode</a><ul><li><a href="#icmp-permissions" class="table-of-contents__link toc-highlight">ICMP Permissions</a></li></ul></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
