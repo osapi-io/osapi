@@ -108,7 +108,13 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			s.Start()
 		}
 
-		startNATSHeartbeatFromKV(ctx, natsLog, controllerBundle.registryKV)
+		bus.StartHeartbeatOn(
+			ctx,
+			natsLog,
+			controllerBundle.registryKV,
+			appConfig.NATS.Server,
+			appConfig.Agent.ProcessConditions,
+		)
 
 		agentServer, agentBundle, agentSubs := setupAgent(
 			ctx, logger.With("component", "agent"), appConfig.Agent.NATS,
@@ -145,7 +151,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 				s.SetReadinessFunc(func() error {
 					return nil
 				})
-				s.RegisterSubsystems(subsystemStatuses(buildNATSSubComponents()))
+				s.RegisterSubsystems(subsystemStatuses(bus.SubComponents(appConfig.NATS.Server)))
 				s.Start()
 
 				metricsServers = append(metricsServers, s)

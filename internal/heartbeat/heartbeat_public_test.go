@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package controller_test
+package heartbeat_test
 
 import (
 	"context"
@@ -31,7 +31,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/osapi-io/osapi/internal/controller"
+	"github.com/osapi-io/osapi/internal/heartbeat"
 	"github.com/osapi-io/osapi/internal/job"
 	jobMocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
@@ -44,7 +44,7 @@ type HeartbeatPublicTestSuite struct {
 	mockCtrl    *gomock.Controller
 	mockKV      *jobMocks.MockKeyValue
 	mockProcess *processMocks.MockProvider
-	heartbeat   *controller.ComponentHeartbeat
+	heartbeat   *heartbeat.Heartbeat
 }
 
 func (s *HeartbeatPublicTestSuite) SetupTest() {
@@ -52,7 +52,7 @@ func (s *HeartbeatPublicTestSuite) SetupTest() {
 	s.mockKV = jobMocks.NewMockKeyValue(s.mockCtrl)
 	s.mockProcess = processMocks.NewMockProvider(s.mockCtrl)
 
-	s.heartbeat = controller.NewComponentHeartbeat(
+	s.heartbeat = heartbeat.New(
 		slog.Default(),
 		s.mockKV,
 		"web-server-01",
@@ -67,7 +67,7 @@ func (s *HeartbeatPublicTestSuite) SetupTest() {
 
 func (s *HeartbeatPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
-	controller.ResetHeartbeatMarshalFn()
+	heartbeat.ResetHeartbeatMarshalFn()
 }
 
 func (s *HeartbeatPublicTestSuite) TestWriteRegistration() {
@@ -121,12 +121,12 @@ func (s *HeartbeatPublicTestSuite) TestWriteRegistration() {
 		{
 			name: "evaluates process conditions when thresholds are set",
 			setupMock: func() {
-				controller.SetHeartbeatThresholds(s.heartbeat, process.ConditionThresholds{
+				heartbeat.SetHeartbeatThresholds(s.heartbeat, process.ConditionThresholds{
 					MemoryPressureBytes: 1, // 1 byte threshold — RSS will exceed it
 					HighCPUPercent:      0, // disabled
 				})
 				s.T().Cleanup(func() {
-					controller.SetHeartbeatThresholds(s.heartbeat, process.ConditionThresholds{})
+					heartbeat.SetHeartbeatThresholds(s.heartbeat, process.ConditionThresholds{})
 				})
 
 				s.mockProcess.EXPECT().
@@ -190,12 +190,12 @@ func (s *HeartbeatPublicTestSuite) TestWriteRegistration() {
 		{
 			name: "includes sub-components when configured",
 			setupMock: func() {
-				controller.SetHeartbeatSubComponents(s.heartbeat, map[string]job.SubComponentInfo{
+				heartbeat.SetHeartbeatSubComponents(s.heartbeat, map[string]job.SubComponentInfo{
 					"api.server":    {Status: "ok", Address: "http://0.0.0.0:8080"},
 					"api.heartbeat": {Status: "ok"},
 				})
 				s.T().Cleanup(func() {
-					controller.SetHeartbeatSubComponents(s.heartbeat, nil)
+					heartbeat.SetHeartbeatSubComponents(s.heartbeat, nil)
 				})
 
 				s.mockProcess.EXPECT().
@@ -231,7 +231,7 @@ func (s *HeartbeatPublicTestSuite) TestWriteRegistration() {
 		{
 			name: "when marshal fails logs warning",
 			setupMock: func() {
-				controller.SetHeartbeatMarshalFn(func(_ any) ([]byte, error) {
+				heartbeat.SetHeartbeatMarshalFn(func(_ any) ([]byte, error) {
 					return nil, errors.New("marshal failed")
 				})
 
@@ -246,7 +246,7 @@ func (s *HeartbeatPublicTestSuite) TestWriteRegistration() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.setupMock()
-			controller.ExportWriteRegistration(context.Background(), s.heartbeat)
+			heartbeat.ExportWriteRegistration(context.Background(), s.heartbeat)
 		})
 	}
 }
@@ -277,7 +277,7 @@ func (s *HeartbeatPublicTestSuite) TestDeregister() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.setupMock()
-			controller.ExportDeregister(s.heartbeat)
+			heartbeat.ExportDeregister(s.heartbeat)
 		})
 	}
 }
@@ -340,7 +340,7 @@ func (s *HeartbeatPublicTestSuite) TestStart() {
 			mockProcess := processMocks.NewMockProvider(ctrl)
 			tt.setupMock(mockKV, mockProcess)
 
-			hb := controller.NewComponentHeartbeat(
+			hb := heartbeat.New(
 				slog.Default(),
 				mockKV,
 				"web-server-01",

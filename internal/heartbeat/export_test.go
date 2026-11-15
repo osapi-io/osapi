@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package controller
+package heartbeat
 
 import (
 	"context"
@@ -31,28 +31,28 @@ import (
 // ExportWriteRegistration exposes the private writeRegistration method for testing.
 func ExportWriteRegistration(
 	ctx context.Context,
-	h *ComponentHeartbeat,
+	h *Heartbeat,
 ) {
 	h.writeRegistration(ctx)
 }
 
 // ExportDeregister exposes the private deregister method for testing.
 func ExportDeregister(
-	h *ComponentHeartbeat,
+	h *Heartbeat,
 ) {
 	h.deregister()
 }
 
 func SetHeartbeatThresholds(
-	h *ComponentHeartbeat,
+	h *Heartbeat,
 	thresholds process.ConditionThresholds,
 ) {
 	h.thresholds = thresholds
 }
 
-// SetHeartbeatSubComponents sets the subComponents field on ComponentHeartbeat for testing.
+// SetHeartbeatSubComponents sets the subComponents field on Heartbeat for testing.
 func SetHeartbeatSubComponents(
-	h *ComponentHeartbeat,
+	h *Heartbeat,
 	subComponents map[string]job.SubComponentInfo,
 ) {
 	h.subComponents = subComponents

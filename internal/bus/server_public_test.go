@@ -27,6 +27,7 @@ import (
 	"testing"
 
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/bus"
@@ -44,20 +45,25 @@ func TestServerPublicTestSuite(
 }
 
 // freePort returns a port that nothing listens on now.
-func (s *ServerPublicTestSuite) freePort() int {
+func freePort(
+	t *testing.T,
+) int {
 	l, err := net.Listen("tcp", "127.0.0.1:0")
-	s.Require().NoError(err)
+	require.NoError(t, err)
 	defer func() { _ = l.Close() }()
 
 	return l.Addr().(*net.TCPAddr).Port
 }
 
-func (s *ServerPublicTestSuite) serverNATS() config.NATS {
+// serverNATS is a config for an embedded server on a free port.
+func serverNATS(
+	t *testing.T,
+) config.NATS {
 	c := fullNATS()
 	c.Server = config.NATSServer{
 		Host:      "127.0.0.1",
-		Port:      s.freePort(),
-		StoreDir:  s.T().TempDir(),
+		Port:      freePort(t),
+		StoreDir:  t.TempDir(),
 		Namespace: "test",
 		Auth:      config.NATSServerAuth{Type: "none"},
 	}
@@ -73,12 +79,12 @@ func (s *ServerPublicTestSuite) TestNewServer() {
 	}{
 		{
 			name: "when the server starts makes the streams and buckets",
-			cfg:  s.serverNATS,
+			cfg:  func() config.NATS { return serverNATS(s.T()) },
 		},
 		{
 			name: "when the auth is not valid returns the error",
 			cfg: func() config.NATS {
-				c := s.serverNATS()
+				c := serverNATS(s.T())
 				c.Server.Auth = config.NATSServerAuth{Type: "operator"}
 				return c
 			},
@@ -87,7 +93,7 @@ func (s *ServerPublicTestSuite) TestNewServer() {
 		{
 			name: "when the port is in use returns the error",
 			cfg: func() config.NATS {
-				c := s.serverNATS()
+				c := serverNATS(s.T())
 				l, err := net.Listen("tcp", "127.0.0.1:0")
 				s.Require().NoError(err)
 				s.T().Cleanup(func() { _ = l.Close() })
@@ -99,7 +105,7 @@ func (s *ServerPublicTestSuite) TestNewServer() {
 		{
 			name: "when the setup fails stops the server and returns the error",
 			cfg: func() config.NATS {
-				c := s.serverNATS()
+				c := serverNATS(s.T())
 				c.Stream.Name = "bad name"
 				return c
 			},
@@ -127,7 +133,7 @@ func (s *ServerPublicTestSuite) TestPrepare() {
 	s.Run("when nothing listens returns the error", func() {
 		err := bus.Prepare(context.Background(), slog.Default(), &natsclient.Options{
 			Host: "127.0.0.1",
-			Port: s.freePort(),
+			Port: freePort(s.T()),
 			Auth: natsclient.AuthOptions{AuthType: natsclient.NoAuth},
 			Name: "test",
 		}, "test", fullNATS())

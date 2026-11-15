@@ -49,14 +49,7 @@ Configures streams, consumers, and KV buckets needed by the job system.
 			cli.LogFatal(log, "failed to start NATS server", err)
 		}
 
-		startNATSHeartbeat(
-			ctx,
-			log,
-			appConfig.NATS.Server.Host,
-			appConfig.NATS.Server.Port,
-			appConfig.NATS.Server.Namespace,
-			appConfig.NATS.Server.Auth,
-		)
+		bus.StartHeartbeat(ctx, log, appConfig.NATS, appConfig.Agent.ProcessConditions)
 
 		var metricsServer *metrics.Server
 		if appConfig.NATS.Server.Metrics.Enabled {
@@ -71,7 +64,7 @@ Configures streams, consumers, and KV buckets needed by the job system.
 					return nil
 				})
 				metricsServer.RegisterSubsystems(
-					subsystemStatuses(buildNATSSubComponents()),
+					subsystemStatuses(bus.SubComponents(appConfig.NATS.Server)),
 				)
 				metricsServer.Start()
 			}
