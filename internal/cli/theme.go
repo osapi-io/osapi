@@ -213,6 +213,11 @@ func renderCell(
 
 		return statusStyle(cell).Render(cell)
 	case h == "HOSTNAME":
+		// A row that continues the one above it, such as a sub-component's
+		// url, has only the tree line.
+		if cell == "│" {
+			return DimStyle.Render(cell)
+		}
 		for _, b := range treeBranches {
 			if rest, ok := strings.CutPrefix(cell, b); ok {
 				return DimStyle.Render(b) + ValueStyle.Render(rest)

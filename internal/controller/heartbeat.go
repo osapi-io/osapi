@@ -100,8 +100,9 @@ func subComponents(
 		"controller.pki":      {Status: enabledOrDisabled(cfg.Controller.PKI.Enabled)},
 		"controller.notifier": {Status: enabledOrDisabled(cfg.Controller.Notifications.Enabled)},
 		"controller.tracing": {
-			Status: enabledOrDisabled(cfg.Telemetry.Tracing.Enabled),
-			URL:    cfg.Telemetry.Tracing.URL,
+			Status:  enabledOrDisabled(cfg.Telemetry.Tracing.Enabled),
+			Address: tracingAddr(cfg.Telemetry.Tracing),
+			URL:     cfg.Telemetry.Tracing.URL,
 		},
 		"controller.ui": {
 			Status:  enabledOrDisabled(cfg.Controller.UI.UIEnabled()),
@@ -109,6 +110,19 @@ func subComponents(
 			URL:     cfg.Controller.UI.URL,
 		},
 	}
+}
+
+// tracingAddr is where the controller sends its spans, the OTLP gRPC
+// endpoint. Tracing listens on nothing, so this is the one sub-component whose
+// address is a destination, not a bind address. stdout exports nowhere.
+func tracingAddr(
+	tc config.TracingConfig,
+) string {
+	if !tc.Enabled || tc.Exporter != "otlp" || tc.OTLPEndpoint == "" {
+		return ""
+	}
+
+	return "grpc://" + tc.OTLPEndpoint
 }
 
 func httpAddr(

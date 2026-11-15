@@ -133,6 +133,32 @@ func (s *HeartbeatPublicTestSuite) TestSubComponents() {
 		s.Nil(controller.ExportConvertSubComponents(nil))
 	})
 
+	s.Run("when tracing exports over otlp reports the endpoint as its address", func() {
+		var cfg config.Config
+		cfg.Telemetry.Tracing = config.TracingConfig{
+			Enabled:      true,
+			Exporter:     "otlp",
+			OTLPEndpoint: "127.0.0.1:4317",
+		}
+
+		got := controller.ExportSubComponents(cfg)
+
+		s.Equal("grpc://127.0.0.1:4317", got["controller.tracing"].Address)
+	})
+
+	s.Run("when tracing exports to stdout or is off reports no address", func() {
+		for _, tc := range []config.TracingConfig{
+			{Enabled: true, Exporter: "stdout"},
+			{Enabled: false, Exporter: "otlp", OTLPEndpoint: "127.0.0.1:4317"},
+			{Enabled: true, Exporter: "otlp"},
+		} {
+			var cfg config.Config
+			cfg.Telemetry.Tracing = tc
+
+			s.Empty(controller.ExportSubComponents(cfg)["controller.tracing"].Address, tc)
+		}
+	})
+
 	s.Run("when the api host is IPv6 brackets it in the address", func() {
 		var cfg config.Config
 		cfg.Controller.API = config.APIServer{Host: "::1", Port: 8080}

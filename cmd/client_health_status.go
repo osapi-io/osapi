@@ -143,15 +143,11 @@ func displayComponentTable(
 				prefix = "  └─ "
 			}
 
-			// Each part has its own style: the status word in its status
-			// color, the address dim because nothing connects through it,
-			// and the url underlined because a person opens it.
+			// The status word in its status color, then the address dim,
+			// because nothing connects through it.
 			status := cli.RenderStatus(sc.status)
 			if sc.address != "" {
 				status += " " + cli.DimStyle.Render(sc.address)
-			}
-			if sc.url != "" {
-				status += " " + cli.URLStyle.Render(sc.url)
 			}
 
 			rows = append(rows, []string{
@@ -163,6 +159,26 @@ func displayComponentTable(
 				"",
 				"",
 			})
+
+			// The url goes on a line of its own, so a long one is never cut
+			// and every row keeps the same shape. The tree line continues
+			// down to the next sibling; under the last one it stops.
+			if sc.url != "" {
+				branch := "  │"
+				if i == len(scs)-1 {
+					branch = ""
+				}
+
+				rows = append(rows, []string{
+					"",
+					branch,
+					cli.DimStyle.Render("↳") + " " + cli.URLStyle.Render(sc.url),
+					"",
+					"",
+					"",
+					"",
+				})
+			}
 		}
 	}
 

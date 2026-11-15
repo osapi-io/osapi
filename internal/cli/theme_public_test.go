@@ -354,6 +354,14 @@ func (suite *ThemePublicTestSuite) TestStatusCellStyledInParts() {
 			},
 		},
 		{
+			name: "when a hostname cell is only a tree line renders it dim",
+			validateFunc: func() {
+				withColor()
+
+				suite.Equal(cli.DimStyle.Render("│"), cli.ExportRenderCell("HOSTNAME", "│"))
+			},
+		},
+		{
 			name: "when a status cell is plain colors it by its status word",
 			validateFunc: func() {
 				withColor()
