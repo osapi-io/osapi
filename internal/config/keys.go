@@ -70,6 +70,7 @@ var Defaults = map[string]any{
 	"agent.consumer.ack_wait":                    "2m",
 	"agent.consumer.max_ack_pending":             1000,
 	"agent.consumer.replay_policy":               "instant",
+	"agent.command.enabled":                      false,
 	"agent.pki.enabled":                          false,
 	"agent.pki.key_dir":                          "/etc/osapi/pki",
 }

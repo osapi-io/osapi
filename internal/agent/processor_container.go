@@ -35,6 +35,7 @@ import (
 // NewDockerProcessor returns a ProcessorFunc that handles docker-related operations.
 func NewDockerProcessor(
 	dockerProvider dockerProv.Provider,
+	execEnabled bool,
 	_ *slog.Logger,
 ) ProcessorFunc {
 	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
@@ -59,6 +60,9 @@ func NewDockerProcessor(
 		case "inspect":
 			return processDockerInspect(ctx, dockerProvider, req)
 		case "exec":
+			if !execEnabled {
+				return nil, ErrCommandDisabled
+			}
 			return processDockerExec(ctx, dockerProvider, req)
 		case "pull":
 			return processDockerPull(ctx, dockerProvider, req)

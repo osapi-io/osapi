@@ -94,9 +94,11 @@ Container operations need `docker:*` permissions. The `admin` role has
 `docker:read` and `docker:write`. The `read` role has only `docker:read`. Refer
 to the [API reference](/category/api) for the permission of each endpoint.
 
-Container exec is a privileged operation, like command execution. By default,
-only the `admin` role has `docker:execute`. When necessary, give it to other
-roles or tokens:
+Container exec is a privileged operation, like command execution. **It is off by
+default.** The agent refuses each exec job until you set
+`agent.command.enabled: true`, the same setting as command execution. The other
+container operations do not need it. By default, only the `admin` role has
+`docker:execute`. When necessary, give it to other roles or tokens:
 
 ```yaml
 controller:

@@ -129,6 +129,9 @@ agent:
     enabled: false
   privilege_escalation:
     enabled: false
+  # Command exec, command shell and docker exec. On here, for development and tests. The default is off.
+  command:
+    enabled: true
   # PKI enrollment and job signing (default: disabled).
   # pki:
   #   enabled: false

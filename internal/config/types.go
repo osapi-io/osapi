@@ -389,6 +389,15 @@ type PrivilegeEscalation struct {
 	Enabled bool `mapstructure:"enabled" doc:"Least-privilege mode: sudo for write commands and capability checks at startup."`
 }
 
+// AgentCommand configures the operations that run a command the caller
+// supplies: command exec, command shell and docker exec.
+type AgentCommand struct {
+	// Enabled lets the agent run command exec, command shell and docker exec.
+	// The agent refuses those jobs when it is false, so a job that reaches the
+	// agent without the API refuses too.
+	Enabled bool `mapstructure:"enabled" doc:"Run command exec, command shell and docker exec jobs. Off by default: each one runs a command the caller supplies, as the agent's user."`
+}
+
 // AgentPKI holds PKI configuration for the agent.
 type AgentPKI struct {
 	// Enabled activates PKI enrollment and job signature verification.
@@ -434,6 +443,8 @@ type AgentConfig struct {
 	ProcessConditions ProcessConditions `mapstructure:"process_conditions,omitempty"`
 	// PrivilegeEscalation configures least-privilege agent mode.
 	PrivilegeEscalation PrivilegeEscalation `mapstructure:"privilege_escalation,omitempty"`
+	// Command enables the operations that run a command the caller supplies.
+	Command AgentCommand `mapstructure:"command,omitempty"`
 	// PKI holds PKI enrollment and signing settings.
 	PKI     AgentPKI      `mapstructure:"pki,omitempty"`
 	Metrics MetricsServer `mapstructure:"metrics"`

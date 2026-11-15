@@ -23,6 +23,7 @@ package agent
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -31,12 +32,24 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/command"
 )
 
-// NewCommandProcessor returns a ProcessorFunc that handles command-related operations.
+// ErrCommandDisabled is the error for a job that runs a command the caller
+// supplies, on an agent where agent.command.enabled is false.
+var ErrCommandDisabled = errors.New(
+	"command execution is disabled on this agent: set agent.command.enabled to true to allow it",
+)
+
+// NewCommandProcessor returns a ProcessorFunc that handles command-related
+// operations. When enabled is false, it refuses each one.
 func NewCommandProcessor(
 	commandProvider command.Provider,
+	enabled bool,
 	_ *slog.Logger,
 ) ProcessorFunc {
 	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
+		if !enabled {
+			return nil, ErrCommandDisabled
+		}
+
 		// Extract base operation from dotted operation (e.g., "exec.execute" -> "exec")
 		baseOperation := strings.Split(req.Operation, ".")[0]
 

@@ -186,6 +186,9 @@ agent:
   # Linux capabilities are verified at startup. See Agent Hardening docs.
   privilege_escalation:
     enabled: false
+  # Command exec, command shell and docker exec. Off by default: each one runs a command the caller supplies.
+  command:
+    enabled: false
   # PKI enrollment and job signing (default: disabled).
   # pki:
   #   enabled: false

@@ -68,8 +68,20 @@ references.
 
 ## Security model
 
-Command execution is a privileged operation. It has two permissions. Thus a role
-can run commands without shell access:
+**Command execution is off by default.** The agent refuses each `exec` and
+`shell` job until you set `agent.command.enabled: true`. The agent makes this
+check, not the API. Thus a job that gets to the agent without the API is refused
+too.
+
+A command runs as the user of the agent. If the agent runs as root, each command
+runs as root. Turn it on only on hosts where that is acceptable.
+
+> **Upgrade note.** Before this release, command execution was always on. After
+> an upgrade, `exec`, `shell` and container `exec` jobs fail until you set
+> `agent.command.enabled: true` on each agent that must run them.
+
+Command execution has two permissions. Thus a role can run commands without
+shell access:
 
 - `command:execute` guards the `exec` endpoint (no shell interpretation).
 - `command:shell` guards the `shell` endpoint (`/bin/sh -c`, with pipes,
@@ -106,8 +118,16 @@ osapi token generate -r read -u user@example.com \
 
 ## Configuration
 
-Command execution uses the general job system. It needs no configuration of its
-own. Refer to [Configuration](../usage/configuration.md) for NATS, agent, and
+Turn command execution on, in the config of each agent that must run commands:
+
+```yaml
+agent:
+  command:
+    enabled: true
+```
+
+When it is off, a job fails with `command execution is disabled on this agent`.
+Refer to [Configuration](../usage/configuration.md) for NATS, agent and
 authentication settings.
 
 ## Permissions

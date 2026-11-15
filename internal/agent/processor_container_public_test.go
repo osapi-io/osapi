@@ -58,8 +58,22 @@ func (s *ProcessorDockerPublicTestSuite) TestProcessDockerOperation() {
 		setupMock    func(*dockerMocks.MockProvider)
 		expectError  bool
 		errorMsg     string
+		disabled     bool
 		validateFunc func(json.RawMessage)
 	}{
+		{
+			name: "when command execution is disabled refuses exec",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "docker",
+				Operation: "exec.execute",
+				Data:      json.RawMessage(`{"id":"abc","command":["id"]}`),
+			},
+			setupMock:   func(*dockerMocks.MockProvider) {},
+			disabled:    true,
+			expectError: true,
+			errorMsg:    "agent.command.enabled",
+		},
 		{
 			name: "nil provider returns error",
 			jobRequest: job.Request{
@@ -682,7 +696,7 @@ func (s *ProcessorDockerPublicTestSuite) TestProcessDockerOperation() {
 			}
 			// nil provider case uses nil containerMock
 
-			processor := agent.NewDockerProcessor(containerMock, slog.Default())
+			processor := agent.NewDockerProcessor(containerMock, !tt.disabled, slog.Default())
 			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
