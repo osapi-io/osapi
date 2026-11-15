@@ -33,6 +33,7 @@ import (
 
 // processServiceOperation dispatches service management sub-operations.
 func processServiceOperation(
+	ctx context.Context,
 	serviceProvider service.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -47,8 +48,6 @@ func processServiceOperation(
 		return nil, fmt.Errorf("invalid service operation: %s", jobRequest.Operation)
 	}
 	subOp := parts[1]
-
-	ctx := context.Background()
 
 	switch subOp {
 	case "list":

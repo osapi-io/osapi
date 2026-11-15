@@ -27,6 +27,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -38,6 +39,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/osapi-io/osapi/internal/provider"
 )
@@ -56,12 +58,23 @@ func New() (*Client, error) {
 	cli, err := dockerclient.NewClientWithOpts(
 		dockerclient.FromEnv,
 		dockerclient.WithAPIVersionNegotiation(),
+		dockerclient.WithTraceOptions(otelhttp.WithFilter(traced)),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("create docker client: %w", err)
 	}
 
 	return &Client{client: cli}, nil
+}
+
+// traced tells the HTTP instrumentation of the Docker client which requests
+// get a span. The agent pings Docker at startup to find out if it is there.
+// On a host without Docker that ping fails, and as a span it is an error with
+// no request behind it. The operations of a job keep their spans.
+func traced(
+	r *http.Request,
+) bool {
+	return !strings.HasSuffix(r.URL.Path, "/_ping")
 }
 
 // NewWithClient creates a Docker provider with an injected client (for testing).

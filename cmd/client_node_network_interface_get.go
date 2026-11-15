@@ -56,6 +56,8 @@ var clientNodeNetworkInterfaceGetCmd = &cobra.Command{
 
 		cli.PrintJobID(resp.Data.JobID)
 
+		cli.PrintTraceID(resp.TraceID())
+
 		for _, r := range resp.Data.Results {
 			if r.Error != "" {
 				cli.PrintKV("Hostname", r.Hostname)

@@ -59,7 +59,7 @@ func (s *ScheduleService) List(
 		}}
 	}
 
-	return NewResponse(cronEntryCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(cronEntryCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Get retrieves a single cron entry by name on the target host.
@@ -91,7 +91,7 @@ func (s *ScheduleService) Get(
 		}}
 	}
 
-	return NewResponse(cronGetCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(cronGetCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Create creates a new cron entry on the target host.
@@ -144,7 +144,11 @@ func (s *ScheduleService) Create(
 		}}
 	}
 
-	return NewResponse(cronMutationCollectionFromCreate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		cronMutationCollectionFromCreate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Update updates an existing cron entry on the target host.
@@ -195,7 +199,11 @@ func (s *ScheduleService) Update(
 		}}
 	}
 
-	return NewResponse(cronMutationCollectionFromUpdate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		cronMutationCollectionFromUpdate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Delete deletes a cron entry on the target host.
@@ -227,5 +235,9 @@ func (s *ScheduleService) Delete(
 		}}
 	}
 
-	return NewResponse(cronMutationCollectionFromDelete(resp.JSON200), resp.Body), nil
+	return newResponse(
+		cronMutationCollectionFromDelete(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }

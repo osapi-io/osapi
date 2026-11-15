@@ -101,27 +101,27 @@ func NewNodeProcessor(
 		case "load":
 			return getNodeLoad(loadProvider, logger)
 		case "sysctl":
-			return processSysctlOperation(sysctlProvider, logger, req)
+			return processSysctlOperation(ctx, sysctlProvider, logger, req)
 		case "ntp":
-			return processNtpOperation(ntpProvider, logger, req)
+			return processNtpOperation(ctx, ntpProvider, logger, req)
 		case "timezone":
-			return processTimezoneOperation(timezoneProvider, logger, req)
+			return processTimezoneOperation(ctx, timezoneProvider, logger, req)
 		case "power":
-			return processPowerOperation(powerProvider, logger, req)
+			return processPowerOperation(ctx, powerProvider, logger, req)
 		case "process":
-			return processProcessOperation(processProvider, logger, req)
+			return processProcessOperation(ctx, processProvider, logger, req)
 		case "user":
-			return processUserOperation(userProvider, logger, req)
+			return processUserOperation(ctx, userProvider, logger, req)
 		case "group":
-			return processGroupOperation(userProvider, logger, req)
+			return processGroupOperation(ctx, userProvider, logger, req)
 		case "sshKey":
-			return processSSHKeyOperation(userProvider, logger, req)
+			return processSSHKeyOperation(ctx, userProvider, logger, req)
 		case "package":
-			return processPackageOperation(packageProvider, logger, req)
+			return processPackageOperation(ctx, packageProvider, logger, req)
 		case "log":
-			return processLogOperation(logProvider, logger, req)
+			return processLogOperation(ctx, logProvider, logger, req)
 		case "service":
-			return processServiceOperation(serviceProvider, logger, req)
+			return processServiceOperation(ctx, serviceProvider, logger, req)
 		default:
 			return nil, fmt.Errorf("unsupported node operation: %s", req.Operation)
 		}

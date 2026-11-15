@@ -159,5 +159,6 @@ func Run(
 	}
 
 	cli.PrintJobID(result.JobID)
+	cli.PrintTraceID(result.TraceID)
 	cli.PrintCompactTable([]cli.Section{Table(m, result)})
 }

@@ -116,5 +116,5 @@ func (s *StatusService) Get(
 		}}
 	}
 
-	return NewResponse(nodeStatusCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(nodeStatusCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }

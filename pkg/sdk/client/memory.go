@@ -53,5 +53,5 @@ func (s *MemoryService) Get(
 		}}
 	}
 
-	return NewResponse(memoryCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(memoryCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }

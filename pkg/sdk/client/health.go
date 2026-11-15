@@ -48,7 +48,7 @@ func (s *HealthService) GetLiveness(
 		}}
 	}
 
-	return NewResponse(healthStatusFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(healthStatusFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Ready checks if the API server and its dependencies are ready to
@@ -71,7 +71,11 @@ func (s *HealthService) GetReady(
 			}}
 		}
 
-		return NewResponse(readyStatusFromGen(resp.JSON200, false), resp.Body), nil
+		return newResponse(
+			readyStatusFromGen(resp.JSON200, false),
+			resp.Body,
+			resp.HTTPResponse,
+		), nil
 	case 503:
 		if resp.JSON503 == nil {
 			return nil, &UnexpectedStatusError{APIError{
@@ -80,7 +84,11 @@ func (s *HealthService) GetReady(
 			}}
 		}
 
-		return NewResponse(readyStatusFromGen(resp.JSON503, true), resp.Body), nil
+		return newResponse(
+			readyStatusFromGen(resp.JSON503, true),
+			resp.Body,
+			resp.HTTPResponse,
+		), nil
 	default:
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),
@@ -114,7 +122,11 @@ func (s *HealthService) GetStatus(
 			}}
 		}
 
-		return NewResponse(systemStatusFromGen(resp.JSON200, false), resp.Body), nil
+		return newResponse(
+			systemStatusFromGen(resp.JSON200, false),
+			resp.Body,
+			resp.HTTPResponse,
+		), nil
 	case 503:
 		if resp.JSON503 == nil {
 			return nil, &UnexpectedStatusError{APIError{
@@ -123,7 +135,11 @@ func (s *HealthService) GetStatus(
 			}}
 		}
 
-		return NewResponse(systemStatusFromGen(resp.JSON503, true), resp.Body), nil
+		return newResponse(
+			systemStatusFromGen(resp.JSON503, true),
+			resp.Body,
+			resp.HTTPResponse,
+		), nil
 	default:
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),

@@ -59,7 +59,7 @@ func (s *GroupService) List(
 		}}
 	}
 
-	return NewResponse(groupInfoCollectionFromList(resp.JSON200), resp.Body), nil
+	return newResponse(groupInfoCollectionFromList(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Get retrieves a single group by name on the target host.
@@ -91,7 +91,7 @@ func (s *GroupService) Get(
 		}}
 	}
 
-	return NewResponse(groupInfoCollectionFromGet(resp.JSON200), resp.Body), nil
+	return newResponse(groupInfoCollectionFromGet(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Create creates a group on the target host.
@@ -134,7 +134,11 @@ func (s *GroupService) Create(
 		}}
 	}
 
-	return NewResponse(groupMutationCollectionFromCreate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		groupMutationCollectionFromCreate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Update updates a group on the target host.
@@ -173,7 +177,11 @@ func (s *GroupService) Update(
 		}}
 	}
 
-	return NewResponse(groupMutationCollectionFromUpdate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		groupMutationCollectionFromUpdate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Delete removes a group on the target host.
@@ -205,5 +213,9 @@ func (s *GroupService) Delete(
 		}}
 	}
 
-	return NewResponse(groupMutationCollectionFromDelete(resp.JSON200), resp.Body), nil
+	return newResponse(
+		groupMutationCollectionFromDelete(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }

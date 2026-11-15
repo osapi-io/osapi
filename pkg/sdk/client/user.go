@@ -59,7 +59,7 @@ func (s *UserService) List(
 		}}
 	}
 
-	return NewResponse(userInfoCollectionFromList(resp.JSON200), resp.Body), nil
+	return newResponse(userInfoCollectionFromList(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Get retrieves a single user account by name on the target host.
@@ -91,7 +91,7 @@ func (s *UserService) Get(
 		}}
 	}
 
-	return NewResponse(userInfoCollectionFromGet(resp.JSON200), resp.Body), nil
+	return newResponse(userInfoCollectionFromGet(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Create creates a user account on the target host.
@@ -154,7 +154,11 @@ func (s *UserService) Create(
 		}}
 	}
 
-	return NewResponse(userMutationCollectionFromCreate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		userMutationCollectionFromCreate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Update updates a user account on the target host.
@@ -205,7 +209,11 @@ func (s *UserService) Update(
 		}}
 	}
 
-	return NewResponse(userMutationCollectionFromUpdate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		userMutationCollectionFromUpdate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Delete removes a user account on the target host.
@@ -237,7 +245,11 @@ func (s *UserService) Delete(
 		}}
 	}
 
-	return NewResponse(userMutationCollectionFromDelete(resp.JSON200), resp.Body), nil
+	return newResponse(
+		userMutationCollectionFromDelete(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // ListKeys returns SSH authorized keys for a user on the target host.
@@ -268,7 +280,7 @@ func (s *UserService) ListKeys(
 		}}
 	}
 
-	return NewResponse(sshKeyCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(sshKeyCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // AddKey adds an SSH authorized key for a user on the target host.
@@ -304,7 +316,11 @@ func (s *UserService) AddKey(
 		}}
 	}
 
-	return NewResponse(sshKeyMutationCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		sshKeyMutationCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // RemoveKey removes an SSH authorized key by fingerprint for a user on the
@@ -339,7 +355,11 @@ func (s *UserService) RemoveKey(
 		}}
 	}
 
-	return NewResponse(sshKeyMutationCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		sshKeyMutationCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // ChangePassword changes a user's password on the target host.
@@ -376,5 +396,9 @@ func (s *UserService) ChangePassword(
 		}}
 	}
 
-	return NewResponse(userMutationCollectionFromPassword(resp.JSON200), resp.Body), nil
+	return newResponse(
+		userMutationCollectionFromPassword(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }

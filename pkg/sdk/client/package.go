@@ -59,7 +59,11 @@ func (s *PackageService) List(
 		}}
 	}
 
-	return NewResponse(packageInfoCollectionFromList(resp.JSON200), resp.Body), nil
+	return newResponse(
+		packageInfoCollectionFromList(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Get retrieves a single package by name on the target host.
@@ -91,7 +95,11 @@ func (s *PackageService) Get(
 		}}
 	}
 
-	return NewResponse(packageInfoCollectionFromGet(resp.JSON200), resp.Body), nil
+	return newResponse(
+		packageInfoCollectionFromGet(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Install installs a package on the target host.
@@ -126,7 +134,11 @@ func (s *PackageService) Install(
 		}}
 	}
 
-	return NewResponse(packageMutationCollectionFromInstall(resp.JSON200), resp.Body), nil
+	return newResponse(
+		packageMutationCollectionFromInstall(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Remove removes a package from the target host.
@@ -158,7 +170,11 @@ func (s *PackageService) Remove(
 		}}
 	}
 
-	return NewResponse(packageMutationCollectionFromRemove(resp.JSON200), resp.Body), nil
+	return newResponse(
+		packageMutationCollectionFromRemove(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Update updates all packages on the target host.
@@ -188,7 +204,11 @@ func (s *PackageService) Update(
 		}}
 	}
 
-	return NewResponse(packageMutationCollectionFromUpdate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		packageMutationCollectionFromUpdate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // ListUpdates lists available package updates on the target host.
@@ -218,5 +238,9 @@ func (s *PackageService) ListUpdates(
 		}}
 	}
 
-	return NewResponse(packageUpdateCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		packageUpdateCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }

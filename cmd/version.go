@@ -22,8 +22,11 @@ package cmd
 
 import (
 	goversion "github.com/caarlos0/go-version"
-	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel/attribute"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+
+	"github.com/osapi-io/osapi/internal/cli"
 )
 
 func buildVersion(
@@ -52,6 +55,13 @@ func buildVersion(
 				i.BuiltBy = builtBy
 			}
 		},
+	)
+}
+
+// versionAttr is the version of this binary, for the resource of each span.
+func versionAttr() attribute.KeyValue {
+	return semconv.ServiceVersion(
+		buildVersion(version, commit, date, builtBy, treeState).GitVersion,
 	)
 }
 

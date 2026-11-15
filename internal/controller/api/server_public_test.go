@@ -33,6 +33,7 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/suite"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/mock/gomock"
 
 	auditmocks "github.com/osapi-io/osapi/internal/audit/mocks"
@@ -348,6 +349,91 @@ func (s *ServerPublicTestSuite) TestStopErrorPath() {
 			defer cancel()
 
 			server.Stop(ctx)
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestUntraced() {
+	tests := []struct {
+		name string
+		path string
+		want bool
+	}{
+		{name: "when a job request is traced", path: "/api/node/web-01/package", want: false},
+		{name: "when the agent list is traced", path: "/api/agent", want: false},
+		{name: "when the health status poll is skipped", path: "/api/health/status", want: true},
+		{name: "when the liveness probe is skipped", path: "/api/health", want: true},
+		{name: "when a file of the UI is skipped", path: "/assets/index.js", want: true},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			e := echo.New()
+			req := httptest.NewRequest(http.MethodGet, tc.path, nil)
+
+			s.Equal(tc.want, api.ExportUntraced(e.NewContext(req, httptest.NewRecorder())))
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestTraceResponse() {
+	traced := trace.ContextWithSpanContext(context.Background(), trace.NewSpanContext(
+		trace.SpanContextConfig{
+			TraceID: trace.TraceID{
+				0x26,
+				0xe4,
+				0x48,
+				0xc9,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+			},
+			SpanID:     trace.SpanID{0x1a, 0x2b, 3, 4, 5, 6, 7, 8},
+			TraceFlags: trace.FlagsSampled,
+		},
+	))
+	tests := []struct {
+		name string
+		ctx  context.Context
+		want string
+	}{
+		{
+			name: "when the request has a span returns its trace",
+			ctx:  traced,
+			want: "00-26e448c90102030405060708090a0b0c-1a2b030405060708-01",
+		},
+		{
+			name: "when the request has no span returns no header",
+			ctx:  context.Background(),
+			want: "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			e := echo.New()
+			req := httptest.NewRequest(http.MethodGet, "/api/node/web-01", nil).WithContext(tc.ctx)
+			rec := httptest.NewRecorder()
+			called := false
+
+			err := api.ExportTraceResponse(func(_ *echo.Context) error {
+				called = true
+
+				return nil
+			})(e.NewContext(req, rec))
+
+			s.Require().NoError(err)
+			s.True(called)
+			s.Equal(tc.want, rec.Header().Get("traceresponse"))
 		})
 	}
 }

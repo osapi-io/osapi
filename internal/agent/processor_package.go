@@ -33,6 +33,7 @@ import (
 
 // processPackageOperation dispatches package management sub-operations.
 func processPackageOperation(
+	ctx context.Context,
 	packageProvider apt.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -47,8 +48,6 @@ func processPackageOperation(
 		return nil, fmt.Errorf("invalid package operation: %s", jobRequest.Operation)
 	}
 	subOp := parts[1]
-
-	ctx := context.Background()
 
 	switch subOp {
 	case "list":

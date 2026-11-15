@@ -137,7 +137,7 @@ func (s *FileService) Upload(
 		}}
 	}
 
-	return NewResponse(fileUploadFromGen(resp.JSON201), resp.Body), nil
+	return newResponse(fileUploadFromGen(resp.JSON201), resp.Body, resp.HTTPResponse), nil
 }
 
 // List retrieves all files stored in the Object Store.
@@ -165,7 +165,7 @@ func (s *FileService) List(
 		}}
 	}
 
-	return NewResponse(fileListFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(fileListFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Get retrieves metadata for a specific file in the Object Store.
@@ -196,7 +196,7 @@ func (s *FileService) Get(
 		}}
 	}
 
-	return NewResponse(fileMetadataFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(fileMetadataFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Delete removes a file from the Object Store.
@@ -227,7 +227,7 @@ func (s *FileService) Delete(
 		}}
 	}
 
-	return NewResponse(fileDeleteFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(fileDeleteFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Stale lists deployments where the deployed file content no longer
@@ -256,7 +256,7 @@ func (s *FileService) ListStale(
 		}}
 	}
 
-	return NewResponse(staleListFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(staleListFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Changed computes the SHA-256 of the provided content and compares

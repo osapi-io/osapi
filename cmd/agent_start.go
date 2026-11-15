@@ -48,6 +48,7 @@ var agentStartCmd = &cobra.Command{
 			ctx,
 			"osapi-agent",
 			appConfig.Telemetry.Tracing,
+			versionAttr(),
 		)
 		if err != nil {
 			cli.LogFatal(logger, "failed to initialize tracer", err)

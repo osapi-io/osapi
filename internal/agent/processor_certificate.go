@@ -38,7 +38,7 @@ func NewCertificateProcessor(
 ) ProcessorFunc {
 	logger = logger.With(slog.String("subsystem", "agent.processor.certificate"))
 
-	return func(_ context.Context, req job.Request) (json.RawMessage, error) {
+	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
 		if certProvider == nil {
 			return nil, fmt.Errorf("certificate provider not available")
 		}
@@ -48,7 +48,7 @@ func NewCertificateProcessor(
 
 		switch baseOperation {
 		case "ca":
-			return processCertificateCAOperation(certProvider, logger, req)
+			return processCertificateCAOperation(ctx, certProvider, logger, req)
 		default:
 			return nil, fmt.Errorf("unsupported certificate operation: %s", req.Operation)
 		}
@@ -57,6 +57,7 @@ func NewCertificateProcessor(
 
 // processCertificateCAOperation dispatches certificate CA sub-operations.
 func processCertificateCAOperation(
+	ctx context.Context,
 	certProvider certificate.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -67,8 +68,6 @@ func processCertificateCAOperation(
 		return nil, fmt.Errorf("invalid certificate CA operation: %s", jobRequest.Operation)
 	}
 	subOp := parts[1]
-
-	ctx := context.Background()
 
 	switch subOp {
 	case "list":

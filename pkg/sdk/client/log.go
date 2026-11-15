@@ -66,7 +66,7 @@ func (s *LogService) Query(
 		}}
 	}
 
-	return NewResponse(logCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(logCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Sources returns unique syslog identifiers available in the journal on the
@@ -97,7 +97,7 @@ func (s *LogService) Sources(
 		}}
 	}
 
-	return NewResponse(logSourceCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(logSourceCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // QueryUnit returns journal log entries for a specific systemd unit on the
@@ -136,5 +136,5 @@ func (s *LogService) QueryUnit(
 		}}
 	}
 
-	return NewResponse(logCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(logCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }

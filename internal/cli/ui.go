@@ -408,6 +408,10 @@ func printSummary(
 		summary += "   " + DimStyle.Render("job "+pendingJobID)
 		pendingJobID = ""
 	}
+	if pendingTraceID != "" {
+		summary += "   " + DimStyle.Render("trace "+pendingTraceID)
+		pendingTraceID = ""
+	}
 
 	fmt.Printf("\n  %s\n", summary)
 }
@@ -423,6 +427,20 @@ func PrintJobID(
 	id string,
 ) {
 	pendingJobID = id
+}
+
+// pendingTraceID is the trace of the request that a result came from, set by
+// PrintTraceID and printed after the job ID.
+var pendingTraceID string
+
+// PrintTraceID records the trace of the request that a command's result came
+// from. The summary line ends with it, after the job ID. Search the tracing
+// backend for it to see the request on the controller, the queue and each
+// agent. An empty ID prints nothing.
+func PrintTraceID(
+	id string,
+) {
+	pendingTraceID = id
 }
 
 // statusWeight returns a numeric weight for status ordering.

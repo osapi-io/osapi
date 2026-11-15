@@ -38,7 +38,7 @@ func NewScheduleProcessor(
 ) ProcessorFunc {
 	logger = logger.With(slog.String("subsystem", "agent.processor.schedule"))
 
-	return func(_ context.Context, req job.Request) (json.RawMessage, error) {
+	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
 		if cronProvider == nil {
 			return nil, fmt.Errorf("cron provider not available")
 		}
@@ -48,7 +48,7 @@ func NewScheduleProcessor(
 
 		switch baseOperation {
 		case "cron":
-			return processCronOperation(cronProvider, logger, req)
+			return processCronOperation(ctx, cronProvider, logger, req)
 		default:
 			return nil, fmt.Errorf("unsupported schedule operation: %s", req.Operation)
 		}
@@ -57,6 +57,7 @@ func NewScheduleProcessor(
 
 // processCronOperation dispatches cron sub-operations.
 func processCronOperation(
+	ctx context.Context,
 	cronProvider cron.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -67,8 +68,6 @@ func processCronOperation(
 		return nil, fmt.Errorf("invalid schedule operation: %s", jobRequest.Operation)
 	}
 	subOp := parts[1]
-
-	ctx := context.Background()
 
 	switch subOp {
 	case "list":

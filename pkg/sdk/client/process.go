@@ -59,7 +59,11 @@ func (s *ProcessService) List(
 		}}
 	}
 
-	return NewResponse(processInfoCollectionFromList(resp.JSON200), resp.Body), nil
+	return newResponse(
+		processInfoCollectionFromList(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Get returns information about a specific process by PID on the target host.
@@ -91,7 +95,11 @@ func (s *ProcessService) Get(
 		}}
 	}
 
-	return NewResponse(processInfoCollectionFromGet(resp.JSON200), resp.Body), nil
+	return newResponse(
+		processInfoCollectionFromGet(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Signal sends a signal to a specific process by PID on the target host.
@@ -128,5 +136,9 @@ func (s *ProcessService) Signal(
 		}}
 	}
 
-	return NewResponse(processSignalCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		processSignalCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }

@@ -181,6 +181,16 @@ func (suite *UIPublicTestSuite) TestShapes() {
 			render: results([]cli.ResultRow{ok("web-01", "vm.swappiness", "10")}, "KEY", "VALUE"),
 		},
 		{
+			name: "one host with the trace of the request",
+			render: func() {
+				cli.PrintTraceID("26e448c9dbe1c4a8d216a98c675079c9")
+				results(
+					[]cli.ResultRow{ok("web-01", "vm.swappiness", "10")},
+					"KEY", "VALUE",
+				)()
+			},
+		},
+		{
 			name: "several hosts in name order",
 			render: results([]cli.ResultRow{
 				ok("web-02", "vm.swappiness", "10"),

@@ -59,7 +59,7 @@ func (s *RouteService) List(
 		}}
 	}
 
-	return NewResponse(routeListCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(routeListCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Get retrieves routes for a specific interface on the target host.
@@ -91,7 +91,7 @@ func (s *RouteService) Get(
 		}}
 	}
 
-	return NewResponse(routeGetCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(routeGetCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Create creates route configuration for an interface on the target host.
@@ -125,7 +125,11 @@ func (s *RouteService) Create(
 		}}
 	}
 
-	return NewResponse(routeMutationCollectionFromCreate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		routeMutationCollectionFromCreate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Update updates route configuration for an interface on the target host.
@@ -160,7 +164,11 @@ func (s *RouteService) Update(
 		}}
 	}
 
-	return NewResponse(routeMutationCollectionFromUpdate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		routeMutationCollectionFromUpdate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Delete removes route configuration for an interface on the target host.
@@ -191,7 +199,11 @@ func (s *RouteService) Delete(
 		}}
 	}
 
-	return NewResponse(routeMutationCollectionFromDelete(resp.JSON200), resp.Body), nil
+	return newResponse(
+		routeMutationCollectionFromDelete(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // routeConfigRequestFromOpts builds a gen.RouteConfigRequest from SDK options.

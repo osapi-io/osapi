@@ -33,6 +33,7 @@ import (
 
 // processPowerOperation dispatches power management sub-operations.
 func processPowerOperation(
+	ctx context.Context,
 	powerProvider power.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -55,8 +56,6 @@ func processPowerOperation(
 			return nil, fmt.Errorf("unmarshal power opts: %w", err)
 		}
 	}
-
-	ctx := context.Background()
 
 	switch subOp {
 	case "reboot":

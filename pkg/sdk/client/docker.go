@@ -88,7 +88,11 @@ func (s *DockerService) Create(
 		}}
 	}
 
-	return NewResponse(dockerResultCollectionFromGen(resp.JSON202), resp.Body), nil
+	return newResponse(
+		dockerResultCollectionFromGen(resp.JSON202),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // List lists containers on the target host, optionally filtered by state.
@@ -131,7 +135,7 @@ func (s *DockerService) List(
 		}}
 	}
 
-	return NewResponse(dockerListCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(dockerListCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Inspect retrieves detailed information about a specific container.
@@ -163,7 +167,11 @@ func (s *DockerService) Inspect(
 		}}
 	}
 
-	return NewResponse(dockerDetailCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		dockerDetailCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Start starts a stopped container on the target host.
@@ -195,7 +203,11 @@ func (s *DockerService) Start(
 		}}
 	}
 
-	return NewResponse(dockerActionCollectionFromGen(resp.JSON202), resp.Body), nil
+	return newResponse(
+		dockerActionCollectionFromGen(resp.JSON202),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Stop stops a running container on the target host.
@@ -233,7 +245,11 @@ func (s *DockerService) Stop(
 		}}
 	}
 
-	return NewResponse(dockerActionCollectionFromGen(resp.JSON202), resp.Body), nil
+	return newResponse(
+		dockerActionCollectionFromGen(resp.JSON202),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Remove removes a container from the target host.
@@ -273,7 +289,11 @@ func (s *DockerService) Remove(
 		}}
 	}
 
-	return NewResponse(dockerActionCollectionFromGen(resp.JSON202), resp.Body), nil
+	return newResponse(
+		dockerActionCollectionFromGen(resp.JSON202),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Exec executes a command inside a running container on the target host.
@@ -316,7 +336,7 @@ func (s *DockerService) Exec(
 		}}
 	}
 
-	return NewResponse(dockerExecCollectionFromGen(resp.JSON202), resp.Body), nil
+	return newResponse(dockerExecCollectionFromGen(resp.JSON202), resp.Body, resp.HTTPResponse), nil
 }
 
 // ImageRemove removes a container image from the target host.
@@ -360,7 +380,11 @@ func (s *DockerService) RemoveImage(
 		}}
 	}
 
-	return NewResponse(dockerActionCollectionFromGen(resp.JSON202), resp.Body), nil
+	return newResponse(
+		dockerActionCollectionFromGen(resp.JSON202),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Pull pulls a container image on the target host.
@@ -395,5 +419,5 @@ func (s *DockerService) Pull(
 		}}
 	}
 
-	return NewResponse(dockerPullCollectionFromGen(resp.JSON202), resp.Body), nil
+	return newResponse(dockerPullCollectionFromGen(resp.JSON202), resp.Body, resp.HTTPResponse), nil
 }

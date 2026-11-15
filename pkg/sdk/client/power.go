@@ -62,7 +62,7 @@ func (s *PowerService) Reboot(
 		}}
 	}
 
-	return NewResponse(powerCollectionFromReboot(resp.JSON200), resp.Body), nil
+	return newResponse(powerCollectionFromReboot(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Shutdown initiates a shutdown on the target host.
@@ -95,7 +95,7 @@ func (s *PowerService) Shutdown(
 		}}
 	}
 
-	return NewResponse(powerCollectionFromShutdown(resp.JSON200), resp.Body), nil
+	return newResponse(powerCollectionFromShutdown(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // buildPowerRequest constructs a gen.PowerRequest from PowerOpts,

@@ -33,6 +33,7 @@ import (
 
 // processTimezoneOperation dispatches timezone sub-operations.
 func processTimezoneOperation(
+	ctx context.Context,
 	timezoneProvider timezone.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -47,8 +48,6 @@ func processTimezoneOperation(
 		return nil, fmt.Errorf("invalid timezone operation: %s", jobRequest.Operation)
 	}
 	subOp := parts[1]
-
-	ctx := context.Background()
 
 	switch subOp {
 	case "get":

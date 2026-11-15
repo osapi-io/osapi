@@ -53,7 +53,7 @@ func (s *HostnameService) Get(
 		}}
 	}
 
-	return NewResponse(hostnameCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(hostnameCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Update updates the hostname on the target node.
@@ -88,8 +88,8 @@ func (s *HostnameService) Update(
 		}}
 	}
 
-	return NewResponse(
-		hostnameUpdateCollectionFromGen(resp.JSON202),
-		resp.Body,
-	), nil
+	return newResponse(
+			hostnameUpdateCollectionFromGen(resp.JSON202), resp.Body, resp.HTTPResponse),
+
+		nil
 }

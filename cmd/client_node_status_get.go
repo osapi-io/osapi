@@ -53,6 +53,8 @@ var clientNodeStatusGetCmd = &cobra.Command{
 
 		cli.PrintJobID(resp.Data.JobID)
 
+		cli.PrintTraceID(resp.TraceID())
+
 		displayNodeStatusCollection(host, &resp.Data)
 	},
 }

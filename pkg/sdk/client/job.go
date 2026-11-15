@@ -60,7 +60,7 @@ func (s *JobService) Get(
 		}}
 	}
 
-	return NewResponse(jobDetailFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(jobDetailFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Delete deletes a job by ID.
@@ -134,7 +134,7 @@ func (s *JobService) List(
 		}}
 	}
 
-	return NewResponse(jobListFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(jobListFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Retry retries a failed job by ID, optionally on a different target.
@@ -169,5 +169,5 @@ func (s *JobService) Retry(
 		}}
 	}
 
-	return NewResponse(jobCreatedFromGen(resp.JSON201), resp.Body), nil
+	return newResponse(jobCreatedFromGen(resp.JSON201), resp.Body, resp.HTTPResponse), nil
 }

@@ -36,7 +36,7 @@ func NewFileProcessor(
 	fileProvider fileProv.Provider,
 	_ *slog.Logger,
 ) ProcessorFunc {
-	return func(_ context.Context, req job.Request) (json.RawMessage, error) {
+	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
 		if fileProvider == nil {
 			return nil, fmt.Errorf("file provider not configured")
 		}
@@ -46,11 +46,11 @@ func NewFileProcessor(
 
 		switch baseOperation {
 		case "deploy":
-			return processFileDeploy(fileProvider, req)
+			return processFileDeploy(ctx, fileProvider, req)
 		case "undeploy":
-			return processFileUndeploy(fileProvider, req)
+			return processFileUndeploy(ctx, fileProvider, req)
 		case "status":
-			return processFileStatus(fileProvider, req)
+			return processFileStatus(ctx, fileProvider, req)
 		default:
 			return nil, fmt.Errorf("unsupported file operation: %s", req.Operation)
 		}
@@ -59,6 +59,7 @@ func NewFileProcessor(
 
 // processFileDeploy handles file deploy operations.
 func processFileDeploy(
+	ctx context.Context,
 	fileProvider fileProv.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
@@ -67,7 +68,7 @@ func processFileDeploy(
 		return nil, fmt.Errorf("failed to parse file deploy data: %w", err)
 	}
 
-	result, err := fileProvider.Deploy(context.Background(), req)
+	result, err := fileProvider.Deploy(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +78,7 @@ func processFileDeploy(
 
 // processFileStatus handles file status operations.
 func processFileStatus(
+	ctx context.Context,
 	fileProvider fileProv.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
@@ -85,7 +87,7 @@ func processFileStatus(
 		return nil, fmt.Errorf("failed to parse file status data: %w", err)
 	}
 
-	result, err := fileProvider.Status(context.Background(), req)
+	result, err := fileProvider.Status(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +97,7 @@ func processFileStatus(
 
 // processFileUndeploy handles file undeploy operations.
 func processFileUndeploy(
+	ctx context.Context,
 	fileProvider fileProv.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
@@ -103,7 +106,7 @@ func processFileUndeploy(
 		return nil, fmt.Errorf("failed to parse file undeploy data: %w", err)
 	}
 
-	result, err := fileProvider.Undeploy(context.Background(), req)
+	result, err := fileProvider.Undeploy(ctx, req)
 	if err != nil {
 		return nil, err
 	}

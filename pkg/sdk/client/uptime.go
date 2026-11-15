@@ -53,5 +53,5 @@ func (s *UptimeService) Get(
 		}}
 	}
 
-	return NewResponse(uptimeCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(uptimeCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }

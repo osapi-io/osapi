@@ -104,7 +104,7 @@ func (s *CommandService) Exec(
 		}}
 	}
 
-	return NewResponse(commandCollectionFromGen(resp.JSON202), resp.Body), nil
+	return newResponse(commandCollectionFromGen(resp.JSON202), resp.Body, resp.HTTPResponse), nil
 }
 
 // Shell executes a command through /bin/sh -c with shell features
@@ -141,5 +141,5 @@ func (s *CommandService) Shell(
 		}}
 	}
 
-	return NewResponse(commandCollectionFromGen(resp.JSON202), resp.Body), nil
+	return newResponse(commandCollectionFromGen(resp.JSON202), resp.Body, resp.HTTPResponse), nil
 }

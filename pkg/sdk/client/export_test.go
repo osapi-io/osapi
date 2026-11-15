@@ -618,3 +618,12 @@ func RouteMutationCollectionFromDelete(
 ) Collection[RouteMutationResult] {
 	return routeMutationCollectionFromDelete(input)
 }
+
+// ExportNewResponse exposes newResponse for testing.
+func ExportNewResponse[T any](
+	data T,
+	rawJSON []byte,
+	httpResp *http.Response,
+) *Response[T] {
+	return newResponse(data, rawJSON, httpResp)
+}

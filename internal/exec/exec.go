@@ -68,6 +68,9 @@ func (d *defaultExecutor) run(
 	cwd string,
 	stdin io.Reader,
 ) (string, error) {
+	ctx, span := startSpan(ctx, name, args)
+	defer span.End()
+
 	ctx, cancel := context.WithTimeout(ctx, DefaultCommandTimeout)
 	defer cancel()
 
@@ -90,6 +93,7 @@ func (d *defaultExecutor) run(
 		slog.String("output", logOutput),
 		slog.Any("error", err),
 	)
+	endSpan(span, cmd, err)
 	if err != nil {
 		// The command was killed rather than having failed on its own terms,
 		// so the reason it stopped is not in its output.

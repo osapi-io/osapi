@@ -81,5 +81,5 @@ func (c *Client) Request(
 		return nil, checkError(resp.StatusCode, &e)
 	}
 
-	return NewResponse(json.RawMessage(raw), raw), nil
+	return newResponse(json.RawMessage(raw), raw, resp), nil
 }

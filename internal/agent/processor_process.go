@@ -33,6 +33,7 @@ import (
 
 // processProcessOperation dispatches process management sub-operations.
 func processProcessOperation(
+	ctx context.Context,
 	processProvider process.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -47,8 +48,6 @@ func processProcessOperation(
 		return nil, fmt.Errorf("invalid process operation: %s", jobRequest.Operation)
 	}
 	subOp := parts[1]
-
-	ctx := context.Background()
 
 	switch subOp {
 	case "list":
