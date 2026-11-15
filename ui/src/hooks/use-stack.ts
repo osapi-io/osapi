@@ -1,12 +1,7 @@
 import { useState, useCallback } from "react";
 
 export type BlockStatus =
-  | "unchecked"
-  | "pending"
-  | "ready"
-  | "applying"
-  | "applied"
-  | "error";
+  "unchecked" | "pending" | "ready" | "applying" | "applied" | "error";
 
 export interface BlockType {
   type: string;
