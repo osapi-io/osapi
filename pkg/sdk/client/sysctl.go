@@ -59,7 +59,11 @@ func (s *SysctlService) List(
 		}}
 	}
 
-	return NewResponse(sysctlEntryCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		sysctlEntryCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Get retrieves a single sysctl parameter by key on the target host.
@@ -91,7 +95,11 @@ func (s *SysctlService) Get(
 		}}
 	}
 
-	return NewResponse(sysctlEntryCollectionFromGet(resp.JSON200), resp.Body), nil
+	return newResponse(
+		sysctlEntryCollectionFromGet(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Create creates a sysctl parameter on the target host.
@@ -127,7 +135,11 @@ func (s *SysctlService) Create(
 		}}
 	}
 
-	return NewResponse(sysctlMutationCollectionFromCreate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		sysctlMutationCollectionFromCreate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Update updates an existing sysctl parameter on the target host.
@@ -164,7 +176,11 @@ func (s *SysctlService) Update(
 		}}
 	}
 
-	return NewResponse(sysctlMutationCollectionFromUpdate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		sysctlMutationCollectionFromUpdate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Delete removes a sysctl parameter on the target host.
@@ -196,5 +212,9 @@ func (s *SysctlService) Delete(
 		}}
 	}
 
-	return NewResponse(sysctlMutationCollectionFromDelete(resp.JSON200), resp.Body), nil
+	return newResponse(
+		sysctlMutationCollectionFromDelete(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }

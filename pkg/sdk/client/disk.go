@@ -53,5 +53,5 @@ func (s *DiskService) Get(
 		}}
 	}
 
-	return NewResponse(diskCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(diskCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }

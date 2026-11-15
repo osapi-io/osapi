@@ -33,6 +33,7 @@ import (
 
 // processSSHKeyOperation dispatches SSH key sub-operations.
 func processSSHKeyOperation(
+	ctx context.Context,
 	userProvider user.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -47,8 +48,6 @@ func processSSHKeyOperation(
 		return nil, fmt.Errorf("invalid sshKey operation: %s", jobRequest.Operation)
 	}
 	subOp := parts[1]
-
-	ctx := context.Background()
 
 	switch subOp {
 	case "list":

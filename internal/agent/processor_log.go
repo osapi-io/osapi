@@ -33,6 +33,7 @@ import (
 
 // processLogOperation dispatches log management sub-operations.
 func processLogOperation(
+	ctx context.Context,
 	logProvider logProv.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -47,8 +48,6 @@ func processLogOperation(
 		return nil, fmt.Errorf("invalid log operation: %s", jobRequest.Operation)
 	}
 	subOp := parts[1]
-
-	ctx := context.Background()
 
 	switch subOp {
 	case "query":

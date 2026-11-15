@@ -64,6 +64,33 @@ func (s *RequestPublicTestSuite) TestRequest() {
 			},
 		},
 		{
+			name:   "when the controller traced the request, the response has its trace ID",
+			method: http.MethodGet,
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set(
+					"traceresponse",
+					"00-26e448c9dbe1c4a8d216a98c675079c9-1a2b3c4d5e6f7a8b-01",
+				)
+				_, _ = w.Write([]byte(`{}`))
+			},
+			validateFunc: func(resp *client.Response[json.RawMessage], err error, _ *http.Request, _ string) {
+				s.Require().NoError(err)
+				s.Equal("26e448c9dbe1c4a8d216a98c675079c9", resp.TraceID())
+			},
+		},
+		{
+			name:   "when the header is not a trace, the trace ID is empty",
+			method: http.MethodGet,
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("traceresponse", "not-a-trace")
+				_, _ = w.Write([]byte(`{}`))
+			},
+			validateFunc: func(resp *client.Response[json.RawMessage], err error, _ *http.Request, _ string) {
+				s.Require().NoError(err)
+				s.Empty(resp.TraceID())
+			},
+		},
+		{
 			name:   "when a write sends a body, it goes as JSON",
 			method: http.MethodPut,
 			body:   []byte(`{"value":"v"}`),

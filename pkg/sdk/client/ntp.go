@@ -59,7 +59,7 @@ func (s *NTPService) Get(
 		}}
 	}
 
-	return NewResponse(ntpStatusCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(ntpStatusCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Create creates NTP configuration on the target host.
@@ -94,7 +94,11 @@ func (s *NTPService) Create(
 		}}
 	}
 
-	return NewResponse(ntpMutationCollectionFromCreate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		ntpMutationCollectionFromCreate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Update updates NTP configuration on the target host.
@@ -130,7 +134,11 @@ func (s *NTPService) Update(
 		}}
 	}
 
-	return NewResponse(ntpMutationCollectionFromUpdate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		ntpMutationCollectionFromUpdate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Delete removes NTP configuration from the target host.
@@ -160,5 +168,9 @@ func (s *NTPService) Delete(
 		}}
 	}
 
-	return NewResponse(ntpMutationCollectionFromDelete(resp.JSON200), resp.Body), nil
+	return newResponse(
+		ntpMutationCollectionFromDelete(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }

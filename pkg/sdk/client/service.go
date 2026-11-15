@@ -59,7 +59,11 @@ func (s *ServiceService) List(
 		}}
 	}
 
-	return NewResponse(serviceListCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		serviceListCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Get returns information about a specific service on the target host.
@@ -91,7 +95,7 @@ func (s *ServiceService) Get(
 		}}
 	}
 
-	return NewResponse(serviceGetCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(serviceGetCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Create creates a new service unit file on the target host.
@@ -127,7 +131,11 @@ func (s *ServiceService) Create(
 		}}
 	}
 
-	return NewResponse(serviceMutationCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		serviceMutationCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Update updates an existing service unit file on the target host.
@@ -164,7 +172,11 @@ func (s *ServiceService) Update(
 		}}
 	}
 
-	return NewResponse(serviceMutationCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		serviceMutationCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Delete deletes a service unit file on the target host.
@@ -195,7 +207,11 @@ func (s *ServiceService) Delete(
 		}}
 	}
 
-	return NewResponse(serviceMutationCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		serviceMutationCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Start starts a service on the target host.
@@ -226,7 +242,11 @@ func (s *ServiceService) Start(
 		}}
 	}
 
-	return NewResponse(serviceMutationCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		serviceMutationCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Stop stops a service on the target host.
@@ -257,7 +277,11 @@ func (s *ServiceService) Stop(
 		}}
 	}
 
-	return NewResponse(serviceMutationCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		serviceMutationCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Restart restarts a service on the target host.
@@ -288,7 +312,11 @@ func (s *ServiceService) Restart(
 		}}
 	}
 
-	return NewResponse(serviceMutationCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		serviceMutationCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Enable enables a service to start on boot on the target host.
@@ -319,7 +347,11 @@ func (s *ServiceService) Enable(
 		}}
 	}
 
-	return NewResponse(serviceMutationCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		serviceMutationCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Disable disables a service from starting on boot on the target host.
@@ -350,5 +382,9 @@ func (s *ServiceService) Disable(
 		}}
 	}
 
-	return NewResponse(serviceMutationCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		serviceMutationCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }

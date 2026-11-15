@@ -53,5 +53,5 @@ func (s *LoadService) Get(
 		}}
 	}
 
-	return NewResponse(loadCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(loadCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }

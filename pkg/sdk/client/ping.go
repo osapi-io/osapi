@@ -58,5 +58,5 @@ func (s *PingService) Send(
 		}}
 	}
 
-	return NewResponse(pingCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(pingCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }

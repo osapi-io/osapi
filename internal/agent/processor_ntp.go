@@ -33,6 +33,7 @@ import (
 
 // processNtpOperation dispatches ntp sub-operations.
 func processNtpOperation(
+	ctx context.Context,
 	ntpProvider ntp.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -47,8 +48,6 @@ func processNtpOperation(
 		return nil, fmt.Errorf("invalid ntp operation: %s", jobRequest.Operation)
 	}
 	subOp := parts[1]
-
-	ctx := context.Background()
 
 	switch subOp {
 	case "get":

@@ -98,6 +98,15 @@ func (suite *ResponsePublicTestSuite) TestData() {
 	}
 }
 
+func (suite *ResponsePublicTestSuite) TestTraceID() {
+	suite.Run("when a response is made without a request has no trace ID", func() {
+		suite.Empty(client.NewResponse("data", nil).TraceID())
+	})
+	suite.Run("when the HTTP response is missing has no trace ID", func() {
+		suite.Empty(client.ExportNewResponse("data", nil, nil).TraceID())
+	})
+}
+
 func TestResponsePublicTestSuite(
 	t *testing.T,
 ) {

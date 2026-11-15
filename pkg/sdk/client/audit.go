@@ -67,7 +67,7 @@ func (s *AuditService) List(
 		}}
 	}
 
-	return NewResponse(auditListFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(auditListFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Get retrieves a single audit log entry by ID.
@@ -102,7 +102,7 @@ func (s *AuditService) Get(
 		}}
 	}
 
-	return NewResponse(auditEntryFromGen(resp.JSON200.Entry), resp.Body), nil
+	return newResponse(auditEntryFromGen(resp.JSON200.Entry), resp.Body, resp.HTTPResponse), nil
 }
 
 // Export retrieves all audit log entries for export.
@@ -130,5 +130,5 @@ func (s *AuditService) Export(
 		}}
 	}
 
-	return NewResponse(auditListFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(auditListFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }

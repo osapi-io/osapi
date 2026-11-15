@@ -17,22 +17,95 @@ sequenceDiagram
     participant API as API Server
     participant Agent
 
-    CLI->>CLI: create root span
-    CLI->>API: HTTP request + traceparent header
-    API->>API: continue trace (otelecho)
-    API->>Agent: NATS message + traceparent header
-    Agent->>Agent: extract context, create job.process span
+    CLI->>API: HTTP request
+    API->>API: start the trace (otelecho)
+    API->>Agent: job.publish: NATS message + traceparent header
+    Agent->>Agent: job.process, as a child of job.publish
+    API->>API: job.collect: wait for the answers
+    API->>CLI: response + traceresponse header
+    CLI->>CLI: print the trace ID
 ```
 
-1. The **CLI** makes a root span and adds `traceparent` to the HTTP request.
-1. The **API server** continues the trace in the `otelecho` middleware. Then,
-   when it publishes a job notification, the nats-client adds the trace context
-   to the NATS message headers automatically.
-1. The **agent** reads the trace context from the NATS message headers. It makes
-   a `job.process` span that connects its work to the original request.
+1. The **API server** starts the trace in the `otelecho` middleware. It opens
+   `job.publish` when it stores and publishes the job. The nats-client adds the
+   trace context to the headers of the NATS message.
+1. The **agent** reads the trace context from the headers. It opens
+   `job.process` as a child of `job.publish`.
+1. The **API server** opens `job.collect` while it waits for the answers of the
+   agents. It sends the trace back in the `traceresponse` header of the
+   response.
+1. The **CLI** prints the trace ID at the end of the summary line, after the job
+   ID:
 
-All structured log lines include `trace_id` and `span_id` when a span is active,
-so `grep trace_id=<hex>` shows the complete end-to-end flow.
+   ```text
+   3 hosts: 2 ok, 1 skipped   job 8adc7e9f-040c-4d5b-8cb1-2e834158f746   trace 26e448c9dbe1c4a8d216a98c675079c9
+   ```
+
+The CLI needs no tracing configuration for this, and no access to the tracing
+backend. Only the controller and the agents send spans. The Go SDK gives the
+same ID: `resp.TraceID()`.
+
+A person who develops osapi can also let the CLI send its own span. Give the CLI
+`telemetry.tracing` with an `exporter`. Then the trace starts at the command,
+for example `osapi client node package list`, and the controller continues it.
+The trace ID is the same in each component. Without an exporter, the CLI sends
+no trace context, so that a trace has no parent that never arrives.
+
+## The span tree
+
+A request to one host, or a broadcast such as `--target _all`, makes this tree.
+A broadcast has one `job.process` for each agent:
+
+```text
+osapi-controller  GET /api/node/:hostname/package
+├─ job.publish
+│  ├─ osapi-agent  job.process     (web-01)
+│  │  └─ exec dpkg-query
+│  └─ osapi-agent  job.process     (web-02)
+│     └─ exec dpkg-query
+└─ job.collect
+```
+
+A behavior adds `behavior.<name>.<method>` under `job.process`, and its commands
+are under that span.
+
+| Span                       | Service            | Attributes that tell you the most                                                                 |
+| -------------------------- | ------------------ | ------------------------------------------------------------------------------------------------- |
+| the command                | `osapi-cli`        | The name is the command                                                                           |
+| `GET /api/...`             | `osapi-controller` | `http.route`, `http.response.status_code`, `osapi.target`                                         |
+| `job.publish`              | `osapi-controller` | `job.id`, `job.type`, `osapi.target`, `messaging.destination.name`                                |
+| `job.collect`              | `osapi-controller` | `job.expected`, `job.answered`, `job.timed_out`; a `job.timeout` event names each silent agent    |
+| `job.process`              | `osapi-agent`      | `osapi.agent.hostname`, `osapi.agent.machine_id`, `host.arch`, `job.status`, `job.changed`        |
+| `behavior.<name>.<method>` | `osapi-agent`      | `osapi.behavior.name`, `osapi.behavior.method`, `osapi.behavior.outcome`                          |
+| `exec <program>`           | `osapi-agent`      | `process.executable.name`, `osapi.exec.sudo`, `process.exit.code`. The arguments are not recorded |
+
+Each span has `service.version`, the version of the binary that made it.
+
+A span has the error status when its work failed: a failed job, a command that
+failed, or a `job.collect` with no answer. A host that skips a job is not an
+error. Its `job.process` has `job.status` `skipped` and a `job.skipped` event
+with the reason.
+
+The health endpoints and the files of the UI have no spans. A probe and the UI
+call them each few seconds, and their traces would hide the traces of the jobs.
+
+## Read a trace in Jaeger
+
+1. Copy the trace ID from the summary line of the command.
+1. Put it in the search box at the top of Jaeger. Jaeger opens the trace.
+1. Each `job.process` shows its host in `osapi.agent.hostname`. A red span
+   failed. Open it, and read the error in its status.
+1. Compare `job.expected` and `job.answered` on `job.collect`. When they are
+   different, the `job.timeout` events name the agents that did not answer.
+
+To find traces without an ID, open **Search**. Set **Service** to
+`osapi-controller`, and set **Tags** to one of these:
+
+- `job.id=<the job ID>`, for one job
+- `osapi.agent.hostname=web-01`, for the work of one host
+
+An audit entry has `trace_id`. Put it in the search box of Jaeger to open the
+trace of that request.
 
 ## Debugging with traces
 

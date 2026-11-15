@@ -48,6 +48,9 @@ type Caller interface {
 type Result struct {
 	JobID   string           `json:"job_id"`
 	Results []map[string]any `json:"results"`
+	// TraceID is the trace of the request, from the controller's
+	// traceresponse header. It is not in the body.
+	TraceID string `json:"-"`
 }
 
 // Build is the request that runs method m of b on target with input, a value
@@ -122,6 +125,8 @@ func Call(
 	if err := json.Unmarshal(resp.Data, &out); err != nil {
 		return Result{}, nil, fmt.Errorf("%s: decode response: %w", b.Operation(m), err)
 	}
+
+	out.TraceID = resp.TraceID()
 
 	return out, resp.RawJSON(), nil
 }

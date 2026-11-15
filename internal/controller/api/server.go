@@ -23,16 +23,19 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	echootel "github.com/labstack/echo-opentelemetry"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/telemetry/httplog"
@@ -65,12 +68,14 @@ func New(
 	otelConfig := echootel.Config{
 		ServerName:     "osapi-api",
 		TracerProvider: otel.GetTracerProvider(),
+		Skipper:        untraced,
 	}
 	if s.meterProvider != nil {
 		otelConfig.MeterProvider = s.meterProvider
 	}
 
 	e.Use(echootel.NewMiddlewareWithConfig(otelConfig))
+	e.Use(traceResponse)
 	e.Use(httplog.New(logger))
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
@@ -165,4 +170,36 @@ func (s *Server) Stop(
 	s.stop()
 	s.stop = nil
 	s.logger.Info("server stopped gracefully")
+}
+
+// untraced tells which requests get no span and no HTTP metrics: the health
+// checks and the files of the UI. A probe and the UI poll the health
+// endpoints each few seconds, and their traces hide the traces of the jobs.
+func untraced(
+	c *echo.Context,
+) bool {
+	path := c.Request().URL.Path
+
+	return !strings.HasPrefix(path, "/api/") || strings.HasPrefix(path, "/api/health")
+}
+
+// traceResponse puts the trace of the request in the traceresponse header of
+// the response, from W3C Trace Context level 2. The CLI prints the trace ID
+// from it, so a person can find the trace of a command without access to
+// the tracing backend from the machine of the CLI. A request with no span,
+// such as a health check, gets no header.
+func traceResponse(
+	next echo.HandlerFunc,
+) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		sc := trace.SpanContextFromContext(c.Request().Context())
+		if sc.IsValid() {
+			c.Response().Header().Set(
+				"traceresponse",
+				fmt.Sprintf("00-%s-%s-%s", sc.TraceID(), sc.SpanID(), sc.TraceFlags()),
+			)
+		}
+
+		return next(c)
+	}
 }

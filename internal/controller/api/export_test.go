@@ -47,3 +47,9 @@ func ExportScopeMiddleware(
 ) StrictHandlerFunc {
 	return ScopeMiddleware(next, tokenManager, signingKey, contextKey, customRoles)
 }
+
+// ExportUntraced exposes untraced for testing.
+var ExportUntraced = untraced
+
+// ExportTraceResponse exposes traceResponse for testing.
+var ExportTraceResponse = traceResponse

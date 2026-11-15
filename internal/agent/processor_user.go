@@ -33,6 +33,7 @@ import (
 
 // processUserOperation dispatches user sub-operations.
 func processUserOperation(
+	ctx context.Context,
 	userProvider user.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -47,8 +48,6 @@ func processUserOperation(
 		return nil, fmt.Errorf("invalid user operation: %s", jobRequest.Operation)
 	}
 	subOp := parts[1]
-
-	ctx := context.Background()
 
 	switch subOp {
 	case "list":
@@ -70,6 +69,7 @@ func processUserOperation(
 
 // processGroupOperation dispatches group sub-operations.
 func processGroupOperation(
+	ctx context.Context,
 	userProvider user.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -84,8 +84,6 @@ func processGroupOperation(
 		return nil, fmt.Errorf("invalid group operation: %s", jobRequest.Operation)
 	}
 	subOp := parts[1]
-
-	ctx := context.Background()
 
 	switch subOp {
 	case "list":

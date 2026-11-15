@@ -33,6 +33,7 @@ import (
 
 // processSysctlOperation dispatches sysctl sub-operations.
 func processSysctlOperation(
+	ctx context.Context,
 	sysctlProvider sysctl.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -47,8 +48,6 @@ func processSysctlOperation(
 		return nil, fmt.Errorf("invalid sysctl operation: %s", jobRequest.Operation)
 	}
 	subOp := parts[1]
-
-	ctx := context.Background()
 
 	switch subOp {
 	case "list":

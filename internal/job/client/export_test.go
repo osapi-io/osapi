@@ -109,3 +109,6 @@ func SetNewFn(
 func ResetNewFn() {
 	newFn = New
 }
+
+// ExportEndCollectSpan exposes endCollectSpan for testing.
+var ExportEndCollectSpan = endCollectSpan

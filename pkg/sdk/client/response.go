@@ -20,10 +20,16 @@
 
 package client
 
+import (
+	"net/http"
+	"strings"
+)
+
 // Response wraps a domain type with raw JSON for CLI --json mode.
 type Response[T any] struct {
 	Data    T
 	rawJSON []byte
+	traceID string
 }
 
 // NewResponse creates a Response with the given data and raw JSON body.
@@ -40,4 +46,39 @@ func NewResponse[T any](
 // RawJSON returns the raw HTTP response body.
 func (r *Response[T]) RawJSON() []byte {
 	return r.rawJSON
+}
+
+// TraceID returns the ID of the trace of the request, from the traceresponse
+// header of the controller. It is empty when the controller did not trace the
+// request. Search the tracing backend for it to see the whole request: the
+// controller, the queue, and the work of each agent.
+func (r *Response[T]) TraceID() string {
+	return r.traceID
+}
+
+// newResponse creates a Response, with the trace ID of the HTTP response.
+func newResponse[T any](
+	data T,
+	rawJSON []byte,
+	httpResp *http.Response,
+) *Response[T] {
+	r := NewResponse(data, rawJSON)
+	if httpResp != nil {
+		r.traceID = traceIDFromHeader(httpResp.Header.Get("traceresponse"))
+	}
+
+	return r
+}
+
+// traceIDFromHeader returns the trace ID of a W3C traceresponse header,
+// version-traceid-spanid-flags, or "" when the header is not in that form.
+func traceIDFromHeader(
+	header string,
+) string {
+	parts := strings.Split(header, "-")
+	if len(parts) != 4 || len(parts[1]) != 32 {
+		return ""
+	}
+
+	return parts[1]
 }

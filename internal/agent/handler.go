@@ -342,6 +342,7 @@ func (a *Agent) handleJobMessage(
 		attribute.String("job.operation", operation),
 		attribute.String("job.type", operationType),
 	)
+	span.SetAttributes(a.identityAttrs()...)
 
 	// Convert operation data to job.Request
 	// operationData came from json.Unmarshal, so Marshal always succeeds.
@@ -476,6 +477,8 @@ func (a *Agent) handleJobMessage(
 			response.Changed = extractChanged(result)
 		}
 	}
+
+	recordOutcome(span, response, jobRequest.Type)
 
 	if a.jobsActive != nil {
 		a.jobsActive.Add(ctx, -1)

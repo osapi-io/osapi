@@ -57,7 +57,7 @@ func (s *AgentService) List(
 		}}
 	}
 
-	return NewResponse(agentListFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(agentListFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Get retrieves detailed information about a specific agent by hostname.
@@ -81,7 +81,7 @@ func (s *AgentService) Get(
 		}}
 	}
 
-	return NewResponse(agentFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(agentFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Drain initiates draining of an agent, stopping it from accepting
@@ -110,7 +110,7 @@ func (s *AgentService) Drain(
 		Message: resp.JSON200.Message,
 	}
 
-	return NewResponse(msg, resp.Body), nil
+	return newResponse(msg, resp.Body, resp.HTTPResponse), nil
 }
 
 // Undrain resumes job acceptance on a drained agent.
@@ -138,7 +138,7 @@ func (s *AgentService) Undrain(
 		Message: resp.JSON200.Message,
 	}
 
-	return NewResponse(msg, resp.Body), nil
+	return newResponse(msg, resp.Body, resp.HTTPResponse), nil
 }
 
 // ListPending retrieves all agents awaiting enrollment acceptance.
@@ -161,7 +161,7 @@ func (s *AgentService) ListPending(
 		}}
 	}
 
-	return NewResponse(pendingAgentListFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(pendingAgentListFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Accept accepts a pending agent enrollment. If fingerprint is provided,
@@ -198,7 +198,7 @@ func (s *AgentService) Accept(
 		Message: resp.JSON200.Message,
 	}
 
-	return NewResponse(msg, resp.Body), nil
+	return newResponse(msg, resp.Body, resp.HTTPResponse), nil
 }
 
 // Reject rejects a pending agent enrollment.
@@ -226,7 +226,7 @@ func (s *AgentService) Reject(
 		Message: resp.JSON200.Message,
 	}
 
-	return NewResponse(msg, resp.Body), nil
+	return newResponse(msg, resp.Body, resp.HTTPResponse), nil
 }
 
 // Remove removes an accepted agent's stored key, so nothing it signs verifies
@@ -262,5 +262,9 @@ func (s *AgentService) Remove(
 		}}
 	}
 
-	return NewResponse(MessageResponse{Message: resp.JSON200.Message}, resp.Body), nil
+	return newResponse(
+		MessageResponse{Message: resp.JSON200.Message},
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }

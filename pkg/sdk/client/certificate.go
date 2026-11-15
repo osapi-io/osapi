@@ -59,7 +59,11 @@ func (s *CertificateService) List(
 		}}
 	}
 
-	return NewResponse(certificateCACollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		certificateCACollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Create creates a new CA certificate on the target host.
@@ -95,7 +99,11 @@ func (s *CertificateService) Create(
 		}}
 	}
 
-	return NewResponse(certificateCAMutationCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		certificateCAMutationCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Update updates an existing CA certificate on the target host.
@@ -132,7 +140,11 @@ func (s *CertificateService) Update(
 		}}
 	}
 
-	return NewResponse(certificateCAMutationCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		certificateCAMutationCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Delete deletes a CA certificate on the target host.
@@ -163,5 +175,9 @@ func (s *CertificateService) Delete(
 		}}
 	}
 
-	return NewResponse(certificateCAMutationCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		certificateCAMutationCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }

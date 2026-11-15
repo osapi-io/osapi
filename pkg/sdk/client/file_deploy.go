@@ -113,7 +113,7 @@ func (s *FileDeployService) Deploy(
 		}}
 	}
 
-	return NewResponse(fileDeployCollectionFromGen(resp.JSON202), resp.Body), nil
+	return newResponse(fileDeployCollectionFromGen(resp.JSON202), resp.Body, resp.HTTPResponse), nil
 }
 
 // Undeploy removes a deployed file from the target host filesystem.
@@ -141,7 +141,11 @@ func (s *FileDeployService) Undeploy(
 		}}
 	}
 
-	return NewResponse(fileUndeployCollectionFromGen(resp.JSON202), resp.Body), nil
+	return newResponse(
+		fileUndeployCollectionFromGen(resp.JSON202),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Status checks the deployment status of a file on the target host.
@@ -170,5 +174,5 @@ func (s *FileDeployService) Status(
 		}}
 	}
 
-	return NewResponse(fileStatusCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(fileStatusCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }

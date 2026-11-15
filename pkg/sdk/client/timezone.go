@@ -59,7 +59,7 @@ func (s *TimezoneService) Get(
 		}}
 	}
 
-	return NewResponse(timezoneCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(timezoneCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Update sets the system timezone on the target host.
@@ -94,5 +94,9 @@ func (s *TimezoneService) Update(
 		}}
 	}
 
-	return NewResponse(timezoneMutationCollectionFromUpdate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		timezoneMutationCollectionFromUpdate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }

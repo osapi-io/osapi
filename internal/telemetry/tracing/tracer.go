@@ -26,6 +26,7 @@ import (
 	"fmt"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
@@ -55,6 +56,7 @@ func InitTracer(
 	ctx context.Context,
 	serviceName string,
 	cfg config.TracingConfig,
+	attrs ...attribute.KeyValue,
 ) (func(context.Context) error, error) {
 	// Always set the W3C propagator so inject/extract works
 	otel.SetTextMapPropagator(propagation.TraceContext{})
@@ -65,11 +67,12 @@ func InitTracer(
 		return func(_ context.Context) error { return nil }, nil
 	}
 
+	// attrs are what the caller already knows about the process, such as
+	// its version. The tracer looks up nothing more.
 	res, err := resourceNewFn(
 		ctx,
-		resource.WithAttributes(
-			semconv.ServiceNameKey.String(serviceName),
-		),
+		resource.WithAttributes(semconv.ServiceNameKey.String(serviceName)),
+		resource.WithAttributes(attrs...),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("creating resource: %w", err)

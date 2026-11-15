@@ -33,6 +33,7 @@ import (
 
 // processRouteOperation dispatches network route sub-operations.
 func processRouteOperation(
+	ctx context.Context,
 	provider route.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -47,8 +48,6 @@ func processRouteOperation(
 		return nil, fmt.Errorf("invalid route operation: %s", jobRequest.Operation)
 	}
 	subOp := parts[1]
-
-	ctx := context.Background()
 
 	switch subOp {
 	case "list":

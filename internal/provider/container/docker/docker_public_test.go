@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
@@ -1930,6 +1932,30 @@ func (s *DockerDriverPublicTestSuite) TestImageRemove() {
 			d := dockerprov.NewWithClient(mockClient)
 			result, err := d.ImageRemove(s.ctx, tt.imageName, tt.force)
 			tt.validateFunc(result, err)
+		})
+	}
+}
+
+func (s *DockerDriverPublicTestSuite) TestTraced() {
+	tests := []struct {
+		name string
+		path string
+		want bool
+	}{
+		{name: "when the startup ping has no span", path: "/_ping", want: false},
+		{name: "when the versioned ping has no span", path: "/v1.47/_ping", want: false},
+		{
+			name: "when a job operation keeps its span",
+			path: "/v1.47/containers/json",
+			want: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			r := httptest.NewRequest(http.MethodHead, "http://docker"+tc.path, nil)
+
+			s.Equal(tc.want, dockerprov.ExportTraced(r))
 		})
 	}
 }

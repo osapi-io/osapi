@@ -55,7 +55,7 @@ func (s *DNSService) Get(
 		}}
 	}
 
-	return NewResponse(dnsConfigCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(dnsConfigCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Update updates DNS configuration for a network interface on the
@@ -100,7 +100,7 @@ func (s *DNSService) Update(
 		}}
 	}
 
-	return NewResponse(dnsUpdateCollectionFromGen(resp.JSON202), resp.Body), nil
+	return newResponse(dnsUpdateCollectionFromGen(resp.JSON202), resp.Body, resp.HTTPResponse), nil
 }
 
 // Delete removes DNS configuration for a network interface on the
@@ -130,5 +130,5 @@ func (s *DNSService) Delete(
 		}}
 	}
 
-	return NewResponse(dnsDeleteCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(dnsDeleteCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }

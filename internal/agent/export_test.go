@@ -31,6 +31,8 @@ import (
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/osapi-io/osapi/internal/agent/identity"
@@ -871,4 +873,28 @@ func SetPlatformFns(
 func ResetPlatformFns() {
 	detectFn = platform.Detect
 	containerFn = platform.IsContainer
+}
+
+// ExportIdentityAttrs gives a the hostname, machine ID and facts that it
+// would resolve at startup, and returns the span attributes for its jobs.
+func ExportIdentityAttrs(
+	a *Agent,
+	hostname string,
+	machineID string,
+	facts *job.FactsRegistration,
+) []attribute.KeyValue {
+	a.hostname = hostname
+	a.machineID = machineID
+	a.cachedFacts.Store(facts)
+
+	return a.identityAttrs()
+}
+
+// ExportRecordOutcome exposes recordOutcome for testing.
+func ExportRecordOutcome(
+	span trace.Span,
+	response job.Response,
+	requestType job.Type,
+) {
+	recordOutcome(span, response, requestType)
 }

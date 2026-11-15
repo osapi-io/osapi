@@ -27,14 +27,21 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/telemetry/tracing"
 )
 
 var (
 	sdkClient      *client.Client
 	tracerShutdown func(context.Context) error
+	// commandSpan is the root span of one client command. Each request of
+	// the command sends its context, so the trace starts here and not at the
+	// controller.
+	commandSpan trace.Span
 )
 
 // clientCmd represents the client command.
@@ -47,9 +54,22 @@ var clientCmd = &cobra.Command{
 			cmd.Context(),
 			"osapi-cli",
 			appConfig.Telemetry.Tracing,
+			versionAttr(),
 		)
 		if err != nil {
 			cli.LogFatal(logger, "failed to initialize tracer", err)
+		}
+
+		// The command opens its own span only when it sends spans somewhere. A
+		// span that is not exported would still go to the controller as the
+		// parent of the request, and the trace would show a parent that
+		// never arrives. Without an exporter, the controller starts the
+		// trace, and the command prints its ID from the response.
+		if exports(appConfig.Telemetry.Tracing) {
+			var ctx context.Context
+			ctx, commandSpan = otel.Tracer("osapi-cli").Start(cmd.Context(), cmd.CommandPath(),
+				trace.WithSpanKind(trace.SpanKindClient))
+			cmd.SetContext(ctx)
 		}
 
 		logger.Debug(
@@ -66,6 +86,11 @@ var clientCmd = &cobra.Command{
 		)
 	},
 	PersistentPostRun: func(_ *cobra.Command, _ []string) {
+		// A command that exits through LogFatal does not reach here, so its
+		// span is not sent. The controller still has the request.
+		if commandSpan != nil {
+			commandSpan.End()
+		}
 		if tracerShutdown != nil {
 			_ = tracerShutdown(context.Background())
 		}
@@ -79,4 +104,11 @@ func init() {
 		StringP("url", "", "http://0.0.0.0:8080", "URL the client will connect to")
 
 	_ = viper.BindPFlag("controller.client.url", clientCmd.PersistentFlags().Lookup("url"))
+}
+
+// exports reports whether the tracing settings send spans to an exporter.
+func exports(
+	cfg config.TracingConfig,
+) bool {
+	return cfg.Enabled && cfg.Exporter != "" && cfg.Exporter != "none"
 }

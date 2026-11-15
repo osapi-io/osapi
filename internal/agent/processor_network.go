@@ -54,9 +54,9 @@ func NewNetworkProcessor(
 		case "ping":
 			return processNetworkPing(pingProvider, logger, req)
 		case "interface":
-			return processInterfaceOperation(interfaceProvider, logger, req)
+			return processInterfaceOperation(ctx, interfaceProvider, logger, req)
 		case "route":
-			return processRouteOperation(routeProvider, logger, req)
+			return processRouteOperation(ctx, routeProvider, logger, req)
 		default:
 			return nil, fmt.Errorf("unsupported network operation: %s", req.Operation)
 		}

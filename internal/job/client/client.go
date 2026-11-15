@@ -176,7 +176,7 @@ func (c *Client) Query(
 
 	resolved := c.resolveTarget(target)
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, resolved)
-	jobID, resp, err := c.publishAndWait(ctx, subject, req)
+	jobID, resp, err := c.publishAndWait(ctx, subject, resolved, req)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
@@ -241,7 +241,7 @@ func (c *Client) Modify(
 
 	resolved := c.resolveTarget(target)
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, resolved)
-	jobID, resp, err := c.publishAndWait(ctx, subject, req)
+	jobID, resp, err := c.publishAndWait(ctx, subject, resolved, req)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
@@ -289,6 +289,7 @@ func (c *Client) ModifyBroadcast(
 func (c *Client) publishAndWait(
 	ctx context.Context,
 	subject string,
+	target string,
 	req *job.Request,
 ) (string, *job.Response, error) {
 	// Generate job ID if not provided
@@ -298,6 +299,7 @@ func (c *Client) publishAndWait(
 	req.Timestamp = time.Now()
 
 	jobID := req.JobID
+	pubCtx, pubSpan := startPublishSpan(ctx, jobID, subject, target, req)
 
 	// Tell the audit trail which job answered this request, so an entry can be
 	// joined to the job's own status timeline. Outside a request — an agent, a
@@ -326,7 +328,7 @@ func (c *Client) publishAndWait(
 	if c.pkiSigner != nil {
 		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, c.machineID, jobJSON)
 		if signErr != nil {
-			return "", nil, fmt.Errorf("failed to sign job data: %w", signErr)
+			return "", nil, endSpan(pubSpan, fmt.Errorf("failed to sign job data: %w", signErr))
 		}
 		kvPayload = signed
 	}
@@ -339,8 +341,8 @@ func (c *Client) publishAndWait(
 		slog.String("job_id", jobID),
 	)
 
-	if _, err := c.kv.Put(ctx, kvKey, kvPayload); err != nil {
-		return "", nil, fmt.Errorf("failed to store job in KV: %w", err)
+	if _, err := c.kv.Put(pubCtx, kvKey, kvPayload); err != nil {
+		return "", nil, endSpan(pubSpan, fmt.Errorf("failed to store job in KV: %w", err))
 	}
 
 	c.logger.InfoContext(
@@ -352,19 +354,21 @@ func (c *Client) publishAndWait(
 
 	// Publish just the job ID to the stream as a notification.
 	// Trace context is propagated via NATS message headers automatically by nats-client.
-	if err := c.natsClient.Publish(ctx, subject, []byte(jobID)); err != nil {
-		return "", nil, fmt.Errorf("failed to publish notification: %w", err)
+	if err := c.natsClient.Publish(pubCtx, subject, []byte(jobID)); err != nil {
+		return "", nil, endSpan(pubSpan, fmt.Errorf("failed to publish notification: %w", err))
 	}
+	pubSpan.End()
 
 	if c.jobsCreated != nil {
 		c.jobsCreated.Add(ctx, 1)
 	}
 
 	// Watch for agent response in KV
+	_, colSpan := startCollectSpan(ctx, jobID)
 	responsePattern := "responses." + jobID + ".>"
 	watcher, err := c.kv.Watch(ctx, responsePattern)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to create response watcher: %w", err)
+		return "", nil, endSpan(colSpan, fmt.Errorf("failed to create response watcher: %w", err))
 	}
 	defer func() {
 		_ = watcher.Stop()
@@ -376,7 +380,10 @@ func (c *Client) publishAndWait(
 	for {
 		select {
 		case <-timeoutCtx.Done():
-			return "", nil, fmt.Errorf("timeout waiting for job response: %w", timeoutCtx.Err())
+			return "", nil, endSpan(
+				colSpan,
+				fmt.Errorf("timeout waiting for job response: %w", timeoutCtx.Err()),
+			)
 		case entry := <-watcher.Updates():
 			if entry == nil {
 				continue
@@ -399,10 +406,10 @@ func (c *Client) publishAndWait(
 					responseData,
 				)
 				if verifyErr != nil {
-					return "", nil, fmt.Errorf(
+					return "", nil, endSpan(colSpan, fmt.Errorf(
 						"response verification failed for job %s: %w",
 						jobID, verifyErr,
-					)
+					))
 				}
 				responseData = verified
 			case c.pkiSigner != nil:
@@ -411,17 +418,20 @@ func (c *Client) publishAndWait(
 					c.pkiSigner.ControllerPublicKey(),
 				)
 				if unwrapErr != nil {
-					return "", nil, fmt.Errorf(
+					return "", nil, endSpan(colSpan, fmt.Errorf(
 						"response signature verification failed for job %s: %w",
 						jobID, unwrapErr,
-					)
+					))
 				}
 				responseData = unwrapped
 			}
 
 			var response job.Response
 			if err := json.Unmarshal(responseData, &response); err != nil {
-				return "", nil, fmt.Errorf("failed to unmarshal response: %w", err)
+				return "", nil, endSpan(
+					colSpan,
+					fmt.Errorf("failed to unmarshal response: %w", err),
+				)
 			}
 
 			c.logger.InfoContext(
@@ -429,6 +439,8 @@ func (c *Client) publishAndWait(
 				slog.String("job_id", jobID),
 				slog.String("status", string(response.Status)),
 			)
+
+			endCollectSpan(colSpan, 1, map[string]*job.Response{response.Hostname: &response})
 
 			return jobID, &response, nil
 		}
@@ -453,6 +465,7 @@ func (c *Client) publishAndCollect(
 	req.Timestamp = time.Now()
 
 	jobID := req.JobID
+	pubCtx, pubSpan := startPublishSpan(ctx, jobID, subject, target, req)
 
 	// Tell the audit trail which job answered this request, so an entry can be
 	// joined to the job's own status timeline. Outside a request — an agent, a
@@ -481,7 +494,7 @@ func (c *Client) publishAndCollect(
 	if c.pkiSigner != nil {
 		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, c.machineID, jobJSON)
 		if signErr != nil {
-			return "", nil, fmt.Errorf("failed to sign job data: %w", signErr)
+			return "", nil, endSpan(pubSpan, fmt.Errorf("failed to sign job data: %w", signErr))
 		}
 		kvPayload = signed
 	}
@@ -494,14 +507,14 @@ func (c *Client) publishAndCollect(
 		slog.String("job_id", jobID),
 	)
 
-	if _, err := c.kv.Put(ctx, kvKey, kvPayload); err != nil {
-		return "", nil, fmt.Errorf("failed to store job in KV: %w", err)
+	if _, err := c.kv.Put(pubCtx, kvKey, kvPayload); err != nil {
+		return "", nil, endSpan(pubSpan, fmt.Errorf("failed to store job in KV: %w", err))
 	}
 
 	// Determine expected agents from registry for early completion and
 	// timeout reporting. If ListAgents fails, fall back to full timeout.
 	var expectedHostnames []string
-	agents, err := c.ListAgents(ctx)
+	agents, err := c.ListAgents(pubCtx)
 	if err != nil {
 		c.logger.WarnContext(
 			ctx, "failed to list agents for broadcast count, using full timeout",
@@ -531,19 +544,21 @@ func (c *Client) publishAndCollect(
 
 	// Publish just the job ID to the stream as a notification.
 	// Trace context is propagated via NATS message headers automatically by nats-client.
-	if err := c.natsClient.Publish(ctx, subject, []byte(jobID)); err != nil {
-		return "", nil, fmt.Errorf("failed to publish notification: %w", err)
+	if err := c.natsClient.Publish(pubCtx, subject, []byte(jobID)); err != nil {
+		return "", nil, endSpan(pubSpan, fmt.Errorf("failed to publish notification: %w", err))
 	}
+	pubSpan.End()
 
 	if c.jobsCreated != nil {
 		c.jobsCreated.Add(ctx, 1)
 	}
 
 	// Watch for agent responses in KV
+	_, colSpan := startCollectSpan(ctx, jobID)
 	responsePattern := "responses." + jobID + ".>"
 	watcher, err := c.kv.Watch(ctx, responsePattern)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to create response watcher: %w", err)
+		return "", nil, endSpan(colSpan, fmt.Errorf("failed to create response watcher: %w", err))
 	}
 	defer func() {
 		_ = watcher.Stop()
@@ -559,9 +574,9 @@ func (c *Client) publishAndCollect(
 		select {
 		case <-timeoutCtx.Done():
 			if len(responses) == 0 {
-				return "", nil, fmt.Errorf(
+				return "", nil, endSpan(colSpan, fmt.Errorf(
 					"timeout waiting for broadcast responses: no agents responded",
-				)
+				))
 			}
 
 			// Inject timeout entries for agents that didn't respond.
@@ -579,6 +594,7 @@ func (c *Client) publishAndCollect(
 					}
 				}
 			}
+			endCollectSpan(colSpan, len(expectedHostnames), responses)
 
 			return jobID, responses, nil
 		case entry := <-watcher.Updates():
@@ -658,6 +674,8 @@ func (c *Client) publishAndCollect(
 
 			// Return early when all expected agents have responded.
 			if len(expectedHostnames) > 0 && len(responses) >= len(expectedHostnames) {
+				endCollectSpan(colSpan, len(expectedHostnames), responses)
+
 				return jobID, responses, nil
 			}
 		}

@@ -53,5 +53,5 @@ func (s *OSService) Get(
 		}}
 	}
 
-	return NewResponse(osInfoCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(osInfoCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }

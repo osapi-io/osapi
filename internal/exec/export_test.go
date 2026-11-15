@@ -28,3 +28,6 @@ func SetExecutor(
 ) {
 	e.executor = executor
 }
+
+// ExportStartSpan exposes startSpan for testing.
+var ExportStartSpan = startSpan

@@ -33,6 +33,7 @@ import (
 
 // processInterfaceOperation dispatches network interface sub-operations.
 func processInterfaceOperation(
+	ctx context.Context,
 	provider iface.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -47,8 +48,6 @@ func processInterfaceOperation(
 		return nil, fmt.Errorf("invalid interface operation: %s", jobRequest.Operation)
 	}
 	subOp := parts[1]
-
-	ctx := context.Background()
 
 	switch subOp {
 	case "list":

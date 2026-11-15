@@ -59,7 +59,11 @@ func (s *InterfaceService) List(
 		}}
 	}
 
-	return NewResponse(interfaceListCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		interfaceListCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Get retrieves a single network interface by name on the target host.
@@ -91,7 +95,11 @@ func (s *InterfaceService) Get(
 		}}
 	}
 
-	return NewResponse(interfaceGetCollectionFromGen(resp.JSON200), resp.Body), nil
+	return newResponse(
+		interfaceGetCollectionFromGen(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Create creates a network interface configuration on the target host.
@@ -125,7 +133,11 @@ func (s *InterfaceService) Create(
 		}}
 	}
 
-	return NewResponse(interfaceMutationCollectionFromCreate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		interfaceMutationCollectionFromCreate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Update updates a network interface configuration on the target host.
@@ -160,7 +172,11 @@ func (s *InterfaceService) Update(
 		}}
 	}
 
-	return NewResponse(interfaceMutationCollectionFromUpdate(resp.JSON200), resp.Body), nil
+	return newResponse(
+		interfaceMutationCollectionFromUpdate(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Delete removes a network interface configuration on the target host.
@@ -191,7 +207,11 @@ func (s *InterfaceService) Delete(
 		}}
 	}
 
-	return NewResponse(interfaceMutationCollectionFromDelete(resp.JSON200), resp.Body), nil
+	return newResponse(
+		interfaceMutationCollectionFromDelete(resp.JSON200),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // interfaceConfigRequestFromOpts builds a gen.InterfaceConfigRequest
