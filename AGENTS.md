@@ -41,6 +41,20 @@ first. Refer to [CONTRIBUTING.md](CONTRIBUTING.md#building-and-running).
 rule here and a design page do not agree, obey the design page. Say that they do
 not agree. Do not use the code to decide.
 
+## Track work in issues
+
+Work that you agree to do later is an issue in the repository where the change
+goes. A problem that you find during a different change is also an issue. Open
+the issue when you agree to the work or find the problem. Before you open it,
+look for an issue that has the work.
+
+Your task list, your memory and the text of the session are not records. They
+stop when the session stops, and nobody else can read them. Use a task list only
+for the steps of the change that you do now. Each item that is not done when the
+change merges becomes an issue, or you delete it.
+[Tracking](https://github.com/osapi-io/specs/blob/main/CONSTITUTION.md#tracking)
+has the rule.
+
 ## Commit trailer
 
 When an agent writes a commit, end the commit message with a trailer that names
