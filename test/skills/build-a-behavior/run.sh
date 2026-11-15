@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Runs the build-a-behavior skill's evals. Each eval copies this checkout to a
 # scratch directory, gives a fresh headless Claude Code session only its
-# prompt, with the skill and the osapi CLI available as in any checkout, and
+# prompt, with the skill pointer and the osapi CLI available as in any checkout, and
 # then checks the result. The session never sees the checks.
 #
-#   .claude/skills/build-a-behavior/evals/run.sh            # every eval
-#   .claude/skills/build-a-behavior/evals/run.sh motd       # one
+#   test/skills/build-a-behavior/run.sh            # every eval
+#   test/skills/build-a-behavior/run.sh motd       # one
 #
 # BUDGET caps each session's spend in US dollars (default 15). KEEP=1 keeps
 # the scratch copies. Results are written to $OUT (default a temp directory):
@@ -13,7 +13,7 @@
 set -uo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
-repo=$(cd "$here/../../../.." && pwd)
+repo=$(cd "$here/../../.." && pwd)
 out=${OUT:-$(mktemp -d -t osapi-skill-evals)}
 budget=${BUDGET:-15}
 ids=("$@")

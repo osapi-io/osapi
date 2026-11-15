@@ -29,3 +29,10 @@ import "embed"
 //
 //go:embed skills
 var Skills embed.FS
+
+// DevSkills are the skills for a person who changes osapi itself, such as
+// build-a-behavior. osapi init does not install them, because only a checkout
+// of osapi can use them. osapi skill serves them.
+//
+//go:embed dev-skills
+var DevSkills embed.FS

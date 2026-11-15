@@ -11,7 +11,7 @@ react_dir := "ui"
 # The skills `osapi init` installs open with YAML frontmatter, which mdformat
 # rewrites into a heading. Claude Code then never loads the skill.
 
-md_extra_excludes := "--exclude 'cmd/resources/skills/**'"
+md_extra_excludes := "--exclude 'cmd/resources/skills/**' --exclude 'cmd/resources/dev-skills/**'"
 
 # Minimum total coverage. Below the org-wide 100% because nine statements are
 # unreachable guards that cannot execute. Declared again in .github/codecov.yml

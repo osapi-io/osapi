@@ -31,9 +31,9 @@ An eval of kind `refuse` asks for something that the platform cannot express yet
 | `neighbors` | `ip neigh`, under the network group             | a grouped behavior, in its group's directory        |
 
 ```sh
-.claude/skills/build-a-behavior/evals/run.sh          # every eval in evals.json
-.claude/skills/build-a-behavior/evals/run.sh motd     # one
-KEEP=1 OUT=/tmp/evals BUDGET=10 .claude/skills/build-a-behavior/evals/run.sh
+test/skills/build-a-behavior/run.sh          # every eval in evals.json
+test/skills/build-a-behavior/run.sh motd     # one
+KEEP=1 OUT=/tmp/evals BUDGET=10 test/skills/build-a-behavior/run.sh
 ```
 
 `run.sh` keeps the transcript of each session as `<id>.session.json`, with its turns, cost and last message. `results.txt` has a PASS or FAIL for each check. Fix a failure in the skill or the CLI, not in the output of the session. Then run the eval again.
