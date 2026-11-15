@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
-<title data-rh="true">Building a behavior | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/development/behaviors"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Building a behavior | OSAPI"><meta data-rh="true" name="description" content="A behavior is one thing that osapi manages on a host, for example kernel"><meta data-rh="true" property="og:description" content="A behavior is one thing that osapi manages on a host, for example kernel"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/development/behaviors"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/behaviors" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/behaviors" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Development","item":"https://osapi-io.github.io/osapi/sidebar/development/"},{"@type":"ListItem","position":2,"name":"Building a behavior","item":"https://osapi-io.github.io/osapi/sidebar/development/behaviors"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.e8064dca.css">
-<script src="/osapi/assets/js/runtime~main.aa5f6e31.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.ee51d605.js" defer="defer"></script>
+<title data-rh="true">Building a behavior | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/development/behaviors"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Building a behavior | OSAPI"><meta data-rh="true" name="description" content="A behavior is one thing that osapi manages on a host, for example kernel"><meta data-rh="true" property="og:description" content="A behavior is one thing that osapi manages on a host, for example kernel"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/development/behaviors"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/behaviors" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/behaviors" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Development","item":"https://osapi-io.github.io/osapi/sidebar/development/"},{"@type":"ListItem","position":2,"name":"Building a behavior","item":"https://osapi-io.github.io/osapi/sidebar/development/behaviors"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
+<script src="/osapi/assets/js/runtime~main.d51581c7.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.8c57d8a4.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -118,7 +118,7 @@ changes: the agent builds the provider from what the definition declares.</p>
 
 
 
-<table><thead><tr><th>Option</th><th>What it does</th></tr></thead><tbody><tr><td><code>behavior.Node</code></td><td>The work runs on a host, through the job system. Required.</td></tr><tr><td><code>behavior.Under(&quot;g&quot;)</code></td><td>Nests it under a group: <code>/api/node/{hostname}/g/&lt;name&gt;</code>, <code>osapi client node g &lt;name&gt;</code>.</td></tr><tr><td><code>behavior.API</code></td><td>Serves it over REST and puts it in the OpenAPI spec and the API reference.</td></tr><tr><td><code>behavior.CLI</code></td><td>Generates its commands and CLI docs pages. Needs <code>API</code>, because the commands call it.</td></tr><tr><td><code>Read(name, fn)</code></td><td>A method that reads the host: <code>GET</code>, the <code>&lt;name&gt;:read</code> permission.</td></tr><tr><td><code>Write(name, fn)</code></td><td>A method that changes it: <code>POST</code>, or <code>PUT</code> for <code>update</code> and <code>DELETE</code> for <code>delete</code>.</td></tr><tr><td><code>.Key(&quot;field&quot;)</code></td><td>Puts that input field in the path: <code>/sysctl/{key}</code>.</td></tr><tr><td><code>.Describe(&quot;...&quot;)</code></td><td>One line: the command&#x27;s short help, the operation&#x27;s summary, the page&#x27;s first line.</td></tr><tr><td><code>.Explain(&quot;...&quot;)</code></td><td>Optional longer text: what it touches on the host and what running it twice does.</td></tr><tr><td><code>.Example(doc, in, out)</code></td><td>A sample call. Its output is run through the real renderer onto the docs page.</td></tr><tr><td><code>behavior.Config(v)</code></td><td>The behavior&#x27;s own settings, with <code>v</code> as their defaults. See below.</td></tr><tr><td><code>behavior.Platform(p, f)</code></td><td>How the provider is built on platform <code>p</code>: <code>debian</code>, <code>darwin</code>, or <code>linux</code> for every Linux host without a provider of its own. On any other, the methods report <code>skipped</code>.</td></tr><tr><td><code>behavior.Sudo(&quot;prog&quot;)</code></td><td>A program the provider runs with sudo. The agent&#x27;s preflight checks it.</td></tr><tr><td><code>behavior.Runs(&quot;prog&quot;)</code></td><td>A program the provider runs without sudo. The agent warns at startup when it is missing.</td></tr><tr><td><code>behavior.Validator(...)</code></td><td>A <code>validate</code> tag of the behavior&#x27;s own: the check, its schema and its message.</td></tr><tr><td><code>behavior.Requires(b...)</code></td><td>Behaviors it is built on. See below.</td></tr><tr><td><code>behavior.Internal</code></td><td>Only other behaviors use it: no route, no command, no permissions.</td></tr></tbody></table>
+<table><thead><tr><th>Option</th><th>What it does</th></tr></thead><tbody><tr><td><code>behavior.Node</code></td><td>The work runs on a host, through the job system. Required.</td></tr><tr><td><code>behavior.Under(&quot;g&quot;)</code></td><td>Nests it under a group: <code>/api/node/{hostname}/g/&lt;name&gt;</code>, <code>osapi client node g &lt;name&gt;</code>.</td></tr><tr><td><code>behavior.API</code></td><td>Serves it over REST and puts it in the OpenAPI spec and the API reference.</td></tr><tr><td><code>behavior.CLI</code></td><td>Generates its commands. Their pages in the CLI reference come from the commands. Needs <code>API</code>, because the commands call it.</td></tr><tr><td><code>Read(name, fn)</code></td><td>A method that reads the host: <code>GET</code>, the <code>&lt;name&gt;:read</code> permission.</td></tr><tr><td><code>Write(name, fn)</code></td><td>A method that changes it: <code>POST</code>, or <code>PUT</code> for <code>update</code> and <code>DELETE</code> for <code>delete</code>.</td></tr><tr><td><code>.Key(&quot;field&quot;)</code></td><td>Puts that input field in the path: <code>/sysctl/{key}</code>.</td></tr><tr><td><code>.Describe(&quot;...&quot;)</code></td><td>One line: the command&#x27;s short help, the operation&#x27;s summary, the first line of the CLI page.</td></tr><tr><td><code>.Explain(&quot;...&quot;)</code></td><td>Optional longer text: what it touches on the host and what running it twice does. It is the command&#x27;s long help.</td></tr><tr><td><code>.Example(doc, in, out)</code></td><td>A sample call. Its command line goes in the examples of the command, under a comment with <code>doc</code>. The tests send it and check <code>out</code>.</td></tr><tr><td><code>behavior.Config(v)</code></td><td>The behavior&#x27;s own settings, with <code>v</code> as their defaults. See below.</td></tr><tr><td><code>behavior.Platform(p, f)</code></td><td>How the provider is built on platform <code>p</code>: <code>debian</code>, <code>darwin</code>, or <code>linux</code> for every Linux host without a provider of its own. On any other, the methods report <code>skipped</code>.</td></tr><tr><td><code>behavior.Sudo(&quot;prog&quot;)</code></td><td>A program the provider runs with sudo. The agent&#x27;s preflight checks it.</td></tr><tr><td><code>behavior.Runs(&quot;prog&quot;)</code></td><td>A program the provider runs without sudo. The agent warns at startup when it is missing.</td></tr><tr><td><code>behavior.Validator(...)</code></td><td>A <code>validate</code> tag of the behavior&#x27;s own: the check, its schema and its message.</td></tr><tr><td><code>behavior.Requires(b...)</code></td><td>Behaviors it is built on. See below.</td></tr><tr><td><code>behavior.Internal</code></td><td>Only other behaviors use it: no route, no command, no permissions.</td></tr></tbody></table>
 <p>A behavior with neither <code>API</code> nor <code>CLI</code> is reachable only through the job system
 or another behavior.</p>
 <p>The name of a method decides more than its label. The HTTP method, the
@@ -348,23 +348,95 @@ change.</p>
 <div class="language-go codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-go codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token function" style="color:rgb(130, 170, 255)">Fails</span><span class="token punctuation" style="color:rgb(199, 146, 234)">(</span><span class="token string" style="color:rgb(195, 232, 141)">&quot;A parameter osapi stopped managing&quot;</span><span class="token punctuation" style="color:rgb(199, 146, 234)">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">    UpdateInput</span><span class="token punctuation" style="color:rgb(199, 146, 234)">{</span><span class="token plain">Key</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token string" style="color:rgb(195, 232, 141)">&quot;vm.swappiness&quot;</span><span class="token punctuation" style="color:rgb(199, 146, 234)">,</span><span class="token plain"> Value</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token string" style="color:rgb(195, 232, 141)">&quot;10&quot;</span><span class="token punctuation" style="color:rgb(199, 146, 234)">}</span><span class="token punctuation" style="color:rgb(199, 146, 234)">,</span><span class="token plain"> </span><span class="token string" style="color:rgb(195, 232, 141)">&quot;not managed&quot;</span><span class="token punctuation" style="color:rgb(199, 146, 234)">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">    behavior</span><span class="token punctuation" style="color:rgb(199, 146, 234)">.</span><span class="token function" style="color:rgb(130, 170, 255)">After</span><span class="token punctuation" style="color:rgb(199, 146, 234)">(</span><span class="token plain">CreateInput</span><span class="token punctuation" style="color:rgb(199, 146, 234)">{</span><span class="token plain">Key</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token string" style="color:rgb(195, 232, 141)">&quot;vm.swappiness&quot;</span><span class="token punctuation" style="color:rgb(199, 146, 234)">,</span><span class="token plain"> Value</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token string" style="color:rgb(195, 232, 141)">&quot;60&quot;</span><span class="token punctuation" style="color:rgb(199, 146, 234)">}</span><span class="token punctuation" style="color:rgb(199, 146, 234)">)</span><span class="token punctuation" style="color:rgb(199, 146, 234)">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">    behavior</span><span class="token punctuation" style="color:rgb(199, 146, 234)">.</span><span class="token function" style="color:rgb(130, 170, 255)">After</span><span class="token punctuation" style="color:rgb(199, 146, 234)">(</span><span class="token plain">DeleteInput</span><span class="token punctuation" style="color:rgb(199, 146, 234)">{</span><span class="token plain">Key</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token string" style="color:rgb(195, 232, 141)">&quot;vm.swappiness&quot;</span><span class="token punctuation" style="color:rgb(199, 146, 234)">}</span><span class="token punctuation" style="color:rgb(199, 146, 234)">)</span><span class="token punctuation" style="color:rgb(199, 146, 234)">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"></span><span class="token punctuation" style="color:rgb(199, 146, 234)">)</span><span class="token punctuation" style="color:rgb(199, 146, 234)">,</span><br></div></code></pre></div></div>
 <p>The provider test checks that each refusal fails with that text. The API test
 checks that a refusal whose input breaks a <code>validate</code> tag gets a 400, and that
-no job goes on the queue. The docs page lists the refusals under &quot;What it
-refuses&quot;.</p>
+no job goes on the queue. The CLI page of the method lists the refusals under
+&quot;Result&quot;.</p>
 <p>On the fake host, each filesystem, command and store call of the example fails
 in turn. Each store read returns a damaged record in turn. The method must
 return an error and must not panic. With its examples and refusals, the test of
 sysctl reaches all of its Debian provider. The only exception is a JSON encoding
 error that a struct of strings cannot cause.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-checks">The checks<a href="#the-checks" class="hash-link" aria-label="Direct link to The checks" title="Direct link to The checks" translate="no">​</a></h2>
-<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">go generate ./internal/behaviors/all      # write gen/, the spec and the docs pages</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi behavior validate             # the definition&#x27;s rules</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi behavior get --name sysctl  # surfaces, routes, schemas, as registered</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">just behavior-gen-check             # fails when generated files are stale</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">just behavior-cover-check           # fails when a behavior is below 100% coverage</span><br></div></code></pre></div></div>
-<p><code>osapi behavior validate</code> checks these things:</p>
-<ul>
-<li class="">the name, the placement, the docs, the methods, the keys and the schemas</li>
-<li class="">that a write reports <code>changed</code></li>
-<li class="">that <code>CLI</code> comes with <code>API</code>, and has a flag for each input field</li>
-<li class="">that the input and the output of each example are the types of the method</li>
-<li class="">that the behavior has a provider on a platform that fits each method</li>
-</ul>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">go generate ./internal/behaviors/all      # write gen/, the spec and the behavior pages</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">just cli-docs-generate              # write the CLI pages of the commands</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi behavior validate             # the definition&#x27;s rules</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi behavior get --name sysctl  # surfaces, routes, schemas, as registered</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">just behavior-gen-check             # fails when generated files are stale</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">just behavior-cover-check           # fails when a behavior is below 100% coverage</span><br></div></code></pre></div></div>
+<p><code>osapi behavior validate</code> checks each definition against these rules. It exits 1
+when one fails, and names the behavior, the method and the rule:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Rule</th><th>Fails when</th></tr></thead><tbody><tr><td><code>name</code></td><td>the name is not lowercase letters and digits</td></tr><tr><td><code>placement</code></td><td>the behavior has no placement</td></tr><tr><td><code>doc</code></td><td>the behavior or a method has no description</td></tr><tr><td><code>methods</code></td><td>the behavior has no methods</td></tr><tr><td><code>duplicate</code></td><td>two methods share a name</td></tr><tr><td><code>verb</code></td><td>a method name is a synonym of a standard verb, a read is not <code>list</code>, <code>get</code> or <code>status</code>, or a write is not <code>create</code>, <code>update</code> or <code>delete</code> (action methods such as <code>restart</code> are not supported yet)</td></tr><tr><td><code>route</code></td><td>two methods would be served at the same route</td></tr><tr><td><code>key</code></td><td>a method&#x27;s key is not a field of its input</td></tr><tr><td><code>schema</code></td><td>an input or output type has no JSON Schema</td></tr><tr><td><code>output</code></td><td>an output field collides with a field of the per-host result</td></tr><tr><td><code>changed</code></td><td>a write&#x27;s output has no <code>changed</code> field</td></tr><tr><td><code>surface</code></td><td>a behavior has CLI without API, is internal but served, or has an input the CLI cannot flag</td></tr><tr><td><code>example</code></td><td>a CLI method has no example, or an example or refusal does not fit its method</td></tr><tr><td><code>settings</code></td><td>settings are not a struct, or a field lacks the name or description the config needs</td></tr><tr><td><code>platform</code></td><td>no platform has a provider, a platform is declared twice, or a provider misses a method</td></tr><tr><td><code>requires</code></td><td>a required behavior is not registered, or behaviors require one another in a cycle</td></tr><tr><td><code>secret</code></td><td>an input field tagged <code>secret:&quot;true&quot;</code> would be recorded on the method&#x27;s span</td></tr></tbody></table>
 <p><code>just test</code> runs <code>behavior-gen-check</code>. Thus a behavior that changed without
 <code>go generate</code> fails CI. It also runs <code>behavior-cover-check</code>. Thus a behavior
 whose examples and tests miss a line fails CI too.</p>
@@ -419,7 +491,20 @@ the cutover.</p>
 
 
 
-<table><thead><tr><th>File</th><th>From</th></tr></thead><tbody><tr><td><code>internal/behaviors/&lt;name&gt;/gen/*.go</code></td><td>the definition, its types and its examples, built with jen</td></tr><tr><td><code>internal/behaviors/&lt;name&gt;/gen/api.yaml</code></td><td>the definition and both types, built with kin-openapi; <code>api.next.yaml</code> for a <code>Next</code> behavior</td></tr><tr><td><code>internal/controller/api/gen/api.yaml</code></td><td>the hand-written specs and every <code>gen/api.yaml</code>, by <code>just generate</code></td></tr><tr><td><code>internal/behaviors/&lt;name&gt;/mocks/provider.gen.go</code></td><td>the Provider interface, by mockgen</td></tr><tr><td><code>internal/behaviors/all/gen/gen.go</code></td><td>every behavior with <code>API</code> or <code>CLI</code></td></tr><tr><td><code>internal/controller/api/next/gen/api.yaml</code></td><td>the behaviors marked <code>Next</code>, while any is</td></tr><tr><td><code>docs/docs/sidebar/behaviors/&lt;name&gt;/</code></td><td>the definition, settings, and examples run through the renderer</td></tr><tr><td><code>docs/docs/gen/api-next/...</code></td><td>the spec, by <code>just docs-generate</code></td></tr></tbody></table>
+
+
+
+
+<table><thead><tr><th>File</th><th>From</th></tr></thead><tbody><tr><td><code>internal/behaviors/&lt;name&gt;/gen/*.go</code></td><td>the definition, its types and its examples, built with jen</td></tr><tr><td><code>internal/behaviors/&lt;name&gt;/gen/api.yaml</code></td><td>the definition and both types, built with kin-openapi; <code>api.next.yaml</code> for a <code>Next</code> behavior</td></tr><tr><td><code>internal/controller/api/gen/api.yaml</code></td><td>the hand-written specs and every <code>gen/api.yaml</code>, by <code>just generate</code></td></tr><tr><td><code>internal/behaviors/&lt;name&gt;/mocks/provider.gen.go</code></td><td>the Provider interface, by mockgen</td></tr><tr><td><code>internal/behaviors/all/gen/gen.go</code></td><td>every behavior with <code>API</code> or <code>CLI</code></td></tr><tr><td><code>internal/controller/api/next/gen/api.yaml</code></td><td>the behaviors marked <code>Next</code>, while any is</td></tr><tr><td><code>docs/docs/sidebar/behaviors/&lt;name&gt;/&lt;name&gt;.md</code></td><td>the definition and its settings</td></tr><tr><td><code>docs/docs/sidebar/usage/cli/client/...</code></td><td>the generated commands, by <code>just cli-docs-generate</code></td></tr><tr><td><code>docs/docs/gen/api-next/...</code></td><td>the spec, by <code>just docs-generate</code></td></tr></tbody></table>
+<p><code>gen/cli.go</code> puts the docs of a method on its command. <code>.Describe</code> is the
+<code>Short</code> of the command, <code>.Explain</code> is its <code>Long</code>, and the examples are its
+<code>Example</code>. The <code>reference.Permission</code> annotation has the permission of the
+method. The <code>reference.Result</code> annotation has a table of what each example does
+on the host, and a table of the refusals. The command of the behavior has a
+<code>reference.Notes</code> annotation, with a link to the page of the behavior. Thus
+<code>just cli-docs-generate</code> writes the page of a behavior command as it writes the
+page of a hand-written command. <a class="" href="/osapi/sidebar/usage/cli">CLI reference</a> has the
+pages.</p>
 <p><code>internal/behavior/gen</code> writes them. It builds Go with jen
 (<code>github.com/dave/jennifer</code>), not with text templates. Thus the output always
 parses, and jen manages its imports. Then it formats the output with goimports,
