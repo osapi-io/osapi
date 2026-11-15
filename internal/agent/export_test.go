@@ -32,9 +32,11 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/osapi-io/osapi/internal/agent/identity"
 	"github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/provider/command"
@@ -50,6 +52,7 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/ntp"
 	"github.com/osapi-io/osapi/internal/provider/node/power"
 	"github.com/osapi-io/osapi/internal/provider/node/timezone"
+	"github.com/osapi-io/osapi/pkg/sdk/platform"
 )
 
 // SetEmbeddedFS overrides the embedded filesystem for testing.
@@ -418,18 +421,6 @@ func SetAgentHostname(
 	a.hostname = hostname
 }
 
-// SetDockerNewFn overrides the dockerNewFn used by the factory for testing.
-// NOTE: This overrides the package-level var in the agent package, not cmd.
-// For cmd-level tests, use the cmd package's own override.
-func SetDockerNewFn(
-	fn func() (*dockerProv.Client, error),
-) {
-	_ = fn // no-op: dockerNewFn lives in cmd package now
-}
-
-// ResetDockerNewFn is a no-op kept for backward compat with test suites.
-func ResetDockerNewFn() {}
-
 // SetProcStatusPath overrides the procStatusPath for testing.
 func SetProcStatusPath(
 	p string,
@@ -797,4 +788,87 @@ func SetLookPath(
 // ResetLookPath restores the PATH lookup.
 func ResetLookPath() {
 	lookPath = osexec.LookPath
+}
+
+// ExportProviders makes each provider of a host with the given platform, and
+// returns them by area.
+func ExportProviders(
+	log *slog.Logger,
+	plat string,
+	container bool,
+	fileState jetstream.KeyValue,
+	files fileProv.Provider,
+) map[string]any {
+	e := hostEnv{
+		log:       log,
+		fs:        memfs.New(),
+		exec:      exec.New(log, false),
+		platform:  plat,
+		container: container,
+		hostname:  "test-host",
+		fileState: fileState,
+		files:     files,
+	}
+	iface, route := e.netplan()
+
+	return map[string]any{
+		"host":        e.host(),
+		"disk":        e.disk(),
+		"memory":      e.memory(),
+		"load":        e.load(),
+		"dns":         e.dns(),
+		"ping":        e.ping(),
+		"netinfo":     e.netinfo(),
+		"cron":        e.cron(),
+		"sysctl":      e.sysctl(),
+		"ntp":         e.ntp(),
+		"timezone":    e.timezone(),
+		"power":       e.power(),
+		"process":     e.process(),
+		"user":        e.user(),
+		"packages":    e.packages(),
+		"logs":        e.logs(),
+		"certificate": e.certificate(),
+		"service":     e.service(),
+		"iface":       iface,
+		"route":       route,
+	}
+}
+
+// ExportDocker calls hostEnv.docker.
+func ExportDocker(
+	ctx context.Context,
+	log *slog.Logger,
+) dockerProv.Provider {
+	return hostEnv{log: log}.docker(ctx)
+}
+
+// SetDockerNewFn replaces the function that makes the Docker client.
+func SetDockerNewFn(
+	fn func() (dockerProv.Provider, error),
+) {
+	dockerNewFn = fn
+}
+
+// defaultDockerNewFn is the function that makes the Docker client.
+var defaultDockerNewFn = dockerNewFn
+
+// ResetDockerNewFn puts back the function that makes the Docker client.
+func ResetDockerNewFn() {
+	dockerNewFn = defaultDockerNewFn
+}
+
+// SetPlatformFns replaces the functions that tell the platform of the host.
+func SetPlatformFns(
+	detect func() string,
+	container func() bool,
+) {
+	detectFn = detect
+	containerFn = container
+}
+
+// ResetPlatformFns puts back the functions that tell the platform of the host.
+func ResetPlatformFns() {
+	detectFn = platform.Detect
+	containerFn = platform.IsContainer
 }
