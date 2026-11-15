@@ -55,11 +55,13 @@ Requires authentication.
 	},
 }
 
-// subComponent holds a name, status, and optional address for display under a parent.
+// subComponent holds a name, status, optional address and optional URL for
+// display under a parent.
 type subComponent struct {
 	name    string
 	status  string
 	address string
+	url     string
 }
 
 // subComponentsFor discovers sub-components for the given component type
@@ -78,7 +80,12 @@ func subComponentsFor(
 	for key, c := range components {
 		if strings.HasPrefix(key, prefix) {
 			name := strings.TrimPrefix(key, prefix)
-			result = append(result, subComponent{name: name, status: c.Status, address: c.Address})
+			result = append(result, subComponent{
+				name:    name,
+				status:  c.Status,
+				address: c.Address,
+				url:     c.URL,
+			})
 		}
 	}
 
@@ -136,9 +143,14 @@ func displayComponentTable(
 				prefix = "  └─ "
 			}
 
+			// The address is dim because nothing connects through it; the
+			// URL is where a person opens the sub-component.
 			status := sc.status
 			if sc.address != "" {
 				status += " " + cli.DimStyle.Render(sc.address)
+			}
+			if sc.url != "" {
+				status += " " + sc.url
 			}
 
 			rows = append(rows, []string{

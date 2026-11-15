@@ -33,6 +33,7 @@ import (
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 type HeartbeatPublicTestSuite struct {
@@ -84,6 +85,61 @@ func (s *HeartbeatPublicTestSuite) TestSubComponents() {
 		for _, name := range []string{"controller.metrics", "controller.pki", "controller.notifier", "controller.tracing", "controller.ui"} {
 			s.Equal("ok", got[name].Status, name)
 		}
+	})
+
+	s.Run("when url keys and an api host are set reports them", func() {
+		var cfg config.Config
+		cfg.Controller.API = config.APIServer{
+			Host: "127.0.0.1",
+			Port: 8080,
+			URL:  "https://hub.example.ts.net/",
+		}
+		cfg.Controller.UI.URL = "https://hub.example.ts.net/ui"
+		cfg.Controller.Metrics = config.MetricsServer{
+			Enabled: true,
+			Host:    "127.0.0.1",
+			Port:    9090,
+			URL:     "http://hub.example.ts.net:9090/metrics",
+		}
+		cfg.Telemetry.Tracing = config.TracingConfig{
+			Enabled: true,
+			URL:     "http://hub.example.ts.net:16686/",
+		}
+
+		got := controller.ExportSubComponents(cfg)
+
+		s.Equal("http://127.0.0.1:8080", got["controller.api"].Address)
+		s.Equal("http://127.0.0.1:8080", got["controller.ui"].Address)
+		s.Equal("https://hub.example.ts.net/", got["controller.api"].URL)
+		s.Equal("https://hub.example.ts.net/ui", got["controller.ui"].URL)
+		s.Equal("http://hub.example.ts.net:9090/metrics", got["controller.metrics"].URL)
+		s.Equal("http://hub.example.ts.net:16686/", got["controller.tracing"].URL)
+		s.Empty(got["controller.tracing"].Address)
+		s.Empty(got["controller.pki"].URL)
+	})
+
+	s.Run("when converted for the health handler keeps the url", func() {
+		got := controller.ExportConvertSubComponents(map[string]job.SubComponentInfo{
+			"agent.metrics": {
+				Status:  "ok",
+				Address: "http://0.0.0.0:9091",
+				URL:     "http://vm.example:9091/metrics",
+			},
+		})
+
+		s.Equal("ok", got["agent.metrics"].Status)
+		s.Equal("http://0.0.0.0:9091", got["agent.metrics"].Address)
+		s.Equal("http://vm.example:9091/metrics", got["agent.metrics"].URL)
+		s.Nil(controller.ExportConvertSubComponents(nil))
+	})
+
+	s.Run("when the api host is IPv6 brackets it in the address", func() {
+		var cfg config.Config
+		cfg.Controller.API = config.APIServer{Host: "::1", Port: 8080}
+
+		got := controller.ExportSubComponents(cfg)
+
+		s.Equal("http://[::1]:8080", got["controller.api"].Address)
 	})
 
 	s.Run("when the parts are off reports them as disabled", func() {

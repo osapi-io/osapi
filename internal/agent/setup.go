@@ -231,6 +231,7 @@ func subComponents(
 				cfg.Agent.Metrics.Host,
 				cfg.Agent.Metrics.Port,
 			),
+			URL: cfg.Agent.Metrics.URL,
 		},
 	}
 }

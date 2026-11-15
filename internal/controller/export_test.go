@@ -115,6 +115,13 @@ func ExportHandlers(
 	})
 }
 
+// ExportConvertSubComponents calls convertSubComponents.
+func ExportConvertSubComponents(
+	src map[string]job.SubComponentInfo,
+) map[string]health.SubComponentInfo {
+	return convertSubComponents(src)
+}
+
 // ExportSubComponents calls subComponents.
 func ExportSubComponents(
 	cfg config.Config,

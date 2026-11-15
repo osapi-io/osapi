@@ -80,6 +80,9 @@ func (h *Health) buildStatusResponse(
 		if info.Address != "" {
 			ch.Address = &info.Address
 		}
+		if info.URL != "" {
+			ch.Url = &info.URL
+		}
 
 		components[name] = ch
 	}
@@ -376,6 +379,9 @@ func (h *Health) populateMetrics(
 				ch := gen.ComponentHealth{Status: sc.Status}
 				if sc.Address != "" {
 					ch.Address = &sc.Address
+				}
+				if sc.URL != "" {
+					ch.Url = &sc.URL
 				}
 				resp.Components[name] = ch
 			}

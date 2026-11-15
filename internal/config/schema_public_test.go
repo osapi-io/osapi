@@ -216,6 +216,129 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 	}
 }
 
+func (s *ConfigPublicTestSuite) TestValidateURL() {
+	valid := func() config.Config {
+		return config.Config{
+			Controller: config.Controller{
+				Client: config.Client{
+					Security: config.ClientSecurity{BearerToken: "test-bearer-token"},
+				},
+				API: config.APIServer{
+					Port:     8080,
+					Security: config.ServerSecurity{SigningKey: testSigningKey},
+				},
+				NATS: config.NATSConnection{Port: 4222},
+			},
+			NATS: config.NATS{
+				Stream:   config.NATSStream{Name: "JOBS", Subjects: "jobs.>"},
+				KV:       config.NATSKV{Bucket: "job-queue", ResponseBucket: "job-responses"},
+				Registry: config.NATSRegistry{Bucket: "agent-registry"},
+			},
+			Agent: config.AgentConfig{
+				NATS:    config.NATSConnection{Port: 4222},
+				MaxJobs: 10,
+				Conditions: config.AgentConditions{
+					MemoryPressureThreshold: 90,
+					HighLoadMultiplier:      2.0,
+					DiskPressureThreshold:   90,
+				},
+			},
+		}
+	}
+
+	tests := []struct {
+		name    string
+		set     func(c *config.Config)
+		wantErr string
+	}{
+		{
+			name: "every url set to an http or https URL",
+			set: func(c *config.Config) {
+				c.Controller.API.Host = "127.0.0.1"
+				c.Controller.API.URL = "https://hub.example.ts.net/"
+				c.Controller.UI.URL = "https://hub.example.ts.net/"
+				c.Controller.Metrics.URL = "http://hub.example.ts.net:9090/metrics"
+				c.Telemetry.Tracing.URL = "http://hub.example.ts.net:16686/"
+				c.Agent.Metrics.URL = "http://vm.example:9091/metrics"
+				c.NATS.Server.URL = "nats://hub.example.ts.net:4222"
+				c.NATS.Server.Metrics.URL = "http://hub.example.ts.net:9092/"
+			},
+		},
+		{
+			name: "api url without a scheme",
+			set: func(c *config.Config) {
+				c.Controller.API.URL = "hub.example.ts.net:8080"
+			},
+			wantErr: "URL",
+		},
+		{
+			name: "tracing url with a scheme other than http",
+			set: func(c *config.Config) {
+				c.Telemetry.Tracing.URL = "grpc://hub.example.ts.net:4317"
+			},
+			wantErr: "URL",
+		},
+		{
+			name: "ui url that is a path",
+			set: func(c *config.Config) {
+				c.Controller.UI.URL = "/ui"
+			},
+			wantErr: "URL",
+		},
+		{
+			name: "http url without a host",
+			set: func(c *config.Config) {
+				c.Controller.Metrics.URL = "http://"
+			},
+			wantErr: "URL",
+		},
+		{
+			name: "nats server url with http",
+			set: func(c *config.Config) {
+				c.NATS.Server.URL = "http://hub.example.ts.net:4222"
+			},
+			wantErr: "URL",
+		},
+		{
+			name: "nats server url with a made-up scheme",
+			set: func(c *config.Config) {
+				c.NATS.Server.URL = "hub:4222"
+			},
+			wantErr: "URL",
+		},
+		{
+			name: "nats server url with tls",
+			set: func(c *config.Config) {
+				c.NATS.Server.URL = "tls://hub.example.ts.net:4222"
+			},
+		},
+		{
+			name: "nats server url that is a bare hostname",
+			set: func(c *config.Config) {
+				c.NATS.Server.URL = "hub.example.ts.net"
+			},
+			wantErr: "URL",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			c := valid()
+			tt.set(&c)
+
+			err := config.Validate(&c)
+
+			if tt.wantErr == "" {
+				s.NoError(err)
+
+				return
+			}
+			s.Error(err)
+			s.Contains(err.Error(), tt.wantErr)
+		})
+	}
+}
+
 func (s *ConfigPublicTestSuite) TestValidateRegisterValidatorsError() {
 	tests := []struct {
 		name         string

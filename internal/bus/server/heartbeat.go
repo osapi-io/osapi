@@ -83,6 +83,7 @@ func SubComponents(
 		"nats.server": {
 			Status:  "ok",
 			Address: fmt.Sprintf("nats://%s:%d", sc.Host, sc.Port),
+			URL:     sc.URL,
 		},
 		"nats.metrics": {Status: "disabled"},
 	}
@@ -91,6 +92,7 @@ func SubComponents(
 		scs["nats.metrics"] = job.SubComponentInfo{
 			Status:  "ok",
 			Address: fmt.Sprintf("http://%s:%d", sc.Metrics.Host, sc.Metrics.Port),
+			URL:     sc.Metrics.URL,
 		}
 	}
 

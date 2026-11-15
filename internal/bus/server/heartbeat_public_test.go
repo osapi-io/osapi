@@ -125,6 +125,33 @@ func (s *HeartbeatPublicTestSuite) TestSubComponents() {
 				"nats.metrics":   {Status: "ok", Address: "http://127.0.0.1:9090"},
 			},
 		},
+		{
+			name: "when url keys are set reports them beside the address",
+			sc: config.NATSServer{
+				Host: "0.0.0.0",
+				Port: 4222,
+				URL:  "nats://hub.example.ts.net:4222",
+				Metrics: config.MetricsServer{
+					Enabled: true,
+					Host:    "127.0.0.1",
+					Port:    9092,
+					URL:     "http://hub.example.ts.net:9092/",
+				},
+			},
+			want: map[string]job.SubComponentInfo{
+				"nats.heartbeat": {Status: "ok"},
+				"nats.server": {
+					Status:  "ok",
+					Address: "nats://0.0.0.0:4222",
+					URL:     "nats://hub.example.ts.net:4222",
+				},
+				"nats.metrics": {
+					Status:  "ok",
+					Address: "http://127.0.0.1:9092",
+					URL:     "http://hub.example.ts.net:9092/",
+				},
+			},
+		},
 	}
 
 	for _, tc := range tests {

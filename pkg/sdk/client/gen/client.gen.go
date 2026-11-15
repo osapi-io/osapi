@@ -1979,6 +1979,9 @@ type ComponentHealth struct {
 
 	// Status Component health status.
 	Status string `json:"status"`
+
+	// Url Where a person opens the component, from its `url` config key. Absent when the key is not set. osapi never requests it.
+	Url *string `json:"url,omitempty"`
 }
 
 // ConsumerDetail defines model for ConsumerDetail.

@@ -67,6 +67,8 @@ type ComponentHealth struct {
 	Status  string `json:"status"`
 	Error   string `json:"error,omitempty"`
 	Address string `json:"address,omitempty"`
+	// URL is where a person opens the component; empty when not configured.
+	URL string `json:"url,omitempty"`
 }
 
 // NATSInfo represents NATS connection info.
@@ -185,6 +187,10 @@ func systemStatusFromGen(
 
 			if v.Address != nil {
 				ch.Address = *v.Address
+			}
+
+			if v.Url != nil {
+				ch.URL = *v.Url
 			}
 
 			comps[k] = ch

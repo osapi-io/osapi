@@ -591,6 +591,9 @@ type SubComponentInfo struct {
 	Status string `json:"status"`
 	// Address is the optional network endpoint (e.g., "http://0.0.0.0:9090").
 	Address string `json:"address,omitempty"`
+	// URL is where a person opens the sub-component, from its url config key.
+	// An agent of an older version sends none.
+	URL string `json:"url,omitempty"`
 }
 
 // ComponentRegistration represents a non-agent component's heartbeat

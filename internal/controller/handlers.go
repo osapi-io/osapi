@@ -90,21 +90,9 @@ func handlers(
 		}
 	}
 
-	healthSubs := map[string]health.SubComponentInfo{
-		"controller.api": {
-			Status:  "ok",
-			Address: httpAddr("0.0.0.0", d.cfg.Controller.API.Port),
-		},
-		"controller.heartbeat": {Status: "ok"},
-		"controller.metrics": {
-			Status:  enabledOrDisabled(d.cfg.Controller.Metrics.Enabled),
-			Address: httpAddr(d.cfg.Controller.Metrics.Host, d.cfg.Controller.Metrics.Port),
-		},
-		"controller.notifier": {
-			Status: enabledOrDisabled(d.cfg.Controller.Notifications.Enabled),
-		},
-		"controller.tracing": {Status: enabledOrDisabled(d.cfg.Telemetry.Tracing.Enabled)},
-	}
+	// The same sub-components the heartbeat reports, so the two copies in the
+	// health response cannot disagree.
+	healthSubs := convertSubComponents(subComponents(d.cfg))
 
 	handlers := make([]func(e *echo.Echo), 0, 16)
 	handlers = append(

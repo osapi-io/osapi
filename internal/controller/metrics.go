@@ -341,6 +341,7 @@ func convertSubComponents(
 		result[k] = health.SubComponentInfo{
 			Status:  v.Status,
 			Address: v.Address,
+			URL:     v.URL,
 		}
 	}
 

@@ -133,10 +133,12 @@ type ClosureMetricsProvider struct {
 	ComponentRegistryFn func(ctx context.Context) ([]ComponentEntry, error)
 }
 
-// SubComponentInfo holds the status and optional address of a sub-component.
+// SubComponentInfo holds the status, optional address and optional URL of a
+// sub-component.
 type SubComponentInfo struct {
 	Status  string
 	Address string // Empty means no network endpoint.
+	URL     string // Where a person opens it; empty when not configured.
 }
 
 // Health implementation of the Health APIs operations.
