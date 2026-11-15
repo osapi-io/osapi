@@ -20,10 +20,8 @@ export function StatCard({
   return (
     <Card className={cn("p-3", className)}>
       <CardContent className="p-0">
-        <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">
-          {label}
-        </p>
-        <p className="text-sm font-bold text-primary">{value}</p>
+        <p className="text-xs font-medium text-text-muted">{label}</p>
+        <p className="text-lg font-semibold text-text">{value}</p>
         {detail != null && (
           <p
             className={cn(

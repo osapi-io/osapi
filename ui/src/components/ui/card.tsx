@@ -10,13 +10,12 @@ const cardVariants = cva(
         default: [
           "border-border",
           "shadow-[0_1px_2px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.03)]",
-          "hover:border-primary/40",
-          "hover:shadow-[0_4px_16px_rgba(103,234,148,0.12),0_1px_2px_rgba(0,0,0,0.4)]",
+          "hover:border-white/20",
         ],
-        active: "border-primary/40 shadow-[0_4px_16px_rgba(103,234,148,0.12)]",
-        pending: "border-accent/40 shadow-[0_4px_16px_rgba(124,58,237,0.12)]",
+        active: "border-white/15",
+        pending: "border-accent/40 shadow-[0_4px_16px_rgba(35,0,253,0.12)]",
         applied:
-          "border-status-applied/60 shadow-[0_4px_16px_rgba(34,170,98,0.12)]",
+          "border-status-applied/60 shadow-[0_4px_16px_rgba(103,234,148,0.12)]",
         error:
           "border-status-error/60 shadow-[0_4px_16px_rgba(239,68,68,0.12)]",
       },

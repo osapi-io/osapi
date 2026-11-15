@@ -135,7 +135,7 @@ export function Roles() {
                     <tr key={`${resource}-header`}>
                       <td
                         colSpan={ROLES.length + 1}
-                        className="border-t border-border/30 bg-card px-4 py-1.5 font-semibold uppercase tracking-wider text-text-muted"
+                        className="border-t border-border/30 bg-card px-4 py-1.5 font-semibold text-text-muted"
                       >
                         {resource}
                       </td>

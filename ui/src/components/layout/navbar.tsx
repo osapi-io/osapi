@@ -32,7 +32,7 @@ const adminLinks = [
 function roleBadgeVariant(name: string) {
   switch (name) {
     case "admin":
-      return "error" as const;
+      return "muted" as const;
     case "operator":
       return "running" as const;
     default:
@@ -55,7 +55,7 @@ export function Navbar() {
   const isAdminPath = location.pathname.startsWith("/admin");
 
   return (
-    <nav className="sticky top-0 z-50 flex h-16 items-center border-b-2 border-accent bg-card px-6 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 flex h-16 items-center border-b border-border bg-card px-6 backdrop-blur-xl">
       <Link to="/" className="mr-8 flex items-center gap-2">
         <img src="/logo.svg" alt="OSAPI" className="h-8 w-auto" />
       </Link>
@@ -68,7 +68,7 @@ export function Navbar() {
               to={item.to}
               className={cn(
                 "flex items-center gap-2 rounded-md px-4 py-2 text-base font-medium transition-colors",
-                active ? "text-primary" : "text-text hover:text-primary",
+                active ? "text-text" : "text-text-muted hover:text-text",
               )}
             >
               <item.icon className="h-5 w-5" />
@@ -85,7 +85,7 @@ export function Navbar() {
               onClick={() => setAdminOpen(!adminOpen)}
               className={cn(
                 "flex items-center gap-2 rounded-md px-4 py-2 text-base font-medium transition-colors",
-                isAdminPath ? "text-primary" : "text-text hover:text-primary",
+                isAdminPath ? "text-text" : "text-text-muted hover:text-text",
               )}
             >
               <ShieldCheck className="h-5 w-5" />
@@ -103,8 +103,8 @@ export function Navbar() {
                       className={cn(
                         "flex items-center gap-2 px-4 py-2 text-sm transition-colors",
                         active
-                          ? "bg-primary/10 text-primary"
-                          : "text-text hover:bg-white/5 hover:text-primary",
+                          ? "bg-white/10 text-text"
+                          : "text-text-muted hover:bg-white/5 hover:text-text",
                       )}
                     >
                       <link.icon className="h-4 w-4" />

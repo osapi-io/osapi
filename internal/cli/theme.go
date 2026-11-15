@@ -33,6 +33,9 @@ import (
 	"github.com/muesli/termenv"
 )
 
+// The web UI copies these colors as tokens in ui/src/index.css, and the
+// specs' ui.md and cli.md hold the rules for both. Change a color in both.
+//
 // The logo palette, from asset/logo-dark.svg. The banner is drawn in it and
 // headings take their colors from it, so the CLI reads like the README.
 var (

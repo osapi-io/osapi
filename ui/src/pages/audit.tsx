@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { spinnerColor } from "@/lib/spinner-color";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { useAuth } from "@/hooks/use-auth";
 import { ContentArea } from "@/components/layout/content-area";
@@ -202,7 +203,7 @@ export function Audit() {
 
       {loading && (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className={`h-8 w-8 animate-spin ${spinnerColor}`} />
         </div>
       )}
 

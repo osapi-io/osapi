@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { spinnerColor } from "@/lib/spinner-color";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { useAuth } from "@/hooks/use-auth";
 import { ContentArea } from "@/components/layout/content-area";
@@ -51,9 +52,10 @@ function statusBadgeVariant(status?: string) {
       return "error" as const;
     case "processing":
       return "running" as const;
-    case "submitted":
     case "retried":
       return "pending" as const;
+    case "submitted":
+      return "muted" as const;
     case "skipped":
       return "muted" as const;
     default:
@@ -344,7 +346,12 @@ export function Jobs() {
               {data.status_counts && (
                 <>
                   {Object.entries(data.status_counts).map(([status, count]) => (
-                    <Badge key={status} variant={statusBadgeVariant(status)}>
+                    <Badge
+                      key={status}
+                      variant={
+                        count === 0 ? "muted" : statusBadgeVariant(status)
+                      }
+                    >
                       {status}: {count}
                     </Badge>
                   ))}
@@ -357,7 +364,7 @@ export function Jobs() {
 
       {loading && (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className={`h-8 w-8 animate-spin ${spinnerColor}`} />
         </div>
       )}
 
@@ -492,7 +499,9 @@ export function Jobs() {
                             >
                               {expandLoading ? (
                                 <div className="flex items-center justify-center py-4">
-                                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                                  <Loader2
+                                    className={`h-5 w-5 animate-spin ${spinnerColor}`}
+                                  />
                                 </div>
                               ) : expandedJob ? (
                                 <JobDetailPanel job={expandedJob} />
