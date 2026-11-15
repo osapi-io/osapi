@@ -57,7 +57,7 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 flex h-16 items-center border-b-2 border-accent bg-card px-6 backdrop-blur-xl">
       <Link to="/" className="mr-8 flex items-center gap-2">
-        <img src="/logo.png" alt="OSAPI" className="h-8 w-auto" />
+        <img src="/logo.svg" alt="OSAPI" className="h-8 w-auto" />
       </Link>
       <div className="flex gap-1">
         {navItems.map((item) => {

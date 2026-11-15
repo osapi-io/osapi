@@ -52,7 +52,7 @@ export function SignIn() {
       <div className="w-full max-w-md px-6">
         <div className="mb-8 text-center">
           <img
-            src="/logo.png"
+            src="/logo.svg"
             alt="OSAPI"
             className="mx-auto mb-4 h-12 w-auto"
           />
