@@ -82,7 +82,7 @@ put a header comment in the deployed file. Thus:
 
 If the object has `content_type: template`, the agent renders it as a Go
 `text/template` before it writes the file to disk. Give variables at deploy time
-with `--vars`:
+with `--var`. Give one `--var` for each variable:
 
 ```bash
 # Upload a template script
@@ -93,7 +93,7 @@ osapi client file upload --name backup-script.tmpl \
 osapi client node schedule create --target web-01 \
   --name backup --schedule "0 2 * * *" \
   --object backup-script.tmpl \
-  --vars "retention_days=30,s3_bucket=my-bucket"
+  --var retention_days=30 --var s3_bucket=my-bucket
 ```
 
 The agent merges the template variables with its system facts and its hostname.

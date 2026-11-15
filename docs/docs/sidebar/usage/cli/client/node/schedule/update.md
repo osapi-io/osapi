@@ -14,4 +14,5 @@ $ osapi client node schedule update --target web-01 \
 ```
 
 The command updates only the fields that you give. If nothing changed, it
-returns `Changed: false`.
+returns `Changed: false`. To change the values of a template, give each
+`--var key=value` again.

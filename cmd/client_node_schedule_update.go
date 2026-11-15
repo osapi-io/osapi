@@ -39,12 +39,14 @@ var clientNodeScheduleUpdateCmd = &cobra.Command{
 		schedule, _ := cmd.Flags().GetString("schedule")
 		user, _ := cmd.Flags().GetString("user")
 		contentType, _ := cmd.Flags().GetString("content-type")
+		varFlags, _ := cmd.Flags().GetStringSlice("var")
 
 		resp, err := sdkClient.Schedule.Update(ctx, host, name, client.ScheduleUpdateOpts{
 			Object:      object,
 			Schedule:    schedule,
 			User:        user,
 			ContentType: contentType,
+			Vars:        parseVarFlags(varFlags),
 		})
 		if err != nil {
 			cli.HandleError(err, logger)
@@ -93,6 +95,8 @@ func init() {
 		String("user", "", "New user to run the command as")
 	clientNodeScheduleUpdateCmd.PersistentFlags().
 		String("content-type", "", "Content type: raw or template")
+	clientNodeScheduleUpdateCmd.PersistentFlags().
+		StringSlice("var", []string{}, "Template variable as key=value (repeatable)")
 
 	_ = clientNodeScheduleUpdateCmd.MarkPersistentFlagRequired("name")
 	clientNodeScheduleUpdateCmd.MarkFlagsOneRequired("object", "schedule", "user")
