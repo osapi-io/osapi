@@ -26,22 +26,14 @@
 
 # Give your agent a fleet, not a shell
 
-osapi does two things:
+osapi lets an AI agent manage Linux hosts through typed operations, not through
+a login. Each operation is a **behavior**: one thing on a host, defined one
+time, with a fixed input and output. osapi checks each request before it queues
+it. A second run changes nothing. Each change is recorded.
 
-- **It makes a Linux host an appliance.** You install one binary. You then
-  manage the host through an API and a CLI, not through a login and edits to
-  files: hostname, DNS, packages, services, users, kernel parameters and more.
-- **It runs automation across a fleet, with help from an agent.** An agent uses
-  the same operations on one host or on all of them. `osapi init` gives the
-  agent its skills.
-
-Each operation is a **behavior**: one thing on a host, defined one time, with a
-fixed input and output. osapi checks each request before it queues it. A second
-run changes nothing. osapi records each change.
-
-The agent does not guess commands. It asks osapi which behaviors exist and what
-each one accepts. No model runs at run time. The same input always does the same
-thing.
+The agent does not guess commands. It asks osapi what exists, and osapi answers
+with the behaviors that this binary has. No model runs at run time. The same
+input always does the same thing.
 
 ## Why osapi
 
