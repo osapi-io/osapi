@@ -262,7 +262,10 @@ that file.
 - The name of a package is the last part of its path. An exported name does not
   repeat it: `atomicfile.Write`, not `atomicfile.WriteFileAtomic`.
 - A caller does not need an alias. If two packages that a file imports have the
-  same name, rename one of them.
+  same name, rename one of them. Mock packages are the exception. Each is named
+  `mocks`, so a test that uses two of them gives one an alias. A clash with a
+  package outside the module, or between two names that are both correct, also
+  takes an alias.
 - A directory can group packages that belong together. Do not put many packages
   under one package.
   [A Go package is one thing](https://github.com/osapi-io/specs/blob/main/CONSTITUTION.md#a-go-package-is-one-thing)
