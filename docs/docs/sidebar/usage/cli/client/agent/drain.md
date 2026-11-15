@@ -1,24 +1,37 @@
 # Drain
 
-Drain an agent so that it does not accept new jobs. The jobs that it runs now
-continue until they are complete:
-
-```bash
-$ osapi client agent drain --hostname web-01
-
-  Hostname: web-01
-  Status: Draining
-  Message: Agent drain initiated
-```
+Drain an agent.
 
 The agent changes from `Ready` to `Draining`. When all its running jobs are
 complete, the state is `Cordoned`. The agent continues to run and to send
-heartbeats. It only stops the intake of new work from the job queue.
+heartbeats. It only stops the intake of new work from the job queue. Use
+`agent undrain` to accept jobs again. The jobs that it runs now continue until
+they are complete.
 
-Use `agent undrain` to accept jobs again.
+```bash
+osapi client agent drain [flags]
+```
+
+## Examples
+
+```bash
+osapi client agent drain --hostname web-01
+```
 
 ## Flags
 
-| Flag         | Description                    | Required |
-| ------------ | ------------------------------ | -------- |
-| `--hostname` | Hostname of the agent to drain | Yes      |
+| Flag         | Description                               | Default |
+| ------------ | ----------------------------------------- | ------- |
+| `--hostname` | Hostname of the agent to drain (required) |         |
+
+## Global flags
+
+| Flag               | Description                    | Default                 |
+| ------------------ | ------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode   |                         |
+| `-j, --json`       | Enable JSON output             |                         |
+| `-f, --osapi-file` | Path to config file            | `/etc/osapi/osapi.yaml` |
+| `--url`            | URL the client will connect to | `http://0.0.0.0:8080`   |
+
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

@@ -170,6 +170,29 @@ osapi client node file deploy \
 Each agent renders the template with its own facts and hostname. Thus the same
 template gives a different configuration for each host in a fleet.
 
+### Conditions and loops
+
+A template can use each action of Go `text/template`. A condition:
+
+```text
+{{ if eq .Vars.env "prod" }}
+log_level = warn
+{{ else }}
+log_level = debug
+{{ end }}
+```
+
+A loop over a list variable:
+
+```text
+{{ range .Vars.servers }}
+upstream {{ . }};
+{{ end }}
+```
+
+The values of `--var` are strings. Thus give a list through the SDK or the
+orchestrator, not through the CLI.
+
 ### Available fact keys
 
 The facts are a flat map. osapi makes it from the `FactsRegistration` of the

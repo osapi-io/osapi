@@ -32,10 +32,9 @@ import (
 var configGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Show one setting in full",
-	Long: `Shows one setting: its value in effect and where it came from, its
-environment variable, type, default, rules and description. The file and the
-environment are read the way osapi start reads them. A password, signing key
-or token prints as ********. osapi config list shows every setting.`,
+	Long: "It shows the value in effect and where it came from, the environment\n" +
+		"variable, the type, the default, the rules and the description. An\n" +
+		"environment variable wins over the file.",
 	Example: `  osapi config get --key controller.api.port
   osapi config get --key agent.labels -f ./osapi.yaml --json`,
 	Args: cobra.NoArgs,

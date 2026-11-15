@@ -32,7 +32,8 @@ import (
 var clientControllerStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Controller component health",
-	Long:  `Show health status for all registered controllers.`,
+	Example: `  osapi client controller status
+  osapi client controller status --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 

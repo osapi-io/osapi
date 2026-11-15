@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -31,6 +32,15 @@ import (
 var clientNodeScheduleUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update a scheduled entry",
+	Long: "The command updates only the fields that you give. If nothing changed, it\n" +
+		"returns `Changed: false`.",
+	Annotations: map[string]string{
+		reference.Result: "The agent does not keep the `--var` values of the last deploy. Give each " +
+			"`--var key=value` again, or the template renders without them.",
+	},
+	Example: `  osapi client node schedule update --target web-01 \
+    --name backup-daily \
+    --schedule "0 3 * * *"`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

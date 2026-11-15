@@ -30,6 +30,9 @@ import (
 var clientNodePackageListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List installed packages, or with --updates those with an update",
+	Example: `  osapi client node package list --target web-01
+  osapi client node package list --target _all
+  osapi client node package list --target group:web`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if updates, _ := cmd.Flags().GetBool("updates"); updates {
 			clientNodePackageListUpdatesCmd.Run(cmd, args)

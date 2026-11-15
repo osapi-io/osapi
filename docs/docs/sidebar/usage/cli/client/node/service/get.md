@@ -1,49 +1,35 @@
 # Get
 
-Get details for a specific systemd service on a target host:
+Get a systemd service.
 
 ```bash
-$ osapi client node service get --target web-01 --name nginx.service
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  NAME             ACTIVE  ENABLED  DESCRIPTION
-  web-01    ok      nginx.service    active  true     A high performance web server
-
-  1 host: 1 ok
+osapi client node service get
 ```
 
-Target all hosts to examine the same service on all of the fleet:
+## Examples
 
 ```bash
-$ osapi client node service get --target _all --name nginx.service
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  NAME             ACTIVE  ENABLED  DESCRIPTION
-  web-01    ok      nginx.service    active  true     A high performance web server
-  web-02    ok      nginx.service    active  true     A high performance web server
-
-  2 hosts: 2 ok
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node service get --target web-01 \
-    --name nginx.service --json
-{"results":[{"hostname":"web-01","status":"ok","service":{
-"name":"nginx.service","status":"active","enabled":true,
-"description":"A high performance web server","pid":1234}
-}],"job_id":"..."}
+osapi client node service get --target web-01 --name nginx.service
+osapi client node service get --target _all --name nginx.service
+osapi client node service get --target web-01 \
+  --name nginx.service --json
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default  |
-| -------------- | -------------------------------------------------------- | -------- |
-| `--name`       | Service name                                             | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`   | Output raw JSON response                                 |          |
+| Flag     | Description             | Default |
+| -------- | ----------------------- | ------- |
+| `--name` | Service name (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

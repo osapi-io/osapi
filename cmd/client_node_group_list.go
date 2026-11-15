@@ -33,6 +33,8 @@ import (
 var clientNodeGroupListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all groups",
+	Example: `  osapi client node group list --target web-01
+  osapi client node group list --target web-01 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

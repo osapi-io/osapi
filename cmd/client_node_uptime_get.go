@@ -30,7 +30,9 @@ import (
 var clientNodeUptimeGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get uptime",
-	Long:  `Get uptime information from the target node.`,
+	Example: `  osapi client node uptime get
+  osapi client node uptime get --target _all
+  osapi client node uptime get --target group:web`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

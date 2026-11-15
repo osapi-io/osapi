@@ -33,6 +33,8 @@ import (
 var clientNodeUserGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get a user account by name",
+	Example: `  osapi client node user get --target web-01 --name deploy
+  osapi client node user get --target web-01 --name deploy --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

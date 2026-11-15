@@ -1,51 +1,28 @@
 # List
 
-List all routes in the kernel routing table on a target host:
+List network routes.
 
 ```bash
-$ osapi client node network route list --target web-01
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  DESTINATION     GATEWAY        INTERFACE  METRIC
-  web-01    ok      0.0.0.0/0       192.168.1.1    eth0       100
-  web-01    ok      10.0.0.0/8      192.168.1.1    eth0       0
-  web-01    ok      192.168.1.0/24  0.0.0.0        eth0       0
-
-  1 host: 1 ok
+osapi client node network route list
 ```
 
-Target all hosts to list the routes on all of the fleet:
+## Examples
 
 ```bash
-$ osapi client node network route list --target _all
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  DESTINATION     GATEWAY        INTERFACE  METRIC
-  web-01    ok      0.0.0.0/0       192.168.1.1    eth0       100
-  web-01    ok      192.168.1.0/24  0.0.0.0        eth0       0
-  web-02    ok      0.0.0.0/0       10.0.0.1       eth0       100
-  web-02    ok      10.0.0.0/24     0.0.0.0        eth0       0
-
-  2 hosts: 2 ok
+osapi client node network route list --target web-01
+osapi client node network route list --target _all
+osapi client node network route list --target web-01 --json
 ```
 
-## JSON Output
+## Global flags
 
-Use `--json` to get the full API response:
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
 
-```bash
-$ osapi client node network route list --target web-01 --json
-{"results":[{"hostname":"web-01","status":"ok","routes":[
-{"destination":"0.0.0.0/0","gateway":"192.168.1.1",
-"interface":"eth0","metric":100}
-]}],"job_id":"..."}
-```
-
-## Flags
-
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
-| `-j, --json`   | Output raw JSON response                                 |         |
+[Output](../../../../output.md) tells how the result is printed, and what
+`--json` gives.

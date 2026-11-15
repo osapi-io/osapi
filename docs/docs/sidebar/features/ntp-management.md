@@ -128,7 +128,7 @@ and `write` roles also include `ntp:write`.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/ntp/ntp.md): NTP commands
+- [CLI Reference](../usage/cli/client/node/ntp/ntp.mdx): NTP commands
 - [File Management](file-management.md): file-state KV tracking
 - [Platform Detection](../sdk/platform/detection.md): OS family detection
 - [Configuration](../usage/configuration.md): full configuration reference

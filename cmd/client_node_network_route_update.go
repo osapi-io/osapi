@@ -24,17 +24,29 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientNodeNetworkRouteUpdateCmd represents the route update command.
 var clientNodeNetworkRouteUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update routes for an interface",
-	Long: `Update network routes for an interface on the target node.
-
-Route format: TO:VIA or TO:VIA:METRIC
-  --route 10.1.0.0/16:10.0.0.1
-  --route 10.2.0.0/16:10.0.0.1:100`,
+	Long:  "Give each route as `TO:VIA` or `TO:VIA:METRIC`.",
+	Annotations: map[string]string{
+		reference.Result: "The command fails if osapi does not manage a route configuration for that\n" +
+			"interface. Use `create` first. If the content did not change, the command\n" +
+			"returns `changed: false`.",
+	},
+	Example: `  osapi client node network route update \
+    --target web-01 --interface eth0 \
+    --route 10.0.0.0/8:192.168.1.1 \
+    --route 172.16.0.0/12:192.168.1.1:100
+  osapi client node network route update \
+    --target web-01 --interface eth0 \
+    --route 10.0.0.0/8:192.168.1.1
+  osapi client node network route update \
+    --target _all --interface eth0 \
+    --route 10.0.0.0/8:10.0.0.1`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

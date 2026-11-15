@@ -32,7 +32,9 @@ import (
 var clientAgentUndrainCmd = &cobra.Command{
 	Use:   "undrain",
 	Short: "Undrain an agent",
-	Long:  `Resume accepting jobs on a drained agent.`,
+	Long: "The agent subscribes to the NATS JetStream consumers again and changes back\n" +
+		"to `Ready`.",
+	Example: `  osapi client agent undrain --hostname web-01`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		hostname, _ := cmd.Flags().GetString("hostname")

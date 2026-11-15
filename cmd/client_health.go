@@ -27,7 +27,7 @@ import (
 // clientHealthCmd represents the health parent command.
 var clientHealthCmd = &cobra.Command{
 	Use:   "health",
-	Short: "Health check commands",
+	Short: "Check the health of the controller",
 }
 
 func init() {

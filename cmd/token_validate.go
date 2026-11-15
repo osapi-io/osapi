@@ -39,11 +39,9 @@ type TokenValidator interface {
 
 // tokenValidateCmd represents the tokenValidate command.
 var tokenValidateCmd = &cobra.Command{
-	Use:   "validate",
-	Short: "Validate a token for authenticity and claims",
-	Long: `Validate a JSON Web Token (JWT) by checking its signature, expiration, and claims.
-This command ensures that the token is authentic, has not expired, and conforms to the expected roles and audience.
-`,
+	Use:     "validate",
+	Short:   "Validate a token for authenticity and claims",
+	Example: `  osapi token validate --token eyJhbGciOiJIUzI1NiIs...`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		signingKey := appConfig.Controller.API.Security.SigningKey
 		tokenString, _ := cmd.Flags().GetString("token")

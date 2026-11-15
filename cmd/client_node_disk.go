@@ -27,7 +27,7 @@ import (
 // clientNodeDiskCmd represents the clientNodeDisk command.
 var clientNodeDiskCmd = &cobra.Command{
 	Use:   "disk",
-	Short: "Manage disk information",
+	Short: "Get the disk usage of target hosts",
 }
 
 func init() {

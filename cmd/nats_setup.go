@@ -26,6 +26,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/internal/job"
 )
 
@@ -35,14 +36,16 @@ import (
 var natsSetupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Create osapi's streams and buckets on a NATS server",
-	Long: `Create the JetStream streams and key-value buckets osapi needs on a NATS
-server it does not run, such as an existing cluster. It connects as the
-controller does, with controller.nats: its host, port, namespace and auth, so
-a server in operator (JWT) mode is reached with the controller's credentials.
-
-Each stream and bucket is created or updated to match the config, so running
-it again changes nothing. osapi nats server start does the same for its
-embedded server, so this is needed only when the server is someone else's.`,
+	Long: "It connects as the controller does, with `controller.nats`: its host,\n" +
+		"port, namespace and auth. Run it one time before you start the controller\n" +
+		"and the agents with that server.",
+	Annotations: map[string]string{
+		reference.Notes: "Run it again after you change the settings of a stream or a bucket. Each\n" +
+			"stream and bucket is created or updated to match the config, so running it\n" +
+			"again changes nothing. `osapi nats server start` does the same for the\n" +
+			"embedded server when the server starts. Thus a deployment that runs the\n" +
+			"NATS server of osapi does not need this command.",
+	},
 	Example: `  osapi nats setup -f /etc/osapi/osapi.yaml`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		n := appConfig.Controller.NATS

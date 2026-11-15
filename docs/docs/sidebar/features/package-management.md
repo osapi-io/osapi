@@ -126,6 +126,7 @@ All built-in roles (`admin`, `write`, `read`) include `package:read`. The
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/package/package.md): package commands
+- [CLI Reference](../usage/cli/client/node/package/package.mdx): package
+  commands
 - [Platform Detection](../sdk/platform/detection.md): OS family detection
 - [Configuration](../usage/configuration.md): full configuration reference

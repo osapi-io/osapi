@@ -30,6 +30,11 @@ import (
 var clientNodeUserSSHKeyListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List SSH authorized keys",
+	Long: "The output does not show hosts without authorized keys. It shows skipped\n" +
+		"hosts, for example unsupported platforms, with their error.",
+	Example: `  osapi client node user ssh-key list --target web-01 --name deploy
+  osapi client node user ssh-key list --target _all --name deploy
+  osapi client node user ssh-key list --target web-01 --name deploy --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -30,6 +30,13 @@ import (
 var clientNodeUserSetPasswordCmd = &cobra.Command{
 	Use:   "set-password",
 	Short: "Set a user's password",
+	Long: "The client sends the password to the controller in plaintext over TLS. The\n" +
+		"controller hashes it before it stores the job. The agent and the provider\n" +
+		"see only the hash. osapi never writes the plaintext to disk or to logs.",
+	Example: `  osapi client node user set-password --target web-01 \
+    --name deploy --password 'newpass123'
+  osapi client node user set-password --target _all \
+    --name deploy --password 'newpass123'`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

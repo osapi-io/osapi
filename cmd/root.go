@@ -56,6 +56,7 @@ var (
 		"completion": true,
 		"config":     true,
 		"roles":      true,
+		"cli-docs":   true,
 	}
 )
 
@@ -63,10 +64,6 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "osapi",
 	Short: "A CRUD API for managing Linux systems.",
-	Long: `A CRUD API for managing Linux systems, responsible for ensuring that
-the system's configuration matches the desired state.
-
-https://github.com/osapi-io/osapi`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

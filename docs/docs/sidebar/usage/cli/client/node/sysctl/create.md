@@ -1,70 +1,47 @@
 # Create
 
-Make a new sysctl parameter on a target host. The agent writes the value to
-`/etc/sysctl.d/osapi-{key}.conf` and applies it immediately with `sysctl -p`. If
-osapi already manages the parameter, the command returns `changed: false`. To
-change a parameter, use `update`:
+Create a sysctl parameter.
+
+The agent writes the value to `/etc/sysctl.d/osapi-{key}.conf` and applies it
+immediately with `sysctl -p`.
 
 ```bash
-$ osapi client node sysctl create --target web-01 \
-    --key net.ipv4.ip_forward --value 1
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   KEY                   CHANGED
-  web-01    changed  net.ipv4.ip_forward   true
-
-  1 host: 1 changed
+osapi client node sysctl create
 ```
 
-Broadcast to all hosts at once:
+## Examples
 
 ```bash
-$ osapi client node sysctl create --target _all \
-    --key vm.swappiness --value 10
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   KEY            CHANGED
-  web-01    changed  vm.swappiness  true
-  web-02    changed  vm.swappiness  true
-
-  2 hosts: 2 changed
+osapi client node sysctl create --target web-01 \
+  --key net.ipv4.ip_forward --value 1
+osapi client node sysctl create --target _all \
+  --key vm.swappiness --value 10
+osapi client node sysctl create --target web-01 \
+  --key vm.swappiness --value 10 --json
 ```
 
-When some hosts are skipped, for example macOS agents:
+## Result
 
-```bash
-$ osapi client node sysctl create --target _all \
-    --key vm.swappiness --value 10
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   KEY            CHANGED
-  web-01    changed  vm.swappiness  true
-  mac-01    skip
-
-  2 hosts: 1 changed, 1 skipped
-
-  Details:
-  mac-01    unsupported platform
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node sysctl create --target web-01 \
-    --key vm.swappiness --value 10 --json
-{"results":[{"hostname":"web-01","key":"vm.swappiness","changed":true,"status":"ok"}],"job_id":"..."}
-```
+If the file and the kernel have the requested value, the command returns
+`changed: false`. If the file was changed by hand, or holds a different value,
+the agent writes it again and applies it.
 
 ## Flags
 
-| Flag           | Description                                              | Default  |
-| -------------- | -------------------------------------------------------- | -------- |
-| `--key`        | Sysctl parameter key to create                           | required |
-| `--value`      | Value to assign to the parameter                         | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`   | Output raw JSON response                                 |          |
+| Flag      | Description                       | Default |
+| --------- | --------------------------------- | ------- |
+| `--key`   | Sysctl parameter key (required)   |         |
+| `--value` | Sysctl parameter value (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

@@ -79,6 +79,7 @@ test: linux-tune
     just docs-gen-check
     just go-pkg-check
     just react-build
+    just cli-docs-gen-check
     just go-test
     just behavior-cover-check
 
@@ -112,6 +113,29 @@ go-pkg-check:
     if [ -n "$leaks" ]; then
         echo "pkg/ imports internal/:" >&2
         echo "$leaks" >&2
+        exit 1
+    fi
+
+# Write the CLI reference pages under docs/ from the cobra command tree, and
+# format them as the site formatter does.
+cli-docs-generate:
+    just _docs-bun-install
+    go run . cli-docs --dir docs/docs/sidebar/usage/cli
+    cd docs && bun run prettier docs/sidebar/usage/cli --write --config prettier.config.js --ignore-path .prettierignore > /dev/null
+
+# The CLI reference pages are generated from the cobra command tree. A command
+# without a page, a page without a command, or a flag that changed fails here.
+cli-docs-gen-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pages() {
+        find docs/docs/sidebar/usage/cli -type f -print | sort | xargs shasum
+    }
+    before=$(pages)
+    just cli-docs-generate
+    if [ "$before" != "$(pages)" ]; then
+        diff <(echo "$before") <(pages) || true
+        echo "CLI reference pages are stale: run just cli-docs-generate and commit the result" >&2
         exit 1
     fi
 
@@ -197,6 +221,7 @@ behavior-gen-check:
 generate:
     just join-spec internal/controller/api/gen/api.yaml
     just go-generate
+    just cli-docs-generate
     just docs-generate
     cp internal/controller/api/gen/api.yaml ui/src/sdk/gen/api.yaml
     just react-generate

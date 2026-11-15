@@ -1,66 +1,45 @@
 # Update
 
-Update a service unit file on a target host with a new Object Store reference.
-The agent deploys the unit file again and runs `systemctl daemon-reload`. The
-command fails if the unit file does not exist. Use `create` first:
+Update a systemd service unit file.
+
+The agent deploys the unit file again and runs `systemctl daemon-reload`.
 
 ```bash
-$ osapi client node service update --target web-01 \
-    --name myapp.service --object myapp-unit-v2
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME             CHANGED
-  web-01    changed  myapp.service    true
-
-  1 host: 1 changed
+osapi client node service update
 ```
 
-If the content did not change (the same SHA), the command returns
-`changed: false`:
+## Examples
 
 ```bash
-$ osapi client node service update --target web-01 \
-    --name myapp.service --object myapp-unit-v2
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  NAME             CHANGED
-  web-01    ok      myapp.service    false
-
-  1 host: 1 ok
+osapi client node service update --target web-01 \
+  --name myapp.service --object myapp-unit-v2
+osapi client node service update --target _all \
+  --name myapp.service --object myapp-unit-v2
+osapi client node service update --target web-01 \
+  --name myapp.service --object myapp-unit-v2 --json
 ```
 
-Broadcast to all hosts at once:
+## Result
 
-```bash
-$ osapi client node service update --target _all \
-    --name myapp.service --object myapp-unit-v2
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME             CHANGED
-  web-01    changed  myapp.service    true
-  web-02    changed  myapp.service    true
-
-  2 hosts: 2 changed
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node service update --target web-01 \
-    --name myapp.service --object myapp-unit-v2 --json
-{"results":[{"hostname":"web-01","name":"myapp.service","changed":true,"status":"ok"}],"job_id":"..."}
-```
+The command fails if the unit file does not exist. If the content did not change
+(the same SHA), the command returns `changed: false`.
 
 ## Flags
 
-| Flag           | Description                                              | Default  |
-| -------------- | -------------------------------------------------------- | -------- |
-| `--name`       | Service unit name to update                              | required |
-| `--object`     | New Object Store reference for the unit file             | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`   | Output raw JSON response                                 |          |
+| Flag       | Description                                         | Default |
+| ---------- | --------------------------------------------------- | ------- |
+| `--name`   | Service unit name (required)                        |         |
+| `--object` | Object store reference for the unit file (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

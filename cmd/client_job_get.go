@@ -28,9 +28,9 @@ import (
 
 // clientJobGetCmd represents the clientJobsGet command.
 var clientJobGetCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Get job details and status",
-	Long:  `Retrieves a job's details and current status via the REST API.`,
+	Use:     "get",
+	Short:   "Get job details and status",
+	Example: `  osapi client job get --id 550e8400-e29b-41d4-a716-446655440000`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		jobID, _ := cmd.Flags().GetString("id")

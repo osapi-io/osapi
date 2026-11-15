@@ -1,24 +1,36 @@
 # Update
 
-Update a group's member list:
-
-```bash
-$ osapi client node group update --target web-01 \
-    --name deploy --members alice,bob
-
-  HOSTNAME  STATUS   NAME     CHANGED
-  web-01    changed  deploy   true
-
-  1 host: 1 changed
-```
+Update a group.
 
 The `--members` flag replaces all of the member list.
 
+```bash
+osapi client node group update
+```
+
+## Examples
+
+```bash
+osapi client node group update --target web-01 \
+  --name deploy --members alice,bob
+```
+
 ## Flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
-| `--name`       | Group name to update (required)                          |         |
-| `--members`    | Group members (comma-separated, replaces existing)       |         |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| Flag        | Description                                 | Default |
+| ----------- | ------------------------------------------- | ------- |
+| `--members` | Group members (replaces existing, required) |         |
+| `--name`    | Group name to update (required)             |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

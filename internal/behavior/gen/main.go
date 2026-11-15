@@ -132,16 +132,10 @@ func run(
 			return fmt.Errorf("%s: %w", b.Name, err)
 		}
 
-		if !b.CLI {
-			continue
-		}
-		for i, m := range b.Methods {
-			page, err := command.MethodPage(b, m, i+2)
-			if err != nil {
-				return err
-			}
-			// .mdx, because the page holds the terminal block.
-			if err := w.write(filepath.Join(dir, m.Name+".mdx"), []byte(page)); err != nil {
+		// A behavior with commands had a page per method here. Its commands
+		// have their pages in the CLI reference now, so the old ones go.
+		for _, m := range b.Methods {
+			if err := w.remove(filepath.Join(dir, m.Name+".mdx")); err != nil {
 				return err
 			}
 		}

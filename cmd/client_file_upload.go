@@ -35,7 +35,13 @@ import (
 var clientFileUploadCmd = &cobra.Command{
 	Use:   "upload",
 	Short: "Upload a file to the Object Store",
-	Long:  `Upload a local file to the OSAPI Object Store for later deployment.`,
+	Long: "An upload of the same content changes nothing (`Changed: false`). If the\n" +
+		"file exists with different content, the command rejects the upload with 409\n" +
+		"Conflict. Use `--force` to replace the file.",
+	Example: `  osapi client file upload --name app.conf --file /tmp/app.conf
+  osapi client file upload --name app.conf.tmpl --file /tmp/app.conf.tmpl \
+    --content-type template
+  osapi client file upload --name app.conf --file /tmp/app.conf --force`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		name, _ := cmd.Flags().GetString("name")

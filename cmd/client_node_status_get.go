@@ -34,9 +34,9 @@ import (
 // clientNodeStatusGetCmd represents the clientNodeStatusGet command.
 var clientNodeStatusGetCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Status of the server",
-	Long: `Obtain the current node status.
-`,
+	Short: "Get the status of target hosts",
+	Example: `  osapi client node status
+  osapi client node status --target _all`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

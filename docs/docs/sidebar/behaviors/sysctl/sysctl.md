@@ -33,11 +33,11 @@ unless the agent runs as root. `osapi agent start` checks this at startup.
 
 | Method | Verb | Permission | Description |
 | ------ | ---- | ---------- | ----------- |
-| [`list`](list.mdx) | read | `sysctl:read` | List the kernel's parameters and which osapi manages |
-| [`get`](get.mdx) | read | `sysctl:read` | Get a kernel parameter's current value, and whether osapi manages it |
-| [`create`](create.mdx) | write | `sysctl:write` | Manage a kernel parameter and apply it |
-| [`update`](update.mdx) | write | `sysctl:write` | Set a kernel parameter, manage it, and apply it |
-| [`delete`](delete.mdx) | write | `sysctl:write` | Stop the management of a kernel parameter |
+| [`list`](../../usage/cli/client/next/node/sysctl/list.md) | read | `sysctl:read` | List the kernel's parameters and which osapi manages |
+| [`get`](../../usage/cli/client/next/node/sysctl/get.md) | read | `sysctl:read` | Get a kernel parameter's current value, and whether osapi manages it |
+| [`create`](../../usage/cli/client/next/node/sysctl/create.md) | write | `sysctl:write` | Manage a kernel parameter and apply it |
+| [`update`](../../usage/cli/client/next/node/sysctl/update.md) | write | `sysctl:write` | Set a kernel parameter, manage it, and apply it |
+| [`delete`](../../usage/cli/client/next/node/sysctl/delete.md) | write | `sysctl:write` | Stop the management of a kernel parameter |
 
 ## Settings
 
@@ -54,5 +54,3 @@ with its environment variable or its `osapi agent start` flag.
 osapi behavior get --name sysctl            # surfaces, methods, types, settings, telemetry
 osapi behavior get --name sysctl --json     # the same, with each method's JSON Schema
 ```
-
-<DocCardList />

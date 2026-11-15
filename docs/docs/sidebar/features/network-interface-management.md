@@ -180,9 +180,9 @@ included in the `admin` and `write` roles.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/network/interface/interface.md):
+- [CLI Reference](../usage/cli/client/node/network/interface/interface.mdx):
   interface commands
-- [CLI Reference](../usage/cli/client/node/network/route/route.md): route
+- [CLI Reference](../usage/cli/client/node/network/route/route.mdx): route
   commands
 - [SDK Reference](../sdk/client/networking/interface.md): Interface service
 - [SDK Reference](../sdk/client/networking/route.md): Route service

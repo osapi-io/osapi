@@ -215,6 +215,27 @@ just docs-fmt-check   # Check formatting of the site
 just docs-fmt         # Auto-fix formatting of the site
 ```
 
+The CLI reference pages under `docs/docs/sidebar/usage/cli/` are generated from
+the cobra commands. Do not edit them. Change the command in `cmd/`, then run
+`just cli-docs-generate`:
+
+- `Short` is one line, and `Long` tells what the command does in a few
+  sentences. `--help` shows both.
+- `Example` has one to three command lines, and no output.
+- The annotations from `internal/cli/reference` are for the page only:
+  `reference.Result` tells when the command returns `changed: true` or `false`
+  and when it fails, `reference.Permission` names the permission that it needs,
+  and `reference.Notes` has more detail. Put a fact in its annotation, not in
+  `Long`. `just test` fails when a page does not agree with its command.
+  `output.md` is the one page in that directory that a person writes.
+- A behavior command is generated from the behavior definition, with its
+  `Short`, `Long`, `Example` and annotations. Change the definition, run
+  `go generate ./internal/behaviors/all`, then `just cli-docs-generate`.
+
+```bash
+just cli-docs-generate   # Write the CLI reference pages
+```
+
 Write each page in Simplified Technical English, as
 [the osapi-io constitution](https://github.com/osapi-io/specs/blob/main/CONSTITUTION.md)
 requires.

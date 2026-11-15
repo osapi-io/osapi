@@ -49,4 +49,4 @@ Each string in a request is dangerous until the provider checks it. The probes c
 - **A line in a file.** A field that goes into a line of a file refuses `\r` and `\n`. If it does not, one value becomes two settings.
 - **A program's argument.** Pass `--` before a value that can start with `-`, or refuse a value that starts with `-`. Do not build a `sh -c` script from input. Run the program with its arguments.
 
-Declare each refusal with `.Fails`. Then the docs page lists it, and the tests check it.
+Declare each refusal with `.Fails`. Then the CLI page of the method lists it, and the tests check it.

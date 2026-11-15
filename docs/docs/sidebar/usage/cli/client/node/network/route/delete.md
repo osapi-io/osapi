@@ -1,68 +1,39 @@
 # Delete
 
-Remove the static routes that osapi manages for an interface on a target host.
-You can delete only the files that osapi manages, with the `osapi-` prefix:
+Delete routes for an interface.
+
+You can delete only the files that osapi manages, with the `osapi-` prefix.
 
 ```bash
-$ osapi client node network route delete \
-    --target web-01 --interface eth0
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   INTERFACE  CHANGED
-  web-01    changed  eth0       true
-
-  1 host: 1 changed
+osapi client node network route delete
 ```
 
-Broadcast delete to all hosts:
+## Examples
 
 ```bash
-$ osapi client node network route delete \
-    --target _all --interface eth0
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   INTERFACE  CHANGED
-  web-01    changed  eth0       true
-  web-02    changed  eth0       true
-
-  2 hosts: 2 changed
-```
-
-When some hosts are skipped:
-
-```bash
-$ osapi client node network route delete \
-    --target _all --interface eth0
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   INTERFACE  CHANGED
-  web-01    changed  eth0       true
-  mac-01    skip
-
-  2 hosts: 1 changed, 1 skipped
-
-  Details:
-  mac-01    unsupported platform
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node network route delete \
-    --target web-01 --interface eth0 --json
-{"results":[{"hostname":"web-01","interface":"eth0",
-"changed":true,"status":"ok"}],"job_id":"..."}
+osapi client node network route delete \
+  --target web-01 --interface eth0
+osapi client node network route delete \
+  --target _all --interface eth0
+osapi client node network route delete \
+  --target web-01 --interface eth0 --json
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default  |
-| -------------- | -------------------------------------------------------- | -------- |
-| `--interface`  | Interface name                                           | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`   | Output raw JSON response                                 |          |
+| Flag          | Description               | Default |
+| ------------- | ------------------------- | ------- |
+| `--interface` | Interface name (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../../output.md) tells how the result is printed, and what
+`--json` gives.

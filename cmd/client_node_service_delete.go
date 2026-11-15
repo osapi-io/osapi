@@ -24,12 +24,25 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientNodeServiceDeleteCmd represents the service delete command.
 var clientNodeServiceDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a systemd service unit file",
+	Long: "If the service runs, the agent stops and disables it. The agent removes\n" +
+		"the unit file from `/etc/systemd/system/` and runs `systemctl\n" +
+		"daemon-reload`.",
+	Annotations: map[string]string{
+		reference.Result: "If the unit file does not exist, the command returns `changed: false`.",
+	},
+	Example: `  osapi client node service delete --target web-01 \
+    --name myapp.service
+  osapi client node service delete --target _all \
+    --name myapp.service
+  osapi client node service delete --target web-01 \
+    --name myapp.service --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

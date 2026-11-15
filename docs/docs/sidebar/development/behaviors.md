@@ -78,13 +78,13 @@ var Behavior = behavior.Register(behavior.Define(
 | `behavior.Node`           | The work runs on a host, through the job system. Required.                                                                                                                |
 | `behavior.Under("g")`     | Nests it under a group: `/api/node/{hostname}/g/<name>`, `osapi client node g <name>`.                                                                                    |
 | `behavior.API`            | Serves it over REST and puts it in the OpenAPI spec and the API reference.                                                                                                |
-| `behavior.CLI`            | Generates its commands and CLI docs pages. Needs `API`, because the commands call it.                                                                                     |
+| `behavior.CLI`            | Generates its commands. Their pages in the CLI reference come from the commands. Needs `API`, because the commands call it.                                               |
 | `Read(name, fn)`          | A method that reads the host: `GET`, the `<name>:read` permission.                                                                                                        |
 | `Write(name, fn)`         | A method that changes it: `POST`, or `PUT` for `update` and `DELETE` for `delete`.                                                                                        |
 | `.Key("field")`           | Puts that input field in the path: `/sysctl/{key}`.                                                                                                                       |
-| `.Describe("...")`        | One line: the command's short help, the operation's summary, the page's first line.                                                                                       |
-| `.Explain("...")`         | Optional longer text: what it touches on the host and what running it twice does.                                                                                         |
-| `.Example(doc, in, out)`  | A sample call. Its output is run through the real renderer onto the docs page.                                                                                            |
+| `.Describe("...")`        | One line: the command's short help, the operation's summary, the first line of the CLI page.                                                                              |
+| `.Explain("...")`         | Optional longer text: what it touches on the host and what running it twice does. It is the command's long help.                                                          |
+| `.Example(doc, in, out)`  | A sample call. Its command line goes in the examples of the command, under a comment with `doc`. The tests send it and check `out`.                                       |
 | `behavior.Config(v)`      | The behavior's own settings, with `v` as their defaults. See below.                                                                                                       |
 | `behavior.Platform(p, f)` | How the provider is built on platform `p`: `debian`, `darwin`, or `linux` for every Linux host without a provider of its own. On any other, the methods report `skipped`. |
 | `behavior.Sudo("prog")`   | A program the provider runs with sudo. The agent's preflight checks it.                                                                                                   |
@@ -303,8 +303,8 @@ Fails("A parameter osapi stopped managing",
 
 The provider test checks that each refusal fails with that text. The API test
 checks that a refusal whose input breaks a `validate` tag gets a 400, and that
-no job goes on the queue. The docs page lists the refusals under "What it
-refuses".
+no job goes on the queue. The CLI page of the method lists the refusals under
+"Result".
 
 On the fake host, each filesystem, command and store call of the example fails
 in turn. Each store read returns a damaged record in turn. The method must
@@ -315,20 +315,36 @@ error that a struct of strings cannot cause.
 ## The checks
 
 ```bash
-go generate ./internal/behaviors/all      # write gen/, the spec and the docs pages
+go generate ./internal/behaviors/all      # write gen/, the spec and the behavior pages
+just cli-docs-generate              # write the CLI pages of the commands
 osapi behavior validate             # the definition's rules
 osapi behavior get --name sysctl  # surfaces, routes, schemas, as registered
 just behavior-gen-check             # fails when generated files are stale
 just behavior-cover-check           # fails when a behavior is below 100% coverage
 ```
 
-`osapi behavior validate` checks these things:
+`osapi behavior validate` checks each definition against these rules. It exits 1
+when one fails, and names the behavior, the method and the rule:
 
-- the name, the placement, the docs, the methods, the keys and the schemas
-- that a write reports `changed`
-- that `CLI` comes with `API`, and has a flag for each input field
-- that the input and the output of each example are the types of the method
-- that the behavior has a provider on a platform that fits each method
+| Rule        | Fails when                                                                                                                                                                                        |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | the name is not lowercase letters and digits                                                                                                                                                      |
+| `placement` | the behavior has no placement                                                                                                                                                                     |
+| `doc`       | the behavior or a method has no description                                                                                                                                                       |
+| `methods`   | the behavior has no methods                                                                                                                                                                       |
+| `duplicate` | two methods share a name                                                                                                                                                                          |
+| `verb`      | a method name is a synonym of a standard verb, a read is not `list`, `get` or `status`, or a write is not `create`, `update` or `delete` (action methods such as `restart` are not supported yet) |
+| `route`     | two methods would be served at the same route                                                                                                                                                     |
+| `key`       | a method's key is not a field of its input                                                                                                                                                        |
+| `schema`    | an input or output type has no JSON Schema                                                                                                                                                        |
+| `output`    | an output field collides with a field of the per-host result                                                                                                                                      |
+| `changed`   | a write's output has no `changed` field                                                                                                                                                           |
+| `surface`   | a behavior has CLI without API, is internal but served, or has an input the CLI cannot flag                                                                                                       |
+| `example`   | a CLI method has no example, or an example or refusal does not fit its method                                                                                                                     |
+| `settings`  | settings are not a struct, or a field lacks the name or description the config needs                                                                                                              |
+| `platform`  | no platform has a provider, a platform is declared twice, or a provider misses a method                                                                                                           |
+| `requires`  | a required behavior is not registered, or behaviors require one another in a cycle                                                                                                                |
+| `secret`    | an input field tagged `secret:"true"` would be recorded on the method's span                                                                                                                      |
 
 `just test` runs `behavior-gen-check`. Thus a behavior that changed without
 `go generate` fails CI. It also runs `behavior-cover-check`. Thus a behavior
@@ -363,8 +379,19 @@ the cutover.
 | `internal/behaviors/<name>/mocks/provider.gen.go` | the Provider interface, by mockgen                                                           |
 | `internal/behaviors/all/gen/gen.go`               | every behavior with `API` or `CLI`                                                           |
 | `internal/controller/api/next/gen/api.yaml`       | the behaviors marked `Next`, while any is                                                    |
-| `docs/docs/sidebar/behaviors/<name>/`             | the definition, settings, and examples run through the renderer                              |
+| `docs/docs/sidebar/behaviors/<name>/<name>.md`    | the definition and its settings                                                              |
+| `docs/docs/sidebar/usage/cli/client/...`          | the generated commands, by `just cli-docs-generate`                                          |
 | `docs/docs/gen/api-next/...`                      | the spec, by `just docs-generate`                                                            |
+
+`gen/cli.go` puts the docs of a method on its command. `.Describe` is the
+`Short` of the command, `.Explain` is its `Long`, and the examples are its
+`Example`. The `reference.Permission` annotation has the permission of the
+method. The `reference.Result` annotation has a table of what each example does
+on the host, and a table of the refusals. The command of the behavior has a
+`reference.Notes` annotation, with a link to the page of the behavior. Thus
+`just cli-docs-generate` writes the page of a behavior command as it writes the
+page of a hand-written command. [CLI reference](../usage/cli/cli.mdx) has the
+pages.
 
 `internal/behavior/gen` writes them. It builds Go with jen
 (`github.com/dave/jennifer`), not with text templates. Thus the output always

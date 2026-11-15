@@ -137,7 +137,7 @@ included in the `admin` and `write` roles.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/certificate/certificate.md):
+- [CLI Reference](../usage/cli/client/node/certificate/certificate.mdx):
   certificate commands
 - [SDK Reference](../sdk/client/security/certificate.md): Certificate service
 - [Platform Detection](../sdk/platform/detection.md): OS family detection

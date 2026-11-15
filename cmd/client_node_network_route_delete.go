@@ -30,6 +30,13 @@ import (
 var clientNodeNetworkRouteDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete routes for an interface",
+	Long:  "You can delete only the files that osapi manages, with the `osapi-` prefix.",
+	Example: `  osapi client node network route delete \
+    --target web-01 --interface eth0
+  osapi client node network route delete \
+    --target _all --interface eth0
+  osapi client node network route delete \
+    --target web-01 --interface eth0 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -32,7 +32,12 @@ import (
 var clientAgentRejectCmd = &cobra.Command{
 	Use:   "reject",
 	Short: "Reject a pending agent enrollment",
-	Long:  `Reject a pending agent enrollment request.`,
+	Long: "When PKI is enabled, a new agent sends an enrollment request. An\n" +
+		"administrator accepts or rejects it. This command rejects a pending agent,\n" +
+		"so the agent cannot join the fleet. The command removes the enrollment entry\n" +
+		"of the agent from the pending queue. Use `agent list --pending` to see the\n" +
+		"agents that wait for approval.",
+	Example: `  osapi client agent reject --hostname web-01`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		hostname, _ := cmd.Flags().GetString("hostname")

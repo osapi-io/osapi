@@ -32,7 +32,8 @@ import (
 var clientFileDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a file from the Object Store",
-	Long:  `Delete a specific file from the OSAPI Object Store.`,
+	Example: `  osapi client file delete --name app.conf
+  osapi client file delete --name app.conf --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		name, _ := cmd.Flags().GetString("name")

@@ -32,7 +32,14 @@ import (
 var clientAgentAcceptCmd = &cobra.Command{
 	Use:   "accept",
 	Short: "Accept a pending agent enrollment",
-	Long:  `Accept a pending agent enrollment request by hostname or fingerprint.`,
+	Long: "When PKI is enabled, a new agent sends an enrollment request. An\n" +
+		"administrator must accept it before the agent can do work. This command\n" +
+		"accepts a pending agent by hostname. To accept by the public key fingerprint\n" +
+		"of the agent, add `--fingerprint`. Use `agent list --pending` to see the\n" +
+		"agents that wait for approval.",
+	Example: `  osapi client agent accept --hostname web-01
+  osapi client agent accept --hostname web-01 \
+    --fingerprint SHA256:ab12cd34...`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		hostname, _ := cmd.Flags().GetString("hostname")

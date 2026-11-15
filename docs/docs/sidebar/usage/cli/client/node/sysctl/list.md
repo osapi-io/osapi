@@ -1,54 +1,28 @@
 # List
 
-List all sysctl parameters that osapi manages on a target host:
+List all sysctl parameters.
 
 ```bash
-$ osapi client node sysctl list --target web-01
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  KEY                      VALUE
-  web-01    ok      net.ipv4.ip_forward      1
-  web-01    ok      vm.swappiness            10
-  web-01    ok      kernel.panic             30
-
-  1 host: 1 ok
+osapi client node sysctl list
 ```
 
-Target all hosts to list the parameters on all of the fleet:
+## Examples
 
 ```bash
-$ osapi client node sysctl list --target _all
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  KEY                  VALUE
-  web-01    ok      net.ipv4.ip_forward  1
-  web-01    ok      vm.swappiness        10
-  web-02    ok      net.ipv4.ip_forward  1
-  web-02    ok      vm.swappiness        10
-
-  2 hosts: 2 ok
+osapi client node sysctl list --target web-01
+osapi client node sysctl list --target _all
+osapi client node sysctl list --target group:web
 ```
 
-Target a label to list the parameters on a group of servers:
+## Global flags
 
-```bash
-$ osapi client node sysctl list --target group:web
-```
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
 
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node sysctl list --target web-01 --json
-{"results":[{"hostname":"web-01","key":"net.ipv4.ip_forward","value":"1","status":"ok"}],"job_id":"..."}
-```
-
-## Flags
-
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
-| `-j, --json`   | Output raw JSON response                                 |         |
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

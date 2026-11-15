@@ -1,19 +1,26 @@
 # Status
 
-Show health status for all registered NATS servers:
+NATS server component health.
 
 ```bash
-$ osapi client nats status
-
-  TYPE  HOSTNAME        STATUS  CONDITIONS  AGE    CPU    MEM
-  nats  nats-server-01  Ready   -           7h 6m  0.3%   64 MB
-        ├─ heartbeat               ok
-        ├─ metrics                 ok http://0.0.0.0:9092
-        └─ server                  ok nats://localhost:4222
+osapi client nats status
 ```
 
-Use `--json` to get the full health status as JSON:
+## Examples
 
 ```bash
-$ osapi client nats status --json
+osapi client nats status
+osapi client nats status --json
 ```
+
+## Global flags
+
+| Flag               | Description                    | Default                 |
+| ------------------ | ------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode   |                         |
+| `-j, --json`       | Enable JSON output             |                         |
+| `-f, --osapi-file` | Path to config file            | `/etc/osapi/osapi.yaml` |
+| `--url`            | URL the client will connect to | `http://0.0.0.0:8080`   |
+
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

@@ -215,14 +215,14 @@ func ValidateBehavior(
 			add(m.Name, RuleVerb, "a write is named create, update or delete, not %q; "+
 				"action methods such as restart are not supported yet", m.Name)
 		}
-		// The docs pages are the examples run through the real renderer, so
-		// an example of the wrong type would publish output the method can
-		// never produce.
+		// The examples are the command lines on the CLI page of the method,
+		// and the generated tests send each one. The tests also check each
+		// output, so an example of the wrong type fails.
 		if b.CLI && len(m.Examples) == 0 {
 			add(
 				m.Name,
 				RuleExample,
-				"no example; a CLI behavior's docs page is built from its examples",
+				"no example; the CLI page of a CLI behavior shows its examples",
 			)
 		}
 		for _, ex := range m.Examples {

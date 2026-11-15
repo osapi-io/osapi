@@ -1,33 +1,31 @@
 # Get
 
-Get job details and status:
+Get job details and status.
 
 ```bash
-$ osapi client job get --id 550e8400-e29b-41d4-a716-446655440000
+osapi client job get
+```
 
-  Job ID: 550e8400-e29b-41d4-a716-446655440000    Status: completed
-  Hostname: server1
-  Created: 2026-02-16T13:21:06Z
-  Updated At: 2026-02-16T13:21:06Z
+## Examples
 
-  Job Request:
-  DATA
-  { "data": {}, "type": "node.status.get" }
-
-  Agent States:
-  HOSTNAME  STATUS     DURATION  ERROR
-  server1   completed  0s
-
-  Job Result:
-  DATA
-  { "hostname": "server1", "uptime": 231685, "os": { "distribution": "Ubuntu", "version": "24.04" } }
+```bash
+osapi client job get --id 550e8400-e29b-41d4-a716-446655440000
 ```
 
 ## Flags
 
-| Flag   | Description        | Default  |
-| ------ | ------------------ | -------- |
-| `--id` | Job ID to retrieve | required |
+| Flag   | Description                   | Default |
+| ------ | ----------------------------- | ------- |
+| `--id` | Job ID to retrieve (required) |         |
 
-The command gets the job status from the API. The status is the current state of
-the job.
+## Global flags
+
+| Flag               | Description                    | Default                 |
+| ------------------ | ------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode   |                         |
+| `-j, --json`       | Enable JSON output             |                         |
+| `-f, --osapi-file` | Path to config file            | `/etc/osapi/osapi.yaml` |
+| `--url`            | URL the client will connect to | `http://0.0.0.0:8080`   |
+
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

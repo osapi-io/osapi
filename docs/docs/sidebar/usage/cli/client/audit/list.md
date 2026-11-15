@@ -1,38 +1,42 @@
 # List
 
-List audit log entries, one page at a time. The list shows recent API activity:
-the user, the HTTP method, the path, the response status and the duration. It
-needs the `audit:read` permission, which the admin role has by default.
+List audit log entries.
+
+The list shows recent API activity: the user, the HTTP method, the path, the
+response status and the duration.
 
 ```bash
-$ osapi client audit list
-
-  Total: 3
-
-  Audit Entries:
-
-  ID        TIMESTAMP            USER             METHOD  PATH                        STATUS  DURATION  TRACE ID
-  550e…000  2026-02-21 10:30:00  ops@example.com  GET     /node/hostname              200     42ms      4bf92f3577b34da6…
-  661f…111  2026-02-21 10:29:55  ops@example.com  POST    /job                        201     15ms      a1b2c3d4e5f67890…
-  772a…222  2026-02-21 10:29:50  ops@example.com  GET     /node/_any/network/dns/eth0  200     8ms       f0e1d2c3b4a59687…
+osapi client audit list [flags]
 ```
 
-Use `--limit` and `--offset` for pagination:
+## Examples
 
 ```bash
-$ osapi client audit list --limit 10 --offset 20
+osapi client audit list
+osapi client audit list --limit 10 --offset 20
+osapi client audit list --json
 ```
 
-Use `--json` to get the raw JSON output:
+## Permission
 
-```bash
-$ osapi client audit list --json
-{"total_items":3,"items":[...]}
-```
+It needs the `audit:read` permission. `osapi token roles` lists the roles that
+grant it.
 
 ## Flags
 
 | Flag       | Description                         | Default |
 | ---------- | ----------------------------------- | ------- |
-| `--limit`  | Maximum number of entries to return | 20      |
-| `--offset` | Number of entries to skip           | 0       |
+| `--limit`  | Maximum number of entries to return | `20`    |
+| `--offset` | Number of entries to skip           |         |
+
+## Global flags
+
+| Flag               | Description                    | Default                 |
+| ------------------ | ------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode   |                         |
+| `-j, --json`       | Enable JSON output             |                         |
+| `-f, --osapi-file` | Path to config file            | `/etc/osapi/osapi.yaml` |
+| `--url`            | URL the client will connect to | `http://0.0.0.0:8080`   |
+
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

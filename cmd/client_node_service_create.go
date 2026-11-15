@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -31,6 +32,19 @@ import (
 var clientNodeServiceCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a systemd service unit file",
+	Long: "First, upload the content of the unit file to the Object Store. The agent\n" +
+		"writes the file to `/etc/systemd/system/{name}` and runs `systemctl\n" +
+		"daemon-reload`.",
+	Annotations: map[string]string{
+		reference.Result: "If the unit file has the same content, the command returns `changed: " +
+			"false`. If the file has different content, the agent writes it again.",
+	},
+	Example: `  osapi client node service create --target web-01 \
+    --name myapp.service --object myapp-unit
+  osapi client node service create --target _all \
+    --name myapp.service --object myapp-unit
+  osapi client node service create --target web-01 \
+    --name myapp.service --object myapp-unit --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

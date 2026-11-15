@@ -36,7 +36,8 @@ import (
 var clientJobListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List jobs",
-	Long:  `Lists jobs with their current status via the REST API.`,
+	Example: `  osapi client job list
+  osapi client job list --status completed --limit 3`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		statusFilter, _ := cmd.Flags().GetString("status")

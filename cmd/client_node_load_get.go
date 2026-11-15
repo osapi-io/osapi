@@ -32,7 +32,9 @@ import (
 var clientNodeLoadGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get load averages",
-	Long:  `Get load average information from the target node.`,
+	Example: `  osapi client node load get
+  osapi client node load get --target _all
+  osapi client node load get --target group:web`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

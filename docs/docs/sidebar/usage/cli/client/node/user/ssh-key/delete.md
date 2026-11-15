@@ -1,43 +1,43 @@
 # Delete
 
-Delete an SSH authorized key by fingerprint:
-
-```bash
-$ osapi client node user ssh-key delete --target web-01 \
-    --name deploy --fingerprint 'SHA256:abc123...'
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED
-  web-01    changed  true
-
-  1 host: 1 changed
-```
+Delete an SSH authorized key.
 
 The agent removes the key with the given SHA256 fingerprint from the
-`~/.ssh/authorized_keys` file of the user. If it does not find the fingerprint,
-the command returns `changed: false`.
-
-When you target all hosts:
+`~/.ssh/authorized_keys` file of the user.
 
 ```bash
-$ osapi client node user ssh-key delete --target _all \
-    --name deploy --fingerprint 'SHA256:abc123...'
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED
-  web-01    changed  true
-  web-02    changed  true
-
-  2 hosts: 2 changed
+osapi client node user ssh-key delete
 ```
+
+## Examples
+
+```bash
+osapi client node user ssh-key delete --target web-01 \
+  --name deploy --fingerprint 'SHA256:abc123...'
+osapi client node user ssh-key delete --target _all \
+  --name deploy --fingerprint 'SHA256:abc123...'
+```
+
+## Result
+
+If it does not find the fingerprint, the command returns `changed: false`.
 
 ## Flags
 
-| Flag            | Description                                              | Default |
-| --------------- | -------------------------------------------------------- | ------- |
-| `-T, --target`  | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
-| `--name`        | Username to remove SSH key from (required)               |         |
-| `--fingerprint` | SHA256 fingerprint of the key to remove (required)       |         |
-| `-j, --json`    | Output raw JSON response                                 |         |
+| Flag            | Description                                     | Default |
+| --------------- | ----------------------------------------------- | ------- |
+| `--fingerprint` | Fingerprint of the SSH key to remove (required) |         |
+| `--name`        | Username to remove SSH key from (required)      |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../../output.md) tells how the result is printed, and what
+`--json` gives.

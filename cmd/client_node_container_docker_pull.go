@@ -31,7 +31,10 @@ import (
 var clientContainerDockerPullCmd = &cobra.Command{
 	Use:   "pull",
 	Short: "Pull a container image",
-	Long:  `Pull a container image on the target node.`,
+	Example: `  osapi client node container docker pull --image nginx:latest
+  osapi client node container docker pull --image alpine:3.18
+  osapi client node container docker pull \
+    --image registry.example.com/myapp:v1.2.3`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

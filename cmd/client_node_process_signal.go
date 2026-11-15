@@ -33,7 +33,12 @@ import (
 var clientNodeProcessSignalCmd = &cobra.Command{
 	Use:   "signal",
 	Short: "Send a signal to a process",
-	Long:  `Send a signal to a specific process on the target node.`,
+	Example: `  osapi client node process signal --target web-01 \
+    --pid 1234 --signal TERM
+  osapi client node process signal --target _all \
+    --pid 1234 --signal HUP
+  osapi client node process signal --target web-01 \
+    --pid 1234 --signal TERM --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
@@ -91,7 +96,7 @@ func init() {
 	clientNodeProcessSignalCmd.PersistentFlags().
 		Int("pid", 0, "Process ID to signal (required)")
 	clientNodeProcessSignalCmd.PersistentFlags().
-		String("signal", "", "Signal to send, e.g. TERM, KILL, HUP (required)")
+		String("signal", "", "Signal to send: TERM, KILL, HUP, INT, USR1 or USR2 (required)")
 
 	_ = clientNodeProcessSignalCmd.MarkPersistentFlagRequired("pid")
 	_ = clientNodeProcessSignalCmd.MarkPersistentFlagRequired("signal")

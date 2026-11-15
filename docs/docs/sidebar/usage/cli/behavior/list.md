@@ -1,18 +1,26 @@
 # List
 
-List every behavior this binary has, with its methods. An internal behavior, one
-that exists only to be built on by others, is marked `(internal)`.
+List the behaviors this binary has.
+
+An internal behavior is marked `(internal)`. Only other behaviors use it.
 
 ```bash
-$ osapi behavior list
-
-Behaviors (2):
-  NAME         GROUP  METHODS                            DESCRIPTION
-  managedfile         get, update, delete                Files osapi writes on a host and keeps a record of (internal)
-  sysctl              list, get, create, update, delete  Kernel parameters, written to sysctl.d files and applied
+osapi behavior list
 ```
+
+## Examples
 
 ```bash
-$ osapi behavior list --json
-[{"name":"managedfile","doc":"Files osapi writes on a host and keeps a record of","methods":["get","update","delete"],"internal":true},{"name":"sysctl","doc":"Kernel parameters, written to sysctl.d files and applied","methods":["list","get","create","update","delete"]}]
+osapi behavior list
+osapi behavior list --json
 ```
+
+## Global flags
+
+| Flag               | Description                  | Default                 |
+| ------------------ | ---------------------------- | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode |                         |
+| `-j, --json`       | Enable JSON output           |                         |
+| `-f, --osapi-file` | Path to config file          | `/etc/osapi/osapi.yaml` |
+
+[Output](../output.md) tells how the result is printed, and what `--json` gives.

@@ -32,7 +32,9 @@ import (
 var clientContainerDockerInspectCmd = &cobra.Command{
 	Use:   "inspect",
 	Short: "Inspect a container",
-	Long:  `Retrieve detailed information about a specific container on the target node.`,
+	Example: `  osapi client node container docker inspect --id a1b2c3d4e5f6
+  osapi client node container docker inspect --id my-nginx
+  osapi client node container docker inspect --id my-nginx --target web-01`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

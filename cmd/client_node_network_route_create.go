@@ -28,6 +28,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -35,11 +36,24 @@ import (
 var clientNodeNetworkRouteCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create routes for an interface",
-	Long: `Create network routes for an interface on the target node.
-
-Route format: TO:VIA or TO:VIA:METRIC
-  --route 10.1.0.0/16:10.0.0.1
-  --route 10.2.0.0/16:10.0.0.1:100`,
+	Long: "Give each route as `TO:VIA` or `TO:VIA:METRIC`. `TO` is the destination in\n" +
+		"CIDR notation. `VIA` is the IP address of the gateway. `METRIC` is the\n" +
+		"priority of the route, and a lower value has priority.",
+	Annotations: map[string]string{
+		reference.Result: "If osapi already manages a route configuration for that interface, the " +
+			"command returns `changed: false` and does not change the file. To change " +
+			"it, use `update`. The command fails if a route is a default route.",
+	},
+	Example: `  osapi client node network route create \
+    --target web-01 --interface eth0 \
+    --route 10.0.0.0/8:192.168.1.1
+  osapi client node network route create \
+    --target web-01 --interface eth0 \
+    --route 10.0.0.0/8:192.168.1.1 \
+    --route 172.16.0.0/12:192.168.1.1:100
+  osapi client node network route create \
+    --target _all --interface eth0 \
+    --route 10.0.0.0/8:192.168.1.1`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -1,66 +1,47 @@
 # Update
 
-Update a sysctl parameter on a target host. The agent writes the value again to
-`/etc/sysctl.d/osapi-{key}.conf` and applies it immediately with `sysctl -p`.
-The command fails if osapi does not manage the key. Use `create` first:
+Update a sysctl parameter.
+
+The agent writes the value again to `/etc/sysctl.d/osapi-{key}.conf` and applies
+it immediately with `sysctl -p`.
 
 ```bash
-$ osapi client node sysctl update --target web-01 \
-    --key net.ipv4.ip_forward --value 0
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   KEY                   CHANGED
-  web-01    changed  net.ipv4.ip_forward   true
-
-  1 host: 1 changed
+osapi client node sysctl update
 ```
 
-If the parameter already has the requested value, the command returns
-`changed: false` and does not write the file again:
+## Examples
 
 ```bash
-$ osapi client node sysctl update --target web-01 \
-    --key net.ipv4.ip_forward --value 0
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  KEY                   CHANGED
-  web-01    ok      net.ipv4.ip_forward   false
-
-  1 host: 1 ok
+osapi client node sysctl update --target web-01 \
+  --key net.ipv4.ip_forward --value 0
+osapi client node sysctl update --target _all \
+  --key vm.swappiness --value 20
+osapi client node sysctl update --target web-01 \
+  --key vm.swappiness --value 20 --json
 ```
 
-Broadcast to all hosts at once:
+## Result
 
-```bash
-$ osapi client node sysctl update --target _all \
-    --key vm.swappiness --value 20
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   KEY            CHANGED
-  web-01    changed  vm.swappiness  true
-  web-02    changed  vm.swappiness  true
-
-  2 hosts: 2 changed
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node sysctl update --target web-01 \
-    --key vm.swappiness --value 20 --json
-{"results":[{"hostname":"web-01","key":"vm.swappiness","changed":true,"status":"ok"}],"job_id":"..."}
-```
+The command is the same as `create`. It sets the parameter, and osapi manages
+it, also when osapi did not manage it before. If the file and the kernel have
+the requested value, the command returns `changed: false`.
 
 ## Flags
 
-| Flag           | Description                                              | Default  |
-| -------------- | -------------------------------------------------------- | -------- |
-| `--key`        | Sysctl parameter key to update                           | required |
-| `--value`      | New value for the parameter                              | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`   | Output raw JSON response                                 |          |
+| Flag      | Description                       | Default |
+| --------- | --------------------------------- | ------- |
+| `--key`   | Sysctl parameter key (required)   |         |
+| `--value` | Sysctl parameter value (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

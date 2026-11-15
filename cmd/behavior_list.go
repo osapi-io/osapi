@@ -44,6 +44,7 @@ type behaviorSummary struct {
 var behaviorListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List the behaviors this binary has",
+	Long:  "An internal behavior is marked `(internal)`. Only other behaviors use it.",
 	Example: `  osapi behavior list
   osapi behavior list --json`,
 	Args: cobra.NoArgs,

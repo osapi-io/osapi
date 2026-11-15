@@ -27,7 +27,7 @@ import (
 // clientNodeNetworkDNSCmd represents the clientNodeNetworkDNS command.
 var clientNodeNetworkDNSCmd = &cobra.Command{
 	Use:   "dns",
-	Short: "The dns subcommand",
+	Short: "Get and set the DNS servers of target hosts",
 }
 
 func init() {

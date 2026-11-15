@@ -27,7 +27,7 @@ import (
 // clientNATSCmd represents the nats parent command under client.
 var clientNATSCmd = &cobra.Command{
 	Use:   "nats",
-	Short: "NATS server commands",
+	Short: "Read the health of the NATS server",
 }
 
 func init() {

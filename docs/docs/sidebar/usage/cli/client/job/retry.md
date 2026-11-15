@@ -1,20 +1,35 @@
 # Retry
 
-Retry a failed or stuck job:
+Retry a failed or stuck job.
+
+The new job has the same operation as the old job. The original job stays in the
+history. Its timeline gets a `retried` event that links to the new job.
 
 ```bash
-$ osapi client job retry --id 550e8400-e29b-41d4-a716-446655440000
+osapi client job retry
+```
 
-  Job ID: 660e8400-e29b-41d4-a716-446655440000    Status: created
+## Examples
+
+```bash
+osapi client job retry --id 550e8400-e29b-41d4-a716-446655440000
 ```
 
 ## Flags
 
-| Flag       | Description             | Default  |
-| ---------- | ----------------------- | -------- |
-| `--id`     | Job ID to retry         | required |
-| `--target` | Override target routing | `_any`   |
+| Flag           | Description                                            | Default |
+| -------------- | ------------------------------------------------------ | ------- |
+| `--id`         | Job ID to retry (required)                             |         |
+| `-T, --target` | Target: _all, _any, hostname, or label (group:web.dev) | `_any`  |
 
-The command makes a new job with the same operation data as the original job.
-The original job stays in the history. Its timeline gets a "retried" event that
-links to the new job.
+## Global flags
+
+| Flag               | Description                    | Default                 |
+| ------------------ | ------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode   |                         |
+| `-j, --json`       | Enable JSON output             |                         |
+| `-f, --osapi-file` | Path to config file            | `/etc/osapi/osapi.yaml` |
+| `--url`            | URL the client will connect to | `http://0.0.0.0:8080`   |
+
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -120,8 +121,11 @@ func ApplyTheme(
 	cobra.AddTemplateFunc("mute", func(s string) string { return Mute(out, s) })
 	cobra.AddTemplateFunc("flags", func(s string) string { return Flags(out, s) })
 	cobra.AddTemplateFunc("runnable", runnable)
+	cobra.AddTemplateFunc("plain", Plain)
+	cobra.AddTemplateFunc("sentence", sentence)
 
 	root.SetUsageTemplate(usageTemplate)
+	root.SetHelpTemplate(helpTemplate)
 	root.SilenceUsage = true
 	root.SilenceErrors = true
 
@@ -149,6 +153,70 @@ func ApplyTheme(
 		}
 		defaultHelp(c, args)
 	})
+}
+
+// helpTemplate is cobra's default help template, but it prints Short and then
+// Long, because Long continues Short. Both pass through Plain, so the docs
+// site and a terminal read the same text.
+const helpTemplate = `{{with .Short}}{{. | sentence}}
+
+{{end}}{{with .Long}}{{. | plain | trimTrailingWhitespaces}}
+
+{{end}}{{if or .Runnable .HasSubCommands}}{{.UsageString}}{{end}}`
+
+// mdLink is a markdown link, [text](target).
+var mdLink = regexp.MustCompile(`\[([^\]]+)\]\([^)]+\)`)
+
+// helpWidth is the width that Plain wraps a paragraph to.
+const helpWidth = 78
+
+// Plain makes a description from the docs site fit a terminal. A link becomes
+// its text, the marks of code and bold go, and each paragraph wraps again to
+// helpWidth.
+func Plain(
+	s string,
+) string {
+	s = mdLink.ReplaceAllString(s, "$1")
+	s = strings.NewReplacer("**", "", "`", "").Replace(s)
+	s = strings.TrimSpace(s)
+
+	paragraphs := strings.Split(s, "\n\n")
+	for i, p := range paragraphs {
+		paragraphs[i] = wrap(strings.Fields(p), helpWidth)
+	}
+
+	return strings.Join(paragraphs, "\n\n")
+}
+
+// sentence is a Short as one sentence: plain, with one period at its end.
+func sentence(
+	s string,
+) string {
+	return strings.TrimSuffix(Plain(s), ".") + "."
+}
+
+// wrap joins words into lines no longer than width, except a word that is
+// longer by itself.
+func wrap(
+	words []string,
+	width int,
+) string {
+	var b strings.Builder
+	line := 0
+	for _, w := range words {
+		if line > 0 && line+1+len(w) > width {
+			b.WriteString("\n")
+			line = 0
+		}
+		if line > 0 {
+			b.WriteString(" ")
+			line++
+		}
+		b.WriteString(w)
+		line += len(w)
+	}
+
+	return b.String()
 }
 
 // groupAnnotation marks a command GuardGroups gave a run function only to

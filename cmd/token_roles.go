@@ -45,10 +45,13 @@ type roleDescription struct {
 var tokenRolesCmd = &cobra.Command{
 	Use:   "roles",
 	Short: "List the roles and the permissions each grants",
-	Long: `Lists the built-in roles, admin, write and read, and any custom role in
-the config, with every permission each grants. A behavior's permissions,
-<name>:read and <name>:write, are included: admin and write grant both, read
-grants read. Works without a config file, showing the built-in roles only.`,
+	Long: "The list has the permissions of each behavior, so it is correct for the\n" +
+		"binary that you run. A custom role from the config's\n" +
+		"`controller.api.security.roles` gets a column of its own. Without a config\n" +
+		"file it shows the built-in roles only. A behavior's permissions are\n" +
+		"`<name>:read` and `<name>:write`, or the group's when it is nested under\n" +
+		"one. `admin` and `write` grant both, and `read` grants the read permission.\n" +
+		"Use this list, not a table in the docs.",
 	Example: `  osapi token roles
   osapi token roles --json`,
 	Args: cobra.NoArgs,

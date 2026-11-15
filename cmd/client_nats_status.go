@@ -32,7 +32,8 @@ import (
 var clientNATSStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "NATS server component health",
-	Long:  `Show health status for all registered NATS servers.`,
+	Example: `  osapi client nats status
+  osapi client nats status --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 

@@ -33,6 +33,8 @@ import (
 var clientNodeGroupGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get a group by name",
+	Example: `  osapi client node group get --target web-01 --name docker
+  osapi client node group get --target web-01 --name docker --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

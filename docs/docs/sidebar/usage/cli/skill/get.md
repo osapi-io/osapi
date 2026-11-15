@@ -1,17 +1,31 @@
 # Get
 
-Print the `SKILL.md` of a skill, or one of its other files:
+Print a skill, or one of its reference files.
 
 ```bash
-$ osapi skill get --name build-a-behavior
-$ osapi skill get --name build-a-behavior --reference references/services.md
+osapi skill get [flags]
+```
+
+## Examples
+
+```bash
+osapi skill get --name build-a-behavior
+osapi skill get --name build-a-behavior --reference references/services.md
 ```
 
 ## Flags
 
-| Flag          | Description                                              |
-| ------------- | -------------------------------------------------------- |
-| `--name`      | The name of the skill. Necessary.                        |
-| `--reference` | A reference file of the skill, relative to its directory |
+| Flag          | Description                                              | Default |
+| ------------- | -------------------------------------------------------- | ------- |
+| `--name`      | Name of the skill (required)                             |         |
+| `--reference` | A reference file of the skill, relative to its directory |         |
 
-With `--json`, it prints `name`, `reference` and `content`.
+## Global flags
+
+| Flag               | Description                  | Default                 |
+| ------------------ | ---------------------------- | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode |                         |
+| `-j, --json`       | Enable JSON output           |                         |
+| `-f, --osapi-file` | Path to config file          | `/etc/osapi/osapi.yaml` |
+
+[Output](../output.md) tells how the result is printed, and what `--json` gives.

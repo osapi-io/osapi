@@ -1,27 +1,33 @@
 # Get
 
-Get a specific user account by name:
+Get a user account by name.
 
 ```bash
-$ osapi client node user get --target web-01 --name deploy
-
-  HOSTNAME  STATUS  NAME     UID   HOME            SHELL      GROUPS
-  web-01    ok      deploy   1001  /home/deploy    /bin/bash   sudo,docker
-
-  1 host: 1 ok
+osapi client node user get
 ```
 
-## JSON Output
+## Examples
 
 ```bash
-$ osapi client node user get --target web-01 --name deploy --json
-{"results":[{"hostname":"web-01","users":[{"name":"deploy","uid":1001,"gid":1001,"home":"/home/deploy","shell":"/bin/bash","groups":["sudo","docker"],"locked":false}],"status":"ok"}],"job_id":"..."}
+osapi client node user get --target web-01 --name deploy
+osapi client node user get --target web-01 --name deploy --json
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
-| `--name`       | Username to look up (required)                           |         |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| Flag     | Description                         | Default |
+| -------- | ----------------------------------- | ------- |
+| `--name` | Name of the user account (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

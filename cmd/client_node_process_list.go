@@ -32,7 +32,9 @@ import (
 var clientNodeProcessListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List running processes",
-	Long:  `List all running processes on the target node.`,
+	Example: `  osapi client node process list --target web-01
+  osapi client node process list --target _all
+  osapi client node process list --target web-01 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

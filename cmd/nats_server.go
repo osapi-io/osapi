@@ -30,7 +30,7 @@ import (
 // natsServerCmd represents the natsServer command.
 var natsServerCmd = &cobra.Command{
 	Use:   "server",
-	Short: "The server subcommand",
+	Short: "Run the embedded NATS server",
 	PersistentPreRun: func(_ *cobra.Command, _ []string) {
 		logger.Debug(
 			"nats server configuration",

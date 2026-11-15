@@ -32,7 +32,9 @@ import (
 var clientNodeDiskGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get disk usage",
-	Long:  `Get disk usage information from the target node.`,
+	Example: `  osapi client node disk get
+  osapi client node disk get --target _all
+  osapi client node disk get --target group:web`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

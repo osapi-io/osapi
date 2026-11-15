@@ -34,6 +34,18 @@ import (
 var clientNodeCommandShellCmd = &cobra.Command{
 	Use:   "shell",
 	Short: "Execute a shell command",
+	Long: "You can use shell features, for example pipes, redirects and variable\n" +
+		"expansion. The table view shortens long output. Use `--json` to get the full\n" +
+		"response. Use `--stdout` or `--stderr` to print only that output of the\n" +
+		"remote command. The exit code of the CLI is the exit code of the remote\n" +
+		"command. Thus you can use it in scripts.",
+	Example: `  osapi client node command shell --command "ls -la /tmp | grep log"
+  osapi client node command shell \
+    --command "df -h / | tail -1 | awk '{print \$5}'" \
+    --timeout 10
+  osapi client node command shell \
+    --command "cat *.conf | wc -l" \
+    --cwd /etc`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

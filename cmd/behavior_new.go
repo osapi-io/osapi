@@ -39,18 +39,14 @@ type newResult struct {
 var behaviorNewCmd = &cobra.Command{
 	Use:   "new",
 	Short: "Write a new behavior's standard layout in an osapi checkout",
-	Long: `Writes internal/behaviors/<name>/ with the standard files, each with its test
-where it has code: the definition, its settings, the input and output types,
-the methods, the provider interface and its mocks, and a Debian provider that
-keeps a value in a file. It registers the behavior in internal/behaviors/all.
-Writes nothing when the name is taken.
-
-After go generate writes the provider's mock and the behavior's gen/
-directory (its API handlers, CLI commands, spec and their tests), the result
-builds, validates and passes every test before you change anything.
-Change the types, the provider and the examples to what the behavior manages;
-each example's declared effects are the provider's tests.
-go doc ./internal/behavior lists every option; internal/behaviors/sysctl is the reference.`,
+	Long: "Before you change anything, the result builds, validates and passes every\n" +
+		"test. Then change the types, the provider and the examples to what the\n" +
+		"behavior manages. Writes nothing when the name is taken. A behavior that\n" +
+		"belongs to a group, such as `network`, is nested under it: its routes are\n" +
+		"`/api/node/{hostname}/network/<name>`, its commands `osapi client node\n" +
+		"network <name>`, and its directory `internal/behaviors/network/<name>/`.\n" +
+		"[Your first behavior](../../../development/your-first-behavior.md) walks\n" +
+		"through the rest.",
 	Example: `  osapi behavior new --name motd --description "The message shown at login"
   osapi behavior new --name motd --description "The message shown at login" --root ~/src/osapi
   osapi behavior new --group network --name neighbors --description "The host's ARP neighbors"`,

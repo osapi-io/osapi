@@ -1,64 +1,39 @@
 # Reboot
 
-Schedule a reboot on the target host. The agent runs `shutdown -r` with the
-configured delay. When `--delay` is 0, the host reboots immediately:
+Reboot the target host.
+
+The agent runs `shutdown -r` with the configured delay. When `--delay` is 0, the
+host reboots immediately.
 
 ```bash
-$ osapi client node power reboot --target web-01
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED  ACTION  DELAY
-  web-01    changed  true     reboot  0
-
-  1 host: 1 changed
+osapi client node power reboot
 ```
 
-Reboot with a 60-second delay and a broadcast message:
+## Examples
 
 ```bash
-$ osapi client node power reboot --target web-01 \
-    --delay 60 --message "Scheduled maintenance reboot"
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED  ACTION  DELAY
-  web-01    changed  true     reboot  60
-
-  1 host: 1 changed
-```
-
-Broadcast reboot to all hosts at once:
-
-```bash
-$ osapi client node power reboot --target _all --delay 30
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   CHANGED  ACTION  DELAY
-  web-01    changed  true     reboot  30
-  mac-01    skip
-
-  2 hosts: 1 changed, 1 skipped
-
-  Details:
-  mac-01    unsupported platform
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node power reboot --target web-01 --json
-{"results":[{"hostname":"web-01","action":"reboot","delay":0,"changed":true,"status":"ok"}],"job_id":"..."}
+osapi client node power reboot --target web-01
+osapi client node power reboot --target web-01 \
+  --delay 60 --message "Scheduled maintenance reboot"
+osapi client node power reboot --target _all --delay 30
 ```
 
 ## Flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `--delay`      | Seconds to wait before rebooting                         | `0`     |
-| `--message`    | Optional message to broadcast before reboot              |         |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| Flag        | Description                                  | Default |
+| ----------- | -------------------------------------------- | ------- |
+| `--delay`   | Seconds to wait before rebooting (default 0) |         |
+| `--message` | Optional message to broadcast before reboot  |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

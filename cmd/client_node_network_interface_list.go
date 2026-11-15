@@ -30,7 +30,9 @@ import (
 var clientNodeNetworkInterfaceListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List network interfaces",
-	Long:  `List all network interfaces on the target node.`,
+	Example: `  osapi client node network interface list --target web-01
+  osapi client node network interface list --target _all
+  osapi client node network interface list --target web-01 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

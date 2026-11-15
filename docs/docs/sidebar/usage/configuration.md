@@ -111,6 +111,11 @@ account signs, and the seed of the user. The JWT has the permissions and the
 expiry of the user. Thus, to add a host, you give it a credential. You do not
 change the server.
 
+`osapi nats setup` connects with the credentials of the controller, and makes
+the streams and buckets. Thus the account of those credentials must have
+JetStream on, and the user must have permission to make streams and key-value
+buckets. The agents need only their own credentials.
+
 ```yaml
 agent:
   nats:

@@ -33,6 +33,8 @@ import (
 var clientNodeUserListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all user accounts",
+	Example: `  osapi client node user list --target web-01
+  osapi client node user list --target web-01 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -22,6 +22,7 @@ package authtoken
 
 import (
 	"log/slog"
+	"sort"
 )
 
 // RoleHierarchy defines the relationship between roles and their associated scopes.
@@ -55,5 +56,7 @@ func GenerateAllowedRoles(
 	for role := range roleHierarchy {
 		roles = append(roles, role)
 	}
+	sort.Strings(roles)
+
 	return roles
 }

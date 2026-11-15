@@ -1,46 +1,41 @@
 # Upload
 
-Upload a local file to the osapi Object Store, to deploy it later:
-
-```bash
-$ osapi client file upload --name app.conf --file /tmp/app.conf
-
-  Name:         app.conf
-  SHA256:       a1b2c3d4e5f6...
-  Size:         1234
-  Changed:      true
-  Content-Type: raw
-```
-
-Upload a template file:
-
-```bash
-$ osapi client file upload --name app.conf.tmpl --file /tmp/app.conf.tmpl \
-    --content-type template
-```
+Upload a file to the Object Store.
 
 An upload of the same content changes nothing (`Changed: false`). If the file
 exists with different content, the command rejects the upload with 409 Conflict.
-Use `--force` to replace the file:
+Use `--force` to replace the file.
 
 ```bash
-$ osapi client file upload --name app.conf --file /tmp/app.conf --force
+osapi client file upload
 ```
 
-## JSON Output
-
-Use `--json` to get the full API response:
+## Examples
 
 ```bash
-$ osapi client file upload --name app.conf --file /tmp/app.conf --json
+osapi client file upload --name app.conf --file /tmp/app.conf
+osapi client file upload --name app.conf.tmpl --file /tmp/app.conf.tmpl \
+  --content-type template
+osapi client file upload --name app.conf --file /tmp/app.conf --force
 ```
 
 ## Flags
 
-| Flag             | Description                                          | Default |
-| ---------------- | ---------------------------------------------------- | ------- |
-| `--name`         | Name for the file in the Object Store (**required**) |         |
-| `--file`         | Path to the local file to upload (**required**)      |         |
-| `--content-type` | File type: `raw` or `template`                       | `raw`   |
-| `--force`        | Force upload even if file exists with different data |         |
-| `-j, --json`     | Output raw JSON response                             |         |
+| Flag             | Description                                                     | Default |
+| ---------------- | --------------------------------------------------------------- | ------- |
+| `--content-type` | File type: raw or template (default raw)                        | `raw`   |
+| `--file`         | Path to the local file to upload (required)                     |         |
+| `--force`        | Force upload even if file already exists with different content |         |
+| `--name`         | Name for the file in the Object Store (required)                |         |
+
+## Global flags
+
+| Flag               | Description                    | Default                 |
+| ------------------ | ------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode   |                         |
+| `-j, --json`       | Enable JSON output             |                         |
+| `-f, --osapi-file` | Path to config file            | `/etc/osapi/osapi.yaml` |
+| `--url`            | URL the client will connect to | `http://0.0.0.0:8080`   |
+
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

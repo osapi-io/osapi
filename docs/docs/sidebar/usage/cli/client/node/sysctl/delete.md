@@ -1,64 +1,45 @@
 # Delete
 
-Delete a sysctl parameter: the agent removes its drop-in file from
-`/etc/sysctl.d/`. The running kernel keeps the value. It stays until the next
-reboot, or until you set a new value:
+Delete a sysctl parameter.
+
+The agent removes its drop-in file from `/etc/sysctl.d/`. The running kernel
+keeps the value until the next reboot, or until you set a new value.
 
 ```bash
-$ osapi client node sysctl delete --target web-01 \
-    --key net.ipv4.ip_forward
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   KEY                   CHANGED
-  web-01    changed  net.ipv4.ip_forward   true
-
-  1 host: 1 changed
+osapi client node sysctl delete
 ```
 
-If the parameter does not exist, the command returns `changed: false`:
+## Examples
 
 ```bash
-$ osapi client node sysctl delete --target web-01 \
-    --key net.ipv4.ip_forward
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  KEY                   CHANGED
-  web-01    ok      net.ipv4.ip_forward   false
-
-  1 host: 1 ok
+osapi client node sysctl delete --target web-01 \
+  --key net.ipv4.ip_forward
+osapi client node sysctl delete --target _all \
+  --key vm.swappiness
+osapi client node sysctl delete --target web-01 \
+  --key net.ipv4.ip_forward --json
 ```
 
-Broadcast to all hosts:
+## Result
 
-```bash
-$ osapi client node sysctl delete --target _all \
-    --key vm.swappiness
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   KEY            CHANGED
-  web-01    changed  vm.swappiness  true
-  web-02    changed  vm.swappiness  true
-
-  2 hosts: 2 changed
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node sysctl delete --target web-01 \
-    --key net.ipv4.ip_forward --json
-{"results":[{"hostname":"web-01","key":"net.ipv4.ip_forward","changed":true,"status":"ok"}],"job_id":"..."}
-```
+If osapi does not manage the parameter, the command returns `changed: false`.
+The agent does not remove a file that osapi did not write.
 
 ## Flags
 
-| Flag           | Description                                              | Default  |
-| -------------- | -------------------------------------------------------- | -------- |
-| `--key`        | Sysctl parameter key to delete                           | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`   | Output raw JSON response                                 |          |
+| Flag    | Description                               | Default |
+| ------- | ----------------------------------------- | ------- |
+| `--key` | Sysctl parameter key to delete (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

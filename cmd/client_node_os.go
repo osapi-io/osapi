@@ -27,7 +27,7 @@ import (
 // clientNodeOSCmd represents the clientNodeOS command.
 var clientNodeOSCmd = &cobra.Command{
 	Use:   "os",
-	Short: "Manage operating system information",
+	Short: "Get the operating system of target hosts",
 }
 
 func init() {

@@ -1,67 +1,42 @@
 # Restart
 
-Restart a systemd service on a target host. The command always returns
-`changed: true`, because the agent restarts the service in all states:
+Restart a systemd service.
 
 ```bash
-$ osapi client node service restart --target web-01 \
-    --name nginx.service
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME             CHANGED
-  web-01    changed  nginx.service    true
-
-  1 host: 1 changed
+osapi client node service restart
 ```
 
-Broadcast restart to all hosts:
+## Examples
 
 ```bash
-$ osapi client node service restart --target _all \
-    --name nginx.service
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME             CHANGED
-  web-01    changed  nginx.service    true
-  web-02    changed  nginx.service    true
-
-  2 hosts: 2 changed
+osapi client node service restart --target web-01 \
+  --name nginx.service
+osapi client node service restart --target _all \
+  --name nginx.service
+osapi client node service restart --target web-01 \
+  --name nginx.service --json
 ```
 
-When some hosts are skipped, for example macOS agents:
+## Result
 
-```bash
-$ osapi client node service restart --target _all \
-    --name nginx.service
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME             CHANGED
-  web-01    changed  nginx.service    true
-  mac-01    skip
-
-  2 hosts: 1 changed, 1 skipped
-
-  Details:
-  mac-01    unsupported platform
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node service restart --target web-01 \
-    --name nginx.service --json
-{"results":[{"hostname":"web-01","name":"nginx.service","changed":true,"status":"ok"}],"job_id":"..."}
-```
+The command always returns `changed: true`, because the agent restarts the
+service in all states.
 
 ## Flags
 
-| Flag           | Description                                              | Default  |
-| -------------- | -------------------------------------------------------- | -------- |
-| `--name`       | Service name to restart                                  | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`   | Output raw JSON response                                 |          |
+| Flag     | Description                        | Default |
+| -------- | ---------------------------------- | ------- |
+| `--name` | Service name to restart (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

@@ -24,12 +24,23 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientNodeServiceStartCmd represents the service start command.
 var clientNodeServiceStartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start a systemd service",
+	Annotations: map[string]string{
+		reference.Result: "If the service was not running, the command returns `changed: true`. If\n" +
+			"the service already runs, it returns `changed: false`.",
+	},
+	Example: `  osapi client node service start --target web-01 \
+    --name nginx.service
+  osapi client node service start --target _all \
+    --name nginx.service
+  osapi client node service start --target web-01 \
+    --name nginx.service --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

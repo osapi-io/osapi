@@ -32,7 +32,12 @@ import (
 var clientNodeNetworkRouteGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get routes for an interface",
-	Long:  `Get network routes for a specific interface on the target node.`,
+	Example: `  osapi client node network route get \
+    --target web-01 --interface eth0
+  osapi client node network route get \
+    --target _all --interface eth0
+  osapi client node network route get \
+    --target web-01 --interface eth0 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

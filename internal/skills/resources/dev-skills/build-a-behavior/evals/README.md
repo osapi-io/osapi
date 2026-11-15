@@ -12,7 +12,7 @@ CLI, as in each checkout. The session does not see the checks. When it stops,
 | It is registered under its name               | `go run . behavior get --name <name> --json`       |
 | Its own tests pass with 100% coverage         | `go test -cover ./internal/behaviors/<name>/`      |
 | Every behavior is valid, mounted and attached | `go test ./internal/behaviors/all/`                |
-| Generated files are current                   | `go generate` changes nothing                      |
+| Generated files are current                   | `go generate` and `just cli-docs-generate` change nothing |
 | Lint is clean                                 | golangci-lint on the behavior's package            |
 | It touched nothing it should not              | only its directory, its import and generated files |
 | Per eval: sudo declared, refusals declared    | a grep of the behavior's package                   |

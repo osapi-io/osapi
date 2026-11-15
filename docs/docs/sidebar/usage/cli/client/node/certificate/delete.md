@@ -1,64 +1,44 @@
 # Delete
 
-Delete a custom CA certificate from a target host. The agent removes the
-certificate file from `/usr/local/share/ca-certificates/`. Then it runs
-`update-ca-certificates` to make the trust store again:
+Remove a custom CA certificate.
+
+The agent removes the certificate file from `/usr/local/share/ca-certificates/`.
+Then it runs `update-ca-certificates` to make the trust store again.
 
 ```bash
-$ osapi client node certificate delete --target web-01 \
-    --name internal-ca
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME         CHANGED
-  web-01    changed  internal-ca  true
-
-  1 host: 1 changed
+osapi client node certificate delete
 ```
 
-If the certificate does not exist, the command returns `changed: false`:
+## Examples
 
 ```bash
-$ osapi client node certificate delete --target web-01 \
-    --name internal-ca
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  NAME         CHANGED
-  web-01    ok      internal-ca  false
-
-  1 host: 1 ok
+osapi client node certificate delete --target web-01 \
+  --name internal-ca
+osapi client node certificate delete --target _all \
+  --name internal-ca
+osapi client node certificate delete --target web-01 \
+  --name internal-ca --json
 ```
 
-Broadcast to all hosts:
+## Result
 
-```bash
-$ osapi client node certificate delete --target _all \
-    --name internal-ca
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME         CHANGED
-  web-01    changed  internal-ca  true
-  web-02    changed  internal-ca  true
-
-  2 hosts: 2 changed
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node certificate delete --target web-01 \
-    --name internal-ca --json
-{"results":[{"hostname":"web-01","name":"internal-ca","changed":true,"status":"ok"}],"job_id":"..."}
-```
+If the certificate does not exist, the command returns `changed: false`.
 
 ## Flags
 
-| Flag           | Description                                              | Default  |
-| -------------- | -------------------------------------------------------- | -------- |
-| `--name`       | Certificate name to delete                               | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`   | Output raw JSON response                                 |          |
+| Flag     | Description                           | Default |
+| -------- | ------------------------------------- | ------- |
+| `--name` | Certificate name to delete (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

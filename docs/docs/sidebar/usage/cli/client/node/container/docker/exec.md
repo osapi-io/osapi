@@ -1,52 +1,44 @@
 # Exec
 
-Execute a command inside a running container on the target node:
+Execute a command in a container.
 
 ```bash
-$ osapi client node container docker exec --id my-nginx --command "ls,-la,/"
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  EXIT  STDOUT
-  server1   ok      0     total 80...
-
-  1 host: 1 ok
+osapi client node container docker exec
 ```
 
-Execute with environment variables and a working directory:
+## Examples
 
 ```bash
-$ osapi client node container docker exec \
-    --id my-app \
-    --command "python,-c,import os; print(os.environ['MY_VAR'])" \
-    --env "MY_VAR=hello" \
-    --working-dir /app
-```
-
-Target a specific host:
-
-```bash
-$ osapi client node container docker exec \
-    --id my-nginx \
-    --command "nginx,-t" \
-    --target web-01
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node container docker exec --id my-nginx --command "ls" --json
+osapi client node container docker exec --id my-nginx --command "ls,-la,/"
+osapi client node container docker exec \
+  --id my-app \
+  --command "python,-c,import os; print(os.environ['MY_VAR'])" \
+  --env "MY_VAR=hello" \
+  --working-dir /app
+osapi client node container docker exec \
+  --id my-nginx \
+  --command "nginx,-t" \
+  --target web-01
 ```
 
 ## Flags
 
-| Flag            | Description                                              | Default |
-| --------------- | -------------------------------------------------------- | ------- |
-| `--id`          | Container ID or name to exec in (**required**)           |         |
-| `--command`     | Command to execute, comma-separated (**required**)       |         |
-| `--env`         | Environment variable in `KEY=VALUE` format (repeatable)  | `[]`    |
-| `--working-dir` | Working directory inside the container                   |         |
-| `-T, --target`  | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
-| `-j, --json`    | Output raw JSON response                                 |         |
+| Flag            | Description                                           | Default |
+| --------------- | ----------------------------------------------------- | ------- |
+| `--command`     | Command to execute (required, comma-separated)        |         |
+| `--env`         | Environment variable in KEY=VALUE format (repeatable) |         |
+| `--id`          | Container ID to exec in (required)                    |         |
+| `--working-dir` | Working directory inside the container                |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../../output.md) tells how the result is printed, and what
+`--json` gives.

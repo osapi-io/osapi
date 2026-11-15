@@ -24,12 +24,23 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientNodeServiceRestartCmd represents the service restart command.
 var clientNodeServiceRestartCmd = &cobra.Command{
 	Use:   "restart",
 	Short: "Restart a systemd service",
+	Annotations: map[string]string{
+		reference.Result: "The command always returns `changed: true`, because the agent restarts the\n" +
+			"service in all states.",
+	},
+	Example: `  osapi client node service restart --target web-01 \
+    --name nginx.service
+  osapi client node service restart --target _all \
+    --name nginx.service
+  osapi client node service restart --target web-01 \
+    --name nginx.service --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

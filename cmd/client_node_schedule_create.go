@@ -31,6 +31,15 @@ import (
 var clientNodeScheduleCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a scheduled entry",
+	Long: "If you do not give `--user`, the value is `root`. If the object is a Go\n" +
+		"template, use `--content-type template`. Then the agent renders it with its\n" +
+		"facts before it writes the file to disk. Give the values of the template\n" +
+		"with `--var key=value`, one `--var` for each variable.",
+	Example: `  osapi client node schedule create --target web-01 \
+    --name backup-daily \
+    --schedule "0 2 * * *" \
+    --object backup-script \
+    --user root`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

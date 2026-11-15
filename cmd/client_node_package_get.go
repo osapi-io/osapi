@@ -30,6 +30,9 @@ import (
 var clientNodePackageGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get a package by name",
+	Example: `  osapi client node package get --target web-01 --name nginx
+  osapi client node package get --target _all --name nginx
+  osapi client node package get --target web-01 --name nginx --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

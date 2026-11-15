@@ -27,7 +27,7 @@ import (
 // clientFileCmd represents the clientFile command.
 var clientFileCmd = &cobra.Command{
 	Use:   "file",
-	Short: "The file subcommand",
+	Short: "Manage the files in the Object Store",
 }
 
 func init() {

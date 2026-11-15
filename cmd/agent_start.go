@@ -37,9 +37,10 @@ import (
 var agentStartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start the agent",
-	Long: `Start the agent process.
-It processes jobs as they become available.
-`,
+	Long: "The agent connects to NATS and subscribes to the job streams. It processes\n" +
+		"each job when the job arrives. It uses a provider for its platform to run\n" +
+		"each operation, for example node status, DNS queries and ping.",
+	Example: `  osapi agent start`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 

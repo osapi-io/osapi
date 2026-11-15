@@ -1,67 +1,46 @@
 # Update
 
-Update a custom CA certificate on a target host with a new Object Store
-reference. The agent deploys the PEM file again and runs
-`update-ca-certificates` to make the trust store again. The command fails if the
-certificate does not exist. Use `create` first:
+Update a custom CA certificate.
+
+The agent deploys the PEM file again and runs `update-ca-certificates` to make
+the trust store again.
 
 ```bash
-$ osapi client node certificate update --target web-01 \
-    --name internal-ca --object internal-ca-v2
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME         CHANGED
-  web-01    changed  internal-ca  true
-
-  1 host: 1 changed
+osapi client node certificate update
 ```
 
-If the content did not change (the same SHA), the command returns
-`changed: false`:
+## Examples
 
 ```bash
-$ osapi client node certificate update --target web-01 \
-    --name internal-ca --object internal-ca-v2
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS  NAME         CHANGED
-  web-01    ok      internal-ca  false
-
-  1 host: 1 ok
+osapi client node certificate update --target web-01 \
+  --name internal-ca --object internal-ca-v2
+osapi client node certificate update --target _all \
+  --name internal-ca --object internal-ca-v2
+osapi client node certificate update --target web-01 \
+  --name internal-ca --object internal-ca-v2 --json
 ```
 
-Broadcast to all hosts at once:
+## Result
 
-```bash
-$ osapi client node certificate update --target _all \
-    --name internal-ca --object internal-ca-v2
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   NAME         CHANGED
-  web-01    changed  internal-ca  true
-  web-02    changed  internal-ca  true
-
-  2 hosts: 2 changed
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client node certificate update --target web-01 \
-    --name internal-ca --object internal-ca-v2 --json
-{"results":[{"hostname":"web-01","name":"internal-ca","changed":true,"status":"ok"}],"job_id":"..."}
-```
+The command fails if the certificate does not exist. If the content did not
+change (the same SHA), the command returns `changed: false`.
 
 ## Flags
 
-| Flag           | Description                                              | Default  |
-| -------------- | -------------------------------------------------------- | -------- |
-| `--name`       | Certificate name to update                               | required |
-| `--object`     | New Object Store reference for the PEM file              | required |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
-| `-j, --json`   | Output raw JSON response                                 |          |
+| Flag       | Description                                        | Default |
+| ---------- | -------------------------------------------------- | ------- |
+| `--name`   | Certificate name (required)                        |         |
+| `--object` | Object store reference for the PEM file (required) |         |
+
+## Global flags
+
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

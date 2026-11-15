@@ -27,7 +27,7 @@ import (
 // clientNodeGroupCmd represents the clientNodeGroup command.
 var clientNodeGroupCmd = &cobra.Command{
 	Use:   "group",
-	Short: "The group subcommand",
+	Short: "Manage the local groups of target hosts",
 }
 
 func init() {

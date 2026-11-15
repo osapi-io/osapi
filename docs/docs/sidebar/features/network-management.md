@@ -46,6 +46,14 @@ the configured servers.
 
 **Ping.** Sends ICMP echo requests to a target host and reports the results.
 
+On Linux, the agent sends a ping without root, on a datagram socket. The kernel
+permits this only for the groups in `net.ipv4.ping_group_range`. If the group of
+the agent is not in the range, the ping fails. To permit each group:
+
+```bash
+sudo sysctl -w net.ipv4.ping_group_range="0 2147483647"
+```
+
 Refer to [CLI Reference](../usage/cli/client/node/network/network.mdx) for usage
 and examples, or the
 [API Reference](/gen/api/network-management-api-network-operations) for the REST

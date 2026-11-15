@@ -32,7 +32,9 @@ import (
 var clientNodeProcessGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get process information by PID",
-	Long:  `Get detailed information about a specific process on the target node.`,
+	Example: `  osapi client node process get --target web-01 --pid 1234
+  osapi client node process get --target _all --pid 1
+  osapi client node process get --target web-01 --pid 1234 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

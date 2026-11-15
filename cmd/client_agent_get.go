@@ -35,7 +35,10 @@ import (
 var clientAgentGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get agent details",
-	Long:  `Get detailed information about a specific agent by hostname.`,
+	Long: "This command reads the agent heartbeat registry directly. It makes no job.\n" +
+		"The data comes from the last heartbeat of the agent. `node status` runs a\n" +
+		"full inspection through the job system, with disk usage and more metrics.",
+	Example: `  osapi client agent get --hostname web-01`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		hostname, _ := cmd.Flags().GetString("hostname")

@@ -27,7 +27,7 @@ import (
 // clientNodeFileCmd represents the clientNodeFile command.
 var clientNodeFileCmd = &cobra.Command{
 	Use:   "file",
-	Short: "The file subcommand",
+	Short: "Deploy files from the Object Store to hosts, and check them",
 }
 
 func init() {

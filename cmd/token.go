@@ -27,7 +27,7 @@ import (
 // tokenCmd represents the token command.
 var tokenCmd = &cobra.Command{
 	Use:   "token",
-	Short: "The token subcommand",
+	Short: "Generate and validate API tokens",
 }
 
 func init() {

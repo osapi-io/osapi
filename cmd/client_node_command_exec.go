@@ -34,6 +34,21 @@ import (
 var clientNodeCommandExecCmd = &cobra.Command{
 	Use:   "exec",
 	Short: "Execute a command directly",
+	Long: "The executable gets the arguments as they are, without shell expansion. The\n" +
+		"table view shortens long output. Use `--json` to get the full response. Use\n" +
+		"`@fact.*` references to put live system values in the command. Refer to\n" +
+		"[System Facts](../../../../../features/system-facts.md) for all `@fact.*`\n" +
+		"references. Use `--stdout` or `--stderr` to print only that output of the\n" +
+		"remote command. The exit code of the CLI is the exit code of the remote\n" +
+		"command. Thus you can use it in scripts. Each agent resolves its own facts,\n" +
+		"so `@fact.*` works with a broadcast target.",
+	Example: `  osapi client node command exec --command ls --args "-la,/tmp"
+  osapi client node command exec \
+    --command cat \
+    --args "config.yaml" \
+    --cwd /etc/osapi \
+    --timeout 10
+  osapi client node command exec --command whoami --target group:web`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

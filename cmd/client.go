@@ -40,7 +40,7 @@ var (
 // clientCmd represents the client command.
 var clientCmd = &cobra.Command{
 	Use:   "client",
-	Short: "The client subcommand",
+	Short: "Call the osapi REST API",
 	PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 		var err error
 		tracerShutdown, err = tracing.InitTracer(

@@ -1,30 +1,27 @@
 # List
 
-List all groups on a target host:
+List all groups.
 
 ```bash
-$ osapi client node group list --target web-01
-
-  HOSTNAME  STATUS  NAME     GID   MEMBERS
-  web-01    ok      docker   999   deploy,app
-  web-01    ok      sudo     27    deploy
-  web-01    ok      users    100   deploy,app
-
-  1 host: 1 ok
+osapi client node group list
 ```
 
-## JSON Output
-
-Use `--json` to get the full API response:
+## Examples
 
 ```bash
-$ osapi client node group list --target web-01 --json
-{"results":[{"hostname":"web-01","groups":[{"name":"docker","gid":999,"members":["deploy","app"]}],"status":"ok"}],"job_id":"..."}
+osapi client node group list --target web-01
+osapi client node group list --target web-01 --json
 ```
 
-## Flags
+## Global flags
 
-| Flag           | Description                                              | Default |
-| -------------- | -------------------------------------------------------- | ------- |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
-| `-j, --json`   | Output raw JSON response                                 |         |
+| Flag               | Description                                            | Default                 |
+| ------------------ | ------------------------------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode                           |                         |
+| `-j, --json`       | Enable JSON output                                     |                         |
+| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
+| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+
+[Output](../../../output.md) tells how the result is printed, and what `--json`
+gives.

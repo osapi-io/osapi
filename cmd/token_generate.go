@@ -44,9 +44,9 @@ type TokenGenerator interface {
 var tokenGenerateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Generate a new token",
-	Long: `Generate a new API token with specific roles, expiration, and issuer details.
-This command allows you to customize the token properties for various use cases.
-`,
+	Example: `  osapi token generate --subject user123 --roles=read
+  osapi token generate --subject svc@example.com --roles=read \
+    -p node:read -p health:read`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		signingKey := appConfig.Controller.API.Security.SigningKey
 		roles, _ := cmd.Flags().GetStringSlice("roles")

@@ -33,6 +33,12 @@ import (
 var clientNodePowerShutdownCmd = &cobra.Command{
 	Use:   "shutdown",
 	Short: "Shut down the target host",
+	Long: "The agent runs `shutdown -h` with the configured delay. When `--delay` is 0,\n" +
+		"the host shuts down immediately.",
+	Example: `  osapi client node power shutdown --target web-01
+  osapi client node power shutdown --target web-01 \
+    --delay 60 --message "Scheduled maintenance shutdown"
+  osapi client node power shutdown --target _all --delay 30`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

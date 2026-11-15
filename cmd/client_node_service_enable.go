@@ -24,12 +24,23 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 // clientNodeServiceEnableCmd represents the service enable command.
 var clientNodeServiceEnableCmd = &cobra.Command{
 	Use:   "enable",
 	Short: "Enable a systemd service to start on boot",
+	Annotations: map[string]string{
+		reference.Result: "If the service was not enabled, the command returns `changed: true`. If\n" +
+			"the service is already enabled, it returns `changed: false`.",
+	},
+	Example: `  osapi client node service enable --target web-01 \
+    --name nginx.service
+  osapi client node service enable --target _all \
+    --name nginx.service
+  osapi client node service enable --target web-01 \
+    --name nginx.service --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

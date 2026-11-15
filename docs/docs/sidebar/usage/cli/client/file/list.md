@@ -1,77 +1,36 @@
 # List
 
-List all files in the osapi Object Store:
+List stored files.
+
+With `--stale`, the list shows the deployments whose object changed after the
+last deploy. Those are the files that you must deploy again.
 
 ```bash
-$ osapi client file list
-
-  Files (3)
-  NAME             SHA256            SIZE
-  app.conf         a1b2c3d4e5f6...   1234
-  app.conf.tmpl    f6e5d4c3b2a1...   567
-  nginx.conf       1a2b3c4d5e6f...   2048
+osapi client file list [flags]
 ```
 
-When no files are stored:
+## Examples
 
 ```bash
-$ osapi client file list
-
-  No files found.
-```
-
-## JSON Output
-
-Use `--json` to get the full API response:
-
-```bash
-$ osapi client file list --json
+osapi client file list
+osapi client file list --json
+osapi client file list --stale
 ```
 
 ## Flags
 
-| Flag         | Description              | Default |
-| ------------ | ------------------------ | ------- |
-| `-j, --json` | Output raw JSON response |         |
+| Flag      | Description                                                       | Default |
+| --------- | ----------------------------------------------------------------- | ------- |
+| `--stale` | List only deployments whose file changed since they were deployed |         |
 
-## Stale deployments
+## Global flags
 
-List the deployments whose source object changed after the last deploy of the
-file. The list shows the files that you must deploy again. Needs the `file:read`
-permission.
+| Flag               | Description                    | Default                 |
+| ------------------ | ------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode   |                         |
+| `-j, --json`       | Enable JSON output             |                         |
+| `-f, --osapi-file` | Path to config file            | `/etc/osapi/osapi.yaml` |
+| `--url`            | URL the client will connect to | `http://0.0.0.0:8080`   |
 
-```bash
-$ osapi client file list --stale
-
-  Total: 2
-
-  Stale Deployments:
-  OBJECT       HOSTNAME  PROVIDER     DEPLOYED              DEPLOYED SHA   CURRENT SHA
-  hello-echo   web-01    service      2026-04-01T18:00:00Z  abc123def456…  789abc012def…
-  my-ca-cert   web-02    certificate  2026-03-31T12:00:00Z  111222333444…  555666777888…
-```
-
-When all deployments are in sync:
-
-```bash
-$ osapi client file list --stale
-
-  Total: 0
-
-  All deployments are in sync.
-```
-
-### JSON Output
-
-Use `--json` to get the raw JSON output:
-
-```bash
-$ osapi client file list --stale --json
-{"stale":[...],"total":2}
-```
-
-### Flags
-
-| Flag         | Description              | Default |
-| ------------ | ------------------------ | ------- |
-| `-j, --json` | Output raw JSON response |         |
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

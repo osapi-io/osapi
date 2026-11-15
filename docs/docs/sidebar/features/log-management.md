@@ -110,7 +110,7 @@ To query logs, you need `log:read`. All built-in roles (`admin`, `write`,
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/log/log.md): log commands
+- [CLI Reference](../usage/cli/client/node/log/log.mdx): log commands
 - [SDK Reference](../sdk/client/node/log.md): Log service
 - [Platform Detection](../sdk/platform/detection.md): OS family detection
 - [Configuration](../usage/configuration.md): full configuration reference

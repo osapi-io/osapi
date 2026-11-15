@@ -27,7 +27,7 @@ import (
 // clientNodeUserCmd represents the clientNodeUser command.
 var clientNodeUserCmd = &cobra.Command{
 	Use:   "user",
-	Short: "The user subcommand",
+	Short: "Manage the local user accounts of target hosts",
 }
 
 func init() {

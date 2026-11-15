@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -31,6 +32,19 @@ import (
 var clientNodeNetworkInterfaceCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a network interface configuration",
+	Annotations: map[string]string{
+		reference.Result: "If osapi already manages a configuration for that interface, the command " +
+			"returns `changed: false` and does not change the file. To change it, use " +
+			"`update`.",
+	},
+	Example: `  osapi client node network interface create \
+    --target web-01 --name eth0 \
+    --address 192.168.1.100/24 \
+    --gateway4 192.168.1.1
+  osapi client node network interface create \
+    --target web-01 --name eth1 --dhcp4
+  osapi client node network interface create \
+    --target _all --name eth1 --dhcp4`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

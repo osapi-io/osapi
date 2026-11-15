@@ -30,6 +30,9 @@ import (
 var clientNodeSysctlGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get a sysctl parameter by key",
+	Example: `  osapi client node sysctl get --target web-01 --key net.ipv4.ip_forward
+  osapi client node sysctl get --target _all --key vm.swappiness
+  osapi client node sysctl get --target web-01 --key vm.swappiness --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

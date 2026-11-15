@@ -32,9 +32,10 @@ import (
 
 // clientJobDeleteCmd represents the clientJobsDelete command.
 var clientJobDeleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "Delete a job",
-	Long:  `Deletes a specific job by its ID via the REST API.`,
+	Use:     "delete",
+	Short:   "Delete a job",
+	Long:    "The job goes from storage permanently.",
+	Example: `  osapi client job delete --id 550e8400-e29b-41d4-a716-446655440000`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		jobID, _ := cmd.Flags().GetString("id")
 		ctx := cmd.Context()

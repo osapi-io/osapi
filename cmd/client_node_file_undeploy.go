@@ -31,8 +31,20 @@ import (
 var clientNodeFileUndeployCmd = &cobra.Command{
 	Use:   "undeploy",
 	Short: "Remove a deployed file from a host",
-	Long: `Remove a previously deployed file from the target host's filesystem.
-The object store entry is preserved; only the file on disk is removed.`,
+	Long: "The object store entry stays, so you can deploy the file again at any time.\n" +
+		"If the file does not exist on disk, the operation changes nothing and\n" +
+		"returns `Changed: false`. When you do not need the object, use `osapi client\n" +
+		"file delete` to remove it from the store.",
+	Example: `  osapi client node file undeploy \
+    --target server1 \
+    --path /etc/app/app.conf
+  osapi client node file undeploy \
+    --path /etc/nginx/nginx.conf \
+    --target group:web
+  osapi client node file undeploy \
+    --target server1 \
+    --path /etc/app/app.conf \
+    --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -27,7 +27,7 @@ import (
 // clientJobCmd represents the clientJob command.
 var clientJobCmd = &cobra.Command{
 	Use:   "job",
-	Short: "Job management commands",
+	Short: "Manage the jobs in the queue",
 }
 
 func init() {

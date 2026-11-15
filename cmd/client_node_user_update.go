@@ -31,6 +31,12 @@ import (
 var clientNodeUserUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update a user account",
+	Long: "Do not use `--lock` and `--unlock` together. Give one or more of `--shell`,\n" +
+		"`--home`, `--groups`, `--lock` and `--unlock`.",
+	Example: `  osapi client node user update --target web-01 \
+    --name deploy --shell /bin/zsh
+  osapi client node user update --target web-01 --name deploy --lock
+  osapi client node user update --target web-01 --name deploy --unlock`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")

@@ -30,7 +30,9 @@ import (
 var clientContainerDockerStartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start a stopped container",
-	Long:  `Start a stopped container on the target node.`,
+	Example: `  osapi client node container docker start --id a1b2c3d4e5f6
+  osapi client node container docker start --id my-nginx
+  osapi client node container docker start --id my-nginx --target web-01`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
