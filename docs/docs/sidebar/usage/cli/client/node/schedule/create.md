@@ -26,4 +26,5 @@ $ osapi client node schedule create --target web-01 \
 If you do not give `--user`, the value is `root`.
 
 If the object is a Go template, use `--content-type template`. Then the agent
-renders it with its facts before it writes the file to disk.
+renders it with its facts before it writes the file to disk. Give the values of
+the template with `--var key=value`, one `--var` for each variable.

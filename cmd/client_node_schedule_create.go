@@ -40,6 +40,7 @@ var clientNodeScheduleCreateCmd = &cobra.Command{
 		interval, _ := cmd.Flags().GetString("interval")
 		user, _ := cmd.Flags().GetString("user")
 		contentType, _ := cmd.Flags().GetString("content-type")
+		varFlags, _ := cmd.Flags().GetStringSlice("var")
 
 		resp, err := sdkClient.Schedule.Create(ctx, host, client.ScheduleCreateOpts{
 			Name:        name,
@@ -48,6 +49,7 @@ var clientNodeScheduleCreateCmd = &cobra.Command{
 			Interval:    interval,
 			User:        user,
 			ContentType: contentType,
+			Vars:        parseVarFlags(varFlags),
 		})
 		if err != nil {
 			cli.HandleError(err, logger)
@@ -98,6 +100,8 @@ func init() {
 		String("user", "", "User to run the command as (default root)")
 	clientNodeScheduleCreateCmd.PersistentFlags().
 		String("content-type", "", "Content type: raw or template")
+	clientNodeScheduleCreateCmd.PersistentFlags().
+		StringSlice("var", []string{}, "Template variable as key=value (repeatable)")
 
 	_ = clientNodeScheduleCreateCmd.MarkPersistentFlagRequired("name")
 	_ = clientNodeScheduleCreateCmd.MarkPersistentFlagRequired("object")
