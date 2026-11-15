@@ -457,6 +457,11 @@ const config: Config = {
               docId: 'sidebar/sdk/client/audit/audit'
             },
             {
+              type: 'doc',
+              label: 'Telemetry',
+              docId: 'sidebar/sdk/client/telemetry/telemetry'
+            },
+            {
               type: 'html',
               value:
                 '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Jobs</small>',

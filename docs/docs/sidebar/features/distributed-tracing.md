@@ -110,6 +110,52 @@ with the reason.
 The health endpoints and the files of the UI have no spans. A probe and the UI
 call them each few seconds, and their traces would hide the traces of the jobs.
 
+## Read a trace from the CLI or the UI
+
+You can read a trace without access to the tracing backend. The controller reads
+it for you:
+
+```bash
+osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9
+```
+
+```text
+Trace:
+  ID:        26e448c9dbe1c4a8d216a98c675079c9
+  Started:   2026-11-15 14:28:04
+  Duration:  111ms
+  Services:  osapi-controller, osapi-agent
+
+Spans (42):
+  SPAN                             HOSTNAME  DURATION  STATUS     DETAIL
+  GET /api/node/:hostname/package            111ms     ok         200
+  ├─ job.publish                             6ms       ok         osapi.jobs.query._all
+  │  ├─ kv.put                               660µs     ok         jobs.46cb73be-…
+  │  └─ nats.publish                         539µs     ok         osapi.jobs.query._all
+  │     └─ nats.process                      35ms      ok         osapi.jobs.query._all
+  │        └─ job.process          ubuntu-1  35ms      completed
+  │           ├─ exec dpkg-query   ubuntu-1  15ms      ok
+  │           └─ kv.put            ubuntu-1  3ms       ok         responses.46cb73be-…
+  └─ job.collect                             38ms      ok
+     └─ kv.watch                             5ms       ok         responses.46cb73be-….>
+```
+
+- **HOSTNAME** is the agent of the `job.process` above the span.
+- **STATUS** is the job status on a `job.process`, and `ok` or `error` on the
+  other spans.
+- **DETAIL** is the error of a failed span. On the other spans, it is what the
+  span acted on: a file, a key, a subject or a bucket.
+
+The **Traces** page of the UI, in the Admin menu, shows the same tree with a
+timing bar for each span. `/admin/traces/<id>` opens one trace.
+
+The controller reads the trace from the query API of Jaeger at
+`telemetry.tracing.url`, the address where a person opens Jaeger. Without that
+setting, the command answers that no tracing backend is configured. The backend
+gets the spans a few seconds after the request, so a trace that ran a moment ago
+can be not found. Run the command again after a few seconds. The command needs
+`trace:read`, which each built-in role has.
+
 ## Read a trace in Jaeger
 
 1. Copy the trace ID from the summary line of the command.
@@ -187,6 +233,9 @@ telemetry:
     enabled: true
     exporter: otlp
     otlp_endpoint: localhost:4317
+    # Where a person opens Jaeger. The controller also reads traces from it
+    # for osapi client telemetry trace get and the Traces page.
+    url: http://jaeger:16686
 ```
 
 :::note Today, the OTLP exporter uses a gRPC connection without TLS and without

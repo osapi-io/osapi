@@ -284,6 +284,22 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Telemetry",
+      link: {
+        type: "doc",
+        id: "gen/api/telemetry-api-telemetry",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-trace",
+          label: "Get the spans of a trace",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Node/Certificate",
       link: {
         type: "doc",

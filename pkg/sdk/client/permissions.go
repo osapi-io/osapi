@@ -37,6 +37,7 @@ const (
 	PermJobWrite         Permission = "job:write"
 	PermHealthRead       Permission = "health:read"
 	PermAuditRead        Permission = "audit:read"
+	PermTraceRead        Permission = "trace:read"
 	PermCommandExecute   Permission = "command:execute"
 	PermCommandShell     Permission = "command:shell"
 	PermFileRead         Permission = "file:read"

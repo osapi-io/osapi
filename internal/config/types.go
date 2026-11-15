@@ -70,9 +70,10 @@ type TracingConfig struct {
 	Exporter string `mapstructure:"exporter"      doc:"Trace exporter: 'stdout' or 'otlp'."`
 	// OTLPEndpoint is the gRPC endpoint for the OTLP exporter (e.g., "localhost:4317").
 	OTLPEndpoint string `mapstructure:"otlp_endpoint" doc:"gRPC endpoint for the OTLP exporter, such as 'localhost:4317'."`
-	// URL is where a person views the traces, such as a Jaeger UI. osapi
-	// does not run that viewer; health only links to it.
-	URL string `mapstructure:"url"           doc:"Where a person views the traces, such as a Jaeger UI. Health shows it; osapi does not run the viewer." validate:"omitempty,http_url"`
+	// URL is where a person views the traces, such as a Jaeger UI. Health
+	// links to it, and the controller reads a trace from its query API for
+	// osapi client telemetry trace get. osapi does not run the backend.
+	URL string `mapstructure:"url"           doc:"Where a person views the traces, such as a Jaeger UI. Health links to it, and the controller reads traces from its query API. osapi does not run the backend." validate:"omitempty,http_url"`
 }
 
 // NATSAuth holds client-side authentication settings for connecting to NATS.

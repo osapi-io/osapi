@@ -12,6 +12,7 @@ export type Permission =
   | "job:write"
   | "health:read"
   | "audit:read"
+  | "trace:read"
   | "command:execute"
   | "command:shell"
   | "file:read"
@@ -54,6 +55,7 @@ export const ALL_PERMISSIONS: Permission[] = [
   "job:write",
   "health:read",
   "audit:read",
+  "trace:read",
   "command:execute",
   "command:shell",
   "file:read",
@@ -102,6 +104,7 @@ export interface RoleDefinition {
 
 const VIEWER_PERMISSIONS: Permission[] = [
   "agent:read",
+  "trace:read",
   "node:read",
   "network:read",
   "job:read",

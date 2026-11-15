@@ -9,10 +9,11 @@ import {
   Briefcase,
   Shield,
   ShieldAlert,
+  GitBranch,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/hooks/use-auth";
-import { ROLES } from "@/lib/permissions";
+import { ROLES, type Permission } from "@/lib/permissions";
 import { Badge } from "@/components/ui/badge";
 import { Dropdown } from "@/components/ui/dropdown";
 import { useOutsideClick } from "@/hooks/use-outside-click";
@@ -22,11 +23,19 @@ const navItems = [
   { to: "/configure", label: "Configure", icon: Settings },
 ];
 
-const adminLinks = [
+// Each link shows to a user with its permission. A link without one shows to
+// a user who can read the audit log, as the whole menu did before.
+const adminLinks: {
+  to: string;
+  label: string;
+  icon: typeof FileText;
+  perm?: Permission;
+}[] = [
   { to: "/admin/audit", label: "Audit Log", icon: FileText },
   { to: "/admin/enrollment", label: "Enrollment", icon: ShieldAlert },
   { to: "/admin/jobs", label: "Jobs", icon: Briefcase },
   { to: "/admin/roles", label: "Roles", icon: Shield },
+  { to: "/admin/traces", label: "Traces", icon: GitBranch, perm: "trace:read" },
 ];
 
 function roleBadgeVariant(name: string) {
@@ -45,7 +54,10 @@ export function Navbar() {
   const { role, roleOverride, setRoleOverride, clearToken, can, tokenRoles } =
     useAuth();
   const isTokenAdmin = tokenRoles.includes("admin");
-  const showAdmin = can("audit:read");
+  const visibleLinks = adminLinks.filter((link) =>
+    can(link.perm ?? "audit:read"),
+  );
+  const showAdmin = visibleLinks.length > 0;
   const [adminOpen, setAdminOpen] = useState(false);
   const adminRef = useRef<HTMLDivElement>(null);
 
@@ -93,8 +105,8 @@ export function Navbar() {
             </button>
             {adminOpen && (
               <div className="absolute left-0 top-full mt-1 w-44 rounded-md border border-border/60 bg-card py-1 shadow-xl">
-                {adminLinks.map((link) => {
-                  const active = location.pathname === link.to;
+                {visibleLinks.map((link) => {
+                  const active = location.pathname.startsWith(link.to);
                   return (
                     <Link
                       key={link.to}
