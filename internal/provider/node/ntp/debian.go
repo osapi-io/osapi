@@ -24,7 +24,9 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"regexp"
 	"strconv"
@@ -181,13 +183,24 @@ func (d *Debian) Update(
 	return &UpdateResult{Changed: true}, nil
 }
 
-// Delete removes the managed NTP server configuration. Fails if the
-// config file does not exist.
+// Delete removes the managed NTP server configuration. When the config file
+// does not exist, it returns Changed: false.
 func (d *Debian) Delete(
 	ctx context.Context,
 ) (*DeleteResult, error) {
+	// Nothing to remove is the state that delete asks for, so a second
+	// delete reports changed: false, not an error.
 	if _, err := d.fs.Stat(sourcesFile); err != nil {
-		return nil, fmt.Errorf("ntp update: %w", provider.ErrNotManaged)
+		if !errors.Is(err, fs.ErrNotExist) {
+			return nil, fmt.Errorf("ntp delete: %w", err)
+		}
+
+		d.logger.Debug(
+			"ntp config not present, nothing to remove",
+			slog.String("path", sourcesFile),
+		)
+
+		return &DeleteResult{Changed: false}, nil
 	}
 
 	if removeErr := d.fs.Remove(sourcesFile); removeErr != nil {
