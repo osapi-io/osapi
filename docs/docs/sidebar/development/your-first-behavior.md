@@ -34,8 +34,8 @@ just deps
 just test
 ```
 
-With an agent, the whole tutorial is one request. In Claude Code, the
-`build-a-behavior` skill in this repository carries these steps:
+With an agent, the full tutorial is one request. The `build-a-behavior` skill in
+this repository has these steps, and each coding agent in a checkout loads it:
 
 ```text
 Build a motd behavior that reads and sets /etc/motd.
