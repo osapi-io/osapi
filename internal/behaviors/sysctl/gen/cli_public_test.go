@@ -7,7 +7,7 @@ import (
 
 	suite "github.com/stretchr/testify/suite"
 
-	clitest "github.com/osapi-io/osapi/internal/cli/behavior/clitest"
+	"github.com/osapi-io/osapi/internal/behavior/command/commandtest"
 )
 
 type CLIPublicTestSuite struct {
@@ -20,12 +20,12 @@ func (s *CLIPublicTestSuite) TestCommands() {
 	tests := []struct {
 		name string
 		args []string
-		want clitest.Request
+		want commandtest.Request
 	}{
 		{
 			name: "when the example \"Every parameter, and which osapi manages\" is run",
 			args: []string{"sysctl", "list", "--target", "server1"},
-			want: clitest.Request{
+			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/next/node/server1/sysctl?prefix=",
 				Body:   ``,
@@ -34,7 +34,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		{
 			name: "when the example \"One part of the tree\" is run",
 			args: []string{"sysctl", "list", "--target", "server1", "--prefix", "net.ipv4"},
-			want: clitest.Request{
+			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/next/node/server1/sysctl?prefix=net.ipv4",
 				Body:   ``,
@@ -43,7 +43,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		{
 			name: "when the example \"A managed parameter the kernel does not have right now\" is run",
 			args: []string{"sysctl", "list", "--target", "server1", "--prefix", "net.bridge"},
-			want: clitest.Request{
+			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/next/node/server1/sysctl?prefix=net.bridge",
 				Body:   ``,
@@ -52,7 +52,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		{
 			name: "when the example \"A parameter osapi manages\" is run",
 			args: []string{"sysctl", "get", "--target", "server1", "--key", "vm.swappiness"},
-			want: clitest.Request{
+			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   ``,
@@ -61,7 +61,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		{
 			name: "when the example \"A parameter osapi does not manage\" is run",
 			args: []string{"sysctl", "get", "--target", "server1", "--key", "vm.swappiness"},
-			want: clitest.Request{
+			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   ``,
@@ -70,7 +70,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		{
 			name: "when the example \"A value of several fields\" is run",
 			args: []string{"sysctl", "get", "--target", "server1", "--key", "net.ipv4.ping_group_range"},
-			want: clitest.Request{
+			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/next/node/server1/sysctl/net.ipv4.ping_group_range",
 				Body:   ``,
@@ -79,7 +79,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		{
 			name: "when the example \"A managed parameter the kernel does not have right now\" is run",
 			args: []string{"sysctl", "get", "--target", "server1", "--key", "net.bridge.bridge-nf-call-iptables"},
-			want: clitest.Request{
+			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/next/node/server1/sysctl/net.bridge.bridge-nf-call-iptables",
 				Body:   ``,
@@ -88,7 +88,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		{
 			name: "when the example \"Turn on IP forwarding\" is run",
 			args: []string{"sysctl", "create", "--target", "server1", "--key", "net.ipv4.ip_forward", "--value", "1"},
-			want: clitest.Request{
+			want: commandtest.Request{
 				Method: "POST",
 				Path:   "/api/next/node/server1/sysctl",
 				Body:   `{"key":"net.ipv4.ip_forward","value":"1"}`,
@@ -97,7 +97,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		{
 			name: "when the example \"Lower swappiness\" is run",
 			args: []string{"sysctl", "update", "--target", "server1", "--key", "vm.swappiness", "--value", "10"},
-			want: clitest.Request{
+			want: commandtest.Request{
 				Method: "PUT",
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
@@ -106,7 +106,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		{
 			name: "when the example \"A parameter osapi did not manage\" is run",
 			args: []string{"sysctl", "update", "--target", "server1", "--key", "vm.swappiness", "--value", "10"},
-			want: clitest.Request{
+			want: commandtest.Request{
 				Method: "PUT",
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
@@ -115,7 +115,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		{
 			name: "when the example \"Remove a parameter\" is run",
 			args: []string{"sysctl", "delete", "--target", "server1", "--key", "vm.swappiness"},
-			want: clitest.Request{
+			want: commandtest.Request{
 				Method: "DELETE",
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
@@ -124,7 +124,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		{
 			name: "when the example \"A parameter osapi does not manage\" is run",
 			args: []string{"sysctl", "delete", "--target", "server1", "--key", "vm.swappiness"},
-			want: clitest.Request{
+			want: commandtest.Request{
 				Method: "DELETE",
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
@@ -133,7 +133,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		{
 			name: "when the example \"A parameter osapi already stopped managing\" is run",
 			args: []string{"sysctl", "delete", "--target", "server1", "--key", "vm.swappiness"},
-			want: clitest.Request{
+			want: commandtest.Request{
 				Method: "DELETE",
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
@@ -143,7 +143,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.Equal(tc.want, clitest.Sent(s.T(), tc.args))
+			s.Equal(tc.want, commandtest.Sent(s.T(), tc.args))
 		})
 	}
 }

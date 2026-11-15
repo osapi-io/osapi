@@ -5,16 +5,16 @@ package gen
 import (
 	"github.com/labstack/echo/v5"
 
+	"github.com/osapi-io/osapi/internal/behavior/server"
 	sysctl "github.com/osapi-io/osapi/internal/behaviors/sysctl"
-	behaviorapi "github.com/osapi-io/osapi/internal/controller/api/behavior"
 )
 
 // apiDelete serves DELETE /api/next/node/{hostname}/sysctl/{key}, which needs
 // sysctl:write: Stop the management of a kernel parameter.
 func apiDelete(
-	s *behaviorapi.Server,
+	s *server.Server,
 ) echo.HandlerFunc {
-	return behaviorapi.Serve(s, sysctl.Behavior, "delete", decodeDelete)
+	return server.Serve(s, sysctl.Behavior, "delete", decodeDelete)
 }
 
 // decodeDelete builds DeleteInput from the request: the JSON body, then key
@@ -24,13 +24,13 @@ func decodeDelete(
 ) (sysctl.DeleteInput, string, bool) {
 	var in sysctl.DeleteInput
 
-	if msg, ok := behaviorapi.Body(c, &in); !ok {
+	if msg, ok := server.Body(c, &in); !ok {
 		return in, msg, false
 	}
-	if msg, ok := behaviorapi.Param(c, "key", &in.Key); !ok {
+	if msg, ok := server.Param(c, "key", &in.Key); !ok {
 		return in, msg, false
 	}
-	if msg, ok := behaviorapi.Valid(in); !ok {
+	if msg, ok := server.Valid(in); !ok {
 		return in, msg, false
 	}
 

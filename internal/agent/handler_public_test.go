@@ -42,9 +42,9 @@ import (
 
 	"github.com/osapi-io/osapi/internal/agent"
 	agentmocks "github.com/osapi-io/osapi/internal/agent/mocks"
-	"github.com/osapi-io/osapi/internal/agent/pki"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/provider"
 	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
 	fileMocks "github.com/osapi-io/osapi/internal/provider/file/mocks"

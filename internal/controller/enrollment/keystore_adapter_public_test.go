@@ -33,11 +33,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/osapi-io/osapi/internal/agent/pki"
 	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	enrollMocks "github.com/osapi-io/osapi/internal/controller/enrollment/mocks"
 	"github.com/osapi-io/osapi/internal/job/client"
 	jobMocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/pki"
 )
 
 type KeyStoreAdapterPublicTestSuite struct {

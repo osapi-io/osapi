@@ -8,8 +8,8 @@ package gen
 import (
 	cobra "github.com/spf13/cobra"
 
+	"github.com/osapi-io/osapi/internal/behavior/command"
 	sysctl "github.com/osapi-io/osapi/internal/behaviors/sysctl"
-	behaviorcli "github.com/osapi-io/osapi/internal/cli/behavior"
 )
 
 var sysctlCmd = &cobra.Command{
@@ -22,7 +22,7 @@ var sysctlListCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		prefix, _ := cmd.Flags().GetString("prefix")
 
-		behaviorcli.Run(cmd, sysctl.Behavior, "list", sysctl.ListInput{Prefix: prefix})
+		command.Run(cmd, sysctl.Behavior, "list", sysctl.ListInput{Prefix: prefix})
 	},
 	Short: "List the kernel's parameters and which osapi manages",
 	Use:   "list",
@@ -32,7 +32,7 @@ var sysctlGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		key, _ := cmd.Flags().GetString("key")
 
-		behaviorcli.Run(cmd, sysctl.Behavior, "get", sysctl.GetInput{Key: key})
+		command.Run(cmd, sysctl.Behavior, "get", sysctl.GetInput{Key: key})
 	},
 	Short: "Get a kernel parameter's current value, and whether osapi manages it",
 	Use:   "get",
@@ -44,7 +44,7 @@ var sysctlCreateCmd = &cobra.Command{
 		key, _ := cmd.Flags().GetString("key")
 		value, _ := cmd.Flags().GetString("value")
 
-		behaviorcli.Run(cmd, sysctl.Behavior, "create", sysctl.CreateInput{
+		command.Run(cmd, sysctl.Behavior, "create", sysctl.CreateInput{
 			Key:   key,
 			Value: value,
 		})
@@ -59,7 +59,7 @@ var sysctlUpdateCmd = &cobra.Command{
 		key, _ := cmd.Flags().GetString("key")
 		value, _ := cmd.Flags().GetString("value")
 
-		behaviorcli.Run(cmd, sysctl.Behavior, "update", sysctl.UpdateInput{
+		command.Run(cmd, sysctl.Behavior, "update", sysctl.UpdateInput{
 			Key:   key,
 			Value: value,
 		})
@@ -73,14 +73,14 @@ var sysctlDeleteCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		key, _ := cmd.Flags().GetString("key")
 
-		behaviorcli.Run(cmd, sysctl.Behavior, "delete", sysctl.DeleteInput{Key: key})
+		command.Run(cmd, sysctl.Behavior, "delete", sysctl.DeleteInput{Key: key})
 	},
 	Short: "Stop the management of a kernel parameter",
 	Use:   "delete",
 }
 
 func init() {
-	behaviorcli.Register("", true, sysctlCmd)
+	command.Register("", true, sysctlCmd)
 
 	sysctlCmd.AddCommand(sysctlListCmd)
 	sysctlListCmd.PersistentFlags().String("prefix", "", "Only this parameter and the ones under it, such as net.ipv4")

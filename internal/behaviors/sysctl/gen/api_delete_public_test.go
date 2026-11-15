@@ -8,227 +8,227 @@ import (
 
 	suite "github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/behavior/server/servertest"
 	sysctl "github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/behaviors/sysctl/gen"
-	apitest "github.com/osapi-io/osapi/internal/controller/api/behavior/apitest"
 )
 
 type APIDeletePublicTestSuite struct {
 	suite.Suite
 
-	api *apitest.Harness
+	api *servertest.Harness
 }
 
 func (s *APIDeletePublicTestSuite) SetupSuite() {
-	s.api = apitest.New(s.T(), "internal/behaviors/sysctl/gen/api.next.yaml", gen.Routes)
+	s.api = servertest.New(s.T(), "internal/behaviors/sysctl/gen/api.next.yaml", gen.Routes)
 }
 
 // TestDelete sends DELETE /api/next/node/{hostname}/sysctl/{key} and checks
 // each answer's response.
 func (s *APIDeletePublicTestSuite) TestDelete() {
-	s.api.Run(s.T(), []apitest.Case{
+	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"Remove a parameter\" is sent, the host's result is returned",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token: apitest.Write,
-			Job: apitest.Modify(
+			Token: servertest.Write,
+			Job: servertest.Modify(
 				"server1",
 				"sysctl.delete",
 				sysctl.DeleteInput{Key: "vm.swappiness"},
-				apitest.Completed("server1", `{"key":"vm.swappiness","changed":true}`),
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":true}`),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","key":"vm.swappiness","status":"ok"}]}`,
 		},
 		{
 			Name: "when the example \"Remove a parameter\" is broadcast, every host's result is returned",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/_all/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token: apitest.Write,
-			Job: apitest.Modify(
+			Token: servertest.Write,
+			Job: servertest.Modify(
 				"_all",
 				"sysctl.delete",
 				sysctl.DeleteInput{Key: "vm.swappiness"},
-				apitest.Completed("server1", `{"key":"vm.swappiness","changed":true}`),
-				apitest.Skipped("server2"),
-				apitest.Failed("server3", "boom"),
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","key":"vm.swappiness","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
 			Name: "when the example \"A parameter osapi does not manage\" is sent, the host's result is returned",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token: apitest.Write,
-			Job: apitest.Modify(
+			Token: servertest.Write,
+			Job: servertest.Modify(
 				"server1",
 				"sysctl.delete",
 				sysctl.DeleteInput{Key: "vm.swappiness"},
-				apitest.Completed("server1", `{"key":"vm.swappiness","changed":false}`),
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":false}`),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","key":"vm.swappiness","status":"ok"}]}`,
 		},
 		{
 			Name: "when the example \"A parameter osapi does not manage\" is broadcast, every host's result is returned",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/_all/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token: apitest.Write,
-			Job: apitest.Modify(
+			Token: servertest.Write,
+			Job: servertest.Modify(
 				"_all",
 				"sysctl.delete",
 				sysctl.DeleteInput{Key: "vm.swappiness"},
-				apitest.Completed("server1", `{"key":"vm.swappiness","changed":false}`),
-				apitest.Skipped("server2"),
-				apitest.Failed("server3", "boom"),
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","key":"vm.swappiness","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
 			Name: "when the example \"A parameter osapi already stopped managing\" is sent, the host's result is returned",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token: apitest.Write,
-			Job: apitest.Modify(
+			Token: servertest.Write,
+			Job: servertest.Modify(
 				"server1",
 				"sysctl.delete",
 				sysctl.DeleteInput{Key: "vm.swappiness"},
-				apitest.Completed("server1", `{"key":"vm.swappiness","changed":false}`),
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":false}`),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","key":"vm.swappiness","status":"ok"}]}`,
 		},
 		{
 			Name: "when the example \"A parameter osapi already stopped managing\" is broadcast, every host's result is returned",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/_all/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token: apitest.Write,
-			Job: apitest.Modify(
+			Token: servertest.Write,
+			Job: servertest.Modify(
 				"_all",
 				"sysctl.delete",
 				sysctl.DeleteInput{Key: "vm.swappiness"},
-				apitest.Completed("server1", `{"key":"vm.swappiness","changed":false}`),
-				apitest.Skipped("server2"),
-				apitest.Failed("server3", "boom"),
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","key":"vm.swappiness","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
 			Name: "when the host skips it, its row says skipped",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token: apitest.Write,
-			Job: apitest.Modify(
+			Token: servertest.Write,
+			Job: servertest.Modify(
 				"server1",
 				"sysctl.delete",
 				sysctl.DeleteInput{Key: "vm.swappiness"},
-				apitest.Skipped("server1"),
+				servertest.Skipped("server1"),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
 		},
 		{
 			Name: "when the host fails it, its row says failed",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token: apitest.Write,
-			Job: apitest.Modify(
+			Token: servertest.Write,
+			Job: servertest.Modify(
 				"server1",
 				"sysctl.delete",
 				sysctl.DeleteInput{Key: "vm.swappiness"},
-				apitest.Failed("server1", "boom"),
+				servertest.Failed("server1", "boom"),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
 		},
 		{
 			Name: "when the host never answers, its row says timeout",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token: apitest.Write,
-			Job: apitest.Modify(
+			Token: servertest.Write,
+			Job: servertest.Modify(
 				"server1",
 				"sysctl.delete",
 				sysctl.DeleteInput{Key: "vm.swappiness"},
-				apitest.TimedOut("server1"),
+				servertest.TimedOut("server1"),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
 		},
 		{
 			Name: "when the job client fails, it is a 500",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token: apitest.Write,
-			Job: apitest.Modify(
+			Token: servertest.Write,
+			Job: servertest.Modify(
 				"server1",
 				"sysctl.delete",
 				sysctl.DeleteInput{Key: "vm.swappiness"},
-			).Fails(apitest.ErrUnreachable),
+			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
 		},
 		{
 			Name: "when broadcast and the job client fails, it is a 500",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/_all/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token: apitest.Write,
-			Job: apitest.Modify(
+			Token: servertest.Write,
+			Job: servertest.Modify(
 				"_all",
 				"sysctl.delete",
 				sysctl.DeleteInput{Key: "vm.swappiness"},
-			).Fails(apitest.ErrUnreachable),
+			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
 		},
 		{
 			Name: "when the host does not have it, it is a 404",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token: apitest.Write,
-			Job: apitest.Modify(
+			Token: servertest.Write,
+			Job: servertest.Modify(
 				"server1",
 				"sysctl.delete",
 				sysctl.DeleteInput{Key: "vm.swappiness"},
-			).Fails(apitest.NotFound("server1")),
+			).Fails(servertest.NotFound("server1")),
 			WantCode: http.StatusNotFound,
 		},
 	})
@@ -237,55 +237,55 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 // TestDeleteValidationHTTP sends requests the API refuses before any job is
 // queued.
 func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
-	s.api.Run(s.T(), []apitest.Case{
+	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the target is not an agent, it is a 400",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/nowhere/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token:    apitest.Write,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
 			Name: "when the target is empty, it is a 400",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node//sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token:    apitest.Write,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
 			Name: "when the body is not JSON, it is a 400",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{`,
 			},
-			Token:    apitest.Write,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
 			Name: "when sent a key that is not a parameter name, it is a 400",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness%3Breboot",
 				Body:   `{"key":"vm.swappiness;reboot"}`,
 			},
-			Token:    apitest.Write,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
 			Name: "when sent a key holding a value, it is a 400",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness=1",
 				Body:   `{"key":"vm.swappiness=1"}`,
 			},
-			Token:    apitest.Write,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 	})
@@ -293,50 +293,50 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 
 // TestDeleteRBACHTTP sends tokens that do not grant sysctl:write.
 func (s *APIDeletePublicTestSuite) TestDeleteRBACHTTP() {
-	s.api.Run(s.T(), []apitest.Case{
+	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when there is no token, it is a 401",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token:    apitest.NoToken,
+			Token:    servertest.NoToken,
 			WantCode: http.StatusUnauthorized,
 		},
 		{
 			Name: "when the token lacks sysctl:write, it is a 403",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token:    apitest.Lacking,
+			Token:    servertest.Lacking,
 			WantCode: http.StatusForbidden,
 		},
 		{
 			Name: "when the token has only the read role, it is a 403",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token:    apitest.Read,
+			Token:    servertest.Read,
 			WantCode: http.StatusForbidden,
 		},
 		{
 			Name: "when the token has the admin role, the request runs",
-			Request: apitest.Request{
+			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
 			},
-			Token: apitest.Admin,
-			Job: apitest.Modify(
+			Token: servertest.Admin,
+			Job: servertest.Modify(
 				"server1",
 				"sysctl.delete",
 				sysctl.DeleteInput{Key: "vm.swappiness"},
-				apitest.Skipped("server1"),
+				servertest.Skipped("server1"),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,

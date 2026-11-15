@@ -91,7 +91,16 @@ just deps
   follows.
 - **`internal/behavior/`.** The framework that defines behaviors, and its tools:
   the host that a provider is built from, the test harnesses, the spec builder
-  and the generator.
+  and the generator. `command/` runs the generated commands, and `server/`
+  serves the generated routes.
+- **`internal/pki/`.** The keys and signatures of an agent and the controller.
+  Both processes use it.
+- **`internal/bus/`.** The NATS options, and the buckets and streams that osapi
+  makes. Each process that connects to NATS uses it.
+- **`internal/atomicfile/`.** It writes a file so that a reader sees the old
+  file or the new file, never a part.
+- **`internal/cli/`.** The output of the CLI: the theme, tables, help, errors
+  and logs.
 - **`internal/skills/`.** The agent skills, in `resources/`, and the code that
   installs them (`osapi init`) and serves them (`osapi skill`). Each skill is
   one directory, with its references and its evals.
@@ -110,6 +119,16 @@ just deps
 - **`internal/` is all the code that makes osapi work:** the agent, the
   controller, the job system, configuration, telemetry and behaviors. No code
   outside this module imports it, so it can change freely.
+- **One process, one tree.** `internal/agent/` and `internal/controller/` never
+  import each other. Code that both use goes in a top-level package, for example
+  `internal/pki/`, `internal/bus/` or `internal/job/`.
+- **The rules for each Go package are in [Go patterns](#go-patterns).** In
+  osapi, `internal/behavior/command/` and `internal/behavior/server/` are under
+  the framework that they belong to. `internal/telemetry/` groups `metrics`,
+  `tracing`, `httplog` and `process`.
+- **Some old packages do not obey these rules yet.**
+  [#717](https://github.com/osapi-io/osapi/issues/717) lists them. Obey the
+  rules in a new package.
 - **A package that only one tree uses goes in that tree.** An example is
   `internal/behavior/behaviortest`, the fake host that only the tests of
   behaviors use. Do not put such a package at the top level, next to packages
@@ -238,6 +257,21 @@ that file.
 - Give an unused parameter the name `_`.
 - Put imports in three groups, with a blank line between them: the standard
   library, third-party packages, then local packages.
+- A package holds one kind of thing, and its name tells what. Do not make a
+  package named `util`, `common`, `helpers` or `shared`.
+- The name of a package is the last part of its path. An exported name does not
+  repeat it inside a longer name: `atomicfile.Write`, not
+  `atomicfile.WriteFileAtomic`. The main type can have the name of the package,
+  as `time.Time` does.
+- A caller does not need an alias. If two packages that a file imports have the
+  same name, rename one of them. Mock packages are the exception. Each is named
+  `mocks`, so a test that uses two of them gives one an alias. A clash with a
+  package outside the module, or between two names that are both correct, also
+  takes an alias.
+- A directory can group packages that belong together. Do not put many packages
+  under one package.
+  [A Go package is one thing](https://github.com/osapi-io/specs/blob/main/CONSTITUTION.md#a-go-package-is-one-thing)
+  tells why.
 
 ### Test doubles
 
@@ -319,7 +353,10 @@ All logs use `log/slog`, the structured logger of Go.
 ### Lifecycle
 
 A component has a lifecycle that does not block. `Start()` returns immediately.
-`Stop(ctx)` stops the component before a deadline.
+`Stop(ctx)` stops the component before a deadline. The `component` interface in
+`cmd/shutdown.go` has these two methods. A start command gives its components to
+`serve`. `serve` starts them, waits for the signal, then stops them with one
+context that ends after `shutdownTimeout`.
 
 ### Filesystem access
 

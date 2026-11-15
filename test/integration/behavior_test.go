@@ -33,8 +33,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/command"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
-	behaviorcli "github.com/osapi-io/osapi/internal/cli/behavior"
 )
 
 // BehaviorSmokeSuite runs every registered behavior's generated commands
@@ -50,16 +50,16 @@ type BehaviorSmokeSuite struct {
 	suite.Suite
 }
 
-// command is the generated command line for one method, with input's flags:
+// commandLine is the generated command line for one method, with input's flags:
 // the docs pages' command without the binary's name.
-func command(
+func commandLine(
 	b *behavior.Behavior,
 	m *behavior.Method,
 	input any,
 ) []string {
 	args := append(strings.Fields(b.CLICommand(m))[1:], "--target", "_any", "--json")
 
-	return append(args, behaviorcli.Args(input)...)
+	return append(args, command.Args(input)...)
 }
 
 // results runs one command and returns its result rows.
@@ -103,7 +103,7 @@ func (s *BehaviorSmokeSuite) TestReads() {
 				continue
 			}
 			s.Run(b.Name+" "+m.Name, func() {
-				s.results(command(b, m, nil))
+				s.results(commandLine(b, m, nil))
 			})
 		}
 	}
@@ -130,18 +130,18 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 						}
 						for _, before := range b.Methods {
 							if before.In == reflect.TypeOf(g.Input) {
-								s.results(command(b, before, g.Input))
+								s.results(commandLine(b, before, g.Input))
 							}
 						}
 					}
 
 					want, _ := behavior.Changed(ex.Output)
-					for _, r := range s.results(command(b, m, ex.Input)) {
+					for _, r := range s.results(commandLine(b, m, ex.Input)) {
 						if r["status"] == "ok" {
 							s.Equal(want, r["changed"], "the example's changed")
 						}
 					}
-					for _, r := range s.results(command(b, m, ex.Input)) {
+					for _, r := range s.results(commandLine(b, m, ex.Input)) {
 						if r["status"] == "ok" {
 							s.Equal(false, r["changed"], "the same call again changes nothing")
 						}

@@ -37,10 +37,10 @@ import (
 
 	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/agent/identity"
-	"github.com/osapi-io/osapi/internal/agent/pki"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/pki"
 	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
 	netinfoMocks "github.com/osapi-io/osapi/internal/provider/network/netinfo/mocks"
 	dnsMocks "github.com/osapi-io/osapi/internal/provider/network/netplan/dns/mocks"

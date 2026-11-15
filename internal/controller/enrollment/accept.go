@@ -29,7 +29,7 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 
-	"github.com/osapi-io/osapi/internal/agent/pki"
+	"github.com/osapi-io/osapi/internal/pki"
 )
 
 // AcceptAgent accepts a pending agent by machine ID. It publishes an

@@ -9,8 +9,8 @@ import (
 
 	suite "github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/behavior/server"
 	"github.com/osapi-io/osapi/internal/behaviors/sysctl/gen"
-	behaviorapi "github.com/osapi-io/osapi/internal/controller/api/behavior"
 )
 
 type APIPublicTestSuite struct {
@@ -18,7 +18,7 @@ type APIPublicTestSuite struct {
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
-	routes := gen.Routes(behaviorapi.NewServer(slog.Default(), nil, "", nil))
+	routes := gen.Routes(server.New(slog.Default(), nil, "", nil))
 	want := []struct {
 		method     string
 		path       string

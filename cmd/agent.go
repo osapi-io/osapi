@@ -26,8 +26,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/osapi-io/osapi/internal/behavior/command"
 	"github.com/osapi-io/osapi/internal/cli"
-	behaviorcli "github.com/osapi-io/osapi/internal/cli/behavior"
 )
 
 // agentCmd represents the agent command.
@@ -62,7 +62,7 @@ func init() {
 	// Each behavior's settings, as --<behavior>-<setting> flags bound to
 	// behaviors.<behavior>.<setting>. The agent runs the methods that read
 	// them, so the flags are here.
-	behaviorcli.SettingFlags(agentCmd.PersistentFlags(), viper.GetViper())
+	command.SettingFlags(agentCmd.PersistentFlags(), viper.GetViper())
 
 	// Agent configuration flags
 	agentCmd.PersistentFlags().

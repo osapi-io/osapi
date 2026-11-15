@@ -30,7 +30,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
-	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller"
 	"github.com/osapi-io/osapi/internal/job"
@@ -61,7 +61,7 @@ func startNATSHeartbeat(
 	var nc NATSClient = natsclient.New(log, &natsclient.Options{
 		Host: host,
 		Port: port,
-		Auth: cli.BuildNATSServerClientAuth(serverAuth),
+		Auth: bus.ServerClientAuth(serverAuth),
 		Name: "osapi-nats-heartbeat",
 	})
 
@@ -73,14 +73,14 @@ func startNATSHeartbeat(
 		return
 	}
 
-	registryKVConfig := cli.BuildRegistryKVConfig(namespace, appConfig.NATS.Registry)
+	registryKVConfig := bus.RegistryKV(namespace, appConfig.NATS.Registry)
 	registryKV, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, registryKVConfig)
 	if err != nil {
 		log.Warn(
 			"failed to get registry KV for NATS heartbeat, skipping",
 			slog.String("error", err.Error()),
 		)
-		cli.CloseNATSClient(nc)
+		bus.Close(nc)
 		return
 	}
 
@@ -102,7 +102,7 @@ func startNATSHeartbeat(
 	)
 
 	go func() {
-		defer cli.CloseNATSClient(nc)
+		defer bus.Close(nc)
 		hb.Start(ctx)
 	}()
 }

@@ -32,7 +32,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/osapi-io/osapi/internal/fsutil"
+	"github.com/osapi-io/osapi/internal/atomicfile"
 
 	"github.com/osapi-io/osapi/internal/provider"
 )
@@ -140,7 +140,7 @@ func (d *Debian) AddKey(
 
 	updated += key.RawLine + "\n"
 
-	if err := fsutil.WriteFileAtomic(
+	if err := atomicfile.Write(
 		d.fs,
 		authKeysPath,
 		[]byte(updated),
@@ -236,7 +236,7 @@ func (d *Debian) RemoveKey(
 
 	output := strings.Join(remaining, "\n")
 
-	if err := fsutil.WriteFileAtomic(
+	if err := atomicfile.Write(
 		d.fs,
 		authKeysPath,
 		[]byte(output),

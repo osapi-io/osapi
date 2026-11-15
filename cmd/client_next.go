@@ -26,8 +26,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/osapi-io/osapi/internal/behavior/command"
 	"github.com/osapi-io/osapi/internal/cli"
-	behaviorcli "github.com/osapi-io/osapi/internal/cli/behavior"
 
 	// Every behavior with a CLI registers its generated commands.
 	_ "github.com/osapi-io/osapi/internal/behaviors/all/gen"
@@ -54,10 +54,10 @@ func init() {
 	clientNextNodeCmd.PersistentFlags().
 		StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
 
-	clientNextCmd.Hidden = !behaviorcli.HasNext()
+	clientNextCmd.Hidden = !command.HasNext()
 
-	if err := behaviorcli.Attach(clientNodeCmd, clientNextNodeCmd, behaviorcli.Deps{
-		Caller: func() behaviorcli.Caller { return sdkClient },
+	if err := command.Attach(clientNodeCmd, clientNextNodeCmd, command.Deps{
+		Caller: func() command.Caller { return sdkClient },
 		JSON:   func() bool { return jsonOutput },
 		Error:  func(err error) { cli.HandleError(err, logger) },
 	}); err != nil {

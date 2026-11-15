@@ -34,9 +34,9 @@ import (
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
-	"github.com/osapi-io/osapi/internal/fsutil"
 )
 
 // marshalJSON is a package-level variable for testing the marshal error path.
@@ -92,7 +92,7 @@ func (d *debian) Write(
 			return false, fmt.Errorf("create directory: %w", err)
 		}
 		// Atomically: a reader of the directory never sees half a file.
-		if err := fsutil.WriteFileAtomic(d.fs, f.Path, f.Content, mode); err != nil {
+		if err := atomicfile.Write(d.fs, f.Path, f.Content, mode); err != nil {
 			return false, fmt.Errorf("write file: %w", err)
 		}
 		changed = true

@@ -25,7 +25,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 )
@@ -73,8 +72,7 @@ Configures streams, consumers, and KV buckets needed by the job system.
 			}
 		}
 
-		var ns cli.Lifecycle = &natsLifecycle{server: s}
-		cli.RunServer(ctx, ns, func(shutdownCtx context.Context) {
+		serve(ctx, []component{&embeddedNATS{server: s}}, func(shutdownCtx context.Context) {
 			if metricsServer != nil {
 				metricsServer.Stop(shutdownCtx)
 			}

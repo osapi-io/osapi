@@ -25,6 +25,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
@@ -77,14 +78,13 @@ It processes jobs as they become available.
 			metricsServer.RegisterHeartbeatAge(a.LastHeartbeatTime)
 		}
 
-		a.Start()
-		cli.RunServer(ctx, a, func(shutdownCtx context.Context) {
+		serve(ctx, []component{a}, func(shutdownCtx context.Context) {
 			if metricsServer != nil {
 				metricsServer.Stop(shutdownCtx)
 			}
 
 			_ = shutdownTracer(shutdownCtx)
-			cli.CloseNATSClient(b.nc)
+			bus.Close(b.nc)
 		})
 	},
 }

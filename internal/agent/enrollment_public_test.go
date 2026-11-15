@@ -43,9 +43,9 @@ import (
 
 	"github.com/osapi-io/osapi/internal/agent"
 	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
-	"github.com/osapi-io/osapi/internal/agent/pki"
 	"github.com/osapi-io/osapi/internal/config"
 	jobMocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/pki"
 )
 
 type EnrollmentPublicTestSuite struct {
