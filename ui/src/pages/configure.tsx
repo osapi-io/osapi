@@ -386,8 +386,7 @@ export function Configure() {
               schedule: block.data.schedule as string,
               object: block.data.object as string,
               content_type: ((block.data.content_type as string) || "raw") as
-                | "raw"
-                | "template",
+                "raw" | "template",
             });
             break;
           case "cron-list":
@@ -397,10 +396,7 @@ export function Configure() {
             result = await deleteNodeSchedule(t, block.data.name as string);
             break;
           case "cron-get":
-            result = await getNodeScheduleByName(
-              t,
-              block.data.name as string,
-            );
+            result = await getNodeScheduleByName(t, block.data.name as string);
             break;
           case "cron-update":
             result = await putNodeSchedule(t, block.data.name as string, {
@@ -504,8 +500,7 @@ export function Configure() {
             result = await postFile({
               name: block.data.name as string,
               content_type: ((block.data.content_type as string) || "raw") as
-                | "raw"
-                | "template",
+                "raw" | "template",
               file,
             });
             break;

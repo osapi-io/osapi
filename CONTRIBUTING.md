@@ -70,6 +70,9 @@ just deps
 
 - **`cmd/`.** The Cobra CLI commands (`client`, `node agent`, `controller.api`,
   `nats server`).
+- **`internal/controller/`.** `controller.New` makes the controller process: the
+  NATS connection, the REST API with each handler, the heartbeat and the
+  watchers. A new API handler goes in `handlers.go`.
 - **`internal/controller/api/`.** The Echo REST API. The handlers that target a
   node are under `node/{domain}/`. The handlers for the controller only are at
   the top level (`job/`, `health/`). Each domain has its own `gen/` with an
@@ -139,6 +142,9 @@ just deps
 - **Declare an interface where you use it.** `internal/behavior/host` declares
   `Exec`, the part of the command runner that a provider calls. It does not use
   the type of the agent.
+- **Code in `internal/` returns an error. Only `cmd/` ends the process.** A
+  command calls `cli.LogFatal` with the error that it gets. Nothing in
+  `internal/` calls `LogFatal` or `os.Exit`.
 - **`cmd/` imports `pkg/` and `internal/`.** It connects them. It holds no logic
   of its own that needs a test.
 - **Embedded files go in `resources/` of the package that owns them.** The
@@ -177,11 +183,13 @@ list in a page becomes incorrect when the configuration changes. Formatting does
 not apply to generated files (`*.gen.go`, `*.pb.go`).
 
 [Prettier] formats the TypeScript and the CSS in `ui/`. [ESLint] examines them
-for problems.
+for problems. `just test` checks the format, so CI makes sure that it is
+correct.
 
 ```bash
-just react-fmt      # Auto-fix UI formatting
-just react-lint     # Run ESLint
+just react-fmt-check   # Check UI formatting
+just react-fmt         # Auto-fix UI formatting
+just react-lint        # Run ESLint
 ```
 
 ### Documentation

@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
@@ -33,9 +34,11 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	sysctlBehavior "github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/bus"
+	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job"
+	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/provider/command"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
@@ -59,6 +62,7 @@ import (
 	userProv "github.com/osapi-io/osapi/internal/provider/node/user"
 	cronProv "github.com/osapi-io/osapi/internal/provider/schedule/cron"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
+	"github.com/osapi-io/osapi/internal/validation"
 	"github.com/osapi-io/osapi/pkg/sdk/platform"
 )
 
@@ -74,11 +78,33 @@ func setupAgent(
 	ctx context.Context,
 	log *slog.Logger,
 	connCfg config.NATSConnection,
-) (*agent.Agent, *natsBundle, map[string]job.SubComponentInfo) {
+) (*agent.Agent, *jobclient.Connection, map[string]job.SubComponentInfo) {
 	namespace := connCfg.Namespace
 	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
 
-	b := connectNATSBundle(ctx, log, connCfg, namespace, streamName)
+	jobTimeout, _ := time.ParseDuration(appConfig.Controller.API.JobTimeout)
+	b, err := jobclient.Connect(
+		ctx,
+		log,
+		connCfg,
+		appConfig.NATS,
+		jobTimeout,
+		validation.ResolveTarget,
+	)
+	if err != nil {
+		cli.LogFatal(log, "failed to connect to NATS", err)
+	}
+
+	// Make the Object Store bucket, as the agent did before it used
+	// jobclient.Connect. createFileProvider only opens it.
+	if appConfig.NATS.Objects.Bucket != "" {
+		objCfg := bus.ObjectStore(namespace, appConfig.NATS.Objects)
+		if _, err := b.NATS.CreateOrUpdateObjectStore(ctx, objCfg); err != nil {
+			log.Warn("Object Store not available, file endpoints disabled",
+				slog.String("bucket", objCfg.Bucket),
+				slog.String("error", err.Error()))
+		}
+	}
 
 	plat := platform.Detect()
 	if plat == "darwin" {
@@ -328,7 +354,7 @@ func setupAgent(
 		appFs,
 		appConfig,
 		log,
-		b.jobClient,
+		b.Jobs,
 		streamName,
 		hostProvider,
 		diskProvider,
@@ -337,10 +363,10 @@ func setupAgent(
 		netinfoProvider,
 		process.New(),
 		registry,
-		b.registryKV,
-		b.factsKV,
+		b.RegistryKV,
+		b.FactsKV,
 		execManager,
-		b.nc,
+		b.NATS,
 	)
 
 	enabledOrDisabled := func(enabled bool) string {
@@ -377,7 +403,7 @@ func setupAgent(
 func createFileProvider(
 	ctx context.Context,
 	log *slog.Logger,
-	b *natsBundle,
+	b *jobclient.Connection,
 	namespace string,
 	hostname string,
 	execManager exec.Manager,
@@ -387,7 +413,7 @@ func createFileProvider(
 	}
 
 	objStoreName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Objects.Bucket)
-	objStore, err := b.nc.ObjectStore(ctx, objStoreName)
+	objStore, err := b.NATS.ObjectStore(ctx, objStoreName)
 	if err != nil {
 		log.Warn(
 			"Object Store not available, file operations disabled",
@@ -398,7 +424,7 @@ func createFileProvider(
 	}
 
 	fileStateKVConfig := bus.FileStateKV(namespace, appConfig.NATS.FileState)
-	fileStateKV, err := b.nc.CreateOrUpdateKVBucketWithConfig(ctx, fileStateKVConfig)
+	fileStateKV, err := b.NATS.CreateOrUpdateKVBucketWithConfig(ctx, fileStateKVConfig)
 	if err != nil {
 		log.Warn(
 			"file state KV not available, file operations disabled",

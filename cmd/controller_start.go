@@ -25,11 +25,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/internal/controller/api"
+	"github.com/osapi-io/osapi/internal/controller"
 	"github.com/osapi-io/osapi/internal/job"
-	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 	"github.com/osapi-io/osapi/internal/telemetry/tracing"
 )
@@ -58,7 +56,7 @@ var controllerStartCmd = &cobra.Command{
 		// Create the metrics server before the API server so the
 		// MeterProvider can be injected into otelecho middleware.
 		var metricsServer *metrics.Server
-		var controllerOpts []api.Option
+		var controllerOpts []controller.Option
 
 		if appConfig.Controller.Metrics.Enabled {
 			metricsServer = metrics.New(
@@ -70,34 +68,30 @@ var controllerStartCmd = &cobra.Command{
 			if metricsServer != nil {
 				controllerOpts = append(
 					controllerOpts,
-					api.WithMeterProvider(metricsServer.MeterProvider()),
+					controller.WithMeterProvider(metricsServer.MeterProvider()),
 				)
 			}
 		}
 
-		sm, b := setupController(ctx, log, appConfig.Controller.NATS, controllerOpts...)
-
-		if metricsServer != nil {
-			if jc, ok := b.jobClient.(*jobclient.Client); ok {
-				jc.SetMeterProvider(metricsServer.MeterProvider())
-			}
+		c, err := controller.New(ctx, log, appConfig, controllerOpts...)
+		if err != nil {
+			cli.LogFatal(log, "failed to start the controller", err)
 		}
 
 		if metricsServer != nil {
 			metricsServer.SetReadinessFunc(func() error {
-				return b.checker.CheckHealth(context.Background())
+				return c.CheckHealth(context.Background())
 			})
-			metricsServer.RegisterSubsystems(subsystemStatuses(b.subComponents))
+			metricsServer.RegisterSubsystems(metrics.Subsystems(c.SubComponents()))
 			metricsServer.Start()
 		}
 
-		serve(ctx, []component{sm}, func(shutdownCtx context.Context) {
+		serve(ctx, []component{c}, func(shutdownCtx context.Context) {
 			if metricsServer != nil {
 				metricsServer.Stop(shutdownCtx)
 			}
 
 			_ = shutdownTracer(shutdownCtx)
-			bus.Close(b.nc)
 		})
 	},
 }

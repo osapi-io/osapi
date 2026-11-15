@@ -5,7 +5,10 @@ import { PopoverPanel, PopoverItem } from "@/components/ui/popover";
 import { useOutsideClick } from "@/hooks/use-outside-click";
 import { usePopoverKeyboard } from "@/hooks/use-popover-keyboard";
 import { getNodeSchedule } from "@/sdk/gen/schedule-management-api-schedule-operations/schedule-management-api-schedule-operations";
-import type { ScheduleEntry, ScheduleCollectionResponse } from "@/sdk/gen/schemas";
+import type {
+  ScheduleEntry,
+  ScheduleCollectionResponse,
+} from "@/sdk/gen/schemas";
 import { ChevronDown, Calendar } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -16,7 +19,12 @@ interface SchedulePickerProps {
   onChange: (value: string) => void;
 }
 
-export function SchedulePicker({ id, label, value, onChange }: SchedulePickerProps) {
+export function SchedulePicker({
+  id,
+  label,
+  value,
+  onChange,
+}: SchedulePickerProps) {
   const [entries, setEntries] = useState<ScheduleEntry[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);

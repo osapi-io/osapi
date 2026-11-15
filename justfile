@@ -73,6 +73,7 @@ build:
 test: linux-tune
     just just-fmt-check
     just docs-fmt-check
+    just react-fmt-check
     just behavior-gen-check
     just go-generate-check
     just docs-gen-check

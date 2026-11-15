@@ -37,7 +37,9 @@ var agentCmd = &cobra.Command{
 	Long: `Manage the node agent process. The agent runs on each managed host,
 processes jobs, and reports status back to the control plane.`,
 	PersistentPreRun: func(_ *cobra.Command, _ []string) {
-		cli.ValidateDistribution(logger)
+		if err := cli.ValidateDistribution(logger); err != nil {
+			cli.LogFatal(logger, "unsupported host", err)
+		}
 
 		logger.Debug(
 			"agent configuration",
