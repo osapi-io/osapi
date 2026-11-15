@@ -99,13 +99,17 @@ func Scaffold(
 	}
 
 	var tmpls []string
-	_ = fs.WalkDir(scaffoldFiles, "resources/scaffold", func(p string, d fs.DirEntry, err error) error {
-		if err == nil && !d.IsDir() && strings.HasSuffix(p, ".tmpl") {
-			tmpls = append(tmpls, p)
-		}
+	_ = fs.WalkDir(
+		scaffoldFiles,
+		"resources/scaffold",
+		func(p string, d fs.DirEntry, err error) error {
+			if err == nil && !d.IsDir() && strings.HasSuffix(p, ".tmpl") {
+				tmpls = append(tmpls, p)
+			}
 
-		return nil
-	})
+			return nil
+		},
+	)
 	type file struct {
 		rel  string
 		data []byte
@@ -116,7 +120,10 @@ func Scaffold(
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", t, err)
 		}
-		rel := filepath.Join(dir, strings.TrimSuffix(strings.TrimPrefix(t, "resources/scaffold/"), ".tmpl"))
+		rel := filepath.Join(
+			dir,
+			strings.TrimSuffix(strings.TrimPrefix(t, "resources/scaffold/"), ".tmpl"),
+		)
 		files = append(files, file{rel, src})
 	}
 	files = append(files, file{allFile, registered})
