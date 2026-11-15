@@ -34,7 +34,7 @@ import (
 var clientControllerKeyCmd = &cobra.Command{
 	Use:   "key",
 	Short: "Controller key management",
-	Long: "The `key` subcommands operate on the PKI key pair of the local controller.",
+	Long:  "The `key` subcommands operate on the PKI key pair of the local controller.",
 }
 
 // clientControllerKeyFingerprintCmd prints the local controller's key fingerprint.

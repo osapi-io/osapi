@@ -99,6 +99,6 @@ includes this permission by default. Do not grant it to untrusted tokens.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/power/power.md): power commands
+- [CLI Reference](../usage/cli/client/node/power/power.mdx): power commands
 - [Platform Detection](../sdk/platform/detection.md): OS family detection
 - [Configuration](../usage/configuration.md): full configuration reference

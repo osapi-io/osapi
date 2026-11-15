@@ -30,7 +30,7 @@ import (
 var clientNodeServiceDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a systemd service unit file",
-	Long: "If the service runs, the agent stops and disables it.",
+	Long:  "If the service runs, the agent stops and disables it.",
 	Example: `  osapi client node service delete --target web-01 \
     --name myapp.service
   osapi client node service delete --target _all \

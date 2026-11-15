@@ -184,7 +184,7 @@ To list and examine services, you need `service:read`. All built-in roles
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/service/service.md): the service
+- [CLI Reference](../usage/cli/client/node/service/service.mdx): the service
   commands
 - [SDK Reference](../sdk/client/services/service.md): the service of the SDK
 - [Platform Detection](../sdk/platform/detection.md): how osapi finds the OS

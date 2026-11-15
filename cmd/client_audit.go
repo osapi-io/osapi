@@ -28,7 +28,7 @@ import (
 var clientAuditCmd = &cobra.Command{
 	Use:   "audit",
 	Short: "Audit log endpoints",
-	Long: "It needs the `audit:read` permission, which the admin role has by default.",
+	Long:  "It needs the `audit:read` permission, which the admin role has by default.",
 }
 
 func init() {

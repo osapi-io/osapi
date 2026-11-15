@@ -34,7 +34,7 @@ import (
 var clientAgentKeyCmd = &cobra.Command{
 	Use:   "key",
 	Short: "Agent key management",
-	Long: "The `key` subcommands operate on the PKI key pair of the local agent.",
+	Long:  "The `key` subcommands operate on the PKI key pair of the local agent.",
 }
 
 // clientAgentKeyFingerprintCmd prints the local agent's key fingerprint.

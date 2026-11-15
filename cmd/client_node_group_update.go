@@ -31,7 +31,7 @@ import (
 var clientNodeGroupUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update a group",
-	Long: "The `--members` flag replaces all of the member list.",
+	Long:  "The `--members` flag replaces all of the member list.",
 	Example: `  osapi client node group update --target web-01 \
     --name deploy --members alice,bob`,
 	Run: func(cmd *cobra.Command, _ []string) {

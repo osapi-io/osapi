@@ -26,7 +26,7 @@ import "github.com/spf13/cobra"
 var clientContainerCmd = &cobra.Command{
 	Use:   "container",
 	Short: "Container runtime management",
-	Long: "Select a runtime below.",
+	Long:  "Select a runtime below.",
 }
 
 func init() {

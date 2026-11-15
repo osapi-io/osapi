@@ -159,7 +159,7 @@ and `write` roles also include `sysctl:write`.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/sysctl/sysctl.md): sysctl commands
+- [CLI Reference](../usage/cli/client/node/sysctl/sysctl.mdx): sysctl commands
 - [File Management](file-management.md): file-state KV tracking
 - [Platform Detection](../sdk/platform/detection.md): OS family detection
 - [Configuration](../usage/configuration.md): full configuration reference

@@ -30,7 +30,7 @@ import (
 var clientNodeFileStatusCmd = &cobra.Command{
 	Use:     "status",
 	Short:   "Check deployment status of a file on a host",
-	Long: "The command reports if the file is `in-sync`, `drifted` or `missing`.",
+	Long:    "The command reports if the file is `in-sync`, `drifted` or `missing`.",
 	Example: `  osapi client node file status --path /etc/app/app.conf`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()

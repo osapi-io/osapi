@@ -30,7 +30,7 @@ import (
 var clientNodePackageUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Refresh package sources",
-	Long: "This is the same as `apt-get update`.",
+	Long:  "This is the same as `apt-get update`.",
 	Example: `  osapi client node package update --target web-01
   osapi client node package update --target _all
   osapi client node package update --target web-01 --json`,

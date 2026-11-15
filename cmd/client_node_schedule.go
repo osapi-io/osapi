@@ -28,7 +28,7 @@ import (
 var clientNodeScheduleCmd = &cobra.Command{
 	Use:     "schedule",
 	Short:   "Manage scheduled entries (cron) on target hosts",
-	Long: "On Debian family hosts, these are cron drop-in files in `/etc/cron.d/`.",
+	Long:    "On Debian family hosts, these are cron drop-in files in `/etc/cron.d/`.",
 	Example: `  osapi client node schedule list --target web-01 --json`,
 }
 
