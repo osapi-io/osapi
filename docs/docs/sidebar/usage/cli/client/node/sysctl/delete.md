@@ -22,7 +22,8 @@ osapi client node sysctl delete --target web-01 \
 
 ## Result
 
-If the parameter does not exist, the command returns `changed: false`.
+If osapi does not manage the parameter, the command returns `changed: false`.
+The agent does not remove a file that osapi did not write.
 
 ## Flags
 

@@ -34,8 +34,8 @@ var clientNodeNetworkDNSDeleteCmd = &cobra.Command{
 	Long: "The agent removes the `/etc/netplan/osapi-dns.yaml` file and runs `netplan\n" +
 		"apply`.",
 	Annotations: map[string]string{
-		reference.Result: "If osapi does not manage a DNS configuration for the interface, the\n" +
-			"command returns `changed: false`.",
+		reference.Result: "If osapi does not manage a DNS configuration, the command returns " +
+			"`changed: false`.",
 	},
 	Example: `  osapi client node network dns delete \
     --interface eth0

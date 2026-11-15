@@ -35,8 +35,9 @@ var clientNodeSysctlCreateCmd = &cobra.Command{
 	Long: "The agent writes the value to `/etc/sysctl.d/osapi-{key}.conf` and applies\n" +
 		"it immediately with `sysctl -p`.",
 	Annotations: map[string]string{
-		reference.Result: "If osapi already manages the parameter, the command returns `changed:\n" +
-			"false`. To change a parameter, use `update`.",
+		reference.Result: "If the file and the kernel have the requested value, the command returns " +
+			"`changed: false`. If the file was changed by hand, or holds a different " +
+			"value, the agent writes it again and applies it.",
 	},
 	Example: `  osapi client node sysctl create --target web-01 \
     --key net.ipv4.ip_forward --value 1

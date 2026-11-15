@@ -35,7 +35,8 @@ var clientNodeSysctlDeleteCmd = &cobra.Command{
 		"kernel keeps the value until the next reboot, or until you set a new\n" +
 		"value.",
 	Annotations: map[string]string{
-		reference.Result: "If the parameter does not exist, the command returns `changed: false`.",
+		reference.Result: "If osapi does not manage the parameter, the command returns `changed: " +
+			"false`. The agent does not remove a file that osapi did not write.",
 	},
 	Example: `  osapi client node sysctl delete --target web-01 \
     --key net.ipv4.ip_forward

@@ -33,8 +33,9 @@ var clientNodeNetworkInterfaceCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a network interface configuration",
 	Annotations: map[string]string{
-		reference.Result: "The command fails if osapi already manages a configuration for that\n" +
-			"interface. To replace it, use `update`.",
+		reference.Result: "If osapi already manages a configuration for that interface, the command " +
+			"returns `changed: false` and does not change the file. To change it, use " +
+			"`update`.",
 	},
 	Example: `  osapi client node network interface create \
     --target web-01 --name eth0 \

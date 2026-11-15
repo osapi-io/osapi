@@ -19,7 +19,7 @@ osapi client node ntp delete --target web-01 --json
 
 ## Result
 
-If the configuration does not exist, the command returns `changed: false`.
+The command fails if the configuration does not exist.
 
 ## Global flags
 

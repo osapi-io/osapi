@@ -27,8 +27,9 @@ osapi client node network route create \
 
 ## Result
 
-The command fails if osapi already manages a route configuration for that
-interface. To replace it, use `update`.
+If osapi already manages a route configuration for that interface, the command
+returns `changed: false` and does not change the file. To change it, use
+`update`. The command fails if a route is a default route.
 
 ## Flags
 

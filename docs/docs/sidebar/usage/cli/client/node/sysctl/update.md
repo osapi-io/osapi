@@ -22,7 +22,8 @@ osapi client node sysctl update --target web-01 \
 
 ## Result
 
-The command fails if osapi does not manage the key. If the parameter already has
+The command is the same as `create`. It sets the parameter, and osapi manages
+it, also when osapi did not manage it before. If the file and the kernel have
 the requested value, the command returns `changed: false`.
 
 ## Flags

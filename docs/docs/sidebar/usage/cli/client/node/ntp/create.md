@@ -22,8 +22,8 @@ osapi client node ntp create --target _all \
 
 ## Result
 
-If osapi already manages it, the command returns `changed: false`. To change the
-server list, use `update`.
+If the configuration has the same server list, the command returns
+`changed: false`. If the configuration is different, the agent writes it again.
 
 ## Flags
 

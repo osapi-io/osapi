@@ -36,7 +36,8 @@ var clientNodeServiceCreateCmd = &cobra.Command{
 		"writes the file to `/etc/systemd/system/{name}` and runs `systemctl\n" +
 		"daemon-reload`.",
 	Annotations: map[string]string{
-		reference.Result: "The command fails if the name exists. To replace it, use `update`.",
+		reference.Result: "If the unit file has the same content, the command returns `changed: " +
+			"false`. If the file has different content, the agent writes it again.",
 	},
 	Example: `  osapi client node service create --target web-01 \
     --name myapp.service --object myapp-unit

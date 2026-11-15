@@ -35,7 +35,7 @@ var clientNodeNtpDeleteCmd = &cobra.Command{
 		"reloads chrony. The system then uses the other chrony configuration that\n" +
 		"stays.",
 	Annotations: map[string]string{
-		reference.Result: "If the configuration does not exist, the command returns `changed: false`.",
+		reference.Result: "The command fails if the configuration does not exist.",
 	},
 	Example: `  osapi client node ntp delete --target web-01
   osapi client node ntp delete --target _all

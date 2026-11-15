@@ -23,7 +23,8 @@ osapi client node certificate create --target web-01 \
 
 ## Result
 
-The command fails if the name exists. To change it, use `update`.
+If the certificate file has the same content, the command returns
+`changed: false`. If the file has different content, the agent writes it again.
 
 ## Flags
 

@@ -35,7 +35,8 @@ var clientNodeScheduleUpdateCmd = &cobra.Command{
 	Long: "The command updates only the fields that you give. If nothing changed, it\n" +
 		"returns `Changed: false`.",
 	Annotations: map[string]string{
-		reference.Result: "To change the values of a template, give each `--var key=value` again.",
+		reference.Result: "The agent does not keep the `--var` values of the last deploy. Give each " +
+			"`--var key=value` again, or the template renders without them.",
 	},
 	Example: `  osapi client node schedule update --target web-01 \
     --name backup-daily \

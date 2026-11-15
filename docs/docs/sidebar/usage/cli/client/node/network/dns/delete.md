@@ -23,8 +23,8 @@ osapi client node network dns delete \
 
 ## Result
 
-If osapi does not manage a DNS configuration for the interface, the command
-returns `changed: false`.
+If osapi does not manage a DNS configuration, the command returns
+`changed: false`.
 
 ## Flags
 

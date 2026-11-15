@@ -36,7 +36,9 @@ var clientNodeCertificateCreateCmd = &cobra.Command{
 		"certificate to `/usr/local/share/ca-certificates/{name}.crt`. Then\n" +
 		"`update-ca-certificates` makes the system trust store again.",
 	Annotations: map[string]string{
-		reference.Result: "The command fails if the name exists. To change it, use `update`.",
+		reference.Result: "If the certificate file has the same content, the command returns " +
+			"`changed: false`. If the file has different content, the agent writes it " +
+			"again.",
 	},
 	Example: `  osapi client node certificate create --target web-01 \
     --name internal-ca --object internal-ca

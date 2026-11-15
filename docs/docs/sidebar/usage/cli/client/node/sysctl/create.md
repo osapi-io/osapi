@@ -22,8 +22,9 @@ osapi client node sysctl create --target web-01 \
 
 ## Result
 
-If osapi already manages the parameter, the command returns `changed: false`. To
-change a parameter, use `update`.
+If the file and the kernel have the requested value, the command returns
+`changed: false`. If the file was changed by hand, or holds a different value,
+the agent writes it again and applies it.
 
 ## Flags
 

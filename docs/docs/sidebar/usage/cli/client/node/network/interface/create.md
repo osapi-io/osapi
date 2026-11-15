@@ -21,8 +21,8 @@ osapi client node network interface create \
 
 ## Result
 
-The command fails if osapi already manages a configuration for that interface.
-To replace it, use `update`.
+If osapi already manages a configuration for that interface, the command returns
+`changed: false` and does not change the file. To change it, use `update`.
 
 ## Flags
 

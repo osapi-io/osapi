@@ -35,8 +35,9 @@ var clientNodeNtpCreateCmd = &cobra.Command{
 	Long: "The agent writes the server list to `/etc/chrony/conf.d/osapi-ntp.conf`\n" +
 		"and reloads chrony immediately.",
 	Annotations: map[string]string{
-		reference.Result: "If osapi already manages it, the command returns `changed: false`. To\n" +
-			"change the server list, use `update`.",
+		reference.Result: "If the configuration has the same server list, the command returns " +
+			"`changed: false`. If the configuration is different, the agent writes it " +
+			"again.",
 	},
 	Example: `  osapi client node ntp create --target web-01 \
     --servers 0.pool.ntp.org --servers 1.pool.ntp.org

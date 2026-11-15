@@ -22,7 +22,8 @@ osapi client node service create --target web-01 \
 
 ## Result
 
-The command fails if the name exists. To replace it, use `update`.
+If the unit file has the same content, the command returns `changed: false`. If
+the file has different content, the agent writes it again.
 
 ## Flags
 

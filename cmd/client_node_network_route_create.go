@@ -40,8 +40,9 @@ var clientNodeNetworkRouteCreateCmd = &cobra.Command{
 		"CIDR notation. `VIA` is the IP address of the gateway. `METRIC` is the\n" +
 		"priority of the route, and a lower value has priority.",
 	Annotations: map[string]string{
-		reference.Result: "The command fails if osapi already manages a route configuration for that\n" +
-			"interface. To replace it, use `update`.",
+		reference.Result: "If osapi already manages a route configuration for that interface, the " +
+			"command returns `changed: false` and does not change the file. To change " +
+			"it, use `update`. The command fails if a route is a default route.",
 	},
 	Example: `  osapi client node network route create \
     --target web-01 --interface eth0 \

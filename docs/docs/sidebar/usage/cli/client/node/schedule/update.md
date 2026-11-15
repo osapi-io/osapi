@@ -19,7 +19,8 @@ osapi client node schedule update --target web-01 \
 
 ## Result
 
-To change the values of a template, give each `--var key=value` again.
+The agent does not keep the `--var` values of the last deploy. Give each
+`--var key=value` again, or the template renders without them.
 
 ## Flags
 
