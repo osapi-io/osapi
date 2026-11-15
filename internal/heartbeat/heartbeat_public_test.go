@@ -52,17 +52,16 @@ func (s *HeartbeatPublicTestSuite) SetupTest() {
 	s.mockKV = jobMocks.NewMockKeyValue(s.mockCtrl)
 	s.mockProcess = processMocks.NewMockProvider(s.mockCtrl)
 
-	s.heartbeat = heartbeat.New(
-		slog.Default(),
-		s.mockKV,
-		"web-server-01",
-		"0.1.0",
-		"api",
-		s.mockProcess,
-		10*time.Second,
-		process.ConditionThresholds{},
-		nil,
-	)
+	s.heartbeat = heartbeat.New(slog.Default(), heartbeat.Options{
+		RegistryKV:    s.mockKV,
+		Hostname:      "web-server-01",
+		Version:       "0.1.0",
+		Component:     "api",
+		Process:       s.mockProcess,
+		Interval:      10 * time.Second,
+		Thresholds:    process.ConditionThresholds{},
+		SubComponents: nil,
+	})
 }
 
 func (s *HeartbeatPublicTestSuite) TearDownTest() {
@@ -340,17 +339,16 @@ func (s *HeartbeatPublicTestSuite) TestStart() {
 			mockProcess := processMocks.NewMockProvider(ctrl)
 			tt.setupMock(mockKV, mockProcess)
 
-			hb := heartbeat.New(
-				slog.Default(),
-				mockKV,
-				"web-server-01",
-				"0.1.0",
-				"api",
-				mockProcess,
-				10*time.Millisecond,
-				process.ConditionThresholds{},
-				nil,
-			)
+			hb := heartbeat.New(slog.Default(), heartbeat.Options{
+				RegistryKV:    mockKV,
+				Hostname:      "web-server-01",
+				Version:       "0.1.0",
+				Component:     "api",
+				Process:       mockProcess,
+				Interval:      10 * time.Millisecond,
+				Thresholds:    process.ConditionThresholds{},
+				SubComponents: nil,
+			})
 
 			ctx, cancel := context.WithCancel(context.Background())
 			done := make(chan struct{})

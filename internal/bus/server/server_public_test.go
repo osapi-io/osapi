@@ -18,10 +18,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package bus_test
+package server_test
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net"
 	"testing"
@@ -31,6 +32,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/bus"
+	"github.com/osapi-io/osapi/internal/bus/server"
 	"github.com/osapi-io/osapi/internal/config"
 )
 
@@ -55,26 +57,42 @@ func freePort(
 	return l.Addr().(*net.TCPAddr).Port
 }
 
-// serverNATS is a config for an embedded server on a free port.
+// serverNATS is a config for an embedded server on a free port, with each
+// stream and bucket named.
 func serverNATS(
 	t *testing.T,
 ) config.NATS {
-	c := fullNATS()
-	c.Server = config.NATSServer{
-		Host:      "127.0.0.1",
-		Port:      freePort(t),
-		StoreDir:  t.TempDir(),
-		Namespace: "test",
-		Auth:      config.NATSServerAuth{Type: "none"},
+	return config.NATS{
+		Server: config.NATSServer{
+			Host:      "127.0.0.1",
+			Port:      freePort(t),
+			StoreDir:  t.TempDir(),
+			Namespace: "test",
+			Auth:      config.NATSServerAuth{Type: "none"},
+		},
+		Stream: config.NATSStream{
+			Name:     "JOBS",
+			Subjects: "jobs.>",
+			MaxAge:   "1h",
+			Storage:  "memory",
+			Replicas: 1,
+		},
+		KV:        config.NATSKV{Bucket: "job-queue", ResponseBucket: "job-responses"},
+		DLQ:       config.NATSDLQ{MaxAge: "24h", Storage: "memory", Replicas: 1},
+		Audit:     config.NATSAudit{Stream: "AUDIT", Subject: "audit"},
+		Registry:  config.NATSRegistry{Bucket: "agent-registry"},
+		Facts:     config.NATSFacts{Bucket: "agent-facts"},
+		State:     config.NATSState{Bucket: "agent-state"},
+		Objects:   config.NATSObjects{Bucket: "file-objects"},
+		FileState: config.NATSFileState{Bucket: "file-state"},
 	}
-
-	return c
 }
 
-func (s *ServerPublicTestSuite) TestNewServer() {
+func (s *ServerPublicTestSuite) TestNew() {
 	tests := []struct {
 		name    string
 		cfg     func() config.NATS
+		dial    func(*slog.Logger, *natsclient.Options) (*natsclient.Client, error)
 		wantErr string
 	}{
 		{
@@ -103,6 +121,14 @@ func (s *ServerPublicTestSuite) TestNewServer() {
 			wantErr: "start embedded NATS server: ",
 		},
 		{
+			name: "when the connection fails stops the server and returns the error",
+			cfg:  func() config.NATS { return serverNATS(s.T()) },
+			dial: func(*slog.Logger, *natsclient.Options) (*natsclient.Client, error) {
+				return nil, errors.New("connect to NATS: refused")
+			},
+			wantErr: "connect to NATS: refused",
+		},
+		{
 			name: "when the setup fails stops the server and returns the error",
 			cfg: func() config.NATS {
 				c := serverNATS(s.T())
@@ -115,7 +141,12 @@ func (s *ServerPublicTestSuite) TestNewServer() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			srv, err := bus.NewServer(context.Background(), slog.Default(), tc.cfg())
+			if tc.dial != nil {
+				server.SetDialFn(tc.dial)
+				defer server.ResetDialFn()
+			}
+
+			srv, err := server.New(context.Background(), slog.Default(), tc.cfg())
 
 			if tc.wantErr != "" {
 				s.ErrorContains(err, tc.wantErr)
@@ -129,15 +160,35 @@ func (s *ServerPublicTestSuite) TestNewServer() {
 	}
 }
 
-func (s *ServerPublicTestSuite) TestPrepare() {
-	s.Run("when nothing listens returns the error", func() {
-		err := bus.Prepare(context.Background(), slog.Default(), &natsclient.Options{
-			Host: "127.0.0.1",
-			Port: freePort(s.T()),
-			Auth: natsclient.AuthOptions{AuthType: natsclient.NoAuth},
-			Name: "test",
-		}, "test", fullNATS())
+// startServer runs an embedded server for one test.
+func startServer(
+	t *testing.T,
+	cfg config.NATS,
+) *server.Server {
+	srv, err := server.New(context.Background(), slog.Default(), cfg)
+	require.NoError(t, err)
+	t.Cleanup(func() { srv.Stop(context.Background()) })
 
-		s.ErrorContains(err, "connect to NATS: ")
+	return srv
+}
+
+// registryKeys returns a function that lists the keys in the registry bucket.
+func registryKeys(
+	t *testing.T,
+	cfg config.NATS,
+) func() []string {
+	nc, err := bus.Dial(slog.Default(), &natsclient.Options{
+		Host: cfg.Server.Host,
+		Port: cfg.Server.Port,
+		Auth: natsclient.AuthOptions{AuthType: natsclient.NoAuth},
+		Name: "test",
 	})
+	require.NoError(t, err)
+	t.Cleanup(nc.Close)
+	bucket := bus.RegistryKV(cfg.Server.Namespace, cfg.Registry).Bucket
+
+	return func() []string {
+		keys, _ := nc.KVKeys(bucket)
+		return keys
+	}
 }

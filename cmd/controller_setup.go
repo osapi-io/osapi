@@ -1006,20 +1006,19 @@ func startControllerHeartbeat(
 		hostname = "unknown"
 	}
 
-	hb := heartbeat.New(
-		log,
-		registryKV,
-		hostname,
-		"0.1.0",
-		"controller",
-		process.New(),
-		10*time.Second,
-		process.ConditionThresholds{
+	hb := heartbeat.New(log, heartbeat.Options{
+		RegistryKV: registryKV,
+		Hostname:   hostname,
+		Version:    "0.1.0",
+		Component:  "controller",
+		Process:    process.New(),
+		Interval:   10 * time.Second,
+		Thresholds: process.ConditionThresholds{
 			MemoryPressureBytes: appConfig.Agent.ProcessConditions.MemoryPressureBytes,
 			HighCPUPercent:      appConfig.Agent.ProcessConditions.HighCPUPercent,
 		},
-		subComponents,
-	)
+		SubComponents: subComponents,
+	})
 
 	go hb.Start(ctx)
 }

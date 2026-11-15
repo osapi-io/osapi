@@ -18,9 +18,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package bus
+package server
 
-import "os"
+import (
+	"log/slog"
+	"os"
+
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
+
+	"github.com/osapi-io/osapi/internal/bus"
+)
 
 // SetHostnameFn replaces the function that returns the name of the host.
 func SetHostnameFn(
@@ -32,4 +39,16 @@ func SetHostnameFn(
 // ResetHostnameFn puts back the function that returns the name of the host.
 func ResetHostnameFn() {
 	hostnameFn = os.Hostname
+}
+
+// SetDialFn replaces the function that connects to NATS.
+func SetDialFn(
+	fn func(*slog.Logger, *natsclient.Options) (*natsclient.Client, error),
+) {
+	dialFn = fn
+}
+
+// ResetDialFn puts back the function that connects to NATS.
+func ResetDialFn() {
+	dialFn = bus.Dial
 }

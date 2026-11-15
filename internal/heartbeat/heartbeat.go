@@ -53,29 +53,42 @@ type Heartbeat struct {
 	subComponents   map[string]job.SubComponentInfo
 }
 
-// New creates a heartbeat writer for a non-agent component.
+// Options describe the component that a Heartbeat registers.
+type Options struct {
+	// RegistryKV is the bucket that gets the registration.
+	RegistryKV jetstream.KeyValue
+	// Hostname is the host that the component runs on.
+	Hostname string
+	// Version is the version of the component.
+	Version string
+	// Component is the kind of component, for example controller or nats.
+	Component string
+	// Process reads the CPU and the memory of the process.
+	Process process.Provider
+	// Interval is the time between two registrations.
+	Interval time.Duration
+	// Thresholds tell when the process reports a condition.
+	Thresholds process.ConditionThresholds
+	// SubComponents are the parts of the component that the registration names.
+	SubComponents map[string]job.SubComponentInfo
+}
+
+// New creates a heartbeat writer for a component that is not an agent.
 func New(
 	logger *slog.Logger,
-	registryKV jetstream.KeyValue,
-	hostname string,
-	version string,
-	componentType string,
-	processProvider process.Provider,
-	interval time.Duration,
-	thresholds process.ConditionThresholds,
-	subComponents map[string]job.SubComponentInfo,
+	opts Options,
 ) *Heartbeat {
 	return &Heartbeat{
-		logger:          logger.With(slog.String("subsystem", componentType+".heartbeat")),
-		registryKV:      registryKV,
-		hostname:        hostname,
-		version:         version,
-		componentType:   componentType,
-		processProvider: processProvider,
-		interval:        interval,
+		logger:          logger.With(slog.String("subsystem", opts.Component+".heartbeat")),
+		registryKV:      opts.RegistryKV,
+		hostname:        opts.Hostname,
+		version:         opts.Version,
+		componentType:   opts.Component,
+		processProvider: opts.Process,
+		interval:        opts.Interval,
 		startedAt:       time.Now(),
-		thresholds:      thresholds,
-		subComponents:   subComponents,
+		thresholds:      opts.Thresholds,
+		subComponents:   opts.SubComponents,
 	}
 }
 

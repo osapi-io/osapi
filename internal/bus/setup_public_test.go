@@ -23,9 +23,14 @@ package bus_test
 import (
 	"context"
 	"errors"
+	"log/slog"
+	"net"
 	"testing"
+	"time"
 
+	natsserver "github.com/nats-io/nats-server/v2/server"
 	"github.com/nats-io/nats.go/jetstream"
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -176,7 +181,7 @@ func (s *SetupPublicTestSuite) TestSetup() {
 				}).
 				AnyTimes()
 
-			err := bus.Setup(context.Background(), js, "ns", tc.cfg())
+			_, err := bus.Setup(context.Background(), js, "ns", tc.cfg())
 
 			if tc.wantErr != "" {
 				s.EqualError(err, tc.wantErr)
@@ -188,4 +193,49 @@ func (s *SetupPublicTestSuite) TestSetup() {
 			s.Equal(tc.wantObjects, objects)
 		})
 	}
+}
+
+func (s *SetupPublicTestSuite) TestPrepare() {
+	s.Run("when the server runs makes the streams and buckets", func() {
+		l, err := net.Listen("tcp", "127.0.0.1:0")
+		s.Require().NoError(err)
+		port := l.Addr().(*net.TCPAddr).Port
+		s.Require().NoError(l.Close())
+
+		ns, err := natsserver.NewServer(&natsserver.Options{
+			Host:      "127.0.0.1",
+			Port:      port,
+			JetStream: true,
+			StoreDir:  s.T().TempDir(),
+		})
+		s.Require().NoError(err)
+		ns.Start()
+		defer ns.Shutdown()
+		s.Require().True(ns.ReadyForConnections(5 * time.Second))
+
+		err = bus.Prepare(context.Background(), slog.Default(), &natsclient.Options{
+			Host: "127.0.0.1",
+			Port: port,
+			Auth: natsclient.AuthOptions{AuthType: natsclient.NoAuth},
+			Name: "test",
+		}, "test", fullNATS())
+
+		s.NoError(err)
+	})
+
+	s.Run("when nothing listens returns the error", func() {
+		l, err := net.Listen("tcp", "127.0.0.1:0")
+		s.Require().NoError(err)
+		port := l.Addr().(*net.TCPAddr).Port
+		s.Require().NoError(l.Close())
+
+		err = bus.Prepare(context.Background(), slog.Default(), &natsclient.Options{
+			Host: "127.0.0.1",
+			Port: port,
+			Auth: natsclient.AuthOptions{AuthType: natsclient.NoAuth},
+			Name: "test",
+		}, "test", fullNATS())
+
+		s.ErrorContains(err, "connect to NATS: ")
+	})
 }

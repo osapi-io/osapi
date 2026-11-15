@@ -25,7 +25,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/osapi-io/osapi/internal/bus"
+	"github.com/osapi-io/osapi/internal/bus/server"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
@@ -44,12 +44,12 @@ Configures streams, consumers, and KV buckets needed by the job system.
 		job.Init(appConfig.NATS.Server.Namespace)
 
 		log := logger.With("component", "nats")
-		s, err := bus.NewServer(ctx, log, appConfig.NATS)
+		s, err := server.New(ctx, log, appConfig.NATS)
 		if err != nil {
 			cli.LogFatal(log, "failed to start NATS server", err)
 		}
 
-		bus.StartHeartbeat(ctx, log, appConfig.NATS, appConfig.Agent.ProcessConditions)
+		s.StartHeartbeat(ctx, appConfig.Agent.ProcessConditions)
 
 		var metricsServer *metrics.Server
 		if appConfig.NATS.Server.Metrics.Enabled {
@@ -64,7 +64,7 @@ Configures streams, consumers, and KV buckets needed by the job system.
 					return nil
 				})
 				metricsServer.RegisterSubsystems(
-					subsystemStatuses(bus.SubComponents(appConfig.NATS.Server)),
+					subsystemStatuses(server.SubComponents(appConfig.NATS.Server)),
 				)
 				metricsServer.Start()
 			}

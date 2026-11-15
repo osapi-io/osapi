@@ -18,7 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package bus
+// Package server runs the embedded NATS server that osapi starts for itself,
+// and writes its heartbeat.
+package server
 
 import (
 	"context"
@@ -26,28 +28,38 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	natsembedded "github.com/osapi-io/nats-server/pkg/server"
 
+	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
 )
 
-// Server is the embedded NATS server that osapi runs.
+// dialFn connects to NATS (injectable for testing).
+var dialFn = bus.Dial
+
+// Server is the embedded NATS server. It keeps one client connection to
+// itself, for its heartbeat.
 type Server struct {
-	server *natsembedded.Server
+	log        *slog.Logger
+	cfg        config.NATSServer
+	server     *natsembedded.Server
+	nc         *natsclient.Client
+	registryKV jetstream.KeyValue
 }
 
-// NewServer starts the embedded NATS server that cfg.Server describes, then
-// creates osapi's streams and buckets on it with Setup. If Setup fails,
-// NewServer stops the server and returns the error.
-func NewServer(
+// New starts the embedded NATS server that cfg.Server describes, connects to
+// it, and creates osapi's streams and buckets with bus.Setup. If a step fails,
+// New stops the server and returns the error.
+func New(
 	ctx context.Context,
 	log *slog.Logger,
 	cfg config.NATS,
 ) (*Server, error) {
 	sc := cfg.Server
 
-	opts, err := ServerOptions(sc.Host, sc.Port, sc.StoreDir, sc.Auth)
+	opts, err := bus.ServerOptions(sc.Host, sc.Port, sc.StoreDir, sc.Auth)
 	if err != nil {
 		return nil, fmt.Errorf("NATS server auth: %w", err)
 	}
@@ -60,12 +72,21 @@ func NewServer(
 		return nil, fmt.Errorf("start embedded NATS server: %w", err)
 	}
 
-	if err := Prepare(ctx, log, &natsclient.Options{
+	nc, err := dialFn(log, &natsclient.Options{
 		Host: sc.Host,
 		Port: sc.Port,
-		Auth: ServerClientAuth(sc.Auth),
-		Name: "osapi-nats-setup",
-	}, sc.Namespace, cfg); err != nil {
+		Auth: bus.ServerClientAuth(sc.Auth),
+		Name: "osapi-nats-server",
+	})
+	if err != nil {
+		s.Stop()
+
+		return nil, err
+	}
+
+	registryKV, err := bus.Setup(ctx, nc, sc.Namespace, cfg)
+	if err != nil {
+		bus.Close(nc)
 		s.Stop()
 
 		return nil, fmt.Errorf("set up JetStream: %w", err)
@@ -80,16 +101,23 @@ func NewServer(
 		"auth.type", sc.Auth.Type,
 	)
 
-	return &Server{server: s}, nil
+	return &Server{
+		log:        log,
+		cfg:        sc,
+		server:     s,
+		nc:         nc,
+		registryKV: registryKV,
+	}, nil
 }
 
-// Start does nothing. NewServer starts the server, because Setup needs it to
+// Start does nothing. New starts the server, because bus.Setup needs it to
 // run first.
 func (s *Server) Start() {}
 
-// Stop stops the server.
+// Stop closes the connection of the server, then stops the server.
 func (s *Server) Stop(
 	_ context.Context,
 ) {
+	bus.Close(s.nc)
 	s.server.Stop()
 }

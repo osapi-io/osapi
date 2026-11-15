@@ -58,24 +58,40 @@ func Prepare(
 	namespace string,
 	cfg config.NATS,
 ) error {
-	nc := natsclient.New(log, opts)
-	if err := nc.Connect(); err != nil {
-		return fmt.Errorf("connect to NATS: %w", err)
+	nc, err := Dial(log, opts)
+	if err != nil {
+		return err
 	}
 	defer Close(nc)
 
-	return Setup(ctx, nc, namespace, cfg)
+	_, err = Setup(ctx, nc, namespace, cfg)
+
+	return err
+}
+
+// Dial connects to NATS with opts.
+func Dial(
+	log *slog.Logger,
+	opts *natsclient.Options,
+) (*natsclient.Client, error) {
+	nc := natsclient.New(log, opts)
+	if err := nc.Connect(); err != nil {
+		return nil, fmt.Errorf("connect to NATS: %w", err)
+	}
+
+	return nc, nil
 }
 
 // Setup creates or updates each stream and bucket that osapi uses, with the
 // names in namespace. A second run with the same config changes nothing. A
-// bucket with no name in cfg is not made.
+// bucket with no name in cfg is not made. Setup returns the registry KV
+// bucket, or nil if cfg names none.
 func Setup(
 	ctx context.Context,
 	js JetStream,
 	namespace string,
 	cfg config.NATS,
-) error {
+) (jetstream.KeyValue, error) {
 	streamName := job.ApplyNamespaceToInfraName(namespace, cfg.Stream.Name)
 	streamMaxAge, _ := time.ParseDuration(cfg.Stream.MaxAge)
 
@@ -93,15 +109,17 @@ func Setup(
 		Replicas: cfg.Stream.Replicas,
 		Discard:  discard,
 	}); err != nil {
-		return fmt.Errorf("create JOBS stream: %w", err)
+		return nil, fmt.Errorf("create JOBS stream: %w", err)
 	}
 
+	var registry jetstream.KeyValueConfig
 	kvs := []jetstream.KeyValueConfig{
 		JobKV(namespace, cfg.KV),
 		ResponseKV(namespace, cfg.KV),
 	}
 	if cfg.Registry.Bucket != "" {
-		kvs = append(kvs, RegistryKV(namespace, cfg.Registry))
+		registry = RegistryKV(namespace, cfg.Registry)
+		kvs = append(kvs, registry)
 	}
 	if cfg.Facts.Bucket != "" {
 		kvs = append(kvs, FactsKV(namespace, cfg.Facts))
@@ -112,23 +130,28 @@ func Setup(
 	if cfg.FileState.Bucket != "" {
 		kvs = append(kvs, FileStateKV(namespace, cfg.FileState))
 	}
+	var registryKV jetstream.KeyValue
 	for _, kv := range kvs {
-		if _, err := js.CreateOrUpdateKVBucketWithConfig(ctx, kv); err != nil {
-			return fmt.Errorf("create KV bucket %s: %w", kv.Bucket, err)
+		handle, err := js.CreateOrUpdateKVBucketWithConfig(ctx, kv)
+		if err != nil {
+			return nil, fmt.Errorf("create KV bucket %s: %w", kv.Bucket, err)
+		}
+		if kv.Bucket == registry.Bucket {
+			registryKV = handle
 		}
 	}
 
 	if cfg.Audit.Stream != "" {
 		audit := AuditStream(namespace, cfg.Audit)
 		if err := js.CreateOrUpdateStreamWithConfig(ctx, audit); err != nil {
-			return fmt.Errorf("create audit stream %s: %w", audit.Name, err)
+			return nil, fmt.Errorf("create audit stream %s: %w", audit.Name, err)
 		}
 	}
 
 	if cfg.Objects.Bucket != "" {
 		objects := ObjectStore(namespace, cfg.Objects)
 		if _, err := js.CreateOrUpdateObjectStore(ctx, objects); err != nil {
-			return fmt.Errorf("create Object Store bucket %s: %w", objects.Bucket, err)
+			return nil, fmt.Errorf("create Object Store bucket %s: %w", objects.Bucket, err)
 		}
 	}
 
@@ -146,8 +169,8 @@ func Setup(
 			"dead_letter_queue": "true",
 		},
 	}); err != nil {
-		return fmt.Errorf("create DLQ stream: %w", err)
+		return nil, fmt.Errorf("create DLQ stream: %w", err)
 	}
 
-	return nil
+	return registryKV, nil
 }

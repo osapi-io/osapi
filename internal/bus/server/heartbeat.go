@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package bus
+package server
 
 import (
 	"context"
@@ -26,9 +26,6 @@ import (
 	"log/slog"
 	"os"
 	"time"
-
-	"github.com/nats-io/nats.go/jetstream"
-	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/heartbeat"
@@ -39,93 +36,41 @@ import (
 // hostnameFn returns the name of the host (injectable for testing).
 var hostnameFn = os.Hostname
 
-// StartHeartbeat connects to the embedded NATS server and writes its
-// registration to the registry KV bucket until ctx ends. Then it closes the
-// connection. If it cannot connect or open the bucket, it logs a warning and
-// returns, because the server runs without a heartbeat.
-func StartHeartbeat(
+// StartHeartbeat writes the registration of the server to the registry KV
+// bucket until ctx ends. If the config names no registry bucket, it logs a
+// warning and returns, because the server runs without a heartbeat.
+func (s *Server) StartHeartbeat(
 	ctx context.Context,
-	log *slog.Logger,
-	cfg config.NATS,
 	conditions config.ProcessConditions,
 ) {
-	sc := cfg.Server
-	nc := natsclient.New(log, &natsclient.Options{
-		Host: sc.Host,
-		Port: sc.Port,
-		Auth: ServerClientAuth(sc.Auth),
-		Name: "osapi-nats-heartbeat",
-	})
-	if err := nc.Connect(); err != nil {
-		log.Warn(
-			"failed to connect to NATS for heartbeat, skipping",
-			slog.String("error", err.Error()),
-		)
+	if s.registryKV == nil {
+		s.log.Warn("no registry KV bucket, NATS heartbeat skipped")
 		return
 	}
 
-	registryKV, err := nc.CreateOrUpdateKVBucketWithConfig(
-		ctx,
-		RegistryKV(sc.Namespace, cfg.Registry),
-	)
-	if err != nil {
-		log.Warn(
-			"failed to get registry KV for NATS heartbeat, skipping",
-			slog.String("error", err.Error()),
-		)
-		Close(nc)
-		return
-	}
-
-	hb := newHeartbeat(log, registryKV, sc, conditions)
-	go func() {
-		defer Close(nc)
-		hb.Start(ctx)
-	}()
-}
-
-// StartHeartbeatOn writes the registration of the embedded NATS server to
-// registryKV until ctx ends. osapi start uses it, because it has a connection
-// open already.
-func StartHeartbeatOn(
-	ctx context.Context,
-	log *slog.Logger,
-	registryKV jetstream.KeyValue,
-	sc config.NATSServer,
-	conditions config.ProcessConditions,
-) {
-	go newHeartbeat(log, registryKV, sc, conditions).Start(ctx)
-}
-
-func newHeartbeat(
-	log *slog.Logger,
-	registryKV jetstream.KeyValue,
-	sc config.NATSServer,
-	conditions config.ProcessConditions,
-) *heartbeat.Heartbeat {
 	hostname, err := hostnameFn()
 	if err != nil {
-		log.Warn(
+		s.log.Warn(
 			"failed to resolve hostname for NATS heartbeat, using 'unknown'",
 			slog.String("error", err.Error()),
 		)
 		hostname = "unknown"
 	}
 
-	return heartbeat.New(
-		log,
-		registryKV,
-		hostname,
-		"0.1.0",
-		"nats",
-		process.New(),
-		10*time.Second,
-		process.ConditionThresholds{
+	hb := heartbeat.New(s.log, heartbeat.Options{
+		RegistryKV: s.registryKV,
+		Hostname:   hostname,
+		Version:    "0.1.0",
+		Component:  "nats",
+		Process:    process.New(),
+		Interval:   10 * time.Second,
+		Thresholds: process.ConditionThresholds{
 			MemoryPressureBytes: conditions.MemoryPressureBytes,
 			HighCPUPercent:      conditions.HighCPUPercent,
 		},
-		SubComponents(sc),
-	)
+		SubComponents: SubComponents(s.cfg),
+	})
+	go hb.Start(ctx)
 }
 
 // SubComponents returns the parts of the embedded NATS server that its

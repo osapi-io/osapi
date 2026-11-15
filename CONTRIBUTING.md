@@ -95,9 +95,9 @@ just deps
   serves the generated routes.
 - **`internal/pki/`.** The keys and signatures of an agent and the controller.
   Both processes use it.
-- **`internal/bus/`.** The NATS options, the buckets and streams that osapi
-  makes, and the embedded NATS server. Each process that connects to NATS uses
-  it.
+- **`internal/bus/`.** The NATS options, and the buckets and streams that osapi
+  makes. Each process that connects to NATS uses it. `server/` runs the embedded
+  NATS server and writes its heartbeat.
 - **`internal/heartbeat/`.** It writes the registration of the controller or the
   NATS server to the registry KV bucket. The agent has its own heartbeat.
 - **`internal/atomicfile/`.** It writes a file so that a reader sees the old
