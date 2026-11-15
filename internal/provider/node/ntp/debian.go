@@ -205,7 +205,7 @@ func (d *Debian) Delete(
 		return &DeleteResult{Changed: false}, nil
 	}
 
-	if removeErr := d.fs.Remove(sourcesFile); removeErr != nil {
+	if removeErr := atomicfile.Remove(ctx, d.fs, sourcesFile); removeErr != nil {
 		return nil, fmt.Errorf("ntp delete: remove file: %w", removeErr)
 	}
 

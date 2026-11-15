@@ -31,3 +31,14 @@ func ExportReport(
 	}
 	h.Errorf("Exec.%s", "Unknown")
 }
+
+// SetSourceDir sets the directory Run reads Go files from, and returns a
+// function that puts it back.
+func SetSourceDir(
+	dir string,
+) func() {
+	previous := sourceDir
+	sourceDir = dir
+
+	return func() { sourceDir = previous }
+}

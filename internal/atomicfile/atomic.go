@@ -24,6 +24,7 @@ package atomicfile
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -67,21 +68,63 @@ func Write(
 	content []byte,
 	mode fs.FileMode,
 ) error {
-	if !trace.SpanContextFromContext(ctx).IsValid() {
+	return traced(ctx, "file.write", false, func() error {
 		return write(vfs, path, content, mode)
+	},
+		attribute.String("file.path", path),
+		attribute.String("file.mode", fmt.Sprintf("%04o", mode.Perm())),
+		attribute.Int("file.size", len(content)),
+	)
+}
+
+// Remove removes path. Inside a trace, it is a span, file.remove, with the
+// path. A path that is not there is not an error of the span: the caller
+// decides what it means.
+func Remove(
+	ctx context.Context,
+	vfs avfs.VFS,
+	path string,
+) error {
+	return traced(ctx, "file.remove", true, func() error {
+		return vfs.Remove(path)
+	}, attribute.String("file.path", path))
+}
+
+// Chmod sets the mode of path. Inside a trace, it is a span, file.chmod,
+// with the path and the mode.
+func Chmod(
+	ctx context.Context,
+	vfs avfs.VFS,
+	path string,
+	mode fs.FileMode,
+) error {
+	return traced(ctx, "file.chmod", false, func() error {
+		return vfs.Chmod(path, mode)
+	},
+		attribute.String("file.path", path),
+		attribute.String("file.mode", fmt.Sprintf("%04o", mode.Perm())),
+	)
+}
+
+// traced runs op as the span name, with attrs, when ctx is inside a trace,
+// and without a span when it is not. With missingOK, a path that is not there
+// does not mark the span as failed.
+func traced(
+	ctx context.Context,
+	name string,
+	missingOK bool,
+	op func() error,
+	attrs ...attribute.KeyValue,
+) error {
+	if !trace.SpanContextFromContext(ctx).IsValid() {
+		return op()
 	}
 
-	_, span := otel.Tracer("osapi-atomicfile").Start(ctx, "file.write",
-		trace.WithAttributes(
-			attribute.String("file.path", path),
-			attribute.String("file.mode", fmt.Sprintf("%04o", mode.Perm())),
-			attribute.Int("file.size", len(content)),
-		),
-	)
+	_, span := otel.Tracer("osapi-atomicfile").Start(ctx, name, trace.WithAttributes(attrs...))
 	defer span.End()
 
-	err := write(vfs, path, content, mode)
-	if err != nil {
+	err := op()
+	if err != nil && (!missingOK || !errors.Is(err, fs.ErrNotExist)) {
 		span.SetStatus(codes.Error, err.Error())
 	}
 

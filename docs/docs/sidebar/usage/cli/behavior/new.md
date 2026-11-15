@@ -12,6 +12,12 @@ group, such as `network`, is nested under it: its routes are
 [Your first behavior](../../../development/your-first-behavior.md) walks through
 the rest.
 
+A new behavior is one an operator calls, with an API and commands. Work that two
+behaviors share, such as writing a file, becomes an internal behavior that the
+two require: add `behavior.Internal` to it then, and `behavior.Requires` to each
+user. `osapi behavior validate` fails an internal behavior that no behavior
+requires.
+
 ```bash
 osapi behavior new [flags]
 ```

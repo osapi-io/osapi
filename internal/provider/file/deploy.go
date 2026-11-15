@@ -174,7 +174,7 @@ func (p *Service) applyPermissions(
 		}
 
 		if info.Mode().Perm() != want.Perm() {
-			if err := p.fs.Chmod(req.Path, want); err != nil {
+			if err := atomicfile.Chmod(ctx, p.fs, req.Path, want); err != nil {
 				return false, fmt.Errorf("file deploy: set mode on %q: %w", req.Path, err)
 			}
 

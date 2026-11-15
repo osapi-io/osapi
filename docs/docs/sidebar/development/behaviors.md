@@ -89,6 +89,8 @@ var Behavior = behavior.Register(behavior.Define(
 | `behavior.Platform(p, f)` | How the provider is built on platform `p`: `debian`, `darwin`, or `linux` for every Linux host without a provider of its own. On any other, the methods report `skipped`. |
 | `behavior.Sudo("prog")`   | A program the provider runs with sudo. The agent's preflight checks it.                                                                                                   |
 | `behavior.Runs("prog")`   | A program the provider runs without sudo. The agent warns at startup when it is missing.                                                                                  |
+| `behavior.Writes("...")`  | The paths the provider writes, removes or changes the mode of, as patterns. `"*"` is any path. The examples fail on a path that is not declared.                          |
+| `behavior.KeepsState`     | The provider keeps a record in the `file-state` bucket. The examples fail on a record without it.                                                                         |
 | `behavior.Validator(...)` | A `validate` tag of the behavior's own: the check, its schema and its message.                                                                                            |
 | `behavior.Requires(b...)` | Behaviors it is built on. See below.                                                                                                                                      |
 | `behavior.Internal`       | Only other behaviors use it: no route, no command, no permissions.                                                                                                        |
@@ -138,15 +140,40 @@ func newDebian(h host.Host) (Provider, error) {
 }
 
 // in the provider
-managedfile.Update(ctx, d.files, managedfile.UpdateInput{Path: path, Content: c})
+behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
+    managedfile.UpdateInput{Path: path, Content: c})
 ```
+
+`behavior.Call` runs the method inside its own span, so a trace shows
+`behavior.managedfile.update` under `behavior.sysctl.create`. A direct call of
+`managedfile.Update` works, but the trace has no step for it, so the tests of
+the behavior fail it.
 
 The agent and the fake host both build the provider of a required behavior
 before the behavior that requires it. A behavior that only other behaviors use
 is `behavior.Internal`. It has examples and tests like the others, and a docs
 page that tells what uses it. It has no route, command or permissions.
-`behavior validate` fails when a requirement is not registered, and when
-requirements make a cycle. sysctl requires `managedfile`, and it is the example.
+`behavior validate` fails when a requirement is not registered, when
+requirements make a cycle, and when an internal behavior has nothing that
+requires it. sysctl requires `managedfile`, and it is the example.
+
+A behavior is internal when an operator would never call it, and it is a piece
+of work that other behaviors share, such as writing a file. `osapi behavior new`
+writes a behavior that an operator calls. Make shared work internal when a
+second behavior needs it.
+
+A behavior declares the paths it writes, also when a required behavior does the
+write. managedfile declares `behavior.Writes("*")`, because it writes the path
+its caller names, and sysctl declares `/etc/sysctl.d/osapi-*.conf`. Thus
+`osapi behavior get --name sysctl` shows the files sysctl changes, and the spans
+under its own:
+
+```text
+Telemetry:
+  Span:             behavior.sysctl.<method>
+  Child spans:      behavior.managedfile.<method>, exec sysctl, exec chown, exec stat, file.write, file.remove, file.chmod, kv.get, kv.put
+  Writes:           /etc/sysctl.d/osapi-*.conf
+```
 
 ## types.go: the contract
 

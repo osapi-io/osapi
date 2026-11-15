@@ -44,12 +44,13 @@ Decide these with the user before you write code. Each answer becomes a declarat
 | Ask | Why it matters | Answer becomes |
 | --- | --- | --- |
 | Is there one close already? Check `go run . behavior list --json`. | Two behaviors managing the same thing disagree about its state | Extend that one: a method, a field or a platform |
-| Who calls it: operators, or only other behaviors? | An operator needs routes, commands and permissions; a building block must not have them | `behavior.API` and `behavior.CLI`, or `behavior.Internal` |
+| Who calls it: operators, or only other behaviors? Would an operator ever call it from the CLI or the API? Is it only a piece of work other behaviors share, such as writing a file or reloading a service? | An operator needs routes, commands and permissions; a building block must not have them. `behavior validate` fails an internal behavior that no behavior requires | `behavior.API` and `behavior.CLI` when an operator calls it, or `behavior.Internal` when only other behaviors do |
 | Which hosts does it run on? | Every other platform reports `skipped`, never fails | `behavior.Platform("debian", ...)` per distribution, `"linux"` for every Linux host without its own, `"darwin"` for macOS |
-| Does part of the work exist as an internal behavior? `behavior list` marks them `(internal)`. | Copying it means two copies of the hard part | `behavior.Requires(that.Behavior)`, and call its methods through `host.Require` |
+| Does part of the work exist as an internal behavior? `behavior list` marks them `(internal)`. | Copying it means two copies of the hard part | `behavior.Requires(that.Behavior)`. Get its provider with `host.Require`, and call each of its methods with `behavior.Call(ctx, that.Behavior, that.Method, provider, in)`, so the trace shows the call as its own step. A direct call fails the tests |
 | Would a second behavior need part of what this one does? | The rule of two: the second need is when shared work becomes its own behavior | Build that part as an internal behavior first, then require it |
 | Does a value change per call, or stay the same on a host? | A setting is agent config; an input is part of each request | An input field, or a field in `settings.go` |
 | Which programs does it run, which as root, and does it take a secret? | The agent checks each is installed and sudo allows it; secrets are kept out of the audit log and traces | `behavior.Runs("program")`, or `behavior.Sudo("program")` for root; `secret:"true"` on the field |
+| Which files does it write, remove or change the mode of, and does it keep a record in the file-state bucket? | Each one is a span in a trace, and the examples fail on a path or a record that is not declared. Declare the paths even when a required behavior, such as managedfile, does the write | `behavior.Writes("/etc/x.d/osapi-*.conf")`, and `behavior.KeepsState` for a record |
 | Is it one host, one step? | A behavior acts on one host inside one job | If it spans hosts or orders several steps, it is an osapi-orchestrator workflow, not a behavior |
 | Does it need anything under "Not yet" below? | The platform cannot express it, and wiring around that breaks the generated layers | Stop and tell the user what is missing |
 
@@ -133,6 +134,10 @@ Read a failure for what it names:
 | `with an option in <Field>`           | That field reaches a command as an option: refuse a leading `-`, or pass `--` before it |
 | `it reached a shell script`           | Input reaches `sh -c`: run the program directly with its arguments instead |
 | `runs <program> but does not declare it` | Declare it with `behavior.Runs`, or `behavior.Sudo` for one run as root |
+| `writes <path> but does not declare it with behavior.Writes` | Declare a pattern that covers the path with `behavior.Writes`, also for a write a required behavior makes |
+| `keeps state in the file-state bucket but does not declare behavior.KeepsState` | Declare `behavior.KeepsState`, or require the behavior that keeps the record |
+| `calls <pkg>.<Method> directly` | Call it with `behavior.Call(ctx, <pkg>.Behavior, <pkg>.<Method>, provider, in)`, so the trace shows it |
+| `is internal, but no behavior requires it` | Require it from the behavior that needs it, or remove `behavior.Internal` if an operator calls it |
 | `<name> runs <program>, which this image lacks` | `behavior-int-linux` only: add the program's package to that recipe's `apt-get install` line |
 | `TestAPI<Method>PublicTestSuite/...`  | The API answer for that case in `gen/api_<method>_public_test.go`: the status, the body, or the spec it breaks |
 | `is not mounted` or `is not attached` | Run `go generate ./internal/behaviors/all`; the gen package is missing          |

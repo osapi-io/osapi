@@ -122,6 +122,7 @@ func (s *FakeHostPublicTestSuite) TestFakeHost() {
 					return probe{h: h}, nil
 				}),
 				behavior.Sudo("tee"),
+				behavior.KeepsState,
 				behavior.Read("get", probeHost).Describe("Probe").
 					Example("A probe", tc.in, probeOut{Seen: tc.want}, tc.options...),
 			)

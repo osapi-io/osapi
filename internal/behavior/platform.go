@@ -88,6 +88,24 @@ func Runs(
 	return optionFunc(func(b *Behavior) { b.Runs = append(b.Runs, programs...) })
 }
 
+// Writes declares the paths the behavior's providers write, remove or change
+// the mode of, as path.Match patterns such as "/etc/sysctl.d/osapi-*.conf".
+// "*" is any path: a behavior such as managedfile, which writes the path its
+// caller names, declares it, and each behavior that requires it declares its
+// own paths. The examples fail on a path that is not declared, and the docs
+// page and behavior get list them. Each such call is a file span in a trace.
+func Writes(
+	paths ...string,
+) Option {
+	return optionFunc(func(b *Behavior) { b.Writes = append(b.Writes, paths...) })
+}
+
+// KeepsState declares that the behavior's providers keep a record in the
+// file-state bucket. Each read and write of it is a kv span in a trace. The
+// examples fail when a behavior uses the bucket without it; a behavior that
+// requires one that keeps state gets it from there.
+var KeepsState Option = optionFunc(func(b *Behavior) { b.KeepsState = true })
+
 // Next serves a behavior under /api/next and osapi client next, beside the
 // hand-written domain it replaces, so both can run while it is proven. The
 // cutover removes it, with the hand-written domain. A new behavior that

@@ -191,14 +191,20 @@ func (d *Debian) deploy(
 
 	// The file on disk, not the record, decides whether anything changes, so
 	// a drop-in edited by hand is rewritten rather than reported unchanged.
-	result, err := managedfile.Update(ctx, d.files, managedfile.UpdateInput{
-		Path:    confPath,
-		Content: entry.Key + " = " + entry.Value + "\n",
-		Metadata: map[string]string{
-			"key":   entry.Key,
-			"value": entry.Value,
+	result, err := behavior.Call(
+		ctx,
+		managedfile.Behavior,
+		managedfile.Update,
+		d.files,
+		managedfile.UpdateInput{
+			Path:    confPath,
+			Content: entry.Key + " = " + entry.Value + "\n",
+			Metadata: map[string]string{
+				"key":   entry.Key,
+				"value": entry.Value,
+			},
 		},
-	})
+	)
 	if err != nil {
 		return nil, fmt.Errorf("sysctl %s: %w", opName, err)
 	}
@@ -252,7 +258,13 @@ func (d *Debian) Delete(
 	confPath := d.confPath(key)
 
 	// Only a file osapi recorded is removed; anything else is left alone.
-	result, err := managedfile.Delete(ctx, d.files, managedfile.DeleteInput{Path: confPath})
+	result, err := behavior.Call(
+		ctx,
+		managedfile.Behavior,
+		managedfile.Delete,
+		d.files,
+		managedfile.DeleteInput{Path: confPath},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("sysctl delete: %w", err)
 	}
@@ -353,7 +365,13 @@ func (d *Debian) Get(
 		return nil, fmt.Errorf("sysctl get: %w", err)
 	}
 
-	record, err := managedfile.Get(ctx, d.files, managedfile.GetInput{Path: d.confPath(key)})
+	record, err := behavior.Call(
+		ctx,
+		managedfile.Behavior,
+		managedfile.Get,
+		d.files,
+		managedfile.GetInput{Path: d.confPath(key)},
+	)
 	if errors.Is(err, managedfile.ErrUnreadable) {
 		return nil, fmt.Errorf("sysctl entry %q: failed to read state", key)
 	}
@@ -436,7 +454,13 @@ func (d *Debian) buildEntryFromState(
 	ctx context.Context,
 	path string,
 ) *Entry {
-	record, err := managedfile.Get(ctx, d.files, managedfile.GetInput{Path: path})
+	record, err := behavior.Call(
+		ctx,
+		managedfile.Behavior,
+		managedfile.Get,
+		d.files,
+		managedfile.GetInput{Path: path},
+	)
 	if err != nil || record.Undeployed {
 		return nil
 	}

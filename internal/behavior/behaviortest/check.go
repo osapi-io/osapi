@@ -34,13 +34,18 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/host"
 )
 
-// Run checks b with Check and reports each problem as a test error.
+// Run checks b with Check and reports each problem as a test error. It also
+// reads the Go files of the test's directory, which is the package of b, and
+// fails a direct call of a method of a behavior b requires.
 func Run(
 	t testing.TB,
 	b *behavior.Behavior,
 ) {
 	t.Helper()
 	for _, p := range Check(b) {
+		t.Error(p)
+	}
+	for _, p := range directCalls(b, sourceDir) {
 		t.Error(p)
 	}
 }
@@ -189,8 +194,10 @@ func prepare(
 	for _, g := range ex.Given {
 		switch g.Kind {
 		case behavior.GivenFile:
+			h.setup = true
 			_ = h.FS.MkdirAll(filepath.Dir(g.Path), 0o755)
 			_ = h.FS.WriteFile(g.Path, []byte(g.Content), 0o644)
+			h.setup = false
 		case behavior.GivenOutput:
 			if g.After != "" {
 				h.later = append(h.later, g)

@@ -63,7 +63,10 @@ type methodDescription struct {
 // metrics every method gets, and the input fields this behavior tags onto
 // the span, by method.
 type telemetryDescription struct {
-	Span       string              `json:"span"`
+	Span string `json:"span"`
+	// ChildSpans are the spans a call can make under Span, from what the
+	// behavior and those it requires declare.
+	ChildSpans []string            `json:"child_spans"`
 	Metrics    []string            `json:"metrics"`
 	Attributes []string            `json:"attributes"`
 	Inputs     map[string][]string `json:"inputs"`
@@ -94,6 +97,10 @@ type behaviorDescription struct {
 	Platforms []string `json:"platforms"`
 	Sudo      []string `json:"sudo"`
 	Runs      []string `json:"runs"`
+	// Writes are the paths it declares it writes, and KeepsState whether it
+	// keeps records in the file-state bucket.
+	Writes     []string `json:"writes"`
+	KeepsState bool     `json:"keeps_state"`
 	// Settings are the behavior's own config keys, under behaviors.<name>.
 	Settings []config.Key        `json:"settings"`
 	Methods  []methodDescription `json:"methods"`
@@ -170,13 +177,16 @@ func describeBehavior(
 		Name: b.Name, Doc: b.Doc, Placement: b.Placement, Group: b.Group,
 		API: b.API, CLI: b.CLI, Internal: b.Internal,
 		Uses: names(b.Requires), UsedBy: names(behavior.RequiredBy(b)),
-		Settings:  behaviorSettings(b.Name),
-		Next:      b.Next,
-		Platforms: platformNames(b),
-		Sudo:      append([]string{}, b.Sudo...),
-		Runs:      append([]string{}, b.Runs...),
+		Settings:   behaviorSettings(b.Name),
+		Next:       b.Next,
+		Platforms:  platformNames(b),
+		Sudo:       append([]string{}, b.Sudo...),
+		Runs:       append([]string{}, b.Runs...),
+		Writes:     append([]string{}, b.Writes...),
+		KeepsState: b.KeepsState,
 		Telemetry: telemetryDescription{
-			Span: "behavior." + b.Name + ".<method>",
+			Span:       "behavior." + b.Name + ".<method>",
+			ChildSpans: append([]string{}, behavior.ChildSpans(b)...),
 			Metrics: []string{
 				behavior.MetricCalls,
 				behavior.MetricDuration,
@@ -300,6 +310,8 @@ func printBehavior(
 	cli.PrintHeading("Telemetry")
 	cli.PrintKV(
 		"Span", desc.Telemetry.Span,
+		"Child spans", orNone(strings.Join(desc.Telemetry.ChildSpans, ", ")),
+		"Writes", orNone(strings.Join(desc.Writes, ", ")),
 		"Metrics", strings.Join(desc.Telemetry.Metrics, ", "),
 		"Attributes", strings.Join(desc.Telemetry.Attributes, ", "),
 		"Recorded inputs", recordedInputs(desc.Telemetry.Inputs, desc.Methods),
@@ -657,4 +669,15 @@ func yesNo(
 	}
 
 	return "no"
+}
+
+// orNone is s, or "none" when s is empty.
+func orNone(
+	s string,
+) string {
+	if s == "" {
+		return "none"
+	}
+
+	return s
 }

@@ -23,6 +23,7 @@ package behavior
 import (
 	"context"
 	"reflect"
+	"slices"
 	"sync"
 	"time"
 
@@ -152,11 +153,24 @@ func current() *instruments {
 	return current()
 }
 
-// observe runs the method inside its span and records its metrics.
+// observe decodes input and runs the method inside its span with its
+// metrics, as the agent calls it.
 func (m *Method) observe(
 	ctx context.Context,
 	provider any,
 	input []byte,
+) (any, error) {
+	return m.run(ctx, func(ctx context.Context) (any, any, error) {
+		return m.invoke(ctx, provider, input)
+	})
+}
+
+// run runs call, the method with its input, inside the span of the method,
+// and records its metrics. call returns the output, and the input so that
+// the span can have its tagged fields.
+func (m *Method) run(
+	ctx context.Context,
+	call func(ctx context.Context) (out any, in any, err error),
 ) (any, error) {
 	name := m.Name
 	if m.owner != nil {
@@ -178,7 +192,7 @@ func (m *Method) observe(
 	defer span.End()
 
 	start := time.Now()
-	out, in, err := m.invoke(ctx, provider, input)
+	out, in, err := call(ctx)
 	elapsed := time.Since(start).Seconds()
 
 	if in != nil {
@@ -267,4 +281,62 @@ func Changed(
 	}
 
 	return false, false
+}
+
+// ChildSpans are the spans a call of b can make under its own span, from what
+// b and the behaviors it requires declare: the span of each required
+// behavior's methods, a command span for each program, the file spans when a
+// behavior declares Writes, and the kv spans of the file-state bucket when
+// one declares KeepsState. Each appears once, in that order.
+func ChildSpans(
+	b *Behavior,
+) []string {
+	var out []string
+	add := func(s string) {
+		if !slices.Contains(out, s) {
+			out = append(out, s)
+		}
+	}
+
+	var walk func(*Behavior, bool)
+	walk = func(x *Behavior, required bool) {
+		if required {
+			add("behavior." + x.Name + ".<method>")
+		}
+		for _, r := range x.Requires {
+			walk(r, true)
+		}
+	}
+	walk(b, false)
+
+	all := func(x *Behavior, f func(*Behavior)) {
+		var each func(*Behavior)
+		each = func(y *Behavior) {
+			f(y)
+			for _, r := range y.Requires {
+				each(r)
+			}
+		}
+		each(x)
+	}
+	all(b, func(x *Behavior) {
+		for _, p := range append(append([]string{}, x.Sudo...), x.Runs...) {
+			add("exec " + p)
+		}
+	})
+	all(b, func(x *Behavior) {
+		if len(x.Writes) > 0 {
+			add("file.write")
+			add("file.remove")
+			add("file.chmod")
+		}
+	})
+	all(b, func(x *Behavior) {
+		if x.KeepsState {
+			add("kv.get")
+			add("kv.put")
+		}
+	})
+
+	return out
 }

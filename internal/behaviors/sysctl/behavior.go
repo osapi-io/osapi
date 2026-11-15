@@ -46,6 +46,9 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Requires(managedfile.Behavior),
 	behavior.Platform("debian", newDebian),
 	behavior.Sudo("sysctl"),
+	// The conf files, in the default directory. behaviors.sysctl.dir can
+	// move them.
+	behavior.Writes(DefaultDir+"/osapi-*.conf"),
 	behavior.API,
 	behavior.CLI,
 	behavior.Read("list", List).

@@ -21,6 +21,11 @@
 package behavior
 
 import (
+	"context"
+	"fmt"
+	"path"
+	"reflect"
+	"runtime"
 	"slices"
 	"strings"
 )
@@ -88,6 +93,28 @@ func chainProblems(
 				Message:  "requires itself: " + strings.Join(cycle, " -> "),
 			})
 		}
+		if b.Internal && len(RequiredBy(b)) == 0 {
+			problems = append(problems, Problem{
+				Behavior: b.Name,
+				Rule:     RuleInternal,
+				Message: "is internal, but no behavior requires it, so nothing can call it: " +
+					"require it from the behavior that needs it, or remove behavior.Internal " +
+					"if an operator calls it",
+			})
+		}
+		for _, p := range b.Writes {
+			if _, err := path.Match(p, "/"); p != "*" &&
+				(err != nil || !strings.HasPrefix(p, "/")) {
+				problems = append(problems, Problem{
+					Behavior: b.Name,
+					Rule:     RuleWrites,
+					Message: fmt.Sprintf(
+						"writes %q, which is not \"*\" or an absolute path pattern",
+						p,
+					),
+				})
+			}
+		}
 	}
 
 	return problems
@@ -117,4 +144,49 @@ func cycleFrom(
 	}
 
 	return nil
+}
+
+// Call runs fn, a method of b, with p, b's provider, inside the span and
+// the metrics of that method, as the agent runs a method. A behavior calls
+// the behaviors it requires through Call, so a trace shows each one as its
+// own step: behavior.sysctl.create, then behavior.managedfile.update under
+// it. A direct call of fn skips the span, and behaviortest.Run fails it.
+//
+//	result, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files, in)
+func Call[P any, In any, Out any](
+	ctx context.Context,
+	b *Behavior,
+	fn func(ctx context.Context, p P, in In) (Out, error),
+	p P,
+	in In,
+) (Out, error) {
+	name := runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
+	var m *Method
+	for _, candidate := range b.Methods {
+		if candidate.fn == name {
+			m = candidate
+			break
+		}
+	}
+	if m == nil {
+		var zero Out
+
+		return zero, fmt.Errorf("%s is not a method of behavior %s", name, b.Name)
+	}
+
+	var out Out
+	_, err := m.run(ctx, func(ctx context.Context) (any, any, error) {
+		var err error
+		out, err = fn(ctx, p, in)
+
+		return out, in, err
+	})
+
+	return out, err
+}
+
+// Func is the name of the method's Go function, such as
+// github.com/osapi-io/osapi/internal/behaviors/managedfile.Update.
+func (m *Method) Func() string {
+	return m.fn
 }

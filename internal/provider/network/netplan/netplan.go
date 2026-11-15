@@ -91,7 +91,7 @@ func ApplyConfig(
 	// Validate with netplan generate (validates without applying).
 	if _, genErr := execManager.RunPrivilegedCmd(ctx, "netplan", []string{"generate"}); genErr != nil {
 		// Roll back: remove the invalid file.
-		_ = fs.Remove(path)
+		_ = atomicfile.Remove(ctx, fs, path)
 
 		return false, fmt.Errorf(
 			"netplan validate failed (file rolled back): %w",
@@ -151,7 +151,7 @@ func RemoveConfig(
 	}
 
 	// Remove the file.
-	if removeErr := fs.Remove(path); removeErr != nil {
+	if removeErr := atomicfile.Remove(ctx, fs, path); removeErr != nil {
 		return false, fmt.Errorf("netplan remove: remove file: %w", removeErr)
 	}
 

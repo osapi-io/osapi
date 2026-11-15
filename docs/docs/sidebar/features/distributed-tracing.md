@@ -74,8 +74,11 @@ osapi-controller  GET /api/node/:hostname/package
 ```
 
 A behavior adds `behavior.<name>.<method>` under `job.process`, and its commands
-and file writes are under that span. The tree above leaves out the `kv.put` of
-each status event.
+and file changes are under that span. A behavior that it requires is a span of
+its own under it, for example `behavior.managedfile.update` under
+`behavior.sysctl.create`. `osapi behavior get --name <name>` lists the spans
+that a behavior can make. The tree above leaves out the `kv.put` of each status
+event.
 
 | Span                                         | Service            | Attributes that tell you the most                                                                   |
 | -------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------- |
@@ -86,7 +89,7 @@ each status event.
 | `job.process`                                | `osapi-agent`      | `osapi.agent.hostname`, `osapi.agent.machine_id`, `host.arch`, `job.status`, `job.changed`          |
 | `behavior.<name>.<method>`                   | `osapi-agent`      | `osapi.behavior.name`, `osapi.behavior.method`, `osapi.behavior.outcome`                            |
 | `exec <program>`                             | `osapi-agent`      | `process.executable.name`, `osapi.exec.sudo`, `process.exit.code`. The arguments are not recorded   |
-| `file.write`                                 | `osapi-agent`      | `file.path`, `file.mode`, `file.size`. The content is not recorded                                  |
+| `file.write`, `file.remove`, `file.chmod`    | `osapi-agent`      | `file.path`, and `file.mode` and `file.size` where they apply. The content is not recorded          |
 | `kv.<op>`, `objectstore.<op>`, `stream.<op>` | both               | `db.operation.name`, `db.namespace` (the bucket or the stream), `nats.kv.key` or `nats.object.name` |
 | `nats.publish`, `nats.process`               | both               | `messaging.destination.name`, the subject                                                           |
 

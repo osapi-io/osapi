@@ -145,6 +145,44 @@ func (s *TelemetryPublicTestSuite) TestInvoke() {
 	}
 }
 
+func (s *TelemetryPublicTestSuite) TestCall() {
+	b := top()
+
+	s.Run("runs the method inside its span, under the caller", func() {
+		s.SetupTest()
+		ctx, parent := otel.Tracer("test").Start(context.Background(), "behavior.other.create")
+
+		out, err := behavior.Call(ctx, b, get, fakeProvider{prefix: "v-"}, getIn{Key: "k"})
+		parent.End()
+
+		s.Require().NoError(err)
+		s.Equal(entry{Key: "k", Value: "v-k"}, out)
+		spans := s.spans.Ended()
+		s.Require().Len(spans, 2)
+		s.Equal("behavior.sysctl.list", spans[0].Name(), "the first method declared with get")
+		s.Equal(parent.SpanContext().SpanID(), spans[0].Parent().SpanID())
+		s.EqualValues(1, s.metrics()[behavior.MetricCalls])
+	})
+
+	s.Run("a failed call marks its span", func() {
+		s.SetupTest()
+
+		_, err := behavior.Call(context.Background(), b, get, fakeProvider{}, getIn{Key: "boom"})
+
+		s.EqualError(err, "boom")
+		s.Equal(codes.Error, s.spans.Ended()[0].Status().Code)
+	})
+
+	s.Run("a function that is not a method of the behavior is an error", func() {
+		s.SetupTest()
+
+		_, err := behavior.Call(context.Background(), grouped(), set, fakeProvider{}, getIn{})
+
+		s.ErrorContains(err, "is not a method of behavior dns")
+		s.Empty(s.spans.Ended())
+	})
+}
+
 func (s *TelemetryPublicTestSuite) TestSetMeterProvider() {
 	s.Run("when no provider was set the global one is used", func() {
 		behavior.ResetInstruments()

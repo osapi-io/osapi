@@ -106,7 +106,7 @@ func (d *debian) Write(
 		return false, fmt.Errorf("stat file: %w", err)
 	}
 	if info.Mode().Perm() != mode.Perm() {
-		if err := d.fs.Chmod(f.Path, mode); err != nil {
+		if err := atomicfile.Chmod(ctx, d.fs, f.Path, mode); err != nil {
 			return false, fmt.Errorf("set mode: %w", err)
 		}
 		changed = true
@@ -195,7 +195,7 @@ func (d *debian) Remove(
 
 	changed := false
 	if _, err := d.fs.Stat(path); err == nil {
-		if err := d.fs.Remove(path); err != nil {
+		if err := atomicfile.Remove(ctx, d.fs, path); err != nil {
 			return false, fmt.Errorf("remove file: %w", err)
 		}
 		changed = true

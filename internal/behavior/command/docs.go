@@ -23,6 +23,7 @@ package command
 import (
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -118,6 +119,30 @@ func IndexPage(
 				"warns about any that are missing.\n",
 			strings.Join(progs, ", "),
 		)
+	}
+
+	if len(b.Writes) > 0 {
+		paths := make([]string, 0, len(b.Writes))
+		for _, p := range b.Writes {
+			paths = append(paths, "`"+p+"`")
+		}
+		if slices.Contains(b.Writes, "*") {
+			sb.WriteString(
+				"\nIt writes the path its caller names. Each behavior that requires it\n" +
+					"declares the paths it writes through it.\n",
+			)
+		} else {
+			fmt.Fprintf(&sb, "\nIt writes %s.\n", strings.Join(paths, ", "))
+		}
+	}
+	if spans := behavior.ChildSpans(b); len(spans) > 0 {
+		names := make([]string, 0, len(spans))
+		for _, sp := range spans {
+			names = append(names, "`"+sp+"`")
+		}
+		fmt.Fprintf(&sb,
+			"\nIn a trace, a call is the span `behavior.%s.<method>`, with %s under it.\n",
+			b.Name, strings.Join(names, ", "))
 	}
 
 	sb.WriteString("\n## Methods\n\n")

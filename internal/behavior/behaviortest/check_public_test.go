@@ -180,10 +180,13 @@ func (s *CheckPublicTestSuite) TestCheck() {
 		{
 			name:     "when the programs are declared by a behavior it requires",
 			platform: onDebian(nil),
-			programs: []behavior.Option{behavior.Requires(behavior.Define(
-				"tools", "Tools", behavior.Node, behavior.Internal, onDebian(nil),
-				behavior.Sudo("apply"), behavior.Runs("cat"),
-			))},
+			programs: []behavior.Option{
+				behavior.Writes("/etc/note"),
+				behavior.Requires(behavior.Define(
+					"tools", "Tools", behavior.Node, behavior.Internal, onDebian(nil),
+					behavior.Sudo("apply"), behavior.Runs("cat"), behavior.KeepsState,
+				)),
+			},
 			methods: []behavior.Option{
 				behavior.Write("set", setNote).Describe("Set it").
 					Example("A note", noteIn{Text: "hello"}, noteOut{Text: "hello", Changed: true},
@@ -207,6 +210,8 @@ func (s *CheckPublicTestSuite) TestCheck() {
 			},
 			want: []string{
 				"runs apply with sudo but does not declare it with behavior.Sudo",
+				"keeps state in the file-state bucket but does not declare behavior.KeepsState",
+				"writes /etc/note but does not declare it with behavior.Writes",
 				"runs cat but does not declare it with behavior.Runs",
 			},
 		},
@@ -343,7 +348,10 @@ func (s *CheckPublicTestSuite) TestCheck() {
 		s.Run(tc.name, func() {
 			programs := tc.programs
 			if programs == nil {
-				programs = []behavior.Option{behavior.Sudo("apply"), behavior.Runs("cat")}
+				programs = []behavior.Option{
+					behavior.Sudo("apply"), behavior.Runs("cat"),
+					behavior.Writes("/etc/note"), behavior.KeepsState,
+				}
 			}
 			opts := append([]behavior.Option{behavior.Node, tc.platform}, programs...)
 			b := behavior.Define("note", "A note", append(opts, tc.methods...)...)
