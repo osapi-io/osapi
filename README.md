@@ -27,35 +27,39 @@
 # Give your agent a fleet, not a shell
 
 osapi lets an AI agent manage Linux hosts through typed operations, not through
-a login. Each operation is a **behavior**: one thing on a host, defined one
-time, with a fixed input and output. osapi checks each request before it queues
-it. A second run changes nothing. Each change is recorded.
+a login. Each operation is a behavior: one thing on a host, defined one time,
+with a fixed input and output. osapi checks each request before it queues it. A
+second run changes nothing. Each change is recorded.
 
 The agent does not guess commands. It asks osapi what exists, and osapi answers
 with the behaviors that this binary has. No model runs at run time. The same
 input always does the same thing.
 
-## Why osapi
+## ✨ Features
 
-- **The agent asks the binary.** `osapi behavior get` and `osapi help --json`
-  give each input, output and permission. The agent reads them before it acts.
-- **A second run is safe.** A write reports `changed: true` one time. After
-  that, it reports `changed: false`.
-- **One host or the fleet.** Target a hostname, any host, each host, or a label
+- 🤖 The agent asks the binary. `osapi behavior get`, `osapi help --json` and
+  `osapi skill get` give each input, output, permission and skill. The agent
+  reads them before it acts.
+- 🛠️ The agent can build a behavior. A behavior is one directory. osapi
+  generates its API, CLI command, permission, docs and tests.
+- 🔁 A second run is safe. A write reports `changed: true` one time. After that,
+  it reports `changed: false`.
+- 🌐 One host or the fleet. Target a hostname, any host, each host, or a label
   such as `group:web`. Each host answers for itself.
-- **A slow host does not stop you.** A request becomes a job. The agent on each
-  host runs it.
-- **You can see what occurred.** osapi keeps each job, an audit log, and
-  OpenTelemetry traces.
-- **Root is a decision, not a default.** Command exec is off until you turn it
-  on. Work is under way so that the agent does not run as root: each behavior
-  declares the steps that need root, and an admin installs the sudoers rules for
-  the behaviors that a host needs.
-- **New behaviors are small.** A behavior is one directory. osapi generates its
-  API, CLI command, permission, docs and tests. An agent can build one with the
-  `build-a-behavior` skill.
+- 📬 A slow host does not stop you. A request becomes a job, and the agent on
+  each host runs it. There is no SSH.
+- 🔍 You can see what occurred. osapi keeps each job, an audit log and
+  OpenTelemetry traces. A secret input never goes to a log or a trace.
+- 🔐 Root is a decision, not a default. Command exec is off until you turn it on.
+  Work is under way so that the agent does not run as root.
+- 🖥️ A dashboard, an API, a CLI and a Go SDK, from one binary.
 
-## What you can ask
+osapi manages the hostname, DNS, network interfaces and routes, NTP, the
+timezone, packages, services, users, files, kernel parameters, cron,
+certificates, containers, processes, logs and power. [Core concepts][concepts]
+tells how the parts fit together.
+
+## 💬 What you can ask
 
 Install the skills with `osapi init`, then ask your agent:
 
@@ -68,37 +72,22 @@ Install the skills with `osapi init`, then ask your agent:
 The agent finds the behavior, runs it with `--json`, and reads the result of
 each host. You can run the same commands from the CLI.
 
-## Core concepts
-
-| Concept        | What it is                                                           |
-| -------------- | -------------------------------------------------------------------- |
-| Behavior       | One thing that osapi manages on a host, defined one time as typed Go |
-| Method         | A read or a write of a behavior, with a typed input and output       |
-| Building block | An internal behavior that other behaviors use, such as `managedfile` |
-| Job            | A request on the queue. The agent on each target host runs it        |
-| Target         | A hostname, `_any`, `_all`, or a label such as `group:web`           |
-| Skill          | What `osapi init` installs, so that an agent knows how to use osapi  |
-
-[Core concepts][concepts] tells more about each one.
-
-## Where osapi goes next
+## 🧭 Where osapi goes next
 
 osapi starts with behaviors on hosts. The next steps make it a platform for
 automation:
 
-- **Workflows.** A file with named, ordered behavior calls. osapi checks the
-  file before it runs. A step can run only where an earlier step changed
-  something. A second run reports `changed: false`.
-- **Behaviors on one system.** A behavior that runs on the controller, or on
-  your machine, and not on a fleet host. For example, it gets data from AWS. A
-  workflow then uses that data to configure the hosts.
-- **Scheduled workflows.** A workflow declares a schedule, and osapi runs it.
-- **More behaviors.** Each hand-written domain moves to a behavior, one at a
-  time.
+- Workflows: a file with named, ordered behavior calls. osapi checks the file
+  before it runs. A step can run only where an earlier step changed something.
+- Behaviors on one system: a behavior that runs on the controller, not on a
+  fleet host. For example, it gets data from AWS, and a workflow then uses that
+  data to configure the hosts.
+- Scheduled workflows: a workflow declares a schedule, and osapi runs it.
+- More behaviors: each hand-written domain moves to a behavior, one at a time.
 
 The [design pages][specs] in osapi-io/specs have the plans.
 
-## Alternatives
+## ⚖️ Alternatives
 
 [Cockpit] and [webmin] give a person a web console for one server. [Ansible]
 pushes configuration over SSH. osapi is built for an agent:
@@ -111,7 +100,7 @@ pushes configuration over SSH. osapi is built for an agent:
 
 [Why osapi][why] has the full comparison, and when to use the others.
 
-## Getting started
+## 🚀 Getting started
 
 The [docs][getting started] give these steps:
 
@@ -122,7 +111,7 @@ The [docs][getting started] give these steps:
 
 The docs also tell how to build a behavior, by hand or with an agent.
 
-## Documentation
+## 📚 Documentation
 
 - [Getting Started]
 - [Core concepts][concepts]
@@ -132,7 +121,7 @@ The docs also tell how to build a behavior, by hand or with an agent.
 - [Usage]
 - [SDK]
 
-## Sister projects
+## 🧩 Sister projects
 
 | Project              | Description                                                          |
 | -------------------- | -------------------------------------------------------------------- |
@@ -144,16 +133,15 @@ The docs also tell how to build a behavior, by hand or with an agent.
 | [osapi-orchestrator] | A Go package for orchestrating operations across OSAPI-managed hosts |
 | [specs]              | The design record for this repository, under `components/osapi/`     |
 
-## Contributing
+## 🤝 Contributing
 
-See the [Contributing](CONTRIBUTING.md) guide for prerequisites, setup,
-conventions, and the PR workflow.
+Refer to the [Contributing](CONTRIBUTING.md) guide for the prerequisites, the
+setup, the conventions and the PR workflow.
 
-## License
+## 📄 License
 
 The [MIT] License.
 
-[ansible]: https://www.ansible.com/
 [api]: https://osapi-io.github.io/osapi/category/api
 [behaviors]: https://osapi-io.github.io/osapi/sidebar/behaviors/
 [cockpit]: https://cockpit-project.org/
