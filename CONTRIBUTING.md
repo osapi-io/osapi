@@ -80,7 +80,9 @@ just deps
 - **`internal/job/`.** The job domain types and the subject routes. `client/`
   holds the high-level operations.
 - **`internal/agent/`.** The node agent: the consumer, handler and processor
-  pipeline that runs jobs.
+  pipeline that runs jobs. `agent.Setup` makes the agent, with the provider of
+  each area for the platform of the host. A new provider goes in `providers.go`,
+  and its registration in `buildRegistry` in `setup.go`.
 - **`internal/provider/`.** The implementations of the operations, in groups by
   category, then by domain.
 - **`internal/config/`.** The configuration from `osapi.yaml`, read with Viper.
@@ -145,8 +147,10 @@ just deps
 - **Code in `internal/` returns an error. Only `cmd/` ends the process.** A
   command calls `cli.LogFatal` with the error that it gets. Nothing in
   `internal/` calls `LogFatal` or `os.Exit`.
-- **`cmd/` imports `pkg/` and `internal/`.** It connects them. It holds no logic
-  of its own that needs a test.
+- **`cmd/` only parses flags and calls `internal/`.** A start command reads its
+  flags and the config, calls `controller.New`, `agent.Setup` or `server.New`,
+  and gives the result to `serve`. It holds no logic of its own that needs a
+  test.
 - **Embedded files go in `resources/` of the package that owns them.** The
   package that reads the files also embeds them, with
   `//go:embed resources/...`. Do not put embedded files in `cmd/`, or in a

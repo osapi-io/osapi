@@ -25,6 +25,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/job"
@@ -54,7 +55,10 @@ It processes jobs as they become available.
 		job.Init(appConfig.Agent.NATS.Namespace)
 
 		log := logger.With("component", "agent")
-		a, b, agentSubs := setupAgent(ctx, log, appConfig.Agent.NATS)
+		a, b, err := agent.Setup(ctx, log, appFs, appConfig)
+		if err != nil {
+			cli.LogFatal(log, "failed to start the agent", err)
+		}
 
 		var metricsServer *metrics.Server
 		if appConfig.Agent.Metrics.Enabled {
@@ -74,7 +78,7 @@ It processes jobs as they become available.
 
 		if metricsServer != nil {
 			a.SetMeterProvider(metricsServer.MeterProvider())
-			metricsServer.RegisterSubsystems(metrics.Subsystems(agentSubs))
+			metricsServer.RegisterSubsystems(metrics.Subsystems(a.SubComponents()))
 			metricsServer.RegisterHeartbeatAge(a.LastHeartbeatTime)
 		}
 

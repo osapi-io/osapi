@@ -25,6 +25,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/bus/server"
 	"github.com/osapi-io/osapi/internal/cli"
@@ -108,9 +109,15 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 
 		natsServer.StartHeartbeat(ctx, appConfig.Agent.ProcessConditions)
 
-		agentServer, agentBundle, agentSubs := setupAgent(
-			ctx, logger.With("component", "agent"), appConfig.Agent.NATS,
+		agentServer, agentBundle, err := agent.Setup(
+			ctx,
+			logger.With("component", "agent"),
+			appFs,
+			appConfig,
 		)
+		if err != nil {
+			cli.LogFatal(logger, "failed to start the agent", err)
+		}
 
 		if appConfig.Agent.Metrics.Enabled {
 			s := metrics.New(
@@ -124,7 +131,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 				})
 
 				agentServer.SetMeterProvider(s.MeterProvider())
-				s.RegisterSubsystems(metrics.Subsystems(agentSubs))
+				s.RegisterSubsystems(metrics.Subsystems(agentServer.SubComponents()))
 				s.RegisterHeartbeatAge(agentServer.LastHeartbeatTime)
 
 				s.Start()
