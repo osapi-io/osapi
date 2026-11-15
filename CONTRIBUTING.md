@@ -92,6 +92,11 @@ just deps
 - **`internal/behavior/`.** The framework that defines behaviors, and its tools:
   the host that a provider is built from, the test harnesses, the spec builder
   and the generator.
+- **`internal/skills/`.** The agent skills, in `resources/`, and the code that
+  installs them (`osapi init`) and serves them (`osapi skill`). Each skill is
+  one directory, with its references and its evals.
+  [Developing a skill][developing-a-skill] tells how to change, add and measure
+  a skill.
 - **`pkg/sdk/`.** The Go SDK. A program uses it to access the REST API.
 - **`ui/`.** React 19, TypeScript, Vite and Tailwind CSS v4. The build embeds
   the UI in the Go binary.
@@ -619,6 +624,7 @@ Open a [Discussion] on GitHub.
 [bun]: https://bun.sh
 [configuration]: docs/docs/sidebar/usage/configuration.md
 [conventional commits]: https://www.conventionalcommits.org
+[developing-a-skill]: docs/docs/sidebar/development/skills.md
 [discussion]: https://github.com/osapi-io/osapi/discussions
 [docusaurus]: https://docusaurus.io
 [eslint]: https://eslint.org

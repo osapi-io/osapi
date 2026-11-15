@@ -38,9 +38,9 @@ missing. This shows that the "Not yet" list of the skill works.
 | `neighbors` | `ip neigh`, under the network group       | a grouped behavior, in its group's directory        |
 
 ```sh
-test/skills/build-a-behavior/run.sh          # every eval in evals.json
-test/skills/build-a-behavior/run.sh motd     # one
-KEEP=1 OUT=/tmp/evals BUDGET=10 test/skills/build-a-behavior/run.sh
+internal/skills/resources/dev-skills/build-a-behavior/evals/run.sh          # every eval in evals.json
+internal/skills/resources/dev-skills/build-a-behavior/evals/run.sh motd     # one
+KEEP=1 OUT=/tmp/evals BUDGET=10 internal/skills/resources/dev-skills/build-a-behavior/evals/run.sh
 ```
 
 `run.sh` keeps the transcript of each session as `<id>.session.json`, with its

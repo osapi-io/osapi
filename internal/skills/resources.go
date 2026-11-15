@@ -27,7 +27,8 @@ import (
 
 // The skill files that this package owns. resources/skills has the skills
 // that osapi init installs. resources/dev-skills has the skills for a person
-// who changes osapi itself, such as build-a-behavior.
+// who changes osapi itself, such as build-a-behavior. Each skill keeps all of
+// its files in its directory, also its evals/.
 //
 //go:embed resources/skills resources/dev-skills
 var resources embed.FS
