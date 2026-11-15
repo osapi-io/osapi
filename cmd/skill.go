@@ -117,7 +117,9 @@ output and obeys it.`,
 		}
 
 		if jsonOutput {
-			out, _ := json.Marshal(skillFile{Name: name, Reference: reference, Content: string(data)})
+			out, _ := json.Marshal(
+				skillFile{Name: name, Reference: reference, Content: string(data)},
+			)
 			cli.PrintJSON(out)
 
 			return nil
@@ -135,5 +137,6 @@ func init() {
 	skillCmd.AddCommand(skillListCmd, skillGetCmd)
 	skillGetCmd.Flags().String("name", "", "Name of the skill")
 	_ = skillGetCmd.MarkFlagRequired("name")
-	skillGetCmd.Flags().String("reference", "", "A reference file of the skill, relative to its directory")
+	skillGetCmd.Flags().
+		String("reference", "", "A reference file of the skill, relative to its directory")
 }

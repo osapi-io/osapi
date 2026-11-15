@@ -41,13 +41,25 @@ type ResourcesPublicTestSuite struct {
 var frontmatter = regexp.MustCompile(`(?s)\A---\nname: ([a-z0-9-]+)\ndescription: .+?\n---\n`)
 
 func (s *ResourcesPublicTestSuite) TestSkillsHaveFrontmatter() {
-	dirs, err := fs.ReadDir(resources.Skills, "skills")
+	for _, set := range []struct {
+		fsys fs.FS
+		dir  string
+	}{{resources.Skills, "skills"}, {resources.DevSkills, "dev-skills"}} {
+		s.checkFrontmatter(set.fsys, set.dir)
+	}
+}
+
+func (s *ResourcesPublicTestSuite) checkFrontmatter(
+	fsys fs.FS,
+	dir string,
+) {
+	dirs, err := fs.ReadDir(fsys, dir)
 	s.Require().NoError(err)
 	s.Require().NotEmpty(dirs)
 
 	for _, d := range dirs {
-		s.Run(d.Name(), func() {
-			data, err := fs.ReadFile(resources.Skills, path.Join("skills", d.Name(), "SKILL.md"))
+		s.Run(path.Join(dir, d.Name()), func() {
+			data, err := fs.ReadFile(fsys, path.Join(dir, d.Name(), "SKILL.md"))
 			s.Require().NoError(err)
 
 			m := frontmatter.FindSubmatch(data)

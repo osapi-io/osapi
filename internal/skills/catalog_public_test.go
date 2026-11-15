@@ -40,12 +40,18 @@ type CatalogPublicTestSuite struct {
 
 func (s *CatalogPublicTestSuite) SetupTest() {
 	s.installed = fstest.MapFS{
-		"osapi/SKILL.md":                {Data: []byte("---\nname: osapi\ndescription: Operate hosts.\n---\nbody\n")},
-		"osapi/references/targets.md":   {Data: []byte("targets\n")},
-		"stray.txt":                     {Data: []byte("not a skill\n")},
+		"osapi/SKILL.md": {
+			Data: []byte("---\nname: osapi\ndescription: Operate hosts.\n---\nbody\n"),
+		},
+		"osapi/references/targets.md": {Data: []byte("targets\n")},
+		"stray.txt":                   {Data: []byte("not a skill\n")},
 	}
 	s.dev = fstest.MapFS{
-		"build-a-behavior/SKILL.md":               {Data: []byte("---\nname: build-a-behavior\ndescription: Build a behavior.\n---\nbuild\n")},
+		"build-a-behavior/SKILL.md": {
+			Data: []byte(
+				"---\nname: build-a-behavior\ndescription: Build a behavior.\n---\nbuild\n",
+			),
+		},
 		"build-a-behavior/references/services.md": {Data: []byte("services\n")},
 	}
 }

@@ -4,20 +4,23 @@ sidebar_position: 5
 
 # Building a behavior with an agent
 
-A behavior is one directory, and an agent can write all of it. The osapi
-repository has a skill, `build-a-behavior`, with the procedure and the
-decisions: what to ask before you write, which behavior to build on, and which
-checks prove that it works. Use this to build most behaviors.
+A behavior is one directory, and an agent can write all of it. The osapi binary
+has a skill, `build-a-behavior`, with the procedure and the decisions: what to
+ask before you write, which behavior to build on, and which checks prove that it
+works. Use this to build most behaviors.
 [Your first behavior](your-first-behavior.md) builds one by hand.
 [Behaviors](behaviors.md) is the reference for each part.
 
 ## Set it up
 
-Open a checkout of osapi with a coding agent. The skill is in
-`.claude/skills/build-a-behavior/`, and `.agents/skills` links to it. The agent
-loads the skill when the request is about a behavior. `osapi init` does not
-install it, because it is to change osapi, not to use it. Build the binary one
-time, because the binary embeds the UI:
+Open a checkout of osapi with a coding agent. `.claude/skills/build-a-behavior/`
+is a short pointer to the skill, and `.agents/skills` links to it. When the
+request is about a behavior, the agent loads the pointer. The pointer tells it
+to run `go run . skill get --name build-a-behavior`, and the binary prints the
+skill. Thus the binary is the only source of the skill. `osapi init` does not
+install it, because it is to change osapi, not to use it. Refer to
+[osapi skill](../usage/cli/skill.md). Build the binary one time, because the
+binary embeds the UI:
 
 ```bash
 mise exec -- just build
