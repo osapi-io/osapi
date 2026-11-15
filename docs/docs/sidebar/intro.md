@@ -10,10 +10,18 @@ title: Home
 
 # Give your agent a fleet, not a shell
 
-osapi manages Linux hosts through typed operations, not through a login. osapi
-checks each change before it puts the change on the queue. You can run each
-change twice safely, and osapi records each change. An agent uses osapi through
-the skills that `osapi init` installs. A person uses the same CLI.
+osapi manages Linux hosts through typed operations, not through a login. Each
+operation is a **behavior**: one thing on a host, defined one time, with a fixed
+input and output. osapi checks each change before it puts the change on the
+queue. A second run changes nothing, and osapi records each change.
+
+An agent uses osapi through the skills that `osapi init` installs. The agent
+does not guess commands. It asks osapi which behaviors exist, and what each one
+accepts. A person uses the same CLI.
+
+osapi starts with behaviors on hosts. Next come workflows, behaviors that run on
+one system, and scheduled automation. [Core concepts](concepts.md) tells what
+each part is, and what comes next.
 
 ## Install
 
@@ -156,6 +164,8 @@ does not run on its platform.
 
 ## Explore the Docs
 
+- [Core concepts](concepts.md): behaviors, building blocks, jobs, targets,
+  skills, and what comes next
 - [Behaviors](behaviors/behaviors.mdx): every behavior, generated from its
   definition
 - [Working with an agent](usage/agents.md): `osapi init`, the skills, and the
