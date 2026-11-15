@@ -128,8 +128,9 @@ func (d *Debian) Get(
 	return entry, nil
 }
 
-// Create deploys a new Netplan interface configuration file. Fails if
-// a managed file already exists for the interface name.
+// Create deploys a new Netplan interface configuration file. When a file
+// already exists for the interface name, it changes nothing and returns
+// Changed: false; Update replaces it.
 func (d *Debian) Create(
 	ctx context.Context,
 	entry InterfaceEntry,
