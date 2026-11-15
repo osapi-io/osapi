@@ -54,7 +54,7 @@ export function ComponentRow({
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="truncate text-primary hover:underline"
+              className="truncate text-link hover:underline"
               title={url}
             >
               {url}
