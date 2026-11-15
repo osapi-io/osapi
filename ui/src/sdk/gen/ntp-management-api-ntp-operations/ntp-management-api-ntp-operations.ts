@@ -245,11 +245,6 @@ export type deleteNodeNtpResponse403 = {
   status: 403
 }
 
-export type deleteNodeNtpResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
 export type deleteNodeNtpResponse500 = {
   data: ErrorResponse
   status: 500
@@ -258,7 +253,7 @@ export type deleteNodeNtpResponse500 = {
 export type deleteNodeNtpResponseSuccess = (deleteNodeNtpResponse200) & {
   headers: Headers;
 };
-export type deleteNodeNtpResponseError = (deleteNodeNtpResponse400 | deleteNodeNtpResponse401 | deleteNodeNtpResponse403 | deleteNodeNtpResponse404 | deleteNodeNtpResponse500) & {
+export type deleteNodeNtpResponseError = (deleteNodeNtpResponse400 | deleteNodeNtpResponse401 | deleteNodeNtpResponse403 | deleteNodeNtpResponse500) & {
   headers: Headers;
 };
 

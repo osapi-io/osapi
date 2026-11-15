@@ -148,7 +148,6 @@ func (s *NTPService) Delete(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
-		resp.JSON404,
 		resp.JSON500,
 	); err != nil {
 		return nil, err

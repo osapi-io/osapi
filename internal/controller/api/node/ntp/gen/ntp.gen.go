@@ -382,20 +382,6 @@ func (response DeleteNodeNtp403JSONResponse) VisitDeleteNodeNtpResponse(w http.R
 	return err
 }
 
-type DeleteNodeNtp404JSONResponse externalRef0.ErrorResponse
-
-func (response DeleteNodeNtp404JSONResponse) VisitDeleteNodeNtpResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(404)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
 type DeleteNodeNtp500JSONResponse externalRef0.ErrorResponse
 
 func (response DeleteNodeNtp500JSONResponse) VisitDeleteNodeNtpResponse(w http.ResponseWriter) error {

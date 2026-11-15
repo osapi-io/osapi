@@ -221,12 +221,6 @@ paths:
             application/json:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-        '404':
-          description: NTP configuration not found.
-          content:
-            application/json:
-              schema:
-                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error deleting NTP configuration.
           content:
