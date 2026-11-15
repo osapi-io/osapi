@@ -221,6 +221,7 @@ behavior-gen-check:
 generate:
     just join-spec internal/controller/api/gen/api.yaml
     just go-generate
+    just cli-docs-generate
     just docs-generate
     cp internal/controller/api/gen/api.yaml ui/src/sdk/gen/api.yaml
     just react-generate

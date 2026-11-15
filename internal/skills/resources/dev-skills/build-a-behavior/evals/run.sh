@@ -74,10 +74,10 @@ for id in "${ids[@]}"; do
 		check "$id" "the behavior is registered under its name" "go run . behavior get --name $b --json"
 		check "$id" "its package tests pass with 100% coverage" "go test -cover ./internal/behaviors/$dir/ | tee /dev/stderr | grep -q 'coverage: 100.0%'"
 		check "$id" "every test in internal/behaviors/all passes" "go test -count=1 ./internal/behaviors/all/"
-		check "$id" "generated files are current" "before=\$(git status --porcelain); go generate ./internal/behaviors/all && [ \"\$before\" = \"\$(git status --porcelain)\" ]"
+		check "$id" "generated files are current" "before=\$(git status --porcelain); go generate ./internal/behaviors/all && mise exec -- just cli-docs-generate && [ \"\$before\" = \"\$(git status --porcelain)\" ]"
 		check "$id" "lint reports no issues in the behavior" "go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --config .golangci.yml ./internal/behaviors/$dir/..."
 		check "$id" "nothing outside the behavior, its registration and generated files changed" \
-			"! git status --porcelain --untracked-files=all | awk '{print \$2}' | grep -vE '^(internal/behaviors/$dir/|internal/behaviors/all/(all.go|gen/gen.go)|internal/controller/api/next/gen/|docs/docs/sidebar/behaviors/|docs/docs/gen/api-next/|docs/docs/gen/api/|internal/controller/api/gen/|pkg/sdk/client/gen/|ui/src/sdk/gen/|justfile)'"
+			"! git status --porcelain --untracked-files=all | awk '{print \$2}' | grep -vE '^(internal/behaviors/$dir/|internal/behaviors/all/(all.go|gen/gen.go)|internal/controller/api/next/gen/|docs/docs/sidebar/behaviors/|docs/docs/sidebar/usage/cli/|docs/docs/gen/api-next/|docs/docs/gen/api/|internal/controller/api/gen/|pkg/sdk/client/gen/|ui/src/sdk/gen/|justfile)'"
 		sudo=$(field "$id" sudo)
 		[ -n "$sudo" ] && check "$id" "$sudo is declared with behavior.Sudo" "grep -rq 'behavior.Sudo(\"$sudo\"' internal/behaviors/$dir/"
 		[ "$(field "$id" refusals)" = "True" ] && check "$id" "at least one refusal is declared with Fails" "grep -rqE '(^|[.[:space:]])Fails\\(' internal/behaviors/$dir/"

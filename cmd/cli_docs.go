@@ -21,8 +21,6 @@
 package cmd
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
@@ -38,13 +36,7 @@ var cliDocsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		dir, _ := cmd.Flags().GetString("dir")
 
-		// The commands of behaviors, under client next, have their pages
-		// under behaviors/.
-		skip := func(_ *cobra.Command, path []string) bool {
-			return strings.Join(path, " ") == "client next"
-		}
-
-		if err := reference.Write(rootCmd, dir, skip); err != nil {
+		if err := reference.Write(rootCmd, dir); err != nil {
 			cli.LogFatal(logger, "failed to write the CLI reference", err)
 		}
 	},

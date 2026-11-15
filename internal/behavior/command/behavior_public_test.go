@@ -40,6 +40,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/command/mocks"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
@@ -70,11 +71,10 @@ type result struct {
 	Changed bool   `json:"changed"`
 }
 
-func read(_ context.Context, _ provider, _ input) ([]entry, error)      { return nil, nil }
-func readOne(_ context.Context, _ provider, _ input) (*entry, error)    { return nil, nil }
-func readString(_ context.Context, _ provider, _ input) (string, error) { return "", nil }
-func write(_ context.Context, _ provider, _ input) (result, error)      { return result{}, nil }
-func writeEntry(_ context.Context, _ provider, _ input) (entry, error)  { return entry{}, nil }
+func read(_ context.Context, _ provider, _ input) ([]entry, error)     { return nil, nil }
+func readOne(_ context.Context, _ provider, _ input) (*entry, error)   { return nil, nil }
+func write(_ context.Context, _ provider, _ input) (result, error)     { return result{}, nil }
+func writeEntry(_ context.Context, _ provider, _ input) (entry, error) { return entry{}, nil }
 
 type BehaviorcmdPublicTestSuite struct {
 	suite.Suite
@@ -183,6 +183,7 @@ func (s *BehaviorcmdPublicTestSuite) TestTable() {
 					"extra":    nil,
 				},
 				{"hostname": "web-02", "status": "skipped", "error": "unsupported"},
+				{"hostname": "web-03", "status": "ok", "ratio": float64(2)},
 			}},
 			validateFunc: func(sec cli.Section) {
 				s.Equal(
@@ -190,6 +191,7 @@ func (s *BehaviorcmdPublicTestSuite) TestTable() {
 					sec.Headers,
 				)
 				s.Equal([]string{"web-01", "ok", "k", "2.0 KB", "1m", "0.5", ""}, sec.Rows[0])
+				s.Equal("2", sec.Rows[1][5], "a whole number prints with no decimals")
 				s.Len(sec.Errors, 1)
 			},
 		},
@@ -212,38 +214,6 @@ func (s *BehaviorcmdPublicTestSuite) TestTable() {
 	}
 }
 
-func (s *BehaviorcmdPublicTestSuite) TestANSIToHTML() {
-	tests := []struct {
-		name string
-		in   string
-		want string
-	}{
-		{name: "when plain text is escaped", in: "a <b>", want: "a &lt;b&gt;"},
-		{
-			name: "when bold and true color",
-			in:   "\x1b[1;38;2;0;213;255mHi\x1b[0m",
-			want: `<span style="color:#00d5ff;font-weight:bold">Hi</span>`,
-		},
-		{
-			name: "when a 256 color",
-			in:   "\x1b[38;5;222mskip\x1b[39m!",
-			want: `<span style="color:#ffdf87">skip</span>!`,
-		},
-		{
-			name: "when bold is turned off",
-			in:   "\x1b[1mA\x1b[22mB",
-			want: `<span style="font-weight:bold">A</span>B`,
-		},
-		{name: "when a sequence is not finished", in: "a\x1b[1", want: "a"},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			s.Equal(tc.want, command.ANSIToHTML(tc.in))
-		})
-	}
-}
-
 func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	b := behavior.Define(
 		"kv",
@@ -253,7 +223,8 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 		behavior.CLI,
 		behavior.Under("store"),
 		behavior.Read("list", read).Describe("List <them>").Explain("All of {them}.").
-			Example("Every key", input{Key: "k", Force: true, Count: 2}, []entry{{Key: "k"}}),
+			Example("Every key", input{Key: "k", Force: true, Count: 2}, []entry{{Key: "k"}}).
+			Example("No keys", input{Key: "none"}, []entry{}),
 		behavior.Platform(
 			"debian",
 			func(host.Host) (provider, error) { return provider{}, nil },
@@ -265,6 +236,8 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 				behavior.Wrote("/var/kv/k", "v\n"),
 				behavior.Removed("/var/kv/old"),
 				behavior.Ran("kvctl", "sync")).
+			Example("A | B", input{Key: "p"}, result{Key: "p"},
+				behavior.Wrote("/var/kv/p", "a\nb\n")).
 			Fails("A key that is taken", input{Key: "k"}, "already exists").
 			Fails("No key", input{}, "key must not be empty").
 			Fails("A key on two lines", input{Key: "a\nb"}, "line breaks"),
@@ -285,7 +258,11 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 		"| API | `/api/next/node/{hostname}/store/kv`, in [API (next)](/category/api-next) |",
 	)
 	s.Contains(next, "| CLI | `osapi client next node store kv` |")
-	s.Contains(index, "| [`list`](list.mdx) | read | `store:read` | List &lt;them&gt; |")
+	s.Contains(
+		index,
+		"| [`list`](../../usage/cli/client/node/store/kv/list.md) | read | `store:read` | List &lt;them&gt; |",
+	)
+	s.NotContains(index, "<DocCardList />", "the method pages are in the CLI reference")
 	s.Contains(index, "None. A behavior declares settings with `behavior.Config`.")
 	s.Contains(index, "On `debian`. On any other platform its methods report `skipped`.")
 	s.Contains(index, "It runs `kvctl` with sudo")
@@ -340,57 +317,56 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 		"| `behaviors.quiet.ratio` | `--quiet-ratio` | `OSAPI_BEHAVIORS_QUIET_RATIO` | float | `0` |",
 	)
 
-	page, err := command.MethodPage(b, b.Method("list"), 2)
-	s.Require().NoError(err)
-	s.Contains(page, "List &lt;them&gt;.")
-	s.Contains(page, "All of &#123;them&#125;.")
-	s.Contains(page, "--key k --force true --count 2")
-	s.Contains(page, "mac-01", "the fleet rendering shows the skipped host")
-	s.Contains(page, "| `--key` | The key | required |")
+	s.Equal(
+		"  # Every key\n  osapi client node store kv list --target web-01 --key k --force true --count 2\n\n"+
+			"  # No keys\n  osapi client node store kv list --target web-01 --key none",
+		command.Example(b, b.Method("list")),
+	)
+	s.Equal(
+		"../../usage/cli/client/node/store/kv/create.md",
+		command.CLIPage(b, b.Method("create")),
+	)
+	s.Equal(
+		map[string]string{reference.Permission: "store:read"},
+		command.Annotations(b, b.Method("list")),
+		"a method with no effects and no refusals has no result",
+	)
 
-	page, err = command.MethodPage(b, b.Method("create"), 3)
-	s.Require().NoError(err)
-	s.Contains(page, `"changed":false`)
-	s.Contains(page, "- writes `/var/kv/k`: `v`")
-	s.Contains(page, "- removes `/var/kv/old`")
-	s.Contains(page, "- runs `kvctl sync`")
-	s.Contains(page, "| A key that is taken | `--key k` | already exists |")
-	s.Contains(page, "| No key |  | key must not be empty |")
-	s.Contains(page, `| A key on two lines | `+"`"+`--key "a\nb"`+"`"+` | line breaks |`,
+	create := command.Annotations(b, b.Method("create"))
+	s.Equal("store:write", create[reference.Permission])
+	result := create[reference.Result]
+	s.Contains(
+		result,
+		"| One key | writes `/var/kv/k`: `v`; removes `/var/kv/old`; runs `kvctl sync` |",
+	)
+	s.Contains(result, "| A key that is taken | `--key k` | already exists |")
+	s.Contains(result, "| No key |  | key must not be empty |")
+	s.Contains(result, `| A key on two lines | `+"`"+`--key "a\nb"`+"`"+` | line breaks |`,
 		"a newline is quoted, not printed into the table row")
+	s.Contains(result, `| A \| B | writes `+"`"+`/var/kv/p`+"`"+`: `+"`"+`a\nb`+"`"+` |`,
+		"a pipe and a newline stay in their cell")
 
-	// A write whose output has no changed field reports one, and an
+	// A behavior that is not served by the API needs no permission, and an
 	// example with no input runs the command bare.
+	b.API = false
 	bare := behavior.Write("apply", writeEntry).
 		Describe("Apply").
 		Example("Apply all", nil, entry{Key: "k"})
-	page, err = command.MethodPage(b, bare, 4)
-	s.Require().NoError(err)
-	s.Contains(page, `"changed":true`)
+	s.Empty(command.Annotations(b, bare))
+	b.API = true
+	s.Equal(
+		"  # Apply all\n  osapi client node store kv apply --target web-01",
+		command.Example(b, bare),
+	)
+	s.Empty(command.Example(b, behavior.Read("get", readOne)), "no examples")
 
-	bad := []struct {
-		name string
-		m    *behavior.Method
-	}{
-		{
-			name: "when an example output cannot be encoded",
-			m:    behavior.Read("get", readOne).Example("x", input{}, struct{ C chan int }{}),
+	s.Equal(
+		map[string]string{
+			reference.Notes: "The [kv behavior](../../../../../../behaviors/kv/kv.md) page tells " +
+				"where the behavior runs, what it is built on and its settings.",
 		},
-		{
-			name: "when a list example's elements are not objects",
-			m:    behavior.Read("list", read).Example("x", input{}, []string{"a"}),
-		},
-		{
-			name: "when an example output is not an object",
-			m:    behavior.Read("get", readString).Example("x", input{}, "a"),
-		},
-	}
-	for _, tc := range bad {
-		s.Run(tc.name, func() {
-			_, err := command.MethodPage(b, tc.m, 1)
-			s.Error(err)
-		})
-	}
+		command.GroupAnnotations(b),
+	)
 }
 
 func (s *BehaviorcmdPublicTestSuite) TestRun() {
@@ -470,6 +446,21 @@ func (s *BehaviorcmdPublicTestSuite) TestAttachRefusesADuplicate() {
 	s.Require().Error(err)
 	s.Contains(err.Error(), "node sysctl is both a hand-written command and a behavior's")
 	s.Contains(err.Error(), "behavior.Next")
+}
+
+// TestAttachMakesAGroup: a behavior with a group that its parent has no
+// command for is put under a new command of that name.
+func (s *BehaviorcmdPublicTestSuite) TestAttachMakesAGroup() {
+	command.ResetRegistered()
+	node := &cobra.Command{Use: "node"}
+	command.Register("store", false, &cobra.Command{Use: "kv"})
+
+	s.Require().NoError(command.Attach(node, &cobra.Command{Use: "next"}, command.Deps{}))
+
+	s.Require().Len(node.Commands(), 1)
+	s.Equal("store", node.Commands()[0].Name())
+	s.Equal("The store behaviors", node.Commands()[0].Short)
+	s.Equal("kv", node.Commands()[0].Commands()[0].Name())
 }
 
 func TestBehaviorcmdPublicTestSuite(

@@ -30,6 +30,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 const (
@@ -37,7 +38,28 @@ const (
 	commandPath     = "github.com/osapi-io/osapi/internal/behavior/command"
 	commandtestPath = "github.com/osapi-io/osapi/internal/behavior/command/commandtest"
 	suitePath       = "github.com/stretchr/testify/suite"
+	referencePath   = "github.com/osapi-io/osapi/internal/cli/reference"
 )
+
+// annotations are a command's docs annotations as a literal map, keyed by
+// the constants in the reference package, in a fixed order.
+func annotations(
+	a map[string]string,
+) jen.Code {
+	keys := []struct{ name, key string }{
+		{"Result", reference.Result},
+		{"Permission", reference.Permission},
+		{"Notes", reference.Notes},
+	}
+	d := jen.Dict{}
+	for _, k := range keys {
+		if v, ok := a[k.key]; ok {
+			d[jen.Qual(referencePath, k.name)] = jen.Lit(v)
+		}
+	}
+
+	return jen.Map(jen.String()).String().Values(d)
+}
 
 // flagFuncs maps a field's kind to the pflag function that declares its
 // flag and the getter that reads it back. The getter returns the field's own
@@ -98,8 +120,9 @@ func cliFile(
 
 	parent := camel(b.Group, b.Name) + "Cmd"
 	f.Var().Id(parent).Op("=").Op("&").Qual(cobraPath, "Command").Values(jen.Dict{
-		jen.Id("Use"):   jen.Lit(b.Name),
-		jen.Id("Short"): jen.Lit(b.Doc),
+		jen.Id("Use"):         jen.Lit(b.Name),
+		jen.Id("Short"):       jen.Lit(b.Doc),
+		jen.Id("Annotations"): annotations(command.GroupAnnotations(b)),
 	})
 
 	initBody := []jen.Code{
@@ -148,6 +171,12 @@ func cliFile(
 		}
 		if m.Long != "" {
 			fields[jen.Id("Long")] = jen.Lit(m.Long)
+		}
+		if ex := command.Example(b, m); ex != "" {
+			fields[jen.Id("Example")] = jen.Lit(ex)
+		}
+		if a := command.Annotations(b, m); len(a) > 0 {
+			fields[jen.Id("Annotations")] = annotations(a)
 		}
 		f.Line()
 		f.Var().Id(cmd).Op("=").Op("&").Qual(cobraPath, "Command").Values(fields)

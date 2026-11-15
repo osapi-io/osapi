@@ -85,9 +85,8 @@ func tree() *cobra.Command {
 
 	plain := &cobra.Command{Use: "dns", Short: "Get DNS", Run: func(*cobra.Command, []string) {}}
 	hidden := &cobra.Command{Use: "secret", Hidden: true, Run: func(*cobra.Command, []string) {}}
-	skipped := &cobra.Command{Use: "next", Run: func(*cobra.Command, []string) {}}
 
-	group.AddCommand(leaf, plain, hidden, skipped)
+	group.AddCommand(leaf, plain, hidden)
 	root.AddCommand(
 		group,
 		&cobra.Command{
@@ -100,13 +99,6 @@ func tree() *cobra.Command {
 	root.InitDefaultCompletionCmd()
 
 	return root
-}
-
-func skipNext(
-	_ *cobra.Command,
-	path []string,
-) bool {
-	return len(path) == 2 && path[1] == "next"
 }
 
 func (s *ReferencePublicTestSuite) read(
@@ -129,7 +121,7 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 			NoError(os.WriteFile(filepath.Join(dir, "output.md"), []byte("# Output\n"), 0o644))
 		s.Require().NoError(os.WriteFile(filepath.Join(dir, "notes.txt"), []byte("x"), 0o644))
 
-		s.Require().NoError(reference.Write(tree(), dir, skipNext))
+		s.Require().NoError(reference.Write(tree(), dir))
 
 		root := s.read(dir, "cli.mdx")
 		s.Contains(root, "# CLI\n\nManage hosts.\n")
@@ -168,26 +160,17 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 		s.FileExists(filepath.Join(dir, "version.md"))
 		s.Contains(s.read(dir, "version.md"), "[Output](output.md)")
 		s.NoFileExists(filepath.Join(dir, "node/secret.md"))
-		s.NoFileExists(filepath.Join(dir, "node/next.md"))
 		s.NoFileExists(filepath.Join(dir, "help.md"))
 		s.NoFileExists(stale)
 		s.FileExists(filepath.Join(dir, "output.md"))
 		s.FileExists(filepath.Join(dir, "notes.txt"))
 	})
 
-	s.Run("when no command is skipped writes the page of each", func() {
-		dir := s.T().TempDir()
-
-		s.Require().NoError(reference.Write(tree(), dir, nil))
-
-		s.FileExists(filepath.Join(dir, "node/next.md"))
-	})
-
 	s.Run("when a directory cannot be made returns the error", func() {
 		dir := s.T().TempDir()
 		s.Require().NoError(os.WriteFile(filepath.Join(dir, "node"), nil, 0o644))
 
-		err := reference.Write(tree(), dir, skipNext)
+		err := reference.Write(tree(), dir)
 
 		s.ErrorContains(err, "make directory for ")
 	})
@@ -196,7 +179,7 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 		dir := s.T().TempDir()
 		s.Require().NoError(os.MkdirAll(filepath.Join(dir, "node", "node.mdx"), 0o755))
 
-		err := reference.Write(tree(), dir, skipNext)
+		err := reference.Write(tree(), dir)
 
 		s.ErrorContains(err, "write ")
 	})
@@ -209,7 +192,7 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 		s.Require().NoError(os.Chmod(locked, 0o500))
 		s.T().Cleanup(func() { _ = os.Chmod(locked, 0o755) })
 
-		err := reference.Write(&cobra.Command{Use: "osapi"}, dir, nil)
+		err := reference.Write(&cobra.Command{Use: "osapi"}, dir)
 
 		s.ErrorContains(err, "remove stale page locked/stale.md")
 	})
@@ -221,7 +204,7 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 		s.Require().NoError(os.Chmod(closed, 0o000))
 		s.T().Cleanup(func() { _ = os.Chmod(closed, 0o755) })
 
-		err := reference.Write(&cobra.Command{Use: "osapi"}, dir, nil)
+		err := reference.Write(&cobra.Command{Use: "osapi"}, dir)
 
 		s.Error(err)
 	})

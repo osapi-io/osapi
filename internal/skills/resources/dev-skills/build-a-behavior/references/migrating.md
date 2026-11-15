@@ -42,7 +42,9 @@ this way, and you can check each step:
    - The CLI does not start until you delete the hand-written commands.
    - The compiler finds the case of the processor in `NewNodeProcessor`.
 
-   Delete the hand-written spec, the CLI docs pages and the platform stubs that
-   no build uses. Run `mise exec -- just generate`. It joins the spec of the
-   behavior to the main spec, and it generates the SDK and UI clients again.
+   Delete the hand-written spec and the platform stubs that no build uses. Run
+   `mise exec -- just generate`. It joins the spec of the behavior to the main
+   spec, and it generates the SDK and UI clients and the CLI pages again. The
+   CLI pages of the hand-written commands go, and the pages of the behavior
+   commands come in their place.
    Fix the code that does not compile against them.

@@ -228,6 +228,9 @@ the cobra commands. Do not edit them. Change the command in `cmd/`, then run
   and `reference.Notes` has more detail. Put a fact in its annotation, not in
   `Long`. `just test` fails when a page does not agree with its command.
   `output.md` is the one page in that directory that a person writes.
+- A behavior command is generated from the behavior definition, with its
+  `Short`, `Long`, `Example` and annotations. Change the definition, run
+  `go generate ./internal/behaviors/all`, then `just cli-docs-generate`.
 
 ```bash
 just cli-docs-generate   # Write the CLI reference pages

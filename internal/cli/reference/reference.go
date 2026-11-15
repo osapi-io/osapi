@@ -59,47 +59,37 @@ var acronyms = map[string]bool{
 	"ui": true, "url": true,
 }
 
-// Skip tells whether a command has no page. Hidden commands, help and
-// completion have none.
-type Skip func(c *cobra.Command, path []string) bool
-
 // Write writes the page of each command under root into dir, and removes each
 // page in dir that no command has, except the pages in Keep.
 func Write(
 	root *cobra.Command,
 	dir string,
-	skip Skip,
 ) error {
 	written := map[string]bool{}
-	if err := writeTree(root, nil, dir, skip, written); err != nil {
+	if err := writeTree(root, nil, dir, written); err != nil {
 		return err
 	}
 
 	return removeStale(dir, written)
 }
 
+// documented tells whether a command has a page. Hidden commands, help and
+// completion have none.
 func documented(
 	c *cobra.Command,
-	path []string,
-	skip Skip,
 ) bool {
-	if c.Hidden || c.Name() == "help" || c.Name() == "completion" {
-		return false
-	}
-
-	return skip == nil || !skip(c, path)
+	return !c.Hidden && c.Name() != "help" && c.Name() != "completion"
 }
 
 func writeTree(
 	c *cobra.Command,
 	path []string,
 	dir string,
-	skip Skip,
 	written map[string]bool,
 ) error {
 	var subs []*cobra.Command
 	for _, sub := range c.Commands() {
-		if documented(sub, append(append([]string{}, path...), sub.Name()), skip) {
+		if documented(sub) {
 			subs = append(subs, sub)
 		}
 	}
@@ -111,7 +101,7 @@ func writeTree(
 	written[file] = true
 
 	for _, sub := range subs {
-		if err := writeTree(sub, append(append([]string{}, path...), sub.Name()), dir, skip, written); err != nil {
+		if err := writeTree(sub, append(append([]string{}, path...), sub.Name()), dir, written); err != nil {
 			return err
 		}
 	}

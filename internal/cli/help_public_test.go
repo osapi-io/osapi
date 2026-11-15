@@ -371,7 +371,7 @@ func (suite *HelpPublicTestSuite) TestGuardGroups() {
 	}
 }
 
-func (s *HelpPublicTestSuite) TestPlain() {
+func (suite *HelpPublicTestSuite) TestPlain() {
 	long := strings.Repeat("word ", 20)
 	tests := []struct {
 		name string
@@ -407,8 +407,8 @@ func (s *HelpPublicTestSuite) TestPlain() {
 	}
 
 	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			s.Equal(tc.want, cli.Plain(tc.in))
+		suite.Run(tc.name, func() {
+			suite.Equal(tc.want, cli.Plain(tc.in))
 		})
 	}
 }

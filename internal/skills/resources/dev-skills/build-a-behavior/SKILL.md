@@ -95,7 +95,7 @@ The request can leave these open: what the behavior manages, where its truth is,
 
 ## Design docs
 
-AGENTS.md puts the design in `osapi-io/specs` before you build. For a behavior, the definition is the design. The generated docs page and `behavior get` publish its methods, types, settings, examples and refusals. Thus a new behavior does not need its own specs page. Change `components/osapi/behaviors.md` in specs
+AGENTS.md puts the design in `osapi-io/specs` before you build. For a behavior, the definition is the design. The generated pages and `behavior get` publish its methods, types, settings, examples and refusals. The page of the behavior has its platforms, settings and the behaviors it uses. The CLI page of each method has its examples, what each example does on the host, its refusals and its permission. Thus a new behavior does not need its own specs page. Change `components/osapi/behaviors.md` in specs
 only when the work changes the platform itself: a new option, rule, surface or
 check that every behavior gets.
 
@@ -111,7 +111,7 @@ To move a domain, copy the code that works. Do not write it again. Follow [refer
 
 ```bash
 go generate ./internal/behaviors/all
-mise exec -- just generate   # joins its spec into the main one: SDK, UI and API docs
+mise exec -- just generate   # joins its spec into the main one: SDK, UI, API docs and CLI pages
 go run . behavior validate
 go test ./internal/behaviors/<name>/... ./internal/behaviors/all/
 mise exec -- just test
@@ -138,15 +138,18 @@ Read a failure for what it names:
 | `is not mounted` or `is not attached` | Run `go generate ./internal/behaviors/all`; the gen package is missing          |
 | `behavior output is stale`            | Run `go generate ./internal/behaviors/all` and keep the result                 |
 | `the joined spec is stale`            | Run `mise exec -- just generate` and keep the result                           |
+| `cli-docs-gen-check` fails            | Run `mise exec -- just cli-docs-generate` and keep the result                  |
 | `is served by the <name> behavior and by <dir>` | A route a hand-written domain still serves: this is a cutover, so delete that domain, or mark the behavior `behavior.Next` |
 | `is both a hand-written command and a behavior's` | The same, for a command under `osapi client node` |
 | `a behavior is below 100% coverage`   | A branch no test reaches: add an example, or a case to the test named for the file |
 
 Never edit `gen/`, `mocks/`, `internal/behaviors/all/gen`,
 `internal/controller/api/gen`, `internal/controller/api/next/gen`,
-`pkg/sdk/client/gen`, `ui/src/sdk/gen`, `docs/docs/gen` or
-`docs/docs/sidebar/behaviors/<name>/`;
-change the definition and generate. A generated test that fails is fixed in the
+`pkg/sdk/client/gen`, `ui/src/sdk/gen`, `docs/docs/gen`,
+`docs/docs/sidebar/behaviors/<name>/` or `docs/docs/sidebar/usage/cli/`;
+change the definition and generate. The `Short`, `Long`, `Example` and
+`Annotations` of a behavior command come from `.Describe`, `.Explain`,
+`.Example` and `.Fails`. Do not write CLI docs for a behavior. A generated test that fails is fixed in the
 definition or in `internal/behavior/gen`, never in `gen/`.
 
 ## Not yet
