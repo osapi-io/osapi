@@ -30,12 +30,13 @@ import (
 	"testing/fstest"
 	"time"
 
+	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
+
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
-	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 )
 
 // SeedPublicTestSuite tests the exported SeedSystemTemplates function.
@@ -83,7 +84,7 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 	tests := []struct {
 		name         string
 		setupFunc    func()
-		setupMock    func(ctrl *gomock.Controller, mockObj *filemocks.MockObjectStore, putNames *[]string)
+		setupMock    func(ctrl *gomock.Controller, mockObj *agentMocks.MockTemplateStore, putNames *[]string)
 		validateFunc func(error, *[]string)
 	}{
 		{
@@ -93,7 +94,7 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				_ *filemocks.MockObjectStore,
+				_ *agentMocks.MockTemplateStore,
 				_ *[]string,
 			) {
 			},
@@ -113,10 +114,10 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				_ *filemocks.MockObjectStore,
+				_ *agentMocks.MockTemplateStore,
 				_ *[]string,
 			) {
-				// No GetBytes or PutBytes calls expected — .gitkeep is skipped.
+				// No ObjectGetBytes or ObjectPutBytes calls expected — .gitkeep is skipped.
 			},
 			validateFunc: func(err error, putNames *[]string) {
 				s.NoError(err)
@@ -134,7 +135,7 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				_ *filemocks.MockObjectStore,
+				_ *agentMocks.MockTemplateStore,
 				_ *[]string,
 			) {
 			},
@@ -152,17 +153,18 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
+				mockObj *agentMocks.MockTemplateStore,
 				putNames *[]string,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "templates", gomock.Any()).
 					Return(nil, errors.New("not found"))
 
 				mockObj.EXPECT().
-					PutBytes(gomock.Any(), gomock.Any(), gomock.Any()).
+					ObjectPutBytes(gomock.Any(), "templates", gomock.Any(), gomock.Any()).
 					DoAndReturn(func(
 						_ context.Context,
+						_ string,
 						name string,
 						_ []byte,
 					) (*jetstream.ObjectInfo, error) {
@@ -186,12 +188,12 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
+				mockObj *agentMocks.MockTemplateStore,
 				_ *[]string,
 			) {
-				// Return same content as embedded — SHA will match, no PutBytes call.
+				// Return same content as embedded — SHA will match, no ObjectPutBytes call.
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "templates", gomock.Any()).
 					Return(templateData, nil)
 			},
 			validateFunc: func(err error, putNames *[]string) {
@@ -207,18 +209,19 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
+				mockObj *agentMocks.MockTemplateStore,
 				putNames *[]string,
 			) {
 				// Return different content — SHA will differ.
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "templates", gomock.Any()).
 					Return([]byte("old content"), nil)
 
 				mockObj.EXPECT().
-					PutBytes(gomock.Any(), gomock.Any(), gomock.Any()).
+					ObjectPutBytes(gomock.Any(), "templates", gomock.Any(), gomock.Any()).
 					DoAndReturn(func(
 						_ context.Context,
+						_ string,
 						name string,
 						_ []byte,
 					) (*jetstream.ObjectInfo, error) {
@@ -236,23 +239,24 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			},
 		},
 		{
-			name: "when PutBytes fails returns wrapped error",
+			name: "when ObjectPutBytes fails returns wrapped error",
 			setupFunc: func() {
 				setupTestTemplateFS()
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
+				mockObj *agentMocks.MockTemplateStore,
 				putNames *[]string,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "templates", gomock.Any()).
 					Return(nil, errors.New("not found"))
 
 				mockObj.EXPECT().
-					PutBytes(gomock.Any(), gomock.Any(), gomock.Any()).
+					ObjectPutBytes(gomock.Any(), "templates", gomock.Any(), gomock.Any()).
 					DoAndReturn(func(
 						_ context.Context,
+						_ string,
 						name string,
 						_ []byte,
 					) (*jetstream.ObjectInfo, error) {
@@ -279,14 +283,14 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 				tt.setupFunc()
 			}
 
-			mockObj := filemocks.NewMockObjectStore(ctrl)
+			mockObj := agentMocks.NewMockTemplateStore(ctrl)
 			putNames := &[]string{}
 
 			if tt.setupMock != nil {
 				tt.setupMock(ctrl, mockObj, putNames)
 			}
 
-			err := agent.SeedSystemTemplates(s.ctx, s.logger, mockObj)
+			err := agent.SeedSystemTemplates(s.ctx, s.logger, mockObj, "templates")
 			tt.validateFunc(err, putNames)
 		})
 	}

@@ -56,47 +56,23 @@ func (p probe) run(
 	case "stdin":
 		return p.h.Exec.RunPrivilegedCmdWithStdin(ctx, "tee", []string{"/x"}, "secret")
 	case "store":
-		if _, err := kv.PutString(ctx, "a", "1"); err != nil {
+		if _, err := kv.KVPut(ctx, "file-state", "a", []byte("1")); err != nil {
 			return "", err
 		}
-		if _, err := kv.Update(ctx, "a", []byte("2"), 0); err != nil {
+		if _, err := kv.KVPut(ctx, "file-state", "a", []byte("2")); err != nil {
 			return "", err
 		}
-		if _, err := kv.Create(ctx, "a", []byte("3")); !errors.Is(err, jetstream.ErrKeyExists) {
-			return "", fmt.Errorf("create over a value: %w", err)
-		}
-		if _, err := kv.Create(ctx, "b", []byte("4")); err != nil {
-			return "", err
-		}
-		e, err := kv.Get(ctx, "a")
+		e, err := kv.KVGet(ctx, "file-state", "a")
 		if err != nil {
 			return "", err
 		}
 
 		return fmt.Sprintf("%s=%s rev=%d zero=%t", e.Key(), e.Value(), e.Revision(),
 			e.Created().IsZero()), nil
-	case "remove":
-		if _, err := kv.Put(ctx, "a", []byte("1")); err != nil {
-			return "", err
-		}
-		if err := kv.Delete(ctx, "a"); err != nil {
-			return "", err
-		}
-		if _, err := kv.Put(ctx, "b", []byte("1")); err != nil {
-			return "", err
-		}
-		if err := kv.Purge(ctx, "b"); err != nil {
-			return "", err
-		}
-		_, errA := kv.Get(ctx, "a")
-		_, errB := kv.Get(ctx, "b")
-
-		return fmt.Sprintf("a=%t b=%t", errors.Is(errA, jetstream.ErrKeyNotFound),
-			errors.Is(errB, jetstream.ErrKeyNotFound)), nil
 	default:
-		_, err := kv.Watch(ctx, "a")
+		_, err := kv.KVGet(ctx, "file-state", "missing")
 
-		return "", err
+		return fmt.Sprintf("missing=%t", errors.Is(err, jetstream.ErrKeyNotFound)), nil
 	}
 }
 
@@ -128,19 +104,14 @@ func (s *FakeHostPublicTestSuite) TestFakeHost() {
 			options: []behavior.HostOption{behavior.Ran("tee", "/x")},
 		},
 		{
-			name: "when values are put, updated, created and read",
+			name: "when a value is put, put again and read",
 			in:   probeIn{Op: "store"},
-			want: "a=2 rev=3 zero=true",
+			want: "a=2 rev=2 zero=true",
 		},
 		{
-			name: "when values are deleted and purged",
-			in:   probeIn{Op: "remove"},
-			want: "a=true b=true",
-		},
-		{
-			name:    "when the provider makes a call the fake host has no answer for",
-			in:      probeIn{Op: "watch"},
-			wantErr: "the fake host does not support that call",
+			name: "when a key is not there, the read says so",
+			in:   probeIn{Op: "missing"},
+			want: "missing=true",
 		},
 	}
 
@@ -171,4 +142,13 @@ func (s *FakeHostPublicTestSuite) TestFakeHost() {
 
 func TestFakeHostPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(FakeHostPublicTestSuite))
+}
+
+func (s *FakeHostPublicTestSuite) TestReport() {
+	for _, fatal := range []bool{false, true} {
+		s.PanicsWithValue(
+			"the fake host has no answer for a call: Exec.Unknown",
+			func() { behaviortest.ExportReport(fatal) },
+		)
+	}
 }

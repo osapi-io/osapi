@@ -45,6 +45,18 @@ var readEmbeddedFile = func(path string) ([]byte, error) { //nolint:revive // de
 	return systemTemplates.ReadFile(path)
 }
 
+// TemplateStore reads and writes the system templates in the Object Store
+// bucket. A *natsclient.Client is one.
+type TemplateStore interface {
+	ObjectGetBytes(ctx context.Context, bucket string, name string) ([]byte, error)
+	ObjectPutBytes(
+		ctx context.Context,
+		bucket string,
+		name string,
+		data []byte,
+	) (*jetstream.ObjectInfo, error)
+}
+
 // SeedSystemTemplates uploads embedded osapi templates to the NATS
 // object store with the "osapi/" prefix. Templates are updated if
 // the embedded content differs from what's in the store (SHA comparison).
@@ -52,7 +64,8 @@ var readEmbeddedFile = func(path string) ([]byte, error) { //nolint:revive // de
 func SeedSystemTemplates(
 	ctx context.Context,
 	logger *slog.Logger,
-	objStore jetstream.ObjectStore,
+	objStore TemplateStore,
+	bucket string,
 ) error {
 	logger = logger.With(slog.String("subsystem", "agent.seed"))
 
@@ -87,7 +100,7 @@ func SeedSystemTemplates(
 		embeddedSHA := computeEmbeddedSHA256(data)
 
 		// Check if the object already exists with the same content.
-		existing, getErr := objStore.GetBytes(ctx, objectName)
+		existing, getErr := objStore.ObjectGetBytes(ctx, bucket, objectName)
 		if getErr == nil {
 			existingSHA := computeEmbeddedSHA256(existing)
 			if existingSHA == embeddedSHA {
@@ -107,7 +120,7 @@ func SeedSystemTemplates(
 			)
 		}
 
-		if _, putErr := objStore.PutBytes(ctx, objectName, data); putErr != nil {
+		if _, putErr := objStore.ObjectPutBytes(ctx, bucket, objectName, data); putErr != nil {
 			return fmt.Errorf("upload osapi template %q: %w", objectName, putErr)
 		}
 

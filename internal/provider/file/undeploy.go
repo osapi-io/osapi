@@ -56,7 +56,7 @@ func (p *Service) Undeploy(
 
 	stateKey := managedfile.StateKey(p.hostname, req.Path)
 
-	entry, err := p.stateKV.Get(ctx, stateKey)
+	entry, err := p.stateKV.KVGet(ctx, p.stateBucket, stateKey)
 	if err == nil {
 		var state managedfile.State
 		if unmarshalErr := json.Unmarshal(entry.Value(), &state); unmarshalErr == nil {
@@ -64,7 +64,7 @@ func (p *Service) Undeploy(
 
 			stateBytes, marshalErr := marshalJSON(state)
 			if marshalErr == nil {
-				_, _ = p.stateKV.Put(ctx, stateKey, stateBytes)
+				_, _ = p.stateKV.KVPut(ctx, p.stateBucket, stateKey, stateBytes)
 			}
 		}
 	}

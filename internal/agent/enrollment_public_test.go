@@ -32,6 +32,8 @@ import (
 	"testing"
 	"time"
 
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
+
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
@@ -219,8 +221,8 @@ func (suite *EnrollmentPublicTestSuite) TestHandlePKIEnrollment() {
 				nil, // netinfoProvider
 				nil, // processProvider
 				nil, // registry
-				nil, // registryKV
-				nil, // factsKV
+				"",  // registryBucket
+				"",  // factsBucket
 				nil, // execManager
 				nil, // natsClient
 			)
@@ -262,7 +264,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, nil,
 				)
 
 				// Set up a PKI manager so PublicKey/Fingerprint don't panic.
@@ -281,9 +283,9 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 			name: "when publish succeeds without namespace",
 			setupAgent: func() *agent.Agent {
 				ctrl := gomock.NewController(suite.T())
-				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+				mockNATS := agentMocks.NewMockNATSClient(ctrl)
 				mockNATS.EXPECT().
-					PublishCore("enroll.request", gomock.Any()).
+					PublishCore(gomock.Any(), "enroll.request", gomock.Any()).
 					Return(nil)
 
 				fs := memfs.New()
@@ -299,7 +301,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				m := pki.New(fs, "/keys", "agent")
@@ -316,9 +318,9 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 			name: "when publish succeeds with namespace",
 			setupAgent: func() *agent.Agent {
 				ctrl := gomock.NewController(suite.T())
-				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+				mockNATS := agentMocks.NewMockNATSClient(ctrl)
 				mockNATS.EXPECT().
-					PublishCore("osapi.enroll.request", gomock.Any()).
+					PublishCore(gomock.Any(), "osapi.enroll.request", gomock.Any()).
 					Return(nil)
 
 				fs := memfs.New()
@@ -337,7 +339,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				m := pki.New(fs, "/keys", "agent")
@@ -354,9 +356,9 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 			name: "when publish fails returns error",
 			setupAgent: func() *agent.Agent {
 				ctrl := gomock.NewController(suite.T())
-				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+				mockNATS := agentMocks.NewMockNATSClient(ctrl)
 				mockNATS.EXPECT().
-					PublishCore(gomock.Any(), gomock.Any()).
+					PublishCore(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(fmt.Errorf("connection refused"))
 
 				fs := memfs.New()
@@ -372,7 +374,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				m := pki.New(fs, "/keys", "agent")
@@ -397,7 +399,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 				})
 
 				ctrl := gomock.NewController(suite.T())
-				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+				mockNATS := agentMocks.NewMockNATSClient(ctrl)
 
 				fs := memfs.New()
 				logger := slog.Default()
@@ -412,7 +414,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				m := pki.New(fs, "/keys", "agent")
@@ -459,7 +461,7 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, nil,
 				)
 
 				agent.SetAgentMachineID(a, "test-machine")
@@ -488,16 +490,17 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 			name: "when subscribe succeeds subscription is created and handler is callable",
 			setupAgent: func() (*agent.Agent, context.Context, context.CancelFunc) {
 				ctrl := gomock.NewController(suite.T())
-				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+				mockNATS := agentMocks.NewMockNATSClient(ctrl)
 				mockNATS.EXPECT().
-					Subscribe("enroll.response.test-machine", gomock.Any()).
+					Subscribe(gomock.Any(), "enroll.response.test-machine", gomock.Any()).
 					DoAndReturn(func(
+						_ context.Context,
 						_ string,
-						handler nats.MsgHandler,
+						handler natsclient.MsgHandler,
 					) (*nats.Subscription, error) {
 						// Invoke the handler with invalid JSON to verify the
 						// closure is wired correctly and early-returns on bad input.
-						handler(&nats.Msg{Data: []byte("bad")})
+						handler(context.Background(), &nats.Msg{Data: []byte("bad")})
 
 						return &nats.Subscription{}, nil
 					})
@@ -515,7 +518,7 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				agent.SetAgentMachineID(a, "test-machine")
@@ -540,9 +543,9 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 			name: "when subscribe succeeds with namespace subject is prefixed",
 			setupAgent: func() (*agent.Agent, context.Context, context.CancelFunc) {
 				ctrl := gomock.NewController(suite.T())
-				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+				mockNATS := agentMocks.NewMockNATSClient(ctrl)
 				mockNATS.EXPECT().
-					Subscribe("osapi.enroll.response.test-machine", gomock.Any()).
+					Subscribe(gomock.Any(), "osapi.enroll.response.test-machine", gomock.Any()).
 					Return(&nats.Subscription{}, nil)
 
 				fs := memfs.New()
@@ -561,7 +564,7 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				agent.SetAgentMachineID(a, "test-machine")
@@ -578,9 +581,9 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 			name: "when subscribe fails logs warning and returns",
 			setupAgent: func() (*agent.Agent, context.Context, context.CancelFunc) {
 				ctrl := gomock.NewController(suite.T())
-				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+				mockNATS := agentMocks.NewMockNATSClient(ctrl)
 				mockNATS.EXPECT().
-					Subscribe(gomock.Any(), gomock.Any()).
+					Subscribe(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("subscribe failed"))
 
 				fs := memfs.New()
@@ -596,7 +599,7 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				agent.SetAgentMachineID(a, "test-machine")
@@ -624,9 +627,9 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 			name: "when context is cancelled unsubscribes",
 			setupAgent: func() (*agent.Agent, context.Context, context.CancelFunc) {
 				ctrl := gomock.NewController(suite.T())
-				mockNATS := agentMocks.NewMockNATSPublisher(ctrl)
+				mockNATS := agentMocks.NewMockNATSClient(ctrl)
 				mockNATS.EXPECT().
-					Subscribe(gomock.Any(), gomock.Any()).
+					Subscribe(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&nats.Subscription{}, nil)
 
 				fs := memfs.New()
@@ -642,7 +645,7 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				agent.SetAgentMachineID(a, "test-machine")
@@ -693,7 +696,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, nil,
 				)
 
 				return a
@@ -724,7 +727,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, nil,
 				)
 
 				return a
@@ -769,7 +772,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 				a := agent.New(
 					fs, cfg, logger,
 					mockJobClient, "test-stream",
-					nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+					nil, nil, nil, nil, nil, nil, nil, "", "", nil, nil,
 				)
 
 				// Set up PKI manager.
@@ -839,7 +842,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 
 				a := agent.New(
 					vfs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, nil,
 				)
 
 				// Use the manager created from the base FS (keys already loaded).

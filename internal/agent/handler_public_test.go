@@ -1016,7 +1016,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 			tt.setupMocks()
 
 			msg := tt.setupMsg(s.mockCtrl)
-			tt.validateFunc(agent.ExportHandleJobMessage(s.testAgent, msg))
+			tt.validateFunc(agent.ExportHandleJobMessage(context.Background(), s.testAgent, msg))
 		})
 	}
 }
@@ -1090,7 +1090,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageModifyJobs() {
 			tt.setupMocks()
 
 			msg := newTestMsg(s.mockCtrl, tt.subject, []byte("modify-job-123"))
-			tt.validateFunc(agent.ExportHandleJobMessage(s.testAgent, msg))
+			tt.validateFunc(agent.ExportHandleJobMessage(context.Background(), s.testAgent, msg))
 		})
 	}
 }
@@ -1520,7 +1520,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 			tt.setupMocks()
 
 			msg := tt.setupMsg(s.mockCtrl)
-			tt.validateFunc(agent.ExportHandleJobMessage(s.testAgent, msg))
+			tt.validateFunc(agent.ExportHandleJobMessage(context.Background(), s.testAgent, msg))
 		})
 	}
 }

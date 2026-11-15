@@ -59,6 +59,13 @@ more. Make a bearer token with `osapi token generate`. Durations are Go
 durations, for example `30s`, `5m` or `168h`. osapi does not accept a `d`
 suffix.
 
+Each bucket name and each namespace must be a name that NATS accepts for a
+bucket: letters, digits, `-` and `_` only. Two settings must not name the same
+bucket, because each role keeps its own keys in it. For example, when
+`nats.kv.bucket` and `nats.registry.bucket` are both `job-queue`, osapi stops
+with the two keys and the name. An empty bucket turns its role off, and osapi
+does not compare it.
+
 ## Authentication
 
 Each NATS connection supports pluggable authentication. Set the `auth.type`

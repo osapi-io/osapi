@@ -59,7 +59,7 @@ func (mr *MockJobClientMockRecorder) CheckDrainFlag(ctx, hostname any) *gomock.C
 }
 
 // ConsumeJobs mocks base method.
-func (m *MockJobClient) ConsumeJobs(ctx context.Context, streamName, consumerName string, handler func(jetstream.Msg) error, opts *client.ConsumeOptions) error {
+func (m *MockJobClient) ConsumeJobs(ctx context.Context, streamName, consumerName string, handler client.JetStreamMessageHandler, opts *client.ConsumeOptions) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ConsumeJobs", ctx, streamName, consumerName, handler, opts)
 	ret0, _ := ret[0].(error)

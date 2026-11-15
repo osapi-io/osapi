@@ -219,7 +219,7 @@ func (d *Debian) buildEntryFromState(
 ) *Entry {
 	stateKey := managedfile.StateKey(d.hostname, path)
 
-	kvEntry, err := d.stateKV.Get(ctx, stateKey)
+	kvEntry, err := d.stateKV.KVGet(ctx, d.stateBucket, stateKey)
 	if err != nil {
 		return nil
 	}

@@ -25,6 +25,8 @@ import (
 	"sync"
 	"testing"
 
+	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
+
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -52,14 +54,14 @@ type LifecyclePublicTestSuite struct {
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *mocks.MockJobClient
-	mockKV        *mocks.MockKeyValue
+	mockKV        *agentMocks.MockNATSClient
 	testAgent     *agent.Agent
 }
 
 func (s *LifecyclePublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
-	s.mockKV = mocks.NewMockKeyValue(s.mockCtrl)
+	s.mockKV = agentMocks.NewMockNATSClient(s.mockCtrl)
 
 	s.testAgent = newTestAgent(newTestAgentParams{
 		appConfig:       config.Config{},
@@ -74,7 +76,8 @@ func (s *LifecyclePublicTestSuite) SetupTest() {
 		netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
 		commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
-		registryKV:      s.mockKV,
+		registryBucket:  "registry",
+		natsClient:      s.mockKV,
 	})
 	agent.SetAgentState(s.testAgent, job.AgentStateReady)
 	agent.SetAgentMachineID(s.testAgent, "test-machine-id")

@@ -119,6 +119,7 @@ func (d *Debian) Create(
 	}
 
 	if writeErr := atomicfile.Write(
+		ctx,
 		d.fs,
 		sourcesFile,
 		content,
@@ -164,6 +165,7 @@ func (d *Debian) Update(
 	}
 
 	if writeErr := atomicfile.Write(
+		ctx,
 		d.fs,
 		sourcesFile,
 		content,

@@ -29,6 +29,8 @@ import (
 	"strings"
 	"testing"
 
+	providermocks "github.com/osapi-io/osapi/internal/provider/mocks"
+
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
@@ -39,7 +41,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	execMocks "github.com/osapi-io/osapi/internal/exec/mocks"
-	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider/file"
 	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 )
@@ -71,7 +72,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 	tests := []struct {
 		name         string
 		setupFunc    func()
-		setupMock    func(*gomock.Controller, *filemocks.MockObjectStore, *jobmocks.MockKeyValue, *avfs.VFS)
+		setupMock    func(*gomock.Controller, *filemocks.MockObjects, *providermocks.MockFileState, *avfs.VFS)
 		setupExec    func(*execMocks.MockManager)
 		req          file.DeployRequest
 		want         *file.DeployResult
@@ -88,12 +89,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				_ *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return([]byte("server { listen 80; }"), nil)
 			},
 			req: file.DeployRequest{
@@ -108,16 +109,16 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when deploy succeeds (new file)",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				mockKV *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				mockKV *providermocks.MockFileState,
 				_ *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			req: file.DeployRequest{
@@ -141,16 +142,16 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when deploy succeeds (changed content)",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				mockKV *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				mockKV *providermocks.MockFileState,
 				_ *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			req: file.DeployRequest{
@@ -174,12 +175,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when deploy skips (unchanged)",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
@@ -200,16 +201,16 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when file is deleted but state exists redeploys",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				mockKV *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				mockKV *providermocks.MockFileState,
 				_ *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			req: file.DeployRequest{
@@ -233,12 +234,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when Object Store get fails",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				_ *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(nil, assert.AnError)
 			},
 			req: file.DeployRequest{
@@ -253,16 +254,16 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when content type is template",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				mockKV *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				mockKV *providermocks.MockFileState,
 				_ *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return([]byte("server {{ .Vars.host }}"), nil)
 
 				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			req: file.DeployRequest{
@@ -286,16 +287,16 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when content type is empty resolves template from object header",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				mockKV *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				mockKV *providermocks.MockFileState,
 				_ *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return([]byte("server {{ .Vars.host }}"), nil)
 
 				mockObj.EXPECT().
-					GetInfo(gomock.Any(), gomock.Any()).
+					ObjectInfo(gomock.Any(), "objects", gomock.Any()).
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{
 							Name: "nginx.conf",
@@ -306,7 +307,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 					}, nil)
 
 				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			req: file.DeployRequest{
@@ -329,20 +330,20 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when content type is empty and GetInfo fails defaults to raw",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				mockKV *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				mockKV *providermocks.MockFileState,
 				_ *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				mockObj.EXPECT().
-					GetInfo(gomock.Any(), gomock.Any()).
+					ObjectInfo(gomock.Any(), "objects", gomock.Any()).
 					Return(nil, errors.New("info error"))
 
 				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			req: file.DeployRequest{
@@ -360,12 +361,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when file write fails",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				// Use failfs to block the temp file the atomic write opens
@@ -397,12 +398,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when mkdir fails",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				vfs := failfs.New(memfs.New())
@@ -431,16 +432,16 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when state KV put fails",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				mockKV *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				mockKV *providermocks.MockFileState,
 				_ *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(0), assert.AnError)
 			},
 			req: file.DeployRequest{
@@ -455,12 +456,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when the mode cannot be parsed on a file already correct",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
@@ -479,12 +480,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when the mode cannot be parsed the deploy fails",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				_ *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 			},
 			req: file.DeployRequest{
@@ -502,16 +503,16 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when mode is set",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				mockKV *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				mockKV *providermocks.MockFileState,
 				_ *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			req: file.DeployRequest{
@@ -535,12 +536,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when the file on disk was edited the content is restored",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				mockKV *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				mockKV *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				// The record says this content was deployed; the disk says
@@ -549,7 +550,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				_ = (*appFs).WriteFile("/etc/nginx/nginx.conf", differentContent, 0o644)
 
 				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			req: file.DeployRequest{
@@ -580,19 +581,19 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				mockKV *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				mockKV *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
 				_ = (*appFs).WriteFile("/etc/nginx/nginx.conf", fileContent, 0o644)
 
 				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			setupExec: func(mockExec *execMocks.MockManager) {
@@ -628,12 +629,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
@@ -663,12 +664,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
@@ -694,12 +695,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
@@ -725,12 +726,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
@@ -758,19 +759,19 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				mockKV *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				mockKV *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
 				_ = (*appFs).WriteFile("/etc/nginx/nginx.conf", fileContent, 0o644)
 
 				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			setupExec: func(mockExec *execMocks.MockManager) {
@@ -794,19 +795,19 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when only the mode changed the file is chmodded",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				mockKV *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				mockKV *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
 				_ = (*appFs).WriteFile("/etc/nginx/nginx.conf", fileContent, 0o644)
 
 				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			req: file.DeployRequest{
@@ -830,12 +831,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when an absent mode leaves the permissions alone",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
@@ -868,12 +869,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				_ *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 			},
 			setupExec: func(mockExec *execMocks.MockManager) {
@@ -894,12 +895,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when the file cannot be stat'd while enforcing the mode",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				base := memfs.New()
@@ -935,12 +936,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when the mode cannot be applied",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				base := memfs.New()
@@ -982,12 +983,12 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				_ *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
@@ -1011,19 +1012,19 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when recording a permission change fails",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *filemocks.MockObjectStore,
-				mockKV *jobmocks.MockKeyValue,
+				mockObj *filemocks.MockObjects,
+				mockKV *providermocks.MockFileState,
 				appFs *avfs.VFS,
 			) {
 				mockObj.EXPECT().
-					GetBytes(gomock.Any(), gomock.Any()).
+					ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 					Return(fileContent, nil)
 
 				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
 				_ = (*appFs).WriteFile("/etc/nginx/nginx.conf", fileContent, 0o644)
 
 				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(0), errors.New("kv down"))
 			},
 			req: file.DeployRequest{
@@ -1047,8 +1048,8 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			}
 
 			var appFs avfs.VFS = memfs.New()
-			mockKV := jobmocks.NewMockKeyValue(ctrl)
-			mockObj := filemocks.NewMockObjectStore(ctrl)
+			mockKV := providermocks.NewMockFileState(ctrl)
+			mockObj := filemocks.NewMockObjects(ctrl)
 
 			mockExec := execMocks.NewMockManager(ctrl)
 
@@ -1063,8 +1064,8 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			provider := file.New(
 				suite.logger,
 				appFs,
-				mockObj,
-				mockKV,
+				mockObj, "objects",
+				mockKV, "file-state",
 				"test-host",
 				mockExec,
 			)

@@ -159,7 +159,7 @@ func (suite *DebianGetResolvConfPublicTestSuite) TestGetResolvConfByInterface() 
 		suite.Run(tc.name, func() {
 			mock := tc.setupMock()
 
-			net := dns.NewDebianProvider(suite.logger, memfs.New(), nil, mock, "test-host")
+			net := dns.NewDebianProvider(suite.logger, memfs.New(), nil, "", mock, "test-host")
 			tc.validateFunc(net.GetResolvConfByInterface(context.Background(), tc.interfaceName))
 		})
 	}

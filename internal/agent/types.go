@@ -27,9 +27,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
+
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel/metric"
 
 	"github.com/osapi-io/osapi/internal/config"
@@ -45,11 +46,18 @@ import (
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 )
 
-// NATSPublisher provides core NATS pub/sub for enrollment.
-// Satisfied by the nats-client's Client type.
-type NATSPublisher interface {
-	PublishCore(subject string, data []byte) error
-	Subscribe(subject string, handler nats.MsgHandler) (*nats.Subscription, error)
+// NATSClient is the access to NATS that the agent uses itself: the core
+// messages of enrollment, and the writes of its registration and its facts.
+// A *natsclient.Client is one.
+type NATSClient interface {
+	PublishCore(ctx context.Context, subject string, data []byte) error
+	Subscribe(
+		ctx context.Context,
+		subject string,
+		handler natsclient.MsgHandler,
+	) (*nats.Subscription, error)
+	KVPut(ctx context.Context, bucket string, key string, value []byte) (uint64, error)
+	KVDelete(ctx context.Context, bucket string, key string) error
 }
 
 // Agent implements job processing with clean lifecycle management.
@@ -76,11 +84,11 @@ type Agent struct {
 	// Process provider for self-metrics in heartbeat.
 	processProvider process.Provider
 
-	// Registry KV for heartbeat registration.
-	registryKV jetstream.KeyValue
+	// registryBucket is the KV bucket of the heartbeat registration, or "".
+	registryBucket string
 
-	// Facts KV for system facts collection.
-	factsKV jetstream.KeyValue
+	// factsBucket is the KV bucket of the system facts, or "".
+	factsBucket string
 
 	// startedAt records when the agent process started.
 	startedAt time.Time
@@ -115,7 +123,7 @@ type Agent struct {
 
 	// natsClient is used for publishing enrollment requests via NATS.
 	// Uses the same NATSClient interface as the rest of the project.
-	natsClient NATSPublisher
+	natsClient NATSClient
 
 	// machineID is the permanent host identifier resolved at startup.
 	machineID string

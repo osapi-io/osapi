@@ -26,7 +26,6 @@ import (
 	"regexp"
 
 	"github.com/avfs/avfs"
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/provider"
@@ -49,7 +48,8 @@ type Debian struct {
 	logger       *slog.Logger
 	fs           avfs.VFS
 	fileDeployer file.Deployer
-	stateKV      jetstream.KeyValue
+	stateKV      provider.FileState
+	stateBucket  string
 	execManager  exec.Manager
 	hostname     string
 }
@@ -59,7 +59,8 @@ func NewDebianProvider(
 	logger *slog.Logger,
 	fs avfs.VFS,
 	fileDeployer file.Deployer,
-	stateKV jetstream.KeyValue,
+	stateKV provider.FileState,
+	stateBucket string,
 	execManager exec.Manager,
 	hostname string,
 ) *Debian {
@@ -68,6 +69,7 @@ func NewDebianProvider(
 		fs:           fs,
 		fileDeployer: fileDeployer,
 		stateKV:      stateKV,
+		stateBucket:  stateBucket,
 		execManager:  execManager,
 		hostname:     hostname,
 	}

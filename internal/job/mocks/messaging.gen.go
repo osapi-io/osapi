@@ -42,61 +42,116 @@ func (m *MockNATSClient) EXPECT() *MockNATSClientMockRecorder {
 	return m.recorder
 }
 
-// ConsumeMessages mocks base method.
-func (m *MockNATSClient) ConsumeMessages(ctx context.Context, streamName, consumerName string, handler client.JetStreamMessageHandler, opts *client.ConsumeOptions) error {
+// Consume mocks base method.
+func (m *MockNATSClient) Consume(ctx context.Context, stream, consumer string, handler client.JetStreamMessageHandler, opts *client.ConsumeOptions) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ConsumeMessages", ctx, streamName, consumerName, handler, opts)
+	ret := m.ctrl.Call(m, "Consume", ctx, stream, consumer, handler, opts)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// ConsumeMessages indicates an expected call of ConsumeMessages.
-func (mr *MockNATSClientMockRecorder) ConsumeMessages(ctx, streamName, consumerName, handler, opts any) *gomock.Call {
+// Consume indicates an expected call of Consume.
+func (mr *MockNATSClientMockRecorder) Consume(ctx, stream, consumer, handler, opts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsumeMessages", reflect.TypeOf((*MockNATSClient)(nil).ConsumeMessages), ctx, streamName, consumerName, handler, opts)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Consume", reflect.TypeOf((*MockNATSClient)(nil).Consume), ctx, stream, consumer, handler, opts)
 }
 
-// CreateOrUpdateConsumerWithConfig mocks base method.
-func (m *MockNATSClient) CreateOrUpdateConsumerWithConfig(ctx context.Context, streamName string, consumerConfig jetstream.ConsumerConfig) error {
+// ConsumerCreateOrUpdate mocks base method.
+func (m *MockNATSClient) ConsumerCreateOrUpdate(ctx context.Context, stream string, config jetstream.ConsumerConfig) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrUpdateConsumerWithConfig", ctx, streamName, consumerConfig)
+	ret := m.ctrl.Call(m, "ConsumerCreateOrUpdate", ctx, stream, config)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CreateOrUpdateConsumerWithConfig indicates an expected call of CreateOrUpdateConsumerWithConfig.
-func (mr *MockNATSClientMockRecorder) CreateOrUpdateConsumerWithConfig(ctx, streamName, consumerConfig any) *gomock.Call {
+// ConsumerCreateOrUpdate indicates an expected call of ConsumerCreateOrUpdate.
+func (mr *MockNATSClientMockRecorder) ConsumerCreateOrUpdate(ctx, stream, config any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateConsumerWithConfig", reflect.TypeOf((*MockNATSClient)(nil).CreateOrUpdateConsumerWithConfig), ctx, streamName, consumerConfig)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsumerCreateOrUpdate", reflect.TypeOf((*MockNATSClient)(nil).ConsumerCreateOrUpdate), ctx, stream, config)
 }
 
-// GetStreamInfo mocks base method.
-func (m *MockNATSClient) GetStreamInfo(ctx context.Context, streamName string) (*jetstream.StreamInfo, error) {
+// KVDelete mocks base method.
+func (m *MockNATSClient) KVDelete(ctx context.Context, bucket, key string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStreamInfo", ctx, streamName)
-	ret0, _ := ret[0].(*jetstream.StreamInfo)
+	ret := m.ctrl.Call(m, "KVDelete", ctx, bucket, key)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// KVDelete indicates an expected call of KVDelete.
+func (mr *MockNATSClientMockRecorder) KVDelete(ctx, bucket, key any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVDelete", reflect.TypeOf((*MockNATSClient)(nil).KVDelete), ctx, bucket, key)
+}
+
+// KVGet mocks base method.
+func (m *MockNATSClient) KVGet(ctx context.Context, bucket, key string) (jetstream.KeyValueEntry, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "KVGet", ctx, bucket, key)
+	ret0, _ := ret[0].(jetstream.KeyValueEntry)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetStreamInfo indicates an expected call of GetStreamInfo.
-func (mr *MockNATSClientMockRecorder) GetStreamInfo(ctx, streamName any) *gomock.Call {
+// KVGet indicates an expected call of KVGet.
+func (mr *MockNATSClientMockRecorder) KVGet(ctx, bucket, key any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStreamInfo", reflect.TypeOf((*MockNATSClient)(nil).GetStreamInfo), ctx, streamName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVGet", reflect.TypeOf((*MockNATSClient)(nil).KVGet), ctx, bucket, key)
+}
+
+// KVKeys mocks base method.
+func (m *MockNATSClient) KVKeys(ctx context.Context, bucket string, filters ...string) ([]string, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, bucket}
+	for _, a := range filters {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "KVKeys", varargs...)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// KVKeys indicates an expected call of KVKeys.
+func (mr *MockNATSClientMockRecorder) KVKeys(ctx, bucket any, filters ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, bucket}, filters...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVKeys", reflect.TypeOf((*MockNATSClient)(nil).KVKeys), varargs...)
 }
 
 // KVPut mocks base method.
-func (m *MockNATSClient) KVPut(bucket, key string, value []byte) error {
+func (m *MockNATSClient) KVPut(ctx context.Context, bucket, key string, value []byte) (uint64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "KVPut", bucket, key, value)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "KVPut", ctx, bucket, key, value)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // KVPut indicates an expected call of KVPut.
-func (mr *MockNATSClientMockRecorder) KVPut(bucket, key, value any) *gomock.Call {
+func (mr *MockNATSClientMockRecorder) KVPut(ctx, bucket, key, value any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVPut", reflect.TypeOf((*MockNATSClient)(nil).KVPut), bucket, key, value)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVPut", reflect.TypeOf((*MockNATSClient)(nil).KVPut), ctx, bucket, key, value)
+}
+
+// KVWatch mocks base method.
+func (m *MockNATSClient) KVWatch(ctx context.Context, bucket, pattern string, opts ...jetstream.WatchOpt) (<-chan jetstream.KeyValueEntry, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, bucket, pattern}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "KVWatch", varargs...)
+	ret0, _ := ret[0].(<-chan jetstream.KeyValueEntry)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// KVWatch indicates an expected call of KVWatch.
+func (mr *MockNATSClientMockRecorder) KVWatch(ctx, bucket, pattern any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, bucket, pattern}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVWatch", reflect.TypeOf((*MockNATSClient)(nil).KVWatch), varargs...)
 }
 
 // Publish mocks base method.
@@ -111,4 +166,19 @@ func (m *MockNATSClient) Publish(ctx context.Context, subject string, data []byt
 func (mr *MockNATSClientMockRecorder) Publish(ctx, subject, data any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Publish", reflect.TypeOf((*MockNATSClient)(nil).Publish), ctx, subject, data)
+}
+
+// StreamInfo mocks base method.
+func (m *MockNATSClient) StreamInfo(ctx context.Context, name string) (*jetstream.StreamInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StreamInfo", ctx, name)
+	ret0, _ := ret[0].(*jetstream.StreamInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StreamInfo indicates an expected call of StreamInfo.
+func (mr *MockNATSClientMockRecorder) StreamInfo(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StreamInfo", reflect.TypeOf((*MockNATSClient)(nil).StreamInfo), ctx, name)
 }

@@ -23,6 +23,7 @@
 package file
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/avfs/avfs"
@@ -45,10 +46,19 @@ type Service struct {
 
 	logger      *slog.Logger
 	fs          avfs.VFS
-	objStore    jetstream.ObjectStore
-	stateKV     jetstream.KeyValue
+	objStore    Objects
+	objBucket   string
+	stateKV     provider.FileState
+	stateBucket string
 	hostname    string
 	execManager exec.Manager
+}
+
+// Objects reads the objects that a deploy writes to a host, from the Object
+// Store bucket. A *natsclient.Client is one.
+type Objects interface {
+	ObjectGetBytes(ctx context.Context, bucket string, name string) ([]byte, error)
+	ObjectInfo(ctx context.Context, bucket string, name string) (*jetstream.ObjectInfo, error)
 }
 
 // New creates a new Service with the given dependencies.
@@ -57,8 +67,10 @@ type Service struct {
 func New(
 	logger *slog.Logger,
 	fs avfs.VFS,
-	objStore jetstream.ObjectStore,
-	stateKV jetstream.KeyValue,
+	objStore Objects,
+	objBucket string,
+	stateKV provider.FileState,
+	stateBucket string,
 	hostname string,
 	execManager exec.Manager,
 ) *Service {
@@ -66,7 +78,9 @@ func New(
 		logger:      logger.With(slog.String("subsystem", "provider.file")),
 		fs:          fs,
 		objStore:    objStore,
+		objBucket:   objBucket,
 		stateKV:     stateKV,
+		stateBucket: stateBucket,
 		hostname:    hostname,
 		execManager: execManager,
 	}

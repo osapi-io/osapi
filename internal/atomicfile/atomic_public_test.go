@@ -21,6 +21,7 @@
 package atomicfile_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -28,6 +29,10 @@ import (
 	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 
 	"github.com/osapi-io/osapi/internal/atomicfile"
 )
@@ -152,9 +157,70 @@ func (s *AtomicPublicTestSuite) TestWrite() {
 		s.Run(tt.name, func() {
 			vfs := tt.setupFS()
 
-			tt.validateFunc(vfs, atomicfile.Write(vfs, target, tt.content, 0o600))
+			tt.validateFunc(
+				vfs,
+				atomicfile.Write(context.Background(), vfs, target, tt.content, 0o600),
+			)
 		})
 	}
+}
+
+func (s *AtomicPublicTestSuite) TestWriteSpan() {
+	const target = "/etc/app/app.conf"
+
+	recorder := tracetest.NewSpanRecorder()
+	tp := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder))
+	previous := otel.GetTracerProvider()
+	otel.SetTracerProvider(tp)
+	defer otel.SetTracerProvider(previous)
+
+	newFS := func() avfs.VFS {
+		vfs := memfs.New()
+		_ = vfs.MkdirAll("/etc/app", 0o755)
+
+		return vfs
+	}
+
+	s.Run("inside a trace the write is a child span with the path and the size", func() {
+		recorder.Reset()
+		ctx, job := tp.Tracer("test").Start(context.Background(), "job.process")
+
+		s.Require().NoError(atomicfile.Write(ctx, newFS(), target, []byte("listen 80\n"), 0o600))
+		job.End()
+
+		span := recorder.Ended()[0]
+		s.Equal("file.write", span.Name())
+		s.Equal(job.SpanContext().SpanID(), span.Parent().SpanID())
+		s.Equal(codes.Unset, span.Status().Code)
+		got := map[string]string{}
+		for _, kv := range span.Attributes() {
+			got[string(kv.Key)] = kv.Value.String()
+		}
+		s.Equal(map[string]string{
+			"file.path": target,
+			"file.mode": "0600",
+			"file.size": "10",
+		}, got)
+	})
+
+	s.Run("a failed write marks the span", func() {
+		recorder.Reset()
+		ctx, job := tp.Tracer("test").Start(context.Background(), "job.process")
+
+		err := atomicfile.Write(ctx, memfs.New(), target, []byte("x"), 0o600)
+		job.End()
+
+		s.Require().Error(err)
+		s.Equal(codes.Error, recorder.Ended()[0].Status().Code)
+	})
+
+	s.Run("outside a trace makes no span", func() {
+		recorder.Reset()
+
+		s.Require().
+			NoError(atomicfile.Write(context.Background(), newFS(), target, []byte("x"), 0o600))
+		s.Empty(recorder.Ended())
+	})
 }
 
 // assertNoLeftovers checks that a failed write left no temporary file behind.

@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v5"
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/behavior/server"
@@ -68,8 +67,9 @@ type handlerDeps struct {
 	checker         health.Checker
 	metricsProvider health.MetricsProvider
 	auditStore      audit.Store
-	objStore        file.ObjectStoreManager
-	fileStateKV     jetstream.KeyValue
+	nats            fileBuckets
+	objBucket       string
+	fileStateBucket string
 	enrollment      *enrollment.Watcher
 }
 
@@ -139,10 +139,18 @@ func handlers(
 			handlers,
 			auditAPI.Handler(d.log, d.auditStore, signingKey, customRoles)...)
 	}
-	if d.objStore != nil {
+	if d.objBucket != "" {
 		handlers = append(
 			handlers,
-			file.Handler(d.log, d.objStore, d.fileStateKV, signingKey, customRoles)...,
+			file.Handler(
+				d.log,
+				d.nats,
+				d.objBucket,
+				d.nats,
+				d.fileStateBucket,
+				signingKey,
+				customRoles,
+			)...,
 		)
 	}
 	handlers = append(handlers, factsAPI.Handler(d.log, signingKey, customRoles)...)

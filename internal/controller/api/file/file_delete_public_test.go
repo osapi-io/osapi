@@ -57,7 +57,7 @@ type FileDeletePublicTestSuite struct {
 func (s *FileDeletePublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockObjStore = mocks.NewMockObjectStoreManager(s.mockCtrl)
-	s.handler = apifile.New(slog.Default(), s.mockObjStore, nil)
+	s.handler = apifile.New(slog.Default(), s.mockObjStore, "objects", nil, "")
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -79,13 +79,13 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByName() {
 			request: gen.DeleteFileByNameRequestObject{Name: "nginx.conf"},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
 						Size:       1024,
 					}, nil)
 				s.mockObjStore.EXPECT().
-					Delete(gomock.Any(), "nginx.conf").
+					ObjectDelete(gomock.Any(), "objects", "nginx.conf").
 					Return(nil)
 			},
 			validateFunc: func(resp gen.DeleteFileByNameResponseObject) {
@@ -123,7 +123,7 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByName() {
 			request: gen.DeleteFileByNameRequestObject{Name: "missing.conf"},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					GetInfo(gomock.Any(), "missing.conf").
+					ObjectInfo(gomock.Any(), "objects", "missing.conf").
 					Return(nil, jetstream.ErrObjectNotFound)
 			},
 			validateFunc: func(resp gen.DeleteFileByNameResponseObject) {
@@ -138,7 +138,7 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByName() {
 			request: gen.DeleteFileByNameRequestObject{Name: "nginx.conf"},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.DeleteFileByNameResponseObject) {
@@ -151,13 +151,13 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByName() {
 			request: gen.DeleteFileByNameRequestObject{Name: "nginx.conf"},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
 						Size:       1024,
 					}, nil)
 				s.mockObjStore.EXPECT().
-					Delete(gomock.Any(), "nginx.conf").
+					ObjectDelete(gomock.Any(), "objects", "nginx.conf").
 					Return(assert.AnError)
 			},
 			validateFunc: func(resp gen.DeleteFileByNameResponseObject) {
@@ -202,13 +202,13 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByNameValidationHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
 						Size:       1024,
 					}, nil)
 				mock.EXPECT().
-					Delete(gomock.Any(), "nginx.conf").
+					ObjectDelete(gomock.Any(), "objects", "nginx.conf").
 					Return(nil)
 				return mock
 			},
@@ -224,7 +224,7 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByNameValidationHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					GetInfo(gomock.Any(), "missing.conf").
+					ObjectInfo(gomock.Any(), "objects", "missing.conf").
 					Return(nil, jetstream.ErrObjectNotFound)
 				return mock
 			},
@@ -239,13 +239,13 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByNameValidationHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
 						Size:       1024,
 					}, nil)
 				mock.EXPECT().
-					Delete(gomock.Any(), "nginx.conf").
+					ObjectDelete(gomock.Any(), "objects", "nginx.conf").
 					Return(assert.AnError)
 				return mock
 			},
@@ -260,7 +260,7 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByNameValidationHTTP() {
 		s.Run(tc.name, func() {
 			objMock := tc.setupMock()
 
-			fileHandler := apifile.New(s.logger, objMock, nil)
+			fileHandler := apifile.New(s.logger, objMock, "objects", nil, "")
 			strictHandler := gen.NewStrictHandler(fileHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
@@ -335,13 +335,13 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByNameRBACHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
 						Size:       1024,
 					}, nil)
 				mock.EXPECT().
-					Delete(gomock.Any(), "nginx.conf").
+					ObjectDelete(gomock.Any(), "objects", "nginx.conf").
 					Return(nil)
 				return mock
 			},
@@ -371,7 +371,9 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByNameRBACHTTP() {
 			handlers := apifile.Handler(
 				s.logger,
 				objMock,
+				"objects",
 				nil,
+				"",
 				appConfig.Controller.API.Security.SigningKey,
 				nil,
 			)

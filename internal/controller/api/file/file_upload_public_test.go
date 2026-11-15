@@ -63,7 +63,7 @@ type FileUploadPublicTestSuite struct {
 func (s *FileUploadPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockObjStore = mocks.NewMockObjectStoreManager(s.mockCtrl)
-	s.handler = apifile.New(slog.Default(), s.mockObjStore, nil)
+	s.handler = apifile.New(slog.Default(), s.mockObjStore, "objects", nil, "")
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -156,13 +156,13 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 			},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(nil, assert.AnError)
 
 				s.mockObjStore.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
 					DoAndReturn(func(
-						_ context.Context,
+						_ context.Context, _ string,
 						meta jetstream.ObjectMeta,
 						_ io.Reader,
 					) (*jetstream.ObjectInfo, error) {
@@ -191,13 +191,13 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 			},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					GetInfo(gomock.Any(), "tmpl.conf").
+					ObjectInfo(gomock.Any(), "objects", "tmpl.conf").
 					Return(nil, assert.AnError)
 
 				s.mockObjStore.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
 					DoAndReturn(func(
-						_ context.Context,
+						_ context.Context, _ string,
 						meta jetstream.ObjectMeta,
 						_ io.Reader,
 					) (*jetstream.ObjectInfo, error) {
@@ -223,11 +223,11 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 			},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					GetInfo(gomock.Any(), "f.txt").
+					ObjectInfo(gomock.Any(), "objects", "f.txt").
 					Return(nil, assert.AnError)
 
 				s.mockObjStore.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{Name: "f.txt"},
 						Size:       uint64(len(fileContent)),
@@ -246,7 +246,7 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 			},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{
 							Name: "nginx.conf",
@@ -274,7 +274,7 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 			},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{
 							Name: "nginx.conf",
@@ -301,7 +301,7 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 			},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
 						Size:       uint64(len(fileContent)),
@@ -322,7 +322,7 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 			},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
 						Size:       uint64(len(fileContent)),
@@ -410,11 +410,11 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 			},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(nil, assert.AnError)
 
 				s.mockObjStore.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
 					Return(nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostFileResponseObject) {
@@ -465,10 +465,10 @@ func (s *FileUploadPublicTestSuite) TestPostFileValidationHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(nil, assert.AnError)
 				mock.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
 						Size:       uint64(len(fileContent)),
@@ -506,7 +506,7 @@ func (s *FileUploadPublicTestSuite) TestPostFileValidationHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
 						Size:       100,
@@ -528,7 +528,7 @@ func (s *FileUploadPublicTestSuite) TestPostFileValidationHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
 						Size:       uint64(len(fileContent)),
@@ -562,10 +562,10 @@ func (s *FileUploadPublicTestSuite) TestPostFileValidationHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(nil, assert.AnError)
 				mock.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
 					Return(nil, assert.AnError)
 				return mock
 			},
@@ -580,7 +580,7 @@ func (s *FileUploadPublicTestSuite) TestPostFileValidationHTTP() {
 		s.Run(tc.name, func() {
 			objMock := tc.setupMock()
 
-			fileHandler := apifile.New(s.logger, objMock, nil)
+			fileHandler := apifile.New(s.logger, objMock, "objects", nil, "")
 			strictHandler := gen.NewStrictHandler(fileHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
@@ -668,10 +668,10 @@ func (s *FileUploadPublicTestSuite) TestPostFileRBACHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(nil, assert.AnError)
 				mock.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
 						Size:       uint64(len(fileContent)),
@@ -704,7 +704,9 @@ func (s *FileUploadPublicTestSuite) TestPostFileRBACHTTP() {
 			handlers := apifile.Handler(
 				s.logger,
 				objMock,
+				"objects",
 				nil,
+				"",
 				appConfig.Controller.API.Security.SigningKey,
 				nil,
 			)

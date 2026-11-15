@@ -28,6 +28,8 @@ import (
 	"os"
 	"testing"
 
+	providermocks "github.com/osapi-io/osapi/internal/provider/mocks"
+
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
@@ -76,7 +78,7 @@ type DebianPublicTestSuite struct {
 	logger       *slog.Logger
 	memFs        avfs.VFS
 	mockDeployer *filemocks.MockDeployer
-	mockStateKV  *jobmocks.MockKeyValue
+	mockStateKV  *providermocks.MockFileState
 	provider     *cron.Debian
 }
 
@@ -85,7 +87,7 @@ func (suite *DebianPublicTestSuite) SetupTest() {
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	suite.memFs = memfs.New()
 	suite.mockDeployer = filemocks.NewMockDeployer(suite.ctrl)
-	suite.mockStateKV = jobmocks.NewMockKeyValue(suite.ctrl)
+	suite.mockStateKV = providermocks.NewMockFileState(suite.ctrl)
 
 	_ = suite.memFs.MkdirAll("/etc/cron.d", 0o755)
 	_ = suite.memFs.MkdirAll("/etc/cron.hourly", 0o755)
@@ -97,7 +99,7 @@ func (suite *DebianPublicTestSuite) SetupTest() {
 		suite.logger,
 		suite.memFs,
 		suite.mockDeployer,
-		suite.mockStateKV,
+		suite.mockStateKV, "file-state",
 		testHostname,
 	)
 }
@@ -334,7 +336,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
 				mockEntry.EXPECT().Value().Return(stateData).AnyTimes()
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 				suite.mockDeployer.EXPECT().
 					Deploy(gomock.Any(), gomock.Eq(file.DeployRequest{
@@ -367,7 +369,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					0o644,
 				)
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, errors.New("kv error"))
 			},
 			validateFunc: func(
@@ -595,11 +597,11 @@ func (suite *DebianPublicTestSuite) TestList() {
 
 				// isManagedFile + buildEntryFromState = 2 Get calls per file.
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil).
 					Times(2) // backup: isManagedFile + buildEntryFromState
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(dailyMockEntry, nil).
 					Times(2) // logrotate: isManagedFile + buildEntryFromState
 			},
@@ -630,7 +632,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 
 				// isManagedFile + buildEntryFromState = 2 Get calls.
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil).
 					Times(2)
 			},
@@ -656,7 +658,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 					suite.logger,
 					noPeriodicFs,
 					suite.mockDeployer,
-					suite.mockStateKV,
+					suite.mockStateKV, "file-state",
 					testHostname,
 				)
 			},
@@ -706,7 +708,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 				)
 				// stateKV.Get returns error => not managed.
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, errors.New("not found")).
 					AnyTimes()
 			},
@@ -728,7 +730,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 				)
 				// stateKV.Get returns error => not managed.
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, errors.New("not found")).
 					AnyTimes()
 			},
@@ -749,7 +751,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 					suite.logger,
 					badFs,
 					suite.mockDeployer,
-					suite.mockStateKV,
+					suite.mockStateKV, "file-state",
 					testHostname,
 				)
 			},
@@ -797,7 +799,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 
 				// isManagedFile + buildEntryFromState = 2 calls.
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil).
 					Times(2)
 			},
@@ -822,7 +824,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 				)
 				// stateKV.Get returns error => not managed.
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, errors.New("not found"))
 			},
 			validateFunc: func(
@@ -887,7 +889,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 				mockEntry.EXPECT().Value().Return([]byte("not-json"))
 
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 			},
 			validateFunc: func(
@@ -919,7 +921,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 				mockEntry.EXPECT().Value().Return(undeployedState)
 
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 			},
 			validateFunc: func(
@@ -947,11 +949,11 @@ func (suite *DebianPublicTestSuite) TestGet() {
 				gomock.InOrder(
 					// isManagedFile: succeeds.
 					suite.mockStateKV.EXPECT().
-						Get(gomock.Any(), gomock.Any()).
+						KVGet(gomock.Any(), "file-state", gomock.Any()).
 						Return(managedEntry, nil),
 					// buildEntryFromState: fails.
 					suite.mockStateKV.EXPECT().
-						Get(gomock.Any(), gomock.Any()).
+						KVGet(gomock.Any(), "file-state", gomock.Any()).
 						Return(nil, errors.New("kv error")),
 				)
 			},
@@ -983,11 +985,11 @@ func (suite *DebianPublicTestSuite) TestGet() {
 				gomock.InOrder(
 					// isManagedFile: succeeds.
 					suite.mockStateKV.EXPECT().
-						Get(gomock.Any(), gomock.Any()).
+						KVGet(gomock.Any(), "file-state", gomock.Any()).
 						Return(managedEntry, nil),
 					// buildEntryFromState: returns invalid JSON.
 					suite.mockStateKV.EXPECT().
-						Get(gomock.Any(), gomock.Any()).
+						KVGet(gomock.Any(), "file-state", gomock.Any()).
 						Return(badEntry, nil),
 				)
 			},
@@ -1018,7 +1020,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 				mockEntry.EXPECT().Value().Return(stateData).AnyTimes()
 
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil).
 					Times(2)
 			},

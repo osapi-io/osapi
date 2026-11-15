@@ -105,7 +105,7 @@ func (d *Debian) Get(
 
 	stateKey := managedfile.StateKey(d.hostname, path)
 
-	kvEntry, err := d.stateKV.Get(ctx, stateKey)
+	kvEntry, err := d.stateKV.KVGet(ctx, d.stateBucket, stateKey)
 	if err != nil {
 		return nil, fmt.Errorf("route %q: %w", interfaceName, provider.ErrNotFound)
 	}
@@ -180,6 +180,7 @@ func (d *Debian) Create(
 		d.logger,
 		d.fs,
 		d.stateKV,
+		d.stateBucket,
 		d.execManager,
 		d.hostname,
 		path,
@@ -242,6 +243,7 @@ func (d *Debian) Update(
 		d.logger,
 		d.fs,
 		d.stateKV,
+		d.stateBucket,
 		d.execManager,
 		d.hostname,
 		path,
@@ -288,6 +290,7 @@ func (d *Debian) Delete(
 		d.logger,
 		d.fs,
 		d.stateKV,
+		d.stateBucket,
 		d.execManager,
 		d.hostname,
 		path,

@@ -30,6 +30,8 @@ import (
 	"os"
 	"testing"
 
+	providermocks "github.com/osapi-io/osapi/internal/provider/mocks"
+
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
@@ -64,7 +66,7 @@ type NetplanPublicTestSuite struct {
 	ctx         context.Context
 	logger      *slog.Logger
 	memFs       avfs.VFS
-	mockStateKV *jobmocks.MockKeyValue
+	mockStateKV *providermocks.MockFileState
 	mockExec    *execmocks.MockManager
 }
 
@@ -73,7 +75,7 @@ func (suite *NetplanPublicTestSuite) SetupTest() {
 	suite.ctx = context.Background()
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	suite.memFs = memfs.New()
-	suite.mockStateKV = jobmocks.NewMockKeyValue(suite.ctrl)
+	suite.mockStateKV = providermocks.NewMockFileState(suite.ctrl)
 	suite.mockExec = execmocks.NewMockManager(suite.ctrl)
 
 	_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
@@ -108,7 +110,7 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 
 				// KV Put succeeds.
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			validateFunc: func(changed bool, err error) {
@@ -144,7 +146,7 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 					Return("", nil)
 
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			validateFunc: func(changed bool, err error) {
@@ -168,7 +170,7 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 					Return("", nil)
 
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			validateFunc: func(changed bool, err error) {
@@ -278,7 +280,7 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 					Return("", nil)
 
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(0), errors.New("kv put failed"))
 			},
 			validateFunc: func(changed bool, err error) {
@@ -318,7 +320,7 @@ func (suite *NetplanPublicTestSuite) TestApplyConfig() {
 				suite.ctx,
 				suite.logger,
 				suite.memFs,
-				suite.mockStateKV,
+				suite.mockStateKV, "file-state",
 				suite.mockExec,
 				testHostname,
 				testPath,
@@ -361,11 +363,11 @@ func (suite *NetplanPublicTestSuite) TestRemoveConfig() {
 				mockEntry.EXPECT().Value().Return(stateBytes)
 
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			validateFunc: func(changed bool, err error) {
@@ -451,11 +453,11 @@ func (suite *NetplanPublicTestSuite) TestRemoveConfig() {
 				mockEntry.EXPECT().Value().Return(stateBytes)
 
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(0), errors.New("kv put failed"))
 			},
 			validateFunc: func(changed bool, err error) {
@@ -474,7 +476,7 @@ func (suite *NetplanPublicTestSuite) TestRemoveConfig() {
 					Return("", nil)
 
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, errors.New("kv get failed"))
 			},
 			validateFunc: func(changed bool, err error) {
@@ -493,7 +495,7 @@ func (suite *NetplanPublicTestSuite) TestRemoveConfig() {
 				suite.ctx,
 				suite.logger,
 				suite.memFs,
-				suite.mockStateKV,
+				suite.mockStateKV, "file-state",
 				suite.mockExec,
 				testHostname,
 				testPath,

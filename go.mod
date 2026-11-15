@@ -27,7 +27,7 @@ require (
 	github.com/nats-io/nkeys v0.4.17
 	github.com/oapi-codegen/runtime v1.8.0
 	github.com/opencontainers/image-spec v1.1.1
-	github.com/osapi-io/nats-client v1.1.0
+	github.com/osapi-io/nats-client v1.2.0
 	github.com/osapi-io/nats-server v1.1.0
 	github.com/prometheus-community/pro-bing v0.9.1
 	github.com/prometheus/client_golang v1.25.0

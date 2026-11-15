@@ -48,11 +48,8 @@ func startEnrollment(
 	namespace string,
 	cfg config.Config,
 ) (*enrollment.Watcher, error) {
-	enrollmentKV, err := conn.NATS.CreateOrUpdateKVBucketWithConfig(
-		ctx,
-		bus.EnrollmentKV(namespace, cfg.NATS.Enrollment),
-	)
-	if err != nil {
+	enrollmentCfg := bus.EnrollmentKV(namespace, cfg.NATS.Enrollment)
+	if err := conn.NATS.KVCreateOrUpdate(ctx, enrollmentCfg); err != nil {
 		log.Warn(
 			"failed to create enrollment KV bucket, enrollment disabled",
 			slog.String("error", err.Error()),
@@ -78,7 +75,8 @@ func startEnrollment(
 	watcher := enrollment.NewWatcher(
 		log,
 		conn.NATS,
-		enrollmentKV,
+		conn.NATS,
+		enrollmentCfg.Bucket,
 		keys,
 		cfg.Controller.PKI.AutoAccept,
 		namespace,

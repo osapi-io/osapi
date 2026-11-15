@@ -88,8 +88,6 @@ func (d *Debian) AddKey(
 	username string,
 	key SSHKey,
 ) (*SSHKeyResult, error) {
-	_ = ctx
-
 	if err := validateAccountName(username); err != nil {
 		return nil, fmt.Errorf("ssh key: add: %w", err)
 	}
@@ -141,6 +139,7 @@ func (d *Debian) AddKey(
 	updated += key.RawLine + "\n"
 
 	if err := atomicfile.Write(
+		ctx,
 		d.fs,
 		authKeysPath,
 		[]byte(updated),
@@ -179,8 +178,6 @@ func (d *Debian) RemoveKey(
 	username string,
 	fingerprint string,
 ) (*SSHKeyResult, error) {
-	_ = ctx
-
 	if err := validateAccountName(username); err != nil {
 		return nil, fmt.Errorf("ssh key: remove: %w", err)
 	}
@@ -237,6 +234,7 @@ func (d *Debian) RemoveKey(
 	output := strings.Join(remaining, "\n")
 
 	if err := atomicfile.Write(
+		ctx,
 		d.fs,
 		authKeysPath,
 		[]byte(output),

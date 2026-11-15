@@ -58,7 +58,7 @@ type FileGetPublicTestSuite struct {
 func (s *FileGetPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockObjStore = mocks.NewMockObjectStoreManager(s.mockCtrl)
-	s.handler = apifile.New(slog.Default(), s.mockObjStore, nil)
+	s.handler = apifile.New(slog.Default(), s.mockObjStore, "objects", nil, "")
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -80,7 +80,7 @@ func (s *FileGetPublicTestSuite) TestGetFileByName() {
 			request: gen.GetFileByNameRequestObject{Name: "nginx.conf"},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{
 							Name: "nginx.conf",
@@ -120,7 +120,7 @@ func (s *FileGetPublicTestSuite) TestGetFileByName() {
 			request: gen.GetFileByNameRequestObject{Name: "missing.conf"},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					GetInfo(gomock.Any(), "missing.conf").
+					ObjectInfo(gomock.Any(), "objects", "missing.conf").
 					Return(nil, jetstream.ErrObjectNotFound)
 			},
 			validateFunc: func(resp gen.GetFileByNameResponseObject) {
@@ -135,7 +135,7 @@ func (s *FileGetPublicTestSuite) TestGetFileByName() {
 			request: gen.GetFileByNameRequestObject{Name: "nginx.conf"},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetFileByNameResponseObject) {
@@ -180,7 +180,7 @@ func (s *FileGetPublicTestSuite) TestGetFileByNameValidationHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{
 							Name: "nginx.conf",
@@ -210,7 +210,7 @@ func (s *FileGetPublicTestSuite) TestGetFileByNameValidationHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					GetInfo(gomock.Any(), "missing.conf").
+					ObjectInfo(gomock.Any(), "objects", "missing.conf").
 					Return(nil, jetstream.ErrObjectNotFound)
 				return mock
 			},
@@ -225,7 +225,7 @@ func (s *FileGetPublicTestSuite) TestGetFileByNameValidationHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(nil, assert.AnError)
 				return mock
 			},
@@ -240,7 +240,7 @@ func (s *FileGetPublicTestSuite) TestGetFileByNameValidationHTTP() {
 		s.Run(tc.name, func() {
 			objMock := tc.setupMock()
 
-			fileHandler := apifile.New(s.logger, objMock, nil)
+			fileHandler := apifile.New(s.logger, objMock, "objects", nil, "")
 			strictHandler := gen.NewStrictHandler(fileHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
@@ -315,7 +315,7 @@ func (s *FileGetPublicTestSuite) TestGetFileByNameRBACHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					GetInfo(gomock.Any(), "nginx.conf").
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{
 							Name: "nginx.conf",
@@ -354,7 +354,9 @@ func (s *FileGetPublicTestSuite) TestGetFileByNameRBACHTTP() {
 			handlers := apifile.Handler(
 				s.logger,
 				objMock,
+				"objects",
 				nil,
+				"",
 				appConfig.Controller.API.Security.SigningKey,
 				nil,
 			)

@@ -34,13 +34,15 @@ import (
 func Handler(
 	logger *slog.Logger,
 	objStore ObjectStoreManager,
+	objBucket string,
 	stateKV StateKeyValue,
+	stateBucket string,
 	signingKey string,
 	customRoles map[string][]string,
 ) []func(e *echo.Echo) {
 	var tokenManager api.TokenValidator = authtoken.New(logger)
 
-	fileHandler := New(logger, objStore, stateKV)
+	fileHandler := New(logger, objStore, objBucket, stateKV, stateBucket)
 
 	strictHandler := gen.NewStrictHandler(
 		fileHandler,

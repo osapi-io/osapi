@@ -31,7 +31,6 @@ import (
 	"strings"
 
 	"github.com/avfs/avfs"
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
@@ -83,7 +82,8 @@ type Debian struct {
 func NewDebianProvider(
 	logger *slog.Logger,
 	fs avfs.VFS,
-	stateKV jetstream.KeyValue,
+	stateKV provider.FileState,
+	stateBucket string,
 	execManager host.Exec,
 	hostname string,
 ) *Debian {
@@ -91,7 +91,7 @@ func NewDebianProvider(
 		logger:      logger.With(slog.String("subsystem", "provider.sysctl")),
 		fs:          fs,
 		execManager: execManager,
-		files:       managedfile.NewDebian(fs, stateKV, execManager, hostname),
+		files:       managedfile.NewDebian(fs, stateKV, stateBucket, execManager, hostname),
 		dir:         DefaultDir,
 	}
 }

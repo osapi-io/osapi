@@ -55,8 +55,8 @@ type options struct {
 	meterProvider *sdkmetric.MeterProvider
 }
 
-// WithMeterProvider sends the HTTP metrics and the job metrics of the
-// controller to mp.
+// WithMeterProvider sends the HTTP metrics, the NATS metrics and the job
+// metrics of the controller to mp.
 func WithMeterProvider(
 	mp *sdkmetric.MeterProvider,
 ) Option {
@@ -90,6 +90,7 @@ func New(
 		cfg.NATS,
 		timeout,
 		validation.ResolveTarget,
+		o.meterProvider,
 	)
 	if err != nil {
 		return nil, err
@@ -139,15 +140,15 @@ func newController(
 		}
 	}
 
-	objStore, fileStateKV := openFileBuckets(ctx, log, conn.NATS, namespace, cfg.NATS)
-	checker := newHealthChecker(conn.NATS, conn.JobsKV)
+	objBucket, fileStateBucket := openFileBuckets(ctx, log, conn.NATS, namespace, cfg.NATS)
+	checker := newHealthChecker(conn.NATS, conn.JobsBucket)
 	metricsProvider := newMetricsProvider(
 		conn.NATS,
 		job.ApplyNamespaceToInfraName(namespace, cfg.NATS.Stream.Name),
 		configuredKVBuckets(namespace, cfg.NATS),
 		configuredObjectBuckets(namespace, cfg.NATS),
 		conn.Jobs,
-		conn.RegistryKV,
+		conn.RegistryBucket,
 	)
 
 	srv := api.New(cfg, log, apiOpts...)
@@ -158,14 +159,15 @@ func newController(
 		checker:         checker,
 		metricsProvider: metricsProvider,
 		auditStore:      auditStore,
-		objStore:        objStore,
-		fileStateKV:     fileStateKV,
+		nats:            conn.NATS,
+		objBucket:       objBucket,
+		fileStateBucket: fileStateBucket,
 		enrollment:      watcher,
 	}))
 
 	subs := subComponents(cfg)
-	startHeartbeat(ctx, log, conn.RegistryKV, subs, cfg.Agent.ProcessConditions)
-	startConditionWatcher(ctx, log, conn.RegistryKV, cfg.Controller.Notifications)
+	startHeartbeat(ctx, log, conn.NATS, conn.RegistryBucket, subs, cfg.Agent.ProcessConditions)
+	startConditionWatcher(ctx, log, conn.NATS, conn.RegistryBucket, cfg.Controller.Notifications)
 
 	return &Controller{
 		api:           srv,

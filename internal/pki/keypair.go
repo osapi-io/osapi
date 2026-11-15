@@ -21,6 +21,7 @@
 package pki
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/sha256"
@@ -250,7 +251,7 @@ func (m *Manager) saveKeys(
 		Bytes: m.privateKey.Seed(),
 	})
 
-	if err := atomicfile.Write(m.fs, privPath, privPEM, privateKeyMode); err != nil {
+	if err := atomicfile.Write(context.Background(), m.fs, privPath, privPEM, privateKeyMode); err != nil {
 		return fmt.Errorf("write private key: %w", err)
 	}
 
@@ -259,7 +260,7 @@ func (m *Manager) saveKeys(
 		Bytes: m.publicKey,
 	})
 
-	if err := atomicfile.Write(m.fs, pubPath, pubPEM, publicKeyMode); err != nil {
+	if err := atomicfile.Write(context.Background(), m.fs, pubPath, pubPEM, publicKeyMode); err != nil {
 		return fmt.Errorf("write public key: %w", err)
 	}
 

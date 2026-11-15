@@ -172,7 +172,7 @@ func (a *Agent) publishEnrollmentRequest() error {
 		subject = namespace + "." + subject
 	}
 
-	if err := a.natsClient.PublishCore(subject, data); err != nil {
+	if err := a.natsClient.PublishCore(context.Background(), subject, data); err != nil {
 		return fmt.Errorf("publish enrollment request: %w", err)
 	}
 
@@ -203,7 +203,7 @@ func (a *Agent) startEnrollmentListener(
 		subject = namespace + "." + subject
 	}
 
-	sub, err := a.natsClient.Subscribe(subject, func(msg *nats.Msg) {
+	sub, err := a.natsClient.Subscribe(ctx, subject, func(_ context.Context, msg *nats.Msg) {
 		a.handleEnrollmentResponse(msg)
 	})
 	if err != nil {
@@ -266,7 +266,7 @@ func (a *Agent) handleEnrollmentResponse(
 		Bytes: controllerPubKey,
 	})
 
-	if err := atomicfile.Write(a.appFs, controllerPubPath, pubPEM, 0o644); err != nil {
+	if err := atomicfile.Write(context.Background(), a.appFs, controllerPubPath, pubPEM, 0o644); err != nil {
 		a.pkiLogger.Error(
 			"failed to save controller public key",
 			slog.String("path", controllerPubPath),

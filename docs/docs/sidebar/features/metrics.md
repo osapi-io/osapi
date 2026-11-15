@@ -37,15 +37,16 @@ for example `otel_scope_name`, so that you can find the source of a metric.
 Each component also has the Go runtime metrics (goroutines, memory, GC) and the
 process metrics (CPU, memory, file descriptors).
 
-| Metric                        | Type      | Labels    | Component  | Description                        |
-| ----------------------------- | --------- | --------- | ---------- | ---------------------------------- |
-| `osapi_component_up`          | gauge     |           | all        | 1 when ready, 0 when not           |
-| `osapi_subsystem_up`          | gauge     | subsystem | all        | 1 when subsystem is ok, 0 when not |
-| `osapi_jobs_created_total`    | counter   |           | controller | Jobs submitted via API             |
-| `osapi_jobs_processed_total`  | counter   | status    | agent      | Jobs completed or failed           |
-| `osapi_jobs_active`           | gauge     |           | agent      | Currently executing jobs           |
-| `osapi_job_duration_seconds`  | histogram |           | agent      | Job execution duration             |
-| `osapi_heartbeat_age_seconds` | gauge     |           | agent      | Seconds since last heartbeat write |
+| Metric                                         | Type      | Labels                                      | Component  | Description                        |
+| ---------------------------------------------- | --------- | ------------------------------------------- | ---------- | ---------------------------------- |
+| `osapi_component_up`                           | gauge     |                                             | all        | 1 when ready, 0 when not           |
+| `osapi_subsystem_up`                           | gauge     | subsystem                                   | all        | 1 when subsystem is ok, 0 when not |
+| `osapi_jobs_created_total`                     | counter   |                                             | controller | Jobs submitted via API             |
+| `osapi_jobs_processed_total`                   | counter   | status                                      | agent      | Jobs completed or failed           |
+| `osapi_jobs_active`                            | gauge     |                                             | agent      | Currently executing jobs           |
+| `osapi_job_duration_seconds`                   | histogram |                                             | agent      | Job execution duration             |
+| `osapi_heartbeat_age_seconds`                  | gauge     |                                             | agent      | Seconds since last heartbeat write |
+| `osapi_nats_client_operation_duration_seconds` | histogram | db_operation_name, db_namespace, error_type | all        | The duration of each call to NATS  |
 
 The `osapi_subsystem_up` gauge has a `subsystem` label that names its internal
 service, for example `api`, `heartbeat`, `metrics`, `notifier`, `tracing` or
@@ -56,7 +57,14 @@ The controller also has HTTP request metrics from the OTEL middleware, with the
 standard `http.server.*` names, for example `http.server.request.duration` and
 `http.server.active_requests`.
 
-The NATS component has only `osapi_component_up` and `osapi_subsystem_up`. NATS
+Each component records `osapi_nats_client_operation_duration_seconds` for each
+call that it makes to NATS. `db_operation_name` is the call, for example
+`kv.get`, `kv.put` or `nats.publish`. `db_namespace` is the bucket or the
+stream. A failed call also has `error_type`. A key, an object name and a subject
+are never labels, because they have no limit. A key that is not there is the
+answer of a read, not a failure, so it has no `error_type`.
+
+The NATS component also has `osapi_component_up` and `osapi_subsystem_up`. NATS
 has its own monitoring.
 
 ## Health probes

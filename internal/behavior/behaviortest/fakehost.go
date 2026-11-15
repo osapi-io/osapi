@@ -51,10 +51,6 @@ const Hostname = "test-host"
 // errFault is the error a fault returns.
 var errFault = errors.New("injected fault")
 
-// errUnsupported is what a call the fake host has no answer for panics with,
-// after the mock controller reports it.
-var errUnsupported = errors.New("the fake host does not support that call")
-
 // fakeHost is one host for one example: an in-memory filesystem, a command
 // runner that records each command line and prints what the example's Prints
 // says, and an in-memory file state store. The runner and the store are the
@@ -86,9 +82,6 @@ type fakeHost struct {
 	corruptAt int
 	corrupt   []byte
 
-	// unsupported are the calls the mocks had no answer for.
-	unsupported []string
-
 	// sudo and runs are the programs the behavior and the ones it requires
 	// declare with behavior.Sudo and behavior.Runs; undeclared is each
 	// program run without its declaration, once.
@@ -110,7 +103,7 @@ func newHost(
 		Logger:    slog.New(slog.NewTextHandler(io.Discard, nil)),
 		FS:        h.filesystem(),
 		Exec:      h.commands(ctrl),
-		FileState: h.store(ctrl),
+		FileState: fileState{h: h, ctrl: ctrl},
 	}
 
 	return h
@@ -145,22 +138,22 @@ func (h *fakeHost) check(
 	}
 }
 
-// Errorf records a call the mocks had no answer for. With Fatalf it makes
-// the host the mock controller's reporter.
+// Errorf is the reporter of the mock controller. The command mock answers
+// each method of host.Exec, so a report is a fault of the fake host itself,
+// and it stops the test with that report.
 func (h *fakeHost) Errorf(
 	format string,
 	args ...any,
 ) {
-	h.unsupported = append(h.unsupported, fmt.Sprintf(format, args...))
+	panic(fmt.Sprintf("the fake host has no answer for a call: "+format, args...))
 }
 
-// Fatalf records the call and stops the method, which the checks recover.
+// Fatalf is Errorf, for the mock controller.
 func (h *fakeHost) Fatalf(
 	format string,
 	args ...any,
 ) {
 	h.Errorf(format, args...)
-	panic(errUnsupported)
 }
 
 // next counts a call and fails the one numbered failAt.
@@ -232,73 +225,51 @@ func (h *fakeHost) commands(
 	return m
 }
 
-// store is the generated jetstream.KeyValue mock, holding values in memory.
-// It answers what providers use: Get, Put, PutString, Create, Update, Delete
-// and Purge. Any other call is reported as unsupported.
-func (h *fakeHost) store(
-	ctrl *gomock.Controller,
-) jetstream.KeyValue {
-	put := func(_ context.Context, key string, value []byte) (uint64, error) {
-		if err := h.next(); err != nil {
-			return 0, err
-		}
-		h.revision++
-		h.values[key] = append([]byte(nil), value...)
+// fileState is the file-state store of the fake host, holding values in
+// memory. Each call can fail in turn, and a read can return a damaged record,
+// as next and corruptAt say. The bucket is not used: the host has one.
+type fileState struct {
+	h    *fakeHost
+	ctrl *gomock.Controller
+}
 
-		return h.revision, nil
+// KVGet returns the value of key, or jetstream.ErrKeyNotFound.
+func (s fileState) KVGet(
+	_ context.Context,
+	_ string,
+	key string,
+) (jetstream.KeyValueEntry, error) {
+	h := s.h
+	if err := h.next(); err != nil {
+		return nil, err
 	}
-	remove := func(_ context.Context, key string, _ ...jetstream.KVDeleteOpt) error {
-		if err := h.next(); err != nil {
-			return err
-		}
-		delete(h.values, key)
-
-		return nil
+	h.gets++
+	value, ok := h.values[key]
+	if h.gets == h.corruptAt {
+		value, ok = h.corrupt, true
+	}
+	if !ok {
+		return nil, jetstream.ErrKeyNotFound
 	}
 
-	kv := jobmocks.NewMockKeyValue(ctrl)
-	kv.EXPECT().Get(gomock.Any(), gomock.Any()).
-		DoAndReturn(func(_ context.Context, key string) (jetstream.KeyValueEntry, error) {
-			if err := h.next(); err != nil {
-				return nil, err
-			}
-			h.gets++
-			value, ok := h.values[key]
-			if h.gets == h.corruptAt {
-				value, ok = h.corrupt, true
-			}
-			if !ok {
-				return nil, jetstream.ErrKeyNotFound
-			}
+	return h.entry(s.ctrl, key, value), nil
+}
 
-			return h.entry(ctrl, key, value), nil
-		}).AnyTimes()
-	kv.EXPECT().Put(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(put).AnyTimes()
-	kv.EXPECT().PutString(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, key string, value string) (uint64, error) {
-			return put(ctx, key, []byte(value))
-		}).AnyTimes()
-	kv.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(
-			ctx context.Context,
-			key string,
-			value []byte,
-			_ ...jetstream.KVCreateOpt,
-		) (uint64, error) {
-			if _, ok := h.values[key]; ok {
-				return 0, jetstream.ErrKeyExists
-			}
+// KVPut stores value at key, and returns the new revision.
+func (s fileState) KVPut(
+	_ context.Context,
+	_ string,
+	key string,
+	value []byte,
+) (uint64, error) {
+	h := s.h
+	if err := h.next(); err != nil {
+		return 0, err
+	}
+	h.revision++
+	h.values[key] = append([]byte(nil), value...)
 
-			return put(ctx, key, value)
-		}).AnyTimes()
-	kv.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, key string, value []byte, _ uint64) (uint64, error) {
-			return put(ctx, key, value)
-		}).AnyTimes()
-	kv.EXPECT().Delete(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(remove).AnyTimes()
-	kv.EXPECT().Purge(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(remove).AnyTimes()
-
-	return kv
+	return h.revision, nil
 }
 
 // entry is the generated jetstream.KeyValueEntry mock for one stored value.

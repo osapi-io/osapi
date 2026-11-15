@@ -69,47 +69,82 @@ func (mr *MockNATSStatusMockRecorder) ConnectedURL() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConnectedURL", reflect.TypeOf((*MockNATSStatus)(nil).ConnectedURL))
 }
 
-// GetStreamInfo mocks base method.
-func (m *MockNATSStatus) GetStreamInfo(ctx context.Context, streamName string) (*jetstream.StreamInfo, error) {
+// KVGet mocks base method.
+func (m *MockNATSStatus) KVGet(ctx context.Context, bucket, key string) (jetstream.KeyValueEntry, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStreamInfo", ctx, streamName)
+	ret := m.ctrl.Call(m, "KVGet", ctx, bucket, key)
+	ret0, _ := ret[0].(jetstream.KeyValueEntry)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// KVGet indicates an expected call of KVGet.
+func (mr *MockNATSStatusMockRecorder) KVGet(ctx, bucket, key any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVGet", reflect.TypeOf((*MockNATSStatus)(nil).KVGet), ctx, bucket, key)
+}
+
+// KVKeys mocks base method.
+func (m *MockNATSStatus) KVKeys(ctx context.Context, bucket string, filters ...string) ([]string, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, bucket}
+	for _, a := range filters {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "KVKeys", varargs...)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// KVKeys indicates an expected call of KVKeys.
+func (mr *MockNATSStatusMockRecorder) KVKeys(ctx, bucket any, filters ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, bucket}, filters...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVKeys", reflect.TypeOf((*MockNATSStatus)(nil).KVKeys), varargs...)
+}
+
+// KVStatus mocks base method.
+func (m *MockNATSStatus) KVStatus(ctx context.Context, bucket string) (jetstream.KeyValueStatus, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "KVStatus", ctx, bucket)
+	ret0, _ := ret[0].(jetstream.KeyValueStatus)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// KVStatus indicates an expected call of KVStatus.
+func (mr *MockNATSStatusMockRecorder) KVStatus(ctx, bucket any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVStatus", reflect.TypeOf((*MockNATSStatus)(nil).KVStatus), ctx, bucket)
+}
+
+// ObjectStoreStatus mocks base method.
+func (m *MockNATSStatus) ObjectStoreStatus(ctx context.Context, bucket string) (jetstream.ObjectStoreStatus, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ObjectStoreStatus", ctx, bucket)
+	ret0, _ := ret[0].(jetstream.ObjectStoreStatus)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ObjectStoreStatus indicates an expected call of ObjectStoreStatus.
+func (mr *MockNATSStatusMockRecorder) ObjectStoreStatus(ctx, bucket any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreStatus", reflect.TypeOf((*MockNATSStatus)(nil).ObjectStoreStatus), ctx, bucket)
+}
+
+// StreamInfo mocks base method.
+func (m *MockNATSStatus) StreamInfo(ctx context.Context, name string) (*jetstream.StreamInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StreamInfo", ctx, name)
 	ret0, _ := ret[0].(*jetstream.StreamInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetStreamInfo indicates an expected call of GetStreamInfo.
-func (mr *MockNATSStatusMockRecorder) GetStreamInfo(ctx, streamName any) *gomock.Call {
+// StreamInfo indicates an expected call of StreamInfo.
+func (mr *MockNATSStatusMockRecorder) StreamInfo(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStreamInfo", reflect.TypeOf((*MockNATSStatus)(nil).GetStreamInfo), ctx, streamName)
-}
-
-// KeyValue mocks base method.
-func (m *MockNATSStatus) KeyValue(ctx context.Context, bucket string) (jetstream.KeyValue, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "KeyValue", ctx, bucket)
-	ret0, _ := ret[0].(jetstream.KeyValue)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// KeyValue indicates an expected call of KeyValue.
-func (mr *MockNATSStatusMockRecorder) KeyValue(ctx, bucket any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KeyValue", reflect.TypeOf((*MockNATSStatus)(nil).KeyValue), ctx, bucket)
-}
-
-// ObjectStore mocks base method.
-func (m *MockNATSStatus) ObjectStore(ctx context.Context, name string) (jetstream.ObjectStore, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ObjectStore", ctx, name)
-	ret0, _ := ret[0].(jetstream.ObjectStore)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ObjectStore indicates an expected call of ObjectStore.
-func (mr *MockNATSStatusMockRecorder) ObjectStore(ctx, name any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStore", reflect.TypeOf((*MockNATSStatus)(nil).ObjectStore), ctx, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StreamInfo", reflect.TypeOf((*MockNATSStatus)(nil).StreamInfo), ctx, name)
 }

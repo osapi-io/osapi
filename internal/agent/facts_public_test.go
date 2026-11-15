@@ -28,6 +28,8 @@ import (
 	"testing"
 	"time"
 
+	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
+
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -51,7 +53,7 @@ type FactsPublicTestSuite struct {
 
 	mockCtrl         *gomock.Controller
 	mockJobClient    *mocks.MockJobClient
-	mockFactsKV      *mocks.MockKeyValue
+	mockFactsKV      *agentMocks.MockNATSClient
 	mockHostProvider *hostMocks.MockProvider
 	mockNetinfo      *netinfoMocks.MockProvider
 	testAgent        *agent.Agent
@@ -60,7 +62,7 @@ type FactsPublicTestSuite struct {
 func (s *FactsPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
-	s.mockFactsKV = mocks.NewMockKeyValue(s.mockCtrl)
+	s.mockFactsKV = agentMocks.NewMockNATSClient(s.mockCtrl)
 	s.mockHostProvider = hostMocks.NewDefaultMockProvider(s.mockCtrl)
 	s.mockNetinfo = netinfoMocks.NewDefaultMockProvider(s.mockCtrl)
 
@@ -83,7 +85,8 @@ func (s *FactsPublicTestSuite) SetupTest() {
 		netinfoProvider: s.mockNetinfo,
 		commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
-		factsKV:         s.mockFactsKV,
+		factsBucket:     "facts",
+		natsClient:      s.mockFactsKV,
 	})
 }
 
@@ -105,9 +108,10 @@ func (s *FactsPublicTestSuite) TestWriteFacts() {
 			name: "when Put succeeds writes facts",
 			setupMock: func() {
 				s.mockFactsKV.EXPECT().
-					Put(gomock.Any(), "facts.test_machine_id", gomock.Any()).
+					KVPut(gomock.Any(), "facts", "facts.test_machine_id", gomock.Any()).
 					DoAndReturn(func(
 						_ context.Context,
+						_ string,
 						_ string,
 						data []byte,
 					) (uint64, error) {
@@ -130,7 +134,7 @@ func (s *FactsPublicTestSuite) TestWriteFacts() {
 			name: "when Put fails logs warning",
 			setupMock: func() {
 				s.mockFactsKV.EXPECT().
-					Put(gomock.Any(), "facts.test_machine_id", gomock.Any()).
+					KVPut(gomock.Any(), "facts", "facts.test_machine_id", gomock.Any()).
 					Return(uint64(0), errors.New("put failed"))
 			},
 		},
@@ -177,9 +181,10 @@ func (s *FactsPublicTestSuite) TestWriteFacts() {
 				agent.SetAgentNetinfoProvider(s.testAgent, errNetinfoProvider)
 
 				s.mockFactsKV.EXPECT().
-					Put(gomock.Any(), "facts.test_machine_id", gomock.Any()).
+					KVPut(gomock.Any(), "facts", "facts.test_machine_id", gomock.Any()).
 					DoAndReturn(func(
 						_ context.Context,
+						_ string,
 						_ string,
 						data []byte,
 					) (uint64, error) {
@@ -226,7 +231,7 @@ func (s *FactsPublicTestSuite) TestStartFactsRefresh() {
 			setupMock: func() {
 				// Initial write + at least 1 ticker refresh
 				s.mockFactsKV.EXPECT().
-					Put(gomock.Any(), "facts.test_machine_id", gomock.Any()).
+					KVPut(gomock.Any(), "facts", "facts.test_machine_id", gomock.Any()).
 					Return(uint64(1), nil).
 					MinTimes(2)
 			},
@@ -264,7 +269,7 @@ func (s *FactsPublicTestSuite) TestStartFactsInterval() {
 			interval: "20ms",
 			setupMock: func() {
 				s.mockFactsKV.EXPECT().
-					Put(gomock.Any(), "facts.test_machine_id", gomock.Any()).
+					KVPut(gomock.Any(), "facts", "facts.test_machine_id", gomock.Any()).
 					Return(uint64(1), nil).
 					AnyTimes()
 			},
@@ -275,7 +280,7 @@ func (s *FactsPublicTestSuite) TestStartFactsInterval() {
 			interval: "",
 			setupMock: func() {
 				s.mockFactsKV.EXPECT().
-					Put(gomock.Any(), "facts.test_machine_id", gomock.Any()).
+					KVPut(gomock.Any(), "facts", "facts.test_machine_id", gomock.Any()).
 					Return(uint64(1), nil).
 					AnyTimes()
 			},
@@ -286,7 +291,7 @@ func (s *FactsPublicTestSuite) TestStartFactsInterval() {
 			interval: "7d",
 			setupMock: func() {
 				s.mockFactsKV.EXPECT().
-					Put(gomock.Any(), "facts.test_machine_id", gomock.Any()).
+					KVPut(gomock.Any(), "facts", "facts.test_machine_id", gomock.Any()).
 					Return(uint64(1), nil).
 					AnyTimes()
 			},

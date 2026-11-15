@@ -21,6 +21,7 @@
 package enrollment
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 
@@ -48,7 +49,7 @@ func (w *Watcher) RotateControllerKey() error {
 	}
 
 	subject := enrollSubject(w.namespace, pki.PKIRotateSuffix)
-	if err := w.nc.PublishCore(subject, data); err != nil {
+	if err := w.nc.PublishCore(context.Background(), subject, data); err != nil {
 		return fmt.Errorf("publish key rotation: %w", err)
 	}
 

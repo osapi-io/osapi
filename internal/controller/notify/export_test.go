@@ -78,9 +78,11 @@ func WatcherSetRenotifyInterval(
 // WatcherSetKV sets the KV store on a Watcher for testing.
 func WatcherSetKV(
 	w *Watcher,
-	kv jetstream.KeyValue,
+	kv Registry,
+	bucket string,
 ) {
 	w.kv = kv
+	w.bucket = bucket
 }
 
 // WatcherDetectTransitions exposes the private detectTransitions method for testing.

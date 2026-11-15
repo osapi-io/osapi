@@ -137,9 +137,9 @@ type NATS struct {
 // No TTL — pending enrollment requests persist until accepted or rejected.
 type NATSEnrollment struct {
 	// Bucket is the KV bucket name for pending enrollment entries.
-	Bucket   string `mapstructure:"bucket"   doc:"KV bucket for pending enrollment entries."`
-	Storage  string `mapstructure:"storage"  doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas" doc:"Number of replicas for the enrollment KV bucket."`
+	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name" doc:"KV bucket for pending enrollment entries."`
+	Storage  string `mapstructure:"storage"                                 doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"                                doc:"Number of replicas for the enrollment KV bucket."`
 }
 
 // NATSAudit configuration for the audit log stream.
@@ -157,7 +157,7 @@ type NATSAudit struct {
 // NATSRegistry configuration for the agent registry KV bucket.
 type NATSRegistry struct {
 	// Bucket is the KV bucket name for agent registration entries.
-	Bucket   string `mapstructure:"bucket"   validate:"required"              doc:"KV bucket for agent heartbeat registration."`
+	Bucket   string `mapstructure:"bucket"   validate:"required,nats_name"    doc:"KV bucket for agent heartbeat registration."`
 	TTL      string `mapstructure:"ttl"      validate:"omitempty,go_duration" doc:"TTL for registry entries (Go duration). Agents refresh every 10s; the TTL acts as a liveness timeout."` // e.g. "30s"
 	Storage  string `mapstructure:"storage"                                   doc:"Storage backend: 'file' or 'memory'."`                                                                  // "file" or "memory"
 	Replicas int    `mapstructure:"replicas"                                  doc:"Number of KV replicas."`
@@ -166,36 +166,36 @@ type NATSRegistry struct {
 // NATSFacts configuration for the agent facts KV bucket.
 type NATSFacts struct {
 	// Bucket is the KV bucket name for agent facts entries.
-	Bucket   string `mapstructure:"bucket"   doc:"KV bucket for agent facts entries."`
-	TTL      string `mapstructure:"ttl"      doc:"TTL for facts entries (Go duration)." validate:"omitempty,go_duration"` // e.g. "1h"
-	Storage  string `mapstructure:"storage"  doc:"Storage backend: 'file' or 'memory'."`                                  // "file" or "memory"
-	Replicas int    `mapstructure:"replicas" doc:"Number of KV replicas."`
+	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name"   doc:"KV bucket for agent facts entries."`
+	TTL      string `mapstructure:"ttl"      validate:"omitempty,go_duration" doc:"TTL for facts entries (Go duration)."` // e.g. "1h"
+	Storage  string `mapstructure:"storage"                                   doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"                                  doc:"Number of KV replicas."`
 }
 
 // NATSState configuration for the agent state KV bucket (drain flags, timeline events).
 type NATSState struct {
 	// Bucket is the KV bucket name for persistent agent state.
-	Bucket   string `mapstructure:"bucket"   doc:"KV bucket for persistent agent state (drain flags, timeline events). No TTL — operator actions persist indefinitely."`
-	Storage  string `mapstructure:"storage"  doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas" doc:"Number of KV replicas."`
+	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name" doc:"KV bucket for persistent agent state (drain flags, timeline events). No TTL — operator actions persist indefinitely."`
+	Storage  string `mapstructure:"storage"                                 doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"                                doc:"Number of KV replicas."`
 }
 
 // NATSObjects configuration for the NATS Object Store bucket.
 type NATSObjects struct {
 	// Bucket is the Object Store bucket name for file content.
-	Bucket   string `mapstructure:"bucket"    doc:"Object Store bucket for uploaded file content."`
-	MaxBytes int64  `mapstructure:"max_bytes" doc:"Maximum total size of the bucket in bytes."`
-	Storage  string `mapstructure:"storage"   doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas"  doc:"Number of Object Store replicas."`
+	Bucket   string `mapstructure:"bucket"    validate:"omitempty,nats_name" doc:"Object Store bucket for uploaded file content."`
+	MaxBytes int64  `mapstructure:"max_bytes"                                doc:"Maximum total size of the bucket in bytes."`
+	Storage  string `mapstructure:"storage"                                  doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"                                 doc:"Number of Object Store replicas."`
 }
 
 // NATSFileState configuration for the file deployment state KV bucket.
 // No TTL — deployed file state persists until explicitly removed.
 type NATSFileState struct {
 	// Bucket is the KV bucket name for file deployment SHA tracking.
-	Bucket   string `mapstructure:"bucket"   doc:"KV bucket for file deploy state tracking. No TTL — state persists until explicitly removed."`
-	Storage  string `mapstructure:"storage"  doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas" doc:"Number of KV replicas."`
+	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name" doc:"KV bucket for file deploy state tracking. No TTL — state persists until explicitly removed."`
+	Storage  string `mapstructure:"storage"                                 doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"                                doc:"Number of KV replicas."`
 }
 
 // NATSServer configuration settings for the embedded NATS server.
@@ -210,7 +210,7 @@ type NATSServer struct {
 	// StoreDir the directory for JetStream file storage.
 	StoreDir string `mapstructure:"store_dir"      doc:"Directory for JetStream file storage."`
 	// Namespace is a prefix for all NATS subjects and infrastructure names.
-	Namespace string `mapstructure:"namespace"      doc:"Prefix for all NATS subjects and infrastructure names."`
+	Namespace string `mapstructure:"namespace"      doc:"Prefix for all NATS subjects and infrastructure names."                                                 validate:"omitempty,nats_name"`
 	// Auth holds server-side authentication configuration.
 	Auth    NATSServerAuth `mapstructure:"auth,omitempty"`
 	Metrics MetricsServer  `mapstructure:"metrics"`
@@ -232,13 +232,13 @@ type NATSStream struct {
 // NATSKV configuration for KeyValue bucket settings.
 type NATSKV struct {
 	// Bucket is the KV bucket name for job definitions and status events.
-	Bucket string `mapstructure:"bucket"          validate:"required" doc:"KV bucket for immutable job definitions and status events."`
+	Bucket string `mapstructure:"bucket"          validate:"required,nats_name" doc:"KV bucket for immutable job definitions and status events."`
 	// ResponseBucket is the KV bucket name for agent result storage.
-	ResponseBucket string `mapstructure:"response_bucket" validate:"required" doc:"KV bucket for agent result storage."`
-	TTL            string `mapstructure:"ttl"                                 doc:"TTL for KV entries (Go duration)."` // e.g. "1h", "30m"
-	MaxBytes       int64  `mapstructure:"max_bytes"                           doc:"Maximum total size of the bucket in bytes."`
-	Storage        string `mapstructure:"storage"                             doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
-	Replicas       int    `mapstructure:"replicas"                            doc:"Number of KV replicas."`
+	ResponseBucket string `mapstructure:"response_bucket" validate:"required,nats_name" doc:"KV bucket for agent result storage."`
+	TTL            string `mapstructure:"ttl"                                           doc:"TTL for KV entries (Go duration)."` // e.g. "1h", "30m"
+	MaxBytes       int64  `mapstructure:"max_bytes"                                     doc:"Maximum total size of the bucket in bytes."`
+	Storage        string `mapstructure:"storage"                                       doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
+	Replicas       int    `mapstructure:"replicas"                                      doc:"Number of KV replicas."`
 }
 
 // KVBucketInfo holds a KV bucket's human-readable name and its configured
@@ -247,6 +247,8 @@ type NATSKV struct {
 type KVBucketInfo struct {
 	// Name is a human-readable label for the bucket (e.g. "job-queue").
 	Name string
+	// Key is the config key that sets the bucket (e.g. "nats.kv.bucket").
+	Key string
 	// Bucket is the bucket name from the config field.
 	Bucket string
 }
@@ -258,6 +260,8 @@ type KVBucketInfo struct {
 type ObjectStoreBucketInfo struct {
 	// Name is a human-readable label for the bucket (e.g. "file-objects").
 	Name string
+	// Key is the config key that sets the bucket (e.g. "nats.objects.bucket").
+	Key string
 	// Bucket is the bucket name from the config field.
 	Bucket string
 }
@@ -279,7 +283,7 @@ type NATSConnection struct {
 	// ClientName the NATS client name for identification.
 	ClientName string `mapstructure:"client_name"    doc:"Client name sent to NATS for identification."`
 	// Namespace is a prefix for all NATS subjects used by this client.
-	Namespace string `mapstructure:"namespace"      doc:"Subject namespace prefix. Must match nats.server.namespace."`
+	Namespace string `mapstructure:"namespace"      doc:"Subject namespace prefix. Must match nats.server.namespace." validate:"omitempty,nats_name"`
 	// Auth holds client-side authentication configuration.
 	Auth NATSAuth `mapstructure:"auth,omitempty"`
 }

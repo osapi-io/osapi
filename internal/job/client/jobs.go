@@ -23,7 +23,6 @@ package client
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"sort"
@@ -31,7 +30,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/job"
 )
@@ -111,13 +109,13 @@ func (c *Client) CreateJob(
 	kvKey := "jobs." + jobID
 	c.logger.DebugContext(
 		ctx, "storing job and sending notification",
-		slog.String("kv_bucket", c.kv.Bucket()),
+		slog.String("kv_bucket", c.jobsBucket),
 		slog.String("key", kvKey),
 		slog.String("subject", notificationSubject),
 		slog.String("job_id", jobID),
 	)
 
-	revision, err := c.kv.Put(ctx, kvKey, kvPayload)
+	revision, err := c.natsClient.KVPut(ctx, c.jobsBucket, kvKey, kvPayload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}
@@ -136,7 +134,7 @@ func (c *Client) CreateJob(
 		},
 	}
 	statusEventJSON, _ := json.Marshal(statusEvent)
-	if _, err := c.kv.Put(ctx, statusKey, statusEventJSON); err != nil {
+	if _, err := c.natsClient.KVPut(ctx, c.jobsBucket, statusKey, statusEventJSON); err != nil {
 		c.logger.ErrorContext(
 			ctx,
 			"failed to write submitted event",
@@ -172,19 +170,8 @@ func (c *Client) CreateJob(
 func (c *Client) GetQueueSummary(
 	ctx context.Context,
 ) (*job.QueueStats, error) {
-	keys, err := c.kv.Keys(ctx)
+	keys, err := c.natsClient.KVKeys(ctx, c.jobsBucket)
 	if err != nil {
-		if errors.Is(err, jetstream.ErrNoKeysFound) {
-			return &job.QueueStats{
-				StatusCounts: map[string]int{
-					string(job.StatusSubmitted):  0,
-					string(job.StatusProcessing): 0,
-					string(job.StatusCompleted):  0,
-					string(job.StatusFailed):     0,
-					string(job.StatusSkipped):    0,
-				},
-			}, nil
-		}
 		return nil, fmt.Errorf("error fetching keys: %w", err)
 	}
 
@@ -207,7 +194,7 @@ func (c *Client) GetQueueSummary(
 	// DLQ count
 	dlqCount := 0
 	dlqName := c.streamName + "-DLQ"
-	dlqInfo, err := c.natsClient.GetStreamInfo(ctx, dlqName)
+	dlqInfo, err := c.natsClient.StreamInfo(ctx, dlqName)
 	if err == nil {
 		dlqCount = int(dlqInfo.State.Msgs)
 	}
@@ -230,7 +217,7 @@ func (c *Client) GetJobStatus(
 		"kv.get",
 		slog.String("key", jobKey),
 	)
-	entry, err := c.kv.Get(ctx, jobKey)
+	entry, err := c.natsClient.KVGet(ctx, c.jobsBucket, jobKey)
 	if err != nil {
 		return nil, fmt.Errorf("job %s: %w", jobID, job.ErrNotFound)
 	}
@@ -241,14 +228,14 @@ func (c *Client) GetJobStatus(
 	}
 
 	// Get status event keys for this job (server-side filtered)
-	statusKeys, err := collectKeys(ctx, c.kv, "status."+jobID+".>")
-	if err != nil && !errors.Is(err, jetstream.ErrNoKeysFound) {
+	statusKeys, err := c.natsClient.KVKeys(ctx, c.jobsBucket, "status."+jobID+".>")
+	if err != nil {
 		return nil, fmt.Errorf("failed to get status events: %w", err)
 	}
 
 	// Get response keys for this job (server-side filtered)
-	responseKeys, err := collectKeys(ctx, c.kv, "responses."+jobID+".>")
-	if err != nil && !errors.Is(err, jetstream.ErrNoKeysFound) {
+	responseKeys, err := c.natsClient.KVKeys(ctx, c.jobsBucket, "responses."+jobID+".>")
+	if err != nil {
 		return nil, fmt.Errorf("failed to get response keys: %w", err)
 	}
 
@@ -324,14 +311,8 @@ func (c *Client) ListJobs(
 		slog.Int("offset", offset),
 	)
 
-	allKeys, err := c.kv.Keys(ctx)
+	allKeys, err := c.natsClient.KVKeys(ctx, c.jobsBucket)
 	if err != nil {
-		if errors.Is(err, jetstream.ErrNoKeysFound) {
-			return &ListJobsResult{
-				Jobs:       []*job.QueuedJob{},
-				TotalCount: 0,
-			}, nil
-		}
 		return nil, fmt.Errorf("error fetching jobs: %w", err)
 	}
 
@@ -427,7 +408,7 @@ func (c *Client) getJobStatusFromKeys(
 	jobKey string,
 	jobID string,
 ) (*job.QueuedJob, error) {
-	entry, err := c.kv.Get(ctx, jobKey)
+	entry, err := c.natsClient.KVGet(ctx, c.jobsBucket, jobKey)
 	if err != nil {
 		return nil, fmt.Errorf("job %s: %w", jobID, job.ErrNotFound)
 	}
@@ -465,25 +446,6 @@ func (c *Client) getJobStatusFromKeys(
 	}
 
 	return queuedJob, nil
-}
-
-// collectKeys wraps ListKeysFiltered and drains the KeyLister channel into a []string.
-func collectKeys(
-	ctx context.Context,
-	kv jetstream.KeyValue,
-	filter string,
-) ([]string, error) {
-	lister, err := kv.ListKeysFiltered(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-
-	var keys []string
-	for key := range lister.Keys() {
-		keys = append(keys, key)
-	}
-
-	return keys, nil
 }
 
 // getStringField safely extracts a string field from a map.
@@ -536,7 +498,7 @@ func (c *Client) computeStatusFromEvents(
 
 	// Process each event
 	for _, key := range relevantKeys {
-		entry, err := c.kv.Get(ctx, key)
+		entry, err := c.natsClient.KVGet(ctx, c.jobsBucket, key)
 		if err != nil {
 			continue
 		}
@@ -728,7 +690,7 @@ func (c *Client) RetryJob(
 		slog.String("operation", "retry_job"),
 	)
 
-	entry, err := c.kv.Get(ctx, jobKey)
+	entry, err := c.natsClient.KVGet(ctx, c.jobsBucket, jobKey)
 	if err != nil {
 		return nil, fmt.Errorf("job %s: %w", jobID, job.ErrNotFound)
 	}
@@ -764,7 +726,7 @@ func (c *Client) RetryJob(
 		},
 	}
 	retriedEventJSON, _ := json.Marshal(retriedEvent)
-	if _, err := c.kv.Put(ctx, retriedKey, retriedEventJSON); err != nil {
+	if _, err := c.natsClient.KVPut(ctx, c.jobsBucket, retriedKey, retriedEventJSON); err != nil {
 		c.logger.Error(
 			"failed to write retried event",
 			slog.String("error", err.Error()),
@@ -791,12 +753,12 @@ func (c *Client) DeleteJob(
 		"kv.delete",
 		slog.String("key", jobKey),
 	)
-	_, err := c.kv.Get(ctx, jobKey)
+	_, err := c.natsClient.KVGet(ctx, c.jobsBucket, jobKey)
 	if err != nil {
 		return fmt.Errorf("job %s: %w", jobID, job.ErrNotFound)
 	}
 
-	if err := c.kv.Delete(ctx, jobKey); err != nil {
+	if err := c.natsClient.KVDelete(ctx, c.jobsBucket, jobKey); err != nil {
 		return fmt.Errorf("failed to delete job: %w", err)
 	}
 
@@ -921,7 +883,7 @@ func (c *Client) getJobResponses(
 			continue
 		}
 
-		entry, err := c.kv.Get(ctx, key)
+		entry, err := c.natsClient.KVGet(ctx, c.jobsBucket, key)
 		if err != nil {
 			continue
 		}

@@ -28,7 +28,6 @@ import (
 	"regexp"
 
 	"github.com/avfs/avfs"
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/exec"
@@ -59,7 +58,8 @@ type Debian struct {
 	logger       *slog.Logger
 	fs           avfs.VFS
 	fileDeployer file.Deployer
-	stateKV      jetstream.KeyValue
+	stateKV      provider.FileState
+	stateBucket  string
 	execManager  exec.Manager
 	hostname     string
 }
@@ -69,7 +69,8 @@ func NewDebianProvider(
 	logger *slog.Logger,
 	fs avfs.VFS,
 	fileDeployer file.Deployer,
-	stateKV jetstream.KeyValue,
+	stateKV provider.FileState,
+	stateBucket string,
 	execManager exec.Manager,
 	hostname string,
 ) *Debian {
@@ -78,6 +79,7 @@ func NewDebianProvider(
 		fs:           fs,
 		fileDeployer: fileDeployer,
 		stateKV:      stateKV,
+		stateBucket:  stateBucket,
 		execManager:  execManager,
 		hostname:     hostname,
 	}
@@ -231,7 +233,7 @@ func (d *Debian) isManagedFile(
 	path string,
 ) bool {
 	stateKey := managedfile.StateKey(d.hostname, path)
-	entry, err := d.stateKV.Get(ctx, stateKey)
+	entry, err := d.stateKV.KVGet(ctx, d.stateBucket, stateKey)
 	if err != nil {
 		return false
 	}
@@ -253,7 +255,7 @@ func (d *Debian) buildEntryFromState(
 ) *Entry {
 	stateKey := managedfile.StateKey(d.hostname, path)
 
-	kvEntry, err := d.stateKV.Get(ctx, stateKey)
+	kvEntry, err := d.stateKV.KVGet(ctx, d.stateBucket, stateKey)
 	if err != nil {
 		return nil
 	}

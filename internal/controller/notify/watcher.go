@@ -39,11 +39,22 @@ type conditionState struct {
 	lastNotified time.Time
 }
 
+// Registry watches the registry KV bucket. A *natsclient.Client is one.
+type Registry interface {
+	KVWatch(
+		ctx context.Context,
+		bucket string,
+		pattern string,
+		opts ...jetstream.WatchOpt,
+	) (<-chan jetstream.KeyValueEntry, error)
+}
+
 // Watcher monitors the registry KV bucket for condition transitions and
 // emits ConditionEvents via the configured Notifier. Active conditions
 // are re-notified after the configured renotify interval.
 type Watcher struct {
-	kv               jetstream.KeyValue
+	kv               Registry
+	bucket           string
 	notifier         Notifier
 	logger           *slog.Logger
 	prev             map[string]map[string]*conditionState // key → condition → state
@@ -55,13 +66,15 @@ type Watcher struct {
 // notifies on condition transitions. Active conditions are re-notified
 // after renotifyInterval elapses (0 disables re-notification).
 func NewWatcher(
-	kv jetstream.KeyValue,
+	kv Registry,
+	bucket string,
 	notifier Notifier,
 	logger *slog.Logger,
 	renotifyInterval time.Duration,
 ) *Watcher {
 	return &Watcher{
 		kv:               kv,
+		bucket:           bucket,
 		notifier:         notifier,
 		logger:           logger.With(slog.String("subsystem", "controller.notify")),
 		prev:             make(map[string]map[string]*conditionState),
@@ -76,31 +89,18 @@ func (w *Watcher) Start(
 ) error {
 	w.logger.Info("condition watcher started")
 
-	watcher, err := w.kv.WatchAll(ctx)
+	updates, err := w.kv.KVWatch(ctx, w.bucket, ">")
 	if err != nil {
 		return err
 	}
-
-	defer func() {
-		if stopErr := watcher.Stop(); stopErr != nil {
-			w.logger.Warn(
-				"failed to stop KV watcher",
-				slog.String("error", stopErr.Error()),
-			)
-		}
-	}()
 
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
-		case entry, ok := <-watcher.Updates():
+		case entry, ok := <-updates:
 			if !ok {
 				return nil
-			}
-			if entry == nil {
-				// nil entry signals end of initial values
-				continue
 			}
 			w.handleEntry(ctx, entry)
 		}

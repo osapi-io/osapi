@@ -42,39 +42,39 @@ func (m *MockStateKeyValue) EXPECT() *MockStateKeyValueMockRecorder {
 	return m.recorder
 }
 
-// Get mocks base method.
-func (m *MockStateKeyValue) Get(ctx context.Context, key string) (jetstream.KeyValueEntry, error) {
+// KVGet mocks base method.
+func (m *MockStateKeyValue) KVGet(ctx context.Context, bucket, key string) (jetstream.KeyValueEntry, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", ctx, key)
+	ret := m.ctrl.Call(m, "KVGet", ctx, bucket, key)
 	ret0, _ := ret[0].(jetstream.KeyValueEntry)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Get indicates an expected call of Get.
-func (mr *MockStateKeyValueMockRecorder) Get(ctx, key any) *gomock.Call {
+// KVGet indicates an expected call of KVGet.
+func (mr *MockStateKeyValueMockRecorder) KVGet(ctx, bucket, key any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockStateKeyValue)(nil).Get), ctx, key)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVGet", reflect.TypeOf((*MockStateKeyValue)(nil).KVGet), ctx, bucket, key)
 }
 
-// Keys mocks base method.
-func (m *MockStateKeyValue) Keys(ctx context.Context, opts ...jetstream.WatchOpt) ([]string, error) {
+// KVKeys mocks base method.
+func (m *MockStateKeyValue) KVKeys(ctx context.Context, bucket string, filters ...string) ([]string, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx}
-	for _, a := range opts {
+	varargs := []any{ctx, bucket}
+	for _, a := range filters {
 		varargs = append(varargs, a)
 	}
-	ret := m.ctrl.Call(m, "Keys", varargs...)
+	ret := m.ctrl.Call(m, "KVKeys", varargs...)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Keys indicates an expected call of Keys.
-func (mr *MockStateKeyValueMockRecorder) Keys(ctx any, opts ...any) *gomock.Call {
+// KVKeys indicates an expected call of KVKeys.
+func (mr *MockStateKeyValueMockRecorder) KVKeys(ctx, bucket any, filters ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Keys", reflect.TypeOf((*MockStateKeyValue)(nil).Keys), varargs...)
+	varargs := append([]any{ctx, bucket}, filters...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVKeys", reflect.TypeOf((*MockStateKeyValue)(nil).KVKeys), varargs...)
 }
 
 // MockObjectStoreManager is a mock of ObjectStoreManager interface.
@@ -101,106 +101,76 @@ func (m *MockObjectStoreManager) EXPECT() *MockObjectStoreManagerMockRecorder {
 	return m.recorder
 }
 
-// Delete mocks base method.
-func (m *MockObjectStoreManager) Delete(ctx context.Context, name string) error {
+// ObjectDelete mocks base method.
+func (m *MockObjectStoreManager) ObjectDelete(ctx context.Context, bucket, name string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", ctx, name)
+	ret := m.ctrl.Call(m, "ObjectDelete", ctx, bucket, name)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Delete indicates an expected call of Delete.
-func (mr *MockObjectStoreManagerMockRecorder) Delete(ctx, name any) *gomock.Call {
+// ObjectDelete indicates an expected call of ObjectDelete.
+func (mr *MockObjectStoreManagerMockRecorder) ObjectDelete(ctx, bucket, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockObjectStoreManager)(nil).Delete), ctx, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectDelete", reflect.TypeOf((*MockObjectStoreManager)(nil).ObjectDelete), ctx, bucket, name)
 }
 
-// GetBytes mocks base method.
-func (m *MockObjectStoreManager) GetBytes(ctx context.Context, name string, opts ...jetstream.GetObjectOpt) ([]byte, error) {
+// ObjectGetBytes mocks base method.
+func (m *MockObjectStoreManager) ObjectGetBytes(ctx context.Context, bucket, name string) ([]byte, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, name}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetBytes", varargs...)
+	ret := m.ctrl.Call(m, "ObjectGetBytes", ctx, bucket, name)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetBytes indicates an expected call of GetBytes.
-func (mr *MockObjectStoreManagerMockRecorder) GetBytes(ctx, name any, opts ...any) *gomock.Call {
+// ObjectGetBytes indicates an expected call of ObjectGetBytes.
+func (mr *MockObjectStoreManagerMockRecorder) ObjectGetBytes(ctx, bucket, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, name}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBytes", reflect.TypeOf((*MockObjectStoreManager)(nil).GetBytes), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectGetBytes", reflect.TypeOf((*MockObjectStoreManager)(nil).ObjectGetBytes), ctx, bucket, name)
 }
 
-// GetInfo mocks base method.
-func (m *MockObjectStoreManager) GetInfo(ctx context.Context, name string, opts ...jetstream.GetObjectInfoOpt) (*jetstream.ObjectInfo, error) {
+// ObjectInfo mocks base method.
+func (m *MockObjectStoreManager) ObjectInfo(ctx context.Context, bucket, name string) (*jetstream.ObjectInfo, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, name}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetInfo", varargs...)
+	ret := m.ctrl.Call(m, "ObjectInfo", ctx, bucket, name)
 	ret0, _ := ret[0].(*jetstream.ObjectInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetInfo indicates an expected call of GetInfo.
-func (mr *MockObjectStoreManagerMockRecorder) GetInfo(ctx, name any, opts ...any) *gomock.Call {
+// ObjectInfo indicates an expected call of ObjectInfo.
+func (mr *MockObjectStoreManagerMockRecorder) ObjectInfo(ctx, bucket, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, name}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInfo", reflect.TypeOf((*MockObjectStoreManager)(nil).GetInfo), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectInfo", reflect.TypeOf((*MockObjectStoreManager)(nil).ObjectInfo), ctx, bucket, name)
 }
 
-// List mocks base method.
-func (m *MockObjectStoreManager) List(ctx context.Context, opts ...jetstream.ListObjectsOpt) ([]*jetstream.ObjectInfo, error) {
+// ObjectList mocks base method.
+func (m *MockObjectStoreManager) ObjectList(ctx context.Context, bucket string) ([]*jetstream.ObjectInfo, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "List", varargs...)
+	ret := m.ctrl.Call(m, "ObjectList", ctx, bucket)
 	ret0, _ := ret[0].([]*jetstream.ObjectInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// List indicates an expected call of List.
-func (mr *MockObjectStoreManagerMockRecorder) List(ctx any, opts ...any) *gomock.Call {
+// ObjectList indicates an expected call of ObjectList.
+func (mr *MockObjectStoreManagerMockRecorder) ObjectList(ctx, bucket any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockObjectStoreManager)(nil).List), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectList", reflect.TypeOf((*MockObjectStoreManager)(nil).ObjectList), ctx, bucket)
 }
 
-// Put mocks base method.
-func (m *MockObjectStoreManager) Put(ctx context.Context, meta jetstream.ObjectMeta, reader io.Reader) (*jetstream.ObjectInfo, error) {
+// ObjectPut mocks base method.
+func (m *MockObjectStoreManager) ObjectPut(ctx context.Context, bucket string, meta jetstream.ObjectMeta, reader io.Reader) (*jetstream.ObjectInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Put", ctx, meta, reader)
+	ret := m.ctrl.Call(m, "ObjectPut", ctx, bucket, meta, reader)
 	ret0, _ := ret[0].(*jetstream.ObjectInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Put indicates an expected call of Put.
-func (mr *MockObjectStoreManagerMockRecorder) Put(ctx, meta, reader any) *gomock.Call {
+// ObjectPut indicates an expected call of ObjectPut.
+func (mr *MockObjectStoreManagerMockRecorder) ObjectPut(ctx, bucket, meta, reader any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockObjectStoreManager)(nil).Put), ctx, meta, reader)
-}
-
-// PutBytes mocks base method.
-func (m *MockObjectStoreManager) PutBytes(ctx context.Context, name string, data []byte) (*jetstream.ObjectInfo, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PutBytes", ctx, name, data)
-	ret0, _ := ret[0].(*jetstream.ObjectInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// PutBytes indicates an expected call of PutBytes.
-func (mr *MockObjectStoreManagerMockRecorder) PutBytes(ctx, name, data any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutBytes", reflect.TypeOf((*MockObjectStoreManager)(nil).PutBytes), ctx, name, data)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectPut", reflect.TypeOf((*MockObjectStoreManager)(nil).ObjectPut), ctx, bucket, meta, reader)
 }

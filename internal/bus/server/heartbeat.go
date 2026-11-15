@@ -43,7 +43,7 @@ func (s *Server) StartHeartbeat(
 	ctx context.Context,
 	conditions config.ProcessConditions,
 ) {
-	if s.registryKV == nil {
+	if s.registryBucket == "" {
 		s.log.Warn("no registry KV bucket, NATS heartbeat skipped")
 		return
 	}
@@ -58,12 +58,13 @@ func (s *Server) StartHeartbeat(
 	}
 
 	hb := heartbeat.New(s.log, heartbeat.Options{
-		RegistryKV: s.registryKV,
-		Hostname:   hostname,
-		Version:    "0.1.0",
-		Component:  "nats",
-		Process:    process.New(),
-		Interval:   10 * time.Second,
+		KV:             s.nc,
+		RegistryBucket: s.registryBucket,
+		Hostname:       hostname,
+		Version:        "0.1.0",
+		Component:      "nats",
+		Process:        process.New(),
+		Interval:       10 * time.Second,
 		Thresholds: process.ConditionThresholds{
 			MemoryPressureBytes: conditions.MemoryPressureBytes,
 			HighCPUPercent:      conditions.HighCPUPercent,

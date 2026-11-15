@@ -28,47 +28,33 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-// StateKeyValue wraps the subset of jetstream.KeyValue methods needed
-// by the file stale check.
+// StateKeyValue reads the file-state KV bucket, for the stale check. A
+// *natsclient.Client is one.
 type StateKeyValue interface {
-	Keys(ctx context.Context, opts ...jetstream.WatchOpt) ([]string, error)
-	Get(ctx context.Context, key string) (jetstream.KeyValueEntry, error)
+	KVKeys(ctx context.Context, bucket string, filters ...string) ([]string, error)
+	KVGet(ctx context.Context, bucket string, key string) (jetstream.KeyValueEntry, error)
 }
 
-// ObjectStoreManager wraps the subset of jetstream.ObjectStore methods
-// needed by the file API handlers. This minimal interface enables
-// straightforward mocking in tests.
+// ObjectStoreManager is the access to the Object Store bucket that the file
+// API handlers use. A *natsclient.Client is one.
 type ObjectStoreManager interface {
-	// Put stores data from a reader under the given metadata.
-	Put(
+	ObjectPut(
 		ctx context.Context,
+		bucket string,
 		meta jetstream.ObjectMeta,
 		reader io.Reader,
 	) (*jetstream.ObjectInfo, error)
-
-	// PutBytes stores data under the given name.
-	PutBytes(ctx context.Context, name string, data []byte) (*jetstream.ObjectInfo, error)
-
-	// GetBytes retrieves the content stored under the given name.
-	GetBytes(ctx context.Context, name string, opts ...jetstream.GetObjectOpt) ([]byte, error)
-
-	// GetInfo retrieves metadata for the named object.
-	GetInfo(
-		ctx context.Context,
-		name string,
-		opts ...jetstream.GetObjectInfoOpt,
-	) (*jetstream.ObjectInfo, error)
-
-	// Delete removes the named object.
-	Delete(ctx context.Context, name string) error
-
-	// List returns metadata for all objects in the store.
-	List(ctx context.Context, opts ...jetstream.ListObjectsOpt) ([]*jetstream.ObjectInfo, error)
+	ObjectGetBytes(ctx context.Context, bucket string, name string) ([]byte, error)
+	ObjectInfo(ctx context.Context, bucket string, name string) (*jetstream.ObjectInfo, error)
+	ObjectDelete(ctx context.Context, bucket string, name string) error
+	ObjectList(ctx context.Context, bucket string) ([]*jetstream.ObjectInfo, error)
 }
 
 // File implementation of the File APIs operations.
 type File struct {
-	objStore ObjectStoreManager
-	stateKV  StateKeyValue
-	logger   *slog.Logger
+	objStore    ObjectStoreManager
+	objBucket   string
+	stateKV     StateKeyValue
+	stateBucket string
+	logger      *slog.Logger
 }

@@ -309,6 +309,22 @@ that file.
   [A Go package is one thing](https://github.com/osapi-io/specs/blob/main/CONSTITUTION.md#a-go-package-is-one-thing)
   tells why.
 
+### NATS access
+
+- Call NATS only through the methods of
+  [nats-client](https://github.com/osapi-io/nats-client). Do not call `nats.go`
+  or `jetstream` yourself, and do not keep a JetStream handle. Each method makes
+  the span and the metric of its call. Thus a direct call is not in a trace, and
+  the trace does not show that it is missing.
+- Give each method the `ctx` of the work, and the name of the bucket or the
+  stream. A bucket goes into a package as its name, not as a handle.
+- When nats-client has no method for the call, add the method to nats-client
+  with its span and its metric. Do not add a direct call here.
+- nats-client returns concrete types. A package declares the interface of the
+  methods that it uses, and makes its mocks from that interface.
+  [The transport](https://github.com/osapi-io/specs/blob/main/ARCHITECTURE.md#the-transport)
+  states the rule.
+
 ### Test doubles
 
 For an interface that this organization defines, generate the double with

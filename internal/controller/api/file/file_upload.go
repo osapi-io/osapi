@@ -73,7 +73,7 @@ func (f *File) PostFile(
 
 	// Unless forced, check if the Object Store already has this file.
 	if !force {
-		existing, err := f.objStore.GetInfo(ctx, name)
+		existing, err := f.objStore.ObjectInfo(ctx, f.objBucket, name)
 		if err == nil && existing != nil {
 			if existing.Digest == newDigest {
 				// Same content — skip the write.
@@ -101,7 +101,7 @@ func (f *File) PostFile(
 			"Osapi-Content-Type": []string{contentType},
 		},
 	}
-	_, err := f.objStore.Put(ctx, meta, bytes.NewReader(fileData))
+	_, err := f.objStore.ObjectPut(ctx, f.objBucket, meta, bytes.NewReader(fileData))
 	if err != nil {
 		errMsg := fmt.Sprintf("failed to store file: %s", err.Error())
 		return gen.PostFile500JSONResponse{

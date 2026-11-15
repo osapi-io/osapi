@@ -25,11 +25,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"log/slog"
 	"strings"
-
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/controller/api/file/gen"
@@ -41,7 +38,7 @@ func (f *File) GetFileStale(
 	ctx context.Context,
 	_ gen.GetFileStaleRequestObject,
 ) (gen.GetFileStaleResponseObject, error) {
-	if f.stateKV == nil {
+	if f.stateBucket == "" {
 		errMsg := "file state KV not available"
 		f.logger.Error(errMsg)
 
@@ -50,15 +47,8 @@ func (f *File) GetFileStale(
 		}, nil
 	}
 
-	keys, err := f.stateKV.Keys(ctx)
+	keys, err := f.stateKV.KVKeys(ctx, f.stateBucket)
 	if err != nil {
-		if errors.Is(err, jetstream.ErrNoKeysFound) {
-			return gen.GetFileStale200JSONResponse{
-				Stale: []gen.StaleDeployment{},
-				Total: 0,
-			}, nil
-		}
-
 		errMsg := "failed to list file state keys"
 		f.logger.Error(errMsg, slog.String("error", err.Error()))
 
@@ -70,7 +60,7 @@ func (f *File) GetFileStale(
 	var stale []gen.StaleDeployment
 
 	for _, key := range keys {
-		entry, err := f.stateKV.Get(ctx, key)
+		entry, err := f.stateKV.KVGet(ctx, f.stateBucket, key)
 		if err != nil {
 			f.logger.Debug(
 				"skipping state entry",
@@ -100,7 +90,7 @@ func (f *File) GetFileStale(
 
 		provider := providerFromPath(state.Path)
 
-		currentContent, err := f.objStore.GetBytes(ctx, state.ObjectName)
+		currentContent, err := f.objStore.ObjectGetBytes(ctx, f.objBucket, state.ObjectName)
 		if err != nil {
 			// Object was deleted — include as stale with empty current_sha.
 			stale = append(stale, gen.StaleDeployment{

@@ -28,8 +28,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/nats-io/nats.go/jetstream"
-
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 )
@@ -41,7 +39,8 @@ var heartbeatMarshalFn = json.Marshal
 // on a configurable interval.
 type Heartbeat struct {
 	logger          *slog.Logger
-	registryKV      jetstream.KeyValue
+	kv              RegistryStore
+	registryBucket  string
 	hostname        string
 	version         string
 	componentType   string
@@ -53,10 +52,19 @@ type Heartbeat struct {
 	subComponents   map[string]job.SubComponentInfo
 }
 
+// RegistryStore writes and removes a registration in a KV bucket. A
+// *natsclient.Client is one.
+type RegistryStore interface {
+	KVPut(ctx context.Context, bucket string, key string, value []byte) (uint64, error)
+	KVDelete(ctx context.Context, bucket string, key string) error
+}
+
 // Options describe the component that a Heartbeat registers.
 type Options struct {
-	// RegistryKV is the bucket that gets the registration.
-	RegistryKV jetstream.KeyValue
+	// KV writes the registration.
+	KV RegistryStore
+	// RegistryBucket is the KV bucket that gets the registration.
+	RegistryBucket string
 	// Hostname is the host that the component runs on.
 	Hostname string
 	// Version is the version of the component.
@@ -80,7 +88,8 @@ func New(
 ) *Heartbeat {
 	return &Heartbeat{
 		logger:          logger.With(slog.String("subsystem", opts.Component+".heartbeat")),
-		registryKV:      opts.RegistryKV,
+		kv:              opts.KV,
+		registryBucket:  opts.RegistryBucket,
 		hostname:        opts.Hostname,
 		version:         opts.Version,
 		componentType:   opts.Component,
@@ -170,7 +179,7 @@ func (h *Heartbeat) writeRegistration(
 	}
 
 	key := h.registryKey()
-	if _, err := h.registryKV.Put(ctx, key, data); err != nil {
+	if _, err := h.kv.KVPut(ctx, h.registryBucket, key, data); err != nil {
 		h.logger.Warn(
 			"failed to write component registration",
 			slog.String("hostname", h.hostname),
@@ -184,7 +193,7 @@ func (h *Heartbeat) writeRegistration(
 // deregister deletes the component's registration key on clean shutdown.
 func (h *Heartbeat) deregister() {
 	key := h.registryKey()
-	if err := h.registryKV.Delete(context.Background(), key); err != nil {
+	if err := h.kv.KVDelete(context.Background(), h.registryBucket, key); err != nil {
 		h.logger.Warn(
 			"failed to deregister component",
 			slog.String("hostname", h.hostname),

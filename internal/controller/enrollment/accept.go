@@ -22,12 +22,9 @@ package enrollment
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
-
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/pki"
 )
@@ -41,7 +38,7 @@ func (w *Watcher) AcceptAgent(
 ) error {
 	key := kvPrefix + machineID
 
-	entry, err := w.enrollmentKV.Get(ctx, key)
+	entry, err := w.enrollmentKV.KVGet(ctx, w.enrollmentBucket, key)
 	if err != nil {
 		return fmt.Errorf("get pending agent %s: %w", machineID, err)
 	}
@@ -70,11 +67,11 @@ func (w *Watcher) AcceptAgent(
 	}
 
 	subject := enrollSubject(w.namespace, pki.EnrollResponsePrefix+"."+machineID)
-	if err := w.nc.PublishCore(subject, data); err != nil {
+	if err := w.nc.PublishCore(context.Background(), subject, data); err != nil {
 		return fmt.Errorf("publish acceptance for %s: %w", machineID, err)
 	}
 
-	if err := w.enrollmentKV.Delete(ctx, key); err != nil {
+	if err := w.enrollmentKV.KVDelete(ctx, w.enrollmentBucket, key); err != nil {
 		return fmt.Errorf("delete pending agent %s: %w", machineID, err)
 	}
 
@@ -98,7 +95,7 @@ func (w *Watcher) RejectAgent(
 ) error {
 	key := kvPrefix + machineID
 
-	entry, err := w.enrollmentKV.Get(ctx, key)
+	entry, err := w.enrollmentKV.KVGet(ctx, w.enrollmentBucket, key)
 	if err != nil {
 		return fmt.Errorf("get pending agent %s: %w", machineID, err)
 	}
@@ -119,11 +116,11 @@ func (w *Watcher) RejectAgent(
 	}
 
 	subject := enrollSubject(w.namespace, pki.EnrollResponsePrefix+"."+machineID)
-	if err := w.nc.PublishCore(subject, data); err != nil {
+	if err := w.nc.PublishCore(context.Background(), subject, data); err != nil {
 		return fmt.Errorf("publish rejection for %s: %w", machineID, err)
 	}
 
-	if err := w.enrollmentKV.Delete(ctx, key); err != nil {
+	if err := w.enrollmentKV.KVDelete(ctx, w.enrollmentBucket, key); err != nil {
 		return fmt.Errorf("delete pending agent %s: %w", machineID, err)
 	}
 
@@ -218,15 +215,12 @@ func (w *Watcher) findPendingBy(
 	ctx context.Context,
 	match func(PendingAgent) bool,
 ) (*PendingAgent, error) {
-	lister, err := w.enrollmentKV.ListKeys(ctx)
+	keys, err := w.enrollmentKV.KVKeys(ctx, w.enrollmentBucket)
 	if err != nil {
-		if errors.Is(err, jetstream.ErrNoKeysFound) {
-			return nil, nil
-		}
 		return nil, fmt.Errorf("list enrollment keys: %w", err)
 	}
 
-	for key := range lister.Keys() {
+	for _, key := range keys {
 		// Accepted agents' keys share this bucket and would otherwise
 		// unmarshal into a PendingAgent, making an already-accepted agent
 		// look pending.
@@ -234,7 +228,7 @@ func (w *Watcher) findPendingBy(
 			continue
 		}
 
-		entry, err := w.enrollmentKV.Get(ctx, key)
+		entry, err := w.enrollmentKV.KVGet(ctx, w.enrollmentBucket, key)
 		if err != nil {
 			continue
 		}

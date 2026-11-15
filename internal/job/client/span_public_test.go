@@ -48,7 +48,6 @@ type SpanPublicTestSuite struct {
 	suite.Suite
 
 	ctrl     *gomock.Controller
-	kv       *jobmocks.MockKeyValue
 	nats     *jobmocks.MockNATSClient
 	recorder *tracetest.SpanRecorder
 	previous trace.TracerProvider
@@ -62,7 +61,6 @@ func TestSpanPublicTestSuite(
 
 func (s *SpanPublicTestSuite) SetupSubTest() {
 	s.ctrl = gomock.NewController(s.T())
-	s.kv = jobmocks.NewMockKeyValue(s.ctrl)
 	s.nats = jobmocks.NewMockNATSClient(s.ctrl)
 	s.recorder = tracetest.NewSpanRecorder()
 	s.previous = otel.GetTracerProvider()
@@ -129,12 +127,14 @@ func (s *SpanPublicTestSuite) TestQuery() {
 				timeout = 50 * time.Millisecond
 			}
 			jobs, err := client.New(slog.Default(), s.nats, &client.Options{
-				Timeout: timeout, KVBucket: s.kv, StreamName: "JOBS",
+				Timeout: timeout, JobsBucket: "jobs", StreamName: "JOBS",
 			})
 			s.Require().NoError(err)
 
 			var sent trace.SpanContext
-			s.kv.EXPECT().Put(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(1), nil)
+			s.nats.EXPECT().
+				KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
+				Return(uint64(1), nil)
 			s.nats.EXPECT().Publish(gomock.Any(), "jobs.query.host.server1", gomock.Any()).
 				DoAndReturn(func(ctx context.Context, _ string, _ []byte) error {
 					sent = trace.SpanContextFromContext(ctx)
@@ -147,17 +147,22 @@ func (s *SpanPublicTestSuite) TestQuery() {
 				entry.EXPECT().Value().Return([]byte(tc.response))
 				ch <- entry
 			}
-			watcher := jobmocks.NewMockKeyWatcher(s.ctrl)
-			watcher.EXPECT().Updates().Return(ch).AnyTimes()
-			watcher.EXPECT().Stop().Return(nil)
-			s.kv.EXPECT().Watch(gomock.Any(), gomock.Any()).Return(watcher, nil)
+			var watched trace.SpanContext
+			s.nats.EXPECT().KVWatch(gomock.Any(), "jobs", gomock.Any()).
+				DoAndReturn(func(ctx context.Context, _, _ string, _ ...jetstream.WatchOpt) (<-chan jetstream.KeyValueEntry, error) {
+					watched = trace.SpanContextFromContext(ctx)
+					return ch, nil
+				})
 
 			ctx, request := otel.Tracer("test").
 				Start(context.Background(), "GET /api/node/:hostname")
 			_, _, _ = jobs.Query(ctx, "server1", "node", job.OperationType("hostname.get"), nil)
 			request.End()
 
-			tc.validate(s.spans(), request.SpanContext(), sent)
+			spans := s.spans()
+			tc.validate(spans, request.SpanContext(), sent)
+			s.Equal(spans["job.collect"].SpanContext().SpanID(), watched.SpanID(),
+				"the watch for the answers is part of job.collect")
 		})
 	}
 }

@@ -26,6 +26,8 @@ import (
 	"errors"
 	"testing"
 
+	providermocks "github.com/osapi-io/osapi/internal/provider/mocks"
+
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -42,12 +44,12 @@ type DebianPublicTestSuite struct {
 	suite.Suite
 
 	ctrl  *gomock.Controller
-	state *jobmocks.MockKeyValue
+	state *providermocks.MockFileState
 }
 
 func (s *DebianPublicTestSuite) SetupSubTest() {
 	s.ctrl = gomock.NewController(s.T())
-	s.state = jobmocks.NewMockKeyValue(s.ctrl)
+	s.state = providermocks.NewMockFileState(s.ctrl)
 }
 
 func (s *DebianPublicTestSuite) TearDownSubTest() {
@@ -72,7 +74,7 @@ func (s *DebianPublicTestSuite) TestNewDebian() {
 			h: host.Host{
 				Platform:  "debian",
 				FS:        memfs.New(),
-				FileState: jobmocks.NewMockKeyValue(gomock.NewController(s.T())),
+				FileState: providermocks.NewMockFileState(gomock.NewController(s.T())),
 			},
 		},
 	}
@@ -103,7 +105,7 @@ func (s *DebianPublicTestSuite) TestWrite() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			managedfile.SetMarshalJSON(failMarshal)
-			p := managedfile.NewDebian(memfs.New(), s.state, nil, "web-01")
+			p := managedfile.NewDebian(memfs.New(), s.state, "file-state", nil, "web-01")
 
 			_, err := p.Write(
 				context.Background(),
@@ -128,9 +130,9 @@ func (s *DebianPublicTestSuite) TestRemove() {
 			record, _ := json.Marshal(managedfile.State{Path: path})
 			entry := jobmocks.NewMockKeyValueEntry(s.ctrl)
 			entry.EXPECT().Value().Return(record)
-			s.state.EXPECT().Get(gomock.Any(), gomock.Any()).Return(entry, nil)
+			s.state.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).Return(entry, nil)
 			managedfile.SetMarshalJSON(failMarshal)
-			p := managedfile.NewDebian(memfs.New(), s.state, nil, "web-01")
+			p := managedfile.NewDebian(memfs.New(), s.state, "file-state", nil, "web-01")
 
 			_, err := p.Remove(context.Background(), path)
 

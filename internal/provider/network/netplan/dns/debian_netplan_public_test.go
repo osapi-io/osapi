@@ -218,7 +218,7 @@ func (suite *DebianNetplanPublicTestSuite) TestResolvePrimaryInterface() {
 			ctrl := gomock.NewController(suite.T())
 			mock := mocks.NewPlainMockManager(ctrl)
 
-			p := dns.NewDebianProvider(suite.logger, memfs.New(), nil, mock, "test-host")
+			p := dns.NewDebianProvider(suite.logger, memfs.New(), nil, "", mock, "test-host")
 			tc.setupFacts(p)
 
 			got := p.ExportResolvePrimaryInterface(tc.interfaceName)

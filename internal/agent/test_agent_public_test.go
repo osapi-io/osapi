@@ -24,7 +24,6 @@ import (
 	"log/slog"
 
 	"github.com/avfs/avfs"
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/agent"
 	sysctlProv "github.com/osapi-io/osapi/internal/behaviors/sysctl"
@@ -73,9 +72,9 @@ type newTestAgentParams struct {
 	powerProvider    powerProv.Provider
 	processProvider  process.Provider
 	execManager      exec.Manager
-	registryKV       jetstream.KeyValue
-	factsKV          jetstream.KeyValue
-	natsClient       agent.NATSPublisher
+	registryBucket   string
+	factsBucket      string
+	natsClient       agent.NATSClient
 }
 
 // newTestAgent builds a ProviderRegistry from the supplied providers and
@@ -161,8 +160,8 @@ func newTestAgent(
 		p.netinfoProvider,
 		p.processProvider,
 		registry,
-		p.registryKV,
-		p.factsKV,
+		p.registryBucket,
+		p.factsBucket,
 		p.execManager,
 		p.natsClient,
 	)

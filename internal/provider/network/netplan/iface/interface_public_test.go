@@ -27,13 +27,14 @@ import (
 	"os"
 	"testing"
 
+	providermocks "github.com/osapi-io/osapi/internal/provider/mocks"
+
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
 	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
-	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan/iface"
 )
 
@@ -147,7 +148,7 @@ type InterfacePublicTestSuite struct {
 	ctx         context.Context
 	logger      *slog.Logger
 	memFs       avfs.VFS
-	mockStateKV *jobmocks.MockKeyValue
+	mockStateKV *providermocks.MockFileState
 	mockExec    *execmocks.MockManager
 	provider    *iface.Debian
 }
@@ -157,7 +158,7 @@ func (suite *InterfacePublicTestSuite) SetupTest() {
 	suite.ctx = context.Background()
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	suite.memFs = memfs.New()
-	suite.mockStateKV = jobmocks.NewMockKeyValue(suite.ctrl)
+	suite.mockStateKV = providermocks.NewMockFileState(suite.ctrl)
 	suite.mockExec = execmocks.NewMockManager(suite.ctrl)
 
 	_ = suite.memFs.MkdirAll("/etc/netplan", 0o755)
@@ -165,7 +166,7 @@ func (suite *InterfacePublicTestSuite) SetupTest() {
 	suite.provider = iface.NewDebianProvider(
 		suite.logger,
 		suite.memFs,
-		suite.mockStateKV,
+		suite.mockStateKV, "file-state",
 		suite.mockExec,
 		testHostname,
 	)
@@ -393,7 +394,7 @@ func (suite *InterfacePublicTestSuite) TestCreate() {
 
 				// KV Put succeeds.
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			validateFunc: func(result *iface.InterfaceResult, err error) {
@@ -542,7 +543,7 @@ func (suite *InterfacePublicTestSuite) TestUpdate() {
 
 				// KV Put succeeds.
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			validateFunc: func(result *iface.InterfaceResult, err error) {
@@ -633,7 +634,7 @@ func (suite *InterfacePublicTestSuite) TestDelete() {
 			interfaceNm: "eth0",
 			setup: func() {
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, errors.New("not found"))
 
 				// Create the managed file on disk.

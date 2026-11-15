@@ -74,7 +74,9 @@ func (s *HandlerPublicTestSuite) TestHandler() {
 			handlers := apifile.Handler(
 				slog.Default(),
 				mockObjStore,
+				"objects",
 				nil,
+				"",
 				"test-signing-key",
 				nil,
 			)

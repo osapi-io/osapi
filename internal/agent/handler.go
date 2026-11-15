@@ -26,7 +26,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -38,7 +37,6 @@ import (
 
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider"
-	"github.com/osapi-io/osapi/internal/telemetry/tracing"
 )
 
 // Errors returned by unwrapJobEnvelope. Each names a distinct rejection
@@ -216,6 +214,7 @@ func (a *Agent) terminateMessage(
 
 // handleJobMessage processes incoming job messages from NATS.
 func (a *Agent) handleJobMessage(
+	ctx context.Context,
 	msg jetstream.Msg,
 ) error {
 	// Extract the key (job ID) from the message data
@@ -234,6 +233,13 @@ func (a *Agent) handleJobMessage(
 		slog.String("raw_data", string(msg.Data())),
 	)
 
+	// The span opens before the first read of the job, so that the reads of
+	// the KV bucket below are in the trace of the request that sent the job.
+	// ctx carries the trace of the request that sent the job: nats-client
+	// reads it from the headers of the message.
+	ctx, span := otel.Tracer("osapi-agent").Start(ctx, "job.process")
+	defer span.End()
+
 	// A redelivered message for a job this agent already answered must not
 	// re-execute the operation — the response and terminal status are
 	// already recorded. Checked before touching the job data itself, since
@@ -242,7 +248,7 @@ func (a *Agent) handleJobMessage(
 	// (where every targeted agent answers independently) are unaffected.
 	// A failed check fails open: proceed with execution rather than risk
 	// silently dropping a job this agent has not actually answered.
-	if answered, err := a.jobClient.HasJobResponse(context.Background(), jobKey, a.hostname); err != nil {
+	if answered, err := a.jobClient.HasJobResponse(ctx, jobKey, a.hostname); err != nil {
 		a.logger.Warn(
 			"failed to check for existing job response; proceeding with execution",
 			slog.String("job_id", jobKey),
@@ -254,6 +260,7 @@ func (a *Agent) handleJobMessage(
 			slog.String("job_id", jobKey),
 			slog.String("hostname", a.hostname),
 		)
+		span.AddEvent("job.already_answered")
 		return nil
 	}
 
@@ -266,7 +273,7 @@ func (a *Agent) handleJobMessage(
 
 	// Get the immutable job data
 	jobDataKey := "jobs." + jobKey
-	jobDataBytes, err := a.jobClient.GetJobData(context.Background(), jobDataKey)
+	jobDataBytes, err := a.jobClient.GetJobData(ctx, jobDataKey)
 	if err != nil {
 		// Redelivery can help here: the job's KV write and this
 		// notification are not transactional, so a very early delivery
@@ -299,11 +306,6 @@ func (a *Agent) handleJobMessage(
 		return a.terminateMessage(msg, "malformed job data",
 			fmt.Errorf("failed to parse job data: %w", err))
 	}
-
-	// Extract trace context from NATS message headers and create a processing span
-	ctx := tracing.ExtractTraceContextFromHeader(context.Background(), http.Header(msg.Headers()))
-	ctx, span := otel.Tracer("osapi-agent").Start(ctx, "job.process")
-	defer span.End()
 
 	// Extract the job ID from top-level job data
 	jobID, ok := jobData["id"].(string)

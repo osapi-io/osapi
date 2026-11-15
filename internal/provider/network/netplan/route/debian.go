@@ -25,7 +25,6 @@ import (
 	"log/slog"
 
 	"github.com/avfs/avfs"
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/provider"
@@ -48,7 +47,8 @@ type Debian struct {
 	provider.FactsAware
 	logger      *slog.Logger
 	fs          avfs.VFS
-	stateKV     jetstream.KeyValue
+	stateKV     provider.FileState
+	stateBucket string
 	execManager exec.Manager
 	hostname    string
 }
@@ -57,7 +57,8 @@ type Debian struct {
 func NewDebianProvider(
 	logger *slog.Logger,
 	fs avfs.VFS,
-	stateKV jetstream.KeyValue,
+	stateKV provider.FileState,
+	stateBucket string,
 	execManager exec.Manager,
 	hostname string,
 ) *Debian {
@@ -65,6 +66,7 @@ func NewDebianProvider(
 		logger:      logger.With(slog.String("subsystem", "provider.netplan.route")),
 		fs:          fs,
 		stateKV:     stateKV,
+		stateBucket: stateBucket,
 		execManager: execManager,
 		hostname:    hostname,
 	}

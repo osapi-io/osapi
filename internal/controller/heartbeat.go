@@ -28,8 +28,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/nats-io/nats.go/jetstream"
-
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/heartbeat"
 	"github.com/osapi-io/osapi/internal/job"
@@ -44,7 +42,8 @@ var hostnameFn = os.Hostname
 func startHeartbeat(
 	ctx context.Context,
 	log *slog.Logger,
-	registryKV jetstream.KeyValue,
+	registry heartbeat.RegistryStore,
+	registryBucket string,
 	subs map[string]job.SubComponentInfo,
 	conditions config.ProcessConditions,
 ) {
@@ -58,12 +57,13 @@ func startHeartbeat(
 	}
 
 	hb := heartbeat.New(log, heartbeat.Options{
-		RegistryKV: registryKV,
-		Hostname:   hostname,
-		Version:    "0.1.0",
-		Component:  "controller",
-		Process:    process.New(),
-		Interval:   10 * time.Second,
+		KV:             registry,
+		RegistryBucket: registryBucket,
+		Hostname:       hostname,
+		Version:        "0.1.0",
+		Component:      "controller",
+		Process:        process.New(),
+		Interval:       10 * time.Second,
 		Thresholds: process.ConditionThresholds{
 			MemoryPressureBytes: conditions.MemoryPressureBytes,
 			HighCPUPercent:      conditions.HighCPUPercent,

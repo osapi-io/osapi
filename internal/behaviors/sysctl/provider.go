@@ -56,7 +56,7 @@ func newDebian(
 		return nil, behavior.ErrUnsupported
 	}
 
-	return NewDebianProvider(h.Logger, h.FS, h.FileState, h.Exec, h.Hostname).
+	return NewDebianProvider(h.Logger, h.FS, h.FileState, h.FileStateBucket, h.Exec, h.Hostname).
 		WithDir(host.Settings[Settings](h).Dir).
 		WithFiles(files), nil
 }

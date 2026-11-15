@@ -28,7 +28,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/nats-io/nats.go/jetstream"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	natsembedded "github.com/osapi-io/nats-server/pkg/server"
 
@@ -42,11 +43,13 @@ var dialFn = bus.Dial
 // Server is the embedded NATS server. It keeps one client connection to
 // itself, for its heartbeat.
 type Server struct {
-	log        *slog.Logger
-	cfg        config.NATSServer
-	server     *natsembedded.Server
-	nc         *natsclient.Client
-	registryKV jetstream.KeyValue
+	log    *slog.Logger
+	cfg    config.NATSServer
+	server *natsembedded.Server
+	nc     *natsclient.Client
+	// registryBucket is the KV bucket of the registry, or "" when the config
+	// names none.
+	registryBucket string
 }
 
 // New starts the embedded NATS server that cfg.Server describes, connects to
@@ -56,6 +59,7 @@ func New(
 	ctx context.Context,
 	log *slog.Logger,
 	cfg config.NATS,
+	mp *sdkmetric.MeterProvider,
 ) (*Server, error) {
 	sc := cfg.Server
 
@@ -72,20 +76,19 @@ func New(
 		return nil, fmt.Errorf("start embedded NATS server: %w", err)
 	}
 
-	nc, err := dialFn(log, &natsclient.Options{
+	nc, err := dialFn(log, bus.Telemetry(&natsclient.Options{
 		Host: sc.Host,
 		Port: sc.Port,
 		Auth: bus.ServerClientAuth(sc.Auth),
 		Name: "osapi-nats-server",
-	})
+	}, mp))
 	if err != nil {
 		s.Stop()
 
 		return nil, err
 	}
 
-	registryKV, err := bus.Setup(ctx, nc, sc.Namespace, cfg)
-	if err != nil {
+	if err := bus.Setup(ctx, nc, sc.Namespace, cfg); err != nil {
 		bus.Close(nc)
 		s.Stop()
 
@@ -102,11 +105,11 @@ func New(
 	)
 
 	return &Server{
-		log:        log,
-		cfg:        sc,
-		server:     s,
-		nc:         nc,
-		registryKV: registryKV,
+		log:            log,
+		cfg:            sc,
+		server:         s,
+		nc:             nc,
+		registryBucket: registryBucket(sc.Namespace, cfg),
 	}, nil
 }
 
@@ -120,4 +123,17 @@ func (s *Server) Stop(
 ) {
 	bus.Close(s.nc)
 	s.server.Stop()
+}
+
+// registryBucket is the name of the registry KV bucket of cfg in namespace,
+// or "" when cfg names none.
+func registryBucket(
+	namespace string,
+	cfg config.NATS,
+) string {
+	if cfg.Registry.Bucket == "" {
+		return ""
+	}
+
+	return bus.RegistryKV(namespace, cfg.Registry).Bucket
 }

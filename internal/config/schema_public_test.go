@@ -28,6 +28,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // testSigningKey is a fixture signing key long enough to satisfy the
@@ -214,6 +215,129 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 			tt.validateFunc(config.Validate(&tt.config))
 		})
 	}
+}
+
+// validConfig returns a config that passes Validate, with nats replaced.
+func (s *ConfigPublicTestSuite) validConfig(
+	nats config.NATS,
+) config.Config {
+	return config.Config{
+		Controller: config.Controller{
+			Client: config.Client{
+				Security: config.ClientSecurity{BearerToken: "test-bearer-token"},
+			},
+			API: config.APIServer{
+				Port:     8080,
+				Security: config.ServerSecurity{SigningKey: testSigningKey},
+			},
+			NATS: config.NATSConnection{Port: 4222},
+		},
+		NATS: nats,
+		Agent: config.AgentConfig{
+			NATS:    config.NATSConnection{Port: 4222},
+			MaxJobs: 10,
+			Conditions: config.AgentConditions{
+				MemoryPressureThreshold: 90,
+				HighLoadMultiplier:      2.0,
+				DiskPressureThreshold:   90,
+			},
+		},
+	}
+}
+
+func (s *ConfigPublicTestSuite) TestValidateBuckets() {
+	base := func() config.NATS {
+		return config.NATS{
+			Stream:    config.NATSStream{Name: "JOBS", Subjects: "jobs.>"},
+			KV:        config.NATSKV{Bucket: "job-queue", ResponseBucket: "job-responses"},
+			Registry:  config.NATSRegistry{Bucket: "agent-registry"},
+			Facts:     config.NATSFacts{Bucket: "agent-facts"},
+			State:     config.NATSState{Bucket: "agent-state"},
+			FileState: config.NATSFileState{Bucket: "file-state"},
+			Objects:   config.NATSObjects{Bucket: "file-objects"},
+		}
+	}
+
+	tests := []struct {
+		name    string
+		change  func(*config.NATS)
+		wantErr string
+	}{
+		{
+			name:   "when each bucket has its own name passes",
+			change: func(*config.NATS) {},
+		},
+		{
+			name:   "when an optional bucket is unset passes",
+			change: func(n *config.NATS) { n.Facts.Bucket, n.State.Bucket = "", "" },
+		},
+		{
+			name: "when an Object Store bucket has the name of a KV bucket passes",
+			change: func(n *config.NATS) {
+				n.Objects.Bucket = "file-state"
+			},
+		},
+		{
+			name:    "when a bucket name is not valid in NATS fails",
+			change:  func(n *config.NATS) { n.Registry.Bucket = "agent.registry" },
+			wantErr: "not a valid NATS bucket name",
+		},
+		{
+			name:    "when an optional bucket name is not valid in NATS fails",
+			change:  func(n *config.NATS) { n.State.Bucket = "agent state" },
+			wantErr: "not a valid NATS bucket name",
+		},
+		{
+			name:    "when the namespace is not valid in NATS fails",
+			change:  func(n *config.NATS) { n.Server.Namespace = "osapi.prod" },
+			wantErr: "not a valid NATS bucket name",
+		},
+		{
+			name:    "when two KV settings name the same bucket fails",
+			change:  func(n *config.NATS) { n.Registry.Bucket = "job-queue" },
+			wantErr: `nats.kv.bucket and nats.registry.bucket are both "job-queue": each needs its own bucket`,
+		},
+		{
+			name:    "when the jobs and the responses share a bucket fails",
+			change:  func(n *config.NATS) { n.KV.ResponseBucket = "job-queue" },
+			wantErr: `nats.kv.bucket and nats.kv.response_bucket are both "job-queue"`,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			n := base()
+			tt.change(&n)
+			c := s.validConfig(n)
+
+			err := config.Validate(&c)
+			if tt.wantErr == "" {
+				s.NoError(err)
+				return
+			}
+			s.Require().Error(err)
+			msg := err.Error()
+			if m, ok := validation.Struct(c); !ok {
+				msg = m
+			}
+			s.Contains(msg, tt.wantErr)
+		})
+	}
+}
+
+func (s *ConfigPublicTestSuite) TestValidateObjectStoreBuckets() {
+	s.Run("when two Object Store settings name the same bucket fails", func() {
+		// There is one Object Store setting today, so the check runs on a
+		// list that has two.
+		err := config.ExportSharedObjectStoreBucket([]config.ObjectStoreBucketInfo{
+			{Key: "nats.objects.bucket", Bucket: "files"},
+			{Key: "nats.other.bucket", Bucket: "files"},
+		})
+		s.EqualError(
+			err,
+			`nats.objects.bucket and nats.other.bucket are both "files": each needs its own bucket`,
+		)
+	})
 }
 
 func (s *ConfigPublicTestSuite) TestValidateURL() {

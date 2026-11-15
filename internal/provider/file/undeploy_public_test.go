@@ -29,6 +29,8 @@ import (
 	"os"
 	"testing"
 
+	providermocks "github.com/osapi-io/osapi/internal/provider/mocks"
+
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
@@ -64,7 +66,7 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 	tests := []struct {
 		name         string
 		setupFunc    func()
-		setupMock    func(*gomock.Controller, *jobmocks.MockKeyValue, avfs.VFS)
+		setupMock    func(*gomock.Controller, *providermocks.MockFileState, avfs.VFS)
 		req          file.UndeployRequest
 		want         *file.UndeployResult
 		wantErr      bool
@@ -81,7 +83,7 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 			},
 			setupMock: func(
 				ctrl *gomock.Controller,
-				mockKV *jobmocks.MockKeyValue,
+				mockKV *providermocks.MockFileState,
 				appFs avfs.VFS,
 			) {
 				_ = appFs.MkdirAll("/etc/cron.d", 0o755)
@@ -98,7 +100,7 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 				mockEntry.EXPECT().Value().Return(stateJSON)
 
 				mockKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 			},
 			req: file.UndeployRequest{Path: "/etc/cron.d/backup"},
@@ -111,7 +113,7 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 			name: "when file exists on disk with state",
 			setupMock: func(
 				ctrl *gomock.Controller,
-				mockKV *jobmocks.MockKeyValue,
+				mockKV *providermocks.MockFileState,
 				appFs avfs.VFS,
 			) {
 				_ = appFs.MkdirAll("/etc/cron.d", 0o755)
@@ -129,10 +131,10 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 				mockEntry.EXPECT().Value().Return(stateJSON)
 
 				mockKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			req: file.UndeployRequest{Path: "/etc/cron.d/backup"},
@@ -149,7 +151,7 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 			name: "when file does not exist on disk",
 			setupMock: func(
 				_ *gomock.Controller,
-				_ *jobmocks.MockKeyValue,
+				_ *providermocks.MockFileState,
 				_ avfs.VFS,
 			) {
 			},
@@ -163,14 +165,14 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 			name: "when file exists but no state entry",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockKV *jobmocks.MockKeyValue,
+				mockKV *providermocks.MockFileState,
 				appFs avfs.VFS,
 			) {
 				_ = appFs.MkdirAll("/etc/cron.d", 0o755)
 				_ = appFs.WriteFile("/etc/cron.d/orphan", []byte("content"), 0o644)
 
 				mockKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, errors.New("key not found"))
 			},
 			req: file.UndeployRequest{Path: "/etc/cron.d/orphan"},
@@ -187,7 +189,7 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 			name: "when fs remove fails returns error",
 			setupMock: func(
 				_ *gomock.Controller,
-				_ *jobmocks.MockKeyValue,
+				_ *providermocks.MockFileState,
 				appFs avfs.VFS,
 			) {
 				_ = appFs.MkdirAll("/etc/cron.d", 0o755)
@@ -202,7 +204,7 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 			name: "when file exists but state entry value is invalid JSON",
 			setupMock: func(
 				ctrl *gomock.Controller,
-				mockKV *jobmocks.MockKeyValue,
+				mockKV *providermocks.MockFileState,
 				appFs avfs.VFS,
 			) {
 				_ = appFs.MkdirAll("/etc/cron.d", 0o755)
@@ -212,7 +214,7 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 				mockEntry.EXPECT().Value().Return([]byte("not-valid-json"))
 
 				mockKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 			},
 			req: file.UndeployRequest{Path: "/etc/cron.d/corrupt"},
@@ -237,8 +239,8 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 			}
 
 			baseFs := memfs.New()
-			mockObj := filemocks.NewMockObjectStore(ctrl)
-			mockKV := jobmocks.NewMockKeyValue(ctrl)
+			mockObj := filemocks.NewMockObjects(ctrl)
+			mockKV := providermocks.NewMockFileState(ctrl)
 
 			tt.setupMock(ctrl, mockKV, baseFs)
 
@@ -262,8 +264,8 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 			provider := file.New(
 				suite.logger,
 				providerFs,
-				mockObj,
-				mockKV,
+				mockObj, "objects",
+				mockKV, "file-state",
 				"test-host",
 				execMocks.NewMockManager(ctrl),
 			)

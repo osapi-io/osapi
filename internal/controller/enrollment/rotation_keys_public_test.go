@@ -43,7 +43,7 @@ type KeyRotationPublicTestSuite struct {
 	ctx       context.Context
 	mockCtrl  *gomock.Controller
 	mockNC    *enrollMocks.MockNATSSubscriber
-	mockKV    *jobMocks.MockKeyValue
+	mockKV    *enrollMocks.MockKVStore
 	mockPKI   *enrollMocks.MockPKIProvider
 	watcher   *enrollment.Watcher
 	fixedTime time.Time
@@ -55,7 +55,7 @@ func (s *KeyRotationPublicTestSuite) SetupTest() {
 	s.ctx = context.Background()
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockNC = enrollMocks.NewMockNATSSubscriber(s.mockCtrl)
-	s.mockKV = jobMocks.NewMockKeyValue(s.mockCtrl)
+	s.mockKV = enrollMocks.NewMockKVStore(s.mockCtrl)
 	s.mockPKI = enrollMocks.NewMockPKIProvider(s.mockCtrl)
 	s.fixedTime = time.Date(2026, 4, 11, 12, 0, 0, 0, time.UTC)
 
@@ -70,7 +70,7 @@ func (s *KeyRotationPublicTestSuite) SetupTest() {
 	s.watcher = enrollment.NewWatcher(
 		slog.Default(),
 		s.mockNC,
-		s.mockKV,
+		s.mockKV, "enrollment",
 		s.mockPKI,
 		false,
 		"osapi",
@@ -111,7 +111,7 @@ func (s *KeyRotationPublicTestSuite) TestRecordAgentKeyRotation() {
 				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry.EXPECT().Value().Return(s.existing())
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "accepted.machine-001").
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(entry, nil)
 			},
 			validateFunc: func(stored enrollment.AcceptedAgent) {
@@ -151,7 +151,7 @@ func (s *KeyRotationPublicTestSuite) TestRecordAgentKeyRotation() {
 				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry.EXPECT().Value().Return(data)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "accepted.machine-001").
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(entry, nil)
 			},
 			validateFunc: func(stored enrollment.AcceptedAgent) {
@@ -166,7 +166,7 @@ func (s *KeyRotationPublicTestSuite) TestRecordAgentKeyRotation() {
 			grace: 24 * time.Hour,
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "accepted.machine-001").
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(nil, jetstream.ErrKeyNotFound)
 			},
 			validateFunc: func(stored enrollment.AcceptedAgent) {
@@ -178,7 +178,7 @@ func (s *KeyRotationPublicTestSuite) TestRecordAgentKeyRotation() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			s.watcher = enrollment.NewWatcher(
-				slog.Default(), s.mockNC, s.mockKV, s.mockPKI, false, "osapi",
+				slog.Default(), s.mockNC, s.mockKV, "enrollment", s.mockPKI, false, "osapi",
 			)
 			s.watcher.SetRotationGracePeriod(tt.grace)
 			tt.setupMock()
@@ -186,9 +186,9 @@ func (s *KeyRotationPublicTestSuite) TestRecordAgentKeyRotation() {
 			var stored enrollment.AcceptedAgent
 
 			s.mockKV.EXPECT().
-				Put(gomock.Any(), "accepted.machine-001", gomock.Any()).
+				KVPut(gomock.Any(), "enrollment", "accepted.machine-001", gomock.Any()).
 				DoAndReturn(func(
-					_ context.Context,
+					_ context.Context, _ string,
 					_ string,
 					data []byte,
 				) (uint64, error) {

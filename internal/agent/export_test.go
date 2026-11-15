@@ -41,6 +41,7 @@ import (
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/pki"
+	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/command"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
@@ -124,10 +125,11 @@ func ExportWriteStatusEvent(
 
 // ExportHandleJobMessage exposes the private handleJobMessage method for testing.
 func ExportHandleJobMessage(
+	ctx context.Context,
 	a *Agent,
 	msg jetstream.Msg,
 ) error {
-	return a.handleJobMessage(msg)
+	return a.handleJobMessage(ctx, msg)
 }
 
 // ExportExtractChanged exposes the private extractChanged function for testing.
@@ -178,7 +180,7 @@ func ExportHandleJobMessageJS(
 	a *Agent,
 	msg jetstream.Msg,
 ) error {
-	return a.handleJobMessageJS(msg)
+	return a.handleJobMessageJS(context.Background(), msg)
 }
 
 // ExportCheckDrainFlag exposes the private checkDrainFlag method for testing.
@@ -743,7 +745,7 @@ func ResetMarshalJSONEnrollment() {
 // SetAgentNATSClient sets the agent's natsClient field for testing.
 func SetAgentNATSClient(
 	a *Agent,
-	c NATSPublisher,
+	c NATSClient,
 ) {
 	a.natsClient = c
 }
@@ -798,18 +800,19 @@ func ExportProviders(
 	log *slog.Logger,
 	plat string,
 	container bool,
-	fileState jetstream.KeyValue,
+	fileState provider.FileState,
 	files fileProv.Provider,
 ) map[string]any {
 	e := hostEnv{
-		log:       log,
-		fs:        memfs.New(),
-		exec:      exec.New(log, false),
-		platform:  plat,
-		container: container,
-		hostname:  "test-host",
-		fileState: fileState,
-		files:     files,
+		log:             log,
+		fs:              memfs.New(),
+		exec:            exec.New(log, false),
+		platform:        plat,
+		container:       container,
+		hostname:        "test-host",
+		fileState:       fileState,
+		fileStateBucket: "file-state",
+		files:           files,
 	}
 	iface, route := e.netplan()
 

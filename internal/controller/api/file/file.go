@@ -34,11 +34,15 @@ var _ gen.StrictServerInterface = (*File)(nil)
 func New(
 	logger *slog.Logger,
 	objStore ObjectStoreManager,
+	objBucket string,
 	stateKV StateKeyValue,
+	stateBucket string,
 ) *File {
 	return &File{
-		objStore: objStore,
-		stateKV:  stateKV,
-		logger:   logger.With(slog.String("subsystem", "controller.file")),
+		objStore:    objStore,
+		objBucket:   objBucket,
+		stateKV:     stateKV,
+		stateBucket: stateBucket,
+		logger:      logger.With(slog.String("subsystem", "controller.file")),
 	}
 }

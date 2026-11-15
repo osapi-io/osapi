@@ -119,6 +119,20 @@ func (mr *MockNATSConnectorMockRecorder) Publish(subject, data any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Publish", reflect.TypeOf((*MockNATSConnector)(nil).Publish), subject, data)
 }
 
+// PublishMsg mocks base method.
+func (m *MockNATSConnector) PublishMsg(msg *nats.Msg) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PublishMsg", msg)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PublishMsg indicates an expected call of PublishMsg.
+func (mr *MockNATSConnectorMockRecorder) PublishMsg(msg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublishMsg", reflect.TypeOf((*MockNATSConnector)(nil).PublishMsg), msg)
+}
+
 // QueueSubscribe mocks base method.
 func (m *MockNATSConnector) QueueSubscribe(subject, queue string, handler nats.MsgHandler) (*nats.Subscription, error) {
 	m.ctrl.T.Helper()

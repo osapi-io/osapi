@@ -45,7 +45,7 @@ type EnrollmentRetryPublicTestSuite struct {
 // pendingAgent builds an agent with a loaded keypair and the state the test wants.
 func (s *EnrollmentRetryPublicTestSuite) pendingAgent(
 	state string,
-	publisher *agentMocks.MockNATSPublisher,
+	publisher *agentMocks.MockNATSClient,
 ) *agent.Agent {
 	fs := memfs.New()
 	cfg := config.Config{
@@ -56,7 +56,7 @@ func (s *EnrollmentRetryPublicTestSuite) pendingAgent(
 
 	a := agent.New(
 		fs, cfg, slog.Default(),
-		nil, "", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, publisher,
+		nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, publisher,
 	)
 
 	m := pki.New(fs, "/keys", "agent")
@@ -72,16 +72,16 @@ func (s *EnrollmentRetryPublicTestSuite) TestRetryEnrollmentIfPending() {
 	tests := []struct {
 		name      string
 		state     string
-		setupMock func(*agentMocks.MockNATSPublisher)
+		setupMock func(*agentMocks.MockNATSClient)
 	}{
 		{
 			name:  "a pending agent asks again",
 			state: job.AgentStatePending,
-			setupMock: func(publisher *agentMocks.MockNATSPublisher) {
+			setupMock: func(publisher *agentMocks.MockNATSClient) {
 				// The controller keys acceptance by machine ID, so asking again
 				// overwrites the pending entry rather than adding one.
 				publisher.EXPECT().
-					PublishCore(gomock.Any(), gomock.Any()).
+					PublishCore(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 			},
@@ -89,9 +89,9 @@ func (s *EnrollmentRetryPublicTestSuite) TestRetryEnrollmentIfPending() {
 		{
 			name:  "a pending agent whose republish fails keeps trying",
 			state: job.AgentStatePending,
-			setupMock: func(publisher *agentMocks.MockNATSPublisher) {
+			setupMock: func(publisher *agentMocks.MockNATSClient) {
 				publisher.EXPECT().
-					PublishCore(gomock.Any(), gomock.Any()).
+					PublishCore(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(fmt.Errorf("no route to controller")).
 					Times(1)
 			},
@@ -99,18 +99,18 @@ func (s *EnrollmentRetryPublicTestSuite) TestRetryEnrollmentIfPending() {
 		{
 			name:  "a ready agent asks for nothing",
 			state: job.AgentStateReady,
-			setupMock: func(publisher *agentMocks.MockNATSPublisher) {
+			setupMock: func(publisher *agentMocks.MockNATSClient) {
 				publisher.EXPECT().
-					PublishCore(gomock.Any(), gomock.Any()).
+					PublishCore(gomock.Any(), gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 		},
 		{
 			name:  "a cordoned agent asks for nothing either",
 			state: job.AgentStateCordoned,
-			setupMock: func(publisher *agentMocks.MockNATSPublisher) {
+			setupMock: func(publisher *agentMocks.MockNATSClient) {
 				publisher.EXPECT().
-					PublishCore(gomock.Any(), gomock.Any()).
+					PublishCore(gomock.Any(), gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 		},
@@ -119,7 +119,7 @@ func (s *EnrollmentRetryPublicTestSuite) TestRetryEnrollmentIfPending() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			ctrl := gomock.NewController(s.T())
-			publisher := agentMocks.NewMockNATSPublisher(ctrl)
+			publisher := agentMocks.NewMockNATSClient(ctrl)
 
 			tt.setupMock(publisher)
 

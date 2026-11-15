@@ -284,16 +284,12 @@ func (a *Agent) stopConsumersLocked() {
 	a.consumerWg.Wait()
 }
 
-// handleJobMessageJS wraps the existing handleJobMessage for JetStream compatibility.
+// handleJobMessageJS is the JetStream handler of a job message.
 func (a *Agent) handleJobMessageJS(
+	ctx context.Context,
 	msg jetstream.Msg,
 ) error {
-	err := a.handleJobMessage(msg)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return a.handleJobMessage(ctx, msg)
 }
 
 // consumerNamePrefix returns the configured consumer name followed by an

@@ -27,6 +27,8 @@ import (
 	"os"
 	"testing"
 
+	providermocks "github.com/osapi-io/osapi/internal/provider/mocks"
+
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/assert"
@@ -47,8 +49,8 @@ type StatusPublicTestSuite struct {
 	logger  *slog.Logger
 	ctx     context.Context
 	appFs   avfs.VFS
-	mockKV  *jobmocks.MockKeyValue
-	mockObj *filemocks.MockObjectStore
+	mockKV  *providermocks.MockFileState
+	mockObj *filemocks.MockObjects
 }
 
 func (suite *StatusPublicTestSuite) SetupTest() {
@@ -56,8 +58,8 @@ func (suite *StatusPublicTestSuite) SetupTest() {
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	suite.ctx = context.Background()
 	suite.appFs = memfs.New()
-	suite.mockKV = jobmocks.NewMockKeyValue(suite.ctrl)
-	suite.mockObj = filemocks.NewMockObjectStore(suite.ctrl)
+	suite.mockKV = providermocks.NewMockFileState(suite.ctrl)
+	suite.mockObj = filemocks.NewMockObjects(suite.ctrl)
 }
 
 func (suite *StatusPublicTestSuite) TearDownTest() {
@@ -92,7 +94,7 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 				mockEntry.EXPECT().Value().Return(stateBytes)
 
 				suite.mockKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 			},
 			req: file.StatusRequest{
@@ -124,7 +126,7 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 				mockEntry.EXPECT().Value().Return(stateBytes)
 
 				suite.mockKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 			},
 			req: file.StatusRequest{
@@ -153,7 +155,7 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 				mockEntry.EXPECT().Value().Return(stateBytes)
 
 				suite.mockKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 			},
 			req: file.StatusRequest{
@@ -175,7 +177,7 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 				mockEntry.EXPECT().Value().Return([]byte("not-json"))
 
 				suite.mockKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 			},
 			req: file.StatusRequest{
@@ -191,7 +193,7 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 			name: "when no state entry",
 			setupMock: func() {
 				suite.mockKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, assert.AnError)
 			},
 			req: file.StatusRequest{
@@ -220,8 +222,8 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 			provider := file.New(
 				suite.logger,
 				suite.appFs,
-				suite.mockObj,
-				suite.mockKV,
+				suite.mockObj, "objects",
+				suite.mockKV, "file-state",
 				"test-host",
 				execMocks.NewMockManager(suite.ctrl),
 			)

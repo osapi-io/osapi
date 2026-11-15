@@ -24,6 +24,8 @@ import (
 	"context"
 	"testing"
 
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
+
 	"github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/suite"
 	"go.opentelemetry.io/otel"
@@ -176,8 +178,9 @@ func (s *SpanPublicTestSuite) TestRecordOutcome() {
 
 // TestJobProcessJoinsTheTrace checks the agent half of the span tree of a
 // request: the job comes with the trace context of job.publish in its
-// headers, and job.process is a child of it, with the agent and the result
-// on it. The controller half is in internal/job/client.
+// headers, nats-client gives the handler that context, and job.process is a
+// child of it, with the agent and the result on it. The controller half is in
+// internal/job/client.
 func (s *SpanPublicTestSuite) TestJobProcessJoinsTheTrace() {
 	recorder := tracetest.NewSpanRecorder()
 	previous, previousProp := otel.GetTracerProvider(), otel.GetTextMapPropagator()
@@ -218,10 +221,10 @@ func (s *SpanPublicTestSuite) TestJobProcessJoinsTheTrace() {
 	msg := agentmocks.NewMockMsg(ctrl)
 	msg.EXPECT().Subject().Return("jobs.query.web-01").AnyTimes()
 	msg.EXPECT().Data().Return([]byte("trace-job")).AnyTimes()
-	msg.EXPECT().Headers().Return(headers).AnyTimes()
 	msg.EXPECT().InProgress().Return(nil).AnyTimes()
 
-	s.Require().NoError(agent.ExportHandleJobMessage(a, msg))
+	ctx := natsclient.MessageContext(context.Background(), headers)
+	s.Require().NoError(agent.ExportHandleJobMessage(ctx, a, msg))
 
 	var process sdktrace.ReadOnlySpan
 	for _, sp := range recorder.Ended() {

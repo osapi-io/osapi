@@ -263,7 +263,7 @@ type JobClient interface {
 		ctx context.Context,
 		streamName string,
 		consumerName string,
-		handler func(jetstream.Msg) error,
+		handler natsclient.JetStreamMessageHandler,
 		opts *natsclient.ConsumeOptions,
 	) error
 	GetJobData(

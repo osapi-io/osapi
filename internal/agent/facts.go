@@ -40,7 +40,7 @@ func (a *Agent) startFacts(
 	machineID string,
 	hostname string,
 ) {
-	if a.factsKV == nil {
+	if a.factsBucket == "" {
 		return
 	}
 
@@ -155,7 +155,7 @@ func (a *Agent) writeFacts(
 	}
 
 	key := factsKey(machineID)
-	if _, err := a.factsKV.Put(ctx, key, data); err != nil {
+	if _, err := a.natsClient.KVPut(ctx, a.factsBucket, key, data); err != nil {
 		a.factsLogger.Warn(
 			"failed to write facts",
 			slog.String("machine_id", machineID),

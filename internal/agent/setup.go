@@ -26,6 +26,8 @@ import (
 	"log/slog"
 	"time"
 
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
 
@@ -55,13 +57,15 @@ var (
 )
 
 // Setup connects to NATS as cfg.Agent.NATS tells, and makes the provider of
-// each operation for this host. It returns the agent and its connection. The
+// each operation for this host. The metrics of each call to NATS go to mp,
+// which can be nil. It returns the agent and its connection. The
 // caller closes the connection after the agent stops.
 func Setup(
 	ctx context.Context,
 	log *slog.Logger,
 	fs avfs.VFS,
 	cfg config.Config,
+	mp *sdkmetric.MeterProvider,
 ) (*Agent, *client.Connection, error) {
 	namespace := cfg.Agent.NATS.Namespace
 	timeout, _ := time.ParseDuration(cfg.Controller.API.JobTimeout)
@@ -73,6 +77,7 @@ func Setup(
 		cfg.NATS,
 		timeout,
 		validation.ResolveTarget,
+		mp,
 	)
 	if err != nil {
 		return nil, nil, err
@@ -82,7 +87,7 @@ func Setup(
 	// when the controller has not started yet.
 	if cfg.NATS.Objects.Bucket != "" {
 		objCfg := bus.ObjectStore(namespace, cfg.NATS.Objects)
-		if _, err := conn.NATS.CreateOrUpdateObjectStore(ctx, objCfg); err != nil {
+		if err := conn.NATS.ObjectStoreCreateOrUpdate(ctx, objCfg); err != nil {
 			log.Warn("Object Store not available, file endpoints disabled",
 				slog.String("bucket", objCfg.Bucket),
 				slog.String("error", err.Error()))
@@ -104,7 +109,10 @@ func Setup(
 		container: containerFn(),
 		hostname:  hostname,
 	}
-	e.files, e.fileState = openFiles(ctx, e, conn.NATS, namespace, cfg.NATS)
+	e.files, e.fileStateBucket = openFiles(ctx, e, conn.NATS, namespace, cfg.NATS)
+	if e.fileStateBucket != "" {
+		e.fileState = conn.NATS
+	}
 
 	hostProvider := e.host()
 	diskProvider := e.disk()
@@ -134,8 +142,8 @@ func Setup(
 			loadProvider,
 			netinfoProvider,
 		),
-		conn.RegistryKV,
-		conn.FactsKV,
+		conn.RegistryBucket,
+		conn.FactsBucket,
 		execManager,
 		conn.NATS,
 	)
@@ -150,16 +158,15 @@ func (a *Agent) SubComponents() map[string]job.SubComponentInfo {
 	return a.subComponents
 }
 
-// fileStores is the part of a NATS client that the file provider opens.
+// fileStores is the access to NATS that openFiles uses. A *natsclient.Client
+// is one.
 type fileStores interface {
-	ObjectStore(
-		ctx context.Context,
-		name string,
-	) (jetstream.ObjectStore, error)
-	CreateOrUpdateKVBucketWithConfig(
-		ctx context.Context,
-		config jetstream.KeyValueConfig,
-	) (jetstream.KeyValue, error)
+	fileProv.Objects
+	TemplateStore
+	ObjectStoreStatus(ctx context.Context, bucket string) (jetstream.ObjectStoreStatus, error)
+	KVCreateOrUpdate(ctx context.Context, config jetstream.KeyValueConfig) error
+	KVGet(ctx context.Context, bucket string, key string) (jetstream.KeyValueEntry, error)
+	KVPut(ctx context.Context, bucket string, key string, value []byte) (uint64, error)
 }
 
 // openFiles makes the file provider, and returns it with the file-state
@@ -171,41 +178,41 @@ func openFiles(
 	nc fileStores,
 	namespace string,
 	cfg config.NATS,
-) (fileProv.Provider, jetstream.KeyValue) {
+) (fileProv.Provider, string) {
 	if cfg.Objects.Bucket == "" || cfg.FileState.Bucket == "" {
-		return nil, nil
+		return nil, ""
 	}
 
-	objStoreName := job.ApplyNamespaceToInfraName(namespace, cfg.Objects.Bucket)
-	objStore, err := nc.ObjectStore(ctx, objStoreName)
-	if err != nil {
+	objBucket := job.ApplyNamespaceToInfraName(namespace, cfg.Objects.Bucket)
+	if _, err := nc.ObjectStoreStatus(ctx, objBucket); err != nil {
 		e.log.Warn(
 			"Object Store not available, file operations disabled",
-			slog.String("bucket", objStoreName),
+			slog.String("bucket", objBucket),
 			slog.String("error", err.Error()),
 		)
-		return nil, nil
+		return nil, ""
 	}
 
 	fileStateCfg := bus.FileStateKV(namespace, cfg.FileState)
-	fileStateKV, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, fileStateCfg)
-	if err != nil {
+	if err := nc.KVCreateOrUpdate(ctx, fileStateCfg); err != nil {
 		e.log.Warn(
 			"file state KV not available, file operations disabled",
 			slog.String("bucket", fileStateCfg.Bucket),
 			slog.String("error", err.Error()),
 		)
-		return nil, nil
+		return nil, ""
 	}
 
-	if err := SeedSystemTemplates(ctx, e.log, objStore); err != nil {
+	if err := SeedSystemTemplates(ctx, e.log, nc, objBucket); err != nil {
 		e.log.Warn(
 			"failed to seed system templates",
 			slog.String("error", err.Error()),
 		)
 	}
 
-	return fileProv.New(e.log, e.fs, objStore, fileStateKV, e.hostname, e.exec), fileStateKV
+	return fileProv.New(
+		e.log, e.fs, nc, objBucket, nc, fileStateCfg.Bucket, e.hostname, e.exec,
+	), fileStateCfg.Bucket
 }
 
 // subComponents returns the parts of the agent that its heartbeat reports.
@@ -332,13 +339,14 @@ func buildRegistry(
 	// Behaviors run beside the categories above, served under /api/next.
 	// Each builds its own provider for this platform from what it declares.
 	behaviorProviders := BuildBehaviorProviders(host.Host{
-		Platform:  e.platform,
-		Container: e.container,
-		Hostname:  e.hostname,
-		Logger:    e.log,
-		FS:        e.fs,
-		Exec:      e.exec,
-		FileState: e.fileState,
+		Platform:        e.platform,
+		Container:       e.container,
+		Hostname:        e.hostname,
+		Logger:          e.log,
+		FS:              e.fs,
+		Exec:            e.exec,
+		FileState:       e.fileState,
+		FileStateBucket: e.fileStateBucket,
 	}, e.log)
 	r.Register(
 		job.CategoryBehavior,

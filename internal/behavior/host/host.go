@@ -30,8 +30,9 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/provider"
+
 	"github.com/avfs/avfs"
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 )
@@ -50,9 +51,11 @@ type Host struct {
 	FS avfs.VFS
 	// Exec runs commands, with sudo for RunPrivilegedCmd when enabled.
 	Exec Exec
-	// FileState records the files osapi deployed. It is nil when the agent
-	// has no store for it.
-	FileState jetstream.KeyValue
+	// FileState records the files osapi deployed, in the bucket
+	// FileStateBucket. It is nil when the agent has no store for it.
+	FileState provider.FileState
+	// FileStateBucket is the KV bucket of FileState.
+	FileStateBucket string
 	// Settings is the behavior's decoded settings, as declared with
 	// behavior.Config, or its defaults before the config is read.
 	Settings any

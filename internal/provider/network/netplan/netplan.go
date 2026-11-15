@@ -32,8 +32,9 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/provider"
+
 	"github.com/avfs/avfs"
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
@@ -51,7 +52,8 @@ func ApplyConfig(
 	ctx context.Context,
 	logger *slog.Logger,
 	fs avfs.VFS,
-	stateKV jetstream.KeyValue,
+	stateKV provider.FileState,
+	stateBucket string,
 	execManager exec.Manager,
 	hostname string,
 	path string,
@@ -82,7 +84,7 @@ func ApplyConfig(
 
 	// Write the config file. netplan reads the directory, so a half-written file
 	// is a config it may refuse or misparse.
-	if writeErr := atomicfile.Write(fs, path, content, 0o600); writeErr != nil {
+	if writeErr := atomicfile.Write(ctx, fs, path, content, 0o600); writeErr != nil {
 		return false, fmt.Errorf("netplan apply: write file: %w", writeErr)
 	}
 
@@ -116,7 +118,7 @@ func ApplyConfig(
 		return false, fmt.Errorf("netplan apply: marshal state: %w", marshalErr)
 	}
 
-	if _, putErr := stateKV.Put(ctx, stateKey, stateBytes); putErr != nil {
+	if _, putErr := stateKV.KVPut(ctx, stateBucket, stateKey, stateBytes); putErr != nil {
 		return false, fmt.Errorf("netplan apply: update state: %w", putErr)
 	}
 
@@ -137,7 +139,8 @@ func RemoveConfig(
 	ctx context.Context,
 	logger *slog.Logger,
 	fs avfs.VFS,
-	stateKV jetstream.KeyValue,
+	stateKV provider.FileState,
+	stateBucket string,
 	execManager exec.Manager,
 	hostname string,
 	path string,
@@ -160,7 +163,7 @@ func RemoveConfig(
 	// Best-effort state cleanup: mark as undeployed in KV.
 	stateKey := managedfile.StateKey(hostname, path)
 
-	kvEntry, err := stateKV.Get(ctx, stateKey)
+	kvEntry, err := stateKV.KVGet(ctx, stateBucket, stateKey)
 	if err == nil {
 		var state managedfile.State
 		if unmarshalErr := json.Unmarshal(kvEntry.Value(), &state); unmarshalErr == nil {
@@ -168,7 +171,7 @@ func RemoveConfig(
 
 			stateBytes, marshalErr := marshalJSON(state)
 			if marshalErr == nil {
-				if _, putErr := stateKV.Put(ctx, stateKey, stateBytes); putErr != nil {
+				if _, putErr := stateKV.KVPut(ctx, stateBucket, stateKey, stateBytes); putErr != nil {
 					logger.Warn(
 						"netplan remove: failed to update state",
 						slog.String("path", path),

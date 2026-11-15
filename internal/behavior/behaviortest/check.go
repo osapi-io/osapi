@@ -23,7 +23,6 @@ package behaviortest
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"path/filepath"
 	"reflect"
@@ -102,9 +101,6 @@ func checkExample(
 	var problems []string
 	before, gets := h.calls, h.gets
 	out, err := call(m, p, ex.Input)
-	if errors.Is(err, errUnsupported) {
-		return []string{fmt.Sprintf("%v: %s", err, strings.Join(h.unsupported, "; "))}
-	}
 	if err != nil {
 		return []string{fmt.Sprintf("failed: %v", err)}
 	}
@@ -230,21 +226,12 @@ func methodFor(
 	return nil
 }
 
-// call runs m with input. A call the fake host has no answer for stops the
-// method; it is returned as errUnsupported, and any other panic goes on.
+// call runs m with input.
 func call(
 	m *behavior.Method,
 	p any,
 	input any,
-) (out any, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			if r != errUnsupported { //nolint:errorlint // the value panicked with, not a wrapped error
-				panic(r)
-			}
-			out, err = nil, errUnsupported
-		}
-	}()
+) (any, error) {
 	data, _ := json.Marshal(input)
 
 	return m.Invoke(context.Background(), p, data)

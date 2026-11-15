@@ -57,31 +57,22 @@ var agentStartCmd = &cobra.Command{
 		job.Init(appConfig.Agent.NATS.Namespace)
 
 		log := logger.With("component", "agent")
-		a, b, err := agent.Setup(ctx, log, appFs, appConfig)
+		// The metrics server is made before the NATS connection, so that
+		// nats-client records the calls of the agent on it.
+		metricsServer := newMetricsServer(appConfig.Agent.Metrics, log)
+		a, b, err := agent.Setup(ctx, log, appFs, appConfig, meterProviderOf(metricsServer))
 		if err != nil {
 			cli.LogFatal(log, "failed to start the agent", err)
 		}
 
-		var metricsServer *metrics.Server
-		if appConfig.Agent.Metrics.Enabled {
-			metricsServer = metrics.New(
-				appConfig.Agent.Metrics.Host,
-				appConfig.Agent.Metrics.Port,
-				log,
-			)
-
-			if metricsServer != nil {
-				metricsServer.SetReadinessFunc(func() error {
-					return a.IsReady()
-				})
-				metricsServer.Start()
-			}
-		}
-
 		if metricsServer != nil {
+			metricsServer.SetReadinessFunc(func() error {
+				return a.IsReady()
+			})
 			a.SetMeterProvider(metricsServer.MeterProvider())
 			metricsServer.RegisterSubsystems(metrics.Subsystems(a.SubComponents()))
 			metricsServer.RegisterHeartbeatAge(a.LastHeartbeatTime)
+			metricsServer.Start()
 		}
 
 		serve(ctx, []component{a}, func(shutdownCtx context.Context) {

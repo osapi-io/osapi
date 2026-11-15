@@ -26,6 +26,8 @@ import (
 	"log/slog"
 	"time"
 
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
@@ -44,19 +46,23 @@ type Connection struct {
 	NATS *natsclient.Client
 	// Jobs is the job client.
 	Jobs *Client
-	// JobsKV is the bucket of the jobs.
-	JobsKV jetstream.KeyValue
-	// RegistryKV is the bucket where each component registers.
-	RegistryKV jetstream.KeyValue
-	// FactsKV is the bucket of the agent facts, or nil if cfg names none.
-	FactsKV jetstream.KeyValue
-	// StateKV is the bucket of the agent state, or nil if cfg names none.
-	StateKV jetstream.KeyValue
+	// JobsBucket is the KV bucket of the jobs.
+	JobsBucket string
+	// RegistryBucket is the KV bucket where each component registers.
+	RegistryBucket string
+	// FactsBucket is the KV bucket of the agent facts, or "" if cfg names
+	// none.
+	FactsBucket string
+	// StateBucket is the KV bucket of the agent state, or "" if cfg names
+	// none.
+	StateBucket string
 }
 
 // Connect connects to NATS as conn tells, opens the buckets that cfg names,
 // and makes a job client on them. A job waits for its answers for at most
-// timeout. resolve gives the value that a target has in a subject.
+// timeout. resolve gives the value that a target has in a subject. The
+// metrics of each call to NATS go to mp, the meter provider of the
+// component, which can be nil.
 func Connect(
 	ctx context.Context,
 	log *slog.Logger,
@@ -64,51 +70,53 @@ func Connect(
 	cfg config.NATS,
 	timeout time.Duration,
 	resolve func(string) string,
+	mp *sdkmetric.MeterProvider,
 ) (*Connection, error) {
 	namespace := conn.Namespace
 
-	nc, err := bus.Dial(log, &natsclient.Options{
+	nc, err := bus.Dial(log, bus.Telemetry(&natsclient.Options{
 		Host: conn.Host,
 		Port: conn.Port,
 		Auth: bus.AuthOptions(conn.Auth),
 		Name: conn.ClientName,
-	})
+	}, mp))
 	if err != nil {
 		return nil, err
 	}
 
-	type bucket struct {
-		kv   *jetstream.KeyValue
-		name string
-		cfg  jetstream.KeyValueConfig
+	c := &Connection{
+		NATS:           nc,
+		JobsBucket:     bus.JobKV(namespace, cfg.KV).Bucket,
+		RegistryBucket: bus.RegistryKV(namespace, cfg.Registry).Bucket,
 	}
-
-	c := &Connection{NATS: nc}
-	buckets := []bucket{
-		{&c.JobsKV, "jobs", bus.JobKV(namespace, cfg.KV)},
-		{&c.RegistryKV, "registry", bus.RegistryKV(namespace, cfg.Registry)},
+	buckets := []jetstream.KeyValueConfig{
+		bus.JobKV(namespace, cfg.KV),
+		bus.RegistryKV(namespace, cfg.Registry),
 	}
 	if cfg.Facts.Bucket != "" {
-		buckets = append(buckets, bucket{&c.FactsKV, "facts", bus.FactsKV(namespace, cfg.Facts)})
+		facts := bus.FactsKV(namespace, cfg.Facts)
+		c.FactsBucket = facts.Bucket
+		buckets = append(buckets, facts)
 	}
 	if cfg.State.Bucket != "" {
-		buckets = append(buckets, bucket{&c.StateKV, "state", bus.StateKV(namespace, cfg.State)})
+		state := bus.StateKV(namespace, cfg.State)
+		c.StateBucket = state.Bucket
+		buckets = append(buckets, state)
 	}
 	for _, b := range buckets {
-		*b.kv, err = nc.CreateOrUpdateKVBucketWithConfig(ctx, b.cfg)
-		if err != nil {
+		if err := nc.KVCreateOrUpdate(ctx, b); err != nil {
 			bus.Close(nc)
 
-			return nil, fmt.Errorf("create %s KV bucket: %w", b.name, err)
+			return nil, fmt.Errorf("create KV bucket %s: %w", b.Bucket, err)
 		}
 	}
 
 	c.Jobs, err = newFn(log, nc, &Options{
 		Timeout:        timeout,
-		KVBucket:       c.JobsKV,
-		RegistryKV:     c.RegistryKV,
-		FactsKV:        c.FactsKV,
-		StateKV:        c.StateKV,
+		JobsBucket:     c.JobsBucket,
+		RegistryBucket: c.RegistryBucket,
+		FactsBucket:    c.FactsBucket,
+		StateBucket:    c.StateBucket,
 		StreamName:     job.ApplyNamespaceToInfraName(namespace, cfg.Stream.Name),
 		TargetResolver: resolve,
 	})

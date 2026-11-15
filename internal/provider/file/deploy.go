@@ -46,7 +46,7 @@ func (p *Service) Deploy(
 	ctx context.Context,
 	req DeployRequest,
 ) (*DeployResult, error) {
-	content, err := p.objStore.GetBytes(ctx, req.ObjectName)
+	content, err := p.objStore.ObjectGetBytes(ctx, p.objBucket, req.ObjectName)
 	if err != nil {
 		return nil, fmt.Errorf("file deploy: get object %q: %w", req.ObjectName, err)
 	}
@@ -58,7 +58,7 @@ func (p *Service) Deploy(
 	if contentType == "" {
 		contentType = "raw"
 
-		info, infoErr := p.objStore.GetInfo(ctx, req.ObjectName)
+		info, infoErr := p.objStore.ObjectInfo(ctx, p.objBucket, req.ObjectName)
 		if infoErr == nil && info.Headers != nil {
 			if ct := info.Headers.Get("Osapi-Content-Type"); ct != "" {
 				contentType = ct
@@ -120,7 +120,7 @@ func (p *Service) Deploy(
 		return nil, fmt.Errorf("file deploy: create directory %q: %w", dir, err)
 	}
 
-	if err := atomicfile.Write(p.fs, req.Path, content, mode); err != nil {
+	if err := atomicfile.Write(ctx, p.fs, req.Path, content, mode); err != nil {
 		return nil, fmt.Errorf("file deploy: write file %q: %w", req.Path, err)
 	}
 
@@ -267,7 +267,7 @@ func (p *Service) putState(
 		return fmt.Errorf("file deploy: marshal file state: %w", err)
 	}
 
-	if _, err := p.stateKV.Put(ctx, stateKey, stateBytes); err != nil {
+	if _, err := p.stateKV.KVPut(ctx, p.stateBucket, stateKey, stateBytes); err != nil {
 		return fmt.Errorf("file deploy: update file state: %w", err)
 	}
 

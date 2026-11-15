@@ -37,7 +37,7 @@ func (p *Service) Status(
 ) (*StatusResult, error) {
 	stateKey := managedfile.StateKey(p.hostname, req.Path)
 
-	entry, err := p.stateKV.Get(ctx, stateKey)
+	entry, err := p.stateKV.KVGet(ctx, p.stateBucket, stateKey)
 	if err != nil {
 		return &StatusResult{
 			Path:   req.Path,
