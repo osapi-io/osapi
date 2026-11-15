@@ -1,26 +1,53 @@
 @import "tailwindcss";
 
+/* Colors come from the CLI's palette in internal/cli/theme.go, which comes
+   from the logo (asset/logo-dark.svg), so the dashboard and a terminal read
+   alike. A token without a CLI color says so. */
 @theme {
   --color-background: #0a0a0a;
   --color-card: #000000;
-  --color-primary: #67ea94;
+  --color-primary: #67ea94; /* the CLI's Green (OKStyle) */
   --color-primary-dark: #1a8a50;
-  --color-primary-light: #81efa9;
-  --color-accent: #7c3aed;
-  --color-accent-light: #a78bfa;
+  --color-primary-light: #67ea94; /* one green, the CLI's */
+  --color-accent: #2300fd; /* LogoBlue */
+  --color-accent-light: #6b5cff; /* LogoBlueText */
   --color-text: #e2e8f0;
-  --color-text-muted: #6b7280;
-  /* A location a person opens, such as a sub-component's url. The CLI's
-     URLStyle color (LogoCyan), so a link is never mistaken for a status. */
-  --color-link: #00d5ff;
-  --color-border: rgba(103, 234, 148, 0.15);
-  --color-border-accent: rgba(124, 58, 237, 0.2);
-  --color-status-ready: #67ea94;
-  --color-status-pending: #f59e0b;
-  --color-status-running: #3b82f6;
+  --color-text-muted: #8a8a8a; /* LogoGray, the CLI's dim */
+  /* Chrome is neutral, so green keeps one meaning: ok. */
+  --color-border: rgba(255, 255, 255, 0.09);
+  --color-border-accent: rgba(35, 0, 253, 0.2); /* LogoBlue */
+  --color-status-ready: #67ea94; /* the CLI's Green */
+  --color-status-pending: #ffd787; /* the CLI's Yellow, 256-color 222 */
+  --color-status-running: #3b82f6; /* no CLI color */
   --color-status-error: #ef4444;
-  --color-status-applied: #22aa62;
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --color-status-applied: #67ea94; /* the CLI colors "changed" with OKStyle */
+  /* The system's own mono first: JetBrains Mono is not bundled, and a
+     missing font fell back to a serif Courier. */
+  --font-mono: ui-monospace, "SF Mono", Menlo, "JetBrains Mono", monospace;
+  /* Section headings rotate through the logo, as the CLI's headings do
+     (nextHeadingColor in internal/cli/theme.go). */
+  --color-heading-1: #00d5ff; /* LogoCyan */
+  --color-heading-2: #ff00ff; /* LogoMagenta */
+  --color-heading-3: #ffd100; /* LogoYellow */
+  --color-heading-4: #45ae17; /* LogoGreen, darker than the ok green */
+  --color-heading-5: #6b5cff; /* LogoBlueText */
+}
+
+/* Set by PageLayout in page order; see the heading tokens above. */
+[data-heading-color="1"] {
+  color: var(--color-heading-1);
+}
+[data-heading-color="2"] {
+  color: var(--color-heading-2);
+}
+[data-heading-color="3"] {
+  color: var(--color-heading-3);
+}
+[data-heading-color="4"] {
+  color: var(--color-heading-4);
+}
+[data-heading-color="5"] {
+  color: var(--color-heading-5);
 }
 
 body {

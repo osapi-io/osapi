@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { spinnerColor } from "@/lib/spinner-color";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { ContentArea } from "@/components/layout/content-area";
 import { AgentCard } from "@/components/domain/agent-card";
@@ -136,7 +137,7 @@ export function Dashboard() {
 
       {loading && (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className={`h-8 w-8 animate-spin ${spinnerColor}`} />
         </div>
       )}
 

@@ -98,7 +98,7 @@ export function TargetPicker({
             <div ref={listRef}>
               {Object.entries(grouped).map(([group, opts]) => (
                 <div key={group}>
-                  <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
+                  <p className="px-3 pb-1 pt-2 text-xs font-semibold text-text-muted">
                     {groupLabel(group as TargetOption["group"])}
                   </p>
                   {opts.map((opt) => {

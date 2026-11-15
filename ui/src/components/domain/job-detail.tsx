@@ -243,9 +243,7 @@ export function JobDetail({ jobId, inline, panel }: JobDetailProps) {
         {/* Error */}
         {job.error && (
           <div className="mt-2 rounded bg-status-error/5 px-3 py-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-status-error">
-              Error
-            </p>
+            <p className="text-xs font-semibold text-status-error">Error</p>
             <Text variant="error" as="p" className="mt-0.5">
               {job.error}
             </Text>
@@ -255,7 +253,7 @@ export function JobDetail({ jobId, inline, panel }: JobDetailProps) {
         {/* Timeline */}
         {job.timeline && job.timeline.length > 0 && (
           <div className="mt-3 border-t border-border/30 pt-2">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-muted">
+            <p className="mb-1 text-xs font-semibold text-text-muted">
               Timeline
             </p>
             {job.timeline.map((event, i) => (
@@ -267,7 +265,7 @@ export function JobDetail({ jobId, inline, panel }: JobDetailProps) {
         {/* Operation */}
         {job.operation && Object.keys(job.operation).length > 0 && (
           <div className="mt-3 border-t border-border/30 pt-2">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-muted">
+            <p className="mb-1 text-xs font-semibold text-text-muted">
               Operation
             </p>
             <CodeBlock variant="muted">

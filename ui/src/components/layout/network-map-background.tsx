@@ -25,7 +25,10 @@ interface NodeStatus {
   lastFloodId: string | null;
 }
 
-const PRIMARY = { r: 103, g: 234, b: 148 };
+// The network glows in the logo's dark blue (#2300fd), not the ok green.
+const PRIMARY = { r: 35, g: 0, b: 253 };
+// A flood sparkles white as it moves through the network.
+const SPARKLE = { r: 255, g: 255, b: 255 };
 const BG_CENTER = "#0a0a0a";
 const BG_EDGE = "#030712";
 
@@ -169,7 +172,7 @@ export function NetworkMapBackground() {
     };
 
     const drawWaves = () => {
-      const c = PRIMARY;
+      const c = SPARKLE;
       wavesRef.current = wavesRef.current.filter((wave) => {
         const ratio = wave.radius / wave.maxRadius;
         const genFade = Math.max(0.2, 1 - wave.generation * 0.15);
@@ -287,7 +290,9 @@ export function NetworkMapBackground() {
           pos.y,
           glowRadius,
         );
-        grad.addColorStop(0, `rgba(${c.r}, ${c.g}, ${c.b}, ${glowAlpha})`);
+        const g =
+          state === "transmitting" || state === "receiving" ? SPARKLE : c;
+        grad.addColorStop(0, `rgba(${g.r}, ${g.g}, ${g.b}, ${glowAlpha})`);
         grad.addColorStop(1, "rgba(0, 0, 0, 0)");
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, glowRadius, 0, Math.PI * 2);
@@ -296,7 +301,7 @@ export function NetworkMapBackground() {
 
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${c.r}, ${c.g}, ${c.b}, ${nodeAlpha})`;
+        ctx.fillStyle = `rgba(${g.r}, ${g.g}, ${g.b}, ${nodeAlpha})`;
         ctx.fill();
       }
     };
