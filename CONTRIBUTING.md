@@ -92,6 +92,11 @@ just deps
 - **`internal/behavior/`.** The framework that defines behaviors, and its tools:
   the host that a provider is built from, the test harnesses, the spec builder
   and the generator.
+- **`internal/skills/`.** The agent skills, in `resources/`, and the code that
+  installs them (`osapi init`) and serves them (`osapi skill`). Each skill is
+  one directory, with its references and its evals.
+  [Developing a skill][developing-a-skill] tells how to change, add and measure
+  a skill.
 - **`pkg/sdk/`.** The Go SDK. A program uses it to access the REST API.
 - **`ui/`.** React 19, TypeScript, Vite and Tailwind CSS v4. The build embeds
   the UI in the Go binary.
@@ -114,6 +119,18 @@ just deps
   the type of the agent.
 - **`cmd/` imports `pkg/` and `internal/`.** It connects them. It holds no logic
   of its own that needs a test.
+- **Embedded files go in `resources/` of the package that owns them.** The
+  package that reads the files also embeds them, with
+  `//go:embed resources/...`. Do not put embedded files in `cmd/`, or in a
+  package that only passes them to a different package. The current resources:
+  - `internal/skills/resources/`: the agent skills. `skills/` has the skills
+    that `osapi init` installs. `dev-skills/` has the skills that `osapi skill`
+    serves to a checkout of osapi.
+  - `internal/behavior/resources/scaffold/`: the templates that
+    `osapi behavior new` writes.
+  - `internal/agent/resources/templates/`: the protected `osapi/` objects that
+    the agent puts in the object store.
+  - `ui/dist/`: the build of the UI, which `ui` embeds.
 
 [Architecture][system-architecture] tells how the processes work together. The
 [specifications](https://github.com/osapi-io/specs/tree/main/components/osapi)
@@ -607,6 +624,7 @@ Open a [Discussion] on GitHub.
 [bun]: https://bun.sh
 [configuration]: docs/docs/sidebar/usage/configuration.md
 [conventional commits]: https://www.conventionalcommits.org
+[developing-a-skill]: docs/docs/sidebar/development/skills.md
 [discussion]: https://github.com/osapi-io/osapi/discussions
 [docusaurus]: https://docusaurus.io
 [eslint]: https://eslint.org

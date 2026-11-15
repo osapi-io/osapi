@@ -25,8 +25,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/cli"
-	behaviorcli "github.com/osapi-io/osapi/internal/cli/behavior"
 )
 
 // newResult is what `behavior new --json` prints.
@@ -61,7 +61,7 @@ go doc ./internal/behavior lists every option; internal/behaviors/sysctl is the 
 		root, _ := cmd.Flags().GetString("root")
 		group, _ := cmd.Flags().GetString("group")
 
-		files, err := behaviorcli.Scaffold(root, group, name, doc)
+		files, err := behavior.Scaffold(root, group, name, doc)
 		if err != nil {
 			return err
 		}

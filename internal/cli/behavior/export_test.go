@@ -20,21 +20,7 @@
 
 package behavior
 
-import "io/fs"
-
 // ResetRegistered forgets every registered command, for testing.
 func ResetRegistered() {
 	registered = nil
-}
-
-// SetScaffoldFiles swaps the scaffold templates, for testing.
-func SetScaffoldFiles(
-	fsys fs.FS,
-) {
-	scaffoldFiles = fsys
-}
-
-// ResetScaffoldFiles puts the embedded scaffold templates back.
-func ResetScaffoldFiles() {
-	scaffoldFiles = scaffoldFS
 }

@@ -178,7 +178,7 @@ field is a flag. `osapi behavior validate` fails a field that no flag can hold.
 
 ## methods.go and provider.go
 
-[The services a behavior uses](https://github.com/osapi-io/osapi/blob/main/.claude/skills/build-a-behavior/references/services.md),
+[The services a behavior uses](https://github.com/osapi-io/osapi/blob/main/internal/skills/resources/dev-skills/build-a-behavior/references/services.md),
 in the build-a-behavior skill, lists what the agent hands a provider
 (filesystem, commands, files osapi owns, secrets, settings), how the tests fake
 each, and which existing provider to copy for each kind of state.

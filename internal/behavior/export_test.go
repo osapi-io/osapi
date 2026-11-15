@@ -20,10 +20,24 @@
 
 package behavior
 
+import "io/fs"
+
 // ResetInstruments drops the instruments, so a test can exercise the first
 // call falling back to the global meter provider.
 func ResetInstruments() {
 	instMu.Lock()
 	inst = nil
 	instMu.Unlock()
+}
+
+// SetScaffoldFiles swaps the scaffold templates, for testing.
+func SetScaffoldFiles(
+	fsys fs.FS,
+) {
+	scaffoldFiles = fsys
+}
+
+// ResetScaffoldFiles puts the embedded scaffold templates back.
+func ResetScaffoldFiles() {
+	scaffoldFiles = scaffoldFS
 }

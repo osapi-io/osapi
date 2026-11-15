@@ -61,7 +61,7 @@ var testTemplateData = []byte("#!/bin/sh\necho hello\n")
 // testTemplateFS returns a fake fs.FS with a single template file.
 func testTemplateFS() fstest.MapFS {
 	return fstest.MapFS{
-		"templates/osapi/test.tmpl": &fstest.MapFile{
+		"resources/templates/osapi/test.tmpl": &fstest.MapFile{
 			Data: testTemplateData,
 		},
 	}
@@ -108,7 +108,7 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			name: "when directory contains only .gitkeep skips it",
 			setupFunc: func() {
 				agent.SetEmbeddedFS(fstest.MapFS{
-					"templates/.gitkeep": &fstest.MapFile{Data: []byte{}},
+					"resources/templates/.gitkeep": &fstest.MapFile{Data: []byte{}},
 				})
 			},
 			setupMock: func(
@@ -304,7 +304,7 @@ type errorWalkFS struct{}
 func (e *errorWalkFS) Open(
 	name string,
 ) (fs.File, error) {
-	if name == "templates" {
+	if name == "resources/templates" {
 		return &errorDir{}, nil
 	}
 
