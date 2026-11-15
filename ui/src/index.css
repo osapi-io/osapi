@@ -10,9 +10,6 @@
   --color-accent-light: #a78bfa;
   --color-text: #e2e8f0;
   --color-text-muted: #6b7280;
-  /* A location a person opens, such as a sub-component's url. The CLI's
-     URLStyle color (LogoCyan), so a link is never mistaken for a status. */
-  --color-link: #00d5ff;
   --color-border: rgba(103, 234, 148, 0.15);
   --color-border-accent: rgba(124, 58, 237, 0.2);
   --color-status-ready: #67ea94;
