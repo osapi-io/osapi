@@ -27,6 +27,7 @@ import (
 
 	"github.com/labstack/echo/v5"
 
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
@@ -91,9 +92,15 @@ func text[T any](
 	return "", true
 }
 
-// Valid checks in's validate tags.
+// Valid checks in's validate tags, then each template field: that it parses,
+// and that each .Vars.<name> it reads is in its vars. It is the check the API
+// makes before a job is queued.
 func Valid(
 	in any,
 ) (string, bool) {
-	return validation.Struct(in)
+	if msg, ok := validation.Struct(in); !ok {
+		return msg, false
+	}
+
+	return behavior.CheckTemplates(in)
 }

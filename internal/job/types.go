@@ -22,6 +22,8 @@ package job
 
 import (
 	"encoding/json"
+	"reflect"
+	"strings"
 	"time"
 
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
@@ -550,6 +552,20 @@ type FactsRegistration struct {
 	PrimaryInterface string             `json:"primary_interface,omitempty"`
 	Routes           []Route            `json:"routes,omitempty"`
 	Facts            map[string]any     `json:"facts,omitempty"`
+}
+
+// FactKeys are the keys that a template reads under .Facts: the JSON names of
+// FactsRegistration, as the agent hands its facts to a provider. facts holds
+// what each collector adds, under its own keys.
+func FactKeys() []string {
+	t := reflect.TypeFor[FactsRegistration]()
+	keys := make([]string, 0, t.NumField())
+	for i := range t.NumField() {
+		name, _, _ := strings.Cut(t.Field(i).Tag.Get("json"), ",")
+		keys = append(keys, name)
+	}
+
+	return keys
 }
 
 // Condition type constants re-exported from the SDK.

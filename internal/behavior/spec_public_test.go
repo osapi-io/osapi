@@ -151,7 +151,7 @@ func (s *SpecPublicTestSuite) TestSpecHasEveryFieldTag() {
 				}
 				sel, ok := call.Fun.(*ast.SelectorExpr)
 				lit, isLit := call.Args[0].(*ast.BasicLit)
-				if ok && isLit && sel.Sel.Name == "Get" &&
+				if ok && isLit && (sel.Sel.Name == "Get" || sel.Sel.Name == "Lookup") &&
 					get.MatchString("Tag.Get("+lit.Value+")") {
 					tag, _ := strconv.Unquote(lit.Value)
 					tags = append(tags, tag)
@@ -244,6 +244,15 @@ func (s *SpecPublicTestSuite) TestCurrentSpec() {
 	s.Equal("Files it keeps. Methods: get, update.", blocks[0].Does)
 	s.Contains(blocks[0].When, "osapi behavior get --name files")
 	s.Len(behavior.Spec.Of(behavior.KindBlock), 0, "Spec itself is not changed")
+
+	for _, t := range behavior.CurrentSpec("architecture", "fqdn").Of(behavior.KindTemplate) {
+		if t.Name == ".Facts.<key>" {
+			s.Contains(t.Does, "The keys: architecture, fqdn.")
+		}
+	}
+	for _, t := range behavior.Spec.Of(behavior.KindTemplate) {
+		s.NotContains(t.Does, "The keys:", "Spec itself is not changed")
+	}
 }
 
 func (s *SpecPublicTestSuite) TestTestChecks() {

@@ -77,6 +77,9 @@ const (
 	//
 	// Checks has the requirement and the fix of each rule.
 	RuleSpan = "span"
+	// RuleTemplate: a field tagged template:"<vars>" is a string, and <vars>
+	// names an input field of type map[string]string.
+	RuleTemplate = "template"
 )
 
 // synonyms are method names that mean a standard verb, and the verb to use.
@@ -178,8 +181,8 @@ func ValidateBehavior(
 		for _, m := range b.Methods {
 			for _, name := range unflaggable(m.In) {
 				add(m.Name, RuleSurface,
-					"input field %s cannot be a CLI flag; flags hold a string, bool, number or "+
-						"float, so give it one of those types or leave CLI off", name)
+					"input field %s cannot be a CLI flag; flags hold a string, bool, number, "+
+						"float or map[string]string, so give it one of those types or leave CLI off", name)
 			}
 		}
 	}
@@ -269,6 +272,20 @@ func ValidateBehavior(
 				}
 				if f.IsExported() && !Secret(f) {
 					recordable = true
+				}
+			}
+			for _, tf := range TemplateFields(m.In) {
+				f := m.In.FieldByIndex(tf.index)
+				switch {
+				case f.Type.Kind() != reflect.String:
+					add(m.Name, RuleTemplate, "input field %s is tagged template but is %s, not a string",
+						tf.Field, f.Type)
+				case tf.vars == nil:
+					add(m.Name, RuleTemplate, "input field %s names %q for its vars, which the input does not have",
+						tf.Field, tf.Vars)
+				case m.In.FieldByIndex(tf.vars).Type != reflect.TypeFor[map[string]string]():
+					add(m.Name, RuleTemplate, "input field %s is the vars of %s but is %s, not map[string]string",
+						tf.Vars, tf.Field, m.In.FieldByIndex(tf.vars).Type)
 				}
 			}
 			if m.Verb == VerbWrite && recordable && len(m.SpanInputs()) == 0 {
@@ -417,6 +434,9 @@ func unflaggable(
 		f := in.Field(i)
 		name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
 		if !f.IsExported() || name == "" || name == "-" {
+			continue
+		}
+		if f.Type == reflect.TypeFor[map[string]string]() {
 			continue
 		}
 		switch f.Type.Kind() {

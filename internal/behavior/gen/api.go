@@ -35,7 +35,6 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
 	"github.com/osapi-io/osapi/internal/behavior/server"
-	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // statusNames are the net/http names of the codes a behavior answers.
@@ -461,11 +460,19 @@ func validationCases(
 		}
 	}
 
+	for _, tf := range behavior.TemplateFields(m.In) {
+		c, err := request(b, m, "server1", withText(input, tf.Field, "{{.Vars.osapi_missing}}"))
+		if err != nil {
+			return nil, err
+		}
+		add(c, "when "+tf.Field+" reads a var that "+tf.Vars+" does not have, it is a 400")
+	}
+
 	for _, r := range m.Refusals {
 		// A refusal the API cannot see, such as a parameter osapi does not
 		// manage, is the provider's, which behaviortest checks; and a keyed
 		// method with no key has no route.
-		if _, ok := validation.Struct(r.Input); ok {
+		if _, ok := server.Valid(r.Input); ok {
 			continue
 		}
 		if m.KeyField != "" {
@@ -706,6 +713,24 @@ func without(
 	v := reflect.New(reflect.TypeOf(input)).Elem()
 	v.Set(reflect.ValueOf(input))
 	v.Field(i).SetZero()
+
+	return v.Interface()
+}
+
+// withText is input with its string field named name, by JSON name, set to
+// value.
+func withText(
+	input any,
+	name string,
+	value string,
+) any {
+	v := reflect.New(reflect.TypeOf(input)).Elem()
+	v.Set(reflect.ValueOf(input))
+	for i := range v.NumField() {
+		if behavior.JSONName(v.Type().Field(i)) == name {
+			v.Field(i).SetString(value)
+		}
+	}
 
 	return v.Interface()
 }

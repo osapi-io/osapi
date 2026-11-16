@@ -104,6 +104,16 @@ func (s *BehaviorcmdPublicTestSuite) TestFlags() {
 			},
 		},
 		{
+			name: "when a field is a map of strings, it is a key=value flag",
+			t: reflect.TypeFor[struct {
+				Vars map[string]string `json:"vars" doc:"Template vars"`
+				Nums map[string]int    `json:"nums"`
+			}](),
+			want: []command.Flag{
+				{Name: "vars", JSON: "vars", Kind: reflect.Map, Usage: "Template vars", Index: 0},
+			},
+		},
+		{
 			name: "when a field is secret, its help says so",
 			t: reflect.TypeFor[struct {
 				Token string `json:"token" doc:"The token" secret:"true"`
@@ -131,6 +141,13 @@ func (s *BehaviorcmdPublicTestSuite) TestArgs() {
 		[]string{"--key", "k", "--count", "2"},
 		command.Args(input{Key: "k", Count: 2, Tags: []string{"a"}}),
 		"zero fields and fields no flag holds are left out",
+	)
+	s.Equal(
+		[]string{"--vars", "a=1", "--vars", "b=2"},
+		command.Args(struct {
+			Vars map[string]string `json:"vars"`
+		}{Vars: map[string]string{"b": "2", "a": "1"}}),
+		"a map is one flag for each key, in order",
 	)
 }
 

@@ -37,6 +37,10 @@ The rules:
 - `span`: A write records on its span the item that it acts on, so that a trace
   shows what each call changed. Fix: Name the item with .Key("field"). A method
   without a key, such as a create, tags that field telemetry:"attr".
+- `template`: A field tagged template:"&lt;vars&gt;" is a string, and
+  &lt;vars&gt; is the JSON name of an input field of type map[string]string.
+  Fix: Tag the string field that holds the template with template:"vars", and
+  add Vars map[string]string `json:"vars"` to the input.
 - `secret`: No input field is both secret:"true" and telemetry:"attr". Fix:
   Remove telemetry:"attr" from the secret field. A secret is never recorded on a
   span.

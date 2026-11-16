@@ -26,7 +26,9 @@ package command
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -41,7 +43,8 @@ type Flag struct {
 	Name string
 	// JSON is the field's JSON name, the key the input is sent under.
 	JSON string
-	// Kind is the field's kind: string, bool, int or float.
+	// Kind is the field's kind: string, bool, int, float, or map for a
+	// map[string]string, which takes key=value.
 	Kind reflect.Kind
 	// Usage is the field's doc tag.
 	Usage string
@@ -68,7 +71,7 @@ func Flags(
 			continue
 		}
 
-		kind := flagKind(f.Type.Kind())
+		kind := flagKind(f.Type)
 		if kind == reflect.Invalid {
 			continue
 		}
@@ -109,6 +112,14 @@ func Args(
 	for _, f := range Flags(v.Type()) {
 		fv := v.Field(f.Index)
 		if fv.IsZero() {
+			continue
+		}
+		if f.Kind == reflect.Map {
+			pairs, _ := fv.Interface().(map[string]string)
+			for _, k := range slices.Sorted(maps.Keys(pairs)) {
+				args = append(args, "--"+f.Name, k+"="+pairs[k])
+			}
+
 			continue
 		}
 		args = append(args, "--"+f.Name, fmt.Sprint(fv.Interface()))
@@ -247,9 +258,12 @@ func jsonName(
 }
 
 func flagKind(
-	k reflect.Kind,
+	t reflect.Type,
 ) reflect.Kind {
-	switch k {
+	if t == reflect.TypeFor[map[string]string]() {
+		return reflect.Map
+	}
+	switch t.Kind() {
 	case reflect.String:
 		return reflect.String
 	case reflect.Bool:

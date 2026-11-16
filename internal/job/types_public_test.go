@@ -299,6 +299,25 @@ func (suite *TypesPublicTestSuite) TestAgentInfoFactsFieldsJSONRoundTrip() {
 	}
 }
 
+func (suite *TypesPublicTestSuite) TestFactKeys() {
+	data, err := json.Marshal(job.FactsRegistration{
+		Architecture: "arm64", KernelVersion: "6.1", CPUCount: 2, FQDN: "h.example",
+		ServiceMgr: "systemd", PackageMgr: "apt", Containerized: true,
+		Interfaces:       []job.NetworkInterface{{Name: "eth0"}},
+		PrimaryInterface: "eth0", Routes: []job.Route{{Destination: "0.0.0.0"}},
+		Facts: map[string]any{"x": 1},
+	})
+	suite.Require().NoError(err)
+	var got map[string]any
+	suite.Require().NoError(json.Unmarshal(data, &got))
+
+	keys := job.FactKeys()
+	suite.Len(keys, len(got), "one key for each field a template can read")
+	for _, k := range keys {
+		suite.Contains(got, k)
+	}
+}
+
 func TestTypesPublicTestSuite(
 	t *testing.T,
 ) {
