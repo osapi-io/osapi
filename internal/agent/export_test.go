@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"io/fs"
 	"log/slog"
+	"os"
 	osexec "os/exec"
 	"time"
 
@@ -905,4 +906,43 @@ func ExportRecordOutcome(
 	requestType job.Type,
 ) {
 	recordOutcome(span, response, requestType)
+}
+
+// SetPingRangePath overrides the ping_group_range path for testing.
+func SetPingRangePath(
+	p string,
+) {
+	pingRangePath = p
+}
+
+// ResetPingRangePath restores the default ping_group_range path.
+func ResetPingRangePath() {
+	pingRangePath = "/proc/sys/net/ipv4/ping_group_range"
+}
+
+// SetProcessGroups overrides the groups of the agent for testing.
+func SetProcessGroups(
+	fn func() ([]int, error),
+) {
+	processGroups = fn
+}
+
+// ResetProcessGroups restores the groups of the agent.
+func ResetProcessGroups() {
+	processGroups = defaultProcessGroups
+}
+
+// ExportDefaultProcessGroups exposes defaultProcessGroups for testing.
+var ExportDefaultProcessGroups = defaultProcessGroups
+
+// SetGetgroups overrides os.Getgroups for testing.
+func SetGetgroups(
+	fn func() ([]int, error),
+) {
+	getgroups = fn
+}
+
+// ResetGetgroups restores os.Getgroups.
+func ResetGetgroups() {
+	getgroups = os.Getgroups
 }

@@ -26,9 +26,12 @@ import (
 	"time"
 )
 
-// replyTimeout is how long a ping waits for its replies. It is below the
-// timeout of Do, so the pinger stops first and reports its statistics.
+// replyTimeout is how long a ping waits for its replies. It is below
+// DefaultTimeout, so the pinger stops first and reports its statistics.
 const replyTimeout = 4 * time.Second
+
+// DefaultTimeout is how long Do waits for the whole ping.
+const DefaultTimeout = 5 * time.Second
 
 // Do pings the given host and returns the ping statistics or an error.
 // It returns a Result struct, and an error if something goes wrong.
@@ -60,7 +63,7 @@ func (u *Debian) Do(
 	pinger.SetTimeout(replyTimeout)
 
 	// Create a context with a timeout for the entire ping operation
-	timeout := 5 * time.Second
+	timeout := u.Timeout
 	// The timeout is under the job's context, so a job that ends stops it.
 	ctx, cancel := context.WithTimeout(job, timeout)
 	defer cancel()

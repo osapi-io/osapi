@@ -143,8 +143,15 @@ as root. The kernel permits that socket only for the groups in
 `net.ipv4.ping_group_range`. On Debian, Ubuntu and Fedora, systemd sets the
 range to each group, in `/usr/lib/sysctl.d/50-default.conf`. The default of the
 kernel is `1 0`, which permits no group. Thus on a host without that file, each
-ping fails with a timeout. The preflight checks do not check the setting. To
-permit each group:
+ping fails at once with `socket: permission denied`. The agent checks the
+setting at each start, also without privilege escalation, and logs a warning
+when no group of the agent is in the range:
+
+```
+WRN a ping from this agent fails error="no group of the agent [0] is in net.ipv4.ping_group_range (1 0); each ping fails"
+```
+
+To permit each group:
 
 ```bash
 echo 'net.ipv4.ping_group_range = 0 2147483647' | sudo tee /etc/sysctl.d/90-osapi-ping.conf

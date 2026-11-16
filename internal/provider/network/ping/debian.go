@@ -36,11 +36,15 @@ type Debian struct {
 	provider.FactsAware
 
 	NewPingerFn func(address string) (Pinger, error)
+	// Timeout is how long Do waits for the whole ping, under the job's
+	// context. The constructor sets DefaultTimeout.
+	Timeout time.Duration
 }
 
 // NewDebianProvider factory to create a new Debian instance.
 func NewDebianProvider() *Debian {
 	return &Debian{
+		Timeout: DefaultTimeout,
 		NewPingerFn: func(address string) (Pinger, error) {
 			rawPinger, err := probing.NewPinger(address)
 			if err != nil {

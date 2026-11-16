@@ -22,6 +22,7 @@ package ping_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -38,6 +39,8 @@ type DarwinDoPublicTestSuite struct {
 	suite.Suite
 
 	ctrl *gomock.Controller
+	// release ends the Run of a ping that times out, when the test ends.
+	release chan struct{}
 }
 
 func (suite *DarwinDoPublicTestSuite) SetupTest() {
@@ -46,6 +49,11 @@ func (suite *DarwinDoPublicTestSuite) SetupTest() {
 
 func (suite *DarwinDoPublicTestSuite) SetupSubTest() {
 	suite.SetupTest()
+	suite.release = make(chan struct{})
+}
+
+func (suite *DarwinDoPublicTestSuite) TearDownSubTest() {
+	close(suite.release)
 }
 
 func (suite *DarwinDoPublicTestSuite) TearDownTest() {
@@ -129,9 +137,11 @@ func (suite *DarwinDoPublicTestSuite) TestDo() {
 				mock.EXPECT().SetCount(3)
 				mock.EXPECT().SetPrivileged(true)
 				mock.EXPECT().SetTimeout(4 * time.Second)
+				// Run ends only when the test ends, so Do times out first.
 				mock.EXPECT().Run().DoAndReturn(func() error {
-					time.Sleep(10 * time.Second)
-					return nil
+					<-suite.release
+
+					return errors.New("released")
 				})
 				// The goroutine may call Statistics() after timeout
 				mock.EXPECT().Statistics().Return(&probing.Statistics{}).AnyTimes()
@@ -141,7 +151,7 @@ func (suite *DarwinDoPublicTestSuite) TestDo() {
 			address: "1.1.1.1",
 			validateFunc: func(_ *ping.Result, err error) {
 				suite.Error(err)
-				suite.Contains(err.Error(), "ping operation timed out after 5s")
+				suite.Contains(err.Error(), "ping operation timed out after 50ms")
 			},
 		},
 	}
@@ -151,6 +161,8 @@ func (suite *DarwinDoPublicTestSuite) TestDo() {
 			mock := tc.setupMock()
 
 			darwin := ping.NewDarwinProvider()
+			// A short timeout, so the case that times out does not wait 5s.
+			darwin.Timeout = 50 * time.Millisecond
 			if mock != nil {
 				darwin.NewPingerFn = func(_ string) (ping.Pinger, error) {
 					return mock, nil

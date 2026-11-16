@@ -21,6 +21,7 @@
 package agent_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -64,6 +65,8 @@ type AgentPublicTestSuite struct {
 	appFs         avfs.VFS
 	appConfig     config.Config
 	logger        *slog.Logger
+	// startLog is what an agent logs when a case gives it its own logger.
+	startLog *bytes.Buffer
 }
 
 func (s *AgentPublicTestSuite) getFreePort() int {
@@ -349,10 +352,22 @@ func (s *AgentPublicTestSuite) TestStart() {
 					Enabled: true,
 				}
 
+				// The kernel default permits no group a ping: the agent warns
+				// at each start, before the preflight.
+				rangePath := filepath.Join(s.T().TempDir(), "ping_group_range")
+				s.Require().NoError(os.WriteFile(rangePath, []byte("1\t0\n"), 0o600))
+				agent.SetPingRangePath(rangePath)
+				agent.SetProcessGroups(func() ([]int, error) { return []int{0}, nil })
+				s.T().Cleanup(func() {
+					agent.ResetPingRangePath()
+					agent.ResetProcessGroups()
+				})
+				s.startLog = &bytes.Buffer{}
+
 				return newTestAgent(newTestAgentParams{
 					appFs:           s.appFs,
 					appConfig:       cfg,
-					logger:          s.logger,
+					logger:          slog.New(slog.NewTextHandler(s.startLog, nil)),
 					jobClient:       s.mockJobClient,
 					streamName:      "test-stream",
 					hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
@@ -371,6 +386,8 @@ func (s *AgentPublicTestSuite) TestStart() {
 				// Agent should not have started consumers, so IsReady fails.
 				err := a.IsReady()
 				s.Error(err)
+				s.Contains(s.startLog.String(), "a ping from this agent fails")
+				s.Contains(s.startLog.String(), "net.ipv4.ping_group_range (1 0)")
 			},
 		},
 		{

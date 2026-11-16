@@ -22,6 +22,7 @@ package ping_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -37,6 +38,8 @@ type DebianDoPublicTestSuite struct {
 	suite.Suite
 
 	ctrl *gomock.Controller
+	// release ends the Run of a ping that times out, when the test ends.
+	release chan struct{}
 }
 
 func (suite *DebianDoPublicTestSuite) SetupTest() {
@@ -45,6 +48,11 @@ func (suite *DebianDoPublicTestSuite) SetupTest() {
 
 func (suite *DebianDoPublicTestSuite) SetupSubTest() {
 	suite.SetupTest()
+	suite.release = make(chan struct{})
+}
+
+func (suite *DebianDoPublicTestSuite) TearDownSubTest() {
+	close(suite.release)
 }
 
 func (suite *DebianDoPublicTestSuite) TearDownTest() {
@@ -111,9 +119,11 @@ func (suite *DebianDoPublicTestSuite) TestDo() {
 				mock := mocks.NewMockPinger(suite.ctrl)
 
 				mocks.SetCommonExpectations(mock)
+				// Run ends only when the test ends, so Do times out first.
 				mock.EXPECT().Run().DoAndReturn(func() error {
-					time.Sleep(10 * time.Second)
-					return nil
+					<-suite.release
+
+					return errors.New("released")
 				})
 
 				return mock
@@ -121,7 +131,7 @@ func (suite *DebianDoPublicTestSuite) TestDo() {
 			address: "1.1.1.1",
 			validateFunc: func(_ *ping.Result, err error) {
 				suite.Error(err)
-				suite.Contains(err.Error(), "ping operation timed out after 5s")
+				suite.Contains(err.Error(), "ping operation timed out after 50ms")
 			},
 		},
 	}
@@ -131,6 +141,8 @@ func (suite *DebianDoPublicTestSuite) TestDo() {
 			mock := tc.setupMock()
 
 			debian := ping.NewDebianProvider()
+			// A short timeout, so the case that times out does not wait 5s.
+			debian.Timeout = 50 * time.Millisecond
 			if mock != nil {
 				debian.NewPingerFn = func(_ string) (ping.Pinger, error) {
 					return mock, nil
