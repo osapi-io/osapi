@@ -28,26 +28,11 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 )
-
-// JetStream is the part of a NATS client that Setup calls.
-type JetStream interface {
-	CreateOrUpdateStreamWithConfig(
-		ctx context.Context,
-		streamConfig jetstream.StreamConfig,
-	) error
-	CreateOrUpdateKVBucketWithConfig(
-		ctx context.Context,
-		config jetstream.KeyValueConfig,
-	) (jetstream.KeyValue, error)
-	CreateOrUpdateObjectStore(
-		ctx context.Context,
-		cfg jetstream.ObjectStoreConfig,
-	) (jetstream.ObjectStore, error)
-}
 
 // Prepare connects to NATS with opts, creates each stream and bucket with
 // Setup, then closes the connection.
@@ -64,9 +49,7 @@ func Prepare(
 	}
 	defer Close(nc)
 
-	_, err = Setup(ctx, nc, namespace, cfg)
-
-	return err
+	return Setup(ctx, nc, namespace, cfg)
 }
 
 // Dial connects to NATS with opts.
@@ -82,16 +65,39 @@ func Dial(
 	return nc, nil
 }
 
+// Telemetry turns on the spans and the metrics of nats-client in opts. The
+// spans use the global tracer provider, which tracing sets. The metrics go to
+// mp, the meter provider of the component; nil sends them to the global
+// meter provider, which records nothing unless a program sets one.
+func Telemetry(
+	opts *natsclient.Options,
+	mp *sdkmetric.MeterProvider,
+) *natsclient.Options {
+	opts.Telemetry = true
+	if mp != nil {
+		opts.MeterProvider = mp
+	}
+
+	return opts
+}
+
+// JetStream is the access to NATS that Setup uses. A *natsclient.Client is
+// one.
+type JetStream interface {
+	StreamCreateOrUpdate(ctx context.Context, config jetstream.StreamConfig) error
+	KVCreateOrUpdate(ctx context.Context, config jetstream.KeyValueConfig) error
+	ObjectStoreCreateOrUpdate(ctx context.Context, config jetstream.ObjectStoreConfig) error
+}
+
 // Setup creates or updates each stream and bucket that osapi uses, with the
 // names in namespace. A second run with the same config changes nothing. A
-// bucket with no name in cfg is not made. Setup returns the registry KV
-// bucket, or nil if cfg names none.
+// bucket with no name in cfg is not made.
 func Setup(
 	ctx context.Context,
-	js JetStream,
+	nc JetStream,
 	namespace string,
 	cfg config.NATS,
-) (jetstream.KeyValue, error) {
+) error {
 	streamName := job.ApplyNamespaceToInfraName(namespace, cfg.Stream.Name)
 	streamMaxAge, _ := time.ParseDuration(cfg.Stream.MaxAge)
 
@@ -100,7 +106,7 @@ func Setup(
 		discard = jetstream.DiscardNew
 	}
 
-	if err := js.CreateOrUpdateStreamWithConfig(ctx, jetstream.StreamConfig{
+	if err := nc.StreamCreateOrUpdate(ctx, jetstream.StreamConfig{
 		Name:     streamName,
 		Subjects: []string{job.ApplyNamespaceToSubjects(namespace, cfg.Stream.Subjects)},
 		MaxAge:   streamMaxAge,
@@ -109,17 +115,15 @@ func Setup(
 		Replicas: cfg.Stream.Replicas,
 		Discard:  discard,
 	}); err != nil {
-		return nil, fmt.Errorf("create JOBS stream: %w", err)
+		return fmt.Errorf("create JOBS stream: %w", err)
 	}
 
-	var registry jetstream.KeyValueConfig
 	kvs := []jetstream.KeyValueConfig{
 		JobKV(namespace, cfg.KV),
 		ResponseKV(namespace, cfg.KV),
 	}
 	if cfg.Registry.Bucket != "" {
-		registry = RegistryKV(namespace, cfg.Registry)
-		kvs = append(kvs, registry)
+		kvs = append(kvs, RegistryKV(namespace, cfg.Registry))
 	}
 	if cfg.Facts.Bucket != "" {
 		kvs = append(kvs, FactsKV(namespace, cfg.Facts))
@@ -130,33 +134,28 @@ func Setup(
 	if cfg.FileState.Bucket != "" {
 		kvs = append(kvs, FileStateKV(namespace, cfg.FileState))
 	}
-	var registryKV jetstream.KeyValue
 	for _, kv := range kvs {
-		handle, err := js.CreateOrUpdateKVBucketWithConfig(ctx, kv)
-		if err != nil {
-			return nil, fmt.Errorf("create KV bucket %s: %w", kv.Bucket, err)
-		}
-		if kv.Bucket == registry.Bucket {
-			registryKV = handle
+		if err := nc.KVCreateOrUpdate(ctx, kv); err != nil {
+			return fmt.Errorf("create KV bucket %s: %w", kv.Bucket, err)
 		}
 	}
 
 	if cfg.Audit.Stream != "" {
 		audit := AuditStream(namespace, cfg.Audit)
-		if err := js.CreateOrUpdateStreamWithConfig(ctx, audit); err != nil {
-			return nil, fmt.Errorf("create audit stream %s: %w", audit.Name, err)
+		if err := nc.StreamCreateOrUpdate(ctx, audit); err != nil {
+			return fmt.Errorf("create audit stream %s: %w", audit.Name, err)
 		}
 	}
 
 	if cfg.Objects.Bucket != "" {
 		objects := ObjectStore(namespace, cfg.Objects)
-		if _, err := js.CreateOrUpdateObjectStore(ctx, objects); err != nil {
-			return nil, fmt.Errorf("create Object Store bucket %s: %w", objects.Bucket, err)
+		if err := nc.ObjectStoreCreateOrUpdate(ctx, objects); err != nil {
+			return fmt.Errorf("create Object Store bucket %s: %w", objects.Bucket, err)
 		}
 	}
 
 	dlqMaxAge, _ := time.ParseDuration(cfg.DLQ.MaxAge)
-	if err := js.CreateOrUpdateStreamWithConfig(ctx, jetstream.StreamConfig{
+	if err := nc.StreamCreateOrUpdate(ctx, jetstream.StreamConfig{
 		Name: streamName + "-DLQ",
 		Subjects: []string{
 			"$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES." + streamName + ".*",
@@ -169,8 +168,8 @@ func Setup(
 			"dead_letter_queue": "true",
 		},
 	}); err != nil {
-		return nil, fmt.Errorf("create DLQ stream: %w", err)
+		return fmt.Errorf("create DLQ stream: %w", err)
 	}
 
-	return registryKV, nil
+	return nil
 }

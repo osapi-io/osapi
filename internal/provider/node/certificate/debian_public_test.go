@@ -27,6 +27,8 @@ import (
 	"os"
 	"testing"
 
+	providermocks "github.com/osapi-io/osapi/internal/provider/mocks"
+
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
@@ -48,7 +50,7 @@ type DebianPublicTestSuite struct {
 	logger          *slog.Logger
 	memFs           avfs.VFS
 	mockDeployer    *filemocks.MockDeployer
-	mockStateKV     *jobmocks.MockKeyValue
+	mockStateKV     *providermocks.MockFileState
 	mockExecManager *execmocks.MockManager
 	provider        *certificate.Debian
 }
@@ -58,7 +60,7 @@ func (suite *DebianPublicTestSuite) SetupTest() {
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	suite.memFs = memfs.New()
 	suite.mockDeployer = filemocks.NewMockDeployer(suite.ctrl)
-	suite.mockStateKV = jobmocks.NewMockKeyValue(suite.ctrl)
+	suite.mockStateKV = providermocks.NewMockFileState(suite.ctrl)
 	suite.mockExecManager = execmocks.NewMockManager(suite.ctrl)
 
 	_ = suite.memFs.MkdirAll("/usr/share/ca-certificates", 0o755)
@@ -68,7 +70,7 @@ func (suite *DebianPublicTestSuite) SetupTest() {
 		suite.logger,
 		suite.memFs,
 		suite.mockDeployer,
-		suite.mockStateKV,
+		suite.mockStateKV, "file-state",
 		suite.mockExecManager,
 		testHostname,
 	)
@@ -451,7 +453,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
 				mockEntry.EXPECT().Value().Return(stateData).AnyTimes()
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 				suite.mockDeployer.EXPECT().
 					Deploy(gomock.Any(), file.DeployRequest{
@@ -486,7 +488,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					0o644,
 				)
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, errors.New("kv error"))
 			},
 			validateFunc: func(
@@ -512,7 +514,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
 				mockEntry.EXPECT().Value().Return([]byte("not-json"))
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 			},
 			validateFunc: func(

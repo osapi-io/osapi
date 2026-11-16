@@ -30,7 +30,7 @@ import (
 	auditmocks "github.com/osapi-io/osapi/internal/audit/mocks"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller"
-	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
+	"github.com/osapi-io/osapi/internal/controller/mocks"
 )
 
 type HandlersPublicTestSuite struct {
@@ -50,7 +50,7 @@ func (s *HandlersPublicTestSuite) TestHandlers() {
 	cfg.Controller.API.Security.Roles = map[string]config.CustomRole{
 		"reader": {Permissions: []string{"node:read"}},
 	}
-	base := len(controller.ExportHandlers(slog.Default(), cfg, nil, nil))
+	base := len(controller.ExportHandlers(slog.Default(), cfg, nil, nil, ""))
 
 	tests := []struct {
 		name  string
@@ -89,19 +89,21 @@ func (s *HandlersPublicTestSuite) TestHandlers() {
 			if tc.audit {
 				store = auditmocks.NewMockStore(ctrl)
 			}
-			var objStore *filemocks.MockObjectStore
+			var objStore *mocks.MockFileBuckets
 			if tc.files {
-				objStore = filemocks.NewMockObjectStore(ctrl)
+				objStore = mocks.NewMockFileBuckets(ctrl)
 			}
 
 			var got int
 			switch {
 			case tc.audit:
-				got = len(controller.ExportHandlers(slog.Default(), tc.cfg(), store, nil))
+				got = len(controller.ExportHandlers(slog.Default(), tc.cfg(), store, nil, ""))
 			case tc.files:
-				got = len(controller.ExportHandlers(slog.Default(), tc.cfg(), nil, objStore))
+				got = len(
+					controller.ExportHandlers(slog.Default(), tc.cfg(), nil, objStore, "objects"),
+				)
 			default:
-				got = len(controller.ExportHandlers(slog.Default(), tc.cfg(), nil, nil))
+				got = len(controller.ExportHandlers(slog.Default(), tc.cfg(), nil, nil, ""))
 			}
 
 			s.Equal(tc.want, got)

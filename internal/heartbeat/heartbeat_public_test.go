@@ -28,12 +28,13 @@ import (
 	"testing"
 	"time"
 
+	heartbeatmocks "github.com/osapi-io/osapi/internal/heartbeat/mocks"
+
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/heartbeat"
 	"github.com/osapi-io/osapi/internal/job"
-	jobMocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 	processMocks "github.com/osapi-io/osapi/internal/telemetry/process/mocks"
 )
@@ -42,25 +43,26 @@ type HeartbeatPublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl    *gomock.Controller
-	mockKV      *jobMocks.MockKeyValue
+	mockKV      *heartbeatmocks.MockRegistryStore
 	mockProcess *processMocks.MockProvider
 	heartbeat   *heartbeat.Heartbeat
 }
 
 func (s *HeartbeatPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
-	s.mockKV = jobMocks.NewMockKeyValue(s.mockCtrl)
+	s.mockKV = heartbeatmocks.NewMockRegistryStore(s.mockCtrl)
 	s.mockProcess = processMocks.NewMockProvider(s.mockCtrl)
 
 	s.heartbeat = heartbeat.New(slog.Default(), heartbeat.Options{
-		RegistryKV:    s.mockKV,
-		Hostname:      "web-server-01",
-		Version:       "0.1.0",
-		Component:     "api",
-		Process:       s.mockProcess,
-		Interval:      10 * time.Second,
-		Thresholds:    process.ConditionThresholds{},
-		SubComponents: nil,
+		KV:             s.mockKV,
+		RegistryBucket: "registry",
+		Hostname:       "web-server-01",
+		Version:        "0.1.0",
+		Component:      "api",
+		Process:        s.mockProcess,
+		Interval:       10 * time.Second,
+		Thresholds:     process.ConditionThresholds{},
+		SubComponents:  nil,
 	})
 }
 
@@ -82,8 +84,8 @@ func (s *HeartbeatPublicTestSuite) TestWriteRegistration() {
 					Return(nil, errors.New("no metrics"))
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "api.web_server_01", gomock.Any()).
-					DoAndReturn(func(_ context.Context, _ string, data []byte) (uint64, error) {
+					KVPut(gomock.Any(), "registry", "api.web_server_01", gomock.Any()).
+					DoAndReturn(func(_ context.Context, _ string, _ string, data []byte) (uint64, error) {
 						var reg job.ComponentRegistration
 						s.Require().NoError(json.Unmarshal(data, &reg))
 						s.Equal("api", reg.Type)
@@ -105,8 +107,8 @@ func (s *HeartbeatPublicTestSuite) TestWriteRegistration() {
 					}, nil)
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "api.web_server_01", gomock.Any()).
-					DoAndReturn(func(_ context.Context, _ string, data []byte) (uint64, error) {
+					KVPut(gomock.Any(), "registry", "api.web_server_01", gomock.Any()).
+					DoAndReturn(func(_ context.Context, _ string, _ string, data []byte) (uint64, error) {
 						var reg job.ComponentRegistration
 						s.Require().NoError(json.Unmarshal(data, &reg))
 						s.Require().NotNil(reg.Process)
@@ -137,8 +139,8 @@ func (s *HeartbeatPublicTestSuite) TestWriteRegistration() {
 					}, nil)
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "api.web_server_01", gomock.Any()).
-					DoAndReturn(func(_ context.Context, _ string, data []byte) (uint64, error) {
+					KVPut(gomock.Any(), "registry", "api.web_server_01", gomock.Any()).
+					DoAndReturn(func(_ context.Context, _ string, _ string, data []byte) (uint64, error) {
 						var reg job.ComponentRegistration
 						s.Require().NoError(json.Unmarshal(data, &reg))
 						s.Require().Len(reg.Conditions, 1)
@@ -160,8 +162,8 @@ func (s *HeartbeatPublicTestSuite) TestWriteRegistration() {
 					}, nil)
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "api.web_server_01", gomock.Any()).
-					DoAndReturn(func(_ context.Context, _ string, data []byte) (uint64, error) {
+					KVPut(gomock.Any(), "registry", "api.web_server_01", gomock.Any()).
+					DoAndReturn(func(_ context.Context, _ string, _ string, data []byte) (uint64, error) {
 						var reg job.ComponentRegistration
 						s.Require().NoError(json.Unmarshal(data, &reg))
 						s.Empty(reg.Conditions)
@@ -177,8 +179,8 @@ func (s *HeartbeatPublicTestSuite) TestWriteRegistration() {
 					Return(nil, errors.New("process unavailable"))
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "api.web_server_01", gomock.Any()).
-					DoAndReturn(func(_ context.Context, _ string, data []byte) (uint64, error) {
+					KVPut(gomock.Any(), "registry", "api.web_server_01", gomock.Any()).
+					DoAndReturn(func(_ context.Context, _ string, _ string, data []byte) (uint64, error) {
 						var reg job.ComponentRegistration
 						s.Require().NoError(json.Unmarshal(data, &reg))
 						s.Nil(reg.Process)
@@ -202,8 +204,8 @@ func (s *HeartbeatPublicTestSuite) TestWriteRegistration() {
 					Return(nil, errors.New("no metrics"))
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "api.web_server_01", gomock.Any()).
-					DoAndReturn(func(_ context.Context, _ string, data []byte) (uint64, error) {
+					KVPut(gomock.Any(), "registry", "api.web_server_01", gomock.Any()).
+					DoAndReturn(func(_ context.Context, _ string, _ string, data []byte) (uint64, error) {
 						var reg job.ComponentRegistration
 						s.Require().NoError(json.Unmarshal(data, &reg))
 						s.Require().Len(reg.SubComponents, 2)
@@ -223,7 +225,7 @@ func (s *HeartbeatPublicTestSuite) TestWriteRegistration() {
 					Return(nil, errors.New("no metrics"))
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "api.web_server_01", gomock.Any()).
+					KVPut(gomock.Any(), "registry", "api.web_server_01", gomock.Any()).
 					Return(uint64(0), errors.New("put failed"))
 			},
 		},
@@ -259,7 +261,7 @@ func (s *HeartbeatPublicTestSuite) TestDeregister() {
 			name: "when Delete succeeds logs deregistration",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "api.web_server_01").
+					KVDelete(gomock.Any(), "registry", "api.web_server_01").
 					Return(nil)
 			},
 		},
@@ -267,7 +269,7 @@ func (s *HeartbeatPublicTestSuite) TestDeregister() {
 			name: "when Delete fails logs warning",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "api.web_server_01").
+					KVDelete(gomock.Any(), "registry", "api.web_server_01").
 					Return(errors.New("delete failed"))
 			},
 		},
@@ -285,24 +287,24 @@ func (s *HeartbeatPublicTestSuite) TestStart() {
 	tests := []struct {
 		name      string
 		sleep     time.Duration
-		setupMock func(mockKV *jobMocks.MockKeyValue, mockProcess *processMocks.MockProvider)
+		setupMock func(mockKV *heartbeatmocks.MockRegistryStore, mockProcess *processMocks.MockProvider)
 	}{
 		{
 			name:  "deletes key on context cancel",
 			sleep: 5 * time.Millisecond,
-			setupMock: func(mockKV *jobMocks.MockKeyValue, mockProcess *processMocks.MockProvider) {
+			setupMock: func(mockKV *heartbeatmocks.MockRegistryStore, mockProcess *processMocks.MockProvider) {
 				mockProcess.EXPECT().
 					GetMetrics().
 					Return(nil, errors.New("no metrics")).
 					AnyTimes()
 
 				mockKV.EXPECT().
-					Put(gomock.Any(), "api.web_server_01", gomock.Any()).
+					KVPut(gomock.Any(), "registry", "api.web_server_01", gomock.Any()).
 					Return(uint64(1), nil).
 					AnyTimes()
 
 				mockKV.EXPECT().
-					Delete(gomock.Any(), "api.web_server_01").
+					KVDelete(gomock.Any(), "registry", "api.web_server_01").
 					Return(nil).
 					Times(1)
 			},
@@ -310,7 +312,7 @@ func (s *HeartbeatPublicTestSuite) TestStart() {
 		{
 			name:  "ticker fires and refreshes registration",
 			sleep: 50 * time.Millisecond,
-			setupMock: func(mockKV *jobMocks.MockKeyValue, mockProcess *processMocks.MockProvider) {
+			setupMock: func(mockKV *heartbeatmocks.MockRegistryStore, mockProcess *processMocks.MockProvider) {
 				mockProcess.EXPECT().
 					GetMetrics().
 					Return(nil, errors.New("no metrics")).
@@ -318,12 +320,12 @@ func (s *HeartbeatPublicTestSuite) TestStart() {
 
 				// Initial write + at least 1 ticker refresh.
 				mockKV.EXPECT().
-					Put(gomock.Any(), "api.web_server_01", gomock.Any()).
+					KVPut(gomock.Any(), "registry", "api.web_server_01", gomock.Any()).
 					Return(uint64(1), nil).
 					MinTimes(2)
 
 				mockKV.EXPECT().
-					Delete(gomock.Any(), "api.web_server_01").
+					KVDelete(gomock.Any(), "registry", "api.web_server_01").
 					Return(nil).
 					Times(1)
 			},
@@ -335,19 +337,20 @@ func (s *HeartbeatPublicTestSuite) TestStart() {
 			ctrl := gomock.NewController(s.T())
 			defer ctrl.Finish()
 
-			mockKV := jobMocks.NewMockKeyValue(ctrl)
+			mockKV := heartbeatmocks.NewMockRegistryStore(ctrl)
 			mockProcess := processMocks.NewMockProvider(ctrl)
 			tt.setupMock(mockKV, mockProcess)
 
 			hb := heartbeat.New(slog.Default(), heartbeat.Options{
-				RegistryKV:    mockKV,
-				Hostname:      "web-server-01",
-				Version:       "0.1.0",
-				Component:     "api",
-				Process:       mockProcess,
-				Interval:      10 * time.Millisecond,
-				Thresholds:    process.ConditionThresholds{},
-				SubComponents: nil,
+				KV:             mockKV,
+				RegistryBucket: "registry",
+				Hostname:       "web-server-01",
+				Version:        "0.1.0",
+				Component:      "api",
+				Process:        mockProcess,
+				Interval:       10 * time.Millisecond,
+				Thresholds:     process.ConditionThresholds{},
+				SubComponents:  nil,
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())

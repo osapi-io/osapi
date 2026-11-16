@@ -41,25 +41,21 @@ import (
 type natsStatus interface {
 	ConnectedURL() string
 	ConnectedServerVersion() string
-	GetStreamInfo(
-		ctx context.Context,
-		streamName string,
-	) (*jetstream.StreamInfo, error)
-	KeyValue(
-		ctx context.Context,
-		bucket string,
-	) (jetstream.KeyValue, error)
-	ObjectStore(
-		ctx context.Context,
-		name string,
-	) (jetstream.ObjectStore, error)
+	StreamInfo(ctx context.Context, name string) (*jetstream.StreamInfo, error)
+	KVStatus(ctx context.Context, bucket string) (jetstream.KeyValueStatus, error)
+	KVKeys(ctx context.Context, bucket string, filters ...string) ([]string, error)
+	KVGet(ctx context.Context, bucket string, key string) (jetstream.KeyValueEntry, error)
+	ObjectStoreStatus(ctx context.Context, bucket string) (jetstream.ObjectStoreStatus, error)
 }
 
 // newHealthChecker checks that NATS is connected and that the jobs bucket
 // answers.
 func newHealthChecker(
-	nc interface{ ConnectedURL() string },
-	jobsKV jetstream.KeyValue,
+	nc interface {
+		ConnectedURL() string
+		KVStatus(ctx context.Context, bucket string) (jetstream.KeyValueStatus, error)
+	},
+	jobsBucket string,
 ) *health.NATSChecker {
 	return &health.NATSChecker{
 		NATSCheck: func() error {
@@ -70,7 +66,7 @@ func newHealthChecker(
 			return nil
 		},
 		KVCheck: func() error {
-			_, err := jobsKV.Status(context.Background())
+			_, err := nc.KVStatus(context.Background(), jobsBucket)
 			if err != nil {
 				return fmt.Errorf("kv bucket not accessible: %w", err)
 			}
@@ -126,7 +122,7 @@ func newMetricsProvider(
 	kvBuckets []string,
 	objBuckets []string,
 	jc jobclient.JobClient,
-	registryKV jetstream.KeyValue,
+	registryBucket string,
 ) *health.ClosureMetricsProvider {
 	return &health.ClosureMetricsProvider{
 		NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
@@ -141,7 +137,7 @@ func newMetricsProvider(
 			}, nil
 		},
 		StreamInfoFn: func(fnCtx context.Context) ([]health.StreamMetrics, error) {
-			info, err := nc.GetStreamInfo(fnCtx, streamName)
+			info, err := nc.StreamInfo(fnCtx, streamName)
 			if err != nil {
 				return nil, fmt.Errorf("stream info: %w", err)
 			}
@@ -158,11 +154,7 @@ func newMetricsProvider(
 		KVInfoFn: func(fnCtx context.Context) ([]health.KVMetrics, error) {
 			results := make([]health.KVMetrics, 0, len(kvBuckets))
 			for _, name := range kvBuckets {
-				kv, err := nc.KeyValue(fnCtx, name)
-				if err != nil {
-					continue
-				}
-				status, err := kv.Status(fnCtx)
+				status, err := nc.KVStatus(fnCtx, name)
 				if err != nil {
 					continue
 				}
@@ -178,11 +170,7 @@ func newMetricsProvider(
 		ObjectStoreInfoFn: func(fnCtx context.Context) ([]health.ObjectStoreMetrics, error) {
 			results := make([]health.ObjectStoreMetrics, 0, len(objBuckets))
 			for _, name := range objBuckets {
-				obj, err := nc.ObjectStore(fnCtx, name)
-				if err != nil {
-					continue
-				}
-				status, err := obj.Status(fnCtx)
+				status, err := nc.ObjectStoreStatus(fnCtx, name)
 				if err != nil {
 					continue
 				}
@@ -239,15 +227,12 @@ func newMetricsProvider(
 			}, nil
 		},
 		ComponentRegistryFn: func(fnCtx context.Context) ([]health.ComponentEntry, error) {
-			if registryKV == nil {
+			if registryBucket == "" {
 				return nil, fmt.Errorf("registry KV not configured")
 			}
 
-			keys, err := registryKV.Keys(fnCtx)
+			keys, err := nc.KVKeys(fnCtx, registryBucket)
 			if err != nil {
-				if strings.Contains(err.Error(), "no keys found") {
-					return []health.ComponentEntry{}, nil
-				}
 				return nil, fmt.Errorf("list registry keys: %w", err)
 			}
 
@@ -259,7 +244,7 @@ func newMetricsProvider(
 				}
 				prefix := parts[0]
 
-				kvEntry, err := registryKV.Get(fnCtx, key)
+				kvEntry, err := nc.KVGet(fnCtx, registryBucket, key)
 				if err != nil {
 					continue
 				}

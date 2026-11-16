@@ -23,7 +23,6 @@ package enrollment
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -31,7 +30,6 @@ import (
 	"time"
 
 	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/pki"
 )
@@ -59,9 +57,11 @@ type Watcher struct {
 	logger       *slog.Logger
 	nc           NATSSubscriber
 	enrollmentKV KVStore
-	pkiProvider  PKIProvider
-	autoAccept   bool
-	namespace    string
+	// enrollmentBucket is the name of the enrollment KV bucket.
+	enrollmentBucket string
+	pkiProvider      PKIProvider
+	autoAccept       bool
+	namespace        string
 
 	// keyCache holds accepted agents' records by machine ID. Verification
 	// touches it for every response and heartbeat, so the lookup does not
@@ -91,18 +91,20 @@ func NewWatcher(
 	logger *slog.Logger,
 	nc NATSSubscriber,
 	enrollmentKV KVStore,
+	enrollmentBucket string,
 	pkiProvider PKIProvider,
 	autoAccept bool,
 	namespace string,
 ) *Watcher {
 	return &Watcher{
-		logger:       logger.With(slog.String("subsystem", "controller.pki")),
-		nc:           nc,
-		enrollmentKV: enrollmentKV,
-		pkiProvider:  pkiProvider,
-		autoAccept:   autoAccept,
-		namespace:    namespace,
-		keyCache:     make(map[string]*AcceptedAgent),
+		logger:           logger.With(slog.String("subsystem", "controller.pki")),
+		nc:               nc,
+		enrollmentKV:     enrollmentKV,
+		enrollmentBucket: enrollmentBucket,
+		pkiProvider:      pkiProvider,
+		autoAccept:       autoAccept,
+		namespace:        namespace,
+		keyCache:         make(map[string]*AcceptedAgent),
 	}
 }
 
@@ -113,7 +115,7 @@ func (w *Watcher) Start(
 ) error {
 	subject := enrollSubject(w.namespace, pki.EnrollRequestSuffix)
 
-	sub, err := w.nc.Subscribe(subject, func(msg *nats.Msg) {
+	sub, err := w.nc.Subscribe(ctx, subject, func(ctx context.Context, msg *nats.Msg) {
 		w.handleEnrollmentRequest(ctx, msg)
 	})
 	if err != nil {
@@ -179,7 +181,7 @@ func (w *Watcher) handleEnrollmentRequest(
 	}
 
 	key := kvPrefix + req.MachineID
-	if _, err := w.enrollmentKV.Put(ctx, key, data); err != nil {
+	if _, err := w.enrollmentKV.KVPut(ctx, w.enrollmentBucket, key, data); err != nil {
 		w.logger.Warn(
 			"failed to store pending enrollment",
 			slog.String("machine_id", req.MachineID),
@@ -210,25 +212,21 @@ func (w *Watcher) handleEnrollmentRequest(
 func (w *Watcher) ListPending(
 	ctx context.Context,
 ) ([]PendingAgent, error) {
-	lister, err := w.enrollmentKV.ListKeys(ctx)
+	keys, err := w.enrollmentKV.KVKeys(ctx, w.enrollmentBucket)
 	if err != nil {
-		// jetstream.ErrNoKeysFound means the bucket is empty.
-		if errors.Is(err, jetstream.ErrNoKeysFound) {
-			return nil, nil
-		}
 		return nil, fmt.Errorf("list enrollment keys: %w", err)
 	}
 
 	var pending []PendingAgent
 
-	for key := range lister.Keys() {
+	for _, key := range keys {
 		// The bucket also holds accepted agents' keys, which are not
 		// pending entries and would otherwise unmarshal into one.
 		if !strings.HasPrefix(key, kvPrefix) {
 			continue
 		}
 
-		entry, err := w.enrollmentKV.Get(ctx, key)
+		entry, err := w.enrollmentKV.KVGet(ctx, w.enrollmentBucket, key)
 		if err != nil {
 			w.logger.Warn(
 				"failed to get enrollment entry",

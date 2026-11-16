@@ -46,7 +46,7 @@ type KeyStoreAdapterPublicTestSuite struct {
 	ctx       context.Context
 	mockCtrl  *gomock.Controller
 	mockNC    *enrollMocks.MockNATSSubscriber
-	mockKV    *jobMocks.MockKeyValue
+	mockKV    *enrollMocks.MockKVStore
 	mockPKI   *enrollMocks.MockPKIProvider
 	watcher   *enrollment.Watcher
 	fixedTime time.Time
@@ -57,7 +57,7 @@ func (s *KeyStoreAdapterPublicTestSuite) SetupTest() {
 	s.ctx = context.Background()
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockNC = enrollMocks.NewMockNATSSubscriber(s.mockCtrl)
-	s.mockKV = jobMocks.NewMockKeyValue(s.mockCtrl)
+	s.mockKV = enrollMocks.NewMockKVStore(s.mockCtrl)
 	s.mockPKI = enrollMocks.NewMockPKIProvider(s.mockCtrl)
 	s.fixedTime = time.Date(2026, 4, 11, 12, 0, 0, 0, time.UTC)
 	s.pubKey = make(ed25519.PublicKey, ed25519.PublicKeySize)
@@ -65,7 +65,7 @@ func (s *KeyStoreAdapterPublicTestSuite) SetupTest() {
 	s.watcher = enrollment.NewWatcher(
 		slog.Default(),
 		s.mockNC,
-		s.mockKV,
+		s.mockKV, "enrollment",
 		s.mockPKI,
 		false,
 		"osapi",
@@ -82,7 +82,7 @@ func (s *KeyStoreAdapterPublicTestSuite) SetupSubTest() {
 	s.watcher = enrollment.NewWatcher(
 		slog.Default(),
 		s.mockNC,
-		s.mockKV,
+		s.mockKV, "enrollment",
 		s.mockPKI,
 		false,
 		"osapi",
@@ -113,7 +113,7 @@ func (s *KeyStoreAdapterPublicTestSuite) TestLookupAgentKey() {
 				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry.EXPECT().Value().Return(data)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "accepted.machine-001").
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(entry, nil)
 			},
 			validateFunc: func(key *client.AgentKey, err error) {
@@ -128,7 +128,7 @@ func (s *KeyStoreAdapterPublicTestSuite) TestLookupAgentKey() {
 			machineID: "machine-404",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "accepted.machine-404").
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-404").
 					Return(nil, jetstream.ErrKeyNotFound)
 			},
 			validateFunc: func(key *client.AgentKey, err error) {
@@ -143,7 +143,7 @@ func (s *KeyStoreAdapterPublicTestSuite) TestLookupAgentKey() {
 			machineID: "machine-001",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "accepted.machine-001").
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(nil, errors.New("kv error"))
 			},
 			validateFunc: func(key *client.AgentKey, err error) {
@@ -160,7 +160,7 @@ func (s *KeyStoreAdapterPublicTestSuite) TestLookupAgentKey() {
 				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry.EXPECT().Value().Return([]byte("bad json"))
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "accepted.machine-001").
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(entry, nil)
 			},
 			validateFunc: func(key *client.AgentKey, err error) {

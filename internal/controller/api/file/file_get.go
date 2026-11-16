@@ -47,7 +47,7 @@ func (f *File) GetFileByName(
 		slog.String("name", request.Name),
 	)
 
-	info, err := f.objStore.GetInfo(ctx, request.Name)
+	info, err := f.objStore.ObjectInfo(ctx, f.objBucket, request.Name)
 	if err != nil {
 		if errors.Is(err, jetstream.ErrObjectNotFound) {
 			errMsg := fmt.Sprintf("file not found: %s", request.Name)

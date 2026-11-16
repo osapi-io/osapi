@@ -29,8 +29,8 @@ sequenceDiagram
 1. The **API server** starts the trace in the `otelecho` middleware. It opens
    `job.publish` when it stores and publishes the job. The nats-client adds the
    trace context to the headers of the NATS message.
-1. The **agent** reads the trace context from the headers. It opens
-   `job.process` as a child of `job.publish`.
+1. The **agent** gets the message in a `nats.process` span, which continues the
+   trace from the headers. It opens `job.process` under it.
 1. The **API server** opens `job.collect` while it waits for the answers of the
    agents. It sends the trace back in the `traceresponse` header of the
    response.
@@ -59,27 +59,45 @@ A broadcast has one `job.process` for each agent:
 ```text
 osapi-controller  GET /api/node/:hostname/package
 ├─ job.publish
-│  ├─ osapi-agent  job.process     (web-01)
-│  │  └─ exec dpkg-query
-│  └─ osapi-agent  job.process     (web-02)
-│     └─ exec dpkg-query
+│  ├─ kv.put                        (the job)
+│  └─ nats.publish
+│     ├─ osapi-agent  nats.process  (web-01)
+│     │  └─ job.process
+│     │     ├─ kv.get               (the job)
+│     │     ├─ exec dpkg-query
+│     │     └─ kv.put               (the answer)
+│     └─ osapi-agent  nats.process  (web-02)
+│        └─ job.process
+│           └─ ...
 └─ job.collect
+   └─ kv.watch                      (the answers)
 ```
 
 A behavior adds `behavior.<name>.<method>` under `job.process`, and its commands
-are under that span.
+and file writes are under that span. The tree above leaves out the `kv.put` of
+each status event.
 
-| Span                       | Service            | Attributes that tell you the most                                                                 |
-| -------------------------- | ------------------ | ------------------------------------------------------------------------------------------------- |
-| the command                | `osapi-cli`        | The name is the command                                                                           |
-| `GET /api/...`             | `osapi-controller` | `http.route`, `http.response.status_code`, `osapi.target`                                         |
-| `job.publish`              | `osapi-controller` | `job.id`, `job.type`, `osapi.target`, `messaging.destination.name`                                |
-| `job.collect`              | `osapi-controller` | `job.expected`, `job.answered`, `job.timed_out`; a `job.timeout` event names each silent agent    |
-| `job.process`              | `osapi-agent`      | `osapi.agent.hostname`, `osapi.agent.machine_id`, `host.arch`, `job.status`, `job.changed`        |
-| `behavior.<name>.<method>` | `osapi-agent`      | `osapi.behavior.name`, `osapi.behavior.method`, `osapi.behavior.outcome`                          |
-| `exec <program>`           | `osapi-agent`      | `process.executable.name`, `osapi.exec.sudo`, `process.exit.code`. The arguments are not recorded |
+| Span                                         | Service            | Attributes that tell you the most                                                                   |
+| -------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------- |
+| the command                                  | `osapi-cli`        | The name is the command                                                                             |
+| `GET /api/...`                               | `osapi-controller` | `http.route`, `http.response.status_code`, `osapi.target`                                           |
+| `job.publish`                                | `osapi-controller` | `job.id`, `job.type`, `osapi.target`, `messaging.destination.name`                                  |
+| `job.collect`                                | `osapi-controller` | `job.expected`, `job.answered`, `job.timed_out`; a `job.timeout` event names each silent agent      |
+| `job.process`                                | `osapi-agent`      | `osapi.agent.hostname`, `osapi.agent.machine_id`, `host.arch`, `job.status`, `job.changed`          |
+| `behavior.<name>.<method>`                   | `osapi-agent`      | `osapi.behavior.name`, `osapi.behavior.method`, `osapi.behavior.outcome`                            |
+| `exec <program>`                             | `osapi-agent`      | `process.executable.name`, `osapi.exec.sudo`, `process.exit.code`. The arguments are not recorded   |
+| `file.write`                                 | `osapi-agent`      | `file.path`, `file.mode`, `file.size`. The content is not recorded                                  |
+| `kv.<op>`, `objectstore.<op>`, `stream.<op>` | both               | `db.operation.name`, `db.namespace` (the bucket or the stream), `nats.kv.key` or `nats.object.name` |
+| `nats.publish`, `nats.process`               | both               | `messaging.destination.name`, the subject                                                           |
 
 Each span has `service.version`, the version of the binary that made it.
+
+The NATS spans come from [nats-client](https://github.com/osapi-io/nats-client),
+which makes one for each call to NATS inside a trace. A call outside a trace,
+such as a heartbeat, makes no span, but the call is in the
+`osapi_nats_client_operation_duration_seconds` metric. A file is written only
+when its content changed, so a `file.write` span is a change; the behavior span
+has `osapi.behavior.changed`.
 
 A span has the error status when its work failed: a failed job, a command that
 failed, or a `job.collect` with no answer. A host that skips a job is not an

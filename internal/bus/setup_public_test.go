@@ -28,6 +28,8 @@ import (
 	"testing"
 	"time"
 
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+
 	natsserver "github.com/nats-io/nats-server/v2/server"
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
@@ -151,7 +153,7 @@ func (s *SetupPublicTestSuite) TestSetup() {
 			var streams, kvs []string
 			objects := 0
 			js.EXPECT().
-				CreateOrUpdateStreamWithConfig(gomock.Any(), gomock.Any()).
+				StreamCreateOrUpdate(gomock.Any(), gomock.Any()).
 				DoAndReturn(func(_ context.Context, c jetstream.StreamConfig) error {
 					if c.Name == tc.failStream {
 						return fail
@@ -161,27 +163,27 @@ func (s *SetupPublicTestSuite) TestSetup() {
 				}).
 				AnyTimes()
 			js.EXPECT().
-				CreateOrUpdateKVBucketWithConfig(gomock.Any(), gomock.Any()).
-				DoAndReturn(func(_ context.Context, c jetstream.KeyValueConfig) (jetstream.KeyValue, error) {
+				KVCreateOrUpdate(gomock.Any(), gomock.Any()).
+				DoAndReturn(func(_ context.Context, c jetstream.KeyValueConfig) error {
 					if c.Bucket == tc.failKV {
-						return nil, fail
+						return fail
 					}
 					kvs = append(kvs, c.Bucket)
-					return nil, nil
+					return nil
 				}).
 				AnyTimes()
 			js.EXPECT().
-				CreateOrUpdateObjectStore(gomock.Any(), gomock.Any()).
-				DoAndReturn(func(_ context.Context, _ jetstream.ObjectStoreConfig) (jetstream.ObjectStore, error) {
+				ObjectStoreCreateOrUpdate(gomock.Any(), gomock.Any()).
+				DoAndReturn(func(_ context.Context, _ jetstream.ObjectStoreConfig) error {
 					if tc.failObjects {
-						return nil, fail
+						return fail
 					}
 					objects++
-					return nil, nil
+					return nil
 				}).
 				AnyTimes()
 
-			_, err := bus.Setup(context.Background(), js, "ns", tc.cfg())
+			err := bus.Setup(context.Background(), js, "ns", tc.cfg())
 
 			if tc.wantErr != "" {
 				s.EqualError(err, tc.wantErr)
@@ -193,6 +195,23 @@ func (s *SetupPublicTestSuite) TestSetup() {
 			s.Equal(tc.wantObjects, objects)
 		})
 	}
+}
+
+func (s *SetupPublicTestSuite) TestTelemetry() {
+	s.Run("turns on telemetry with the meter provider of the component", func() {
+		mp := sdkmetric.NewMeterProvider()
+
+		opts := bus.Telemetry(&natsclient.Options{Name: "osapi"}, mp)
+		s.True(opts.Telemetry)
+		s.Same(mp, opts.MeterProvider)
+		s.Equal("osapi", opts.Name)
+	})
+
+	s.Run("with no meter provider leaves the global one", func() {
+		opts := bus.Telemetry(&natsclient.Options{}, nil)
+		s.True(opts.Telemetry)
+		s.Nil(opts.MeterProvider)
+	})
 }
 
 func (s *SetupPublicTestSuite) TestPrepare() {

@@ -120,7 +120,7 @@ func (w *Watcher) recordAgentKey(
 	}
 
 	key := acceptedKey(pending.MachineID)
-	if _, err := w.enrollmentKV.Put(ctx, key, data); err != nil {
+	if _, err := w.enrollmentKV.KVPut(ctx, w.enrollmentBucket, key, data); err != nil {
 		return fmt.Errorf(
 			"store accepted agent %s: %w",
 			pending.MachineID,
@@ -144,7 +144,7 @@ func (w *Watcher) LookupAgentKey(
 		return record, nil
 	}
 
-	entry, err := w.enrollmentKV.Get(ctx, acceptedKey(machineID))
+	entry, err := w.enrollmentKV.KVGet(ctx, w.enrollmentBucket, acceptedKey(machineID))
 	if err != nil {
 		if errors.Is(err, jetstream.ErrKeyNotFound) {
 			return nil, fmt.Errorf("%w: %s", ErrAgentKeyNotFound, machineID)
@@ -175,7 +175,7 @@ func (w *Watcher) RemoveAgentKey(
 	ctx context.Context,
 	machineID string,
 ) error {
-	if err := w.enrollmentKV.Delete(ctx, acceptedKey(machineID)); err != nil {
+	if err := w.enrollmentKV.KVDelete(ctx, w.enrollmentBucket, acceptedKey(machineID)); err != nil {
 		return fmt.Errorf("remove accepted agent %s: %w", machineID, err)
 	}
 
@@ -197,19 +197,19 @@ func (w *Watcher) RemoveByHostname(
 	hostname string,
 	machineID string,
 ) (string, error) {
-	lister, err := w.enrollmentKV.ListKeys(ctx)
-	if err != nil && !errors.Is(err, jetstream.ErrNoKeysFound) {
+	keys, err := w.enrollmentKV.KVKeys(ctx, w.enrollmentBucket)
+	if err != nil {
 		return "", fmt.Errorf("list enrollment keys: %w", err)
 	}
 
 	var matches []string
 	if err == nil {
-		for key := range lister.Keys() {
+		for _, key := range keys {
 			if !strings.HasPrefix(key, acceptedKVPrefix) {
 				continue
 			}
 
-			entry, err := w.enrollmentKV.Get(ctx, key)
+			entry, err := w.enrollmentKV.KVGet(ctx, w.enrollmentBucket, key)
 			if err != nil {
 				return "", fmt.Errorf("get accepted agent %s: %w", key, err)
 			}

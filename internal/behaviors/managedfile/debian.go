@@ -31,8 +31,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/provider"
+
 	"github.com/avfs/avfs"
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -46,7 +47,8 @@ var marshalJSON = json.Marshal
 // the file state store, keyed by host and path.
 type debian struct {
 	fs       avfs.VFS
-	state    jetstream.KeyValue
+	state    provider.FileState
+	bucket   string
 	exec     host.Exec
 	hostname string
 }
@@ -55,11 +57,12 @@ type debian struct {
 // hand-written domains that write managed files build one with it.
 func NewDebian(
 	fs avfs.VFS,
-	state jetstream.KeyValue,
+	state provider.FileState,
+	bucket string,
 	exec host.Exec,
 	hostname string,
 ) Provider {
-	return &debian{fs: fs, state: state, exec: exec, hostname: hostname}
+	return &debian{fs: fs, state: state, bucket: bucket, exec: exec, hostname: hostname}
 }
 
 // newDebian is the provider on Debian and its family. It needs the file state
@@ -71,7 +74,7 @@ func newDebian(
 		return nil, behavior.ErrUnsupported
 	}
 
-	return NewDebian(h.FS, h.FileState, h.Exec, h.Hostname), nil
+	return NewDebian(h.FS, h.FileState, h.FileStateBucket, h.Exec, h.Hostname), nil
 }
 
 // Write makes f.Path hold f.Content with its mode and ownership. Whether it
@@ -92,7 +95,7 @@ func (d *debian) Write(
 			return false, fmt.Errorf("create directory: %w", err)
 		}
 		// Atomically: a reader of the directory never sees half a file.
-		if err := atomicfile.Write(d.fs, f.Path, f.Content, mode); err != nil {
+		if err := atomicfile.Write(ctx, d.fs, f.Path, f.Content, mode); err != nil {
 			return false, fmt.Errorf("write file: %w", err)
 		}
 		changed = true
@@ -132,7 +135,7 @@ func (d *debian) Write(
 	if err != nil {
 		return false, fmt.Errorf("marshal state: %w", err)
 	}
-	if _, err := d.state.Put(ctx, StateKey(d.hostname, f.Path), data); err != nil {
+	if _, err := d.state.KVPut(ctx, d.bucket, StateKey(d.hostname, f.Path), data); err != nil {
 		return false, fmt.Errorf("update state: %w", err)
 	}
 
@@ -177,7 +180,7 @@ func (d *debian) Remove(
 	path string,
 ) (bool, error) {
 	key := StateKey(d.hostname, path)
-	entry, err := d.state.Get(ctx, key)
+	entry, err := d.state.KVGet(ctx, d.bucket, key)
 	if err != nil {
 		return false, nil
 	}
@@ -203,7 +206,7 @@ func (d *debian) Remove(
 	if err != nil {
 		return false, fmt.Errorf("marshal state: %w", err)
 	}
-	if _, err := d.state.Put(ctx, key, data); err != nil {
+	if _, err := d.state.KVPut(ctx, d.bucket, key, data); err != nil {
 		return false, fmt.Errorf("update state: %w", err)
 	}
 
@@ -215,7 +218,7 @@ func (d *debian) Read(
 	ctx context.Context,
 	path string,
 ) (Record, error) {
-	entry, err := d.state.Get(ctx, StateKey(d.hostname, path))
+	entry, err := d.state.KVGet(ctx, d.bucket, StateKey(d.hostname, path))
 	if err != nil {
 		return Record{}, fmt.Errorf("%s: %w", path, ErrNotManaged)
 	}

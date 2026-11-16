@@ -29,6 +29,8 @@ import (
 	"strings"
 	"testing"
 
+	providermocks "github.com/osapi-io/osapi/internal/provider/mocks"
+
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
@@ -72,7 +74,7 @@ type DebianPublicTestSuite struct {
 	ctrl        *gomock.Controller
 	logger      *slog.Logger
 	memFs       avfs.VFS
-	mockStateKV *jobmocks.MockKeyValue
+	mockStateKV *providermocks.MockFileState
 	mockExec    *execmocks.MockManager
 	provider    *sysctl.Debian
 }
@@ -81,7 +83,7 @@ func (suite *DebianPublicTestSuite) SetupTest() {
 	suite.ctrl = gomock.NewController(suite.T())
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	suite.memFs = memfs.New()
-	suite.mockStateKV = jobmocks.NewMockKeyValue(suite.ctrl)
+	suite.mockStateKV = providermocks.NewMockFileState(suite.ctrl)
 	suite.mockExec = execmocks.NewMockManager(suite.ctrl)
 
 	_ = suite.memFs.MkdirAll("/etc/sysctl.d", 0o755)
@@ -89,7 +91,7 @@ func (suite *DebianPublicTestSuite) SetupTest() {
 	suite.provider = sysctl.NewDebianProvider(
 		suite.logger,
 		suite.memFs,
-		suite.mockStateKV,
+		suite.mockStateKV, "file-state",
 		suite.mockExec,
 		testHostname,
 	)
@@ -111,11 +113,11 @@ func (suite *DebianPublicTestSuite) TestWithFiles() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			otherKV := jobmocks.NewMockKeyValue(suite.ctrl)
-			files := managedfile.NewDebian(suite.memFs, otherKV, nil, testHostname)
+			otherKV := providermocks.NewMockFileState(suite.ctrl)
+			files := managedfile.NewDebian(suite.memFs, otherKV, "file-state", nil, testHostname)
 			p := suite.provider.WithFiles(files)
 			otherKV.EXPECT().
-				Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 				Return(uint64(1), nil)
 			suite.mockExec.EXPECT().
 				RunPrivilegedCmd(gomock.Any(), "sysctl", gomock.Any()).
@@ -156,7 +158,7 @@ func (suite *DebianPublicTestSuite) TestWithDir() {
 		suite.Run(tc.name, func() {
 			p := suite.provider.WithDir(tc.dir)
 			suite.mockStateKV.EXPECT().
-				Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 				Return(uint64(1), nil)
 			suite.mockExec.EXPECT().
 				RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", tc.wantPath}).
@@ -190,7 +192,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 			setup: func() {
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
@@ -253,7 +255,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					0o644,
 				))
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
@@ -289,7 +291,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					0o644,
 				))
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
@@ -319,7 +321,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 			setup: func() {
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
@@ -507,7 +509,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 			setup: func() {
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "sysctl", gomock.Any()).
@@ -529,7 +531,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 			setup: func() {
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(0), errors.New("kv put error"))
 			},
 			validateFunc: func(
@@ -549,7 +551,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 			setup: func() {
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "sysctl", gomock.Any()).
@@ -648,7 +650,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			},
 			setup: func() {
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
@@ -840,7 +842,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 				suite.provider = sysctl.NewDebianProvider(
 					suite.logger,
 					vfs,
-					suite.mockStateKV,
+					suite.mockStateKV, "file-state",
 					suite.mockExec,
 					testHostname,
 				)
@@ -878,7 +880,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 				suite.provider = sysctl.NewDebianProvider(
 					suite.logger,
 					vfs,
-					suite.mockStateKV,
+					suite.mockStateKV, "file-state",
 					suite.mockExec,
 					testHostname,
 				)
@@ -929,10 +931,10 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 				mockEntry.EXPECT().Value().Return(stateData)
 
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"--system"}).
@@ -1017,7 +1019,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			key:  "net.ipv4.ip_forward",
 			setup: func() {
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, errors.New("not found"))
 			},
 			validateFunc: func(
@@ -1036,7 +1038,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 				mockEntry.EXPECT().Value().Return([]byte("not-json"))
 
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 			},
 			validateFunc: func(
@@ -1066,7 +1068,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 				mockEntry.EXPECT().Value().Return(stateBytes)
 
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 			},
 			validateFunc: func(
@@ -1090,10 +1092,10 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 				mockEntry.EXPECT().Value().Return(stateData)
 
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				// No sysctl --system call since changed is false.
 			},
@@ -1131,7 +1133,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 				suite.provider = sysctl.NewDebianProvider(
 					suite.logger,
 					vfs,
-					suite.mockStateKV,
+					suite.mockStateKV, "file-state",
 					suite.mockExec,
 					testHostname,
 				)
@@ -1143,7 +1145,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 				mockEntry.EXPECT().Value().Return(stateData)
 
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 			},
 			validateFunc: func(
@@ -1172,10 +1174,10 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 				mockEntry.EXPECT().Value().Return(stateData)
 
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(0), errors.New("kv put error"))
 			},
 			validateFunc: func(
@@ -1204,10 +1206,10 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 				mockEntry.EXPECT().Value().Return(stateData)
 
 				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(mockEntry, nil)
 				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"--system"}).
@@ -1252,7 +1254,7 @@ func (suite *DebianPublicTestSuite) failing(
 	return sysctl.NewDebianProvider(
 		suite.logger,
 		vfs,
-		suite.mockStateKV,
+		suite.mockStateKV, "file-state",
 		suite.mockExec,
 		testHostname,
 	)
@@ -1278,7 +1280,10 @@ func (suite *DebianPublicTestSuite) manage(
 	_ = suite.memFs.WriteFile(path, []byte(key+" = "+value+"\n"), 0o644)
 	entry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
 	entry.EXPECT().Value().Return(managedStateJSON(key, value, path)).AnyTimes()
-	suite.mockStateKV.EXPECT().Get(gomock.Any(), gomock.Any()).Return(entry, nil).AnyTimes()
+	suite.mockStateKV.EXPECT().
+		KVGet(gomock.Any(), "file-state", gomock.Any()).
+		Return(entry, nil).
+		AnyTimes()
 }
 
 func (suite *DebianPublicTestSuite) TestList() {
@@ -1408,7 +1413,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name: "when the kernel's value cannot be read",
 			setup: func() {
 				suite.kernel(map[string]string{"/proc/sys/kernel/cad_pid": "1\n"})
-				suite.mockStateKV.EXPECT().Get(gomock.Any(), gomock.Any()).
+				suite.mockStateKV.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, jetstream.ErrKeyNotFound)
 				suite.provider = suite.failing(avfs.FnReadFile, "/proc/sys/kernel/cad_pid")
 			},
@@ -1420,7 +1425,9 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			setup: func() {
 				entry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
 				entry.EXPECT().Value().Return([]byte("not json"))
-				suite.mockStateKV.EXPECT().Get(gomock.Any(), gomock.Any()).Return(entry, nil)
+				suite.mockStateKV.EXPECT().
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
+					Return(entry, nil)
 			},
 			key:     "vm.swappiness",
 			wantErr: "failed to read state",

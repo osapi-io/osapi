@@ -709,6 +709,38 @@ func (s *ValidationPublicTestSuite) TestResourceName() {
 	})
 }
 
+func (s *ValidationPublicTestSuite) TestNATSName() {
+	tests := []struct {
+		name  string
+		field string
+		valid bool
+	}{
+		{
+			name:  "when it has letters, digits, hyphens and underscores",
+			field: "agent-registry_2",
+			valid: true,
+		},
+		{name: "when it has a dot", field: "agent.registry", valid: false},
+		{name: "when it has a space", field: "agent registry", valid: false},
+		{name: "when it has a wildcard", field: "agent-*", valid: false},
+		{name: "when it has a slash", field: "agent/registry", valid: false},
+		{name: "when empty", field: "", valid: false},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			_, ok := validation.Var(tt.field, "nats_name")
+			s.Equal(tt.valid, ok)
+		})
+	}
+
+	s.Run("an invalid name shows the hint", func() {
+		errMsg, ok := validation.Var("bad name", "nats_name")
+		s.False(ok)
+		s.Contains(errMsg, "not a valid NATS bucket name")
+	})
+}
+
 func (s *ValidationPublicTestSuite) TestContainerID() {
 	tests := []struct {
 		name  string

@@ -57,7 +57,7 @@ type FileListPublicTestSuite struct {
 func (s *FileListPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockObjStore = mocks.NewMockObjectStoreManager(s.mockCtrl)
-	s.handler = apifile.New(slog.Default(), s.mockObjStore, nil)
+	s.handler = apifile.New(slog.Default(), s.mockObjStore, "objects", nil, "")
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -77,7 +77,7 @@ func (s *FileListPublicTestSuite) TestGetFiles() {
 			name: "success with user and osapi files",
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					List(gomock.Any()).
+					ObjectList(gomock.Any(), "objects").
 					Return([]*jetstream.ObjectInfo{
 						{
 							ObjectMeta: jetstream.ObjectMeta{
@@ -123,22 +123,8 @@ func (s *FileListPublicTestSuite) TestGetFiles() {
 			name: "success with empty store",
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					List(gomock.Any()).
+					ObjectList(gomock.Any(), "objects").
 					Return([]*jetstream.ObjectInfo{}, nil)
-			},
-			validateFunc: func(resp gen.GetFilesResponseObject) {
-				r, ok := resp.(gen.GetFiles200JSONResponse)
-				s.True(ok)
-				s.Equal(0, r.Total)
-				s.Empty(r.Files)
-			},
-		},
-		{
-			name: "when ErrNoObjectsFound returns empty list",
-			setupMock: func() {
-				s.mockObjStore.EXPECT().
-					List(gomock.Any()).
-					Return(nil, jetstream.ErrNoObjectsFound)
 			},
 			validateFunc: func(resp gen.GetFilesResponseObject) {
 				r, ok := resp.(gen.GetFiles200JSONResponse)
@@ -151,7 +137,7 @@ func (s *FileListPublicTestSuite) TestGetFiles() {
 			name: "filters deleted objects",
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					List(gomock.Any()).
+					ObjectList(gomock.Any(), "objects").
 					Return([]*jetstream.ObjectInfo{
 						{
 							ObjectMeta: jetstream.ObjectMeta{
@@ -183,7 +169,7 @@ func (s *FileListPublicTestSuite) TestGetFiles() {
 			name: "object store error",
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
-					List(gomock.Any()).
+					ObjectList(gomock.Any(), "objects").
 					Return(nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetFilesResponseObject) {
@@ -215,7 +201,7 @@ func (s *FileListPublicTestSuite) TestGetFilesHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					List(gomock.Any()).
+					ObjectList(gomock.Any(), "objects").
 					Return([]*jetstream.ObjectInfo{
 						{
 							ObjectMeta: jetstream.ObjectMeta{
@@ -243,7 +229,7 @@ func (s *FileListPublicTestSuite) TestGetFilesHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					List(gomock.Any()).
+					ObjectList(gomock.Any(), "objects").
 					Return(nil, assert.AnError)
 				return mock
 			},
@@ -258,7 +244,7 @@ func (s *FileListPublicTestSuite) TestGetFilesHTTP() {
 		s.Run(tc.name, func() {
 			objMock := tc.setupMock()
 
-			fileHandler := apifile.New(s.logger, objMock, nil)
+			fileHandler := apifile.New(s.logger, objMock, "objects", nil, "")
 			strictHandler := gen.NewStrictHandler(fileHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
@@ -333,7 +319,7 @@ func (s *FileListPublicTestSuite) TestGetFilesRBACHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
-					List(gomock.Any()).
+					ObjectList(gomock.Any(), "objects").
 					Return([]*jetstream.ObjectInfo{}, nil)
 				return mock
 			},
@@ -363,7 +349,9 @@ func (s *FileListPublicTestSuite) TestGetFilesRBACHTTP() {
 			handlers := apifile.Handler(
 				s.logger,
 				objMock,
+				"objects",
 				nil,
+				"",
 				appConfig.Controller.API.Security.SigningKey,
 				nil,
 			)

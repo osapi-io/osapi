@@ -34,8 +34,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
-
-	"github.com/nats-io/nats.go/jetstream"
 )
 
 type AgentTimelinePublicTestSuite struct {
@@ -43,14 +41,12 @@ type AgentTimelinePublicTestSuite struct {
 
 	mockCtrl       *gomock.Controller
 	mockNATSClient *jobmocks.MockNATSClient
-	mockKV         *jobmocks.MockKeyValue
 	ctx            context.Context
 }
 
 func (s *AgentTimelinePublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockNATSClient = jobmocks.NewMockNATSClient(s.mockCtrl)
-	s.mockKV = jobmocks.NewMockKeyValue(s.mockCtrl)
 	s.ctx = context.Background()
 }
 
@@ -58,13 +54,11 @@ func (s *AgentTimelinePublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *AgentTimelinePublicTestSuite) newClientWithState(
-	stateKV *jobmocks.MockKeyValue,
-) *client.Client {
+func (s *AgentTimelinePublicTestSuite) newClientWithState() *client.Client {
 	opts := &client.Options{
-		Timeout:  30 * time.Second,
-		KVBucket: s.mockKV,
-		StateKV:  stateKV,
+		Timeout:     30 * time.Second,
+		JobsBucket:  "jobs",
+		StateBucket: "state",
 	}
 	c, err := client.New(slog.Default(), s.mockNATSClient, opts)
 	s.Require().NoError(err)
@@ -74,8 +68,8 @@ func (s *AgentTimelinePublicTestSuite) newClientWithState(
 
 func (s *AgentTimelinePublicTestSuite) newClientWithoutState() *client.Client {
 	opts := &client.Options{
-		Timeout:  30 * time.Second,
-		KVBucket: s.mockKV,
+		Timeout:    30 * time.Second,
+		JobsBucket: "jobs",
 	}
 	c, err := client.New(slog.Default(), s.mockNATSClient, opts)
 	s.Require().NoError(err)
@@ -91,7 +85,7 @@ func (s *AgentTimelinePublicTestSuite) TestWriteAgentTimelineEvent() {
 		message      string
 		useState     bool
 		marshalErr   bool
-		setupMocks   func(*jobmocks.MockKeyValue)
+		setupMocks   func(*jobmocks.MockNATSClient)
 		validateFunc func(error)
 	}{
 		{
@@ -100,11 +94,11 @@ func (s *AgentTimelinePublicTestSuite) TestWriteAgentTimelineEvent() {
 			event:    "drain",
 			message:  "node marked for drain",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
-				kv.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "state", gomock.Any(), gomock.Any()).
 					DoAndReturn(func(
-						_ context.Context,
+						_ context.Context, _ string,
 						key string,
 						data []byte,
 					) (uint64, error) {
@@ -131,9 +125,9 @@ func (s *AgentTimelinePublicTestSuite) TestWriteAgentTimelineEvent() {
 			event:    "drain",
 			message:  "drain requested",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
-				kv.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "state", gomock.Any(), gomock.Any()).
 					Return(uint64(0), errors.New("kv connection failed"))
 			},
 			validateFunc: func(err error) {
@@ -142,7 +136,7 @@ func (s *AgentTimelinePublicTestSuite) TestWriteAgentTimelineEvent() {
 			},
 		},
 		{
-			name:     "when stateKV is nil returns error",
+			name:     "when there is no state bucket returns error",
 			hostname: "server1",
 			event:    "drain",
 			message:  "drain requested",
@@ -159,7 +153,7 @@ func (s *AgentTimelinePublicTestSuite) TestWriteAgentTimelineEvent() {
 			message:    "drain requested",
 			useState:   true,
 			marshalErr: true,
-			setupMocks: func(_ *jobmocks.MockKeyValue) {
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
 				// No KV expectations — marshal fails before Put
 			},
 			validateFunc: func(err error) {
@@ -173,11 +167,10 @@ func (s *AgentTimelinePublicTestSuite) TestWriteAgentTimelineEvent() {
 		s.Run(tt.name, func() {
 			var jobsClient *client.Client
 			if tt.useState {
-				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
 				if tt.setupMocks != nil {
-					tt.setupMocks(stateKV)
+					tt.setupMocks(s.mockNATSClient)
 				}
-				jobsClient = s.newClientWithState(stateKV)
+				jobsClient = s.newClientWithState()
 			} else {
 				jobsClient = s.newClientWithoutState()
 			}
@@ -207,7 +200,7 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 		name          string
 		hostname      string
 		useState      bool
-		setupMocks    func(*jobmocks.MockKeyValue)
+		setupMocks    func(*jobmocks.MockNATSClient)
 		expectError   bool
 		errorMsg      string
 		expectedCount int
@@ -217,9 +210,9 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 			name:     "when events exist returns sorted events",
 			hostname: "server1",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
-				kv.EXPECT().
-					Keys(gomock.Any()).
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "state").
 					Return([]string{
 						"timeline.server1.drain.1000000000",
 						"timeline.server1.undrain.2000000000",
@@ -234,8 +227,8 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 				})
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(drainEvent)
-				kv.EXPECT().
-					Get(gomock.Any(), "timeline.server1.drain.1000000000").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "state", "timeline.server1.drain.1000000000").
 					Return(entry1, nil)
 
 				undrainEvent, _ := json.Marshal(job.TimelineEvent{
@@ -246,8 +239,8 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 				})
 				entry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry2.EXPECT().Value().Return(undrainEvent)
-				kv.EXPECT().
-					Get(gomock.Any(), "timeline.server1.undrain.2000000000").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "state", "timeline.server1.undrain.2000000000").
 					Return(entry2, nil)
 			},
 			expectedCount: 2,
@@ -261,10 +254,10 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 			name:     "when the bucket is empty returns an empty timeline",
 			hostname: "server1",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
-				kv.EXPECT().
-					Keys(gomock.Any()).
-					Return(nil, jetstream.ErrNoKeysFound)
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "state").
+					Return([]string{}, nil)
 			},
 			expectedCount: 0,
 		},
@@ -272,9 +265,9 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 			name:     "when the bucket cannot be read the failure is reported",
 			hostname: "server1",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
-				kv.EXPECT().
-					Keys(gomock.Any()).
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "state").
 					Return(nil, errors.New("nats: connection closed"))
 			},
 			expectError: true,
@@ -283,7 +276,7 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 			errorMsg: "list timeline keys",
 		},
 		{
-			name:        "when stateKV is nil returns error",
+			name:        "when there is no state bucket returns error",
 			hostname:    "server1",
 			useState:    false,
 			expectError: true,
@@ -293,9 +286,9 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 			name:     "when Get fails for a key skips it",
 			hostname: "server1",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
-				kv.EXPECT().
-					Keys(gomock.Any()).
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "state").
 					Return([]string{
 						"timeline.server1.drain.1000000000",
 						"timeline.server1.undrain.2000000000",
@@ -309,12 +302,12 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 				})
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(drainEvent)
-				kv.EXPECT().
-					Get(gomock.Any(), "timeline.server1.drain.1000000000").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "state", "timeline.server1.drain.1000000000").
 					Return(entry1, nil)
 
-				kv.EXPECT().
-					Get(gomock.Any(), "timeline.server1.undrain.2000000000").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "state", "timeline.server1.undrain.2000000000").
 					Return(nil, errors.New("key not found"))
 			},
 			expectedCount: 1,
@@ -326,9 +319,9 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 			name:     "when unmarshal fails for a key skips it",
 			hostname: "server1",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
-				kv.EXPECT().
-					Keys(gomock.Any()).
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "state").
 					Return([]string{
 						"timeline.server1.drain.1000000000",
 						"timeline.server1.undrain.2000000000",
@@ -342,14 +335,14 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 				})
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(drainEvent)
-				kv.EXPECT().
-					Get(gomock.Any(), "timeline.server1.drain.1000000000").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "state", "timeline.server1.drain.1000000000").
 					Return(entry1, nil)
 
 				entry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry2.EXPECT().Value().Return([]byte("invalid json"))
-				kv.EXPECT().
-					Get(gomock.Any(), "timeline.server1.undrain.2000000000").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "state", "timeline.server1.undrain.2000000000").
 					Return(entry2, nil)
 			},
 			expectedCount: 1,
@@ -361,9 +354,9 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 			name:     "when keys exist for other hostnames filters them out",
 			hostname: "server1",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
-				kv.EXPECT().
-					Keys(gomock.Any()).
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "state").
 					Return([]string{
 						"timeline.server1.drain.1000000000",
 						"timeline.server2.drain.2000000000",
@@ -378,8 +371,8 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 				})
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(drainEvent)
-				kv.EXPECT().
-					Get(gomock.Any(), "timeline.server1.drain.1000000000").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "state", "timeline.server1.drain.1000000000").
 					Return(entry1, nil)
 			},
 			expectedCount: 1,
@@ -393,11 +386,10 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 		s.Run(tt.name, func() {
 			var jobsClient *client.Client
 			if tt.useState {
-				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
 				if tt.setupMocks != nil {
-					tt.setupMocks(stateKV)
+					tt.setupMocks(s.mockNATSClient)
 				}
-				jobsClient = s.newClientWithState(stateKV)
+				jobsClient = s.newClientWithState()
 			} else {
 				jobsClient = s.newClientWithoutState()
 			}

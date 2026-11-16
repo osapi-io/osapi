@@ -49,5 +49,9 @@ func Validate(
 		return err
 	}
 
-	return v.Struct(c)
+	if err := v.Struct(c); err != nil {
+		return err
+	}
+
+	return c.NATS.sharedBucket()
 }

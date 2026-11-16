@@ -43,7 +43,6 @@ type RegistrationTrustPublicTestSuite struct {
 	ctx      context.Context
 	mockCtrl *gomock.Controller
 	mockNC   *jobmocks.MockNATSClient
-	mockKV   *jobmocks.MockKeyValue
 	pub      ed25519.PublicKey
 	priv     ed25519.PrivateKey
 }
@@ -52,7 +51,6 @@ func (s *RegistrationTrustPublicTestSuite) SetupTest() {
 	s.ctx = context.Background()
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockNC = jobmocks.NewMockNATSClient(s.mockCtrl)
-	s.mockKV = jobmocks.NewMockKeyValue(s.mockCtrl)
 
 	pub, priv, err := ed25519.GenerateKey(rand.Reader)
 	s.Require().NoError(err)
@@ -63,25 +61,24 @@ func (s *RegistrationTrustPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-// registry returns a registry KV holding exactly this registration.
+// registry makes the registry bucket hold exactly this registration.
 func (s *RegistrationTrustPublicTestSuite) registry(
 	reg job.AgentRegistration,
-) *jobmocks.MockKeyValue {
+) {
 	s.T().Helper()
 
 	data, err := json.Marshal(reg)
 	s.Require().NoError(err)
 
-	kv := jobmocks.NewMockKeyValue(s.mockCtrl)
-	kv.EXPECT().Keys(gomock.Any()).Return([]string{"agents." + reg.MachineID}, nil)
+	s.mockNC.EXPECT().
+		KVKeys(gomock.Any(), "registry").
+		Return([]string{"agents." + reg.MachineID}, nil)
 
 	entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 	entry.EXPECT().Value().Return(data)
-	kv.EXPECT().
-		Get(gomock.Any(), "agents."+reg.MachineID).
+	s.mockNC.EXPECT().
+		KVGet(gomock.Any(), "registry", "agents."+reg.MachineID).
 		Return(entry, nil)
-
-	return kv
 }
 
 func (s *RegistrationTrustPublicTestSuite) signed(
@@ -225,13 +222,13 @@ func (s *RegistrationTrustPublicTestSuite) TestListAgentsTrust() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			reg := tt.reg()
-			registryKV := s.registry(reg)
+			s.registry(reg)
 
 			c, err := client.New(slog.Default(), s.mockNC, &client.Options{
-				Timeout:    30 * time.Second,
-				KVBucket:   s.mockKV,
-				RegistryKV: registryKV,
-				StreamName: "JOBS",
+				Timeout:        30 * time.Second,
+				JobsBucket:     "jobs",
+				RegistryBucket: "registry",
+				StreamName:     "JOBS",
 			})
 			s.Require().NoError(err)
 

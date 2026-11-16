@@ -29,7 +29,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel/metric"
 
 	"github.com/osapi-io/osapi/internal/job"
@@ -41,12 +40,15 @@ import (
 type Client struct {
 	logger     *slog.Logger
 	natsClient NATSClient
-	kv         jetstream.KeyValue
-	registryKV jetstream.KeyValue
-	factsKV    jetstream.KeyValue
-	stateKV    jetstream.KeyValue
-	timeout    time.Duration
-	streamName string
+	// jobsBucket, registryBucket, factsBucket and stateBucket are the KV
+	// buckets of the jobs and their responses, the registry, the facts and
+	// the agent state. A bucket that the config does not name is "".
+	jobsBucket     string
+	registryBucket string
+	factsBucket    string
+	stateBucket    string
+	timeout        time.Duration
+	streamName     string
 	// JSONMarshalFn is the function used to marshal JSON. Defaults to json.Marshal.
 	// Exported for testing.
 	JSONMarshalFn func(v any) ([]byte, error)
@@ -71,14 +73,14 @@ type Client struct {
 type Options struct {
 	// Timeout for waiting for job responses (default: 30s)
 	Timeout time.Duration
-	// KVBucket for job storage (required)
-	KVBucket jetstream.KeyValue
-	// RegistryKV is the KV bucket for agent registry (optional).
-	RegistryKV jetstream.KeyValue
-	// FactsKV is the KV bucket for agent facts (optional).
-	FactsKV jetstream.KeyValue
-	// StateKV is the KV bucket for persistent agent state (drain flags, timeline).
-	StateKV jetstream.KeyValue
+	// JobsBucket is the KV bucket of the jobs and their responses (required).
+	JobsBucket string
+	// RegistryBucket is the KV bucket of the registry.
+	RegistryBucket string
+	// FactsBucket is the KV bucket of the agent facts.
+	FactsBucket string
+	// StateBucket is the KV bucket of the agent state.
+	StateBucket string
 	// StreamName is the JetStream stream name (used to derive DLQ name).
 	StreamName string
 	// PKISigner signs job payloads when PKI is enabled. Nil when disabled.
@@ -97,17 +99,17 @@ func New(
 	if opts == nil {
 		return nil, fmt.Errorf("options cannot be nil")
 	}
-	if opts.KVBucket == nil {
-		return nil, fmt.Errorf("kvBucket cannot be nil")
+	if opts.JobsBucket == "" {
+		return nil, fmt.Errorf("jobs bucket cannot be empty")
 	}
 
 	return &Client{
 		logger:         logger.With(slog.String("subsystem", "job.client")),
 		natsClient:     natsClient,
-		kv:             opts.KVBucket,
-		registryKV:     opts.RegistryKV,
-		factsKV:        opts.FactsKV,
-		stateKV:        opts.StateKV,
+		jobsBucket:     opts.JobsBucket,
+		registryBucket: opts.RegistryBucket,
+		factsBucket:    opts.FactsBucket,
+		stateBucket:    opts.StateBucket,
 		streamName:     opts.StreamName,
 		timeout:        opts.Timeout,
 		JSONMarshalFn:  json.Marshal,
@@ -341,7 +343,7 @@ func (c *Client) publishAndWait(
 		slog.String("job_id", jobID),
 	)
 
-	if _, err := c.kv.Put(pubCtx, kvKey, kvPayload); err != nil {
+	if _, err := c.natsClient.KVPut(pubCtx, c.jobsBucket, kvKey, kvPayload); err != nil {
 		return "", nil, endSpan(pubSpan, fmt.Errorf("failed to store job in KV: %w", err))
 	}
 
@@ -364,15 +366,15 @@ func (c *Client) publishAndWait(
 	}
 
 	// Watch for agent response in KV
-	_, colSpan := startCollectSpan(ctx, jobID)
+	colCtx, colSpan := startCollectSpan(ctx, jobID)
 	responsePattern := "responses." + jobID + ".>"
-	watcher, err := c.kv.Watch(ctx, responsePattern)
+	// The watch ends when this function returns.
+	watchCtx, stopWatch := context.WithCancel(colCtx)
+	defer stopWatch()
+	updates, err := c.natsClient.KVWatch(watchCtx, c.jobsBucket, responsePattern)
 	if err != nil {
 		return "", nil, endSpan(colSpan, fmt.Errorf("failed to create response watcher: %w", err))
 	}
-	defer func() {
-		_ = watcher.Stop()
-	}()
 
 	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
@@ -384,8 +386,12 @@ func (c *Client) publishAndWait(
 				colSpan,
 				fmt.Errorf("timeout waiting for job response: %w", timeoutCtx.Err()),
 			)
-		case entry := <-watcher.Updates():
-			if entry == nil {
+		case entry, ok := <-updates:
+			if !ok {
+				// The watch ended before the timeout. A nil channel
+				// blocks, so the loop waits for the timeout and does
+				// not spin on the closed channel.
+				updates = nil
 				continue
 			}
 
@@ -507,7 +513,7 @@ func (c *Client) publishAndCollect(
 		slog.String("job_id", jobID),
 	)
 
-	if _, err := c.kv.Put(pubCtx, kvKey, kvPayload); err != nil {
+	if _, err := c.natsClient.KVPut(pubCtx, c.jobsBucket, kvKey, kvPayload); err != nil {
 		return "", nil, endSpan(pubSpan, fmt.Errorf("failed to store job in KV: %w", err))
 	}
 
@@ -554,15 +560,15 @@ func (c *Client) publishAndCollect(
 	}
 
 	// Watch for agent responses in KV
-	_, colSpan := startCollectSpan(ctx, jobID)
+	colCtx, colSpan := startCollectSpan(ctx, jobID)
 	responsePattern := "responses." + jobID + ".>"
-	watcher, err := c.kv.Watch(ctx, responsePattern)
+	// The watch ends when this function returns.
+	watchCtx, stopWatch := context.WithCancel(colCtx)
+	defer stopWatch()
+	updates, err := c.natsClient.KVWatch(watchCtx, c.jobsBucket, responsePattern)
 	if err != nil {
 		return "", nil, endSpan(colSpan, fmt.Errorf("failed to create response watcher: %w", err))
 	}
-	defer func() {
-		_ = watcher.Stop()
-	}()
 
 	responses := make(map[string]*job.Response)
 
@@ -597,8 +603,12 @@ func (c *Client) publishAndCollect(
 			endCollectSpan(colSpan, len(expectedHostnames), responses)
 
 			return jobID, responses, nil
-		case entry := <-watcher.Updates():
-			if entry == nil {
+		case entry, ok := <-updates:
+			if !ok {
+				// The watch ended before the timeout. A nil channel
+				// blocks, so the loop waits for the timeout and does
+				// not spin on the closed channel.
+				updates = nil
 				continue
 			}
 

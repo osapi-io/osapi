@@ -26,6 +26,8 @@ import (
 	"os"
 	"testing"
 
+	providermocks "github.com/osapi-io/osapi/internal/provider/mocks"
+
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -33,8 +35,6 @@ import (
 	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
 	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 	"github.com/osapi-io/osapi/internal/provider/node/service"
-
-	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
 
 const testHostname = "test-host"
@@ -52,14 +52,14 @@ func (suite *DebianListPublicTestSuite) SetupTest() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	memFs := memfs.New()
 	mockDeployer := filemocks.NewMockDeployer(suite.ctrl)
-	mockStateKV := jobmocks.NewMockKeyValue(suite.ctrl)
+	mockStateKV := providermocks.NewMockFileState(suite.ctrl)
 	suite.mockExecManager = execmocks.NewMockManager(suite.ctrl)
 
 	suite.provider = service.NewDebianProvider(
 		logger,
 		memFs,
 		mockDeployer,
-		mockStateKV,
+		mockStateKV, "file-state",
 		suite.mockExecManager,
 		testHostname,
 	)

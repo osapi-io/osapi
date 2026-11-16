@@ -37,16 +37,14 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/mocks"
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
-	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 )
 
 type MetricsPublicTestSuite struct {
 	suite.Suite
 
-	ctrl     *gomock.Controller
-	nc       *mocks.MockNATSStatus
-	jobs     *jobmocks.MockJobClient
-	registry *jobmocks.MockKeyValue
+	ctrl *gomock.Controller
+	nc   *mocks.MockNATSStatus
+	jobs *jobmocks.MockJobClient
 }
 
 func TestMetricsPublicTestSuite(
@@ -59,13 +57,12 @@ func (s *MetricsPublicTestSuite) SetupSubTest() {
 	s.ctrl = gomock.NewController(s.T())
 	s.nc = mocks.NewMockNATSStatus(s.ctrl)
 	s.jobs = jobmocks.NewMockJobClient(s.ctrl)
-	s.registry = jobmocks.NewMockKeyValue(s.ctrl)
 }
 
 var errBoom = errors.New("boom")
 
 func (s *MetricsPublicTestSuite) provider(
-	registryKV jetstream.KeyValue,
+	registryBucket string,
 ) *health.ClosureMetricsProvider {
 	return controller.ExportNewMetricsProvider(
 		s.nc,
@@ -73,7 +70,7 @@ func (s *MetricsPublicTestSuite) provider(
 		[]string{"kv-missing", "kv-broken", "kv-ok"},
 		[]string{"obj-missing", "obj-broken", "obj-ok"},
 		s.jobs,
-		registryKV,
+		registryBucket,
 	)
 }
 
@@ -102,7 +99,7 @@ func (s *MetricsPublicTestSuite) TestNATSInfo() {
 				s.nc.EXPECT().ConnectedServerVersion().Return("2.11.0")
 			}
 
-			got, err := s.provider(nil).NATSInfoFn(context.Background())
+			got, err := s.provider("").NATSInfoFn(context.Background())
 
 			if tc.wantErr != "" {
 				s.EqualError(err, tc.wantErr)
@@ -140,9 +137,9 @@ func (s *MetricsPublicTestSuite) TestStreamInfo() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.nc.EXPECT().GetStreamInfo(gomock.Any(), "test-JOBS").Return(tc.info, tc.err)
+			s.nc.EXPECT().StreamInfo(gomock.Any(), "test-JOBS").Return(tc.info, tc.err)
 
-			got, err := s.provider(nil).StreamInfoFn(context.Background())
+			got, err := s.provider("").StreamInfoFn(context.Background())
 
 			if tc.wantErr != "" {
 				s.EqualError(err, tc.wantErr)
@@ -156,20 +153,16 @@ func (s *MetricsPublicTestSuite) TestStreamInfo() {
 
 func (s *MetricsPublicTestSuite) TestKVInfo() {
 	s.Run("when a bucket fails leaves it out", func() {
-		broken := jobmocks.NewMockKeyValue(s.ctrl)
-		broken.EXPECT().Status(gomock.Any()).Return(nil, errBoom)
 		status := mocks.NewMockKeyValueStatus(s.ctrl)
 		status.EXPECT().Bucket().Return("kv-ok")
 		status.EXPECT().Values().Return(uint64(4))
 		status.EXPECT().Bytes().Return(uint64(256))
-		ok := jobmocks.NewMockKeyValue(s.ctrl)
-		ok.EXPECT().Status(gomock.Any()).Return(status, nil)
 
-		s.nc.EXPECT().KeyValue(gomock.Any(), "kv-missing").Return(nil, errBoom)
-		s.nc.EXPECT().KeyValue(gomock.Any(), "kv-broken").Return(broken, nil)
-		s.nc.EXPECT().KeyValue(gomock.Any(), "kv-ok").Return(ok, nil)
+		s.nc.EXPECT().KVStatus(gomock.Any(), "kv-missing").Return(nil, errBoom)
+		s.nc.EXPECT().KVStatus(gomock.Any(), "kv-broken").Return(nil, errBoom)
+		s.nc.EXPECT().KVStatus(gomock.Any(), "kv-ok").Return(status, nil)
 
-		got, err := s.provider(nil).KVInfoFn(context.Background())
+		got, err := s.provider("").KVInfoFn(context.Background())
 
 		s.Require().NoError(err)
 		s.Equal([]health.KVMetrics{{Name: "kv-ok", Keys: 4, Bytes: 256}}, got)
@@ -178,19 +171,15 @@ func (s *MetricsPublicTestSuite) TestKVInfo() {
 
 func (s *MetricsPublicTestSuite) TestObjectStoreInfo() {
 	s.Run("when a bucket fails leaves it out", func() {
-		broken := filemocks.NewMockObjectStore(s.ctrl)
-		broken.EXPECT().Status(gomock.Any()).Return(nil, errBoom)
 		status := mocks.NewMockObjectStoreStatus(s.ctrl)
 		status.EXPECT().Bucket().Return("obj-ok")
 		status.EXPECT().Size().Return(uint64(1024))
-		ok := filemocks.NewMockObjectStore(s.ctrl)
-		ok.EXPECT().Status(gomock.Any()).Return(status, nil)
 
-		s.nc.EXPECT().ObjectStore(gomock.Any(), "obj-missing").Return(nil, errBoom)
-		s.nc.EXPECT().ObjectStore(gomock.Any(), "obj-broken").Return(broken, nil)
-		s.nc.EXPECT().ObjectStore(gomock.Any(), "obj-ok").Return(ok, nil)
+		s.nc.EXPECT().ObjectStoreStatus(gomock.Any(), "obj-missing").Return(nil, errBoom)
+		s.nc.EXPECT().ObjectStoreStatus(gomock.Any(), "obj-broken").Return(nil, errBoom)
+		s.nc.EXPECT().ObjectStoreStatus(gomock.Any(), "obj-ok").Return(status, nil)
 
-		got, err := s.provider(nil).ObjectStoreInfoFn(context.Background())
+		got, err := s.provider("").ObjectStoreInfoFn(context.Background())
 
 		s.Require().NoError(err)
 		s.Equal([]health.ObjectStoreMetrics{{Name: "obj-ok", Size: 1024}}, got)
@@ -237,7 +226,7 @@ func (s *MetricsPublicTestSuite) TestJobStats() {
 		s.Run(tc.name, func() {
 			s.jobs.EXPECT().GetQueueSummary(gomock.Any()).Return(tc.stats, tc.err)
 
-			got, err := s.provider(nil).JobStatsFn(context.Background())
+			got, err := s.provider("").JobStatsFn(context.Background())
 
 			if tc.wantErr != "" {
 				s.EqualError(err, tc.wantErr)
@@ -281,7 +270,7 @@ func (s *MetricsPublicTestSuite) TestAgentStats() {
 		s.Run(tc.name, func() {
 			s.jobs.EXPECT().ListAgents(gomock.Any()).Return(tc.agents, tc.err)
 
-			got, err := s.provider(nil).AgentStatsFn(context.Background())
+			got, err := s.provider("").AgentStatsFn(context.Background())
 
 			if tc.wantErr != "" {
 				s.EqualError(err, tc.wantErr)
@@ -301,7 +290,7 @@ func (s *MetricsPublicTestSuite) TestAgentStats() {
 			Labels:   map[string]string{"a": "1", "b": "2"},
 		}}, nil)
 
-		got, err := s.provider(nil).AgentStatsFn(context.Background())
+		got, err := s.provider("").AgentStatsFn(context.Background())
 
 		s.Require().NoError(err)
 		s.Contains([]string{"a=1, b=2", "b=2, a=1"}, got.Agents[0].Labels)
@@ -335,23 +324,27 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 	subs := map[string]job.SubComponentInfo{"agent.heartbeat": {Status: "ok"}}
 
 	s.Run("when the registry has components returns each one, sorted", func() {
-		s.registry.EXPECT().Keys(gomock.Any()).Return([]string{
+		s.nc.EXPECT().KVKeys(gomock.Any(), "registry").Return([]string{
 			"agents.web-01", "agents.bad-json", "controller.ctl-01",
 			"nats.bad-json", "nodot", "unknown.x", "agents.gone", "agents.app-01",
 		}, nil)
-		s.registry.EXPECT().Get(gomock.Any(), "agents.web-01").Return(s.entry(job.AgentRegistration{
-			Hostname:      "web-01",
-			StartedAt:     started,
-			Conditions:    conditions,
-			Process:       process,
-			SubComponents: subs,
-		}), nil)
-		s.registry.EXPECT().Get(gomock.Any(), "agents.app-01").Return(s.entry(job.AgentRegistration{
-			Hostname: "app-01",
-		}), nil)
-		s.registry.EXPECT().Get(gomock.Any(), "agents.bad-json").Return(s.entry("{"), nil)
-		s.registry.EXPECT().
-			Get(gomock.Any(), "controller.ctl-01").
+		s.nc.EXPECT().
+			KVGet(gomock.Any(), "registry", "agents.web-01").
+			Return(s.entry(job.AgentRegistration{
+				Hostname:      "web-01",
+				StartedAt:     started,
+				Conditions:    conditions,
+				Process:       process,
+				SubComponents: subs,
+			}), nil)
+		s.nc.EXPECT().
+			KVGet(gomock.Any(), "registry", "agents.app-01").
+			Return(s.entry(job.AgentRegistration{
+				Hostname: "app-01",
+			}), nil)
+		s.nc.EXPECT().KVGet(gomock.Any(), "registry", "agents.bad-json").Return(s.entry("{"), nil)
+		s.nc.EXPECT().
+			KVGet(gomock.Any(), "registry", "controller.ctl-01").
 			Return(s.entry(job.ComponentRegistration{
 				Type:          "controller",
 				Hostname:      "ctl-01",
@@ -360,11 +353,11 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 				Process:       process,
 				SubComponents: map[string]job.SubComponentInfo{"controller.api": {Status: "ok"}},
 			}), nil)
-		s.registry.EXPECT().Get(gomock.Any(), "nats.bad-json").Return(s.entry("{"), nil)
-		s.registry.EXPECT().Get(gomock.Any(), "unknown.x").Return(s.entry("{}"), nil)
-		s.registry.EXPECT().Get(gomock.Any(), "agents.gone").Return(nil, errBoom)
+		s.nc.EXPECT().KVGet(gomock.Any(), "registry", "nats.bad-json").Return(s.entry("{"), nil)
+		s.nc.EXPECT().KVGet(gomock.Any(), "registry", "unknown.x").Return(s.entry("{}"), nil)
+		s.nc.EXPECT().KVGet(gomock.Any(), "registry", "agents.gone").Return(nil, errBoom)
 
-		got, err := s.provider(s.registry).ComponentRegistryFn(context.Background())
+		got, err := s.provider("registry").ComponentRegistryFn(context.Background())
 
 		s.Require().NoError(err)
 		s.Require().Len(got, 3)
@@ -385,24 +378,24 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 	})
 
 	s.Run("when the registry is empty returns no components", func() {
-		s.registry.EXPECT().Keys(gomock.Any()).Return(nil, errors.New("nats: no keys found"))
+		s.nc.EXPECT().KVKeys(gomock.Any(), "registry").Return([]string{}, nil)
 
-		got, err := s.provider(s.registry).ComponentRegistryFn(context.Background())
+		got, err := s.provider("registry").ComponentRegistryFn(context.Background())
 
 		s.Require().NoError(err)
 		s.Empty(got)
 	})
 
 	s.Run("when the registry fails returns the error", func() {
-		s.registry.EXPECT().Keys(gomock.Any()).Return(nil, errBoom)
+		s.nc.EXPECT().KVKeys(gomock.Any(), "registry").Return(nil, errBoom)
 
-		_, err := s.provider(s.registry).ComponentRegistryFn(context.Background())
+		_, err := s.provider("registry").ComponentRegistryFn(context.Background())
 
 		s.EqualError(err, "list registry keys: boom")
 	})
 
 	s.Run("when there is no registry returns the error", func() {
-		_, err := s.provider(nil).ComponentRegistryFn(context.Background())
+		_, err := s.provider("").ComponentRegistryFn(context.Background())
 
 		s.EqualError(err, "registry KV not configured")
 	})
@@ -428,9 +421,8 @@ func (s *MetricsPublicTestSuite) TestHealthChecker() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			s.nc.EXPECT().ConnectedURL().Return(tc.url)
-			kv := jobmocks.NewMockKeyValue(s.ctrl)
-			kv.EXPECT().Status(gomock.Any()).Return(nil, tc.kvErr).AnyTimes()
-			checker := controller.ExportNewHealthChecker(s.nc, kv)
+			s.nc.EXPECT().KVStatus(gomock.Any(), "jobs").Return(nil, tc.kvErr).AnyTimes()
+			checker := controller.ExportNewHealthChecker(s.nc, "jobs")
 
 			err := checker.NATSCheck()
 			if err == nil {

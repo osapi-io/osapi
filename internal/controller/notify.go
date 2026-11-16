@@ -25,8 +25,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/nats-io/nats.go/jetstream"
-
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/notify"
 )
@@ -36,10 +34,11 @@ import (
 func startConditionWatcher(
 	ctx context.Context,
 	log *slog.Logger,
-	registryKV jetstream.KeyValue,
+	registry notify.Registry,
+	registryBucket string,
 	cfg config.NotificationsConfig,
 ) {
-	if !cfg.Enabled || registryKV == nil {
+	if !cfg.Enabled || registryBucket == "" {
 		return
 	}
 
@@ -57,6 +56,12 @@ func startConditionWatcher(
 		}
 	}
 
-	watcher := notify.NewWatcher(registryKV, notify.NewLogNotifier(log), log, renotify)
+	watcher := notify.NewWatcher(
+		registry,
+		registryBucket,
+		notify.NewLogNotifier(log),
+		log,
+		renotify,
+	)
 	background(ctx, log, "condition watcher", watcher.Start)
 }

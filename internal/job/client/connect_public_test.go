@@ -83,7 +83,7 @@ func (s *ConnectPublicTestSuite) startServer() (config.NATS, config.NATSConnecti
 		Namespace: "test",
 		Auth:      config.NATSServerAuth{Type: "none"},
 	})
-	srv, err := server.New(context.Background(), slog.Default(), cfg)
+	srv, err := server.New(context.Background(), slog.Default(), cfg, nil)
 	s.Require().NoError(err)
 	s.T().Cleanup(func() { srv.Stop(context.Background()) })
 
@@ -148,7 +148,7 @@ func (s *ConnectPublicTestSuite) TestConnect() {
 				cfg.Registry.Bucket = "bad name"
 				return cfg, conn
 			},
-			wantErr: "create registry KV bucket: ",
+			wantErr: "create KV bucket test-bad name: ",
 		},
 	}
 
@@ -163,6 +163,7 @@ func (s *ConnectPublicTestSuite) TestConnect() {
 				cfg,
 				time.Second,
 				nil,
+				nil,
 			)
 
 			if tc.wantErr != "" {
@@ -173,10 +174,10 @@ func (s *ConnectPublicTestSuite) TestConnect() {
 			s.Require().NoError(err)
 			defer c.NATS.Close()
 			s.NotNil(c.Jobs)
-			s.NotNil(c.JobsKV)
-			s.NotNil(c.RegistryKV)
-			s.Equal(tc.wantFacts, c.FactsKV != nil)
-			s.Equal(tc.wantFacts, c.StateKV != nil)
+			s.NotEmpty(c.JobsBucket)
+			s.NotEmpty(c.RegistryBucket)
+			s.Equal(tc.wantFacts, c.FactsBucket != "")
+			s.Equal(tc.wantFacts, c.StateBucket != "")
 		})
 	}
 }

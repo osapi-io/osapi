@@ -39,20 +39,18 @@ import (
 type StreamStorePublicTestSuite struct {
 	suite.Suite
 
-	ctrl          *gomock.Controller
-	mockStream    *mocks.MockStream
-	mockPublisher *mocks.MockPublisher
-	store         *audit.StreamStore
+	ctrl       *gomock.Controller
+	mockStream *mocks.MockStream
+	store      *audit.StreamStore
 }
 
 func (s *StreamStorePublicTestSuite) SetupTest() {
 	s.ctrl = gomock.NewController(s.T())
 	s.mockStream = mocks.NewMockStream(s.ctrl)
-	s.mockPublisher = mocks.NewMockPublisher(s.ctrl)
 	s.store = audit.NewStreamStore(
 		slog.Default(),
 		s.mockStream,
-		s.mockPublisher,
+		"AUDIT",
 		"audit.log",
 	)
 }
@@ -82,18 +80,6 @@ func (s *StreamStorePublicTestSuite) newEntry(
 	}
 }
 
-func (s *StreamStorePublicTestSuite) newMsgChan(
-	msgs ...jetstream.Msg,
-) <-chan jetstream.Msg {
-	ch := make(chan jetstream.Msg, len(msgs))
-	for _, msg := range msgs {
-		ch <- msg
-	}
-	close(ch)
-
-	return ch
-}
-
 func (s *StreamStorePublicTestSuite) newStreamInfo(
 	msgs uint64,
 	firstSeq uint64,
@@ -117,7 +103,7 @@ func (s *StreamStorePublicTestSuite) TestWrite() {
 			name:  "successfully publishes entry",
 			entry: s.newEntry("entry-1"),
 			setupMock: func() {
-				s.mockPublisher.EXPECT().
+				s.mockStream.EXPECT().
 					Publish(gomock.Any(), "audit.log.entry-1", gomock.Any()).
 					Return(nil)
 			},
@@ -129,7 +115,7 @@ func (s *StreamStorePublicTestSuite) TestWrite() {
 			name:  "returns error when publish fails",
 			entry: s.newEntry("entry-2"),
 			setupMock: func() {
-				s.mockPublisher.EXPECT().
+				s.mockStream.EXPECT().
 					Publish(gomock.Any(), "audit.log.entry-2", gomock.Any()).
 					Return(fmt.Errorf("publish error"))
 			},
@@ -177,7 +163,7 @@ func (s *StreamStorePublicTestSuite) TestGet() {
 			id:   "entry-1",
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					GetLastMsgForSubject(gomock.Any(), "audit.log.entry-1").
+					StreamLastMsg(gomock.Any(), "AUDIT", "audit.log.entry-1").
 					Return(&jetstream.RawStreamMsg{Data: data}, nil)
 			},
 			validateFunc: func(e *audit.Entry, err error) {
@@ -193,7 +179,7 @@ func (s *StreamStorePublicTestSuite) TestGet() {
 			id:   "missing",
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					GetLastMsgForSubject(gomock.Any(), "audit.log.missing").
+					StreamLastMsg(gomock.Any(), "AUDIT", "audit.log.missing").
 					Return(nil, jetstream.ErrMsgNotFound)
 			},
 			validateFunc: func(e *audit.Entry, err error) {
@@ -207,7 +193,7 @@ func (s *StreamStorePublicTestSuite) TestGet() {
 			id:   "bad-json",
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					GetLastMsgForSubject(gomock.Any(), "audit.log.bad-json").
+					StreamLastMsg(gomock.Any(), "AUDIT", "audit.log.bad-json").
 					Return(&jetstream.RawStreamMsg{Data: []byte("not-json")}, nil)
 			},
 			validateFunc: func(e *audit.Entry, err error) {
@@ -248,16 +234,8 @@ func (s *StreamStorePublicTestSuite) TestList() {
 			offset: 0,
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					Info(gomock.Any()).
+					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(3, 1), nil)
-
-				mockConsumer := mocks.NewMockConsumer(s.ctrl)
-				s.mockStream.EXPECT().
-					OrderedConsumer(gomock.Any(), jetstream.OrderedConsumerConfig{
-						DeliverPolicy: jetstream.DeliverByStartSequencePolicy,
-						OptStartSeq:   1,
-					}).
-					Return(mockConsumer, nil)
 
 				msg1 := mocks.NewMockMsg(s.ctrl)
 				msg1.EXPECT().Data().Return(data1)
@@ -266,13 +244,9 @@ func (s *StreamStorePublicTestSuite) TestList() {
 				msg3 := mocks.NewMockMsg(s.ctrl)
 				msg3.EXPECT().Data().Return(data3)
 
-				mockBatch := mocks.NewMockMessageBatch(s.ctrl)
-				mockBatch.EXPECT().Messages().Return(s.newMsgChan(msg1, msg2, msg3))
-				mockBatch.EXPECT().Error().Return(nil)
-
-				mockConsumer.EXPECT().
-					Fetch(3, gomock.Any()).
-					Return(mockBatch, nil)
+				s.mockStream.EXPECT().
+					StreamRead(gomock.Any(), "AUDIT", uint64(1), 3).
+					Return([]jetstream.Msg{msg1, msg2, msg3}, nil)
 			},
 			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
@@ -290,28 +264,17 @@ func (s *StreamStorePublicTestSuite) TestList() {
 			offset: 1,
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					Info(gomock.Any()).
+					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(3, 1), nil)
 
-				mockConsumer := mocks.NewMockConsumer(s.ctrl)
 				// newestSeq=3, offset=1, count=1 => startSeq=3-1-1+1=2
-				s.mockStream.EXPECT().
-					OrderedConsumer(gomock.Any(), jetstream.OrderedConsumerConfig{
-						DeliverPolicy: jetstream.DeliverByStartSequencePolicy,
-						OptStartSeq:   2,
-					}).
-					Return(mockConsumer, nil)
 
 				msg := mocks.NewMockMsg(s.ctrl)
 				msg.EXPECT().Data().Return(data2)
 
-				mockBatch := mocks.NewMockMessageBatch(s.ctrl)
-				mockBatch.EXPECT().Messages().Return(s.newMsgChan(msg))
-				mockBatch.EXPECT().Error().Return(nil)
-
-				mockConsumer.EXPECT().
-					Fetch(1, gomock.Any()).
-					Return(mockBatch, nil)
+				s.mockStream.EXPECT().
+					StreamRead(gomock.Any(), "AUDIT", uint64(2), 1).
+					Return([]jetstream.Msg{msg}, nil)
 			},
 			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
@@ -326,7 +289,7 @@ func (s *StreamStorePublicTestSuite) TestList() {
 			offset: 100,
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					Info(gomock.Any()).
+					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(3, 1), nil)
 			},
 			validateFunc: func(entries []audit.Entry, total int, err error) {
@@ -341,7 +304,7 @@ func (s *StreamStorePublicTestSuite) TestList() {
 			offset: 0,
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					Info(gomock.Any()).
+					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(0, 0), nil)
 			},
 			validateFunc: func(entries []audit.Entry, total int, err error) {
@@ -356,7 +319,7 @@ func (s *StreamStorePublicTestSuite) TestList() {
 			offset: 0,
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					Info(gomock.Any()).
+					StreamInfo(gomock.Any(), "AUDIT").
 					Return(nil, fmt.Errorf("connection error"))
 			},
 			validateFunc: func(entries []audit.Entry, total int, err error) {
@@ -367,40 +330,16 @@ func (s *StreamStorePublicTestSuite) TestList() {
 			},
 		},
 		{
-			name:   "returns error when OrderedConsumer fails",
+			name:   "returns error when the read fails",
 			limit:  10,
 			offset: 0,
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					Info(gomock.Any()).
+					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(3, 1), nil)
 				s.mockStream.EXPECT().
-					OrderedConsumer(gomock.Any(), gomock.Any()).
-					Return(nil, fmt.Errorf("consumer error"))
-			},
-			validateFunc: func(entries []audit.Entry, total int, err error) {
-				s.Error(err)
-				s.Nil(entries)
-				s.Equal(0, total)
-				s.Contains(err.Error(), "create ordered consumer")
-			},
-		},
-		{
-			name:   "returns error when Fetch fails",
-			limit:  10,
-			offset: 0,
-			setupMock: func() {
-				s.mockStream.EXPECT().
-					Info(gomock.Any()).
-					Return(s.newStreamInfo(3, 1), nil)
-
-				mockConsumer := mocks.NewMockConsumer(s.ctrl)
-				s.mockStream.EXPECT().
-					OrderedConsumer(gomock.Any(), gomock.Any()).
-					Return(mockConsumer, nil)
-				mockConsumer.EXPECT().
-					Fetch(3, gomock.Any()).
-					Return(nil, fmt.Errorf("fetch error"))
+					StreamRead(gomock.Any(), "AUDIT", gomock.Any(), gomock.Any()).
+					Return(nil, fmt.Errorf("read error"))
 			},
 			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.Error(err)
@@ -415,26 +354,17 @@ func (s *StreamStorePublicTestSuite) TestList() {
 			offset: 0,
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					Info(gomock.Any()).
+					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(2, 1), nil)
-
-				mockConsumer := mocks.NewMockConsumer(s.ctrl)
-				s.mockStream.EXPECT().
-					OrderedConsumer(gomock.Any(), gomock.Any()).
-					Return(mockConsumer, nil)
 
 				badMsg := mocks.NewMockMsg(s.ctrl)
 				badMsg.EXPECT().Data().Return([]byte("not-json"))
 				goodMsg := mocks.NewMockMsg(s.ctrl)
 				goodMsg.EXPECT().Data().Return(data1)
 
-				mockBatch := mocks.NewMockMessageBatch(s.ctrl)
-				mockBatch.EXPECT().Messages().Return(s.newMsgChan(badMsg, goodMsg))
-				mockBatch.EXPECT().Error().Return(nil)
-
-				mockConsumer.EXPECT().
-					Fetch(2, gomock.Any()).
-					Return(mockBatch, nil)
+				s.mockStream.EXPECT().
+					StreamRead(gomock.Any(), "AUDIT", uint64(1), 2).
+					Return([]jetstream.Msg{badMsg, goodMsg}, nil)
 			},
 			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
@@ -449,24 +379,15 @@ func (s *StreamStorePublicTestSuite) TestList() {
 			offset: 0,
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					Info(gomock.Any()).
+					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(1, 1), nil)
-
-				mockConsumer := mocks.NewMockConsumer(s.ctrl)
-				s.mockStream.EXPECT().
-					OrderedConsumer(gomock.Any(), gomock.Any()).
-					Return(mockConsumer, nil)
 
 				msg := mocks.NewMockMsg(s.ctrl)
 				msg.EXPECT().Data().Return(data1)
 
-				mockBatch := mocks.NewMockMessageBatch(s.ctrl)
-				mockBatch.EXPECT().Messages().Return(s.newMsgChan(msg))
-				mockBatch.EXPECT().Error().Return(fmt.Errorf("batch timeout"))
-
-				mockConsumer.EXPECT().
-					Fetch(1, gomock.Any()).
-					Return(mockBatch, nil)
+				s.mockStream.EXPECT().
+					StreamRead(gomock.Any(), "AUDIT", uint64(1), 1).
+					Return([]jetstream.Msg{msg}, fmt.Errorf("batch timeout"))
 			},
 			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
@@ -502,15 +423,8 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 			name: "returns all entries newest-first",
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					Info(gomock.Any()).
+					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(3, 1), nil)
-
-				mockConsumer := mocks.NewMockConsumer(s.ctrl)
-				s.mockStream.EXPECT().
-					OrderedConsumer(gomock.Any(), jetstream.OrderedConsumerConfig{
-						DeliverPolicy: jetstream.DeliverAllPolicy,
-					}).
-					Return(mockConsumer, nil)
 
 				msg1 := mocks.NewMockMsg(s.ctrl)
 				msg1.EXPECT().Data().Return(data1)
@@ -519,13 +433,9 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 				msg3 := mocks.NewMockMsg(s.ctrl)
 				msg3.EXPECT().Data().Return(data3)
 
-				mockBatch := mocks.NewMockMessageBatch(s.ctrl)
-				mockBatch.EXPECT().Messages().Return(s.newMsgChan(msg1, msg2, msg3))
-				mockBatch.EXPECT().Error().Return(nil)
-
-				mockConsumer.EXPECT().
-					Fetch(3, gomock.Any()).
-					Return(mockBatch, nil)
+				s.mockStream.EXPECT().
+					StreamRead(gomock.Any(), "AUDIT", uint64(0), 3).
+					Return([]jetstream.Msg{msg1, msg2, msg3}, nil)
 			},
 			validateFunc: func(entries []audit.Entry, err error) {
 				s.NoError(err)
@@ -540,7 +450,7 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 			name: "returns empty for empty stream",
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					Info(gomock.Any()).
+					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(0, 0), nil)
 			},
 			validateFunc: func(entries []audit.Entry, err error) {
@@ -552,7 +462,7 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 			name: "returns error when Info fails",
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					Info(gomock.Any()).
+					StreamInfo(gomock.Any(), "AUDIT").
 					Return(nil, fmt.Errorf("connection error"))
 			},
 			validateFunc: func(entries []audit.Entry, err error) {
@@ -562,35 +472,14 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 			},
 		},
 		{
-			name: "returns error when OrderedConsumer fails",
+			name: "returns error when the read fails",
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					Info(gomock.Any()).
+					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(3, 1), nil)
 				s.mockStream.EXPECT().
-					OrderedConsumer(gomock.Any(), gomock.Any()).
-					Return(nil, fmt.Errorf("consumer error"))
-			},
-			validateFunc: func(entries []audit.Entry, err error) {
-				s.Error(err)
-				s.Nil(entries)
-				s.Contains(err.Error(), "create ordered consumer")
-			},
-		},
-		{
-			name: "returns error when Fetch fails",
-			setupMock: func() {
-				s.mockStream.EXPECT().
-					Info(gomock.Any()).
-					Return(s.newStreamInfo(3, 1), nil)
-
-				mockConsumer := mocks.NewMockConsumer(s.ctrl)
-				s.mockStream.EXPECT().
-					OrderedConsumer(gomock.Any(), gomock.Any()).
-					Return(mockConsumer, nil)
-				mockConsumer.EXPECT().
-					Fetch(3, gomock.Any()).
-					Return(nil, fmt.Errorf("fetch error"))
+					StreamRead(gomock.Any(), "AUDIT", gomock.Any(), gomock.Any()).
+					Return(nil, fmt.Errorf("read error"))
 			},
 			validateFunc: func(entries []audit.Entry, err error) {
 				s.Error(err)
@@ -602,26 +491,17 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 			name: "skips entries when unmarshal fails",
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					Info(gomock.Any()).
+					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(2, 1), nil)
-
-				mockConsumer := mocks.NewMockConsumer(s.ctrl)
-				s.mockStream.EXPECT().
-					OrderedConsumer(gomock.Any(), gomock.Any()).
-					Return(mockConsumer, nil)
 
 				badMsg := mocks.NewMockMsg(s.ctrl)
 				badMsg.EXPECT().Data().Return([]byte("not-json"))
 				goodMsg := mocks.NewMockMsg(s.ctrl)
 				goodMsg.EXPECT().Data().Return(data1)
 
-				mockBatch := mocks.NewMockMessageBatch(s.ctrl)
-				mockBatch.EXPECT().Messages().Return(s.newMsgChan(badMsg, goodMsg))
-				mockBatch.EXPECT().Error().Return(nil)
-
-				mockConsumer.EXPECT().
-					Fetch(2, gomock.Any()).
-					Return(mockBatch, nil)
+				s.mockStream.EXPECT().
+					StreamRead(gomock.Any(), "AUDIT", uint64(0), 2).
+					Return([]jetstream.Msg{badMsg, goodMsg}, nil)
 			},
 			validateFunc: func(entries []audit.Entry, err error) {
 				s.NoError(err)
@@ -633,24 +513,15 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 			name: "logs warning on batch error",
 			setupMock: func() {
 				s.mockStream.EXPECT().
-					Info(gomock.Any()).
+					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(1, 1), nil)
-
-				mockConsumer := mocks.NewMockConsumer(s.ctrl)
-				s.mockStream.EXPECT().
-					OrderedConsumer(gomock.Any(), gomock.Any()).
-					Return(mockConsumer, nil)
 
 				msg := mocks.NewMockMsg(s.ctrl)
 				msg.EXPECT().Data().Return(data1)
 
-				mockBatch := mocks.NewMockMessageBatch(s.ctrl)
-				mockBatch.EXPECT().Messages().Return(s.newMsgChan(msg))
-				mockBatch.EXPECT().Error().Return(fmt.Errorf("batch timeout"))
-
-				mockConsumer.EXPECT().
-					Fetch(1, gomock.Any()).
-					Return(mockBatch, nil)
+				s.mockStream.EXPECT().
+					StreamRead(gomock.Any(), "AUDIT", uint64(0), 1).
+					Return([]jetstream.Msg{msg}, fmt.Errorf("batch timeout"))
 			},
 			validateFunc: func(entries []audit.Entry, err error) {
 				s.NoError(err)

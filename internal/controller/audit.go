@@ -35,15 +35,8 @@ import (
 
 // auditStreams is the part of a NATS client that the audit store uses.
 type auditStreams interface {
-	CreateOrUpdateStreamWithConfig(
-		ctx context.Context,
-		streamConfig jetstream.StreamConfig,
-	) error
-	Stream(
-		ctx context.Context,
-		name string,
-	) (jetstream.Stream, error)
-	audit.Publisher
+	StreamCreateOrUpdate(ctx context.Context, config jetstream.StreamConfig) error
+	audit.Stream
 }
 
 // newAuditStore makes the audit stream and a store on it. It returns nil if
@@ -59,22 +52,14 @@ func newAuditStore(
 		return nil, nil
 	}
 
-	if err := nc.CreateOrUpdateStreamWithConfig(
-		ctx,
-		bus.AuditStream(namespace, cfg),
-	); err != nil {
+	if err := nc.StreamCreateOrUpdate(ctx, bus.AuditStream(namespace, cfg)); err != nil {
 		return nil, fmt.Errorf("create audit stream: %w", err)
-	}
-
-	stream, err := nc.Stream(ctx, job.ApplyNamespaceToInfraName(namespace, cfg.Stream))
-	if err != nil {
-		return nil, fmt.Errorf("get audit stream: %w", err)
 	}
 
 	return audit.NewStreamStore(
 		log,
-		stream,
 		nc,
+		job.ApplyNamespaceToInfraName(namespace, cfg.Stream),
 		job.ApplyNamespaceToSubjects(namespace, cfg.Subject),
 	), nil
 }

@@ -40,14 +40,12 @@ type AgentDrainPublicTestSuite struct {
 
 	mockCtrl       *gomock.Controller
 	mockNATSClient *jobmocks.MockNATSClient
-	mockKV         *jobmocks.MockKeyValue
 	ctx            context.Context
 }
 
 func (s *AgentDrainPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockNATSClient = jobmocks.NewMockNATSClient(s.mockCtrl)
-	s.mockKV = jobmocks.NewMockKeyValue(s.mockCtrl)
 	s.ctx = context.Background()
 }
 
@@ -55,13 +53,11 @@ func (s *AgentDrainPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *AgentDrainPublicTestSuite) newClientWithState(
-	stateKV *jobmocks.MockKeyValue,
-) *client.Client {
+func (s *AgentDrainPublicTestSuite) newClientWithState() *client.Client {
 	opts := &client.Options{
-		Timeout:  30 * time.Second,
-		KVBucket: s.mockKV,
-		StateKV:  stateKV,
+		Timeout:     30 * time.Second,
+		JobsBucket:  "jobs",
+		StateBucket: "state",
 	}
 	c, err := client.New(slog.Default(), s.mockNATSClient, opts)
 	s.Require().NoError(err)
@@ -71,8 +67,8 @@ func (s *AgentDrainPublicTestSuite) newClientWithState(
 
 func (s *AgentDrainPublicTestSuite) newClientWithoutState() *client.Client {
 	opts := &client.Options{
-		Timeout:  30 * time.Second,
-		KVBucket: s.mockKV,
+		Timeout:    30 * time.Second,
+		JobsBucket: "jobs",
 	}
 	c, err := client.New(slog.Default(), s.mockNATSClient, opts)
 	s.Require().NoError(err)
@@ -85,17 +81,17 @@ func (s *AgentDrainPublicTestSuite) TestCheckDrainFlag() {
 		name         string
 		hostname     string
 		useState     bool
-		setupMocks   func(*jobmocks.MockKeyValue)
+		setupMocks   func(*jobmocks.MockNATSClient)
 		validateFunc func(bool)
 	}{
 		{
 			name:     "when drain flag exists returns true",
 			hostname: "server1",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
 				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				kv.EXPECT().
-					Get(gomock.Any(), "drain.server1").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "state", "drain.server1").
 					Return(entry, nil)
 			},
 			validateFunc: func(got bool) {
@@ -106,9 +102,9 @@ func (s *AgentDrainPublicTestSuite) TestCheckDrainFlag() {
 			name:     "when drain flag missing returns false",
 			hostname: "server1",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
-				kv.EXPECT().
-					Get(gomock.Any(), "drain.server1").
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "state", "drain.server1").
 					Return(nil, errors.New("key not found"))
 			},
 			validateFunc: func(got bool) {
@@ -116,7 +112,7 @@ func (s *AgentDrainPublicTestSuite) TestCheckDrainFlag() {
 			},
 		},
 		{
-			name:     "when stateKV is nil returns false",
+			name:     "when there is no state bucket returns false",
 			hostname: "server1",
 			useState: false,
 			validateFunc: func(got bool) {
@@ -129,11 +125,10 @@ func (s *AgentDrainPublicTestSuite) TestCheckDrainFlag() {
 		s.Run(tt.name, func() {
 			var jobsClient *client.Client
 			if tt.useState {
-				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
 				if tt.setupMocks != nil {
-					tt.setupMocks(stateKV)
+					tt.setupMocks(s.mockNATSClient)
 				}
-				jobsClient = s.newClientWithState(stateKV)
+				jobsClient = s.newClientWithState()
 			} else {
 				jobsClient = s.newClientWithoutState()
 			}
@@ -149,16 +144,16 @@ func (s *AgentDrainPublicTestSuite) TestSetDrainFlag() {
 		name         string
 		hostname     string
 		useState     bool
-		setupMocks   func(*jobmocks.MockKeyValue)
+		setupMocks   func(*jobmocks.MockNATSClient)
 		validateFunc func(error)
 	}{
 		{
 			name:     "when write succeeds sets drain flag",
 			hostname: "server1",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
-				kv.EXPECT().
-					Put(gomock.Any(), "drain.server1", []byte("1")).
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "state", "drain.server1", []byte("1")).
 					Return(uint64(1), nil)
 			},
 			validateFunc: func(err error) {
@@ -169,9 +164,9 @@ func (s *AgentDrainPublicTestSuite) TestSetDrainFlag() {
 			name:     "when KV put fails returns error",
 			hostname: "server1",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
-				kv.EXPECT().
-					Put(gomock.Any(), "drain.server1", []byte("1")).
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "state", "drain.server1", []byte("1")).
 					Return(uint64(0), errors.New("kv connection failed"))
 			},
 			validateFunc: func(err error) {
@@ -180,7 +175,7 @@ func (s *AgentDrainPublicTestSuite) TestSetDrainFlag() {
 			},
 		},
 		{
-			name:     "when stateKV is nil returns error",
+			name:     "when there is no state bucket returns error",
 			hostname: "server1",
 			useState: false,
 			validateFunc: func(err error) {
@@ -194,11 +189,10 @@ func (s *AgentDrainPublicTestSuite) TestSetDrainFlag() {
 		s.Run(tt.name, func() {
 			var jobsClient *client.Client
 			if tt.useState {
-				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
 				if tt.setupMocks != nil {
-					tt.setupMocks(stateKV)
+					tt.setupMocks(s.mockNATSClient)
 				}
-				jobsClient = s.newClientWithState(stateKV)
+				jobsClient = s.newClientWithState()
 			} else {
 				jobsClient = s.newClientWithoutState()
 			}
@@ -213,16 +207,16 @@ func (s *AgentDrainPublicTestSuite) TestDeleteDrainFlag() {
 		name         string
 		hostname     string
 		useState     bool
-		setupMocks   func(*jobmocks.MockKeyValue)
+		setupMocks   func(*jobmocks.MockNATSClient)
 		validateFunc func(error)
 	}{
 		{
 			name:     "when delete succeeds removes drain flag",
 			hostname: "server1",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
-				kv.EXPECT().
-					Delete(gomock.Any(), "drain.server1").
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
+				s.mockNATSClient.EXPECT().
+					KVDelete(gomock.Any(), "state", "drain.server1").
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -233,9 +227,9 @@ func (s *AgentDrainPublicTestSuite) TestDeleteDrainFlag() {
 			name:     "when KV delete fails returns error",
 			hostname: "server1",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
-				kv.EXPECT().
-					Delete(gomock.Any(), "drain.server1").
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
+				s.mockNATSClient.EXPECT().
+					KVDelete(gomock.Any(), "state", "drain.server1").
 					Return(errors.New("kv connection failed"))
 			},
 			validateFunc: func(err error) {
@@ -244,7 +238,7 @@ func (s *AgentDrainPublicTestSuite) TestDeleteDrainFlag() {
 			},
 		},
 		{
-			name:     "when stateKV is nil returns error",
+			name:     "when there is no state bucket returns error",
 			hostname: "server1",
 			useState: false,
 			validateFunc: func(err error) {
@@ -258,11 +252,10 @@ func (s *AgentDrainPublicTestSuite) TestDeleteDrainFlag() {
 		s.Run(tt.name, func() {
 			var jobsClient *client.Client
 			if tt.useState {
-				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
 				if tt.setupMocks != nil {
-					tt.setupMocks(stateKV)
+					tt.setupMocks(s.mockNATSClient)
 				}
-				jobsClient = s.newClientWithState(stateKV)
+				jobsClient = s.newClientWithState()
 			} else {
 				jobsClient = s.newClientWithoutState()
 			}
@@ -276,16 +269,16 @@ func (s *AgentDrainPublicTestSuite) TestOverlayDrainState() {
 	tests := []struct {
 		name         string
 		useState     bool
-		setupMocks   func(*jobmocks.MockKeyValue)
+		setupMocks   func(*jobmocks.MockNATSClient)
 		validateFunc func(string)
 	}{
 		{
 			name:     "when drain flag exists sets state to Cordoned",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
 				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				kv.EXPECT().
-					Get(gomock.Any(), "drain.abc123").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "state", "drain.abc123").
 					Return(entry, nil)
 			},
 			validateFunc: func(got string) {
@@ -295,9 +288,9 @@ func (s *AgentDrainPublicTestSuite) TestOverlayDrainState() {
 		{
 			name:     "when drain flag missing keeps original state",
 			useState: true,
-			setupMocks: func(kv *jobmocks.MockKeyValue) {
-				kv.EXPECT().
-					Get(gomock.Any(), "drain.abc123").
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "state", "drain.abc123").
 					Return(nil, errors.New("key not found"))
 			},
 			validateFunc: func(got string) {
@@ -305,7 +298,7 @@ func (s *AgentDrainPublicTestSuite) TestOverlayDrainState() {
 			},
 		},
 		{
-			name:     "when stateKV is nil keeps original state",
+			name:     "when there is no state bucket keeps original state",
 			useState: false,
 			validateFunc: func(got string) {
 				s.Equal("", got)
@@ -315,31 +308,28 @@ func (s *AgentDrainPublicTestSuite) TestOverlayDrainState() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
-
 			// Set up the registry KV to return agent data with machine_id
 			entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 			entry.EXPECT().Value().Return(agentRegistrationJSON("server1"))
-			registryKV.EXPECT().
-				Get(gomock.Any(), "agents.abc123").
+			s.mockNATSClient.EXPECT().
+				KVGet(gomock.Any(), "registry", "agents.abc123").
 				Return(entry, nil)
 
 			opts := &client.Options{
-				Timeout:    30 * time.Second,
-				KVBucket:   s.mockKV,
-				RegistryKV: registryKV,
+				Timeout:        30 * time.Second,
+				JobsBucket:     "jobs",
+				RegistryBucket: "registry",
 			}
 
 			if tt.useState {
-				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
 				if tt.setupMocks != nil {
-					tt.setupMocks(stateKV)
+					tt.setupMocks(s.mockNATSClient)
 				}
-				opts.StateKV = stateKV
+				opts.StateBucket = "state"
 				// GetAgent also calls GetAgentTimeline which uses stateKV
-				stateKV.EXPECT().
-					Keys(gomock.Any()).
-					Return(nil, errors.New("nats: no keys found"))
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "state").
+					Return([]string{}, nil)
 			}
 
 			jobsClient, err := client.New(

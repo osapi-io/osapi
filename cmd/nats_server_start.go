@@ -47,30 +47,24 @@ var natsServerStartCmd = &cobra.Command{
 		job.Init(appConfig.NATS.Server.Namespace)
 
 		log := logger.With("component", "nats")
-		s, err := server.New(ctx, log, appConfig.NATS)
+		// The metrics server is made before the NATS connection, so that
+		// nats-client records the calls of the bus on it.
+		metricsServer := newMetricsServer(appConfig.NATS.Server.Metrics, log)
+		s, err := server.New(ctx, log, appConfig.NATS, meterProviderOf(metricsServer))
 		if err != nil {
 			cli.LogFatal(log, "failed to start NATS server", err)
 		}
 
 		s.StartHeartbeat(ctx, appConfig.Agent.ProcessConditions)
 
-		var metricsServer *metrics.Server
-		if appConfig.NATS.Server.Metrics.Enabled {
-			metricsServer = metrics.New(
-				appConfig.NATS.Server.Metrics.Host,
-				appConfig.NATS.Server.Metrics.Port,
-				log,
+		if metricsServer != nil {
+			metricsServer.SetReadinessFunc(func() error {
+				return nil
+			})
+			metricsServer.RegisterSubsystems(
+				metrics.Subsystems(server.SubComponents(appConfig.NATS.Server)),
 			)
-
-			if metricsServer != nil {
-				metricsServer.SetReadinessFunc(func() error {
-					return nil
-				})
-				metricsServer.RegisterSubsystems(
-					metrics.Subsystems(server.SubComponents(appConfig.NATS.Server)),
-				)
-				metricsServer.Start()
-			}
+			metricsServer.Start()
 		}
 
 		serve(ctx, []component{s}, func(shutdownCtx context.Context) {

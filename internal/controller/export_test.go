@@ -26,40 +26,33 @@ import (
 	"os"
 
 	"github.com/labstack/echo/v5"
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/config"
-	"github.com/osapi-io/osapi/internal/controller/api/file"
 	"github.com/osapi-io/osapi/internal/controller/api/health"
+	"github.com/osapi-io/osapi/internal/controller/notify"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 )
 
 // ExportNewMetricsProvider calls newMetricsProvider.
 func ExportNewMetricsProvider(
-	nc interface {
-		ConnectedURL() string
-		ConnectedServerVersion() string
-		GetStreamInfo(ctx context.Context, streamName string) (*jetstream.StreamInfo, error)
-		KeyValue(ctx context.Context, bucket string) (jetstream.KeyValue, error)
-		ObjectStore(ctx context.Context, name string) (jetstream.ObjectStore, error)
-	},
+	nc natsStatus,
 	streamName string,
 	kvBuckets []string,
 	objBuckets []string,
 	jc jobclient.JobClient,
-	registryKV jetstream.KeyValue,
+	registryBucket string,
 ) *health.ClosureMetricsProvider {
-	return newMetricsProvider(nc, streamName, kvBuckets, objBuckets, jc, registryKV)
+	return newMetricsProvider(nc, streamName, kvBuckets, objBuckets, jc, registryBucket)
 }
 
 // ExportNewHealthChecker calls newHealthChecker.
 func ExportNewHealthChecker(
-	nc interface{ ConnectedURL() string },
-	jobsKV jetstream.KeyValue,
+	nc natsStatus,
+	jobsBucket string,
 ) *health.NATSChecker {
-	return newHealthChecker(nc, jobsKV)
+	return newHealthChecker(nc, jobsBucket)
 }
 
 // ExportConfiguredKVBuckets calls configuredKVBuckets.
@@ -96,7 +89,7 @@ func ExportOpenFileBuckets(
 	nc fileBuckets,
 	namespace string,
 	cfg config.NATS,
-) (file.ObjectStoreManager, jetstream.KeyValue) {
+) (string, string) {
 	return openFileBuckets(ctx, log, nc, namespace, cfg)
 }
 
@@ -105,13 +98,15 @@ func ExportHandlers(
 	log *slog.Logger,
 	cfg config.Config,
 	auditStore audit.Store,
-	objStore file.ObjectStoreManager,
+	nats fileBuckets,
+	objBucket string,
 ) []func(e *echo.Echo) {
 	return handlers(handlerDeps{
 		log:        log,
 		cfg:        cfg,
 		auditStore: auditStore,
-		objStore:   objStore,
+		nats:       nats,
+		objBucket:  objBucket,
 	})
 }
 
@@ -133,10 +128,11 @@ func ExportSubComponents(
 func ExportStartConditionWatcher(
 	ctx context.Context,
 	log *slog.Logger,
-	registryKV jetstream.KeyValue,
+	registry notify.Registry,
+	registryBucket string,
 	cfg config.NotificationsConfig,
 ) {
-	startConditionWatcher(ctx, log, registryKV, cfg)
+	startConditionWatcher(ctx, log, registry, registryBucket, cfg)
 }
 
 // ExportBackground calls background.

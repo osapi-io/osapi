@@ -23,12 +23,17 @@
 package atomicfile
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
 	"os"
 	"sync/atomic"
 
 	"github.com/avfs/avfs"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // tmpCounter distinguishes two temporary files written by the same process at
@@ -50,7 +55,41 @@ var tmpCounter atomic.Uint64
 // is never briefly readable by someone the mode excludes. It is set twice — at
 // creation and again explicitly — because the mode passed to open is masked by
 // the process umask and chmod is not.
+//
+// Inside a trace, the write is a span, file.write, with the path, the mode and
+// the size; the content stays out of it. A caller writes only a file whose
+// content differs, so the span is a change. A write outside a trace, such as
+// the keys at startup, makes no span.
 func Write(
+	ctx context.Context,
+	vfs avfs.VFS,
+	path string,
+	content []byte,
+	mode fs.FileMode,
+) error {
+	if !trace.SpanContextFromContext(ctx).IsValid() {
+		return write(vfs, path, content, mode)
+	}
+
+	_, span := otel.Tracer("osapi-atomicfile").Start(ctx, "file.write",
+		trace.WithAttributes(
+			attribute.String("file.path", path),
+			attribute.String("file.mode", fmt.Sprintf("%04o", mode.Perm())),
+			attribute.Int("file.size", len(content)),
+		),
+	)
+	defer span.End()
+
+	err := write(vfs, path, content, mode)
+	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+	}
+
+	return err
+}
+
+// write is Write without the span.
+func write(
 	vfs avfs.VFS,
 	path string,
 	content []byte,

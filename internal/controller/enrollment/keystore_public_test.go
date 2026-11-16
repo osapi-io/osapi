@@ -46,7 +46,7 @@ type KeyStorePublicTestSuite struct {
 	ctx       context.Context
 	mockCtrl  *gomock.Controller
 	mockNC    *enrollMocks.MockNATSSubscriber
-	mockKV    *jobMocks.MockKeyValue
+	mockKV    *enrollMocks.MockKVStore
 	mockPKI   *enrollMocks.MockPKIProvider
 	watcher   *enrollment.Watcher
 	fixedTime time.Time
@@ -57,7 +57,7 @@ func (s *KeyStorePublicTestSuite) SetupTest() {
 	s.ctx = context.Background()
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockNC = enrollMocks.NewMockNATSSubscriber(s.mockCtrl)
-	s.mockKV = jobMocks.NewMockKeyValue(s.mockCtrl)
+	s.mockKV = enrollMocks.NewMockKVStore(s.mockCtrl)
 	s.mockPKI = enrollMocks.NewMockPKIProvider(s.mockCtrl)
 	s.fixedTime = time.Date(2026, 4, 11, 12, 0, 0, 0, time.UTC)
 	s.pubKey = make(ed25519.PublicKey, ed25519.PublicKeySize)
@@ -67,7 +67,7 @@ func (s *KeyStorePublicTestSuite) SetupTest() {
 	s.watcher = enrollment.NewWatcher(
 		slog.Default(),
 		s.mockNC,
-		s.mockKV,
+		s.mockKV, "enrollment",
 		s.mockPKI,
 		false,
 		"osapi",
@@ -85,7 +85,7 @@ func (s *KeyStorePublicTestSuite) SetupSubTest() {
 	s.watcher = enrollment.NewWatcher(
 		slog.Default(),
 		s.mockNC,
-		s.mockKV,
+		s.mockKV, "enrollment",
 		s.mockPKI,
 		false,
 		"osapi",
@@ -112,7 +112,7 @@ func (s *KeyStorePublicTestSuite) TestLookupAgentKey() {
 					s.makeAcceptedJSON("machine-001", "web-01"),
 				)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "accepted.machine-001").
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(entry, nil)
 			},
 			validateFunc: func(record *enrollment.AcceptedAgent, err error) {
@@ -130,7 +130,7 @@ func (s *KeyStorePublicTestSuite) TestLookupAgentKey() {
 			machineID: "machine-404",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "accepted.machine-404").
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-404").
 					Return(nil, jetstream.ErrKeyNotFound)
 			},
 			validateFunc: func(record *enrollment.AcceptedAgent, err error) {
@@ -145,7 +145,7 @@ func (s *KeyStorePublicTestSuite) TestLookupAgentKey() {
 			machineID: "machine-001",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "accepted.machine-001").
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(nil, errors.New("kv error"))
 			},
 			validateFunc: func(record *enrollment.AcceptedAgent, err error) {
@@ -162,7 +162,7 @@ func (s *KeyStorePublicTestSuite) TestLookupAgentKey() {
 				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry.EXPECT().Value().Return([]byte("bad json"))
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "accepted.machine-001").
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(entry, nil)
 			},
 			validateFunc: func(record *enrollment.AcceptedAgent, err error) {
@@ -189,7 +189,7 @@ func (s *KeyStorePublicTestSuite) TestLookupAgentKeyCaches() {
 	entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 	entry.EXPECT().Value().Return(s.makeAcceptedJSON("machine-001", "web-01"))
 	s.mockKV.EXPECT().
-		Get(gomock.Any(), "accepted.machine-001").
+		KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 		Return(entry, nil).
 		Times(1)
 
@@ -207,7 +207,7 @@ func (s *KeyStorePublicTestSuite) TestLookupAgentKeyReturnsCopy() {
 	entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 	entry.EXPECT().Value().Return(s.makeAcceptedJSON("machine-001", "web-01"))
 	s.mockKV.EXPECT().
-		Get(gomock.Any(), "accepted.machine-001").
+		KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 		Return(entry, nil).
 		Times(1)
 
@@ -233,7 +233,7 @@ func (s *KeyStorePublicTestSuite) TestRemoveAgentKey() {
 			machineID: "machine-001",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "accepted.machine-001").
+					KVDelete(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -245,7 +245,7 @@ func (s *KeyStorePublicTestSuite) TestRemoveAgentKey() {
 			machineID: "machine-001",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "accepted.machine-001").
+					KVDelete(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(errors.New("delete error"))
 			},
 			validateFunc: func(err error) {
@@ -280,14 +280,12 @@ func (s *KeyStorePublicTestSuite) TestRemoveByHostname() {
 		}
 		close(keys)
 
-		lister := jobMocks.NewMockKeyLister(s.mockCtrl)
-		lister.EXPECT().Keys().Return(keys)
-		s.mockKV.EXPECT().ListKeys(gomock.Any()).Return(lister, nil)
+		s.mockKV.EXPECT().KVKeys(gomock.Any(), "enrollment").Return(keysOf(keys), nil)
 
 		for _, id := range ids {
 			entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 			entry.EXPECT().Value().Return(s.makeAcceptedJSON(id, records[id]))
-			s.mockKV.EXPECT().Get(gomock.Any(), "accepted."+id).Return(entry, nil)
+			s.mockKV.EXPECT().KVGet(gomock.Any(), "enrollment", "accepted."+id).Return(entry, nil)
 		}
 	}
 
@@ -305,7 +303,9 @@ func (s *KeyStorePublicTestSuite) TestRemoveByHostname() {
 			hostname: "web-01",
 			setupMock: func() {
 				listing(map[string]string{"machine-001": "web-01", "machine-002": "db-01"})
-				s.mockKV.EXPECT().Delete(gomock.Any(), "accepted.machine-001").Return(nil)
+				s.mockKV.EXPECT().
+					KVDelete(gomock.Any(), "enrollment", "accepted.machine-001").
+					Return(nil)
 			},
 			wantID: "machine-001",
 		},
@@ -324,7 +324,9 @@ func (s *KeyStorePublicTestSuite) TestRemoveByHostname() {
 			machineID: "machine-002",
 			setupMock: func() {
 				listing(map[string]string{"machine-001": "web-01", "machine-002": "web-01"})
-				s.mockKV.EXPECT().Delete(gomock.Any(), "accepted.machine-002").Return(nil)
+				s.mockKV.EXPECT().
+					KVDelete(gomock.Any(), "enrollment", "accepted.machine-002").
+					Return(nil)
 			},
 			wantID: "machine-002",
 		},
@@ -341,7 +343,7 @@ func (s *KeyStorePublicTestSuite) TestRemoveByHostname() {
 			name:     "is not found when the bucket is empty",
 			hostname: "web-01",
 			setupMock: func() {
-				s.mockKV.EXPECT().ListKeys(gomock.Any()).Return(nil, jetstream.ErrNoKeysFound)
+				s.mockKV.EXPECT().KVKeys(gomock.Any(), "enrollment").Return([]string{}, nil)
 			},
 			wantErrIs: enrollment.ErrNoAcceptedAgent,
 		},
@@ -349,7 +351,9 @@ func (s *KeyStorePublicTestSuite) TestRemoveByHostname() {
 			name:     "fails when the keys cannot be listed",
 			hostname: "web-01",
 			setupMock: func() {
-				s.mockKV.EXPECT().ListKeys(gomock.Any()).Return(nil, errors.New("list error"))
+				s.mockKV.EXPECT().
+					KVKeys(gomock.Any(), "enrollment").
+					Return(nil, errors.New("list error"))
 			},
 			wantErrText: "list enrollment keys: list error",
 		},
@@ -360,11 +364,9 @@ func (s *KeyStorePublicTestSuite) TestRemoveByHostname() {
 				keys := make(chan string, 1)
 				keys <- "accepted.machine-001"
 				close(keys)
-				lister := jobMocks.NewMockKeyLister(s.mockCtrl)
-				lister.EXPECT().Keys().Return(keys)
-				s.mockKV.EXPECT().ListKeys(gomock.Any()).Return(lister, nil)
+				s.mockKV.EXPECT().KVKeys(gomock.Any(), "enrollment").Return(keysOf(keys), nil)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "accepted.machine-001").
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(nil, errors.New("get error"))
 			},
 			wantErrText: "get accepted agent accepted.machine-001: get error",
@@ -376,12 +378,12 @@ func (s *KeyStorePublicTestSuite) TestRemoveByHostname() {
 				keys := make(chan string, 1)
 				keys <- "accepted.machine-001"
 				close(keys)
-				lister := jobMocks.NewMockKeyLister(s.mockCtrl)
-				lister.EXPECT().Keys().Return(keys)
-				s.mockKV.EXPECT().ListKeys(gomock.Any()).Return(lister, nil)
+				s.mockKV.EXPECT().KVKeys(gomock.Any(), "enrollment").Return(keysOf(keys), nil)
 				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry.EXPECT().Value().Return([]byte("not json"))
-				s.mockKV.EXPECT().Get(gomock.Any(), "accepted.machine-001").Return(entry, nil)
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
+					Return(entry, nil)
 			},
 			wantErrText: "unmarshal accepted agent accepted.machine-001",
 		},
@@ -391,7 +393,7 @@ func (s *KeyStorePublicTestSuite) TestRemoveByHostname() {
 			setupMock: func() {
 				listing(map[string]string{"machine-001": "web-01"})
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "accepted.machine-001").
+					KVDelete(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(errors.New("delete error"))
 			},
 			wantErrText: "remove accepted agent machine-001: delete error",
@@ -429,19 +431,19 @@ func (s *KeyStorePublicTestSuite) TestRemoveAgentKeyInvalidatesCache() {
 	first := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 	first.EXPECT().Value().Return(s.makeAcceptedJSON("machine-001", "web-01"))
 	s.mockKV.EXPECT().
-		Get(gomock.Any(), "accepted.machine-001").
+		KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 		Return(first, nil)
 
 	_, err := s.watcher.LookupAgentKey(s.ctx, "machine-001")
 	s.Require().NoError(err)
 
 	s.mockKV.EXPECT().
-		Delete(gomock.Any(), "accepted.machine-001").
+		KVDelete(gomock.Any(), "enrollment", "accepted.machine-001").
 		Return(nil)
 	s.Require().NoError(s.watcher.RemoveAgentKey(s.ctx, "machine-001"))
 
 	s.mockKV.EXPECT().
-		Get(gomock.Any(), "accepted.machine-001").
+		KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 		Return(nil, jetstream.ErrKeyNotFound)
 
 	_, err = s.watcher.LookupAgentKey(s.ctx, "machine-001")
@@ -454,14 +456,14 @@ func (s *KeyStorePublicTestSuite) TestRecordAgentKeyInvalidatesCache() {
 	stale := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 	stale.EXPECT().Value().Return(s.makeAcceptedJSON("machine-001", "web-01"))
 	s.mockKV.EXPECT().
-		Get(gomock.Any(), "accepted.machine-001").
+		KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 		Return(stale, nil)
 
 	_, err := s.watcher.LookupAgentKey(s.ctx, "machine-001")
 	s.Require().NoError(err)
 
 	s.mockKV.EXPECT().
-		Put(gomock.Any(), "accepted.machine-001", gomock.Any()).
+		KVPut(gomock.Any(), "enrollment", "accepted.machine-001", gomock.Any()).
 		Return(uint64(2), nil)
 	s.Require().NoError(enrollment.ExportRecordAgentKey(
 		s.ctx,
@@ -478,7 +480,7 @@ func (s *KeyStorePublicTestSuite) TestRecordAgentKeyInvalidatesCache() {
 		s.makeAcceptedJSON("machine-001", "web-01-renamed"),
 	)
 	s.mockKV.EXPECT().
-		Get(gomock.Any(), "accepted.machine-001").
+		KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 		Return(fresh, nil)
 
 	record, err := s.watcher.LookupAgentKey(s.ctx, "machine-001")

@@ -27,6 +27,8 @@ import (
 	"net"
 	"testing"
 
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -146,7 +148,7 @@ func (s *ServerPublicTestSuite) TestNew() {
 				defer server.ResetDialFn()
 			}
 
-			srv, err := server.New(context.Background(), slog.Default(), tc.cfg())
+			srv, err := server.New(context.Background(), slog.Default(), tc.cfg(), nil)
 
 			if tc.wantErr != "" {
 				s.ErrorContains(err, tc.wantErr)
@@ -165,7 +167,7 @@ func startServer(
 	t *testing.T,
 	cfg config.NATS,
 ) *server.Server {
-	srv, err := server.New(context.Background(), slog.Default(), cfg)
+	srv, err := server.New(context.Background(), slog.Default(), cfg, sdkmetric.NewMeterProvider())
 	require.NoError(t, err)
 	t.Cleanup(func() { srv.Stop(context.Background()) })
 
@@ -188,7 +190,7 @@ func registryKeys(
 	bucket := bus.RegistryKV(cfg.Server.Namespace, cfg.Registry).Bucket
 
 	return func() []string {
-		keys, _ := nc.KVKeys(bucket)
+		keys, _ := nc.KVKeys(context.Background(), bucket)
 		return keys
 	}
 }

@@ -41,46 +41,44 @@ func (m *MockJetStream) EXPECT() *MockJetStreamMockRecorder {
 	return m.recorder
 }
 
-// CreateOrUpdateKVBucketWithConfig mocks base method.
-func (m *MockJetStream) CreateOrUpdateKVBucketWithConfig(ctx context.Context, config jetstream.KeyValueConfig) (jetstream.KeyValue, error) {
+// KVCreateOrUpdate mocks base method.
+func (m *MockJetStream) KVCreateOrUpdate(ctx context.Context, config jetstream.KeyValueConfig) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrUpdateKVBucketWithConfig", ctx, config)
-	ret0, _ := ret[0].(jetstream.KeyValue)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateOrUpdateKVBucketWithConfig indicates an expected call of CreateOrUpdateKVBucketWithConfig.
-func (mr *MockJetStreamMockRecorder) CreateOrUpdateKVBucketWithConfig(ctx, config any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateKVBucketWithConfig", reflect.TypeOf((*MockJetStream)(nil).CreateOrUpdateKVBucketWithConfig), ctx, config)
-}
-
-// CreateOrUpdateObjectStore mocks base method.
-func (m *MockJetStream) CreateOrUpdateObjectStore(ctx context.Context, cfg jetstream.ObjectStoreConfig) (jetstream.ObjectStore, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrUpdateObjectStore", ctx, cfg)
-	ret0, _ := ret[0].(jetstream.ObjectStore)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateOrUpdateObjectStore indicates an expected call of CreateOrUpdateObjectStore.
-func (mr *MockJetStreamMockRecorder) CreateOrUpdateObjectStore(ctx, cfg any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateObjectStore", reflect.TypeOf((*MockJetStream)(nil).CreateOrUpdateObjectStore), ctx, cfg)
-}
-
-// CreateOrUpdateStreamWithConfig mocks base method.
-func (m *MockJetStream) CreateOrUpdateStreamWithConfig(ctx context.Context, streamConfig jetstream.StreamConfig) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrUpdateStreamWithConfig", ctx, streamConfig)
+	ret := m.ctrl.Call(m, "KVCreateOrUpdate", ctx, config)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CreateOrUpdateStreamWithConfig indicates an expected call of CreateOrUpdateStreamWithConfig.
-func (mr *MockJetStreamMockRecorder) CreateOrUpdateStreamWithConfig(ctx, streamConfig any) *gomock.Call {
+// KVCreateOrUpdate indicates an expected call of KVCreateOrUpdate.
+func (mr *MockJetStreamMockRecorder) KVCreateOrUpdate(ctx, config any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateStreamWithConfig", reflect.TypeOf((*MockJetStream)(nil).CreateOrUpdateStreamWithConfig), ctx, streamConfig)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVCreateOrUpdate", reflect.TypeOf((*MockJetStream)(nil).KVCreateOrUpdate), ctx, config)
+}
+
+// ObjectStoreCreateOrUpdate mocks base method.
+func (m *MockJetStream) ObjectStoreCreateOrUpdate(ctx context.Context, config jetstream.ObjectStoreConfig) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ObjectStoreCreateOrUpdate", ctx, config)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ObjectStoreCreateOrUpdate indicates an expected call of ObjectStoreCreateOrUpdate.
+func (mr *MockJetStreamMockRecorder) ObjectStoreCreateOrUpdate(ctx, config any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreCreateOrUpdate", reflect.TypeOf((*MockJetStream)(nil).ObjectStoreCreateOrUpdate), ctx, config)
+}
+
+// StreamCreateOrUpdate mocks base method.
+func (m *MockJetStream) StreamCreateOrUpdate(ctx context.Context, config jetstream.StreamConfig) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StreamCreateOrUpdate", ctx, config)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// StreamCreateOrUpdate indicates an expected call of StreamCreateOrUpdate.
+func (mr *MockJetStreamMockRecorder) StreamCreateOrUpdate(ctx, config any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StreamCreateOrUpdate", reflect.TypeOf((*MockJetStream)(nil).StreamCreateOrUpdate), ctx, config)
 }

@@ -29,6 +29,8 @@ import (
 	"testing"
 	"time"
 
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
+
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
@@ -46,7 +48,7 @@ type WatcherPublicTestSuite struct {
 	ctx       context.Context
 	mockCtrl  *gomock.Controller
 	mockNC    *enrollMocks.MockNATSSubscriber
-	mockKV    *jobMocks.MockKeyValue
+	mockKV    *enrollMocks.MockKVStore
 	mockPKI   *enrollMocks.MockPKIProvider
 	watcher   *enrollment.Watcher
 	fixedTime time.Time
@@ -57,7 +59,7 @@ func (s *WatcherPublicTestSuite) SetupTest() {
 	s.ctx = context.Background()
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockNC = enrollMocks.NewMockNATSSubscriber(s.mockCtrl)
-	s.mockKV = jobMocks.NewMockKeyValue(s.mockCtrl)
+	s.mockKV = enrollMocks.NewMockKVStore(s.mockCtrl)
 	s.mockPKI = enrollMocks.NewMockPKIProvider(s.mockCtrl)
 	s.fixedTime = time.Date(2026, 4, 11, 12, 0, 0, 0, time.UTC)
 	s.pubKey = make(ed25519.PublicKey, ed25519.PublicKeySize)
@@ -67,7 +69,7 @@ func (s *WatcherPublicTestSuite) SetupTest() {
 	s.watcher = enrollment.NewWatcher(
 		slog.Default(),
 		s.mockNC,
-		s.mockKV,
+		s.mockKV, "enrollment",
 		s.mockPKI,
 		false,
 		"osapi",
@@ -95,9 +97,9 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequest() {
 			name: "stores pending agent in KV",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "enrollment.machine-001", gomock.Any()).
+					KVPut(gomock.Any(), "enrollment", "enrollment.machine-001", gomock.Any()).
 					DoAndReturn(func(
-						_ context.Context,
+						_ context.Context, _ string,
 						_ string,
 						value []byte,
 					) (uint64, error) {
@@ -135,7 +137,7 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequest() {
 			name: "logs warning on KV put failure",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "enrollment.machine-001", gomock.Any()).
+					KVPut(gomock.Any(), "enrollment", "enrollment.machine-001", gomock.Any()).
 					Return(uint64(0), errors.New("kv error"))
 			},
 			msg: s.makeEnrollmentMsg("machine-001", "web-01", "SHA256:abc123"),
@@ -154,7 +156,7 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAccept() {
 	autoWatcher := enrollment.NewWatcher(
 		slog.Default(),
 		s.mockNC,
-		s.mockKV,
+		s.mockKV, "enrollment",
 		s.mockPKI,
 		true,
 		"osapi",
@@ -172,21 +174,21 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAccept() {
 
 				// Store in KV.
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "enrollment.machine-001", gomock.Any()).
+					KVPut(gomock.Any(), "enrollment", "enrollment.machine-001", gomock.Any()).
 					Return(uint64(1), nil)
 
 				// AcceptAgent: Get from KV.
 				mockEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(mockEntry, nil)
 
 				// AcceptAgent: Publish response — verify the acceptance payload.
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
-					DoAndReturn(func(
+					PublishCore(gomock.Any(), "osapi.enroll.response.machine-001", gomock.Any()).
+					DoAndReturn(func(_ context.Context,
 						_ string,
 						data []byte,
 					) error {
@@ -207,11 +209,11 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAccept() {
 
 				// AcceptAgent: Delete from KV.
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "enrollment.machine-001").
+					KVDelete(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(nil)
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "accepted.machine-001", gomock.Any()).
+					KVPut(gomock.Any(), "enrollment", "accepted.machine-001", gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			msg: s.makeEnrollmentMsg("machine-001", "web-01", "SHA256:abc123"),
@@ -221,12 +223,12 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAccept() {
 			setupMock: func() {
 				// Store in KV.
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "enrollment.machine-002", gomock.Any()).
+					KVPut(gomock.Any(), "enrollment", "enrollment.machine-002", gomock.Any()).
 					Return(uint64(1), nil)
 
 				// AcceptAgent: Get from KV fails.
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-002").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-002").
 					Return(nil, errors.New("kv error"))
 			},
 			msg: s.makeEnrollmentMsg("machine-002", "web-02", "SHA256:def456"),
@@ -257,22 +259,22 @@ func (s *WatcherPublicTestSuite) TestAcceptAgent() {
 				mockEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(mockEntry, nil)
 
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore(gomock.Any(), "osapi.enroll.response.machine-001", gomock.Any()).
 					Return(nil)
 
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "enrollment.machine-001").
+					KVDelete(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(nil)
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "accepted.machine-001", gomock.Any()).
+					KVPut(gomock.Any(), "enrollment", "accepted.machine-001", gomock.Any()).
 					DoAndReturn(func(
-						_ context.Context,
+						_ context.Context, _ string,
 						_ string,
 						value []byte,
 					) (uint64, error) {
@@ -299,7 +301,7 @@ func (s *WatcherPublicTestSuite) TestAcceptAgent() {
 			machineID: "missing",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.missing").
+					KVGet(gomock.Any(), "enrollment", "enrollment.missing").
 					Return(nil, jetstream.ErrKeyNotFound)
 			},
 			validateFunc: func(err error) {
@@ -314,7 +316,7 @@ func (s *WatcherPublicTestSuite) TestAcceptAgent() {
 				mockEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte("bad json"))
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(mockEntry, nil)
 			},
 			validateFunc: func(err error) {
@@ -331,11 +333,11 @@ func (s *WatcherPublicTestSuite) TestAcceptAgent() {
 				mockEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(mockEntry, nil)
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "accepted.machine-001", gomock.Any()).
+					KVPut(gomock.Any(), "enrollment", "accepted.machine-001", gomock.Any()).
 					Return(uint64(1), nil)
 
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
@@ -365,16 +367,16 @@ func (s *WatcherPublicTestSuite) TestAcceptAgent() {
 				mockEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(mockEntry, nil)
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "accepted.machine-001", gomock.Any()).
+					KVPut(gomock.Any(), "enrollment", "accepted.machine-001", gomock.Any()).
 					Return(uint64(1), nil)
 
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore(gomock.Any(), "osapi.enroll.response.machine-001", gomock.Any()).
 					Return(errors.New("publish error"))
 			},
 			validateFunc: func(err error) {
@@ -391,20 +393,20 @@ func (s *WatcherPublicTestSuite) TestAcceptAgent() {
 				mockEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(mockEntry, nil)
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "accepted.machine-001", gomock.Any()).
+					KVPut(gomock.Any(), "enrollment", "accepted.machine-001", gomock.Any()).
 					Return(uint64(1), nil)
 
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore(gomock.Any(), "osapi.enroll.response.machine-001", gomock.Any()).
 					Return(nil)
 
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "enrollment.machine-001").
+					KVDelete(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(errors.New("delete error"))
 			},
 			validateFunc: func(err error) {
@@ -421,11 +423,11 @@ func (s *WatcherPublicTestSuite) TestAcceptAgent() {
 				mockEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(mockEntry, nil)
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "accepted.machine-001", gomock.Any()).
+					KVPut(gomock.Any(), "enrollment", "accepted.machine-001", gomock.Any()).
 					Return(uint64(0), errors.New("kv error"))
 			},
 			validateFunc: func(err error) {
@@ -442,7 +444,7 @@ func (s *WatcherPublicTestSuite) TestAcceptAgent() {
 				mockEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(mockEntry, nil)
 
 				enrollment.SetMarshalFn(func(_ any) ([]byte, error) {
@@ -482,12 +484,12 @@ func (s *WatcherPublicTestSuite) TestRejectAgent() {
 				mockEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(mockEntry, nil)
 
 				s.mockNC.EXPECT().
-					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
-					DoAndReturn(func(_ string, data []byte) error {
+					PublishCore(gomock.Any(), "osapi.enroll.response.machine-001", gomock.Any()).
+					DoAndReturn(func(_ context.Context, _ string, data []byte) error {
 						var resp pki.EnrollmentResponse
 						s.Require().NoError(json.Unmarshal(data, &resp))
 						s.False(resp.Accepted)
@@ -496,11 +498,11 @@ func (s *WatcherPublicTestSuite) TestRejectAgent() {
 					})
 
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "enrollment.machine-001").
+					KVDelete(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(nil)
 
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "accepted.machine-001").
+					KVDelete(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -513,7 +515,7 @@ func (s *WatcherPublicTestSuite) TestRejectAgent() {
 			reason:    "denied",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.missing").
+					KVGet(gomock.Any(), "enrollment", "enrollment.missing").
 					Return(nil, jetstream.ErrKeyNotFound)
 			},
 			validateFunc: func(err error) {
@@ -529,7 +531,7 @@ func (s *WatcherPublicTestSuite) TestRejectAgent() {
 				mockEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte("bad"))
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(mockEntry, nil)
 			},
 			validateFunc: func(err error) {
@@ -547,7 +549,7 @@ func (s *WatcherPublicTestSuite) TestRejectAgent() {
 				mockEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(mockEntry, nil)
 
 				enrollment.SetMarshalFn(func(_ any) ([]byte, error) {
@@ -569,11 +571,11 @@ func (s *WatcherPublicTestSuite) TestRejectAgent() {
 				mockEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(mockEntry, nil)
 
 				s.mockNC.EXPECT().
-					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore(gomock.Any(), "osapi.enroll.response.machine-001", gomock.Any()).
 					Return(errors.New("publish error"))
 			},
 			validateFunc: func(err error) {
@@ -591,15 +593,15 @@ func (s *WatcherPublicTestSuite) TestRejectAgent() {
 				mockEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(mockEntry, nil)
 
 				s.mockNC.EXPECT().
-					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore(gomock.Any(), "osapi.enroll.response.machine-001", gomock.Any()).
 					Return(nil)
 
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "enrollment.machine-001").
+					KVDelete(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(errors.New("delete error"))
 			},
 			validateFunc: func(err error) {
@@ -617,19 +619,19 @@ func (s *WatcherPublicTestSuite) TestRejectAgent() {
 				mockEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(mockEntry, nil)
 
 				s.mockNC.EXPECT().
-					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore(gomock.Any(), "osapi.enroll.response.machine-001", gomock.Any()).
 					Return(nil)
 
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "enrollment.machine-001").
+					KVDelete(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(nil)
 
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "accepted.machine-001").
+					KVDelete(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(errors.New("delete error"))
 			},
 			validateFunc: func(err error) {
@@ -661,19 +663,16 @@ func (s *WatcherPublicTestSuite) TestListPending() {
 				keys <- "enrollment.machine-002"
 				close(keys)
 
-				mockLister := jobMocks.NewMockKeyLister(s.mockCtrl)
-				mockLister.EXPECT().Keys().Return(keys)
-
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(mockLister, nil)
+					KVKeys(gomock.Any(), "enrollment").
+					Return(keysOf(keys), nil)
 
 				entry1 := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(
 					s.makePendingJSON("machine-001", "web-01", "SHA256:abc123"),
 				)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(entry1, nil)
 
 				entry2 := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -681,7 +680,7 @@ func (s *WatcherPublicTestSuite) TestListPending() {
 					s.makePendingJSON("machine-002", "web-02", "SHA256:def456"),
 				)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-002").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-002").
 					Return(entry2, nil)
 			},
 			validateFunc: func(pending []enrollment.PendingAgent, err error) {
@@ -693,8 +692,8 @@ func (s *WatcherPublicTestSuite) TestListPending() {
 			name: "returns nil when bucket is empty",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(nil, jetstream.ErrNoKeysFound)
+					KVKeys(gomock.Any(), "enrollment").
+					Return([]string{}, nil)
 			},
 			validateFunc: func(pending []enrollment.PendingAgent, err error) {
 				s.Require().NoError(err)
@@ -705,7 +704,7 @@ func (s *WatcherPublicTestSuite) TestListPending() {
 			name: "returns error on list failure",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
+					KVKeys(gomock.Any(), "enrollment").
 					Return(nil, errors.New("list error"))
 			},
 			validateFunc: func(_ []enrollment.PendingAgent, err error) {
@@ -721,15 +720,12 @@ func (s *WatcherPublicTestSuite) TestListPending() {
 				keys <- "enrollment.machine-002"
 				close(keys)
 
-				mockLister := jobMocks.NewMockKeyLister(s.mockCtrl)
-				mockLister.EXPECT().Keys().Return(keys)
+				s.mockKV.EXPECT().
+					KVKeys(gomock.Any(), "enrollment").
+					Return(keysOf(keys), nil)
 
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(mockLister, nil)
-
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(nil, errors.New("get error"))
 
 				entry2 := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -737,7 +733,7 @@ func (s *WatcherPublicTestSuite) TestListPending() {
 					s.makePendingJSON("machine-002", "web-02", "SHA256:def456"),
 				)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-002").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-002").
 					Return(entry2, nil)
 			},
 			validateFunc: func(pending []enrollment.PendingAgent, err error) {
@@ -752,17 +748,14 @@ func (s *WatcherPublicTestSuite) TestListPending() {
 				keys <- "enrollment.machine-001"
 				close(keys)
 
-				mockLister := jobMocks.NewMockKeyLister(s.mockCtrl)
-				mockLister.EXPECT().Keys().Return(keys)
-
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(mockLister, nil)
+					KVKeys(gomock.Any(), "enrollment").
+					Return(keysOf(keys), nil)
 
 				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry.EXPECT().Value().Return([]byte("bad json"))
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(entry, nil)
 			},
 			validateFunc: func(pending []enrollment.PendingAgent, err error) {
@@ -778,19 +771,16 @@ func (s *WatcherPublicTestSuite) TestListPending() {
 				keys <- "accepted.machine-001"
 				close(keys)
 
-				mockLister := jobMocks.NewMockKeyLister(s.mockCtrl)
-				mockLister.EXPECT().Keys().Return(keys)
-
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(mockLister, nil)
+					KVKeys(gomock.Any(), "enrollment").
+					Return(keysOf(keys), nil)
 
 				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry.EXPECT().Value().Return(
 					s.makePendingJSON("machine-001", "web-01", "SHA256:abc123"),
 				)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(entry, nil)
 			},
 			validateFunc: func(pending []enrollment.PendingAgent, err error) {
@@ -824,39 +814,36 @@ func (s *WatcherPublicTestSuite) TestAcceptByHostname() {
 				keys <- "enrollment.machine-001"
 				close(keys)
 
-				mockLister := jobMocks.NewMockKeyLister(s.mockCtrl)
-				mockLister.EXPECT().Keys().Return(keys)
-
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(mockLister, nil)
+					KVKeys(gomock.Any(), "enrollment").
+					Return(keysOf(keys), nil)
 
 				pendingData := s.makePendingJSON("machine-001", "web-01", "SHA256:abc123")
 
 				findEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				findEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(findEntry, nil)
 
 				// AcceptAgent: Get from KV.
 				acceptEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				acceptEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(acceptEntry, nil)
 
 				// AcceptAgent: Publish + Delete.
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore(gomock.Any(), "osapi.enroll.response.machine-001", gomock.Any()).
 					Return(nil)
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "enrollment.machine-001").
+					KVDelete(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(nil)
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "accepted.machine-001", gomock.Any()).
+					KVPut(gomock.Any(), "enrollment", "accepted.machine-001", gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			validateFunc: func(err error) {
@@ -872,18 +859,15 @@ func (s *WatcherPublicTestSuite) TestAcceptByHostname() {
 				keys <- "accepted.machine-001"
 				close(keys)
 
-				mockLister := jobMocks.NewMockKeyLister(s.mockCtrl)
-				mockLister.EXPECT().Keys().Return(keys)
-
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(mockLister, nil)
+					KVKeys(gomock.Any(), "enrollment").
+					Return(keysOf(keys), nil)
 
 				pendingData := s.makePendingJSON("machine-001", "web-01", "SHA256:abc123")
 				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(entry, nil)
 			},
 			validateFunc: func(err error) {
@@ -897,8 +881,8 @@ func (s *WatcherPublicTestSuite) TestAcceptByHostname() {
 			hostname: "web-01",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(nil, jetstream.ErrNoKeysFound)
+					KVKeys(gomock.Any(), "enrollment").
+					Return([]string{}, nil)
 			},
 			validateFunc: func(err error) {
 				s.Require().Error(err)
@@ -911,7 +895,7 @@ func (s *WatcherPublicTestSuite) TestAcceptByHostname() {
 			hostname: "web-01",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
+					KVKeys(gomock.Any(), "enrollment").
 					Return(nil, errors.New("list error"))
 			},
 			validateFunc: func(err error) {
@@ -945,39 +929,36 @@ func (s *WatcherPublicTestSuite) TestAcceptByFingerprint() {
 				keys <- "enrollment.machine-001"
 				close(keys)
 
-				mockLister := jobMocks.NewMockKeyLister(s.mockCtrl)
-				mockLister.EXPECT().Keys().Return(keys)
-
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(mockLister, nil)
+					KVKeys(gomock.Any(), "enrollment").
+					Return(keysOf(keys), nil)
 
 				pendingData := s.makePendingJSON("machine-001", "web-01", "SHA256:abc123")
 
 				findEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				findEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(findEntry, nil)
 
 				// AcceptAgent: Get from KV.
 				acceptEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				acceptEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(acceptEntry, nil)
 
 				// AcceptAgent: Publish + Delete.
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore(gomock.Any(), "osapi.enroll.response.machine-001", gomock.Any()).
 					Return(nil)
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "enrollment.machine-001").
+					KVDelete(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(nil)
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "accepted.machine-001", gomock.Any()).
+					KVPut(gomock.Any(), "enrollment", "accepted.machine-001", gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			validateFunc: func(err error) {
@@ -992,18 +973,15 @@ func (s *WatcherPublicTestSuite) TestAcceptByFingerprint() {
 				keys <- "enrollment.machine-001"
 				close(keys)
 
-				mockLister := jobMocks.NewMockKeyLister(s.mockCtrl)
-				mockLister.EXPECT().Keys().Return(keys)
-
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(mockLister, nil)
+					KVKeys(gomock.Any(), "enrollment").
+					Return(keysOf(keys), nil)
 
 				pendingData := s.makePendingJSON("machine-001", "web-01", "SHA256:abc123")
 				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(entry, nil)
 			},
 			validateFunc: func(err error) {
@@ -1017,8 +995,8 @@ func (s *WatcherPublicTestSuite) TestAcceptByFingerprint() {
 			fingerprint: "SHA256:abc123",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(nil, jetstream.ErrNoKeysFound)
+					KVKeys(gomock.Any(), "enrollment").
+					Return([]string{}, nil)
 			},
 			validateFunc: func(err error) {
 				s.Require().Error(err)
@@ -1031,7 +1009,7 @@ func (s *WatcherPublicTestSuite) TestAcceptByFingerprint() {
 			fingerprint: "SHA256:abc123",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
+					KVKeys(gomock.Any(), "enrollment").
 					Return(nil, errors.New("list error"))
 			},
 			validateFunc: func(err error) {
@@ -1048,16 +1026,13 @@ func (s *WatcherPublicTestSuite) TestAcceptByFingerprint() {
 				keys <- "enrollment.machine-002"
 				close(keys)
 
-				mockLister := jobMocks.NewMockKeyLister(s.mockCtrl)
-				mockLister.EXPECT().Keys().Return(keys)
-
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(mockLister, nil)
+					KVKeys(gomock.Any(), "enrollment").
+					Return(keysOf(keys), nil)
 
 				// First entry: get error, skipped.
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(nil, errors.New("get error"))
 
 				// Second entry: matches.
@@ -1065,27 +1040,27 @@ func (s *WatcherPublicTestSuite) TestAcceptByFingerprint() {
 				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-002").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-002").
 					Return(entry, nil)
 
 				// AcceptAgent: Get from KV.
 				acceptEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				acceptEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-002").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-002").
 					Return(acceptEntry, nil)
 
 				// AcceptAgent: Publish + Delete.
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					PublishCore("osapi.enroll.response.machine-002", gomock.Any()).
+					PublishCore(gomock.Any(), "osapi.enroll.response.machine-002", gomock.Any()).
 					Return(nil)
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "enrollment.machine-002").
+					KVDelete(gomock.Any(), "enrollment", "enrollment.machine-002").
 					Return(nil)
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "accepted.machine-002", gomock.Any()).
+					KVPut(gomock.Any(), "enrollment", "accepted.machine-002", gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			validateFunc: func(err error) {
@@ -1101,18 +1076,15 @@ func (s *WatcherPublicTestSuite) TestAcceptByFingerprint() {
 				keys <- "enrollment.machine-002"
 				close(keys)
 
-				mockLister := jobMocks.NewMockKeyLister(s.mockCtrl)
-				mockLister.EXPECT().Keys().Return(keys)
-
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(mockLister, nil)
+					KVKeys(gomock.Any(), "enrollment").
+					Return(keysOf(keys), nil)
 
 				// First entry: bad JSON, skipped.
 				badEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				badEntry.EXPECT().Value().Return([]byte("bad"))
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(badEntry, nil)
 
 				// Second entry: matches.
@@ -1120,27 +1092,27 @@ func (s *WatcherPublicTestSuite) TestAcceptByFingerprint() {
 				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-002").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-002").
 					Return(entry, nil)
 
 				// AcceptAgent: Get from KV.
 				acceptEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				acceptEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-002").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-002").
 					Return(acceptEntry, nil)
 
 				// AcceptAgent: Publish + Delete.
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					PublishCore("osapi.enroll.response.machine-002", gomock.Any()).
+					PublishCore(gomock.Any(), "osapi.enroll.response.machine-002", gomock.Any()).
 					Return(nil)
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "enrollment.machine-002").
+					KVDelete(gomock.Any(), "enrollment", "enrollment.machine-002").
 					Return(nil)
 
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "accepted.machine-002", gomock.Any()).
+					KVPut(gomock.Any(), "enrollment", "accepted.machine-002", gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			validateFunc: func(err error) {
@@ -1168,12 +1140,12 @@ func (s *WatcherPublicTestSuite) TestStart() {
 			name: "subscribes and blocks until context cancelled",
 			setupMock: func() {
 				s.mockNC.EXPECT().
-					Subscribe("osapi.enroll.request", gomock.Any()).
-					DoAndReturn(func(_ string, cb nats.MsgHandler) (*nats.Subscription, error) {
+					Subscribe(gomock.Any(), "osapi.enroll.request", gomock.Any()).
+					DoAndReturn(func(_ context.Context, _ string, cb natsclient.MsgHandler) (*nats.Subscription, error) {
 						// Invoke the callback to cover the closure body inside Start.
 						// The msg contains invalid JSON, so handleEnrollmentRequest
 						// logs a warning and returns without side effects.
-						cb(&nats.Msg{Data: []byte("invalid")})
+						cb(context.Background(), &nats.Msg{Data: []byte("invalid")})
 						return &nats.Subscription{}, nil
 					})
 			},
@@ -1185,7 +1157,7 @@ func (s *WatcherPublicTestSuite) TestStart() {
 			name: "returns error on subscribe failure",
 			setupMock: func() {
 				s.mockNC.EXPECT().
-					Subscribe("osapi.enroll.request", gomock.Any()).
+					Subscribe(gomock.Any(), "osapi.enroll.request", gomock.Any()).
 					Return(nil, errors.New("subscribe error"))
 			},
 			wantErr: true,
@@ -1301,39 +1273,36 @@ func (s *WatcherPublicTestSuite) TestRejectByHostname() {
 				keys <- "enrollment.machine-001"
 				close(keys)
 
-				mockLister := jobMocks.NewMockKeyLister(s.mockCtrl)
-				mockLister.EXPECT().Keys().Return(keys)
-
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(mockLister, nil)
+					KVKeys(gomock.Any(), "enrollment").
+					Return(keysOf(keys), nil)
 
 				pendingData := s.makePendingJSON("machine-001", "web-01", "SHA256:abc123")
 
 				findEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				findEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(findEntry, nil)
 
 				// RejectAgent: Get from KV.
 				rejectEntry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				rejectEntry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(rejectEntry, nil)
 
 				// RejectAgent: Publish + Delete.
 				s.mockNC.EXPECT().
-					PublishCore("osapi.enroll.response.machine-001", gomock.Any()).
+					PublishCore(gomock.Any(), "osapi.enroll.response.machine-001", gomock.Any()).
 					Return(nil)
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "enrollment.machine-001").
+					KVDelete(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(nil)
 
 				// RemoveAgentKey: a rejected agent keeps no stored key.
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "accepted.machine-001").
+					KVDelete(gomock.Any(), "enrollment", "accepted.machine-001").
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -1348,18 +1317,15 @@ func (s *WatcherPublicTestSuite) TestRejectByHostname() {
 				keys <- "enrollment.machine-001"
 				close(keys)
 
-				mockLister := jobMocks.NewMockKeyLister(s.mockCtrl)
-				mockLister.EXPECT().Keys().Return(keys)
-
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(mockLister, nil)
+					KVKeys(gomock.Any(), "enrollment").
+					Return(keysOf(keys), nil)
 
 				pendingData := s.makePendingJSON("machine-001", "web-01", "SHA256:abc123")
 				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry.EXPECT().Value().Return(pendingData)
 				s.mockKV.EXPECT().
-					Get(gomock.Any(), "enrollment.machine-001").
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(entry, nil)
 			},
 			validateFunc: func(err error) {
@@ -1373,8 +1339,8 @@ func (s *WatcherPublicTestSuite) TestRejectByHostname() {
 			hostname: "web-01",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
-					Return(nil, jetstream.ErrNoKeysFound)
+					KVKeys(gomock.Any(), "enrollment").
+					Return([]string{}, nil)
 			},
 			validateFunc: func(err error) {
 				s.Require().Error(err)
@@ -1387,7 +1353,7 @@ func (s *WatcherPublicTestSuite) TestRejectByHostname() {
 			hostname: "web-01",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					ListKeys(gomock.Any()).
+					KVKeys(gomock.Any(), "enrollment").
 					Return(nil, errors.New("list error"))
 			},
 			validateFunc: func(err error) {
@@ -1425,6 +1391,18 @@ func (s *WatcherPublicTestSuite) makePendingJSON(
 	s.Require().NoError(err)
 
 	return data
+}
+
+// keysOf returns the keys sent on ch, which the test closes, as KVKeys does.
+func keysOf(
+	ch <-chan string,
+) []string {
+	keys := []string{}
+	for k := range ch {
+		keys = append(keys, k)
+	}
+
+	return keys
 }
 
 func TestWatcherPublicTestSuite(

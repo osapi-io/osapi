@@ -41,20 +41,6 @@ func (m *MockAuditStreams) EXPECT() *MockAuditStreamsMockRecorder {
 	return m.recorder
 }
 
-// CreateOrUpdateStreamWithConfig mocks base method.
-func (m *MockAuditStreams) CreateOrUpdateStreamWithConfig(ctx context.Context, streamConfig jetstream.StreamConfig) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrUpdateStreamWithConfig", ctx, streamConfig)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CreateOrUpdateStreamWithConfig indicates an expected call of CreateOrUpdateStreamWithConfig.
-func (mr *MockAuditStreamsMockRecorder) CreateOrUpdateStreamWithConfig(ctx, streamConfig any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateStreamWithConfig", reflect.TypeOf((*MockAuditStreams)(nil).CreateOrUpdateStreamWithConfig), ctx, streamConfig)
-}
-
 // Publish mocks base method.
 func (m *MockAuditStreams) Publish(ctx context.Context, subject string, data []byte) error {
 	m.ctrl.T.Helper()
@@ -69,17 +55,61 @@ func (mr *MockAuditStreamsMockRecorder) Publish(ctx, subject, data any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Publish", reflect.TypeOf((*MockAuditStreams)(nil).Publish), ctx, subject, data)
 }
 
-// Stream mocks base method.
-func (m *MockAuditStreams) Stream(ctx context.Context, name string) (jetstream.Stream, error) {
+// StreamCreateOrUpdate mocks base method.
+func (m *MockAuditStreams) StreamCreateOrUpdate(ctx context.Context, config jetstream.StreamConfig) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Stream", ctx, name)
-	ret0, _ := ret[0].(jetstream.Stream)
+	ret := m.ctrl.Call(m, "StreamCreateOrUpdate", ctx, config)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// StreamCreateOrUpdate indicates an expected call of StreamCreateOrUpdate.
+func (mr *MockAuditStreamsMockRecorder) StreamCreateOrUpdate(ctx, config any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StreamCreateOrUpdate", reflect.TypeOf((*MockAuditStreams)(nil).StreamCreateOrUpdate), ctx, config)
+}
+
+// StreamInfo mocks base method.
+func (m *MockAuditStreams) StreamInfo(ctx context.Context, name string) (*jetstream.StreamInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StreamInfo", ctx, name)
+	ret0, _ := ret[0].(*jetstream.StreamInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Stream indicates an expected call of Stream.
-func (mr *MockAuditStreamsMockRecorder) Stream(ctx, name any) *gomock.Call {
+// StreamInfo indicates an expected call of StreamInfo.
+func (mr *MockAuditStreamsMockRecorder) StreamInfo(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stream", reflect.TypeOf((*MockAuditStreams)(nil).Stream), ctx, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StreamInfo", reflect.TypeOf((*MockAuditStreams)(nil).StreamInfo), ctx, name)
+}
+
+// StreamLastMsg mocks base method.
+func (m *MockAuditStreams) StreamLastMsg(ctx context.Context, name, subject string) (*jetstream.RawStreamMsg, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StreamLastMsg", ctx, name, subject)
+	ret0, _ := ret[0].(*jetstream.RawStreamMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StreamLastMsg indicates an expected call of StreamLastMsg.
+func (mr *MockAuditStreamsMockRecorder) StreamLastMsg(ctx, name, subject any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StreamLastMsg", reflect.TypeOf((*MockAuditStreams)(nil).StreamLastMsg), ctx, name, subject)
+}
+
+// StreamRead mocks base method.
+func (m *MockAuditStreams) StreamRead(ctx context.Context, name string, from uint64, count int) ([]jetstream.Msg, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StreamRead", ctx, name, from, count)
+	ret0, _ := ret[0].([]jetstream.Msg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StreamRead indicates an expected call of StreamRead.
+func (mr *MockAuditStreamsMockRecorder) StreamRead(ctx, name, from, count any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StreamRead", reflect.TypeOf((*MockAuditStreams)(nil).StreamRead), ctx, name, from, count)
 }

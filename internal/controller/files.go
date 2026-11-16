@@ -34,19 +34,15 @@ import (
 
 // fileBuckets is the part of a NATS client that the file endpoints use.
 type fileBuckets interface {
-	CreateOrUpdateObjectStore(
-		ctx context.Context,
-		cfg jetstream.ObjectStoreConfig,
-	) (jetstream.ObjectStore, error)
-	KeyValue(
-		ctx context.Context,
-		bucket string,
-	) (jetstream.KeyValue, error)
+	file.ObjectStoreManager
+	file.StateKeyValue
+	ObjectStoreCreateOrUpdate(ctx context.Context, config jetstream.ObjectStoreConfig) error
+	KVStatus(ctx context.Context, bucket string) (jetstream.KeyValueStatus, error)
 }
 
 // openFileBuckets opens the Object Store of the file endpoints and the
-// file-state bucket of the stale deployment checks. Each one is nil if cfg
-// names none, or if it does not open. The controller runs without the file
+// file-state bucket of the stale deployment checks, and returns their names.
+// Each one is "" if cfg names none, or if it does not open. The controller runs without the file
 // endpoints then, so a failure is a warning.
 func openFileBuckets(
 	ctx context.Context,
@@ -54,30 +50,27 @@ func openFileBuckets(
 	nc fileBuckets,
 	namespace string,
 	cfg config.NATS,
-) (file.ObjectStoreManager, jetstream.KeyValue) {
-	var objStore file.ObjectStoreManager
+) (objBucket string, stateBucket string) {
 	if cfg.Objects.Bucket != "" {
 		objCfg := bus.ObjectStore(namespace, cfg.Objects)
-		store, err := nc.CreateOrUpdateObjectStore(ctx, objCfg)
-		if err != nil {
+		if err := nc.ObjectStoreCreateOrUpdate(ctx, objCfg); err != nil {
 			log.Warn("Object Store not available, file endpoints disabled",
 				slog.String("bucket", objCfg.Bucket),
 				slog.String("error", err.Error()))
 		} else {
-			objStore = store
+			objBucket = objCfg.Bucket
 		}
 	}
 
-	var fileStateKV jetstream.KeyValue
 	if cfg.FileState.Bucket != "" {
-		kv, err := nc.KeyValue(ctx, job.ApplyNamespaceToInfraName(namespace, cfg.FileState.Bucket))
-		if err != nil {
+		name := job.ApplyNamespaceToInfraName(namespace, cfg.FileState.Bucket)
+		if _, err := nc.KVStatus(ctx, name); err != nil {
 			log.Warn("file state KV not available",
 				slog.String("error", err.Error()))
 		} else {
-			fileStateKV = kv
+			stateBucket = name
 		}
 	}
 
-	return objStore, fileStateKV
+	return objBucket, stateBucket
 }

@@ -23,11 +23,8 @@ package file
 import (
 	"context"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/controller/api/file/gen"
 )
@@ -39,15 +36,8 @@ func (f *File) GetFiles(
 ) (gen.GetFilesResponseObject, error) {
 	f.logger.Debug("file list")
 
-	objects, err := f.objStore.List(ctx)
+	objects, err := f.objStore.ObjectList(ctx, f.objBucket)
 	if err != nil {
-		if errors.Is(err, jetstream.ErrNoObjectsFound) {
-			return gen.GetFiles200JSONResponse{
-				Files: []gen.FileInfo{},
-				Total: 0,
-			}, nil
-		}
-
 		errMsg := fmt.Sprintf("failed to list files: %s", err.Error())
 		return gen.GetFiles500JSONResponse{
 			Error: &errMsg,

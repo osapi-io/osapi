@@ -27,34 +27,33 @@ import (
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 )
 
-// NATSClient defines the NATS operations needed by the job client.
+// NATSClient is the access to NATS that the job client uses. A
+// *natsclient.Client is one.
 type NATSClient interface {
-	Publish(
+	Publish(ctx context.Context, subject string, data []byte) error
+	StreamInfo(ctx context.Context, name string) (*jetstream.StreamInfo, error)
+	ConsumerCreateOrUpdate(
 		ctx context.Context,
-		subject string,
-		data []byte,
+		stream string,
+		config jetstream.ConsumerConfig,
 	) error
-	GetStreamInfo(
+	Consume(
 		ctx context.Context,
-		streamName string,
-	) (*jetstream.StreamInfo, error)
-	KVPut(
-		bucket string,
-		key string,
-		value []byte,
-	) error
-	ConsumeMessages(
-		ctx context.Context,
-		streamName string,
-		consumerName string,
+		stream string,
+		consumer string,
 		handler natsclient.JetStreamMessageHandler,
 		opts *natsclient.ConsumeOptions,
 	) error
-	CreateOrUpdateConsumerWithConfig(
+	KVGet(ctx context.Context, bucket string, key string) (jetstream.KeyValueEntry, error)
+	KVPut(ctx context.Context, bucket string, key string, value []byte) (uint64, error)
+	KVDelete(ctx context.Context, bucket string, key string) error
+	KVKeys(ctx context.Context, bucket string, filters ...string) ([]string, error)
+	KVWatch(
 		ctx context.Context,
-		streamName string,
-		consumerConfig jetstream.ConsumerConfig,
-	) error
+		bucket string,
+		pattern string,
+		opts ...jetstream.WatchOpt,
+	) (<-chan jetstream.KeyValueEntry, error)
 }
 
 // Ensure natsclient.Client implements NATSClient interface.

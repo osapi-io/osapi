@@ -70,101 +70,79 @@ var startCmd = &cobra.Command{
 
 		job.Init(appConfig.Controller.NATS.Namespace)
 
+		// Each metrics server is made before the NATS connection of its
+		// component, so that nats-client records the calls of that
+		// connection on it. Each server starts when its component is ready.
 		natsLog := logger.With("component", "nats")
-		natsServer, err := server.New(ctx, natsLog, appConfig.NATS)
+		controllerLog := logger.With("component", "controller")
+		agentLog := logger.With("component", "agent")
+		natsMetrics := newMetricsServer(appConfig.NATS.Server.Metrics, natsLog)
+		controllerMetrics := newMetricsServer(appConfig.Controller.Metrics, controllerLog)
+		agentMetrics := newMetricsServer(appConfig.Agent.Metrics, agentLog)
+		var metricsServers []*metrics.Server
+
+		natsServer, err := server.New(ctx, natsLog, appConfig.NATS, meterProviderOf(natsMetrics))
 		if err != nil {
 			cli.LogFatal(natsLog, "failed to start NATS server", err)
 		}
 
-		// Create the controller metrics server before the API server so the
-		// MeterProvider can be injected into otelecho middleware.
-		var metricsServers []*metrics.Server
+		// The controller metrics server also serves the HTTP metrics of the
+		// otelecho middleware.
 		var controllerOpts []controller.Option
-
-		if appConfig.Controller.Metrics.Enabled {
-			s := metrics.New(
-				appConfig.Controller.Metrics.Host,
-				appConfig.Controller.Metrics.Port,
-				logger.With("component", "controller"),
+		if controllerMetrics != nil {
+			controllerOpts = append(
+				controllerOpts,
+				controller.WithMeterProvider(controllerMetrics.MeterProvider()),
 			)
-			if s != nil {
-				controllerOpts = append(
-					controllerOpts,
-					controller.WithMeterProvider(s.MeterProvider()),
-				)
-				metricsServers = append(metricsServers, s)
-			}
 		}
 
-		c, err := controller.New(
-			ctx,
-			logger.With("component", "controller"),
-			appConfig,
-			controllerOpts...,
-		)
+		c, err := controller.New(ctx, controllerLog, appConfig, controllerOpts...)
 		if err != nil {
 			cli.LogFatal(logger, "failed to start the controller", err)
 		}
 
-		// Set readiness, register subsystems, and start controller metrics server.
-		for _, s := range metricsServers {
-			s.SetReadinessFunc(func() error {
+		if controllerMetrics != nil {
+			controllerMetrics.SetReadinessFunc(func() error {
 				return c.CheckHealth(context.Background())
 			})
-			s.RegisterSubsystems(metrics.Subsystems(c.SubComponents()))
-			s.Start()
+			controllerMetrics.RegisterSubsystems(metrics.Subsystems(c.SubComponents()))
+			controllerMetrics.Start()
+			metricsServers = append(metricsServers, controllerMetrics)
 		}
 
 		natsServer.StartHeartbeat(ctx, appConfig.Agent.ProcessConditions)
 
 		agentServer, agentBundle, err := agent.Setup(
 			ctx,
-			logger.With("component", "agent"),
+			agentLog,
 			appFs,
 			appConfig,
+			meterProviderOf(agentMetrics),
 		)
 		if err != nil {
 			cli.LogFatal(logger, "failed to start the agent", err)
 		}
 
-		if appConfig.Agent.Metrics.Enabled {
-			s := metrics.New(
-				appConfig.Agent.Metrics.Host,
-				appConfig.Agent.Metrics.Port,
-				logger.With("component", "agent"),
-			)
-			if s != nil {
-				s.SetReadinessFunc(func() error {
-					return agentServer.IsReady()
-				})
-
-				agentServer.SetMeterProvider(s.MeterProvider())
-				s.RegisterSubsystems(metrics.Subsystems(agentServer.SubComponents()))
-				s.RegisterHeartbeatAge(agentServer.LastHeartbeatTime)
-
-				s.Start()
-
-				metricsServers = append(metricsServers, s)
-			}
+		if agentMetrics != nil {
+			agentMetrics.SetReadinessFunc(func() error {
+				return agentServer.IsReady()
+			})
+			agentServer.SetMeterProvider(agentMetrics.MeterProvider())
+			agentMetrics.RegisterSubsystems(metrics.Subsystems(agentServer.SubComponents()))
+			agentMetrics.RegisterHeartbeatAge(agentServer.LastHeartbeatTime)
+			agentMetrics.Start()
+			metricsServers = append(metricsServers, agentMetrics)
 		}
 
-		if appConfig.NATS.Server.Metrics.Enabled {
-			s := metrics.New(
-				appConfig.NATS.Server.Metrics.Host,
-				appConfig.NATS.Server.Metrics.Port,
-				logger.With("component", "nats"),
+		if natsMetrics != nil {
+			natsMetrics.SetReadinessFunc(func() error {
+				return nil
+			})
+			natsMetrics.RegisterSubsystems(
+				metrics.Subsystems(server.SubComponents(appConfig.NATS.Server)),
 			)
-			if s != nil {
-				s.SetReadinessFunc(func() error {
-					return nil
-				})
-				s.RegisterSubsystems(
-					metrics.Subsystems(server.SubComponents(appConfig.NATS.Server)),
-				)
-				s.Start()
-
-				metricsServers = append(metricsServers, s)
-			}
+			natsMetrics.Start()
+			metricsServers = append(metricsServers, natsMetrics)
 		}
 
 		components := []component{c, agentServer, natsServer}

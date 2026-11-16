@@ -103,7 +103,7 @@ func startServer(
 		Namespace: "test",
 		Auth:      config.NATSServerAuth{Type: "none"},
 	}
-	srv, err := server.New(context.Background(), slog.Default(), n)
+	srv, err := server.New(context.Background(), slog.Default(), n, nil)
 	require.NoError(t, err)
 	t.Cleanup(func() { srv.Stop(context.Background()) })
 

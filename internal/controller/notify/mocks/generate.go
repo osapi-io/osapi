@@ -22,3 +22,4 @@
 package mocks
 
 //go:generate go tool go.uber.org/mock/mockgen -source=../types.go -destination=types.gen.go -package=mocks
+//go:generate go tool go.uber.org/mock/mockgen -source=../watcher.go -destination=watcher.gen.go -package=mocks

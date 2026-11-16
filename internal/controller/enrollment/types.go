@@ -27,6 +27,8 @@ import (
 	"crypto/ed25519"
 	"time"
 
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
+
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
@@ -74,18 +76,16 @@ type AgentKeyStore interface {
 	) (*AcceptedAgent, error)
 }
 
-// NATSSubscriber defines the NATS operations needed by the enrollment
-// watcher for subscribing to enrollment requests and publishing responses.
-// Satisfied by the nats-client's *Client type (Subscribe + PublishCore).
+// NATSSubscriber is the core NATS messaging of the enrollment watcher: it
+// receives the enrollment requests and publishes the answers. A
+// *natsclient.Client is one.
 type NATSSubscriber interface {
 	Subscribe(
-		subj string,
-		cb nats.MsgHandler,
+		ctx context.Context,
+		subject string,
+		handler natsclient.MsgHandler,
 	) (*nats.Subscription, error)
-	PublishCore(
-		subj string,
-		data []byte,
-	) error
+	PublishCore(ctx context.Context, subject string, data []byte) error
 }
 
 // PKIProvider defines the PKI operations needed by the enrollment watcher
@@ -94,5 +94,11 @@ type PKIProvider interface {
 	PublicKey() ed25519.PublicKey
 }
 
-// KVStore wraps the jetstream.KeyValue interface for testability.
-type KVStore = jetstream.KeyValue
+// KVStore reads and writes the enrollment KV bucket. A *natsclient.Client is
+// one.
+type KVStore interface {
+	KVGet(ctx context.Context, bucket string, key string) (jetstream.KeyValueEntry, error)
+	KVPut(ctx context.Context, bucket string, key string, value []byte) (uint64, error)
+	KVDelete(ctx context.Context, bucket string, key string) error
+	KVKeys(ctx context.Context, bucket string, filters ...string) ([]string, error)
+}

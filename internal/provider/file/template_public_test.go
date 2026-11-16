@@ -26,13 +26,14 @@ import (
 	"os"
 	"testing"
 
+	providermocks "github.com/osapi-io/osapi/internal/provider/mocks"
+
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
 	execMocks "github.com/osapi-io/osapi/internal/exec/mocks"
-	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/file"
 	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
@@ -286,24 +287,24 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 			defer ctrl.Finish()
 
 			var appFs avfs.VFS = memfs.New()
-			mockKV := jobmocks.NewMockKeyValue(ctrl)
-			mockObj := filemocks.NewMockObjectStore(ctrl)
+			mockKV := providermocks.NewMockFileState(ctrl)
+			mockObj := filemocks.NewMockObjects(ctrl)
 
 			mockObj.EXPECT().
-				GetBytes(gomock.Any(), gomock.Any()).
+				ObjectGetBytes(gomock.Any(), "objects", gomock.Any()).
 				Return([]byte(tc.template), nil)
 
 			if !tc.wantErr {
 				mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 			}
 
 			p := file.New(
 				suite.logger,
 				appFs,
-				mockObj,
-				mockKV,
+				mockObj, "objects",
+				mockKV, "file-state",
 				tc.hostname,
 				execMocks.NewMockManager(ctrl),
 			)

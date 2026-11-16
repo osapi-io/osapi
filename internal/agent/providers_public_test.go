@@ -26,11 +26,12 @@ import (
 	"strings"
 	"testing"
 
+	providermocks "github.com/osapi-io/osapi/internal/provider/mocks"
+
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
-	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 )
 
@@ -122,7 +123,7 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 					slog.Default(),
 					tc.platform,
 					tc.container,
-					jobmocks.NewMockKeyValue(ctrl),
+					providermocks.NewMockFileState(ctrl),
 					filemocks.NewMockProvider(ctrl),
 				)
 			} else {

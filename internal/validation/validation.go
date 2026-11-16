@@ -74,6 +74,13 @@ const accountNameMaxLength = 32
 // written into.
 var resourceNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
+// natsNamePattern matches a name NATS accepts for a KV or Object Store
+// bucket: letters, digits, underscores, and hyphens. It is the rule nats.go
+// enforces when a bucket is made, so a bad name in the config fails when
+// the config loads, not at the first call that uses the bucket. A namespace
+// is held to it too, because it becomes the prefix of each bucket name.
+var natsNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
 // containerIDPattern matches a container name or ID as the container runtime
 // accepts it. The first character must be a letter or digit so the value
 // cannot be mistaken for a command-line option.
@@ -144,6 +151,12 @@ func init() {
 	// wrong rather than told the host failed.
 	_ = instance.RegisterValidation("resource_name", func(fl validator.FieldLevel) bool {
 		return resourceNamePattern.MatchString(fl.Field().String())
+	})
+
+	// nats_name validates a NATS bucket name or the namespace that prefixes
+	// one.
+	_ = instance.RegisterValidation("nats_name", func(fl validator.FieldLevel) bool {
+		return natsNamePattern.MatchString(fl.Field().String())
 	})
 
 	// container_id validates a container name or ID.
@@ -236,6 +249,13 @@ var customHints = map[string]func(fe validator.FieldError) string{
 			"%q is not a valid name (expected: %s)",
 			fe.Value(),
 			resourceNamePattern.String(),
+		)
+	},
+	"nats_name": func(fe validator.FieldError) string {
+		return fmt.Sprintf(
+			"%q is not a valid NATS bucket name (expected: %s)",
+			fe.Value(),
+			natsNamePattern.String(),
 		)
 	},
 	"container_id": func(fe validator.FieldError) string {

@@ -51,7 +51,7 @@ func (s *WatcherPublicTestSuite) SetupTest() {
 	s.ctrl = gomock.NewController(s.T())
 	s.mockNotifier = notifymocks.NewMockNotifier(s.ctrl)
 	s.capturedEvts = nil
-	s.watcher = notify.NewWatcher(nil, s.mockNotifier, slog.Default(), 0)
+	s.watcher = notify.NewWatcher(nil, "registry", s.mockNotifier, slog.Default(), 0)
 }
 
 func (s *WatcherPublicTestSuite) TearDownTest() {
@@ -719,17 +719,29 @@ func (s *WatcherPublicTestSuite) TestHandleDelete() {
 }
 
 func (s *WatcherPublicTestSuite) TestStart() {
+	// watch returns a Registry whose KVWatch gives ch, or fails with err.
+	watch := func(
+		ctrl *gomock.Controller,
+		ch chan jetstream.KeyValueEntry,
+		err error,
+	) *notifymocks.MockRegistry {
+		kv := notifymocks.NewMockRegistry(ctrl)
+		kv.EXPECT().
+			KVWatch(gomock.Any(), "registry", ">").
+			Return((<-chan jetstream.KeyValueEntry)(ch), err)
+
+		return kv
+	}
+
 	tests := []struct {
 		name         string
-		setup        func(ctrl *gomock.Controller, ctx context.Context) *jobmocks.MockKeyValue
+		setup        func(ctrl *gomock.Controller, ctx context.Context) *notifymocks.MockRegistry
 		validateFunc func(err error)
 	}{
 		{
-			name: "returns error when WatchAll fails",
-			setup: func(ctrl *gomock.Controller, _ context.Context) *jobmocks.MockKeyValue {
-				kv := jobmocks.NewMockKeyValue(ctrl)
-				kv.EXPECT().WatchAll(gomock.Any()).Return(nil, errors.New("watch failed"))
-				return kv
+			name: "returns error when the watch fails",
+			setup: func(ctrl *gomock.Controller, _ context.Context) *notifymocks.MockRegistry {
+				return watch(ctrl, nil, errors.New("watch failed"))
 			},
 			validateFunc: func(err error) {
 				s.Error(err)
@@ -738,16 +750,8 @@ func (s *WatcherPublicTestSuite) TestStart() {
 		},
 		{
 			name: "returns nil when context is cancelled",
-			setup: func(ctrl *gomock.Controller, _ context.Context) *jobmocks.MockKeyValue {
-				ch := make(chan jetstream.KeyValueEntry, 1)
-
-				w := jobmocks.NewMockKeyWatcher(ctrl)
-				w.EXPECT().Updates().Return(ch).AnyTimes()
-				w.EXPECT().Stop().Return(nil)
-
-				kv := jobmocks.NewMockKeyValue(ctrl)
-				kv.EXPECT().WatchAll(gomock.Any()).Return(w, nil)
-				return kv
+			setup: func(ctrl *gomock.Controller, _ context.Context) *notifymocks.MockRegistry {
+				return watch(ctrl, make(chan jetstream.KeyValueEntry, 1), nil)
 			},
 			validateFunc: func(err error) {
 				s.NoError(err)
@@ -755,53 +759,11 @@ func (s *WatcherPublicTestSuite) TestStart() {
 		},
 		{
 			name: "returns nil when updates channel is closed",
-			setup: func(ctrl *gomock.Controller, _ context.Context) *jobmocks.MockKeyValue {
+			setup: func(ctrl *gomock.Controller, _ context.Context) *notifymocks.MockRegistry {
 				ch := make(chan jetstream.KeyValueEntry)
 				close(ch)
 
-				w := jobmocks.NewMockKeyWatcher(ctrl)
-				w.EXPECT().Updates().Return(ch).AnyTimes()
-				w.EXPECT().Stop().Return(nil)
-
-				kv := jobmocks.NewMockKeyValue(ctrl)
-				kv.EXPECT().WatchAll(gomock.Any()).Return(w, nil)
-				return kv
-			},
-			validateFunc: func(err error) {
-				s.NoError(err)
-			},
-		},
-		{
-			name: "skips nil entry (initial values sentinel) and exits on closed channel",
-			setup: func(ctrl *gomock.Controller, _ context.Context) *jobmocks.MockKeyValue {
-				ch := make(chan jetstream.KeyValueEntry, 2)
-				ch <- nil // sentinel nil entry
-				close(ch)
-
-				w := jobmocks.NewMockKeyWatcher(ctrl)
-				w.EXPECT().Updates().Return(ch).AnyTimes()
-				w.EXPECT().Stop().Return(nil)
-
-				kv := jobmocks.NewMockKeyValue(ctrl)
-				kv.EXPECT().WatchAll(gomock.Any()).Return(w, nil)
-				return kv
-			},
-			validateFunc: func(err error) {
-				s.NoError(err)
-			},
-		},
-		{
-			name: "logs warning when Stop returns error",
-			setup: func(ctrl *gomock.Controller, _ context.Context) *jobmocks.MockKeyValue {
-				ch := make(chan jetstream.KeyValueEntry, 1)
-
-				w := jobmocks.NewMockKeyWatcher(ctrl)
-				w.EXPECT().Updates().Return(ch).AnyTimes()
-				w.EXPECT().Stop().Return(errors.New("stop failed"))
-
-				kv := jobmocks.NewMockKeyValue(ctrl)
-				kv.EXPECT().WatchAll(gomock.Any()).Return(w, nil)
-				return kv
+				return watch(ctrl, ch, nil)
 			},
 			validateFunc: func(err error) {
 				s.NoError(err)
@@ -809,7 +771,7 @@ func (s *WatcherPublicTestSuite) TestStart() {
 		},
 		{
 			name: "processes real entry from updates channel then exits on close",
-			setup: func(ctrl *gomock.Controller, _ context.Context) *jobmocks.MockKeyValue {
+			setup: func(ctrl *gomock.Controller, _ context.Context) *notifymocks.MockRegistry {
 				// Build an entry with an unrecognized key so handleEntry returns
 				// quickly without needing further mock expectations.
 				entry := jobmocks.NewMockKeyValueEntry(ctrl)
@@ -819,13 +781,7 @@ func (s *WatcherPublicTestSuite) TestStart() {
 				ch <- entry
 				close(ch)
 
-				w := jobmocks.NewMockKeyWatcher(ctrl)
-				w.EXPECT().Updates().Return(ch).AnyTimes()
-				w.EXPECT().Stop().Return(nil)
-
-				kv := jobmocks.NewMockKeyValue(ctrl)
-				kv.EXPECT().WatchAll(gomock.Any()).Return(w, nil)
-				return kv
+				return watch(ctrl, ch, nil)
 			},
 			validateFunc: func(err error) {
 				s.NoError(err)
@@ -848,13 +804,12 @@ func (s *WatcherPublicTestSuite) TestStart() {
 			defer cancel()
 
 			kv := tt.setup(ctrl, ctx)
-			notify.WatcherSetKV(s.watcher, kv)
+			notify.WatcherSetKV(s.watcher, kv, "registry")
 
 			// Cancel context immediately for cases that need context cancellation.
 			// For cases with closed channels, the channel close drives exit.
 			switch tt.name {
-			case "returns nil when context is cancelled",
-				"logs warning when Stop returns error":
+			case "returns nil when context is cancelled":
 				cancel()
 			}
 

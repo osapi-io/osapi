@@ -32,12 +32,12 @@ func (c *Client) CheckDrainFlag(
 	ctx context.Context,
 	machineID string,
 ) bool {
-	if c.stateKV == nil {
+	if c.stateBucket == "" {
 		return false
 	}
 
 	key := "drain." + machineID
-	_, err := c.stateKV.Get(ctx, key)
+	_, err := c.natsClient.KVGet(ctx, c.stateBucket, key)
 	return err == nil
 }
 
@@ -48,12 +48,12 @@ func (c *Client) SetDrainFlag(
 	ctx context.Context,
 	machineID string,
 ) error {
-	if c.stateKV == nil {
+	if c.stateBucket == "" {
 		return fmt.Errorf("agent state bucket not configured")
 	}
 
 	key := "drain." + machineID
-	_, err := c.stateKV.Put(ctx, key, []byte("1"))
+	_, err := c.natsClient.KVPut(ctx, c.stateBucket, key, []byte("1"))
 	if err != nil {
 		return fmt.Errorf("set drain flag: %w", err)
 	}
@@ -74,12 +74,12 @@ func (c *Client) DeleteDrainFlag(
 	ctx context.Context,
 	machineID string,
 ) error {
-	if c.stateKV == nil {
+	if c.stateBucket == "" {
 		return fmt.Errorf("agent state bucket not configured")
 	}
 
 	key := "drain." + machineID
-	err := c.stateKV.Delete(ctx, key)
+	err := c.natsClient.KVDelete(ctx, c.stateBucket, key)
 	if err != nil {
 		return fmt.Errorf("delete drain flag: %w", err)
 	}

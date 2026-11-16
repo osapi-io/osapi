@@ -39,35 +39,35 @@ var marshalJSON = json.Marshal
 // fetchTimeout is the maximum wait time for fetching messages from a consumer.
 const fetchTimeout = 5 * time.Second
 
-// Publisher defines the interface for publishing messages to NATS subjects.
-type Publisher interface {
-	Publish(
-		ctx context.Context,
-		subject string,
-		data []byte,
-	) error
+// Stream is the access to NATS that StreamStore uses: it publishes each entry
+// to the audit stream, and reads the stream back. A *natsclient.Client is one.
+type Stream interface {
+	Publish(ctx context.Context, subject string, data []byte) error
+	StreamInfo(ctx context.Context, name string) (*jetstream.StreamInfo, error)
+	StreamLastMsg(ctx context.Context, name string, subject string) (*jetstream.RawStreamMsg, error)
+	StreamRead(ctx context.Context, name string, from uint64, count int) ([]jetstream.Msg, error)
 }
 
 // StreamStore implements Store backed by a NATS JetStream stream.
 type StreamStore struct {
-	logger    *slog.Logger
-	stream    jetstream.Stream
-	publisher Publisher
-	subject   string
+	logger  *slog.Logger
+	nc      Stream
+	stream  string
+	subject string
 }
 
 // NewStreamStore creates a new StreamStore.
 func NewStreamStore(
 	logger *slog.Logger,
-	stream jetstream.Stream,
-	publisher Publisher,
+	nc Stream,
+	stream string,
 	subject string,
 ) *StreamStore {
 	return &StreamStore{
-		logger:    logger.With(slog.String("subsystem", "controller.audit.store")),
-		stream:    stream,
-		publisher: publisher,
-		subject:   subject,
+		logger:  logger.With(slog.String("subsystem", "controller.audit.store")),
+		nc:      nc,
+		stream:  stream,
+		subject: subject,
 	}
 }
 
@@ -82,7 +82,7 @@ func (s *StreamStore) Write(
 	}
 
 	subject := s.subject + "." + entry.ID
-	if err := s.publisher.Publish(ctx, subject, data); err != nil {
+	if err := s.nc.Publish(ctx, subject, data); err != nil {
 		return fmt.Errorf("publish audit entry: %w", err)
 	}
 
@@ -96,7 +96,7 @@ func (s *StreamStore) Get(
 ) (*Entry, error) {
 	subject := s.subject + "." + id
 
-	msg, err := s.stream.GetLastMsgForSubject(ctx, subject)
+	msg, err := s.nc.StreamLastMsg(ctx, s.stream, subject)
 	if err != nil {
 		return nil, fmt.Errorf("get audit entry %s: %w: %w", id, ErrNotFound, err)
 	}
@@ -116,7 +116,7 @@ func (s *StreamStore) List(
 	limit int,
 	offset int,
 ) ([]Entry, int, error) {
-	info, err := s.stream.Info(ctx)
+	info, err := s.nc.StreamInfo(ctx, s.stream)
 	if err != nil {
 		return nil, 0, fmt.Errorf("get stream info: %w", err)
 	}
@@ -144,39 +144,9 @@ func (s *StreamStore) List(
 
 	startSeq := newestSeq - uint64(offset) - uint64(count) + 1
 
-	consumer, err := s.stream.OrderedConsumer(ctx, jetstream.OrderedConsumerConfig{
-		DeliverPolicy: jetstream.DeliverByStartSequencePolicy,
-		OptStartSeq:   startSeq,
-	})
+	entries, err := s.read(ctx, startSeq, count)
 	if err != nil {
-		return nil, 0, fmt.Errorf("create ordered consumer: %w", err)
-	}
-
-	batch, err := consumer.Fetch(count, jetstream.FetchMaxWait(fetchTimeout))
-	if err != nil {
-		return nil, 0, fmt.Errorf("fetch audit entries: %w", err)
-	}
-
-	entries := make([]Entry, 0, count)
-	for msg := range batch.Messages() {
-		var entry Entry
-		if err := json.Unmarshal(msg.Data(), &entry); err != nil {
-			s.logger.Warn(
-				"failed to unmarshal audit entry",
-				slog.String("error", err.Error()),
-			)
-
-			continue
-		}
-
-		entries = append(entries, entry)
-	}
-
-	if err := batch.Error(); err != nil {
-		s.logger.Warn(
-			"batch error during list",
-			slog.String("error", err.Error()),
-		)
+		return nil, 0, err
 	}
 
 	// Reverse for newest-first ordering.
@@ -191,7 +161,7 @@ func (s *StreamStore) List(
 func (s *StreamStore) ListAll(
 	ctx context.Context,
 ) ([]Entry, error) {
-	info, err := s.stream.Info(ctx)
+	info, err := s.nc.StreamInfo(ctx, s.stream)
 	if err != nil {
 		return nil, fmt.Errorf("get stream info: %w", err)
 	}
@@ -201,20 +171,41 @@ func (s *StreamStore) ListAll(
 		return []Entry{}, nil
 	}
 
-	consumer, err := s.stream.OrderedConsumer(ctx, jetstream.OrderedConsumerConfig{
-		DeliverPolicy: jetstream.DeliverAllPolicy,
-	})
+	entries, err := s.read(ctx, 0, total)
 	if err != nil {
-		return nil, fmt.Errorf("create ordered consumer: %w", err)
+		return nil, err
 	}
 
-	batch, err := consumer.Fetch(total, jetstream.FetchMaxWait(fetchTimeout))
-	if err != nil {
+	// Reverse for newest-first ordering.
+	for i, j := 0, len(entries)-1; i < j; i, j = i+1, j-1 {
+		entries[i], entries[j] = entries[j], entries[i]
+	}
+
+	return entries, nil
+}
+
+// read reads count entries of the stream from the sequence from, or from the
+// first when from is 0, oldest first. An entry that does not decode is left
+// out. When the read stops with an error after some entries, the entries are
+// kept and the error is logged; with no entry, the error is returned.
+func (s *StreamStore) read(
+	ctx context.Context,
+	from uint64,
+	count int,
+) ([]Entry, error) {
+	ctx, cancel := context.WithTimeout(ctx, fetchTimeout)
+	defer cancel()
+
+	msgs, err := s.nc.StreamRead(ctx, s.stream, from, count)
+	if err != nil && len(msgs) == 0 {
 		return nil, fmt.Errorf("fetch audit entries: %w", err)
 	}
+	if err != nil {
+		s.logger.Warn("read of the audit stream stopped", slog.String("error", err.Error()))
+	}
 
-	entries := make([]Entry, 0, total)
-	for msg := range batch.Messages() {
+	entries := make([]Entry, 0, len(msgs))
+	for _, msg := range msgs {
 		var entry Entry
 		if err := json.Unmarshal(msg.Data(), &entry); err != nil {
 			s.logger.Warn(
@@ -226,18 +217,6 @@ func (s *StreamStore) ListAll(
 		}
 
 		entries = append(entries, entry)
-	}
-
-	if err := batch.Error(); err != nil {
-		s.logger.Warn(
-			"batch error during list all",
-			slog.String("error", err.Error()),
-		)
-	}
-
-	// Reverse for newest-first ordering.
-	for i, j := 0, len(entries)-1; i < j; i, j = i+1, j-1 {
-		entries[i], entries[j] = entries[j], entries[i]
 	}
 
 	return entries, nil

@@ -32,7 +32,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -63,7 +62,7 @@ func (s *FileStalePublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockObjStore = mocks.NewMockObjectStoreManager(s.mockCtrl)
 	s.mockStateKV = mocks.NewMockStateKeyValue(s.mockCtrl)
-	s.handler = apifile.New(slog.Default(), s.mockObjStore, s.mockStateKV)
+	s.handler = apifile.New(slog.Default(), s.mockObjStore, "objects", s.mockStateKV, "file-state")
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -95,7 +94,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				// No mocks needed — stateKV is nil.
 			},
 			setupHandler: func() *apifile.File {
-				return apifile.New(slog.Default(), s.mockObjStore, nil)
+				return apifile.New(slog.Default(), s.mockObjStore, "objects", nil, "")
 			},
 			validateFunc: func(resp gen.GetFileStaleResponseObject) {
 				r, ok := resp.(gen.GetFileStale500JSONResponse)
@@ -108,8 +107,8 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			name: "when no keys found returns empty list",
 			setupMock: func() {
 				s.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
-					Return(nil, jetstream.ErrNoKeysFound)
+					KVKeys(gomock.Any(), "file-state").
+					Return([]string{}, nil)
 			},
 			setupHandler: func() *apifile.File { return s.handler },
 			validateFunc: func(resp gen.GetFileStaleResponseObject) {
@@ -123,7 +122,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			name: "when Keys errors returns 500",
 			setupMock: func() {
 				s.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
+					KVKeys(gomock.Any(), "file-state").
 					Return(nil, assert.AnError)
 			},
 			setupHandler: func() *apifile.File { return s.handler },
@@ -136,7 +135,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			name: "when SHA mismatch returns stale entry",
 			setupMock: func() {
 				s.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
+					KVKeys(gomock.Any(), "file-state").
 					Return([]string{stateKey}, nil)
 
 				state := managedfile.State{
@@ -151,11 +150,11 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				entry.EXPECT().Value().Return(stateJSON)
 
 				s.mockStateKV.EXPECT().
-					Get(gomock.Any(), stateKey).
+					KVGet(gomock.Any(), "file-state", stateKey).
 					Return(entry, nil)
 
 				s.mockObjStore.EXPECT().
-					GetBytes(gomock.Any(), "hello-echo").
+					ObjectGetBytes(gomock.Any(), "objects", "hello-echo").
 					Return(contentNew, nil)
 			},
 			setupHandler: func() *apifile.File { return s.handler },
@@ -177,7 +176,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			name: "when SHA matches returns empty list",
 			setupMock: func() {
 				s.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
+					KVKeys(gomock.Any(), "file-state").
 					Return([]string{stateKey}, nil)
 
 				state := managedfile.State{
@@ -192,11 +191,11 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				entry.EXPECT().Value().Return(stateJSON)
 
 				s.mockStateKV.EXPECT().
-					Get(gomock.Any(), stateKey).
+					KVGet(gomock.Any(), "file-state", stateKey).
 					Return(entry, nil)
 
 				s.mockObjStore.EXPECT().
-					GetBytes(gomock.Any(), "hello-echo").
+					ObjectGetBytes(gomock.Any(), "objects", "hello-echo").
 					Return(contentOld, nil)
 			},
 			setupHandler: func() *apifile.File { return s.handler },
@@ -211,7 +210,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			name: "when entry is undeployed skips it",
 			setupMock: func() {
 				s.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
+					KVKeys(gomock.Any(), "file-state").
 					Return([]string{stateKey}, nil)
 
 				state := managedfile.State{
@@ -227,7 +226,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				entry.EXPECT().Value().Return(stateJSON)
 
 				s.mockStateKV.EXPECT().
-					Get(gomock.Any(), stateKey).
+					KVGet(gomock.Any(), "file-state", stateKey).
 					Return(entry, nil)
 			},
 			setupHandler: func() *apifile.File { return s.handler },
@@ -242,7 +241,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			name: "when object deleted returns stale with empty current_sha",
 			setupMock: func() {
 				s.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
+					KVKeys(gomock.Any(), "file-state").
 					Return([]string{stateKey}, nil)
 
 				state := managedfile.State{
@@ -257,11 +256,11 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				entry.EXPECT().Value().Return(stateJSON)
 
 				s.mockStateKV.EXPECT().
-					Get(gomock.Any(), stateKey).
+					KVGet(gomock.Any(), "file-state", stateKey).
 					Return(entry, nil)
 
 				s.mockObjStore.EXPECT().
-					GetBytes(gomock.Any(), "hello-echo").
+					ObjectGetBytes(gomock.Any(), "objects", "hello-echo").
 					Return(nil, assert.AnError)
 			},
 			setupHandler: func() *apifile.File { return s.handler },
@@ -279,11 +278,11 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			name: "when Get entry fails skips and continues",
 			setupMock: func() {
 				s.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
+					KVKeys(gomock.Any(), "file-state").
 					Return([]string{stateKey}, nil)
 
 				s.mockStateKV.EXPECT().
-					Get(gomock.Any(), stateKey).
+					KVGet(gomock.Any(), "file-state", stateKey).
 					Return(nil, assert.AnError)
 			},
 			setupHandler: func() *apifile.File { return s.handler },
@@ -298,14 +297,14 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			name: "when unmarshal fails skips and continues",
 			setupMock: func() {
 				s.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
+					KVKeys(gomock.Any(), "file-state").
 					Return([]string{stateKey}, nil)
 
 				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry.EXPECT().Value().Return([]byte("not-json"))
 
 				s.mockStateKV.EXPECT().
-					Get(gomock.Any(), stateKey).
+					KVGet(gomock.Any(), "file-state", stateKey).
 					Return(entry, nil)
 			},
 			setupHandler: func() *apifile.File { return s.handler },
@@ -325,7 +324,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				certKey := "web-02." + certPathHash
 
 				s.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
+					KVKeys(gomock.Any(), "file-state").
 					Return([]string{certKey}, nil)
 
 				state := managedfile.State{
@@ -340,11 +339,11 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				entry.EXPECT().Value().Return(stateBytes)
 
 				s.mockStateKV.EXPECT().
-					Get(gomock.Any(), certKey).
+					KVGet(gomock.Any(), "file-state", certKey).
 					Return(entry, nil)
 
 				s.mockObjStore.EXPECT().
-					GetBytes(gomock.Any(), "my-ca").
+					ObjectGetBytes(gomock.Any(), "objects", "my-ca").
 					Return(contentNew, nil)
 			},
 			setupHandler: func() *apifile.File { return s.handler },
@@ -363,7 +362,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				cronKey := "web-03." + cronPathHash
 
 				s.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
+					KVKeys(gomock.Any(), "file-state").
 					Return([]string{cronKey}, nil)
 
 				state := managedfile.State{
@@ -378,11 +377,11 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				entry.EXPECT().Value().Return(stateBytes)
 
 				s.mockStateKV.EXPECT().
-					Get(gomock.Any(), cronKey).
+					KVGet(gomock.Any(), "file-state", cronKey).
 					Return(entry, nil)
 
 				s.mockObjStore.EXPECT().
-					GetBytes(gomock.Any(), "backup-cron").
+					ObjectGetBytes(gomock.Any(), "objects", "backup-cron").
 					Return(contentNew, nil)
 			},
 			setupHandler: func() *apifile.File { return s.handler },
@@ -401,7 +400,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				fileKey := "web-04." + filePathHash
 
 				s.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
+					KVKeys(gomock.Any(), "file-state").
 					Return([]string{fileKey}, nil)
 
 				state := managedfile.State{
@@ -416,11 +415,11 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				entry.EXPECT().Value().Return(stateBytes)
 
 				s.mockStateKV.EXPECT().
-					Get(gomock.Any(), fileKey).
+					KVGet(gomock.Any(), "file-state", fileKey).
 					Return(entry, nil)
 
 				s.mockObjStore.EXPECT().
-					GetBytes(gomock.Any(), "app-conf").
+					ObjectGetBytes(gomock.Any(), "objects", "app-conf").
 					Return(contentNew, nil)
 			},
 			setupHandler: func() *apifile.File { return s.handler },
@@ -438,7 +437,7 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				shortKey := "short"
 
 				s.mockStateKV.EXPECT().
-					Keys(gomock.Any()).
+					KVKeys(gomock.Any(), "file-state").
 					Return([]string{shortKey}, nil)
 
 				state := managedfile.State{
@@ -453,11 +452,11 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 				entry.EXPECT().Value().Return(stateBytes)
 
 				s.mockStateKV.EXPECT().
-					Get(gomock.Any(), shortKey).
+					KVGet(gomock.Any(), "file-state", shortKey).
 					Return(entry, nil)
 
 				s.mockObjStore.EXPECT().
-					GetBytes(gomock.Any(), "test").
+					ObjectGetBytes(gomock.Any(), "objects", "test").
 					Return(contentNew, nil)
 			},
 			setupHandler: func() *apifile.File { return s.handler },
@@ -495,8 +494,8 @@ func (s *FileStalePublicTestSuite) TestGetFileStaleHTTP() {
 				objMock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				kvMock := mocks.NewMockStateKeyValue(s.mockCtrl)
 				kvMock.EXPECT().
-					Keys(gomock.Any()).
-					Return(nil, jetstream.ErrNoKeysFound)
+					KVKeys(gomock.Any(), "file-state").
+					Return([]string{}, nil)
 				return objMock, kvMock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
@@ -522,12 +521,15 @@ func (s *FileStalePublicTestSuite) TestGetFileStaleHTTP() {
 		s.Run(tc.name, func() {
 			objMock, kvMock := tc.setupMock()
 
+			// No state store is an empty bucket name, as the controller
+			// gives when the file-state bucket does not open.
 			var stateKV apifile.StateKeyValue
+			stateBucket := ""
 			if kvMock != nil {
-				stateKV = kvMock
+				stateKV, stateBucket = kvMock, "file-state"
 			}
 
-			fileHandler := apifile.New(s.logger, objMock, stateKV)
+			fileHandler := apifile.New(s.logger, objMock, "objects", stateKV, stateBucket)
 			strictHandler := gen.NewStrictHandler(fileHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
@@ -605,8 +607,8 @@ func (s *FileStalePublicTestSuite) TestGetFileStaleRBACHTTP() {
 				objMock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				kvMock := mocks.NewMockStateKeyValue(s.mockCtrl)
 				kvMock.EXPECT().
-					Keys(gomock.Any()).
-					Return(nil, jetstream.ErrNoKeysFound)
+					KVKeys(gomock.Any(), "file-state").
+					Return([]string{}, nil)
 				return objMock, kvMock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
@@ -635,7 +637,9 @@ func (s *FileStalePublicTestSuite) TestGetFileStaleRBACHTTP() {
 			handlers := apifile.Handler(
 				s.logger,
 				objMock,
+				"objects",
 				kvMock,
+				"file-state",
 				appConfig.Controller.API.Security.SigningKey,
 				nil,
 			)

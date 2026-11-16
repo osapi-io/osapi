@@ -45,3 +45,15 @@ func KeysOf(
 ) []Key {
 	return walk(t, "", reflect.Value{})
 }
+
+// ExportSharedObjectStoreBucket runs the shared-bucket check on infos.
+func ExportSharedObjectStoreBucket(
+	infos []ObjectStoreBucketInfo,
+) error {
+	keys, buckets := make([]string, 0, len(infos)), make([]string, 0, len(infos))
+	for _, b := range infos {
+		keys, buckets = append(keys, b.Key), append(buckets, b.Bucket)
+	}
+
+	return sharedName(keys, buckets)
+}

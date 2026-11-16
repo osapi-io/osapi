@@ -11,6 +11,7 @@ package mocks
 
 import (
 	context "context"
+	io "io"
 	reflect "reflect"
 
 	jetstream "github.com/nats-io/nats.go/jetstream"
@@ -41,32 +42,140 @@ func (m *MockFileBuckets) EXPECT() *MockFileBucketsMockRecorder {
 	return m.recorder
 }
 
-// CreateOrUpdateObjectStore mocks base method.
-func (m *MockFileBuckets) CreateOrUpdateObjectStore(ctx context.Context, cfg jetstream.ObjectStoreConfig) (jetstream.ObjectStore, error) {
+// KVGet mocks base method.
+func (m *MockFileBuckets) KVGet(ctx context.Context, bucket, key string) (jetstream.KeyValueEntry, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrUpdateObjectStore", ctx, cfg)
-	ret0, _ := ret[0].(jetstream.ObjectStore)
+	ret := m.ctrl.Call(m, "KVGet", ctx, bucket, key)
+	ret0, _ := ret[0].(jetstream.KeyValueEntry)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CreateOrUpdateObjectStore indicates an expected call of CreateOrUpdateObjectStore.
-func (mr *MockFileBucketsMockRecorder) CreateOrUpdateObjectStore(ctx, cfg any) *gomock.Call {
+// KVGet indicates an expected call of KVGet.
+func (mr *MockFileBucketsMockRecorder) KVGet(ctx, bucket, key any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateObjectStore", reflect.TypeOf((*MockFileBuckets)(nil).CreateOrUpdateObjectStore), ctx, cfg)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVGet", reflect.TypeOf((*MockFileBuckets)(nil).KVGet), ctx, bucket, key)
 }
 
-// KeyValue mocks base method.
-func (m *MockFileBuckets) KeyValue(ctx context.Context, bucket string) (jetstream.KeyValue, error) {
+// KVKeys mocks base method.
+func (m *MockFileBuckets) KVKeys(ctx context.Context, bucket string, filters ...string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "KeyValue", ctx, bucket)
-	ret0, _ := ret[0].(jetstream.KeyValue)
+	varargs := []any{ctx, bucket}
+	for _, a := range filters {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "KVKeys", varargs...)
+	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// KeyValue indicates an expected call of KeyValue.
-func (mr *MockFileBucketsMockRecorder) KeyValue(ctx, bucket any) *gomock.Call {
+// KVKeys indicates an expected call of KVKeys.
+func (mr *MockFileBucketsMockRecorder) KVKeys(ctx, bucket any, filters ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KeyValue", reflect.TypeOf((*MockFileBuckets)(nil).KeyValue), ctx, bucket)
+	varargs := append([]any{ctx, bucket}, filters...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVKeys", reflect.TypeOf((*MockFileBuckets)(nil).KVKeys), varargs...)
+}
+
+// KVStatus mocks base method.
+func (m *MockFileBuckets) KVStatus(ctx context.Context, bucket string) (jetstream.KeyValueStatus, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "KVStatus", ctx, bucket)
+	ret0, _ := ret[0].(jetstream.KeyValueStatus)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// KVStatus indicates an expected call of KVStatus.
+func (mr *MockFileBucketsMockRecorder) KVStatus(ctx, bucket any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVStatus", reflect.TypeOf((*MockFileBuckets)(nil).KVStatus), ctx, bucket)
+}
+
+// ObjectDelete mocks base method.
+func (m *MockFileBuckets) ObjectDelete(ctx context.Context, bucket, name string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ObjectDelete", ctx, bucket, name)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ObjectDelete indicates an expected call of ObjectDelete.
+func (mr *MockFileBucketsMockRecorder) ObjectDelete(ctx, bucket, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectDelete", reflect.TypeOf((*MockFileBuckets)(nil).ObjectDelete), ctx, bucket, name)
+}
+
+// ObjectGetBytes mocks base method.
+func (m *MockFileBuckets) ObjectGetBytes(ctx context.Context, bucket, name string) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ObjectGetBytes", ctx, bucket, name)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ObjectGetBytes indicates an expected call of ObjectGetBytes.
+func (mr *MockFileBucketsMockRecorder) ObjectGetBytes(ctx, bucket, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectGetBytes", reflect.TypeOf((*MockFileBuckets)(nil).ObjectGetBytes), ctx, bucket, name)
+}
+
+// ObjectInfo mocks base method.
+func (m *MockFileBuckets) ObjectInfo(ctx context.Context, bucket, name string) (*jetstream.ObjectInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ObjectInfo", ctx, bucket, name)
+	ret0, _ := ret[0].(*jetstream.ObjectInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ObjectInfo indicates an expected call of ObjectInfo.
+func (mr *MockFileBucketsMockRecorder) ObjectInfo(ctx, bucket, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectInfo", reflect.TypeOf((*MockFileBuckets)(nil).ObjectInfo), ctx, bucket, name)
+}
+
+// ObjectList mocks base method.
+func (m *MockFileBuckets) ObjectList(ctx context.Context, bucket string) ([]*jetstream.ObjectInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ObjectList", ctx, bucket)
+	ret0, _ := ret[0].([]*jetstream.ObjectInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ObjectList indicates an expected call of ObjectList.
+func (mr *MockFileBucketsMockRecorder) ObjectList(ctx, bucket any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectList", reflect.TypeOf((*MockFileBuckets)(nil).ObjectList), ctx, bucket)
+}
+
+// ObjectPut mocks base method.
+func (m *MockFileBuckets) ObjectPut(ctx context.Context, bucket string, meta jetstream.ObjectMeta, reader io.Reader) (*jetstream.ObjectInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ObjectPut", ctx, bucket, meta, reader)
+	ret0, _ := ret[0].(*jetstream.ObjectInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ObjectPut indicates an expected call of ObjectPut.
+func (mr *MockFileBucketsMockRecorder) ObjectPut(ctx, bucket, meta, reader any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectPut", reflect.TypeOf((*MockFileBuckets)(nil).ObjectPut), ctx, bucket, meta, reader)
+}
+
+// ObjectStoreCreateOrUpdate mocks base method.
+func (m *MockFileBuckets) ObjectStoreCreateOrUpdate(ctx context.Context, config jetstream.ObjectStoreConfig) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ObjectStoreCreateOrUpdate", ctx, config)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ObjectStoreCreateOrUpdate indicates an expected call of ObjectStoreCreateOrUpdate.
+func (mr *MockFileBucketsMockRecorder) ObjectStoreCreateOrUpdate(ctx, config any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreCreateOrUpdate", reflect.TypeOf((*MockFileBuckets)(nil).ObjectStoreCreateOrUpdate), ctx, config)
 }

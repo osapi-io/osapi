@@ -30,8 +30,6 @@ import (
 
 	"github.com/osapi-io/osapi/internal/controller"
 	"github.com/osapi-io/osapi/internal/controller/mocks"
-	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
-	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 )
 
 type FilesPublicTestSuite struct {
@@ -73,21 +71,10 @@ func (s *FilesPublicTestSuite) TestOpenFileBuckets() {
 		s.Run(tc.name, func() {
 			ctrl := gomock.NewController(s.T())
 			nc := mocks.NewMockFileBuckets(ctrl)
-			if tc.objErr != nil {
-				nc.EXPECT().
-					CreateOrUpdateObjectStore(gomock.Any(), gomock.Any()).
-					Return(nil, tc.objErr)
-			} else {
-				nc.EXPECT().CreateOrUpdateObjectStore(gomock.Any(), gomock.Any()).
-					Return(filemocks.NewMockObjectStore(ctrl), nil)
-			}
-			if tc.kvErr != nil {
-				nc.EXPECT().KeyValue(gomock.Any(), "ns-file-state").Return(nil, tc.kvErr)
-			} else {
-				nc.EXPECT().KeyValue(gomock.Any(), "ns-file-state").Return(jobmocks.NewMockKeyValue(ctrl), nil)
-			}
+			nc.EXPECT().ObjectStoreCreateOrUpdate(gomock.Any(), gomock.Any()).Return(tc.objErr)
+			nc.EXPECT().KVStatus(gomock.Any(), "ns-file-state").Return(nil, tc.kvErr)
 
-			objStore, stateKV := controller.ExportOpenFileBuckets(
+			objBucket, stateBucket := controller.ExportOpenFileBuckets(
 				context.Background(),
 				slog.Default(),
 				nc,
@@ -95,8 +82,8 @@ func (s *FilesPublicTestSuite) TestOpenFileBuckets() {
 				natsConfig(),
 			)
 
-			s.Equal(tc.wantObject, objStore != nil)
-			s.Equal(tc.wantState, stateKV != nil)
+			s.Equal(tc.wantObject, objBucket != "")
+			s.Equal(tc.wantState, stateBucket != "")
 		})
 	}
 }

@@ -23,7 +23,6 @@ package client
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"sort"
@@ -31,8 +30,6 @@ import (
 	"time"
 
 	"github.com/osapi-io/osapi/internal/job"
-
-	"github.com/nats-io/nats.go/jetstream"
 )
 
 // WriteAgentTimelineEvent writes an append-only timeline event
@@ -41,7 +38,7 @@ func (c *Client) WriteAgentTimelineEvent(
 	ctx context.Context,
 	hostname, event, message string,
 ) error {
-	if c.stateKV == nil {
+	if c.stateBucket == "" {
 		return fmt.Errorf("agent state bucket not configured")
 	}
 
@@ -63,7 +60,7 @@ func (c *Client) WriteAgentTimelineEvent(
 		return fmt.Errorf("marshal timeline event: %w", err)
 	}
 
-	_, err = c.stateKV.Put(ctx, key, data)
+	_, err = c.natsClient.KVPut(ctx, c.stateBucket, key, data)
 	if err != nil {
 		return fmt.Errorf("write timeline event: %w", err)
 	}
@@ -83,31 +80,28 @@ func (c *Client) GetAgentTimeline(
 	ctx context.Context,
 	hostname string,
 ) ([]job.TimelineEvent, error) {
-	if c.stateKV == nil {
+	if c.stateBucket == "" {
 		return nil, fmt.Errorf("agent state bucket not configured")
 	}
 
 	prefix := "timeline." + job.SanitizeHostname(hostname) + "."
 
-	keys, err := c.stateKV.Keys(ctx)
+	keys, err := c.natsClient.KVKeys(ctx, c.stateBucket)
 	if err != nil {
-		// An empty bucket is an empty timeline. Anything else is a bucket that
-		// could not be read, and reporting that as "no events" tells an operator
-		// the agent has no history when the truth is that nobody knows.
-		if errors.Is(err, jetstream.ErrNoKeysFound) {
-			return []job.TimelineEvent{}, nil
-		}
-
+		// An empty bucket has no keys and no error, so it is an empty
+		// timeline. An error is a bucket that could not be read, and
+		// reporting that as "no events" tells an operator the agent has no
+		// history when the truth is that nobody knows.
 		return nil, fmt.Errorf("list timeline keys for %q: %w", hostname, err)
 	}
 
-	var events []job.TimelineEvent
+	events := []job.TimelineEvent{}
 	for _, key := range keys {
 		if !strings.HasPrefix(key, prefix) {
 			continue
 		}
 
-		entry, err := c.stateKV.Get(ctx, key)
+		entry, err := c.natsClient.KVGet(ctx, c.stateBucket, key)
 		if err != nil {
 			continue
 		}

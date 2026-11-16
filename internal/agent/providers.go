@@ -24,8 +24,9 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/provider"
+
 	"github.com/avfs/avfs"
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	sysctlBehavior "github.com/osapi-io/osapi/internal/behaviors/sysctl"
@@ -69,8 +70,11 @@ type hostEnv struct {
 	platform  string
 	container bool
 	hostname  string
-	fileState jetstream.KeyValue
-	files     fileProv.Provider
+	// fileState and fileStateBucket record the files that the providers
+	// deploy. fileState is nil when the agent has no file-state bucket.
+	fileState       provider.FileState
+	fileStateBucket string
+	files           fileProv.Provider
 }
 
 func (e hostEnv) host() nodeHost.Provider {
@@ -126,7 +130,14 @@ func (e hostEnv) dns() dns.Provider {
 		if e.container {
 			return dns.NewDebianDockerProvider(e.log, e.fs)
 		}
-		return dns.NewDebianProvider(e.log, e.fs, e.fileState, e.exec, e.hostname)
+		return dns.NewDebianProvider(
+			e.log,
+			e.fs,
+			e.fileState,
+			e.fileStateBucket,
+			e.exec,
+			e.hostname,
+		)
 	case "darwin":
 		return dns.NewDarwinProvider(e.log, e.exec)
 	default:
@@ -180,7 +191,14 @@ func (e hostEnv) cron() cronProv.Provider {
 			e.log.Warn("file provider not available, cron operations disabled")
 			return cronProv.NewLinuxProvider()
 		}
-		return cronProv.NewDebianProvider(e.log, e.fs, e.files, e.fileState, e.hostname)
+		return cronProv.NewDebianProvider(
+			e.log,
+			e.fs,
+			e.files,
+			e.fileState,
+			e.fileStateBucket,
+			e.hostname,
+		)
 	case "darwin":
 		return cronProv.NewDarwinProvider()
 	default:
@@ -197,7 +215,7 @@ func (e hostEnv) sysctl() sysctlBehavior.Provider {
 		}
 		dir := behavior.Settings[sysctlBehavior.Settings](sysctlBehavior.Behavior).Dir
 
-		return sysctlBehavior.NewDebianProvider(e.log, e.fs, e.fileState, e.exec, e.hostname).
+		return sysctlBehavior.NewDebianProvider(e.log, e.fs, e.fileState, e.fileStateBucket, e.exec, e.hostname).
 			WithDir(dir)
 	case "darwin":
 		return sysctlBehavior.NewDarwinProvider()
@@ -309,7 +327,15 @@ func (e hostEnv) certificate() certProv.Provider {
 			e.log.Warn("file provider not available, certificate operations disabled")
 			return certProv.NewLinuxProvider()
 		}
-		return certProv.NewDebianProvider(e.log, e.fs, e.files, e.fileState, e.exec, e.hostname)
+		return certProv.NewDebianProvider(
+			e.log,
+			e.fs,
+			e.files,
+			e.fileState,
+			e.fileStateBucket,
+			e.exec,
+			e.hostname,
+		)
 	case "darwin":
 		return certProv.NewDarwinProvider()
 	default:
@@ -328,7 +354,15 @@ func (e hostEnv) service() serviceProv.Provider {
 			e.log.Warn("file provider not available, service operations disabled")
 			return serviceProv.NewLinuxProvider()
 		}
-		return serviceProv.NewDebianProvider(e.log, e.fs, e.files, e.fileState, e.exec, e.hostname)
+		return serviceProv.NewDebianProvider(
+			e.log,
+			e.fs,
+			e.files,
+			e.fileState,
+			e.fileStateBucket,
+			e.exec,
+			e.hostname,
+		)
 	case "darwin":
 		return serviceProv.NewDarwinProvider()
 	default:
@@ -343,8 +377,22 @@ func (e hostEnv) netplan() (ifaceProv.Provider, routeProv.Provider) {
 			e.log.Warn("file state KV not available, netplan operations disabled")
 			return ifaceProv.NewLinuxProvider(), routeProv.NewLinuxProvider()
 		}
-		return ifaceProv.NewDebianProvider(e.log, e.fs, e.fileState, e.exec, e.hostname),
-			routeProv.NewDebianProvider(e.log, e.fs, e.fileState, e.exec, e.hostname)
+		return ifaceProv.NewDebianProvider(
+				e.log,
+				e.fs,
+				e.fileState,
+				e.fileStateBucket,
+				e.exec,
+				e.hostname,
+			),
+			routeProv.NewDebianProvider(
+				e.log,
+				e.fs,
+				e.fileState,
+				e.fileStateBucket,
+				e.exec,
+				e.hostname,
+			)
 	case "darwin":
 		return ifaceProv.NewDarwinProvider(), routeProv.NewDarwinProvider()
 	default:

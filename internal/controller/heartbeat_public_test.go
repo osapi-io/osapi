@@ -63,7 +63,7 @@ func (s *HeartbeatPublicTestSuite) TestStartHeartbeat() {
 		defer nc.Close()
 		bucket := bus.RegistryKV("test", cfg.NATS.Registry).Bucket
 		s.Eventually(func() bool {
-			keys, _ := nc.KVKeys(bucket)
+			keys, _ := nc.KVKeys(context.Background(), bucket)
 			return slices.Contains(keys, "controller.unknown")
 		}, 5*time.Second, 50*time.Millisecond)
 	})

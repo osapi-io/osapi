@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/avfs/avfs"
-	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
@@ -58,10 +57,10 @@ func New(
 	netinfoProvider netinfo.Provider,
 	processProvider process.Provider,
 	registry *ProviderRegistry,
-	registryKV jetstream.KeyValue,
-	factsKV jetstream.KeyValue,
+	registryBucket string,
+	factsBucket string,
 	execManager exec.Manager,
-	natsClient NATSPublisher,
+	natsClient NATSClient,
 ) *Agent {
 	a := &Agent{
 		logger:          logger.With(slog.String("subsystem", "agent")),
@@ -76,8 +75,8 @@ func New(
 		netinfoProvider: netinfoProvider,
 		processProvider: processProvider,
 		registry:        registry,
-		registryKV:      registryKV,
-		factsKV:         factsKV,
+		registryBucket:  registryBucket,
+		factsBucket:     factsBucket,
 		execManager:     execManager,
 		natsClient:      natsClient,
 		heartbeatLogger: logger.With(slog.String("subsystem", "agent.heartbeat")),

@@ -27,6 +27,8 @@ import (
 	"os"
 	"testing"
 
+	providermocks "github.com/osapi-io/osapi/internal/provider/mocks"
+
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/assert"
@@ -34,7 +36,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
-	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan/dns"
 )
 
@@ -62,7 +63,7 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TearDownTest() {
 func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvConfByInterface() {
 	tests := []struct {
 		name          string
-		setupMock     func() (*execmocks.MockManager, *jobmocks.MockKeyValue)
+		setupMock     func() (*execmocks.MockManager, *providermocks.MockFileState)
 		servers       []string
 		searchDomains []string
 		interfaceName string
@@ -70,15 +71,15 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 	}{
 		{
 			name: "when SetResolvConf Ok",
-			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+			setupMock: func() (*execmocks.MockManager, *providermocks.MockFileState) {
 				mock := execmocks.NewSetResolvConfMockManager(suite.ctrl)
-				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+				kv := providermocks.NewMockFileState(suite.ctrl)
 
 				// KV Get returns not found (new file).
 
 				// KV Put succeeds.
 				kv.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 
 				return mock, kv
@@ -100,12 +101,12 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 		},
 		{
 			name: "when SetResolvConf preserves existing servers Ok",
-			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+			setupMock: func() (*execmocks.MockManager, *providermocks.MockFileState) {
 				mock := execmocks.NewSetResolvConfPreserveDNSServersMockManager(suite.ctrl)
-				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+				kv := providermocks.NewMockFileState(suite.ctrl)
 
 				kv.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 
 				return mock, kv
@@ -123,12 +124,12 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 		},
 		{
 			name: "when SetResolvConf preserves existing search domains Ok",
-			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+			setupMock: func() (*execmocks.MockManager, *providermocks.MockFileState) {
 				mock := execmocks.NewSetResolvConfPreserveDNSDomainMockManager(suite.ctrl)
-				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+				kv := providermocks.NewMockFileState(suite.ctrl)
 
 				kv.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 
 				return mock, kv
@@ -146,12 +147,12 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 		},
 		{
 			name: "when SetResolvConf filters root domain Ok",
-			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+			setupMock: func() (*execmocks.MockManager, *providermocks.MockFileState) {
 				mock := execmocks.NewSetResolvConfFiltersRootDNSDomainMockManager(suite.ctrl)
-				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+				kv := providermocks.NewMockFileState(suite.ctrl)
 
 				kv.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 
 				return mock, kv
@@ -169,9 +170,9 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 		},
 		{
 			name: "when SetResolvConf missing args errors",
-			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+			setupMock: func() (*execmocks.MockManager, *providermocks.MockFileState) {
 				mock := execmocks.NewPlainMockManager(suite.ctrl)
-				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+				kv := providermocks.NewMockFileState(suite.ctrl)
 
 				return mock, kv
 			},
@@ -187,9 +188,9 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 		},
 		{
 			name: "when GetResolvConfByInterface errors",
-			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+			setupMock: func() (*execmocks.MockManager, *providermocks.MockFileState) {
 				mock := execmocks.NewPlainMockManager(suite.ctrl)
-				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+				kv := providermocks.NewMockFileState(suite.ctrl)
 
 				mock.EXPECT().
 					RunCmd(gomock.Any(), execmocks.ResolveCommand, []string{"status", execmocks.NetworkInterfaceName}).
@@ -215,9 +216,9 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 		},
 		{
 			name: "when netplan generate fails",
-			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+			setupMock: func() (*execmocks.MockManager, *providermocks.MockFileState) {
 				mock := execmocks.NewSetResolvConfNetplanGenerateErrorMockManager(suite.ctrl)
-				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+				kv := providermocks.NewMockFileState(suite.ctrl)
 
 				mock.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
@@ -242,9 +243,9 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 		},
 		{
 			name: "when netplan apply fails",
-			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+			setupMock: func() (*execmocks.MockManager, *providermocks.MockFileState) {
 				mock := execmocks.NewSetResolvConfNetplanGenerateErrorMockManager(suite.ctrl)
-				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+				kv := providermocks.NewMockFileState(suite.ctrl)
 
 				mock.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
@@ -273,9 +274,9 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 		},
 		{
 			name: "when interface resolved from facts",
-			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+			setupMock: func() (*execmocks.MockManager, *providermocks.MockFileState) {
 				mock := execmocks.NewPlainMockManager(suite.ctrl)
-				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+				kv := providermocks.NewMockFileState(suite.ctrl)
 
 				// Read path uses empty interface name, but resolvectl
 				// still needs the interface. The handler passes the
@@ -307,7 +308,7 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 			fs := memfs.New()
 			_ = fs.MkdirAll("/etc/netplan", 0o755)
 
-			net := dns.NewDebianProvider(suite.logger, fs, kv, mock, "test-host")
+			net := dns.NewDebianProvider(suite.logger, fs, kv, "file-state", mock, "test-host")
 			tc.validateFunc(net.UpdateResolvConfByInterface(
 				context.Background(),
 				tc.servers,
@@ -322,19 +323,19 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestDeleteNetplanConfig() {
 	tests := []struct {
 		name         string
-		setupMock    func() (*execmocks.MockManager, *jobmocks.MockKeyValue)
+		setupMock    func() (*execmocks.MockManager, *providermocks.MockFileState)
 		setupFS      func(avfs.VFS)
 		validateFunc func(bool, error)
 	}{
 		{
 			name: "when file exists and remove succeeds",
-			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+			setupMock: func() (*execmocks.MockManager, *providermocks.MockFileState) {
 				mock := execmocks.NewPlainMockManager(suite.ctrl)
-				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+				kv := providermocks.NewMockFileState(suite.ctrl)
 
 				// Undeploy still reads the record, to mark it undeployed.
 				kv.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
+					KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, errors.New("not found")).
 					AnyTimes()
 
@@ -362,9 +363,9 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestDeleteNetplan
 		},
 		{
 			name: "when file does not exist returns not changed",
-			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+			setupMock: func() (*execmocks.MockManager, *providermocks.MockFileState) {
 				mock := execmocks.NewPlainMockManager(suite.ctrl)
-				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+				kv := providermocks.NewMockFileState(suite.ctrl)
 
 				return mock, kv
 			},
@@ -378,9 +379,9 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestDeleteNetplan
 		},
 		{
 			name: "when netplan apply fails",
-			setupMock: func() (*execmocks.MockManager, *jobmocks.MockKeyValue) {
+			setupMock: func() (*execmocks.MockManager, *providermocks.MockFileState) {
 				mock := execmocks.NewPlainMockManager(suite.ctrl)
-				kv := jobmocks.NewMockKeyValue(suite.ctrl)
+				kv := providermocks.NewMockFileState(suite.ctrl)
 
 				mock.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
@@ -409,7 +410,7 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestDeleteNetplan
 			fs := memfs.New()
 			tc.setupFS(fs)
 
-			net := dns.NewDebianProvider(suite.logger, fs, kv, mock, "test-host")
+			net := dns.NewDebianProvider(suite.logger, fs, kv, "file-state", mock, "test-host")
 			tc.validateFunc(net.DeleteNetplanConfig(context.Background(), "eth0"))
 		})
 	}

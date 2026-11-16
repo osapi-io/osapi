@@ -51,33 +51,30 @@ func registrationJSON(
 	))
 }
 
-// setupRegistryKV configures mockRegistryKV to return the provided hostnames
-// from Keys() and then return registration data for each.
+// setupRegistryKV makes the registry bucket of nc return the provided
+// hostnames from KVKeys and then registration data for each.
 func setupRegistryKV(
 	ctrl *gomock.Controller,
+	nc *jobmocks.MockNATSClient,
 	hostnames []string,
-) *jobmocks.MockKeyValue {
-	mockRegistryKV := jobmocks.NewMockKeyValue(ctrl)
-
+) {
 	keys := make([]string, len(hostnames))
 	for i, h := range hostnames {
 		keys[i] = "agents." + job.SanitizeHostname(h)
 	}
 
-	mockRegistryKV.EXPECT().
-		Keys(gomock.Any()).
+	nc.EXPECT().
+		KVKeys(gomock.Any(), "registry").
 		Return(keys, nil)
 
 	for _, h := range hostnames {
 		key := "agents." + job.SanitizeHostname(h)
 		entry := jobmocks.NewMockKeyValueEntry(ctrl)
 		entry.EXPECT().Value().Return(registrationJSON(h))
-		mockRegistryKV.EXPECT().
-			Get(gomock.Any(), key).
+		nc.EXPECT().
+			KVGet(gomock.Any(), "registry", key).
 			Return(entry, nil)
 	}
-
-	return mockRegistryKV
 }
 
 type ClientPublicTestSuite struct {
@@ -85,7 +82,6 @@ type ClientPublicTestSuite struct {
 
 	mockCtrl       *gomock.Controller
 	mockNATSClient *jobmocks.MockNATSClient
-	mockKV         *jobmocks.MockKeyValue
 	jobsClient     *client.Client
 	ctx            context.Context
 }
@@ -93,12 +89,11 @@ type ClientPublicTestSuite struct {
 func (s *ClientPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockNATSClient = jobmocks.NewMockNATSClient(s.mockCtrl)
-	s.mockKV = jobmocks.NewMockKeyValue(s.mockCtrl)
 	s.ctx = context.Background()
 
 	opts := &client.Options{
 		Timeout:    30 * time.Second,
-		KVBucket:   s.mockKV,
+		JobsBucket: "jobs",
 		StreamName: "JOBS",
 	}
 	var err error
@@ -137,7 +132,7 @@ func (s *ClientPublicTestSuite) TestQuery() {
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					successResp,
@@ -155,7 +150,7 @@ func (s *ClientPublicTestSuite) TestQuery() {
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					successResp,
@@ -174,7 +169,7 @@ func (s *ClientPublicTestSuite) TestQuery() {
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					failedResp,
@@ -189,7 +184,7 @@ func (s *ClientPublicTestSuite) TestQuery() {
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					skippedResp,
@@ -216,7 +211,7 @@ func (s *ClientPublicTestSuite) TestQuery() {
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					"",
@@ -231,7 +226,7 @@ func (s *ClientPublicTestSuite) TestQuery() {
 			setupMocks: func() {
 				setupPublishAndWaitMocksWithOpts(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndWaitMockOpts{
@@ -248,7 +243,7 @@ func (s *ClientPublicTestSuite) TestQuery() {
 			setupMocks: func() {
 				setupPublishAndWaitMocksWithOpts(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndWaitMockOpts{
@@ -265,7 +260,7 @@ func (s *ClientPublicTestSuite) TestQuery() {
 			setupMocks: func() {
 				setupPublishAndWaitMocksWithOpts(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndWaitMockOpts{
@@ -277,33 +272,12 @@ func (s *ClientPublicTestSuite) TestQuery() {
 			expectedErr: "failed to publish and wait",
 		},
 		{
-			name: "when nil entry received before real entry succeeds",
-			data: nil,
-			setupMocks: func() {
-				setupPublishAndWaitMocksWithOpts(
-					s.mockCtrl,
-					s.mockKV,
-					s.mockNATSClient,
-					subject,
-					&publishAndWaitMockOpts{
-						responseData: successResp,
-						sendNilFirst: true,
-					},
-				)
-			},
-			validateFunc: func(jobID string, resp *job.Response) {
-				s.NotEmpty(jobID)
-				s.NotNil(resp)
-				s.Equal(job.StatusCompleted, resp.Status)
-			},
-		},
-		{
 			name: "when unmarshal error on response",
 			data: nil,
 			setupMocks: func() {
 				setupPublishAndWaitMocksWithOpts(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndWaitMockOpts{
@@ -370,12 +344,12 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			data:      nil,
 			withMeter: true,
 			setupMocks: func() *client.Client {
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
-				c := s.newClientWithRegistry(registryKV)
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1"})
+				c := s.newClientWithRegistry()
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -393,12 +367,12 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			name: "when succeeds",
 			data: nil,
 			setupMocks: func() *client.Client {
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
-				c := s.newClientWithRegistry(registryKV)
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1"})
+				c := s.newClientWithRegistry()
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -427,12 +401,12 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			name: "when job failed",
 			data: nil,
 			setupMocks: func() *client.Client {
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
-				c := s.newClientWithRegistry(registryKV)
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1"})
+				c := s.newClientWithRegistry()
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -454,12 +428,12 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			name: "when job skipped",
 			data: nil,
 			setupMocks: func() *client.Client {
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
-				c := s.newClientWithRegistry(registryKV)
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1"})
+				c := s.newClientWithRegistry()
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -482,7 +456,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			setupMocks: func() *client.Client {
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -498,12 +472,12 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			name: "when partial failure",
 			data: nil,
 			setupMocks: func() *client.Client {
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1", "server2"})
-				c := s.newClientWithRegistry(registryKV)
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1", "server2"})
+				c := s.newClientWithRegistry()
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -526,16 +500,15 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			name: "when ListAgents fails falls back to full timeout and collects responses",
 			data: nil,
 			setupMocks: func() *client.Client {
-				// registryKV returns error so ListAgents fails — warn path is exercised.
-				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
-				registryKV.EXPECT().
-					Keys(gomock.Any()).
+				// The registry returns an error so ListAgents fails — warn path is exercised.
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "registry").
 					Return(nil, errors.New("registry unavailable"))
-				c := s.newClientWithRegistry(registryKV)
+				c := s.newClientWithRegistry()
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -555,7 +528,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			setupMocks: func() *client.Client {
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -573,7 +546,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			setupMocks: func() *client.Client {
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -586,27 +559,35 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			expectedErr: "failed to collect broadcast responses",
 		},
 		{
-			name: "when nil entry received before real entry succeeds",
+			name: "when the watch ends early waits for the timeout",
 			data: nil,
 			setupMocks: func() *client.Client {
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
-				c := s.newClientWithRegistry(registryKV)
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1", "server2"})
+				opts := &client.Options{
+					Timeout:        50 * time.Millisecond,
+					JobsBucket:     "jobs",
+					StreamName:     "JOBS",
+					RegistryBucket: "registry",
+				}
+				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+				s.Require().NoError(err)
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
 						responseEntries: []string{host1Resp},
-						sendNilFirst:    true,
+						closeWatch:      true,
 					},
 				)
 				return c
 			},
 			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
-				s.Len(results, 1)
+				s.Len(results, 2)
+				s.Equal(job.StatusTimeout, results["server2"].Status)
 			},
 		},
 		{
@@ -617,19 +598,19 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				// then one valid response; the bad one is skipped, the valid one
 				// counts as 1 of 2 and the second slot stays open until timeout.
 				// Use a tiny timeout so this doesn't wait 30s.
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1"})
 				opts := &client.Options{
-					Timeout:    50 * time.Millisecond,
-					KVBucket:   s.mockKV,
-					StreamName: "JOBS",
-					RegistryKV: registryKV,
+					Timeout:        50 * time.Millisecond,
+					JobsBucket:     "jobs",
+					StreamName:     "JOBS",
+					RegistryBucket: "registry",
 				}
 				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
 				s.Require().NoError(err)
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -655,7 +636,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				// len(responses)>0 so the non-error timeout branch executes.
 				opts := &client.Options{
 					Timeout:    50 * time.Millisecond,
-					KVBucket:   s.mockKV,
+					JobsBucket: "jobs",
 					StreamName: "JOBS",
 				}
 				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
@@ -663,7 +644,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -683,14 +664,14 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			name: "when broadcast response has empty hostname uses unknown",
 			data: nil,
 			setupMocks: func() *client.Client {
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
-				c := s.newClientWithRegistry(registryKV)
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1"})
+				c := s.newClientWithRegistry()
 
 				// Response has no hostname field — falls back to "unknown" key.
 				noHostnameResp := `{"status":"completed"}`
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -709,19 +690,19 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			data: nil,
 			setupMocks: func() *client.Client {
 				// Registry reports 2 agents but only server1 responds.
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1", "server2"})
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1", "server2"})
 				opts := &client.Options{
-					Timeout:    50 * time.Millisecond,
-					KVBucket:   s.mockKV,
-					StreamName: "JOBS",
-					RegistryKV: registryKV,
+					Timeout:        50 * time.Millisecond,
+					JobsBucket:     "jobs",
+					StreamName:     "JOBS",
+					RegistryBucket: "registry",
 				}
 				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
 				s.Require().NoError(err)
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -751,7 +732,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			setupMocks: func() *client.Client {
 				opts := &client.Options{
 					Timeout:    50 * time.Millisecond,
-					KVBucket:   s.mockKV,
+					JobsBucket: "jobs",
 					StreamName: "JOBS",
 				}
 				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
@@ -759,7 +740,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -830,7 +811,7 @@ func (s *ClientPublicTestSuite) TestModify() {
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					successResp,
@@ -848,7 +829,7 @@ func (s *ClientPublicTestSuite) TestModify() {
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					successResp,
@@ -867,7 +848,7 @@ func (s *ClientPublicTestSuite) TestModify() {
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					failedResp,
@@ -882,7 +863,7 @@ func (s *ClientPublicTestSuite) TestModify() {
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					skippedResp,
@@ -908,7 +889,7 @@ func (s *ClientPublicTestSuite) TestModify() {
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					"",
@@ -974,12 +955,12 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 			data:      nil,
 			withMeter: true,
 			setupMocks: func() *client.Client {
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
-				c := s.newClientWithRegistry(registryKV)
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1"})
+				c := s.newClientWithRegistry()
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -997,12 +978,12 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 			name: "when succeeds",
 			data: nil,
 			setupMocks: func() *client.Client {
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
-				c := s.newClientWithRegistry(registryKV)
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1"})
+				c := s.newClientWithRegistry()
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -1031,12 +1012,12 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 			name: "when job failed",
 			data: nil,
 			setupMocks: func() *client.Client {
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
-				c := s.newClientWithRegistry(registryKV)
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1"})
+				c := s.newClientWithRegistry()
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -1058,12 +1039,12 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 			name: "when job skipped",
 			data: nil,
 			setupMocks: func() *client.Client {
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
-				c := s.newClientWithRegistry(registryKV)
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1"})
+				c := s.newClientWithRegistry()
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -1086,7 +1067,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 			setupMocks: func() *client.Client {
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -1102,12 +1083,12 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 			name: "when partial failure",
 			data: nil,
 			setupMocks: func() *client.Client {
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1", "server2"})
-				c := s.newClientWithRegistry(registryKV)
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1", "server2"})
+				c := s.newClientWithRegistry()
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
-					s.mockKV,
+					s.mockNATSClient,
 					s.mockNATSClient,
 					subject,
 					&publishAndCollectMockOpts{
@@ -1159,15 +1140,13 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 }
 
 // newClientWithRegistry creates a new client using the suite's existing mocks
-// plus the provided registryKV.
-func (s *ClientPublicTestSuite) newClientWithRegistry(
-	registryKV *jobmocks.MockKeyValue,
-) *client.Client {
+// and the registry bucket.
+func (s *ClientPublicTestSuite) newClientWithRegistry() *client.Client {
 	opts := &client.Options{
-		Timeout:    30 * time.Second,
-		KVBucket:   s.mockKV,
-		StreamName: "JOBS",
-		RegistryKV: registryKV,
+		Timeout:        30 * time.Second,
+		JobsBucket:     "jobs",
+		StreamName:     "JOBS",
+		RegistryBucket: "registry",
 	}
 	c, err := client.New(slog.Default(), s.mockNATSClient, opts)
 	s.Require().NoError(err)
@@ -1194,9 +1173,9 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISigner() {
 			name: "when PKI signs job data and unwraps response",
 			setupMocks: func() {
 				// KV Put should receive a signed envelope.
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					DoAndReturn(func(_ interface{}, _ string, data []byte) (uint64, error) {
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
+					DoAndReturn(func(_ interface{}, _ string, _ string, data []byte) (uint64, error) {
 						// Verify the stored data is a valid signed envelope.
 						var envelope job.SignedEnvelope
 						s.NoError(json.Unmarshal(data, &envelope))
@@ -1219,13 +1198,9 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISigner() {
 				ch := make(chan jetstream.KeyValueEntry, 1)
 				ch <- mockEntry
 
-				mockWatcher := jobmocks.NewMockKeyWatcher(s.mockCtrl)
-				mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
-				mockWatcher.EXPECT().Stop().Return(nil)
-
-				s.mockKV.EXPECT().
-					Watch(gomock.Any(), gomock.Any()).
-					Return(mockWatcher, nil)
+				s.mockNATSClient.EXPECT().
+					KVWatch(gomock.Any(), "jobs", gomock.Any()).
+					Return(ch, nil)
 			},
 			validateFunc: func(jobID string, resp *job.Response) {
 				s.NotEmpty(jobID)
@@ -1249,7 +1224,7 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISigner() {
 			// Create a client with PKI signer.
 			opts := &client.Options{
 				Timeout:    30 * time.Second,
-				KVBucket:   s.mockKV,
+				JobsBucket: "jobs",
 				StreamName: "JOBS",
 				PKISigner:  signer,
 			}
@@ -1335,7 +1310,7 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISignerUnwrapPaths() {
 		s.Run(tt.name, func() {
 			opts := &client.Options{
 				Timeout:    30 * time.Second,
-				KVBucket:   s.mockKV,
+				JobsBucket: "jobs",
 				StreamName: "JOBS",
 				PKISigner:  signer,
 			}
@@ -1343,8 +1318,8 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISignerUnwrapPaths() {
 			s.Require().NoError(err)
 
 			// KV Put succeeds (signed envelope).
-			s.mockKV.EXPECT().
-				Put(gomock.Any(), gomock.Any(), gomock.Any()).
+			s.mockNATSClient.EXPECT().
+				KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 				Return(uint64(1), nil)
 			s.mockNATSClient.EXPECT().
 				Publish(gomock.Any(), subject, gomock.Any()).
@@ -1355,13 +1330,9 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISignerUnwrapPaths() {
 			ch := make(chan jetstream.KeyValueEntry, 1)
 			ch <- mockEntry
 
-			mockWatcher := jobmocks.NewMockKeyWatcher(s.mockCtrl)
-			mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
-			mockWatcher.EXPECT().Stop().Return(nil)
-
-			s.mockKV.EXPECT().
-				Watch(gomock.Any(), gomock.Any()).
-				Return(mockWatcher, nil)
+			s.mockNATSClient.EXPECT().
+				KVWatch(gomock.Any(), "jobs", gomock.Any()).
+				Return(ch, nil)
 
 			jobID, resp, err := c.Query(s.ctx, target, category, operation, nil)
 			if tt.wantErr != "" {
@@ -1398,22 +1369,22 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithPKISigner() {
 			name: "when PKI signs and unwraps broadcast responses",
 			setupMocks: func() {
 				// Registry returns one agent.
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1"})
 
 				opts := &client.Options{
-					Timeout:    30 * time.Second,
-					KVBucket:   s.mockKV,
-					StreamName: "JOBS",
-					PKISigner:  signerWithCtrl,
-					RegistryKV: registryKV,
+					Timeout:        30 * time.Second,
+					JobsBucket:     "jobs",
+					StreamName:     "JOBS",
+					PKISigner:      signerWithCtrl,
+					RegistryBucket: "registry",
 				}
 				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
 				s.Require().NoError(err)
 				s.jobsClient = c
 
 				// KV Put succeeds.
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				s.mockNATSClient.EXPECT().
 					Publish(gomock.Any(), subject, gomock.Any()).
@@ -1428,13 +1399,9 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithPKISigner() {
 				ch := make(chan jetstream.KeyValueEntry, 1)
 				ch <- mockEntry
 
-				mockWatcher := jobmocks.NewMockKeyWatcher(s.mockCtrl)
-				mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
-				mockWatcher.EXPECT().Stop().Return(nil)
-
-				s.mockKV.EXPECT().
-					Watch(gomock.Any(), gomock.Any()).
-					Return(mockWatcher, nil)
+				s.mockNATSClient.EXPECT().
+					KVWatch(gomock.Any(), "jobs", gomock.Any()).
+					Return(ch, nil)
 			},
 			validateFunc: func(responses map[string]*job.Response) {
 				s.Len(responses, 1)
@@ -1445,22 +1412,22 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithPKISigner() {
 			name: "when broadcast response has invalid signature the agent times out",
 			setupMocks: func() {
 				// Registry returns one agent.
-				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1"})
 
 				opts := &client.Options{
-					Timeout:    1 * time.Second,
-					KVBucket:   s.mockKV,
-					StreamName: "JOBS",
-					PKISigner:  signerWithCtrl,
-					RegistryKV: registryKV,
+					Timeout:        1 * time.Second,
+					JobsBucket:     "jobs",
+					StreamName:     "JOBS",
+					PKISigner:      signerWithCtrl,
+					RegistryBucket: "registry",
 				}
 				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
 				s.Require().NoError(err)
 				s.jobsClient = c
 
 				// KV Put succeeds.
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				s.mockNATSClient.EXPECT().
 					Publish(gomock.Any(), subject, gomock.Any()).
@@ -1479,13 +1446,9 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithPKISigner() {
 				ch := make(chan jetstream.KeyValueEntry, 1)
 				ch <- mockEntry
 
-				mockWatcher := jobmocks.NewMockKeyWatcher(s.mockCtrl)
-				mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
-				mockWatcher.EXPECT().Stop().Return(nil)
-
-				s.mockKV.EXPECT().
-					Watch(gomock.Any(), gomock.Any()).
-					Return(mockWatcher, nil)
+				s.mockNATSClient.EXPECT().
+					KVWatch(gomock.Any(), "jobs", gomock.Any()).
+					Return(ch, nil)
 			},
 			// A forged or corrupted response is dropped rather than kept
 			// as an unverified result: it never counts toward server1's
@@ -1501,7 +1464,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithPKISigner() {
 
 				opts := &client.Options{
 					Timeout:    30 * time.Second,
-					KVBucket:   s.mockKV,
+					JobsBucket: "jobs",
 					StreamName: "JOBS",
 					PKISigner:  signer,
 				}
@@ -1535,6 +1498,34 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithPKISigner() {
 	}
 }
 
+func (s *ClientPublicTestSuite) TestQueryWatchEndsEarly() {
+	s.Run("when the watch ends before a response waits for the timeout", func() {
+		c, err := client.New(slog.Default(), s.mockNATSClient, &client.Options{
+			Timeout:    50 * time.Millisecond,
+			JobsBucket: "jobs",
+			StreamName: "JOBS",
+		})
+		s.Require().NoError(err)
+
+		setupPublishAndWaitMocksWithOpts(
+			s.mockCtrl,
+			s.mockNATSClient,
+			s.mockNATSClient,
+			"jobs.query.host.server1",
+			&publishAndWaitMockOpts{closeWatch: true},
+		)
+
+		_, _, err = c.Query(
+			s.ctx,
+			"server1",
+			"node",
+			job.OperationType("node.hostname.get"),
+			nil,
+		)
+		s.ErrorContains(err, "timeout waiting for job response")
+	})
+}
+
 func (s *ClientPublicTestSuite) TestQueryWithTargetResolver() {
 	const (
 		hostname  = "web-01"
@@ -1554,8 +1545,8 @@ func (s *ClientPublicTestSuite) TestQueryWithTargetResolver() {
 	// Expect subject to use the resolved machineID, not the hostname.
 	expectedSubject := "jobs.query.host." + machineID
 
-	s.mockKV.EXPECT().
-		Put(gomock.Any(), gomock.Any(), gomock.Any()).
+	s.mockNATSClient.EXPECT().
+		KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 		Return(uint64(1), nil)
 	s.mockNATSClient.EXPECT().
 		Publish(gomock.Any(), expectedSubject, gomock.Any()).
@@ -1568,17 +1559,13 @@ func (s *ClientPublicTestSuite) TestQueryWithTargetResolver() {
 	ch := make(chan jetstream.KeyValueEntry, 1)
 	ch <- mockEntry
 
-	mockWatcher := jobmocks.NewMockKeyWatcher(s.mockCtrl)
-	mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
-	mockWatcher.EXPECT().Stop().Return(nil)
-
-	s.mockKV.EXPECT().
-		Watch(gomock.Any(), gomock.Any(), gomock.Any()).
-		Return(mockWatcher, nil)
+	s.mockNATSClient.EXPECT().
+		KVWatch(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
+		Return(ch, nil)
 
 	opts := &client.Options{
 		Timeout:        30 * time.Second,
-		KVBucket:       s.mockKV,
+		JobsBucket:     "jobs",
 		StreamName:     "JOBS",
 		TargetResolver: resolver,
 	}
@@ -1623,14 +1610,15 @@ type publishAndWaitMockOpts struct {
 	mockError error
 	// errorMode controls which step fails when mockError is set.
 	errorMode publishAndWaitErrorMode
-	// sendNilFirst sends a nil entry before the real entry on the watcher channel.
-	sendNilFirst bool
+	// closeWatch ends the watch with no response, so the client waits for
+	// its timeout.
+	closeWatch bool
 }
 
 // setupPublishAndWaitMocks configures mocks for the publishAndWait flow.
 func setupPublishAndWaitMocks(
 	ctrl *gomock.Controller,
-	mockKV *jobmocks.MockKeyValue,
+	mockKV *jobmocks.MockNATSClient,
 	mockNATSClient *jobmocks.MockNATSClient,
 	subject string,
 	responseData string,
@@ -1651,28 +1639,28 @@ type publishAndCollectMockOpts struct {
 	mockError error
 	// errorMode controls which step fails when mockError is set.
 	errorMode publishAndWaitErrorMode
-	// sendNilFirst sends a nil entry before the response entries on the watcher channel.
-	sendNilFirst bool
+	// closeWatch ends the watch after the response entries.
+	closeWatch bool
 }
 
 // setupPublishAndCollectMocks configures mocks for the publishAndCollect flow.
 func setupPublishAndCollectMocks(
 	ctrl *gomock.Controller,
-	mockKV *jobmocks.MockKeyValue,
+	mockKV *jobmocks.MockNATSClient,
 	mockNATSClient *jobmocks.MockNATSClient,
 	subject string,
 	opts *publishAndCollectMockOpts,
 ) {
 	if opts.mockError != nil && opts.errorMode == errorOnKVPut {
 		mockKV.EXPECT().
-			Put(gomock.Any(), gomock.Any(), gomock.Any()).
+			KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 			Return(uint64(0), opts.mockError)
 		return
 	}
 
 	// kv.Put succeeds
 	mockKV.EXPECT().
-		Put(gomock.Any(), gomock.Any(), gomock.Any()).
+		KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 		Return(uint64(1), nil)
 
 	if opts.mockError != nil && opts.errorMode == errorOnPublish {
@@ -1689,7 +1677,7 @@ func setupPublishAndCollectMocks(
 
 	if opts.mockError != nil && opts.errorMode == errorOnWatch {
 		mockKV.EXPECT().
-			Watch(gomock.Any(), gomock.Any()).
+			KVWatch(gomock.Any(), "jobs", gomock.Any()).
 			Return(nil, opts.mockError)
 		return
 	}
@@ -1698,13 +1686,9 @@ func setupPublishAndCollectMocks(
 		// Return a channel that never sends anything, causing timeout with 0 responses
 		ch := make(chan jetstream.KeyValueEntry)
 
-		mockWatcher := jobmocks.NewMockKeyWatcher(ctrl)
-		mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
-		mockWatcher.EXPECT().Stop().Return(nil)
-
 		mockKV.EXPECT().
-			Watch(gomock.Any(), gomock.Any()).
-			Return(mockWatcher, nil)
+			KVWatch(gomock.Any(), "jobs", gomock.Any()).
+			Return(ch, nil)
 		return
 	}
 
@@ -1720,25 +1704,14 @@ func setupPublishAndCollectMocks(
 		mockEntry.EXPECT().Value().Return([]byte(responseData))
 		ch <- mockEntry
 
-		mockWatcher := jobmocks.NewMockKeyWatcher(ctrl)
-		mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
-		mockWatcher.EXPECT().Stop().Return(nil)
-
 		mockKV.EXPECT().
-			Watch(gomock.Any(), gomock.Any()).
-			Return(mockWatcher, nil)
+			KVWatch(gomock.Any(), "jobs", gomock.Any()).
+			Return(ch, nil)
 		return
 	}
 
 	// Create buffered channel with all response entries
-	bufSize := len(opts.responseEntries)
-	if opts.sendNilFirst {
-		bufSize++
-	}
-	ch := make(chan jetstream.KeyValueEntry, bufSize)
-	if opts.sendNilFirst {
-		ch <- nil
-	}
+	ch := make(chan jetstream.KeyValueEntry, len(opts.responseEntries))
 	for _, data := range opts.responseEntries {
 		if data == "" {
 			continue
@@ -1747,36 +1720,33 @@ func setupPublishAndCollectMocks(
 		mockEntry.EXPECT().Value().Return([]byte(data))
 		ch <- mockEntry
 	}
+	if opts.closeWatch {
+		close(ch)
+	}
 
-	// Create mock watcher
-	mockWatcher := jobmocks.NewMockKeyWatcher(ctrl)
-	mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
-	mockWatcher.EXPECT().Stop().Return(nil)
-
-	// kv.Watch returns the mock watcher
 	mockKV.EXPECT().
-		Watch(gomock.Any(), gomock.Any()).
-		Return(mockWatcher, nil)
+		KVWatch(gomock.Any(), "jobs", gomock.Any()).
+		Return(ch, nil)
 }
 
 // setupPublishAndWaitMocksWithOpts configures mocks with fine-grained control.
 func setupPublishAndWaitMocksWithOpts(
 	ctrl *gomock.Controller,
-	mockKV *jobmocks.MockKeyValue,
+	mockKV *jobmocks.MockNATSClient,
 	mockNATSClient *jobmocks.MockNATSClient,
 	subject string,
 	opts *publishAndWaitMockOpts,
 ) {
 	if opts.mockError != nil && opts.errorMode == errorOnKVPut {
 		mockKV.EXPECT().
-			Put(gomock.Any(), gomock.Any(), gomock.Any()).
+			KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 			Return(uint64(0), opts.mockError)
 		return
 	}
 
 	// kv.Put succeeds
 	mockKV.EXPECT().
-		Put(gomock.Any(), gomock.Any(), gomock.Any()).
+		KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 		Return(uint64(1), nil)
 
 	if opts.mockError != nil && opts.errorMode == errorOnPublish {
@@ -1793,7 +1763,7 @@ func setupPublishAndWaitMocksWithOpts(
 
 	if opts.mockError != nil && opts.errorMode == errorOnWatch {
 		mockKV.EXPECT().
-			Watch(gomock.Any(), gomock.Any()).
+			KVWatch(gomock.Any(), "jobs", gomock.Any()).
 			Return(nil, opts.mockError)
 		return
 	}
@@ -1802,13 +1772,19 @@ func setupPublishAndWaitMocksWithOpts(
 		// Return a channel that never sends anything, causing timeout
 		ch := make(chan jetstream.KeyValueEntry)
 
-		mockWatcher := jobmocks.NewMockKeyWatcher(ctrl)
-		mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
-		mockWatcher.EXPECT().Stop().Return(nil)
+		mockKV.EXPECT().
+			KVWatch(gomock.Any(), "jobs", gomock.Any()).
+			Return(ch, nil)
+		return
+	}
+
+	if opts.closeWatch {
+		ch := make(chan jetstream.KeyValueEntry)
+		close(ch)
 
 		mockKV.EXPECT().
-			Watch(gomock.Any(), gomock.Any()).
-			Return(mockWatcher, nil)
+			KVWatch(gomock.Any(), "jobs", gomock.Any()).
+			Return(ch, nil)
 		return
 	}
 
@@ -1816,26 +1792,12 @@ func setupPublishAndWaitMocksWithOpts(
 	mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
 	mockEntry.EXPECT().Value().Return([]byte(opts.responseData))
 
-	// Create buffered channel and optionally send nil first
-	bufSize := 1
-	if opts.sendNilFirst {
-		bufSize = 2
-	}
-	ch := make(chan jetstream.KeyValueEntry, bufSize)
-	if opts.sendNilFirst {
-		ch <- nil
-	}
+	ch := make(chan jetstream.KeyValueEntry, 1)
 	ch <- mockEntry
 
-	// Create mock watcher
-	mockWatcher := jobmocks.NewMockKeyWatcher(ctrl)
-	mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
-	mockWatcher.EXPECT().Stop().Return(nil)
-
-	// kv.Watch returns the mock watcher
 	mockKV.EXPECT().
-		Watch(gomock.Any(), gomock.Any()).
-		Return(mockWatcher, nil)
+		KVWatch(gomock.Any(), "jobs", gomock.Any()).
+		Return(ch, nil)
 }
 
 // TestQueryWithAgentKeyStoreEnforcing covers the single-target response path
@@ -1930,15 +1892,15 @@ func (s *ClientPublicTestSuite) TestQueryWithAgentKeyStoreEnforcing() {
 
 			opts := &client.Options{
 				Timeout:    30 * time.Second,
-				KVBucket:   s.mockKV,
+				JobsBucket: "jobs",
 				StreamName: "JOBS",
 			}
 			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
 			s.Require().NoError(err)
 			c.SetAgentKeyStore(store)
 
-			s.mockKV.EXPECT().
-				Put(gomock.Any(), gomock.Any(), gomock.Any()).
+			s.mockNATSClient.EXPECT().
+				KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 				Return(uint64(1), nil)
 			s.mockNATSClient.EXPECT().
 				Publish(gomock.Any(), subject, gomock.Any()).
@@ -1949,13 +1911,9 @@ func (s *ClientPublicTestSuite) TestQueryWithAgentKeyStoreEnforcing() {
 			ch := make(chan jetstream.KeyValueEntry, 1)
 			ch <- mockEntry
 
-			mockWatcher := jobmocks.NewMockKeyWatcher(s.mockCtrl)
-			mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
-			mockWatcher.EXPECT().Stop().Return(nil)
-
-			s.mockKV.EXPECT().
-				Watch(gomock.Any(), gomock.Any()).
-				Return(mockWatcher, nil)
+			s.mockNATSClient.EXPECT().
+				KVWatch(gomock.Any(), "jobs", gomock.Any()).
+				Return(ch, nil)
 
 			_, resp, err := c.Query(s.ctx, target, category, operation, nil)
 			if tt.wantErr != "" {
@@ -2051,20 +2009,20 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithAgentKeyStoreEnforcing() 
 				Return(nil, client.ErrResponseKeyUnknown).
 				AnyTimes()
 
-			registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
+			setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1"})
 
 			opts := &client.Options{
-				Timeout:    1 * time.Second,
-				KVBucket:   s.mockKV,
-				StreamName: "JOBS",
-				RegistryKV: registryKV,
+				Timeout:        1 * time.Second,
+				JobsBucket:     "jobs",
+				StreamName:     "JOBS",
+				RegistryBucket: "registry",
 			}
 			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
 			s.Require().NoError(err)
 			c.SetAgentKeyStore(store)
 
-			s.mockKV.EXPECT().
-				Put(gomock.Any(), gomock.Any(), gomock.Any()).
+			s.mockNATSClient.EXPECT().
+				KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 				Return(uint64(1), nil)
 			s.mockNATSClient.EXPECT().
 				Publish(gomock.Any(), subject, gomock.Any()).
@@ -2075,13 +2033,9 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithAgentKeyStoreEnforcing() 
 			ch := make(chan jetstream.KeyValueEntry, 1)
 			ch <- mockEntry
 
-			mockWatcher := jobmocks.NewMockKeyWatcher(s.mockCtrl)
-			mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
-			mockWatcher.EXPECT().Stop().Return(nil)
-
-			s.mockKV.EXPECT().
-				Watch(gomock.Any(), gomock.Any()).
-				Return(mockWatcher, nil)
+			s.mockNATSClient.EXPECT().
+				KVWatch(gomock.Any(), "jobs", gomock.Any()).
+				Return(ch, nil)
 
 			_, responses, err := c.ModifyBroadcast(
 				s.ctx, target, category, operation, nil,

@@ -23,7 +23,6 @@ package client
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"regexp"
@@ -47,8 +46,8 @@ func (c *Client) HasJobResponse(
 	hostname string,
 ) (bool, error) {
 	filter := fmt.Sprintf("responses.%s.%s.>", jobID, sanitizeKeyForNATS(hostname))
-	keys, err := collectKeys(ctx, c.kv, filter)
-	if err != nil && !errors.Is(err, jetstream.ErrNoKeysFound) {
+	keys, err := c.natsClient.KVKeys(ctx, c.jobsBucket, filter)
+	if err != nil {
 		return false, fmt.Errorf("failed to check for existing job response: %w", err)
 	}
 	return len(keys) > 0, nil
@@ -57,7 +56,7 @@ func (c *Client) HasJobResponse(
 // WriteStatusEvent writes an append-only status event for a job.
 // This eliminates race conditions by never updating existing keys.
 func (c *Client) WriteStatusEvent(
-	_ context.Context,
+	ctx context.Context,
 	jobID, event, hostname string,
 	data map[string]interface{},
 ) error {
@@ -89,7 +88,7 @@ func (c *Client) WriteStatusEvent(
 	}
 
 	// Write to KV - this always succeeds due to unique key
-	err = c.natsClient.KVPut(c.kv.Bucket(), statusKey, eventJSON)
+	_, err = c.natsClient.KVPut(ctx, c.jobsBucket, statusKey, eventJSON)
 	if err != nil {
 		return fmt.Errorf("failed to write status event: %w", err)
 	}
@@ -107,7 +106,7 @@ func (c *Client) WriteStatusEvent(
 
 // WriteJobResponse stores agent response data for a job.
 func (c *Client) WriteJobResponse(
-	_ context.Context,
+	ctx context.Context,
 	jobID, hostname string,
 	responseData []byte,
 	status string,
@@ -146,7 +145,7 @@ func (c *Client) WriteJobResponse(
 	}
 
 	// Store in KV
-	err := c.natsClient.KVPut(c.kv.Bucket(), responseKey, kvPayload)
+	_, err := c.natsClient.KVPut(ctx, c.jobsBucket, responseKey, kvPayload)
 	if err != nil {
 		return fmt.Errorf("failed to store job response: %w", err)
 	}
@@ -166,14 +165,11 @@ func (c *Client) WriteJobResponse(
 func (c *Client) ConsumeJobs(
 	ctx context.Context,
 	streamName, consumerName string,
-	handler func(jetstream.Msg) error,
+	handler natsclient.JetStreamMessageHandler,
 	opts *natsclient.ConsumeOptions,
 ) error {
 	// Use the natsClient to consume messages with the provided consumer name
-	return c.natsClient.ConsumeMessages(ctx, streamName, consumerName,
-		func(msg jetstream.Msg) error {
-			return handler(msg)
-		}, opts)
+	return c.natsClient.Consume(ctx, streamName, consumerName, handler, opts)
 }
 
 // GetJobData retrieves raw job data from the KV store.
@@ -185,7 +181,7 @@ func (c *Client) GetJobData(
 		"kv.get",
 		slog.String("key", jobKey),
 	)
-	entry, err := c.kv.Get(ctx, jobKey)
+	entry, err := c.natsClient.KVGet(ctx, c.jobsBucket, jobKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get job data for key %s: %w", jobKey, err)
 	}
@@ -198,7 +194,7 @@ func (c *Client) CreateOrUpdateConsumer(
 	streamName string,
 	consumerConfig jetstream.ConsumerConfig,
 ) error {
-	return c.natsClient.CreateOrUpdateConsumerWithConfig(ctx, streamName, consumerConfig)
+	return c.natsClient.ConsumerCreateOrUpdate(ctx, streamName, consumerConfig)
 }
 
 // ListAgents reads the agent registry KV bucket and returns all registered
@@ -206,16 +202,12 @@ func (c *Client) CreateOrUpdateConsumer(
 func (c *Client) ListAgents(
 	ctx context.Context,
 ) ([]job.AgentInfo, error) {
-	if c.registryKV == nil {
+	if c.registryBucket == "" {
 		return nil, fmt.Errorf("agent registry not configured")
 	}
 
-	keys, err := c.registryKV.Keys(ctx)
+	keys, err := c.natsClient.KVKeys(ctx, c.registryBucket)
 	if err != nil {
-		// Keys returns jetstream.ErrNoKeysFound when the bucket is empty.
-		if err.Error() == "nats: no keys found" {
-			return []job.AgentInfo{}, nil
-		}
 		return nil, fmt.Errorf("failed to list registry keys: %w", err)
 	}
 
@@ -225,7 +217,7 @@ func (c *Client) ListAgents(
 			continue
 		}
 
-		entry, err := c.registryKV.Get(ctx, key)
+		entry, err := c.natsClient.KVGet(ctx, c.registryBucket, key)
 		if err != nil {
 			continue
 		}
@@ -253,13 +245,13 @@ func (c *Client) GetAgent(
 	ctx context.Context,
 	target string,
 ) (*job.AgentInfo, error) {
-	if c.registryKV == nil {
+	if c.registryBucket == "" {
 		return nil, fmt.Errorf("agent registry not configured")
 	}
 
 	// Try as machine ID first (direct KV lookup).
 	key := "agents." + target
-	entry, err := c.registryKV.Get(ctx, key)
+	entry, err := c.natsClient.KVGet(ctx, c.registryBucket, key)
 	if err == nil {
 		var reg job.AgentRegistration
 		if err := json.Unmarshal(entry.Value(), &reg); err != nil {
@@ -307,12 +299,12 @@ func (c *Client) overlayDrainState(
 	ctx context.Context,
 	info *job.AgentInfo,
 ) {
-	if c.stateKV == nil {
+	if c.stateBucket == "" {
 		return
 	}
 
 	key := "drain." + info.MachineID
-	_, err := c.stateKV.Get(ctx, key)
+	_, err := c.natsClient.KVGet(ctx, c.stateBucket, key)
 	if err == nil {
 		info.State = job.AgentStateCordoned
 	}
@@ -324,12 +316,12 @@ func (c *Client) mergeFacts(
 	ctx context.Context,
 	info *job.AgentInfo,
 ) {
-	if c.factsKV == nil {
+	if c.factsBucket == "" {
 		return
 	}
 
 	key := "facts." + info.MachineID
-	entry, err := c.factsKV.Get(ctx, key)
+	entry, err := c.natsClient.KVGet(ctx, c.factsBucket, key)
 	if err != nil {
 		return
 	}

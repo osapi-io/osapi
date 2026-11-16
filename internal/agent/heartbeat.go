@@ -52,7 +52,7 @@ func (a *Agent) startHeartbeat(
 	machineID string,
 	hostname string,
 ) {
-	if a.registryKV == nil {
+	if a.registryBucket == "" {
 		return
 	}
 
@@ -220,7 +220,7 @@ func (a *Agent) writeRegistration(
 	}
 
 	key := registryKey(machineID)
-	if _, err := a.registryKV.Put(ctx, key, data); err != nil {
+	if _, err := a.natsClient.KVPut(ctx, a.registryBucket, key, data); err != nil {
 		a.heartbeatLogger.Warn(
 			"failed to write agent registration",
 			slog.String("machine_id", machineID),
@@ -238,7 +238,7 @@ func (a *Agent) deregister(
 	machineID string,
 ) {
 	key := registryKey(machineID)
-	if err := a.registryKV.Delete(context.Background(), key); err != nil {
+	if err := a.natsClient.KVDelete(context.Background(), a.registryBucket, key); err != nil {
 		a.heartbeatLogger.Warn(
 			"failed to deregister agent",
 			slog.String("machine_id", machineID),

@@ -28,7 +28,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	auditmocks "github.com/osapi-io/osapi/internal/audit/mocks"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller"
 	"github.com/osapi-io/osapi/internal/controller/mocks"
@@ -58,22 +57,18 @@ func (s *AuditPublicTestSuite) TestNewAuditStore() {
 		{
 			name:   "when the stream opens returns a store",
 			stream: "AUDIT",
-			setup: func(nc *mocks.MockAuditStreams, ctrl *gomock.Controller) {
-				nc.EXPECT().CreateOrUpdateStreamWithConfig(gomock.Any(), gomock.Any()).Return(nil)
-				nc.EXPECT().
-					Stream(gomock.Any(), "ns-AUDIT").
-					Return(auditmocks.NewMockStream(ctrl), nil)
+			setup: func(nc *mocks.MockAuditStreams, _ *gomock.Controller) {
+				nc.EXPECT().StreamCreateOrUpdate(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			wantStore: true,
 		},
 		{
-			name:   "when the stream does not open returns the error",
+			name:   "when the stream is not made returns the error",
 			stream: "AUDIT",
 			setup: func(nc *mocks.MockAuditStreams, _ *gomock.Controller) {
-				nc.EXPECT().CreateOrUpdateStreamWithConfig(gomock.Any(), gomock.Any()).Return(nil)
-				nc.EXPECT().Stream(gomock.Any(), "ns-AUDIT").Return(nil, errBoom)
+				nc.EXPECT().StreamCreateOrUpdate(gomock.Any(), gomock.Any()).Return(errBoom)
 			},
-			wantErr: "get audit stream: boom",
+			wantErr: "create audit stream: boom",
 		},
 	}
 

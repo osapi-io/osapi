@@ -39,28 +39,11 @@ import (
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
 
-// newMockKeyLister returns a MockKeyLister that yields the given keys then closes.
-func newMockKeyLister(
-	ctrl *gomock.Controller,
-	keys []string,
-) *jobmocks.MockKeyLister {
-	ch := make(chan string, len(keys))
-	for _, k := range keys {
-		ch <- k
-	}
-	close(ch)
-	m := jobmocks.NewMockKeyLister(ctrl)
-	m.EXPECT().Keys().Return(ch)
-	m.EXPECT().Stop().Return(nil).AnyTimes()
-	return m
-}
-
 type JobsPublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl       *gomock.Controller
 	mockNATSClient *jobmocks.MockNATSClient
-	mockKV         *jobmocks.MockKeyValue
 	jobsClient     *client.Client
 	ctx            context.Context
 }
@@ -68,12 +51,11 @@ type JobsPublicTestSuite struct {
 func (s *JobsPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockNATSClient = jobmocks.NewMockNATSClient(s.mockCtrl)
-	s.mockKV = jobmocks.NewMockKeyValue(s.mockCtrl)
 	s.ctx = context.Background()
 
 	opts := &client.Options{
 		Timeout:    30 * time.Second,
-		KVBucket:   s.mockKV,
+		JobsBucket: "jobs",
 		StreamName: "JOBS",
 	}
 	var err error
@@ -105,19 +87,19 @@ func (s *JobsPublicTestSuite) TestNew() {
 			},
 		},
 		{
-			name: "nil KV bucket",
+			name: "no jobs bucket",
 			opts: &client.Options{},
 			validateFunc: func(c *client.Client, err error) {
 				s.Error(err)
-				s.Contains(err.Error(), "kvBucket cannot be nil")
+				s.Contains(err.Error(), "jobs bucket cannot be empty")
 				s.Nil(c)
 			},
 		},
 		{
 			name: "valid options",
 			opts: &client.Options{
-				KVBucket: s.mockKV,
-				Timeout:  30 * time.Second,
+				JobsBucket: "jobs",
+				Timeout:    30 * time.Second,
 			},
 			validateFunc: func(c *client.Client, err error) {
 				s.NoError(err)
@@ -159,13 +141,15 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					"subject": "jobs.query.server1",
 					"operation": {"type": "node.hostname.get"}
 				}`))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-123").Return(mockEntry, nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-123.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-123.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-123").
+					Return(mockEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-123.>").
+					Return([]string{}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-123.>").
+					Return([]string{}, nil)
 			},
 			expectedStatus: "submitted",
 		},
@@ -174,8 +158,8 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			jobID:       "nonexistent",
 			expectedErr: "job nonexistent: not found",
 			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "jobs.nonexistent").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.nonexistent").
 					Return(nil, errors.New("key not found"))
 			},
 		},
@@ -186,7 +170,9 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(`invalid json`))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-invalid").Return(mockEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-invalid").
+					Return(mockEntry, nil)
 			},
 		},
 		{
@@ -197,28 +183,30 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z","subject":"jobs.query.server1"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-1.>").
+					Return([]string{
 						"status.job-1.acknowledged.agent1.100",
 						"status.job-1.started.agent1.200",
 						"status.job-1.completed.agent1.300",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-1.>").
+					Return([]string{
 						"responses.job-1.agent1.400",
-					}), nil)
+					}, nil)
 
 				ackEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				ackEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
 					`{"job_id":"job-1","event":"acknowledged","hostname":"agent1","timestamp":"%s"}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.acknowledged.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.acknowledged.agent1.100").
 					Return(ackEntry, nil)
 
 				startEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -226,8 +214,8 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					`{"job_id":"job-1","event":"started","hostname":"agent1","timestamp":"%s"}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.started.agent1.200").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.started.agent1.200").
 					Return(startEntry, nil)
 
 				compEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -235,16 +223,16 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					`{"job_id":"job-1","event":"completed","hostname":"agent1","timestamp":"%s"}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.completed.agent1.300").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.completed.agent1.300").
 					Return(compEntry, nil)
 
 				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				respEntry.EXPECT().Value().Return([]byte(
 					`{"status":"completed","data":"eyJ0ZXN0IjogdHJ1ZX0="}`,
 				))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "responses.job-1.agent1.400").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "responses.job-1.agent1.400").
 					Return(respEntry, nil)
 			},
 			expectedStatus: "completed",
@@ -259,34 +247,36 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-changed","operation":{"type":"file.deploy.execute"},"created":"2024-01-01T00:00:00Z","subject":"jobs.modify.server1"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-changed").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-changed").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-changed.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-changed.>").
+					Return([]string{
 						"status.job-changed.completed.agent1.100",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-changed.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-changed.>").
+					Return([]string{
 						"responses.job-changed.agent1.200",
-					}), nil)
+					}, nil)
 
 				compEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				compEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
 					`{"job_id":"job-changed","event":"completed","hostname":"agent1","timestamp":"%s"}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-changed.completed.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-changed.completed.agent1.100").
 					Return(compEntry, nil)
 
 				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				respEntry.EXPECT().Value().Return([]byte(
 					`{"status":"completed","data":"eyJ0ZXN0IjogdHJ1ZX0=","changed":true,"hostname":"agent1"}`,
 				))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "responses.job-changed.agent1.200").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "responses.job-changed.agent1.200").
 					Return(respEntry, nil)
 			},
 			expectedStatus: "completed",
@@ -305,25 +295,27 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-1.>").
+					Return([]string{
 						"status.job-1.started.agent1.100",
 						"status.job-1.failed.agent1.200",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-1.>").
+					Return([]string{}, nil)
 
 				startEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				startEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
 					`{"job_id":"job-1","event":"started","hostname":"agent1","timestamp":"%s"}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.started.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.started.agent1.100").
 					Return(startEntry, nil)
 
 				failEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -331,8 +323,8 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					`{"job_id":"job-1","event":"failed","hostname":"agent1","timestamp":"%s","data":{"error":"disk full"}}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.failed.agent1.200").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.failed.agent1.200").
 					Return(failEntry, nil)
 			},
 			expectedStatus: "failed",
@@ -347,25 +339,27 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-1.>").
+					Return([]string{
 						"status.job-1.completed.agent1.100",
 						"status.job-1.failed.agent2.200",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-1.>").
+					Return([]string{}, nil)
 
 				compEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				compEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
 					`{"job_id":"job-1","event":"completed","hostname":"agent1","timestamp":"%s"}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.completed.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.completed.agent1.100").
 					Return(compEntry, nil)
 
 				failEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -373,8 +367,8 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					`{"job_id":"job-1","event":"failed","hostname":"agent2","timestamp":"%s","data":{"error":"timeout"}}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.failed.agent2.200").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.failed.agent2.200").
 					Return(failEntry, nil)
 			},
 			expectedStatus: "partial_failure",
@@ -388,25 +382,27 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-1.>").
+					Return([]string{
 						"status.job-1.acknowledged.agent1.100",
 						"status.job-1.started.agent1.200",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-1.>").
+					Return([]string{}, nil)
 
 				ackEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				ackEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
 					`{"job_id":"job-1","event":"acknowledged","hostname":"agent1","timestamp":"%s"}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.acknowledged.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.acknowledged.agent1.100").
 					Return(ackEntry, nil)
 
 				startEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -414,8 +410,8 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					`{"job_id":"job-1","event":"started","hostname":"agent1","timestamp":"%s"}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.started.agent1.200").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.started.agent1.200").
 					Return(startEntry, nil)
 			},
 			expectedStatus: "processing",
@@ -429,19 +425,21 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-1.>").
+					Return([]string{
 						"status.job-1.completed.agent1.100",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-1.>").
+					Return([]string{}, nil)
 
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.completed.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.completed.agent1.100").
 					Return(nil, errors.New("kv error"))
 			},
 			expectedStatus: "submitted",
@@ -454,21 +452,23 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-1.>").
+					Return([]string{
 						"status.job-1.completed.agent1.100",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-1.>").
+					Return([]string{}, nil)
 
 				invalidEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				invalidEntry.EXPECT().Value().Return([]byte(`invalid json`))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.completed.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.completed.agent1.100").
 					Return(invalidEntry, nil)
 			},
 			expectedStatus: "submitted",
@@ -482,10 +482,12 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-1.>").
 					Return(nil, errors.New("connection failed"))
 			},
 		},
@@ -497,21 +499,23 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-1.>").
+					Return([]string{}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-1.>").
+					Return([]string{
 						"responses.job-1.agent1.100",
-					}), nil)
+					}, nil)
 
 				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				respEntry.EXPECT().Value().Return([]byte(`not json`))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "responses.job-1.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "responses.job-1.agent1.100").
 					Return(respEntry, nil)
 			},
 			expectedStatus: "submitted",
@@ -525,19 +529,21 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-1.>").
+					Return([]string{}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-1.>").
+					Return([]string{
 						"responses.job-1.agent1.100",
-					}), nil)
+					}, nil)
 
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "responses.job-1.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "responses.job-1.agent1.100").
 					Return(nil, errors.New("kv error"))
 			},
 			expectedStatus: "submitted",
@@ -551,32 +557,34 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-1.>").
+					Return([]string{
 						"status.job-1.completed.agent1.300",
 						"status.job-1.started.agent1.100",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-1.>").
+					Return([]string{}, nil)
 
 				compEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				compEntry.EXPECT().Value().Return([]byte(
 					`{"job_id":"job-1","event":"completed","hostname":"agent1","timestamp":"2024-01-01T00:00:05Z"}`,
 				))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.completed.agent1.300").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.completed.agent1.300").
 					Return(compEntry, nil)
 
 				startEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				startEntry.EXPECT().Value().Return([]byte(
 					`{"job_id":"job-1","event":"started","hostname":"agent1","timestamp":"2024-01-01T00:00:01Z"}`,
 				))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.started.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.started.agent1.100").
 					Return(startEntry, nil)
 			},
 			expectedStatus: "completed",
@@ -590,24 +598,26 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-1.>").
+					Return([]string{
 						"status.job-1.acknowledged.agent1.100",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-1.>").
+					Return([]string{}, nil)
 
 				ackEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				ackEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
 					`{"job_id":"job-1","event":"acknowledged","hostname":"agent1","timestamp":"%s"}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.acknowledged.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.acknowledged.agent1.100").
 					Return(ackEntry, nil)
 			},
 			expectedStatus: "processing",
@@ -621,36 +631,38 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
 				// Simulate NATS redelivery: two started/failed cycles
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-1.>").
+					Return([]string{
 						"status.job-1.started.agent1.100",
 						"status.job-1.failed.agent1.200",
 						"status.job-1.started.agent1.300",
 						"status.job-1.failed.agent1.400",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-1.>").
+					Return([]string{}, nil)
 
 				// First attempt: started at T+0, failed at T+1s
 				start1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				start1.EXPECT().Value().Return([]byte(
 					`{"job_id":"job-1","event":"started","hostname":"agent1","timestamp":"2024-01-01T00:00:01Z"}`,
 				))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.started.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.started.agent1.100").
 					Return(start1, nil)
 
 				fail1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				fail1.EXPECT().Value().Return([]byte(
 					`{"job_id":"job-1","event":"failed","hostname":"agent1","timestamp":"2024-01-01T00:00:02Z","data":{"error":"attempt 1"}}`,
 				))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.failed.agent1.200").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.failed.agent1.200").
 					Return(fail1, nil)
 
 				// Second attempt (redelivery): started at T+60s, failed at T+61s
@@ -658,16 +670,16 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				start2.EXPECT().Value().Return([]byte(
 					`{"job_id":"job-1","event":"started","hostname":"agent1","timestamp":"2024-01-01T00:01:00Z"}`,
 				))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.started.agent1.300").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.started.agent1.300").
 					Return(start2, nil)
 
 				fail2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				fail2.EXPECT().Value().Return([]byte(
 					`{"job_id":"job-1","event":"failed","hostname":"agent1","timestamp":"2024-01-01T00:01:01Z","data":{"error":"attempt 2"}}`,
 				))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.failed.agent1.400").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.failed.agent1.400").
 					Return(fail2, nil)
 			},
 			expectedStatus: "failed",
@@ -691,32 +703,34 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-1.>").
+					Return([]string{
 						"status.job-1.started.agent1.100",
 						"status.job-1.completed.agent1.200",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-1.>").
+					Return([]string{}, nil)
 
 				startEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				startEntry.EXPECT().Value().Return([]byte(
 					`{"job_id":"job-1","event":"started","hostname":"agent1","timestamp":"2024-01-01T00:00:01.000000000Z"}`,
 				))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.started.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.started.agent1.100").
 					Return(startEntry, nil)
 
 				compEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				compEntry.EXPECT().Value().Return([]byte(
 					`{"job_id":"job-1","event":"completed","hostname":"agent1","timestamp":"2024-01-01T00:00:01.045000000Z"}`,
 				))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.completed.agent1.200").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.completed.agent1.200").
 					Return(compEntry, nil)
 			},
 			expectedStatus: "completed",
@@ -734,23 +748,25 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-1.>").
+					Return([]string{
 						"status.job-1.completed.agent1.100",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-1.>").
+					Return([]string{}, nil)
 
 				badEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				badEntry.EXPECT().Value().Return([]byte(
 					`{"job_id":"job-1","event":"completed","hostname":"agent1","timestamp":"not-a-date"}`,
 				))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.completed.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.completed.agent1.100").
 					Return(badEntry, nil)
 			},
 			expectedStatus: "submitted",
@@ -764,13 +780,15 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-1.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-1.>").
+					Return([]string{}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-1.>").
 					Return(nil, errors.New("connection failed"))
 			},
 		},
@@ -782,25 +800,27 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-skip","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-skip").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-skip").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-skip.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-skip.>").
+					Return([]string{
 						"status.job-skip.started.agent1.100",
 						"status.job-skip.skipped.agent1.200",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-skip.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-skip.>").
+					Return([]string{}, nil)
 
 				startEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				startEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
 					`{"job_id":"job-skip","event":"started","hostname":"agent1","timestamp":"%s"}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-skip.started.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-skip.started.agent1.100").
 					Return(startEntry, nil)
 
 				skipEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -808,8 +828,8 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					`{"job_id":"job-skip","event":"skipped","hostname":"agent1","timestamp":"%s","data":{"error":"operation not supported on this OS family"}}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-skip.skipped.agent1.200").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-skip.skipped.agent1.200").
 					Return(skipEntry, nil)
 			},
 			expectedStatus: "skipped",
@@ -838,25 +858,27 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-allskip","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-allskip").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-allskip").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-allskip.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-allskip.>").
+					Return([]string{
 						"status.job-allskip.skipped.agent1.100",
 						"status.job-allskip.skipped.agent2.200",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-allskip.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-allskip.>").
+					Return([]string{}, nil)
 
 				skip1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				skip1.EXPECT().Value().Return([]byte(fmt.Sprintf(
 					`{"job_id":"job-allskip","event":"skipped","hostname":"agent1","timestamp":"%s","data":{"error":"unsupported"}}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-allskip.skipped.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-allskip.skipped.agent1.100").
 					Return(skip1, nil)
 
 				skip2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -864,8 +886,8 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					`{"job_id":"job-allskip","event":"skipped","hostname":"agent2","timestamp":"%s","data":{"error":"unsupported"}}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-allskip.skipped.agent2.200").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-allskip.skipped.agent2.200").
 					Return(skip2, nil)
 			},
 			expectedStatus: "skipped",
@@ -879,28 +901,30 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-bc","operation":{"type":"file.deploy.execute"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-bc").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-bc").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-bc.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-bc.>").
+					Return([]string{
 						"status.job-bc.completed.agent1.100",
 						"status.job-bc.completed.agent2.200",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-bc.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-bc.>").
+					Return([]string{
 						"responses.job-bc.agent1.300",
 						"responses.job-bc.agent2.400",
-					}), nil)
+					}, nil)
 
 				comp1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				comp1.EXPECT().Value().Return([]byte(fmt.Sprintf(
 					`{"job_id":"job-bc","event":"completed","hostname":"agent1","timestamp":"%s"}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-bc.completed.agent1.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-bc.completed.agent1.100").
 					Return(comp1, nil)
 
 				comp2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -908,24 +932,24 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					`{"job_id":"job-bc","event":"completed","hostname":"agent2","timestamp":"%s"}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-bc.completed.agent2.200").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-bc.completed.agent2.200").
 					Return(comp2, nil)
 
 				resp1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				resp1.EXPECT().Value().Return([]byte(
 					`{"status":"completed","data":"eyJ0ZXN0IjogdHJ1ZX0=","changed":true,"hostname":"agent1"}`,
 				))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "responses.job-bc.agent1.300").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "responses.job-bc.agent1.300").
 					Return(resp1, nil)
 
 				resp2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				resp2.EXPECT().Value().Return([]byte(
 					`{"status":"completed","data":"eyJ0ZXN0IjogdHJ1ZX0=","changed":false,"hostname":"agent2"}`,
 				))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "responses.job-bc.agent2.400").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "responses.job-bc.agent2.400").
 					Return(resp2, nil)
 			},
 			expectedStatus: "completed",
@@ -983,7 +1007,7 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			name:         "no jobs found",
 			statusFilter: "",
 			setupMocks: func() {
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return(nil, jetstream.ErrNoKeysFound)
+				s.mockNATSClient.EXPECT().KVKeys(gomock.Any(), "jobs").Return([]string{}, nil)
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
@@ -995,7 +1019,9 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 		{
 			name: "kv error",
 			setupMocks: func() {
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return(nil, errors.New("connection failed"))
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
+					Return(nil, errors.New("connection failed"))
 			},
 			validateFunc: func(_ *client.ListJobsResult, err error) {
 				s.Error(err)
@@ -1005,21 +1031,25 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 		{
 			name: "returns all jobs default limit",
 			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
 
 				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry1.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry1, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockEntry1, nil)
 
 				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry2.EXPECT().Value().Return([]byte(
 					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry2, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-2").
+					Return(mockEntry2, nil)
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
@@ -1034,7 +1064,9 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			setupMocks: func() {
 				// No status keys → default "submitted", doesn't match "completed"
 				// Two-pass: no kv.Get needed for filtering
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"jobs.job-1"}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
+					Return([]string{"jobs.job-1"}, nil)
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
@@ -1046,7 +1078,9 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 		{
 			name: "empty job ID after trim skipped",
 			setupMocks: func() {
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"jobs."}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
+					Return([]string{"jobs."}, nil)
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
@@ -1058,12 +1092,12 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 		{
 			name: "getJobStatusFromKeys error skipped",
 			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return([]string{"jobs.job-bad"}, nil)
 
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "jobs.job-bad").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-bad").
 					Return(nil, errors.New("kv error"))
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
@@ -1076,7 +1110,7 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 		{
 			name: "only processes jobs prefix keys",
 			setupMocks: func() {
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return(
+				s.mockNATSClient.EXPECT().KVKeys(gomock.Any(), "jobs").Return(
 					[]string{
 						"status.job-1.submitted._api.123",
 						"jobs.job-1",
@@ -1089,22 +1123,24 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockJobEntry, nil)
 
 				mockStatusEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockStatusEntry.EXPECT().Value().Return([]byte(
 					`{"job_id":"job-1","event":"submitted","hostname":"_api","timestamp":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-1.submitted._api.123").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-1.submitted._api.123").
 					Return(mockStatusEntry, nil)
 
 				mockRespEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockRespEntry.EXPECT().Value().Return([]byte(
 					`{"status":"completed","data":"{}"}`,
 				))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "responses.job-1.host.123").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "responses.job-1.host.123").
 					Return(mockRespEntry, nil)
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
@@ -1118,8 +1154,8 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			name:  "limit restricts returned jobs",
 			limit: 1,
 			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
 
 				// Only job-2 is fetched (newest-first, limit 1)
@@ -1127,7 +1163,9 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				mockEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-2").
+					Return(mockEntry, nil)
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
@@ -1140,8 +1178,8 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			name:   "offset skips jobs",
 			offset: 1,
 			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
 
 				// After reversing: [job-2, job-1], offset 1 skips job-2, returns job-1
@@ -1149,7 +1187,9 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				mockEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockEntry, nil)
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
@@ -1162,8 +1202,8 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			name:   "offset beyond total returns empty",
 			offset: 10,
 			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
@@ -1179,8 +1219,8 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			offset:       1,
 			setupMocks: func() {
 				// No status keys → all default "submitted"
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return([]string{"jobs.job-1", "jobs.job-2", "jobs.job-3"}, nil)
 
 				// Reversed: job-3, job-2, job-1. Offset 1 → page = [job-2, job-1]
@@ -1189,13 +1229,17 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				mockEntry2.EXPECT().Value().Return([]byte(
 					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry2, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-2").
+					Return(mockEntry2, nil)
 
 				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry1.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry1, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockEntry1, nil)
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
@@ -1210,8 +1254,8 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			limit:        1,
 			setupMocks: func() {
 				// No status keys → both default "submitted"
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
 
 				// Reversed: job-2, job-1. Limit 1 → page = [job-2]
@@ -1220,7 +1264,9 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				mockEntry2.EXPECT().Value().Return([]byte(
 					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry2, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-2").
+					Return(mockEntry2, nil)
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
@@ -1234,21 +1280,23 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			statusFilter: "submitted",
 			setupMocks: func() {
 				// No status keys → both default "submitted"
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return([]string{"jobs.job-bad", "jobs.job-good"}, nil)
 
 				// Reversed: job-good, job-bad — both match filter
 				// Pass 2: job-good Get fails, job-bad Get succeeds
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "jobs.job-good").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-good").
 					Return(nil, errors.New("kv error"))
 
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-bad","operation":{"type":"node.status.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-bad").Return(mockEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-bad").
+					Return(mockEntry, nil)
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
@@ -1260,13 +1308,15 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 		{
 			name: "getJobStatusFromKeys with invalid JSON",
 			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return([]string{"jobs.job-1"}, nil)
 
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(`not valid json`))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockEntry, nil)
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
@@ -1279,8 +1329,8 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			name:  "limit exceeding max capped to default",
 			limit: 200,
 			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
 
 				// Limit 200 → capped to DefaultPageSize (10)
@@ -1289,13 +1339,17 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				mockEntry2.EXPECT().Value().Return([]byte(
 					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry2, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-2").
+					Return(mockEntry2, nil)
 
 				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry1.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry1, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockEntry1, nil)
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
@@ -1307,8 +1361,8 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 		{
 			name: "newest first ordering",
 			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return([]string{"jobs.job-1", "jobs.job-2", "jobs.job-3"}, nil)
 
 				// Reversed: job-3, job-2, job-1
@@ -1316,19 +1370,25 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				mockEntry3.EXPECT().Value().Return([]byte(
 					`{"id":"job-3","operation":{"type":"node.status.get"},"created":"2024-01-03T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-3").Return(mockEntry3, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-3").
+					Return(mockEntry3, nil)
 
 				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry2.EXPECT().Value().Return([]byte(
 					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry2, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-2").
+					Return(mockEntry2, nil)
 
 				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry1.EXPECT().Value().Return([]byte(
 					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry1, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(mockEntry1, nil)
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
@@ -1366,8 +1426,10 @@ func (s *JobsPublicTestSuite) TestDeleteJob() {
 			setupMocks: func() {
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(`{"id":"job-123"}`)).AnyTimes()
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-123").Return(mockEntry, nil)
-				s.mockKV.EXPECT().Delete(gomock.Any(), "jobs.job-123").Return(nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-123").
+					Return(mockEntry, nil)
+				s.mockNATSClient.EXPECT().KVDelete(gomock.Any(), "jobs", "jobs.job-123").Return(nil)
 			},
 			validateFunc: func(err error) {
 				s.NoError(err)
@@ -1377,8 +1439,8 @@ func (s *JobsPublicTestSuite) TestDeleteJob() {
 			name:  "job not found",
 			jobID: "nonexistent",
 			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "jobs.nonexistent").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.nonexistent").
 					Return(nil, errors.New("key not found"))
 			},
 			validateFunc: func(err error) {
@@ -1392,9 +1454,11 @@ func (s *JobsPublicTestSuite) TestDeleteJob() {
 			setupMocks: func() {
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(`{"id":"job-456"}`)).AnyTimes()
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-456").Return(mockEntry, nil)
-				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "jobs.job-456").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-456").
+					Return(mockEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVDelete(gomock.Any(), "jobs", "jobs.job-456").
 					Return(errors.New("storage failure"))
 			},
 			validateFunc: func(err error) {
@@ -1430,26 +1494,28 @@ func (s *JobsPublicTestSuite) TestRetriedEventInTimeline() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-original","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-original").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-original").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-original.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-original.>").
+					Return([]string{
 						"status.job-original.submitted._api.100",
 						"status.job-original.failed.agent1.200",
 						"status.job-original.retried._api.300",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-original.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-original.>").
+					Return([]string{}, nil)
 
 				submitEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				submitEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
 					`{"job_id":"job-original","event":"submitted","hostname":"_api","timestamp":"%s"}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-original.submitted._api.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-original.submitted._api.100").
 					Return(submitEntry, nil)
 
 				failEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -1457,8 +1523,8 @@ func (s *JobsPublicTestSuite) TestRetriedEventInTimeline() {
 					`{"job_id":"job-original","event":"failed","hostname":"agent1","timestamp":"%s","data":{"error":"timeout"}}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-original.failed.agent1.200").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-original.failed.agent1.200").
 					Return(failEntry, nil)
 
 				retriedEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -1466,8 +1532,8 @@ func (s *JobsPublicTestSuite) TestRetriedEventInTimeline() {
 					`{"job_id":"job-original","event":"retried","hostname":"_api","timestamp":"%s","data":{"new_job_id":"job-new-123","target_hostname":"_any"}}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-original.retried._api.300").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-original.retried._api.300").
 					Return(retriedEntry, nil)
 			},
 			validateFunc: func(qj *job.QueuedJob) {
@@ -1493,24 +1559,26 @@ func (s *JobsPublicTestSuite) TestRetriedEventInTimeline() {
 				mockJobEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-original-2","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-original-2").Return(mockJobEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-original-2").
+					Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status.job-original-2.>").
-					Return(newMockKeyLister(s.mockCtrl, []string{
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-original-2.>").
+					Return([]string{
 						"status.job-original-2.retried._api.100",
-					}), nil)
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses.job-original-2.>").
-					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses.job-original-2.>").
+					Return([]string{}, nil)
 
 				retriedEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				retriedEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
 					`{"job_id":"job-original-2","event":"retried","hostname":"_api","timestamp":"%s","data":{}}`,
 					now,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "status.job-original-2.retried._api.100").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "status.job-original-2.retried._api.100").
 					Return(retriedEntry, nil)
 			},
 			validateFunc: func(qj *job.QueuedJob) {
@@ -1561,7 +1629,6 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 			},
 			target: "_any",
 			setupMocks: func() {
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
 			},
 			validateFunc: func(_ *client.CreateJobResult, err error) {
 				s.Error(err)
@@ -1576,9 +1643,8 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 			},
 			target: "web-01",
 			setupMocks: func() {
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil).
 					Times(2)
 				s.mockNATSClient.EXPECT().
@@ -1599,14 +1665,13 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 			},
 			target: "_any",
 			setupMocks: func() {
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
 				// First put succeeds (job storage)
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				// Second put fails (status event)
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 					Return(uint64(0), errors.New("status event write failed"))
 				s.mockNATSClient.EXPECT().
 					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -1626,9 +1691,8 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 			},
 			target: "_any",
 			setupMocks: func() {
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil).
 					Times(2)
 				s.mockNATSClient.EXPECT().
@@ -1669,21 +1733,22 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 				mockEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-123","operation":{"type":"node.hostname.get","data":{}},"subject":"jobs.query._any"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-123").Return(mockEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-123").
+					Return(mockEntry, nil)
 
 				// CreateJob: store new job + status event + publish
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil).
 					Times(2)
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
 				s.mockNATSClient.EXPECT().
 					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				// Write retried event on original job
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 					Return(uint64(2), nil)
 			},
 			validateFunc: func(result *client.CreateJobResult, err error) {
@@ -1697,8 +1762,8 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 			jobID:  "nonexistent",
 			target: "_any",
 			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "jobs.nonexistent").
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.nonexistent").
 					Return(nil, errors.New("key not found"))
 			},
 			validateFunc: func(_ *client.CreateJobResult, err error) {
@@ -1713,7 +1778,9 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 			setupMocks: func() {
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(`not json`))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-bad").Return(mockEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-bad").
+					Return(mockEntry, nil)
 			},
 			validateFunc: func(_ *client.CreateJobResult, err error) {
 				s.Error(err)
@@ -1729,7 +1796,9 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 				mockEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-no-op","subject":"jobs.query._any"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-no-op").Return(mockEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-no-op").
+					Return(mockEntry, nil)
 			},
 			validateFunc: func(_ *client.CreateJobResult, err error) {
 				s.Error(err)
@@ -1745,13 +1814,14 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 				mockEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-456","operation":{"type":"node.hostname.get","data":{}},"subject":"jobs.query._any"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-456").Return(mockEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-456").
+					Return(mockEntry, nil)
 
 				// CreateJob fails on KV put
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 					Return(uint64(0), errors.New("kv error"))
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
 			},
 			validateFunc: func(_ *client.CreateJobResult, err error) {
 				s.Error(err)
@@ -1767,21 +1837,22 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 				mockEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-789","operation":{"type":"node.hostname.get","data":{}},"subject":"jobs.query._any"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-789").Return(mockEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-789").
+					Return(mockEntry, nil)
 
 				// CreateJob succeeds
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil).
 					Times(2)
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
 				s.mockNATSClient.EXPECT().
 					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				// Retried event put fails (should be logged, not returned)
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 					Return(uint64(0), errors.New("event put failed"))
 			},
 			validateFunc: func(result *client.CreateJobResult, err error) {
@@ -1799,20 +1870,21 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 				mockEntry.EXPECT().Value().Return([]byte(
 					`{"id":"job-empty-target","operation":{"type":"node.hostname.get","data":{}},"subject":"jobs.query._any"}`,
 				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-empty-target").Return(mockEntry, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-empty-target").
+					Return(mockEntry, nil)
 
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil).
 					Times(2)
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
 				s.mockNATSClient.EXPECT().
 					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				// Retried event
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 					Return(uint64(2), nil)
 			},
 			validateFunc: func(result *client.CreateJobResult, err error) {
@@ -1839,11 +1911,14 @@ func (s *JobsPublicTestSuite) TestGetQueueSummary() {
 		validateFunc func(*job.QueueStats, error)
 	}{
 		{
-			name: "when no keys found returns empty stats",
+			name: "when the bucket is empty returns empty stats",
 			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
-					Return(nil, jetstream.ErrNoKeysFound)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
+					Return([]string{}, nil)
+				s.mockNATSClient.EXPECT().
+					StreamInfo(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("stream not found"))
 			},
 			validateFunc: func(stats *job.QueueStats, err error) {
 				s.NoError(err)
@@ -1859,8 +1934,8 @@ func (s *JobsPublicTestSuite) TestGetQueueSummary() {
 		{
 			name: "when keys error returns error",
 			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return(nil, errors.New("connection failed"))
 			},
 			validateFunc: func(_ *job.QueueStats, err error) {
@@ -1893,11 +1968,11 @@ func (s *JobsPublicTestSuite) TestGetQueueSummary() {
 					"jobs.job-1",
 					"responses.job-1.agent1.103",
 				}
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return(keys, nil)
 				s.mockNATSClient.EXPECT().
-					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
+					StreamInfo(gomock.Any(), "JOBS-DLQ").
 					Return(nil, errors.New("no stream"))
 			},
 			validateFunc: func(stats *job.QueueStats, err error) {
@@ -1917,11 +1992,11 @@ func (s *JobsPublicTestSuite) TestGetQueueSummary() {
 				keys := []string{
 					"status.job-1.submitted._api.100",
 				}
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return(keys, nil)
 				s.mockNATSClient.EXPECT().
-					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
+					StreamInfo(gomock.Any(), "JOBS-DLQ").
 					Return(&jetstream.StreamInfo{
 						State: jetstream.StreamState{Msgs: 3},
 					}, nil)
@@ -1945,11 +2020,11 @@ func (s *JobsPublicTestSuite) TestGetQueueSummary() {
 					"status.job-1.submitted._api.100",
 					"status.job-1.completed.agent1.101",
 				}
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return(keys, nil)
 				s.mockNATSClient.EXPECT().
-					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
+					StreamInfo(gomock.Any(), "JOBS-DLQ").
 					Return(nil, errors.New("no stream"))
 			},
 			validateFunc: func(stats *job.QueueStats, err error) {
@@ -1970,11 +2045,11 @@ func (s *JobsPublicTestSuite) TestGetQueueSummary() {
 					"status.job-1.submitted._api.100",
 					"status.job-1.completed.agent1.101",
 				}
-				s.mockKV.EXPECT().
-					Keys(gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
 					Return(keys, nil)
 				s.mockNATSClient.EXPECT().
-					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
+					StreamInfo(gomock.Any(), "JOBS-DLQ").
 					Return(nil, errors.New("stream not found"))
 			},
 			validateFunc: func(stats *job.QueueStats, err error) {
@@ -2284,9 +2359,8 @@ func (s *JobsPublicTestSuite) TestCreateJobWithPKISigner() {
 			target:  "_any",
 			setupFn: func() {},
 			setupMocks: func() {
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+				s.mockNATSClient.EXPECT().
+					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil).
 					Times(2)
 				s.mockNATSClient.EXPECT().
@@ -2312,7 +2386,6 @@ func (s *JobsPublicTestSuite) TestCreateJobWithPKISigner() {
 				})
 			},
 			setupMocks: func() {
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
 			},
 			validateFunc: func(_ *client.CreateJobResult, err error) {
 				s.Error(err)
@@ -2328,7 +2401,7 @@ func (s *JobsPublicTestSuite) TestCreateJobWithPKISigner() {
 
 			opts := &client.Options{
 				Timeout:    30 * time.Second,
-				KVBucket:   s.mockKV,
+				JobsBucket: "jobs",
 				StreamName: "JOBS",
 				PKISigner:  signer,
 			}
@@ -2363,7 +2436,7 @@ func (s *JobsPublicTestSuite) TestSetPKISigner() {
 			buildOpts: func() *client.Options {
 				return &client.Options{
 					Timeout:    30 * time.Second,
-					KVBucket:   s.mockKV,
+					JobsBucket: "jobs",
 					StreamName: "JOBS",
 				}
 			},
@@ -2382,7 +2455,7 @@ func (s *JobsPublicTestSuite) TestSetPKISigner() {
 			buildOpts: func() *client.Options {
 				return &client.Options{
 					Timeout:    30 * time.Second,
-					KVBucket:   s.mockKV,
+					JobsBucket: "jobs",
 					StreamName: "JOBS",
 					PKISigner:  signer,
 				}
@@ -2408,10 +2481,9 @@ func (s *JobsPublicTestSuite) TestSetPKISigner() {
 			tt.wireFn(c)
 
 			var storedJobData []byte
-			s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
-			s.mockKV.EXPECT().
-				Put(gomock.Any(), gomock.Any(), gomock.Any()).
-				DoAndReturn(func(_ context.Context, key string, data []byte) (uint64, error) {
+			s.mockNATSClient.EXPECT().
+				KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
+				DoAndReturn(func(_ context.Context, _ string, key string, data []byte) (uint64, error) {
 					if strings.HasPrefix(key, "jobs.") {
 						storedJobData = data
 					}
@@ -2448,21 +2520,21 @@ func (s *JobsPublicTestSuite) TestGetJobStatusWithPKISigner() {
 					`{"id":"%s","status":"unprocessed","created":"2026-01-01T00:00:00Z","subject":"jobs.query.host.server1","operation":{"type":"node.hostname.get"}}`,
 					jobID,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "jobs."+jobID).
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs."+jobID).
 					Return(jobEntry, nil)
 
 				// Status keys — empty.
-				statusLister := newMockKeyLister(s.mockCtrl, []string{})
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status."+jobID+".>").
+				statusLister := []string{}
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status."+jobID+".>").
 					Return(statusLister, nil)
 
 				// Response keys — one signed response.
 				responseKey := "responses." + jobID + ".server1.12345"
-				responseLister := newMockKeyLister(s.mockCtrl, []string{responseKey})
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses."+jobID+".>").
+				responseLister := []string{responseKey}
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses."+jobID+".>").
 					Return(responseLister, nil)
 
 				// The response entry is a signed envelope.
@@ -2473,8 +2545,8 @@ func (s *JobsPublicTestSuite) TestGetJobStatusWithPKISigner() {
 
 				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				respEntry.EXPECT().Value().Return(wrapped)
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), responseKey).
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", responseKey).
 					Return(respEntry, nil)
 			},
 			validateFunc: func(qj *job.QueuedJob) {
@@ -2494,21 +2566,21 @@ func (s *JobsPublicTestSuite) TestGetJobStatusWithPKISigner() {
 					`{"id":"%s","status":"unprocessed","created":"2026-01-01T00:00:00Z","subject":"jobs.query.host.server1","operation":{"type":"node.hostname.get"}}`,
 					jobID,
 				)))
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "jobs."+jobID).
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs."+jobID).
 					Return(jobEntry, nil)
 
 				// Status keys — empty.
-				statusLister := newMockKeyLister(s.mockCtrl, []string{})
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "status."+jobID+".>").
+				statusLister := []string{}
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status."+jobID+".>").
 					Return(statusLister, nil)
 
 				// Response keys — one response with tampered signature.
 				responseKey := "responses." + jobID + ".server1.12345"
-				responseLister := newMockKeyLister(s.mockCtrl, []string{responseKey})
-				s.mockKV.EXPECT().
-					ListKeysFiltered(gomock.Any(), "responses."+jobID+".>").
+				responseLister := []string{responseKey}
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses."+jobID+".>").
 					Return(responseLister, nil)
 
 				// Build a valid signed envelope then corrupt the signature.
@@ -2521,8 +2593,8 @@ func (s *JobsPublicTestSuite) TestGetJobStatusWithPKISigner() {
 
 				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				respEntry.EXPECT().Value().Return(corrupted)
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), responseKey).
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", responseKey).
 					Return(respEntry, nil)
 			},
 			validateFunc: func(qj *job.QueuedJob) {
@@ -2540,7 +2612,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatusWithPKISigner() {
 
 			opts := &client.Options{
 				Timeout:    30 * time.Second,
-				KVBucket:   s.mockKV,
+				JobsBucket: "jobs",
 				StreamName: "JOBS",
 				PKISigner:  signer,
 			}
@@ -2621,7 +2693,7 @@ func (s *JobsPublicTestSuite) TestSetAgentKeyStoreAndMachineID() {
 		s.Run(tt.name, func() {
 			opts := &client.Options{
 				Timeout:    30 * time.Second,
-				KVBucket:   s.mockKV,
+				JobsBucket: "jobs",
 				StreamName: "JOBS",
 			}
 			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
@@ -2629,10 +2701,9 @@ func (s *JobsPublicTestSuite) TestSetAgentKeyStoreAndMachineID() {
 			tt.wireFn(c)
 
 			var storedJobData []byte
-			s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
-			s.mockKV.EXPECT().
-				Put(gomock.Any(), gomock.Any(), gomock.Any()).
-				DoAndReturn(func(_ context.Context, key string, data []byte) (uint64, error) {
+			s.mockNATSClient.EXPECT().
+				KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
+				DoAndReturn(func(_ context.Context, _ string, key string, data []byte) (uint64, error) {
 					if strings.HasPrefix(key, "jobs.") {
 						storedJobData = data
 					}
@@ -2664,18 +2735,18 @@ func (s *JobsPublicTestSuite) TestGetJobStatusWithAgentKeyStoreEnforcing() {
 			`{"id":"%s","status":"unprocessed","created":"2026-01-01T00:00:00Z","subject":"jobs.query.host.server1","operation":{"type":"node.hostname.get"}}`,
 			jobID,
 		)))
-		s.mockKV.EXPECT().
-			Get(gomock.Any(), "jobs."+jobID).
+		s.mockNATSClient.EXPECT().
+			KVGet(gomock.Any(), "jobs", "jobs."+jobID).
 			Return(jobEntry, nil)
 
-		statusLister := newMockKeyLister(s.mockCtrl, []string{})
-		s.mockKV.EXPECT().
-			ListKeysFiltered(gomock.Any(), "status."+jobID+".>").
+		statusLister := []string{}
+		s.mockNATSClient.EXPECT().
+			KVKeys(gomock.Any(), "jobs", "status."+jobID+".>").
 			Return(statusLister, nil)
 
-		responseLister := newMockKeyLister(s.mockCtrl, []string{responseKey})
-		s.mockKV.EXPECT().
-			ListKeysFiltered(gomock.Any(), "responses."+jobID+".>").
+		responseLister := []string{responseKey}
+		s.mockNATSClient.EXPECT().
+			KVKeys(gomock.Any(), "jobs", "responses."+jobID+".>").
 			Return(responseLister, nil)
 	}
 
@@ -2708,8 +2779,8 @@ func (s *JobsPublicTestSuite) TestGetJobStatusWithAgentKeyStoreEnforcing() {
 
 				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				respEntry.EXPECT().Value().Return(wrapped)
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), responseKey).
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", responseKey).
 					Return(respEntry, nil)
 			},
 			validateFunc: func(qj *job.QueuedJob) {
@@ -2738,8 +2809,8 @@ func (s *JobsPublicTestSuite) TestGetJobStatusWithAgentKeyStoreEnforcing() {
 
 				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				respEntry.EXPECT().Value().Return(wrapped)
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), responseKey).
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", responseKey).
 					Return(respEntry, nil)
 			},
 			validateFunc: func(qj *job.QueuedJob) {
@@ -2758,7 +2829,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatusWithAgentKeyStoreEnforcing() {
 
 			opts := &client.Options{
 				Timeout:    30 * time.Second,
-				KVBucket:   s.mockKV,
+				JobsBucket: "jobs",
 				StreamName: "JOBS",
 			}
 			c, err := client.New(slog.Default(), s.mockNATSClient, opts)

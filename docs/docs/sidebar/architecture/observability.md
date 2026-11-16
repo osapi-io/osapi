@@ -42,17 +42,18 @@ metrics server of the controller is on 9090 by default. `agent.metrics` and
 records metrics through OpenTelemetry and exports them with the `osapi_` prefix,
 together with the Go runtime and process metrics. Watch these metrics first:
 
-| Metric                            | From       | Watch for                                  |
-| --------------------------------- | ---------- | ------------------------------------------ |
-| `osapi_component_up`              | All        | 0: the process is not ready                |
-| `osapi_subsystem_up`              | All        | 0 on a subsystem, for example the notifier |
-| `osapi_jobs_created_total`        | Controller | The request rate                           |
-| `osapi_jobs_processed_total`      | Agent      | The `failed` part, by status               |
-| `osapi_job_duration_seconds`      | Agent      | Slow operations                            |
-| `osapi_heartbeat_age_seconds`     | Agent      | An increase: the agent cannot reach NATS   |
-| `osapi_behavior_calls_total`      | Agent      | Calls for each behavior, method and result |
-| `osapi_behavior_duration_seconds` | Agent      | The latency of each method                 |
-| `osapi_behavior_changes_total`    | Agent      | How often a write changed a host           |
+| Metric                                         | From       | Watch for                                  |
+| ---------------------------------------------- | ---------- | ------------------------------------------ |
+| `osapi_component_up`                           | All        | 0: the process is not ready                |
+| `osapi_subsystem_up`                           | All        | 0 on a subsystem, for example the notifier |
+| `osapi_jobs_created_total`                     | Controller | The request rate                           |
+| `osapi_jobs_processed_total`                   | Agent      | The `failed` part, by status               |
+| `osapi_job_duration_seconds`                   | Agent      | Slow operations                            |
+| `osapi_heartbeat_age_seconds`                  | Agent      | An increase: the agent cannot reach NATS   |
+| `osapi_behavior_calls_total`                   | Agent      | Calls for each behavior, method and result |
+| `osapi_behavior_duration_seconds`              | Agent      | The latency of each method                 |
+| `osapi_behavior_changes_total`                 | Agent      | How often a write changed a host           |
+| `osapi_nats_client_operation_duration_seconds` | All        | Slow or failed calls to NATS, by bucket    |
 
 [Metrics](../features/metrics.md) lists each metric and its labels.
 

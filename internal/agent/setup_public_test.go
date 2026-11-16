@@ -103,7 +103,7 @@ func agentConfig(
 		Objects:   config.NATSObjects{Bucket: "file-objects"},
 		FileState: config.NATSFileState{Bucket: "file-state"},
 	}
-	srv, err := server.New(context.Background(), slog.Default(), cfg.NATS)
+	srv, err := server.New(context.Background(), slog.Default(), cfg.NATS, nil)
 	require.NoError(t, err)
 	t.Cleanup(func() { srv.Stop(context.Background()) })
 
@@ -194,7 +194,13 @@ func (s *SetupPublicTestSuite) TestSetup() {
 				tc.setup()
 			}
 
-			a, conn, err := agent.Setup(context.Background(), slog.Default(), memfs.New(), tc.cfg())
+			a, conn, err := agent.Setup(
+				context.Background(),
+				slog.Default(),
+				memfs.New(),
+				tc.cfg(),
+				nil,
+			)
 
 			if tc.wantErr != "" {
 				s.ErrorContains(err, tc.wantErr)
@@ -220,7 +226,7 @@ func (s *SetupPublicTestSuite) TestSubComponents() {
 			URL:     "http://vm.example:9091/metrics",
 		}
 
-		a, conn, err := agent.Setup(context.Background(), slog.Default(), memfs.New(), cfg)
+		a, conn, err := agent.Setup(context.Background(), slog.Default(), memfs.New(), cfg, nil)
 		s.Require().NoError(err)
 		defer bus.Close(conn.NATS)
 

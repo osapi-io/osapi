@@ -52,7 +52,7 @@ func (f *File) DeleteFileByName(
 	)
 
 	// Check if the file exists before attempting deletion.
-	_, err := f.objStore.GetInfo(ctx, request.Name)
+	_, err := f.objStore.ObjectInfo(ctx, f.objBucket, request.Name)
 	if err != nil {
 		if errors.Is(err, jetstream.ErrObjectNotFound) {
 			errMsg := fmt.Sprintf("file not found: %s", request.Name)
@@ -67,7 +67,7 @@ func (f *File) DeleteFileByName(
 		}, nil
 	}
 
-	if err := f.objStore.Delete(ctx, request.Name); err != nil {
+	if err := f.objStore.ObjectDelete(ctx, f.objBucket, request.Name); err != nil {
 		errMsg := fmt.Sprintf("failed to delete file: %s", err.Error())
 		return gen.DeleteFileByName500JSONResponse{
 			Error: &errMsg,

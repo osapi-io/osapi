@@ -40,7 +40,6 @@ type MeterPublicTestSuite struct {
 
 	mockCtrl       *gomock.Controller
 	mockNATSClient *jobmocks.MockNATSClient
-	mockKV         *jobmocks.MockKeyValue
 	jobsClient     *client.Client
 	ctx            context.Context
 }
@@ -56,12 +55,11 @@ func (s *MeterPublicTestSuite) getFreePort() int {
 func (s *MeterPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockNATSClient = jobmocks.NewMockNATSClient(s.mockCtrl)
-	s.mockKV = jobmocks.NewMockKeyValue(s.mockCtrl)
 	s.ctx = context.Background()
 
 	opts := &client.Options{
-		Timeout:  30 * time.Second,
-		KVBucket: s.mockKV,
+		Timeout:    30 * time.Second,
+		JobsBucket: "jobs",
 	}
 	var err error
 	s.jobsClient, err = client.New(slog.Default(), s.mockNATSClient, opts)

@@ -26,13 +26,14 @@ import (
 	"testing"
 	"time"
 
+	notifymocks "github.com/osapi-io/osapi/internal/controller/notify/mocks"
+
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller"
-	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
 
 type NotifyPublicTestSuite struct {
@@ -76,24 +77,24 @@ func (s *NotifyPublicTestSuite) TestStartConditionWatcher() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			var registry jetstream.KeyValue
+			registry := notifymocks.NewMockRegistry(gomock.NewController(s.T()))
+			bucket := ""
 			watched := make(chan struct{})
 			if tc.registry {
-				kv := jobmocks.NewMockKeyValue(gomock.NewController(s.T()))
+				bucket = "registry"
 				if tc.wantWatch {
 					// The watcher stops at once with this error, and
 					// background logs it.
-					kv.EXPECT().WatchAll(gomock.Any()).DoAndReturn(
-						func(context.Context, ...jetstream.WatchOpt) (jetstream.KeyWatcher, error) {
+					registry.EXPECT().KVWatch(gomock.Any(), "registry", ">").DoAndReturn(
+						func(context.Context, string, string, ...jetstream.WatchOpt) (<-chan jetstream.KeyValueEntry, error) {
 							close(watched)
 							return nil, errBoom
 						},
 					)
 				}
-				registry = kv
 			}
 
-			controller.ExportStartConditionWatcher(ctx, slog.Default(), registry, tc.cfg)
+			controller.ExportStartConditionWatcher(ctx, slog.Default(), registry, bucket, tc.cfg)
 
 			if tc.wantWatch {
 				select {

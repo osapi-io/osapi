@@ -71,7 +71,7 @@ func (n note) set(
 
 		return noteOut{}, err
 	}
-	if _, err := n.h.FileState.Put(ctx, notePath, []byte(in.Text)); err != nil {
+	if _, err := n.h.FileState.KVPut(ctx, n.h.FileStateBucket, notePath, []byte(in.Text)); err != nil {
 		return noteOut{}, err
 	}
 	if in.Mode != "nowrite" {
@@ -96,7 +96,7 @@ func getNote(
 	in getIn,
 ) (noteOut, error) {
 	if in.Strict {
-		entry, err := n.h.FileState.Get(ctx, notePath)
+		entry, err := n.h.FileState.KVGet(ctx, n.h.FileStateBucket, notePath)
 		if err != nil {
 			return noteOut{}, errors.New("not managed")
 		}

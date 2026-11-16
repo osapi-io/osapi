@@ -33,7 +33,6 @@ import (
 
 	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	enrollMocks "github.com/osapi-io/osapi/internal/controller/enrollment/mocks"
-	jobMocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
 
 type RotationPublicTestSuite struct {
@@ -41,7 +40,7 @@ type RotationPublicTestSuite struct {
 
 	mockCtrl *gomock.Controller
 	mockNC   *enrollMocks.MockNATSSubscriber
-	mockKV   *jobMocks.MockKeyValue
+	mockKV   *enrollMocks.MockKVStore
 	mockPKI  *enrollMocks.MockPKIProvider
 	watcher  *enrollment.Watcher
 	pubKey   ed25519.PublicKey
@@ -50,14 +49,14 @@ type RotationPublicTestSuite struct {
 func (s *RotationPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockNC = enrollMocks.NewMockNATSSubscriber(s.mockCtrl)
-	s.mockKV = jobMocks.NewMockKeyValue(s.mockCtrl)
+	s.mockKV = enrollMocks.NewMockKVStore(s.mockCtrl)
 	s.mockPKI = enrollMocks.NewMockPKIProvider(s.mockCtrl)
 	s.pubKey = make(ed25519.PublicKey, ed25519.PublicKeySize)
 
 	s.watcher = enrollment.NewWatcher(
 		slog.Default(),
 		s.mockNC,
-		s.mockKV,
+		s.mockKV, "enrollment",
 		s.mockPKI,
 		false,
 		"osapi",
@@ -83,7 +82,7 @@ func (s *RotationPublicTestSuite) TestRotateControllerKey() {
 			setupMock: func() {
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					PublishCore("osapi.pki.rotate", gomock.Any()).
+					PublishCore(gomock.Any(), "osapi.pki.rotate", gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -108,7 +107,7 @@ func (s *RotationPublicTestSuite) TestRotateControllerKey() {
 			setupMock: func() {
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					PublishCore("osapi.pki.rotate", gomock.Any()).
+					PublishCore(gomock.Any(), "osapi.pki.rotate", gomock.Any()).
 					Return(errors.New("publish error"))
 			},
 			validateFunc: func(err error) {
@@ -122,14 +121,14 @@ func (s *RotationPublicTestSuite) TestRotateControllerKey() {
 				s.watcher = enrollment.NewWatcher(
 					slog.Default(),
 					s.mockNC,
-					s.mockKV,
+					s.mockKV, "enrollment",
 					s.mockPKI,
 					false,
 					"",
 				)
 				s.mockPKI.EXPECT().PublicKey().Return(s.pubKey)
 				s.mockNC.EXPECT().
-					PublishCore("pki.rotate", gomock.Any()).
+					PublishCore(gomock.Any(), "pki.rotate", gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
