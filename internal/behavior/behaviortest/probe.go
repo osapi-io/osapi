@@ -122,21 +122,25 @@ func probe(
 
 	for path, content := range changed(before, files(h)) {
 		if strings.Contains(path, probeMark) && !dirs[filepath.Dir(path)] {
-			return "it wrote " + path + ", outside the directories the example writes"
+			return behavior.TestFailure(behavior.TestTraversal,
+				"it wrote "+path+", outside the directories the example writes")
 		}
 		if strings.Contains(content, "\nosapi_probe = 1") && content != value {
-			return "its line reached " + path
+			return behavior.TestFailure(behavior.TestNewLine, "its line reached "+path)
 		}
 	}
 	for _, line := range h.ran {
 		args := strings.Fields(line)
 		if (args[0] == "sh" || args[0] == "bash") &&
 			slices.Contains(args, "-c") && strings.Contains(line, probeMark) {
-			return "it reached a shell script: " + line
+			return behavior.TestFailure(behavior.TestShell, "it reached a shell script: "+line)
 		}
 		for j, arg := range args {
 			if arg == "--"+probeMark && !slices.Contains(args[:j], "--") {
-				return "it reached a command as an option: " + line
+				return behavior.TestFailure(
+					behavior.TestOption,
+					"it reached a command as an option: "+line,
+				)
 			}
 		}
 	}

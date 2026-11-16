@@ -29,6 +29,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/behavior/host"
@@ -67,7 +68,7 @@ func (c conf) set(
 	}
 	path := "/etc/conf.d/" + key + ".conf"
 	_ = c.h.FS.MkdirAll("/etc/conf.d", 0o755)
-	_ = c.h.FS.WriteFile(path, []byte(key+" = "+value+"\n"), 0o644)
+	_ = atomicfile.Write(ctx, c.h.FS, path, []byte(key+" = "+value+"\n"), 0o644)
 	if c.safe {
 		_, _ = c.h.Exec.RunPrivilegedCmd(ctx, "reload", []string{"--", key})
 

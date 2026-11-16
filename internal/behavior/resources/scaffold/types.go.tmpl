@@ -24,9 +24,11 @@ package {{.Name}}
 // spec property; this one has none.
 type GetInput struct{}
 
-// UpdateInput is update's input.
+// UpdateInput is update's input. update has no key, so the field that says
+// what it changes is tagged telemetry:"attr", and the trace shows it.
+// osapi behavior spec lists each tag.
 type UpdateInput struct {
-	Value string `json:"value" validate:"required" doc:"The value to set"`
+	Value string `json:"value" validate:"required" doc:"The value to set" telemetry:"attr"`
 }
 
 // Entry is get's output. Each field becomes a column and a JSON field.

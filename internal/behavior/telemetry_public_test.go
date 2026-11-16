@@ -52,6 +52,20 @@ func (s *TelemetryPublicTestSuite) SetupTest() {
 	behavior.SetMeterProvider(sdkmetric.NewMeterProvider(sdkmetric.WithReader(s.reader)))
 }
 
+// secretKey has a key that is a secret, beside a tagged field.
+type secretKey struct {
+	Key  string `json:"key"  secret:"true"`
+	Name string `json:"name"               telemetry:"attr"`
+}
+
+func readTagged(context.Context, fakeProvider, tagged) (entry, error) {
+	return entry{}, nil
+}
+
+func readSecretKey(context.Context, fakeProvider, secretKey) (entry, error) {
+	return entry{}, nil
+}
+
 type tagged struct {
 	Key    string  `json:"key"    telemetry:"attr"`
 	On     bool    `json:"on"     telemetry:"attr"`
@@ -192,16 +206,20 @@ func (s *TelemetryPublicTestSuite) TestSetMeterProvider() {
 }
 
 func (s *TelemetryPublicTestSuite) TestInputAttributes() {
+	all := []string{"key", "on", "count", "ratio", "list", "token"}
+
 	tests := []struct {
-		name string
-		in   any
-		want map[string]any
+		name   string
+		in     any
+		fields []string
+		want   map[string]any
 	}{
 		{
-			name: "when fields are tagged each kind is recorded and untagged ones are not",
+			name: "when fields are named each kind is recorded and a secret is not",
 			in: tagged{
 				Key: "k", On: true, Count: 3, Ratio: 0.5, Secret: "hunter2", Token: "s3cret",
 			},
+			fields: all,
 			want: map[string]any{
 				"osapi.behavior.input.key":   "k",
 				"osapi.behavior.input.on":    true,
@@ -210,8 +228,9 @@ func (s *TelemetryPublicTestSuite) TestInputAttributes() {
 			},
 		},
 		{
-			name: "when the input is a pointer it is followed",
-			in:   &tagged{Key: "k"},
+			name:   "when the input is a pointer it is followed",
+			in:     &tagged{Key: "k"},
+			fields: all,
 			want: map[string]any{
 				"osapi.behavior.input.key":   "k",
 				"osapi.behavior.input.on":    false,
@@ -219,14 +238,23 @@ func (s *TelemetryPublicTestSuite) TestInputAttributes() {
 				"osapi.behavior.input.ratio": float64(0),
 			},
 		},
-		{name: "when the pointer is nil", in: (*tagged)(nil), want: map[string]any{}},
-		{name: "when the input is not a struct", in: "x", want: map[string]any{}},
+		{
+			name:   "when a field is not named it is not recorded",
+			in:     tagged{Key: "k", On: true},
+			fields: []string{"key"},
+			want:   map[string]any{"osapi.behavior.input.key": "k"},
+		},
+		{
+			name: "when the pointer is nil",
+			in:   (*tagged)(nil), fields: all, want: map[string]any{},
+		},
+		{name: "when the input is not a struct", in: "x", fields: all, want: map[string]any{}},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			got := map[string]any{}
-			for _, kv := range behavior.InputAttributes(tc.in) {
+			for _, kv := range behavior.InputAttributes(tc.in, tc.fields) {
 				got[string(kv.Key)] = kv.Value.AsInterface()
 			}
 			s.Equal(tc.want, got)
@@ -261,31 +289,73 @@ func (s *TelemetryPublicTestSuite) TestChanged() {
 	}
 }
 
-func (s *TelemetryPublicTestSuite) TestTaggedInputs() {
+func (s *TelemetryPublicTestSuite) TestSpanInputs() {
 	tests := []struct {
 		name string
-		t    reflect.Type
+		m    *behavior.Method
 		want []string
 	}{
 		{
-			name: "when fields are tagged",
-			t:    reflect.TypeFor[tagged](),
+			name: "when the method has a key it comes first, then the tagged fields",
+			m:    behavior.Read("get", readTagged).Key("on"),
+			want: []string{"on", "key", "count", "ratio", "list"},
+		},
+		{
+			name: "when the key is not tagged it is still recorded",
+			m:    behavior.Read("get", get).Key("key"),
+			want: []string{"key"},
+		},
+		{
+			name: "when the method has no key only the tagged fields are recorded",
+			m:    behavior.Read("get", readTagged),
 			want: []string{"key", "on", "count", "ratio", "list"},
 		},
 		{
-			name: "when given a pointer",
-			t:    reflect.TypeFor[*tagged](),
-			want: []string{"key", "on", "count", "ratio", "list"},
+			name: "when nothing is tagged and there is no key",
+			m:    behavior.Read("get", get),
+			want: nil,
 		},
-		{name: "when nothing is tagged", t: reflect.TypeFor[getIn](), want: nil},
-		{name: "when not a struct", t: reflect.TypeFor[string](), want: nil},
+		{
+			name: "when the key is a secret it is not recorded",
+			m:    behavior.Read("get", readSecretKey).Key("key"),
+			want: []string{"name"},
+		},
+		{
+			name: "when the input is a pointer it is followed",
+			m:    &behavior.Method{In: reflect.TypeFor[*getIn](), KeyField: "key"},
+			want: []string{"key"},
+		},
+		{
+			name: "when the input is not a struct",
+			m:    &behavior.Method{In: reflect.TypeFor[string]()},
+			want: nil,
+		},
+		{name: "when there is no input", m: &behavior.Method{}, want: nil},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.Equal(tc.want, behavior.TaggedInputs(tc.t))
+			s.Equal(tc.want, tc.m.SpanInputs())
 		})
 	}
+}
+
+func (s *TelemetryPublicTestSuite) TestSpanRecordsKey() {
+	s.Run("when a method has a key its span records it without a tag", func() {
+		s.SetupTest()
+
+		_, err := top().Method("get").
+			Invoke(context.Background(), fakeProvider{}, []byte(`{"key":"vm.swappiness"}`))
+		s.Require().NoError(err)
+
+		spans := s.spans.Ended()
+		s.Require().Len(spans, 1)
+		got := map[string]any{}
+		for _, kv := range spans[0].Attributes() {
+			got[string(kv.Key)] = kv.Value.AsInterface()
+		}
+		s.Equal("vm.swappiness", got["osapi.behavior.input.key"])
+	})
 }
 
 func (s *TelemetryPublicTestSuite) TestSpanName() {

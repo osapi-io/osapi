@@ -283,6 +283,7 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 		behavior.Writes("/var/kv/*.conf"),
 		behavior.Config(kvSettings{Dir: "/var/kv"}),
 		behavior.Read("list", read),
+		behavior.Read("get", read).Key("key"),
 	))
 	apiOnly := behavior.Define("served", "Served, no commands", behavior.Node, behavior.API,
 		behavior.Read("get", read))
@@ -293,6 +294,8 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	s.Contains(internal, "with `file.write`, `file.remove`, `file.chmod` under it.")
 	quietPage := command.IndexPage(quiet)
 	s.Contains(quietPage, "It writes `/var/kv/*.conf`.")
+	s.Contains(quietPage, "Its span records the input `key` (get).")
+	s.NotContains(internal, "Its span records", "no key and no tagged field")
 	s.Contains(
 		quietPage,
 		"In a trace, a call is the span `behavior.quiet.<method>`, with `behavior.files.<method>`,",

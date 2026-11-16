@@ -39,14 +39,16 @@ import (
 //
 //   - a span, behavior.<name>.<method>, under the agent's job.process span,
 //     with the behavior, method, verb and outcome, whether a write changed
-//     the host, and any input field tagged telemetry:"attr";
+//     the host, the method's key field, and any input field tagged
+//     telemetry:"attr";
 //   - osapi_behavior_calls_total, by behavior, method and outcome;
 //   - osapi_behavior_duration_seconds, by behavior and method;
 //   - osapi_behavior_changes_total, by behavior and method, for writes that
 //     changed the host.
 //
-// An input value is recorded only when its field is tagged telemetry:"attr",
-// so a password or a file's contents never reaches a trace by default.
+// An input value is recorded only when its field is the method's key, set
+// with Key, or is tagged telemetry:"attr". Thus a password or a file's
+// contents never reaches a trace by default. A secret is never recorded.
 
 // Attribute keys, under osapi.behavior.
 const (
@@ -55,7 +57,7 @@ const (
 	AttrVerb     = attribute.Key("osapi.behavior.verb")
 	AttrOutcome  = attribute.Key("osapi.behavior.outcome")
 	AttrChanged  = attribute.Key("osapi.behavior.changed")
-	// attrInput prefixes a tagged input field: osapi.behavior.input.key.
+	// attrInput prefixes a recorded input field: osapi.behavior.input.key.
 	attrInput = "osapi.behavior.input."
 )
 
@@ -79,27 +81,38 @@ func (b *Behavior) SpanName(
 	return "behavior." + b.Name + "." + m.Name
 }
 
-// TaggedInputs are the input fields of t, by JSON name, tagged
-// telemetry:"attr": the ones a call records on its span.
-func TaggedInputs(
-	t reflect.Type,
-) []string {
-	for t.Kind() == reflect.Pointer {
+// SpanInputs are the input fields, by JSON name, that a call of m records on
+// its span: the key field first, then each field tagged telemetry:"attr". A
+// secret is never one of them.
+func (m *Method) SpanInputs() []string {
+	t := m.In
+	for t != nil && t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
-	if t.Kind() != reflect.Struct {
+	if t == nil || t.Kind() != reflect.Struct {
 		return nil
 	}
 
-	var names []string
+	var key string
+	var tagged []string
 	for i := range t.NumField() {
 		f := t.Field(i)
-		if f.IsExported() && f.Tag.Get("telemetry") == "attr" && !Secret(f) {
-			names = append(names, JSONName(f))
+		if !f.IsExported() || Secret(f) {
+			continue
+		}
+		name := JSONName(f)
+		switch {
+		case m.KeyField != "" && name == m.KeyField:
+			key = name
+		case f.Tag.Get("telemetry") == "attr":
+			tagged = append(tagged, name)
 		}
 	}
+	if key == "" {
+		return tagged
+	}
 
-	return names
+	return append([]string{key}, tagged...)
 }
 
 type instruments struct {
@@ -196,7 +209,7 @@ func (m *Method) run(
 	elapsed := time.Since(start).Seconds()
 
 	if in != nil {
-		span.SetAttributes(InputAttributes(in)...)
+		span.SetAttributes(InputAttributes(in, m.SpanInputs())...)
 	}
 
 	outcome := OutcomeOK
@@ -222,10 +235,11 @@ func (m *Method) run(
 	return out, err
 }
 
-// InputAttributes returns a span attribute for each field of in tagged
-// telemetry:"attr", keyed by its JSON name.
+// InputAttributes returns a span attribute for each field of in named in
+// fields, by JSON name, keyed by that name. A secret is never recorded.
 func InputAttributes(
 	in any,
+	fields []string,
 ) []attribute.KeyValue {
 	v := reflect.ValueOf(in)
 	for v.Kind() == reflect.Pointer {
@@ -244,10 +258,11 @@ func InputAttributes(
 		f := t.Field(i)
 		// A secret is never recorded, whatever its telemetry tag says;
 		// behavior validate refuses that pairing.
-		if !f.IsExported() || f.Tag.Get("telemetry") != "attr" || Secret(f) {
+		name := JSONName(f)
+		if !f.IsExported() || Secret(f) || !slices.Contains(fields, name) {
 			continue
 		}
-		key := attribute.Key(attrInput + JSONName(f))
+		key := attribute.Key(attrInput + name)
 		switch fv := v.Field(i); fv.Kind() {
 		case reflect.String:
 			attrs = append(attrs, key.String(fv.String()))

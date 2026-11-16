@@ -29,6 +29,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/behavior/host"
@@ -48,7 +49,7 @@ type filesOut struct {
 const filesPath = "/etc/w/x"
 
 func changeFile(
-	_ context.Context,
+	ctx context.Context,
 	p files,
 	in filesIn,
 ) (filesOut, error) {
@@ -73,6 +74,8 @@ func changeFile(
 		err = fs.Truncate(filesPath, 0)
 	case "read":
 		_, err = fs.ReadFile(filesPath)
+	case "atomic":
+		err = atomicfile.Write(ctx, fs, filesPath, []byte("x"), 0o644)
 	default:
 		err = fs.WriteFile(filesPath, []byte("x"), 0o644)
 	}
@@ -133,6 +136,48 @@ func (s *WritesPublicTestSuite) TestWrites() {
 			}
 			s.Require().NotEmpty(undeclared)
 			s.Contains(undeclared[0], tc.want[0])
+		})
+	}
+}
+
+func (s *WritesPublicTestSuite) TestFileSpans() {
+	tests := []struct {
+		name string
+		op   string
+		want bool
+	}{
+		{name: "when a write goes through atomicfile it has its span", op: "atomic"},
+		{name: "when a write goes through h.FS it has none", op: "write", want: true},
+		{name: "when a removal goes through h.FS it has none", op: "remove", want: true},
+		{name: "when a read goes through h.FS it needs none", op: "read"},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			b := behavior.Define("files", "Files", behavior.Node,
+				behavior.Platform("debian", func(h host.Host) (files, error) {
+					return files{h: h}, nil
+				}),
+				behavior.Writes("*"),
+				behavior.Read("get", changeFile).Describe("Change it").
+					Example("A change", filesIn{Op: tc.op}, filesOut{},
+						behavior.Exists(filesPath, "x")),
+			)
+
+			var spanless []string
+			for _, p := range behaviortest.Check(b) {
+				if strings.Contains(p, "so the trace has no file span") {
+					spanless = append(spanless, p)
+				}
+			}
+
+			if !tc.want {
+				s.Empty(spanless)
+				return
+			}
+			s.Require().Len(spanless, 1)
+			s.Contains(spanless[0], "changes /etc/w/x through h.FS")
+			s.Contains(spanless[0], "Fix: For a file that osapi manages, require managedfile")
 		})
 	}
 }

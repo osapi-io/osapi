@@ -182,10 +182,38 @@ func Plain(
 
 	paragraphs := strings.Split(s, "\n\n")
 	for i, p := range paragraphs {
+		if strings.HasPrefix(p, "- ") {
+			paragraphs[i] = wrapList(p)
+
+			continue
+		}
 		paragraphs[i] = wrap(strings.Fields(p), helpWidth)
 	}
 
 	return strings.Join(paragraphs, "\n\n")
+}
+
+// wrapList wraps a paragraph that is a list, each item starting with "- " on
+// a new line. Each item wraps on its own, with the lines after the first
+// indented under its text.
+func wrapList(
+	p string,
+) string {
+	var items []string
+	for _, line := range strings.Split(p, "\n") {
+		if strings.HasPrefix(line, "- ") || len(items) == 0 {
+			items = append(items, strings.TrimPrefix(line, "- "))
+
+			continue
+		}
+		items[len(items)-1] += " " + line
+	}
+	for i, item := range items {
+		items[i] = "- " + strings.ReplaceAll(
+			wrap(strings.Fields(item), helpWidth-2), "\n", "\n  ")
+	}
+
+	return strings.Join(items, "\n")
 }
 
 // sentence is a Short as one sentence: plain, with one period at its end.
