@@ -145,23 +145,27 @@ func (s *RespspanPublicTestSuite) TestMiddleware() {
 
 			s.Require().NoError(respspan.Middleware(tc.handler)(c))
 
-			var encode []sdktrace.ReadOnlySpan
+			byName := map[string]sdktrace.ReadOnlySpan{}
 			for _, sp := range s.spans.Ended() {
-				if sp.Name() == respspan.SpanName {
-					encode = append(encode, sp)
+				if sp.Name() == respspan.SpanEncode || sp.Name() == respspan.SpanWrite {
+					byName[sp.Name()] = sp
 				}
 			}
 			if !tc.wantSpan {
-				s.Empty(encode)
+				s.Empty(byName)
 
 				return
 			}
-			s.Require().Len(encode, 1)
-			sp := encode[0]
-			s.Equal(trace.SpanContextFromContext(ctx).SpanID(), sp.Parent().SpanID())
-			s.True(sp.EndTime().After(sp.StartTime()), "the encode takes time")
+			s.Require().Len(byName, 2)
+			encode, write := byName[respspan.SpanEncode], byName[respspan.SpanWrite]
+			parent := trace.SpanContextFromContext(ctx).SpanID()
+			s.Equal(parent, encode.Parent().SpanID())
+			s.Equal(parent, write.Parent().SpanID())
+			s.True(encode.EndTime().After(encode.StartTime()), "the encode takes time")
+			s.Equal(encode.EndTime(), write.StartTime(), "the write starts when the encode ends")
+			s.False(write.EndTime().Before(write.StartTime()))
 			var size int64
-			for _, kv := range sp.Attributes() {
+			for _, kv := range write.Attributes() {
 				if kv.Key == respspan.AttrBodySize {
 					size = kv.Value.AsInt64()
 				}

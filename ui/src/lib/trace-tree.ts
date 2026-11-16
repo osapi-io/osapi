@@ -86,7 +86,11 @@ function spanDetail(s: TraceSpan): string {
   if (s.name === "kv.keys") return `list keys in ${a["db.namespace"] ?? ""}`;
   // The request span has the size too, from otelecho; it shows its status.
   const size = a["http.response.body.size"];
-  if (size && s.name === "response.encode") return formatBytes(Number(size));
+  if (size && s.name === "response.write") return formatBytes(Number(size));
+  // A job's subject names a host by its machine ID; the operation and the
+  // target that the caller gave say the same thing in words.
+  if (a["job.type"] && a["osapi.target"])
+    return `${a["job.type"]} to ${a["osapi.target"]}`;
   return DETAIL.map((k) => a[k]).find((v) => v) ?? "";
 }
 

@@ -18,12 +18,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package respspan times how long the controller takes to encode a response
-// as JSON and write it, as a span of its own under the request. The code
-// that oapi-codegen generates encodes after every middleware has returned,
-// so no middleware can open a span around the encode. Two marks time it
-// instead: Handled, when the handler has its answer, and the last write of
-// the body, which echo reports through Response.After.
+// Package respspan times what the controller does after a handler has its
+// answer, as two spans of their own under the request: response.encode, the
+// encode of the answer as JSON, and response.write, the write of it to the
+// client, which waits on the network. The code that oapi-codegen generates
+// encodes after every middleware has returned, so no middleware can open a
+// span around the encode. Three marks time them instead: Handled, when the
+// handler has its answer; echo's Response.Before, when the status line goes
+// out, after the encode; and echo's Response.After, the last write.
 package respspan
 
 import (
@@ -35,8 +37,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// SpanName is the span of the encode and the write of a response.
-const SpanName = "response.encode"
+// The spans after a handler has its answer.
+const (
+	// SpanEncode is the encode of the answer as JSON.
+	SpanEncode = "response.encode"
+	// SpanWrite is the write of the body to the client. It waits on the
+	// network, so a slow client makes it long, not the controller.
+	SpanWrite = "response.write"
+)
 
 // AttrBodySize is the size of the body that the controller wrote, in bytes.
 const AttrBodySize = attribute.Key("http.response.body.size")
@@ -58,17 +66,20 @@ func Handled(
 	c.Set(handledKey, time.Now())
 }
 
-// Middleware opens the response.encode span of a request, from the time
-// Handled marks to the last write of the body, under the span of the
-// request. A request without a span, without the mark, or without a body
-// gets none. It goes after the middleware that opens the request span.
+// Middleware opens the response.encode and response.write spans of a
+// request under the span of the request: response.encode from the time
+// Handled marks to the status line, and response.write from there to the last
+// write of the body, with its size. A request without a span, without the
+// mark, or without a body gets neither, and no span ends before it starts.
+// It goes after the middleware that opens the request span.
 func Middleware(
 	next echo.HandlerFunc,
 ) echo.HandlerFunc {
 	return func(c *echo.Context) error {
 		resp, unwrapErr := echo.UnwrapResponse(c.Response())
-		var last time.Time
+		var header, last time.Time
 		if unwrapErr == nil {
+			resp.Before(func() { header = time.Now() })
 			resp.After(func() { last = time.Now() })
 		}
 
@@ -76,14 +87,19 @@ func Middleware(
 
 		ctx := c.Request().Context()
 		start, marked := c.Get(handledKey).(time.Time)
-		if marked && !last.IsZero() && !last.Before(start) &&
-			trace.SpanContextFromContext(ctx).IsValid() {
-			_, span := otel.Tracer("osapi-controller").Start(ctx, SpanName,
-				trace.WithTimestamp(start),
-				trace.WithAttributes(AttrBodySize.Int64(resp.Size)),
-			)
-			span.End(trace.WithTimestamp(last))
+		if !marked || last.IsZero() || header.Before(start) || last.Before(header) ||
+			!trace.SpanContextFromContext(ctx).IsValid() {
+			return err
 		}
+
+		tracer := otel.Tracer("osapi-controller")
+		_, encode := tracer.Start(ctx, SpanEncode, trace.WithTimestamp(start))
+		encode.End(trace.WithTimestamp(header))
+		_, write := tracer.Start(ctx, SpanWrite,
+			trace.WithTimestamp(header),
+			trace.WithAttributes(AttrBodySize.Int64(resp.Size)),
+		)
+		write.End(trace.WithTimestamp(last))
 
 		return err
 	}
