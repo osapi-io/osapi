@@ -22,6 +22,8 @@
 package config
 
 import (
+	"reflect"
+
 	"github.com/go-playground/validator/v10"
 
 	"github.com/osapi-io/osapi/internal/validation"
@@ -50,8 +52,8 @@ func Validate(
 	}
 
 	if err := v.Struct(c); err != nil {
-		return err
+		return broke(RuleValue, joined(valueProblems(err, RuleValue, reflect.TypeOf(*c), "")))
 	}
 
-	return c.NATS.sharedBucket()
+	return broke(RuleBucket, c.NATS.sharedBucket())
 }

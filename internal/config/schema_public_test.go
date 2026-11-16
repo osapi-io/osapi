@@ -99,7 +99,7 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 			},
 			validateFunc: func(err error) {
 				s.Error(err)
-				s.Contains(err.Error(), "SigningKey")
+				s.Contains(err.Error(), "controller.api.security.signing_key breaks its rule")
 			},
 		},
 		{
@@ -120,7 +120,7 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 			},
 			validateFunc: func(err error) {
 				s.Error(err)
-				s.Contains(err.Error(), "SigningKey")
+				s.Contains(err.Error(), "controller.api.security.signing_key breaks its rule")
 			},
 		},
 		{
@@ -177,7 +177,7 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 			},
 			validateFunc: func(err error) {
 				s.Error(err)
-				s.Contains(err.Error(), "SigningKey")
+				s.Contains(err.Error(), "controller.api.security.signing_key breaks its rule")
 			},
 		},
 		{
@@ -198,7 +198,7 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 			},
 			validateFunc: func(err error) {
 				s.Error(err)
-				s.Contains(err.Error(), "BearerToken")
+				s.Contains(err.Error(), "controller.client.security.bearer_token breaks its rule")
 			},
 		},
 		{
@@ -393,42 +393,42 @@ func (s *ConfigPublicTestSuite) TestValidateURL() {
 			set: func(c *config.Config) {
 				c.Controller.API.URL = "hub.example.ts.net:8080"
 			},
-			wantErr: "URL",
+			wantErr: "controller.api.url breaks its rule",
 		},
 		{
 			name: "tracing url with a scheme other than http",
 			set: func(c *config.Config) {
 				c.Telemetry.Tracing.URL = "grpc://hub.example.ts.net:4317"
 			},
-			wantErr: "URL",
+			wantErr: "telemetry.tracing.url breaks its rule",
 		},
 		{
 			name: "ui url that is a path",
 			set: func(c *config.Config) {
 				c.Controller.UI.URL = "/ui"
 			},
-			wantErr: "URL",
+			wantErr: "controller.ui.url breaks its rule",
 		},
 		{
 			name: "http url without a host",
 			set: func(c *config.Config) {
 				c.Controller.Metrics.URL = "http://"
 			},
-			wantErr: "URL",
+			wantErr: "controller.metrics.url breaks its rule",
 		},
 		{
 			name: "nats server url with http",
 			set: func(c *config.Config) {
 				c.NATS.Server.URL = "http://hub.example.ts.net:4222"
 			},
-			wantErr: "URL",
+			wantErr: "nats.server.url breaks its rule \"startswith=nats://|startswith=tls://\"",
 		},
 		{
 			name: "nats server url with a made-up scheme",
 			set: func(c *config.Config) {
 				c.NATS.Server.URL = "hub:4222"
 			},
-			wantErr: "URL",
+			wantErr: "nats.server.url breaks its rule \"startswith=nats://|startswith=tls://\"",
 		},
 		{
 			name: "nats server url with tls",
@@ -441,7 +441,7 @@ func (s *ConfigPublicTestSuite) TestValidateURL() {
 			set: func(c *config.Config) {
 				c.NATS.Server.URL = "hub.example.ts.net"
 			},
-			wantErr: "URL",
+			wantErr: "nats.server.url breaks its rule \"url\"",
 		},
 	}
 
