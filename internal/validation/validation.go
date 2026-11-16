@@ -319,16 +319,28 @@ func formatErrors(
 	msgs := make([]string, 0, len(errs))
 	for _, fe := range errs {
 		msg := fe.Error()
-		hintsMu.RLock()
-		fn, ok := customHints[fe.Tag()]
-		hintsMu.RUnlock()
-		if ok {
-			msg = fmt.Sprintf("%s: %s", msg, fn(fe))
+		if hint := Hint(fe); hint != "" {
+			msg = fmt.Sprintf("%s: %s", msg, hint)
 		}
 		msgs = append(msgs, msg)
 	}
 
 	return strings.Join(msgs, "; ")
+}
+
+// Hint is what a failure of a custom validate tag means, such as what a
+// signing key must look like, or "" for a tag without one.
+func Hint(
+	fe validator.FieldError,
+) string {
+	hintsMu.RLock()
+	fn, ok := customHints[fe.Tag()]
+	hintsMu.RUnlock()
+	if !ok {
+		return ""
+	}
+
+	return fn(fe)
 }
 
 // AtLeastOneField checks that at least one exported pointer, slice, or map

@@ -85,7 +85,9 @@ func (s *LoadPublicTestSuite) TestLoad() {
 		missing      bool
 		env          map[string]string
 		register     func(*validator.Validate) error
+		dir          bool
 		wantErr      string
+		wantRule     string
 		validateFunc func(v *viper.Viper, c config.Config)
 	}{
 		{
@@ -112,32 +114,64 @@ func (s *LoadPublicTestSuite) TestLoad() {
 				s.Equal(config.SourceEnv, config.Source(v, "behaviors.kv.level"))
 			},
 		},
-		{name: "when the file is missing", missing: true, wantErr: "read "},
 		{
-			name:    "when a value has the wrong shape",
-			body:    validConfig("agent: [1]"),
-			wantErr: "parse ",
+			name:     "when the file is missing",
+			missing:  true,
+			wantErr:  "read ",
+			wantRule: config.RuleFile,
 		},
 		{
-			name:    "when a value breaks a constraint",
-			body:    strings.Replace(validConfig(), testSigningKey, "short", 1),
-			wantErr: "signing",
+			name:     "when the path cannot be read as a file",
+			dir:      true,
+			wantErr:  "read ",
+			wantRule: config.RuleFile,
 		},
 		{
-			name:    "when a behavior's setting breaks its rule",
-			body:    validConfig("behaviors:", "  kv:", "    level: 9"),
-			wantErr: "behaviors.kv",
+			name:     "when the file is not YAML",
+			body:     "controller:\n  api:\n    port: [\n",
+			wantErr:  "read ",
+			wantRule: config.RuleParse,
 		},
 		{
-			name:    "when a behavior's setting has the wrong shape",
-			body:    validConfig("behaviors:", "  kv:", "    level: many"),
-			wantErr: "behaviors.kv",
+			name:     "when a value has the wrong shape",
+			body:     validConfig("agent: [1]"),
+			wantErr:  "parse ",
+			wantRule: config.RuleParse,
+		},
+		{
+			name:     "when a value breaks a constraint",
+			body:     strings.Replace(validConfig(), testSigningKey, "short", 1),
+			wantErr:  `controller.api.security.signing_key breaks its rule "signing_key": signing key`,
+			wantRule: config.RuleValue,
+		},
+		{
+			name:     "when a behavior's setting breaks its rule",
+			body:     validConfig("behaviors:", "  kv:", "    level: 9"),
+			wantErr:  `behaviors.kv.level breaks its rule "max=`,
+			wantRule: config.RuleSetting,
+		},
+		{
+			name:     "when a behavior's setting has the wrong shape",
+			body:     validConfig("behaviors:", "  kv:", "    level: many"),
+			wantErr:  "behaviors.kv",
+			wantRule: config.RuleParse,
+		},
+		{
+			name: "when two keys name one bucket",
+			body: validConfig(),
+			env: map[string]string{
+				"OSAPI_NATS_REGISTRY_BUCKET": "shared",
+				"OSAPI_NATS_KV_BUCKET":       "shared",
+			},
+			wantErr:  `are both "shared"`,
+			wantRule: config.RuleBucket,
 		},
 		{
 			name:     "when the extra checks fail",
 			body:     validConfig(),
 			register: func(*validator.Validate) error { return errors.New("boom") },
 			wantErr:  "boom",
+			wantRule: config.RuleValue,
 		},
 	}
 
@@ -150,7 +184,10 @@ func (s *LoadPublicTestSuite) TestLoad() {
 				s.T().Setenv(k, v)
 			}
 			path := filepath.Join(s.T().TempDir(), "osapi.yaml")
-			if !tc.missing {
+			switch {
+			case tc.dir:
+				path = s.T().TempDir()
+			case !tc.missing:
 				path = s.write(tc.body)
 			}
 
@@ -160,11 +197,68 @@ func (s *LoadPublicTestSuite) TestLoad() {
 
 			if tc.wantErr != "" {
 				s.ErrorContains(err, tc.wantErr)
+				s.Equal(tc.wantRule, config.RuleOf(err))
 
 				return
 			}
 			s.Require().NoError(err)
 			tc.validateFunc(v, c)
+		})
+	}
+}
+
+func (s *LoadPublicTestSuite) TestCheck() {
+	tests := []struct {
+		name    string
+		body    string
+		missing bool
+		want    []config.Problem
+	}{
+		{name: "when the file is valid there are no problems", body: validConfig()},
+		{
+			name:    "when the file is missing it is one problem",
+			missing: true,
+			want: []config.Problem{{
+				Rule: config.RuleFile,
+				Fix:  config.Checks.Fix(config.RuleFile),
+			}},
+		},
+		{
+			name: "when values break rules each is a problem with its key",
+			body: strings.Replace(
+				validConfig("behaviors:", "  kv:", "    level: 9"), testSigningKey, "short", 1),
+			want: []config.Problem{
+				{
+					Rule: config.RuleValue,
+					Key:  "controller.api.security.signing_key",
+					Fix:  config.Checks.Fix(config.RuleValue),
+				},
+				{
+					Rule: config.RuleSetting,
+					Key:  "behaviors.kv.level",
+					Fix:  config.Checks.Fix(config.RuleSetting),
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			path := filepath.Join(s.T().TempDir(), "osapi.yaml")
+			if !tc.missing {
+				path = s.write(tc.body)
+			}
+
+			var c config.Config
+			got := config.Check(viper.New(), path, &c)
+
+			s.Require().Len(got, len(tc.want))
+			for i, want := range tc.want {
+				s.Equal(want.Rule, got[i].Rule)
+				s.Equal(want.Key, got[i].Key)
+				s.Equal(want.Fix, got[i].Fix)
+				s.NotEmpty(got[i].Message)
+			}
 		})
 	}
 }

@@ -47,6 +47,9 @@ osapi, with the field that failed. To check a file and start nothing:
 osapi config validate -f ./osapi.yaml
 ```
 
+When the file is not valid, the command lists each problem with its rule, the
+key and the fix. `osapi config validate --help` lists each rule with its fix.
+
 Two keys have no default. You must set them:
 
 | Key                                       | Purpose                       |

@@ -44,8 +44,42 @@ const (
 
 // Load reads the config file at path into v and c, with every key's default
 // and environment variable applied, then checks it. It is what osapi start
-// runs: a missing file or a value that breaks a rule is an error.
+// runs: a missing file or a value that breaks a rule is an error, with the
+// rule of the first problem and the message of each.
 func Load(
+	v *viper.Viper,
+	path string,
+	c *Config,
+) error {
+	if err := read(v, path, c); err != nil {
+		return err
+	}
+	problems := Problems(c)
+	if len(problems) == 0 {
+		return nil
+	}
+
+	return &Error{Rule: problems[0].Rule, Err: joined(problems)}
+}
+
+// Check reads the config file at path into v and c as Load does, and returns
+// every problem, each with its rule and fix, not only the first. It is what
+// osapi config validate runs. A file that cannot be read or parsed is one
+// problem, because nothing after it can be checked.
+func Check(
+	v *viper.Viper,
+	path string,
+	c *Config,
+) []Problem {
+	if err := read(v, path, c); err != nil {
+		return withFixes([]Problem{{Rule: RuleOf(err), Message: err.Error()}})
+	}
+
+	return Problems(c)
+}
+
+// read is Read, with a missing file as an error.
+func read(
 	v *viper.Viper,
 	path string,
 	c *Config,
@@ -55,21 +89,38 @@ func Load(
 		return err
 	}
 	if !found {
-		return fmt.Errorf("read %s: %w", path, os.ErrNotExist)
+		return broke(RuleFile, fmt.Errorf("read %s: %w", path, os.ErrNotExist))
 	}
-	if msg, ok := validation.Struct(*c); !ok {
-		return errors.New(msg)
+
+	return nil
+}
+
+// Problems are the rules that c, as read, breaks: each value against its
+// validate tag, each behavior setting against its tag, and the buckets.
+func Problems(
+	c *Config,
+) []Problem {
+	var problems []Problem
+	v := validation.Instance()
+	if err := registerValidatorsFn(v); err != nil {
+		problems = append(problems, Problem{Rule: RuleValue, Message: err.Error()})
+	} else if err := v.Struct(*c); err != nil {
+		problems = append(problems, valueProblems(err, RuleValue, reflect.TypeOf(*c), "")...)
 	}
 	for _, b := range behavior.All() {
 		if b.SettingsType() == nil {
 			continue
 		}
-		if msg, ok := validation.Struct(behavior.Settings[any](b)); !ok {
-			return fmt.Errorf("%s: %s", b.SettingsKey(), msg)
+		if err := v.Struct(behavior.Settings[any](b)); err != nil {
+			problems = append(problems,
+				valueProblems(err, RuleSetting, b.SettingsType(), b.SettingsKey())...)
 		}
 	}
+	if err := c.NATS.sharedBucket(); err != nil {
+		problems = append(problems, Problem{Rule: RuleBucket, Message: err.Error()})
+	}
 
-	return Validate(c)
+	return withFixes(problems)
 }
 
 // Read reads the config file at path into v and c, with every key's default
@@ -99,12 +150,17 @@ func Read(
 	v.SetConfigFile(path)
 	if err := v.ReadInConfig(); err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
-			return false, fmt.Errorf("read %s: %w", path, err)
+			rule := RuleFile
+			if errors.As(err, &viper.ConfigParseError{}) {
+				rule = RuleParse
+			}
+
+			return false, broke(rule, fmt.Errorf("read %s: %w", path, err))
 		}
 		found = false
 	}
 	if err := v.Unmarshal(c); err != nil {
-		return found, fmt.Errorf("parse %s: %w", path, err)
+		return found, broke(RuleParse, fmt.Errorf("parse %s: %w", path, err))
 	}
 
 	// Each behavior's settings are decoded into its own struct and handed to
@@ -130,7 +186,10 @@ func Read(
 		b := behavior.Lookup(name)
 		settings := reflect.New(b.SettingsType())
 		if err := section.Unmarshal(settings.Interface()); err != nil {
-			return found, fmt.Errorf("parse %s: %s: %w", path, b.SettingsKey(), err)
+			return found, broke(
+				RuleParse,
+				fmt.Errorf("parse %s: %s: %w", path, b.SettingsKey(), err),
+			)
 		}
 		b.SetSettings(settings.Elem().Interface())
 	}

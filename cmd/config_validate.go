@@ -32,25 +32,30 @@ import (
 
 // configCheck is what `config validate --json` prints.
 type configCheck struct {
-	File  string `json:"file"`
-	Valid bool   `json:"valid"`
-	Error string `json:"error,omitempty"`
+	File     string           `json:"file"`
+	Valid    bool             `json:"valid"`
+	Problems []config.Problem `json:"problems"`
 }
 
 var configValidateCmd = &cobra.Command{
 	Use:   "validate",
 	Short: "Check a config file before osapi starts with it",
-	Long:  "The command starts nothing. It exits 1 when the config is not valid.",
+	Long: "The command starts nothing. It exits 1 when the config is not valid, and\n" +
+		"lists each problem with its rule, the key, the message and the fix. Each\n" +
+		"problem in `--json` has `rule`, `key` (when the problem is about one key),\n" +
+		"`message` and `fix`. `osapi config list` shows each key, with its type, rule\n" +
+		"and default.\n\n" +
+		"The rules:\n\n" + config.Checks.Help(),
 	Example: `  osapi config validate
   osapi config validate -f ./osapi.yaml --json`,
 	Args: cobra.NoArgs,
 	Run: func(_ *cobra.Command, _ []string) {
 		file := viper.GetString("osapiFile")
 		var c config.Config
-		err := config.Load(viper.New(), file, &c)
-		result := configCheck{File: file, Valid: err == nil}
-		if err != nil {
-			result.Error = err.Error()
+		problems := config.Check(viper.New(), file, &c)
+		result := configCheck{File: file, Valid: len(problems) == 0, Problems: problems}
+		if result.Problems == nil {
+			result.Problems = []config.Problem{}
 		}
 
 		if jsonOutput {
@@ -62,7 +67,20 @@ var configValidateCmd = &cobra.Command{
 			if result.Valid {
 				cli.PrintKV("Status", "valid")
 			} else {
-				cli.PrintKV("Status", "invalid", "Error", result.Error)
+				cli.PrintKV("Status", "invalid")
+				rows := make([][]string, 0, len(problems))
+				rules := make([]string, 0, len(problems))
+				for _, p := range problems {
+					rows = append(rows, []string{p.Rule, p.Key, p.Message})
+					rules = append(rules, p.Rule)
+				}
+				cli.PrintCompactTable([]cli.Section{{
+					Title:     "Problems",
+					Headers:   []string{"RULE", "KEY", "MESSAGE"},
+					Rows:      rows,
+					Reference: true,
+				}})
+				printFixes(config.Checks, rules)
 			}
 		}
 

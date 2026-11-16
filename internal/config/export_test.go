@@ -57,3 +57,9 @@ func ExportSharedObjectStoreBucket(
 
 	return sharedName(keys, buckets)
 }
+
+// KeyOf exposes keyOf for testing.
+var KeyOf = keyOf
+
+// ValueProblems exposes valueProblems for testing.
+var ValueProblems = valueProblems
