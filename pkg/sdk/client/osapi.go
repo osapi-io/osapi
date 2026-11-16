@@ -89,6 +89,9 @@ type Client struct {
 	// Audit provides audit log operations (list, get, export).
 	Audit *AuditService
 
+	// Telemetry reads telemetry through the controller, such as a trace.
+	Telemetry *TelemetryService
+
 	// File provides file management operations (upload, list, get, delete).
 	File *FileService
 
@@ -223,6 +226,7 @@ func New(
 	c.Job = &JobService{client: httpClient}
 	c.Health = &HealthService{client: httpClient}
 	c.Audit = &AuditService{client: httpClient}
+	c.Telemetry = &TelemetryService{client: httpClient}
 	c.File = &FileService{client: httpClient}
 	c.Docker = &DockerService{client: httpClient}
 	c.Schedule = &ScheduleService{client: httpClient}
