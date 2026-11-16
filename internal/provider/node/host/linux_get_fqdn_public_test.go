@@ -23,9 +23,9 @@ package host_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 )
 
@@ -40,13 +40,33 @@ func (suite *LinuxGetFQDNPublicTestSuite) TearDownTest() {}
 func (suite *LinuxGetFQDNPublicTestSuite) TestGetFQDN() {
 	tests := []struct {
 		name         string
+		setupMock    func(u *host.Linux)
 		validateFunc func(string, error)
 	}{
 		{
-			name: "returns not implemented error",
-			validateFunc: func(result string, err error) {
-				suite.Empty(result)
-				suite.ErrorIs(err, provider.ErrUnsupported)
+			name: "when GetFQDN Ok",
+			setupMock: func(u *host.Linux) {
+				u.HostnameFn = func() (string, error) {
+					return "node-01.example.com", nil
+				}
+			},
+			validateFunc: func(got string, err error) {
+				suite.NoError(err)
+				suite.NotNil(got)
+				suite.Equal("node-01.example.com", got)
+			},
+		},
+		{
+			name: "when os.Hostname errors",
+			setupMock: func(u *host.Linux) {
+				u.HostnameFn = func() (string, error) {
+					return "", assert.AnError
+				}
+			},
+			validateFunc: func(got string, err error) {
+				suite.Error(err)
+				suite.ErrorContains(err, assert.AnError.Error())
+				suite.Empty(got)
 			},
 		},
 	}
@@ -54,6 +74,10 @@ func (suite *LinuxGetFQDNPublicTestSuite) TestGetFQDN() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			linux := host.NewLinuxProvider()
+
+			if tc.setupMock != nil {
+				tc.setupMock(linux)
+			}
 
 			tc.validateFunc(linux.GetFQDN())
 		})

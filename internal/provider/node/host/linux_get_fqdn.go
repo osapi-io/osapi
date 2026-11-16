@@ -21,11 +21,15 @@
 package host
 
 import (
-	"github.com/osapi-io/osapi/internal/provider"
+	"fmt"
 )
 
 // GetFQDN retrieves the fully qualified domain name of the system.
-// It returns an error because it is not implemented for LinuxProvider.
-func (l *Linux) GetFQDN() (string, error) {
-	return "", provider.ErrUnsupported
+// It returns the hostname as reported by the operating system.
+func (u *Linux) GetFQDN() (string, error) {
+	hostname, err := u.HostnameFn()
+	if err != nil {
+		return "", fmt.Errorf("failed to get FQDN: %w", err)
+	}
+	return hostname, nil
 }

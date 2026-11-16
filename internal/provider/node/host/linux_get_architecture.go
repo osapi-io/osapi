@@ -20,12 +20,13 @@
 
 package host
 
-import (
-	"github.com/osapi-io/osapi/internal/provider"
-)
-
-// GetArchitecture retrieves the system CPU architecture.
-// It returns an error because it is not implemented for LinuxProvider.
-func (l *Linux) GetArchitecture() (string, error) {
-	return "", provider.ErrUnsupported
+// GetArchitecture retrieves the system CPU architecture (e.g., x86_64, arm64).
+// It uses gopsutil's KernelArch field which returns the native architecture
+// as reported by `uname -m`.
+func (u *Linux) GetArchitecture() (string, error) {
+	hostInfo, err := u.InfoFn()
+	if err != nil {
+		return "", err
+	}
+	return hostInfo.KernelArch, nil
 }

@@ -173,19 +173,22 @@ Refer to [Configuration](../usage/configuration.md) for all the settings.
 ## Platform support
 
 A provider for each platform collects the facts. All facts are available on
-Linux and on macOS:
+Linux and on macOS. Linux is each Linux distribution: a distribution without a
+provider of its own, such as Fedora, reads its facts the same way as Debian and
+Ubuntu. A feature that is not supported on that distribution still reports
+`skipped`.
 
-| Fact              | Linux provider            | macOS provider            |
-| ----------------- | ------------------------- | ------------------------- |
-| Architecture      | `gopsutil`                | `gopsutil`                |
-| Kernel Version    | `gopsutil`                | `gopsutil`                |
-| FQDN              | `gopsutil`                | `gopsutil`                |
-| CPU Count         | `gopsutil`                | `gopsutil`                |
-| Service Manager   | `gopsutil`                | `gopsutil`                |
-| Package Manager   | `gopsutil`                | `gopsutil`                |
-| Interfaces        | `net.Interfaces` (stdlib) | `net.Interfaces` (stdlib) |
-| Primary Interface | parses `/proc/net/route`  | parses `netstat -rn`      |
-| Routes            | parses `/proc/net/route`  | parses `netstat -rn`      |
+| Fact              | Linux provider                | macOS provider            |
+| ----------------- | ----------------------------- | ------------------------- |
+| Architecture      | `gopsutil`                    | `gopsutil`                |
+| Kernel Version    | `gopsutil`                    | `gopsutil`                |
+| FQDN              | `gopsutil`                    | `gopsutil`                |
+| CPU Count         | `gopsutil`                    | `gopsutil`                |
+| Service Manager   | stat of `/run/systemd/system` | always `launchd`          |
+| Package Manager   | looks for `apt`, `dnf`, `yum` | looks for `brew`          |
+| Interfaces        | `net.Interfaces` (stdlib)     | `net.Interfaces` (stdlib) |
+| Primary Interface | parses `/proc/net/route`      | parses `netstat -rn`      |
+| Routes            | parses `/proc/net/route`      | parses `netstat -rn`      |
 
 A provider error does not stop the agent. If a provider fails, the agent still
 publishes the facts that it collected. Thus `@fact.interface.primary` can be

@@ -22,12 +22,14 @@ package host
 
 import (
 	"time"
-
-	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // GetUptime retrieves the system uptime.
 // It returns the uptime as a time.Duration, and an error if something goes wrong.
-func (l *Linux) GetUptime() (time.Duration, error) {
-	return 0, provider.ErrUnsupported
+func (u *Linux) GetUptime() (time.Duration, error) {
+	hostInfo, err := u.InfoFn()
+	if err != nil {
+		return 0, err
+	}
+	return time.Duration(hostInfo.Uptime) * time.Second, nil
 }

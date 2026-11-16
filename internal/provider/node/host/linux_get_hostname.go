@@ -20,12 +20,12 @@
 
 package host
 
-import (
-	"github.com/osapi-io/osapi/internal/provider"
-)
-
 // GetHostname retrieves the hostname of the system.
 // It returns the hostname as a string, and an error if something goes wrong.
-func (dls *Linux) GetHostname() (string, error) {
-	return "", provider.ErrUnsupported
+func (u *Linux) GetHostname() (string, error) {
+	hostInfo, err := u.InfoFn()
+	if err != nil {
+		return "", err
+	}
+	return hostInfo.Hostname, nil
 }

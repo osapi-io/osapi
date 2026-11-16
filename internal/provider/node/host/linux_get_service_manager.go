@@ -20,12 +20,13 @@
 
 package host
 
-import (
-	"github.com/osapi-io/osapi/internal/provider"
-)
+const systemdPath = "/run/systemd/system"
 
 // GetServiceManager detects the system's service manager.
-// It returns an error because it is not implemented for LinuxProvider.
-func (l *Linux) GetServiceManager() (string, error) {
-	return "", provider.ErrUnsupported
+// It checks for the presence of /run/systemd/system to detect systemd.
+func (u *Linux) GetServiceManager() (string, error) {
+	if _, err := u.StatFn(systemdPath); err == nil {
+		return "systemd", nil
+	}
+	return "unknown", nil
 }

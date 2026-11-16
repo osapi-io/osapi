@@ -22,17 +22,45 @@
 package host
 
 import (
+	"os"
+	"os/exec"
+	"runtime"
+
+	"github.com/shirou/gopsutil/v4/host"
+
 	"github.com/osapi-io/osapi/internal/provider"
 )
 
-var _ provider.FactsSetter = (*Linux)(nil)
+// Compile-time check: Linux must satisfy Provider and FactsSetter.
+var (
+	_ Provider             = (*Linux)(nil)
+	_ provider.FactsSetter = (*Linux)(nil)
+)
 
-// Linux implements the Load interface for Linux.
+// Linux implements the Host Provider interface for any Linux host. Each read
+// is the same on every distribution: gopsutil for the hostname, OS, kernel,
+// architecture, CPU count and uptime, a look for apt, dnf or yum, and a stat
+// of the systemd directory. Thus a host without a provider of its own, such
+// as Fedora, reports its facts. UpdateHostname is unsupported here, because
+// how a host sets its name is specific to its distribution; Debian embeds
+// Linux and adds it.
 type Linux struct {
 	provider.FactsAware
+
+	InfoFn     func() (*host.InfoStat, error)
+	HostnameFn func() (string, error)
+	NumCPUFn   func() int
+	StatFn     func(name string) (os.FileInfo, error)
+	LookPathFn func(file string) (string, error)
 }
 
 // NewLinuxProvider factory to create a new Linux instance.
 func NewLinuxProvider() *Linux {
-	return &Linux{}
+	return &Linux{
+		InfoFn:     host.Info,
+		HostnameFn: os.Hostname,
+		NumCPUFn:   runtime.NumCPU,
+		StatFn:     os.Stat,
+		LookPathFn: exec.LookPath,
+	}
 }

@@ -20,12 +20,8 @@
 
 package host
 
-import (
-	"github.com/osapi-io/osapi/internal/provider"
-)
-
-// GetCPUCount retrieves the number of logical CPUs available.
-// It returns an error because it is not implemented for LinuxProvider.
-func (l *Linux) GetCPUCount() (int, error) {
-	return 0, provider.ErrUnsupported
+// GetCPUCount retrieves the number of logical CPUs available to the process.
+// It uses runtime.NumCPU under the hood.
+func (u *Linux) GetCPUCount() (int, error) {
+	return u.NumCPUFn(), nil
 }

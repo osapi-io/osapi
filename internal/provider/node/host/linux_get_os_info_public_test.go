@@ -23,9 +23,10 @@ package host_test
 import (
 	"testing"
 
+	sysHost "github.com/shirou/gopsutil/v4/host"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 )
 
@@ -40,13 +41,39 @@ func (suite *LinuxGetOSInfoPublicTestSuite) TearDownTest() {}
 func (suite *LinuxGetOSInfoPublicTestSuite) TestGetOSInfo() {
 	tests := []struct {
 		name         string
+		setupMock    func() func() (*sysHost.InfoStat, error)
 		validateFunc func(*host.Result, error)
 	}{
 		{
-			name: "returns not implemented error",
-			validateFunc: func(result *host.Result, err error) {
-				suite.Nil(result)
-				suite.ErrorIs(err, provider.ErrUnsupported)
+			name: "when GetOSInfo Ok",
+			setupMock: func() func() (*sysHost.InfoStat, error) {
+				return func() (*sysHost.InfoStat, error) {
+					return &sysHost.InfoStat{
+						Platform:        "Debian",
+						PlatformVersion: "24.04",
+					}, nil
+				}
+			},
+			validateFunc: func(got *host.Result, err error) {
+				suite.NoError(err)
+				suite.NotNil(got)
+				suite.Equal(&host.Result{
+					Distribution: "Debian",
+					Version:      "24.04",
+				}, got)
+			},
+		},
+		{
+			name: "when host.Info errors",
+			setupMock: func() func() (*sysHost.InfoStat, error) {
+				return func() (*sysHost.InfoStat, error) {
+					return nil, assert.AnError
+				}
+			},
+			validateFunc: func(got *host.Result, err error) {
+				suite.Error(err)
+				suite.ErrorContains(err, assert.AnError.Error())
+				suite.Nil(got)
 			},
 		},
 	}
@@ -54,6 +81,10 @@ func (suite *LinuxGetOSInfoPublicTestSuite) TestGetOSInfo() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			linux := host.NewLinuxProvider()
+
+			if tc.setupMock != nil {
+				linux.InfoFn = tc.setupMock()
+			}
 
 			tc.validateFunc(linux.GetOSInfo())
 		})

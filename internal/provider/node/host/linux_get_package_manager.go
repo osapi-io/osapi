@@ -20,12 +20,16 @@
 
 package host
 
-import (
-	"github.com/osapi-io/osapi/internal/provider"
-)
+// packageManagers is the ordered list of package managers to detect.
+var packageManagers = []string{"apt", "dnf", "yum"}
 
-// GetPackageManager detects the system's package manager.
-// It returns an error because it is not implemented for LinuxProvider.
-func (l *Linux) GetPackageManager() (string, error) {
-	return "", provider.ErrUnsupported
+// GetPackageManager detects the system's package manager by checking for
+// known executables in order of preference: apt, dnf, yum.
+func (u *Linux) GetPackageManager() (string, error) {
+	for _, pm := range packageManagers {
+		if _, err := u.LookPathFn(pm); err == nil {
+			return pm, nil
+		}
+	}
+	return "unknown", nil
 }

@@ -51,7 +51,7 @@ case "debian":
 case "darwin":
     hostProvider = host.NewDarwinProvider()
 default:
-    hostProvider = host.NewLinuxProvider() // stub
+    hostProvider = host.NewLinuxProvider() // the reads of any Linux; no hostname change
 }
 ```
 
@@ -60,5 +60,8 @@ default:
 1. Add the family to `supportedFamilies` in `internal/cli/validate.go`
 2. Add the distribution mapping to `debianFamily` (or create a new map) in
    `pkg/sdk/platform/platform.go`
-3. Create provider files: `{family}_*.go` (for example `redhat_get_hostname.go`)
+3. Create provider files: `{family}_*.go` (for example
+   `redhat_update_hostname.go`). A host provider embeds `Linux`, which has the
+   reads that are the same on each distribution, and adds or overrides only what
+   differs, as `Debian` adds `UpdateHostname`
 4. Add a `case` to each provider switch in `internal/agent/factory.go`

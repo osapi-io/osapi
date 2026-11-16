@@ -21,11 +21,11 @@
 package host_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 )
 
@@ -40,13 +40,31 @@ func (suite *LinuxGetServiceManagerPublicTestSuite) TearDownTest() {}
 func (suite *LinuxGetServiceManagerPublicTestSuite) TestGetServiceManager() {
 	tests := []struct {
 		name         string
+		setupMock    func(u *host.Linux)
 		validateFunc func(string, error)
 	}{
 		{
-			name: "returns not implemented error",
-			validateFunc: func(result string, err error) {
-				suite.Empty(result)
-				suite.ErrorIs(err, provider.ErrUnsupported)
+			name: "when systemd detected",
+			setupMock: func(u *host.Linux) {
+				u.StatFn = func(_ string) (os.FileInfo, error) {
+					return nil, nil
+				}
+			},
+			validateFunc: func(got string, err error) {
+				suite.NoError(err)
+				suite.Equal("systemd", got)
+			},
+		},
+		{
+			name: "when systemd not detected",
+			setupMock: func(u *host.Linux) {
+				u.StatFn = func(_ string) (os.FileInfo, error) {
+					return nil, os.ErrNotExist
+				}
+			},
+			validateFunc: func(got string, err error) {
+				suite.NoError(err)
+				suite.Equal("unknown", got)
 			},
 		},
 	}
@@ -54,6 +72,10 @@ func (suite *LinuxGetServiceManagerPublicTestSuite) TestGetServiceManager() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			linux := host.NewLinuxProvider()
+
+			if tc.setupMock != nil {
+				tc.setupMock(linux)
+			}
 
 			tc.validateFunc(linux.GetServiceManager())
 		})

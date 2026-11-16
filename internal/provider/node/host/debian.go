@@ -21,27 +21,18 @@
 package host
 
 import (
-	"os"
-	"os/exec"
-	"runtime"
-
-	"github.com/shirou/gopsutil/v4/host"
-
 	iexec "github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/provider"
 )
 
 var _ provider.FactsSetter = (*Debian)(nil)
 
-// Debian implements the Mem interface for Debian.
+// Debian implements the Host Provider interface for Debian and Ubuntu. It
+// embeds Linux, whose reads are the same on each distribution, and adds what
+// is specific to Debian: UpdateHostname, with hostnamectl.
 type Debian struct {
-	provider.FactsAware
+	Linux
 
-	InfoFn      func() (*host.InfoStat, error)
-	HostnameFn  func() (string, error)
-	NumCPUFn    func() int
-	StatFn      func(name string) (os.FileInfo, error)
-	LookPathFn  func(file string) (string, error)
 	execManager iexec.Manager
 }
 
@@ -50,11 +41,7 @@ func NewDebianProvider(
 	execManager iexec.Manager,
 ) *Debian {
 	return &Debian{
-		InfoFn:      host.Info,
-		HostnameFn:  os.Hostname,
-		NumCPUFn:    runtime.NumCPU,
-		StatFn:      os.Stat,
-		LookPathFn:  exec.LookPath,
+		Linux:       *NewLinuxProvider(),
 		execManager: execManager,
 	}
 }
