@@ -34,6 +34,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/telemetry/respspan"
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
@@ -103,6 +104,8 @@ func Serve[In any](
 				results = append(results, rows(m, host, resp)...)
 			}
 
+			respspan.Handled(c)
+
 			return c.JSON(http.StatusOK, Response{JobID: jobID, Results: results})
 		}
 
@@ -114,6 +117,8 @@ func Serve[In any](
 
 			return c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		}
+
+		respspan.Handled(c)
 
 		return c.JSON(
 			http.StatusOK,

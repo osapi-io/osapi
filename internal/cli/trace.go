@@ -23,6 +23,7 @@ package cli
 import (
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -169,6 +170,9 @@ func spanDetail(
 	}
 	if s.Name == "kv.keys" {
 		return "list keys in " + s.Attributes["db.namespace"]
+	}
+	if size, err := strconv.Atoi(s.Attributes["http.response.body.size"]); err == nil {
+		return FormatBytes(size)
 	}
 	for _, k := range traceDetail {
 		if v := s.Attributes[k]; v != "" {

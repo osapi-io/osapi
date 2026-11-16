@@ -69,6 +69,10 @@ func traceSpans() []client.TraceSpan {
 			Attributes: map[string]string{},
 		},
 		{
+			ID: "h", ParentID: "a", Name: "response.encode", Service: "osapi-controller", Start: at(50), Duration: 2 * time.Millisecond,
+			Attributes: map[string]string{"http.response.body.size": "1536"},
+		},
+		{
 			ID: "g", ParentID: "missing", Name: "orphan", Service: "osapi-cli", Start: at(60), Duration: time.Millisecond,
 			Failed: true, Attributes: map[string]string{},
 		},
@@ -82,7 +86,8 @@ func (s *TracePublicTestSuite) TestTraceRows() {
 		{"│  └─ job.process", "web-01", "20ms", "failed", ""},
 		{"│     ├─ exec apt-get", "web-01", "10ms", "error", "exit status 100"},
 		{"│     └─ file.write", "web-01", "1ms", "ok", "/etc/x.conf"},
-		{"└─ job.collect", "", "19ms", "ok", ""},
+		{"├─ job.collect", "", "19ms", "ok", ""},
+		{"└─ response.encode", "", "2ms", "ok", "1.5 KB"},
 		{"orphan", "", "1ms", "error", ""},
 	}, cli.TraceRows(traceSpans(), true))
 }

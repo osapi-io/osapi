@@ -29,6 +29,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/controller/api/components/gen"
+	"github.com/osapi-io/osapi/internal/telemetry/respspan"
 )
 
 // Context key constants for injecting user identity into handlers.
@@ -55,6 +56,15 @@ func ScopeMiddleware(
 ) StrictHandlerFunc {
 	return StrictHandlerFunc(
 		func(ctx *echo.Context, request interface{}) (response interface{}, err error) {
+			// handle runs the handler, then marks that it has its answer, so the
+			// encode of the response after it is a span of its own.
+			handle := func() (interface{}, error) {
+				response, err := handler(ctx, request)
+				respspan.Handled(ctx)
+
+				return response, err
+			}
+
 			authHeader := ctx.Request().Header.Get("Authorization")
 			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 				errMsg := "Bearer token required"
@@ -78,7 +88,7 @@ func ScopeMiddleware(
 
 			requiredScopes, ok := ctx.Get(contextKey).([]string)
 			if !ok || len(requiredScopes) == 0 {
-				return handler(ctx, request)
+				return handle()
 			}
 
 			resolved := authtoken.ResolvePermissions(
@@ -89,7 +99,7 @@ func ScopeMiddleware(
 
 			for _, required := range requiredScopes {
 				if authtoken.HasPermission(resolved, required) {
-					return handler(ctx, request)
+					return handle()
 				}
 			}
 

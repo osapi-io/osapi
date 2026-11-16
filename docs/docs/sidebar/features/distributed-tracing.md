@@ -69,8 +69,9 @@ osapi-controller  GET /api/node/:hostname/package
 │     └─ osapi-agent  nats.process  (web-02)
 │        └─ job.process
 │           └─ ...
-└─ job.collect
-   └─ kv.watch                      (the answers)
+├─ job.collect
+│  └─ kv.watch                      (the answers)
+└─ response.encode                  (the JSON answer, and its size)
 ```
 
 A behavior adds `behavior.<name>.<method>` under `job.process`, and its commands
@@ -86,6 +87,7 @@ event.
 | `GET /api/...`                               | `osapi-controller` | `http.route`, `http.response.status_code`, `osapi.target`                                           |
 | `job.publish`                                | `osapi-controller` | `job.id`, `job.type`, `osapi.target`, `messaging.destination.name`                                  |
 | `job.collect`                                | `osapi-controller` | `job.expected`, `job.answered`, `job.timed_out`; a `job.timeout` event names each silent agent      |
+| `response.encode`                            | `osapi-controller` | `http.response.body.size`. The time to encode the answer as JSON and write it                       |
 | `job.process`                                | `osapi-agent`      | `osapi.agent.hostname`, `osapi.agent.machine_id`, `host.arch`, `job.status`, `job.changed`          |
 | `behavior.<name>.<method>`                   | `osapi-agent`      | `osapi.behavior.name`, `osapi.behavior.method`, `osapi.behavior.outcome`                            |
 | `exec <program>`                             | `osapi-agent`      | `process.executable.name`, `osapi.exec.sudo`, `process.exit.code`. The arguments are not recorded   |
