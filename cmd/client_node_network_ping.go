@@ -61,13 +61,15 @@ var clientNodeNetworkPingCmd = &cobra.Command{
 			if r.Error != "" {
 				errPtr = &r.Error
 			}
-			// With no reply there is no round trip to time: the API gives 0s, and
-			// the table shows -, so a host that did not answer does not look
-			// instant. --json keeps the values.
-			avg, minRtt, maxRtt := r.AvgRtt, r.MinRtt, r.MaxRtt
-			if r.PacketsReceived == 0 {
-				avg, minRtt, maxRtt = "-", "-", "-"
+			// With no reply the API leaves the times out; the table shows -.
+			orDash := func(v string) string {
+				if v == "" {
+					return "-"
+				}
+
+				return v
 			}
+			avg, minRtt, maxRtt := orDash(r.AvgRtt), orDash(r.MinRtt), orDash(r.MaxRtt)
 			results = append(results, cli.ResultRow{
 				Hostname: r.Hostname,
 				Status:   r.Status,

@@ -874,18 +874,21 @@ components:
         min_rtt:
           type: string
           description: >
-            Minimum round-trip time in Go time.Duration format.
-          example: "14.637103ms"
+            Minimum round-trip time in milliseconds, with two decimals.
+            Absent when no reply came back.
+          example: "14.64ms"
         avg_rtt:
           type: string
           description: >
-            Average round-trip time in Go time.Duration format.
-          example: "18.647498ms"
+            Average round-trip time in milliseconds, with two decimals.
+            Absent when no reply came back.
+          example: "18.65ms"
         max_rtt:
           type: string
           description: >
-            Maximum round-trip time in Go time.Duration format.
-          example: "24.309240ms"
+            Maximum round-trip time in milliseconds, with two decimals.
+            Absent when no reply came back.
+          example: "24.31ms"
         changed:
           type: boolean
           description: Whether the operation modified system state.

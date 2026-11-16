@@ -1738,11 +1738,8 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
               {r.packet_loss != null && (
                 <span>{Math.round(r.packet_loss)}% loss</span>
               )}
-              {/* With no reply there is no round trip to time. */}
-              {r.avg_rtt && r.packets_received !== 0 && (
-                <span>avg {r.avg_rtt}</span>
-              )}
-              {r.min_rtt && r.max_rtt && r.packets_received !== 0 && (
+              {r.avg_rtt && <span>avg {r.avg_rtt}</span>}
+              {r.min_rtt && r.max_rtt && (
                 <span>
                   {r.min_rtt} – {r.max_rtt}
                 </span>
