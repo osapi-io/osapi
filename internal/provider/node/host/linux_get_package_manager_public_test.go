@@ -25,7 +25,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 )
 
@@ -40,13 +39,72 @@ func (suite *LinuxGetPackageManagerPublicTestSuite) TearDownTest() {}
 func (suite *LinuxGetPackageManagerPublicTestSuite) TestGetPackageManager() {
 	tests := []struct {
 		name         string
-		validateFunc func(string, error)
+		setupMock    func(u *host.Linux)
+		want         interface{}
+		wantErr      bool
+		validateFunc func(got string)
 	}{
 		{
-			name: "returns not implemented error",
-			validateFunc: func(result string, err error) {
-				suite.Empty(result)
-				suite.ErrorIs(err, provider.ErrUnsupported)
+			name: "when apt detected",
+			setupMock: func(u *host.Linux) {
+				u.LookPathFn = func(file string) (string, error) {
+					if file == "apt" {
+						return "/usr/bin/apt", nil
+					}
+					return "", &host.ExecNotFoundError{Name: file}
+				}
+			},
+			want:    "apt",
+			wantErr: false,
+		},
+		{
+			name: "when dnf detected",
+			setupMock: func(u *host.Linux) {
+				u.LookPathFn = func(file string) (string, error) {
+					if file == "dnf" {
+						return "/usr/bin/dnf", nil
+					}
+					return "", &host.ExecNotFoundError{Name: file}
+				}
+			},
+			want:    "dnf",
+			wantErr: false,
+		},
+		{
+			name: "when yum detected",
+			setupMock: func(u *host.Linux) {
+				u.LookPathFn = func(file string) (string, error) {
+					if file == "yum" {
+						return "/usr/bin/yum", nil
+					}
+					return "", &host.ExecNotFoundError{Name: file}
+				}
+			},
+			want:    "yum",
+			wantErr: false,
+		},
+		{
+			name: "when no package manager detected",
+			setupMock: func(u *host.Linux) {
+				u.LookPathFn = func(_ string) (string, error) {
+					return "", &host.ExecNotFoundError{Name: "unknown"}
+				}
+			},
+			want:    "unknown",
+			wantErr: false,
+		},
+		{
+			name: "when ExecNotFoundError formats message",
+			setupMock: func(u *host.Linux) {
+				u.LookPathFn = func(file string) (string, error) {
+					return "", &host.ExecNotFoundError{Name: file}
+				}
+			},
+			want:    "unknown",
+			wantErr: false,
+			validateFunc: func(_ string) {
+				err := &host.ExecNotFoundError{Name: "apt"}
+				suite.Equal("executable file not found: apt", err.Error())
 			},
 		},
 	}
@@ -55,7 +113,23 @@ func (suite *LinuxGetPackageManagerPublicTestSuite) TestGetPackageManager() {
 		suite.Run(tc.name, func() {
 			linux := host.NewLinuxProvider()
 
-			tc.validateFunc(linux.GetPackageManager())
+			if tc.setupMock != nil {
+				tc.setupMock(linux)
+			}
+
+			got, err := linux.GetPackageManager()
+
+			if tc.wantErr {
+				suite.Error(err)
+				suite.Empty(got)
+			} else {
+				suite.NoError(err)
+				suite.Equal(tc.want, got)
+			}
+
+			if tc.validateFunc != nil {
+				tc.validateFunc(got)
+			}
 		})
 	}
 }

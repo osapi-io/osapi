@@ -24,9 +24,10 @@ import (
 	"testing"
 	"time"
 
+	sysHost "github.com/shirou/gopsutil/v4/host"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 )
 
@@ -41,13 +42,33 @@ func (suite *LinuxGetUptimePublicTestSuite) TearDownTest() {}
 func (suite *LinuxGetUptimePublicTestSuite) TestGetUptime() {
 	tests := []struct {
 		name         string
+		setupMock    func() func() (*sysHost.InfoStat, error)
 		validateFunc func(time.Duration, error)
 	}{
 		{
-			name: "returns not implemented error",
-			validateFunc: func(result time.Duration, err error) {
-				suite.Equal(time.Duration(0), result)
-				suite.ErrorIs(err, provider.ErrUnsupported)
+			name: "when GetUptime Ok",
+			setupMock: func() func() (*sysHost.InfoStat, error) {
+				return func() (*sysHost.InfoStat, error) {
+					return &sysHost.InfoStat{Uptime: 5 * 3600}, nil
+				}
+			},
+			validateFunc: func(got time.Duration, err error) {
+				suite.NoError(err)
+				suite.NotNil(got)
+				suite.Equal(time.Hour*5, got)
+			},
+		},
+		{
+			name: "when host.Info errors",
+			setupMock: func() func() (*sysHost.InfoStat, error) {
+				return func() (*sysHost.InfoStat, error) {
+					return nil, assert.AnError
+				}
+			},
+			validateFunc: func(got time.Duration, err error) {
+				suite.Error(err)
+				suite.ErrorContains(err, assert.AnError.Error())
+				suite.Equal(time.Duration(0), got)
 			},
 		},
 	}
@@ -55,6 +76,10 @@ func (suite *LinuxGetUptimePublicTestSuite) TestGetUptime() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			linux := host.NewLinuxProvider()
+
+			if tc.setupMock != nil {
+				linux.InfoFn = tc.setupMock()
+			}
 
 			tc.validateFunc(linux.GetUptime())
 		})

@@ -25,7 +25,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 )
 
@@ -40,13 +39,31 @@ func (suite *LinuxGetCPUCountPublicTestSuite) TearDownTest() {}
 func (suite *LinuxGetCPUCountPublicTestSuite) TestGetCPUCount() {
 	tests := []struct {
 		name         string
+		setupMock    func(u *host.Linux)
 		validateFunc func(int, error)
 	}{
 		{
-			name: "returns not implemented error",
-			validateFunc: func(result int, err error) {
-				suite.Equal(0, result)
-				suite.ErrorIs(err, provider.ErrUnsupported)
+			name: "when GetCPUCount Ok",
+			setupMock: func(u *host.Linux) {
+				u.NumCPUFn = func() int {
+					return 8
+				}
+			},
+			validateFunc: func(got int, err error) {
+				suite.NoError(err)
+				suite.Equal(8, got)
+			},
+		},
+		{
+			name: "when NumCPU returns 1",
+			setupMock: func(u *host.Linux) {
+				u.NumCPUFn = func() int {
+					return 1
+				}
+			},
+			validateFunc: func(got int, err error) {
+				suite.NoError(err)
+				suite.Equal(1, got)
 			},
 		},
 	}
@@ -54,6 +71,10 @@ func (suite *LinuxGetCPUCountPublicTestSuite) TestGetCPUCount() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			linux := host.NewLinuxProvider()
+
+			if tc.setupMock != nil {
+				tc.setupMock(linux)
+			}
 
 			tc.validateFunc(linux.GetCPUCount())
 		})

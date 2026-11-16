@@ -20,12 +20,12 @@
 
 package host
 
-import (
-	"github.com/osapi-io/osapi/internal/provider"
-)
-
 // GetKernelVersion retrieves the running kernel version string.
-// It returns an error because it is not implemented for LinuxProvider.
-func (l *Linux) GetKernelVersion() (string, error) {
-	return "", provider.ErrUnsupported
+// It uses gopsutil's KernelVersion field.
+func (u *Linux) GetKernelVersion() (string, error) {
+	hostInfo, err := u.InfoFn()
+	if err != nil {
+		return "", err
+	}
+	return hostInfo.KernelVersion, nil
 }

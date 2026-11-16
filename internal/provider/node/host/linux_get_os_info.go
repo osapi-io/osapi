@@ -21,11 +21,19 @@
 package host
 
 import (
-	"github.com/osapi-io/osapi/internal/provider"
+	"fmt"
 )
 
 // GetOSInfo retrieves information about the operating system, including the
 // distribution name and version. It returns the
-func (l *Linux) GetOSInfo() (*Result, error) {
-	return nil, provider.ErrUnsupported
+func (u *Linux) GetOSInfo() (*Result, error) {
+	info, err := u.InfoFn()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get host info: %w", err)
+	}
+
+	return &Result{
+		Distribution: info.Platform,
+		Version:      info.PlatformVersion,
+	}, nil
 }
