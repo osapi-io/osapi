@@ -23,7 +23,6 @@ package ping
 import (
 	"context"
 	"fmt"
-	"time"
 )
 
 // Do pings the given host and returns the ping statistics or an error.
@@ -46,7 +45,7 @@ func (d *Darwin) Do(
 	// reply kept Run waiting until the outer timeout failed the whole ping.
 	pinger.SetTimeout(replyTimeout)
 
-	timeout := 5 * time.Second
+	timeout := d.Timeout
 	// The timeout is under the job's context, so a job that ends stops it.
 	ctx, cancel := context.WithTimeout(job, timeout)
 	defer cancel()

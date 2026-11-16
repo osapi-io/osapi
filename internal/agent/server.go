@@ -84,6 +84,12 @@ func (a *Agent) Start() {
 		)
 	}
 
+	// A ping needs the agent's group in net.ipv4.ping_group_range, whatever
+	// the privileges of the agent, so this runs on each start.
+	if problem := PingProblem(); problem != "" {
+		a.logger.Warn("a ping from this agent fails", slog.String("error", problem))
+	}
+
 	// Run preflight checks when privilege escalation is enabled.
 	pe := a.appConfig.Agent.PrivilegeEscalation
 	if pe.Enabled {

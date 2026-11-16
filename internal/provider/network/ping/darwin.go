@@ -21,6 +21,8 @@
 package ping
 
 import (
+	"time"
+
 	probing "github.com/prometheus-community/pro-bing"
 
 	"github.com/osapi-io/osapi/internal/provider"
@@ -33,11 +35,15 @@ type Darwin struct {
 	provider.FactsAware
 
 	NewPingerFn func(address string) (Pinger, error)
+	// Timeout is how long Do waits for the whole ping, under the job's
+	// context. The constructor sets DefaultTimeout.
+	Timeout time.Duration
 }
 
 // NewDarwinProvider factory to create a new Darwin instance.
 func NewDarwinProvider() *Darwin {
 	return &Darwin{
+		Timeout: DefaultTimeout,
 		NewPingerFn: func(address string) (Pinger, error) {
 			rawPinger, err := probing.NewPinger(address)
 			if err != nil {
