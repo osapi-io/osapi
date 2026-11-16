@@ -40,10 +40,13 @@ type validateResult struct {
 var behaviorValidateCmd = &cobra.Command{
 	Use:   "validate",
 	Short: "Check every behavior against the rules the platform relies on",
-	Long: "It exits 1 when a rule fails, and names the behavior, the method and the\n" +
-		"rule. Each problem in `--json` has `behavior`, `method` (when the problem is\n" +
-		"in one), `rule` and `message`. [The\n" +
-		"checks](../../../development/behaviors.md#the-checks) lists the rules.",
+	Long: "It exits 1 when a rule fails, and names the behavior, the method, the rule\n" +
+		"and the fix. Each problem in `--json` has `behavior`, `method` (when the\n" +
+		"problem is in one), `rule`, `message` and `fix`. `osapi behavior spec`\n" +
+		"describes each part of a behavior.\n\n" +
+		"The rules:\n\n" + behavior.Checks.Help() + "\n" +
+		"`go test` runs the examples and refusals of each behavior on a fake host,\n" +
+		"and checks these. Each failure ends with its fix:\n\n" + behavior.TestChecks.Help(),
 	Example: `  osapi behavior validate
   osapi behavior validate --json`,
 	Args: cobra.NoArgs,
@@ -75,6 +78,11 @@ var behaviorValidateCmd = &cobra.Command{
 				Rows:      rows,
 				Reference: true,
 			}})
+			rules := make([]string, 0, len(problems))
+			for _, p := range problems {
+				rules = append(rules, p.Rule)
+			}
+			printFixes(behavior.Checks, rules)
 		}
 
 		if !result.Valid {

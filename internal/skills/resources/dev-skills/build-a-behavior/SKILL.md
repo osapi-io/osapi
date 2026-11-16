@@ -11,8 +11,9 @@ definition.
 
 This skill gives a procedure and decisions. It is not a catalog. The platform tells about itself:
 
+- `behavior spec` tells each part of the DSL, what it does and when to use it, the generated paths and what the platform cannot do yet.
+- `behavior validate --help` tells each rule and each test check, with its fix. Each failure also ends with its fix.
 - `behavior list` and `behavior get` tell what each behavior accepts and does. This includes the building blocks.
-- `go doc` tells what each option and each host service is.
 
 Ask these tools. Do not use your memory. If a tool and this skill do not agree, the tool is correct. If the platform does not have what you need, stop and say what is missing. That is a platform change, and a person decides it. Do not add code around it.
 
@@ -28,9 +29,11 @@ Ask the code and the binary before you read prose. Each one answers one question
 
 | Question                                         | Ask                                                       |
 | ------------------------------------------------ | --------------------------------------------------------- |
-| What options, tags and checks exist              | `go doc ./internal/behavior`, then `go doc ./internal/behavior <Name>` |
+| What options, methods, example parts and tags exist, and when to use each | `go run . behavior spec`                                  |
+| What rules and test checks a behavior must pass, and the fix of each | `go run . behavior validate --help`                       |
 | What a provider builder gets from the agent      | `go doc ./internal/behavior/host Host`                         |
 | What behaviors exist already                     | `go run . behavior list`                                  |
+| Which building blocks do generic work, such as a managed file, and when to make a new one | `go run . behavior spec`, under "Building on other behaviors" and "Building blocks" |
 | What one accepts and does: routes, fields, platforms, sudo, what it uses | `go run . behavior get --name <name> --json`, building blocks included |
 | Whether a definition breaks a rule               | `go run . behavior validate`                              |
 | A complete example of every part                 | `internal/behaviors/sysctl`                                     |
@@ -49,10 +52,11 @@ Decide these with the user before you write code. Each answer becomes a declarat
 | Does part of the work exist as an internal behavior? `behavior list` marks them `(internal)`. | Copying it means two copies of the hard part | `behavior.Requires(that.Behavior)`. Get its provider with `host.Require`, and call each of its methods with `behavior.Call(ctx, that.Behavior, that.Method, provider, in)`, so the trace shows the call as its own step. A direct call fails the tests |
 | Would a second behavior need part of what this one does? | The rule of two: the second need is when shared work becomes its own behavior | Build that part as an internal behavior first, then require it |
 | Does a value change per call, or stay the same on a host? | A setting is agent config; an input is part of each request | An input field, or a field in `settings.go` |
+| Which input names the thing a call acts on, such as a key or a path? | A trace shows it, so a reader sees what each call changed. `behavior validate` fails a write that records nothing | `.Key("key")`, or `telemetry:"attr"` on a method without a key |
 | Which programs does it run, which as root, and does it take a secret? | The agent checks each is installed and sudo allows it; secrets are kept out of the audit log and traces | `behavior.Runs("program")`, or `behavior.Sudo("program")` for root; `secret:"true"` on the field |
 | Which files does it write, remove or change the mode of, and does it keep a record in the file-state bucket? | Each one is a span in a trace, and the examples fail on a path or a record that is not declared. Declare the paths even when a required behavior, such as managedfile, does the write | `behavior.Writes("/etc/x.d/osapi-*.conf")`, and `behavior.KeepsState` for a record |
 | Is it one host, one step? | A behavior acts on one host inside one job | If it spans hosts or orders several steps, it is an osapi-orchestrator workflow, not a behavior |
-| Does it need anything under "Not yet" below? | The platform cannot express it, and wiring around that breaks the generated layers | Stop and tell the user what is missing |
+| Does it need anything that `behavior spec` lists under "Not supported yet"? | The platform cannot express it, and wiring around that breaks the generated layers | Stop and tell the user what is missing |
 
 Then decide how it operates. This decides the provider and its examples. Read [references/services.md](references/services.md) first. Then select the pattern that the answers identify:
 
@@ -87,7 +91,7 @@ The request can leave these open: what the behavior manages, where its truth is,
    then `behavior.go`. Use the host only through `host.Host`. Then the fake host can test it. Compare before you act. Then a second run reports `changed: false`. A building block's own fields, such as what `managedfile`
    accepts, come from `behavior get` on it.
 3. Give each method a useful example. The example names the host that it runs on and the changes on that host. Declare what the method refuses with `.Fails`.
-   `go doc ./internal/behavior Given` and `Effect` list the options. The examples run
+   `behavior spec` lists the parts of an example. The examples run
    the provider on a fake host and become the generated HTTP and CLI tests.
 4. Keep a test for every file with code, named for it:
    `methods_public_test.go` on the mocked provider, and
@@ -119,25 +123,12 @@ mise exec -- just test
 mise exec -- just behavior-int-linux   # its examples against a real agent on Debian
 ```
 
-Read a failure for what it names:
+A failure of `behavior validate` or of a behavior's tests ends with its fix.
+`go run . behavior validate --help` lists each rule and each test check before
+you break one. The failures below come from elsewhere:
 
 | Failure names                         | It means                                                                 |
 | ------------------------------------- | ------------------------------------------------------------------------ |
-| `<name> <method> on <platform>, "..."` | An example's output or effect is not what the provider did on the fake host |
-| `a write declares no effects`         | Add `Wrote`, `Removed` or `Ran` to that example                          |
-| `running it again reports changed`    | The provider writes without comparing first                              |
-| `with call N failing: panicked`       | The provider ignores an error and uses its zero value                    |
-| `with store read N returning ...`     | The provider trusts a state record without checking it                   |
-| `refusal "...": succeeded with`       | The provider accepts what the refusal says it rejects                    |
-| `with path traversal in <Field>`      | A path built from that field leaves its directory: add a `validate` pattern, or check it in the provider and declare the refusal |
-| `with a new line in <Field>`          | That field can add a line to a file: refuse `\r` and `\n`              |
-| `with an option in <Field>`           | That field reaches a command as an option: refuse a leading `-`, or pass `--` before it |
-| `it reached a shell script`           | Input reaches `sh -c`: run the program directly with its arguments instead |
-| `runs <program> but does not declare it` | Declare it with `behavior.Runs`, or `behavior.Sudo` for one run as root |
-| `writes <path> but does not declare it with behavior.Writes` | Declare a pattern that covers the path with `behavior.Writes`, also for a write a required behavior makes |
-| `keeps state in the file-state bucket but does not declare behavior.KeepsState` | Declare `behavior.KeepsState`, or require the behavior that keeps the record |
-| `calls <pkg>.<Method> directly` | Call it with `behavior.Call(ctx, <pkg>.Behavior, <pkg>.<Method>, provider, in)`, so the trace shows it |
-| `is internal, but no behavior requires it` | Require it from the behavior that needs it, or remove `behavior.Internal` if an operator calls it |
 | `<name> runs <program>, which this image lacks` | `behavior-int-linux` only: add the program's package to that recipe's `apt-get install` line |
 | `TestAPI<Method>PublicTestSuite/...`  | The API answer for that case in `gen/api_<method>_public_test.go`: the status, the body, or the spec it breaks |
 | `is not mounted` or `is not attached` | Run `go generate ./internal/behaviors/all`; the gen package is missing          |
@@ -148,27 +139,12 @@ Read a failure for what it names:
 | `is both a hand-written command and a behavior's` | The same, for a command under `osapi client node` |
 | `a behavior is below 100% coverage`   | A branch no test reaches: add an example, or a case to the test named for the file |
 
-Never edit `gen/`, `mocks/`, `internal/behaviors/all/gen`,
-`internal/controller/api/gen`, `internal/controller/api/next/gen`,
-`pkg/sdk/client/gen`, `ui/src/sdk/gen`, `docs/docs/gen`,
-`docs/docs/sidebar/behaviors/<name>/` or `docs/docs/sidebar/usage/cli/`;
-change the definition and generate. The `Short`, `Long`, `Example` and
-`Annotations` of a behavior command come from `.Describe`, `.Explain`,
-`.Example` and `.Fails`. Do not write CLI docs for a behavior. A generated test that fails is fixed in the
-definition or in `internal/behavior/gen`, never in `gen/`.
+Never edit a path that `behavior spec` lists under "Generated, never edited".
+Change the definition and generate. Do not write CLI docs for a behavior.
 
 ## Not yet
 
-The platform cannot express these yet. If a request needs one, say so and stop. Do not build around it:
-
-- **Action methods**, such as restart or reboot. `behavior validate` refuses a
-  write that is not create, update or delete.
-- **A command or a shell from the caller.** There is no `execute` permission.
-- **A resource under another**, with two keys in the path, such as a user's SSH
-  keys.
-- **Streaming and uploads**, and the object store they would deploy from.
-- **A step on the controller** before osapi queues the job. An example is a password hash.
-
-This list is the only catalog in this skill. It is here because a session that finds these by trial loses its time. The list becomes shorter when `behavior validate` learns to report them.
+`behavior spec` lists what the platform cannot express yet, under "Not
+supported yet". If a request needs one, say so and stop. Do not build around it.
 
 A behavior needs no edits outside its directory. The only exception is a package that `behavior-int-linux` says is missing from its image. If you must edit other code, for example `cmd/agent_setup.go`, `internal/validation` or `internal/authtoken`, the platform does not have a declaration that you need. Say so. Do not add the code by hand.

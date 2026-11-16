@@ -97,7 +97,8 @@
 //	validate:"..."    checked before a job is queued; becomes spec constraints
 //	doc:"..."         the description in the spec, the flag help and the docs
 //	render:"..."      on an output: "-" hides the column; bytes, age, status
-//	telemetry:"attr"  on an input: recorded on the method's span
+//	telemetry:"attr"  on an input: recorded on the method's span; the field
+//	                  a method names with Key is recorded without it
 //	secret:"true"     on an input: redacted from the audit log, write-only in
 //	                  the spec, never on a span
 //

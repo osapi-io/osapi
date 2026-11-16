@@ -25,7 +25,7 @@ import "github.com/osapi-io/osapi/internal/behavior"
 
 // Behavior is the {{.Name}} definition. The routes, the agent's dispatch, the
 // CLI commands, the spec, the docs pages and the tests of every layer above
-// the provider are built from it. go doc ./internal/behavior lists every option.
+// the provider are built from it. osapi behavior spec lists every option.
 var Behavior = behavior.Register(behavior.Define(
 	"{{.Name}}", {{printf "%q" .Doc}},
 	behavior.Node,{{if .Group}}

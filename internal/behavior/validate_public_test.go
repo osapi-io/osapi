@@ -99,6 +99,31 @@ func readReserved(
 	return reserved{}, nil
 }
 
+// noFields is an input with no field that a span can record.
+type noFields struct{}
+
+// onlySecret is an input whose only field is a secret.
+type onlySecret struct {
+	Password string `json:"password" secret:"true"`
+}
+
+// taggedName is an input whose name is tagged for the span.
+type taggedName struct {
+	Name string `json:"name" telemetry:"attr"`
+}
+
+func setNoFields(context.Context, fakeProvider, noFields) (result, error) {
+	return result{}, nil
+}
+
+func setOnlySecret(context.Context, fakeProvider, onlySecret) (result, error) {
+	return result{}, nil
+}
+
+func setTagged(context.Context, fakeProvider, taggedName) (result, error) {
+	return result{}, nil
+}
+
 func writeNoChanged(
 	_ context.Context,
 	_ fakeProvider,
@@ -133,7 +158,7 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			b: behavior.Define("sysctl", "Kernel parameters", behavior.Node, onDebian,
 				behavior.Read("list", readList).Describe("List"),
 				behavior.Read("status", readPointer).Key("key").Describe("One"),
-				behavior.Write("create", set).Describe("Create"),
+				behavior.Write("create", set).Key("key").Describe("Create"),
 			),
 		},
 		{
@@ -206,7 +231,7 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 		{
 			name: "when a write has no changed field",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
-				behavior.Write("create", writeNoChanged).Describe("Create"),
+				behavior.Write("create", writeNoChanged).Key("key").Describe("Create"),
 			),
 			wantRules: []string{behavior.RuleChanged},
 		},
@@ -244,7 +269,7 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 		{
 			name: "when a method is named with a synonym",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
-				behavior.Write("remove", set).Describe("Remove"),
+				behavior.Write("remove", set).Key("key").Describe("Remove"),
 			),
 			wantRules: []string{behavior.RuleVerb},
 		},
@@ -258,14 +283,34 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 		{
 			name: "when a write is named for an action",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
-				behavior.Write("restart", set).Describe("Restart"),
+				behavior.Write("restart", set).Key("key").Describe("Restart"),
 			),
 			wantRules: []string{behavior.RuleVerb},
 		},
 		{
+			name: "when a write records nothing on its span",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.Write("create", set).Describe("Create"),
+			),
+			wantRules: []string{behavior.RuleSpan},
+		},
+		{
+			name: "when a write without a key tags the field that names the item",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.Write("create", setTagged).Describe("Create"),
+			),
+		},
+		{
+			name: "when a write has no field that a span can record",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.Write("create", setNoFields).Describe("Create"),
+				behavior.Write("update", setOnlySecret).Describe("Update"),
+			),
+		},
+		{
 			name: "when a write's changed is not a boolean",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
-				behavior.Write("create", writeStringChanged).Describe("Create"),
+				behavior.Write("create", writeStringChanged).Key("key").Describe("Create"),
 			),
 			wantRules: []string{behavior.RuleChanged},
 		},
@@ -377,6 +422,7 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			var messages []string
 			for _, p := range behavior.ValidateBehavior(tc.b) {
 				assert.NotEmpty(s.T(), p.Message)
+				assert.NotEmpty(s.T(), p.Fix, "every rule has a fix")
 				rules = append(rules, p.Rule)
 				if p.Rule == behavior.RuleSettings {
 					messages = append(messages, p.Message)

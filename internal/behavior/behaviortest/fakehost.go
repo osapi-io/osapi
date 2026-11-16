@@ -32,6 +32,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"runtime"
 	"slices"
 	"strings"
 	"time"
@@ -147,9 +148,11 @@ func (h *fakeHost) check(
 	var problem string
 	switch {
 	case privileged && !slices.Contains(h.sudo, name):
-		problem = fmt.Sprintf("runs %s with sudo but does not declare it with behavior.Sudo", name)
+		problem = behavior.TestFailure(behavior.TestRuns,
+			fmt.Sprintf("runs %s with sudo but does not declare it with behavior.Sudo", name))
 	case !privileged && !slices.Contains(h.runs, name) && !slices.Contains(h.sudo, name):
-		problem = fmt.Sprintf("runs %s but does not declare it with behavior.Runs", name)
+		problem = behavior.TestFailure(behavior.TestRuns,
+			fmt.Sprintf("runs %s but does not declare it with behavior.Runs", name))
 	}
 	h.report(problem)
 }
@@ -176,19 +179,43 @@ func (h *fakeHost) checkWrite(
 		return
 	}
 	p = tempSuffix.ReplaceAllString(p, "")
+	if !fromAtomicfile() {
+		h.report(behavior.TestFailure(behavior.TestFileSpan, fmt.Sprintf(
+			"changes %s through h.FS, so the trace has no file span for it", p)))
+	}
 	for _, pattern := range h.writes {
 		if ok, _ := path.Match(pattern, p); ok || pattern == "*" {
 			return
 		}
 	}
-	h.report(fmt.Sprintf("writes %s but does not declare it with behavior.Writes", p))
+	h.report(behavior.TestFailure(behavior.TestWrites,
+		fmt.Sprintf("writes %s but does not declare it with behavior.Writes", p)))
+}
+
+// fromAtomicfile reports whether the filesystem call in progress comes from
+// the atomicfile package, which opens the file.write, file.remove and
+// file.chmod spans. A provider that changes a file through h.FS directly
+// makes no span.
+func fromAtomicfile() bool {
+	pcs := make([]uintptr, 64)
+	frames := runtime.CallersFrames(pcs[:runtime.Callers(3, pcs)])
+	for {
+		f, more := frames.Next()
+		if strings.Contains(f.Function, "/internal/atomicfile.") {
+			return true
+		}
+		if !more {
+			return false
+		}
+	}
 }
 
 // checkState records a use of the file-state bucket by a behavior that does
 // not declare behavior.KeepsState.
 func (h *fakeHost) checkState() {
 	if !h.keepsState {
-		h.report("keeps state in the file-state bucket but does not declare behavior.KeepsState")
+		h.report(behavior.TestFailure(behavior.TestKeepsState,
+			"keeps state in the file-state bucket but does not declare behavior.KeepsState"))
 	}
 }
 

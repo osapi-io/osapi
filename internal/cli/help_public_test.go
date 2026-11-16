@@ -400,6 +400,13 @@ func (suite *HelpPublicTestSuite) TestPlain() {
 			want: "One two.\n\nThree.",
 		},
 		{
+			name: "when a paragraph is a list wraps each item under its text",
+			in: "- `one`: " + strings.TrimSpace(strings.Repeat("word ", 16)) + "\n" +
+				"- two\nmore",
+			want: "- one: " + strings.TrimSpace(strings.Repeat("word ", 14)) + "\n" +
+				"  word word\n- two more",
+		},
+		{
 			name: "when a word is longer than a line keeps it whole",
 			in:   strings.Repeat("x", 90) + " y",
 			want: strings.Repeat("x", 90) + "\ny",

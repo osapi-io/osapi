@@ -33,6 +33,8 @@ It writes `/etc/sysctl.d/osapi-*.conf`.
 
 In a trace, a call is the span `behavior.sysctl.<method>`, with `behavior.managedfile.<method>`, `exec sysctl`, `exec chown`, `exec stat`, `file.write`, `file.remove`, `file.chmod`, `kv.get`, `kv.put` under it.
 
+Its span records the input `key` (get, create, update, delete).
+
 ## Methods
 
 | Method | Verb | Permission | Description |

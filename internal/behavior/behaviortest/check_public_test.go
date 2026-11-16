@@ -28,6 +28,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/behavior/host"
@@ -76,7 +77,7 @@ func (n note) set(
 	}
 	if in.Mode != "nowrite" {
 		_ = n.h.FS.MkdirAll("/etc", 0o755)
-		_ = n.h.FS.WriteFile(notePath, []byte(in.Text), 0o644)
+		_ = atomicfile.Write(ctx, n.h.FS, notePath, []byte(in.Text), 0o644)
 	}
 
 	return noteOut{Text: in.Text, Changed: true}, nil

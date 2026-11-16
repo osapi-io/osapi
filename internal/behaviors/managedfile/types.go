@@ -24,7 +24,7 @@ import "io/fs"
 
 // UpdateInput is a file to write and keep a record of.
 type UpdateInput struct {
-	Path     string            `json:"path"     validate:"required,startswith=/" doc:"Absolute path of the file"`
+	Path     string            `json:"path"     validate:"required,startswith=/" doc:"Absolute path of the file"                                                telemetry:"attr"`
 	Content  string            `json:"content"  validate:"required"              doc:"The file's whole content"`
 	Mode     string            `json:"mode"                                      doc:"Permissions in octal, such as 0600; 0644 when empty"`
 	Owner    string            `json:"owner"                                     doc:"User that owns the file; left as written when empty"`
@@ -35,12 +35,12 @@ type UpdateInput struct {
 
 // DeleteInput is a file to stop managing.
 type DeleteInput struct {
-	Path string `json:"path" validate:"required,startswith=/" doc:"Absolute path of the file"`
+	Path string `json:"path" validate:"required,startswith=/" doc:"Absolute path of the file" telemetry:"attr"`
 }
 
 // GetInput is a file whose record to read.
 type GetInput struct {
-	Path string `json:"path" validate:"required,startswith=/" doc:"Absolute path of the file"`
+	Path string `json:"path" validate:"required,startswith=/" doc:"Absolute path of the file" telemetry:"attr"`
 }
 
 // Result is what a change did.

@@ -107,10 +107,11 @@ func checkExample(
 	before, gets := h.calls, h.gets
 	out, err := call(m, p, ex.Input)
 	if err != nil {
-		return []string{fmt.Sprintf("failed: %v", err)}
+		return []string{behavior.TestFailure(behavior.TestOutput, fmt.Sprintf("failed: %v", err))}
 	}
 	if got, want := jsonOf(out), jsonOf(ex.Output); got != want {
-		problems = append(problems, fmt.Sprintf("output %s, want %s", got, want))
+		problems = append(problems,
+			behavior.TestFailure(behavior.TestOutput, fmt.Sprintf("output %s, want %s", got, want)))
 	}
 	problems = append(problems, effects(h, ex.Effects)...)
 	problems = append(problems, h.undeclared...)
@@ -118,11 +119,17 @@ func checkExample(
 	if m.Verb == behavior.VerbWrite {
 		if changed, _ := behavior.Changed(ex.Output); changed && len(ex.Effects) == 0 {
 			problems = append(problems,
-				"a write declares no effects; add behavior.Wrote, Removed or Ran to the example")
+				behavior.TestFailure(behavior.TestEffects, "a write declares no effects"))
 		}
 		again, err := call(m, p, ex.Input)
 		if changed, _ := behavior.Changed(again); err == nil && changed {
-			problems = append(problems, "running it again reports changed: true")
+			problems = append(
+				problems,
+				behavior.TestFailure(
+					behavior.TestIdempotent,
+					"running it again reports changed: true",
+				),
+			)
 		}
 	}
 
@@ -132,7 +139,8 @@ func checkExample(
 		fh, fp, _ := prepare(b, platform, ex)
 		fh.failAt = fh.calls + i
 		if msg := survives(m, fp, ex.Input); msg != "" {
-			problems = append(problems, fmt.Sprintf("with call %d failing: %s", i, msg))
+			problems = append(problems, behavior.TestFailure(behavior.TestErrors,
+				fmt.Sprintf("with call %d failing: %s", i, msg)))
 		}
 	}
 
@@ -144,8 +152,8 @@ func checkExample(
 			fh, fp, _ := prepare(b, platform, ex)
 			fh.corruptAt, fh.corrupt = fh.gets+i, []byte(damaged)
 			if msg := survives(m, fp, ex.Input); msg != "" {
-				problems = append(problems,
-					fmt.Sprintf("with store read %d returning %q: %s", i, damaged, msg))
+				problems = append(problems, behavior.TestFailure(behavior.TestState,
+					fmt.Sprintf("with store read %d returning %q: %s", i, damaged, msg)))
 			}
 		}
 	}
@@ -169,9 +177,11 @@ func checkRefusal(
 	out, err := call(m, p, r.Input)
 	switch {
 	case err == nil:
-		return fmt.Sprintf("succeeded with %s, want an error containing %q", jsonOf(out), r.Error)
+		return behavior.TestFailure(behavior.TestRefusal,
+			fmt.Sprintf("succeeded with %s, want an error containing %q", jsonOf(out), r.Error))
 	case !strings.Contains(err.Error(), r.Error):
-		return fmt.Sprintf("failed with %q, want it to contain %q", err, r.Error)
+		return behavior.TestFailure(behavior.TestRefusal,
+			fmt.Sprintf("failed with %q, want it to contain %q", err, r.Error))
 	default:
 		return ""
 	}
@@ -271,19 +281,35 @@ func effects(
 		case behavior.EffectWrote:
 			got, err := h.FS.ReadFile(e.Path)
 			if err != nil {
-				problems = append(problems, fmt.Sprintf("did not write %s", e.Path))
+				problems = append(
+					problems,
+					behavior.TestFailure(
+						behavior.TestEffects,
+						fmt.Sprintf("did not write %s", e.Path),
+					),
+				)
 			} else if string(got) != e.Content {
-				problems = append(problems, fmt.Sprintf("wrote %s as %q, want %q", e.Path, got, e.Content))
+				problems = append(problems,
+					behavior.TestFailure(behavior.TestEffects, fmt.Sprintf("wrote %s as %q, want %q", e.Path, got, e.Content)))
 			}
 		case behavior.EffectRemoved:
 			if _, err := h.FS.Stat(e.Path); err == nil {
-				problems = append(problems, fmt.Sprintf("did not remove %s", e.Path))
+				problems = append(
+					problems,
+					behavior.TestFailure(
+						behavior.TestEffects,
+						fmt.Sprintf("did not remove %s", e.Path),
+					),
+				)
 			}
 		case behavior.EffectRan:
 			if !slices.Contains(h.ran, e.Command) {
 				problems = append(
 					problems,
-					fmt.Sprintf("did not run %q; ran %q", e.Command, h.ran),
+					behavior.TestFailure(
+						behavior.TestEffects,
+						fmt.Sprintf("did not run %q; ran %q", e.Command, h.ran),
+					),
 				)
 			}
 		}

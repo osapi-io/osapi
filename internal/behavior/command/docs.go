@@ -144,6 +144,9 @@ func IndexPage(
 			"\nIn a trace, a call is the span `behavior.%s.<method>`, with %s under it.\n",
 			b.Name, strings.Join(names, ", "))
 	}
+	if recorded := spanInputs(b); recorded != "" {
+		fmt.Fprintf(&sb, "\nIts span records the input %s.\n", recorded)
+	}
 
 	sb.WriteString("\n## Methods\n\n")
 	if b.API {
@@ -445,4 +448,28 @@ func names(
 	}
 
 	return strings.Join(out, ", ")
+}
+
+// spanInputs lists the input fields b's methods record on their spans, each
+// with the methods that record it: `key` (get, update, delete).
+func spanInputs(
+	b *behavior.Behavior,
+) string {
+	byField := map[string][]string{}
+	var order []string
+	for _, m := range b.Methods {
+		for _, f := range m.SpanInputs() {
+			if _, ok := byField[f]; !ok {
+				order = append(order, f)
+			}
+			byField[f] = append(byField[f], m.Name)
+		}
+	}
+
+	parts := make([]string, 0, len(order))
+	for _, f := range order {
+		parts = append(parts, "`"+f+"` ("+strings.Join(byField[f], ", ")+")")
+	}
+
+	return strings.Join(parts, ", ")
 }

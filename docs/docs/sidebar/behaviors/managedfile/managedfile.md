@@ -34,6 +34,8 @@ declares the paths it writes through it.
 
 In a trace, a call is the span `behavior.managedfile.<method>`, with `exec chown`, `exec stat`, `file.write`, `file.remove`, `file.chmod`, `kv.get`, `kv.put` under it.
 
+Its span records the input `path` (get, update, delete).
+
 ## Methods
 
 | Method | Verb | Description |

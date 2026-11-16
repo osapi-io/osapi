@@ -16,8 +16,8 @@ hand-written domains that did not move yet. A behavior that replaces a
 hand-written domain has the `behavior.Next` mark while both exist. The mark
 serves it under `/api/next` and `osapi client next`, until the cutover of that
 domain. Today, sysctl has the mark. `internal/behaviors/sysctl` is the
-reference. `go doc ./internal/behavior` lists each option, with examples that
-run as tests.
+reference. `osapi behavior spec` lists each option, and
+`go doc ./internal/behavior` shows the Go API, with examples that run as tests.
 
 ## The layout
 
@@ -181,14 +181,14 @@ The tags of the input and output types hold all of the contract. Each field of
 an input becomes a request field, a CLI flag and a spec property. Each field of
 an output becomes a JSON field and a table column.
 
-| Tag                | On     | Becomes                                                                      |
-| ------------------ | ------ | ---------------------------------------------------------------------------- |
-| `json:"key"`       | both   | The name everywhere: request, flag (`--key`), column (`KEY`), `--json` field |
-| `validate:"..."`   | input  | Checked by the API before a job is queued; the spec's constraints            |
-| `doc:"..."`        | both   | The field's description in the spec, the flag's help and the docs pages      |
-| `render:"..."`     | output | How a column shows: `-` hides it, `bytes`, `age` or `status`                 |
-| `telemetry:"attr"` | input  | Records the field on the method's trace span. Untagged fields never are.     |
-| `secret:"true"`    | input  | A secret: redacted from the audit log, write-only in the spec, never traced  |
+| Tag                | On     | Becomes                                                                                                |
+| ------------------ | ------ | ------------------------------------------------------------------------------------------------------ |
+| `json:"key"`       | both   | The name everywhere: request, flag (`--key`), column (`KEY`), `--json` field                           |
+| `validate:"..."`   | input  | Checked by the API before a job is queued; the spec's constraints                                      |
+| `doc:"..."`        | both   | The field's description in the spec, the flag's help and the docs pages                                |
+| `render:"..."`     | output | How a column shows: `-` hides it, `bytes`, `age` or `status`                                           |
+| `telemetry:"attr"` | input  | Records the field on the method's trace span. The field that `.Key` names is recorded without the tag. |
+| `secret:"true"`    | input  | A secret: redacted from the audit log, write-only in the spec, never traced                            |
 
 A write's output has a `changed` bool. The table shows it as the row's status,
 `changed` or `ok`, rather than as a column. An output that is a slice becomes
@@ -344,34 +344,20 @@ error that a struct of strings cannot cause.
 ```bash
 go generate ./internal/behaviors/all      # write gen/, the spec and the behavior pages
 just cli-docs-generate              # write the CLI pages of the commands
-osapi behavior validate             # the definition's rules
+osapi behavior spec                 # each part of the DSL, and when to use it
+osapi behavior validate             # the definition's rules, each with its fix
 osapi behavior get --name sysctl  # surfaces, routes, schemas, as registered
 just behavior-gen-check             # fails when generated files are stale
 just behavior-cover-check           # fails when a behavior is below 100% coverage
 ```
 
-`osapi behavior validate` checks each definition against these rules. It exits 1
-when one fails, and names the behavior, the method and the rule:
-
-| Rule        | Fails when                                                                                                                                                                                        |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | the name is not lowercase letters and digits                                                                                                                                                      |
-| `placement` | the behavior has no placement                                                                                                                                                                     |
-| `doc`       | the behavior or a method has no description                                                                                                                                                       |
-| `methods`   | the behavior has no methods                                                                                                                                                                       |
-| `duplicate` | two methods share a name                                                                                                                                                                          |
-| `verb`      | a method name is a synonym of a standard verb, a read is not `list`, `get` or `status`, or a write is not `create`, `update` or `delete` (action methods such as `restart` are not supported yet) |
-| `route`     | two methods would be served at the same route                                                                                                                                                     |
-| `key`       | a method's key is not a field of its input                                                                                                                                                        |
-| `schema`    | an input or output type has no JSON Schema                                                                                                                                                        |
-| `output`    | an output field collides with a field of the per-host result                                                                                                                                      |
-| `changed`   | a write's output has no `changed` field                                                                                                                                                           |
-| `surface`   | a behavior has CLI without API, is internal but served, or has an input the CLI cannot flag                                                                                                       |
-| `example`   | a CLI method has no example, or an example or refusal does not fit its method                                                                                                                     |
-| `settings`  | settings are not a struct, or a field lacks the name or description the config needs                                                                                                              |
-| `platform`  | no platform has a provider, a platform is declared twice, or a provider misses a method                                                                                                           |
-| `requires`  | a required behavior is not registered, or behaviors require one another in a cycle                                                                                                                |
-| `secret`    | an input field tagged `secret:"true"` would be recorded on the method's span                                                                                                                      |
+`osapi behavior validate` checks each definition against its rules. It exits 1
+when one fails, and names the behavior, the method, the rule and the fix. The
+tests of each behavior run its examples on a fake host, and each failure ends
+with its fix too. `osapi behavior validate --help` lists each rule and each test
+check, from the same tables that the checks use. Thus the list cannot be out of
+date. `osapi behavior spec` lists each part of the DSL, the generated paths and
+what the platform cannot do yet.
 
 `just test` runs `behavior-gen-check`. Thus a behavior that changed without
 `go generate` fails CI. It also runs `behavior-cover-check`. Thus a behavior

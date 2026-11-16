@@ -91,13 +91,13 @@ func directCalls(
 				return true
 			}
 			if m, ok := methods[imports[pkg.Name]+"."+sel.Sel.Name]; ok {
-				problems = append(problems, fmt.Sprintf(
-					"%s calls %s.%s directly, so the trace has no step for %s; call it with behavior.Call",
+				problems = append(problems, behavior.TestFailure(behavior.TestCall, fmt.Sprintf(
+					"%s calls %s.%s directly, so the trace has no step for %s",
 					fset.Position(call.Pos()),
 					pkg.Name,
 					sel.Sel.Name,
 					m,
-				))
+				)))
 			}
 
 			return true

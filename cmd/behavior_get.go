@@ -60,8 +60,8 @@ type methodDescription struct {
 }
 
 // telemetryDescription is what a behavior's calls record: the span and
-// metrics every method gets, and the input fields this behavior tags onto
-// the span, by method.
+// metrics every method gets, and the input fields each method records on the
+// span: its key, and the fields tagged telemetry:"attr".
 type telemetryDescription struct {
 	Span string `json:"span"`
 	// ChildSpans are the spans a call can make under Span, from what the
@@ -212,8 +212,8 @@ func describeBehavior(
 			return desc, fmt.Errorf("%s %s output: %w", b.Name, m.Name, err)
 		}
 
-		if tagged := behavior.TaggedInputs(m.In); len(tagged) > 0 {
-			desc.Telemetry.Inputs[m.Name] = tagged
+		if recorded := m.SpanInputs(); len(recorded) > 0 {
+			desc.Telemetry.Inputs[m.Name] = recorded
 		}
 
 		md := methodDescription{
@@ -597,7 +597,7 @@ func pairs(
 	return strings.Join(parts, ", ")
 }
 
-// recordedInputs lists the input fields a behavior tags onto its spans, and
+// recordedInputs lists the input fields a behavior records on its spans, and
 // the methods each is recorded by: key (get, create, update, delete).
 func recordedInputs(
 	inputs map[string][]string,

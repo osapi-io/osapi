@@ -30,8 +30,9 @@ package sysctl
 //     docs pages.
 //   - render says how an output field shows in a table: "-" to hide it,
 //     bytes, age or status.
-//   - telemetry:"attr" records an input field on the method's span. Only
-//     tagged fields are recorded.
+//   - telemetry:"attr" records an input field on the method's span. The
+//     field a method names with Key is recorded without it, so only create,
+//     which takes the key in its body, tags it.
 
 // ListInput optionally narrows the list to one part of the tree.
 type ListInput struct {
@@ -40,7 +41,7 @@ type ListInput struct {
 
 // GetInput names one parameter.
 type GetInput struct {
-	Key string `json:"key" validate:"required,min=1,sysctl_key" doc:"Parameter name, such as net.ipv4.ip_forward" telemetry:"attr"`
+	Key string `json:"key" validate:"required,min=1,sysctl_key" doc:"Parameter name, such as net.ipv4.ip_forward"`
 }
 
 // CreateInput is a parameter and the value to set.
@@ -51,13 +52,13 @@ type CreateInput struct {
 
 // UpdateInput is a parameter and its new value.
 type UpdateInput struct {
-	Key   string `json:"key"   validate:"required,min=1,sysctl_key" doc:"Parameter name, such as net.ipv4.ip_forward" telemetry:"attr"`
+	Key   string `json:"key"   validate:"required,min=1,sysctl_key" doc:"Parameter name, such as net.ipv4.ip_forward"`
 	Value string `json:"value" validate:"required,no_linebreak"     doc:"Value to set"`
 }
 
 // DeleteInput names the parameter to stop managing.
 type DeleteInput struct {
-	Key string `json:"key" validate:"required,min=1,sysctl_key" doc:"Parameter name, such as net.ipv4.ip_forward" telemetry:"attr"`
+	Key string `json:"key" validate:"required,min=1,sysctl_key" doc:"Parameter name, such as net.ipv4.ip_forward"`
 }
 
 // Entry is a parameter, its current runtime value, and whether osapi

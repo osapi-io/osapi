@@ -33,6 +33,8 @@ type Problem struct {
 	Method   string `json:"method,omitempty"`
 	Rule     string `json:"rule"`
 	Message  string `json:"message"`
+	// Fix is how to fix it, from the check of Rule.
+	Fix string `json:"fix"`
 }
 
 // The rules Validate checks, by the name a Problem reports.
@@ -68,6 +70,13 @@ const (
 	// RuleWrites: each path a behavior declares with Writes is "*", or an
 	// absolute path.Match pattern.
 	RuleWrites = "writes"
+	// RuleSpan: a write records on its span what it acts on, through Key or
+	// a field tagged telemetry:"attr". Thus a trace says what each write
+	// changed. A write whose input has no field that can be recorded is
+	// exempt.
+	//
+	// Checks has the requirement and the fix of each rule.
+	RuleSpan = "span"
 )
 
 // synonyms are method names that mean a standard verb, and the verb to use.
@@ -123,7 +132,7 @@ func Validate() []Problem {
 		problems = append(problems, ValidateBehavior(b)...)
 	}
 
-	return append(problems, chainProblems(all)...)
+	return withFixes(append(problems, chainProblems(all)...))
 }
 
 // ValidateBehavior checks one behavior.
@@ -250,12 +259,20 @@ func ValidateBehavior(
 				m.In,
 			)
 		} else {
+			recordable := false
 			for i := range m.In.NumField() {
-				if f := m.In.Field(i); Secret(f) && f.Tag.Get("telemetry") == "attr" {
+				f := m.In.Field(i)
+				if Secret(f) && f.Tag.Get("telemetry") == "attr" {
 					add(m.Name, RuleSecret,
 						"input field %s is secret and tagged telemetry:\"attr\"; a secret is never recorded on a span",
 						JSONName(f))
 				}
+				if f.IsExported() && !Secret(f) {
+					recordable = true
+				}
+			}
+			if m.Verb == VerbWrite && recordable && len(m.SpanInputs()) == 0 {
+				add(m.Name, RuleSpan, "its span records no input, so a trace cannot say what it changed")
 			}
 		}
 
@@ -331,7 +348,7 @@ func ValidateBehavior(
 		}
 	}
 
-	return problems
+	return withFixes(problems)
 }
 
 // settingsProblems checks a settings struct: every exported field has a
