@@ -461,6 +461,27 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			},
 			wantRules: []string{behavior.RuleRequires, behavior.RuleRequires},
 		},
+		{
+			name: "when an internal behavior is required by none",
+			setup: func() {
+				behavior.Register(complete("files", behavior.Internal))
+			},
+			wantRules: []string{behavior.RuleInternal},
+		},
+		{
+			name: "when the paths a behavior writes are absolute patterns, or any",
+			setup: func() {
+				behavior.Register(complete("conf", behavior.Writes("/etc/conf.d/*.conf", "*")))
+			},
+			wantRules: []string{},
+		},
+		{
+			name: "when a path it writes is relative, or not a pattern",
+			setup: func() {
+				behavior.Register(complete("conf", behavior.Writes("etc/conf", "/etc/[")))
+			},
+			wantRules: []string{behavior.RuleWrites, behavior.RuleWrites},
+		},
 	}
 
 	for _, tc := range tests {

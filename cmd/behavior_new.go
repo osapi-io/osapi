@@ -46,7 +46,12 @@ var behaviorNewCmd = &cobra.Command{
 		"`/api/node/{hostname}/network/<name>`, its commands `osapi client node\n" +
 		"network <name>`, and its directory `internal/behaviors/network/<name>/`.\n" +
 		"[Your first behavior](../../../development/your-first-behavior.md) walks\n" +
-		"through the rest.",
+		"through the rest.\n\n" +
+		"A new behavior is one an operator calls, with an API and commands. Work\n" +
+		"that two behaviors share, such as writing a file, becomes an internal\n" +
+		"behavior that the two require: add `behavior.Internal` to it then, and\n" +
+		"`behavior.Requires` to each user. `osapi behavior validate` fails an\n" +
+		"internal behavior that no behavior requires.",
 	Example: `  osapi behavior new --name motd --description "The message shown at login"
   osapi behavior new --name motd --description "The message shown at login" --root ~/src/osapi
   osapi behavior new --group network --name neighbors --description "The host's ARP neighbors"`,

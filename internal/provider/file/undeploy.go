@@ -27,6 +27,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/atomicfile"
+
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 )
 
@@ -50,7 +52,7 @@ func (p *Service) Undeploy(
 		}, nil
 	}
 
-	if err := p.fs.Remove(req.Path); err != nil {
+	if err := atomicfile.Remove(ctx, p.fs, req.Path); err != nil {
 		return nil, fmt.Errorf("file undeploy: remove file %q: %w", req.Path, err)
 	}
 

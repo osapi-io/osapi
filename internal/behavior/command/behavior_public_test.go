@@ -274,11 +274,13 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	defer behavior.Reset()
 	files := behavior.Register(behavior.Define(
 		"files", "Files it keeps", behavior.Node, behavior.Internal,
+		behavior.Writes("*"),
 		behavior.Read("get", read).Describe("Read one"),
 	))
 	quiet := behavior.Register(behavior.Define(
 		"quiet", "Runs only as jobs", behavior.Node,
 		behavior.Requires(files),
+		behavior.Writes("/var/kv/*.conf"),
 		behavior.Config(kvSettings{Dir: "/var/kv"}),
 		behavior.Read("list", read),
 	))
@@ -287,6 +289,14 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 
 	internal := command.IndexPage(files)
 	s.Contains(internal, "Nowhere: it is internal.")
+	s.Contains(internal, "It writes the path its caller names.")
+	s.Contains(internal, "with `file.write`, `file.remove`, `file.chmod` under it.")
+	quietPage := command.IndexPage(quiet)
+	s.Contains(quietPage, "It writes `/var/kv/*.conf`.")
+	s.Contains(
+		quietPage,
+		"In a trace, a call is the span `behavior.quiet.<method>`, with `behavior.files.<method>`,",
+	)
 	s.NotContains(internal, "| Jobs |")
 	s.Contains(internal, "| Method | Verb | Description |")
 	s.Contains(internal, "| `get` | read | Read one |", "no method page to link to")

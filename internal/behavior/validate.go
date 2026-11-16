@@ -62,6 +62,12 @@ const (
 	// RulePlatform: a behavior declares a provider for at least one
 	// platform, once each, and each implements every method's provider type.
 	RulePlatform = "platform"
+	// RuleInternal: an internal behavior is required by another. Nothing
+	// else can reach it, because it has no API and no CLI.
+	RuleInternal = "internal"
+	// RuleWrites: each path a behavior declares with Writes is "*", or an
+	// absolute path.Match pattern.
+	RuleWrites = "writes"
 )
 
 // synonyms are method names that mean a standard verb, and the verb to use.

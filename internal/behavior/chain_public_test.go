@@ -45,6 +45,57 @@ func (s *ChainPublicTestSuite) TestRequires() {
 	s.Equal([]*behavior.Behavior{files, state}, b.Requires)
 }
 
+func (s *ChainPublicTestSuite) TestChildSpans() {
+	tests := []struct {
+		name string
+		b    func() *behavior.Behavior
+		want []string
+	}{
+		{
+			name: "when it declares nothing, there are none",
+			b:    func() *behavior.Behavior { return behavior.Define("motd", "x") },
+		},
+		{
+			name: "when it requires a behavior, each declaration of the two counts once",
+			b: func() *behavior.Behavior {
+				files := behavior.Define("files", "x", behavior.Internal,
+					behavior.Sudo("chown"), behavior.Runs("stat"),
+					behavior.Writes("*"), behavior.KeepsState)
+
+				return behavior.Define("sysctl", "x",
+					behavior.Requires(files, files),
+					behavior.Sudo("sysctl"), behavior.Runs("stat"),
+					behavior.Writes("/etc/sysctl.d/osapi-*.conf"))
+			},
+			want: []string{
+				"behavior.files.<method>",
+				"exec sysctl", "exec stat", "exec chown",
+				"file.write", "file.remove", "file.chmod",
+				"kv.get", "kv.put",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, behavior.ChildSpans(tc.b()))
+		})
+	}
+}
+
+func (s *ChainPublicTestSuite) TestWrites() {
+	b := behavior.Define("conf", "x", behavior.Writes("/etc/a"), behavior.Writes("/etc/b"))
+
+	s.Equal([]string{"/etc/a", "/etc/b"}, b.Writes)
+	s.True(behavior.Define("files", "x", behavior.KeepsState).KeepsState)
+}
+
+func (s *ChainPublicTestSuite) TestFunc() {
+	b := behavior.Define("sysctl", "x", behavior.Read("get", get))
+
+	s.Equal("github.com/osapi-io/osapi/internal/behavior_test.get", b.Methods[0].Func())
+}
+
 func (s *ChainPublicTestSuite) TestInternal() {
 	s.True(behavior.Define("files", "x", behavior.Internal).Internal)
 	s.False(behavior.Define("sysctl", "x").Internal)

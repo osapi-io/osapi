@@ -41,6 +41,10 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Platform("debian", newDebian),
 	behavior.Sudo("chown"),
 	behavior.Runs("stat"),
+	// It writes the path its caller names. Each behavior that requires it
+	// declares the paths it writes through it.
+	behavior.Writes("*"),
+	behavior.KeepsState,
 	behavior.Read("get", Get).
 		Describe("Read the record of a file osapi wrote").
 		Example("A file osapi wrote", GetInput{Path: path},

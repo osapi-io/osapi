@@ -29,6 +29,9 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
+	"path"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -88,13 +91,27 @@ type fakeHost struct {
 	sudo       []string
 	runs       []string
 	undeclared []string
+
+	// writes are the paths the behavior under test declares with
+	// behavior.Writes. A required behavior's paths do not count: a behavior
+	// declares each path it writes, also through managedfile. keepsState is
+	// set when it or a behavior it requires declares behavior.KeepsState.
+	// setup is set while prepare writes an example's Given files, which are
+	// not the behavior's writes.
+	writes     []string
+	keepsState bool
+	setup      bool
 }
 
 func newHost(
 	b *behavior.Behavior,
 	platform string,
 ) *fakeHost {
-	h := &fakeHost{outputs: map[string]string{}, values: map[string][]byte{}}
+	h := &fakeHost{
+		outputs: map[string]string{},
+		values:  map[string][]byte{},
+		writes:  b.Writes,
+	}
 	h.declare(b)
 	ctrl := gomock.NewController(h)
 	h.Host = host.Host{
@@ -115,6 +132,7 @@ func (h *fakeHost) declare(
 ) {
 	h.sudo = append(h.sudo, b.Sudo...)
 	h.runs = append(h.runs, b.Runs...)
+	h.keepsState = h.keepsState || b.KeepsState
 	for _, r := range b.Requires {
 		h.declare(r)
 	}
@@ -133,8 +151,44 @@ func (h *fakeHost) check(
 	case !privileged && !slices.Contains(h.runs, name) && !slices.Contains(h.sudo, name):
 		problem = fmt.Sprintf("runs %s but does not declare it with behavior.Runs", name)
 	}
+	h.report(problem)
+}
+
+// report records problem once. An empty problem is none.
+func (h *fakeHost) report(
+	problem string,
+) {
 	if problem != "" && !slices.Contains(h.undeclared, problem) {
 		h.undeclared = append(h.undeclared, problem)
+	}
+}
+
+// tempSuffix is the suffix atomicfile.Write gives the temporary file beside
+// its target, which is a write of the target.
+var tempSuffix = regexp.MustCompile(`\.osapi-\d+-\d+$`)
+
+// checkWrite records a change to p, a write, a removal or a mode change,
+// that is not under a path the behavior declares with behavior.Writes.
+func (h *fakeHost) checkWrite(
+	p string,
+) {
+	if h.setup {
+		return
+	}
+	p = tempSuffix.ReplaceAllString(p, "")
+	for _, pattern := range h.writes {
+		if ok, _ := path.Match(pattern, p); ok || pattern == "*" {
+			return
+		}
+	}
+	h.report(fmt.Sprintf("writes %s but does not declare it with behavior.Writes", p))
+}
+
+// checkState records a use of the file-state bucket by a behavior that does
+// not declare behavior.KeepsState.
+func (h *fakeHost) checkState() {
+	if !h.keepsState {
+		h.report("keeps state in the file-state bucket but does not declare behavior.KeepsState")
 	}
 }
 
@@ -170,7 +224,18 @@ func (h *fakeHost) next() error {
 // commands and the store's.
 func (h *fakeHost) filesystem() avfs.VFS {
 	vfs := failfs.New(memfs.New())
-	_ = vfs.SetFailFunc(func(avfs.VFSBase, avfs.FnVFS, *failfs.FailParam) error {
+	_ = vfs.SetFailFunc(func(_ avfs.VFSBase, fn avfs.FnVFS, fp *failfs.FailParam) error {
+		switch fn {
+		case avfs.FnOpenFile:
+			if fp.Flag&(os.O_WRONLY|os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND) != 0 {
+				h.checkWrite(fp.Path)
+			}
+		case avfs.FnWriteFile, avfs.FnRemove, avfs.FnRemoveAll, avfs.FnChmod, avfs.FnTruncate:
+			h.checkWrite(fp.Path)
+		case avfs.FnRename:
+			h.checkWrite(fp.NewPath)
+		}
+
 		return h.next()
 	})
 
@@ -240,6 +305,7 @@ func (s fileState) KVGet(
 	key string,
 ) (jetstream.KeyValueEntry, error) {
 	h := s.h
+	h.checkState()
 	if err := h.next(); err != nil {
 		return nil, err
 	}
@@ -263,6 +329,7 @@ func (s fileState) KVPut(
 	value []byte,
 ) (uint64, error) {
 	h := s.h
+	h.checkState()
 	if err := h.next(); err != nil {
 		return 0, err
 	}

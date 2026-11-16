@@ -29,6 +29,11 @@ unless the agent runs as root. `osapi agent start` checks this at startup.
 It runs `stat`, which the host must have installed. `osapi agent start`
 warns about any that are missing.
 
+It writes the path its caller names. Each behavior that requires it
+declares the paths it writes through it.
+
+In a trace, a call is the span `behavior.managedfile.<method>`, with `exec chown`, `exec stat`, `file.write`, `file.remove`, `file.chmod`, `kv.get`, `kv.put` under it.
+
 ## Methods
 
 | Method | Verb | Description |

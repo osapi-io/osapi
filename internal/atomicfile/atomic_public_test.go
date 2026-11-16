@@ -223,6 +223,96 @@ func (s *AtomicPublicTestSuite) TestWriteSpan() {
 	})
 }
 
+func (s *AtomicPublicTestSuite) TestRemoveAndChmod() {
+	const target = "/etc/app/app.conf"
+
+	recorder := tracetest.NewSpanRecorder()
+	tp := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder))
+	previous := otel.GetTracerProvider()
+	otel.SetTracerProvider(tp)
+	defer otel.SetTracerProvider(previous)
+
+	withFile := func() avfs.VFS {
+		vfs := memfs.New()
+		_ = vfs.MkdirAll("/etc/app", 0o755)
+		_ = vfs.WriteFile(target, []byte("x"), 0o644)
+
+		return vfs
+	}
+	attrs := func(span sdktrace.ReadOnlySpan) map[string]string {
+		got := map[string]string{}
+		for _, kv := range span.Attributes() {
+			got[string(kv.Key)] = kv.Value.String()
+		}
+
+		return got
+	}
+
+	tests := []struct {
+		name     string
+		op       func(context.Context) error
+		wantSpan string
+		want     map[string]string
+		wantErr  bool
+		wantCode codes.Code
+	}{
+		{
+			name:     "Remove deletes the file in a file.remove span",
+			op:       func(ctx context.Context) error { return atomicfile.Remove(ctx, withFile(), target) },
+			wantSpan: "file.remove",
+			want:     map[string]string{"file.path": target},
+		},
+		{
+			name:     "Remove of a missing file returns the error, and the span is not failed",
+			op:       func(ctx context.Context) error { return atomicfile.Remove(ctx, memfs.New(), target) },
+			wantSpan: "file.remove",
+			want:     map[string]string{"file.path": target},
+			wantErr:  true,
+		},
+		{
+			name:     "Chmod sets the mode in a file.chmod span",
+			op:       func(ctx context.Context) error { return atomicfile.Chmod(ctx, withFile(), target, 0o600) },
+			wantSpan: "file.chmod",
+			want:     map[string]string{"file.path": target, "file.mode": "0600"},
+		},
+		{
+			name:     "Chmod of a missing file fails the span",
+			op:       func(ctx context.Context) error { return atomicfile.Chmod(ctx, memfs.New(), target, 0o600) },
+			wantSpan: "file.chmod",
+			want:     map[string]string{"file.path": target, "file.mode": "0600"},
+			wantErr:  true,
+			wantCode: codes.Error,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			recorder.Reset()
+			ctx, job := tp.Tracer("test").Start(context.Background(), "job.process")
+
+			err := tt.op(ctx)
+			job.End()
+
+			if tt.wantErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
+			span := recorder.Ended()[0]
+			s.Equal(tt.wantSpan, span.Name())
+			s.Equal(tt.want, attrs(span))
+			s.Equal(tt.wantCode, span.Status().Code)
+		})
+	}
+
+	s.Run("outside a trace makes no span", func() {
+		recorder.Reset()
+
+		s.Require().NoError(atomicfile.Remove(context.Background(), withFile(), target))
+		s.Empty(recorder.Ended())
+	})
+}
+
 // assertNoLeftovers checks that a failed write left no temporary file behind.
 func (s *AtomicPublicTestSuite) assertNoLeftovers(
 	vfs avfs.VFS,

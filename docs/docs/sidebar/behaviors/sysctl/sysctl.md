@@ -29,6 +29,10 @@ On `debian`. On any other platform its methods report `skipped`.
 It runs `sysctl` with sudo, so the agent's user needs a sudoers entry for it
 unless the agent runs as root. `osapi agent start` checks this at startup.
 
+It writes `/etc/sysctl.d/osapi-*.conf`.
+
+In a trace, a call is the span `behavior.sysctl.<method>`, with `behavior.managedfile.<method>`, `exec sysctl`, `exec chown`, `exec stat`, `file.write`, `file.remove`, `file.chmod`, `kv.get`, `kv.put` under it.
+
 ## Methods
 
 | Method | Verb | Permission | Description |

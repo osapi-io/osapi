@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"runtime"
 	"strings"
 )
 
@@ -91,6 +92,12 @@ type Behavior struct {
 	// Runs lists the programs its providers run without sudo, declared with
 	// Runs.
 	Runs []string
+	// Writes lists the paths its providers write, remove or change the mode
+	// of, as path.Match patterns, declared with Writes. "*" is any path.
+	Writes []string
+	// KeepsState is set when its providers keep a record in the file-state
+	// bucket, declared with KeepsState.
+	KeepsState bool
 	// Next serves the behavior under /api/next and osapi client next, beside
 	// the hand-written domain it replaces, until that domain's cutover.
 	Next bool
@@ -212,6 +219,10 @@ type Method struct {
 	// invoke decodes the input, calls the method, and returns the decoded
 	// input beside the output so telemetry can read its tagged fields.
 	invoke func(ctx context.Context, provider any, input []byte) (out any, in any, err error)
+	// fn names the Go function of the method, such as
+	// github.com/osapi-io/osapi/internal/behaviors/managedfile.Update, so a
+	// test can find a direct call of it that skips Call.
+	fn string
 }
 
 func (m *Method) apply(
@@ -293,6 +304,7 @@ func newMethod[P any, In any, Out any](
 		In:       reflect.TypeFor[In](),
 		Out:      reflect.TypeFor[Out](),
 		provider: reflect.TypeFor[P](),
+		fn:       runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name(),
 		invoke: func(ctx context.Context, provider any, input []byte) (any, any, error) {
 			p, ok := provider.(P)
 			if !ok {
