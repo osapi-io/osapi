@@ -178,7 +178,9 @@ func (c *Client) Query(
 
 	resolved := c.resolveTarget(target)
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, resolved)
-	jobID, resp, err := c.publishAndWait(ctx, subject, resolved, req)
+	// The span records the target that the caller gave, such as debian-1;
+	// the subject has the machine ID that it resolves to.
+	jobID, resp, err := c.publishAndWait(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
@@ -243,7 +245,9 @@ func (c *Client) Modify(
 
 	resolved := c.resolveTarget(target)
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, resolved)
-	jobID, resp, err := c.publishAndWait(ctx, subject, resolved, req)
+	// The span records the target that the caller gave, such as debian-1;
+	// the subject has the machine ID that it resolves to.
+	jobID, resp, err := c.publishAndWait(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
