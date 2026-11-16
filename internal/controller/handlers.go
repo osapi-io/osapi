@@ -53,9 +53,11 @@ import (
 	sysctlAPI "github.com/osapi-io/osapi/internal/controller/api/node/sysctl"
 	timezoneAPI "github.com/osapi-io/osapi/internal/controller/api/node/timezone"
 	userAPI "github.com/osapi-io/osapi/internal/controller/api/node/user"
+	telemetryAPI "github.com/osapi-io/osapi/internal/controller/api/telemetry"
 	uihandler "github.com/osapi-io/osapi/internal/controller/api/ui"
 	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/telemetry/traces"
 	uiassets "github.com/osapi-io/osapi/ui"
 )
 
@@ -139,6 +141,14 @@ func handlers(
 			handlers,
 			auditAPI.Handler(d.log, d.auditStore, signingKey, customRoles)...)
 	}
+	handlers = append(
+		handlers,
+		telemetryAPI.Handler(
+			d.log,
+			traceReader(d.cfg.Telemetry.Tracing),
+			signingKey,
+			customRoles,
+		)...)
 	if d.objBucket != "" {
 		handlers = append(
 			handlers,
@@ -164,4 +174,17 @@ func handlers(
 	}
 
 	return handlers
+}
+
+// traceReader reads traces from the backend at cfg.URL, the address where a
+// person views the traces, which for Jaeger is also its query API. It is nil
+// when no URL is set, and the trace route then answers 503.
+func traceReader(
+	cfg config.TracingConfig,
+) telemetryAPI.TraceReader {
+	if cfg.URL == "" {
+		return nil
+	}
+
+	return traces.NewJaeger(cfg.URL, nil)
 }

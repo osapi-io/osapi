@@ -24,6 +24,8 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/telemetry/traces"
+
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -41,6 +43,14 @@ func TestHandlersPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(HandlersPublicTestSuite))
+}
+
+func (s *HandlersPublicTestSuite) TestTraceReader() {
+	s.Nil(controller.ExportTraceReader(config.TracingConfig{}), "no URL is no backend")
+	s.IsType(
+		&traces.Jaeger{},
+		controller.ExportTraceReader(config.TracingConfig{URL: "http://jaeger:16686"}),
+	)
 }
 
 func (s *HandlersPublicTestSuite) TestHandlers() {
