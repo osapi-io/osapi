@@ -30,6 +30,9 @@ tags:
   - name: Node_Management_API_node_status
     x-displayName: Node/Status
     description: Operations related to node status endpoint.
+  - name: Telemetry_API_telemetry
+    x-displayName: Telemetry
+    description: Telemetry endpoints, such as the spans of a trace.
   - name: Certificate_Management_API_certificate_operations
     x-displayName: Node/Certificate
     description: CA certificate management on a target node.
@@ -1652,6 +1655,71 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Error retrieving uptime.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/telemetry/trace/{id}:
+    servers: []
+    get:
+      operationId: GetTrace
+      summary: Get the spans of a trace
+      description: >-
+        Returns each span of a trace, read from the tracing backend at
+        telemetry.tracing.url. The backend gets the spans a few seconds after
+        the request, so a trace of a request that just ran can be not found yet.
+      tags:
+        - Telemetry_API_telemetry
+      security:
+        - BearerAuth:
+            - trace:read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[0-9a-f]{32}$
+          description: The trace ID, 32 hexadecimal characters.
+      responses:
+        '200':
+          description: The spans of the trace.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TraceResponse'
+        '400':
+          description: The trace ID is not valid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: The backend has no trace with this ID, or not yet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: The tracing backend could not be read.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: No tracing backend is configured on the controller.
           content:
             application/json:
               schema:
@@ -7565,6 +7633,68 @@ components:
             $ref: '#/components/schemas/UptimeResponse'
       required:
         - results
+    TraceResponse:
+      type: object
+      required:
+        - trace_id
+        - spans
+      properties:
+        trace_id:
+          type: string
+          description: The trace ID.
+        spans:
+          type: array
+          description: Each span of the trace, ordered by start time.
+          items:
+            $ref: '#/components/schemas/TraceSpan'
+    TraceSpan:
+      type: object
+      required:
+        - span_id
+        - name
+        - service
+        - start_time
+        - duration_ms
+        - status
+        - attributes
+      properties:
+        span_id:
+          type: string
+          description: The span ID.
+        parent_span_id:
+          type: string
+          description: The ID of the parent span. Empty for the root.
+        name:
+          type: string
+          description: The name of the span, such as job.process.
+        service:
+          type: string
+          description: The service that made the span, such as osapi-agent.
+        kind:
+          type: string
+          description: The span kind, such as server, client, producer or consumer.
+        start_time:
+          type: string
+          format: date-time
+          description: When the span started.
+        duration_ms:
+          type: number
+          format: double
+          description: How long the span took, in milliseconds.
+        status:
+          type: string
+          enum:
+            - ok
+            - error
+          description: Whether the work of the span failed.
+        status_message:
+          type: string
+          description: The error of a failed span.
+        attributes:
+          type: object
+          additionalProperties:
+            type: string
+          description: The attributes of the span, each as text.
     CertificateCACreateRequest:
       type: object
       required:
@@ -11144,6 +11274,9 @@ x-tagGroups:
     tags:
       - Node_Management_API_node_operations
       - Node_Management_API_node_status
+  - name: Telemetry API
+    tags:
+      - Telemetry_API_telemetry
   - name: Certificate Management API
     tags:
       - Certificate_Management_API_certificate_operations

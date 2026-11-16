@@ -1480,6 +1480,24 @@ func (e TimezoneMutationResultStatus) Valid() bool {
 	}
 }
 
+// Defines values for TraceSpanStatus.
+const (
+	TraceSpanStatusError TraceSpanStatus = "error"
+	TraceSpanStatusOk    TraceSpanStatus = "ok"
+)
+
+// Valid indicates whether the value is a known member of the TraceSpanStatus enum.
+func (e TraceSpanStatus) Valid() bool {
+	switch e {
+	case TraceSpanStatusError:
+		return true
+	case TraceSpanStatusOk:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for UpdateEntryStatus.
 const (
 	UpdateEntryStatusFailed  UpdateEntryStatus = "failed"
@@ -1596,25 +1614,25 @@ func (e PostFileMultipartBodyContentType) Valid() bool {
 
 // Defines values for GetJobsParamsStatus.
 const (
-	GetJobsParamsStatusCompleted      GetJobsParamsStatus = "completed"
-	GetJobsParamsStatusFailed         GetJobsParamsStatus = "failed"
-	GetJobsParamsStatusPartialFailure GetJobsParamsStatus = "partial_failure"
-	GetJobsParamsStatusProcessing     GetJobsParamsStatus = "processing"
-	GetJobsParamsStatusSubmitted      GetJobsParamsStatus = "submitted"
+	Completed      GetJobsParamsStatus = "completed"
+	Failed         GetJobsParamsStatus = "failed"
+	PartialFailure GetJobsParamsStatus = "partial_failure"
+	Processing     GetJobsParamsStatus = "processing"
+	Submitted      GetJobsParamsStatus = "submitted"
 )
 
 // Valid indicates whether the value is a known member of the GetJobsParamsStatus enum.
 func (e GetJobsParamsStatus) Valid() bool {
 	switch e {
-	case GetJobsParamsStatusCompleted:
+	case Completed:
 		return true
-	case GetJobsParamsStatusFailed:
+	case Failed:
 		return true
-	case GetJobsParamsStatusPartialFailure:
+	case PartialFailure:
 		return true
-	case GetJobsParamsStatusProcessing:
+	case Processing:
 		return true
-	case GetJobsParamsStatusSubmitted:
+	case Submitted:
 		return true
 	default:
 		return false
@@ -4466,6 +4484,51 @@ type TimezoneUpdateResponse struct {
 	Results []TimezoneMutationResult `json:"results"`
 }
 
+// TraceResponse defines model for TraceResponse.
+type TraceResponse struct {
+	// Spans Each span of the trace, ordered by start time.
+	Spans []TraceSpan `json:"spans"`
+
+	// TraceId The trace ID.
+	TraceId string `json:"trace_id"`
+}
+
+// TraceSpan defines model for TraceSpan.
+type TraceSpan struct {
+	// Attributes The attributes of the span, each as text.
+	Attributes map[string]string `json:"attributes"`
+
+	// DurationMs How long the span took, in milliseconds.
+	DurationMs float64 `json:"duration_ms"`
+
+	// Kind The span kind, such as server, client, producer or consumer.
+	Kind *string `json:"kind,omitempty"`
+
+	// Name The name of the span, such as job.process.
+	Name string `json:"name"`
+
+	// ParentSpanId The ID of the parent span. Empty for the root.
+	ParentSpanId *string `json:"parent_span_id,omitempty"`
+
+	// Service The service that made the span, such as osapi-agent.
+	Service string `json:"service"`
+
+	// SpanId The span ID.
+	SpanId string `json:"span_id"`
+
+	// StartTime When the span started.
+	StartTime time.Time `json:"start_time"`
+
+	// Status Whether the work of the span failed.
+	Status TraceSpanStatus `json:"status"`
+
+	// StatusMessage The error of a failed span.
+	StatusMessage *string `json:"status_message,omitempty"`
+}
+
+// TraceSpanStatus Whether the work of the span failed.
+type TraceSpanStatus string
+
 // UpdateCollectionResponse defines model for UpdateCollectionResponse.
 type UpdateCollectionResponse struct {
 	// JobId The job ID used to process this request.
@@ -5438,6 +5501,9 @@ type ClientInterface interface {
 
 	// DeleteNodeUserSSHKey request
 	DeleteNodeUserSSHKey(ctx context.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTrace request
+	GetTrace(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiVersion request
 	GetApiVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -7317,6 +7383,18 @@ func (c *Client) PostNodeUserSSHKey(ctx context.Context, hostname Hostname, name
 
 func (c *Client) DeleteNodeUserSSHKey(ctx context.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteNodeUserSSHKeyRequest(c.Server, hostname, name, fingerprint)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetTrace(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTraceRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -12471,6 +12549,40 @@ func NewDeleteNodeUserSSHKeyRequest(server string, hostname Hostname, name UserN
 	return req, nil
 }
 
+// NewGetTraceRequest generates requests for GetTrace
+func NewGetTraceRequest(server string, id string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/telemetry/trace/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetApiVersionRequest generates requests for GetApiVersion
 func NewGetApiVersionRequest(server string) (*http.Request, error) {
 	var err error
@@ -12972,6 +13084,9 @@ type ClientWithResponsesInterface interface {
 
 	// DeleteNodeUserSSHKeyWithResponse request
 	DeleteNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*DeleteNodeUserSSHKeyResponse, error)
+
+	// GetTraceWithResponse request
+	GetTraceWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetTraceResponse, error)
 
 	// GetApiVersionWithResponse request
 	GetApiVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiVersionResponse, error)
@@ -17027,6 +17142,42 @@ func (r DeleteNodeUserSSHKeyResponse) ContentType() string {
 	return ""
 }
 
+type GetTraceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *TraceResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+	JSON503      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTraceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTraceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTraceResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetApiVersionResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -18429,6 +18580,15 @@ func (c *ClientWithResponses) DeleteNodeUserSSHKeyWithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParseDeleteNodeUserSSHKeyResponse(rsp)
+}
+
+// GetTraceWithResponse request returning *GetTraceResponse
+func (c *ClientWithResponses) GetTraceWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetTraceResponse, error) {
+	rsp, err := c.GetTrace(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTraceResponse(rsp)
 }
 
 // GetApiVersionWithResponse request returning *GetApiVersionResponse
@@ -25012,6 +25172,74 @@ func ParseDeleteNodeUserSSHKeyResponse(rsp *http.Response) (*DeleteNodeUserSSHKe
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTraceResponse parses an HTTP response from a GetTraceWithResponse call
+func ParseGetTraceResponse(rsp *http.Response) (*GetTraceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTraceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TraceResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
 
 	}
 

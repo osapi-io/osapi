@@ -7,12 +7,12 @@ require (
 	github.com/avfs/avfs v0.35.0
 	github.com/caarlos0/go-version v0.2.2
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/charmbracelet/x/ansi v0.11.8
+	github.com/charmbracelet/x/ansi v0.11.9
 	github.com/dave/jennifer v1.7.1
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/docker/go-connections v0.8.2
 	// https://github.com/oapi-codegen/oapi-codegen/issues/1702
-	github.com/getkin/kin-openapi v0.149.0
+	github.com/getkin/kin-openapi v0.153.0
 	github.com/ggwhite/go-masker/v2 v2.4.2
 	github.com/go-playground/validator/v10 v10.30.6
 	github.com/golang-jwt/jwt/v4 v4.5.2
@@ -21,7 +21,7 @@ require (
 	github.com/labstack/echo/v5 v5.4.4
 	github.com/lmittmann/tint v1.2.1
 	github.com/muesli/termenv v0.16.0
-	github.com/nats-io/jwt/v2 v2.8.2
+	github.com/nats-io/jwt/v2 v2.8.3
 	github.com/nats-io/nats-server/v2 v2.15.2
 	github.com/nats-io/nats.go v1.55.0
 	github.com/nats-io/nkeys v0.4.17
@@ -38,7 +38,7 @@ require (
 	github.com/spf13/pflag v1.1.0
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.71.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.72.0
 	go.opentelemetry.io/otel v1.47.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.47.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.47.0
@@ -51,7 +51,7 @@ require (
 	go.opentelemetry.io/proto/otlp v1.11.1
 	go.uber.org/mock v0.6.0
 	golang.org/x/term v0.47.0
-	golang.org/x/tools v0.51.0
+	golang.org/x/tools v0.52.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3
 )
@@ -210,7 +210,7 @@ require (
 	github.com/matoous/godox v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
-	github.com/mattn/go-runewidth v0.0.24 // indirect
+	github.com/mattn/go-runewidth v0.0.27 // indirect
 	github.com/mgechev/revive v1.17.0 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/minio/highwayhash v1.0.4 // indirect
@@ -228,8 +228,6 @@ require (
 	github.com/nishanths/predeclared v0.2.2 // indirect
 	github.com/nunnatsa/ginkgolinter v0.24.0 // indirect
 	github.com/oapi-codegen/oapi-codegen/v2 v2.7.1 // indirect
-	github.com/oasdiff/yaml v0.1.1 // indirect
-	github.com/oasdiff/yaml3 v0.0.14 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -302,10 +300,11 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
+	go.yaml.in/yaml/v4 v4.0.0 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20260811152304-ee035b5b010f // indirect
-	golang.org/x/mod v0.41.0 // indirect
-	golang.org/x/net v0.60.0 // indirect
+	golang.org/x/mod v0.42.0 // indirect
+	golang.org/x/net v0.61.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
