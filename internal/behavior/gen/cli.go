@@ -74,6 +74,7 @@ var flagFuncs = map[reflect.Kind][2]string{
 	reflect.Uint32:  {"Uint32", "GetUint32"},
 	reflect.Uint64:  {"Uint64", "GetUint64"},
 	reflect.Float64: {"Float64", "GetFloat64"},
+	reflect.Map:     {"StringToString", "GetStringToString"},
 }
 
 // cliFlag is one input field's flag.
@@ -290,6 +291,8 @@ func zero(
 		return jen.Lit("")
 	case reflect.Bool:
 		return jen.False()
+	case reflect.Map:
+		return jen.Map(jen.String()).String().Values()
 	default:
 		return jen.Lit(0)
 	}

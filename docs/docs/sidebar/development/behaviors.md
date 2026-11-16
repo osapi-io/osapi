@@ -181,14 +181,15 @@ The tags of the input and output types hold all of the contract. Each field of
 an input becomes a request field, a CLI flag and a spec property. Each field of
 an output becomes a JSON field and a table column.
 
-| Tag                | On     | Becomes                                                                                                |
-| ------------------ | ------ | ------------------------------------------------------------------------------------------------------ |
-| `json:"key"`       | both   | The name everywhere: request, flag (`--key`), column (`KEY`), `--json` field                           |
-| `validate:"..."`   | input  | Checked by the API before a job is queued; the spec's constraints                                      |
-| `doc:"..."`        | both   | The field's description in the spec, the flag's help and the docs pages                                |
-| `render:"..."`     | output | How a column shows: `-` hides it, `bytes`, `age` or `status`                                           |
-| `telemetry:"attr"` | input  | Records the field on the method's trace span. The field that `.Key` names is recorded without the tag. |
-| `secret:"true"`    | input  | A secret: redacted from the audit log, write-only in the spec, never traced                            |
+| Tag                | On     | Becomes                                                                                                                                                                                                                          |
+| ------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `json:"key"`       | both   | The name everywhere: request, flag (`--key`), column (`KEY`), `--json` field                                                                                                                                                     |
+| `validate:"..."`   | input  | Checked by the API before a job is queued; the spec's constraints                                                                                                                                                                |
+| `doc:"..."`        | both   | The field's description in the spec, the flag's help and the docs pages                                                                                                                                                          |
+| `render:"..."`     | output | How a column shows: `-` hides it, `bytes`, `age` or `status`                                                                                                                                                                     |
+| `telemetry:"attr"` | input  | Records the field on the method's trace span. The field that `.Key` names is recorded without the tag.                                                                                                                           |
+| `template:"vars"`  | input  | A Go template, whose `.Vars` are in the input field `vars` (a `map[string]string`). The API refuses one that does not parse, or that reads a field or a var it does not have. `osapi behavior spec` lists what a template reads. |
+| `secret:"true"`    | input  | A secret: redacted from the audit log, write-only in the spec, never traced                                                                                                                                                      |
 
 A write's output has a `changed` bool. The table shows it as the row's status,
 `changed` or `ok`, rather than as a column. An output that is a slice becomes

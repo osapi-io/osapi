@@ -29,7 +29,7 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/behavior"
-	"github.com/osapi-io/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/behavior/server"
 )
 
 // probeMark is in every probe, so a probe that got through is found by it.
@@ -110,7 +110,7 @@ func probe(
 	value string,
 	dirs map[string]bool,
 ) string {
-	if _, ok := validation.Struct(input); !ok {
+	if _, ok := server.Valid(input); !ok {
 		return ""
 	}
 

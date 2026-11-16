@@ -22,10 +22,12 @@ package cmd
 
 import (
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/guide"
+	"github.com/osapi-io/osapi/internal/job"
 )
 
 var behaviorSpecCmd = newSpecCommand(
-	behavior.CurrentSpec,
+	func() guide.Spec { return behavior.CurrentSpec(job.FactKeys()...) },
 	"Print the behavior DSL: each option, method, example part and field tag",
 	"Print each part of the behavior DSL, what it makes osapi do and when to use\n"+
 		"it. The list comes from this binary. Thus it agrees with the build that you\n"+

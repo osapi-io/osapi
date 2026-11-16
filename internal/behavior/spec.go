@@ -37,6 +37,7 @@ const (
 	KindCompose    = "compose"
 	KindBlock      = "block"
 	KindTag        = "tag"
+	KindTemplate   = "template"
 	KindGenerated  = "generated"
 	KindNotYet     = "not-yet"
 )
@@ -56,6 +57,7 @@ var Spec = guide.Spec{
 		{Kind: KindCall, Title: "Calls in a provider"},
 		{Kind: KindCompose, Title: "Building on other behaviors"},
 		{Kind: KindTag, Title: "Tags on input, output and settings fields"},
+		{Kind: KindTemplate, Title: "What a template reads"},
 		{Kind: KindGenerated, Title: "Generated, never edited"},
 		{Kind: KindNotYet, Title: "Not supported yet"},
 	},
@@ -271,6 +273,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindCall,
+			Name: "Render(text, TemplateData{Facts, Vars, Hostname})",
+			Does: "Renders a template with the facts of the agent, the vars of the request and the hostname. A key that the data does not have is an error.",
+			When: "In the provider of a method with a template input. The input is checked at the API already.",
+		},
+		{
+			Kind: KindCall,
 			Name: "Settings[T](Behavior)",
 			Does: "Returns the settings of the behavior, or the defaults.",
 			When: "In a builder or a method that reads a setting.",
@@ -320,6 +328,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindTag,
+			Name: `template:"vars"`,
+			Does: "Marks a string input as a Go template, whose .Vars are in the input field vars, a map[string]string. The API refuses a template that does not parse, that reads a field other than .Facts, .Vars and .Hostname, or that reads a var the request does not give. Each such method gets a generated 400 test.",
+			When: "On an input that holds a template, such as the content of a file. Render it with Render.",
+		},
+		{
+			Kind: KindTag,
 			Name: `secret:"true"`,
 			Does: "Redacted from the audit log, write-only in the spec, never recorded on a span.",
 			When: "On each input that holds a password, a key or a token.",
@@ -331,6 +345,24 @@ var Spec = guide.Spec{
 			When: "On each field of the struct given to Config.",
 		},
 
+		{
+			Kind: KindTemplate,
+			Name: ".Vars.<name>",
+			Does: "A value from the vars of the request. The API refuses a template that reads a var that the request does not give.",
+			When: "For a value that the caller gives with each call.",
+		},
+		{
+			Kind: KindTemplate,
+			Name: ".Hostname",
+			Does: "The hostname of the agent that renders the template.",
+			When: "For a value that names the host.",
+		},
+		{
+			Kind: KindTemplate,
+			Name: ".Facts.<key>",
+			Does: "A fact of the agent that renders the template. Facts are known only on each host, so a fact that a host does not have fails on that host.",
+			When: "For a value that differs from host to host.",
+		},
 		{
 			Kind: KindGenerated,
 			Name: "internal/behaviors/<name>/gen/",
@@ -396,9 +428,17 @@ var Spec = guide.Spec{
 
 // CurrentSpec is Spec, with "Building blocks" after "Building on other
 // behaviors": each internal behavior in the registry, with what it does and
-// its methods. Thus the list agrees with the behaviors of the binary.
-func CurrentSpec() guide.Spec {
+// its methods. factKeys, the keys that .Facts has, are added to that term.
+// Thus both lists agree with the binary.
+func CurrentSpec(
+	factKeys ...string,
+) guide.Spec {
 	spec := guide.Spec{Terms: append([]guide.Term(nil), Spec.Terms...)}
+	for i, t := range spec.Terms {
+		if t.Name == ".Facts.<key>" && len(factKeys) > 0 {
+			spec.Terms[i].Does += " The keys: " + strings.Join(factKeys, ", ") + "."
+		}
+	}
 	for _, k := range Spec.Kinds {
 		spec.Kinds = append(spec.Kinds, k)
 		if k.Kind == KindCompose {

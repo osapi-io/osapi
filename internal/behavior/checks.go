@@ -89,6 +89,11 @@ var Checks = guide.Checks{
 		Fix:      "Name the item with .Key(\"field\"). A method without a key, such as a create, tags that field telemetry:\"attr\".",
 	},
 	{
+		Rule:     RuleTemplate,
+		Requires: "A field tagged template:\"<vars>\" is a string, and <vars> is the JSON name of an input field of type map[string]string.",
+		Fix:      "Tag the string field that holds the template with template:\"vars\", and add Vars map[string]string `json:\"vars\"` to the input.",
+	},
+	{
 		Rule:     RuleSecret,
 		Requires: "No input field is both secret:\"true\" and telemetry:\"attr\".",
 		Fix:      "Remove telemetry:\"attr\" from the secret field. A secret is never recorded on a span.",
