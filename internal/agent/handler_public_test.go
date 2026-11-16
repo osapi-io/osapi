@@ -268,9 +268,16 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					WriteStatusEvent(gomock.Any(), "test-job-123", "acknowledged", gomock.Any(), gomock.Any()).
 					Return(nil)
 
+				// The version of the agent is in its registration, not in each
+				// started event.
 				s.mockJobClient.EXPECT().
 					WriteStatusEvent(gomock.Any(), "test-job-123", "started", gomock.Any(), gomock.Any()).
-					Return(nil)
+					DoAndReturn(func(_ context.Context, _, _, _ string, data map[string]interface{}) error {
+						s.NotContains(data, "agent_version")
+						s.Contains(data, "pid")
+
+						return nil
+					})
 
 				s.mockJobClient.EXPECT().
 					WriteStatusEvent(gomock.Any(), "test-job-123", "completed", gomock.Any(), gomock.Any()).

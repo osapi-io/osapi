@@ -13,8 +13,8 @@ you deploy the `osapi` binary, the UI is ready.
 The dashboard provides a visual interface for fleet management:
 
 - **Dashboard**: an overview of the fleet health, with agent cards (machine ID,
-  fingerprint, scheduling state), the component status, JetStream metrics and
-  node conditions
+  fingerprint, version, scheduling state), the component status, JetStream
+  metrics and node conditions
 - **Configure**: a builder that puts operations together from blocks, and
   applies the changes to the targets
 - **Admin**: the audit log with export, the job queue with retry and delete, PKI

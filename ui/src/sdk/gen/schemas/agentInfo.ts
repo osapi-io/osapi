@@ -21,6 +21,8 @@ export interface AgentInfo {
   machine_id?: string;
   /** The SHA256 fingerprint of the agent's PKI public key. Empty when PKI is disabled. */
   fingerprint?: string;
+  /** The build version of the agent binary. Absent for an agent that does not report it. */
+  version?: string;
   /** The hostname of the agent. */
   hostname: string;
   /** The current status of the agent. */

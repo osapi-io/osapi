@@ -34,11 +34,14 @@ Each condition tracks:
 `agent list` shows active conditions in the CONDITIONS column:
 
 ```
-HOSTNAME  STATUS  CONDITIONS               LABELS  AGE    LOAD (1m)  OS
-web-01    Ready   HighLoad,MemoryPressure  -       3d 4h  4.12       Ubuntu 24.04
-web-02    Ready   -                        -       12h    0.31       Ubuntu 24.04
-db-01     Ready   DiskPressure             -       5d     1.22       Ubuntu 24.04
+HOSTNAME  STATUS  CONDITIONS               LABELS  AGE    LOAD (1m)  OS            VERSION
+web-01    Ready   HighLoad,MemoryPressure  -       3d 4h  4.12       Ubuntu 24.04  v1.4.0
+web-02    Ready   -                        -       12h    0.31       Ubuntu 24.04  v1.4.0
+db-01     Ready   DiskPressure             -       5d     1.22       Ubuntu 24.04  v1.3.2
 ```
+
+The VERSION column is the build of each agent. During an upgrade, it shows which
+agents run the new build.
 
 `agent get` shows full condition details:
 

@@ -129,6 +129,7 @@ func (a *Agent) writeRegistration(
 		State:         a.State(),
 		SubComponents: a.subComponents,
 		Fingerprint:   a.pkiFingerprint(),
+		AgentVersion:  a.version,
 	}
 
 	if info, err := a.hostProvider.GetOSInfo(); err == nil {

@@ -71,6 +71,9 @@ func displayAgentGetDetail(
 	if data.Fingerprint != "" {
 		kvArgs = append(kvArgs, "Fingerprint", data.Fingerprint)
 	}
+	if data.Version != "" {
+		kvArgs = append(kvArgs, "Version", data.Version)
+	}
 	kvArgs = append(kvArgs, "Status", data.Status)
 	cli.PrintKV(kvArgs...)
 

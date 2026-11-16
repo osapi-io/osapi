@@ -181,6 +181,9 @@ type AgentInfo struct {
 
 	// Verified Whether this agent's registration was signed by its stored key and claims the hostname it enrolled under. Only a verified registration decides where work is routed. True when the controller is not enforcing verification.
 	Verified *bool `json:"verified,omitempty"`
+
+	// Version The build version of the agent binary. Absent for an agent that does not report it.
+	Version *string `json:"version,omitempty"`
 }
 
 // AgentInfoState Agent scheduling state.

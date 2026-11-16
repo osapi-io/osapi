@@ -85,6 +85,7 @@ func (s *AgentListPublicTestSuite) TestListAgents() {
 					Hostname:     "server1",
 					MachineID:    "abc123def456",
 					Fingerprint:  "SHA256:test-fingerprint",
+					AgentVersion: "v1.4.0",
 					Labels:       map[string]string{"group": "web"},
 					RegisteredAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 					StartedAt:    time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
@@ -106,6 +107,9 @@ func (s *AgentListPublicTestSuite) TestListAgents() {
 				s.Equal("abc123def456", *r.Agents[0].MachineId)
 				s.Require().NotNil(r.Agents[0].Fingerprint)
 				s.Equal("SHA256:test-fingerprint", *r.Agents[0].Fingerprint)
+				s.Require().NotNil(r.Agents[0].Version)
+				s.Equal("v1.4.0", *r.Agents[0].Version)
+				s.Nil(r.Agents[1].Version, "an agent that reports no version has none")
 				s.NotNil(r.Agents[0].Labels)
 				s.NotNil(r.Agents[0].RegisteredAt)
 				s.NotNil(r.Agents[0].StartedAt)

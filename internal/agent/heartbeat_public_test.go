@@ -421,6 +421,30 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistrationStoresHeartbeatT
 	}
 }
 
+func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistrationHasVersion() {
+	s.Run("when the agent has a version its registration has it", func() {
+		s.testAgent.SetVersion("v1.4.0")
+
+		var got job.AgentRegistration
+		s.mockKV.EXPECT().
+			KVPut(gomock.Any(), "registry", "agents.test_machine_id", gomock.Any()).
+			DoAndReturn(func(_ context.Context, _, _ string, data []byte) (uint64, error) {
+				s.Require().NoError(json.Unmarshal(data, &got))
+
+				return 1, nil
+			})
+
+		agent.ExportWriteRegistration(
+			context.Background(),
+			s.testAgent,
+			"test-machine-id",
+			"test-agent",
+		)
+
+		s.Equal("v1.4.0", got.AgentVersion)
+	})
+}
+
 func (s *HeartbeatLowLevelPublicTestSuite) TestDeregister() {
 	tests := []struct {
 		name         string

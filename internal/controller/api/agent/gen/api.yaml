@@ -598,6 +598,12 @@ components:
           description: >-
             The SHA256 fingerprint of the agent's PKI public key.
             Empty when PKI is disabled.
+        version:
+          type: string
+          description: >-
+            The build version of the agent binary. Absent for an agent
+            that does not report it.
+          example: "v1.4.0"
         hostname:
           type: string
           description: The hostname of the agent.
