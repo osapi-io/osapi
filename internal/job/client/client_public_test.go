@@ -118,9 +118,12 @@ func (s *ClientPublicTestSuite) TestQuery() {
 	skippedResp := `{"status":"skipped","error":"unsupported"}`
 
 	tests := []struct {
-		name         string
-		data         any
-		withMeter    bool
+		name      string
+		data      any
+		withMeter bool
+		// timeout, when set, is the client's timeout, so a case that waits
+		// for no answer does not wait the suite's 30 seconds.
+		timeout      time.Duration
 		setupMocks   func()
 		expectedErr  string
 		validateFunc func(jobID string, resp *job.Response)
@@ -255,8 +258,9 @@ func (s *ClientPublicTestSuite) TestQuery() {
 			expectedErr: "failed to publish and wait",
 		},
 		{
-			name: "when timeout waiting for response",
-			data: nil,
+			name:    "when timeout waiting for response",
+			data:    nil,
+			timeout: 50 * time.Millisecond,
 			setupMocks: func() {
 				setupPublishAndWaitMocksWithOpts(
 					s.mockCtrl,
@@ -297,7 +301,11 @@ func (s *ClientPublicTestSuite) TestQuery() {
 
 			tt.setupMocks()
 
-			jobID, resp, err := s.jobsClient.Query(
+			jobs := s.jobsClient
+			if tt.timeout != 0 {
+				jobs = s.newClient(tt.timeout, "")
+			}
+			jobID, resp, err := jobs.Query(
 				s.ctx,
 				target,
 				category,
@@ -504,7 +512,8 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "registry").
 					Return(nil, errors.New("registry unavailable"))
-				c := s.newClientWithRegistry()
+				// It waits the client's whole timeout, so the timeout is short.
+				c := s.newClient(50*time.Millisecond, "registry")
 
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
@@ -1142,14 +1151,24 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 // newClientWithRegistry creates a new client using the suite's existing mocks
 // and the registry bucket.
 func (s *ClientPublicTestSuite) newClientWithRegistry() *client.Client {
+	return s.newClient(30*time.Second, "registry")
+}
+
+// newClient is a client with timeout, and with registry as its registry
+// bucket when it is not empty.
+func (s *ClientPublicTestSuite) newClient(
+	timeout time.Duration,
+	registry string,
+) *client.Client {
 	opts := &client.Options{
-		Timeout:        30 * time.Second,
+		Timeout:        timeout,
 		JobsBucket:     "jobs",
 		StreamName:     "JOBS",
-		RegistryBucket: "registry",
+		RegistryBucket: registry,
 	}
 	c, err := client.New(slog.Default(), s.mockNATSClient, opts)
 	s.Require().NoError(err)
+
 	return c
 }
 
