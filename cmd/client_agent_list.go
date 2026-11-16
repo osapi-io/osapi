@@ -116,6 +116,7 @@ var clientAgentListCmd = &cobra.Command{
 				age,
 				loadStr,
 				osStr,
+				a.Version,
 			})
 		}
 
@@ -131,6 +132,7 @@ var clientAgentListCmd = &cobra.Command{
 					"AGE",
 					"LOAD (1m)",
 					"OS",
+					"VERSION",
 				},
 				Rows: rows,
 			},

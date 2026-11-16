@@ -31,6 +31,7 @@ type Agent struct {
 	Hostname         string             `json:"hostname"`
 	MachineID        string             `json:"machine_id,omitempty"`
 	Fingerprint      string             `json:"fingerprint,omitempty"`
+	Version          string             `json:"version,omitempty"`
 	Status           string             `json:"status"`
 	State            string             `json:"state,omitempty"`
 	Labels           map[string]string  `json:"labels,omitempty"`
@@ -122,6 +123,10 @@ func agentFromGen(
 
 	if g.Fingerprint != nil {
 		a.Fingerprint = *g.Fingerprint
+	}
+
+	if g.Version != nil {
+		a.Version = *g.Version
 	}
 
 	if g.Labels != nil {

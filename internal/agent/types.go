@@ -93,6 +93,10 @@ type Agent struct {
 	// startedAt records when the agent process started.
 	startedAt time.Time
 
+	// version is the build version of the agent binary, from SetVersion. It
+	// is in the started event of each job and in the registration.
+	version string
+
 	// prevConditions tracks condition state between heartbeats.
 	prevConditions []job.Condition
 

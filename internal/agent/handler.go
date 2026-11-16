@@ -410,8 +410,7 @@ func (a *Agent) handleJobMessage(
 	// Write started event
 	startTime := time.Now()
 	if err := a.writeStatusEvent(ctx, jobKey, string(job.StatusStarted), map[string]interface{}{
-		"agent_version": "1.0.0", // TODO: get from config or build info
-		"pid":           os.Getpid(),
+		"pid": os.Getpid(),
 	}); err != nil {
 		a.logger.ErrorContext(
 			ctx,

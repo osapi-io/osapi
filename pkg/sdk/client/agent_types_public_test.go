@@ -72,11 +72,13 @@ func (suite *AgentTypesPublicTestSuite) TestAgentFromGen() {
 
 				machineID := "abc123-machine-id"
 				fingerprint := "SHA256:abc123def456"
+				version := "v1.4.0"
 
 				return &gen.AgentInfo{
 					Hostname:      "web-01",
 					MachineId:     &machineID,
 					Fingerprint:   &fingerprint,
+					Version:       &version,
 					Status:        gen.AgentInfoStatus("Ready"),
 					Labels:        &labels,
 					Architecture:  &arch,
@@ -152,6 +154,7 @@ func (suite *AgentTypesPublicTestSuite) TestAgentFromGen() {
 				suite.Equal("web-01", a.Hostname)
 				suite.Equal("abc123-machine-id", a.MachineID)
 				suite.Equal("SHA256:abc123def456", a.Fingerprint)
+				suite.Equal("v1.4.0", a.Version)
 				suite.Equal("Ready", a.Status)
 				suite.Equal("Ready", a.State)
 				suite.Equal(map[string]string{"group": "web", "env": "prod"}, a.Labels)

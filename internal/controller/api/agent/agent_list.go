@@ -88,6 +88,11 @@ func setIdentity(
 		info.Fingerprint = &fingerprint
 	}
 
+	if a.AgentVersion != "" {
+		version := a.AgentVersion
+		info.Version = &version
+	}
+
 	// Both are reported, because they answer different questions: whether the
 	// controller can verify this agent at all, and whether what it last
 	// registered checked out. An operator staging a rollout needs the first to

@@ -107,7 +107,7 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
       </CardHeader>
       <CardContent className="flex flex-1 flex-col">
         {/* Identity */}
-        {(agent.machine_id || agent.fingerprint) && (
+        {(agent.machine_id || agent.fingerprint || agent.version) && (
           <div className="mt-1 space-y-0.5">
             {agent.machine_id && (
               <CopyField label="ID" value={agent.machine_id} />
@@ -115,6 +115,7 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
             {agent.fingerprint && (
               <CopyField label="FP" value={agent.fingerprint} />
             )}
+            {agent.version && <CopyField label="VER" value={agent.version} />}
           </div>
         )}
 

@@ -140,3 +140,13 @@ func (a *Agent) SetSubComponents(
 ) {
 	a.subComponents = scs
 }
+
+// SetVersion sets the build version of the agent binary, such as v1.4.0.
+// osapi agent start calls it with the version the binary was built with;
+// the agent writes it in the started event of each job and in its
+// registration.
+func (a *Agent) SetVersion(
+	version string,
+) {
+	a.version = version
+}
