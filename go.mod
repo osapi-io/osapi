@@ -21,7 +21,7 @@ require (
 	github.com/labstack/echo/v5 v5.4.4
 	github.com/lmittmann/tint v1.2.1
 	github.com/muesli/termenv v0.16.0
-	github.com/nats-io/jwt/v2 v2.8.2
+	github.com/nats-io/jwt/v2 v2.8.3
 	github.com/nats-io/nats-server/v2 v2.15.2
 	github.com/nats-io/nats.go v1.55.0
 	github.com/nats-io/nkeys v0.4.17
