@@ -42,6 +42,7 @@ const (
 	PermJobWrite         = client.PermJobWrite
 	PermHealthRead       = client.PermHealthRead
 	PermAuditRead        = client.PermAuditRead
+	PermTraceRead        = client.PermTraceRead
 	PermCommandExecute   = client.PermCommandExecute
 	PermCommandShell     = client.PermCommandShell
 	PermFileRead         = client.PermFileRead
@@ -84,6 +85,7 @@ var builtinPermissions = []Permission{
 	PermJobWrite,
 	PermHealthRead,
 	PermAuditRead,
+	PermTraceRead,
 	PermCommandExecute,
 	PermCommandShell,
 	PermFileRead,
@@ -126,6 +128,7 @@ var builtinRolePermissions = map[string][]Permission{
 		PermJobRead,
 		PermJobWrite,
 		PermHealthRead,
+		PermTraceRead,
 		PermAuditRead,
 		PermCommandExecute,
 		PermCommandShell,
@@ -164,6 +167,7 @@ var builtinRolePermissions = map[string][]Permission{
 		PermJobRead,
 		PermJobWrite,
 		PermHealthRead,
+		PermTraceRead,
 		PermFileRead,
 		PermFileWrite,
 		PermDockerRead,
@@ -193,6 +197,7 @@ var builtinRolePermissions = map[string][]Permission{
 		PermNetworkRead,
 		PermJobRead,
 		PermHealthRead,
+		PermTraceRead,
 		PermFileRead,
 		PermDockerRead,
 		PermCronRead,

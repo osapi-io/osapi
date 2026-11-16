@@ -1,0 +1,1 @@
+{"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","pattern":"^[0-9a-f]{32}$"},"description":"The trace ID, 32 hexadecimal characters."}]}

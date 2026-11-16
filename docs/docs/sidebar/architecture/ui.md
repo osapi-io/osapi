@@ -44,6 +44,9 @@ Three built-in roles have permissions in levels:
 | Operator | `write`   | Read, write and execute, but not audit |
 | Viewer   | `read`    | Read only                              |
 
+Each role can read traces with `trace:read`. The Traces page in the Admin menu
+shows the span tree of a trace by its ID.
+
 A permission has the form `resource:verb`, as in the Go model of osapi, for
 example `agent:read`, `file:write`, `command:execute` and `docker:execute`.
 `BLOCK_PERMISSIONS` (`ui/src/lib/permissions.ts`) gives the permission that each

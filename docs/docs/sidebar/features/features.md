@@ -29,7 +29,7 @@ osapi has these features to manage Linux systems.
 | 🕐  | [NTP Management](ntp-management.md)            | Chrony NTP server configuration and sync status                                               |
 | 🌍  | [Timezone Management](timezone-management.md)  | System timezone get and set via timedatectl                                                   |
 | 🔔  | [Notifications](notifications.md)              | Pluggable condition alerts with re-notification                                               |
-| 🔍  | [Distributed Tracing](distributed-tracing.md)  | OpenTelemetry with trace context propagation                                                  |
+| 🔍  | [Distributed Tracing](distributed-tracing.md)  | OpenTelemetry across the queue, and the span tree of a trace in the CLI and the UI           |
 | ⚡  | [Power Management](power-management.md)        | Reboot and shutdown target hosts with optional delay                                          |
 | 📡  | [Process Management](process-management.md)    | List, inspect, and signal running processes                                                   |
 | 👤  | [User & Group Management](user-management.md)  | Local user account, group, and SSH key management                                             |
