@@ -46,13 +46,27 @@ the configured servers.
 
 **Ping.** Sends ICMP echo requests to a target host and reports the results.
 
-On Linux, the agent sends a ping without root, on a datagram socket. The kernel
-permits this only for the groups in `net.ipv4.ping_group_range`. If the group of
-the agent is not in the range, the ping fails. To permit each group:
+On Linux, the agent sends a ping on an ICMP datagram socket, also when it runs
+as root. The kernel permits this only for the groups in
+`net.ipv4.ping_group_range`. If the group of the agent is not in the range, the
+ping fails. On Debian, Ubuntu and Fedora, systemd permits each group; the
+default of the kernel permits none.
+[Agent hardening](agent-hardening.md#kernel-settings) tells more. To permit each
+group:
 
 ```bash
 sudo sysctl -w net.ipv4.ping_group_range="0 2147483647"
 ```
+
+The agent sends three echo requests and waits up to 4 seconds for the replies. A
+reply that does not come back in that time is loss, in the `LOSS` column. It is
+not a failure of the ping. When the job ends, for example because it is
+cancelled, the ping stops.
+
+If each ping from a host times out, but other traffic from that host works,
+something between the host and the target drops ICMP. An example is a VM behind
+the NAT of a Mac with the stealth mode of the macOS firewall on: the Mac drops
+the replies to the pings of the VM.
 
 Refer to [CLI Reference](../usage/cli/client/node/network/network.mdx) for usage
 and examples, or the

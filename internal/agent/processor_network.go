@@ -52,7 +52,7 @@ func NewNetworkProcessor(
 		case "dns":
 			return processNetworkDNS(ctx, dnsProvider, logger, req)
 		case "ping":
-			return processNetworkPing(pingProvider, logger, req)
+			return processNetworkPing(ctx, pingProvider, logger, req)
 		case "interface":
 			return processInterfaceOperation(ctx, interfaceProvider, logger, req)
 		case "route":
@@ -173,6 +173,7 @@ func processNetworkDNS(
 
 // processNetworkPing handles ping operations.
 func processNetworkPing(
+	ctx context.Context,
 	pingProvider ping.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -192,7 +193,7 @@ func processNetworkPing(
 		slog.String("address", address),
 	)
 
-	result, err := pingProvider.Do(address)
+	result, err := pingProvider.Do(ctx, address)
 	if err != nil {
 		return nil, fmt.Errorf("ping failed: %w", err)
 	}

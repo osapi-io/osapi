@@ -61,15 +61,24 @@ var clientNodeNetworkPingCmd = &cobra.Command{
 			if r.Error != "" {
 				errPtr = &r.Error
 			}
+			// With no reply the API leaves the times out; the table shows -.
+			orDash := func(v string) string {
+				if v == "" {
+					return "-"
+				}
+
+				return v
+			}
+			avg, minRtt, maxRtt := orDash(r.AvgRtt), orDash(r.MinRtt), orDash(r.MaxRtt)
 			results = append(results, cli.ResultRow{
 				Hostname: r.Hostname,
 				Status:   r.Status,
 				Error:    errPtr,
 				Fields: []string{
-					r.AvgRtt,
-					r.MinRtt,
-					r.MaxRtt,
-					fmt.Sprintf("%f", r.PacketLoss),
+					avg,
+					minRtt,
+					maxRtt,
+					fmt.Sprintf("%.0f%%", r.PacketLoss),
 				},
 			})
 		}

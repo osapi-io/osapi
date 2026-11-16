@@ -127,6 +127,40 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 				s.Equal(3, *r.Results[0].PacketsReceived)
 				s.Require().NotNil(r.Results[0].Changed)
 				s.False(*r.Results[0].Changed)
+				s.Require().NotNil(r.Results[0].AvgRtt)
+				s.Equal("20.00ms", *r.Results[0].AvgRtt)
+			},
+		},
+		{
+			name: "when no reply comes back leaves the round-trip times out",
+			request: gen.PostNodeNetworkPingRequestObject{
+				Hostname: "_any",
+				Body: &gen.PostNodeNetworkPingJSONRequestBody{
+					Address: "1.1.1.1",
+				},
+			},
+			setupMock: func() {
+				data, _ := json.Marshal(ping.Result{PacketLoss: 100, PacketsSent: 3})
+				s.mockJobClient.EXPECT().
+					Query(gomock.Any(), "_any", "network", job.OperationNetworkPingDo, gomock.Any()).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{Hostname: "agent1", Data: json.RawMessage(data)},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeNetworkPingResponseObject) {
+				r, ok := resp.(gen.PostNodeNetworkPing200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.PingResponseStatusOk, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].PacketLoss)
+				s.Equal(float64(100), *r.Results[0].PacketLoss)
+				s.Require().NotNil(r.Results[0].PacketsReceived)
+				s.Equal(0, *r.Results[0].PacketsReceived)
+				s.Nil(r.Results[0].AvgRtt, "no round trip, so no time")
+				s.Nil(r.Results[0].MinRtt)
+				s.Nil(r.Results[0].MaxRtt)
 			},
 		},
 		{

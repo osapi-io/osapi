@@ -26,6 +26,10 @@ import (
 	"time"
 )
 
+// replyTimeout is how long a ping waits for its replies. It is below the
+// timeout of Do, so the pinger stops first and reports its statistics.
+const replyTimeout = 4 * time.Second
+
 // Do pings the given host and returns the ping statistics or an error.
 // It returns a Result struct, and an error if something goes wrong.
 //
@@ -40,6 +44,7 @@ import (
 //  2. Set capabilities on the binary to allow raw socket usage:
 //     sudo setcap cap_net_raw=+ep /path/to/your/compiled/binary
 func (u *Debian) Do(
+	job context.Context,
 	address string,
 ) (*Result, error) {
 	pinger, err := u.NewPingerFn(address)
@@ -49,10 +54,15 @@ func (u *Debian) Do(
 
 	pinger.SetCount(3)
 	pinger.SetPrivileged(false)
+	// The pinger stops at its own deadline, before the outer timeout, and
+	// reports a reply that did not come back as loss. Without it, one lost
+	// reply kept Run waiting until the outer timeout failed the whole ping.
+	pinger.SetTimeout(replyTimeout)
 
 	// Create a context with a timeout for the entire ping operation
 	timeout := 5 * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	// The timeout is under the job's context, so a job that ends stops it.
+	ctx, cancel := context.WithTimeout(job, timeout)
 	defer cancel()
 
 	// Run the ping in a separate goroutine to avoid blocking
@@ -86,6 +96,10 @@ func (u *Debian) Do(
 	// Use a select statement to enforce the timeout
 	select {
 	case <-ctx.Done():
+		if err := job.Err(); err != nil {
+			return nil, fmt.Errorf("ping stopped, the job ended: %w", err)
+		}
+
 		return nil, fmt.Errorf("ping operation timed out after %s", timeout)
 	case err := <-errorChan:
 		return nil, err

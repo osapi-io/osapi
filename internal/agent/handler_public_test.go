@@ -117,7 +117,7 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 
 	// Use plain ping mock with appropriate expectations
 	pingMock := pingMocks.NewPlainMockProvider(s.mockCtrl)
-	pingMock.EXPECT().Do(gomock.Any()).Return(&ping.Result{
+	pingMock.EXPECT().Do(gomock.Any(), gomock.Any()).Return(&ping.Result{
 		PacketsSent:     3,
 		PacketsReceived: 3,
 		PacketLoss:      0,

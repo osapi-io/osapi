@@ -51,9 +51,9 @@ func NewDefaultMockProvider(
 		MaxRTT:          20 * time.Millisecond,
 	}
 
-	mock.EXPECT().Do("1.1.1.1").Return(result, nil).AnyTimes()
+	mock.EXPECT().Do(gomock.Any(), "1.1.1.1").Return(result, nil).AnyTimes()
 
-	mock.EXPECT().Do("2001:4860:4860::8888").Return(result, nil).AnyTimes()
+	mock.EXPECT().Do(gomock.Any(), "2001:4860:4860::8888").Return(result, nil).AnyTimes()
 
 	return mock
 }
@@ -91,4 +91,5 @@ func SetCommonExpectations(
 ) {
 	mock.EXPECT().SetCount(3)
 	mock.EXPECT().SetPrivileged(false)
+	mock.EXPECT().SetTimeout(4 * time.Second)
 }

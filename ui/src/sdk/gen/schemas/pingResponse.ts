@@ -17,11 +17,11 @@ export interface PingResponse {
   packets_received?: number;
   /** Percentage of packet loss. */
   packet_loss?: number;
-  /** Minimum round-trip time in Go time.Duration format. */
+  /** Minimum round-trip time in milliseconds, with two decimals. Absent when no reply came back. */
   min_rtt?: string;
-  /** Average round-trip time in Go time.Duration format. */
+  /** Average round-trip time in milliseconds, with two decimals. Absent when no reply came back. */
   avg_rtt?: string;
-  /** Maximum round-trip time in Go time.Duration format. */
+  /** Maximum round-trip time in milliseconds, with two decimals. Absent when no reply came back. */
   max_rtt?: string;
   /** Whether the operation modified system state. */
   changed?: boolean;

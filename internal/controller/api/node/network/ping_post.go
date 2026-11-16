@@ -179,17 +179,23 @@ func buildPingResponse(
 ) gen.PingResponse {
 	changed := false
 
-	return gen.PingResponse{
+	resp := gen.PingResponse{
 		Hostname:        hostname,
 		Status:          gen.PingResponseStatusOk,
-		AvgRtt:          durationToString(&r.AvgRTT),
-		MaxRtt:          durationToString(&r.MaxRTT),
-		MinRtt:          durationToString(&r.MinRTT),
 		PacketLoss:      &r.PacketLoss,
 		PacketsReceived: &r.PacketsReceived,
 		PacketsSent:     &r.PacketsSent,
 		Changed:         &changed,
 	}
+	// With no reply there is no round trip, so the times are left out, not
+	// sent as 0.00ms.
+	if r.PacketsReceived > 0 {
+		resp.AvgRtt = durationToString(&r.AvgRTT)
+		resp.MaxRtt = durationToString(&r.MaxRTT)
+		resp.MinRtt = durationToString(&r.MinRTT)
+	}
+
+	return resp
 }
 
 // durationToString converts *time.Duration to a human-readable *string

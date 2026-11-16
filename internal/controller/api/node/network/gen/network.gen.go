@@ -506,7 +506,7 @@ type PingCollectionResponse struct {
 
 // PingResponse defines model for PingResponse.
 type PingResponse struct {
-	// AvgRtt Average round-trip time in Go time.Duration format.
+	// AvgRtt Average round-trip time in milliseconds, with two decimals. Absent when no reply came back.
 	AvgRtt *string `json:"avg_rtt,omitempty"`
 
 	// Changed Whether the operation modified system state.
@@ -518,10 +518,10 @@ type PingResponse struct {
 	// Hostname The hostname of the agent that executed the ping.
 	Hostname string `json:"hostname"`
 
-	// MaxRtt Maximum round-trip time in Go time.Duration format.
+	// MaxRtt Maximum round-trip time in milliseconds, with two decimals. Absent when no reply came back.
 	MaxRtt *string `json:"max_rtt,omitempty"`
 
-	// MinRtt Minimum round-trip time in Go time.Duration format.
+	// MinRtt Minimum round-trip time in milliseconds, with two decimals. Absent when no reply came back.
 	MinRtt *string `json:"min_rtt,omitempty"`
 
 	// PacketLoss Percentage of packet loss.

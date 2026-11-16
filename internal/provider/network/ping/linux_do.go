@@ -21,11 +21,14 @@
 package ping
 
 import (
+	"context"
+
 	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // Do pings the given host and returns the ping statistics or an error.
 func (l *Linux) Do(
+	_ context.Context,
 	_ string,
 ) (*Result, error) {
 	return nil, provider.ErrUnsupported

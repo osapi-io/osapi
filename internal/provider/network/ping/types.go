@@ -21,6 +21,7 @@
 package ping
 
 import (
+	"context"
 	"time"
 
 	probing "github.com/prometheus-community/pro-bing"
@@ -29,7 +30,10 @@ import (
 // Provider implements the methods to interact with various ping components.
 type Provider interface {
 	// Do pings the given host and returns the ping statistics or an error.
+	// It stops when ctx, the context of the job, ends, or after its own
+	// timeout.
 	Do(
+		ctx context.Context,
 		address string,
 	) (*Result, error)
 }
@@ -48,6 +52,11 @@ type Pinger interface {
 	// SetCount specifies the number of ping packets to send. A value of 3 means the ping will attempt 3 times.
 	SetCount(
 		count int,
+	)
+	// SetTimeout stops Run after timeout, whether or not each reply came
+	// back. Statistics then shows a reply that did not come back as loss.
+	SetTimeout(
+		timeout time.Duration,
 	)
 }
 

@@ -21,6 +21,7 @@
 package ping_test
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"testing"
@@ -61,7 +62,7 @@ func (suite *LinuxDoStatsPublicTestSuite) TestDo() {
 		suite.Run(tc.name, func() {
 			linux := ping.NewLinuxProvider()
 
-			tc.validateFunc(linux.Do("1.1.1.1"))
+			tc.validateFunc(linux.Do(context.Background(), "1.1.1.1"))
 		})
 	}
 }
