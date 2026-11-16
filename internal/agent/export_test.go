@@ -79,9 +79,14 @@ func SetReadEmbeddedFile(
 
 // ResetReadEmbeddedFile restores the default read function.
 func ResetReadEmbeddedFile() {
-	readEmbeddedFile = func(path string) ([]byte, error) {
-		return systemTemplates.ReadFile(path)
-	}
+	readEmbeddedFile = defaultReadEmbeddedFile
+}
+
+// ExportDefaultReadEmbeddedFile exposes defaultReadEmbeddedFile for testing.
+func ExportDefaultReadEmbeddedFile(
+	path string,
+) ([]byte, error) {
+	return defaultReadEmbeddedFile(path)
 }
 
 // ExportProcessJobOperation exposes the private processJobOperation method for testing.

@@ -179,6 +179,22 @@ func (s *RebootPostPublicTestSuite) TestPostNodePowerReboot() {
 			},
 		},
 		{
+			name: "validation error negative delay",
+			request: gen.PostNodePowerRebootRequestObject{
+				Hostname: "server1",
+				Body: &gen.PowerRequest{
+					Delay: ptr.To(-1),
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodePowerRebootResponseObject) {
+				r, ok := resp.(gen.PostNodePowerReboot400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "min")
+			},
+		},
+		{
 			name: "when job skipped",
 			request: gen.PostNodePowerRebootRequestObject{
 				Hostname: "server1",

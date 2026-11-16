@@ -296,6 +296,36 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 	}
 }
 
+func (s *SeedPublicTestSuite) TestDefaultReadEmbeddedFile() {
+	tests := []struct {
+		name         string
+		path         string
+		validateFunc func([]byte, error)
+	}{
+		{
+			name: "when the file is embedded",
+			path: "resources/templates/.gitkeep",
+			validateFunc: func(_ []byte, err error) {
+				s.NoError(err)
+			},
+		},
+		{
+			name: "when the file is not embedded",
+			path: "resources/templates/missing",
+			validateFunc: func(data []byte, err error) {
+				s.Error(err)
+				s.Nil(data)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.validateFunc(agent.ExportDefaultReadEmbeddedFile(tc.path))
+		})
+	}
+}
+
 func TestSeedPublicTestSuite(
 	t *testing.T,
 ) {

@@ -63,18 +63,21 @@ var allowedSignals = map[string]syscall.Signal{
 	"USR2": syscall.SIGUSR2,
 }
 
-// gopsutilLister wraps gopsutil calls to satisfy Lister.
-// These are thin OS wrappers — error paths are not coverable in
-// unit tests because gopsutil.Processes() always succeeds on a
-// running system. The provider's List/Get/Signal methods are fully
-// tested via the mocked Lister/Signaler interfaces.
+// gopsutilProcesses lists the running processes. Tests swap it via
+// export_test.go, because gopsutil.Processes always succeeds on a running
+// system.
+var gopsutilProcesses = gopsutil.Processes
+
+// gopsutilLister wraps gopsutil calls to satisfy Lister. The provider's
+// List/Get/Signal methods are tested via the mocked Lister/Signaler
+// interfaces.
 type gopsutilLister struct{}
 
 // Processes returns all running processes as Item instances.
 func (g *gopsutilLister) Processes() ([]Item, error) {
-	procs, err := gopsutil.Processes()
+	procs, err := gopsutilProcesses()
 	if err != nil {
-		return nil, err // not coverable: gopsutil always succeeds on a running system
+		return nil, err
 	}
 
 	result := make([]Item, len(procs))

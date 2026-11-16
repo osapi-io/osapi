@@ -609,6 +609,35 @@ func (suite *DebianPublicTestSuite) TestGatherInfoErrors() {
 	}
 }
 
+// TestGopsutilListerProcessesError covers the error from the process listing,
+// which a running system never returns.
+func (suite *DebianPublicTestSuite) TestGopsutilListerProcessesError() {
+	tests := []struct {
+		name         string
+		validateFunc func([]process.Item, error)
+	}{
+		{
+			name: "when listing fails returns the error",
+			validateFunc: func(items []process.Item, err error) {
+				suite.Require().Error(err)
+				suite.Contains(err.Error(), "proc unavailable")
+				suite.Nil(items)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			process.SetGopsutilProcesses(func() ([]*gopsutil.Process, error) {
+				return nil, errors.New("proc unavailable")
+			})
+			defer process.ResetGopsutilProcesses()
+
+			tc.validateFunc(process.NewGopsutilLister().Processes())
+		})
+	}
+}
+
 // TestDefaultOSFunctions exercises the real OS-interaction wrappers
 // against the current test process to ensure coverage of gopsutil calls.
 func (suite *DebianPublicTestSuite) TestDefaultOSFunctions() {

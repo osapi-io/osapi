@@ -425,7 +425,7 @@ just go-unit-int   # Run integration tests
 go test -run TestName -v ./internal/job/...  # Run a single test
 ```
 
-The coverage target is 99.9%. `just test` fails when the total coverage is less
+The coverage target is 100%. `just test` fails when the total coverage is less
 than the target. Thus a change that adds code without tests fails on your
 machine and in CI:
 
