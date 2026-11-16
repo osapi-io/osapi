@@ -179,6 +179,22 @@ func (s *ShutdownPostPublicTestSuite) TestPostNodePowerShutdown() {
 			},
 		},
 		{
+			name: "validation error negative delay",
+			request: gen.PostNodePowerShutdownRequestObject{
+				Hostname: "server1",
+				Body: &gen.PowerRequest{
+					Delay: ptr.To(-1),
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodePowerShutdownResponseObject) {
+				r, ok := resp.(gen.PostNodePowerShutdown400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "min")
+			},
+		},
+		{
 			name: "when job skipped",
 			request: gen.PostNodePowerShutdownRequestObject{
 				Hostname: "server1",

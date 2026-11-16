@@ -86,8 +86,6 @@ func InitTracer(
 	// With no exporter, spans are still created (so trace_id appears in logs)
 	// but nothing is dumped to stdout or sent over the wire.
 	switch cfg.Exporter {
-	case "", "none":
-		// No exporter — log-only trace correlation
 	case "stdout":
 		exp, err := stdouttraceNewFn(stdouttrace.WithPrettyPrint())
 		if err != nil {
@@ -107,7 +105,10 @@ func InitTracer(
 
 		opts = append(opts, sdktrace.WithBatcher(exp))
 	default:
-		return nil, fmt.Errorf("unsupported tracing exporter: %q", cfg.Exporter)
+		// "" and "none" add no exporter, for log-only trace correlation.
+		if cfg.Exporter != "" && cfg.Exporter != "none" {
+			return nil, fmt.Errorf("unsupported tracing exporter: %q", cfg.Exporter)
+		}
 	}
 
 	tp := sdktrace.NewTracerProvider(opts...)

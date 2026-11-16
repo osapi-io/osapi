@@ -40,8 +40,13 @@ var systemTemplates embed.FS
 var embeddedFS fs.FS = systemTemplates
 
 // readEmbeddedFile is a package-level variable for testing the read error path.
-// The default body delegates to the real embed; tests swap it via export_test.go.
-var readEmbeddedFile = func(path string) ([]byte, error) { //nolint:revive // default body untestable
+// Tests swap it via export_test.go.
+var readEmbeddedFile = defaultReadEmbeddedFile
+
+// defaultReadEmbeddedFile reads a template from the embedded filesystem.
+func defaultReadEmbeddedFile(
+	path string,
+) ([]byte, error) {
 	return systemTemplates.ReadFile(path)
 }
 

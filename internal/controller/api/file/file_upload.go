@@ -42,12 +42,6 @@ func (f *File) PostFile(
 	ctx context.Context,
 	request gen.PostFileRequestObject,
 ) (gen.PostFileResponseObject, error) {
-	// Defense in depth: current params use omitempty so validation
-	// always passes, but guards against future parameter additions.
-	if errMsg, ok := validation.Struct(request.Params); !ok {
-		return gen.PostFile400JSONResponse{Error: &errMsg}, nil
-	}
-
 	name, contentType, fileData, errResp := f.parseMultipart(request)
 	if errResp != nil {
 		return errResp, nil

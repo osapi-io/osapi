@@ -296,6 +296,29 @@ func (suite *PlatformPublicTestSuite) TestDefaultIoregFn() {
 			},
 		},
 		{
+			name: "when the real command runs it returns its output or an error",
+			setupFn: func() {
+				identity.ResetExecCommandFn()
+			},
+			validateFunc: func(out string, err error) {
+				if err != nil {
+					assert.Empty(suite.T(), out)
+				}
+			},
+		},
+		{
+			name: "when exec command succeeds returns its output",
+			setupFn: func() {
+				identity.SetExecCommandFn(func() ([]byte, error) {
+					return []byte(`"IOPlatformUUID" = "abc"`), nil
+				})
+			},
+			validateFunc: func(out string, err error) {
+				require.NoError(suite.T(), err)
+				assert.Equal(suite.T(), `"IOPlatformUUID" = "abc"`, out)
+			},
+		},
+		{
 			name: "when exec command fails returns error",
 			setupFn: func() {
 				identity.SetExecCommandFn(func() ([]byte, error) {

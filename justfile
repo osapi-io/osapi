@@ -13,12 +13,6 @@ react_dir := "ui"
 
 md_extra_excludes := "--exclude 'internal/skills/resources/**'"
 
-# Minimum total coverage. Below the org-wide 100% because nine statements are
-# unreachable guards that cannot execute. Declared again in .github/codecov.yml
-# — change both together.
-
-go_coverage_target := "99.9"
-
 # Pinned so the combined spec does not change under whoever runs `just
 # generate`. Run through bunx rather than from the path: bun is declared in
 # .mise.toml, redocly was not declared anywhere.

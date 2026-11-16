@@ -274,7 +274,14 @@ func (s *OpenAPIPublicTestSuite) TestOpenAPIErrors() {
 	tests := []struct {
 		name string
 		b    *behavior.Behavior
+		dir  string
 	}{
+		{
+			name: "when the directory is absolute",
+			b: behavior.Define("x", "x", behavior.Node, behavior.API,
+				behavior.Read("get", specGet).Describe("Get")),
+			dir: "/internal/behaviors/x/gen",
+		},
 		{
 			name: "when an input has no schema",
 			b: behavior.Define("x", "x", behavior.Node, behavior.API,
@@ -294,7 +301,11 @@ func (s *OpenAPIPublicTestSuite) TestOpenAPIErrors() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			_, err := openapi.OpenAPI([]*behavior.Behavior{tc.b}, "internal/behaviors/x/gen")
+			dir := tc.dir
+			if dir == "" {
+				dir = "internal/behaviors/x/gen"
+			}
+			_, err := openapi.OpenAPI([]*behavior.Behavior{tc.b}, dir)
 			s.Error(err)
 		})
 	}
