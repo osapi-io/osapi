@@ -7,6 +7,7 @@ import { Dashboard } from "./pages/dashboard";
 import { Configure } from "./pages/configure";
 import { Roles } from "./pages/roles";
 import { Audit } from "./pages/audit";
+import { Traces } from "./pages/traces";
 import { Jobs } from "./pages/jobs";
 import { Enrollment } from "./pages/enrollment";
 import { SignIn } from "./pages/sign-in";
@@ -26,6 +27,8 @@ function AuthenticatedApp() {
         <Route path="/roles" element={<Navigate to="/admin/roles" replace />} />
         <Route path="/admin/audit" element={<Audit />} />
         <Route path="/admin/jobs" element={<Jobs />} />
+        <Route path="/admin/traces" element={<Traces />} />
+        <Route path="/admin/traces/:id" element={<Traces />} />
         <Route path="/admin/roles" element={<Roles />} />
         <Route path="/admin/enrollment" element={<Enrollment />} />
       </Routes>

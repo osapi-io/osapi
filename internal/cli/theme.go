@@ -228,6 +228,14 @@ func renderCell(
 		}
 
 		return NameStyle.Render(cell)
+	case h == "SPAN":
+		// The tree lines of a span tree are dim, and the span name is not.
+		name := strings.TrimLeft(cell, "│├└─ ")
+		if lines := cell[:len(cell)-len(name)]; lines != "" {
+			return DimStyle.Render(lines) + ValueStyle.Render(name)
+		}
+
+		return ValueStyle.Render(cell)
 	case h == "CONDITIONS":
 		if strings.TrimSpace(cell) == "" || cell == "-" {
 			return DimStyle.Render(cell)
