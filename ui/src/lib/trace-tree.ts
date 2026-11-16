@@ -84,8 +84,9 @@ function spanDetail(s: TraceSpan): string {
   if (a["nats.kv.key"])
     return keyMeaning(a["nats.kv.key"], a["db.namespace"] ?? "");
   if (s.name === "kv.keys") return `list keys in ${a["db.namespace"] ?? ""}`;
+  // The request span has the size too, from otelecho; it shows its status.
   const size = a["http.response.body.size"];
-  if (size) return formatBytes(Number(size));
+  if (size && s.name === "response.encode") return formatBytes(Number(size));
   return DETAIL.map((k) => a[k]).find((v) => v) ?? "";
 }
 

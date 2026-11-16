@@ -50,7 +50,9 @@ func traceSpans() []client.TraceSpan {
 		},
 		{
 			ID: "a", Name: "GET /api/x", Service: "osapi-controller", Start: at(0), Duration: 50 * time.Millisecond,
-			Attributes: map[string]string{"http.response.status_code": "200"},
+			Attributes: map[string]string{
+				"http.response.status_code": "200", "http.response.body.size": "1536",
+			},
 		},
 		{
 			ID: "b", ParentID: "a", Name: "job.publish", Service: "osapi-controller", Start: at(1), Duration: 30 * time.Millisecond,

@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/suite"
@@ -64,6 +65,29 @@ func (s *RespspanPublicTestSuite) TestMiddleware() {
 				return c.JSON(http.StatusOK, map[string]string{"key": "value"})
 			},
 			wantSpan: true,
+		},
+		{
+			name:   "when a handler marks, writes, then is marked again the first mark wins",
+			parent: true,
+			handler: func(c *echo.Context) error {
+				respspan.Handled(c)
+				err := c.JSON(http.StatusOK, map[string]string{"key": "value"})
+				respspan.Handled(c)
+
+				return err
+			},
+			wantSpan: true,
+		},
+		{
+			name:   "when the only mark is after the write there is none",
+			parent: true,
+			handler: func(c *echo.Context) error {
+				err := c.JSON(http.StatusOK, map[string]string{"key": "value"})
+				time.Sleep(time.Millisecond)
+				respspan.Handled(c)
+
+				return err
+			},
 		},
 		{
 			name:   "when the handler does not mark its answer there is none",
@@ -135,7 +159,7 @@ func (s *RespspanPublicTestSuite) TestMiddleware() {
 			s.Require().Len(encode, 1)
 			sp := encode[0]
 			s.Equal(trace.SpanContextFromContext(ctx).SpanID(), sp.Parent().SpanID())
-			s.False(sp.EndTime().Before(sp.StartTime()))
+			s.True(sp.EndTime().After(sp.StartTime()), "the encode takes time")
 			var size int64
 			for _, kv := range sp.Attributes() {
 				if kv.Key == respspan.AttrBodySize {

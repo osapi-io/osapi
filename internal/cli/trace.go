@@ -171,7 +171,9 @@ func spanDetail(
 	if s.Name == "kv.keys" {
 		return "list keys in " + s.Attributes["db.namespace"]
 	}
-	if size, err := strconv.Atoi(s.Attributes["http.response.body.size"]); err == nil {
+	// The request span has the size too, from otelecho; it shows its status.
+	if size, err := strconv.Atoi(s.Attributes["http.response.body.size"]); err == nil &&
+		s.Name == "response.encode" {
 		return FormatBytes(size)
 	}
 	for _, k := range traceDetail {

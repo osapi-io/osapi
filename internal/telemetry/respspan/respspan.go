@@ -46,10 +46,15 @@ const handledKey = "osapi.response.handled"
 // Handled marks the time that the handler of c has its answer. What the
 // controller does after it, until the last write, is the encode and the
 // write of the response. ScopeMiddleware calls it for each strict handler;
-// a handler that encodes itself calls it before c.JSON.
+// a handler that encodes itself calls it before c.JSON. The first mark wins:
+// a handler that writes its own answer inside ScopeMiddleware has marked
+// already, and the mark after its write would end the span before it starts.
 func Handled(
 	c *echo.Context,
 ) {
+	if _, marked := c.Get(handledKey).(time.Time); marked {
+		return
+	}
 	c.Set(handledKey, time.Now())
 }
 
@@ -71,7 +76,8 @@ func Middleware(
 
 		ctx := c.Request().Context()
 		start, marked := c.Get(handledKey).(time.Time)
-		if marked && !last.IsZero() && trace.SpanContextFromContext(ctx).IsValid() {
+		if marked && !last.IsZero() && !last.Before(start) &&
+			trace.SpanContextFromContext(ctx).IsValid() {
 			_, span := otel.Tracer("osapi-controller").Start(ctx, SpanName,
 				trace.WithTimestamp(start),
 				trace.WithAttributes(AttrBodySize.Int64(resp.Size)),
