@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Distributed tracing | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/distributed-tracing"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Distributed tracing | OSAPI"><meta data-rh="true" name="description" content="osapi uses OpenTelemetry to send one trace ID"><meta data-rh="true" property="og:description" content="osapi uses OpenTelemetry to send one trace ID"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/distributed-tracing"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/distributed-tracing" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/distributed-tracing" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Distributed tracing","item":"https://osapi-io.github.io/osapi/sidebar/features/distributed-tracing"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.b3ed871e.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.a13876cd.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.8c57d8a4.js" defer="defer"></script>
 </head>
 <body>
@@ -25,8 +25,8 @@ request from the CLI to the API server to the agent. Filter the logs on
 trace context to the headers of the NATS message.</p>
 </li>
 <li class="">
-<p>The <strong>agent</strong> reads the trace context from the headers. It opens
-<code>job.process</code> as a child of <code>job.publish</code>.</p>
+<p>The <strong>agent</strong> gets the message in a <code>nats.process</code> span, which continues the
+trace from the headers. It opens <code>job.process</code> under it.</p>
 </li>
 <li class="">
 <p>The <strong>API server</strong> opens <code>job.collect</code> while it waits for the answers of the
@@ -50,9 +50,10 @@ no trace context, so that a trace has no parent that never arrives.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-span-tree">The span tree<a href="#the-span-tree" class="hash-link" aria-label="Direct link to The span tree" title="Direct link to The span tree" translate="no">​</a></h2>
 <p>A request to one host, or a broadcast such as <code>--target _all</code>, makes this tree.
 A broadcast has one <code>job.process</code> for each agent:</p>
-<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi-controller  GET /api/node/:hostname/package</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">├─ job.publish</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│  ├─ osapi-agent  job.process     (web-01)</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│  │  └─ exec dpkg-query</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│  └─ osapi-agent  job.process     (web-02)</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│     └─ exec dpkg-query</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">└─ job.collect</span><br></div></code></pre></div></div>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi-controller  GET /api/node/:hostname/package</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">├─ job.publish</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│  ├─ kv.put                        (the job)</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│  └─ nats.publish</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│     ├─ osapi-agent  nats.process  (web-01)</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│     │  └─ job.process</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│     │     ├─ kv.get               (the job)</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│     │     ├─ exec dpkg-query</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│     │     └─ kv.put               (the answer)</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│     └─ osapi-agent  nats.process  (web-02)</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│        └─ job.process</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">│           └─ ...</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">└─ job.collect</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">   └─ kv.watch                      (the answers)</span><br></div></code></pre></div></div>
 <p>A behavior adds <code>behavior.&lt;name&gt;.&lt;method&gt;</code> under <code>job.process</code>, and its commands
-are under that span.</p>
+and file writes are under that span. The tree above leaves out the <code>kv.put</code> of
+each status event.</p>
 
 
 
@@ -98,8 +99,29 @@ are under that span.</p>
 
 
 
-<table><thead><tr><th>Span</th><th>Service</th><th>Attributes that tell you the most</th></tr></thead><tbody><tr><td>the command</td><td><code>osapi-cli</code></td><td>The name is the command</td></tr><tr><td><code>GET /api/...</code></td><td><code>osapi-controller</code></td><td><code>http.route</code>, <code>http.response.status_code</code>, <code>osapi.target</code></td></tr><tr><td><code>job.publish</code></td><td><code>osapi-controller</code></td><td><code>job.id</code>, <code>job.type</code>, <code>osapi.target</code>, <code>messaging.destination.name</code></td></tr><tr><td><code>job.collect</code></td><td><code>osapi-controller</code></td><td><code>job.expected</code>, <code>job.answered</code>, <code>job.timed_out</code>; a <code>job.timeout</code> event names each silent agent</td></tr><tr><td><code>job.process</code></td><td><code>osapi-agent</code></td><td><code>osapi.agent.hostname</code>, <code>osapi.agent.machine_id</code>, <code>host.arch</code>, <code>job.status</code>, <code>job.changed</code></td></tr><tr><td><code>behavior.&lt;name&gt;.&lt;method&gt;</code></td><td><code>osapi-agent</code></td><td><code>osapi.behavior.name</code>, <code>osapi.behavior.method</code>, <code>osapi.behavior.outcome</code></td></tr><tr><td><code>exec &lt;program&gt;</code></td><td><code>osapi-agent</code></td><td><code>process.executable.name</code>, <code>osapi.exec.sudo</code>, <code>process.exit.code</code>. The arguments are not recorded</td></tr></tbody></table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Span</th><th>Service</th><th>Attributes that tell you the most</th></tr></thead><tbody><tr><td>the command</td><td><code>osapi-cli</code></td><td>The name is the command</td></tr><tr><td><code>GET /api/...</code></td><td><code>osapi-controller</code></td><td><code>http.route</code>, <code>http.response.status_code</code>, <code>osapi.target</code></td></tr><tr><td><code>job.publish</code></td><td><code>osapi-controller</code></td><td><code>job.id</code>, <code>job.type</code>, <code>osapi.target</code>, <code>messaging.destination.name</code></td></tr><tr><td><code>job.collect</code></td><td><code>osapi-controller</code></td><td><code>job.expected</code>, <code>job.answered</code>, <code>job.timed_out</code>; a <code>job.timeout</code> event names each silent agent</td></tr><tr><td><code>job.process</code></td><td><code>osapi-agent</code></td><td><code>osapi.agent.hostname</code>, <code>osapi.agent.machine_id</code>, <code>host.arch</code>, <code>job.status</code>, <code>job.changed</code></td></tr><tr><td><code>behavior.&lt;name&gt;.&lt;method&gt;</code></td><td><code>osapi-agent</code></td><td><code>osapi.behavior.name</code>, <code>osapi.behavior.method</code>, <code>osapi.behavior.outcome</code></td></tr><tr><td><code>exec &lt;program&gt;</code></td><td><code>osapi-agent</code></td><td><code>process.executable.name</code>, <code>osapi.exec.sudo</code>, <code>process.exit.code</code>. The arguments are not recorded</td></tr><tr><td><code>file.write</code></td><td><code>osapi-agent</code></td><td><code>file.path</code>, <code>file.mode</code>, <code>file.size</code>. The content is not recorded</td></tr><tr><td><code>kv.&lt;op&gt;</code>, <code>objectstore.&lt;op&gt;</code>, <code>stream.&lt;op&gt;</code></td><td>both</td><td><code>db.operation.name</code>, <code>db.namespace</code> (the bucket or the stream), <code>nats.kv.key</code> or <code>nats.object.name</code></td></tr><tr><td><code>nats.publish</code>, <code>nats.process</code></td><td>both</td><td><code>messaging.destination.name</code>, the subject</td></tr></tbody></table>
 <p>Each span has <code>service.version</code>, the version of the binary that made it.</p>
+<p>The NATS spans come from <a href="https://github.com/osapi-io/nats-client" target="_blank" rel="noopener noreferrer" class="">nats-client</a>,
+which makes one for each call to NATS inside a trace. A call outside a trace,
+such as a heartbeat, makes no span, but the call is in the
+<code>osapi_nats_client_operation_duration_seconds</code> metric. A file is written only
+when its content changed, so a <code>file.write</code> span is a change; the behavior span
+has <code>osapi.behavior.changed</code>.</p>
 <p>A span has the error status when its work failed: a failed job, a command that
 failed, or a <code>job.collect</code> with no answer. A host that skips a job is not an
 error. Its <code>job.process</code> has <code>job.status</code> <code>skipped</code> and a <code>job.skipped</code> event
