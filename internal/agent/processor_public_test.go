@@ -105,12 +105,12 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 	// Use plain ping mock to avoid hardcoded address expectations
 	pingMock := pingMocks.NewPlainMockProvider(s.mockCtrl)
 	// Set up expectations for addresses used in tests
-	pingMock.EXPECT().Do("127.0.0.1").Return(&ping.Result{
+	pingMock.EXPECT().Do(gomock.Any(), "127.0.0.1").Return(&ping.Result{
 		PacketsSent:     3,
 		PacketsReceived: 3,
 		PacketLoss:      0,
 	}, nil).AnyTimes()
-	pingMock.EXPECT().Do("8.8.8.8").Return(&ping.Result{
+	pingMock.EXPECT().Do(gomock.Any(), "8.8.8.8").Return(&ping.Result{
 		PacketsSent:     3,
 		PacketsReceived: 3,
 		PacketLoss:      0,
@@ -962,7 +962,9 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperations() {
 			data:      `{"address": "8.8.8.8"}`,
 			createAgent: func() *agent.Agent {
 				pingMock := pingMocks.NewPlainMockProvider(s.mockCtrl)
-				pingMock.EXPECT().Do("8.8.8.8").Return(nil, errors.New("ping timeout"))
+				pingMock.EXPECT().
+					Do(gomock.Any(), "8.8.8.8").
+					Return(nil, errors.New("ping timeout"))
 				return newTestAgent(newTestAgentParams{
 					appFs:           memfs.New(),
 					appConfig:       config.Config{},

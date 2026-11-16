@@ -69,7 +69,7 @@ var clientNodeNetworkPingCmd = &cobra.Command{
 					r.AvgRtt,
 					r.MinRtt,
 					r.MaxRtt,
-					fmt.Sprintf("%f", r.PacketLoss),
+					fmt.Sprintf("%.0f%%", r.PacketLoss),
 				},
 			})
 		}

@@ -10,7 +10,9 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
+	time "time"
 
 	ping "github.com/osapi-io/osapi/internal/provider/network/ping"
 	probing "github.com/prometheus-community/pro-bing"
@@ -42,18 +44,18 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 }
 
 // Do mocks base method.
-func (m *MockProvider) Do(address string) (*ping.Result, error) {
+func (m *MockProvider) Do(ctx context.Context, address string) (*ping.Result, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Do", address)
+	ret := m.ctrl.Call(m, "Do", ctx, address)
 	ret0, _ := ret[0].(*ping.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Do indicates an expected call of Do.
-func (mr *MockProviderMockRecorder) Do(address any) *gomock.Call {
+func (mr *MockProviderMockRecorder) Do(ctx, address any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*MockProvider)(nil).Do), address)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*MockProvider)(nil).Do), ctx, address)
 }
 
 // MockPinger is a mock of Pinger interface.
@@ -116,6 +118,18 @@ func (m *MockPinger) SetPrivileged(privileged bool) {
 func (mr *MockPingerMockRecorder) SetPrivileged(privileged any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPrivileged", reflect.TypeOf((*MockPinger)(nil).SetPrivileged), privileged)
+}
+
+// SetTimeout mocks base method.
+func (m *MockPinger) SetTimeout(timeout time.Duration) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetTimeout", timeout)
+}
+
+// SetTimeout indicates an expected call of SetTimeout.
+func (mr *MockPingerMockRecorder) SetTimeout(timeout any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockPinger)(nil).SetTimeout), timeout)
 }
 
 // Statistics mocks base method.

@@ -1735,7 +1735,9 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
               <span>
                 {r.packets_received}/{r.packets_sent} recv
               </span>
-              {r.packet_loss != null && <span>{r.packet_loss}% loss</span>}
+              {r.packet_loss != null && (
+                <span>{Math.round(r.packet_loss)}% loss</span>
+              )}
               {r.avg_rtt && <span>avg {r.avg_rtt}</span>}
               {r.min_rtt && r.max_rtt && (
                 <span>

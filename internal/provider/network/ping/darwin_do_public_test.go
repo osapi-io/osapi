@@ -21,6 +21,7 @@
 package ping_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -65,6 +66,7 @@ func (suite *DarwinDoPublicTestSuite) TestDo() {
 
 				mock.EXPECT().SetCount(3)
 				mock.EXPECT().SetPrivileged(true)
+				mock.EXPECT().SetTimeout(4 * time.Second)
 				mock.EXPECT().Run().Return(nil)
 				mock.EXPECT().Statistics().Return(&probing.Statistics{
 					PacketsSent: 3,
@@ -108,6 +110,7 @@ func (suite *DarwinDoPublicTestSuite) TestDo() {
 
 				mock.EXPECT().SetCount(3)
 				mock.EXPECT().SetPrivileged(true)
+				mock.EXPECT().SetTimeout(4 * time.Second)
 				mock.EXPECT().Run().Return(assert.AnError)
 
 				return mock
@@ -125,6 +128,7 @@ func (suite *DarwinDoPublicTestSuite) TestDo() {
 
 				mock.EXPECT().SetCount(3)
 				mock.EXPECT().SetPrivileged(true)
+				mock.EXPECT().SetTimeout(4 * time.Second)
 				mock.EXPECT().Run().DoAndReturn(func() error {
 					time.Sleep(10 * time.Second)
 					return nil
@@ -153,7 +157,7 @@ func (suite *DarwinDoPublicTestSuite) TestDo() {
 				}
 			}
 
-			tc.validateFunc(darwin.Do(tc.address))
+			tc.validateFunc(darwin.Do(context.Background(), tc.address))
 		})
 	}
 }

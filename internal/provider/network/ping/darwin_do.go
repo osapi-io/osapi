@@ -31,6 +31,7 @@ import (
 // On macOS, it uses privileged mode (raw sockets) for ICMP. This may
 // require running the binary as root or with appropriate entitlements.
 func (d *Darwin) Do(
+	job context.Context,
 	address string,
 ) (*Result, error) {
 	pinger, err := d.NewPingerFn(address)
@@ -40,9 +41,14 @@ func (d *Darwin) Do(
 
 	pinger.SetCount(3)
 	pinger.SetPrivileged(true)
+	// The pinger stops at its own deadline, before the outer timeout, and
+	// reports a reply that did not come back as loss. Without it, one lost
+	// reply kept Run waiting until the outer timeout failed the whole ping.
+	pinger.SetTimeout(replyTimeout)
 
 	timeout := 5 * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	// The timeout is under the job's context, so a job that ends stops it.
+	ctx, cancel := context.WithTimeout(job, timeout)
 	defer cancel()
 
 	// Buffered, so the goroutine can finish after a timeout. Do returns as
@@ -74,6 +80,10 @@ func (d *Darwin) Do(
 
 	select {
 	case <-ctx.Done():
+		if err := job.Err(); err != nil {
+			return nil, fmt.Errorf("ping stopped, the job ended: %w", err)
+		}
+
 		return nil, fmt.Errorf("ping operation timed out after %s", timeout)
 	case err := <-errorChan:
 		return nil, err

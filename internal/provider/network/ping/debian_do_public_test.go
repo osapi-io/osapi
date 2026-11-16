@@ -21,6 +21,7 @@
 package ping_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -136,7 +137,7 @@ func (suite *DebianDoPublicTestSuite) TestDo() {
 				}
 			}
 
-			tc.validateFunc(debian.Do(tc.address))
+			tc.validateFunc(debian.Do(context.Background(), tc.address))
 		})
 	}
 }
@@ -157,6 +158,19 @@ func (suite *DebianDoPublicTestSuite) TestSetCount() {
 	suite.Require().NoError(err)
 
 	pinger.SetCount(5)
+}
+
+func (suite *DebianDoPublicTestSuite) TestSetTimeout() {
+	debian := ping.NewDebianProvider()
+
+	pinger, err := debian.NewPingerFn("127.0.0.1")
+	suite.Require().NoError(err)
+
+	pinger.SetTimeout(4 * time.Second)
+
+	wrapped, ok := pinger.(*ping.PingerWrapper)
+	suite.Require().True(ok)
+	suite.Equal(4*time.Second, wrapped.Timeout, "the pinger stops at its own deadline")
 }
 
 // In order for `go test` to run this suite, we need to create

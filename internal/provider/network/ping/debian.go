@@ -21,6 +21,8 @@
 package ping
 
 import (
+	"time"
+
 	probing "github.com/prometheus-community/pro-bing"
 
 	"github.com/osapi-io/osapi/internal/provider"
@@ -47,6 +49,13 @@ func NewDebianProvider() *Debian {
 			return &PingerWrapper{Pinger: rawPinger}, nil
 		},
 	}
+}
+
+// SetTimeout sets how long Run waits for the replies.
+func (p *PingerWrapper) SetTimeout(
+	timeout time.Duration,
+) {
+	p.Timeout = timeout
 }
 
 // SetCount sets the count of pings to be sent.

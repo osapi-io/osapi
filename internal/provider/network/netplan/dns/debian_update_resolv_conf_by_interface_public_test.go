@@ -320,6 +320,9 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 	}
 }
 
+// jobKey marks the context of a job, to check that a call gets it.
+type jobKey struct{}
+
 func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestDeleteNetplanConfig() {
 	tests := []struct {
 		name         string
@@ -339,9 +342,15 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestDeleteNetplan
 					Return(nil, errors.New("not found")).
 					AnyTimes()
 
+				// netplan apply runs in the job's context, so its span is in
+				// the job's trace and a job that ends stops it.
 				mock.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
-					Return("", nil)
+					DoAndReturn(func(ctx context.Context, _ string, _ []string) (string, error) {
+						suite.Equal("job-1", ctx.Value(jobKey{}), "the job's context")
+
+						return "", nil
+					})
 
 				// KV Get for state cleanup — return not found so
 				// the cleanup branch is skipped cleanly.
@@ -411,7 +420,8 @@ func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestDeleteNetplan
 			tc.setupFS(fs)
 
 			net := dns.NewDebianProvider(suite.logger, fs, kv, "file-state", mock, "test-host")
-			tc.validateFunc(net.DeleteNetplanConfig(context.Background(), "eth0"))
+			job := context.WithValue(context.Background(), jobKey{}, "job-1")
+			tc.validateFunc(net.DeleteNetplanConfig(job, "eth0"))
 		})
 	}
 }

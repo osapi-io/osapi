@@ -130,6 +130,27 @@ when it starts, and checks the `CapEff` bitmask for the required bits:
 If a required capability is missing, the agent writes a warning to the log. Only
 the operations that need the capability fail.
 
+## Kernel settings
+
+Some operations need a kernel setting, not a capability or a sudo rule:
+
+| Setting                     | Value                              | Needed for |
+| --------------------------- | ---------------------------------- | ---------- |
+| `net.ipv4.ping_group_range` | a range that has the agent's group | ping       |
+
+On Linux, the agent sends a ping on an ICMP datagram socket, also when it runs
+as root. The kernel permits that socket only for the groups in
+`net.ipv4.ping_group_range`. On Debian, Ubuntu and Fedora, systemd sets the
+range to each group, in `/usr/lib/sysctl.d/50-default.conf`. The default of the
+kernel is `1 0`, which permits no group. Thus on a host without that file, each
+ping fails with a timeout. The preflight checks do not check the setting. To
+permit each group:
+
+```bash
+echo 'net.ipv4.ping_group_range = 0 2147483647' | sudo tee /etc/sysctl.d/90-osapi-ping.conf
+sudo sysctl -p /etc/sysctl.d/90-osapi-ping.conf
+```
+
 ## Systemd unit file
 
 Use this unit file to run the agent as a user without privileges. The unit keeps
