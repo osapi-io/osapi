@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Building a behavior | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/development/behaviors"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Building a behavior | OSAPI"><meta data-rh="true" name="description" content="A behavior is one thing that osapi manages on a host, for example kernel"><meta data-rh="true" property="og:description" content="A behavior is one thing that osapi manages on a host, for example kernel"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/development/behaviors"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/behaviors" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/behaviors" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Development","item":"https://osapi-io.github.io/osapi/sidebar/development/"},{"@type":"ListItem","position":2,"name":"Building a behavior","item":"https://osapi-io.github.io/osapi/sidebar/development/behaviors"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.1cd2d5dc.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.cf4695cd.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.e349b849.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.a8c7c31c.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -23,8 +23,8 @@ hand-written domains that did not move yet. A behavior that replaces a
 hand-written domain has the <code>behavior.Next</code> mark while both exist. The mark
 serves it under <code>/api/next</code> and <code>osapi client next</code>, until the cutover of that
 domain. Today, sysctl has the mark. <code>internal/behaviors/sysctl</code> is the
-reference. <code>go doc ./internal/behavior</code> lists each option, with examples that
-run as tests.</p>
+reference. <code>osapi behavior spec</code> lists each option, and
+<code>go doc ./internal/behavior</code> shows the Go API, with examples that run as tests.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-layout">The layout<a href="#the-layout" class="hash-link" aria-label="Direct link to The layout" title="Direct link to The layout" translate="no">​</a></h2>
 <p>Every behavior has the same files, so a reader, a reviewer or an agent finds the
 same thing in the same place.
@@ -211,7 +211,7 @@ an output becomes a JSON field and a table column.</p>
 
 
 
-<table><thead><tr><th>Tag</th><th>On</th><th>Becomes</th></tr></thead><tbody><tr><td><code>json:&quot;key&quot;</code></td><td>both</td><td>The name everywhere: request, flag (<code>--key</code>), column (<code>KEY</code>), <code>--json</code> field</td></tr><tr><td><code>validate:&quot;...&quot;</code></td><td>input</td><td>Checked by the API before a job is queued; the spec&#x27;s constraints</td></tr><tr><td><code>doc:&quot;...&quot;</code></td><td>both</td><td>The field&#x27;s description in the spec, the flag&#x27;s help and the docs pages</td></tr><tr><td><code>render:&quot;...&quot;</code></td><td>output</td><td>How a column shows: <code>-</code> hides it, <code>bytes</code>, <code>age</code> or <code>status</code></td></tr><tr><td><code>telemetry:&quot;attr&quot;</code></td><td>input</td><td>Records the field on the method&#x27;s trace span. Untagged fields never are.</td></tr><tr><td><code>secret:&quot;true&quot;</code></td><td>input</td><td>A secret: redacted from the audit log, write-only in the spec, never traced</td></tr></tbody></table>
+<table><thead><tr><th>Tag</th><th>On</th><th>Becomes</th></tr></thead><tbody><tr><td><code>json:&quot;key&quot;</code></td><td>both</td><td>The name everywhere: request, flag (<code>--key</code>), column (<code>KEY</code>), <code>--json</code> field</td></tr><tr><td><code>validate:&quot;...&quot;</code></td><td>input</td><td>Checked by the API before a job is queued; the spec&#x27;s constraints</td></tr><tr><td><code>doc:&quot;...&quot;</code></td><td>both</td><td>The field&#x27;s description in the spec, the flag&#x27;s help and the docs pages</td></tr><tr><td><code>render:&quot;...&quot;</code></td><td>output</td><td>How a column shows: <code>-</code> hides it, <code>bytes</code>, <code>age</code> or <code>status</code></td></tr><tr><td><code>telemetry:&quot;attr&quot;</code></td><td>input</td><td>Records the field on the method&#x27;s trace span. The field that <code>.Key</code> names is recorded without the tag.</td></tr><tr><td><code>secret:&quot;true&quot;</code></td><td>input</td><td>A secret: redacted from the audit log, write-only in the spec, never traced</td></tr></tbody></table>
 <p>A write&#x27;s output has a <code>changed</code> bool. The table shows it as the row&#x27;s status,
 <code>changed</code> or <code>ok</code>, rather than as a column. An output that is a slice becomes
 one row per element.</p>
@@ -379,87 +379,14 @@ return an error and must not panic. With its examples and refusals, the test of
 sysctl reaches all of its Debian provider. The only exception is a JSON encoding
 error that a struct of strings cannot cause.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-checks">The checks<a href="#the-checks" class="hash-link" aria-label="Direct link to The checks" title="Direct link to The checks" translate="no">​</a></h2>
-<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">go generate ./internal/behaviors/all      # write gen/, the spec and the behavior pages</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">just cli-docs-generate              # write the CLI pages of the commands</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi behavior validate             # the definition&#x27;s rules</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi behavior get --name sysctl  # surfaces, routes, schemas, as registered</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">just behavior-gen-check             # fails when generated files are stale</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">just behavior-cover-check           # fails when a behavior is below 100% coverage</span><br></div></code></pre></div></div>
-<p><code>osapi behavior validate</code> checks each definition against these rules. It exits 1
-when one fails, and names the behavior, the method and the rule:</p>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>Rule</th><th>Fails when</th></tr></thead><tbody><tr><td><code>name</code></td><td>the name is not lowercase letters and digits</td></tr><tr><td><code>placement</code></td><td>the behavior has no placement</td></tr><tr><td><code>doc</code></td><td>the behavior or a method has no description</td></tr><tr><td><code>methods</code></td><td>the behavior has no methods</td></tr><tr><td><code>duplicate</code></td><td>two methods share a name</td></tr><tr><td><code>verb</code></td><td>a method name is a synonym of a standard verb, a read is not <code>list</code>, <code>get</code> or <code>status</code>, or a write is not <code>create</code>, <code>update</code> or <code>delete</code> (action methods such as <code>restart</code> are not supported yet)</td></tr><tr><td><code>route</code></td><td>two methods would be served at the same route</td></tr><tr><td><code>key</code></td><td>a method&#x27;s key is not a field of its input</td></tr><tr><td><code>schema</code></td><td>an input or output type has no JSON Schema</td></tr><tr><td><code>output</code></td><td>an output field collides with a field of the per-host result</td></tr><tr><td><code>changed</code></td><td>a write&#x27;s output has no <code>changed</code> field</td></tr><tr><td><code>surface</code></td><td>a behavior has CLI without API, is internal but served, or has an input the CLI cannot flag</td></tr><tr><td><code>example</code></td><td>a CLI method has no example, or an example or refusal does not fit its method</td></tr><tr><td><code>settings</code></td><td>settings are not a struct, or a field lacks the name or description the config needs</td></tr><tr><td><code>platform</code></td><td>no platform has a provider, a platform is declared twice, or a provider misses a method</td></tr><tr><td><code>requires</code></td><td>a required behavior is not registered, or behaviors require one another in a cycle</td></tr><tr><td><code>secret</code></td><td>an input field tagged <code>secret:&quot;true&quot;</code> would be recorded on the method&#x27;s span</td></tr></tbody></table>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">go generate ./internal/behaviors/all      # write gen/, the spec and the behavior pages</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">just cli-docs-generate              # write the CLI pages of the commands</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi behavior spec                 # each part of the DSL, and when to use it</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi behavior validate             # the definition&#x27;s rules, each with its fix</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi behavior get --name sysctl  # surfaces, routes, schemas, as registered</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">just behavior-gen-check             # fails when generated files are stale</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">just behavior-cover-check           # fails when a behavior is below 100% coverage</span><br></div></code></pre></div></div>
+<p><code>osapi behavior validate</code> checks each definition against its rules. It exits 1
+when one fails, and names the behavior, the method, the rule and the fix. The
+tests of each behavior run its examples on a fake host, and each failure ends
+with its fix too. <code>osapi behavior validate --help</code> lists each rule and each test
+check, from the same tables that the checks use. Thus the list cannot be out of
+date. <code>osapi behavior spec</code> lists each part of the DSL, the generated paths and
+what the platform cannot do yet.</p>
 <p><code>just test</code> runs <code>behavior-gen-check</code>. Thus a behavior that changed without
 <code>go generate</code> fails CI. It also runs <code>behavior-cover-check</code>. Thus a behavior
 whose examples and tests miss a line fails CI too.</p>

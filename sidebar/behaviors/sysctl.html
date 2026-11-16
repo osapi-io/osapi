@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">sysctl | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/behaviors/sysctl"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="sysctl | OSAPI"><meta data-rh="true" name="description" content="Kernel parameters, written to sysctl.d files and applied."><meta data-rh="true" property="og:description" content="Kernel parameters, written to sysctl.d files and applied."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/behaviors/sysctl"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/behaviors/sysctl" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/behaviors/sysctl" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Behaviors","item":"https://osapi-io.github.io/osapi/sidebar/behaviors/"},{"@type":"ListItem","position":2,"name":"sysctl","item":"https://osapi-io.github.io/osapi/sidebar/behaviors/sysctl/"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.1cd2d5dc.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.cf4695cd.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.e349b849.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.a8c7c31c.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -57,6 +57,7 @@
 unless the agent runs as root. <code>osapi agent start</code> checks this at startup.</p>
 <p>It writes <code>/etc/sysctl.d/osapi-*.conf</code>.</p>
 <p>In a trace, a call is the span <code>behavior.sysctl.&lt;method&gt;</code>, with <code>behavior.managedfile.&lt;method&gt;</code>, <code>exec sysctl</code>, <code>exec chown</code>, <code>exec stat</code>, <code>file.write</code>, <code>file.remove</code>, <code>file.chmod</code>, <code>kv.get</code>, <code>kv.put</code> under it.</p>
+<p>Its span records the input <code>key</code> (get, create, update, delete).</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="methods">Methods<a href="#methods" class="hash-link" aria-label="Direct link to Methods" title="Direct link to Methods" translate="no">​</a></h2>
 
 
