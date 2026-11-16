@@ -48,10 +48,13 @@ Each role can read traces with `trace:read`. The Traces page in the Admin menu
 shows the span tree of a trace by its ID.
 
 A permission has the form `resource:verb`, as in the Go model of osapi, for
-example `agent:read`, `file:write`, `command:execute` and `docker:execute`.
-`BLOCK_PERMISSIONS` (`ui/src/lib/permissions.ts`) gives the permission that each
-Configure block needs. The UI shows a block without permission in gray, with a
-lock icon.
+example `agent:read`, `file:write`, `command:execute` and `docker:execute`. The
+UI's list of permissions and the permissions of each role are in
+`ui/src/lib/permissions.gen.ts`, which `go generate ./internal/behaviors/all`
+writes from the Go model. Do not edit it. `BLOCK_PERMISSIONS`
+(`ui/src/lib/permissions.ts`) gives the permission that each Configure block
+needs, and TypeScript refuses a permission that the generated list does not
+have. The UI shows a block without permission in gray, with a lock icon.
 
 ## Pages
 

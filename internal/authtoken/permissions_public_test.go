@@ -22,6 +22,7 @@ package authtoken_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -336,6 +337,32 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 		s.Run(tt.name, func() {
 			tt.validateFunc(authtoken.RolePermissions(tt.role))
 		})
+	}
+}
+
+func (s *PermissionsPublicTestSuite) TestTypeScript() {
+	ts := authtoken.TypeScript()
+
+	s.True(strings.HasPrefix(ts, "// Code generated"), "it says it is generated")
+	all := authtoken.AllPermissions()
+	s.Contains(ts, "export type Permission =\n  | \""+string(all[0])+"\"\n")
+	s.Contains(ts, "  | \""+string(all[len(all)-1])+"\";\n", "the last member ends the type")
+	for _, p := range all {
+		s.Contains(ts, "  \""+string(p)+"\",\n", "ALL_PERMISSIONS has %s", p)
+	}
+
+	for _, role := range []string{"admin", "write", "read"} {
+		perms, ok := authtoken.RolePermissions(role)
+		s.Require().True(ok)
+		start := strings.Index(ts, "  "+role+": [\n")
+		s.Require().GreaterOrEqual(start, 0, "ROLE_PERMISSIONS has %s", role)
+		block := ts[start : start+strings.Index(ts[start:], "  ],\n")]
+		s.Equal(
+			len(perms),
+			strings.Count(block, "\n    \""),
+			"the %s role lists each of its permissions",
+			role,
+		)
 	}
 }
 

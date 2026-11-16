@@ -34,6 +34,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v3"
 
+	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
 	"github.com/osapi-io/osapi/internal/behavior/server"
@@ -56,6 +57,15 @@ func (s *AllPublicTestSuite) TestEveryBehaviorIsValid() {
 			s.Empty(behavior.ValidateBehavior(b))
 		})
 	}
+}
+
+// TestUIPermissionsAreCurrent checks that the UI's permissions, which go
+// generate writes from internal/authtoken, are what a token can have now.
+func (s *AllPublicTestSuite) TestUIPermissionsAreCurrent() {
+	got, err := os.ReadFile(filepath.Join("..", "..", "..", authtoken.TypeScriptFile))
+	s.Require().NoError(err)
+	s.Equal(authtoken.TypeScript(), string(got),
+		"%s is stale: run go generate ./internal/behaviors/all", authtoken.TypeScriptFile)
 }
 
 func (s *AllPublicTestSuite) TestEveryRouteIsMounted() {

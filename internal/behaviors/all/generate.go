@@ -21,3 +21,4 @@
 package all
 
 //go:generate go run ../../behavior/gen --root ../../..
+//go:generate go run ../../authtoken/gen --root ../../..

@@ -1,93 +1,14 @@
 // ---------------------------------------------------------------------------
-// Permissions — mirrors osapi's pkg/sdk/client/permissions.go
+// Permissions — generated from Go, in permissions.gen.ts
 // ---------------------------------------------------------------------------
 
-export type Permission =
-  | "agent:read"
-  | "agent:write"
-  | "node:read"
-  | "network:read"
-  | "network:write"
-  | "job:read"
-  | "job:write"
-  | "health:read"
-  | "audit:read"
-  | "trace:read"
-  | "command:execute"
-  | "command:shell"
-  | "file:read"
-  | "file:write"
-  | "docker:read"
-  | "docker:write"
-  | "docker:execute"
-  | "cron:read"
-  | "cron:write"
-  | "service:read"
-  | "service:write"
-  | "package:read"
-  | "package:write"
-  | "sysctl:read"
-  | "sysctl:write"
-  | "ntp:read"
-  | "ntp:write"
-  | "timezone:read"
-  | "timezone:write"
-  | "hostname:read"
-  | "hostname:write"
-  | "power:execute"
-  | "process:read"
-  | "process:write"
-  | "log:read"
-  | "user:read"
-  | "user:write"
-  | "group:read"
-  | "group:write"
-  | "certificate:read"
-  | "certificate:write";
+import {
+  ALL_PERMISSIONS,
+  ROLE_PERMISSIONS,
+  type Permission,
+} from "./permissions.gen";
 
-export const ALL_PERMISSIONS: Permission[] = [
-  "agent:read",
-  "agent:write",
-  "node:read",
-  "network:read",
-  "network:write",
-  "job:read",
-  "job:write",
-  "health:read",
-  "audit:read",
-  "trace:read",
-  "command:execute",
-  "command:shell",
-  "file:read",
-  "file:write",
-  "docker:read",
-  "docker:write",
-  "docker:execute",
-  "cron:read",
-  "cron:write",
-  "service:read",
-  "service:write",
-  "package:read",
-  "package:write",
-  "sysctl:read",
-  "sysctl:write",
-  "ntp:read",
-  "ntp:write",
-  "timezone:read",
-  "timezone:write",
-  "hostname:read",
-  "hostname:write",
-  "power:execute",
-  "process:read",
-  "process:write",
-  "log:read",
-  "user:read",
-  "user:write",
-  "group:read",
-  "group:write",
-  "certificate:read",
-  "certificate:write",
-];
+export { ALL_PERMISSIONS, type Permission };
 
 // ---------------------------------------------------------------------------
 // Roles — named sets of permissions with hierarchy
@@ -102,57 +23,9 @@ export interface RoleDefinition {
   permissions: Set<Permission>;
 }
 
-const VIEWER_PERMISSIONS: Permission[] = [
-  "agent:read",
-  "trace:read",
-  "node:read",
-  "network:read",
-  "job:read",
-  "health:read",
-  "file:read",
-  "docker:read",
-  "cron:read",
-  "service:read",
-  "package:read",
-  "sysctl:read",
-  "ntp:read",
-  "timezone:read",
-  "hostname:read",
-  "process:read",
-  "log:read",
-  "user:read",
-  "group:read",
-  "certificate:read",
-];
-
-const OPERATOR_PERMISSIONS: Permission[] = [
-  ...VIEWER_PERMISSIONS,
-  "agent:write",
-  "network:write",
-  "job:write",
-  "file:write",
-  "docker:write",
-  "docker:execute",
-  "command:execute",
-  "cron:write",
-  "service:write",
-  "package:write",
-  "sysctl:write",
-  "ntp:write",
-  "timezone:write",
-  "hostname:write",
-  "power:execute",
-  "process:write",
-  "user:write",
-  "group:write",
-  "certificate:write",
-];
-
-const ADMIN_PERMISSIONS: Permission[] = [
-  ...OPERATOR_PERMISSIONS,
-  "audit:read",
-  "command:shell",
-];
+const VIEWER_PERMISSIONS: Permission[] = ROLE_PERMISSIONS.read;
+const OPERATOR_PERMISSIONS: Permission[] = ROLE_PERMISSIONS.write;
+const ADMIN_PERMISSIONS: Permission[] = ROLE_PERMISSIONS.admin;
 
 export const ROLES: RoleDefinition[] = [
   {
@@ -213,11 +86,11 @@ export function hasAnyPermission(
 
 export const BLOCK_PERMISSIONS: Record<string, Permission> = {
   // Cron group
-  "cron-create": "cron:write",
-  "cron-list": "cron:read",
-  "cron-delete": "cron:write",
-  "cron-get": "cron:read",
-  "cron-update": "cron:write",
+  "cron-create": "schedule:write",
+  "cron-list": "schedule:read",
+  "cron-delete": "schedule:write",
+  "cron-get": "schedule:read",
+  "cron-update": "schedule:write",
   // File group
   "file-list": "file:read",
   "file-upload": "file:write",
@@ -284,8 +157,8 @@ export const BLOCK_PERMISSIONS: Record<string, Permission> = {
   "ntp-delete": "ntp:write",
   "timezone-get": "timezone:read",
   "timezone-set": "timezone:write",
-  "hostname-get": "hostname:read",
-  "hostname-set": "hostname:write",
+  "hostname-get": "node:read",
+  "hostname-set": "node:write",
   // Node group
   "node-status": "node:read",
   "node-load": "node:read",
@@ -295,7 +168,7 @@ export const BLOCK_PERMISSIONS: Record<string, Permission> = {
   "power-shutdown": "power:execute",
   "process-list": "process:read",
   "process-get": "process:read",
-  "process-signal": "process:write",
+  "process-signal": "process:execute",
   "log-query": "log:read",
   "log-sources": "log:read",
   "log-query-unit": "log:read",
@@ -316,11 +189,11 @@ export const BLOCK_PERMISSIONS: Record<string, Permission> = {
   "user-add-key": "user:write",
   "user-remove-key": "user:write",
   "user-change-password": "user:write",
-  "group-list": "group:read",
-  "group-get": "group:read",
-  "group-create": "group:write",
-  "group-update": "group:write",
-  "group-delete": "group:write",
+  "group-list": "user:read",
+  "group-get": "user:read",
+  "group-create": "user:write",
+  "group-update": "user:write",
+  "group-delete": "user:write",
   "certificate-list": "certificate:read",
   "certificate-create": "certificate:write",
   "certificate-update": "certificate:write",
