@@ -102,8 +102,9 @@ func (s *SpanPublicTestSuite) TestQuery() {
 				s.Equal(pub.SpanContext().SpanID(), sent.SpanID(),
 					"the job carries job.publish, so job.process is its child")
 
-				s.Contains(attrMap(pub), "osapi.target=server1")
-				s.Contains(attrMap(pub), "messaging.destination.name=jobs.query.host.server1")
+				s.Contains(attrMap(pub), "osapi.target=server1",
+					"the target that the caller gave, not the machine ID")
+				s.Contains(attrMap(pub), "messaging.destination.name=jobs.query.host.mid1")
 				s.Contains(attrMap(col), "job.expected=1")
 				s.Contains(attrMap(col), "job.answered=1")
 				s.Equal(codes.Unset, col.Status().Code)
@@ -128,6 +129,8 @@ func (s *SpanPublicTestSuite) TestQuery() {
 			}
 			jobs, err := client.New(slog.Default(), s.nats, &client.Options{
 				Timeout: timeout, JobsBucket: "jobs", StreamName: "JOBS",
+				// The controller resolves a hostname to the agent's machine ID.
+				TargetResolver: func(string) string { return "mid1" },
 			})
 			s.Require().NoError(err)
 
@@ -135,7 +138,7 @@ func (s *SpanPublicTestSuite) TestQuery() {
 			s.nats.EXPECT().
 				KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 				Return(uint64(1), nil)
-			s.nats.EXPECT().Publish(gomock.Any(), "jobs.query.host.server1", gomock.Any()).
+			s.nats.EXPECT().Publish(gomock.Any(), "jobs.query.host.mid1", gomock.Any()).
 				DoAndReturn(func(ctx context.Context, _ string, _ []byte) error {
 					sent = trace.SpanContextFromContext(ctx)
 

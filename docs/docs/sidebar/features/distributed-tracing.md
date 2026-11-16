@@ -69,8 +69,10 @@ osapi-controller  GET /api/node/:hostname/package
 │     └─ osapi-agent  nats.process  (web-02)
 │        └─ job.process
 │           └─ ...
-└─ job.collect
-   └─ kv.watch                      (the answers)
+├─ job.collect
+│  └─ kv.watch                      (the answers)
+├─ response.encode                  (the answer as JSON)
+└─ response.write                   (the answer to the client, and its size)
 ```
 
 A behavior adds `behavior.<name>.<method>` under `job.process`, and its commands
@@ -86,6 +88,8 @@ event.
 | `GET /api/...`                               | `osapi-controller` | `http.route`, `http.response.status_code`, `osapi.target`                                           |
 | `job.publish`                                | `osapi-controller` | `job.id`, `job.type`, `osapi.target`, `messaging.destination.name`                                  |
 | `job.collect`                                | `osapi-controller` | `job.expected`, `job.answered`, `job.timed_out`; a `job.timeout` event names each silent agent      |
+| `response.encode`                            | `osapi-controller` | The time to encode the answer as JSON                                                               |
+| `response.write`                             | `osapi-controller` | `http.response.body.size`. The time to write the answer; a slow network or client makes it long     |
 | `job.process`                                | `osapi-agent`      | `osapi.agent.hostname`, `osapi.agent.machine_id`, `host.arch`, `job.status`, `job.changed`          |
 | `behavior.<name>.<method>`                   | `osapi-agent`      | `osapi.behavior.name`, `osapi.behavior.method`, `osapi.behavior.outcome`                            |
 | `exec <program>`                             | `osapi-agent`      | `process.executable.name`, `osapi.exec.sudo`, `process.exit.code`. The arguments are not recorded   |
@@ -129,7 +133,7 @@ Trace:
 Spans (8):
   SPAN                                     HOSTNAME  DURATION  STATUS     DETAIL
   POST /api/next/node/:hostname/sysctl               20ms      ok         200
-  ├─ job.publish                                     2ms       ok         osapi.jobs.modify.host.…
+  ├─ job.publish                                     2ms       ok         behavior.sysctl.create to debian-1
   │  └─ job.process                        debian-1  11ms      completed
   │     └─ behavior.sysctl.create          debian-1  5ms       changed    key=vm.swappiness
   │        ├─ behavior.managedfile.update  debian-1  1ms       changed
@@ -143,7 +147,8 @@ Spans (8):
 - **STATUS** is the job status on a `job.process`, `changed` or `unchanged` on a
   behavior write, and `ok` or `error` on the other spans.
 - **DETAIL** is the error of a failed span. On the other spans, it is what the
-  span acted on: the inputs that a behavior records, a file, or a subject.
+  span acted on: the inputs that a behavior records, a file, the operation and
+  target of a job, or the size of the answer.
 
 The NATS calls are the bookkeeping of the job queue: the agent reads the job,
 writes its status as it goes, and writes its answer. The command leaves them out

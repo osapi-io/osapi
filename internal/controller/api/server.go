@@ -39,6 +39,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/telemetry/httplog"
+	"github.com/osapi-io/osapi/internal/telemetry/respspan"
 )
 
 // shutdownGracePeriod bounds how long Stop waits for in-flight requests.
@@ -76,6 +77,7 @@ func New(
 
 	e.Use(echootel.NewMiddlewareWithConfig(otelConfig))
 	e.Use(traceResponse)
+	e.Use(respspan.Middleware)
 	e.Use(httplog.New(logger))
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())

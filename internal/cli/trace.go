@@ -23,6 +23,7 @@ package cli
 import (
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -169,6 +170,17 @@ func spanDetail(
 	}
 	if s.Name == "kv.keys" {
 		return "list keys in " + s.Attributes["db.namespace"]
+	}
+	// The request span has the size too, from otelecho; it shows its status.
+	if size, err := strconv.Atoi(s.Attributes["http.response.body.size"]); err == nil &&
+		s.Name == "response.write" {
+		return FormatBytes(size)
+	}
+	// A job's subject names a host by its machine ID; the operation and the
+	// target that the caller gave say the same thing in words.
+	if op, target := s.Attributes["job.type"], s.Attributes["osapi.target"]; op != "" &&
+		target != "" {
+		return op + " to " + target
 	}
 	for _, k := range traceDetail {
 		if v := s.Attributes[k]; v != "" {

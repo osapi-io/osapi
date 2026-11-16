@@ -50,7 +50,9 @@ func traceSpans() []client.TraceSpan {
 		},
 		{
 			ID: "a", Name: "GET /api/x", Service: "osapi-controller", Start: at(0), Duration: 50 * time.Millisecond,
-			Attributes: map[string]string{"http.response.status_code": "200"},
+			Attributes: map[string]string{
+				"http.response.status_code": "200", "http.response.body.size": "1536",
+			},
 		},
 		{
 			ID: "b", ParentID: "a", Name: "job.publish", Service: "osapi-controller", Start: at(1), Duration: 30 * time.Millisecond,
@@ -69,6 +71,14 @@ func traceSpans() []client.TraceSpan {
 			Attributes: map[string]string{},
 		},
 		{
+			ID: "h", ParentID: "a", Name: "response.encode", Service: "osapi-controller", Start: at(50), Duration: time.Millisecond,
+			Attributes: map[string]string{},
+		},
+		{
+			ID: "i", ParentID: "a", Name: "response.write", Service: "osapi-controller", Start: at(51), Duration: 2 * time.Millisecond,
+			Attributes: map[string]string{"http.response.body.size": "1536"},
+		},
+		{
 			ID: "g", ParentID: "missing", Name: "orphan", Service: "osapi-cli", Start: at(60), Duration: time.Millisecond,
 			Failed: true, Attributes: map[string]string{},
 		},
@@ -82,7 +92,9 @@ func (s *TracePublicTestSuite) TestTraceRows() {
 		{"│  └─ job.process", "web-01", "20ms", "failed", ""},
 		{"│     ├─ exec apt-get", "web-01", "10ms", "error", "exit status 100"},
 		{"│     └─ file.write", "web-01", "1ms", "ok", "/etc/x.conf"},
-		{"└─ job.collect", "", "19ms", "ok", ""},
+		{"├─ job.collect", "", "19ms", "ok", ""},
+		{"├─ response.encode", "", "1ms", "ok", ""},
+		{"└─ response.write", "", "2ms", "ok", "1.5 KB"},
 		{"orphan", "", "1ms", "error", ""},
 	}, cli.TraceRows(traceSpans(), true))
 }
@@ -143,6 +155,45 @@ func natsTrace() []client.TraceSpan {
 		span("ans", "job", "kv.put", 16, kv("responses.j1.web-01.123")),
 		span("col", "root", "job.collect", 17, map[string]string{}),
 		span("w", "col", "kv.watch", 18, kv("responses.j1.>")),
+	}
+}
+
+func (s *TracePublicTestSuite) TestJobPublishDetail() {
+	publish := func(attrs map[string]string) string {
+		rows := cli.TraceRows([]client.TraceSpan{{
+			ID: "p", Name: "job.publish", Start: time.Now(), Attributes: attrs,
+		}}, true)
+
+		return rows[0][4]
+	}
+
+	tests := []struct {
+		name  string
+		attrs map[string]string
+		want  string
+	}{
+		{
+			name: "when the job has its operation and target they say where it went",
+			attrs: map[string]string{
+				"job.type":                   "behavior.sysctl.get",
+				"osapi.target":               "debian-1",
+				"messaging.destination.name": "osapi.jobs.query.host.d530664edc1c431eb5ef1e9dfd6617a5",
+			},
+			want: "behavior.sysctl.get to debian-1",
+		},
+		{
+			name: "when an older trace has only the subject it shows the subject",
+			attrs: map[string]string{
+				"messaging.destination.name": "osapi.jobs.query._all",
+			},
+			want: "osapi.jobs.query._all",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, publish(tc.attrs))
+		})
 	}
 }
 

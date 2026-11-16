@@ -84,7 +84,23 @@ function spanDetail(s: TraceSpan): string {
   if (a["nats.kv.key"])
     return keyMeaning(a["nats.kv.key"], a["db.namespace"] ?? "");
   if (s.name === "kv.keys") return `list keys in ${a["db.namespace"] ?? ""}`;
+  // The request span has the size too, from otelecho; it shows its status.
+  const size = a["http.response.body.size"];
+  if (size && s.name === "response.write") return formatBytes(Number(size));
+  // A job's subject names a host by its machine ID; the operation and the
+  // target that the caller gave say the same thing in words.
+  if (a["job.type"] && a["osapi.target"])
+    return `${a["job.type"]} to ${a["osapi.target"]}`;
   return DETAIL.map((k) => a[k]).find((v) => v) ?? "";
+}
+
+// formatBytes is a size as the CLI prints it: 512 B, 4.0 KB, 1.2 MB.
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024)
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
 
 // traceRows returns the spans as a tree: each child under its parent, in
