@@ -21,6 +21,12 @@ osapi client agent list
 It needs the `agent:read` permission. `osapi token roles` lists the roles that
 grant it.
 
+## Notes
+
+The `--json` output has more system facts that the agent collects: architecture,
+kernel version, FQDN, CPU count, network interfaces, service manager and package
+manager. The table view does not show these fields.
+
 ## Global flags
 
 | Flag               | Description                    | Default                 |

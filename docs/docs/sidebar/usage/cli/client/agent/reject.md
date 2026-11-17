@@ -24,9 +24,9 @@ grant it.
 
 ## Flags
 
-| Flag         | Description                                             | Default |
-| ------------ | ------------------------------------------------------- | ------- |
-| `--hostname` | The hostname of the pending agent to reject. (required) |         |
+| Flag         | Description                                            | Default |
+| ------------ | ------------------------------------------------------ | ------- |
+| `--hostname` | The hostname of the pending agent to reject (required) |         |
 
 ## Global flags
 

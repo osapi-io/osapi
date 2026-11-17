@@ -54,6 +54,9 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Doc[OSInfoResponse]("Operating system information."),
 	endpoint.Doc[RouteResponse]("A network routing table entry."),
 	endpoint.Get[ListInput, ListAgentsResponse]("list").
+		Notes("The `--json` output has more system facts that the agent collects:\n"+
+			"architecture, kernel version, FQDN, CPU count, network interfaces, service\n"+
+			"manager and package manager. The table view does not show these fields.").
 		Command("List active agents",
 			"This command reads the agent heartbeat registry directly. It makes no job.\nEach agent writes a heartbeat every 10 seconds, with a 30-second TTL. When\nan agent stops its heartbeat, it goes from the list.").
 		Example("").
@@ -84,6 +87,15 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("Agent details.").
 		Errors(endpoint.NotFound(ErrNotFound, "Agent not found")),
 	endpoint.Delete[RemoveInput, Message]("remove").
+		Result("Two machines can have the same hostname, because the identity of an agent\n"+
+			"is its machine ID. When more than one accepted agent has the hostname, the\n"+
+			"command fails and names their machine IDs. Run it again with\n"+
+			"`--machine-id`.").
+		Notes("The agent does not get a message. It keeps the controller key that it got\n"+
+			"at acceptance, and it does not enroll again by itself. To enroll it again,\n"+
+			"delete `controller.pub` from its key directory on the host\n"+
+			"(`/etc/osapi/pki` by default), and restart the agent. Then it sends a new\n"+
+			"request, and `agent accept` accepts it.").
 		Command("Remove an enrolled agent",
 			"When PKI is enabled, the controller keeps the public key of each accepted\nagent. This command deletes it. After that, the controller does not verify\nthe responses or the registration of the agent. Thus a target does not\nfind the agent, and a broadcast gives it no row.").
 		Example("--hostname web-01").

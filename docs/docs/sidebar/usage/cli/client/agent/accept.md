@@ -25,10 +25,10 @@ grant it.
 
 ## Flags
 
-| Flag            | Description                                             | Default |
-| --------------- | ------------------------------------------------------- | ------- |
-| `--fingerprint` | Accept by fingerprint instead of hostname.              |         |
-| `--hostname`    | The hostname of the pending agent to accept. (required) |         |
+| Flag            | Description                                            | Default |
+| --------------- | ------------------------------------------------------ | ------- |
+| `--fingerprint` | Accept by fingerprint instead of hostname              |         |
+| `--hostname`    | The hostname of the pending agent to accept (required) |         |
 
 ## Global flags
 

@@ -22,9 +22,9 @@ grant it.
 
 ## Flags
 
-| Flag         | Description                                      | Default |
-| ------------ | ------------------------------------------------ | ------- |
-| `--hostname` | The hostname of the agent to undrain. (required) |         |
+| Flag         | Description                                     | Default |
+| ------------ | ----------------------------------------------- | ------- |
+| `--hostname` | The hostname of the agent to undrain (required) |         |
 
 ## Global flags
 

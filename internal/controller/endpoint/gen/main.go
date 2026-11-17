@@ -182,8 +182,9 @@ func commands(
 			reads = append(reads, jen.List(jen.Id(local), jen.Id("_")).Op(":=").
 				Id("cmd").Dot("Flags").Call().Dot("Get"+kind).Call(jen.Lit(flag)))
 			fields = append(fields, jen.Id(fld.Name).Op(":").Id(local))
+			// Flag help has no period at its end, as cobra's own has none.
 			inits = append(inits, jen.Id(name).Dot("Flags").Call().Dot(kind).Call(
-				jen.Lit(flag), zero, jen.Lit(fld.Tag.Get("doc"))))
+				jen.Lit(flag), zero, jen.Lit(strings.TrimSuffix(fld.Tag.Get("doc"), "."))))
 			if fld.Tag.Get("in") == "path" || validates(fld, "required") {
 				inits = append(inits, jen.Id("_").Op("=").Id(name).Dot("MarkFlagRequired").
 					Call(jen.Lit(flag)))
@@ -219,10 +220,18 @@ func commands(
 		if len(examples) > 0 {
 			dict[jen.Id("Example")] = jen.Lit(strings.Join(examples, "\n"))
 		}
+		notes := jen.Dict{}
 		if perm := g.Permission(m); perm != "" {
-			dict[jen.Id("Annotations")] = jen.Map(jen.String()).String().Values(jen.Dict{
-				jen.Qual(referencePath, "Permission"): jen.Lit(perm),
-			})
+			notes[jen.Qual(referencePath, "Permission")] = jen.Lit(perm)
+		}
+		if n := m.PageNotes(); n != "" {
+			notes[jen.Qual(referencePath, "Notes")] = jen.Lit(n)
+		}
+		if r := m.PageResult(); r != "" {
+			notes[jen.Qual(referencePath, "Result")] = jen.Lit(r)
+		}
+		if len(notes) > 0 {
+			dict[jen.Id("Annotations")] = jen.Map(jen.String()).String().Values(notes)
 		}
 		f.Var().Id(name).Op("=").Op("&").Qual(cobraPath, "Command").Values(dict)
 		f.Line()

@@ -18,17 +18,31 @@ osapi client agent remove --hostname web-01
 osapi client agent remove --hostname web-01 --machine-id 3f2a9c...
 ```
 
+## Result
+
+Two machines can have the same hostname, because the identity of an agent is its
+machine ID. When more than one accepted agent has the hostname, the command
+fails and names their machine IDs. Run it again with `--machine-id`.
+
 ## Permission
 
 It needs the `agent:write` permission. `osapi token roles` lists the roles that
 grant it.
 
+## Notes
+
+The agent does not get a message. It keeps the controller key that it got at
+acceptance, and it does not enroll again by itself. To enroll it again, delete
+`controller.pub` from its key directory on the host (`/etc/osapi/pki` by
+default), and restart the agent. Then it sends a new request, and `agent accept`
+accepts it.
+
 ## Flags
 
-| Flag           | Description                                                                   | Default |
-| -------------- | ----------------------------------------------------------------------------- | ------- |
-| `--hostname`   | The hostname of the accepted agent to remove. (required)                      |         |
-| `--machine-id` | The machine ID to remove, when more than one accepted agent has the hostname. |         |
+| Flag           | Description                                                                  | Default |
+| -------------- | ---------------------------------------------------------------------------- | ------- |
+| `--hostname`   | The hostname of the accepted agent to remove (required)                      |         |
+| `--machine-id` | The machine ID to remove, when more than one accepted agent has the hostname |         |
 
 ## Global flags
 

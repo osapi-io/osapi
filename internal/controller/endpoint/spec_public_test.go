@@ -45,6 +45,7 @@ var notDSL = map[string]bool{
 	"Path:Group": true, "Permission:Group": true, "Key": true, "OperationID": true, "Handler": true,
 	"Mapped": true, "SuccessStatus": true, "Method:Group": true,
 	"CommandShort": true, "CommandLong": true, "Examples": true, "Scaffold": true,
+	"PageNotes": true, "PageResult": true,
 	"String:Problem": true,
 }
 

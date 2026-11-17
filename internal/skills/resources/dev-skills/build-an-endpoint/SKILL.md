@@ -130,7 +130,9 @@ The switch:
 The CLI:
 
 1. Give each method `.Command(short, long)` with the help of the hand-written
-   command, and `.Example("--flag value")` with its examples. Each input field
+   command, `.Example("--flag value")` with its examples, and `.Notes` and
+   `.Result` with the `reference.Notes` and `reference.Result` annotations of
+   the hand-written command, so its page keeps those sections. Each input field
    is a flag, named for its json name with `_` as `-`.
 2. Write `cmd/client_<group>_render.go`: a `command.Render` for each method,
    with the output code of the hand-written command.
@@ -140,6 +142,9 @@ The CLI:
    `go run . help client <group> <command> --json`. Compare it with the help of
    the generated commands: the same flags, types and required flags. Tell the
    user each difference.
+   Run `mise exec -- just cli-docs-generate` and read the diff of each
+   command's page under `docs/docs/sidebar/usage/cli/client/<group>/`: no
+   section may go.
 5. Delete `cmd/client_<group>_<method>.go` for each method. A command that is
    not a method of the group, such as `agent key`, stays.
 6. Run `mise exec -- just cli-docs-generate`, and run each command against a

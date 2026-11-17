@@ -225,6 +225,7 @@ type Method struct {
 	cmdShort         string
 	cmdLong          string
 	examples         []string
+	notes, result    string
 	status           int
 	errors           []Error
 }
@@ -401,6 +402,37 @@ func (m *Method) Example(
 	m.examples = append(m.examples, flags)
 
 	return m
+}
+
+// Notes adds a Notes section to the CLI command's page: what a person needs
+// to know that the help does not say, such as what --json has that the
+// table does not.
+func (m *Method) Notes(
+	text string,
+) *Method {
+	m.notes = text
+
+	return m
+}
+
+// Result adds a Result section to the CLI command's page: what the command
+// does in a case that needs words, such as when two agents share a name.
+func (m *Method) Result(
+	text string,
+) *Method {
+	m.result = text
+
+	return m
+}
+
+// PageNotes is the Notes section Notes set, or "".
+func (m *Method) PageNotes() string {
+	return m.notes
+}
+
+// PageResult is the Result section Result set, or "".
+func (m *Method) PageResult() string {
+	return m.result
 }
 
 // CommandShort is the CLI command's one line: the one Command set, or the

@@ -11,10 +11,13 @@ import (
 )
 
 var agentListCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "agent:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client agent list",
-	Long:        "This command reads the agent heartbeat registry directly. It makes no job.\nEach agent writes a heartbeat every 10 seconds, with a 30-second TTL. When\nan agent stops its heartbeat, it goes from the list.",
+	Annotations: map[string]string{
+		reference.Notes:      "The `--json` output has more system facts that the agent collects:\narchitecture, kernel version, FQDN, CPU count, network interfaces, service\nmanager and package manager. The table view does not show these fields.",
+		reference.Permission: "agent:read",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client agent list",
+	Long:    "This command reads the agent heartbeat registry directly. It makes no job.\nEach agent writes a heartbeat every 10 seconds, with a 30-second TTL. When\nan agent stops its heartbeat, it goes from the list.",
 	Run: func(cmd *cobra.Command, _ []string) {
 
 		command.Run(cmd, agent.Group, "list", agent.ListInput{})
@@ -51,10 +54,14 @@ var agentGetCmd = &cobra.Command{
 }
 
 var agentRemoveCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "agent:write"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client agent remove --hostname web-01\n  osapi client agent remove --hostname web-01 --machine-id 3f2a9c...",
-	Long:        "When PKI is enabled, the controller keeps the public key of each accepted\nagent. This command deletes it. After that, the controller does not verify\nthe responses or the registration of the agent. Thus a target does not\nfind the agent, and a broadcast gives it no row.",
+	Annotations: map[string]string{
+		reference.Notes:      "The agent does not get a message. It keeps the controller key that it got\nat acceptance, and it does not enroll again by itself. To enroll it again,\ndelete `controller.pub` from its key directory on the host\n(`/etc/osapi/pki` by default), and restart the agent. Then it sends a new\nrequest, and `agent accept` accepts it.",
+		reference.Permission: "agent:write",
+		reference.Result:     "Two machines can have the same hostname, because the identity of an agent\nis its machine ID. When more than one accepted agent has the hostname, the\ncommand fails and names their machine IDs. Run it again with\n`--machine-id`.",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client agent remove --hostname web-01\n  osapi client agent remove --hostname web-01 --machine-id 3f2a9c...",
+	Long:    "When PKI is enabled, the controller keeps the public key of each accepted\nagent. This command deletes it. After that, the controller does not verify\nthe responses or the registration of the agent. Thus a target does not\nfind the agent, and a broadcast gives it no row.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("hostname")
 		machineID, _ := cmd.Flags().GetString("machine-id")
@@ -123,19 +130,19 @@ var agentUndrainCmd = &cobra.Command{
 }
 
 func init() {
-	agentGetCmd.Flags().String("hostname", "", "The hostname of the agent to retrieve.")
+	agentGetCmd.Flags().String("hostname", "", "The hostname of the agent to retrieve")
 	_ = agentGetCmd.MarkFlagRequired("hostname")
-	agentRemoveCmd.Flags().String("hostname", "", "The hostname of the accepted agent to remove.")
+	agentRemoveCmd.Flags().String("hostname", "", "The hostname of the accepted agent to remove")
 	_ = agentRemoveCmd.MarkFlagRequired("hostname")
-	agentRemoveCmd.Flags().String("machine-id", "", "The machine ID to remove, when more than one accepted agent has the hostname.")
-	agentAcceptCmd.Flags().String("hostname", "", "The hostname of the pending agent to accept.")
+	agentRemoveCmd.Flags().String("machine-id", "", "The machine ID to remove, when more than one accepted agent has the hostname")
+	agentAcceptCmd.Flags().String("hostname", "", "The hostname of the pending agent to accept")
 	_ = agentAcceptCmd.MarkFlagRequired("hostname")
-	agentAcceptCmd.Flags().String("fingerprint", "", "Accept by fingerprint instead of hostname.")
-	agentRejectCmd.Flags().String("hostname", "", "The hostname of the pending agent to reject.")
+	agentAcceptCmd.Flags().String("fingerprint", "", "Accept by fingerprint instead of hostname")
+	agentRejectCmd.Flags().String("hostname", "", "The hostname of the pending agent to reject")
 	_ = agentRejectCmd.MarkFlagRequired("hostname")
-	agentDrainCmd.Flags().String("hostname", "", "The hostname of the agent to drain.")
+	agentDrainCmd.Flags().String("hostname", "", "The hostname of the agent to drain")
 	_ = agentDrainCmd.MarkFlagRequired("hostname")
-	agentUndrainCmd.Flags().String("hostname", "", "The hostname of the agent to undrain.")
+	agentUndrainCmd.Flags().String("hostname", "", "The hostname of the agent to undrain")
 	_ = agentUndrainCmd.MarkFlagRequired("hostname")
 	command.Register(agent.Group, agentListCmd, agentPendingCmd, agentGetCmd, agentRemoveCmd, agentAcceptCmd, agentRejectCmd, agentDrainCmd, agentUndrainCmd)
 }

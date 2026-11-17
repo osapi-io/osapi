@@ -152,7 +152,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindRefine,
 			Name: `.Command("short", "long")`,
-			Does: "Sets the CLI command's own help: its one line and the rest. Without it, the command has the summary and the description of the API.",
+			Does: "Sets the CLI command's own help: its one line and the rest. Without it, the command has the summary and the description of the API. The one line, and the doc of each input field that becomes a flag's help, start with a capital letter and have no period at the end; the long help is sentences. A test of every command holds this.",
 			When: "When the CLI needs words for a person at a shell, such as what the command reads and what to run next.",
 		},
 		{
@@ -160,6 +160,18 @@ var Spec = guide.Spec{
 			Name: `.Example("--flag value")`,
 			Does: "Adds an example of the CLI command: the flags after osapi client <group> <method>. The help and the CLI page show each one.",
 			When: "At least one for each method: the call a person makes most.",
+		},
+		{
+			Kind: KindRefine,
+			Name: `.Notes("text")`,
+			Does: "Adds a Notes section to the CLI command's page.",
+			When: "For what a person needs that the help does not say, such as what --json has that the table does not.",
+		},
+		{
+			Kind: KindRefine,
+			Name: `.Result("text")`,
+			Does: "Adds a Result section to the CLI command's page.",
+			When: "For what the command does in a case that needs words, such as when two agents share a hostname.",
 		},
 		{
 			Kind: KindRefine,

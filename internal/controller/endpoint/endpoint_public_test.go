@@ -172,6 +172,12 @@ func (s *EndpointPublicTestSuite) TestCommandHelp() {
 	s.Equal("List the nodes", cli.CommandShort())
 	s.Equal("Shell words.", cli.CommandLong())
 	s.Equal([]string{"", "--all"}, cli.Examples())
+	s.Empty(cli.PageNotes())
+	s.Empty(cli.PageResult())
+
+	paged := endpoint.Get[noInput, Node]("get").Notes("More in --json.").Result("Fails twice.")
+	s.Equal("More in --json.", paged.PageNotes())
+	s.Equal("Fails twice.", paged.PageResult())
 }
 
 func (s *EndpointPublicTestSuite) TestErrorf() {

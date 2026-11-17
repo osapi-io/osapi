@@ -23,9 +23,9 @@ grant it.
 
 ## Flags
 
-| Flag         | Description                                       | Default |
-| ------------ | ------------------------------------------------- | ------- |
-| `--hostname` | The hostname of the agent to retrieve. (required) |         |
+| Flag         | Description                                      | Default |
+| ------------ | ------------------------------------------------ | ------- |
+| `--hostname` | The hostname of the agent to retrieve (required) |         |
 
 ## Global flags
 

@@ -25,9 +25,9 @@ grant it.
 
 ## Flags
 
-| Flag         | Description                                    | Default |
-| ------------ | ---------------------------------------------- | ------- |
-| `--hostname` | The hostname of the agent to drain. (required) |         |
+| Flag         | Description                                   | Default |
+| ------------ | --------------------------------------------- | ------- |
+| `--hostname` | The hostname of the agent to drain (required) |         |
 
 ## Global flags
 
