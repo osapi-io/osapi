@@ -28,10 +28,10 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/internal/endpoint"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
-// endpointMethod is one method in `endpoint get --json`.
+// endpointMethod is one method in `controller endpoint get --json`.
 type endpointMethod struct {
 	Name        string `json:"name"`
 	Verb        string `json:"verb"`
@@ -46,9 +46,9 @@ var endpointGetCmd = &cobra.Command{
 	Long: "`--openapi` prints the group's part of the spec, as the definition makes it.\n" +
 		"Read it beside the hand-written spec of the group to compare the prose.\n" +
 		"`TestEndpointParity` compares the rest.",
-	Example: `  osapi endpoint get --name agent
-  osapi endpoint get --name agent --json
-  osapi endpoint get --name agent --openapi`,
+	Example: `  osapi controller endpoint get --name agent
+  osapi controller endpoint get --name agent --json
+  osapi controller endpoint get --name agent --openapi`,
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, _ []string) {
 		name, _ := cmd.Flags().GetString("name")

@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/apicontract"
-	"github.com/osapi-io/osapi/internal/endpoint"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
 type EndpointPublicTestSuite struct {
@@ -434,18 +434,38 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 		},
 	}
 
+	seen := map[string]bool{}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			var got []string
 			for _, p := range endpoint.Validate(tc.group) {
-				got = append(got, p.Rule)
+				got = append(got, p.Message)
+				seen[p.Rule] = true
+				s.Equal(endpoint.Checks.Fix(p.Rule), p.Fix, "every rule has a check")
 				s.NotEmpty(p.Fix)
-				s.Contains(p.String(), " Fix: ")
+				s.Equal(p.Message+" Fix: "+p.Fix, p.String())
 			}
 
 			s.Equal(tc.want, got)
 		})
 	}
+
+	// Each check is a rule that Validate applies, and each rule has a
+	// check: the cases above trigger every one.
+	checked := make([]string, 0, len(endpoint.Checks))
+	for _, c := range endpoint.Checks {
+		checked = append(checked, c.Rule)
+		s.NotEmpty(c.Requires, c.Rule)
+	}
+	triggered := make([]string, 0, len(seen))
+	for r := range seen {
+		triggered = append(triggered, r)
+	}
+	s.ElementsMatch(
+		checked,
+		triggered,
+		"each check is triggered by a case, and each rule has a check",
+	)
 }
 
 func TestEndpointPublicTestSuite(

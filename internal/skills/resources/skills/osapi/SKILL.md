@@ -21,7 +21,7 @@ host.
    `osapi help <command...> --json` for its exact flags. Before building a
    request, run `osapi behavior get --name <behavior> --method <method> --json`
    for its input and output schema. For an operation on osapi itself, such as
-   the agents or the jobs, run `osapi endpoint get --name <group> --json`. Flags and fields change between releases.
+   the agents or the jobs, run `osapi controller endpoint get --name <group> --json`. Flags and fields change between releases.
 2. **Always pass `--json`.** Output is the API's response body. On failure,
    stderr is one document, `{"error", "code"}`. Match on `code`, never on the
    message. Exit 2 means that the call was incorrect. Fix the call. Do not try it again unchanged.

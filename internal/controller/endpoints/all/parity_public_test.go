@@ -32,12 +32,12 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/osapi-io/osapi/internal/apicontract"
-	"github.com/osapi-io/osapi/internal/endpoint"
-	_ "github.com/osapi-io/osapi/internal/endpoints/all"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
 )
 
 // repoRoot is the repository root, from this package's directory.
-const repoRoot = "../../.."
+const repoRoot = "../../../.."
 
 // moving is each group whose hand-written spec the controller still serves,
 // and that spec. A row goes when its group moves and the spec is deleted;
@@ -62,7 +62,7 @@ type ParityPublicTestSuite struct {
 
 // TestEndpointParity holds the generated spec of each group that moves to
 // its hand-written spec: the same operations, parameters, auth, bodies,
-// responses and schemas. Prose is not compared; osapi endpoint get --name
+// responses and schemas. Prose is not compared; osapi controller endpoint get --name
 // <group> --openapi prints the generated spec to read beside the old one.
 func (s *ParityPublicTestSuite) TestEndpointParity() {
 	for _, m := range moving {
