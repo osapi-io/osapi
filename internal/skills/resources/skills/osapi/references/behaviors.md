@@ -38,5 +38,12 @@ And per method:
 
 A read (`verb: read`) changes nothing. You can safely do a write again. A create of something that exists succeeds with `changed: false`. A delete of something that is not there also succeeds with `changed: false`. Updating something absent fails.
 
-Controller commands that are not behaviors, `client job`, `client audit`,
-`client agent` and `client health`, are found with `osapi help client --json`.
+Most operations on a host are not behaviors yet. Their commands are under
+`osapi client node`, such as `osapi client node service list` and
+`osapi client node package get`. `osapi help client node --json` lists them, and
+`osapi help client node <domain> <command> --json` gives the flags of one. They
+take the same `--target` and return one result for each host, in the same way.
+When a domain moves to a behavior, `behavior list` shows it.
+
+The operations of osapi itself, such as the agents and the jobs, are not on a
+host. [endpoints.md](endpoints.md) tells about them.
