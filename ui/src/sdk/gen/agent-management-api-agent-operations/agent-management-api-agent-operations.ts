@@ -431,10 +431,15 @@ export type drainAgentResponse409 = {
   status: 409
 }
 
+export type drainAgentResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
 export type drainAgentResponseSuccess = (drainAgentResponse200) & {
   headers: Headers;
 };
-export type drainAgentResponseError = (drainAgentResponse400 | drainAgentResponse401 | drainAgentResponse403 | drainAgentResponse404 | drainAgentResponse409) & {
+export type drainAgentResponseError = (drainAgentResponse400 | drainAgentResponse401 | drainAgentResponse403 | drainAgentResponse404 | drainAgentResponse409 | drainAgentResponse500) & {
   headers: Headers;
 };
 
@@ -494,10 +499,15 @@ export type undrainAgentResponse409 = {
   status: 409
 }
 
+export type undrainAgentResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
 export type undrainAgentResponseSuccess = (undrainAgentResponse200) & {
   headers: Headers;
 };
-export type undrainAgentResponseError = (undrainAgentResponse400 | undrainAgentResponse401 | undrainAgentResponse403 | undrainAgentResponse404 | undrainAgentResponse409) & {
+export type undrainAgentResponseError = (undrainAgentResponse400 | undrainAgentResponse401 | undrainAgentResponse403 | undrainAgentResponse404 | undrainAgentResponse409 | undrainAgentResponse500) & {
   headers: Headers;
 };
 

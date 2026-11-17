@@ -39,12 +39,6 @@ import (
 // repoRoot is the repository root, from this package's directory.
 const repoRoot = "../../.."
 
-// noFiveHundred is why drain and undrain differ: their handlers answer 409
-// when the controller fails, not 500, and the hand-written spec lists no
-// 500 (osapi#788). A generated method answers 500 for an error it does not
-// map.
-const noFiveHundred = "osapi#788: drain and undrain report a failure as 409"
-
 // moving is each group whose hand-written spec the controller still serves,
 // and that spec. A row goes when its group moves and the spec is deleted;
 // when the table is empty, the test goes too.
@@ -59,12 +53,6 @@ var moving = []struct {
 	{
 		group: "agent",
 		spec:  "internal/controller/api/agent/gen/api.yaml",
-		accepted: map[string]string{
-			"-op POST /api/agent/{hostname}/drain id=drainAgent tags=[agent_operations] auth=BearerAuth:agent:write params=[path:hostname!:string] body= responses=[200=application/json:{message!:string} 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse]":                                        noFiveHundred,
-			"+op POST /api/agent/{hostname}/drain id=drainAgent tags=[agent_operations] auth=BearerAuth:agent:write params=[path:hostname!:string] body= responses=[200=application/json:{message!:string} 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]":     noFiveHundred,
-			"-op POST /api/agent/{hostname}/undrain id=undrainAgent tags=[agent_operations] auth=BearerAuth:agent:write params=[path:hostname!:string] body= responses=[200=application/json:{message!:string} 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse]":                                    noFiveHundred,
-			"+op POST /api/agent/{hostname}/undrain id=undrainAgent tags=[agent_operations] auth=BearerAuth:agent:write params=[path:hostname!:string] body= responses=[200=application/json:{message!:string} 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]": noFiveHundred,
-		},
 	},
 }
 

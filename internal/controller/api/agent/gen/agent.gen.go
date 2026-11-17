@@ -1083,6 +1083,20 @@ func (response DrainAgent409JSONResponse) VisitDrainAgentResponse(w http.Respons
 	return err
 }
 
+type DrainAgent500JSONResponse externalRef0.ErrorResponse
+
+func (response DrainAgent500JSONResponse) VisitDrainAgentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type RejectAgentRequestObject struct {
 	Hostname string `json:"hostname" validate:"required,min=1,max=255"`
 }
@@ -1267,6 +1281,20 @@ func (response UndrainAgent409JSONResponse) VisitUndrainAgentResponse(w http.Res
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UndrainAgent500JSONResponse externalRef0.ErrorResponse
+
+func (response UndrainAgent500JSONResponse) VisitUndrainAgentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
 	_, err := buf.WriteTo(w)
 	return err
 }

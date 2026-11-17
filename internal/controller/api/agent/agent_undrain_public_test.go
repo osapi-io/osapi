@@ -168,7 +168,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 			},
 		},
 		{
-			name:     "when DeleteDrainFlag fails returns 409",
+			name:     "when DeleteDrainFlag fails returns 500",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
 				MachineID: "abc123",
@@ -179,13 +179,13 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 			mockDeleteDrainErr: fmt.Errorf("kv connection failed"),
 			skipWrite:          true,
 			validateFunc: func(resp gen.UndrainAgentResponseObject) {
-				r, ok := resp.(gen.UndrainAgent409JSONResponse)
+				r, ok := resp.(gen.UndrainAgent500JSONResponse)
 				s.True(ok)
 				s.Contains(*r.Error, "failed to delete drain flag")
 			},
 		},
 		{
-			name:     "when the timeline write fails the agent is not reported missing",
+			name:     "when the timeline write fails the agent is not reported missing or in a state, it is a 500",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
 				MachineID: "abc123",
@@ -197,12 +197,12 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 			validateFunc: func(resp gen.UndrainAgentResponseObject) {
 				// The agent exists: the lookup before this said so. A timeline
 				// that cannot be written is not a missing agent.
-				_, ok := resp.(gen.UndrainAgent409JSONResponse)
+				_, ok := resp.(gen.UndrainAgent500JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
-			name:     "when WriteAgentTimelineEvent returns other error returns 409",
+			name:     "when WriteAgentTimelineEvent returns other error returns 500",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
 				MachineID: "abc123",
@@ -212,7 +212,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 			mockDeleteDrain: true,
 			mockWriteErr:    fmt.Errorf("connection failed"),
 			validateFunc: func(resp gen.UndrainAgentResponseObject) {
-				r, ok := resp.(gen.UndrainAgent409JSONResponse)
+				r, ok := resp.(gen.UndrainAgent500JSONResponse)
 				s.True(ok)
 				s.Contains(*r.Error, "connection failed")
 			},
@@ -294,7 +294,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgentHTTP() {
 			},
 		},
 		{
-			name:     "when the agent registry cannot be read it is not a 404",
+			name:     "when the agent registry cannot be read it is a 500, not a 404 or a 409",
 			hostname: "unknown",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
@@ -307,7 +307,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgentHTTP() {
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				// A registry that cannot be read is not an agent that does not
 				// exist, and saying so sends an operator after the wrong thing.
-				s.Equal(http.StatusConflict, rec.Code)
+				s.Equal(http.StatusInternalServerError, rec.Code)
 			},
 		},
 		{

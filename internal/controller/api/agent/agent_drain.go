@@ -54,7 +54,7 @@ func (a *Agent) DrainAgent(
 		// wrong thing.
 		errMsg := err.Error()
 
-		return gen.DrainAgent409JSONResponse{Error: &errMsg}, nil
+		return gen.DrainAgent500JSONResponse{Error: &errMsg}, nil
 	}
 
 	if agentInfo.State == job.AgentStateDraining || agentInfo.State == job.AgentStateCordoned {
@@ -64,7 +64,7 @@ func (a *Agent) DrainAgent(
 
 	if err := a.JobClient.SetDrainFlag(ctx, agentInfo.MachineID); err != nil {
 		errMsg := fmt.Sprintf("failed to set drain flag: %s", err.Error())
-		return gen.DrainAgent409JSONResponse{Error: &errMsg}, nil
+		return gen.DrainAgent500JSONResponse{Error: &errMsg}, nil
 	}
 
 	if err := a.JobClient.WriteAgentTimelineEvent(
@@ -76,10 +76,12 @@ func (a *Agent) DrainAgent(
 		// The agent exists: the lookup above established that. A timeline
 		// write that fails here is the timeline failing, not a missing
 		// agent, and the branch that claimed otherwise could never match
-		// because this call does not report one.
+		// because this call does not report one. It is a failure of the
+		// controller, so it is a 500: a 409 would say the agent is
+		// already in the state that was asked for.
 		errMsg := err.Error()
 
-		return gen.DrainAgent409JSONResponse{Error: &errMsg}, nil
+		return gen.DrainAgent500JSONResponse{Error: &errMsg}, nil
 	}
 
 	msg := fmt.Sprintf("drain initiated for agent %s", hostname)

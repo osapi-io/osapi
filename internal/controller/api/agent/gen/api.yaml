@@ -459,6 +459,12 @@ paths:
             application/json:
               schema:
                 $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error draining agent.
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
   /api/agent/{hostname}/undrain:
     post:
       operationId: undrainAgent
@@ -521,6 +527,12 @@ paths:
                 $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '409':
           description: Agent not in draining or cordoned state.
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error undraining agent.
           content:
             application/json:
               schema:

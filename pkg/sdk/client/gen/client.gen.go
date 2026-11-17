@@ -13237,6 +13237,7 @@ type DrainAgentResponse struct {
 	JSON403 *ErrorResponse
 	JSON404 *ErrorResponse
 	JSON409 *ErrorResponse
+	JSON500 *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -13311,6 +13312,7 @@ type UndrainAgentResponse struct {
 	JSON403 *ErrorResponse
 	JSON404 *ErrorResponse
 	JSON409 *ErrorResponse
+	JSON500 *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -18865,6 +18867,13 @@ func ParseDrainAgentResponse(rsp *http.Response) (*DrainAgentResponse, error) {
 		}
 		response.JSON409 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
 	}
 
 	return response, nil
@@ -18990,6 +18999,13 @@ func ParseUndrainAgentResponse(rsp *http.Response) (*UndrainAgentResponse, error
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
 
 	}
 
