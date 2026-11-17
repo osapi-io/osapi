@@ -180,6 +180,17 @@ func (s *EndpointPublicTestSuite) TestCommandHelp() {
 	s.Equal("Fails twice.", paged.PageResult())
 }
 
+func (s *EndpointPublicTestSuite) TestFlagAndInternal() {
+	m := endpoint.Get[noInput, Node]("get").Sub("trace").Flag("all", "Show everything")
+	s.Equal([]endpoint.Flag{{Name: "all", Usage: "Show everything"}}, m.CommandFlags())
+	s.Equal("trace", m.SubPath())
+
+	cause := errors.New("dial tcp 10.0.0.9:16686: refused")
+	err := endpoint.Internal("failed to read the trace", cause)
+	s.EqualError(err, "failed to read the trace")
+	s.ErrorIs(err, cause)
+}
+
 func (s *EndpointPublicTestSuite) TestErrorf() {
 	err := endpoint.Errorf(errMissing, "no node named %q", "web-01")
 

@@ -14,7 +14,7 @@ backend gets the spans a few seconds after the request: a trace that is not
 found yet is there after a few seconds.
 
 ```bash
-osapi client telemetry trace get
+osapi client telemetry trace get [flags]
 ```
 
 ## Examples
@@ -32,10 +32,10 @@ grant it.
 
 ## Flags
 
-| Flag    | Description                                                      | Default |
-| ------- | ---------------------------------------------------------------- | ------- |
-| `--all` | Show the NATS calls too, the reads and writes of the job queue   |         |
-| `--id`  | The trace ID, which a command prints after its job ID (required) |         |
+| Flag    | Description                                                                                 | Default |
+| ------- | ------------------------------------------------------------------------------------------- | ------- |
+| `--all` | Show the NATS calls too, the reads and writes of the job queue                              |         |
+| `--id`  | The trace ID, which a command prints after its job ID, 32 hexadecimal characters (required) |         |
 
 ## Global flags
 

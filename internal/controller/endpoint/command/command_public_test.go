@@ -186,7 +186,7 @@ func capture(
 
 func (s *CommandPublicTestSuite) TestRun() {
 	rendered := ""
-	command.Render(group, "get", func(in getInput, out thing) {
+	command.Render(group, "get", func(_ *cobra.Command, in getInput, out thing) {
 		rendered = in.Name + ":" + out.Name
 	})
 
@@ -325,12 +325,46 @@ func (s *CommandPublicTestSuite) TestAttach() {
 	s.Require().Error(err)
 	s.True(strings.Contains(err.Error(), "both a hand-written command"))
 
+	// A command with a Sub annotation goes under that command: a new one
+	// when the group has none, the one there when it has.
+	g2 := endpoint.Define("zznested", "Nested things", endpoint.Get[getInput, thing]("get"))
+	nested := &cobra.Command{Use: "get", Annotations: map[string]string{command.SubKey: "trace"}}
+	nested2 := &cobra.Command{Use: "list", Annotations: map[string]string{command.SubKey: "trace"}}
+	command.Register(g2, nested, nested2)
+	parent = &cobra.Command{Use: "client"}
+	s.Require().NoError(command.Attach(parent, command.Deps{}))
+	var trace *cobra.Command
+	for _, c := range parent.Commands() {
+		if c.Name() == "zznested" {
+			for _, sub := range c.Commands() {
+				if sub.Name() == "trace" {
+					trace = sub
+				}
+			}
+		}
+	}
+	s.Require().NotNil(trace, "the sub command is made")
+	s.Equal("Trace commands", trace.Short)
+	s.Len(trace.Commands(), 2)
+
+	// A named sub command that is not under its group yet gets them.
+	parent = &cobra.Command{Use: "client"}
+	group := &cobra.Command{Use: "zznested"}
+	namedTrace := &cobra.Command{Use: "trace", Short: "Read a trace"}
+	s.Require().NoError(command.Attach(parent, command.Deps{}, group, namedTrace))
+	s.Len(namedTrace.Commands(), 2)
+	for _, c := range group.Commands() {
+		s.NotEqual("trace", c.Name(), "the named trace gets them, not a second one")
+	}
+
 	// A hand-written group command that is named, but not under parent yet,
 	// gets the commands, and parent gets no second one.
 	parent = &cobra.Command{Use: "client"}
 	named := &cobra.Command{Use: "zzattach"}
 	s.Require().NoError(command.Attach(parent, command.Deps{}, named))
-	s.Empty(parent.Commands())
+	for _, c := range parent.Commands() {
+		s.NotEqual("zzattach", c.Name(), "the named command gets them, not a second one")
+	}
 	s.Len(named.Commands(), 1)
 }
 

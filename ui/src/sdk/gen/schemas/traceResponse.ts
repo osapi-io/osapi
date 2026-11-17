@@ -7,8 +7,8 @@
 import type { TraceSpan } from './traceSpan';
 
 export interface TraceResponse {
-  /** The trace ID. */
-  trace_id: string;
   /** Each span of the trace, ordered by start time. */
   spans: TraceSpan[];
+  /** The trace ID. */
+  trace_id: string;
 }

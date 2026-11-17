@@ -17,49 +17,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-
 package telemetry
 
 import (
-	"log/slog"
+	"context"
 
-	"github.com/labstack/echo/v5"
-
-	"github.com/osapi-io/osapi/internal/authtoken"
-	"github.com/osapi-io/osapi/internal/controller/api"
-	gen "github.com/osapi-io/osapi/internal/controller/api/telemetry/gen"
+	"github.com/osapi-io/osapi/internal/telemetry/traces"
 )
 
-// Handler returns the telemetry route registration functions. reader is nil
-// when the controller has no tracing backend; the route then answers 503.
-func Handler(
-	logger *slog.Logger,
-	reader TraceReader,
-	signingKey string,
-	customRoles map[string][]string,
-) []func(e *echo.Echo) {
-	var tokenManager api.TokenValidator = authtoken.New(logger)
+// Deps is what the telemetry group's handlers use.
+type Deps struct {
+	// Traces reads traces from the tracing backend. Nil when no backend is
+	// configured; Get then answers 503.
+	Traces TraceReader
+}
 
-	telemetryHandler := New(logger, reader)
-
-	strictHandler := gen.NewStrictHandler(
-		telemetryHandler,
-		[]gen.StrictMiddlewareFunc{
-			func(handler gen.StrictHandlerFunc, _ string) gen.StrictHandlerFunc {
-				return gen.StrictHandlerFunc(api.ScopeMiddleware(
-					api.StrictHandlerFunc(handler),
-					tokenManager,
-					signingKey,
-					string(gen.BearerAuthScopes),
-					customRoles,
-				))
-			},
-		},
-	)
-
-	return []func(e *echo.Echo){
-		func(e *echo.Echo) {
-			gen.RegisterHandlers(e, strictHandler)
-		},
-	}
+// TraceReader reads one trace from the tracing backend.
+type TraceReader interface {
+	Trace(ctx context.Context, id string) (*traces.Trace, error)
 }

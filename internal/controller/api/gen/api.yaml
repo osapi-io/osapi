@@ -20,6 +20,9 @@ tags:
   - description: Operations related to agent discovery and details.
     name: Agent_Management_API_agent_operations
     x-displayName: Agent
+  - description: Telemetry endpoints, such as the spans of a trace.
+    name: Telemetry_API_telemetry
+    x-displayName: Telemetry
   - name: Audit_Log_API_audit
     x-displayName: Audit
     description: Audit log endpoints for viewing API activity.
@@ -41,9 +44,6 @@ tags:
   - name: Node_Management_API_node_status
     x-displayName: Node/Status
     description: Operations related to node status endpoint.
-  - name: Telemetry_API_telemetry
-    x-displayName: Telemetry
-    description: Telemetry endpoints, such as the spans of a trace.
   - name: Certificate_Management_API_certificate_operations
     x-displayName: Node/Certificate
     description: CA certificate management on a target node.
@@ -611,6 +611,73 @@ paths:
       summary: List agents awaiting enrollment
       tags:
         - Agent_Management_API_agent_operations
+  /api/telemetry/trace/{id}:
+    servers: []
+    get:
+      description: >-
+        Returns each span of a trace, read from the tracing backend at
+        telemetry.tracing.url. The backend gets the spans a few seconds after
+        the request, so a trace of a request that just ran can be not found yet.
+      operationId: GetTrace
+      parameters:
+        - description: >-
+            The trace ID, which a command prints after its job ID, 32
+            hexadecimal characters
+          in: path
+          name: id
+          required: true
+          schema:
+            pattern: ^[0-9a-f]{32}$
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TraceResponse'
+          description: The spans of the trace.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The backend has no trace with this ID, or not yet.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: No tracing backend is configured on the controller.
+      security:
+        - BearerAuth:
+            - trace:read
+      summary: Get the spans of a trace
+      tags:
+        - Telemetry_API_telemetry
   /api/audit:
     servers: []
     get:
@@ -1661,71 +1728,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Error retrieving uptime.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/telemetry/trace/{id}:
-    servers: []
-    get:
-      operationId: GetTrace
-      summary: Get the spans of a trace
-      description: >-
-        Returns each span of a trace, read from the tracing backend at
-        telemetry.tracing.url. The backend gets the spans a few seconds after
-        the request, so a trace of a request that just ran can be not found yet.
-      tags:
-        - Telemetry_API_telemetry
-      security:
-        - BearerAuth:
-            - trace:read
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            pattern: ^[0-9a-f]{32}$
-          description: The trace ID, 32 hexadecimal characters.
-      responses:
-        '200':
-          description: The spans of the trace.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TraceResponse'
-        '400':
-          description: The trace ID is not valid.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: The backend has no trace with this ID, or not yet.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: The tracing backend could not be read.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '503':
-          description: No tracing backend is configured on the controller.
           content:
             application/json:
               schema:
@@ -6602,6 +6604,68 @@ components:
         - timestamp
         - event
       type: object
+    TraceResponse:
+      properties:
+        spans:
+          description: Each span of the trace, ordered by start time.
+          items:
+            $ref: '#/components/schemas/TraceSpan'
+          type: array
+        trace_id:
+          description: The trace ID.
+          type: string
+      required:
+        - trace_id
+        - spans
+      type: object
+    TraceSpan:
+      properties:
+        attributes:
+          additionalProperties:
+            type: string
+          description: The attributes of the span, each as text.
+          type: object
+        duration_ms:
+          description: How long the span took, in milliseconds.
+          format: double
+          type: number
+        kind:
+          description: The span kind, such as server, client, producer or consumer.
+          type: string
+        name:
+          description: The name of the span, such as job.process.
+          type: string
+        parent_span_id:
+          description: The ID of the parent span. Empty for the root.
+          type: string
+        service:
+          description: The service that made the span, such as osapi-agent.
+          type: string
+        span_id:
+          description: The span ID.
+          type: string
+        start_time:
+          description: When the span started.
+          format: date-time
+          type: string
+        status:
+          description: Whether the work of the span failed.
+          enum:
+            - ok
+            - error
+          type: string
+        status_message:
+          description: The error of a failed span.
+          type: string
+      required:
+        - span_id
+        - name
+        - service
+        - start_time
+        - duration_ms
+        - status
+        - attributes
+      type: object
     AuditEntry:
       type: object
       properties:
@@ -7640,68 +7704,6 @@ components:
             $ref: '#/components/schemas/UptimeResponse'
       required:
         - results
-    TraceResponse:
-      type: object
-      required:
-        - trace_id
-        - spans
-      properties:
-        trace_id:
-          type: string
-          description: The trace ID.
-        spans:
-          type: array
-          description: Each span of the trace, ordered by start time.
-          items:
-            $ref: '#/components/schemas/TraceSpan'
-    TraceSpan:
-      type: object
-      required:
-        - span_id
-        - name
-        - service
-        - start_time
-        - duration_ms
-        - status
-        - attributes
-      properties:
-        span_id:
-          type: string
-          description: The span ID.
-        parent_span_id:
-          type: string
-          description: The ID of the parent span. Empty for the root.
-        name:
-          type: string
-          description: The name of the span, such as job.process.
-        service:
-          type: string
-          description: The service that made the span, such as osapi-agent.
-        kind:
-          type: string
-          description: The span kind, such as server, client, producer or consumer.
-        start_time:
-          type: string
-          format: date-time
-          description: When the span started.
-        duration_ms:
-          type: number
-          format: double
-          description: How long the span took, in milliseconds.
-        status:
-          type: string
-          enum:
-            - ok
-            - error
-          description: Whether the work of the span failed.
-        status_message:
-          type: string
-          description: The error of a failed span.
-        attributes:
-          type: object
-          additionalProperties:
-            type: string
-          description: The attributes of the span, each as text.
     CertificateCACreateRequest:
       type: object
       required:
@@ -11267,6 +11269,9 @@ x-tagGroups:
   - name: Agent Management API
     tags:
       - Agent_Management_API_agent_operations
+  - name: Telemetry API
+    tags:
+      - Telemetry_API_telemetry
   - name: Audit Log API
     tags:
       - Audit_Log_API_audit
@@ -11286,9 +11291,6 @@ x-tagGroups:
     tags:
       - Node_Management_API_node_operations
       - Node_Management_API_node_status
-  - name: Telemetry API
-    tags:
-      - Telemetry_API_telemetry
   - name: Certificate Management API
     tags:
       - Certificate_Management_API_certificate_operations

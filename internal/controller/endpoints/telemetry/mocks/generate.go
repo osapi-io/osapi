@@ -17,25 +17,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+// Package mocks holds the generated doubles of the telemetry group's
+// dependencies, for the methods' tests.
+package mocks
 
-package telemetry
-
-import (
-	"context"
-	"log/slog"
-
-	"github.com/osapi-io/osapi/internal/telemetry/traces"
-)
-
-// TraceReader reads a trace from the tracing backend. A *traces.Jaeger is
-// one.
-type TraceReader interface {
-	Trace(ctx context.Context, id string) (*traces.Trace, error)
-}
-
-// Telemetry implements the telemetry API operations.
-type Telemetry struct {
-	// reader reads traces, or is nil when no backend is configured.
-	reader TraceReader
-	logger *slog.Logger
-}
+//go:generate go tool go.uber.org/mock/mockgen -source=../deps.go -destination=deps.gen.go -package=mocks

@@ -75,9 +75,14 @@ var (
 // renderer prints a method's answer: fn gets the input and a value of out,
 // the type the answer decodes into.
 type renderer struct {
-	fn  func(in, out any)
+	fn  func(cmd *cobra.Command, in, out any)
 	out reflect.Type
 }
+
+// SubKey is the annotation of a generated command that goes under a
+// command of its own: the Sub segment of its method, such as trace in
+// osapi client telemetry trace get.
+const SubKey = "osapi.endpoint.sub"
 
 // Register adds a group's generated commands. Each gen/cli.go calls it from
 // init.
@@ -91,7 +96,9 @@ func Register(
 // Attach puts each registered group's commands under the group's command:
 // one of groups, the hand-written group commands such as osapi client
 // agent, by name; else parent's child of that name; else a new one under
-// parent. Naming the hand-written ones keeps Attach free of the order in
+// parent. A command with a Sub goes under the command of that name in the
+// same way: one of groups, such as osapi client telemetry trace, else the
+// group's child, else a new one. Naming the hand-written ones keeps Attach free of the order in
 // which init functions run. It keeps d for Run. A generated command with
 // the name of one that is there already is a command written twice, so it
 // is an error.
@@ -113,12 +120,28 @@ func Attach(
 			parent.AddCommand(group)
 		}
 		for _, c := range e.cmds {
-			if child(group, c.Name()) != nil {
+			parent := group
+			if sub := c.Annotations[SubKey]; sub != "" {
+				parent = child(group, sub)
+				for _, g := range groups {
+					if g.Name() == sub && g != group {
+						parent = g
+					}
+				}
+				if parent == nil {
+					parent = &cobra.Command{
+						Use:   sub,
+						Short: strings.ToUpper(sub[:1]) + sub[1:] + " commands",
+					}
+					group.AddCommand(parent)
+				}
+			}
+			if child(parent, c.Name()) != nil {
 				return fmt.Errorf(
 					"osapi client %s %s is both a hand-written command and the %s group's",
 					e.group.Name, c.Name(), e.group.Name)
 			}
-			group.AddCommand(c)
+			parent.AddCommand(c)
 		}
 	}
 
@@ -139,14 +162,15 @@ func child(
 }
 
 // Render sets how a method's answer prints without --json. fn gets the
-// input the command sent and the output the API answered.
+// command, for a flag that Flag added, the input the command sent and the
+// output the API answered.
 func Render[In, Out any](
 	g *endpoint.Group,
 	method string,
-	fn func(in In, out Out),
+	fn func(cmd *cobra.Command, in In, out Out),
 ) {
 	renderers[g.Name+"."+method] = renderer{
-		fn:  func(in, out any) { fn(in.(In), out.(Out)) },
+		fn:  func(cmd *cobra.Command, in, out any) { fn(cmd, in.(In), out.(Out)) },
 		out: reflect.TypeFor[Out](),
 	}
 }
@@ -194,7 +218,7 @@ func Run[In any](
 			return
 		}
 	}
-	render.fn(in, out.Elem().Interface())
+	render.fn(cmd, in, out.Elem().Interface())
 }
 
 // Build is the request that sends in to method m of g: the key in the path,

@@ -229,10 +229,15 @@ func status(
 			return e.Code
 		}
 	}
+	cause := err.Error()
+	var internal *endpoint.InternalError
+	if errors.As(err, &internal) && internal.Cause != nil {
+		cause = internal.Cause.Error()
+	}
 	s.logger.Error("endpoint failed",
 		slog.String("group", g.Name),
 		slog.String("method", m.Name),
-		slog.String("error", err.Error()))
+		slog.String("error", cause))
 
 	return http.StatusInternalServerError
 }

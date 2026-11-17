@@ -18,10 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // Package telemetry is the endpoint group for what the controller reads
-// from the telemetry backends, such as the spans of a trace. Until the
-// group moves, the controller serves the hand-written spec in
-// internal/controller/api/telemetry, and TestEndpointParity holds the two
-// together.
+// from the telemetry backends, such as the spans of a trace.
 package telemetry
 
 import (
@@ -43,7 +40,9 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Title("Telemetry API"),
 	endpoint.Tag("telemetry", "Telemetry",
 		"Telemetry endpoints, such as the spans of a trace."),
-	endpoint.Get[TraceInput, TraceResponse]("trace").
+	endpoint.Uses[Deps](),
+	endpoint.Get[TraceInput, TraceResponse]("get").
+		Handle(Get).
 		Sub("trace").
 		ID("GetTrace").
 		Permission("trace:read").
@@ -52,6 +51,20 @@ var Group = endpoint.Register(endpoint.Define(
 			"telemetry.tracing.url. The backend gets the spans a few seconds after the "+
 			"request, so a trace of a request that just ran can be not found yet.").
 		Returns("The spans of the trace.").
+		Command("Show the span tree of a trace",
+			"Shows each span of a trace as a tree: the request on the controller,\n"+
+				"the job, each agent that ran it with its host and status, and the\n"+
+				"commands and file changes under each. The NATS calls, which record the\n"+
+				"job's progress, are left out and counted; --all shows them. Each\n"+
+				"command prints the ID of its trace after its job ID.\n\n"+
+				"The controller reads the trace from the tracing backend at\n"+
+				"`telemetry.tracing.url`, so this host needs no access to the backend.\n"+
+				"The backend gets the spans a few seconds after the request: a trace\n"+
+				"that is not found yet is there after a few seconds.").
+		Example("--id 26e448c9dbe1c4a8d216a98c675079c9").
+		Example("--id 26e448c9dbe1c4a8d216a98c675079c9 --all").
+		Example("--id 26e448c9dbe1c4a8d216a98c675079c9 --json").
+		Flag("all", "Show the NATS calls too, the reads and writes of the job queue").
 		Errors(
 			endpoint.NotFound(ErrNotFound,
 				"The backend has no trace with this ID, or not yet."),

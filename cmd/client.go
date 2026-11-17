@@ -110,12 +110,13 @@ func init() {
 
 	// The generated commands of the endpoint groups go under client. A group
 	// that also has hand-written commands, such as agent with key and
-	// status, is named, so its generated commands join that command.
+	// status, is named, so its generated commands join that command; so is
+	// a command that a generated one goes under, such as telemetry trace.
 	if err := command.Attach(clientCmd, command.Deps{
 		Caller: func() command.Caller { return sdkClient },
 		JSON:   func() bool { return jsonOutput },
 		Error:  func(err error) { cli.HandleError(err, logger) },
-	}, clientAgentCmd); err != nil {
+	}, clientAgentCmd, clientTelemetryCmd, clientTelemetryTraceCmd); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

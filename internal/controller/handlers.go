@@ -52,10 +52,10 @@ import (
 	sysctlAPI "github.com/osapi-io/osapi/internal/controller/api/node/sysctl"
 	timezoneAPI "github.com/osapi-io/osapi/internal/controller/api/node/timezone"
 	userAPI "github.com/osapi-io/osapi/internal/controller/api/node/user"
-	telemetryAPI "github.com/osapi-io/osapi/internal/controller/api/telemetry"
 	uihandler "github.com/osapi-io/osapi/internal/controller/api/ui"
 	endpointserver "github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
+	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/telemetry/traces"
@@ -103,7 +103,13 @@ func handlers(
 	handlers := make([]func(e *echo.Echo), 0, 16)
 	handlers = append(
 		handlers,
-		endpointserver.Handler(d.log, signingKey, customRoles, agentDeps(d))...,
+		endpointserver.Handler(
+			d.log,
+			signingKey,
+			customRoles,
+			agentDeps(d),
+			telemetry.Deps{Traces: traceReader(d.cfg.Telemetry.Tracing)},
+		)...,
 	)
 	handlers = append(handlers, nodeAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, jobAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
@@ -145,14 +151,6 @@ func handlers(
 			handlers,
 			auditAPI.Handler(d.log, d.auditStore, signingKey, customRoles)...)
 	}
-	handlers = append(
-		handlers,
-		telemetryAPI.Handler(
-			d.log,
-			traceReader(d.cfg.Telemetry.Tracing),
-			signingKey,
-			customRoles,
-		)...)
 	if d.objBucket != "" {
 		handlers = append(
 			handlers,
@@ -185,7 +183,7 @@ func handlers(
 // when no URL is set, and the trace route then answers 503.
 func traceReader(
 	cfg config.TracingConfig,
-) telemetryAPI.TraceReader {
+) telemetry.TraceReader {
 	if cfg.URL == "" {
 		return nil
 	}

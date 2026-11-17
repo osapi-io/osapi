@@ -226,6 +226,7 @@ type Method struct {
 	cmdLong          string
 	examples         []string
 	notes, result    string
+	flags            []Flag
 	status           int
 	errors           []Error
 }
@@ -425,6 +426,36 @@ func (m *Method) Result(
 	return m
 }
 
+// Flag is a flag of the CLI command that is not part of the request: it
+// changes only how the answer prints, such as --all. The renderer reads it.
+type Flag struct {
+	// Name is the flag's name, without the dashes.
+	Name string
+	// Usage is its help.
+	Usage string
+}
+
+// Flag adds a bool flag to the CLI command that the request does not send,
+// for the renderer: such as --all, to show what it leaves out.
+func (m *Method) Flag(
+	name string,
+	usage string,
+) *Method {
+	m.flags = append(m.flags, Flag{Name: name, Usage: usage})
+
+	return m
+}
+
+// CommandFlags are the flags Flag added.
+func (m *Method) CommandFlags() []Flag {
+	return m.flags
+}
+
+// SubPath is the fixed segment Sub set, or "".
+func (m *Method) SubPath() string {
+	return m.sub
+}
+
 // PageNotes is the Notes section Notes set, or "".
 func (m *Method) PageNotes() string {
 	return m.notes
@@ -544,6 +575,32 @@ func (w *wrapped) Error() string {
 
 func (w *wrapped) Unwrap() error {
 	return w.sentinel
+}
+
+// Internal is a failure of the controller whose cause stays out of the
+// answer: the caller gets msg, a 500, and the log gets the cause, such as
+// the address of a backend that could not be read.
+func Internal(
+	msg string,
+	cause error,
+) error {
+	return &InternalError{Msg: msg, Cause: cause}
+}
+
+// InternalError is the error Internal makes.
+type InternalError struct {
+	// Msg is what the caller gets.
+	Msg string
+	// Cause is what the log gets.
+	Cause error
+}
+
+func (e *InternalError) Error() string {
+	return e.Msg
+}
+
+func (e *InternalError) Unwrap() error {
+	return e.Cause
 }
 
 // NotFound maps err to 404.
