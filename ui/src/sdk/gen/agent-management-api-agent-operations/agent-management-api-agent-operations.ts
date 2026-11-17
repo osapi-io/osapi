@@ -73,69 +73,6 @@ export const getAgents = async ( options?: Parameters<typeof apiFetch>[1]): Prom
 );}
 
 
-export type getAgentDetailsResponse200 = {
-  data: AgentInfo
-  status: 200
-}
-
-export type getAgentDetailsResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type getAgentDetailsResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type getAgentDetailsResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type getAgentDetailsResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type getAgentDetailsResponse500 = {
-  data: ErrorResponse
-  status: 500
-}
-
-export type getAgentDetailsResponseSuccess = (getAgentDetailsResponse200) & {
-  headers: Headers;
-};
-export type getAgentDetailsResponseError = (getAgentDetailsResponse400 | getAgentDetailsResponse401 | getAgentDetailsResponse403 | getAgentDetailsResponse404 | getAgentDetailsResponse500) & {
-  headers: Headers;
-};
-
-export type getAgentDetailsResponse = (getAgentDetailsResponseSuccess | getAgentDetailsResponseError)
-
-export const getGetAgentDetailsUrl = (hostname: string,) => {
-
-
-
-
-  return `/api/agent/${hostname}`
-}
-
-/**
- * Get detailed information about a specific agent by hostname.
- * @summary Get agent details
- */
-export const getAgentDetails = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getAgentDetailsResponse> => {
-
-  return apiFetch<getAgentDetailsResponse>(getGetAgentDetailsUrl(hostname),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
 export type removeAgentResponse200 = {
   data: RemoveAgent200
   status: 200
@@ -213,50 +150,60 @@ export const removeAgent = async (hostname: string,
 );}
 
 
-export type getAgentsPendingResponse200 = {
-  data: ListPendingAgentsResponse
+export type getAgentDetailsResponse200 = {
+  data: AgentInfo
   status: 200
 }
 
-export type getAgentsPendingResponse401 = {
+export type getAgentDetailsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getAgentDetailsResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type getAgentsPendingResponse403 = {
+export type getAgentDetailsResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type getAgentsPendingResponse500 = {
+export type getAgentDetailsResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getAgentDetailsResponse500 = {
   data: ErrorResponse
   status: 500
 }
 
-export type getAgentsPendingResponseSuccess = (getAgentsPendingResponse200) & {
+export type getAgentDetailsResponseSuccess = (getAgentDetailsResponse200) & {
   headers: Headers;
 };
-export type getAgentsPendingResponseError = (getAgentsPendingResponse401 | getAgentsPendingResponse403 | getAgentsPendingResponse500) & {
+export type getAgentDetailsResponseError = (getAgentDetailsResponse400 | getAgentDetailsResponse401 | getAgentDetailsResponse403 | getAgentDetailsResponse404 | getAgentDetailsResponse500) & {
   headers: Headers;
 };
 
-export type getAgentsPendingResponse = (getAgentsPendingResponseSuccess | getAgentsPendingResponseError)
+export type getAgentDetailsResponse = (getAgentDetailsResponseSuccess | getAgentDetailsResponseError)
 
-export const getGetAgentsPendingUrl = () => {
-
-
+export const getGetAgentDetailsUrl = (hostname: string,) => {
 
 
-  return `/api/agent/pending`
+
+
+  return `/api/agent/${hostname}`
 }
 
 /**
- * List all agents that have submitted enrollment requests but have not yet been accepted or rejected.
- * @summary List agents awaiting enrollment
+ * Get detailed information about a specific agent by hostname.
+ * @summary Get agent details
  */
-export const getAgentsPending = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getAgentsPendingResponse> => {
+export const getAgentDetails = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getAgentDetailsResponse> => {
 
-  return apiFetch<getAgentsPendingResponse>(getGetAgentsPendingUrl(),
+  return apiFetch<getAgentDetailsResponse>(getGetAgentDetailsUrl(hostname),
   {
     ...options,
     method: 'GET'
@@ -338,69 +285,6 @@ export const acceptAgent = async (hostname: string,
 );}
 
 
-export type rejectAgentResponse200 = {
-  data: RejectAgent200
-  status: 200
-}
-
-export type rejectAgentResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type rejectAgentResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type rejectAgentResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type rejectAgentResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type rejectAgentResponse500 = {
-  data: ErrorResponse
-  status: 500
-}
-
-export type rejectAgentResponseSuccess = (rejectAgentResponse200) & {
-  headers: Headers;
-};
-export type rejectAgentResponseError = (rejectAgentResponse400 | rejectAgentResponse401 | rejectAgentResponse403 | rejectAgentResponse404 | rejectAgentResponse500) & {
-  headers: Headers;
-};
-
-export type rejectAgentResponse = (rejectAgentResponseSuccess | rejectAgentResponseError)
-
-export const getRejectAgentUrl = (hostname: string,) => {
-
-
-
-
-  return `/api/agent/${hostname}/reject`
-}
-
-/**
- * Reject a pending agent enrollment request.
- * @summary Reject a pending agent
- */
-export const rejectAgent = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<rejectAgentResponse> => {
-
-  return apiFetch<rejectAgentResponse>(getRejectAgentUrl(hostname),
-  {
-    ...options,
-    method: 'POST'
-
-
-  }
-);}
-
-
 export type drainAgentResponse200 = {
   data: DrainAgent200
   status: 200
@@ -460,6 +344,69 @@ export const getDrainAgentUrl = (hostname: string,) => {
 export const drainAgent = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<drainAgentResponse> => {
 
   return apiFetch<drainAgentResponse>(getDrainAgentUrl(hostname),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+export type rejectAgentResponse200 = {
+  data: RejectAgent200
+  status: 200
+}
+
+export type rejectAgentResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type rejectAgentResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type rejectAgentResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type rejectAgentResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type rejectAgentResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type rejectAgentResponseSuccess = (rejectAgentResponse200) & {
+  headers: Headers;
+};
+export type rejectAgentResponseError = (rejectAgentResponse400 | rejectAgentResponse401 | rejectAgentResponse403 | rejectAgentResponse404 | rejectAgentResponse500) & {
+  headers: Headers;
+};
+
+export type rejectAgentResponse = (rejectAgentResponseSuccess | rejectAgentResponseError)
+
+export const getRejectAgentUrl = (hostname: string,) => {
+
+
+
+
+  return `/api/agent/${hostname}/reject`
+}
+
+/**
+ * Reject a pending agent enrollment request.
+ * @summary Reject a pending agent
+ */
+export const rejectAgent = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<rejectAgentResponse> => {
+
+  return apiFetch<rejectAgentResponse>(getRejectAgentUrl(hostname),
   {
     ...options,
     method: 'POST'
@@ -531,6 +478,59 @@ export const undrainAgent = async (hostname: string, options?: Parameters<typeof
   {
     ...options,
     method: 'POST'
+
+
+  }
+);}
+
+
+export type getAgentsPendingResponse200 = {
+  data: ListPendingAgentsResponse
+  status: 200
+}
+
+export type getAgentsPendingResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getAgentsPendingResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getAgentsPendingResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type getAgentsPendingResponseSuccess = (getAgentsPendingResponse200) & {
+  headers: Headers;
+};
+export type getAgentsPendingResponseError = (getAgentsPendingResponse401 | getAgentsPendingResponse403 | getAgentsPendingResponse500) & {
+  headers: Headers;
+};
+
+export type getAgentsPendingResponse = (getAgentsPendingResponseSuccess | getAgentsPendingResponseError)
+
+export const getGetAgentsPendingUrl = () => {
+
+
+
+
+  return `/api/agent/pending`
+}
+
+/**
+ * List all agents that have submitted enrollment requests but have not yet been accepted or rejected.
+ * @summary List agents awaiting enrollment
+ */
+export const getAgentsPending = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getAgentsPendingResponse> => {
+
+  return apiFetch<getAgentsPendingResponse>(getGetAgentsPendingUrl(),
+  {
+    ...options,
+    method: 'GET'
 
 
   }

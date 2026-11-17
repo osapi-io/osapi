@@ -26,6 +26,11 @@ The rules:
   or rename it.
 - `route`: No two methods have one verb and path. Fix: Change the verb, the Sub
   or the Action.
+- `handler`: A group that Uses a type gives each method a handler,
+  func(context.Context, D, In) (Out, error), with D that type and In and Out the
+  method's types. A group with a handler Uses a type. Fix: Add .Handle(fn) to
+  each method, with the signature that the message names, and
+  endpoint.Uses[Deps](<>) to Define.
 - `schema`: The spec builds: each input and output type is one that JSON can
   encode. Fix: Use structs, slices, maps, strings, numbers, bools and time.Time;
   not channels or functions.

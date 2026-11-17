@@ -239,7 +239,7 @@ generate:
 
 # Join the hand-written specs and each served behavior's gen/api.yaml into out
 join-spec out:
-    bunx @redocly/cli@{{ redocly_version }} join --prefix-tags-with-info-prop title -o {{ out }} $(ls internal/controller/api/*/gen/api.yaml | grep -v -e '/next/' -e '^internal/controller/api/gen/') internal/controller/api/node/*/gen/api.yaml $(find internal/behaviors -path '*/gen/api.yaml' | sort)
+    bunx @redocly/cli@{{ redocly_version }} join --prefix-tags-with-info-prop title -o {{ out }} $(find internal/controller/endpoints -path '*/gen/api.yaml' | sort) $(ls internal/controller/api/*/gen/api.yaml | grep -v -e '/next/' -e '^internal/controller/api/gen/') internal/controller/api/node/*/gen/api.yaml $(find internal/behaviors -path '*/gen/api.yaml' | sort)
 
 # Format, lint, and generate before committing
 ready:

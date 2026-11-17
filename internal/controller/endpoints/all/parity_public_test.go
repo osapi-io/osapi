@@ -50,10 +50,8 @@ var moving = []struct {
 	// generated spec has with +.
 	accepted map[string]string
 }{
-	{
-		group: "agent",
-		spec:  "internal/controller/api/agent/gen/api.yaml",
-	},
+	// agent moved: its hand-written spec is gone, and TestJoinedSpec holds
+	// the joined spec, which has its generated spec, to the same contract.
 }
 
 type ParityPublicTestSuite struct {

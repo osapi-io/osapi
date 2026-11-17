@@ -30,7 +30,6 @@ import (
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/behavior/server"
 	"github.com/osapi-io/osapi/internal/config"
-	agentAPI "github.com/osapi-io/osapi/internal/controller/api/agent"
 	auditAPI "github.com/osapi-io/osapi/internal/controller/api/audit"
 	factsAPI "github.com/osapi-io/osapi/internal/controller/api/facts"
 	"github.com/osapi-io/osapi/internal/controller/api/file"
@@ -55,10 +54,15 @@ import (
 	userAPI "github.com/osapi-io/osapi/internal/controller/api/node/user"
 	telemetryAPI "github.com/osapi-io/osapi/internal/controller/api/telemetry"
 	uihandler "github.com/osapi-io/osapi/internal/controller/api/ui"
+	endpointserver "github.com/osapi-io/osapi/internal/controller/endpoint/server"
+	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/telemetry/traces"
 	uiassets "github.com/osapi-io/osapi/ui"
+
+	// Registers the routes of every endpoint group that is served.
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all/gen"
 )
 
 // handlerDeps is what the REST API handlers use.
@@ -99,7 +103,7 @@ func handlers(
 	handlers := make([]func(e *echo.Echo), 0, 16)
 	handlers = append(
 		handlers,
-		agentAPI.Handler(d.log, d.jobs, signingKey, customRoles, d.enrollment)...,
+		endpointserver.Handler(d.log, signingKey, customRoles, agentDeps(d))...,
 	)
 	handlers = append(handlers, nodeAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, jobAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
@@ -187,4 +191,18 @@ func traceReader(
 	}
 
 	return traces.NewJaeger(cfg.URL, nil)
+}
+
+// agentDeps is what the agent group's handlers use. A controller without
+// enrollment has no watcher, and the group must see a nil interface, not an
+// interface that holds a nil pointer, to answer that enrollment is off.
+func agentDeps(
+	d handlerDeps,
+) agent.Deps {
+	deps := agent.Deps{Jobs: d.jobs}
+	if d.enrollment != nil {
+		deps.Enrollment = d.enrollment
+	}
+
+	return deps
 }

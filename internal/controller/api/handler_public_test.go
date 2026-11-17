@@ -31,7 +31,6 @@ import (
 
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/api"
-	agentAPI "github.com/osapi-io/osapi/internal/controller/api/agent"
 	"github.com/osapi-io/osapi/internal/controller/api/health"
 	jobAPI "github.com/osapi-io/osapi/internal/controller/api/job"
 	nodeAPI "github.com/osapi-io/osapi/internal/controller/api/node"
@@ -85,10 +84,6 @@ func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
 			signingKey := "test-signing-key"
 
 			handlers := make([]func(e *echo.Echo), 0, 5)
-			handlers = append(
-				handlers,
-				agentAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil, nil)...,
-			)
 			handlers = append(
 				handlers,
 				nodeAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...,

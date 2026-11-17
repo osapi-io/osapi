@@ -630,7 +630,10 @@ The operations of the controller itself, such as the agents and the jobs, move
 to definitions in `internal/controller/endpoints/`. `osapi controller endpoint`
 lists them, and `osapi controller endpoint spec` lists each part of the DSL.
 `TestEndpointParity` holds the spec of each group that moves to its hand-written
-spec, until the group moves.
+spec, until the group moves. The agent group is served from its definition:
+`go generate ./internal/controller/endpoints/all` writes its spec, routes and
+decoders under `gen/`, and `just generate` joins its spec into the main one. The
+`build-an-endpoint` skill has the steps.
 
 ### Rules a domain has to follow
 

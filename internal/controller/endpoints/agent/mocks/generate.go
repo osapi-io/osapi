@@ -17,31 +17,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+// Package mocks holds the generated doubles of the agent group's
+// dependencies, for the methods' tests.
+package mocks
 
-package agent
-
-import (
-	"context"
-	"log/slog"
-
-	"github.com/osapi-io/osapi/internal/controller/enrollment"
-	"github.com/osapi-io/osapi/internal/job/client"
-)
-
-// EnrollmentManager defines the enrollment operations needed by the
-// agent API handlers. When nil, enrollment endpoints return 500.
-type EnrollmentManager interface {
-	ListPending(ctx context.Context) ([]enrollment.PendingAgent, error)
-	AcceptByHostname(ctx context.Context, hostname string) error
-	AcceptByFingerprint(ctx context.Context, fingerprint string) error
-	RejectByHostname(ctx context.Context, hostname string, reason string) error
-	RemoveByHostname(ctx context.Context, hostname string, machineID string) (string, error)
-}
-
-// Agent implementation of the Agent APIs operations.
-type Agent struct {
-	// JobClient provides job-based operations for agent queries.
-	JobClient  client.JobClient
-	logger     *slog.Logger
-	enrollment EnrollmentManager
-}
+//go:generate go tool go.uber.org/mock/mockgen -source=../deps.go -destination=deps.gen.go -package=mocks

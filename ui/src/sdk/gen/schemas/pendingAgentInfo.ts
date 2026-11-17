@@ -6,12 +6,12 @@
  */
 
 export interface PendingAgentInfo {
-  /** The permanent machine identifier. */
-  machine_id: string;
-  /** The hostname of the agent. */
-  hostname: string;
   /** The SHA256 fingerprint of the agent's public key. */
   fingerprint: string;
+  /** The hostname of the agent. */
+  hostname: string;
+  /** The permanent machine identifier. */
+  machine_id: string;
   /** When the enrollment request was received. */
   requested_at: string;
 }

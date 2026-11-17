@@ -7,10 +7,10 @@
 import type { NetworkInterfaceResponseFamily } from './networkInterfaceResponseFamily';
 
 export interface NetworkInterfaceResponse {
-  name: string;
+  /** IP address family. */
+  family?: NetworkInterfaceResponseFamily;
   ipv4?: string;
   ipv6?: string;
   mac?: string;
-  /** IP address family. */
-  family?: NetworkInterfaceResponseFamily;
+  name: string;
 }

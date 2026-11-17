@@ -18,49 +18,45 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package agent
+package server
 
 import (
-	"log/slog"
-
 	"github.com/labstack/echo/v5"
 
-	"github.com/osapi-io/osapi/internal/authtoken"
-	"github.com/osapi-io/osapi/internal/controller/api"
-	gen "github.com/osapi-io/osapi/internal/controller/api/agent/gen"
-	"github.com/osapi-io/osapi/internal/job/client"
+	behaviorserver "github.com/osapi-io/osapi/internal/behavior/server"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
-// Handler returns agent route registration functions.
-func Handler(
-	logger *slog.Logger,
-	jobClient client.JobClient,
-	signingKey string,
-	customRoles map[string][]string,
-	enrollmentMgr EnrollmentManager,
-) []func(e *echo.Echo) {
-	var tokenManager api.TokenValidator = authtoken.New(logger)
+// Param sets *field from the path parameter name, the method's key.
+func Param[T any](
+	c *echo.Context,
+	name string,
+	field *T,
+) (string, bool) {
+	return behaviorserver.Param(c, name, field)
+}
 
-	agentHandler := New(logger, jobClient, enrollmentMgr)
+// Query sets *field from the query parameter name, when the request has it.
+func Query[T any](
+	c *echo.Context,
+	name string,
+	field *T,
+) (string, bool) {
+	return behaviorserver.Query(c, name, field)
+}
 
-	strictHandler := gen.NewStrictHandler(
-		agentHandler,
-		[]gen.StrictMiddlewareFunc{
-			func(handler gen.StrictHandlerFunc, _ string) gen.StrictHandlerFunc {
-				return gen.StrictHandlerFunc(api.ScopeMiddleware(
-					api.StrictHandlerFunc(handler),
-					tokenManager,
-					signingKey,
-					string(gen.BearerAuthScopes),
-					customRoles,
-				))
-			},
-		},
-	)
+// Body decodes the JSON body into in. An empty body leaves in as it is, for
+// Valid to report what is missing.
+func Body(
+	c *echo.Context,
+	in any,
+) (string, bool) {
+	return behaviorserver.Body(c, in)
+}
 
-	return []func(e *echo.Echo){
-		func(e *echo.Echo) {
-			gen.RegisterHandlers(e, strictHandler)
-		},
-	}
+// Valid checks in's validate tags.
+func Valid(
+	in any,
+) (string, bool) {
+	return validation.Struct(in)
 }

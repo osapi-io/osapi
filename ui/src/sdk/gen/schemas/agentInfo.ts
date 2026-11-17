@@ -17,54 +17,54 @@ import type { RouteResponse } from './routeResponse';
 import type { TimelineEvent } from './timelineEvent';
 
 export interface AgentInfo {
-  /** The permanent machine identifier. */
-  machine_id?: string;
-  /** The SHA256 fingerprint of the agent's PKI public key. Empty when PKI is disabled. */
-  fingerprint?: string;
-  /** The build version of the agent binary. Absent for an agent that does not report it. */
-  version?: string;
-  /** The hostname of the agent. */
-  hostname: string;
-  /** The current status of the agent. */
-  status: AgentInfoStatus;
-  /** Key-value labels configured on the agent. */
-  labels?: AgentInfoLabels;
-  /** When the agent last refreshed its heartbeat. */
-  registered_at?: string;
-  /** When the agent process started. */
-  started_at?: string;
-  os_info?: OSInfoResponse;
-  /** The system uptime. */
-  uptime?: string;
-  load_average?: LoadAverageResponse;
-  memory?: MemoryResponse;
   /** CPU architecture. */
   architecture?: string;
-  /** OS kernel version. */
-  kernel_version?: string;
-  /** Number of logical CPUs. */
-  cpu_count?: number;
-  /** Fully qualified domain name. */
-  fqdn?: string;
-  /** Init system. */
-  service_mgr?: string;
-  /** Package manager. */
-  package_mgr?: string;
-  interfaces?: NetworkInterfaceResponse[];
-  /** Name of the interface used for the default route. */
-  primary_interface?: string;
-  /** Network routing table entries. */
-  routes?: RouteResponse[];
-  /** Extended facts from additional providers. */
-  facts?: AgentInfoFacts;
-  /** Agent scheduling state. */
-  state?: AgentInfoState;
   /** Evaluated node conditions. */
   conditions?: NodeCondition[];
-  /** Agent state transition history. */
-  timeline?: TimelineEvent[];
+  /** Number of logical CPUs. */
+  cpu_count?: number;
+  /** Extended facts from additional providers. */
+  facts?: AgentInfoFacts;
+  /** The SHA256 fingerprint of the agent's PKI public key. Empty when PKI is disabled. */
+  fingerprint?: string;
+  /** Fully qualified domain name. */
+  fqdn?: string;
+  /** The hostname of the agent. */
+  hostname: string;
+  interfaces?: NetworkInterfaceResponse[];
+  /** OS kernel version. */
+  kernel_version?: string;
   /** Whether the controller holds this agent's public key, recorded when its enrollment was accepted. False for an agent that has not enrolled since the key store existed, which is what to re-enrol before enabling enforcement. */
   key_stored?: boolean;
+  /** Key-value labels configured on the agent. */
+  labels?: AgentInfoLabels;
+  load_average?: LoadAverageResponse;
+  /** The permanent machine identifier. */
+  machine_id?: string;
+  memory?: MemoryResponse;
+  os_info?: OSInfoResponse;
+  /** Package manager. */
+  package_mgr?: string;
+  /** Name of the interface used for the default route. */
+  primary_interface?: string;
+  /** When the agent last refreshed its heartbeat. */
+  registered_at?: string;
+  /** Network routing table entries. */
+  routes?: RouteResponse[];
+  /** Init system. */
+  service_mgr?: string;
+  /** When the agent process started. */
+  started_at?: string;
+  /** Agent scheduling state. */
+  state?: AgentInfoState;
+  /** The current status of the agent. */
+  status: AgentInfoStatus;
+  /** Agent state transition history. */
+  timeline?: TimelineEvent[];
+  /** The system uptime. */
+  uptime?: string;
   /** Whether this agent's registration was signed by its stored key and claims the hostname it enrolled under. Only a verified registration decides where work is routed. True when the controller is not enforcing verification. */
   verified?: boolean;
+  /** The build version of the agent binary. Absent for an agent that does not report it. */
+  version?: string;
 }

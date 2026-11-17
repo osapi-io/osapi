@@ -21,6 +21,7 @@
 package endpoint_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -70,7 +71,7 @@ type namedBodyInput struct {
 
 type Node struct {
 	Name     string            `json:"name"`
-	Seen     time.Time         `json:"seen,omitempty"`
+	Seen     time.Time         `json:"seen,omitzero"`
 	Labels   map[string]string `json:"labels,omitempty"`
 	Facts    map[string]any    `json:"facts,omitempty"`
 	Any      any               `json:"any,omitempty"`
@@ -89,6 +90,16 @@ type badOut struct {
 
 type BadNamed struct {
 	C chan int `json:"c"`
+}
+
+type deps struct{}
+
+func handleNode(
+	_ context.Context,
+	_ deps,
+	_ noInput,
+) (Node, error) {
+	return Node{}, nil
 }
 
 type twoKeys struct {
@@ -128,6 +139,30 @@ func (s *EndpointPublicTestSuite) contract(
 	s.Require().NoError(json.Unmarshal(raw, &m))
 
 	return apicontract.Lines(m)
+}
+
+func (s *EndpointPublicTestSuite) TestUsesAndHandle() {
+	m := endpoint.Get[noInput, Node]("list").Handle(handleNode)
+	g := endpoint.Define("node", "The nodes", endpoint.Uses[deps](), m)
+
+	s.Equal("endpoint_test.deps", g.Deps.String())
+	s.NotNil(m.Handler())
+	s.Nil(endpoint.Get[noInput, Node]("get").Handler())
+	s.Same(m, g.Method("list"))
+	s.Nil(g.Method("none"))
+
+	e := endpoint.NotFound(errMissing, "gone")
+	created := endpoint.Post[noInput, Node]("create").Status(http.StatusCreated).Errors(e)
+	s.Equal(http.StatusCreated, created.SuccessStatus())
+	s.Equal(http.StatusOK, m.SuccessStatus())
+	s.Equal([]endpoint.Error{e}, created.Mapped())
+}
+
+func (s *EndpointPublicTestSuite) TestErrorf() {
+	err := endpoint.Errorf(errMissing, "no node named %q", "web-01")
+
+	s.EqualError(err, `no node named "web-01"`)
+	s.ErrorIs(err, errMissing)
 }
 
 func (s *EndpointPublicTestSuite) TestDefine() {
@@ -323,6 +358,49 @@ func (s *EndpointPublicTestSuite) TestOpenAPI() {
 	}
 }
 
+type Sample struct {
+	Count int     `json:"count" example:"4"`
+	Load  float64 `json:"load"  example:"0.32"`
+	On    bool    `json:"on"    example:"true"`
+	Name  string  `json:"name"  example:"web-01"`
+	Bad   int     `json:"bad"   example:"many"`
+	Badf  float64 `json:"badf"  example:"x"`
+	Badb  bool    `json:"badb"  example:"maybe"`
+}
+
+func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
+	g := endpoint.Define("node", "The nodes",
+		endpoint.Doc[Sample]("A sample."),
+		endpoint.Get[noInput, Sample]("get"),
+	)
+	doc, err := endpoint.OpenAPI(g, "x")
+	s.Require().NoError(err)
+
+	sample := doc.Components.Schemas["Sample"].Value
+	s.Equal("A sample.", sample.Description)
+	s.Equal(int64(4), sample.Properties["count"].Value.Example)
+	s.InEpsilon(0.32, sample.Properties["load"].Value.Example, 0.0001)
+	s.Equal(true, sample.Properties["on"].Value.Example)
+	s.Equal("web-01", sample.Properties["name"].Value.Example)
+	s.Equal("many", sample.Properties["bad"].Value.Example)
+	s.Equal("x", sample.Properties["badf"].Value.Example)
+	s.Equal("maybe", sample.Properties["badb"].Value.Example)
+}
+
+func (s *EndpointPublicTestSuite) TestParameterValidateTags() {
+	doc, err := endpoint.OpenAPI(endpoint.Define("node", "The nodes",
+		endpoint.Get[keyInput, Node]("get")), "x")
+	s.Require().NoError(err)
+
+	params := doc.Paths.Value("/api/node/{hostname}").Get.Parameters
+	s.Equal(map[string]any{
+		"x-oapi-codegen-extra-tags": map[string]string{"validate": "required,min=1,max=255"},
+	}, params[0].Value.Extensions)
+	s.Equal(map[string]any{
+		"x-oapi-codegen-extra-tags": map[string]string{"validate": "required"},
+	}, params[1].Value.Extensions)
+}
+
 func (s *EndpointPublicTestSuite) TestOpenAPISchemas() {
 	lines := s.contract(endpoint.Define("node", "The nodes", endpoint.Get[noInput, Node]("get")))
 
@@ -402,6 +480,32 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 		{
 			name:  "when the group is valid",
 			group: endpoint.Define("node", "The nodes", endpoint.Get[noInput, Node]("list")),
+		},
+		{
+			name: "when a group that Uses a type has handlers of the right shape",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.Uses[deps](),
+				endpoint.Get[noInput, Node]("list").Handle(handleNode),
+			),
+		},
+		{
+			name: "when handlers are missing, wrong or without Uses",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.Uses[deps](),
+				endpoint.Get[noInput, Node]("list"),
+				endpoint.Get[noInput, Node]("get").Sub("one").Handle(func() {}),
+			),
+			want: []string{
+				"the group Uses endpoint_test.deps, and the method has no handler.",
+				"the handler is func(); it must be func(context.Context, endpoint_test.deps, endpoint_test.noInput) (endpoint_test.Node, error).",
+			},
+		},
+		{
+			name: "when a method has a handler and the group Uses no type",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.Get[noInput, Node]("list").Handle(handleNode),
+			),
+			want: []string{"the method has a handler, and the group Uses no type."},
 		},
 		{
 			name:  "when the group has a bad name and no methods",

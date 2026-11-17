@@ -21,7 +21,9 @@
 package endpoint
 
 import (
+	"context"
 	"fmt"
+	"reflect"
 	"regexp"
 
 	"github.com/osapi-io/osapi/internal/guide"
@@ -42,6 +44,7 @@ const (
 	RuleID      = "id"
 	RuleRoute   = "route"
 	RuleSchema  = "schema"
+	RuleHandler = "handler"
 )
 
 // Checks are the rules Validate applies. osapi controller endpoint
@@ -88,6 +91,11 @@ var Checks = guide.Checks{
 		Rule:     RuleRoute,
 		Requires: "No two methods have one verb and path.",
 		Fix:      "Change the verb, the Sub or the Action.",
+	},
+	{
+		Rule:     RuleHandler,
+		Requires: "A group that Uses a type gives each method a handler, func(context.Context, D, In) (Out, error), with D that type and In and Out the method's types. A group with a handler Uses a type.",
+		Fix:      "Add .Handle(fn) to each method, with the signature that the message names, and endpoint.Uses[Deps]() to Define.",
 	},
 	{
 		Rule:     RuleSchema,
@@ -172,6 +180,10 @@ func Validate(
 		}
 		ids[id] = m.Name
 
+		if msg := handlerProblem(g, m); msg != "" {
+			add(m.Name, RuleHandler, msg)
+		}
+
 		route := m.Verb + " " + g.Path(m)
 		if other, ok := routes[route]; ok {
 			add(m.Name, RuleRoute, route+" is also the route of "+other+".")
@@ -184,4 +196,29 @@ func Validate(
 	}
 
 	return out
+}
+
+// handlerProblem says what is wrong with the method's handler, or "".
+func handlerProblem(
+	g *Group,
+	m *Method,
+) string {
+	switch {
+	case m.handler == nil && g.Deps == nil:
+		return ""
+	case m.handler == nil:
+		return "the group Uses " + g.Deps.String() + ", and the method has no handler."
+	case g.Deps == nil:
+		return "the method has a handler, and the group Uses no type."
+	}
+	want := reflect.FuncOf(
+		[]reflect.Type{reflect.TypeFor[context.Context](), g.Deps, m.In},
+		[]reflect.Type{m.Out, reflect.TypeFor[error]()},
+		false,
+	)
+	if got := reflect.TypeOf(m.handler); got != want {
+		return fmt.Sprintf("the handler is %s; it must be %s.", got, want)
+	}
+
+	return ""
 }

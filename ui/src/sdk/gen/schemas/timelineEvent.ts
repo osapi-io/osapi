@@ -6,9 +6,9 @@
  */
 
 export interface TimelineEvent {
-  timestamp: string;
+  error?: string;
   event: string;
   hostname?: string;
   message?: string;
-  error?: string;
+  timestamp: string;
 }

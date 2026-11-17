@@ -46,6 +46,13 @@ type Group struct {
 	// Tag is the tag of each operation, with its name in the docs and its
 	// description.
 	Tag, TagDisplay, TagDoc string
+	// Deps is the type Uses names: what the group's handlers get from the
+	// controller, such as the job client. Nil for a group that only has a
+	// spec.
+	Deps reflect.Type
+	// Docs are the descriptions of the group's named types, which Doc sets:
+	// Go has no tag on a type.
+	Docs map[reflect.Type]string
 	// Methods are the group's endpoints, in the order they were declared.
 	Methods []*Method
 }
@@ -79,6 +86,25 @@ func Tag(
 ) Option {
 	return optionFunc(func(g *Group) {
 		g.Tag, g.TagDisplay, g.TagDoc = name, display, doc
+	})
+}
+
+// Uses names D, the struct of what the group's handlers use, such as the
+// job client. The controller gives one D at startup, and a test gives one
+// with fakes. Each handler takes it as its second argument.
+func Uses[D any]() Option {
+	return optionFunc(func(g *Group) { g.Deps = reflect.TypeFor[D]() })
+}
+
+// Doc describes T, a named type of the group, in its schema.
+func Doc[T any](
+	doc string,
+) Option {
+	return optionFunc(func(g *Group) {
+		if g.Docs == nil {
+			g.Docs = map[reflect.Type]string{}
+		}
+		g.Docs[reflect.TypeFor[T]()] = doc
 	})
 }
 
@@ -195,6 +221,7 @@ type Method struct {
 	returns          string
 	permission       string
 	public           bool
+	handler          any
 	status           int
 	errors           []Error
 }
@@ -340,6 +367,45 @@ func (m *Method) Errors(
 	return m
 }
 
+// Handle sets the function that runs the method:
+// func(ctx context.Context, d D, in In) (Out, error), with D the type the
+// group Uses. Validate checks the signature; the generated route calls it.
+func (m *Method) Handle(
+	fn any,
+) *Method {
+	m.handler = fn
+
+	return m
+}
+
+// Mapped are the errors Errors set, each with its status code.
+func (m *Method) Mapped() []Error {
+	return m.errors
+}
+
+// SuccessStatus is the status of a success: the one Status set, or 200.
+func (m *Method) SuccessStatus() int {
+	return m.status
+}
+
+// Method is the method of g with the name, or nil.
+func (g *Group) Method(
+	name string,
+) *Method {
+	for _, m := range g.Methods {
+		if m.Name == name {
+			return m
+		}
+	}
+
+	return nil
+}
+
+// Handler is the function Handle set, or nil.
+func (m *Method) Handler() any {
+	return m.handler
+}
+
 // Key is the name of the input's path parameter, or "" when it has none.
 func (m *Method) Key() string {
 	for _, f := range fields(m.In) {
@@ -371,6 +437,31 @@ type Error struct {
 	Code int
 	// Doc says when it occurs, for the spec.
 	Doc string
+}
+
+// Errorf is an error whose text is the message, and that errors.Is
+// matches to sentinel. A handler returns it to answer with the status that
+// Errors maps sentinel to, and with a message that names what it was
+// called with, such as no pending agent with hostname "web-01".
+func Errorf(
+	sentinel error,
+	format string,
+	args ...any,
+) error {
+	return &wrapped{msg: fmt.Sprintf(format, args...), sentinel: sentinel}
+}
+
+type wrapped struct {
+	msg      string
+	sentinel error
+}
+
+func (w *wrapped) Error() string {
+	return w.msg
+}
+
+func (w *wrapped) Unwrap() error {
+	return w.sentinel
 }
 
 // NotFound maps err to 404.
