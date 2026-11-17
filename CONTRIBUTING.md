@@ -57,6 +57,19 @@ This repository does not need a plugin or an extension.
 Agents read the skills of this repository from `.claude/skills`.
 `.agents/skills` is a link to that directory, for agents that read that path.
 
+The content of each skill is in the embedded skills,
+`internal/skills/resources/`. A file in `.claude/skills/` only points an agent
+to `osapi skill get`. Do not put the procedure there. Thus the skills have one
+source, and the binary serves it.
+
+**A change updates the skills in the same pull request.** A new or changed
+command, flag, DSL option or check changes what a person or an agent can do with
+osapi. Thus it changes each embedded skill that tells about it: the skills that
+`osapi init` installs (`skills/`) and the skills for a checkout of osapi
+(`dev-skills/`). Do this also when the feature is not complete. Write in the
+skill what is not built yet, so that an agent stops there.
+[Developing a skill][developing-a-skill] tells how.
+
 ## Setup
 
 Download the shared justfiles and install the dependencies:

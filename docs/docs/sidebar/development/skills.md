@@ -21,6 +21,7 @@ internal/skills/resources/
       SKILL.md             the frontmatter and the procedure
       references/          files that the procedure sends the agent to
       evals/               the requests that measure the skill, and run.sh
+    build-an-endpoint/
 ```
 
 `internal/skills` embeds all of `resources/`. It also has the code that installs
@@ -35,6 +36,15 @@ install it. The checkout has a short pointer at
 `.claude/skills/<skill>/SKILL.md`. The pointer has the frontmatter of the skill,
 so that agents find it. Its body tells the agent to run
 `go run . skill get --name <skill>` and obey the output.
+
+## When a skill changes
+
+The embedded skills are how a person and an agent learn osapi. Thus a change to
+osapi that adds or changes a command, a flag, a DSL option or a check updates
+each skill that tells about it, in the same pull request. That includes the
+skills that `osapi init` installs, not only the skills in `dev-skills/`. Do not
+wait until a feature is complete. Write in the skill what is not built yet, so
+that an agent stops there and does not build around it.
 
 ## Change a skill
 
