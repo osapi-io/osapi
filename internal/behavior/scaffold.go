@@ -22,23 +22,14 @@ package behavior
 
 import (
 	"bytes"
-	"embed"
 	"errors"
 	"fmt"
 	gofmt "go/format"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-	"text/template"
 )
-
-//go:embed resources/scaffold
-var scaffoldFS embed.FS
-
-// scaffoldFiles is where the templates are read from; a test swaps it.
-var scaffoldFiles fs.FS = scaffoldFS
 
 // module is the module a scaffold is written into.
 const module = "github.com/osapi-io/osapi"
@@ -98,33 +89,18 @@ func Scaffold(
 		return nil, err
 	}
 
-	var tmpls []string
-	_ = fs.WalkDir(
-		scaffoldFiles,
-		"resources/scaffold",
-		func(p string, d fs.DirEntry, err error) error {
-			if err == nil && !d.IsDir() && strings.HasSuffix(p, ".tmpl") {
-				tmpls = append(tmpls, p)
-			}
-
-			return nil
-		},
-	)
 	type file struct {
 		rel  string
 		data []byte
 	}
-	files := make([]file, 0, len(tmpls)+1)
-	for _, t := range tmpls {
-		src, err := renderScaffold(t, group, name, path, doc)
+	sources := scaffoldSources(scaffold{group: group, name: name, path: path, doc: doc})
+	files := make([]file, 0, len(sources)+1)
+	for _, src := range sources {
+		data, err := renderGo(src.file)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", t, err)
+			return nil, fmt.Errorf("%s: %w", src.rel, err)
 		}
-		rel := filepath.Join(
-			dir,
-			strings.TrimSuffix(strings.TrimPrefix(t, "resources/scaffold/"), ".tmpl"),
-		)
-		files = append(files, file{rel, src})
+		files = append(files, file{filepath.Join(dir, filepath.FromSlash(src.rel)), data})
 	}
 	files = append(files, file{allFile, registered})
 
@@ -141,30 +117,6 @@ func Scaffold(
 	}
 
 	return written, nil
-}
-
-// renderScaffold fills one template and formats the result as Go.
-func renderScaffold(
-	tmpl string,
-	group string,
-	name string,
-	path string,
-	doc string,
-) ([]byte, error) {
-	t, err := template.ParseFS(scaffoldFiles, tmpl)
-	if err != nil {
-		return nil, err
-	}
-
-	var buf bytes.Buffer
-	data := struct{ Group, Name, Path, Upper, Doc string }{
-		group, name, path, strings.ToUpper(name), doc,
-	}
-	if err := t.Execute(&buf, data); err != nil {
-		return nil, err
-	}
-
-	return gofmt.Source(buf.Bytes())
 }
 
 // register adds the blank import of the behavior at path, under

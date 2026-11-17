@@ -158,8 +158,6 @@ just deps
   - `internal/skills/resources/`: the agent skills. `skills/` has the skills
     that `osapi init` installs. `dev-skills/` has the skills that `osapi skill`
     serves to a checkout of osapi.
-  - `internal/behavior/resources/scaffold/`: the templates that
-    `osapi behavior new` writes.
   - `internal/agent/resources/templates/`: the protected `osapi/` objects that
     the agent puts in the object store.
   - `ui/dist/`: the build of the UI, which `ui` embeds.
@@ -324,6 +322,35 @@ that file.
   methods that it uses, and makes its mocks from that interface.
   [The transport](https://github.com/osapi-io/specs/blob/main/ARCHITECTURE.md#the-transport)
   states the rule.
+
+### Generated code
+
+A generator in osapi writes Go with [jen](https://github.com/dave/jennifer). Do
+not use `text/template`, and do not join strings to make Go source. jen builds
+each statement and manages the imports. A template is text. It can write code
+that does not parse, and the error shows only when somebody runs the output.
+
+The generators that use jen:
+
+- `internal/behavior/gen` writes the routes, the handlers, the CLI commands and
+  the tests of each behavior.
+- `osapi behavior new` writes the first files of a new behavior, from
+  `internal/behavior/scaffold_files.go`.
+
+A generator built with jen is hard to read as the code that it writes. Thus the
+output of `osapi behavior new` has golden copies in
+`internal/behavior/testdata/scaffold/`, and a test compares them. When you
+change the scaffold, run the test with `-update`. The diff of the golden files
+shows the change to the files that a person gets.
+
+jen puts all the imports in one group. Give its output to goimports, with
+`LocalPrefix` set to the module, as these generators do. Then the imports have
+the three groups of the repository.
+
+The rule is for the generators of osapi. oapi-codegen writes the server and the
+client from an OpenAPI spec, and mockgen writes the test doubles. They are
+external tools, and they stay. A generator that writes a different language,
+such as the TypeScript permissions of the UI, does not use jen.
 
 ### Test doubles
 

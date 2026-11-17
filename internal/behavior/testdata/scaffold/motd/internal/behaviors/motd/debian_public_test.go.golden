@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package {{.Name}}_test
+package motd_test
 
 import (
 	"context"
@@ -28,22 +28,22 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior/host"
-	"github.com/osapi-io/osapi/internal/behaviors/{{.Path}}"
+	"github.com/osapi-io/osapi/internal/behaviors/motd"
 )
 
 type DebianPublicTestSuite struct {
 	suite.Suite
 
-	provider {{.Name}}.Provider
+	provider motd.Provider
 }
 
 func (s *DebianPublicTestSuite) SetupSubTest() {
-	p, err := {{.Name}}.Behavior.Provider("debian", host.Host{
+	p, err := motd.Behavior.Provider("debian", host.Host{
 		FS:       memfs.New(),
-		Settings: {{.Name}}.Settings{Path: "/etc/osapi/{{.Name}}"},
+		Settings: motd.Settings{Path: "/etc/osapi/motd"},
 	})
 	s.Require().NoError(err)
-	s.provider = p.({{.Name}}.Provider)
+	s.provider = p.(motd.Provider)
 }
 
 func (s *DebianPublicTestSuite) TestGet() {

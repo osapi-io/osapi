@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package mocks holds the generated double of the {{.Name}} provider, for the
+// Package mocks holds the generated double of the neighbors provider, for the
 // methods' tests.
 package mocks
 

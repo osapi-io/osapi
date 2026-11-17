@@ -18,17 +18,35 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package {{.Name}}
+package neighbors_test
 
-// defaultPath is where the value is kept unless the config says otherwise.
-const defaultPath = "/etc/osapi/{{.Name}}"
+import (
+	"testing"
 
-// Settings is the agent's standing config for {{.Name}}, under
-// behaviors.{{.Name}}. Each field gets an OSAPI_BEHAVIORS_{{.Upper}}_<FIELD>
-// variable and an osapi agent start flag. A value that changes per call
-// belongs in an input type, not here.
-type Settings struct {
-	Path string `mapstructure:"path" doc:"File the {{.Name}} value is kept in." validate:"required,startswith=/"`
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
+	"github.com/osapi-io/osapi/internal/behaviors/network/neighbors"
+)
+
+type BehaviorPublicTestSuite struct {
+	suite.Suite
 }
 
-var defaults = Settings{Path: defaultPath}
+func (s *BehaviorPublicTestSuite) TestBehavior() {
+	s.Same(neighbors.Behavior, behavior.Lookup("neighbors"))
+	s.Empty(behavior.ValidateBehavior(neighbors.Behavior))
+}
+
+// TestExamples runs every example and refusal on a fake host with each
+// platform's provider, through the methods, and checks what each changes.
+func (s *BehaviorPublicTestSuite) TestExamples() {
+	behaviortest.Run(s.T(), neighbors.Behavior)
+}
+
+func TestBehaviorPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(BehaviorPublicTestSuite))
+}

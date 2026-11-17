@@ -21,10 +21,10 @@
 package behavior_test
 
 import (
+	"flag"
 	"os"
 	"path/filepath"
 	"testing"
-	"testing/fstest"
 
 	"github.com/stretchr/testify/suite"
 
@@ -40,12 +40,17 @@ import (
 )
 `
 
+// update rewrites the scaffold's golden files from the current scaffold:
+//
+//	go test ./internal/behavior -run TestScaffoldPublicTestSuite/TestGolden -update
+var update = flag.Bool("update", false, "rewrite the scaffold's golden files")
+
 type ScaffoldPublicTestSuite struct {
 	suite.Suite
 }
 
 func (s *ScaffoldPublicTestSuite) TearDownSubTest() {
-	behavior.ResetScaffoldFiles()
+	behavior.ResetScaffold()
 }
 
 // checkout makes a minimal osapi checkout: its go.mod and internal/behaviors/all.
@@ -63,12 +68,6 @@ func (s *ScaffoldPublicTestSuite) checkout(
 }
 
 // template is a scaffold of one template, for the cases a template is wrong.
-func template(
-	text string,
-) fstest.MapFS {
-	return fstest.MapFS{"resources/scaffold/x.go.tmpl": {Data: []byte(text)}}
-}
-
 func (s *ScaffoldPublicTestSuite) TestScaffold() {
 	tests := []struct {
 		name         string
@@ -262,31 +261,9 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 			wantErr: "permission denied",
 		},
 		{
-			name: "when a template does not parse",
+			name: "when a generated file is not Go",
 			setup: func() string {
-				behavior.SetScaffoldFiles(template("{{.Name"))
-
-				return s.checkout(allGo)
-			},
-			bname:   "motd",
-			doc:     "x",
-			wantErr: "unclosed action",
-		},
-		{
-			name: "when a template names a missing field",
-			setup: func() string {
-				behavior.SetScaffoldFiles(template("{{.Missing}}"))
-
-				return s.checkout(allGo)
-			},
-			bname:   "motd",
-			doc:     "x",
-			wantErr: "can't evaluate field Missing",
-		},
-		{
-			name: "when a template is not Go",
-			setup: func() string {
-				behavior.SetScaffoldFiles(template("package {{.Name}}\n\nfunc {"))
+				behavior.BreakScaffold()
 
 				return s.checkout(allGo)
 			},
@@ -309,6 +286,53 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 			}
 			s.Require().NoError(err)
 			tc.validateFunc(root, files)
+		})
+	}
+}
+
+// TestGolden compares each file that the scaffold writes with its copy
+// under testdata/scaffold. The scaffold builds its files with jen, so the
+// copies are where a reader sees them, and a change to the scaffold shows in
+// the diff of its golden files.
+func (s *ScaffoldPublicTestSuite) TestGolden() {
+	tests := []struct {
+		name  string
+		group string
+		bname string
+		doc   string
+	}{
+		{
+			name:  "motd",
+			bname: "motd",
+			doc:   `The "message" shown at login`,
+		},
+		{
+			name:  "neighbors",
+			group: "network",
+			bname: "neighbors",
+			doc:   "The neighbor table",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			root := s.checkout(allGo)
+
+			files, err := behavior.Scaffold(root, tc.group, tc.bname, tc.doc)
+			s.Require().NoError(err)
+
+			for _, rel := range files {
+				got, err := os.ReadFile(filepath.Join(root, rel))
+				s.Require().NoError(err)
+				golden := filepath.Join("testdata", "scaffold", tc.name, rel+".golden")
+				if *update {
+					s.Require().NoError(os.MkdirAll(filepath.Dir(golden), 0o755))
+					s.Require().NoError(os.WriteFile(golden, got, 0o644))
+				}
+				want, err := os.ReadFile(golden)
+				s.Require().NoError(err, "no golden file; run with -update")
+				s.Equal(string(want), string(got), rel)
+			}
 		})
 	}
 }

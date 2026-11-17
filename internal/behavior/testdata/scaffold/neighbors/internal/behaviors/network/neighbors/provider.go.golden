@@ -18,34 +18,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package {{.Name}}
+package neighbors
 
 import "context"
 
-// Get reads the value from the host.
-func Get(
-	ctx context.Context,
-	p Provider,
-	_ GetInput,
-) (Entry, error) {
-	value, err := p.Get(ctx)
-	if err != nil {
-		return Entry{}, err
-	}
-
-	return Entry{Value: value}, nil
-}
-
-// Update sets the value on the host.
-func Update(
-	ctx context.Context,
-	p Provider,
-	in UpdateInput,
-) (Result, error) {
-	changed, err := p.Set(ctx, in.Value)
-	if err != nil {
-		return Result{}, err
-	}
-
-	return Result{Changed: changed}, nil
+// Provider is what each platform implements. A platform's implementation is
+// <platform>.go, such as debian.go, declared in the definition with
+// behavior.Platform; on a platform without one, the methods report skipped.
+// mocks/ generates its double for the methods' tests.
+type Provider interface {
+	Get(ctx context.Context) (string, error)
+	Set(ctx context.Context, value string) (changed bool, err error)
 }

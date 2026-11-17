@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package {{.Name}}_test
+package neighbors_test
 
 import (
 	"context"
@@ -28,8 +28,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/osapi-io/osapi/internal/behaviors/{{.Path}}"
-	"github.com/osapi-io/osapi/internal/behaviors/{{.Path}}/mocks"
+	"github.com/osapi-io/osapi/internal/behaviors/network/neighbors"
+	"github.com/osapi-io/osapi/internal/behaviors/network/neighbors/mocks"
 )
 
 type MethodsPublicTestSuite struct {
@@ -53,12 +53,12 @@ func (s *MethodsPublicTestSuite) TestGet() {
 		name  string
 		value string
 		err   error
-		want  {{.Name}}.Entry
+		want  neighbors.Entry
 	}{
 		{
 			name:  "when the provider reads the value",
 			value: "hello",
-			want:  {{.Name}}.Entry{Value: "hello"},
+			want:  neighbors.Entry{Value: "hello"},
 		},
 		{
 			name: "when the provider fails",
@@ -70,7 +70,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 		s.Run(tc.name, func() {
 			s.mock.EXPECT().Get(gomock.Any()).Return(tc.value, tc.err)
 
-			got, err := {{.Name}}.Get(context.Background(), s.mock, {{.Name}}.GetInput{})
+			got, err := neighbors.Get(context.Background(), s.mock, neighbors.GetInput{})
 
 			if tc.err != nil {
 				s.ErrorIs(err, tc.err)
@@ -88,16 +88,16 @@ func (s *MethodsPublicTestSuite) TestUpdate() {
 		name    string
 		changed bool
 		err     error
-		want    {{.Name}}.Result
+		want    neighbors.Result
 	}{
 		{
 			name:    "when the provider writes the value",
 			changed: true,
-			want:    {{.Name}}.Result{Changed: true},
+			want:    neighbors.Result{Changed: true},
 		},
 		{
 			name: "when the value is already set",
-			want: {{.Name}}.Result{},
+			want: neighbors.Result{},
 		},
 		{
 			name: "when the provider fails",
@@ -109,10 +109,10 @@ func (s *MethodsPublicTestSuite) TestUpdate() {
 		s.Run(tc.name, func() {
 			s.mock.EXPECT().Set(gomock.Any(), "hello").Return(tc.changed, tc.err)
 
-			got, err := {{.Name}}.Update(
+			got, err := neighbors.Update(
 				context.Background(),
 				s.mock,
-				{{.Name}}.UpdateInput{Value: "hello"},
+				neighbors.UpdateInput{Value: "hello"},
 			)
 
 			if tc.err != nil {

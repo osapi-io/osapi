@@ -20,7 +20,7 @@
 
 package behavior
 
-import "io/fs"
+import "github.com/dave/jennifer/jen"
 
 // ResetInstruments drops the instruments, so a test can exercise the first
 // call falling back to the global meter provider.
@@ -30,14 +30,21 @@ func ResetInstruments() {
 	instMu.Unlock()
 }
 
-// SetScaffoldFiles swaps the scaffold templates, for testing.
-func SetScaffoldFiles(
-	fsys fs.FS,
-) {
-	scaffoldFiles = fsys
+// scaffoldGo is the scaffold's real sources, put back after a test swaps them.
+var scaffoldGo = scaffoldSources
+
+// BreakScaffold makes the scaffold build one file whose code is not Go, for
+// testing.
+func BreakScaffold() {
+	scaffoldSources = func(scaffold) []scaffoldSource {
+		f := jen.NewFile("broken")
+		f.Op("func {")
+
+		return []scaffoldSource{{"broken.go", f}}
+	}
 }
 
-// ResetScaffoldFiles puts the embedded scaffold templates back.
-func ResetScaffoldFiles() {
-	scaffoldFiles = scaffoldFS
+// ResetScaffold puts the scaffold's real sources back.
+func ResetScaffold() {
+	scaffoldSources = scaffoldGo
 }

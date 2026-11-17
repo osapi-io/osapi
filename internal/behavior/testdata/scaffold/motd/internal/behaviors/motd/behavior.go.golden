@@ -18,31 +18,30 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package {{.Name}} is the {{.Name}} behavior: {{.Doc}}.
-package {{.Name}}
+// Package motd is the motd behavior: The "message" shown at login.
+package motd
 
 import "github.com/osapi-io/osapi/internal/behavior"
 
-// Behavior is the {{.Name}} definition. The routes, the agent's dispatch, the
+// Behavior is the motd definition. The routes, the agent's dispatch, the
 // CLI commands, the spec, the docs pages and the tests of every layer above
 // the provider are built from it. osapi behavior spec lists every option.
 var Behavior = behavior.Register(behavior.Define(
-	"{{.Name}}", {{printf "%q" .Doc}},
-	behavior.Node,{{if .Group}}
-	behavior.Under({{printf "%q" .Group}}),{{end}}
+	"motd", "The \"message\" shown at login",
+	behavior.Node,
 	behavior.API,
 	behavior.CLI,
 	behavior.Config(defaults),
 	behavior.Platform("debian", newDebian),
 	behavior.Read("get", Get).
-		Describe("Get the {{.Name}} value").
+		Describe("Get the motd value").
 		Example("Before anything is set", GetInput{}, Entry{}).
 		Example("The current value", GetInput{}, Entry{Value: "example"},
 			behavior.After(UpdateInput{Value: "example"}),
 		),
 	behavior.Write("update", Update).
-		Describe("Set the {{.Name}} value").
-		Explain("Writes the value to behaviors.{{.Name}}.path. Setting the value it "+
+		Describe("Set the motd value").
+		Explain("Writes the value to behaviors.motd.path. Setting the value it "+
 			"already has reports changed: false.").
 		Example("A new value", UpdateInput{Value: "example"}, Result{Changed: true},
 			behavior.Wrote(defaultPath, "example"),

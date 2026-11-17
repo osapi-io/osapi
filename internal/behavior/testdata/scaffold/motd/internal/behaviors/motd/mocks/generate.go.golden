@@ -18,25 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package {{.Name}}
+// Package mocks holds the generated double of the motd provider, for the
+// methods' tests.
+package mocks
 
-// GetInput is get's input. Each field becomes a flag, a request field and a
-// spec property; this one has none.
-type GetInput struct{}
-
-// UpdateInput is update's input. update has no key, so the field that says
-// what it changes is tagged telemetry:"attr", and the trace shows it.
-// osapi behavior spec lists each tag.
-type UpdateInput struct {
-	Value string `json:"value" validate:"required" doc:"The value to set" telemetry:"attr"`
-}
-
-// Entry is get's output. Each field becomes a column and a JSON field.
-type Entry struct {
-	Value string `json:"value" doc:"The current value"`
-}
-
-// Result is update's output. Every write reports whether it changed the host.
-type Result struct {
-	Changed bool `json:"changed" doc:"Whether the host changed"`
-}
+//go:generate go tool go.uber.org/mock/mockgen -source=../provider.go -destination=provider.gen.go -package=mocks
