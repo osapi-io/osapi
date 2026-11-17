@@ -63,7 +63,7 @@ var (
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:   "osapi",
-	Short: "A CRUD API for managing Linux systems",
+	Short: "Typed, repeatable operations for Linux hosts",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

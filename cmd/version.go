@@ -35,7 +35,7 @@ func buildVersion(
 	return goversion.GetVersionInfo(
 		goversion.WithAppDetails(
 			"osapi",
-			"A CRUD API for managing Linux systems.\n",
+			"Typed, repeatable operations for Linux hosts.\n",
 			"https://github.com/osapi-io/osapi",
 		),
 		func(i *goversion.Info) {

@@ -9,7 +9,7 @@ import { themes as prismThemes } from 'prism-react-renderer';
 
 const config: Config = {
   title: 'OSAPI',
-  tagline: 'OSAPI is cool',
+  tagline: 'Typed, repeatable operations for Linux hosts.',
   favicon: 'img/favicon.ico',
   markdown: {
     mermaid: true,
