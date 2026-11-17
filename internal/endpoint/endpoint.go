@@ -1,0 +1,398 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+// Package endpoint is the DSL for the controller's own API: the operations
+// that run on the controller, such as the agents, the jobs and the audit
+// log, and not on a host. A group's definition is Go; its OpenAPI part, and
+// later its routes, CLI commands and tests, come from it. A behavior is work
+// on a host and has its own DSL, internal/behavior.
+package endpoint
+
+import (
+	"fmt"
+	"net/http"
+	"reflect"
+	"sort"
+	"sync"
+)
+
+// Group is a set of endpoints under one path, /api/<name>, such as agent.
+type Group struct {
+	// Name is the first segment of each path and the CLI group.
+	Name string
+	// Doc says what the group is, in one line.
+	Doc string
+	// Title is the title of the group's spec. The joined spec puts it in
+	// front of each tag, and the UI's client files take their names from
+	// the result, so a group that moves keeps the title it had.
+	Title string
+	// Tag is the tag of each operation, with its name in the docs and its
+	// description.
+	Tag, TagDisplay, TagDoc string
+	// Methods are the group's endpoints, in the order they were declared.
+	Methods []*Method
+}
+
+// Option is a setting of a group, or one of its endpoints.
+type Option interface {
+	apply(g *Group)
+}
+
+type optionFunc func(g *Group)
+
+func (f optionFunc) apply(
+	g *Group,
+) {
+	f(g)
+}
+
+// Title sets the title of the group's spec.
+func Title(
+	title string,
+) Option {
+	return optionFunc(func(g *Group) { g.Title = title })
+}
+
+// Tag sets the tag of each operation of the group: its name, its name in
+// the docs, and its description.
+func Tag(
+	name string,
+	display string,
+	doc string,
+) Option {
+	return optionFunc(func(g *Group) {
+		g.Tag, g.TagDisplay, g.TagDoc = name, display, doc
+	})
+}
+
+// Define builds a group from its options. Validate checks the result.
+func Define(
+	name string,
+	doc string,
+	opts ...Option,
+) *Group {
+	g := &Group{Name: name, Doc: doc, Title: name, Tag: name}
+	for _, o := range opts {
+		o.apply(g)
+	}
+
+	return g
+}
+
+// Path is the method's path: /api/<group>, then its fixed sub-path, then
+// its key, then its action, each only when it has one.
+func (g *Group) Path(
+	m *Method,
+) string {
+	p := "/api/" + g.Name
+	if m.sub != "" {
+		p += "/" + m.sub
+	}
+	if key := m.Key(); key != "" {
+		p += "/{" + key + "}"
+	}
+	if m.action != "" {
+		p += "/" + m.action
+	}
+
+	return p
+}
+
+// Permission is the permission a method needs: the one it names, or
+// <group>:read for a GET and <group>:write for the other verbs. A public
+// method needs none, and has "".
+func (g *Group) Permission(
+	m *Method,
+) string {
+	switch {
+	case m.public:
+		return ""
+	case m.permission != "":
+		return m.permission
+	case m.Verb == http.MethodGet:
+		return g.Name + ":read"
+	default:
+		return g.Name + ":write"
+	}
+}
+
+var (
+	registryMu sync.RWMutex
+	registry   = map[string]*Group{}
+)
+
+// Register adds g to the groups the controller has, and returns it. Two
+// groups with one name are a mistake in the code, so it panics.
+func Register(
+	g *Group,
+) *Group {
+	registryMu.Lock()
+	defer registryMu.Unlock()
+	if _, ok := registry[g.Name]; ok {
+		panic(fmt.Sprintf("endpoint: group %q registered twice", g.Name))
+	}
+	registry[g.Name] = g
+
+	return g
+}
+
+// Lookup is the registered group with the name, or nil.
+func Lookup(
+	name string,
+) *Group {
+	registryMu.RLock()
+	defer registryMu.RUnlock()
+
+	return registry[name]
+}
+
+// All is each registered group, by name.
+func All() []*Group {
+	registryMu.RLock()
+	defer registryMu.RUnlock()
+	out := make([]*Group, 0, len(registry))
+	for _, g := range registry {
+		out = append(out, g)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+
+	return out
+}
+
+// Method is one endpoint of a group. Get, Post, Put and Delete make one;
+// its methods set the rest and return it, so a definition chains them.
+type Method struct {
+	// Name is the method's name in its group, such as list or drain.
+	Name string
+	// Verb is the HTTP method.
+	Verb string
+	// In is the input type: a field tagged in:"path" is the key, a field
+	// tagged in:"query" is a query parameter, and the others are the JSON
+	// body.
+	In reflect.Type
+	// Out is the response type.
+	Out reflect.Type
+
+	sub, action, id  string
+	summary, explain string
+	returns          string
+	permission       string
+	public           bool
+	status           int
+	errors           []Error
+}
+
+func (m *Method) apply(
+	g *Group,
+) {
+	g.Methods = append(g.Methods, m)
+}
+
+func newMethod[In, Out any](
+	verb string,
+	name string,
+) *Method {
+	return &Method{
+		Name:   name,
+		Verb:   verb,
+		In:     reflect.TypeFor[In](),
+		Out:    reflect.TypeFor[Out](),
+		status: http.StatusOK,
+	}
+}
+
+// Get is a GET endpoint that takes In and answers with Out.
+func Get[In, Out any](
+	name string,
+) *Method {
+	return newMethod[In, Out](http.MethodGet, name)
+}
+
+// Post is a POST endpoint that takes In and answers with Out.
+func Post[In, Out any](
+	name string,
+) *Method {
+	return newMethod[In, Out](http.MethodPost, name)
+}
+
+// Put is a PUT endpoint that takes In and answers with Out.
+func Put[In, Out any](
+	name string,
+) *Method {
+	return newMethod[In, Out](http.MethodPut, name)
+}
+
+// Delete is a DELETE endpoint that takes In and answers with Out.
+func Delete[In, Out any](
+	name string,
+) *Method {
+	return newMethod[In, Out](http.MethodDelete, name)
+}
+
+// Sub puts a fixed segment after the group's name, such as pending in
+// /api/agent/pending, or trace in /api/telemetry/trace/{id}.
+func (m *Method) Sub(
+	segment string,
+) *Method {
+	m.sub = segment
+
+	return m
+}
+
+// Action puts a segment after the key, such as drain in
+// /api/agent/{hostname}/drain.
+func (m *Method) Action(
+	segment string,
+) *Method {
+	m.action = segment
+
+	return m
+}
+
+// ID sets the operationId. The Go SDK and the UI client take their names
+// from it, so a group that moves keeps the IDs it had.
+func (m *Method) ID(
+	id string,
+) *Method {
+	m.id = id
+
+	return m
+}
+
+// Describe sets the summary: what the method does, in one line.
+func (m *Method) Describe(
+	summary string,
+) *Method {
+	m.summary = summary
+
+	return m
+}
+
+// Explain sets the description: the rest of what a caller needs to know.
+func (m *Method) Explain(
+	text string,
+) *Method {
+	m.explain = text
+
+	return m
+}
+
+// Returns describes the response of a success, such as "List of active
+// agents."
+func (m *Method) Returns(
+	doc string,
+) *Method {
+	m.returns = doc
+
+	return m
+}
+
+// Permission names the permission the method needs, in place of the
+// group's read or write permission.
+func (m *Method) Permission(
+	permission string,
+) *Method {
+	m.permission = permission
+
+	return m
+}
+
+// Public makes the method need no auth. Only the health probes are public.
+func (m *Method) Public() *Method {
+	m.public = true
+
+	return m
+}
+
+// Status sets the status code of a success, such as 201 or 204.
+func (m *Method) Status(
+	code int,
+) *Method {
+	m.status = code
+
+	return m
+}
+
+// Errors are the errors the method can return, each with its status code.
+// An error that is not in the list is a 500.
+func (m *Method) Errors(
+	errs ...Error,
+) *Method {
+	m.errors = append(m.errors, errs...)
+
+	return m
+}
+
+// Key is the name of the input's path parameter, or "" when it has none.
+func (m *Method) Key() string {
+	for _, f := range fields(m.In) {
+		if f.Tag.Get("in") == "path" {
+			return jsonName(f)
+		}
+	}
+
+	return ""
+}
+
+// OperationID is the operationId: the one ID sets, or the verb and the
+// path in camel case.
+func (m *Method) OperationID(
+	g *Group,
+) string {
+	if m.id != "" {
+		return m.id
+	}
+
+	return lowerVerb(m.Verb) + upper(g.Name) + upper(m.sub) + upper(m.Name)
+}
+
+// Error is an error a method can return, and the status code it maps to.
+type Error struct {
+	// Err is the error, matched with errors.Is.
+	Err error
+	// Code is the status code.
+	Code int
+	// Doc says when it occurs, for the spec.
+	Doc string
+}
+
+// NotFound maps err to 404.
+func NotFound(
+	err error,
+	doc string,
+) Error {
+	return Error{Err: err, Code: http.StatusNotFound, Doc: doc}
+}
+
+// Conflict maps err to 409.
+func Conflict(
+	err error,
+	doc string,
+) Error {
+	return Error{Err: err, Code: http.StatusConflict, Doc: doc}
+}
+
+// Unavailable maps err to 503.
+func Unavailable(
+	err error,
+	doc string,
+) Error {
+	return Error{Err: err, Code: http.StatusServiceUnavailable, Doc: doc}
+}
