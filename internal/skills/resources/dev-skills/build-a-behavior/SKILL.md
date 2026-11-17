@@ -1,6 +1,6 @@
 ---
 name: build-a-behavior
-description: Build or change an osapi behavior, the typed definition under internal/behaviors/<name>/ that osapi's API routes, agent dispatch, CLI commands, OpenAPI spec, docs pages, settings, permissions and tests are generated from. Use when asked to add a behavior, manage something new on a host, add a method or a setting to a behavior, give a behavior a provider for another platform, migrate a hand-written domain to a behavior, or when a behavior fails osapi behavior validate, behavior-gen-check or its tests. Also use to decide whether something should be a behavior at all, whether it should be internal or served, which platforms it runs on, whether it should require another behavior or be split into an internal one, and whether it belongs in osapi-orchestrator instead. Not for the hand-written domains under internal/controller/api/node, which the add-a-domain skill in osapi-io/specs covers.
+description: Build or change an osapi behavior, the typed definition under internal/behaviors/<name>/ that osapi's API routes, agent dispatch, CLI commands, OpenAPI spec, docs pages, settings, permissions and tests are generated from. Use when asked to add a behavior, manage something new on a host, add a method or a setting to a behavior, give a behavior a provider for another platform, migrate a hand-written domain to a behavior, or when a behavior fails osapi behavior validate, behavior-gen-check or its tests. Also use to decide whether something should be a behavior at all, whether it should be internal or served, which platforms it runs on, whether it should require another behavior or be split into an internal one, and whether it belongs in osapi-orchestrator instead. Not for the hand-written domains under internal/controller/api/node, which the add-a-domain skill in osapi-io/specs covers, and not for operations that run on the controller itself, such as the agents, the jobs and the audit log, which the build-an-endpoint skill covers.
 ---
 
 # Build a behavior
@@ -14,6 +14,10 @@ This skill gives a procedure and decisions. It is not a catalog. The platform te
 - `behavior spec` tells each part of the DSL, what it does and when to use it, the generated paths and what the platform cannot do yet.
 - `behavior validate --help` tells each rule and each test check, with its fix. Each failure also ends with its fix.
 - `behavior list` and `behavior get` tell what each behavior accepts and does. This includes the building blocks.
+
+A behavior is work on a host. An operation that runs on the controller itself,
+such as the agents, the jobs or the audit log, is an endpoint. The
+build-an-endpoint skill covers it: `go run . skill get --name build-an-endpoint`.
 
 Ask these tools. Do not use your memory. If a tool and this skill do not agree, the tool is correct. If the platform does not have what you need, stop and say what is missing. That is a platform change, and a person decides it. Do not add code around it.
 
@@ -46,6 +50,7 @@ Decide these with the user before you write code. Each answer becomes a declarat
 
 | Ask | Why it matters | Answer becomes |
 | --- | --- | --- |
+| Does the work occur on a host, or on the controller, such as reading the registry or the job queue? | A behavior changes or reads a host; the controller's own operations are endpoints | This skill, or the build-an-endpoint skill |
 | Is there one close already? Check `go run . behavior list --json`. | Two behaviors managing the same thing disagree about its state | Extend that one: a method, a field or a platform |
 | Who calls it: operators, or only other behaviors? Would an operator ever call it from the CLI or the API? Is it only a piece of work other behaviors share, such as writing a file or reloading a service? | An operator needs routes, commands and permissions; a building block must not have them. `behavior validate` fails an internal behavior that no behavior requires | `behavior.API` and `behavior.CLI` when an operator calls it, or `behavior.Internal` when only other behaviors do |
 | Which hosts does it run on? | Every other platform reports `skipped`, never fails | `behavior.Platform("debian", ...)` per distribution, `"linux"` for every Linux host without its own, `"darwin"` for macOS |
@@ -117,6 +122,7 @@ To move a domain, copy the code that works. Do not write it again. Follow [refer
 ```bash
 go generate ./internal/behaviors/all
 mise exec -- just generate   # joins its spec into the main one: SDK, UI, API docs and CLI pages
+go test ./internal/apicontract/   # the contract of the API; -update when the change is on purpose
 go run . behavior validate
 go test ./internal/behaviors/<name>/... ./internal/behaviors/all/
 mise exec -- just test
@@ -134,6 +140,7 @@ you break one. The failures below come from elsewhere:
 | `is not mounted` or `is not attached` | Run `go generate ./internal/behaviors/all`; the gen package is missing          |
 | `behavior output is stale`            | Run `go generate ./internal/behaviors/all` and keep the result                 |
 | `the joined spec is stale`            | Run `mise exec -- just generate` and keep the result                           |
+| `TestJoinedSpec`                      | The joined spec changed, as a new served behavior or a cutover changes it. Write the contract again with `go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -update`, and keep the diff: it is the change to the API |
 | `cli-docs-gen-check` fails            | Run `mise exec -- just cli-docs-generate` and keep the result                  |
 | `is served by the <name> behavior and by <dir>` | A route a hand-written domain still serves: this is a cutover, so delete that domain, or mark the behavior `behavior.Next` |
 | `is both a hand-written command and a behavior's` | The same, for a command under `osapi client node` |
