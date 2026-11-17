@@ -66,7 +66,7 @@ import {
 import {
   postNodeCommandExec,
   postNodeCommandShell,
-} from "@/sdk/gen/node-management-api-command-operations/node-management-api-command-operations";
+} from "@/sdk/gen/command-execution-api-command-operations/command-execution-api-command-operations";
 import { postNodeContainerDockerExec } from "@/sdk/gen/docker-management-api-docker-exec/docker-management-api-docker-exec";
 import {
   postNodeContainerDockerPull,
@@ -75,8 +75,8 @@ import {
 import {
   getNodeNetworkDNSByInterface,
   putNodeNetworkDNS,
-} from "@/sdk/gen/node-management-api-dns-operations/node-management-api-dns-operations";
-import { deleteNodeNetworkDNS } from "@/sdk/gen/network-management-api-dns-operations/network-management-api-dns-operations";
+  deleteNodeNetworkDNS,
+} from "@/sdk/gen/network-management-api-dns-operations/network-management-api-dns-operations";
 import {
   getNodeNetworkInterface,
   getNodeNetworkInterfaceByName,
@@ -91,7 +91,7 @@ import {
   putNodeNetworkRoute,
   deleteNodeNetworkRoute,
 } from "@/sdk/gen/network-management-api-route-operations/network-management-api-route-operations";
-import { postNodeNetworkPing } from "@/sdk/gen/node-management-api-network-operations/node-management-api-network-operations";
+import { postNodeNetworkPing } from "@/sdk/gen/network-management-api-network-operations/network-management-api-network-operations";
 import {
   getNodePackage,
   getNodePackageByName,
