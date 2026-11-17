@@ -253,6 +253,10 @@ func (s *ServerPublicTestSuite) TestDeps() {
 	s.PanicsWithValue("endpoint: no string given to the server", func() {
 		server.Deps[string](srv)
 	})
+	s.PanicsWithValue("endpoint: no server_test.deps given to the server", func() {
+		server.Deps[deps](server.New(slog.Default(), signingKey, nil))
+	})
+	s.Equal(struct{}{}, server.Deps[struct{}](srv), "an empty struct needs no wiring")
 }
 
 func (s *ServerPublicTestSuite) TestHandler() {

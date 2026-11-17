@@ -93,11 +93,16 @@ func New(
 
 // Deps is the value of type D that the server was given. A group whose
 // dependencies the controller did not give is a mistake in the wiring, so
-// it panics at startup, when the routes are made.
+// it panics at startup, when the routes are made. An empty struct needs no
+// wiring: a new group starts with one, and its first field makes the
+// controller give it.
 func Deps[D any](
 	s *Server,
 ) D {
 	d, ok := s.deps[reflect.TypeFor[D]()].(D)
+	if t := reflect.TypeFor[D](); !ok && t.Kind() == reflect.Struct && t.NumField() == 0 {
+		return d
+	}
 	if !ok {
 		panic(fmt.Sprintf("endpoint: no %s given to the server", reflect.TypeFor[D]()))
 	}

@@ -75,6 +75,7 @@ test: linux-tune
     just react-build
     just cli-docs-gen-check
     just behavior-scaffold-check
+    just endpoint-scaffold-check
     just go-test
     just behavior-cover-check
 
@@ -94,6 +95,25 @@ behavior-scaffold-check:
     go run . behavior new --name scaffoldcheck --description "A scaffold check" >/dev/null
     go generate ./internal/behaviors/scaffoldcheck/mocks ./internal/behaviors/all
     go test -count=1 ./internal/behaviors/scaffoldcheck/...
+
+# Fail when a group that osapi controller endpoint new writes does not pass
+# its tests
+#
+# As behavior-scaffold-check does for behaviors: the recipe writes a group in
+# a copy of the checkout, generates it, and runs its tests and the
+# controller's, which mount its routes. The checkout itself does not change.
+endpoint-scaffold-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    rsync -a --exclude .git --exclude .worktrees --exclude node_modules \
+        --exclude /dist --exclude /examples --exclude /docs/build ./ "$tmp/"
+    cd "$tmp"
+    go run . controller endpoint new --name scaffoldcheck --description "A scaffold check" >/dev/null
+    go generate ./internal/controller/endpoints/all
+    go run . controller endpoint validate >/dev/null
+    go test -count=1 ./internal/controller/endpoints/scaffoldcheck/... ./internal/controller/endpoints/all/ ./internal/controller/
 
 # Fail when a behavior's own code is not fully covered
 #

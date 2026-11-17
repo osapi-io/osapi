@@ -54,9 +54,12 @@ import (
 const module = "github.com/osapi-io/osapi"
 
 const (
-	serverPath = module + "/internal/controller/endpoint/server"
-	echoPath   = "github.com/labstack/echo/v5"
-	allGen     = "internal/controller/endpoints/all/gen"
+	serverPath    = module + "/internal/controller/endpoint/server"
+	commandPath   = module + "/internal/controller/endpoint/command"
+	referencePath = module + "/internal/cli/reference"
+	cobraPath     = "github.com/spf13/cobra"
+	echoPath      = "github.com/labstack/echo/v5"
+	allGen        = "internal/controller/endpoints/all/gen"
 )
 
 // errorRef is the shared ErrorResponse, from a group's gen directory.
@@ -145,7 +148,146 @@ func (w *writer) group(
 		return err
 	}
 
-	return w.goFile(filepath.Join(dir, "decode.go"), decoders(g, pkg))
+	if err := w.goFile(filepath.Join(dir, "decode.go"), decoders(g, pkg)); err != nil {
+		return err
+	}
+
+	return w.goFile(filepath.Join(dir, "cli.go"), commands(g, pkg))
+}
+
+// commands is gen/cli.go: one cobra command for each method, with its help,
+// its permission, its examples and a flag for each input field, and the
+// init that registers them under osapi client <group>.
+func commands(
+	g *endpoint.Group,
+	pkg string,
+) *jen.File {
+	f := newFile(pkg)
+	f.ImportName(commandPath, "command")
+	f.ImportName(referencePath, "reference")
+	f.ImportName(cobraPath, "cobra")
+
+	var inits []jen.Code
+	names := make([]jen.Code, 0, len(g.Methods))
+	for _, m := range g.Methods {
+		name := g.Name + upperFirst(m.Name) + "Cmd"
+		names = append(names, jen.Id(name))
+
+		var reads []jen.Code
+		var fields []jen.Code
+		for _, fld := range structFields(m.In) {
+			flag := strings.ReplaceAll(jsonName(fld), "_", "-")
+			kind, zero := flagKind(fld.Type)
+			local := lowerFirst(fld.Name)
+			reads = append(reads, jen.List(jen.Id(local), jen.Id("_")).Op(":=").
+				Id("cmd").Dot("Flags").Call().Dot("Get"+kind).Call(jen.Lit(flag)))
+			fields = append(fields, jen.Id(fld.Name).Op(":").Id(local))
+			// Flag help has no period at its end, as cobra's own has none.
+			inits = append(inits, jen.Id(name).Dot("Flags").Call().Dot(kind).Call(
+				jen.Lit(flag), zero, jen.Lit(strings.TrimSuffix(fld.Tag.Get("doc"), "."))))
+			if fld.Tag.Get("in") == "path" || validates(fld, "required") {
+				inits = append(inits, jen.Id("_").Op("=").Id(name).Dot("MarkFlagRequired").
+					Call(jen.Lit(flag)))
+			}
+		}
+		in := jen.Qual(m.In.PkgPath(), m.In.Name())
+		if len(fields) > 0 {
+			in = in.Values(fields...)
+		} else {
+			in = in.Values()
+		}
+		// The flags are read first, then a blank line, then the call; a
+		// method with no flags has only the call.
+		run := reads
+		if len(reads) > 0 {
+			run = append(run, jen.Line())
+		}
+		run = append(run, jen.Qual(commandPath, "Run").Call(
+			jen.Id("cmd"), jen.Qual(pkg, "Group"), jen.Lit(m.Name), in))
+
+		examples := make([]string, 0, len(m.Examples()))
+		for _, e := range m.Examples() {
+			examples = append(examples,
+				strings.TrimRight("  osapi client "+g.Name+" "+m.Name+" "+e, " "))
+		}
+
+		dict := jen.Dict{
+			jen.Id("Use"):   jen.Lit(m.Name),
+			jen.Id("Short"): jen.Lit(m.CommandShort()),
+			jen.Id("Args"):  jen.Qual(cobraPath, "NoArgs"),
+			jen.Id("Run"): jen.Func().Params(
+				jen.Id("cmd").Op("*").Qual(cobraPath, "Command"),
+				jen.Id("_").Index().String(),
+			).Block(run...),
+		}
+		if long := m.CommandLong(); long != "" {
+			dict[jen.Id("Long")] = jen.Lit(long)
+		}
+		if len(examples) > 0 {
+			dict[jen.Id("Example")] = jen.Lit(strings.Join(examples, "\n"))
+		}
+		notes := jen.Dict{}
+		if perm := g.Permission(m); perm != "" {
+			notes[jen.Qual(referencePath, "Permission")] = jen.Lit(perm)
+		}
+		if n := m.PageNotes(); n != "" {
+			notes[jen.Qual(referencePath, "Notes")] = jen.Lit(n)
+		}
+		if r := m.PageResult(); r != "" {
+			notes[jen.Qual(referencePath, "Result")] = jen.Lit(r)
+		}
+		if len(notes) > 0 {
+			dict[jen.Id("Annotations")] = jen.Map(jen.String()).String().Values(notes)
+		}
+		f.Var().Id(name).Op("=").Op("&").Qual(cobraPath, "Command").Values(dict)
+		f.Line()
+	}
+
+	inits = append(inits, jen.Qual(commandPath, "Register").Call(
+		append([]jen.Code{jen.Qual(pkg, "Group")}, names...)...))
+	f.Func().Id("init").Params().Block(inits...)
+
+	return f
+}
+
+// flagKind is the pflag kind of a field's type, such as String, and its
+// zero value.
+func flagKind(
+	t reflect.Type,
+) (string, jen.Code) {
+	switch t.Kind() {
+	case reflect.Bool:
+		return "Bool", jen.False()
+	case reflect.Int:
+		return "Int", jen.Lit(0)
+	default:
+		return "String", jen.Lit("")
+	}
+}
+
+func validates(
+	f reflect.StructField,
+	rule string,
+) bool {
+	for _, r := range strings.Split(f.Tag.Get("validate"), ",") {
+		if r == rule {
+			return true
+		}
+	}
+
+	return false
+}
+
+func upperFirst(
+	s string,
+) string {
+	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+func lowerFirst(
+	s string,
+) string {
+	return strings.ToLower(s[:1]) + s[1:]
 }
 
 // newFile is a file of a group's gen package.

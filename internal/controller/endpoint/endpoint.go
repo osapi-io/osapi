@@ -222,6 +222,10 @@ type Method struct {
 	permission       string
 	public           bool
 	handler          any
+	cmdShort         string
+	cmdLong          string
+	examples         []string
+	notes, result    string
 	status           int
 	errors           []Error
 }
@@ -376,6 +380,84 @@ func (m *Method) Handle(
 	m.handler = fn
 
 	return m
+}
+
+// Command sets the CLI command's own help: its one line, and the rest. The
+// API's summary and description are for a caller of the API; the CLI's are
+// for a person at a shell.
+func (m *Method) Command(
+	short string,
+	long string,
+) *Method {
+	m.cmdShort, m.cmdLong = short, long
+
+	return m
+}
+
+// Example adds an example of the CLI command: its flags, such as
+// --hostname web-01. The help shows each one after the command.
+func (m *Method) Example(
+	flags string,
+) *Method {
+	m.examples = append(m.examples, flags)
+
+	return m
+}
+
+// Notes adds a Notes section to the CLI command's page: what a person needs
+// to know that the help does not say, such as what --json has that the
+// table does not.
+func (m *Method) Notes(
+	text string,
+) *Method {
+	m.notes = text
+
+	return m
+}
+
+// Result adds a Result section to the CLI command's page: what the command
+// does in a case that needs words, such as when two agents share a name.
+func (m *Method) Result(
+	text string,
+) *Method {
+	m.result = text
+
+	return m
+}
+
+// PageNotes is the Notes section Notes set, or "".
+func (m *Method) PageNotes() string {
+	return m.notes
+}
+
+// PageResult is the Result section Result set, or "".
+func (m *Method) PageResult() string {
+	return m.result
+}
+
+// CommandShort is the CLI command's one line: the one Command set, or the
+// summary.
+func (m *Method) CommandShort() string {
+	if m.cmdShort != "" {
+		return m.cmdShort
+	}
+
+	return m.summary
+}
+
+// CommandLong is the rest of the CLI command's help: the one Command set,
+// or the description.
+func (m *Method) CommandLong() string {
+	if m.cmdLong != "" {
+		return m.cmdLong
+	}
+
+	return m.explain
+}
+
+// Examples are the CLI command's examples, the flags of each.
+func (m *Method) Examples() []string {
+	return m.examples
 }
 
 // Mapped are the errors Errors set, each with its status code.

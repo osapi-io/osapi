@@ -24,6 +24,11 @@ Two machines can have the same hostname, because the identity of an agent is its
 machine ID. When more than one accepted agent has the hostname, the command
 fails and names their machine IDs. Run it again with `--machine-id`.
 
+## Permission
+
+It needs the `agent:write` permission. `osapi token roles` lists the roles that
+grant it.
+
 ## Notes
 
 The agent does not get a message. It keeps the controller key that it got at
@@ -34,10 +39,10 @@ accepts it.
 
 ## Flags
 
-| Flag           | Description                                                     | Default |
-| -------------- | --------------------------------------------------------------- | ------- |
-| `--hostname`   | Hostname of the accepted agent to remove (required)             |         |
-| `--machine-id` | Machine ID to remove, when more than one agent has the hostname |         |
+| Flag           | Description                                                                  | Default |
+| -------------- | ---------------------------------------------------------------------------- | ------- |
+| `--hostname`   | The hostname of the accepted agent to remove (required)                      |         |
+| `--machine-id` | The machine ID to remove, when more than one accepted agent has the hostname |         |
 
 ## Global flags
 

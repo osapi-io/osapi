@@ -54,12 +54,21 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Doc[OSInfoResponse]("Operating system information."),
 	endpoint.Doc[RouteResponse]("A network routing table entry."),
 	endpoint.Get[ListInput, ListAgentsResponse]("list").
+		Notes("The `--json` output has more system facts that the agent collects:\n"+
+			"architecture, kernel version, FQDN, CPU count, network interfaces, service\n"+
+			"manager and package manager. The table view does not show these fields.").
+		Command("List active agents",
+			"This command reads the agent heartbeat registry directly. It makes no job.\nEach agent writes a heartbeat every 10 seconds, with a 30-second TTL. When\nan agent stops its heartbeat, it goes from the list.").
+		Example("").
 		Handle(List).
 		ID("getAgents").
 		Describe("List active agents").
 		Explain("Discover all active agents in the fleet.").
 		Returns("List of active agents."),
 	endpoint.Get[ListInput, ListPendingAgentsResponse]("pending").
+		Command("List agents awaiting enrollment",
+			"When PKI is enabled, a new agent sends an enrollment request, and waits\nhere until an administrator accepts or rejects it with `agent accept` or\n`agent reject`.").
+		Example("").
 		Handle(Pending).
 		Sub("pending").
 		ID("getAgentsPending").
@@ -68,6 +77,9 @@ var Group = endpoint.Register(endpoint.Define(
 			"not yet been accepted or rejected.").
 		Returns("List of pending agents."),
 	endpoint.Get[GetInput, AgentInfo]("get").
+		Command("Get agent details",
+			"This command reads the agent heartbeat registry directly. It makes no job.\nThe data comes from the last heartbeat of the agent. `node status` runs a\nfull inspection through the job system, with disk usage and more metrics.").
+		Example("--hostname web-01").
 		Handle(Get).
 		ID("getAgentDetails").
 		Describe("Get agent details").
@@ -75,6 +87,19 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("Agent details.").
 		Errors(endpoint.NotFound(ErrNotFound, "Agent not found")),
 	endpoint.Delete[RemoveInput, Message]("remove").
+		Result("Two machines can have the same hostname, because the identity of an agent\n"+
+			"is its machine ID. When more than one accepted agent has the hostname, the\n"+
+			"command fails and names their machine IDs. Run it again with\n"+
+			"`--machine-id`.").
+		Notes("The agent does not get a message. It keeps the controller key that it got\n"+
+			"at acceptance, and it does not enroll again by itself. To enroll it again,\n"+
+			"delete `controller.pub` from its key directory on the host\n"+
+			"(`/etc/osapi/pki` by default), and restart the agent. Then it sends a new\n"+
+			"request, and `agent accept` accepts it.").
+		Command("Remove an enrolled agent",
+			"When PKI is enabled, the controller keeps the public key of each accepted\nagent. This command deletes it. After that, the controller does not verify\nthe responses or the registration of the agent. Thus a target does not\nfind the agent, and a broadcast gives it no row.").
+		Example("--hostname web-01").
+		Example("--hostname web-01 --machine-id 3f2a9c...").
 		Handle(Remove).
 		ID("removeAgent").
 		Describe("Remove an enrolled agent").
@@ -90,6 +115,10 @@ var Group = endpoint.Register(endpoint.Define(
 				"More than one accepted agent has the hostname; name one with machine_id."),
 		),
 	endpoint.Post[AcceptInput, Message]("accept").
+		Command("Accept a pending agent enrollment",
+			"When PKI is enabled, a new agent sends an enrollment request. An\nadministrator must accept it before the agent can do work. This command\naccepts a pending agent by hostname. To accept by the public key fingerprint\nof the agent, add `--fingerprint`. Use `agent pending` to see the agents\nthat wait for approval.").
+		Example("--hostname web-01").
+		Example("--hostname web-01 --fingerprint SHA256:ab12cd34...").
 		Handle(Accept).
 		Action("accept").
 		ID("acceptAgent").
@@ -99,6 +128,9 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("Agent accepted.").
 		Errors(endpoint.NotFound(ErrNotFound, "Pending agent not found.")),
 	endpoint.Post[RejectInput, Message]("reject").
+		Command("Reject a pending agent enrollment",
+			"When PKI is enabled, a new agent sends an enrollment request. An\nadministrator accepts or rejects it. This command rejects a pending agent,\nso the agent cannot join the fleet. The command removes the enrollment entry\nof the agent from the pending queue. Use `agent pending` to see the agents\nthat wait for approval.").
+		Example("--hostname web-01").
 		Handle(Reject).
 		Action("reject").
 		ID("rejectAgent").
@@ -107,6 +139,9 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("Agent rejected.").
 		Errors(endpoint.NotFound(ErrNotFound, "Pending agent not found.")),
 	endpoint.Post[DrainInput, Message]("drain").
+		Command("Drain an agent",
+			"The agent changes from `Ready` to `Draining`. When all its running jobs are\ncomplete, the state is `Cordoned`. The agent continues to run and to send\nheartbeats. It only stops the intake of new work from the job queue. Use\n`agent undrain` to accept jobs again. The jobs that it runs now continue\nuntil they are complete.").
+		Example("--hostname web-01").
 		Handle(Drain).
 		Action("drain").
 		ID("drainAgent").
@@ -119,6 +154,9 @@ var Group = endpoint.Register(endpoint.Define(
 			endpoint.Conflict(ErrState, "Agent already in requested state."),
 		),
 	endpoint.Post[UndrainInput, Message]("undrain").
+		Command("Undrain an agent",
+			"The agent subscribes to the NATS JetStream consumers again and changes back\nto `Ready`.").
+		Example("--hostname web-01").
 		Handle(Undrain).
 		Action("undrain").
 		ID("undrainAgent").

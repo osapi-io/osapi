@@ -1,0 +1,39 @@
+# New
+
+Write a new endpoint group that builds and passes its tests.
+
+It writes `internal/controller/endpoints/<name>/` in the osapi checkout in the
+current directory, and adds its import to `internal/controller/endpoints/all`.
+The group has a list and a get, an empty `Deps` and the tests of its methods.
+Then run `go generate ./internal/controller/endpoints/all` and `just generate`.
+While its `Deps` is empty, the controller needs no wiring.
+`osapi controller endpoint spec` lists each part of the DSL.
+
+```bash
+osapi controller endpoint new [flags]
+```
+
+## Examples
+
+```bash
+osapi controller endpoint new --name trace --description "The traces of the controller"
+```
+
+## Flags
+
+| Flag            | Description                                                 | Default |
+| --------------- | ----------------------------------------------------------- | ------- |
+| `--description` | What the group is, in one line (required)                   |         |
+| `--name`        | The group's name: its path segment and CLI group (required) |         |
+
+## Global flags
+
+| Flag               | Description                  | Default                 |
+| ------------------ | ---------------------------- | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode |                         |
+| `-j, --json`       | Enable JSON output           |                         |
+| `-f, --osapi-file` | Path to config file          | `/etc/osapi/osapi.yaml` |
+| `-p, --port`       | Port the server will bind to | `8080`                  |
+
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

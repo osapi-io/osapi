@@ -53,8 +53,8 @@ work until an administrator accepts it:
 
 1. When the agent starts for the first time, it makes an Ed25519 key pair in
    `agent.pki.key_dir`.
-1. It sends an enrollment request and waits. `osapi client agent list --pending`
-   shows it.
+1. It sends an enrollment request and waits. `osapi client agent pending` shows
+   it.
 1. An administrator accepts it, by hostname or by key fingerprint. Or the
    controller accepts each agent itself, with `controller.pki.auto_accept`.
 1. After that, the controller signs each job. The agent refuses a job that the
