@@ -11,6 +11,12 @@ works. Use this to build most behaviors.
 [Your first behavior](your-first-behavior.md) builds one by hand.
 [Behaviors](behaviors.md) is the reference for each part.
 
+A behavior is work on a host. An operation of the controller itself, such as the
+agents, the jobs or the audit log, is an endpoint. A second skill,
+`build-an-endpoint`, covers it in the same way. The endpoint DSL makes the spec
+of a group today, and the skill says to stop at the parts that are not built
+yet.
+
 ## Set it up
 
 Open a checkout of osapi with a coding agent. `.claude/skills/build-a-behavior/`
