@@ -7,8 +7,8 @@
 import type { NodeConditionType } from './nodeConditionType';
 
 export interface NodeCondition {
-  type: NodeConditionType;
-  status: boolean;
-  reason?: string;
   last_transition_time: string;
+  reason?: string;
+  status: boolean;
+  type: NodeConditionType;
 }

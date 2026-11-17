@@ -48,12 +48,19 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Title("Agent Management API"),
 	endpoint.Tag("agent_operations", "Agent",
 		"Operations related to agent discovery and details."),
+	endpoint.Uses[Deps](),
+	endpoint.Doc[LoadAverageResponse]("The system load averages for 1, 5, and 15 minutes."),
+	endpoint.Doc[MemoryResponse]("Memory usage information."),
+	endpoint.Doc[OSInfoResponse]("Operating system information."),
+	endpoint.Doc[RouteResponse]("A network routing table entry."),
 	endpoint.Get[ListInput, ListAgentsResponse]("list").
+		Handle(List).
 		ID("getAgents").
 		Describe("List active agents").
 		Explain("Discover all active agents in the fleet.").
 		Returns("List of active agents."),
 	endpoint.Get[ListInput, ListPendingAgentsResponse]("pending").
+		Handle(Pending).
 		Sub("pending").
 		ID("getAgentsPending").
 		Describe("List agents awaiting enrollment").
@@ -61,12 +68,14 @@ var Group = endpoint.Register(endpoint.Define(
 			"not yet been accepted or rejected.").
 		Returns("List of pending agents."),
 	endpoint.Get[GetInput, AgentInfo]("get").
+		Handle(Get).
 		ID("getAgentDetails").
 		Describe("Get agent details").
 		Explain("Get detailed information about a specific agent by hostname.").
 		Returns("Agent details.").
 		Errors(endpoint.NotFound(ErrNotFound, "Agent not found")),
 	endpoint.Delete[RemoveInput, Message]("remove").
+		Handle(Remove).
 		ID("removeAgent").
 		Describe("Remove an enrolled agent").
 		Explain("Remove an accepted agent's stored public key. Its responses and "+
@@ -81,6 +90,7 @@ var Group = endpoint.Register(endpoint.Define(
 				"More than one accepted agent has the hostname; name one with machine_id."),
 		),
 	endpoint.Post[AcceptInput, Message]("accept").
+		Handle(Accept).
 		Action("accept").
 		ID("acceptAgent").
 		Describe("Accept a pending agent").
@@ -89,6 +99,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("Agent accepted.").
 		Errors(endpoint.NotFound(ErrNotFound, "Pending agent not found.")),
 	endpoint.Post[RejectInput, Message]("reject").
+		Handle(Reject).
 		Action("reject").
 		ID("rejectAgent").
 		Describe("Reject a pending agent").
@@ -96,6 +107,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("Agent rejected.").
 		Errors(endpoint.NotFound(ErrNotFound, "Pending agent not found.")),
 	endpoint.Post[DrainInput, Message]("drain").
+		Handle(Drain).
 		Action("drain").
 		ID("drainAgent").
 		Describe("Drain an agent").
@@ -107,6 +119,7 @@ var Group = endpoint.Register(endpoint.Define(
 			endpoint.Conflict(ErrState, "Agent already in requested state."),
 		),
 	endpoint.Post[UndrainInput, Message]("undrain").
+		Handle(Undrain).
 		Action("undrain").
 		ID("undrainAgent").
 		Describe("Undrain an agent").

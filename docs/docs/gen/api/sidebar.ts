@@ -22,20 +22,14 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "gen/api/get-agent-details",
-          label: "Get agent details",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
           id: "gen/api/remove-agent",
           label: "Remove an enrolled agent",
           className: "api-method delete",
         },
         {
           type: "doc",
-          id: "gen/api/get-agents-pending",
-          label: "List agents awaiting enrollment",
+          id: "gen/api/get-agent-details",
+          label: "Get agent details",
           className: "api-method get",
         },
         {
@@ -46,14 +40,14 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "gen/api/reject-agent",
-          label: "Reject a pending agent",
+          id: "gen/api/drain-agent",
+          label: "Drain an agent",
           className: "api-method post",
         },
         {
           type: "doc",
-          id: "gen/api/drain-agent",
-          label: "Drain an agent",
+          id: "gen/api/reject-agent",
+          label: "Reject a pending agent",
           className: "api-method post",
         },
         {
@@ -61,6 +55,12 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/undrain-agent",
           label: "Undrain an agent",
           className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-agents-pending",
+          label: "List agents awaiting enrollment",
+          className: "api-method get",
         },
       ],
     },

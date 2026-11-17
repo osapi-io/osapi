@@ -42,7 +42,8 @@ type SpecPublicTestSuite struct {
 // use.
 var notDSL = map[string]bool{
 	"OpenAPI": true, "Validate": true, "Lookup": true, "All": true,
-	"Path:Group": true, "Permission:Group": true, "Key": true, "OperationID": true,
+	"Path:Group": true, "Permission:Group": true, "Key": true, "OperationID": true, "Handler": true,
+	"Mapped": true, "SuccessStatus": true, "Method:Group": true,
 	"String:Problem": true,
 }
 
@@ -76,7 +77,11 @@ func (s *SpecPublicTestSuite) TestSpecCoversTheDSL() {
 				if star, ok := recv.(*ast.StarExpr); ok {
 					recv = star.X
 				}
-				if id, ok := recv.(*ast.Ident); ok && id.Name != "Method" {
+				id, _ := recv.(*ast.Ident)
+				if id == nil || !id.IsExported() {
+					continue
+				}
+				if id.Name != "Method" {
 					name += ":" + id.Name
 				}
 			}

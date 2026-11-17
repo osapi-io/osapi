@@ -18,28 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package agent provides agent-related API handlers.
-package agent
+package all
 
-import (
-	"log/slog"
-
-	"github.com/osapi-io/osapi/internal/controller/api/agent/gen"
-	"github.com/osapi-io/osapi/internal/job/client"
-)
-
-// ensure that we've conformed to the `StrictServerInterface` with a compile-time check
-var _ gen.StrictServerInterface = (*Agent)(nil)
-
-// New factory to create a new instance.
-func New(
-	logger *slog.Logger,
-	jobClient client.JobClient,
-	enrollmentMgr EnrollmentManager,
-) *Agent {
-	return &Agent{
-		JobClient:  jobClient,
-		logger:     logger.With(slog.String("subsystem", "controller.agent")),
-		enrollment: enrollmentMgr,
-	}
-}
+//go:generate go run ../../endpoint/gen --root ../../../..

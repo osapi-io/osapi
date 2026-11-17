@@ -11,6 +11,8 @@
 export interface RouteResponse {
   /** Destination network address. */
   destination: string;
+  /** Route flags. */
+  flags?: string;
   /** Gateway address. */
   gateway: string;
   /** Network interface name. */
@@ -19,6 +21,4 @@ export interface RouteResponse {
   mask?: string;
   /** Route metric. */
   metric?: number;
-  /** Route flags. */
-  flags?: string;
 }

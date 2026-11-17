@@ -65,6 +65,18 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: "Uses[Deps]()",
+			Does: "Names the struct of what the group's handlers use, such as the job client. The controller gives one at startup, and a test gives one with fakes. It is the place of the host in a behavior.",
+			When: "In each group that is served. Keep it to interfaces, so a test can fake each one.",
+		},
+		{
+			Kind: KindOption,
+			Name: `Doc[T]("description")`,
+			Does: "Describes T, a named type, in its schema. Go has no tag on a type, so a group says it here.",
+			When: "For each type whose schema has a description, such as one that another spec defines too: the join fails when two specs define one schema in different words.",
+		},
+		{
+			Kind: KindOption,
 			Name: `Tag("name", "display", "doc")`,
 			Does: "Sets the tag of each operation, its name in the docs and its description.",
 			When: "When a group moves: copy its tag. A new group can leave it; the tag is then the group's name.",
@@ -95,6 +107,12 @@ var Spec = guide.Spec{
 			When: "For a removal.",
 		},
 
+		{
+			Kind: KindRefine,
+			Name: ".Handle(fn)",
+			Does: "Sets the function that runs the method: func(ctx context.Context, d Deps, in In) (Out, error). The generated route decodes and validates In, calls it, and maps its error with Errors.",
+			When: "On each method of a group that Uses a type. Validate checks the signature.",
+		},
 		{
 			Kind: KindRefine,
 			Name: `.Sub("segment")`,
@@ -158,6 +176,12 @@ var Spec = guide.Spec{
 
 		{
 			Kind: KindError,
+			Name: `Errorf(sentinel, "format", args...)`,
+			Does: "Is an error whose text is the message, and that errors.Is matches to sentinel. The answer has the status that Errors maps sentinel to, and the message as its error.",
+			When: "In a handler, to answer 404 or 409 with a message that names what it was called with, such as no pending agent with hostname \"web-01\".",
+		},
+		{
+			Kind: KindError,
 			Name: `NotFound(err, "doc")`,
 			Does: "Maps err to 404.",
 			When: "When the thing the key names is not there.",
@@ -196,7 +220,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindTag,
 			Name: `json:"name"`,
-			Does: "Names the field in JSON, the parameter and the schema property. In an output type, a field without ,omitempty is required.",
+			Does: "Names the field in JSON, the parameter and the schema property. In an output type, a field without ,omitempty or ,omitzero is required.",
 			When: "On each field.",
 		},
 		{
@@ -204,6 +228,12 @@ var Spec = guide.Spec{
 			Name: `doc:"..."`,
 			Does: "Describes the field in the spec.",
 			When: "On each field a caller reads or sets.",
+		},
+		{
+			Kind: KindTag,
+			Name: `example:"..."`,
+			Does: "Gives the field an example in the spec and the API docs: a number for an integer or a number, true or false for a boolean, and the text for the rest.",
+			When: "On each field a caller reads, so the docs show a value.",
 		},
 		{
 			Kind: KindTag,
@@ -215,7 +245,7 @@ var Spec = guide.Spec{
 			Kind: KindTag,
 			Name: "time.Time",
 			Does: "Is a string with the date-time format.",
-			When: "For a timestamp.",
+			When: "For a timestamp. Tag an optional one ,omitzero: ,omitempty does not leave out a zero time.",
 		},
 		{
 			Kind: KindTag,
@@ -244,28 +274,28 @@ var Spec = guide.Spec{
 		},
 
 		{
-			Kind: KindNotYet,
-			Name: "Handlers",
-			Does: "A method has no function that runs. The controller serves the hand-written handler of each group.",
-			When: "Stop and say so. Do not write a handler, and do not wire a group into the controller by hand.",
+			Kind: KindCheck,
+			Name: "go generate ./internal/controller/endpoints/all",
+			Does: "Writes, for each group that Uses a type, gen/api.yaml, the routes in gen/api.go and the decoders in gen/decode.go, and internal/controller/endpoints/all/gen, which registers every group's routes. just generate then joins gen/api.yaml into the main spec.",
+			When: "After each change to a group. go-generate-check fails when a gen/ file is stale. Never edit a gen/ file.",
 		},
 		{
 			Kind: KindNotYet,
-			Name: "Uses[Deps]",
-			Does: "Will name the things the methods use, such as the job client, with fakes in tests.",
-			When: "Comes with the handlers.",
+			Name: "Generated CLI commands",
+			Does: "The osapi client commands of a group are still written by hand, over the SDK. They will come from the definition, with a renderer for a view such as agent get.",
+			When: "Stop and say so. Do not write a CLI command for a new method of a group without the user.",
 		},
 		{
 			Kind: KindNotYet,
-			Name: "Generated routes, CLI commands and HTTP tests",
-			Does: "Will be written under gen/ of the group, with golden copies. Today the spec is made in memory only.",
-			When: "Comes with the handlers.",
+			Name: "Wiring a new group's Deps",
+			Does: "The controller gives each group's Deps in internal/controller/handlers.go, such as agentDeps. A new group needs a line there.",
+			When: "Add it by hand, and say so in the pull request.",
 		},
 		{
 			Kind: KindNotYet,
 			Name: "osapi controller endpoint new",
 			Does: "Will write a new group that builds and passes its tests.",
-			When: "Comes with the handlers. Until then, copy the shape of internal/controller/endpoints/agent.",
+			When: "Comes next. Until then, copy the shape of internal/controller/endpoints/agent.",
 		},
 		{
 			Kind: KindNotYet,

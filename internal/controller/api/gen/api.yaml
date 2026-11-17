@@ -3,9 +3,9 @@ info:
   title: Agent Management API
   version: 1.0.0
 tags:
-  - name: Agent_Management_API_agent_operations
+  - description: Operations related to agent discovery and details.
+    name: Agent_Management_API_agent_operations
     x-displayName: Agent
-    description: Operations related to agent discovery and details.
   - name: Audit_Log_API_audit
     x-displayName: Audit
     description: Audit log endpoints for viewing API activity.
@@ -100,504 +100,503 @@ paths:
   /api/agent:
     servers: []
     get:
-      operationId: getAgents
-      summary: List active agents
       description: Discover all active agents in the fleet.
-      tags:
-        - Agent_Management_API_agent_operations
-      security:
-        - BearerAuth:
-            - agent:read
+      operationId: getAgents
       responses:
         '200':
-          description: List of active agents.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListAgentsResponse'
+          description: List of active agents.
         '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
           description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
           description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: Error discovering agents.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/agent/{hostname}:
-    servers: []
-    get:
-      summary: Get agent details
-      description: Get detailed information about a specific agent by hostname.
-      operationId: getAgentDetails
-      tags:
-        - Agent_Management_API_agent_operations
+          description: An error on the controller.
       security:
         - BearerAuth:
             - agent:read
-      parameters:
-        - name: hostname
-          in: path
-          required: true
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=255
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 255
-          description: The hostname of the agent to retrieve.
-      responses:
-        '200':
-          description: Agent details.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AgentInfo'
-        '400':
-          description: Invalid hostname.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Agent not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving agent details.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+      summary: List active agents
+      tags:
+        - Agent_Management_API_agent_operations
+  /api/agent/{hostname}:
+    servers: []
     delete:
-      operationId: removeAgent
-      summary: Remove an enrolled agent
-      description: >
+      description: >-
         Remove an accepted agent's stored public key. Its responses and
         registration stop verifying at once, so targeting no longer resolves it.
         The agent does not enroll again by itself: remove its controller key on
         the host and restart it. Two machines may share a hostname; when they
         do, name one with machine_id.
-      tags:
-        - Agent_Management_API_agent_operations
-      security:
-        - BearerAuth:
-            - agent:write
+      operationId: removeAgent
       parameters:
-        - name: hostname
+        - description: The hostname of the accepted agent to remove.
           in: path
+          name: hostname
           required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
           x-oapi-codegen-extra-tags:
             validate: required,min=1,max=255
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 255
-          description: The hostname of the accepted agent to remove.
-        - name: machine_id
-          in: query
-          required: false
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1,max=255
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 255
-          description: >
+        - description: >-
             The machine ID to remove, when more than one accepted agent has the
             hostname.
+          in: query
+          name: machine_id
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=255
       responses:
         '200':
-          description: Agent removed.
           content:
             application/json:
               schema:
-                type: object
                 properties:
                   message:
                     type: string
                 required:
                   - message
+                type: object
+          description: Agent removed.
         '400':
-          description: Invalid hostname or machine ID.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
         '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
           description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
           description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: No accepted agent with that hostname.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+          description: No accepted agent with that hostname.
         '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
           description: >-
             More than one accepted agent has the hostname; name one with
             machine_id.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: Error removing agent.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/agent/pending:
-    servers: []
-    get:
-      operationId: getAgentsPending
-      summary: List agents awaiting enrollment
-      description: >-
-        List all agents that have submitted enrollment requests but have not yet
-        been accepted or rejected.
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - agent:write
+      summary: Remove an enrolled agent
       tags:
         - Agent_Management_API_agent_operations
+    get:
+      description: Get detailed information about a specific agent by hostname.
+      operationId: getAgentDetails
+      parameters:
+        - description: The hostname of the agent to retrieve.
+          in: path
+          name: hostname
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentInfo'
+          description: Agent details.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Agent not found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
       security:
         - BearerAuth:
             - agent:read
+      summary: Get agent details
+      tags:
+        - Agent_Management_API_agent_operations
+  /api/agent/{hostname}/accept:
+    servers: []
+    post:
+      description: >-
+        Accept a pending agent enrollment request. The agent can be identified
+        by hostname (path parameter) or by fingerprint (query parameter).
+      operationId: acceptAgent
+      parameters:
+        - description: The hostname of the pending agent to accept.
+          in: path
+          name: hostname
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+        - description: Accept by fingerprint instead of hostname.
+          in: query
+          name: fingerprint
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=255
       responses:
         '200':
-          description: List of pending agents.
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                type: object
+          description: Agent accepted.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Pending agent not found.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - agent:write
+      summary: Accept a pending agent
+      tags:
+        - Agent_Management_API_agent_operations
+  /api/agent/{hostname}/drain:
+    servers: []
+    post:
+      description: >-
+        Stop the agent from accepting new jobs. In-flight jobs continue to
+        completion.
+      operationId: drainAgent
+      parameters:
+        - description: The hostname of the agent to drain.
+          in: path
+          name: hostname
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                type: object
+          description: Agent drain initiated.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Agent not found.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Agent already in requested state.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - agent:write
+      summary: Drain an agent
+      tags:
+        - Agent_Management_API_agent_operations
+  /api/agent/{hostname}/reject:
+    servers: []
+    post:
+      description: Reject a pending agent enrollment request.
+      operationId: rejectAgent
+      parameters:
+        - description: The hostname of the pending agent to reject.
+          in: path
+          name: hostname
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                type: object
+          description: Agent rejected.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Pending agent not found.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - agent:write
+      summary: Reject a pending agent
+      tags:
+        - Agent_Management_API_agent_operations
+  /api/agent/{hostname}/undrain:
+    servers: []
+    post:
+      description: Resume accepting jobs on a drained agent.
+      operationId: undrainAgent
+      parameters:
+        - description: The hostname of the agent to undrain.
+          in: path
+          name: hostname
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                type: object
+          description: Agent undrain initiated.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Agent not found.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Agent not in draining or cordoned state.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - agent:write
+      summary: Undrain an agent
+      tags:
+        - Agent_Management_API_agent_operations
+  /api/agent/pending:
+    servers: []
+    get:
+      description: >-
+        List all agents that have submitted enrollment requests but have not yet
+        been accepted or rejected.
+      operationId: getAgentsPending
+      responses:
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListPendingAgentsResponse'
+          description: List of pending agents.
         '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
           description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
           description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: Error listing pending agents.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/agent/{hostname}/accept:
-    servers: []
-    post:
-      operationId: acceptAgent
-      summary: Accept a pending agent
-      description: >
-        Accept a pending agent enrollment request. The agent can be identified
-        by hostname (path parameter) or by fingerprint (query parameter).
-      tags:
-        - Agent_Management_API_agent_operations
+          description: An error on the controller.
       security:
         - BearerAuth:
-            - agent:write
-      parameters:
-        - name: hostname
-          in: path
-          required: true
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=255
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 255
-          description: The hostname of the pending agent to accept.
-        - name: fingerprint
-          in: query
-          required: false
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1,max=255
-          schema:
-            type: string
-            maxLength: 255
-          description: Accept by fingerprint instead of hostname.
-      responses:
-        '200':
-          description: Agent accepted.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                required:
-                  - message
-        '400':
-          description: Invalid hostname or fingerprint.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Pending agent not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error accepting agent.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/agent/{hostname}/reject:
-    servers: []
-    post:
-      operationId: rejectAgent
-      summary: Reject a pending agent
-      description: Reject a pending agent enrollment request.
+            - agent:read
+      summary: List agents awaiting enrollment
       tags:
         - Agent_Management_API_agent_operations
-      security:
-        - BearerAuth:
-            - agent:write
-      parameters:
-        - name: hostname
-          in: path
-          required: true
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=255
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 255
-          description: The hostname of the pending agent to reject.
-      responses:
-        '200':
-          description: Agent rejected.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                required:
-                  - message
-        '400':
-          description: Invalid hostname.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Pending agent not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error rejecting agent.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/agent/{hostname}/drain:
-    servers: []
-    post:
-      operationId: drainAgent
-      summary: Drain an agent
-      description: >
-        Stop the agent from accepting new jobs. In-flight jobs continue to
-        completion.
-      tags:
-        - Agent_Management_API_agent_operations
-      security:
-        - BearerAuth:
-            - agent:write
-      parameters:
-        - name: hostname
-          in: path
-          required: true
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=255
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 255
-          description: The hostname of the agent to drain.
-      responses:
-        '200':
-          description: Agent drain initiated.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                required:
-                  - message
-        '400':
-          description: Invalid hostname.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Agent not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Agent already in requested state.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error draining agent.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/agent/{hostname}/undrain:
-    servers: []
-    post:
-      operationId: undrainAgent
-      summary: Undrain an agent
-      description: Resume accepting jobs on a drained agent.
-      tags:
-        - Agent_Management_API_agent_operations
-      security:
-        - BearerAuth:
-            - agent:write
-      parameters:
-        - name: hostname
-          in: path
-          required: true
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=255
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 255
-          description: The hostname of the agent to undrain.
-      responses:
-        '200':
-          description: Agent undrain initiated.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                required:
-                  - message
-        '400':
-          description: Invalid hostname.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Agent not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Agent not in draining or cordoned state.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error undraining agent.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/audit:
     servers: []
     get:
@@ -6253,12 +6252,131 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
   schemas:
+    AgentInfo:
+      properties:
+        architecture:
+          description: CPU architecture.
+          example: amd64
+          type: string
+        conditions:
+          description: Evaluated node conditions.
+          items:
+            $ref: '#/components/schemas/NodeCondition'
+          type: array
+        cpu_count:
+          description: Number of logical CPUs.
+          example: 4
+          type: integer
+        facts:
+          additionalProperties: true
+          description: Extended facts from additional providers.
+          type: object
+        fingerprint:
+          description: >-
+            The SHA256 fingerprint of the agent's PKI public key. Empty when PKI
+            is disabled.
+          type: string
+        fqdn:
+          description: Fully qualified domain name.
+          example: web-01.example.com
+          type: string
+        hostname:
+          description: The hostname of the agent.
+          type: string
+        interfaces:
+          items:
+            $ref: '#/components/schemas/NetworkInterfaceResponse'
+          type: array
+        kernel_version:
+          description: OS kernel version.
+          example: 5.15.0-91-generic
+          type: string
+        key_stored:
+          description: >-
+            Whether the controller holds this agent's public key, recorded when
+            its enrollment was accepted. False for an agent that has not
+            enrolled since the key store existed, which is what to re-enrol
+            before enabling enforcement.
+          type: boolean
+        labels:
+          additionalProperties:
+            type: string
+          description: Key-value labels configured on the agent.
+          type: object
+        load_average:
+          $ref: '#/components/schemas/LoadAverageResponse'
+        machine_id:
+          description: The permanent machine identifier.
+          type: string
+        memory:
+          $ref: '#/components/schemas/MemoryResponse'
+        os_info:
+          $ref: '#/components/schemas/OSInfoResponse'
+        package_mgr:
+          description: Package manager.
+          example: apt
+          type: string
+        primary_interface:
+          description: Name of the interface used for the default route.
+          example: eth0
+          type: string
+        registered_at:
+          description: When the agent last refreshed its heartbeat.
+          format: date-time
+          type: string
+        routes:
+          description: Network routing table entries.
+          items:
+            $ref: '#/components/schemas/RouteResponse'
+          type: array
+        service_mgr:
+          description: Init system.
+          example: systemd
+          type: string
+        started_at:
+          description: When the agent process started.
+          format: date-time
+          type: string
+        state:
+          description: Agent scheduling state.
+          enum:
+            - Ready
+            - Draining
+            - Cordoned
+            - Pending
+          type: string
+        status:
+          description: The current status of the agent.
+          enum:
+            - Ready
+            - NotReady
+          type: string
+        timeline:
+          description: Agent state transition history.
+          items:
+            $ref: '#/components/schemas/TimelineEvent'
+          type: array
+        uptime:
+          description: The system uptime.
+          type: string
+        verified:
+          description: >-
+            Whether this agent's registration was signed by its stored key and
+            claims the hostname it enrolled under. Only a verified registration
+            decides where work is routed. True when the controller is not
+            enforcing verification.
+          type: boolean
+        version:
+          description: >-
+            The build version of the agent binary. Absent for an agent that does
+            not report it.
+          example: v1.4.0
+          type: string
+      required:
+        - hostname
+        - status
+      type: object
     ErrorResponse:
       type: object
       properties:
@@ -6274,177 +6392,32 @@ components:
           type: integer
           description: The error code.
           example: 500
-    ListPendingAgentsResponse:
-      type: object
-      properties:
-        agents:
-          type: array
-          items:
-            $ref: '#/components/schemas/PendingAgentInfo'
-        total:
-          type: integer
-          description: Total number of pending agents.
-      required:
-        - agents
-        - total
-    PendingAgentInfo:
-      type: object
-      properties:
-        machine_id:
-          type: string
-          description: The permanent machine identifier.
-        hostname:
-          type: string
-          description: The hostname of the agent.
-        fingerprint:
-          type: string
-          description: The SHA256 fingerprint of the agent's public key.
-        requested_at:
-          type: string
-          format: date-time
-          description: When the enrollment request was received.
-      required:
-        - machine_id
-        - hostname
-        - fingerprint
-        - requested_at
     ListAgentsResponse:
-      type: object
       properties:
         agents:
-          type: array
           items:
             $ref: '#/components/schemas/AgentInfo'
+          type: array
         total:
-          type: integer
           description: Total number of active agents.
+          type: integer
       required:
         - agents
         - total
-    AgentInfo:
       type: object
+    ListPendingAgentsResponse:
       properties:
-        machine_id:
-          type: string
-          description: The permanent machine identifier.
-        fingerprint:
-          type: string
-          description: >-
-            The SHA256 fingerprint of the agent's PKI public key. Empty when PKI
-            is disabled.
-        version:
-          type: string
-          description: >-
-            The build version of the agent binary. Absent for an agent that does
-            not report it.
-          example: v1.4.0
-        hostname:
-          type: string
-          description: The hostname of the agent.
-        status:
-          type: string
-          enum:
-            - Ready
-            - NotReady
-          description: The current status of the agent.
-        labels:
-          type: object
-          additionalProperties:
-            type: string
-          description: Key-value labels configured on the agent.
-        registered_at:
-          type: string
-          format: date-time
-          description: When the agent last refreshed its heartbeat.
-        started_at:
-          type: string
-          format: date-time
-          description: When the agent process started.
-        os_info:
-          $ref: '#/components/schemas/OSInfoResponse'
-        uptime:
-          type: string
-          description: The system uptime.
-        load_average:
-          $ref: '#/components/schemas/LoadAverageResponse'
-        memory:
-          $ref: '#/components/schemas/MemoryResponse'
-        architecture:
-          type: string
-          description: CPU architecture.
-          example: amd64
-        kernel_version:
-          type: string
-          description: OS kernel version.
-          example: 5.15.0-91-generic
-        cpu_count:
+        agents:
+          items:
+            $ref: '#/components/schemas/PendingAgentInfo'
+          type: array
+        total:
+          description: Total number of pending agents.
           type: integer
-          description: Number of logical CPUs.
-          example: 4
-        fqdn:
-          type: string
-          description: Fully qualified domain name.
-          example: web-01.example.com
-        service_mgr:
-          type: string
-          description: Init system.
-          example: systemd
-        package_mgr:
-          type: string
-          description: Package manager.
-          example: apt
-        interfaces:
-          type: array
-          items:
-            $ref: '#/components/schemas/NetworkInterfaceResponse'
-        primary_interface:
-          type: string
-          description: Name of the interface used for the default route.
-          example: eth0
-        routes:
-          type: array
-          items:
-            $ref: '#/components/schemas/RouteResponse'
-          description: Network routing table entries.
-        facts:
-          type: object
-          additionalProperties: true
-          description: Extended facts from additional providers.
-        state:
-          type: string
-          enum:
-            - Ready
-            - Draining
-            - Cordoned
-            - Pending
-          description: Agent scheduling state.
-        conditions:
-          type: array
-          items:
-            $ref: '#/components/schemas/NodeCondition'
-          description: Evaluated node conditions.
-        timeline:
-          type: array
-          items:
-            $ref: '#/components/schemas/TimelineEvent'
-          description: Agent state transition history.
-        key_stored:
-          type: boolean
-          description: >-
-            Whether the controller holds this agent's public key, recorded when
-            its enrollment was accepted. False for an agent that has not
-            enrolled since the key store existed, which is what to re-enrol
-            before enabling enforcement.
-        verified:
-          type: boolean
-          description: >-
-            Whether this agent's registration was signed by its stored key and
-            claims the hostname it enrolled under. Only a verified registration
-            decides where work is routed. True when the controller is not
-            enforcing verification.
       required:
-        - hostname
-        - status
+        - agents
+        - total
+      type: object
     LoadAverageResponse:
       type: object
       description: The system load averages for 1, 5, and 15 minutes.
@@ -6485,6 +6458,51 @@ components:
         - total
         - free
         - used
+    NetworkInterfaceResponse:
+      properties:
+        family:
+          description: IP address family.
+          enum:
+            - inet
+            - inet6
+            - dual
+          example: dual
+          type: string
+        ipv4:
+          example: 192.168.1.10
+          type: string
+        ipv6:
+          example: fe80::1
+          type: string
+        mac:
+          example: '00:11:22:33:44:55'
+          type: string
+        name:
+          example: eth0
+          type: string
+      required:
+        - name
+      type: object
+    NodeCondition:
+      properties:
+        last_transition_time:
+          format: date-time
+          type: string
+        reason:
+          type: string
+        status:
+          type: boolean
+        type:
+          enum:
+            - MemoryPressure
+            - HighLoad
+            - DiskPressure
+          type: string
+      required:
+        - type
+        - status
+        - last_transition_time
+      type: object
     OSInfoResponse:
       type: object
       description: Operating system information.
@@ -6500,100 +6518,76 @@ components:
       required:
         - distribution
         - version
-    NetworkInterfaceResponse:
-      type: object
+    PendingAgentInfo:
       properties:
-        name:
+        fingerprint:
+          description: The SHA256 fingerprint of the agent's public key.
           type: string
-          example: eth0
-        ipv4:
+        hostname:
+          description: The hostname of the agent.
           type: string
-          example: 192.168.1.10
-        ipv6:
+        machine_id:
+          description: The permanent machine identifier.
           type: string
-          example: fe80::1
-        mac:
-          type: string
-          example: '00:11:22:33:44:55'
-        family:
-          type: string
-          description: IP address family.
-          example: dual
-          enum:
-            - inet
-            - inet6
-            - dual
-      required:
-        - name
-    NodeCondition:
-      type: object
-      properties:
-        type:
-          type: string
-          enum:
-            - MemoryPressure
-            - HighLoad
-            - DiskPressure
-        status:
-          type: boolean
-        reason:
-          type: string
-        last_transition_time:
-          type: string
+        requested_at:
+          description: When the enrollment request was received.
           format: date-time
+          type: string
       required:
-        - type
-        - status
-        - last_transition_time
-    RouteResponse:
+        - machine_id
+        - hostname
+        - fingerprint
+        - requested_at
       type: object
+    RouteResponse:
       description: A network routing table entry.
       properties:
         destination:
-          type: string
           description: Destination network address.
           example: 0.0.0.0
-        gateway:
           type: string
-          description: Gateway address.
-          example: 192.168.1.1
-        interface:
-          type: string
-          description: Network interface name.
-          example: eth0
-        mask:
-          type: string
-          description: Network mask in CIDR notation.
-          example: /0
-        metric:
-          type: integer
-          description: Route metric.
-          example: 100
         flags:
-          type: string
           description: Route flags.
           example: '0003'
+          type: string
+        gateway:
+          description: Gateway address.
+          example: 192.168.1.1
+          type: string
+        interface:
+          description: Network interface name.
+          example: eth0
+          type: string
+        mask:
+          description: Network mask in CIDR notation.
+          example: /0
+          type: string
+        metric:
+          description: Route metric.
+          example: 100
+          type: integer
       required:
         - destination
         - gateway
         - interface
-    TimelineEvent:
       type: object
+    TimelineEvent:
       properties:
-        timestamp:
+        error:
           type: string
-          format: date-time
         event:
           type: string
         hostname:
           type: string
         message:
           type: string
-        error:
+        timestamp:
+          format: date-time
           type: string
       required:
         - timestamp
         - event
+      type: object
     AuditEntry:
       type: object
       properties:
@@ -11066,6 +11060,11 @@ components:
             $ref: '#/components/schemas/GroupMutationResult'
       required:
         - results
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   parameters:
     FileName:
       name: name

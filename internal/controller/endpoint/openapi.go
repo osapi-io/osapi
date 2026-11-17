@@ -51,7 +51,7 @@ func OpenAPI(
 ) (*openapi3.T, error) {
 	doc := &openapi3.T{
 		OpenAPI: "3.0.0",
-		Info:    &openapi3.Info{Title: g.Title, Version: "1.0.0", Description: g.Doc},
+		Info:    &openapi3.Info{Title: g.Title, Version: "1.0.0"},
 		Paths:   openapi3.NewPaths(),
 		Tags: openapi3.Tags{{
 			Name:        g.Tag,
@@ -66,7 +66,7 @@ func OpenAPI(
 		},
 	}
 
-	b := &builder{schemas: doc.Components.Schemas}
+	b := &builder{schemas: doc.Components.Schemas, docs: g.Docs}
 	for _, m := range g.Methods {
 		op, err := b.operation(g, m)
 		if err != nil {
@@ -87,6 +87,7 @@ func OpenAPI(
 // builder adds each named type it meets to the components, once.
 type builder struct {
 	schemas openapi3.Schemas
+	docs    map[reflect.Type]string
 }
 
 func (b *builder) operation(
@@ -114,13 +115,21 @@ func (b *builder) operation(
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", f.Name, err)
 			}
-			op.Parameters = append(op.Parameters, &openapi3.ParameterRef{Value: &openapi3.Parameter{
+			p := &openapi3.Parameter{
 				Name:        jsonName(f),
 				In:          in,
 				Required:    in == "path" || validates(f, "required"),
 				Description: f.Tag.Get("doc"),
 				Schema:      constrained(s, f),
-			}})
+			}
+			// oapi-codegen copies this onto the parameter's field, so a Go
+			// client made from the spec validates as the server does.
+			if v := f.Tag.Get("validate"); v != "" {
+				p.Extensions = map[string]any{
+					"x-oapi-codegen-extra-tags": map[string]string{"validate": v},
+				}
+			}
+			op.Parameters = append(op.Parameters, &openapi3.ParameterRef{Value: p})
 		default:
 			body = append(body, f)
 		}
@@ -221,6 +230,7 @@ func (b *builder) ref(
 
 			return nil, fmt.Errorf("%s: %w", t.Name(), err)
 		}
+		s.Description = b.docs[t]
 		b.schemas[t.Name()] = openapi3.NewSchemaRef("", s)
 	}
 
@@ -278,8 +288,8 @@ func (b *builder) inline(
 }
 
 // object is an object of the fields. In a response, a field is required
-// when its json tag has no omitempty; in a request, when it is tagged
-// validate:"required".
+// when its json tag has neither omitempty nor omitzero; in a request, when
+// it is tagged validate:"required".
 func (b *builder) object(
 	fs []reflect.StructField,
 	response bool,
@@ -298,7 +308,8 @@ func (b *builder) object(
 		s.Properties[name] = constrained(fs, f)
 		required := validates(f, "required")
 		if response {
-			required = !strings.Contains(f.Tag.Get("json"), ",omitempty")
+			tag := f.Tag.Get("json")
+			required = !strings.Contains(tag, ",omitempty") && !strings.Contains(tag, ",omitzero")
 		}
 		if required {
 			s.Required = append(s.Required, name)
@@ -308,14 +319,18 @@ func (b *builder) object(
 	return s, nil
 }
 
-// constrained is s with the constraints of the field's validate tag: the
-// values of oneof, and min and max as the length of a string.
+// constrained is s with the field's example, and the constraints of its
+// validate tag: the values of oneof, and min and max as the length of a
+// string.
 func constrained(
 	s *openapi3.SchemaRef,
 	f reflect.StructField,
 ) *openapi3.SchemaRef {
 	if s.Value == nil {
 		return s
+	}
+	if ex, ok := f.Tag.Lookup("example"); ok {
+		s.Value.Example = example(s.Value, ex)
 	}
 	for _, rule := range strings.Split(f.Tag.Get("validate"), ",") {
 		name, param, _ := strings.Cut(rule, "=")
@@ -393,4 +408,29 @@ func upper(
 	}
 
 	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+// example is the text of an example tag as the value its schema's type
+// holds: a number for an integer or a number, a bool for a boolean, and the
+// text for anything else, or when it does not parse.
+func example(
+	s *openapi3.Schema,
+	text string,
+) any {
+	switch {
+	case s.Type.Is(openapi3.TypeInteger):
+		if n, err := strconv.ParseInt(text, 10, 64); err == nil {
+			return n
+		}
+	case s.Type.Is(openapi3.TypeNumber):
+		if n, err := strconv.ParseFloat(text, 64); err == nil {
+			return n
+		}
+	case s.Type.Is(openapi3.TypeBoolean):
+		if v, err := strconv.ParseBool(text); err == nil {
+			return v
+		}
+	}
+
+	return text
 }
