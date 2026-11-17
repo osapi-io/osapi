@@ -44,6 +44,7 @@ var notDSL = map[string]bool{
 	"OpenAPI": true, "Validate": true, "Lookup": true, "All": true,
 	"Path:Group": true, "Permission:Group": true, "Key": true, "OperationID": true, "Handler": true,
 	"Mapped": true, "SuccessStatus": true, "Method:Group": true,
+	"CommandShort": true, "CommandLong": true, "Examples": true, "Scaffold": true,
 	"String:Problem": true,
 }
 

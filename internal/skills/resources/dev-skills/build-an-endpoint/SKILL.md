@@ -24,10 +24,11 @@ about the DSL:
 Ask these tools. Do not use your memory. If a tool and this skill do not agree,
 the tool is correct.
 
-The DSL makes the spec, the routes and the decoders of a group. A group's
-handlers are typed functions. The agent group is served from its definition. The
-other groups still have a hand-written spec and handler, until they move. The
-CLI commands are still written by hand. Some parts are not built yet.
+The DSL makes the spec, the routes, the decoders and the CLI commands of a
+group. A group's handlers are typed functions. The agent group is served, and
+its commands are made, from its definition. The other groups still have a
+hand-written spec, handler and commands, until they move. Some parts are not
+built yet.
 `controller endpoint spec` lists them under "Not supported yet". If the work
 needs one of them, stop and say so. That is a platform change, and a person
 decides it. Do not add code around it.
@@ -61,6 +62,24 @@ Ask the code and the binary before you read prose:
 | A complete group | `internal/controller/endpoints/agent` |
 | The hand-written spec of a group | `internal/controller/api/<group>/gen/api.yaml` |
 | How two specs are compared | `go doc ./internal/apicontract` |
+
+## Build a new group
+
+1. Write it: `go run . controller endpoint new --name <group> --description "<one line>"`,
+   then `go generate ./internal/controller/endpoints/all` and
+   `mise exec -- just generate`. The group has a list and a get, an empty
+   `Deps`, its types and the tests of its methods. It builds, validates and
+   passes its tests before you change it.
+2. Change it in this order: `types.go`, `deps.go`, `methods.go`, then
+   `<group>.go`. Decide each method with the user first; "Decide first" below
+   has the questions.
+3. When `Deps` gets its first field, give it in
+   `internal/controller/handlers.go`, as `agentDeps` does. While it is empty,
+   the controller needs no wiring.
+4. Add `cmd/client_<group>_render.go` with a `command.Render` for each method
+   a person reads at a shell. A method without one prints its answer as JSON.
+5. A new operation changes the API: run `TestJoinedSpec` with `-update`, and
+   keep the diff.
 
 ## Move a hand-written group
 
@@ -108,6 +127,24 @@ The switch:
    without `-update`: the contract of the API does not change. Read the diff of
    the Go SDK and the UI client, which must not change their names.
 
+The CLI:
+
+1. Give each method `.Command(short, long)` with the help of the hand-written
+   command, and `.Example("--flag value")` with its examples. Each input field
+   is a flag, named for its json name with `_` as `-`.
+2. Write `cmd/client_<group>_render.go`: a `command.Render` for each method,
+   with the output code of the hand-written command.
+3. Run `go generate ./internal/controller/endpoints/all`. It writes
+   `gen/cli.go`.
+4. Before you delete the hand-written commands, save their help:
+   `go run . help client <group> <command> --json`. Compare it with the help of
+   the generated commands: the same flags, types and required flags. Tell the
+   user each difference.
+5. Delete `cmd/client_<group>_<method>.go` for each method. A command that is
+   not a method of the group, such as `agent key`, stays.
+6. Run `mise exec -- just cli-docs-generate`, and run each command against a
+   controller.
+
 When a difference is a bug in the hand-written spec or its handler, do not copy
 the bug into the definition. Tell the user, and file an issue. If the user
 agrees, the row accepts the line, with the issue in its reason. Drain and undrain
@@ -143,6 +180,8 @@ mise exec -- just test
 | `go-generate-check` | A `gen/` file is stale: run `go generate ./internal/controller/endpoints/all` |
 | `Conflict on components => schemas` from `just generate` | Two specs define one schema in different words: copy the description with `Doc` and each `example` from the other spec |
 | `endpoint: no ... given to the server` at startup | The controller does not give the group's `Deps`: add it in `internal/controller/handlers.go` |
+| `is both a hand-written command and the <group> group's` at startup | Delete the hand-written command of that method |
+| `endpoint-scaffold-check` | A group that `controller endpoint new` writes no longer passes its tests: change the scaffold in `internal/controller/endpoint/scaffold_files.go`, and run its golden test with `-update` |
 | `TestEndpointParity` | A line of the contract differs. `-` is only in the hand-written spec, `+` only in the generated spec. Change the definition until they agree, or see the bug rule above |
 | `TestJoinedSpec` | The joined spec changed. If you changed the API on purpose, write the contract again: `go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -update`, and keep the diff. If you did not, find what changed it |
 | `the spec has no term for` | A new option of the DSL has no entry in `internal/controller/endpoint/spec.go`. Add one |

@@ -104,7 +104,7 @@ administrator. Do not use this in production.
 
 ```bash
 # List pending enrollment requests
-osapi client agent list --pending
+osapi client agent pending
 
 # Accept a pending agent by hostname
 osapi client agent accept --hostname web-01

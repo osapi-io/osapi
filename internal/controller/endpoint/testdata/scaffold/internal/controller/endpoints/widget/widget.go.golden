@@ -18,46 +18,31 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+// Package widget is the widget endpoint group: Widgets of the controller.
+package widget
 
 import (
-	"fmt"
+	"errors"
 
-	"github.com/spf13/cobra"
-
-	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
-// clientAgentUndrainCmd represents the clientAgentUndrain command.
-var clientAgentUndrainCmd = &cobra.Command{
-	Use:   "undrain",
-	Short: "Undrain an agent",
-	Long: "The agent subscribes to the NATS JetStream consumers again and changes back\n" +
-		"to `Ready`.",
-	Example: `  osapi client agent undrain --hostname web-01`,
-	Run: func(cmd *cobra.Command, _ []string) {
-		ctx := cmd.Context()
-		hostname, _ := cmd.Flags().GetString("hostname")
+// ErrNotFound is an item that is not there.
+var ErrNotFound = errors.New("not found")
 
-		resp, err := sdkClient.Agent.Undrain(ctx, hostname)
-		if err != nil {
-			cli.HandleError(err, logger)
-			return
-		}
-
-		if jsonOutput {
-			cli.PrintJSON(resp.RawJSON())
-			return
-		}
-
-		fmt.Println()
-		cli.PrintKV("Hostname", hostname, "Status", "Ready")
-		cli.PrintKV("Message", resp.Data.Message)
-	},
-}
-
-func init() {
-	clientAgentCmd.AddCommand(clientAgentUndrainCmd)
-	clientAgentUndrainCmd.Flags().String("hostname", "", "Hostname of the agent to undrain")
-	_ = clientAgentUndrainCmd.MarkFlagRequired("hostname")
-}
+// Group is the widget group's definition. The routes, the spec, the CLI
+// commands and their pages come from it. osapi controller endpoint spec
+// lists every option.
+var Group = endpoint.Register(endpoint.Define(
+	"widget", "Widgets of the controller",
+	endpoint.Uses[Deps](),
+	endpoint.Get[ListInput, WidgetList]("list").
+		Handle(List).
+		Describe("List the widget items").
+		Example(""),
+	endpoint.Get[GetInput, WidgetItem]("get").
+		Handle(Get).
+		Describe("Get one widget item").
+		Errors(endpoint.NotFound(ErrNotFound, "No item with that name.")).
+		Example("--name example"),
+))

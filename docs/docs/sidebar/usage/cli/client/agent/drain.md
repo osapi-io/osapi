@@ -18,11 +18,16 @@ osapi client agent drain [flags]
 osapi client agent drain --hostname web-01
 ```
 
+## Permission
+
+It needs the `agent:write` permission. `osapi token roles` lists the roles that
+grant it.
+
 ## Flags
 
-| Flag         | Description                               | Default |
-| ------------ | ----------------------------------------- | ------- |
-| `--hostname` | Hostname of the agent to drain (required) |         |
+| Flag         | Description                                    | Default |
+| ------------ | ---------------------------------------------- | ------- |
+| `--hostname` | The hostname of the agent to drain. (required) |         |
 
 ## Global flags
 

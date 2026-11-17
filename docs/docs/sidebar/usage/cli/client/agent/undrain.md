@@ -15,11 +15,16 @@ osapi client agent undrain [flags]
 osapi client agent undrain --hostname web-01
 ```
 
+## Permission
+
+It needs the `agent:write` permission. `osapi token roles` lists the roles that
+grant it.
+
 ## Flags
 
-| Flag         | Description                                 | Default |
-| ------------ | ------------------------------------------- | ------- |
-| `--hostname` | Hostname of the agent to undrain (required) |         |
+| Flag         | Description                                      | Default |
+| ------------ | ------------------------------------------------ | ------- |
+| `--hostname` | The hostname of the agent to undrain. (required) |         |
 
 ## Global flags
 

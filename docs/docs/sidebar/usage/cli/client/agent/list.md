@@ -7,27 +7,19 @@ agent writes a heartbeat every 10 seconds, with a 30-second TTL. When an agent
 stops its heartbeat, it goes from the list.
 
 ```bash
-osapi client agent list [flags]
+osapi client agent list
 ```
 
 ## Examples
 
 ```bash
 osapi client agent list
-osapi client agent list --pending
 ```
 
-## Notes
+## Permission
 
-The `--json` output has more system facts that the agent collects: architecture,
-kernel version, FQDN, CPU count, network interfaces, service manager and package
-manager. The table view does not show these fields.
-
-## Flags
-
-| Flag        | Description                     | Default |
-| ----------- | ------------------------------- | ------- |
-| `--pending` | List agents awaiting enrollment |         |
+It needs the `agent:read` permission. `osapi token roles` lists the roles that
+grant it.
 
 ## Global flags
 

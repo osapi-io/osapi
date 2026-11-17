@@ -16,11 +16,16 @@ osapi client agent get [flags]
 osapi client agent get --hostname web-01
 ```
 
+## Permission
+
+It needs the `agent:read` permission. `osapi token roles` lists the roles that
+grant it.
+
 ## Flags
 
-| Flag         | Description                                  | Default |
-| ------------ | -------------------------------------------- | ------- |
-| `--hostname` | Hostname of the agent to retrieve (required) |         |
+| Flag         | Description                                       | Default |
+| ------------ | ------------------------------------------------- | ------- |
+| `--hostname` | The hostname of the agent to retrieve. (required) |         |
 
 ## Global flags
 

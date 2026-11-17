@@ -158,6 +158,22 @@ func (s *EndpointPublicTestSuite) TestUsesAndHandle() {
 	s.Equal([]endpoint.Error{e}, created.Mapped())
 }
 
+func (s *EndpointPublicTestSuite) TestCommandHelp() {
+	plain := endpoint.Get[noInput, Node]("get").Describe("Get a node").Explain("API words.")
+	s.Equal("Get a node", plain.CommandShort())
+	s.Equal("API words.", plain.CommandLong())
+	s.Empty(plain.Examples())
+
+	cli := endpoint.Get[noInput, Node]("list").
+		Describe("List nodes").
+		Command("List the nodes", "Shell words.").
+		Example("").
+		Example("--all")
+	s.Equal("List the nodes", cli.CommandShort())
+	s.Equal("Shell words.", cli.CommandLong())
+	s.Equal([]string{"", "--all"}, cli.Examples())
+}
+
 func (s *EndpointPublicTestSuite) TestErrorf() {
 	err := endpoint.Errorf(errMissing, "no node named %q", "web-01")
 

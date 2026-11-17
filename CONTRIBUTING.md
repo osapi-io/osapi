@@ -630,10 +630,13 @@ The operations of the controller itself, such as the agents and the jobs, move
 to definitions in `internal/controller/endpoints/`. `osapi controller endpoint`
 lists them, and `osapi controller endpoint spec` lists each part of the DSL.
 `TestEndpointParity` holds the spec of each group that moves to its hand-written
-spec, until the group moves. The agent group is served from its definition:
-`go generate ./internal/controller/endpoints/all` writes its spec, routes and
-decoders under `gen/`, and `just generate` joins its spec into the main one. The
-`build-an-endpoint` skill has the steps.
+spec, until the group moves. The agent group is served, and its commands are
+made, from its definition: `go generate ./internal/controller/endpoints/all`
+writes its spec, routes, decoders and CLI commands under `gen/`, and
+`just generate` joins its spec into the main one. How a command prints is
+`command.Render` in `cmd/client_<group>_render.go`. A new group starts from
+`osapi controller endpoint new`, and `just endpoint-scaffold-check` holds what
+it writes to its tests. The `build-an-endpoint` skill has the steps.
 
 ### Rules a domain has to follow
 
