@@ -53,6 +53,9 @@ type Group struct {
 	// Docs are the descriptions of the group's named types, which Doc sets:
 	// Go has no tag on a type.
 	Docs map[reflect.Type]string
+	// Examples are the examples of fields of the group's named types, by
+	// type and json name, which Example sets: for a value a tag cannot hold.
+	Examples map[reflect.Type]map[string]string
 	// Methods are the group's endpoints, in the order they were declared.
 	Methods []*Method
 }
@@ -94,6 +97,26 @@ func Tag(
 // with fakes. Each handler takes it as its second argument.
 func Uses[D any]() Option {
 	return optionFunc(func(g *Group) { g.Deps = reflect.TypeFor[D]() })
+}
+
+// Example gives the field of T with the json name field its example. A
+// struct tag holds an example with no double quote, and Example holds the
+// rest, such as a JSON document: gofumpt and golines drop the backslashes of
+// a quote in a tag.
+func Example[T any](
+	field string,
+	example string,
+) Option {
+	return optionFunc(func(g *Group) {
+		if g.Examples == nil {
+			g.Examples = map[reflect.Type]map[string]string{}
+		}
+		t := reflect.TypeFor[T]()
+		if g.Examples[t] == nil {
+			g.Examples[t] = map[string]string{}
+		}
+		g.Examples[t][field] = example
+	})
 }
 
 // Doc describes T, a named type of the group, in its schema.

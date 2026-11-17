@@ -66,7 +66,7 @@ func OpenAPI(
 		},
 	}
 
-	b := &builder{schemas: doc.Components.Schemas, docs: g.Docs}
+	b := &builder{schemas: doc.Components.Schemas, docs: g.Docs, examples: g.Examples}
 	for _, m := range g.Methods {
 		op, err := b.operation(g, m)
 		if err != nil {
@@ -86,8 +86,9 @@ func OpenAPI(
 
 // builder adds each named type it meets to the components, once.
 type builder struct {
-	schemas openapi3.Schemas
-	docs    map[reflect.Type]string
+	schemas  openapi3.Schemas
+	docs     map[reflect.Type]string
+	examples map[reflect.Type]map[string]string
 }
 
 func (b *builder) operation(
@@ -231,6 +232,11 @@ func (b *builder) ref(
 			return nil, fmt.Errorf("%s: %w", t.Name(), err)
 		}
 		s.Description = b.docs[t]
+		for name, ex := range b.examples[t] {
+			if p, ok := s.Properties[name]; ok && p.Value != nil {
+				p.Value.Example = example(p.Value, ex)
+			}
+		}
 		b.schemas[t.Name()] = openapi3.NewSchemaRef("", s)
 	}
 

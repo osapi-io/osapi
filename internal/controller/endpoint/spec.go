@@ -79,6 +79,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: `Example[T]("field", "example")`,
+			Does: "Gives the field of T with that json name its example in the schema.",
+			When: "For an example with a double quote, such as a JSON document. A struct tag cannot keep the backslash of a quote, because the formatters drop it.",
+		},
+		{
+			Kind: KindOption,
 			Name: `Tag("name", "display", "doc")`,
 			Does: "Sets the tag of each operation, its name in the docs and its description.",
 			When: "When a group moves: copy its tag. A new group can leave it; the tag is then the group's name.",

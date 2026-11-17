@@ -411,6 +411,8 @@ type Sample struct {
 func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
 	g := endpoint.Define("node", "The nodes",
 		endpoint.Doc[Sample]("A sample."),
+		endpoint.Example[Sample]("name", `{"host":"web-01"}`),
+		endpoint.Example[Sample]("nosuchfield", "x"),
 		endpoint.Get[noInput, Sample]("get"),
 	)
 	doc, err := endpoint.OpenAPI(g, "x")
@@ -421,7 +423,7 @@ func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
 	s.Equal(int64(4), sample.Properties["count"].Value.Example)
 	s.InEpsilon(0.32, sample.Properties["load"].Value.Example, 0.0001)
 	s.Equal(true, sample.Properties["on"].Value.Example)
-	s.Equal("web-01", sample.Properties["name"].Value.Example)
+	s.Equal(`{"host":"web-01"}`, sample.Properties["name"].Value.Example)
 	s.Equal("many", sample.Properties["bad"].Value.Example)
 	s.Equal("x", sample.Properties["badf"].Value.Example)
 	s.Equal("maybe", sample.Properties["badb"].Value.Example)

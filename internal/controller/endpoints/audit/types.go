@@ -48,7 +48,7 @@ type AuditEntryResponse struct { //nolint:revive // the schema name is part of t
 
 // AuditEntry is the record of one request.
 type AuditEntry struct { //nolint:revive // the schema name is part of the API
-	ID             string    `json:"id"                        doc:"Unique identifier for the audit entry."                                                                        example:"550e8400-e29b-41d4-a716-446655440000"               validate:"uuid"`
+	ID             string    `json:"id"                        doc:"Unique identifier for the audit entry."                                                                        example:"550e8400-e29b-41d4-a716-446655440000" validate:"uuid"`
 	Timestamp      time.Time `json:"timestamp"                 doc:"When the request was processed."                                                                               example:"2026-02-21T10:30:00Z"`
 	User           string    `json:"user"                      doc:"Authenticated user (JWT subject)."                                                                             example:"ops@example.com"`
 	Roles          []string  `json:"roles"                     doc:"Roles from the JWT token."`
@@ -60,5 +60,5 @@ type AuditEntry struct { //nolint:revive // the schema name is part of the API
 	DurationMs     int64     `json:"duration_ms"               doc:"Request duration in milliseconds."                                                                             example:"42"`
 	TraceID        string    `json:"trace_id,omitempty"        doc:"OpenTelemetry trace ID for correlation."                                                                       example:"4bf92f3577b34da6a3ce929d0e0e4736"`
 	JobID          string    `json:"job_id,omitempty"          doc:"The job this request created, absent when it created none. Joins the entry to that job's own status timeline." example:"7c9e6679-7425-40de-944b-e07fc1f90ae7"`
-	RequestSummary string    `json:"request_summary,omitempty" doc:"What the request asked for, with sensitive values replaced. Recorded for methods that change something."       example:"{"command":"systemctl","args":["restart","nginx"]}"`
+	RequestSummary string    `json:"request_summary,omitempty" doc:"What the request asked for, with sensitive values replaced. Recorded for methods that change something."`
 }

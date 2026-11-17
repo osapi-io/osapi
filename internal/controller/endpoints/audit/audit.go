@@ -37,6 +37,10 @@ var Group = endpoint.Register(endpoint.Define(
 	"audit", "The audit log",
 	endpoint.Title("Audit Log API"),
 	endpoint.Tag("audit", "Audit", "Audit log endpoints for viewing API activity."),
+	endpoint.Example[AuditEntry](
+		"request_summary",
+		`{"command":"systemctl","args":["restart","nginx"]}`,
+	),
 	endpoint.Get[ListInput, ListAuditResponse]("list").
 		ID("GetAuditLogs").
 		Describe("List audit log entries").
