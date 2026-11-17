@@ -120,8 +120,11 @@ func (suite *DebianDoPublicTestSuite) TestDo() {
 
 				mocks.SetCommonExpectations(mock)
 				// Run ends only when the test ends, so Do times out first.
+				// The channel is read into a local: the goroutine outlives
+				// the subtest, and the next subtest sets suite.release.
+				release := suite.release
 				mock.EXPECT().Run().DoAndReturn(func() error {
-					<-suite.release
+					<-release
 
 					return errors.New("released")
 				})
