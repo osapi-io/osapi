@@ -136,6 +136,11 @@ export type getAuditLogByIDResponse200 = {
   status: 200
 }
 
+export type getAuditLogByIDResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
 export type getAuditLogByIDResponse401 = {
   data: ErrorResponse
   status: 401
@@ -159,7 +164,7 @@ export type getAuditLogByIDResponse500 = {
 export type getAuditLogByIDResponseSuccess = (getAuditLogByIDResponse200) & {
   headers: Headers;
 };
-export type getAuditLogByIDResponseError = (getAuditLogByIDResponse401 | getAuditLogByIDResponse403 | getAuditLogByIDResponse404 | getAuditLogByIDResponse500) & {
+export type getAuditLogByIDResponseError = (getAuditLogByIDResponse400 | getAuditLogByIDResponse401 | getAuditLogByIDResponse403 | getAuditLogByIDResponse404 | getAuditLogByIDResponse500) & {
   headers: Headers;
 };
 

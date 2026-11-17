@@ -804,6 +804,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuditEntryResponse'
+        '400':
+          description: The ID is not a UUID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required.
           content:

@@ -275,6 +275,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindTag,
+			Name: `default:"20"`,
+			Does: "Gives a field its default in the spec. The method still sees the zero value when the caller sends none, and applies the default itself.",
+			When: "For an optional query parameter, such as limit.",
+		},
+		{
+			Kind: KindTag,
 			Name: `pattern:"^...$"`,
 			Does: "Gives a string field a regular expression, in the spec, and the generated route answers 400 for a value that does not match.",
 			When: "For an ID of a fixed form, such as a trace ID of 32 hexadecimal characters.",
@@ -282,13 +288,13 @@ var Spec = guide.Spec{
 		{
 			Kind: KindTag,
 			Name: `validate:"..."`,
-			Does: "In an input, required makes the field required. oneof gives an enum, and min and max give the length of a string.",
+			Does: "In an input, required makes the field required. oneof gives an enum, min and max the length of a string or the bounds of a number, and uuid, email, hostname, ip, ipv4, ipv6, url and uri a format, as the behavior DSL maps them.",
 			When: "On each input field with a limit. On an output field, only for oneof.",
 		},
 		{
 			Kind: KindTag,
 			Name: "time.Time",
-			Does: "Is a string with the date-time format.",
+			Does: "Is a string with the date-time format. An int64 is an integer of format int64 and the other integers have none; a float64 is a number of format double and a float32 has none; as oapi-codegen maps them back.",
 			When: "For a timestamp. Tag an optional one ,omitzero: ,omitempty does not leave out a zero time.",
 		},
 		{
