@@ -19,7 +19,6 @@ export * from './node-file-operations-api-node-file-operations/node-file-operati
 export * from './node-management-api-node-operations/node-management-api-node-operations';
 export * from './node-management-api-node-status/node-management-api-node-status';
 export * from './ntp-management-api-ntp-operations/ntp-management-api-ntp-operations';
-export * from './osapi-a-crud-api-for-managing-linux-systems-info/osapi-a-crud-api-for-managing-linux-systems-info';
 export * from './package-management-api-package-operations/package-management-api-package-operations';
 export * from './power-management-api-power-operations/power-management-api-power-operations';
 export * from './process-management-api-process-operations/process-management-api-process-operations';
