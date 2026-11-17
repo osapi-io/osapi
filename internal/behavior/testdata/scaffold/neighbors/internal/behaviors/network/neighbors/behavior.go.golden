@@ -34,6 +34,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.CLI,
 	behavior.Config(defaults),
 	behavior.Platform("debian", newDebian),
+	behavior.Writes(defaultPath),
 	behavior.Read("get", Get).
 		Describe("Get the neighbors value").
 		Example("Before anything is set", GetInput{}, Entry{}).

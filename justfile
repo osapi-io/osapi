@@ -74,8 +74,26 @@ test: linux-tune
     just go-pkg-check
     just react-build
     just cli-docs-gen-check
+    just behavior-scaffold-check
     just go-test
     just behavior-cover-check
+
+# Fail when a behavior that osapi behavior new writes does not pass its tests
+#
+# The scaffold must keep up with the checks of behaviortest, as each behavior
+# must. The recipe writes a behavior in a copy of the checkout, generates it,
+# and runs its tests. The checkout itself does not change.
+behavior-scaffold-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    rsync -a --exclude .git --exclude .worktrees --exclude node_modules \
+        --exclude /dist --exclude /examples --exclude /docs/build ./ "$tmp/"
+    cd "$tmp"
+    go run . behavior new --name scaffoldcheck --description "A scaffold check" >/dev/null
+    go generate ./internal/behaviors/scaffoldcheck/mocks ./internal/behaviors/all
+    go test -count=1 ./internal/behaviors/scaffoldcheck/...
 
 # Fail when a behavior's own code is not fully covered
 #

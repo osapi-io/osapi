@@ -28,6 +28,7 @@ import (
 
 	"github.com/avfs/avfs"
 
+	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 )
 
@@ -61,7 +62,7 @@ func (d *debian) Get(
 
 // Set writes the value, and reports whether it changed.
 func (d *debian) Set(
-	_ context.Context,
+	ctx context.Context,
 	value string,
 ) (bool, error) {
 	if current, err := d.fs.ReadFile(d.path); err == nil && string(current) == value {
@@ -70,5 +71,5 @@ func (d *debian) Set(
 	// A directory that cannot be made fails the write below, which reports it.
 	_ = d.fs.MkdirAll(filepath.Dir(d.path), 0o755)
 
-	return true, d.fs.WriteFile(d.path, []byte(value), 0o644)
+	return true, atomicfile.Write(ctx, d.fs, d.path, []byte(value), 0o644)
 }
