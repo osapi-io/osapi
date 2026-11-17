@@ -382,6 +382,20 @@ func (response GetAuditLogByID200JSONResponse) VisitGetAuditLogByIDResponse(w ht
 	return err
 }
 
+type GetAuditLogByID400JSONResponse externalRef0.ErrorResponse
+
+func (response GetAuditLogByID400JSONResponse) VisitGetAuditLogByIDResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type GetAuditLogByID401JSONResponse externalRef0.ErrorResponse
 
 func (response GetAuditLogByID401JSONResponse) VisitGetAuditLogByIDResponse(w http.ResponseWriter) error {

@@ -400,12 +400,19 @@ type Sample struct {
 	Badf  float64 `json:"badf"  example:"x"`
 	Badb  bool    `json:"badb"  example:"maybe"`
 	ID    string  `json:"id"                     pattern:"^[0-9a-f]{32}$"`
+	Key   string  `json:"key"                                             validate:"uuid"`
+	Took  int64   `json:"took"`
+	Limit int     `json:"limit"                                           validate:"min=1,max=100" default:"20"`
+	Ratio float64 `json:"ratio"                                           validate:"min=0"`
+	Skip  string  `json:"skip"                                            validate:"nosuchrule"`
 	Small float32 `json:"small"`
 }
 
 func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
 	g := endpoint.Define("node", "The nodes",
 		endpoint.Doc[Sample]("A sample."),
+		endpoint.Example[Sample]("name", `{"host":"web-01"}`),
+		endpoint.Example[Sample]("nosuchfield", "x"),
 		endpoint.Get[noInput, Sample]("get"),
 	)
 	doc, err := endpoint.OpenAPI(g, "x")
@@ -416,13 +423,22 @@ func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
 	s.Equal(int64(4), sample.Properties["count"].Value.Example)
 	s.InEpsilon(0.32, sample.Properties["load"].Value.Example, 0.0001)
 	s.Equal(true, sample.Properties["on"].Value.Example)
-	s.Equal("web-01", sample.Properties["name"].Value.Example)
+	s.Equal(`{"host":"web-01"}`, sample.Properties["name"].Value.Example)
 	s.Equal("many", sample.Properties["bad"].Value.Example)
 	s.Equal("x", sample.Properties["badf"].Value.Example)
 	s.Equal("maybe", sample.Properties["badb"].Value.Example)
 	s.Equal("^[0-9a-f]{32}$", sample.Properties["id"].Value.Pattern)
 	s.Equal("double", sample.Properties["load"].Value.Format)
 	s.Empty(sample.Properties["small"].Value.Format)
+	s.Equal("uuid", sample.Properties["key"].Value.Format)
+	s.Equal("int64", sample.Properties["took"].Value.Format)
+	limit := sample.Properties["limit"].Value
+	s.Empty(limit.Format)
+	s.InDelta(1.0, *limit.Min, 0)
+	s.InDelta(100.0, *limit.Max, 0)
+	s.Equal(int64(20), limit.Default)
+	s.InDelta(0.0, *sample.Properties["ratio"].Value.Min, 0)
+	s.Empty(sample.Properties["skip"].Value.Format)
 }
 
 func (s *EndpointPublicTestSuite) TestParameterValidateTags() {

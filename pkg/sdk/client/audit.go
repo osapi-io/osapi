@@ -87,6 +87,7 @@ func (s *AuditService) Get(
 
 	if err := checkError(
 		resp.StatusCode(),
+		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,

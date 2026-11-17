@@ -25,8 +25,8 @@ Ask these tools. Do not use your memory. If a tool and this skill do not agree,
 the tool is correct.
 
 The DSL makes the spec, the routes, the decoders and the CLI commands of a
-group. A group's handlers are typed functions. The agent group is served, and
-its commands are made, from its definition. The other groups still have a
+group. A group's handlers are typed functions. The agent and telemetry groups are served, and
+their commands are made, from their definitions. The other groups still have a
 hand-written spec, handler and commands, until they move. Some parts are not
 built yet.
 `controller endpoint spec` lists them under "Not supported yet". If the work
@@ -149,6 +149,13 @@ The CLI:
    not a method of the group, such as `agent key`, stays.
 6. Run `mise exec -- just cli-docs-generate`, and run each command against a
    controller.
+
+When the hand-written spec leaves out what its route already does, fix the
+hand-written spec in the spec pull request, so the two agree with no accepted
+line. Audit's get answered 400 for an ID that is not a UUID, and its spec did
+not list the 400. Run `mise exec -- just generate`, map the new status in the
+SDK service, and run `TestJoinedSpec` with `-update`. The diff of the contract
+is that status only.
 
 When a difference is a bug in the hand-written spec or its handler, do not copy
 the bug into the definition. Tell the user, and file an issue. If the user

@@ -66,7 +66,7 @@ func OpenAPI(
 		},
 	}
 
-	b := &builder{schemas: doc.Components.Schemas, docs: g.Docs}
+	b := &builder{schemas: doc.Components.Schemas, docs: g.Docs, examples: g.Examples}
 	for _, m := range g.Methods {
 		op, err := b.operation(g, m)
 		if err != nil {
@@ -86,8 +86,9 @@ func OpenAPI(
 
 // builder adds each named type it meets to the components, once.
 type builder struct {
-	schemas openapi3.Schemas
-	docs    map[reflect.Type]string
+	schemas  openapi3.Schemas
+	docs     map[reflect.Type]string
+	examples map[reflect.Type]map[string]string
 }
 
 func (b *builder) operation(
@@ -231,6 +232,11 @@ func (b *builder) ref(
 			return nil, fmt.Errorf("%s: %w", t.Name(), err)
 		}
 		s.Description = b.docs[t]
+		for name, ex := range b.examples[t] {
+			if p, ok := s.Properties[name]; ok && p.Value != nil {
+				p.Value.Example = example(p.Value, ex)
+			}
+		}
 		b.schemas[t.Name()] = openapi3.NewSchemaRef("", s)
 	}
 
@@ -249,7 +255,11 @@ func (b *builder) inline(
 		return openapi3.NewStringSchema(), nil
 	case reflect.Bool:
 		return openapi3.NewBoolSchema(), nil
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+	case reflect.Int64:
+		// An int64 is an int64, and the other integers have no format, as
+		// oapi-codegen maps them back.
+		return openapi3.NewInt64Schema(), nil
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return openapi3.NewIntegerSchema(), nil
 	case reflect.Float32:
@@ -339,6 +349,9 @@ func constrained(
 	if p := f.Tag.Get("pattern"); p != "" {
 		s.Value.Pattern = p
 	}
+	if d, ok := f.Tag.Lookup("default"); ok {
+		s.Value.Default = example(s.Value, d)
+	}
 	for _, rule := range strings.Split(f.Tag.Get("validate"), ",") {
 		name, param, _ := strings.Cut(rule, "=")
 		switch name {
@@ -348,13 +361,13 @@ func constrained(
 			}
 		case "min", "max":
 			n, err := strconv.ParseUint(param, 10, 64)
-			if err != nil || !s.Value.Type.Is(openapi3.TypeString) {
+			if err != nil {
 				continue
 			}
-			if name == "min" {
-				s.Value.MinLength = n
-			} else {
-				s.Value.MaxLength = &n
+			bound(s.Value, name == "min", n)
+		default:
+			if format, ok := formats[name]; ok {
+				s.Value.Format = format
 			}
 		}
 	}
@@ -440,4 +453,39 @@ func example(
 	}
 
 	return text
+}
+
+// formats are the validate rules that are a format, as the behavior DSL
+// maps them.
+var formats = map[string]string{
+	"uuid":     "uuid",
+	"email":    "email",
+	"hostname": "hostname",
+	"ip":       "ip",
+	"ipv4":     "ipv4",
+	"ipv6":     "ipv6",
+	"url":      "uri",
+	"uri":      "uri",
+}
+
+// bound sets a min or a max as the constraint that fits the type: the
+// length of a string, the value of an integer or a number.
+func bound(
+	s *openapi3.Schema,
+	isMin bool,
+	n uint64,
+) {
+	switch {
+	case s.Type.Is(openapi3.TypeString) && isMin:
+		s.MinLength = n
+	case s.Type.Is(openapi3.TypeString):
+		s.MaxLength = &n
+	case s.Type.Is(openapi3.TypeInteger) || s.Type.Is(openapi3.TypeNumber):
+		v := float64(n)
+		if isMin {
+			s.Min = &v
+		} else {
+			s.Max = &v
+		}
+	}
 }

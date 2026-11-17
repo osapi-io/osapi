@@ -168,6 +168,21 @@ func (suite *AuditPublicTestSuite) TestGet() {
 			},
 		},
 		{
+			name: "when the server answers 400 returns ValidationError",
+			id:   "550e8400-e29b-41d4-a716-446655440000",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(`{"error":"the ID is not a UUID"}`))
+			}),
+			validateFunc: func(resp *client.Response[client.AuditEntry], err error) {
+				suite.Nil(resp)
+				var target *client.ValidationError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusBadRequest, target.StatusCode)
+			},
+		},
+		{
 			name: "when invalid UUID returns error",
 			id:   "not-a-uuid",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
