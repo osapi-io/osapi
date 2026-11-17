@@ -1,7 +1,21 @@
 openapi: 3.0.0
 info:
-  title: Agent Management API
+  title: osapi
+  description: |
+    Typed, repeatable operations for Linux hosts. Give your agent a fleet, not
+    a shell.
+
+    osapi lets an AI agent manage Linux hosts through typed operations, not
+    through a login. Each operation is a behavior: one thing on a host,
+    defined one time, with a fixed input and output. osapi checks each
+    request before it queues it. A second run changes nothing. Each change is
+    recorded.
   version: 1.0.0
+  contact:
+    url: https://github.com/osapi-io/osapi
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
 tags:
   - description: Operations related to agent discovery and details.
     name: Agent_Management_API_agent_operations
@@ -6253,6 +6267,21 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: A description of the error that occurred.
+          example: Failed to retrieve status.
+        details:
+          type: string
+          description: Additional details about the error.
+          example: Failed due to network timeout.
+        code:
+          type: integer
+          description: The error code.
+          example: 500
     AgentInfo:
       properties:
         architecture:
@@ -6377,21 +6406,6 @@ components:
         - hostname
         - status
       type: object
-    ErrorResponse:
-      type: object
-      properties:
-        error:
-          type: string
-          description: A description of the error that occurred.
-          example: Failed to retrieve status.
-        details:
-          type: string
-          description: Additional details about the error.
-          example: Failed due to network timeout.
-        code:
-          type: integer
-          description: The error code.
-          example: 500
     ListAgentsResponse:
       properties:
         agents:

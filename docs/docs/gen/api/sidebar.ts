@@ -4,7 +4,7 @@ const sidebar: SidebarsConfig = {
   apisidebar: [
     {
       type: "doc",
-      id: "gen/api/agent-management-api",
+      id: "gen/api/osapi",
     },
     {
       type: "category",
