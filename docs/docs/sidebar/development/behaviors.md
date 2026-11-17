@@ -350,6 +350,7 @@ osapi behavior validate             # the definition's rules, each with its fix
 osapi behavior get --name sysctl  # surfaces, routes, schemas, as registered
 just behavior-gen-check             # fails when generated files are stale
 just behavior-cover-check           # fails when a behavior is below 100% coverage
+just behavior-scaffold-check        # fails when a new behavior fails its tests
 ```
 
 `osapi behavior validate` checks each definition against its rules. It exits 1
@@ -362,7 +363,10 @@ what the platform cannot do yet.
 
 `just test` runs `behavior-gen-check`. Thus a behavior that changed without
 `go generate` fails CI. It also runs `behavior-cover-check`. Thus a behavior
-whose examples and tests miss a line fails CI too.
+whose examples and tests miss a line fails CI too. It also runs
+`behavior-scaffold-check`, which makes a behavior with `osapi behavior new` in a
+copy of the checkout and runs its tests. Thus the behavior that you start from
+passes each check.
 
 A behavior that replaces a hand-written domain also gets a row in the parity
 test until the cutover. `TestOpenAPIParity` is in

@@ -33,6 +33,7 @@ const (
 	behaviorPath     = module + "/internal/behavior"
 	behaviortestPath = module + "/internal/behavior/behaviortest"
 	hostPath         = module + "/internal/behavior/host"
+	atomicfilePath   = module + "/internal/atomicfile"
 	avfsPath         = "github.com/avfs/avfs"
 	memfsPath        = "github.com/avfs/avfs/vfs/memfs"
 	gomockPath       = "go.uber.org/mock/gomock"
@@ -247,6 +248,7 @@ func (sc scaffold) behaviorFile() *jen.File {
 		b("CLI"),
 		b("Config").Call(jen.Id("defaults")),
 		b("Platform").Call(jen.Lit("debian"), jen.Id("newDebian")),
+		b("Writes").Call(jen.Id("defaultPath")),
 		b("Read").Call(jen.Lit("get"), jen.Id("Get")).
 			Add(next("Describe", jen.Lit("Get the "+sc.name+" value"))).
 			Add(next("Example", jen.Lit("Before anything is set"),
@@ -387,9 +389,11 @@ func (sc scaffold) debianFile() *jen.File {
 	f := sc.newFile()
 	f.ImportName(avfsPath, "avfs")
 	f.ImportName(hostPath, "host")
+	f.ImportName(atomicfilePath, "atomicfile")
 	d := func() *jen.Statement { return jen.Id("d") }
 	recv := jen.Params(jen.Id("d").Op("*").Id("debian"))
 	ctx := jen.Id("_").Qual("context", "Context")
+	setCtx := jen.Id("ctx").Qual("context", "Context")
 
 	comments(f,
 		"debian keeps the value in a file. debian_public_test.go tests it on an",
@@ -427,7 +431,7 @@ func (sc scaffold) debianFile() *jen.File {
 	)
 	f.Line()
 	comments(f, "Set writes the value, and reports whether it changed.")
-	f.Func().Add(recv.Clone()).Id("Set").Add(params(ctx.Clone(), jen.Id("value").String())).
+	f.Func().Add(recv.Clone()).Id("Set").Add(params(setCtx, jen.Id("value").String())).
 		Params(jen.Bool(), jen.Error()).Block(
 		jen.If(
 			jen.List(jen.Id("current"), jen.Err()).Op(":=").Add(d()).Dot("fs").Dot("ReadFile").
@@ -438,7 +442,7 @@ func (sc scaffold) debianFile() *jen.File {
 		jen.Id("_").Op("=").Add(d()).Dot("fs").Dot("MkdirAll").
 			Call(jen.Qual("path/filepath", "Dir").Call(d().Dot("path")), octal(0o755)),
 		jen.Line(),
-		jen.Return(jen.True(), d().Dot("fs").Dot("WriteFile").Call(
+		jen.Return(jen.True(), jen.Qual(atomicfilePath, "Write").Call(jen.Id("ctx"), d().Dot("fs"),
 			d().Dot("path"), jen.Index().Byte().Call(jen.Id("value")), octal(0o644))),
 	)
 
