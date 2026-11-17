@@ -51,7 +51,7 @@ func init() {
 	// group's definition; this is how each answer prints.
 	command.Render(audit.Group, "list", renderAuditList)
 	command.Render(audit.Group, "get", renderAuditEntry)
-	command.Render(audit.Group, "export", renderAuditExport)
+	command.Acts(audit.Group, "export", exportAudit)
 }
 
 // renderAuditList prints a page of the audit log as a table.
@@ -126,9 +126,9 @@ func renderAuditEntry(
 	}
 }
 
-// renderAuditExport writes each entry to the --output file as a JSON line,
-// and prints how many it wrote.
-func renderAuditExport(
+// exportAudit writes each entry to the --output file as a JSON line, with
+// or without --json, and prints how many it wrote.
+func exportAudit(
 	cmd *cobra.Command,
 	_ audit.ExportInput,
 	out audit.ListAuditResponse,

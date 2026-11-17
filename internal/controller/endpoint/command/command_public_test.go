@@ -189,6 +189,10 @@ func (s *CommandPublicTestSuite) TestRun() {
 	command.Render(group, "get", func(_ *cobra.Command, in getInput, out thing) {
 		rendered = in.Name + ":" + out.Name
 	})
+	acted := ""
+	command.Acts(group, "retry", func(_ *cobra.Command, in retryInput, out thing) {
+		acted = in.Body.Reason + ":" + out.Name
+	})
 
 	tests := []struct {
 		name         string
@@ -218,6 +222,18 @@ func (s *CommandPublicTestSuite) TestRun() {
 			validateFunc: func(_ *caller, out string, err error) {
 				s.Require().NoError(err)
 				s.Contains(out, `"web-01"`)
+			},
+		},
+		{
+			name:   "when the method acts on its answer, it runs with --json too",
+			method: "retry",
+			in:     retryInput{Body: Retry{Reason: "flaky"}},
+			json:   true,
+			caller: &caller{answer: []byte(`{"name":"web-03"}`)},
+			validateFunc: func(_ *caller, out string, err error) {
+				s.Require().NoError(err)
+				s.Equal("flaky:web-03", acted)
+				s.Empty(out)
 			},
 		},
 		{
@@ -287,6 +303,8 @@ func (s *CommandPublicTestSuite) TestRun() {
 				case getInput:
 					command.Run(cmd, group, tc.method, in)
 				case setInput:
+					command.Run(cmd, group, tc.method, in)
+				case retryInput:
 					command.Run(cmd, group, tc.method, in)
 				case badBody:
 					command.Run(cmd, group, tc.method, in)
