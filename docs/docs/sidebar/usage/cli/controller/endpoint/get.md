@@ -7,15 +7,15 @@ Read it beside the hand-written spec of the group to compare the prose.
 `TestEndpointParity` compares the rest.
 
 ```bash
-osapi endpoint get [flags]
+osapi controller endpoint get [flags]
 ```
 
 ## Examples
 
 ```bash
-osapi endpoint get --name agent
-osapi endpoint get --name agent --json
-osapi endpoint get --name agent --openapi
+osapi controller endpoint get --name agent
+osapi controller endpoint get --name agent --json
+osapi controller endpoint get --name agent --openapi
 ```
 
 ## Flags
@@ -32,5 +32,7 @@ osapi endpoint get --name agent --openapi
 | `-d, --debug`      | Enable or disable debug mode |                         |
 | `-j, --json`       | Enable JSON output           |                         |
 | `-f, --osapi-file` | Path to config file          | `/etc/osapi/osapi.yaml` |
+| `-p, --port`       | Port the server will bind to | `8080`                  |
 
-[Output](../output.md) tells how the result is printed, and what `--json` gives.
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

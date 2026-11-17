@@ -23,7 +23,7 @@ This skill runs these components. To change a host through them, use the osapi s
 1. **Ask the binary, not memory.** `osapi help <command> --json` gives every
    command's flags. `osapi config list --json` gives every setting with its
    value, source, type, default, environment variable and description.
-   `osapi endpoint get --name <group> --json` gives the routes and permissions
+   `osapi controller endpoint get --name <group> --json` gives the routes and permissions
    of the controller's own operations, such as the agent group. They all change
    between releases.
 2. **Check the config before you start osapi.** Run `osapi config validate` after any

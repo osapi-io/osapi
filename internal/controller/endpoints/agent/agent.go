@@ -28,7 +28,7 @@ package agent
 import (
 	"errors"
 
-	"github.com/osapi-io/osapi/internal/endpoint"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
 var (

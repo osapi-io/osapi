@@ -1,19 +1,16 @@
-# Validate
+# List
 
-Check every endpoint group against the rules of a definition.
-
-It exits 1 when a rule fails, and names the group, the method, the rule and the
-fix.
+List the endpoint groups this binary has.
 
 ```bash
-osapi endpoint validate
+osapi controller endpoint list
 ```
 
 ## Examples
 
 ```bash
-osapi endpoint validate
-osapi endpoint validate --json
+osapi controller endpoint list
+osapi controller endpoint list --json
 ```
 
 ## Global flags
@@ -23,5 +20,7 @@ osapi endpoint validate --json
 | `-d, --debug`      | Enable or disable debug mode |                         |
 | `-j, --json`       | Enable JSON output           |                         |
 | `-f, --osapi-file` | Path to config file          | `/etc/osapi/osapi.yaml` |
+| `-p, --port`       | Port the server will bind to | `8080`                  |
 
-[Output](../output.md) tells how the result is printed, and what `--json` gives.
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

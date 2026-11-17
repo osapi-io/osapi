@@ -17,27 +17,25 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-
-	// Register every endpoint group, so the endpoint commands see them.
-	_ "github.com/osapi-io/osapi/internal/endpoints/all"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/internal/guide"
 )
 
-var endpointCmd = &cobra.Command{
-	Use:   "endpoint",
-	Short: "List, describe and validate the controller's own endpoints",
-	Long: "An endpoint is one operation of the controller itself, such as\n" +
-		"`GET /api/agent`. It runs on the controller, not on a host. Work on a host\n" +
-		"is a behavior: see `osapi behavior`. These commands read the definitions in\n" +
-		"the binary. Thus they need no config file and no controller.\n\n" +
-		"The groups are defined, and their specs are compared with the hand-written\n" +
-		"specs. The controller still serves the hand-written specs.",
-}
+var endpointSpecCmd = newSpecCommand(
+	func() guide.Spec { return endpoint.Spec },
+	"Print the endpoint DSL: each option, method, refinement, error and field tag",
+	"Print each part of the endpoint DSL, what it makes osapi do and when to use\n"+
+		"it, and what it cannot do yet. The list comes from this binary. Thus it\n"+
+		"agrees with the build that you run. Read it before you write a group, then\n"+
+		"check the result with `osapi controller endpoint validate`.",
+	`  osapi controller endpoint spec
+  osapi controller endpoint spec --json`,
+)
 
 func init() {
-	rootCmd.AddCommand(endpointCmd)
-	skipConfigCmds["endpoint"] = true
+	endpointCmd.AddCommand(endpointSpecCmd)
 }

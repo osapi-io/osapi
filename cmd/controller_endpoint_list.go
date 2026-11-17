@@ -27,10 +27,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/internal/endpoint"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
-// endpointSummary is one group in `endpoint list --json`.
+// endpointSummary is one group in `controller endpoint list --json`.
 type endpointSummary struct {
 	Name    string   `json:"name"`
 	Doc     string   `json:"doc"`
@@ -40,8 +40,8 @@ type endpointSummary struct {
 var endpointListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List the endpoint groups this binary has",
-	Example: `  osapi endpoint list
-  osapi endpoint list --json`,
+	Example: `  osapi controller endpoint list
+  osapi controller endpoint list --json`,
 	Args: cobra.NoArgs,
 	Run: func(_ *cobra.Command, _ []string) {
 		all := endpoint.All()

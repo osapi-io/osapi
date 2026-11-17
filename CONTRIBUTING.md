@@ -627,7 +627,8 @@ The diff of the file shows the change to the API. A change that you did not
 make, such as a schema that a generator changed, fails the test.
 
 The operations of the controller itself, such as the agents and the jobs, move
-to definitions in `internal/endpoints/`. `osapi endpoint` lists them.
+to definitions in `internal/controller/endpoints/`. `osapi controller endpoint`
+lists them, and `osapi controller endpoint spec` lists each part of the DSL.
 `TestEndpointParity` holds the spec of each group that moves to its hand-written
 spec, until the group moves.
 

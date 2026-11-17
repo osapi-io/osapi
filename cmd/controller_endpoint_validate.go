@@ -27,10 +27,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/internal/endpoint"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
-// endpointValidateResult is what `endpoint validate --json` prints.
+// endpointValidateResult is what `controller endpoint validate --json` prints.
 type endpointValidateResult struct {
 	Valid    bool               `json:"valid"`
 	Problems []endpoint.Problem `json:"problems"`
@@ -39,10 +39,13 @@ type endpointValidateResult struct {
 var endpointValidateCmd = &cobra.Command{
 	Use:   "validate",
 	Short: "Check every endpoint group against the rules of a definition",
-	Long: "It exits 1 when a rule fails, and names the group, the method, the rule\n" +
-		"and the fix.",
-	Example: `  osapi endpoint validate
-  osapi endpoint validate --json`,
+	Long: "It exits 1 when a rule fails, and names the group, the method, the rule,\n" +
+		"what is wrong and the fix. Each problem in `--json` has `group`, `method`\n" +
+		"(when the problem is in one), `rule`, `message` and `fix`.\n" +
+		"`osapi controller endpoint spec` describes each part of a group.\n\n" +
+		"The rules:\n\n" + endpoint.Checks.Help(),
+	Example: `  osapi controller endpoint validate
+  osapi controller endpoint validate --json`,
 	Args: cobra.NoArgs,
 	Run: func(_ *cobra.Command, _ []string) {
 		result := endpointValidateResult{Problems: []endpoint.Problem{}}
@@ -64,15 +67,18 @@ var endpointValidateCmd = &cobra.Command{
 			fmt.Println(cli.Success(os.Stdout, fmt.Sprintf("%d endpoint %s valid", n, noun)))
 		default:
 			rows := make([][]string, 0, len(result.Problems))
+			rules := make([]string, 0, len(result.Problems))
 			for _, p := range result.Problems {
-				rows = append(rows, []string{p.Group, p.Method, p.Rule, p.Fix})
+				rows = append(rows, []string{p.Group, p.Method, p.Rule, p.Message})
+				rules = append(rules, p.Rule)
 			}
 			cli.PrintCompactTable([]cli.Section{{
 				Title:     "Problems",
-				Headers:   []string{"GROUP", "METHOD", "RULE", "FIX"},
+				Headers:   []string{"GROUP", "METHOD", "RULE", "MESSAGE"},
 				Rows:      rows,
 				Reference: true,
 			}})
+			printFixes(endpoint.Checks, rules)
 		}
 
 		if !result.Valid {

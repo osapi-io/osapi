@@ -25,8 +25,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/osapi/internal/endpoint"
-	_ "github.com/osapi-io/osapi/internal/endpoints/all"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
 )
 
 type AllPublicTestSuite struct {
