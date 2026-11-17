@@ -24,7 +24,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"testing/fstest"
 
 	"github.com/stretchr/testify/suite"
 
@@ -45,7 +44,7 @@ type ScaffoldPublicTestSuite struct {
 }
 
 func (s *ScaffoldPublicTestSuite) TearDownSubTest() {
-	behavior.ResetScaffoldFiles()
+	behavior.ResetScaffold()
 }
 
 // checkout makes a minimal osapi checkout: its go.mod and internal/behaviors/all.
@@ -63,12 +62,6 @@ func (s *ScaffoldPublicTestSuite) checkout(
 }
 
 // template is a scaffold of one template, for the cases a template is wrong.
-func template(
-	text string,
-) fstest.MapFS {
-	return fstest.MapFS{"resources/scaffold/x.go.tmpl": {Data: []byte(text)}}
-}
-
 func (s *ScaffoldPublicTestSuite) TestScaffold() {
 	tests := []struct {
 		name         string
@@ -262,31 +255,9 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 			wantErr: "permission denied",
 		},
 		{
-			name: "when a template does not parse",
+			name: "when a generated file is not Go",
 			setup: func() string {
-				behavior.SetScaffoldFiles(template("{{.Name"))
-
-				return s.checkout(allGo)
-			},
-			bname:   "motd",
-			doc:     "x",
-			wantErr: "unclosed action",
-		},
-		{
-			name: "when a template names a missing field",
-			setup: func() string {
-				behavior.SetScaffoldFiles(template("{{.Missing}}"))
-
-				return s.checkout(allGo)
-			},
-			bname:   "motd",
-			doc:     "x",
-			wantErr: "can't evaluate field Missing",
-		},
-		{
-			name: "when a template is not Go",
-			setup: func() string {
-				behavior.SetScaffoldFiles(template("package {{.Name}}\n\nfunc {"))
+				behavior.BreakScaffold()
 
 				return s.checkout(allGo)
 			},
