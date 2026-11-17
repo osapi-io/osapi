@@ -51,6 +51,13 @@ func Lines(
 		}
 	}
 	for name, raw := range obj(obj(doc["components"])["schemas"]) {
+		// A schema that is only a $ref to a schema of its own name, in
+		// another file, declares nothing: a spec puts it there so its
+		// responses can say #/components/schemas/<name>, and the join
+		// resolves it.
+		if refName(str(obj(raw)["$ref"])) == name {
+			continue
+		}
 		out = append(out, schema(name, obj(raw))...)
 	}
 	sort.Strings(out)

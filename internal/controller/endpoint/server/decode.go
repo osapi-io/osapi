@@ -21,6 +21,11 @@
 package server
 
 import (
+	"fmt"
+	"reflect"
+	"regexp"
+	"strings"
+
 	"github.com/labstack/echo/v5"
 
 	behaviorserver "github.com/osapi-io/osapi/internal/behavior/server"
@@ -54,9 +59,32 @@ func Body(
 	return behaviorserver.Body(c, in)
 }
 
-// Valid checks in's validate tags.
+// Valid checks in's validate tags, and each string field tagged
+// pattern:"..." against its regular expression.
 func Valid(
 	in any,
 ) (string, bool) {
-	return validation.Struct(in)
+	if msg, ok := validation.Struct(in); !ok {
+		return msg, false
+	}
+	// A generated decoder calls Valid only for an input with fields, a
+	// struct, as validation.Struct needs.
+	v := reflect.ValueOf(in)
+	for i := range v.NumField() {
+		f := v.Type().Field(i)
+		p := f.Tag.Get("pattern")
+		if p == "" || v.Field(i).Kind() != reflect.String {
+			continue
+		}
+		if !regexp.MustCompile(p).MatchString(v.Field(i).String()) {
+			name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
+			if name == "" {
+				name = f.Name
+			}
+
+			return fmt.Sprintf("%s does not match %s", name, p), false
+		}
+	}
+
+	return "", true
 }

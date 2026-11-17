@@ -99,4 +99,19 @@ func (s *ServerPublicTestSuite) TestDecode() {
 	msg, ok := server.Valid(decodeInput{})
 	s.False(ok)
 	s.NotEmpty(msg)
+
+	type traceInput struct {
+		ID    string `json:"id" pattern:"^[0-9a-f]{4}$"`
+		Other string
+		Count int    `          pattern:"x"`
+		Named string `          pattern:"^a$"`
+	}
+	msg, ok = server.Valid(traceInput{ID: "beef", Named: "a"})
+	s.True(ok, msg)
+	msg, ok = server.Valid(traceInput{ID: "BEEF", Named: "a"})
+	s.False(ok)
+	s.Equal("id does not match ^[0-9a-f]{4}$", msg)
+	msg, ok = server.Valid(traceInput{ID: "beef", Named: "b"})
+	s.False(ok)
+	s.Equal("Named does not match ^a$", msg)
 }
