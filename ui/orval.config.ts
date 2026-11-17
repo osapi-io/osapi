@@ -3,13 +3,17 @@ import { defineConfig } from 'orval'
 export default defineConfig({
   osapi: {
     input: {
-      target: './src/sdk/gen/api.yaml',
+      // The joined spec, read where just generate writes it.
+      target: '../internal/controller/api/gen/api.yaml',
     },
     output: {
       target: './src/sdk/gen/client.ts',
       schemas: './src/sdk/gen/schemas',
       client: 'fetch',
       mode: 'tags-split',
+      // Empty the output first, so the client of a tag or an operation the
+      // spec no longer has does not stay behind.
+      clean: true,
       baseUrl: false,
       override: {
         header: ({ title, version } = {}) => [

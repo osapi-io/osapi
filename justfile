@@ -235,7 +235,6 @@ generate:
     just go-generate
     just cli-docs-generate
     just docs-generate
-    cp internal/controller/api/gen/api.yaml ui/src/sdk/gen/api.yaml
     just react-generate
 
 # Join the hand-written specs and each served behavior's gen/api.yaml into out
