@@ -260,6 +260,24 @@ func (suite *AgentPublicTestSuite) TestDrain() {
 			},
 		},
 		{
+			name:     "when the controller fails returns ServerError",
+			hostname: "test-host",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"nats: timeout"}`))
+			},
+			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.ServerError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusInternalServerError, target.StatusCode)
+				suite.Equal("nats: timeout", target.Message)
+			},
+		},
+		{
 			name:     "when server returns 404 returns NotFoundError",
 			hostname: "test-host",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
@@ -364,6 +382,24 @@ func (suite *AgentPublicTestSuite) TestUndrain() {
 				suite.True(errors.As(err, &target))
 				suite.Equal(http.StatusConflict, target.StatusCode)
 				suite.Equal("agent not in draining state", target.Message)
+			},
+		},
+		{
+			name:     "when the controller fails returns ServerError",
+			hostname: "test-host",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"nats: timeout"}`))
+			},
+			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.ServerError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusInternalServerError, target.StatusCode)
+				suite.Equal("nats: timeout", target.Message)
 			},
 		},
 		{

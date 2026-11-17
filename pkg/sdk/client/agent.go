@@ -95,7 +95,14 @@ func (s *AgentService) Drain(
 		return nil, fmt.Errorf("drain agent %s: %w", hostname, err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON409); err != nil {
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
+		resp.JSON500,
+	); err != nil {
 		return nil, err
 	}
 
@@ -123,7 +130,14 @@ func (s *AgentService) Undrain(
 		return nil, fmt.Errorf("undrain agent %s: %w", hostname, err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON409); err != nil {
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
+		resp.JSON500,
+	); err != nil {
 		return nil, err
 	}
 
