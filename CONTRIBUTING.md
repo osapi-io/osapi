@@ -599,6 +599,25 @@ existing domain. Search for it across the codebase with `find` and `grep`. Your
 new domain must be in all the same places.** If something exists for `sysctl`
 but not for your domain, it is missing.
 
+### The contract of the API
+
+`internal/apicontract/testdata/joined.golden` is the contract of the joined
+spec: each tag, operation, parameter, body, response and schema, one line each.
+A test fails when the joined spec does not agree with it. When you change the
+API on purpose, write the file again in the same pull request:
+
+```bash
+go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -update
+```
+
+The diff of the file shows the change to the API. A change that you did not
+make, such as a schema that a generator changed, fails the test.
+
+The operations of the controller itself, such as the agents and the jobs, move
+to definitions in `internal/endpoints/`. `osapi endpoint` lists them.
+`TestEndpointParity` holds the spec of each group that moves to its hand-written
+spec, until the group moves.
+
 ### Rules a domain has to follow
 
 These rules apply to all domains. This page states each rule because you need it
