@@ -22,7 +22,9 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"os"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
@@ -32,6 +34,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/telemetry/tracing"
 )
 
@@ -104,6 +107,18 @@ func init() {
 		StringP("url", "", "http://0.0.0.0:8080", "URL the client will connect to")
 
 	_ = viper.BindPFlag("controller.client.url", clientCmd.PersistentFlags().Lookup("url"))
+
+	// The generated commands of the endpoint groups go under client. A group
+	// that also has hand-written commands, such as agent with key and
+	// status, is named, so its generated commands join that command.
+	if err := command.Attach(clientCmd, command.Deps{
+		Caller: func() command.Caller { return sdkClient },
+		JSON:   func() bool { return jsonOutput },
+		Error:  func(err error) { cli.HandleError(err, logger) },
+	}, clientAgentCmd); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
 
 // exports reports whether the tracing settings send spans to an exporter.

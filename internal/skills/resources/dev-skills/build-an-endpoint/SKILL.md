@@ -76,7 +76,7 @@ Ask the code and the binary before you read prose:
 3. When `Deps` gets its first field, give it in
    `internal/controller/handlers.go`, as `agentDeps` does. While it is empty,
    the controller needs no wiring.
-4. Add `cmd/client_<group>_render.go` with a `command.Render` for each method
+4. In `cmd/client_<group>.go`, the file of the group's command, add a `command.Render` for each method
    a person reads at a shell. A method without one prints its answer as JSON.
 5. A new operation changes the API: run `TestJoinedSpec` with `-update`, and
    keep the diff.
@@ -134,7 +134,7 @@ The CLI:
    `.Result` with the `reference.Notes` and `reference.Result` annotations of
    the hand-written command, so its page keeps those sections. Each input field
    is a flag, named for its json name with `_` as `-`.
-2. Write `cmd/client_<group>_render.go`: a `command.Render` for each method,
+2. In `cmd/client_<group>.go`, the file of the group's command, add a `command.Render` for each method,
    with the output code of the hand-written command.
 3. Run `go generate ./internal/controller/endpoints/all`. It writes
    `gen/cli.go`.

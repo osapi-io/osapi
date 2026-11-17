@@ -88,17 +88,26 @@ func Register(
 	registered = append(registered, entry{group: g, cmds: cmds})
 }
 
-// Attach puts each registered group's commands under parent's command of
-// the group's name, which it makes when parent has none, and keeps d for
-// Run. A generated command with the name of one that is there already is a
-// command written twice, so it is an error.
+// Attach puts each registered group's commands under the group's command:
+// one of groups, the hand-written group commands such as osapi client
+// agent, by name; else parent's child of that name; else a new one under
+// parent. Naming the hand-written ones keeps Attach free of the order in
+// which init functions run. It keeps d for Run. A generated command with
+// the name of one that is there already is a command written twice, so it
+// is an error.
 func Attach(
 	parent *cobra.Command,
 	d Deps,
+	groups ...*cobra.Command,
 ) error {
 	deps = d
 	for _, e := range registered {
 		group := child(parent, e.group.Name)
+		for _, g := range groups {
+			if g.Name() == e.group.Name {
+				group = g
+			}
+		}
 		if group == nil {
 			group = &cobra.Command{Use: e.group.Name, Short: e.group.Doc}
 			parent.AddCommand(group)

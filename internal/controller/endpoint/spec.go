@@ -307,7 +307,7 @@ var Spec = guide.Spec{
 			Kind: KindCheck,
 			Name: "command.Render(Group, \"method\", fn)",
 			Does: "Sets how a method's answer prints without --json: fn gets the input the command sent and the output the API answered. A method without a renderer prints its answer as JSON. The generated command, its flags and its help come from the definition.",
-			When: "In cmd/client_<group>_render.go, for each method a person reads at a shell, such as a table for a list or a detail view for a get.",
+			When: "In cmd/client_<group>.go, the file of the group's command, for each method a person reads at a shell, such as a table for a list or a detail view for a get.",
 		},
 		{
 			Kind: KindCheck,

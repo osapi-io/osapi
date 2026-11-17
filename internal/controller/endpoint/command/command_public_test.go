@@ -324,6 +324,14 @@ func (s *CommandPublicTestSuite) TestAttach() {
 	err := command.Attach(parent, command.Deps{})
 	s.Require().Error(err)
 	s.True(strings.Contains(err.Error(), "both a hand-written command"))
+
+	// A hand-written group command that is named, but not under parent yet,
+	// gets the commands, and parent gets no second one.
+	parent = &cobra.Command{Use: "client"}
+	named := &cobra.Command{Use: "zzattach"}
+	s.Require().NoError(command.Attach(parent, command.Deps{}, named))
+	s.Empty(parent.Commands())
+	s.Len(named.Commands(), 1)
 }
 
 func TestCommandPublicTestSuite(
