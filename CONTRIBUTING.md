@@ -337,6 +337,12 @@ The generators that use jen:
 - `osapi behavior new` writes the first files of a new behavior, from
   `internal/behavior/scaffold_files.go`.
 
+A generator built with jen is hard to read as the code that it writes. Thus the
+output of `osapi behavior new` has golden copies in
+`internal/behavior/testdata/scaffold/`, and a test compares them. When you
+change the scaffold, run the test with `-update`. The diff of the golden files
+shows the change to the files that a person gets.
+
 jen puts all the imports in one group. Give its output to goimports, with
 `LocalPrefix` set to the module, as these generators do. Then the imports have
 the three groups of the repository.

@@ -1,0 +1,8 @@
+// Package all registers every behavior.
+package all
+
+import (
+	// Each import registers its behavior.
+	_ "github.com/osapi-io/osapi/internal/behaviors/network/neighbors"
+	_ "github.com/osapi-io/osapi/internal/behaviors/sysctl"
+)
