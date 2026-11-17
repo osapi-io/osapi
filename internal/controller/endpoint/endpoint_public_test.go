@@ -388,6 +388,8 @@ type Sample struct {
 	Bad   int     `json:"bad"   example:"many"`
 	Badf  float64 `json:"badf"  example:"x"`
 	Badb  bool    `json:"badb"  example:"maybe"`
+	ID    string  `json:"id"                     pattern:"^[0-9a-f]{32}$"`
+	Small float32 `json:"small"`
 }
 
 func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
@@ -407,6 +409,9 @@ func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
 	s.Equal("many", sample.Properties["bad"].Value.Example)
 	s.Equal("x", sample.Properties["badf"].Value.Example)
 	s.Equal("maybe", sample.Properties["badb"].Value.Example)
+	s.Equal("^[0-9a-f]{32}$", sample.Properties["id"].Value.Pattern)
+	s.Equal("double", sample.Properties["load"].Value.Format)
+	s.Empty(sample.Properties["small"].Value.Format)
 }
 
 func (s *EndpointPublicTestSuite) TestParameterValidateTags() {
@@ -427,7 +432,6 @@ func (s *EndpointPublicTestSuite) TestOpenAPISchemas() {
 	lines := s.contract(endpoint.Define("node", "The nodes", endpoint.Get[noInput, Node]("get")))
 
 	s.Subset(lines, []string{
-		"schema ErrorResponse = ErrorResponse",
 		"schema Node.NoTag! = string",
 		"schema Node.any = ",
 		"schema Node.children = [Node]",

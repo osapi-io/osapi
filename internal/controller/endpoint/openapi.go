@@ -252,8 +252,12 @@ func (b *builder) inline(
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return openapi3.NewIntegerSchema(), nil
-	case reflect.Float32, reflect.Float64:
+	case reflect.Float32:
 		return openapi3.NewFloat64Schema(), nil
+	case reflect.Float64:
+		// A float64 is a double, and a float32 a number with no format, as
+		// oapi-codegen maps them back.
+		return openapi3.NewFloat64Schema().WithFormat("double"), nil
 	case reflect.Interface:
 		return &openapi3.Schema{}, nil
 	case reflect.Slice, reflect.Array:
@@ -331,6 +335,9 @@ func constrained(
 	}
 	if ex, ok := f.Tag.Lookup("example"); ok {
 		s.Value.Example = example(s.Value, ex)
+	}
+	if p := f.Tag.Get("pattern"); p != "" {
+		s.Value.Pattern = p
 	}
 	for _, rule := range strings.Split(f.Tag.Get("validate"), ",") {
 		name, param, _ := strings.Cut(rule, "=")

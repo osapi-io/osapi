@@ -261,6 +261,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindTag,
+			Name: `pattern:"^...$"`,
+			Does: "Gives a string field a regular expression, in the spec, and the generated route answers 400 for a value that does not match.",
+			When: "For an ID of a fixed form, such as a trace ID of 32 hexadecimal characters.",
+		},
+		{
+			Kind: KindTag,
 			Name: `validate:"..."`,
 			Does: "In an input, required makes the field required. oneof gives an enum, and min and max give the length of a string.",
 			When: "On each input field with a limit. On an output field, only for oneof.",

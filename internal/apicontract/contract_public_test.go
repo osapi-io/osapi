@@ -149,6 +149,7 @@ components:
         labels: {type: object, additionalProperties: {type: string}}
         facts: {type: object, additionalProperties: true}
     Error: {$ref: '../components/gen/api.yaml#/components/schemas/ErrorResponse'}
+    ErrorResponse: {$ref: '../components/gen/api.yaml#/components/schemas/ErrorResponse'}
     Names: {type: array, items: {type: string}}
 `,
 			want: []string{
