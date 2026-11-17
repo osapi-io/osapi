@@ -196,7 +196,13 @@ func commands(
 		} else {
 			in = in.Values()
 		}
-		run := append(reads, jen.Line(), jen.Qual(commandPath, "Run").Call(
+		// The flags are read first, then a blank line, then the call; a
+		// method with no flags has only the call.
+		run := reads
+		if len(reads) > 0 {
+			run = append(run, jen.Line())
+		}
+		run = append(run, jen.Qual(commandPath, "Run").Call(
 			jen.Id("cmd"), jen.Qual(pkg, "Group"), jen.Lit(m.Name), in))
 
 		examples := make([]string, 0, len(m.Examples()))

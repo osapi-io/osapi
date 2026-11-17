@@ -19,7 +19,6 @@ var agentListCmd = &cobra.Command{
 	Example: "  osapi client agent list",
 	Long:    "This command reads the agent heartbeat registry directly. It makes no job.\nEach agent writes a heartbeat every 10 seconds, with a 30-second TTL. When\nan agent stops its heartbeat, it goes from the list.",
 	Run: func(cmd *cobra.Command, _ []string) {
-
 		command.Run(cmd, agent.Group, "list", agent.ListInput{})
 	},
 	Short: "List active agents",
@@ -32,7 +31,6 @@ var agentPendingCmd = &cobra.Command{
 	Example:     "  osapi client agent pending",
 	Long:        "When PKI is enabled, a new agent sends an enrollment request, and waits\nhere until an administrator accepts or rejects it with `agent accept` or\n`agent reject`.",
 	Run: func(cmd *cobra.Command, _ []string) {
-
 		command.Run(cmd, agent.Group, "pending", agent.ListInput{})
 	},
 	Short: "List agents awaiting enrollment",
