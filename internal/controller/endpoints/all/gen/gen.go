@@ -3,4 +3,7 @@
 // Package gen registers the routes of every endpoint group that is served.
 package gen
 
-import _ "github.com/osapi-io/osapi/internal/controller/endpoints/agent/gen"
+import (
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/agent/gen"
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/telemetry/gen"
+)

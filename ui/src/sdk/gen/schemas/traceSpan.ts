@@ -8,24 +8,24 @@ import type { TraceSpanAttributes } from './traceSpanAttributes';
 import type { TraceSpanStatus } from './traceSpanStatus';
 
 export interface TraceSpan {
-  /** The span ID. */
-  span_id: string;
-  /** The ID of the parent span. Empty for the root. */
-  parent_span_id?: string;
-  /** The name of the span, such as job.process. */
-  name: string;
-  /** The service that made the span, such as osapi-agent. */
-  service: string;
-  /** The span kind, such as server, client, producer or consumer. */
-  kind?: string;
-  /** When the span started. */
-  start_time: string;
+  /** The attributes of the span, each as text. */
+  attributes: TraceSpanAttributes;
   /** How long the span took, in milliseconds. */
   duration_ms: number;
+  /** The span kind, such as server, client, producer or consumer. */
+  kind?: string;
+  /** The name of the span, such as job.process. */
+  name: string;
+  /** The ID of the parent span. Empty for the root. */
+  parent_span_id?: string;
+  /** The service that made the span, such as osapi-agent. */
+  service: string;
+  /** The span ID. */
+  span_id: string;
+  /** When the span started. */
+  start_time: string;
   /** Whether the work of the span failed. */
   status: TraceSpanStatus;
   /** The error of a failed span. */
   status_message?: string;
-  /** The attributes of the span, each as text. */
-  attributes: TraceSpanAttributes;
 }

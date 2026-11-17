@@ -191,6 +191,10 @@ mise exec -- just test
 | `TestJoinedSpec` | The joined spec changed. If you changed the API on purpose, write the contract again: `go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -update`, and keep the diff. If you did not, find what changed it |
 | `the spec has no term for` | A new option of the DSL has no entry in `internal/controller/endpoint/spec.go`. Add one |
 
+Never edit a path that `controller endpoint spec` lists under "Generated, never
+edited". Change the definition and generate. Do not write CLI docs for an
+endpoint.
+
 ## Not yet
 
 `controller endpoint spec` lists what the DSL cannot do yet, under "Not

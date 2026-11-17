@@ -190,6 +190,10 @@ func commands(
 					Call(jen.Lit(flag)))
 			}
 		}
+		for _, extra := range m.CommandFlags() {
+			inits = append(inits, jen.Id(name).Dot("Flags").Call().Dot("Bool").Call(
+				jen.Lit(extra.Name), jen.False(), jen.Lit(extra.Usage)))
+		}
 		in := jen.Qual(m.In.PkgPath(), m.In.Name())
 		if len(fields) > 0 {
 			in = in.Values(fields...)
@@ -206,9 +210,13 @@ func commands(
 			jen.Id("cmd"), jen.Qual(pkg, "Group"), jen.Lit(m.Name), in))
 
 		examples := make([]string, 0, len(m.Examples()))
+		path := g.Name + " " + m.Name
+		if sub := m.SubPath(); sub != "" && sub != m.Name {
+			path = g.Name + " " + sub + " " + m.Name
+		}
 		for _, e := range m.Examples() {
 			examples = append(examples,
-				strings.TrimRight("  osapi client "+g.Name+" "+m.Name+" "+e, " "))
+				strings.TrimRight("  osapi client "+path+" "+e, " "))
 		}
 
 		dict := jen.Dict{
@@ -235,6 +243,9 @@ func commands(
 		}
 		if r := m.PageResult(); r != "" {
 			notes[jen.Qual(referencePath, "Result")] = jen.Lit(r)
+		}
+		if sub := m.SubPath(); sub != "" && sub != m.Name {
+			notes[jen.Qual(commandPath, "SubKey")] = jen.Lit(sub)
 		}
 		if len(notes) > 0 {
 			dict[jen.Id("Annotations")] = jen.Map(jen.String()).String().Values(notes)

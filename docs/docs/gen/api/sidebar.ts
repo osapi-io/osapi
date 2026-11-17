@@ -66,6 +66,22 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Telemetry",
+      link: {
+        type: "doc",
+        id: "gen/api/telemetry-api-telemetry",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-trace",
+          label: "Get the spans of a trace",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Audit",
       link: {
         type: "doc",
@@ -262,22 +278,6 @@ const sidebar: SidebarsConfig = {
           type: "doc",
           id: "gen/api/get-node-status",
           label: "Retrieve node status",
-          className: "api-method get",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Telemetry",
-      link: {
-        type: "doc",
-        id: "gen/api/telemetry-api-telemetry",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-trace",
-          label: "Get the spans of a trace",
           className: "api-method get",
         },
       ],

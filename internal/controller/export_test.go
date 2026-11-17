@@ -25,7 +25,7 @@ import (
 	"log/slog"
 	"os"
 
-	telemetryAPI "github.com/osapi-io/osapi/internal/controller/api/telemetry"
+	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 
 	"github.com/labstack/echo/v5"
 
@@ -169,6 +169,6 @@ func ExportRegisterTargetValidator(
 // ExportTraceReader calls traceReader.
 func ExportTraceReader(
 	cfg config.TracingConfig,
-) telemetryAPI.TraceReader {
+) telemetry.TraceReader {
 	return traceReader(cfg)
 }

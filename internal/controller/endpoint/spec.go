@@ -31,6 +31,7 @@ const (
 	KindError      = "error"
 	KindTag        = "tag"
 	KindCheck      = "check"
+	KindGenerated  = "generated"
 	KindNotYet     = "not-yet"
 )
 
@@ -47,6 +48,7 @@ var Spec = guide.Spec{
 		{Kind: KindError, Title: "Errors a method maps"},
 		{Kind: KindTag, Title: "Tags on input and output fields"},
 		{Kind: KindCheck, Title: "What holds a group to its spec"},
+		{Kind: KindGenerated, Title: "Generated, never edited"},
 		{Kind: KindNotYet, Title: "Not supported yet"},
 	},
 	Terms: []guide.Term{
@@ -116,7 +118,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindRefine,
 			Name: `.Sub("segment")`,
-			Does: "Puts a fixed segment after the group's name, before the key: /api/<group>/<segment>[/{key}].",
+			Does: "Puts a fixed segment after the group's name, before the key: /api/<group>/<segment>[/{key}]. When the segment is not the method's name, the CLI command is under it too: osapi client <group> <segment> <method>.",
 			When: "For a path beside the key, such as /api/agent/pending, or before it, such as /api/telemetry/trace/{id}.",
 		},
 		{
@@ -163,6 +165,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: `.Flag("name", "usage")`,
+			Does: "Adds a bool flag to the CLI command that the request does not send. The renderer reads it from the command.",
+			When: "For a flag that changes only how the answer prints, such as --all to show what the view leaves out.",
+		},
+		{
+			Kind: KindRefine,
 			Name: `.Notes("text")`,
 			Does: "Adds a Notes section to the CLI command's page.",
 			When: "For what a person needs that the help does not say, such as what --json has that the table does not.",
@@ -203,6 +211,12 @@ var Spec = guide.Spec{
 			Name: `Errorf(sentinel, "format", args...)`,
 			Does: "Is an error whose text is the message, and that errors.Is matches to sentinel. The answer has the status that Errors maps sentinel to, and the message as its error.",
 			When: "In a handler, to answer 404 or 409 with a message that names what it was called with, such as no pending agent with hostname \"web-01\".",
+		},
+		{
+			Kind: KindError,
+			Name: `Internal("msg", cause)`,
+			Does: "Is a failure of the controller whose cause stays out of the answer: the caller gets msg and a 500, and the log gets the cause.",
+			When: "When the cause has what a caller must not see, such as the address or the error of a backend.",
 		},
 		{
 			Kind: KindError,
@@ -326,6 +340,36 @@ var Spec = guide.Spec{
 			Name: "Deps in internal/controller/handlers.go",
 			Does: "The controller gives each group its Deps, such as agentDeps. An empty Deps needs no wiring. A group whose Deps has a field and is not given stops the controller at startup.",
 			When: "When a group's Deps gets its first field: add a line there, and a nil pointer must be a nil interface.",
+		},
+		{
+			Kind: KindGenerated,
+			Name: "internal/controller/endpoints/<group>/gen/",
+			Does: "The routes, decoders, CLI commands and spec of the group, from go generate ./internal/controller/endpoints/all.",
+			When: "Change the definition, then generate. A generated file that is wrong is fixed in the definition or in internal/controller/endpoint/gen.",
+		},
+		{
+			Kind: KindGenerated,
+			Name: "internal/controller/endpoints/<group>/mocks/",
+			Does: "The doubles of the group's Deps, from go generate ./internal/controller/endpoints/<group>/mocks.",
+			When: "Run it again after deps.go changes.",
+		},
+		{
+			Kind: KindGenerated,
+			Name: "internal/controller/endpoints/all/gen/",
+			Does: "The import of each group's gen package, so the controller registers its routes and commands, from go generate ./internal/controller/endpoints/all.",
+			When: "Change the definition, then generate. A generated file that is wrong is fixed in the definition or in internal/controller/endpoint/gen.",
+		},
+		{
+			Kind: KindGenerated,
+			Name: "docs/docs/sidebar/usage/cli/",
+			Does: "The CLI pages, from just cli-docs-generate. The help of an endpoint command comes from .Command, .Example, .Notes, .Result and each input field's doc.",
+			When: "Change the definition, then generate. A generated file that is wrong is fixed in the definition or in internal/controller/endpoint/gen.",
+		},
+		{
+			Kind: KindGenerated,
+			Name: "internal/controller/api/gen/, pkg/sdk/client/gen/, ui/src/sdk/gen/, docs/docs/gen/",
+			Does: "The joined spec, the SDK, the UI client and the API pages, from just generate.",
+			When: "Change the definition, then generate. A generated file that is wrong is fixed in the definition or in internal/controller/endpoint/gen.",
 		},
 		{
 			Kind: KindNotYet,

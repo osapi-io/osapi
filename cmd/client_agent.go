@@ -48,34 +48,59 @@ func init() {
 func init() {
 	command.Render(agent.Group, "list", renderAgentList)
 	command.Render(agent.Group, "pending", renderAgentPending)
-	command.Render(agent.Group, "get", func(_ agent.GetInput, out agent.AgentInfo) {
-		renderAgentDetail(out)
-	})
-	command.Render(agent.Group, "accept", func(_ agent.AcceptInput, out agent.Message) {
-		fmt.Println()
-		cli.PrintKV("Status", "Accepted", "Message", out.Message)
-	})
-	command.Render(agent.Group, "reject", func(_ agent.RejectInput, out agent.Message) {
-		fmt.Println()
-		cli.PrintKV("Status", "Rejected", "Message", out.Message)
-	})
-	command.Render(agent.Group, "remove", func(_ agent.RemoveInput, out agent.Message) {
-		fmt.Println()
-		cli.PrintKV("Status", "Removed", "Message", out.Message)
-	})
-	command.Render(agent.Group, "drain", func(in agent.DrainInput, out agent.Message) {
-		fmt.Println()
-		cli.PrintKV("Hostname", in.Hostname, "Status", "Draining")
-		cli.PrintKV("Message", out.Message)
-	})
-	command.Render(agent.Group, "undrain", func(in agent.UndrainInput, out agent.Message) {
-		fmt.Println()
-		cli.PrintKV("Hostname", in.Hostname, "Status", "Ready")
-		cli.PrintKV("Message", out.Message)
-	})
+	command.Render(
+		agent.Group,
+		"get",
+		func(_ *cobra.Command, _ agent.GetInput, out agent.AgentInfo) {
+			renderAgentDetail(out)
+		},
+	)
+	command.Render(
+		agent.Group,
+		"accept",
+		func(_ *cobra.Command, _ agent.AcceptInput, out agent.Message) {
+			fmt.Println()
+			cli.PrintKV("Status", "Accepted", "Message", out.Message)
+		},
+	)
+	command.Render(
+		agent.Group,
+		"reject",
+		func(_ *cobra.Command, _ agent.RejectInput, out agent.Message) {
+			fmt.Println()
+			cli.PrintKV("Status", "Rejected", "Message", out.Message)
+		},
+	)
+	command.Render(
+		agent.Group,
+		"remove",
+		func(_ *cobra.Command, _ agent.RemoveInput, out agent.Message) {
+			fmt.Println()
+			cli.PrintKV("Status", "Removed", "Message", out.Message)
+		},
+	)
+	command.Render(
+		agent.Group,
+		"drain",
+		func(_ *cobra.Command, in agent.DrainInput, out agent.Message) {
+			fmt.Println()
+			cli.PrintKV("Hostname", in.Hostname, "Status", "Draining")
+			cli.PrintKV("Message", out.Message)
+		},
+	)
+	command.Render(
+		agent.Group,
+		"undrain",
+		func(_ *cobra.Command, in agent.UndrainInput, out agent.Message) {
+			fmt.Println()
+			cli.PrintKV("Hostname", in.Hostname, "Status", "Ready")
+			cli.PrintKV("Message", out.Message)
+		},
+	)
 }
 
 func renderAgentList(
+	_ *cobra.Command,
 	_ agent.ListInput,
 	out agent.ListAgentsResponse,
 ) {
@@ -131,6 +156,7 @@ func renderAgentList(
 }
 
 func renderAgentPending(
+	_ *cobra.Command,
 	_ agent.ListInput,
 	out agent.ListPendingAgentsResponse,
 ) {
