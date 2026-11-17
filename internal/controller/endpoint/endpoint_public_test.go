@@ -181,8 +181,12 @@ func (s *EndpointPublicTestSuite) TestCommandHelp() {
 }
 
 func (s *EndpointPublicTestSuite) TestFlagAndInternal() {
-	m := endpoint.Get[noInput, Node]("get").Sub("trace").Flag("all", "Show everything")
-	s.Equal([]endpoint.Flag{{Name: "all", Usage: "Show everything"}}, m.CommandFlags())
+	m := endpoint.Get[noInput, Node]("get").Sub("trace").Flag("all", "Show everything").
+		StringFlag("output", "", "The file to write", true)
+	s.Equal([]endpoint.Flag{
+		{Name: "all", Usage: "Show everything"},
+		{Name: "output", Usage: "The file to write", String: true, Required: true},
+	}, m.CommandFlags())
 	s.Equal("trace", m.SubPath())
 
 	cause := errors.New("dial tcp 10.0.0.9:16686: refused")

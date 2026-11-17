@@ -17,43 +17,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-
 package audit
 
 import (
 	"context"
-	"errors"
-	"log/slog"
 
-	"github.com/osapi-io/osapi/internal/controller/api/audit/gen"
-
-	"github.com/osapi-io/osapi/internal/audit"
+	auditstore "github.com/osapi-io/osapi/internal/audit"
 )
 
-// GetAuditLogByID returns a single audit log entry by ID.
-func (a *Audit) GetAuditLogByID(
-	ctx context.Context,
-	request gen.GetAuditLogByIDRequestObject,
-) (gen.GetAuditLogByIDResponseObject, error) {
-	id := request.Id.String()
+// Deps is what the audit group's handlers use.
+type Deps struct {
+	// Store reads the audit log. Nil when nats.audit.stream is not set; each
+	// method then answers 503.
+	Store Store
+}
 
-	entry, err := a.Store.Get(ctx, id)
-	if err != nil {
-		if errors.Is(err, audit.ErrNotFound) {
-			errMsg := "audit entry not found"
-			return gen.GetAuditLogByID404JSONResponse{Error: &errMsg}, nil
-		}
-
-		a.logger.Error(
-			"failed to get audit entry",
-			slog.String("error", err.Error()),
-			slog.String("id", id),
-		)
-		errMsg := "failed to get audit entry"
-		return gen.GetAuditLogByID500JSONResponse{Error: &errMsg}, nil
-	}
-
-	return gen.GetAuditLogByID200JSONResponse{
-		Entry: mapEntryToGen(*entry),
-	}, nil
+// Store reads entries of the audit log.
+type Store interface {
+	Get(ctx context.Context, id string) (*auditstore.Entry, error)
+	List(ctx context.Context, limit int, offset int) ([]auditstore.Entry, int, error)
+	ListAll(ctx context.Context) ([]auditstore.Entry, error)
 }

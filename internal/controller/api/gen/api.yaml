@@ -20,12 +20,12 @@ tags:
   - description: Operations related to agent discovery and details.
     name: Agent_Management_API_agent_operations
     x-displayName: Agent
+  - description: Audit log endpoints for viewing API activity.
+    name: Audit_Log_API_audit
+    x-displayName: Audit
   - description: Telemetry endpoints, such as the spans of a trace.
     name: Telemetry_API_telemetry
     x-displayName: Telemetry
-  - name: Audit_Log_API_audit
-    x-displayName: Audit
-    description: Audit log endpoints for viewing API activity.
   - name: Facts_API_facts
     x-displayName: Facts
     description: Fact key discovery for @fact. references.
@@ -611,6 +611,180 @@ paths:
       summary: List agents awaiting enrollment
       tags:
         - Agent_Management_API_agent_operations
+  /api/audit:
+    servers: []
+    get:
+      description: Returns a paginated list of audit log entries, newest first.
+      operationId: GetAuditLogs
+      parameters:
+        - description: Maximum number of entries to return.
+          in: query
+          name: limit
+          schema:
+            default: 20
+            maximum: 100
+            minimum: 1
+            type: integer
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=100
+        - description: Number of entries to skip.
+          in: query
+          name: offset
+          schema:
+            default: 0
+            minimum: 0
+            type: integer
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAuditResponse'
+          description: List of audit entries.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The audit log is not configured on the controller.
+      security:
+        - BearerAuth:
+            - audit:read
+      summary: List audit log entries
+      tags:
+        - Audit_Log_API_audit
+  /api/audit/{id}:
+    servers: []
+    get:
+      description: Returns a single audit log entry by ID.
+      operationId: GetAuditLogByID
+      parameters:
+        - description: The audit entry ID.
+          in: path
+          name: id
+          required: true
+          schema:
+            format: uuid
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEntryResponse'
+          description: Audit entry found.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Audit entry not found.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The audit log is not configured on the controller.
+      security:
+        - BearerAuth:
+            - audit:read
+      summary: Get a single audit log entry
+      tags:
+        - Audit_Log_API_audit
+  /api/audit/export:
+    servers: []
+    get:
+      description: Returns all audit log entries without pagination for export.
+      operationId: GetAuditExport
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAuditResponse'
+          description: All audit entries.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The audit log is not configured on the controller.
+      security:
+        - BearerAuth:
+            - audit:read
+      summary: Export all audit log entries
+      tags:
+        - Audit_Log_API_audit
   /api/telemetry/trace/{id}:
     servers: []
     get:
@@ -678,162 +852,6 @@ paths:
       summary: Get the spans of a trace
       tags:
         - Telemetry_API_telemetry
-  /api/audit:
-    servers: []
-    get:
-      operationId: GetAuditLogs
-      summary: List audit log entries
-      description: Returns a paginated list of audit log entries, newest first.
-      tags:
-        - Audit_Log_API_audit
-      security:
-        - BearerAuth:
-            - audit:read
-      parameters:
-        - name: limit
-          in: query
-          required: false
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1,max=100
-          schema:
-            type: integer
-            default: 20
-            minimum: 1
-            maximum: 100
-          description: Maximum number of entries to return.
-        - name: offset
-          in: query
-          required: false
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=0
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-          description: Number of entries to skip.
-      responses:
-        '200':
-          description: List of audit entries.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListAuditResponse'
-        '400':
-          description: Invalid request parameters.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/audit/export:
-    servers: []
-    get:
-      operationId: GetAuditExport
-      summary: Export all audit log entries
-      description: Returns all audit log entries without pagination for export.
-      tags:
-        - Audit_Log_API_audit
-      security:
-        - BearerAuth:
-            - audit:read
-      responses:
-        '200':
-          description: All audit entries.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListAuditResponse'
-        '401':
-          description: Unauthorized - API key required.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/audit/{id}:
-    servers: []
-    get:
-      operationId: GetAuditLogByID
-      summary: Get a single audit log entry
-      description: Returns a single audit log entry by ID.
-      tags:
-        - Audit_Log_API_audit
-      security:
-        - BearerAuth:
-            - audit:read
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: The audit entry ID.
-      responses:
-        '200':
-          description: Audit entry found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuditEntryResponse'
-        '400':
-          description: The ID is not a UUID.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Audit entry not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/facts/keys:
     servers: []
     get:
@@ -6610,6 +6628,101 @@ components:
         - timestamp
         - event
       type: object
+    AuditEntry:
+      properties:
+        duration_ms:
+          description: Request duration in milliseconds.
+          example: 42
+          format: int64
+          type: integer
+        id:
+          description: Unique identifier for the audit entry.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+        job_id:
+          description: >-
+            The job this request created, absent when it created none. Joins the
+            entry to that job's own status timeline.
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+          type: string
+        method:
+          description: HTTP method.
+          example: GET
+          type: string
+        operation_id:
+          description: OpenAPI operation ID.
+          example: GetNodeHostname
+          type: string
+        path:
+          description: Request URL path.
+          example: /node/hostname
+          type: string
+        request_summary:
+          description: >-
+            What the request asked for, with sensitive values replaced. Recorded
+            for methods that change something.
+          example: '{"command":"systemctl","args":["restart","nginx"]}'
+          type: string
+        response_code:
+          description: HTTP response status code.
+          example: 200
+          type: integer
+        roles:
+          description: Roles from the JWT token.
+          items:
+            type: string
+          type: array
+        source_ip:
+          description: Client IP address.
+          example: 192.168.1.100
+          type: string
+        timestamp:
+          description: When the request was processed.
+          example: '2026-02-21T10:30:00Z'
+          format: date-time
+          type: string
+        trace_id:
+          description: OpenTelemetry trace ID for correlation.
+          example: 4bf92f3577b34da6a3ce929d0e0e4736
+          type: string
+        user:
+          description: Authenticated user (JWT subject).
+          example: ops@example.com
+          type: string
+      required:
+        - id
+        - timestamp
+        - user
+        - roles
+        - method
+        - path
+        - source_ip
+        - response_code
+        - duration_ms
+      type: object
+    AuditEntryResponse:
+      properties:
+        entry:
+          $ref: '#/components/schemas/AuditEntry'
+      required:
+        - entry
+      type: object
+    ListAuditResponse:
+      properties:
+        items:
+          description: The audit entries for this page.
+          items:
+            $ref: '#/components/schemas/AuditEntry'
+          type: array
+        total_items:
+          description: Total number of audit entries.
+          example: 150
+          type: integer
+      required:
+        - total_items
+        - items
+      type: object
     TraceResponse:
       properties:
         spans:
@@ -6672,103 +6785,6 @@ components:
         - status
         - attributes
       type: object
-    AuditEntry:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          description: Unique identifier for the audit entry.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        timestamp:
-          type: string
-          format: date-time
-          description: When the request was processed.
-          example: '2026-02-21T10:30:00Z'
-        user:
-          type: string
-          description: Authenticated user (JWT subject).
-          example: ops@example.com
-        roles:
-          type: array
-          items:
-            type: string
-          description: Roles from the JWT token.
-          example:
-            - admin
-        method:
-          type: string
-          description: HTTP method.
-          example: GET
-        path:
-          type: string
-          description: Request URL path.
-          example: /node/hostname
-        operation_id:
-          type: string
-          description: OpenAPI operation ID.
-          example: GetNodeHostname
-        source_ip:
-          type: string
-          description: Client IP address.
-          example: 192.168.1.100
-        response_code:
-          type: integer
-          description: HTTP response status code.
-          example: 200
-        duration_ms:
-          type: integer
-          format: int64
-          description: Request duration in milliseconds.
-          example: 42
-        trace_id:
-          type: string
-          description: OpenTelemetry trace ID for correlation.
-          example: 4bf92f3577b34da6a3ce929d0e0e4736
-        job_id:
-          type: string
-          description: >-
-            The job this request created, absent when it created none. Joins the
-            entry to that job's own status timeline.
-          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
-        request_summary:
-          type: string
-          description: >-
-            What the request asked for, with sensitive values replaced. Recorded
-            for methods that change something.
-          example: '{"command":"systemctl","args":["restart","nginx"]}'
-      required:
-        - id
-        - timestamp
-        - user
-        - roles
-        - method
-        - path
-        - source_ip
-        - response_code
-        - duration_ms
-    AuditEntryResponse:
-      type: object
-      properties:
-        entry:
-          $ref: '#/components/schemas/AuditEntry'
-      required:
-        - entry
-    ListAuditResponse:
-      type: object
-      properties:
-        total_items:
-          type: integer
-          description: Total number of audit entries.
-          example: 150
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/AuditEntry'
-          description: The audit entries for this page.
-      required:
-        - total_items
-        - items
     FactKeysResponse:
       type: object
       required:
@@ -11275,12 +11291,12 @@ x-tagGroups:
   - name: Agent Management API
     tags:
       - Agent_Management_API_agent_operations
-  - name: Telemetry API
-    tags:
-      - Telemetry_API_telemetry
   - name: Audit Log API
     tags:
       - Audit_Log_API_audit
+  - name: Telemetry API
+    tags:
+      - Telemetry_API_telemetry
   - name: Facts API
     tags:
       - Facts_API_facts

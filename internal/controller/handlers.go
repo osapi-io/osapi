@@ -30,7 +30,6 @@ import (
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/behavior/server"
 	"github.com/osapi-io/osapi/internal/config"
-	auditAPI "github.com/osapi-io/osapi/internal/controller/api/audit"
 	factsAPI "github.com/osapi-io/osapi/internal/controller/api/facts"
 	"github.com/osapi-io/osapi/internal/controller/api/file"
 	"github.com/osapi-io/osapi/internal/controller/api/health"
@@ -55,6 +54,7 @@ import (
 	uihandler "github.com/osapi-io/osapi/internal/controller/api/ui"
 	endpointserver "github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
+	auditEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/audit"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
@@ -79,7 +79,7 @@ type handlerDeps struct {
 	enrollment      *enrollment.Watcher
 }
 
-// handlers returns each REST API handler. The audit, file and UI handlers are
+// handlers returns each REST API handler. The file and UI handlers are
 // only there when their parts are.
 func handlers(
 	d handlerDeps,
@@ -109,6 +109,7 @@ func handlers(
 			customRoles,
 			agentDeps(d),
 			telemetry.Deps{Traces: traceReader(d.cfg.Telemetry.Tracing)},
+			auditEndpoint.Deps{Store: d.auditStore},
 		)...,
 	)
 	handlers = append(handlers, nodeAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
@@ -146,11 +147,6 @@ func handlers(
 	handlers = append(handlers, serviceAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, logAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, nodeFileAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
-	if d.auditStore != nil {
-		handlers = append(
-			handlers,
-			auditAPI.Handler(d.log, d.auditStore, signingKey, customRoles)...)
-	}
 	if d.objBucket != "" {
 		handlers = append(
 			handlers,

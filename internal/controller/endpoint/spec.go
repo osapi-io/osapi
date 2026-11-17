@@ -177,6 +177,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: `.StringFlag("name", "value", "usage", required)`,
+			Does: "Adds a string flag to the CLI command that the request does not send, with its value when the caller gives none. The renderer reads it from the command.",
+			When: "For a flag that changes only what the command does with the answer, such as --output, the file an export writes.",
+		},
+		{
+			Kind: KindRefine,
 			Name: `.Notes("text")`,
 			Does: "Adds a Notes section to the CLI command's page.",
 			When: "For what a person needs that the help does not say, such as what --json has that the table does not.",
@@ -282,7 +288,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindTag,
 			Name: `default:"20"`,
-			Does: "Gives a field its default in the spec. The method still sees the zero value when the caller sends none, and applies the default itself.",
+			Does: "Gives a field its default in the spec, and its CLI flag the same value. The method still sees the zero value when the caller sends none, and applies the default itself.",
 			When: "For an optional query parameter, such as limit.",
 		},
 		{

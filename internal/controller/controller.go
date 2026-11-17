@@ -30,6 +30,7 @@ import (
 
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
+	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/api"
@@ -128,7 +129,11 @@ func newController(
 	if err != nil {
 		return nil, err
 	}
+	// A nil *StreamStore must be a nil Store, so a handler can tell that the
+	// controller keeps no audit log.
+	var auditLog audit.Store
 	if auditStore != nil {
+		auditLog = auditStore
 		apiOpts = append(apiOpts, api.WithAuditStore(auditStore))
 	}
 
@@ -158,7 +163,7 @@ func newController(
 		jobs:            conn.Jobs,
 		checker:         checker,
 		metricsProvider: metricsProvider,
-		auditStore:      auditStore,
+		auditStore:      auditLog,
 		nats:            conn.NATS,
 		objBucket:       objBucket,
 		fileStateBucket: fileStateBucket,
