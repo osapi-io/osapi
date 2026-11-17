@@ -94,22 +94,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Info",
-      link: {
-        type: "doc",
-        id: "gen/api/osapi-a-crud-api-for-managing-linux-systems-info",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/retrieve-the-software-version",
-          label: "Retrieve the software version",
-          className: "api-method get",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Facts",
       link: {
         type: "doc",

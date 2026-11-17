@@ -9,9 +9,6 @@ tags:
   - name: Audit_Log_API_audit
     x-displayName: Audit
     description: Audit log endpoints for viewing API activity.
-  - name: OSAPI_-_A_CRUD_API_for_managing_Linux_systems_info
-    x-displayName: Info
-    description: Operations related to the info endpoint.
   - name: Facts_API_facts
     x-displayName: Facts
     description: Fact key discovery for @fact. references.
@@ -735,22 +732,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/version:
-    servers:
-      - url: http://127.0.0.1:8080
-        description: Mock API (local).
-    get:
-      summary: Retrieve the software version
-      description: Get the current version of the software running on the system.
-      tags:
-        - OSAPI_-_A_CRUD_API_for_managing_Linux_systems_info
-      responses:
-        '400':
-          description: A common JSON error response.
           content:
             application/json:
               schema:
@@ -11264,9 +11245,6 @@ x-tagGroups:
   - name: Audit Log API
     tags:
       - Audit_Log_API_audit
-  - name: OSAPI - A CRUD API for managing Linux systems
-    tags:
-      - OSAPI_-_A_CRUD_API_for_managing_Linux_systems_info
   - name: Facts API
     tags:
       - Facts_API_facts

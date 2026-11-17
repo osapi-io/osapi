@@ -5507,9 +5507,6 @@ type ClientInterface interface {
 
 	// GetTrace request
 	GetTrace(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetApiVersion request
-	GetApiVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetAgents(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -7398,18 +7395,6 @@ func (c *Client) DeleteNodeUserSSHKey(ctx context.Context, hostname Hostname, na
 
 func (c *Client) GetTrace(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTraceRequest(c.Server, id)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetApiVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiVersionRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -12586,33 +12571,6 @@ func NewGetTraceRequest(server string, id string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetApiVersionRequest generates requests for GetApiVersion
-func NewGetApiVersionRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/version")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -13090,9 +13048,6 @@ type ClientWithResponsesInterface interface {
 
 	// GetTraceWithResponse request
 	GetTraceWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetTraceResponse, error)
-
-	// GetApiVersionWithResponse request
-	GetApiVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiVersionResponse, error)
 }
 
 type GetAgentsResponse struct {
@@ -17181,36 +17136,6 @@ func (r GetTraceResponse) ContentType() string {
 	return ""
 }
 
-type GetApiVersionResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON400      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetApiVersionResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetApiVersionResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiVersionResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
 // GetAgentsWithResponse request returning *GetAgentsResponse
 func (c *ClientWithResponses) GetAgentsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAgentsResponse, error) {
 	rsp, err := c.GetAgents(ctx, reqEditors...)
@@ -18592,15 +18517,6 @@ func (c *ClientWithResponses) GetTraceWithResponse(ctx context.Context, id strin
 		return nil, err
 	}
 	return ParseGetTraceResponse(rsp)
-}
-
-// GetApiVersionWithResponse request returning *GetApiVersionResponse
-func (c *ClientWithResponses) GetApiVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiVersionResponse, error) {
-	rsp, err := c.GetApiVersion(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetApiVersionResponse(rsp)
 }
 
 // ParseGetAgentsResponse parses an HTTP response from a GetAgentsWithResponse call
@@ -25243,32 +25159,6 @@ func ParseGetTraceResponse(rsp *http.Response) (*GetTraceResponse, error) {
 			return nil, err
 		}
 		response.JSON503 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetApiVersionResponse parses an HTTP response from a GetApiVersionWithResponse call
-func ParseGetApiVersionResponse(rsp *http.Response) (*GetApiVersionResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetApiVersionResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
 
 	}
 
