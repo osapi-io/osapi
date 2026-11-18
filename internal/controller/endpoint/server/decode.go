@@ -22,6 +22,7 @@ package server
 
 import (
 	"fmt"
+	"io"
 	"reflect"
 	"regexp"
 	"strings"
@@ -84,6 +85,48 @@ func Valid(
 
 			return fmt.Sprintf("%s does not match %s", name, p), false
 		}
+	}
+
+	return "", true
+}
+
+// maxForm is the most of a multipart form that the server holds in memory;
+// the rest goes to temporary files.
+const maxForm = 32 << 20
+
+// Form reads the fields of in that are tagged in:"form" from a
+// multipart/form-data body: a string from its value, and a []byte from the
+// file of that name.
+func Form(
+	c *echo.Context,
+	in any,
+) (string, bool) {
+	req := c.Request()
+	if err := req.ParseMultipartForm(maxForm); err != nil {
+		return fmt.Sprintf("the body is not a multipart form: %s", err), false
+	}
+
+	v := reflect.ValueOf(in).Elem()
+	for i := range v.NumField() {
+		f := v.Type().Field(i)
+		if f.Tag.Get("in") != "form" {
+			continue
+		}
+		name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
+		if f.Type == reflect.TypeFor[[]byte]() {
+			file, _, err := req.FormFile(name)
+			if err != nil {
+				continue
+			}
+			// ParseMultipartForm stored the part whole, in memory or in a
+			// temporary file, so it reads to its end.
+			data, _ := io.ReadAll(file)
+			_ = file.Close()
+			v.Field(i).SetBytes(data)
+
+			continue
+		}
+		v.Field(i).SetString(req.FormValue(name))
 	}
 
 	return "", true

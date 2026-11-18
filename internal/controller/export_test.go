@@ -25,6 +25,8 @@ import (
 	"log/slog"
 	"os"
 
+	fileEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/file"
+
 	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 
 	"github.com/labstack/echo/v5"
@@ -93,6 +95,15 @@ func ExportOpenFileBuckets(
 	cfg config.NATS,
 ) (string, string) {
 	return openFileBuckets(ctx, log, nc, namespace, cfg)
+}
+
+// ExportFileDeps calls fileDeps.
+func ExportFileDeps(
+	nc fileBuckets,
+	objBucket string,
+	stateBucket string,
+) fileEndpoint.Deps {
+	return fileDeps(nc, objBucket, stateBucket)
 }
 
 // ExportHandlers calls handlers with the parts that a test sets.

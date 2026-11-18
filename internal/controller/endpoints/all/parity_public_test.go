@@ -50,11 +50,7 @@ var moving = []struct {
 	// generated spec has with +.
 	accepted map[string]string
 }{
-	{
-		group: "file",
-		spec:  "internal/controller/api/file/gen/api.yaml",
-	},
-	// agent, telemetry, audit, job, facts and health moved: their hand-written specs are gone,
+	// each group moved: their hand-written specs are gone,
 	// and TestJoinedSpec holds the joined spec, which has their generated
 	// specs, to the same contract.
 }

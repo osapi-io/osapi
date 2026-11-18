@@ -4279,6 +4279,7 @@ type StaleDeployment struct {
 
 // StaleDeploymentsResponse defines model for StaleDeploymentsResponse.
 type StaleDeploymentsResponse struct {
+	// Items The stale deployments.
 	Items []StaleDeployment `json:"items"`
 
 	// TotalItems Total number of stale deployments.
@@ -4736,9 +4737,6 @@ type CertName = string
 // DockerId defines model for DockerId.
 type DockerId = string
 
-// FileName defines model for FileName.
-type FileName = string
-
 // GroupName defines model for GroupName.
 type GroupName = string
 
@@ -4801,14 +4799,14 @@ type GetAuditLogsParams struct {
 
 // PostFileMultipartBody defines parameters for PostFile.
 type PostFileMultipartBody struct {
-	// ContentType How the file should be treated during deploy. "raw" writes bytes as-is; "template" renders with Go text/template and agent facts.
-	ContentType *PostFileMultipartBodyContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
+	// ContentType How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts.
+	ContentType *PostFileMultipartBodyContentType `json:"content_type,omitempty"`
 
 	// File The file content.
-	File openapi_types.File `json:"file" validate:"required,min=1"`
+	File openapi_types.File `json:"file"`
 
 	// Name The name of the file in the Object Store.
-	Name string `json:"name" validate:"required,min=1,max=255"`
+	Name string `json:"name"`
 }
 
 // PostFileMultipartBodyContentType defines parameters for PostFile.
@@ -4816,11 +4814,11 @@ type PostFileMultipartBodyContentType string
 
 // PutFileByNameMultipartBody defines parameters for PutFileByName.
 type PutFileByNameMultipartBody struct {
-	// ContentType How the file should be treated during deploy. "raw" writes bytes as-is; "template" renders with Go text/template and agent facts.
-	ContentType *PutFileByNameMultipartBodyContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
+	// ContentType How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts.
+	ContentType *PutFileByNameMultipartBodyContentType `json:"content_type,omitempty"`
 
 	// File The file content.
-	File openapi_types.File `json:"file" validate:"required,min=1"`
+	File openapi_types.File `json:"file"`
 }
 
 // PutFileByNameMultipartBodyContentType defines parameters for PutFileByName.
@@ -5139,13 +5137,13 @@ type ClientInterface interface {
 	GetFileStale(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteFileByName request
-	DeleteFileByName(ctx context.Context, name FileName, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteFileByName(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetFileByName request
-	GetFileByName(ctx context.Context, name FileName, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetFileByName(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutFileByNameWithBody request with any body
-	PutFileByNameWithBody(ctx context.Context, name FileName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutFileByNameWithBody(ctx context.Context, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetHealth request
 	GetHealth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5710,7 +5708,7 @@ func (c *Client) GetFileStale(ctx context.Context, reqEditors ...RequestEditorFn
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteFileByName(ctx context.Context, name FileName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) DeleteFileByName(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteFileByNameRequest(c.Server, name)
 	if err != nil {
 		return nil, err
@@ -5722,7 +5720,7 @@ func (c *Client) DeleteFileByName(ctx context.Context, name FileName, reqEditors
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetFileByName(ctx context.Context, name FileName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) GetFileByName(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetFileByNameRequest(c.Server, name)
 	if err != nil {
 		return nil, err
@@ -5734,7 +5732,7 @@ func (c *Client) GetFileByName(ctx context.Context, name FileName, reqEditors ..
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutFileByNameWithBody(ctx context.Context, name FileName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PutFileByNameWithBody(ctx context.Context, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutFileByNameRequestWithBody(c.Server, name, contentType, body)
 	if err != nil {
 		return nil, err
@@ -7976,7 +7974,7 @@ func NewGetFileStaleRequest(server string) (*http.Request, error) {
 }
 
 // NewDeleteFileByNameRequest generates requests for DeleteFileByName
-func NewDeleteFileByNameRequest(server string, name FileName) (*http.Request, error) {
+func NewDeleteFileByNameRequest(server string, name string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -8010,7 +8008,7 @@ func NewDeleteFileByNameRequest(server string, name FileName) (*http.Request, er
 }
 
 // NewGetFileByNameRequest generates requests for GetFileByName
-func NewGetFileByNameRequest(server string, name FileName) (*http.Request, error) {
+func NewGetFileByNameRequest(server string, name string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -8044,7 +8042,7 @@ func NewGetFileByNameRequest(server string, name FileName) (*http.Request, error
 }
 
 // NewPutFileByNameRequestWithBody generates requests for PutFileByName with any type of body
-func NewPutFileByNameRequestWithBody(server string, name FileName, contentType string, body io.Reader) (*http.Request, error) {
+func NewPutFileByNameRequestWithBody(server string, name string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -12700,13 +12698,13 @@ type ClientWithResponsesInterface interface {
 	GetFileStaleWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFileStaleResponse, error)
 
 	// DeleteFileByNameWithResponse request
-	DeleteFileByNameWithResponse(ctx context.Context, name FileName, reqEditors ...RequestEditorFn) (*DeleteFileByNameResponse, error)
+	DeleteFileByNameWithResponse(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*DeleteFileByNameResponse, error)
 
 	// GetFileByNameWithResponse request
-	GetFileByNameWithResponse(ctx context.Context, name FileName, reqEditors ...RequestEditorFn) (*GetFileByNameResponse, error)
+	GetFileByNameWithResponse(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*GetFileByNameResponse, error)
 
 	// PutFileByNameWithBodyWithResponse request with any body
-	PutFileByNameWithBodyWithResponse(ctx context.Context, name FileName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutFileByNameResponse, error)
+	PutFileByNameWithBodyWithResponse(ctx context.Context, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutFileByNameResponse, error)
 
 	// GetHealthWithResponse request
 	GetHealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthResponse, error)
@@ -13510,6 +13508,7 @@ type GetFilesResponse struct {
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
+	JSON503      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -13546,6 +13545,7 @@ type PostFileResponse struct {
 	JSON403      *ErrorResponse
 	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
+	JSON503      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -13579,6 +13579,7 @@ type GetFileStaleResponse struct {
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
+	JSON503      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -13613,6 +13614,7 @@ type DeleteFileByNameResponse struct {
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
 	JSON500      *ErrorResponse
+	JSON503      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -13648,6 +13650,7 @@ type GetFileByNameResponse struct {
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
 	JSON500      *ErrorResponse
+	JSON503      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -13683,6 +13686,7 @@ type PutFileByNameResponse struct {
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
+	JSON503      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -17341,7 +17345,7 @@ func (c *ClientWithResponses) GetFileStaleWithResponse(ctx context.Context, reqE
 }
 
 // DeleteFileByNameWithResponse request returning *DeleteFileByNameResponse
-func (c *ClientWithResponses) DeleteFileByNameWithResponse(ctx context.Context, name FileName, reqEditors ...RequestEditorFn) (*DeleteFileByNameResponse, error) {
+func (c *ClientWithResponses) DeleteFileByNameWithResponse(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*DeleteFileByNameResponse, error) {
 	rsp, err := c.DeleteFileByName(ctx, name, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -17350,7 +17354,7 @@ func (c *ClientWithResponses) DeleteFileByNameWithResponse(ctx context.Context, 
 }
 
 // GetFileByNameWithResponse request returning *GetFileByNameResponse
-func (c *ClientWithResponses) GetFileByNameWithResponse(ctx context.Context, name FileName, reqEditors ...RequestEditorFn) (*GetFileByNameResponse, error) {
+func (c *ClientWithResponses) GetFileByNameWithResponse(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*GetFileByNameResponse, error) {
 	rsp, err := c.GetFileByName(ctx, name, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -17359,7 +17363,7 @@ func (c *ClientWithResponses) GetFileByNameWithResponse(ctx context.Context, nam
 }
 
 // PutFileByNameWithBodyWithResponse request with arbitrary body returning *PutFileByNameResponse
-func (c *ClientWithResponses) PutFileByNameWithBodyWithResponse(ctx context.Context, name FileName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutFileByNameResponse, error) {
+func (c *ClientWithResponses) PutFileByNameWithBodyWithResponse(ctx context.Context, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutFileByNameResponse, error) {
 	rsp, err := c.PutFileByNameWithBody(ctx, name, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -19307,6 +19311,13 @@ func ParseGetFilesResponse(rsp *http.Response) (*GetFilesResponse, error) {
 		}
 		response.JSON500 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
 	}
 
 	return response, nil
@@ -19375,6 +19386,13 @@ func ParsePostFileResponse(rsp *http.Response) (*PostFileResponse, error) {
 		}
 		response.JSON500 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
 	}
 
 	return response, nil
@@ -19421,6 +19439,13 @@ func ParseGetFileStaleResponse(rsp *http.Response) (*GetFileStaleResponse, error
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
 
 	}
 
@@ -19475,6 +19500,13 @@ func ParseDeleteFileByNameResponse(rsp *http.Response) (*DeleteFileByNameRespons
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
 
 	}
 
@@ -19537,6 +19569,13 @@ func ParseGetFileByNameResponse(rsp *http.Response) (*GetFileByNameResponse, err
 		}
 		response.JSON500 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
 	}
 
 	return response, nil
@@ -19597,6 +19636,13 @@ func ParsePutFileByNameResponse(rsp *http.Response) (*PutFileByNameResponse, err
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
 
 	}
 

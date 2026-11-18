@@ -21,12 +21,16 @@
 package command_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"io"
+	"mime"
+	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -63,6 +67,12 @@ type badBody struct {
 	Body func() `in:"body"`
 }
 
+type formInput struct {
+	Name string `json:"name" in:"form"`
+	Note string `json:"note" in:"form"`
+	File []byte `json:"file" in:"form"`
+}
+
 type thing struct {
 	Name string `json:"name"`
 }
@@ -73,6 +83,7 @@ var group = endpoint.Define("thing", "Things",
 	endpoint.Post[retryInput, thing]("retry").Sub("retry"),
 	endpoint.Post[badBody, thing]("bad").Sub("bad"),
 	endpoint.Get[string, thing]("raw").Sub("raw"),
+	endpoint.Post[formInput, thing]("upload").Sub("upload"),
 	endpoint.Get[getInput, thing]("probe").Sub("probe").
 		Answers(http.StatusServiceUnavailable, "Not ready."),
 )
@@ -80,18 +91,20 @@ var group = endpoint.Define("thing", "Things",
 // caller records the request, and answers with body or err.
 type caller struct {
 	method, path string
+	contentType  string
 	body         []byte
 	answer       []byte
 	err          error
 }
 
-func (c *caller) Request(
+func (c *caller) Send(
 	_ context.Context,
 	method string,
 	path string,
+	contentType string,
 	body []byte,
 ) (*client.Response[json.RawMessage], error) {
-	c.method, c.path, c.body = method, path, body
+	c.method, c.path, c.contentType, c.body = method, path, contentType, body
 	if c.err != nil {
 		return nil, c.err
 	}
@@ -103,6 +116,26 @@ type CommandPublicTestSuite struct {
 	suite.Suite
 }
 
+func (s *CommandPublicTestSuite) TestReadFile() {
+	var reported error
+	parent := &cobra.Command{Use: "client"}
+	s.Require().NoError(command.Attach(parent, command.Deps{
+		Caller: func() command.Caller { return &caller{} },
+		JSON:   func() bool { return false },
+		Error:  func(err error) { reported = err },
+	}))
+
+	path := filepath.Join(s.T().TempDir(), "a.conf")
+	s.Require().NoError(os.WriteFile(path, []byte("data"), 0o600))
+	data, ok := command.ReadFile(path)
+	s.True(ok)
+	s.Equal("data", string(data))
+
+	_, ok = command.ReadFile(filepath.Join(s.T().TempDir(), "missing"))
+	s.False(ok)
+	s.ErrorContains(reported, "missing")
+}
+
 func (s *CommandPublicTestSuite) TestBuild() {
 	tests := []struct {
 		name     string
@@ -110,6 +143,7 @@ func (s *CommandPublicTestSuite) TestBuild() {
 		in       any
 		wantPath string
 		wantBody string
+		wantForm map[string]string
 		wantErr  bool
 	}{
 		{
@@ -145,6 +179,13 @@ func (s *CommandPublicTestSuite) TestBuild() {
 			wantPath: "/api/thing/raw",
 		},
 		{
+			name:     "when the input has form fields, the body is a form without its zero fields",
+			method:   "upload",
+			in:       formInput{Name: "a.conf", File: []byte("data")},
+			wantPath: "/api/thing/upload",
+			wantForm: map[string]string{"name": "a.conf", "file": "data"},
+		},
+		{
 			name:    "when the body cannot be encoded, it is an error",
 			method:  "bad",
 			in:      badBody{Body: func() {}},
@@ -154,7 +195,7 @@ func (s *CommandPublicTestSuite) TestBuild() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			path, body, err := command.Build(group, group.Method(tc.method), tc.in)
+			path, body, contentType, err := command.Build(group, group.Method(tc.method), tc.in)
 
 			if tc.wantErr {
 				s.Error(err)
@@ -163,6 +204,22 @@ func (s *CommandPublicTestSuite) TestBuild() {
 			}
 			s.Require().NoError(err)
 			s.Equal(tc.wantPath, path)
+			if tc.wantForm != nil {
+				_, params, err := mime.ParseMediaType(contentType)
+				s.Require().NoError(err)
+				form, err := multipart.NewReader(bytes.NewReader(body), params["boundary"]).
+					ReadForm(1 << 20)
+				s.Require().NoError(err)
+				s.Equal([]string{tc.wantForm["name"]}, form.Value["name"])
+				s.NotContains(form.Value, "note")
+				f, err := form.File["file"][0].Open()
+				s.Require().NoError(err)
+				data, _ := io.ReadAll(f)
+				s.Equal(tc.wantForm["file"], string(data))
+
+				return
+			}
+			s.Equal("application/json", contentType)
 			if tc.wantBody == "" {
 				s.Nil(body)
 			} else {

@@ -265,12 +265,12 @@ osapi client node service create \
 ## Staleness detection
 
 When you upload an object again with new content, the deployments of it become
-stale. The deployed file is then different from the source. `file list --stale`
+stale. The deployed file is then different from the source. `file stale list`
 finds this. It compares the SHA-256 of each deployment with the current content
 of the object.
 
 ```bash
-osapi client file list --stale
+osapi client file stale list
 ```
 
 The controller does this check, and it does not contact the agents. It compares

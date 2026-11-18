@@ -6,12 +6,12 @@
  */
 
 export interface FileInfoResponse {
+  /** How the file should be treated during deploy (raw or template). */
+  content_type: string;
   /** The name of the file. */
   name: string;
   /** SHA-256 hash of the file content. */
   sha256: string;
   /** File size in bytes. */
   size: number;
-  /** How the file should be treated during deploy (raw or template). */
-  content_type: string;
 }

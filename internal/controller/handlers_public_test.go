@@ -76,10 +76,10 @@ func (s *HandlersPublicTestSuite) TestHandlers() {
 			want:  base,
 		},
 		{
-			name:  "when the Object Store is there adds the file handler",
+			name:  "when the Object Store is there the endpoint groups serve it, with no handler of its own",
 			cfg:   func() config.Config { return cfg },
 			files: true,
-			want:  base + 1,
+			want:  base,
 		},
 		{
 			name: "when the UI is off leaves the UI handler out",

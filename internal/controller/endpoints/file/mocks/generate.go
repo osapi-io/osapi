@@ -17,32 +17,6 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+package mocks
 
-// Package file provides file management API handlers.
-package file
-
-import (
-	"log/slog"
-
-	"github.com/osapi-io/osapi/internal/controller/api/file/gen"
-)
-
-// ensure that we've conformed to the `StrictServerInterface` with a compile-time check
-var _ gen.StrictServerInterface = (*File)(nil)
-
-// New factory to create a new instance.
-func New(
-	logger *slog.Logger,
-	objStore ObjectStoreManager,
-	objBucket string,
-	stateKV StateKeyValue,
-	stateBucket string,
-) *File {
-	return &File{
-		objStore:    objStore,
-		objBucket:   objBucket,
-		stateKV:     stateKV,
-		stateBucket: stateBucket,
-		logger:      logger.With(slog.String("subsystem", "controller.file")),
-	}
-}
+//go:generate go tool go.uber.org/mock/mockgen -source=../deps.go -destination=deps.gen.go -package=mocks

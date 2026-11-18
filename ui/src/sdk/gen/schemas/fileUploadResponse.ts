@@ -6,14 +6,14 @@
  */
 
 export interface FileUploadResponse {
+  /** Whether the file content changed. False when the Object Store already held an object with the same SHA-256 digest. */
+  changed: boolean;
+  /** How the file should be treated during deploy (raw or template). */
+  content_type: string;
   /** The name of the uploaded file. */
   name: string;
   /** SHA-256 hash of the file content. */
   sha256: string;
   /** File size in bytes. */
   size: number;
-  /** Whether the file content changed. False when the Object Store already held an object with the same SHA-256 digest. */
-  changed: boolean;
-  /** How the file should be treated during deploy (raw or template). */
-  content_type: string;
 }

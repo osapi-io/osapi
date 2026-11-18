@@ -2,8 +2,10 @@
 
 Delete a file from the Object Store.
 
+Delete a file from the Object Store.
+
 ```bash
-osapi client file delete
+osapi client file delete [flags]
 ```
 
 ## Examples
@@ -13,11 +15,16 @@ osapi client file delete --name app.conf
 osapi client file delete --name app.conf --json
 ```
 
+## Permission
+
+It needs the `file:write` permission. `osapi token roles` lists the roles that
+grant it.
+
 ## Flags
 
-| Flag     | Description                                     | Default |
-| -------- | ----------------------------------------------- | ------- |
-| `--name` | Name of the file in the Object Store (required) |         |
+| Flag     | Description                                         | Default |
+| -------- | --------------------------------------------------- | ------- |
+| `--name` | The name of the file in the Object Store (required) |         |
 
 ## Global flags
 

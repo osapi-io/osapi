@@ -2,11 +2,10 @@
 
 List stored files.
 
-With `--stale`, the list shows the deployments whose object changed after the
-last deploy. Those are the files that you must deploy again.
+List all files stored in the Object Store.
 
 ```bash
-osapi client file list [flags]
+osapi client file list
 ```
 
 ## Examples
@@ -14,14 +13,12 @@ osapi client file list [flags]
 ```bash
 osapi client file list
 osapi client file list --json
-osapi client file list --stale
 ```
 
-## Flags
+## Permission
 
-| Flag      | Description                                                       | Default |
-| --------- | ----------------------------------------------------------------- | ------- |
-| `--stale` | List only deployments whose file changed since they were deployed |         |
+It needs the `file:read` permission. `osapi token roles` lists the roles that
+grant it.
 
 ## Global flags
 

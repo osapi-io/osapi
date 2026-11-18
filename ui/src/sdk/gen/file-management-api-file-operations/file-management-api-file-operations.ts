@@ -16,6 +16,64 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
+export type getFilesResponse200 = {
+  data: FileListResponse
+  status: 200
+}
+
+export type getFilesResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getFilesResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getFilesResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type getFilesResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
+export type getFilesResponseSuccess = (getFilesResponse200) & {
+  headers: Headers;
+};
+export type getFilesResponseError = (getFilesResponse401 | getFilesResponse403 | getFilesResponse500 | getFilesResponse503) & {
+  headers: Headers;
+};
+
+export type getFilesResponse = (getFilesResponseSuccess | getFilesResponseError)
+
+export const getGetFilesUrl = () => {
+
+
+
+
+  return `/api/file`
+}
+
+/**
+ * List all files stored in the Object Store.
+ * @summary List stored files
+ */
+export const getFiles = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getFilesResponse> => {
+
+  return apiFetch<getFilesResponse>(getGetFilesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
 export type postFileResponse200 = {
   data: FileUploadResponse
   status: 200
@@ -51,10 +109,15 @@ export type postFileResponse500 = {
   status: 500
 }
 
+export type postFileResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postFileResponseSuccess = (postFileResponse200 | postFileResponse201) & {
   headers: Headers;
 };
-export type postFileResponseError = (postFileResponse400 | postFileResponse401 | postFileResponse403 | postFileResponse409 | postFileResponse500) & {
+export type postFileResponseError = (postFileResponse400 | postFileResponse401 | postFileResponse403 | postFileResponse409 | postFileResponse500 | postFileResponse503) & {
   headers: Headers;
 };
 
@@ -74,11 +137,11 @@ export const getPostFileUrl = () => {
  */
 export const postFile = async (postFileBody: PostFileBody, options?: Parameters<typeof apiFetch>[1]): Promise<postFileResponse> => {
     const formData = new FormData();
-formData.append(`name`, postFileBody.name);
 if(postFileBody.content_type !== undefined) {
  formData.append(`content_type`, postFileBody.content_type);
  }
 formData.append(`file`, postFileBody.file);
+formData.append(`name`, postFileBody.name);
 
   return apiFetch<postFileResponse>(getPostFileUrl(),
   {
@@ -90,106 +153,68 @@ formData.append(`file`, postFileBody.file);
 );}
 
 
-export type getFilesResponse200 = {
-  data: FileListResponse
-  status: 200
+export type deleteFileByNameResponse204 = {
+  data: void
+  status: 204
 }
 
-export type getFilesResponse401 = {
+export type deleteFileByNameResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type deleteFileByNameResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type getFilesResponse403 = {
+export type deleteFileByNameResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type getFilesResponse500 = {
+export type deleteFileByNameResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteFileByNameResponse500 = {
   data: ErrorResponse
   status: 500
 }
 
-export type getFilesResponseSuccess = (getFilesResponse200) & {
+export type deleteFileByNameResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
+export type deleteFileByNameResponseSuccess = (deleteFileByNameResponse204) & {
   headers: Headers;
 };
-export type getFilesResponseError = (getFilesResponse401 | getFilesResponse403 | getFilesResponse500) & {
+export type deleteFileByNameResponseError = (deleteFileByNameResponse400 | deleteFileByNameResponse401 | deleteFileByNameResponse403 | deleteFileByNameResponse404 | deleteFileByNameResponse500 | deleteFileByNameResponse503) & {
   headers: Headers;
 };
 
-export type getFilesResponse = (getFilesResponseSuccess | getFilesResponseError)
+export type deleteFileByNameResponse = (deleteFileByNameResponseSuccess | deleteFileByNameResponseError)
 
-export const getGetFilesUrl = () => {
-
-
+export const getDeleteFileByNameUrl = (name: string,) => {
 
 
-  return `/api/file`
+
+
+  return `/api/file/${name}`
 }
 
 /**
- * List all files stored in the Object Store.
- * @summary List stored files
+ * Delete a file from the Object Store.
+ * @summary Delete a file
  */
-export const getFiles = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getFilesResponse> => {
+export const deleteFileByName = async (name: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteFileByNameResponse> => {
 
-  return apiFetch<getFilesResponse>(getGetFilesUrl(),
+  return apiFetch<deleteFileByNameResponse>(getDeleteFileByNameUrl(name),
   {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-export type getFileStaleResponse200 = {
-  data: StaleDeploymentsResponse
-  status: 200
-}
-
-export type getFileStaleResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type getFileStaleResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type getFileStaleResponse500 = {
-  data: ErrorResponse
-  status: 500
-}
-
-export type getFileStaleResponseSuccess = (getFileStaleResponse200) & {
-  headers: Headers;
-};
-export type getFileStaleResponseError = (getFileStaleResponse401 | getFileStaleResponse403 | getFileStaleResponse500) & {
-  headers: Headers;
-};
-
-export type getFileStaleResponse = (getFileStaleResponseSuccess | getFileStaleResponseError)
-
-export const getGetFileStaleUrl = () => {
-
-
-
-
-  return `/api/file/stale`
-}
-
-/**
- * Returns deployments where the source object in the Object Store has been updated since the file was last deployed. Controller-only check that compares state KV SHA-256 hashes against current object content.
- * @summary List stale file deployments
- */
-export const getFileStale = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getFileStaleResponse> => {
-
-  return apiFetch<getFileStaleResponse>(getGetFileStaleUrl(),
-  {
-    ...options,
-    method: 'GET'
+    method: 'DELETE'
 
 
   }
@@ -226,10 +251,15 @@ export type getFileByNameResponse500 = {
   status: 500
 }
 
+export type getFileByNameResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getFileByNameResponseSuccess = (getFileByNameResponse200) & {
   headers: Headers;
 };
-export type getFileByNameResponseError = (getFileByNameResponse400 | getFileByNameResponse401 | getFileByNameResponse403 | getFileByNameResponse404 | getFileByNameResponse500) & {
+export type getFileByNameResponseError = (getFileByNameResponse400 | getFileByNameResponse401 | getFileByNameResponse403 | getFileByNameResponse404 | getFileByNameResponse500 | getFileByNameResponse503) & {
   headers: Headers;
 };
 
@@ -289,10 +319,15 @@ export type putFileByNameResponse500 = {
   status: 500
 }
 
+export type putFileByNameResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type putFileByNameResponseSuccess = (putFileByNameResponse200 | putFileByNameResponse201) & {
   headers: Headers;
 };
-export type putFileByNameResponseError = (putFileByNameResponse400 | putFileByNameResponse401 | putFileByNameResponse403 | putFileByNameResponse500) & {
+export type putFileByNameResponseError = (putFileByNameResponse400 | putFileByNameResponse401 | putFileByNameResponse403 | putFileByNameResponse500 | putFileByNameResponse503) & {
   headers: Headers;
 };
 
@@ -328,63 +363,58 @@ formData.append(`file`, putFileByNameBody.file);
 );}
 
 
-export type deleteFileByNameResponse204 = {
-  data: void
-  status: 204
+export type getFileStaleResponse200 = {
+  data: StaleDeploymentsResponse
+  status: 200
 }
 
-export type deleteFileByNameResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type deleteFileByNameResponse401 = {
+export type getFileStaleResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type deleteFileByNameResponse403 = {
+export type getFileStaleResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type deleteFileByNameResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type deleteFileByNameResponse500 = {
+export type getFileStaleResponse500 = {
   data: ErrorResponse
   status: 500
 }
 
-export type deleteFileByNameResponseSuccess = (deleteFileByNameResponse204) & {
+export type getFileStaleResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
+export type getFileStaleResponseSuccess = (getFileStaleResponse200) & {
   headers: Headers;
 };
-export type deleteFileByNameResponseError = (deleteFileByNameResponse400 | deleteFileByNameResponse401 | deleteFileByNameResponse403 | deleteFileByNameResponse404 | deleteFileByNameResponse500) & {
+export type getFileStaleResponseError = (getFileStaleResponse401 | getFileStaleResponse403 | getFileStaleResponse500 | getFileStaleResponse503) & {
   headers: Headers;
 };
 
-export type deleteFileByNameResponse = (deleteFileByNameResponseSuccess | deleteFileByNameResponseError)
+export type getFileStaleResponse = (getFileStaleResponseSuccess | getFileStaleResponseError)
 
-export const getDeleteFileByNameUrl = (name: string,) => {
-
-
+export const getGetFileStaleUrl = () => {
 
 
-  return `/api/file/${name}`
+
+
+  return `/api/file/stale`
 }
 
 /**
- * Delete a file from the Object Store.
- * @summary Delete a file
+ * Returns deployments where the source object in the Object Store has been updated since the file was last deployed. Controller-only check that compares state KV SHA-256 hashes against current object content.
+ * @summary List stale file deployments
  */
-export const deleteFileByName = async (name: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteFileByNameResponse> => {
+export const getFileStale = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getFileStaleResponse> => {
 
-  return apiFetch<deleteFileByNameResponse>(getDeleteFileByNameUrl(name),
+  return apiFetch<getFileStaleResponse>(getGetFileStaleUrl(),
   {
     ...options,
-    method: 'DELETE'
+    method: 'GET'
 
 
   }

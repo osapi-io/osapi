@@ -22,20 +22,31 @@ package controller
 
 import (
 	"context"
+	"io"
 	"log/slog"
 
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
-	"github.com/osapi-io/osapi/internal/controller/api/file"
+	fileEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/file"
 	"github.com/osapi-io/osapi/internal/job"
 )
 
 // fileBuckets is the part of a NATS client that the file endpoints use.
 type fileBuckets interface {
-	file.ObjectStoreManager
-	file.StateKeyValue
+	ObjectPut(
+		ctx context.Context,
+		bucket string,
+		meta jetstream.ObjectMeta,
+		reader io.Reader,
+	) (*jetstream.ObjectInfo, error)
+	ObjectGetBytes(ctx context.Context, bucket string, name string) ([]byte, error)
+	ObjectInfo(ctx context.Context, bucket string, name string) (*jetstream.ObjectInfo, error)
+	ObjectDelete(ctx context.Context, bucket string, name string) error
+	ObjectList(ctx context.Context, bucket string) ([]*jetstream.ObjectInfo, error)
+	KVKeys(ctx context.Context, bucket string, filters ...string) ([]string, error)
+	KVGet(ctx context.Context, bucket string, key string) (jetstream.KeyValueEntry, error)
 	ObjectStoreCreateOrUpdate(ctx context.Context, config jetstream.ObjectStoreConfig) error
 	KVStatus(ctx context.Context, bucket string) (jetstream.KeyValueStatus, error)
 }
@@ -73,4 +84,82 @@ func openFileBuckets(
 	}
 
 	return objBucket, stateBucket
+}
+
+// fileDeps is what the file group uses: the Object Store and the file-state
+// bucket, each bound to its name, and nil when it is not open.
+func fileDeps(
+	nc fileBuckets,
+	objBucket string,
+	stateBucket string,
+) fileEndpoint.Deps {
+	var d fileEndpoint.Deps
+	if objBucket != "" {
+		d.Objects = objects{nc: nc, bucket: objBucket}
+	}
+	if stateBucket != "" {
+		d.States = states{nc: nc, bucket: stateBucket}
+	}
+
+	return d
+}
+
+// objects is the Object Store bucket of the files.
+type objects struct {
+	nc     fileBuckets
+	bucket string
+}
+
+func (o objects) Put(
+	ctx context.Context,
+	meta jetstream.ObjectMeta,
+	r io.Reader,
+) (*jetstream.ObjectInfo, error) {
+	return o.nc.ObjectPut(ctx, o.bucket, meta, r)
+}
+
+func (o objects) GetBytes(
+	ctx context.Context,
+	name string,
+) ([]byte, error) {
+	return o.nc.ObjectGetBytes(ctx, o.bucket, name)
+}
+
+func (o objects) Info(
+	ctx context.Context,
+	name string,
+) (*jetstream.ObjectInfo, error) {
+	return o.nc.ObjectInfo(ctx, o.bucket, name)
+}
+
+func (o objects) Delete(
+	ctx context.Context,
+	name string,
+) error {
+	return o.nc.ObjectDelete(ctx, o.bucket, name)
+}
+
+func (o objects) List(
+	ctx context.Context,
+) ([]*jetstream.ObjectInfo, error) {
+	return o.nc.ObjectList(ctx, o.bucket)
+}
+
+// states is the KV bucket of the deploy state.
+type states struct {
+	nc     fileBuckets
+	bucket string
+}
+
+func (s states) Keys(
+	ctx context.Context,
+) ([]string, error) {
+	return s.nc.KVKeys(ctx, s.bucket)
+}
+
+func (s states) Get(
+	ctx context.Context,
+	key string,
+) (jetstream.KeyValueEntry, error) {
+	return s.nc.KVGet(ctx, s.bucket, key)
 }

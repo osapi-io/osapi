@@ -25,13 +25,10 @@ Ask these tools. Do not use your memory. If a tool and this skill do not agree,
 the tool is correct.
 
 The DSL makes the spec, the routes, the decoders and the CLI commands of a
-group. A group's handlers are typed functions. The agent, telemetry, audit, job, facts and health groups are served, and
-their commands are made, from their definitions. The other groups still have a
-hand-written spec, handler and commands, until they move. Some parts are not
-built yet.
-`controller endpoint spec` lists them under "Not supported yet". If the work
-needs one of them, stop and say so. That is a platform change, and a person
-decides it. Do not add code around it.
+group. A group's handlers are typed functions. Each controller group is served,
+and its commands are made, from its definition. If the work needs a part that
+`controller endpoint spec` does not list, stop and say so. That is a platform
+change, and a person decides it. Do not add code around it.
 
 The design, with what is built and what comes next, is
 `components/osapi/endpoints.md` in osapi-io/specs. Read it first.
@@ -137,6 +134,9 @@ The CLI:
    is a flag, named for its json name with `_` as `-`; a field of an
    `in:"body"` struct is a flag too. Keep the flag of the hand-written command
    with the `flag` and `short` tags, such as `-T/--target`.
+   A `[]byte` field is a file. In the API it is a part of an `in:"form"`
+   multipart body. In the CLI its flag is the path of a local file, and the
+   command sends the content of that file, such as `file upload --file`.
    Each command is `<group> <resource> <verb>`, such as `telemetry trace get`:
    the verb is `list`, `get`, `create`, `update`, `delete`, or an action such
    as `retry`, never a noun. A verb that the group has as a method already
@@ -217,8 +217,8 @@ Never edit a path that `controller endpoint spec` lists under "Generated, never
 edited". Change the definition and generate. Do not write CLI docs for an
 endpoint.
 
-## Not yet
+## What the DSL does not do
 
-`controller endpoint spec` lists what the DSL cannot do yet, under "Not
-supported yet". If a request needs one, say so and stop. Do not write a handler
-for a group, and do not wire a group into the controller by hand.
+`controller endpoint spec` lists each part of the DSL. If a request needs a part
+that is not in the list, say so and stop. Do not write a handler for a group,
+and do not wire a group into the controller by hand.
