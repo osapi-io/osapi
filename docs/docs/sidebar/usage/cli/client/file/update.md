@@ -6,7 +6,7 @@ The command replaces the content of a stored file, or stores it when the name is
 new. The same content changes nothing (`Changed: false`).
 
 ```bash
-osapi client file update
+osapi client file update [flags]
 ```
 
 ## Examples
@@ -22,11 +22,11 @@ grant it.
 
 ## Flags
 
-| Flag             | Description                                            | Default |
-| ---------------- | ------------------------------------------------------ | ------- |
-| `--content-type` | File type: raw or template                             | `raw`   |
-| `--file`         | Path to the local file with the new content (required) |         |
-| `--name`         | Name of the file in the Object Store (required)        |         |
+| Flag             | Description                                                                                                                                  | Default |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `--content-type` | How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts (raw, template) | `raw`   |
+| `--file`         | Path to the local file with the file content (required)                                                                                      |         |
+| `--name`         | The name of the file in the Object Store (required)                                                                                          |         |
 
 ## Global flags
 

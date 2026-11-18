@@ -6,7 +6,7 @@
  */
 
 /**
- * How the file should be treated during deploy. "raw" writes bytes as-is; "template" renders with Go text/template and agent facts.
+ * How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts.
  */
 export type PutFileByNameBodyContentType = typeof PutFileByNameBodyContentType[keyof typeof PutFileByNameBodyContentType];
 

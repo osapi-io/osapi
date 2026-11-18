@@ -27,11 +27,14 @@
 package command
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"mime/multipart"
 	"net/url"
+	"os"
 	"reflect"
 	"strings"
 
@@ -44,10 +47,11 @@ import (
 
 // Caller sends one request to the API. The SDK client satisfies it.
 type Caller interface {
-	Request(
+	Send(
 		ctx context.Context,
 		method string,
 		path string,
+		contentType string,
 		body []byte,
 	) (*client.Response[json.RawMessage], error)
 }
@@ -202,14 +206,14 @@ func Run[In any](
 	in In,
 ) {
 	m := g.Method(method)
-	path, body, err := Build(g, m, in)
+	path, body, contentType, err := Build(g, m, in)
 	if err != nil {
 		deps.Error(err)
 
 		return
 	}
 
-	resp, err := deps.Caller().Request(cmd.Context(), m.Verb, path, body)
+	resp, err := deps.Caller().Send(cmd.Context(), m.Verb, path, contentType, body)
 	data, ok := answered(m, err)
 	if err != nil && !ok {
 		deps.Error(err)
@@ -247,11 +251,14 @@ func Build(
 	g *endpoint.Group,
 	m *endpoint.Method,
 	in any,
-) (string, []byte, error) {
+) (string, []byte, string, error) {
 	v := reflect.ValueOf(in)
 	path := g.Path(m)
 	query := url.Values{}
 	body := map[string]any{}
+	form := &bytes.Buffer{}
+	parts := multipart.NewWriter(form)
+	hasForm := false
 	var whole any
 
 	if v.Kind() == reflect.Struct {
@@ -278,6 +285,9 @@ func Build(
 				}
 			case "body":
 				whole = value.Interface()
+			case "form":
+				hasForm = true
+				formPart(parts, name, value)
 			default:
 				body[name] = value.Interface()
 			}
@@ -288,17 +298,44 @@ func Build(
 	}
 
 	switch {
+	case hasForm:
+		_ = parts.Close()
+
+		return path, form.Bytes(), parts.FormDataContentType(), nil
 	case whole != nil:
 		data, err := json.Marshal(whole)
 
-		return path, data, err
+		return path, data, jsonType, err
 	case len(body) > 0:
 		data, err := json.Marshal(body)
 
-		return path, data, err
+		return path, data, jsonType, err
 	}
 
-	return path, nil, nil
+	return path, nil, jsonType, nil
+}
+
+// jsonType is the content type of a JSON body.
+const jsonType = "application/json"
+
+// formPart writes a field of a form: a []byte as the file of that name,
+// and each other value as text. A zero value is not sent, so the server
+// applies its default.
+func formPart(
+	parts *multipart.Writer,
+	name string,
+	value reflect.Value,
+) {
+	if value.IsZero() {
+		return
+	}
+	if data, ok := value.Interface().([]byte); ok {
+		file, _ := parts.CreateFormFile(name, name)
+		_, _ = file.Write(data)
+
+		return
+	}
+	_ = parts.WriteField(name, fmt.Sprint(value.Interface()))
 }
 
 // answered is the body of an error answer whose status the method
@@ -319,4 +356,19 @@ func answered(
 	}
 
 	return nil, false
+}
+
+// ReadFile is the content of the local file at path, for a flag of a []byte
+// field. A file that it cannot read is reported, and ok is false.
+func ReadFile(
+	path string,
+) ([]byte, bool) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		deps.Error(fmt.Errorf("read %s: %w", path, err))
+
+		return nil, false
+	}
+
+	return data, true
 }

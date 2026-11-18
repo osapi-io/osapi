@@ -31,7 +31,6 @@ import (
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/behavior/server"
 	"github.com/osapi-io/osapi/internal/config"
-	"github.com/osapi-io/osapi/internal/controller/api/file"
 	nodeAPI "github.com/osapi-io/osapi/internal/controller/api/node"
 	certificateAPI "github.com/osapi-io/osapi/internal/controller/api/node/certificate"
 	commandAPI "github.com/osapi-io/osapi/internal/controller/api/node/command"
@@ -81,8 +80,8 @@ type handlerDeps struct {
 	enrollment      *enrollment.Watcher
 }
 
-// handlers returns each REST API handler. The file and UI handlers are
-// only there when their parts are.
+// handlers returns each REST API handler. The UI handler is only there
+// when it is enabled.
 func handlers(
 	d handlerDeps,
 ) []func(e *echo.Echo) {
@@ -116,6 +115,7 @@ func handlers(
 			auditEndpoint.Deps{Store: d.auditStore},
 			jobEndpoint.Deps{Jobs: d.jobs},
 			healthEndpoint.Deps{Health: reporter},
+			fileDeps(d.nats, d.objBucket, d.fileStateBucket),
 			factsEndpoint.Deps{},
 		)...,
 	)
@@ -140,20 +140,6 @@ func handlers(
 	handlers = append(handlers, serviceAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, logAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, nodeFileAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
-	if d.objBucket != "" {
-		handlers = append(
-			handlers,
-			file.Handler(
-				d.log,
-				d.nats,
-				d.objBucket,
-				d.nats,
-				d.fileStateBucket,
-				signingKey,
-				customRoles,
-			)...,
-		)
-	}
 
 	if d.cfg.Controller.UI.UIEnabled() {
 		// The embedded assets are under dist/ in the ui package. fs.Sub fails

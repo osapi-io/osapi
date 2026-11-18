@@ -32,7 +32,6 @@ const (
 	KindTag        = "tag"
 	KindCheck      = "check"
 	KindGenerated  = "generated"
-	KindNotYet     = "not-yet"
 )
 
 // Spec is every term of the endpoint DSL. osapi controller endpoint spec
@@ -49,7 +48,6 @@ var Spec = guide.Spec{
 		{Kind: KindTag, Title: "Tags on input and output fields"},
 		{Kind: KindCheck, Title: "What holds a group to its spec"},
 		{Kind: KindGenerated, Title: "Generated, never edited"},
-		{Kind: KindNotYet, Title: "Not supported yet"},
 	},
 	Terms: []guide.Term{
 		{
@@ -442,12 +440,6 @@ var Spec = guide.Spec{
 			Name: "internal/controller/api/gen/, pkg/sdk/client/gen/, ui/src/sdk/gen/, docs/docs/gen/",
 			Does: "The joined spec, the SDK, the UI client and the API pages, from just generate.",
 			When: "Change the definition, then generate. A generated file that is wrong is fixed in the definition or in internal/controller/endpoint/gen.",
-		},
-		{
-			Kind: KindNotYet,
-			Name: "Multipart uploads",
-			Does: "A body of multipart/form-data, as POST /api/file has.",
-			When: "Comes when the file group moves.",
 		},
 	},
 }

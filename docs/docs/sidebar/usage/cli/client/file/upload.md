@@ -7,24 +7,28 @@ exists with different content, the command rejects the upload with 409 Conflict.
 `file update` replaces the file.
 
 ```bash
-osapi client file upload
+osapi client file upload [flags]
 ```
 
 ## Examples
 
 ```bash
 osapi client file upload --name app.conf --file /tmp/app.conf
-osapi client file upload --name app.conf.tmpl --file /tmp/app.conf.tmpl \
-  --content-type template
+osapi client file upload --name app.conf.tmpl --file /tmp/app.conf.tmpl --content-type template
 ```
+
+## Permission
+
+It needs the `file:write` permission. `osapi token roles` lists the roles that
+grant it.
 
 ## Flags
 
-| Flag             | Description                                      | Default |
-| ---------------- | ------------------------------------------------ | ------- |
-| `--content-type` | File type: raw or template (default raw)         | `raw`   |
-| `--file`         | Path to the local file to upload (required)      |         |
-| `--name`         | Name for the file in the Object Store (required) |         |
+| Flag             | Description                                                                                                                                  | Default |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `--content-type` | How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts (raw, template) | `raw`   |
+| `--file`         | Path to the local file with the file content (required)                                                                                      |         |
+| `--name`         | The name of the file in the Object Store (required)                                                                                          |         |
 
 ## Global flags
 

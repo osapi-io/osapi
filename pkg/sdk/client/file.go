@@ -76,6 +76,7 @@ func (s *FileService) Upload(
 		resp.JSON403,
 		resp.JSON409,
 		resp.JSON500,
+		resp.JSON503,
 	); err != nil {
 		return nil, err
 	}
@@ -107,6 +108,7 @@ func (s *FileService) Update(
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,
+		resp.JSON503,
 	); err != nil {
 		return nil, err
 	}
@@ -171,6 +173,7 @@ func (s *FileService) List(
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,
+		resp.JSON503,
 	); err != nil {
 		return nil, err
 	}
@@ -202,6 +205,7 @@ func (s *FileService) Get(
 		resp.JSON403,
 		resp.JSON404,
 		resp.JSON500,
+		resp.JSON503,
 	); err != nil {
 		return nil, err
 	}
@@ -233,6 +237,7 @@ func (s *FileService) Delete(
 		resp.JSON403,
 		resp.JSON404,
 		resp.JSON500,
+		resp.JSON503,
 	)
 }
 
@@ -251,6 +256,7 @@ func (s *FileService) ListStale(
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,
+		resp.JSON503,
 	); err != nil {
 		return nil, err
 	}

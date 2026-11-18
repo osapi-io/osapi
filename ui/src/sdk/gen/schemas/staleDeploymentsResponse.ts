@@ -7,6 +7,7 @@
 import type { StaleDeployment } from './staleDeployment';
 
 export interface StaleDeploymentsResponse {
+  /** The stale deployments. */
   items: StaleDeployment[];
   /** Total number of stale deployments. */
   total_items: number;

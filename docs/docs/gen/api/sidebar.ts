@@ -110,6 +110,52 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "File",
+      link: {
+        type: "doc",
+        id: "gen/api/file-management-api-file-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-files",
+          label: "List stored files",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-file",
+          label: "Upload a file",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-file-by-name",
+          label: "Delete a file",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-file-by-name",
+          label: "Get file metadata",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-file-by-name",
+          label: "Replace a file",
+          className: "api-method put",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-file-stale",
+          label: "List stale file deployments",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Health",
       link: {
         type: "doc",
@@ -183,52 +229,6 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/get-trace",
           label: "Get the spans of a trace",
           className: "api-method get",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "File",
-      link: {
-        type: "doc",
-        id: "gen/api/file-management-api-file-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/post-file",
-          label: "Upload a file",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-files",
-          label: "List stored files",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-file-stale",
-          label: "List stale file deployments",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-file-by-name",
-          label: "Get file metadata",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/put-file-by-name",
-          label: "Replace a file",
-          className: "api-method put",
-        },
-        {
-          type: "doc",
-          id: "gen/api/delete-file-by-name",
-          label: "Delete a file",
-          className: "api-method delete",
         },
       ],
     },

@@ -2,8 +2,10 @@
 
 Get file metadata.
 
+Get metadata for a specific file in the Object Store.
+
 ```bash
-osapi client file get
+osapi client file get [flags]
 ```
 
 ## Examples
@@ -13,11 +15,16 @@ osapi client file get --name app.conf
 osapi client file get --name app.conf --json
 ```
 
+## Permission
+
+It needs the `file:read` permission. `osapi token roles` lists the roles that
+grant it.
+
 ## Flags
 
-| Flag     | Description                                     | Default |
-| -------- | ----------------------------------------------- | ------- |
-| `--name` | Name of the file in the Object Store (required) |         |
+| Flag     | Description                                         | Default |
+| -------- | --------------------------------------------------- | ------- |
+| `--name` | The name of the file in the Object Store (required) |         |
 
 ## Global flags
 

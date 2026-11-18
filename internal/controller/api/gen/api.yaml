@@ -26,6 +26,9 @@ tags:
   - description: Fact key discovery for @fact. references.
     name: Facts_API_facts
     x-displayName: Facts
+  - description: Object Store file management operations.
+    name: File_Management_API_file_operations
+    x-displayName: File
   - description: Health check endpoints for liveness, readiness, and detailed status.
     name: Health_Check_API_health
     x-displayName: Health
@@ -35,9 +38,6 @@ tags:
   - description: Telemetry endpoints, such as the spans of a trace.
     name: Telemetry_API_telemetry
     x-displayName: Telemetry
-  - name: File_Management_API_file_operations
-    x-displayName: File
-    description: Object Store file management operations.
   - name: Node_Management_API_node_operations
     x-displayName: Node
     description: Operations related to the node endpoint.
@@ -778,6 +778,405 @@ paths:
       summary: List available fact keys
       tags:
         - Facts_API_facts
+  /api/file:
+    servers: []
+    get:
+      description: List all files stored in the Object Store.
+      operationId: GetFiles
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileListResponse'
+          description: List of stored files.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The Object Store is not configured on the controller.
+      security:
+        - BearerAuth:
+            - file:read
+      summary: List stored files
+      tags:
+        - File_Management_API_file_operations
+    post:
+      description: Upload a file to the Object Store.
+      operationId: PostFile
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                content_type:
+                  default: raw
+                  description: >-
+                    How the file should be treated during deploy. raw writes
+                    bytes as-is; template renders with Go text/template and
+                    agent facts.
+                  enum:
+                    - raw
+                    - template
+                  type: string
+                file:
+                  description: The file content.
+                  format: binary
+                  minLength: 1
+                  type: string
+                name:
+                  description: The name of the file in the Object Store.
+                  example: nginx.conf
+                  maxLength: 255
+                  minLength: 1
+                  type: string
+              required:
+                - name
+                - file
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadResponse'
+          description: The file exists with the same content. Nothing changed.
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadResponse'
+          description: The file is new.
+          headers:
+            Location:
+              description: The URL of the resource that the request created.
+              schema:
+                type: string
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The file is an osapi file, which a caller cannot write.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The file exists with different content. Replace it with PUT
+            /api/file/{name}.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The Object Store is not configured on the controller.
+      security:
+        - BearerAuth:
+            - file:write
+      summary: Upload a file
+      tags:
+        - File_Management_API_file_operations
+  /api/file/{name}:
+    servers: []
+    delete:
+      description: Delete a file from the Object Store.
+      operationId: DeleteFileByName
+      parameters:
+        - description: The name of the file in the Object Store.
+          in: path
+          name: name
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+      responses:
+        '204':
+          description: File deleted.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The file is an osapi file, which a caller cannot delete.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: File not found.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The Object Store is not configured on the controller.
+      security:
+        - BearerAuth:
+            - file:write
+      summary: Delete a file
+      tags:
+        - File_Management_API_file_operations
+    get:
+      description: Get metadata for a specific file in the Object Store.
+      operationId: GetFileByName
+      parameters:
+        - description: The name of the file in the Object Store.
+          in: path
+          name: name
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileInfoResponse'
+          description: The metadata of the file.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: File not found.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The Object Store is not configured on the controller.
+      security:
+        - BearerAuth:
+            - file:read
+      summary: Get file metadata
+      tags:
+        - File_Management_API_file_operations
+    put:
+      description: Replace a file in the Object Store, or create it when the name is new.
+      operationId: PutFileByName
+      parameters:
+        - description: The name of the file in the Object Store.
+          in: path
+          name: name
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                content_type:
+                  default: raw
+                  description: >-
+                    How the file should be treated during deploy. raw writes
+                    bytes as-is; template renders with Go text/template and
+                    agent facts.
+                  enum:
+                    - raw
+                    - template
+                  type: string
+                file:
+                  description: The file content.
+                  format: binary
+                  minLength: 1
+                  type: string
+              required:
+                - file
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadResponse'
+          description: The file existed. changed says whether its content changed.
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadResponse'
+          description: The file is new.
+          headers:
+            Location:
+              description: The URL of the resource that the request created.
+              schema:
+                type: string
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The file is an osapi file, which a caller cannot write.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The Object Store is not configured on the controller.
+      security:
+        - BearerAuth:
+            - file:write
+      summary: Replace a file
+      tags:
+        - File_Management_API_file_operations
+  /api/file/stale:
+    servers: []
+    get:
+      description: >-
+        Returns deployments where the source object in the Object Store has been
+        updated since the file was last deployed. Controller-only check that
+        compares state KV SHA-256 hashes against current object content.
+      operationId: GetFileStale
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaleDeploymentsResponse'
+          description: The stale deployments.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The Object Store or the file state KV is not configured.
+      security:
+        - BearerAuth:
+            - file:read
+      summary: List stale file deployments
+      tags:
+        - File_Management_API_file_operations
   /api/health:
     servers: []
     get:
@@ -1194,353 +1593,6 @@ paths:
       summary: Get the spans of a trace
       tags:
         - Telemetry_API_telemetry
-  /api/file:
-    servers: []
-    post:
-      summary: Upload a file
-      description: Upload a file to the Object Store.
-      tags:
-        - File_Management_API_file_operations
-      operationId: PostFile
-      security:
-        - BearerAuth:
-            - file:write
-      requestBody:
-        description: The file to upload.
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  description: The name of the file in the Object Store.
-                  example: nginx.conf
-                  x-oapi-codegen-extra-tags:
-                    validate: required,min=1,max=255
-                content_type:
-                  type: string
-                  description: >
-                    How the file should be treated during deploy. "raw" writes
-                    bytes as-is; "template" renders with Go text/template and
-                    agent facts.
-                  default: raw
-                  enum:
-                    - raw
-                    - template
-                  x-oapi-codegen-extra-tags:
-                    validate: omitempty,oneof=raw template
-                file:
-                  type: string
-                  format: binary
-                  description: The file content.
-                  x-oapi-codegen-extra-tags:
-                    validate: required,min=1
-              required:
-                - name
-                - file
-      responses:
-        '200':
-          description: |
-            The file exists with the same content. Nothing changed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FileUploadResponse'
-        '201':
-          description: The file is new.
-          headers:
-            Location:
-              description: The URL of the file that the request created.
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FileUploadResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: >
-            The file exists with different content. Replace it with PUT
-            /api/file/{name}.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error uploading file.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    get:
-      summary: List stored files
-      description: List all files stored in the Object Store.
-      tags:
-        - File_Management_API_file_operations
-      operationId: GetFiles
-      security:
-        - BearerAuth:
-            - file:read
-      responses:
-        '200':
-          description: List of stored files.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FileListResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error listing files.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/file/stale:
-    servers: []
-    get:
-      summary: List stale file deployments
-      description: >
-        Returns deployments where the source object in the Object Store has been
-        updated since the file was last deployed. Controller-only check that
-        compares state KV SHA-256 hashes against current object content.
-      tags:
-        - File_Management_API_file_operations
-      operationId: GetFileStale
-      security:
-        - BearerAuth:
-            - file:read
-      responses:
-        '200':
-          description: Stale deployments found (may be empty).
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StaleDeploymentsResponse'
-        '401':
-          description: Unauthorized - API key required.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/file/{name}:
-    servers: []
-    get:
-      summary: Get file metadata
-      description: Get metadata for a specific file in the Object Store.
-      tags:
-        - File_Management_API_file_operations
-      operationId: GetFileByName
-      security:
-        - BearerAuth:
-            - file:read
-      parameters:
-        - $ref: '#/components/parameters/FileName'
-      responses:
-        '200':
-          description: File metadata.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FileInfoResponse'
-        '400':
-          description: Invalid file name.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: File not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving file metadata.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    put:
-      summary: Replace a file
-      description: |
-        Replace a file in the Object Store, or create it when the name is new.
-      tags:
-        - File_Management_API_file_operations
-      operationId: PutFileByName
-      security:
-        - BearerAuth:
-            - file:write
-      parameters:
-        - $ref: '#/components/parameters/FileName'
-      requestBody:
-        description: The new content of the file.
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                content_type:
-                  type: string
-                  description: >
-                    How the file should be treated during deploy. "raw" writes
-                    bytes as-is; "template" renders with Go text/template and
-                    agent facts.
-                  default: raw
-                  enum:
-                    - raw
-                    - template
-                  x-oapi-codegen-extra-tags:
-                    validate: omitempty,oneof=raw template
-                file:
-                  type: string
-                  format: binary
-                  description: The file content.
-                  x-oapi-codegen-extra-tags:
-                    validate: required,min=1
-              required:
-                - file
-      responses:
-        '200':
-          description: |
-            The file existed. changed says whether its content changed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FileUploadResponse'
-        '201':
-          description: The file is new.
-          headers:
-            Location:
-              description: The URL of the file that the request created.
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FileUploadResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error replacing file.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: Delete a file
-      description: Delete a file from the Object Store.
-      tags:
-        - File_Management_API_file_operations
-      operationId: DeleteFileByName
-      security:
-        - BearerAuth:
-            - file:write
-      parameters:
-        - $ref: '#/components/parameters/FileName'
-      responses:
-        '204':
-          description: File deleted.
-        '400':
-          description: Invalid file name.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: File not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error deleting file.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/node/{hostname}:
     servers: []
     get:
@@ -6807,6 +6859,158 @@ components:
         - items
         - total_items
       type: object
+    FileInfo:
+      properties:
+        content_type:
+          description: How the file should be treated during deploy (raw or template).
+          example: raw
+          type: string
+        name:
+          description: The name of the file.
+          example: nginx.conf
+          type: string
+        sha256:
+          description: SHA-256 hash of the file content.
+          example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+          type: string
+        size:
+          description: File size in bytes.
+          example: 1024
+          type: integer
+        source:
+          description: 'Source of the file: ''system'' or ''user''.'
+          example: user
+          type: string
+      required:
+        - name
+        - sha256
+        - size
+        - content_type
+        - source
+      type: object
+    FileInfoResponse:
+      properties:
+        content_type:
+          description: How the file should be treated during deploy (raw or template).
+          example: raw
+          type: string
+        name:
+          description: The name of the file.
+          example: nginx.conf
+          type: string
+        sha256:
+          description: SHA-256 hash of the file content.
+          example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+          type: string
+        size:
+          description: File size in bytes.
+          example: 1024
+          type: integer
+      required:
+        - name
+        - sha256
+        - size
+        - content_type
+      type: object
+    FileListResponse:
+      properties:
+        items:
+          description: List of stored files.
+          items:
+            $ref: '#/components/schemas/FileInfo'
+          type: array
+        total_items:
+          description: Total number of files.
+          example: 5
+          type: integer
+      required:
+        - items
+        - total_items
+      type: object
+    FileUploadResponse:
+      properties:
+        changed:
+          description: >-
+            Whether the file content changed. False when the Object Store
+            already held an object with the same SHA-256 digest.
+          example: true
+          type: boolean
+        content_type:
+          description: How the file should be treated during deploy (raw or template).
+          example: raw
+          type: string
+        name:
+          description: The name of the uploaded file.
+          example: nginx.conf
+          type: string
+        sha256:
+          description: SHA-256 hash of the file content.
+          example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+          type: string
+        size:
+          description: File size in bytes.
+          example: 1024
+          type: integer
+      required:
+        - name
+        - sha256
+        - size
+        - changed
+        - content_type
+      type: object
+    StaleDeployment:
+      properties:
+        current_sha:
+          description: SHA-256 hash of the current object store content.
+          example: 789abc012def
+          type: string
+        deployed_at:
+          description: When the file was last deployed.
+          example: '2026-04-01T18:00:00Z'
+          type: string
+        deployed_sha:
+          description: SHA-256 hash of the currently deployed content.
+          example: abc123def456
+          type: string
+        hostname:
+          description: Host where the file is deployed.
+          example: web-01
+          type: string
+        object_name:
+          description: Name of the object in the Object Store.
+          example: hello-echo
+          type: string
+        path:
+          description: Deployment path on the target host.
+          example: /etc/systemd/system/osapi-hello-echo.service
+          type: string
+        provider:
+          description: Provider that manages this deployment.
+          example: service
+          type: string
+      required:
+        - object_name
+        - hostname
+        - provider
+        - path
+        - deployed_sha
+        - current_sha
+        - deployed_at
+      type: object
+    StaleDeploymentsResponse:
+      properties:
+        items:
+          description: The stale deployments.
+          items:
+            $ref: '#/components/schemas/StaleDeployment'
+          type: array
+        total_items:
+          description: Total number of stale deployments.
+          type: integer
+      required:
+        - items
+        - total_items
+      type: object
     AgentDetail:
       properties:
         hostname:
@@ -7318,160 +7522,6 @@ components:
         - status
         - attributes
       type: object
-    FileInfo:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the file.
-          example: nginx.conf
-        sha256:
-          type: string
-          description: SHA-256 hash of the file content.
-          example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-        size:
-          type: integer
-          description: File size in bytes.
-          example: 1024
-        content_type:
-          type: string
-          description: |
-            How the file should be treated during deploy (raw or template).
-          example: raw
-        source:
-          type: string
-          description: 'Source of the file: ''system'' or ''user''.'
-          example: user
-      required:
-        - name
-        - sha256
-        - size
-        - content_type
-        - source
-    FileUploadResponse:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the uploaded file.
-          example: nginx.conf
-        sha256:
-          type: string
-          description: SHA-256 hash of the file content.
-          example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-        size:
-          type: integer
-          description: File size in bytes.
-          example: 1024
-        changed:
-          type: boolean
-          description: >
-            Whether the file content changed. False when the Object Store
-            already held an object with the same SHA-256 digest.
-          example: true
-        content_type:
-          type: string
-          description: |
-            How the file should be treated during deploy (raw or template).
-          example: raw
-      required:
-        - name
-        - sha256
-        - size
-        - changed
-        - content_type
-    FileListResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/FileInfo'
-          description: List of stored files.
-        total_items:
-          type: integer
-          description: Total number of files.
-          example: 5
-      required:
-        - items
-        - total_items
-    FileInfoResponse:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the file.
-          example: nginx.conf
-        sha256:
-          type: string
-          description: SHA-256 hash of the file content.
-          example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-        size:
-          type: integer
-          description: File size in bytes.
-          example: 1024
-        content_type:
-          type: string
-          description: |
-            How the file should be treated during deploy (raw or template).
-          example: raw
-      required:
-        - name
-        - sha256
-        - size
-        - content_type
-    StaleDeployment:
-      type: object
-      properties:
-        object_name:
-          type: string
-          description: Name of the object in the Object Store.
-          example: hello-echo
-        hostname:
-          type: string
-          description: Host where the file is deployed.
-          example: web-01
-        provider:
-          type: string
-          description: Provider that manages this deployment.
-          example: service
-        path:
-          type: string
-          description: Deployment path on the target host.
-          example: /etc/systemd/system/osapi-hello-echo.service
-        deployed_sha:
-          type: string
-          description: SHA-256 hash of the currently deployed content.
-          example: abc123def456
-        current_sha:
-          type: string
-          description: SHA-256 hash of the current object store content.
-          example: 789abc012def
-        deployed_at:
-          type: string
-          description: When the file was last deployed.
-          example: '2026-04-01T18:00:00Z'
-      required:
-        - object_name
-        - hostname
-        - provider
-        - path
-        - deployed_sha
-        - current_sha
-        - deployed_at
-    StaleDeploymentsResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/StaleDeployment'
-        total_items:
-          type: integer
-          description: Total number of stale deployments.
-      required:
-        - items
-        - total_items
     DiskResponse:
       type: object
       description: Local disk usage information.
@@ -11134,18 +11184,6 @@ components:
       scheme: bearer
       bearerFormat: JWT
   parameters:
-    FileName:
-      name: name
-      in: path
-      required: true
-      description: |
-        The name of the file in the Object Store.
-      x-oapi-codegen-extra-tags:
-        validate: required,min=1,max=255
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 255
     Hostname:
       name: hostname
       in: path
@@ -11327,6 +11365,9 @@ x-tagGroups:
   - name: Facts API
     tags:
       - Facts_API_facts
+  - name: File Management API
+    tags:
+      - File_Management_API_file_operations
   - name: Health Check API
     tags:
       - Health_Check_API_health
@@ -11336,9 +11377,6 @@ x-tagGroups:
   - name: Telemetry API
     tags:
       - Telemetry_API_telemetry
-  - name: File Management API
-    tags:
-      - File_Management_API_file_operations
   - name: Node Management API
     tags:
       - Node_Management_API_node_operations

@@ -25,6 +25,8 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/nats-io/nats.go/jetstream"
+
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -86,4 +88,35 @@ func (s *FilesPublicTestSuite) TestOpenFileBuckets() {
 			s.Equal(tc.wantState, stateBucket != "")
 		})
 	}
+}
+
+// TestFileDeps holds the file group's buckets to the names the controller
+// opened: each call goes to its bucket, and a bucket that is not open is nil.
+func (s *FilesPublicTestSuite) TestFileDeps() {
+	ctrl := gomock.NewController(s.T())
+	nc := mocks.NewMockFileBuckets(ctrl)
+	ctx := context.Background()
+
+	none := controller.ExportFileDeps(nc, "", "")
+	s.Nil(none.Objects)
+	s.Nil(none.States)
+
+	d := controller.ExportFileDeps(nc, "objects", "state")
+	nc.EXPECT().ObjectPut(ctx, "objects", jetstream.ObjectMeta{Name: "a"}, nil).Return(nil, nil)
+	nc.EXPECT().ObjectGetBytes(ctx, "objects", "a").Return([]byte("x"), nil)
+	nc.EXPECT().ObjectInfo(ctx, "objects", "a").Return(nil, nil)
+	nc.EXPECT().ObjectDelete(ctx, "objects", "a").Return(nil)
+	nc.EXPECT().ObjectList(ctx, "objects").Return(nil, nil)
+	nc.EXPECT().KVKeys(ctx, "state").Return([]string{"k"}, nil)
+	nc.EXPECT().KVGet(ctx, "state", "k").Return(nil, nil)
+
+	_, _ = d.Objects.Put(ctx, jetstream.ObjectMeta{Name: "a"}, nil)
+	data, _ := d.Objects.GetBytes(ctx, "a")
+	s.Equal("x", string(data))
+	_, _ = d.Objects.Info(ctx, "a")
+	s.NoError(d.Objects.Delete(ctx, "a"))
+	_, _ = d.Objects.List(ctx)
+	keys, _ := d.States.Keys(ctx)
+	s.Equal([]string{"k"}, keys)
+	_, _ = d.States.Get(ctx, "k")
 }

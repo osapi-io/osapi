@@ -31,6 +31,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"go/token"
 	"net/http"
 	"os"
 	"os/exec"
@@ -185,10 +186,26 @@ func commands(
 			}
 			kind, zero := flagKind(fld.Type, fld.Tag)
 			local := lowerFirst(fld.Name)
+			// A local that is a keyword, or the name of the group's package,
+			// would hide it.
+			if token.IsKeyword(local) || local == g.Name {
+				local += "Flag"
+			}
 			reads = append(reads, jen.List(jen.Id(local), jen.Id("_")).Op(":=").
 				Id("cmd").Dot("Flags").Call().Dot("Get"+kind).Call(jen.Lit(flag)))
 			// Flag help has no period at its end, as cobra's own has none.
 			help := strings.TrimSuffix(fld.Tag.Get("doc"), ".")
+			// A []byte is a file: its flag is the path of a local file, and
+			// the command sends the file's content.
+			if fld.Type == reflect.TypeFor[[]byte]() {
+				path := local
+				local += "Data"
+				reads = append(reads,
+					jen.List(jen.Id(local), jen.Id("ok")).Op(":=").
+						Qual(commandPath, "ReadFile").Call(jen.Id(path)),
+					jen.If(jen.Op("!").Id("ok")).Block(jen.Return()))
+				help = "Path to the local file with " + strings.ToLower(help[:1]) + help[1:]
+			}
 			if values := oneOf(fld); values != "" {
 				help += " (" + values + ")"
 			}
@@ -428,7 +445,7 @@ func decoders(
 		body := []jen.Code{jen.Var().Id("in").Add(in.Clone())}
 		var path, query []reflect.StructField
 		var bodyField *reflect.StructField
-		hasBody := false
+		hasBody, hasForm := false, false
 		for _, fld := range structFields(m.In) {
 			switch fld.Tag.Get("in") {
 			case "path":
@@ -437,11 +454,16 @@ func decoders(
 				query = append(query, fld)
 			case "body":
 				bodyField = &fld
+			case "form":
+				hasForm = true
 			default:
 				hasBody = true
 			}
 		}
 		switch {
+		case hasForm:
+			body = append(body, check(jen.Qual(serverPath, "Form").Call(
+				jen.Id("c"), jen.Op("&").Id("in"))))
 		case bodyField != nil:
 			body = append(body, check(jen.Qual(serverPath, "Body").Call(
 				jen.Id("c"), jen.Op("&").Id("in").Dot(bodyField.Name))))

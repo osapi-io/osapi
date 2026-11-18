@@ -6,18 +6,18 @@
  */
 
 export interface StaleDeployment {
-  /** Name of the object in the Object Store. */
-  object_name: string;
-  /** Host where the file is deployed. */
-  hostname: string;
-  /** Provider that manages this deployment. */
-  provider: string;
-  /** Deployment path on the target host. */
-  path: string;
-  /** SHA-256 hash of the currently deployed content. */
-  deployed_sha: string;
   /** SHA-256 hash of the current object store content. */
   current_sha: string;
   /** When the file was last deployed. */
   deployed_at: string;
+  /** SHA-256 hash of the currently deployed content. */
+  deployed_sha: string;
+  /** Host where the file is deployed. */
+  hostname: string;
+  /** Name of the object in the Object Store. */
+  object_name: string;
+  /** Deployment path on the target host. */
+  path: string;
+  /** Provider that manages this deployment. */
+  provider: string;
 }

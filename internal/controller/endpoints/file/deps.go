@@ -17,18 +17,37 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-
 package file
 
-import "github.com/osapi-io/osapi/internal/validation"
+import (
+	"context"
+	"io"
 
-// validateFileName validates a file name path parameter using the shared
-// validator. Returns the error message and false if invalid.
-//
-// This exists because oapi-codegen does not generate validate tags on
-// path parameters in strict-server mode (upstream limitation).
-func validateFileName(
-	name string,
-) (string, bool) {
-	return validation.Var(name, "required,min=1,max=255")
+	"github.com/nats-io/nats.go/jetstream"
+)
+
+// Deps is what the file group's handlers use.
+type Deps struct {
+	// Objects is the Object Store bucket of the files. Nil when the
+	// controller has no object bucket; each method then answers 503.
+	Objects Objects
+	// States is the KV bucket of the deploy state. Nil when it is not set;
+	// stale then answers 503.
+	States States
+}
+
+// Objects is the Object Store bucket of the files.
+type Objects interface {
+	Put(ctx context.Context, meta jetstream.ObjectMeta, r io.Reader) (*jetstream.ObjectInfo, error)
+	GetBytes(ctx context.Context, name string) ([]byte, error)
+	Info(ctx context.Context, name string) (*jetstream.ObjectInfo, error)
+	Delete(ctx context.Context, name string) error
+	List(ctx context.Context) ([]*jetstream.ObjectInfo, error)
+}
+
+// States is the KV bucket of the deploy state: one entry for each file
+// that an agent deployed.
+type States interface {
+	Keys(ctx context.Context) ([]string, error)
+	Get(ctx context.Context, key string) (jetstream.KeyValueEntry, error)
 }

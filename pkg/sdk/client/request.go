@@ -44,6 +44,18 @@ func (c *Client) Request(
 	path string,
 	body []byte,
 ) (*Response[json.RawMessage], error) {
+	return c.Send(ctx, method, path, "application/json", body)
+}
+
+// Send is Request with the content type of the body, such as the
+// multipart/form-data of an upload.
+func (c *Client) Send(
+	ctx context.Context,
+	method string,
+	path string,
+	contentType string,
+	body []byte,
+) (*Response[json.RawMessage], error) {
 	what := method + " " + path
 
 	var reader io.Reader
@@ -61,7 +73,7 @@ func (c *Client) Request(
 		return nil, fmt.Errorf("%s: %w", what, err)
 	}
 	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Content-Type", contentType)
 	}
 
 	resp, err := c.hc.Do(req)
