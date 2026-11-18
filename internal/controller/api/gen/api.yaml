@@ -9697,10 +9697,12 @@ components:
       properties:
         name:
           type: string
-          description: |
-            Name of the package to install.
+          description: >
+            Name of the package to install. It starts with a letter or digit,
+            and may have an architecture or a version.
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9.+_:~=-]*$
           x-oapi-codegen-extra-tags:
-            validate: required,min=1
+            validate: required,package_name
     PackageEntry:
       type: object
       description: A package list result for one host.
@@ -11290,13 +11292,15 @@ components:
       name: name
       in: path
       required: true
-      description: |
-        Package name.
+      description: >
+        Package name. It starts with a letter or digit, and may have an
+        architecture or a version, such as nginx:amd64 or nginx=1.24.0-1.
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,package_name
       schema:
         type: string
         minLength: 1
+        pattern: ^[a-zA-Z0-9][a-zA-Z0-9.+_:~=-]*$
     Pid:
       name: pid
       in: path

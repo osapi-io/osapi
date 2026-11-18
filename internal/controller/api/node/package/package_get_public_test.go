@@ -170,6 +170,20 @@ func (s *PackageGetPublicTestSuite) TestGetNodePackageByName() {
 			},
 		},
 		{
+			name: "when the name would be read as an option, it is a 400 and no job is sent",
+			request: gen.GetNodePackageByNameRequestObject{
+				Hostname: "server1",
+				Name:     "-oAPT::Get::Assume-Yes=true",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.GetNodePackageByNameResponseObject) {
+				r, ok := resp.(gen.GetNodePackageByName400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "package_name")
+			},
+		},
+		{
 			name: "validation error empty hostname",
 			request: gen.GetNodePackageByNameRequestObject{
 				Hostname: "",

@@ -348,15 +348,17 @@ components:
       in: path
       required: true
       description: >
-        Package name.
+        Package name. It starts with a letter or digit, and may have an
+        architecture or a version, such as nginx:amd64 or nginx=1.24.0-1.
       # NOTE: x-oapi-codegen-extra-tags on path params do not generate
       # validate tags in strict-server mode. Validation is handled
-      # manually in the handler.
+      # manually in the handler, by validateName.
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,package_name
       schema:
         type: string
         minLength: 1
+        pattern: '^[a-zA-Z0-9][a-zA-Z0-9.+_:~=-]*$'
 
   securitySchemes:
     BearerAuth:
@@ -378,9 +380,11 @@ components:
         name:
           type: string
           description: >
-            Name of the package to install.
+            Name of the package to install. It starts with a letter or
+            digit, and may have an architecture or a version.
+          pattern: '^[a-zA-Z0-9][a-zA-Z0-9.+_:~=-]*$'
           x-oapi-codegen-extra-tags:
-            validate: "required,min=1"
+            validate: "required,package_name"
 
     # -- Response schemas ------------------------------------------------
 

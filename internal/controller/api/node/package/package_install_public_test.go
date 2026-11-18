@@ -132,6 +132,20 @@ func (s *PackageInstallPublicTestSuite) TestPostNodePackage() {
 			},
 		},
 		{
+			name: "when the name would be read as an option, it is a 400 and no job is sent",
+			request: gen.PostNodePackageRequestObject{
+				Hostname: "server1",
+				Body:     &gen.PackageInstallRequest{Name: "-oAPT::Get::Assume-Yes=true"},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodePackageResponseObject) {
+				r, ok := resp.(gen.PostNodePackage400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "package_name")
+			},
+		},
+		{
 			name: "validation error empty hostname",
 			request: gen.PostNodePackageRequestObject{
 				Hostname: "",

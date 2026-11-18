@@ -32,3 +32,12 @@ func validateHostname(
 ) (string, bool) {
 	return validation.Var(hostname, "required,min=1,valid_target")
 }
+
+// validateName validates a package name path parameter, which reaches the
+// package manager's command line. A name that starts with a dash would be
+// read as an option.
+func validateName(
+	name string,
+) (string, bool) {
+	return validation.Var(name, "required,package_name")
+}
