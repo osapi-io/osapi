@@ -1,15 +1,13 @@
 import { useCallback, useRef, useSyncExternalStore } from "react";
 import { getJobByID } from "@/sdk/gen/job-management-api-job-operations/job-management-api-job-operations";
-import type {
-  JobDetailResponse,
-  JobDetailResponseTimelineItem,
-} from "@/sdk/gen/schemas";
+import type { JobDetailResponse } from "@/sdk/gen/schemas";
 import { Badge } from "@/components/ui/badge";
-import { CodeBlock } from "@/components/ui/code-block";
 import { IdBadge } from "@/components/ui/id-badge";
-import { KeyValue } from "@/components/ui/key-value";
+import { KVList } from "@/components/ui/kv-list";
+import { DataTable } from "@/components/ui/data-table";
+import { SectionLabel } from "@/components/ui/section-label";
 import { Text } from "@/components/ui/text";
-import { formatTime } from "@/lib/format";
+import { formatDuration, formatTime, summarize } from "@/lib/format";
 import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { statusVariant } from "@/lib/status";
 
@@ -126,35 +124,6 @@ function useJobDetail(jobId: string) {
   return { ...snapshot, toggle };
 }
 
-function TimelineRow({ event }: { event: JobDetailResponseTimelineItem }) {
-  return (
-    <div className="flex items-start gap-3 py-1.5">
-      <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/60" />
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <Text className="font-medium">{event.event}</Text>
-          {event.hostname && <Text variant="muted">{event.hostname}</Text>}
-          {event.timestamp && (
-            <span className="ml-auto text-xs text-text-muted/50">
-              {formatTime(event.timestamp)}
-            </span>
-          )}
-        </div>
-        {event.message && (
-          <Text variant="muted" as="p">
-            {event.message}
-          </Text>
-        )}
-        {event.error && (
-          <Text variant="error" as="p">
-            {event.error}
-          </Text>
-        )}
-      </div>
-    </div>
-  );
-}
-
 interface JobDetailProps {
   jobId: string;
   /** Render as the clickable pill in the header */
@@ -200,64 +169,173 @@ export function JobDetail({ jobId, inline, panel }: JobDetailProps) {
 
     return (
       <div className="border-b border-border/40 bg-surface px-4 py-3">
-        {/* Header */}
-        <div className="mb-2 flex items-center gap-2">
-          <Text variant="mono-muted">{job.id}</Text>
-          <Badge variant={statusVariant(job.status)}>{job.status}</Badge>
-          {job.changed != null && (
-            <Badge variant={job.changed ? "applied" : "muted"}>
-              {job.changed ? "changed" : "unchanged"}
-            </Badge>
-          )}
-        </div>
-
-        {/* Details grid */}
-        <div className="flex flex-col gap-1 text-xs">
-          {job.hostname && <KeyValue label="Host" value={job.hostname} />}
-          {job.created && (
-            <KeyValue label="Created" value={formatTime(job.created)} />
-          )}
-          {job.updated_at && job.updated_at.length > 0 && (
-            <KeyValue label="Updated" value={formatTime(job.updated_at)} />
-          )}
-        </div>
-
-        {/* Error */}
-        {job.error && (
-          <div className="mt-2 rounded bg-status-error/5 px-3 py-2">
-            <p className="text-xs font-semibold text-status-error">Error</p>
-            <Text variant="error" as="p" className="mt-0.5">
-              {job.error}
-            </Text>
-          </div>
-        )}
-
-        {/* Timeline */}
-        {job.timeline && job.timeline.length > 0 && (
-          <div className="mt-3 border-t border-border/30 pt-2">
-            <p className="mb-1 text-xs font-semibold text-text-muted">
-              Timeline
-            </p>
-            {job.timeline.map((event, i) => (
-              <TimelineRow key={i} event={event} />
-            ))}
-          </div>
-        )}
-
-        {/* Operation */}
-        {job.operation && Object.keys(job.operation).length > 0 && (
-          <div className="mt-3 border-t border-border/30 pt-2">
-            <p className="mb-1 text-xs font-semibold text-text-muted">
-              Operation
-            </p>
-            <CodeBlock variant="muted">
-              {JSON.stringify(job.operation, null, 2)}
-            </CodeBlock>
-          </div>
-        )}
+        <JobView job={job} />
       </div>
     );
   }
 
   return null;
+}
+
+/** The fields of an object as key-value pairs, as the CLI's printObject prints them. */
+function ObjectKV({ v }: { v: unknown }) {
+  const pairs: [string, string][] =
+    v && typeof v === "object" && !Array.isArray(v)
+      ? Object.keys(v)
+          .sort()
+          .map((k) => [k, summarize((v as Record<string, unknown>)[k])])
+      : [["Value", summarize(v)]];
+  return <KVList pairs={pairs} />;
+}
+
+/**
+ * JobView is one job, as osapi client job get prints it: the job, its
+ * request, the agents' responses and states, the timeline and the result.
+ * The Jobs page and a Configure result's job panel both show it.
+ */
+export function JobView({ job }: { job: JobDetailResponse }) {
+  const states = Object.entries(job.agent_states ?? {}).sort(([a], [b]) =>
+    a.localeCompare(b),
+  );
+  const responses = Object.entries(job.responses ?? {}).sort(([a], [b]) =>
+    a.localeCompare(b),
+  );
+  const count = (status: string) =>
+    states.filter(([, s]) => s.status === status).length;
+  const skipped = count("skipped");
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <SectionLabel>Job</SectionLabel>
+        <KVList
+          pairs={[
+            ["Job ID", <span className="font-mono">{job.id}</span>],
+            [
+              "Status",
+              <Badge variant={statusVariant(job.status)}>{job.status}</Badge>,
+            ],
+            ["Hostname", job.hostname],
+            ["Target", job.target],
+            ["Created", job.created && formatTime(job.created)],
+            ["Updated", job.updated_at && formatTime(job.updated_at)],
+            [
+              "Error",
+              job.error && (
+                <span className="text-status-error">{job.error}</span>
+              ),
+            ],
+            [
+              "Agents",
+              states.length > 1 &&
+                `${states.length} total (${count("completed")} completed, ${count("failed")} failed, ${count("started")} processing${skipped > 0 ? `, ${skipped} skipped` : ""})`,
+            ],
+          ]}
+        />
+      </div>
+
+      {job.operation && (
+        <div>
+          <SectionLabel>Request</SectionLabel>
+          <ObjectKV v={job.operation} />
+        </div>
+      )}
+
+      {responses.length > 0 && (
+        <div>
+          <SectionLabel>Agent Responses</SectionLabel>
+          <DataTable
+            rows={responses}
+            getRowKey={([h]) => h}
+            columns={[
+              { header: "Hostname", cell: ([h]) => h },
+              {
+                header: "Status",
+                cell: ([, r]) => (
+                  <Badge variant={statusVariant(r.status)}>{r.status}</Badge>
+                ),
+              },
+              { header: "Data", cell: ([, r]) => summarize(r.data) },
+              {
+                header: "Error",
+                cell: ([, r]) => (
+                  <span className="text-status-error">{r.error}</span>
+                ),
+              },
+            ]}
+          />
+        </div>
+      )}
+
+      {states.length > 0 && (
+        <div>
+          <SectionLabel>Agent States</SectionLabel>
+          <DataTable
+            rows={states}
+            getRowKey={([h]) => h}
+            columns={[
+              { header: "Hostname", cell: ([h]) => h },
+              {
+                header: "Status",
+                cell: ([, st]) => (
+                  <Badge variant={statusVariant(st.status)}>{st.status}</Badge>
+                ),
+              },
+              {
+                header: "Duration",
+                cell: ([, st]) => (
+                  <span className="text-text-muted">
+                    {formatDuration(st.duration)}
+                  </span>
+                ),
+              },
+              {
+                header: "Error",
+                cell: ([, st]) => (
+                  <span className="text-status-error">{st.error}</span>
+                ),
+              },
+            ]}
+          />
+        </div>
+      )}
+
+      <div>
+        <SectionLabel>Timeline</SectionLabel>
+        <DataTable
+          rows={job.timeline ?? []}
+          getRowKey={(_, i) => i}
+          columns={[
+            {
+              header: "Timestamp",
+              cell: (e) => (
+                <span className="text-text-muted">
+                  {formatTime(e.timestamp)}
+                </span>
+              ),
+            },
+            {
+              header: "Event",
+              cell: (e) => (
+                <Badge variant={statusVariant(e.event)}>{e.event}</Badge>
+              ),
+            },
+            { header: "Hostname", cell: (e) => e.hostname },
+            { header: "Message", cell: (e) => e.message },
+            {
+              header: "Error",
+              cell: (e) => <span className="text-status-error">{e.error}</span>,
+            },
+          ]}
+        />
+      </div>
+
+      {job.result !== undefined && job.result !== null && (
+        <div>
+          <SectionLabel>Result</SectionLabel>
+          <ObjectKV v={job.result} />
+        </div>
+      )}
+    </div>
+  );
 }

@@ -113,3 +113,24 @@ export function formatBytes(b: number): string {
 export function shortFingerprint(fp: string): string {
   return fp.length > 20 ? `${fp.slice(0, 20)}...` : fp;
 }
+
+/**
+ * A value for one cell or key-value pair, as the CLI's Summarize prints it:
+ * a scalar as itself, a list by its length, an object by its field count,
+ * and nothing as "none".
+ */
+export function summarize(v: unknown): string {
+  if (v === null || v === undefined) return "none";
+  if (Array.isArray(v)) return v.length === 1 ? "1 item" : `${v.length} items`;
+  if (typeof v === "object") {
+    const n = Object.keys(v).length;
+    return n === 1 ? "1 field" : `${n} fields`;
+  }
+  return String(v);
+}
+
+/** The type of a job's operation, as osapi client job list prints it. */
+export function operationType(operation?: Record<string, unknown>): string {
+  const t = operation?.type;
+  return typeof t === "string" ? t : "Unknown";
+}
