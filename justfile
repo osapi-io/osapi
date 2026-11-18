@@ -253,6 +253,8 @@ behavior-gen-check:
 # generate, and the join reads them. The SDK client is generated, in the same
 # go generate pass, from the joined spec. So those specs are written first,
 # then joined, then the rest is generated: one run leaves nothing stale.
+# Temporary: the first step goes when the generators write the full spec and
+# the join is removed (#833).
 
 # Generate code
 generate:
