@@ -25,7 +25,7 @@ require (
 	github.com/nats-io/nats-server/v2 v2.15.2
 	github.com/nats-io/nats.go v1.55.0
 	github.com/nats-io/nkeys v0.4.17
-	github.com/oapi-codegen/runtime v1.8.0
+	github.com/oapi-codegen/runtime v1.9.0
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/osapi-io/nats-client v1.2.0
 	github.com/osapi-io/nats-server v1.1.0
