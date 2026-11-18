@@ -23,6 +23,7 @@ package widget
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
@@ -44,5 +45,6 @@ var Group = endpoint.Register(endpoint.Define(
 		Handle(Get).
 		Describe("Get one widget item").
 		Errors(endpoint.NotFound(ErrNotFound, "No item with that name.")).
+		Fails("a name over 255 characters", GetInput{Name: strings.Repeat("a", 256)}).
 		Example("--name example"),
 ))

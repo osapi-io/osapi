@@ -61,7 +61,17 @@ func (s *AllPublicTestSuite) TestValidate() {
 // rule of each endpoint.
 func (s *AllPublicTestSuite) TestRefusals() {
 	const key = "test-signing-key-for-the-refusals"
-	token, err := authtoken.New(slog.Default()).Generate(key, []string{"admin"}, "test", nil)
+	// The token has each method's permission, so a new group's, which no
+	// role has yet, does not answer 403 before the input is checked.
+	var perms []string
+	for _, g := range endpoint.All() {
+		for _, m := range g.Methods {
+			if p := g.Permission(m); p != "" {
+				perms = append(perms, p)
+			}
+		}
+	}
+	token, err := authtoken.New(slog.Default()).Generate(key, []string{"admin"}, "test", perms)
 	s.Require().NoError(err)
 
 	// Each group gets an empty Deps: the API refuses each input before a

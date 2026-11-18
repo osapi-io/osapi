@@ -185,6 +185,10 @@ func (sc groupScaffold) groupFile() *jen.File {
 			Add(next("Describe", jen.Lit("Get one "+sc.name+" item"))).
 			Add(next("Errors", e("NotFound").Call(jen.Id("ErrNotFound"),
 				jen.Lit("No item with that name.")))).
+			Add(next("Fails", jen.Lit("a name over 255 characters"),
+				jen.Id("GetInput").Values(jen.Dict{
+					jen.Id("Name"): jen.Qual("strings", "Repeat").Call(jen.Lit("a"), jen.Lit(256)),
+				}))).
 			Add(next("Example", jen.Lit("--name example"))),
 	))))
 
