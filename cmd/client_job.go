@@ -75,7 +75,13 @@ func renderJobList(
 			operation = kind
 		}
 
-		rows = append(rows, []string{j.ID, j.Status, created, j.Hostname, operation})
+		// The target the request gave; a job stored before targets were kept
+		// has only the host that answered.
+		target := j.Target
+		if target == "" {
+			target = j.Hostname
+		}
+		rows = append(rows, []string{j.ID, j.Status, created, target, operation})
 	}
 
 	cli.PrintCompactTable([]cli.Section{

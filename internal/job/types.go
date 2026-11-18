@@ -336,6 +336,9 @@ type QueuedJob struct {
 	Created string `json:"created"`
 	// Subject is the NATS subject for this job (optional)
 	Subject string `json:"subject,omitempty"`
+	// Target is the target the request gave, such as _all, a hostname or a
+	// label, as the controller stored it with the job.
+	Target string `json:"target,omitempty"`
 	// Operation contains the actual work to be performed (stored as flexible JSON)
 	Operation map[string]interface{} `json:"operation"`
 	// StatusHistory tracks status transitions (optional)

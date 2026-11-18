@@ -7427,6 +7427,11 @@ components:
         status:
           description: Current status of the job.
           type: string
+        target:
+          description: >-
+            The target the request gave: _any, _all, a hostname, or a label such
+            as group:web.dev.
+          type: string
         timeline:
           description: Chronological sequence of job lifecycle events.
           items:
