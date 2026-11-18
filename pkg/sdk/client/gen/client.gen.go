@@ -3098,7 +3098,7 @@ type ListAuditResponse struct {
 type ListJobsResponse struct {
 	Items *[]JobDetailResponse `json:"items,omitempty"`
 
-	// StatusCounts Count of all jobs by status (submitted, processing, completed, failed, partial_failure). Derived from key names during the listing pass — no extra reads.
+	// StatusCounts Count of all jobs by status (submitted, processing, completed, failed, partial_failure). Derived from key names during the listing pass, with no extra reads.
 	StatusCounts *map[string]int `json:"status_counts,omitempty"`
 
 	// TotalItems Total number of jobs matching the filter.
@@ -3790,8 +3790,8 @@ type ReadyResponse struct {
 
 // RetryJobRequest defines model for RetryJobRequest.
 type RetryJobRequest struct {
-	// TargetHostname Override target hostname for the retried job. Defaults to _any if not specified.
-	TargetHostname *string `json:"target_hostname,omitempty" validate:"omitempty,min=1,valid_target"`
+	// TargetHostname The target of the retried job: _any, _all, a hostname, or a label such as group:web.dev.
+	TargetHostname *string `json:"target_hostname,omitempty"`
 }
 
 // RouteConfigRequest defines model for RouteConfigRequest.

@@ -9,7 +9,7 @@
  * Per-agent processing state for broadcast jobs.
  */
 export type JobDetailResponseAgentStates = {[key: string]: {
-  status?: string;
-  error?: string;
   duration?: string;
+  error?: string;
+  status?: string;
 }};

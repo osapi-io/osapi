@@ -33,7 +33,6 @@ import (
 	factsAPI "github.com/osapi-io/osapi/internal/controller/api/facts"
 	"github.com/osapi-io/osapi/internal/controller/api/file"
 	"github.com/osapi-io/osapi/internal/controller/api/health"
-	jobAPI "github.com/osapi-io/osapi/internal/controller/api/job"
 	nodeAPI "github.com/osapi-io/osapi/internal/controller/api/node"
 	certificateAPI "github.com/osapi-io/osapi/internal/controller/api/node/certificate"
 	commandAPI "github.com/osapi-io/osapi/internal/controller/api/node/command"
@@ -55,6 +54,7 @@ import (
 	endpointserver "github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 	auditEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/audit"
+	jobEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/job"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
@@ -110,10 +110,10 @@ func handlers(
 			agentDeps(d),
 			telemetry.Deps{Traces: traceReader(d.cfg.Telemetry.Tracing)},
 			auditEndpoint.Deps{Store: d.auditStore},
+			jobEndpoint.Deps{Jobs: d.jobs},
 		)...,
 	)
 	handlers = append(handlers, nodeAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
-	handlers = append(handlers, jobAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(
 		handlers,
 		health.Handler(

@@ -317,6 +317,7 @@ func (s *EndpointPublicTestSuite) TestOpenAPI() {
 						endpoint.NotFound(errMissing, "No such node."),
 						endpoint.Conflict(errMissing, "Already drained."),
 						endpoint.Unavailable(errMissing, "Not ready."),
+						endpoint.Invalid(errMissing, "Nothing to drain."),
 					),
 			},
 			want: []string{

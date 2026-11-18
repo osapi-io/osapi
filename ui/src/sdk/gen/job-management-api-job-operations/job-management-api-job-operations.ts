@@ -80,69 +80,6 @@ export const getJobs = async (params?: GetJobsParams, options?: Parameters<typeo
 );}
 
 
-export type getJobByIDResponse200 = {
-  data: JobDetailResponse
-  status: 200
-}
-
-export type getJobByIDResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type getJobByIDResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type getJobByIDResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type getJobByIDResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type getJobByIDResponse500 = {
-  data: ErrorResponse
-  status: 500
-}
-
-export type getJobByIDResponseSuccess = (getJobByIDResponse200) & {
-  headers: Headers;
-};
-export type getJobByIDResponseError = (getJobByIDResponse400 | getJobByIDResponse401 | getJobByIDResponse403 | getJobByIDResponse404 | getJobByIDResponse500) & {
-  headers: Headers;
-};
-
-export type getJobByIDResponse = (getJobByIDResponseSuccess | getJobByIDResponseError)
-
-export const getGetJobByIDUrl = (id: string,) => {
-
-
-
-
-  return `/api/job/${id}`
-}
-
-/**
- * Retrieve details of a specific job by its ID.
- * @summary Get job detail
- */
-export const getJobByID = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<getJobByIDResponse> => {
-
-  return apiFetch<getJobByIDResponse>(getGetJobByIDUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
 export type deleteJobByIDResponse204 = {
   data: void
   status: 204
@@ -200,6 +137,69 @@ export const deleteJobByID = async (id: string, options?: Parameters<typeof apiF
   {
     ...options,
     method: 'DELETE'
+
+
+  }
+);}
+
+
+export type getJobByIDResponse200 = {
+  data: JobDetailResponse
+  status: 200
+}
+
+export type getJobByIDResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getJobByIDResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getJobByIDResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getJobByIDResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getJobByIDResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type getJobByIDResponseSuccess = (getJobByIDResponse200) & {
+  headers: Headers;
+};
+export type getJobByIDResponseError = (getJobByIDResponse400 | getJobByIDResponse401 | getJobByIDResponse403 | getJobByIDResponse404 | getJobByIDResponse500) & {
+  headers: Headers;
+};
+
+export type getJobByIDResponse = (getJobByIDResponseSuccess | getJobByIDResponseError)
+
+export const getGetJobByIDUrl = (id: string,) => {
+
+
+
+
+  return `/api/job/${id}`
+}
+
+/**
+ * Retrieve details of a specific job by its ID.
+ * @summary Get job detail
+ */
+export const getJobByID = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<getJobByIDResponse> => {
+
+  return apiFetch<getJobByIDResponse>(getGetJobByIDUrl(id),
+  {
+    ...options,
+    method: 'GET'
 
 
   }

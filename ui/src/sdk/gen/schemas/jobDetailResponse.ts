@@ -10,31 +10,28 @@ import type { JobDetailResponseResponses } from './jobDetailResponseResponses';
 import type { JobDetailResponseTimelineItem } from './jobDetailResponseTimelineItem';
 
 export interface JobDetailResponse {
-  /** Unique identifier of the job. */
-  id?: string;
-  /** Current status of the job. */
-  status?: string;
+  /** Per-agent processing state for broadcast jobs. */
+  agent_states?: JobDetailResponseAgentStates;
+  /** Whether the operation modified system state. Null for pending/failed jobs; true/false for completed jobs. */
+  changed?: boolean;
   /** Creation timestamp. */
   created?: string;
-  /** The operation data. */
-  operation?: JobDetailResponseOperation;
-  /** The result data if completed. */
-  result?: unknown;
-  /**
-     * Whether the operation modified system state. Null for pending/failed jobs; true/false for completed jobs.
-     * @nullable
-     */
-  changed?: boolean | null;
   /** Error message if failed. */
   error?: string;
   /** Agent hostname that processed the job. */
   hostname?: string;
-  /** Last update timestamp. */
-  updated_at?: string;
+  /** Unique identifier of the job. */
+  id?: string;
+  /** The operation data. */
+  operation?: JobDetailResponseOperation;
   /** Per-agent response data for broadcast jobs. */
   responses?: JobDetailResponseResponses;
-  /** Per-agent processing state for broadcast jobs. */
-  agent_states?: JobDetailResponseAgentStates;
+  /** The result data if completed. */
+  result?: unknown;
+  /** Current status of the job. */
+  status?: string;
   /** Chronological sequence of job lifecycle events. */
   timeline?: JobDetailResponseTimelineItem[];
+  /** Last update timestamp. */
+  updated_at?: string;
 }

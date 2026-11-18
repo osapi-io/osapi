@@ -8,10 +8,10 @@
 export interface CreateJobResponse {
   /** Unique identifier for the created job. */
   job_id: string;
-  /** Initial status of the job. */
-  status: string;
   /** The KV revision number. */
   revision?: number;
+  /** Initial status of the job. */
+  status: string;
   /** Creation timestamp. */
   timestamp?: string;
 }

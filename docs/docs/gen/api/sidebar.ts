@@ -94,6 +94,40 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Job",
+      link: {
+        type: "doc",
+        id: "gen/api/job-management-api-job-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-jobs",
+          label: "List jobs",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-job-by-id",
+          label: "Delete a job",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-job-by-id",
+          label: "Get job detail",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/retry-job-by-id",
+          label: "Retry a job",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Telemetry",
       link: {
         type: "doc",
@@ -189,40 +223,6 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/get-health-status",
           label: "System status and component health",
           className: "api-method get",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Job",
-      link: {
-        type: "doc",
-        id: "gen/api/job-management-api-job-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-jobs",
-          label: "List jobs",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-job-by-id",
-          label: "Get job detail",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/delete-job-by-id",
-          label: "Delete a job",
-          className: "api-method delete",
-        },
-        {
-          type: "doc",
-          id: "gen/api/retry-job-by-id",
-          label: "Retry a job",
-          className: "api-method post",
         },
       ],
     },

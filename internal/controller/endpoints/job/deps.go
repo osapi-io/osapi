@@ -17,27 +17,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-
-// Package job provides job queue API handlers.
 package job
 
 import (
-	"log/slog"
+	"context"
 
-	"github.com/osapi-io/osapi/internal/controller/api/job/gen"
+	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 )
 
-// ensure that we've conformed to the `StrictServerInterface` with a compile-time check
-var _ gen.StrictServerInterface = (*Job)(nil)
+// Deps is what the job group's handlers use.
+type Deps struct {
+	// Jobs reads, deletes and retries the jobs in the queue.
+	Jobs Jobs
+}
 
-// New factory to create a new instance.
-func New(
-	logger *slog.Logger,
-	jobClient client.JobClient,
-) *Job {
-	return &Job{
-		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "controller.job")),
-	}
+// Jobs is the part of the job client that the job group uses.
+type Jobs interface {
+	ListJobs(
+		ctx context.Context,
+		statusFilter string,
+		limit int,
+		offset int,
+	) (*client.ListJobsResult, error)
+	GetJobStatus(ctx context.Context, jobID string) (*job.QueuedJob, error)
+	DeleteJob(ctx context.Context, jobID string) error
+	RetryJob(
+		ctx context.Context,
+		jobID string,
+		targetHostname string,
+	) (*client.CreateJobResult, error)
 }

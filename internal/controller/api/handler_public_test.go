@@ -32,7 +32,6 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/api"
 	"github.com/osapi-io/osapi/internal/controller/api/health"
-	jobAPI "github.com/osapi-io/osapi/internal/controller/api/job"
 	nodeAPI "github.com/osapi-io/osapi/internal/controller/api/node"
 	"github.com/osapi-io/osapi/internal/job/mocks"
 )
@@ -87,10 +86,6 @@ func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
 			handlers = append(
 				handlers,
 				nodeAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...,
-			)
-			handlers = append(
-				handlers,
-				jobAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...,
 			)
 			checker := &health.NATSChecker{}
 			handlers = append(

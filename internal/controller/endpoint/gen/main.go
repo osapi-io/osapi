@@ -175,21 +175,51 @@ func commands(
 		names = append(names, jen.Id(name))
 
 		var reads []jen.Code
-		var fields []jen.Code
-		for _, fld := range structFields(m.In) {
+		// flagFor reads fld from its flag, and declares the flag: named for
+		// the field's json name with _ as -, or its flag tag, with the
+		// shorthand of its short tag.
+		flagFor := func(fld reflect.StructField) jen.Code {
 			flag := strings.ReplaceAll(jsonName(fld), "_", "-")
+			if f := fld.Tag.Get("flag"); f != "" {
+				flag = f
+			}
 			kind, zero := flagKind(fld.Type, fld.Tag)
 			local := lowerFirst(fld.Name)
 			reads = append(reads, jen.List(jen.Id(local), jen.Id("_")).Op(":=").
 				Id("cmd").Dot("Flags").Call().Dot("Get"+kind).Call(jen.Lit(flag)))
-			fields = append(fields, jen.Id(fld.Name).Op(":").Id(local))
 			// Flag help has no period at its end, as cobra's own has none.
-			inits = append(inits, jen.Id(name).Dot("Flags").Call().Dot(kind).Call(
-				jen.Lit(flag), zero, jen.Lit(strings.TrimSuffix(fld.Tag.Get("doc"), "."))))
+			help := strings.TrimSuffix(fld.Tag.Get("doc"), ".")
+			if values := oneOf(fld); values != "" {
+				help += " (" + values + ")"
+			}
+			usage := jen.Lit(help)
+			declare := jen.Id(name).Dot("Flags").Call().Dot(kind).Call(jen.Lit(flag), zero, usage)
+			if short := fld.Tag.Get("short"); short != "" {
+				declare = jen.Id(name).Dot("Flags").Call().Dot(kind+"P").
+					Call(jen.Lit(flag), jen.Lit(short), zero, usage)
+			}
+			inits = append(inits, declare)
 			if fld.Tag.Get("in") == "path" || validates(fld, "required") {
 				inits = append(inits, jen.Id("_").Op("=").Id(name).Dot("MarkFlagRequired").
 					Call(jen.Lit(flag)))
 			}
+
+			return jen.Id(fld.Name).Op(":").Id(local)
+		}
+		var fields []jen.Code
+		for _, fld := range structFields(m.In) {
+			if fld.Tag.Get("in") != "body" || fld.Type.Kind() != reflect.Struct {
+				fields = append(fields, flagFor(fld))
+
+				continue
+			}
+			// A named body is a flag for each of its fields.
+			var inner []jen.Code
+			for _, bf := range structFields(fld.Type) {
+				inner = append(inner, flagFor(bf))
+			}
+			fields = append(fields, jen.Id(fld.Name).Op(":").
+				Qual(fld.Type.PkgPath(), fld.Type.Name()).Values(inner...))
 		}
 		for _, extra := range m.CommandFlags() {
 			if !extra.String {
@@ -314,6 +344,11 @@ func upperFirst(
 func lowerFirst(
 	s string,
 ) string {
+	// An initialism, such as ID, is lower case whole.
+	if s == strings.ToUpper(s) {
+		return strings.ToLower(s)
+	}
+
 	return strings.ToLower(s[:1]) + s[1:]
 }
 
@@ -606,4 +641,17 @@ func (w *writer) format() error {
 	}
 
 	return nil
+}
+
+// oneOf is the values of a field's oneof rule, joined with ", ", or "".
+func oneOf(
+	f reflect.StructField,
+) string {
+	for _, r := range strings.Split(f.Tag.Get("validate"), ",") {
+		if values, ok := strings.CutPrefix(r, "oneof="); ok {
+			return strings.Join(strings.Fields(values), ", ")
+		}
+	}
+
+	return ""
 }

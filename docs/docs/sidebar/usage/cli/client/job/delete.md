@@ -5,7 +5,7 @@ Delete a job.
 The job goes from storage permanently.
 
 ```bash
-osapi client job delete
+osapi client job delete [flags]
 ```
 
 ## Examples
@@ -14,11 +14,16 @@ osapi client job delete
 osapi client job delete --id 550e8400-e29b-41d4-a716-446655440000
 ```
 
+## Permission
+
+It needs the `job:write` permission. `osapi token roles` lists the roles that
+grant it.
+
 ## Flags
 
-| Flag   | Description                 | Default |
-| ------ | --------------------------- | ------- |
-| `--id` | Job ID to delete (required) |         |
+| Flag   | Description                          | Default |
+| ------ | ------------------------------------ | ------- |
+| `--id` | UUID of the job to delete (required) |         |
 
 ## Global flags
 

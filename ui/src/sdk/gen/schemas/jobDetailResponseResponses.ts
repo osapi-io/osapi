@@ -9,11 +9,10 @@
  * Per-agent response data for broadcast jobs.
  */
 export type JobDetailResponseResponses = {[key: string]: {
-  status?: string;
+  changed?: boolean;
   /** Agent result data. */
   data?: unknown;
-  /** @nullable */
-  changed?: boolean | null;
   error?: string;
   hostname?: string;
+  status?: string;
 }};

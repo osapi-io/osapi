@@ -6,6 +6,6 @@
  */
 
 /**
- * Count of all jobs by status (submitted, processing, completed, failed, partial_failure). Derived from key names during the listing pass — no extra reads.
+ * Count of all jobs by status (submitted, processing, completed, failed, partial_failure). Derived from key names during the listing pass, with no extra reads.
  */
 export type ListJobsResponseStatusCounts = {[key: string]: number};

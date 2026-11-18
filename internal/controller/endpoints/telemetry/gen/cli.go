@@ -19,9 +19,9 @@ var telemetryGetCmd = &cobra.Command{
 	Example: "  osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9\n  osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9 --all\n  osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9 --json",
 	Long:    "Shows each span of a trace as a tree: the request on the controller,\nthe job, each agent that ran it with its host and status, and the\ncommands and file changes under each. The NATS calls, which record the\njob's progress, are left out and counted; --all shows them. Each\ncommand prints the ID of its trace after its job ID.\n\nThe controller reads the trace from the tracing backend at\n`telemetry.tracing.url`, so this host needs no access to the backend.\nThe backend gets the spans a few seconds after the request: a trace\nthat is not found yet is there after a few seconds.",
 	Run: func(cmd *cobra.Command, _ []string) {
-		iD, _ := cmd.Flags().GetString("id")
+		id, _ := cmd.Flags().GetString("id")
 
-		command.Run(cmd, telemetry.Group, "get", telemetry.TraceInput{ID: iD})
+		command.Run(cmd, telemetry.Group, "get", telemetry.TraceInput{ID: id})
 	},
 	Short: "Show the span tree of a trace",
 	Use:   "get",
