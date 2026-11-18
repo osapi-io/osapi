@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/osapi-io/osapi/internal/controller/api/health/gen"
+	api "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 )
 
 // metricTimeout is the per-metric context deadline. Individual metric
@@ -34,20 +34,28 @@ import (
 // call doesn't stall the entire response.
 const metricTimeout = 3 * time.Second
 
-// GetHealthStatus returns per-component health status with system metrics (authenticated).
-func (h *Health) GetHealthStatus(
+// Ready checks the controller's dependencies: nil when it can take
+// traffic.
+func (h *Health) Ready(
 	ctx context.Context,
-	_ gen.GetHealthStatusRequestObject,
-) (gen.GetHealthStatusResponseObject, error) {
+) error {
+	return h.Checker.CheckHealth(ctx)
+}
+
+// Status is the health of each component, with the metrics of the system,
+// and whether each component is healthy.
+func (h *Health) Status(
+	ctx context.Context,
+) (api.StatusResponse, bool) {
 	checker, ok := h.Checker.(*NATSChecker)
 	if !ok {
-		return h.buildStatusResponse(ctx, nil, nil), nil
+		return h.buildStatusResponse(ctx, nil, nil)
 	}
 
 	natsErr := checker.CheckNATS()
 	kvErr := checker.CheckKV()
 
-	return h.buildStatusResponse(ctx, natsErr, kvErr), nil
+	return h.buildStatusResponse(ctx, natsErr, kvErr)
 }
 
 // buildStatusResponse constructs the status response from component checks and metrics.
@@ -55,36 +63,30 @@ func (h *Health) buildStatusResponse(
 	ctx context.Context,
 	natsErr error,
 	kvErr error,
-) gen.GetHealthStatusResponseObject {
-	natsComponent := gen.ComponentHealth{Status: "ok"}
+) (api.StatusResponse, bool) {
+	natsComponent := api.ComponentHealth{Status: "ok"}
 	if natsErr != nil {
-		errMsg := natsErr.Error()
-		natsComponent = gen.ComponentHealth{Status: "error", Error: &errMsg}
+		natsComponent = api.ComponentHealth{Status: "error", Error: natsErr.Error()}
 	}
 
-	kvComponent := gen.ComponentHealth{Status: "ok"}
+	kvComponent := api.ComponentHealth{Status: "ok"}
 	if kvErr != nil {
-		errMsg := kvErr.Error()
-		kvComponent = gen.ComponentHealth{Status: "error", Error: &errMsg}
+		kvComponent = api.ComponentHealth{Status: "error", Error: kvErr.Error()}
 	}
 
 	uptime := time.Since(h.StartTime).Round(time.Second).String()
 
-	components := map[string]gen.ComponentHealth{
+	components := map[string]api.ComponentHealth{
 		"controller.nats (connectivity)": natsComponent,
 		"controller.kv (connectivity)":   kvComponent,
 	}
 
 	for name, info := range h.SubComponents {
-		ch := gen.ComponentHealth{Status: info.Status}
-		if info.Address != "" {
-			ch.Address = &info.Address
+		components[name] = api.ComponentHealth{
+			Status:  info.Status,
+			Address: info.Address,
+			URL:     info.URL,
 		}
-		if info.URL != "" {
-			ch.Url = &info.URL
-		}
-
-		components[name] = ch
 	}
 
 	overall := "ok"
@@ -92,7 +94,7 @@ func (h *Health) buildStatusResponse(
 		overall = "degraded"
 	}
 
-	resp := gen.StatusResponse{
+	resp := api.StatusResponse{
 		Status:     overall,
 		Components: components,
 		Version:    h.Version,
@@ -103,18 +105,14 @@ func (h *Health) buildStatusResponse(
 		h.populateMetricsWithCache(ctx, &resp)
 	}
 
-	if overall != "ok" {
-		return gen.GetHealthStatus503JSONResponse(resp)
-	}
-
-	return gen.GetHealthStatus200JSONResponse(resp)
+	return resp, overall == "ok"
 }
 
 // populateMetricsWithCache serves cached metrics if fresh enough,
 // otherwise fetches new metrics and caches them.
 func (h *Health) populateMetricsWithCache(
 	ctx context.Context,
-	resp *gen.StatusResponse,
+	resp *api.StatusResponse,
 ) {
 	h.metricsCacheMu.RLock()
 	cached := h.metricsCache
@@ -140,11 +138,11 @@ func (h *Health) populateMetricsWithCache(
 // Component-level fields (Status, Uptime, Version) are always fresh.
 func copyMetricsFromCache(
 	cached *cachedMetrics,
-	resp *gen.StatusResponse,
+	resp *api.StatusResponse,
 ) {
-	resp.Nats = cached.resp.Nats
+	resp.NATS = cached.resp.NATS
 	resp.Streams = cached.resp.Streams
-	resp.KvBuckets = cached.resp.KvBuckets
+	resp.KVBuckets = cached.resp.KVBuckets
 	resp.ObjectStores = cached.resp.ObjectStores
 	resp.Jobs = cached.resp.Jobs
 	resp.Agents = cached.resp.Agents
@@ -162,7 +160,7 @@ func copyMetricsFromCache(
 // run concurrently with per-metric timeouts. If one fails, log and skip.
 func (h *Health) populateMetrics(
 	ctx context.Context,
-	resp *gen.StatusResponse,
+	resp *api.StatusResponse,
 ) {
 	var (
 		mu               sync.Mutex
@@ -274,118 +272,91 @@ func (h *Health) populateMetrics(
 	wg.Wait()
 
 	if natsInfo != nil {
-		resp.Nats = &gen.NATSInfo{
-			Url:     natsInfo.URL,
-			Version: natsInfo.Version,
-		}
+		resp.NATS = &api.NATSInfo{URL: natsInfo.URL, Version: natsInfo.Version}
 	}
 
 	if streams != nil {
-		streamInfos := make([]gen.StreamInfo, 0, len(streams))
+		resp.Streams = make([]api.StreamInfo, 0, len(streams))
 		totalConsumers := 0
 		for _, s := range streams {
-			streamInfos = append(streamInfos, gen.StreamInfo{
+			resp.Streams = append(resp.Streams, api.StreamInfo{
 				Name:      s.Name,
-				Messages:  int(s.Messages),
-				Bytes:     int(s.Bytes),
+				Messages:  int(s.Messages), //nolint:gosec // a stream's count fits an int
+				Bytes:     int(s.Bytes),    //nolint:gosec // a stream's size fits an int
 				Consumers: s.Consumers,
 			})
 			totalConsumers += s.Consumers
 		}
-		resp.Streams = &streamInfos
-
-		resp.Consumers = &gen.ConsumerStats{
-			Total: totalConsumers,
-		}
+		resp.Consumers = &api.ConsumerStats{Total: totalConsumers}
 	}
 
 	if kvBuckets != nil {
-		bucketInfos := make([]gen.KVBucketInfo, 0, len(kvBuckets))
+		resp.KVBuckets = make([]api.KVBucketInfo, 0, len(kvBuckets))
 		for _, b := range kvBuckets {
-			bucketInfos = append(bucketInfos, gen.KVBucketInfo{
+			resp.KVBuckets = append(resp.KVBuckets, api.KVBucketInfo{
 				Name:  b.Name,
 				Keys:  b.Keys,
-				Bytes: int(b.Bytes),
+				Bytes: int(b.Bytes), //nolint:gosec // a bucket's size fits an int
 			})
 		}
-		resp.KvBuckets = &bucketInfos
 	}
 
 	if objectStores != nil {
-		infos := make([]gen.ObjectStoreInfo, 0, len(objectStores))
+		resp.ObjectStores = make([]api.ObjectStoreInfo, 0, len(objectStores))
 		for _, o := range objectStores {
-			infos = append(infos, gen.ObjectStoreInfo{
+			resp.ObjectStores = append(resp.ObjectStores, api.ObjectStoreInfo{
 				Name: o.Name,
-				Size: int(o.Size),
+				Size: int(o.Size), //nolint:gosec // a store's size fits an int
 			})
 		}
-		resp.ObjectStores = &infos
 	}
 
 	if jobStats != nil {
-		resp.Jobs = &gen.JobStats{
+		resp.Jobs = &api.JobStats{
 			Total:       jobStats.Total,
 			Unprocessed: jobStats.Unprocessed,
 			Processing:  jobStats.Processing,
 			Completed:   jobStats.Completed,
 			Failed:      jobStats.Failed,
-			Dlq:         jobStats.DLQ,
+			DLQ:         jobStats.DLQ,
 		}
 	}
 
 	if agentStats != nil {
-		stats := gen.AgentStats{
-			Total: agentStats.Total,
-			Ready: agentStats.Ready,
-		}
-		if len(agentStats.Agents) > 0 {
-			details := make([]gen.AgentDetail, 0, len(agentStats.Agents))
-			for _, a := range agentStats.Agents {
-				d := gen.AgentDetail{
-					Hostname:   a.Hostname,
-					Registered: a.Registered,
-				}
-				if a.Labels != "" {
-					d.Labels = &a.Labels
-				}
-				details = append(details, d)
-			}
-			stats.Agents = &details
+		stats := api.AgentStats{Total: agentStats.Total, Ready: agentStats.Ready}
+		for _, a := range agentStats.Agents {
+			stats.Agents = append(stats.Agents, api.AgentDetail{
+				Hostname:   a.Hostname,
+				Labels:     a.Labels,
+				Registered: a.Registered,
+			})
 		}
 		resp.Agents = &stats
 	}
 
 	if componentEntries != nil {
-		entries := make([]gen.ComponentEntry, 0, len(componentEntries))
+		resp.Registry = make([]api.ComponentEntry, 0, len(componentEntries))
 		for _, e := range componentEntries {
-			entry := gen.ComponentEntry{}
-			entry.Type = &e.Type
-			entry.Hostname = &e.Hostname
-			entry.Status = &e.Status
-			age := e.Age
-			entry.Age = &age
-			cpu := float32(e.CPUPercent)
-			entry.CpuPercent = &cpu
-			mem := e.MemBytes
-			entry.MemBytes = &mem
-			if len(e.Conditions) > 0 {
-				conds := make([]string, len(e.Conditions))
-				copy(conds, e.Conditions)
-				entry.Conditions = &conds
+			entry := api.ComponentEntry{
+				Type:       e.Type,
+				Hostname:   e.Hostname,
+				Status:     e.Status,
+				Age:        e.Age,
+				CPUPercent: float32(e.CPUPercent),
+				MemBytes:   e.MemBytes,
 			}
-			entries = append(entries, entry)
+			if len(e.Conditions) > 0 {
+				entry.Conditions = append([]string(nil), e.Conditions...)
+			}
+			resp.Registry = append(resp.Registry, entry)
 
 			for name, sc := range e.SubComponents {
-				ch := gen.ComponentHealth{Status: sc.Status}
-				if sc.Address != "" {
-					ch.Address = &sc.Address
+				resp.Components[name] = api.ComponentHealth{
+					Status:  sc.Status,
+					Address: sc.Address,
+					URL:     sc.URL,
 				}
-				if sc.URL != "" {
-					ch.Url = &sc.URL
-				}
-				resp.Components[name] = ch
 			}
 		}
-		resp.Registry = &entries
 	}
 }

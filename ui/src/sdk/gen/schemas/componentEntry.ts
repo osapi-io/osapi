@@ -6,18 +6,18 @@
  */
 
 export interface ComponentEntry {
-  /** Component type (agent, api, nats). */
-  type?: string;
-  /** Component hostname. */
-  hostname?: string;
-  /** Component status. */
-  status?: string;
-  /** Active conditions. */
-  conditions?: string[];
   /** Time since component started. */
   age?: string;
+  /** Active conditions. */
+  conditions?: string[];
   /** Process CPU usage percentage. */
   cpu_percent?: number;
+  /** Component hostname. */
+  hostname?: string;
   /** Process RSS memory in bytes. */
   mem_bytes?: number;
+  /** Component status. */
+  status?: string;
+  /** Component type (agent, api, nats). */
+  type?: string;
 }

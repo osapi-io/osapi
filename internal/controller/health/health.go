@@ -18,28 +18,31 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package health provides health check API handlers.
 package health
 
 import (
-	"context"
-
-	"github.com/osapi-io/osapi/internal/controller/api/health/gen"
+	"log/slog"
+	"time"
 )
 
-// GetHealthReady readiness probe — returns 200 when dependencies are reachable.
-func (h *Health) GetHealthReady(
-	ctx context.Context,
-	_ gen.GetHealthReadyRequestObject,
-) (gen.GetHealthReadyResponseObject, error) {
-	if err := h.Checker.CheckHealth(ctx); err != nil {
-		errMsg := err.Error()
-		return gen.GetHealthReady503JSONResponse{
-			Status: "not_ready",
-			Error:  &errMsg,
-		}, nil
-	}
+// ensure that we've conformed to the `StrictServerInterface` with a compile-time check
 
-	return gen.GetHealthReady200JSONResponse{
-		Status: "ready",
-	}, nil
+// New factory to create a new instance.
+func New(
+	logger *slog.Logger,
+	checker Checker,
+	startTime time.Time,
+	version string,
+	metrics MetricsProvider,
+	subComponents map[string]SubComponentInfo,
+) *Health {
+	return &Health{
+		Checker:       checker,
+		StartTime:     startTime,
+		Version:       version,
+		Metrics:       metrics,
+		SubComponents: subComponents,
+		logger:        logger.With(slog.String("subsystem", "controller.health")),
+	}
 }

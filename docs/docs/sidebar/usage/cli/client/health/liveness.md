@@ -2,6 +2,8 @@
 
 Liveness probe.
 
+Returns 200 if the process is alive. No checks performed.
+
 ```bash
 osapi client health liveness
 ```

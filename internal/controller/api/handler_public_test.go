@@ -23,7 +23,6 @@ package api_test
 import (
 	"log/slog"
 	"testing"
-	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/suite"
@@ -31,7 +30,6 @@ import (
 
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/api"
-	"github.com/osapi-io/osapi/internal/controller/api/health"
 	nodeAPI "github.com/osapi-io/osapi/internal/controller/api/node"
 	"github.com/osapi-io/osapi/internal/job/mocks"
 )
@@ -86,20 +84,6 @@ func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
 			handlers = append(
 				handlers,
 				nodeAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...,
-			)
-			checker := &health.NATSChecker{}
-			handlers = append(
-				handlers,
-				health.Handler(
-					slog.Default(),
-					checker,
-					time.Now(),
-					"0.1.0",
-					nil,
-					nil,
-					signingKey,
-					nil,
-				)...,
 			)
 
 			routesBefore := len(s.server.Echo.Router().Routes())

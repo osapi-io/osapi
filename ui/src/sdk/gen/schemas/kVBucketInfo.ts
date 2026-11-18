@@ -6,10 +6,10 @@
  */
 
 export interface KVBucketInfo {
-  /** KV bucket name. */
-  name: string;
-  /** Number of keys in the bucket. */
-  keys: number;
   /** Total bytes in the bucket. */
   bytes: number;
+  /** Number of keys in the bucket. */
+  keys: number;
+  /** KV bucket name. */
+  name: string;
 }

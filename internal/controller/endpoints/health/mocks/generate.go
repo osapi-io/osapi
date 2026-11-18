@@ -17,40 +17,6 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+package mocks
 
-package cmd
-
-import (
-	"github.com/spf13/cobra"
-
-	"github.com/osapi-io/osapi/internal/cli"
-)
-
-// clientHealthLivenessCmd represents the health liveness command.
-var clientHealthLivenessCmd = &cobra.Command{
-	Use:   "liveness",
-	Short: "Liveness probe",
-	Example: `  osapi client health liveness
-  osapi client health liveness --json`,
-	Run: func(cmd *cobra.Command, _ []string) {
-		ctx := cmd.Context()
-
-		resp, err := sdkClient.Health.GetLiveness(ctx)
-		if err != nil {
-			cli.HandleError(err, logger)
-			return
-		}
-
-		if jsonOutput {
-			cli.PrintJSON(resp.RawJSON())
-			return
-		}
-
-		cli.PrintHeading("Health")
-		cli.PrintKV("Status", resp.Data.Status)
-	},
-}
-
-func init() {
-	clientHealthCmd.AddCommand(clientHealthLivenessCmd)
-}
+//go:generate go tool go.uber.org/mock/mockgen -source=../deps.go -destination=deps.gen.go -package=mocks

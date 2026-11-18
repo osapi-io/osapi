@@ -6,16 +6,16 @@
  */
 
 export interface JobStats {
+  /** Number of completed jobs. */
+  completed: number;
+  /** Number of jobs in the dead letter queue. */
+  dlq: number;
+  /** Number of failed jobs. */
+  failed: number;
+  /** Number of jobs currently processing. */
+  processing: number;
   /** Total number of jobs. */
   total: number;
   /** Number of unprocessed jobs. */
   unprocessed: number;
-  /** Number of jobs currently processing. */
-  processing: number;
-  /** Number of completed jobs. */
-  completed: number;
-  /** Number of failed jobs. */
-  failed: number;
-  /** Number of jobs in the dead letter queue. */
-  dlq: number;
 }

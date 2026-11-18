@@ -30,8 +30,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/osapi/internal/controller/api/health"
-	"github.com/osapi-io/osapi/internal/controller/api/health/gen"
+	"github.com/osapi-io/osapi/internal/controller/health"
 )
 
 type MetricsRefreshPublicTestSuite struct {
@@ -108,9 +107,8 @@ func (s *MetricsRefreshPublicTestSuite) TestStartMetricsRefresh() {
 				s.GreaterOrEqual(callCount.Load(), int32(1))
 
 				// Verify cache is populated via GetHealthStatus.
-				resp, err := handler.GetHealthStatus(ctx, gen.GetHealthStatusRequestObject{})
-				s.NoError(err)
-				s.NotNil(resp)
+				r, _ := handler.Status(ctx)
+				s.NotNil(r.NATS)
 			},
 		},
 		{

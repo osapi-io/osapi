@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/osapi-io/osapi/internal/controller/api/health/gen"
+	api "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 )
 
 // Checker checks the health of a dependency.
@@ -167,7 +167,7 @@ type Health struct {
 
 // cachedMetrics holds a snapshot of metrics with a timestamp for TTL.
 type cachedMetrics struct {
-	resp      gen.StatusResponse
+	resp      api.StatusResponse
 	fetchedAt time.Time
 }
 

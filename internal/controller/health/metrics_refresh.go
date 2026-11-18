@@ -25,7 +25,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/osapi-io/osapi/internal/controller/api/health/gen"
+	api "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 )
 
 // StartMetricsRefresh starts a background goroutine that refreshes the
@@ -79,8 +79,8 @@ func (h *Health) StartMetricsRefresh(
 func (h *Health) refreshMetricsCache(
 	ctx context.Context,
 ) {
-	resp := gen.StatusResponse{
-		Components: make(map[string]gen.ComponentHealth),
+	resp := api.StatusResponse{
+		Components: make(map[string]api.ComponentHealth),
 	}
 
 	h.populateMetrics(ctx, &resp)

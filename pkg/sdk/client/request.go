@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -77,8 +78,13 @@ func (c *Client) Request(
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		var e gen.ErrorResponse
 		_ = json.Unmarshal(raw, &e)
+		err := checkError(resp.StatusCode, &e)
+		var withBody interface{ setBody([]byte) }
+		if errors.As(err, &withBody) {
+			withBody.setBody(raw)
+		}
 
-		return nil, checkError(resp.StatusCode, &e)
+		return nil, err
 	}
 
 	return newResponse(json.RawMessage(raw), raw, resp), nil

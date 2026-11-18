@@ -118,6 +118,21 @@ func (s *RequestPublicTestSuite) TestRequest() {
 			},
 		},
 		{
+			name:   "when a probe answers 503 with its own body, the error keeps that body",
+			method: http.MethodGet,
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				_, _ = w.Write([]byte(`{"status":"not_ready","error":"nats down"}`))
+			},
+			validateFunc: func(_ *client.Response[json.RawMessage], err error, _ *http.Request, _ string) {
+				var a interface{ Answer() (int, []byte) }
+				s.Require().ErrorAs(err, &a)
+				code, body := a.Answer()
+				s.Equal(http.StatusServiceUnavailable, code)
+				s.JSONEq(`{"status":"not_ready","error":"nats down"}`, string(body))
+			},
+		},
+		{
 			name:   "when the response body is cut short",
 			method: http.MethodGet,
 			handler: func(w http.ResponseWriter, _ *http.Request) {

@@ -22,10 +22,9 @@ package health_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
 	"time"
@@ -33,15 +32,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/config"
-	"github.com/osapi-io/osapi/internal/controller/api"
-	"github.com/osapi-io/osapi/internal/controller/api/health"
-	"github.com/osapi-io/osapi/internal/controller/api/health/gen"
-	healthmocks "github.com/osapi-io/osapi/internal/controller/api/health/mocks"
+	endpoints "github.com/osapi-io/osapi/internal/controller/endpoints/health"
+	"github.com/osapi-io/osapi/internal/controller/health"
+	healthmocks "github.com/osapi-io/osapi/internal/controller/health/mocks"
 )
-
-const rbacHealthStatusTestSigningKey = "test-signing-key-for-rbac-integration"
 
 type HealthStatusGetPublicTestSuite struct {
 	suite.Suite
@@ -69,7 +64,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 		checker      health.Checker
 		checkerFn    func() health.Checker
 		metrics      health.MetricsProvider
-		validateFunc func(resp gen.GetHealthStatusResponseObject)
+		validateFunc func(r endpoints.StatusResponse, healthy bool)
 	}{
 		{
 			name: "all components healthy",
@@ -77,8 +72,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				NATSCheck: func() error { return nil },
 				KVCheck:   func() error { return nil },
 			},
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := healthy
 				s.True(ok)
 				s.Equal("ok", r.Status)
 				s.Equal("ok", r.Components["controller.nats (connectivity)"].Status)
@@ -93,14 +88,14 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				NATSCheck: func() error { return fmt.Errorf("nats not connected") },
 				KVCheck:   func() error { return nil },
 			},
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus503JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := !healthy
 				s.True(ok)
 				s.Equal("degraded", r.Status)
 				s.Equal("error", r.Components["controller.nats (connectivity)"].Status)
 				s.Require().NotNil(r.Components["controller.nats (connectivity)"].Error)
 				s.Contains(
-					*r.Components["controller.nats (connectivity)"].Error,
+					r.Components["controller.nats (connectivity)"].Error,
 					"nats not connected",
 				)
 				s.Equal("ok", r.Components["controller.kv (connectivity)"].Status)
@@ -112,15 +107,15 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				NATSCheck: func() error { return nil },
 				KVCheck:   func() error { return fmt.Errorf("kv bucket not accessible") },
 			},
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus503JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := !healthy
 				s.True(ok)
 				s.Equal("degraded", r.Status)
 				s.Equal("ok", r.Components["controller.nats (connectivity)"].Status)
 				s.Equal("error", r.Components["controller.kv (connectivity)"].Status)
 				s.Require().NotNil(r.Components["controller.kv (connectivity)"].Error)
 				s.Contains(
-					*r.Components["controller.kv (connectivity)"].Error,
+					r.Components["controller.kv (connectivity)"].Error,
 					"kv bucket not accessible",
 				)
 			},
@@ -131,8 +126,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				NATSCheck: func() error { return fmt.Errorf("nats down") },
 				KVCheck:   func() error { return fmt.Errorf("kv down") },
 			},
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus503JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := !healthy
 				s.True(ok)
 				s.Equal("degraded", r.Status)
 				s.Equal("error", r.Components["controller.nats (connectivity)"].Status)
@@ -145,8 +140,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				NATSCheck: func() error { return nil },
 				KVCheck:   func() error { return nil },
 			},
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := healthy
 				s.True(ok)
 				s.Equal("0.1.0", r.Version)
 				s.NotEmpty(r.Uptime)
@@ -159,8 +154,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				// implementation it short-circuits without calling CheckHealth.
 				return healthmocks.NewMockChecker(s.mockCtrl)
 			},
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := healthy
 				s.True(ok)
 				s.Equal("ok", r.Status)
 				s.Equal("ok", r.Components["controller.nats (connectivity)"].Status)
@@ -174,12 +169,12 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				KVCheck:   func() error { return nil },
 			},
 			metrics: nil,
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := healthy
 				s.True(ok)
-				s.Nil(r.Nats)
+				s.Nil(r.NATS)
 				s.Nil(r.Streams)
-				s.Nil(r.KvBuckets)
+				s.Nil(r.KVBuckets)
 				s.Nil(r.Jobs)
 			},
 		},
@@ -226,28 +221,28 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 					}, nil
 				},
 			},
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := healthy
 				s.True(ok)
 
-				s.Require().NotNil(r.Nats)
-				s.Equal("nats://localhost:4222", r.Nats.Url)
-				s.Equal("2.10.0", r.Nats.Version)
+				s.Require().NotNil(r.NATS)
+				s.Equal("nats://localhost:4222", r.NATS.URL)
+				s.Equal("2.10.0", r.NATS.Version)
 
 				s.Require().NotNil(r.Streams)
-				s.Len(*r.Streams, 1)
-				s.Equal("JOBS", (*r.Streams)[0].Name)
-				s.Equal(42, (*r.Streams)[0].Messages)
+				s.Len(r.Streams, 1)
+				s.Equal("JOBS", r.Streams[0].Name)
+				s.Equal(42, r.Streams[0].Messages)
 
-				s.Require().NotNil(r.KvBuckets)
-				s.Len(*r.KvBuckets, 1)
-				s.Equal("job-queue", (*r.KvBuckets)[0].Name)
-				s.Equal(10, (*r.KvBuckets)[0].Keys)
+				s.Require().NotNil(r.KVBuckets)
+				s.Len(r.KVBuckets, 1)
+				s.Equal("job-queue", r.KVBuckets[0].Name)
+				s.Equal(10, r.KVBuckets[0].Keys)
 
 				s.Require().NotNil(r.ObjectStores)
-				s.Len(*r.ObjectStores, 1)
-				s.Equal("file-objects", (*r.ObjectStores)[0].Name)
-				s.Equal(5242880, (*r.ObjectStores)[0].Size)
+				s.Len(r.ObjectStores, 1)
+				s.Equal("file-objects", r.ObjectStores[0].Name)
+				s.Equal(5242880, r.ObjectStores[0].Size)
 
 				// Consumer count is derived from stream info, not enumerated.
 				s.Require().NotNil(r.Consumers)
@@ -263,14 +258,14 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Equal(3, r.Agents.Total)
 				s.Equal(3, r.Agents.Ready)
 				s.Require().NotNil(r.Agents.Agents)
-				s.Len(*r.Agents.Agents, 3)
-				s.Equal("web-01", (*r.Agents.Agents)[0].Hostname)
-				s.Require().NotNil((*r.Agents.Agents)[0].Labels)
-				s.Equal("group=web.prod", *(*r.Agents.Agents)[0].Labels)
-				s.Equal("15s ago", (*r.Agents.Agents)[0].Registered)
-				s.Equal("db-01", (*r.Agents.Agents)[2].Hostname)
-				s.Nil((*r.Agents.Agents)[2].Labels)
-				s.Equal("2m ago", (*r.Agents.Agents)[2].Registered)
+				s.Len(r.Agents.Agents, 3)
+				s.Equal("web-01", r.Agents.Agents[0].Hostname)
+				s.Require().NotNil(r.Agents.Agents[0].Labels)
+				s.Equal("group=web.prod", r.Agents.Agents[0].Labels)
+				s.Equal("15s ago", r.Agents.Agents[0].Registered)
+				s.Equal("db-01", r.Agents.Agents[2].Hostname)
+				s.Empty(r.Agents.Agents[2].Labels)
+				s.Equal("2m ago", r.Agents.Agents[2].Registered)
 			},
 		},
 		{
@@ -321,33 +316,33 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 					}, nil
 				},
 			},
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := healthy
 				s.True(ok)
 
 				s.Require().NotNil(r.Registry)
-				s.Len(*r.Registry, 2)
+				s.Len(r.Registry, 2)
 
-				first := (*r.Registry)[0]
+				first := r.Registry[0]
 				s.Require().NotNil(first.Type)
-				s.Equal("api", *first.Type)
+				s.Equal("api", first.Type)
 				s.Require().NotNil(first.Hostname)
-				s.Equal("api-server-01", *first.Hostname)
+				s.Equal("api-server-01", first.Hostname)
 				s.Require().NotNil(first.Status)
-				s.Equal("Ready", *first.Status)
+				s.Equal("Ready", first.Status)
 				s.Require().NotNil(first.Age)
-				s.Equal("7h 6m", *first.Age)
-				s.Require().NotNil(first.CpuPercent)
-				s.InDelta(2.1, float64(*first.CpuPercent), 0.01)
+				s.Equal("7h 6m", first.Age)
+				s.Require().NotNil(first.CPUPercent)
+				s.InDelta(2.1, float64(first.CPUPercent), 0.01)
 				s.Require().NotNil(first.MemBytes)
-				s.Equal(int64(134217728), *first.MemBytes)
-				s.Nil(first.Conditions)
+				s.Equal(int64(134217728), first.MemBytes)
+				s.Empty(first.Conditions)
 
-				second := (*r.Registry)[1]
+				second := r.Registry[1]
 				s.Require().NotNil(second.Type)
-				s.Equal("agent", *second.Type)
+				s.Equal("agent", second.Type)
 				s.Require().NotNil(second.Conditions)
-				s.Equal([]string{"DiskPressure"}, *second.Conditions)
+				s.Equal([]string{"DiskPressure"}, second.Conditions)
 			},
 		},
 		{
@@ -405,33 +400,33 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 					}, nil
 				},
 			},
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := healthy
 				s.True(ok)
 
 				// Sub-components from registry entries merged into components map.
 				natsServer := r.Components["nats.server"]
 				s.Equal("ok", natsServer.Status)
 				s.Require().NotNil(natsServer.Address)
-				s.Equal("nats://localhost:4222", *natsServer.Address)
-				s.Require().NotNil(natsServer.Url)
-				s.Equal("nats://hub.example.ts.net:4222", *natsServer.Url)
+				s.Equal("nats://localhost:4222", natsServer.Address)
+				s.Require().NotNil(natsServer.URL)
+				s.Equal("nats://hub.example.ts.net:4222", natsServer.URL)
 
 				natsHB := r.Components["nats.heartbeat"]
 				s.Equal("ok", natsHB.Status)
-				s.Nil(natsHB.Address)
+				s.Empty(natsHB.Address)
 
 				natsMetrics := r.Components["nats.metrics"]
 				s.Equal("ok", natsMetrics.Status)
 				s.Require().NotNil(natsMetrics.Address)
-				s.Equal("http://0.0.0.0:9092", *natsMetrics.Address)
+				s.Equal("http://0.0.0.0:9092", natsMetrics.Address)
 
 				agentHB := r.Components["agent.heartbeat"]
 				s.Equal("ok", agentHB.Status)
 
 				agentMetrics := r.Components["agent.metrics"]
 				s.Equal("disabled", agentMetrics.Status)
-				s.Nil(agentMetrics.Address)
+				s.Empty(agentMetrics.Address)
 			},
 		},
 		{
@@ -463,8 +458,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 					return nil, fmt.Errorf("registry unavailable")
 				},
 			},
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := healthy
 				s.True(ok)
 				s.Equal("ok", r.Status)
 				s.Nil(r.Registry)
@@ -497,8 +492,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				},
 				// ComponentRegistryFn intentionally nil
 			},
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := healthy
 				s.True(ok)
 				s.Equal("ok", r.Status)
 				s.Nil(r.Registry)
@@ -532,14 +527,14 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 					return nil, fmt.Errorf("agent stats unavailable")
 				},
 			},
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := healthy
 				s.True(ok)
 				s.Equal("ok", r.Status)
-				s.Nil(r.Nats)
+				s.Nil(r.NATS)
 				s.Nil(r.Streams)
-				s.Require().NotNil(r.KvBuckets)
-				s.Len(*r.KvBuckets, 1)
+				s.Require().NotNil(r.KVBuckets)
+				s.Len(r.KVBuckets, 1)
 				s.Nil(r.ObjectStores)
 				s.Nil(r.Consumers)
 				s.Nil(r.Jobs)
@@ -572,13 +567,13 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 					return nil, fmt.Errorf("agent stats unavailable")
 				},
 			},
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := healthy
 				s.True(ok)
 				s.Equal("ok", r.Status)
-				s.Nil(r.Nats)
+				s.Nil(r.NATS)
 				s.Nil(r.Streams)
-				s.Nil(r.KvBuckets)
+				s.Nil(r.KVBuckets)
 				s.Nil(r.ObjectStores)
 				s.Nil(r.Consumers)
 				s.Nil(r.Jobs)
@@ -595,9 +590,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 			}
 			handler := health.New(slog.Default(), checker, time.Now(), "0.1.0", tt.metrics, nil)
 
-			resp, err := handler.GetHealthStatus(s.ctx, gen.GetHealthStatusRequestObject{})
-			s.NoError(err)
-			tt.validateFunc(resp)
+			tt.validateFunc(handler.Status(s.ctx))
 		})
 	}
 }
@@ -606,7 +599,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusSubComponents() {
 	tests := []struct {
 		name         string
 		subs         map[string]health.SubComponentInfo
-		validateFunc func(resp gen.GetHealthStatusResponseObject)
+		validateFunc func(r endpoints.StatusResponse, healthy bool)
 	}{
 		{
 			name: "sub-components with ports appear in response",
@@ -620,37 +613,37 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusSubComponents() {
 				"controller.metrics":   {Status: "ok", Address: "http://0.0.0.0:9090"},
 				"controller.notifier":  {Status: "disabled"},
 			},
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := healthy
 				s.True(ok)
 
 				api := r.Components["controller.api"]
 				s.Equal("ok", api.Status)
 				s.Require().NotNil(api.Address)
-				s.Equal("http://0.0.0.0:8080", *api.Address)
-				s.Require().NotNil(api.Url)
-				s.Equal("https://hub.example.ts.net/", *api.Url)
+				s.Equal("http://0.0.0.0:8080", api.Address)
+				s.Require().NotNil(api.URL)
+				s.Equal("https://hub.example.ts.net/", api.URL)
 
 				hb := r.Components["controller.heartbeat"]
 				s.Equal("ok", hb.Status)
-				s.Nil(hb.Address)
-				s.Nil(hb.Url)
+				s.Empty(hb.Address)
+				s.Empty(hb.URL)
 
 				metrics := r.Components["controller.metrics"]
 				s.Equal("ok", metrics.Status)
 				s.Require().NotNil(metrics.Address)
-				s.Equal("http://0.0.0.0:9090", *metrics.Address)
+				s.Equal("http://0.0.0.0:9090", metrics.Address)
 
 				notifier := r.Components["controller.notifier"]
 				s.Equal("disabled", notifier.Status)
-				s.Nil(notifier.Address)
+				s.Empty(notifier.Address)
 			},
 		},
 		{
 			name: "nil sub-components produces no extra keys",
 			subs: nil,
-			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
-				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				ok := healthy
 				s.True(ok)
 				s.Len(r.Components, 2) // nats + kv only
 			},
@@ -666,280 +659,33 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusSubComponents() {
 
 			handler := health.New(slog.Default(), checker, time.Now(), "0.1.0", nil, tt.subs)
 
-			resp, err := handler.GetHealthStatus(s.ctx, gen.GetHealthStatusRequestObject{})
+			tt.validateFunc(handler.Status(s.ctx))
+		})
+	}
+}
+
+func (s *HealthStatusGetPublicTestSuite) TestReady() {
+	tests := []struct {
+		name    string
+		err     error
+		wantErr bool
+	}{
+		{name: "when the dependencies answer, it is ready"},
+		{name: "when a dependency fails, it says why", err: errors.New("nats down"), wantErr: true},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			checker := healthmocks.NewMockChecker(s.mockCtrl)
+			checker.EXPECT().CheckHealth(gomock.Any()).Return(tc.err)
+			h := health.New(slog.Default(), checker, time.Now(), "0.1.0", nil, nil)
+
+			err := h.Ready(s.ctx)
+			if tc.wantErr {
+				s.EqualError(err, "nats down")
+
+				return
+			}
 			s.NoError(err)
-			tt.validateFunc(resp)
-		})
-	}
-}
-
-func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusHTTP() {
-	tests := []struct {
-		name         string
-		checker      *health.NATSChecker
-		metrics      health.MetricsProvider
-		validateFunc func(*httptest.ResponseRecorder)
-	}{
-		{
-			name: "when all components healthy returns status with metrics",
-			checker: &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return nil },
-			},
-			metrics: &health.ClosureMetricsProvider{
-				NATSInfoFn: func(
-					_ context.Context,
-				) (*health.NATSMetrics, error) {
-					return &health.NATSMetrics{
-						URL:     "nats://localhost:4222",
-						Version: "2.10.0",
-					}, nil
-				},
-				StreamInfoFn: func(
-					_ context.Context,
-				) ([]health.StreamMetrics, error) {
-					return []health.StreamMetrics{
-						{Name: "JOBS", Messages: 42, Bytes: 1024, Consumers: 1},
-					}, nil
-				},
-				KVInfoFn: func(
-					_ context.Context,
-				) ([]health.KVMetrics, error) {
-					return []health.KVMetrics{
-						{Name: "job-queue", Keys: 10, Bytes: 2048},
-					}, nil
-				},
-				ObjectStoreInfoFn: func(
-					_ context.Context,
-				) ([]health.ObjectStoreMetrics, error) {
-					return []health.ObjectStoreMetrics{
-						{Name: "file-objects", Size: 5242880},
-					}, nil
-				},
-				JobStatsFn: func(
-					_ context.Context,
-				) (*health.JobMetrics, error) {
-					return &health.JobMetrics{
-						Total: 100, Unprocessed: 5, Processing: 2,
-						Completed: 90, Failed: 3, DLQ: 0,
-					}, nil
-				},
-				AgentStatsFn: func(
-					_ context.Context,
-				) (*health.AgentMetrics, error) {
-					return &health.AgentMetrics{
-						Total: 3,
-						Ready: 3,
-						Agents: []health.AgentDetail{
-							{Hostname: "web-01", Labels: "group=web.prod", Registered: "15s ago"},
-						},
-					}, nil
-				},
-				ComponentRegistryFn: func(
-					_ context.Context,
-				) ([]health.ComponentEntry, error) {
-					return []health.ComponentEntry{
-						{
-							Type:     "api",
-							Hostname: "api-server-01",
-							Status:   "Ready",
-							Age:      "7h 6m",
-						},
-					}, nil
-				},
-			},
-			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusOK, rec.Code)
-				s.Contains(rec.Body.String(), `"status":"ok"`)
-				s.Contains(rec.Body.String(), `"version":"0.1.0"`)
-				s.Contains(rec.Body.String(), `"uptime"`)
-				s.Contains(rec.Body.String(), `"nats"`)
-				s.Contains(rec.Body.String(), `"streams"`)
-				s.Contains(rec.Body.String(), `"kv_buckets"`)
-				s.Contains(rec.Body.String(), `"object_stores"`)
-				s.Contains(rec.Body.String(), `"consumers"`)
-				s.Contains(rec.Body.String(), `"jobs"`)
-				s.Contains(rec.Body.String(), `"agents"`)
-				s.Contains(rec.Body.String(), `"web-01"`)
-				s.Contains(rec.Body.String(), `"group=web.prod"`)
-				s.Contains(rec.Body.String(), `"total":1`)
-				s.Contains(rec.Body.String(), `"file-objects"`)
-				s.Contains(rec.Body.String(), `"registry"`)
-				s.Contains(rec.Body.String(), `"api-server-01"`)
-			},
-		},
-		{
-			name: "when nil metrics omits metrics fields",
-			checker: &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return nil },
-			},
-			metrics: nil,
-			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusOK, rec.Code)
-				s.Contains(rec.Body.String(), `"status":"ok"`)
-				s.Contains(rec.Body.String(), `"version":"0.1.0"`)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			healthHandler := health.New(
-				s.logger,
-				tc.checker,
-				time.Now(),
-				"0.1.0",
-				tc.metrics,
-				nil,
-			)
-			strictHandler := gen.NewStrictHandler(healthHandler, nil)
-
-			a := api.New(s.appConfig, s.logger)
-			gen.RegisterHandlers(a.Echo, strictHandler)
-
-			req := httptest.NewRequest(http.MethodGet, "/api/health/status", nil)
-			rec := httptest.NewRecorder()
-
-			a.Echo.ServeHTTP(rec, req)
-
-			tc.validateFunc(rec)
-		})
-	}
-}
-
-func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusRBACHTTP() {
-	tokenManager := authtoken.New(s.logger)
-
-	tests := []struct {
-		name         string
-		setupAuth    func(req *http.Request)
-		validateFunc func(*httptest.ResponseRecorder)
-	}{
-		{
-			name: "when no token returns 401",
-			setupAuth: func(_ *http.Request) {
-				// No auth header set
-			},
-			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusUnauthorized, rec.Code)
-				s.Contains(rec.Body.String(), "Bearer token required")
-			},
-		},
-		{
-			name: "when insufficient permissions returns 403",
-			setupAuth: func(req *http.Request) {
-				token, err := tokenManager.Generate(
-					rbacHealthStatusTestSigningKey,
-					[]string{"read"},
-					"test-user",
-					[]string{"job:read"},
-				)
-				s.Require().NoError(err)
-				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-			},
-			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusForbidden, rec.Code)
-				s.Contains(rec.Body.String(), "Insufficient permissions")
-			},
-		},
-		{
-			name: "when valid token with health:read returns 200",
-			setupAuth: func(req *http.Request) {
-				token, err := tokenManager.Generate(
-					rbacHealthStatusTestSigningKey,
-					[]string{"admin"},
-					"test-user",
-					nil,
-				)
-				s.Require().NoError(err)
-				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-			},
-			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusOK, rec.Code)
-				s.Contains(rec.Body.String(), `"status":"ok"`)
-				s.Contains(rec.Body.String(), `"version"`)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			checker := &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return nil },
-			}
-			metrics := &health.ClosureMetricsProvider{
-				NATSInfoFn: func(
-					_ context.Context,
-				) (*health.NATSMetrics, error) {
-					return &health.NATSMetrics{
-						URL:     "nats://localhost:4222",
-						Version: "2.10.0",
-					}, nil
-				},
-				StreamInfoFn: func(
-					_ context.Context,
-				) ([]health.StreamMetrics, error) {
-					return []health.StreamMetrics{}, nil
-				},
-				KVInfoFn: func(
-					_ context.Context,
-				) ([]health.KVMetrics, error) {
-					return []health.KVMetrics{}, nil
-				},
-				ObjectStoreInfoFn: func(
-					_ context.Context,
-				) ([]health.ObjectStoreMetrics, error) {
-					return []health.ObjectStoreMetrics{}, nil
-				},
-				JobStatsFn: func(
-					_ context.Context,
-				) (*health.JobMetrics, error) {
-					return &health.JobMetrics{}, nil
-				},
-				AgentStatsFn: func(
-					_ context.Context,
-				) (*health.AgentMetrics, error) {
-					return &health.AgentMetrics{}, nil
-				},
-				ComponentRegistryFn: func(
-					_ context.Context,
-				) ([]health.ComponentEntry, error) {
-					return []health.ComponentEntry{}, nil
-				},
-			}
-
-			appConfig := config.Config{
-				Controller: config.Controller{
-					API: config.APIServer{
-						Security: config.ServerSecurity{
-							SigningKey: rbacHealthStatusTestSigningKey,
-						},
-					},
-				},
-			}
-
-			server := api.New(appConfig, s.logger)
-			handlers := health.Handler(
-				s.logger,
-				checker,
-				time.Now(),
-				"0.1.0",
-				metrics,
-				nil,
-				appConfig.Controller.API.Security.SigningKey,
-				nil,
-			)
-			server.RegisterHandlers(handlers)
-
-			req := httptest.NewRequest(http.MethodGet, "/api/health/status", nil)
-			tc.setupAuth(req)
-			rec := httptest.NewRecorder()
-
-			server.Echo.ServeHTTP(rec, req)
-
-			tc.validateFunc(rec)
 		})
 	}
 }
@@ -953,14 +699,12 @@ func (s *HealthStatusGetPublicTestSuite) TestMetricsCache() {
 			name: "when cache is fresh serves cached metrics",
 			validateFunc: func(handler *health.Health) {
 				// First call populates cache.
-				resp1, err := handler.GetHealthStatus(s.ctx, gen.GetHealthStatusRequestObject{})
-				s.NoError(err)
-				s.NotNil(resp1)
+				resp1, _ := handler.Status(s.ctx)
 
 				// Second call should serve from cache with identical data.
-				resp2, err := handler.GetHealthStatus(s.ctx, gen.GetHealthStatusRequestObject{})
-				s.NoError(err)
-				s.NotNil(resp2)
+				resp2, _ := handler.Status(s.ctx)
+				s.Equal(resp1.NATS, resp2.NATS)
+				s.Equal(resp1.KVBuckets, resp2.KVBuckets)
 			},
 		},
 	}

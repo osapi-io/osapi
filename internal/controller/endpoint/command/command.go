@@ -29,6 +29,7 @@ package command
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -209,10 +210,14 @@ func Run[In any](
 	}
 
 	resp, err := deps.Caller().Request(cmd.Context(), m.Verb, path, body)
-	if err != nil {
+	data, ok := answered(m, err)
+	if err != nil && !ok {
 		deps.Error(err)
 
 		return
+	}
+	if ok {
+		resp = client.NewResponse(data, []byte(data))
 	}
 	render, ok := renderers[g.Name+"."+method]
 	if deps.JSON() && !render.acts {
@@ -294,4 +299,24 @@ func Build(
 	}
 
 	return path, nil, nil
+}
+
+// answered is the body of an error answer whose status the method
+// .Answers with its output, such as a probe's 503: it prints as an answer.
+func answered(
+	m *endpoint.Method,
+	err error,
+) (json.RawMessage, bool) {
+	var a interface{ Answer() (int, []byte) }
+	if !errors.As(err, &a) {
+		return nil, false
+	}
+	code, body := a.Answer()
+	for _, ans := range m.Answering() {
+		if ans.Code == code {
+			return body, true
+		}
+	}
+
+	return nil, false
 }

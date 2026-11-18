@@ -17,35 +17,50 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-
-// Package health provides health check API handlers.
 package health
 
 import (
-	"log/slog"
-	"time"
+	"context"
+	"net/http"
 
-	"github.com/osapi-io/osapi/internal/controller/api/health/gen"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
-// ensure that we've conformed to the `StrictServerInterface` with a compile-time check
-var _ gen.StrictServerInterface = (*Health)(nil)
+// Liveness says the process is alive. It checks nothing.
+func Liveness(
+	_ context.Context,
+	_ Deps,
+	_ LivenessInput,
+) (HealthResponse, error) {
+	return HealthResponse{Status: "ok"}, nil
+}
 
-// New factory to create a new instance.
-func New(
-	logger *slog.Logger,
-	checker Checker,
-	startTime time.Time,
-	version string,
-	metrics MetricsProvider,
-	subComponents map[string]SubComponentInfo,
-) *Health {
-	return &Health{
-		Checker:       checker,
-		StartTime:     startTime,
-		Version:       version,
-		Metrics:       metrics,
-		SubComponents: subComponents,
-		logger:        logger.With(slog.String("subsystem", "controller.health")),
+// Ready says whether the controller can take traffic, and why not with a
+// 503.
+func Ready(
+	ctx context.Context,
+	d Deps,
+	_ ReadyInput,
+) (ReadyResponse, error) {
+	if err := d.Health.Ready(ctx); err != nil {
+		return ReadyResponse{Status: "not_ready", Error: err.Error()},
+			endpoint.Answer(http.StatusServiceUnavailable)
 	}
+
+	return ReadyResponse{Status: "ready"}, nil
+}
+
+// Status is the health of each component, with a 503 when one is not
+// healthy.
+func Status(
+	ctx context.Context,
+	d Deps,
+	_ StatusInput,
+) (StatusResponse, error) {
+	resp, healthy := d.Health.Status(ctx)
+	if !healthy {
+		return resp, endpoint.Answer(http.StatusServiceUnavailable)
+	}
+
+	return resp, nil
 }

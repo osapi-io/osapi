@@ -26,6 +26,9 @@ tags:
   - description: Fact key discovery for @fact. references.
     name: Facts_API_facts
     x-displayName: Facts
+  - description: Health check endpoints for liveness, readiness, and detailed status.
+    name: Health_Check_API_health
+    x-displayName: Health
   - description: Operations related to the job queue.
     name: Job_Management_API_job_operations
     x-displayName: Job
@@ -35,9 +38,6 @@ tags:
   - name: File_Management_API_file_operations
     x-displayName: File
     description: Object Store file management operations.
-  - name: Health_Check_API_health
-    x-displayName: Health
-    description: Health check endpoints for liveness, readiness, and detailed status.
   - name: Node_Management_API_node_operations
     x-displayName: Node
     description: Operations related to the node endpoint.
@@ -823,6 +823,100 @@ paths:
       summary: List available fact keys
       tags:
         - Facts_API_facts
+  /api/health:
+    servers: []
+    get:
+      description: Returns 200 if the process is alive. No checks performed.
+      operationId: GetHealth
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+          description: Process is alive.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security: []
+      summary: Liveness probe
+      tags:
+        - Health_Check_API_health
+  /api/health/ready:
+    servers: []
+    get:
+      description: Returns 200 when the service is ready to accept traffic.
+      operationId: GetHealthReady
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyResponse'
+          description: Service is ready.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyResponse'
+          description: Service is not ready.
+      security: []
+      summary: Readiness probe
+      tags:
+        - Health_Check_API_health
+  /api/health/status:
+    servers: []
+    get:
+      description: >-
+        Returns per-component health status with system metrics. Requires
+        authentication.
+      operationId: GetHealthStatus
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+          description: All components healthy.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+          description: One or more components unhealthy.
+      security:
+        - BearerAuth:
+            - health:read
+      summary: System status and component health
+      tags:
+        - Health_Check_API_health
   /api/job:
     servers: []
     get:
@@ -1413,98 +1507,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/health:
-    servers: []
-    get:
-      operationId: GetHealth
-      summary: Liveness probe
-      description: Returns 200 if the process is alive. No checks performed.
-      tags:
-        - Health_Check_API_health
-      responses:
-        '200':
-          description: Process is alive.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HealthResponse'
-        '500':
-          description: An error on the controller.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/health/ready:
-    servers: []
-    get:
-      operationId: GetHealthReady
-      summary: Readiness probe
-      description: Returns 200 when the service is ready to accept traffic.
-      tags:
-        - Health_Check_API_health
-      responses:
-        '200':
-          description: Service is ready.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReadyResponse'
-        '500':
-          description: An error on the controller.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '503':
-          description: Service is not ready.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReadyResponse'
-  /api/health/status:
-    servers: []
-    get:
-      operationId: GetHealthStatus
-      summary: System status and component health
-      description: >-
-        Returns per-component health status with system metrics. Requires
-        authentication.
-      tags:
-        - Health_Check_API_health
-      security:
-        - BearerAuth:
-            - health:read
-      responses:
-        '200':
-          description: All components healthy.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StatusResponse'
-        '401':
-          description: Unauthorized - API key required.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: An error on the controller.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '503':
-          description: One or more components unhealthy.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StatusResponse'
   /api/node/{hostname}:
     servers: []
     get:
@@ -6763,6 +6765,315 @@ components:
       required:
         - keys
       type: object
+    AgentDetail:
+      properties:
+        hostname:
+          description: Agent hostname.
+          example: web-01
+          type: string
+        labels:
+          description: Formatted label string.
+          example: group=web.prod
+          type: string
+        registered:
+          description: Time since last heartbeat registration.
+          example: 15s ago
+          type: string
+      required:
+        - hostname
+        - registered
+      type: object
+    AgentStats:
+      properties:
+        agents:
+          description: Per-agent registration details.
+          items:
+            $ref: '#/components/schemas/AgentDetail'
+          type: array
+        ready:
+          description: Number of agents with Ready status.
+          example: 5
+          type: integer
+        total:
+          description: Total number of registered agents.
+          example: 5
+          type: integer
+      required:
+        - total
+        - ready
+      type: object
+    ComponentEntry:
+      properties:
+        age:
+          description: Time since component started.
+          example: 7h 6m
+          type: string
+        conditions:
+          description: Active conditions.
+          items:
+            type: string
+          type: array
+        cpu_percent:
+          description: Process CPU usage percentage.
+          example: 2.1
+          type: number
+        hostname:
+          description: Component hostname.
+          example: web-01
+          type: string
+        mem_bytes:
+          description: Process RSS memory in bytes.
+          example: 134217728
+          format: int64
+          type: integer
+        status:
+          description: Component status.
+          example: Ready
+          type: string
+        type:
+          description: Component type (agent, api, nats).
+          example: agent
+          type: string
+      type: object
+    ComponentHealth:
+      properties:
+        address:
+          description: Listen address of the component (if applicable).
+          example: http://0.0.0.0:8080
+          type: string
+        error:
+          description: Error message when component is unhealthy.
+          type: string
+        status:
+          description: Component health status.
+          example: ok
+          type: string
+        url:
+          description: >-
+            Where a person opens the component, from its url config key. Absent
+            when the key is not set. osapi never requests it.
+          example: https://hub.example.ts.net/
+          type: string
+      required:
+        - status
+      type: object
+    ConsumerDetail:
+      properties:
+        ack_pending:
+          description: Messages delivered but not yet acknowledged.
+          example: 3
+          type: integer
+        name:
+          description: Consumer name.
+          example: query_any_web_01
+          type: string
+        pending:
+          description: Messages not yet delivered.
+          example: 0
+          type: integer
+        redelivered:
+          description: Messages redelivered and not yet acknowledged.
+          example: 0
+          type: integer
+      required:
+        - name
+        - pending
+        - ack_pending
+        - redelivered
+      type: object
+    ConsumerStats:
+      properties:
+        consumers:
+          description: Per-consumer details.
+          items:
+            $ref: '#/components/schemas/ConsumerDetail'
+          type: array
+        total:
+          description: Total number of JetStream consumers.
+          example: 2
+          type: integer
+      required:
+        - total
+      type: object
+    HealthResponse:
+      properties:
+        status:
+          description: Health status.
+          example: ok
+          type: string
+      required:
+        - status
+      type: object
+    JobStats:
+      properties:
+        completed:
+          description: Number of completed jobs.
+          example: 90
+          type: integer
+        dlq:
+          description: Number of jobs in the dead letter queue.
+          example: 0
+          type: integer
+        failed:
+          description: Number of failed jobs.
+          example: 3
+          type: integer
+        processing:
+          description: Number of jobs currently processing.
+          example: 2
+          type: integer
+        total:
+          description: Total number of jobs.
+          example: 100
+          type: integer
+        unprocessed:
+          description: Number of unprocessed jobs.
+          example: 5
+          type: integer
+      required:
+        - total
+        - unprocessed
+        - processing
+        - completed
+        - failed
+        - dlq
+      type: object
+    KVBucketInfo:
+      properties:
+        bytes:
+          description: Total bytes in the bucket.
+          example: 2048
+          type: integer
+        keys:
+          description: Number of keys in the bucket.
+          example: 10
+          type: integer
+        name:
+          description: KV bucket name.
+          example: job-queue
+          type: string
+      required:
+        - name
+        - keys
+        - bytes
+      type: object
+    NATSInfo:
+      properties:
+        url:
+          description: Connected NATS server URL.
+          example: nats://localhost:4222
+          type: string
+        version:
+          description: NATS server version.
+          example: 2.10.0
+          type: string
+      required:
+        - url
+        - version
+      type: object
+    ObjectStoreInfo:
+      properties:
+        name:
+          description: Object Store bucket name.
+          example: file-objects
+          type: string
+        size:
+          description: Total bytes in the store.
+          example: 5242880
+          type: integer
+      required:
+        - name
+        - size
+      type: object
+    ReadyResponse:
+      properties:
+        error:
+          description: Error message when not ready.
+          type: string
+        status:
+          description: Readiness status.
+          example: ready
+          type: string
+      required:
+        - status
+      type: object
+    StatusResponse:
+      properties:
+        agents:
+          $ref: '#/components/schemas/AgentStats'
+        components:
+          additionalProperties:
+            $ref: '#/components/schemas/ComponentHealth'
+          description: Per-component health status.
+          type: object
+        consumers:
+          $ref: '#/components/schemas/ConsumerStats'
+        jobs:
+          $ref: '#/components/schemas/JobStats'
+        kv_buckets:
+          description: KV bucket statistics.
+          items:
+            $ref: '#/components/schemas/KVBucketInfo'
+          type: array
+        nats:
+          $ref: '#/components/schemas/NATSInfo'
+        object_stores:
+          description: Object Store statistics.
+          items:
+            $ref: '#/components/schemas/ObjectStoreInfo'
+          type: array
+        registry:
+          description: All registered components with health details.
+          items:
+            $ref: '#/components/schemas/ComponentEntry'
+          type: array
+        status:
+          description: Overall health status.
+          example: ok
+          type: string
+        streams:
+          description: JetStream stream statistics.
+          items:
+            $ref: '#/components/schemas/StreamInfo'
+          type: array
+        uptime:
+          description: Time since server started.
+          example: 2h30m
+          type: string
+        version:
+          description: Application version.
+          example: 0.1.0
+          type: string
+      required:
+        - status
+        - components
+        - version
+        - uptime
+      type: object
+    StreamInfo:
+      properties:
+        bytes:
+          description: Total bytes in the stream.
+          example: 1024
+          type: integer
+        consumers:
+          description: Number of consumers on the stream.
+          example: 1
+          type: integer
+        messages:
+          description: Number of messages in the stream.
+          example: 42
+          type: integer
+        name:
+          description: Stream name.
+          example: JOBS
+          type: string
+      required:
+        - name
+        - messages
+        - bytes
+        - consumers
+      type: object
     CreateJobResponse:
       properties:
         job_id:
@@ -7133,315 +7444,6 @@ components:
       required:
         - stale
         - total
-    HealthResponse:
-      type: object
-      properties:
-        status:
-          type: string
-          description: Health status.
-          example: ok
-      required:
-        - status
-    ReadyResponse:
-      type: object
-      properties:
-        status:
-          type: string
-          description: Readiness status.
-          example: ready
-        error:
-          type: string
-          description: Error message when not ready.
-      required:
-        - status
-    ComponentHealth:
-      type: object
-      properties:
-        status:
-          type: string
-          description: Component health status.
-          example: ok
-        error:
-          type: string
-          description: Error message when component is unhealthy.
-        address:
-          type: string
-          description: Listen address of the component (if applicable).
-          example: http://0.0.0.0:8080
-        url:
-          type: string
-          description: >-
-            Where a person opens the component, from its `url` config key.
-            Absent when the key is not set. osapi never requests it.
-          example: https://hub.example.ts.net/
-      required:
-        - status
-    NATSInfo:
-      type: object
-      properties:
-        url:
-          type: string
-          description: Connected NATS server URL.
-          example: nats://localhost:4222
-        version:
-          type: string
-          description: NATS server version.
-          example: 2.10.0
-      required:
-        - url
-        - version
-    StreamInfo:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Stream name.
-          example: JOBS
-        messages:
-          type: integer
-          description: Number of messages in the stream.
-          example: 42
-        bytes:
-          type: integer
-          description: Total bytes in the stream.
-          example: 1024
-        consumers:
-          type: integer
-          description: Number of consumers on the stream.
-          example: 1
-      required:
-        - name
-        - messages
-        - bytes
-        - consumers
-    KVBucketInfo:
-      type: object
-      properties:
-        name:
-          type: string
-          description: KV bucket name.
-          example: job-queue
-        keys:
-          type: integer
-          description: Number of keys in the bucket.
-          example: 10
-        bytes:
-          type: integer
-          description: Total bytes in the bucket.
-          example: 2048
-      required:
-        - name
-        - keys
-        - bytes
-    ObjectStoreInfo:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Object Store bucket name.
-          example: file-objects
-        size:
-          type: integer
-          description: Total bytes in the store.
-          example: 5242880
-      required:
-        - name
-        - size
-    JobStats:
-      type: object
-      properties:
-        total:
-          type: integer
-          description: Total number of jobs.
-          example: 100
-        unprocessed:
-          type: integer
-          description: Number of unprocessed jobs.
-          example: 5
-        processing:
-          type: integer
-          description: Number of jobs currently processing.
-          example: 2
-        completed:
-          type: integer
-          description: Number of completed jobs.
-          example: 90
-        failed:
-          type: integer
-          description: Number of failed jobs.
-          example: 3
-        dlq:
-          type: integer
-          description: Number of jobs in the dead letter queue.
-          example: 0
-      required:
-        - total
-        - unprocessed
-        - processing
-        - completed
-        - failed
-        - dlq
-    AgentStats:
-      type: object
-      properties:
-        total:
-          type: integer
-          description: Total number of registered agents.
-          example: 5
-        ready:
-          type: integer
-          description: Number of agents with Ready status.
-          example: 5
-        agents:
-          type: array
-          items:
-            $ref: '#/components/schemas/AgentDetail'
-          description: Per-agent registration details.
-      required:
-        - total
-        - ready
-    AgentDetail:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: Agent hostname.
-          example: web-01
-        labels:
-          type: string
-          description: Formatted label string.
-          example: group=web.prod
-        registered:
-          type: string
-          description: Time since last heartbeat registration.
-          example: 15s ago
-      required:
-        - hostname
-        - registered
-    ComponentEntry:
-      type: object
-      properties:
-        type:
-          type: string
-          description: Component type (agent, api, nats).
-          example: agent
-        hostname:
-          type: string
-          description: Component hostname.
-          example: web-01
-        status:
-          type: string
-          description: Component status.
-          example: Ready
-        conditions:
-          type: array
-          items:
-            type: string
-          description: Active conditions.
-        age:
-          type: string
-          description: Time since component started.
-          example: 7h 6m
-        cpu_percent:
-          type: number
-          description: Process CPU usage percentage.
-          example: 2.1
-        mem_bytes:
-          type: integer
-          format: int64
-          description: Process RSS memory in bytes.
-          example: 134217728
-    ConsumerStats:
-      type: object
-      properties:
-        total:
-          type: integer
-          description: Total number of JetStream consumers.
-          example: 2
-        consumers:
-          type: array
-          items:
-            $ref: '#/components/schemas/ConsumerDetail'
-          description: Per-consumer details.
-      required:
-        - total
-    ConsumerDetail:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Consumer name.
-          example: query_any_web_01
-        pending:
-          type: integer
-          description: Messages not yet delivered.
-          example: 0
-        ack_pending:
-          type: integer
-          description: Messages delivered but not yet acknowledged.
-          example: 3
-        redelivered:
-          type: integer
-          description: Messages redelivered and not yet acknowledged.
-          example: 0
-      required:
-        - name
-        - pending
-        - ack_pending
-        - redelivered
-    StatusResponse:
-      type: object
-      properties:
-        status:
-          type: string
-          description: Overall health status.
-          example: ok
-        components:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/ComponentHealth'
-          description: Per-component health status.
-        version:
-          type: string
-          description: Application version.
-          example: 0.1.0
-        uptime:
-          type: string
-          description: Time since server started.
-          example: 2h30m
-        nats:
-          $ref: '#/components/schemas/NATSInfo'
-        streams:
-          type: array
-          items:
-            $ref: '#/components/schemas/StreamInfo'
-          description: JetStream stream statistics.
-        kv_buckets:
-          type: array
-          items:
-            $ref: '#/components/schemas/KVBucketInfo'
-          description: KV bucket statistics.
-        object_stores:
-          type: array
-          items:
-            $ref: '#/components/schemas/ObjectStoreInfo'
-          description: Object Store statistics.
-        jobs:
-          $ref: '#/components/schemas/JobStats'
-        agents:
-          $ref: '#/components/schemas/AgentStats'
-        consumers:
-          $ref: '#/components/schemas/ConsumerStats'
-        registry:
-          type: array
-          items:
-            $ref: '#/components/schemas/ComponentEntry'
-          description: All registered components with health details.
-      required:
-        - status
-        - components
-        - version
-        - uptime
     DiskResponse:
       type: object
       description: Local disk usage information.
@@ -11307,6 +11309,9 @@ x-tagGroups:
   - name: Facts API
     tags:
       - Facts_API_facts
+  - name: Health Check API
+    tags:
+      - Health_Check_API_health
   - name: Job Management API
     tags:
       - Job_Management_API_job_operations
@@ -11316,9 +11321,6 @@ x-tagGroups:
   - name: File Management API
     tags:
       - File_Management_API_file_operations
-  - name: Health Check API
-    tags:
-      - Health_Check_API_health
   - name: Node Management API
     tags:
       - Node_Management_API_node_operations
