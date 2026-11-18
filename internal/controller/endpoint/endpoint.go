@@ -747,6 +747,15 @@ func Invalid(
 	return Error{Err: err, Code: http.StatusBadRequest, Doc: doc}
 }
 
+// Forbidden maps err to 403: a request that the token may make, but not
+// on this thing, such as a write to a file that osapi owns.
+func Forbidden(
+	err error,
+	doc string,
+) Error {
+	return Error{Err: err, Code: http.StatusForbidden, Doc: doc}
+}
+
 // NotFound maps err to 404.
 func NotFound(
 	err error,

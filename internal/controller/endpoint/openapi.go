@@ -109,6 +109,7 @@ func (b *builder) operation(
 	}
 
 	var body []reflect.StructField
+	form := false
 	for _, f := range fields(m.In) {
 		switch in := f.Tag.Get("in"); in {
 		case "path", "query":
@@ -132,6 +133,7 @@ func (b *builder) operation(
 			}
 			op.Parameters = append(op.Parameters, &openapi3.ParameterRef{Value: p})
 		default:
+			form = form || in == "form"
 			body = append(body, f)
 		}
 	}
@@ -140,9 +142,15 @@ func (b *builder) operation(
 		if err != nil {
 			return nil, err
 		}
-		op.RequestBody = &openapi3.RequestBodyRef{Value: openapi3.NewRequestBody().
-			WithRequired(required).
-			WithJSONSchemaRef(s)}
+		rb := openapi3.NewRequestBody().WithRequired(required)
+		// A field tagged in:"form" makes the body a multipart form, as an
+		// upload of a file is.
+		if form {
+			rb = rb.WithFormDataSchemaRef(s)
+		} else {
+			rb = rb.WithJSONSchemaRef(s)
+		}
+		op.RequestBody = &openapi3.RequestBodyRef{Value: rb}
 	}
 
 	returns := m.returns
@@ -327,7 +335,7 @@ func (b *builder) object(
 	s.Properties = openapi3.Schemas{}
 	for _, f := range fs {
 		name := jsonName(f)
-		fs, err := b.ref(f.Type)
+		fs, err := b.field(f)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", f.Name, err)
 		}
@@ -346,6 +354,22 @@ func (b *builder) object(
 	}
 
 	return s, nil
+}
+
+// field is the schema of a field: bytes are a file in a form and base64 in
+// JSON, and each other type is its schema.
+func (b *builder) field(
+	f reflect.StructField,
+) (*openapi3.SchemaRef, error) {
+	if f.Type != reflect.TypeFor[[]byte]() {
+		return b.ref(f.Type)
+	}
+	bytes := openapi3.NewBytesSchema()
+	if f.Tag.Get("in") == "form" {
+		bytes.Format = "binary"
+	}
+
+	return openapi3.NewSchemaRef("", bytes), nil
 }
 
 // constrained is s with the field's example, and the constraints of its

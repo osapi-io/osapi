@@ -268,6 +268,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindError,
+			Name: `Forbidden(err, "doc")`,
+			Does: "Maps err to 403. Its doc is the 403's description, so say the permission failure too.",
+			When: "When the token may make the request, but not on this thing, such as a write to a file that osapi owns.",
+		},
+		{
+			Kind: KindError,
 			Name: `Invalid(err, "doc")`,
 			Does: "Maps err to 400. Its doc is the 400's description, so say the decode failures too.",
 			When: "When the request is well formed but the method cannot do it, such as a retry of a job with no operation data.",
@@ -290,6 +296,12 @@ var Spec = guide.Spec{
 			Name: `in:"query"`,
 			Does: "Makes the input field a query parameter.",
 			When: "For a filter, a page or an option, such as status, limit or force.",
+		},
+		{
+			Kind: KindTag,
+			Name: `in:"form"`,
+			Does: "Makes the field a part of a multipart/form-data body. A []byte field is the file, a string of format binary.",
+			When: "For an upload of a file, such as POST /api/file.",
 		},
 		{
 			Kind: KindTag,
