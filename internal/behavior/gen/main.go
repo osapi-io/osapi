@@ -144,20 +144,13 @@ func (w *writer) behavior(
 		if err := w.goFile(filepath.Join(gen, "group.go"), g); err != nil {
 			return err
 		}
-		if err := w.goFile(filepath.Join(gen, "api.go"), apiFile(b)); err != nil {
-			return err
-		}
+		// The routes and the decoders, gen/api.go and gen/decode.go, come
+		// from the group too: internal/behavior/gen/spec writes them with the
+		// endpoint layer's route writer.
 		if err := w.goFile(filepath.Join(gen, "api_public_test.go"), apiTestFile(b)); err != nil {
 			return err
 		}
 		for _, m := range b.Methods {
-			f, err := apiMethodFile(b, m)
-			if err != nil {
-				return err
-			}
-			if err := w.goFile(filepath.Join(gen, "api_"+m.Name+".go"), f); err != nil {
-				return err
-			}
 			t, err := apiMethodTestFile(b, m)
 			if err != nil {
 				return err

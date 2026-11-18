@@ -3,7 +3,11 @@
 package gen
 
 import (
+	"context"
+
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch"
+	sysctl "github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
@@ -15,18 +19,27 @@ type ListRequest struct {
 
 // SysctlEntry is the result of sysctl on one host.
 type SysctlEntry struct {
-	Hostname string `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Key      string `doc:"Parameter name" json:"key,omitempty"`
-	Value    string `doc:"Current runtime value" json:"value,omitempty"`
-	Managed  bool   `doc:"Whether osapi manages it: a file of its own sets it at boot" json:"managed,omitempty"`
-	Error    string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
+	Key      *string `doc:"Parameter name" json:"key,omitempty"`
+	Value    *string `doc:"Current runtime value" json:"value,omitempty"`
+	Managed  *bool   `doc:"Whether osapi manages it: a file of its own sets it at boot" json:"managed,omitempty"`
+	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // SysctlCollectionResponse is each target host's result.
 type SysctlCollectionResponse struct {
 	JobID   string        `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
 	Results []SysctlEntry `json:"results"`
+}
+
+// HandleList runs sysctl list on the target, for the endpoint server.
+func HandleList(
+	ctx context.Context,
+	d dispatch.Deps,
+	in ListRequest,
+) (SysctlCollectionResponse, error) {
+	return dispatch.Run[SysctlCollectionResponse](ctx, d, sysctl.Behavior, "list", in.Hostname, sysctl.ListInput{Prefix: in.Prefix})
 }
 
 // GetRequest is the request of sysctl get: its target and its input.
@@ -39,6 +52,15 @@ type GetRequest struct {
 type SysctlGetResponse struct {
 	JobID   string        `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
 	Results []SysctlEntry `json:"results"`
+}
+
+// HandleGet runs sysctl get on the target, for the endpoint server.
+func HandleGet(
+	ctx context.Context,
+	d dispatch.Deps,
+	in GetRequest,
+) (SysctlGetResponse, error) {
+	return dispatch.Run[SysctlGetResponse](ctx, d, sysctl.Behavior, "get", in.Hostname, sysctl.GetInput{Key: in.Key})
 }
 
 // CreateRequest is the request of sysctl create: its target and its input.
@@ -55,17 +77,26 @@ type SysctlCreateRequest struct {
 
 // SysctlMutationResult is the result of sysctl on one host.
 type SysctlMutationResult struct {
-	Hostname string `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Key      string `doc:"Parameter name" json:"key,omitempty"`
-	Changed  bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
+	Key      *string `doc:"Parameter name" json:"key,omitempty"`
+	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // SysctlCreateResponse is each target host's result.
 type SysctlCreateResponse struct {
 	JobID   string                 `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
 	Results []SysctlMutationResult `json:"results"`
+}
+
+// HandleCreate runs sysctl create on the target, for the endpoint server.
+func HandleCreate(
+	ctx context.Context,
+	d dispatch.Deps,
+	in CreateRequest,
+) (SysctlCreateResponse, error) {
+	return dispatch.Run[SysctlCreateResponse](ctx, d, sysctl.Behavior, "create", in.Hostname, sysctl.CreateInput{Key: in.Body.Key, Value: in.Body.Value})
 }
 
 // UpdateRequest is the request of sysctl update: its target and its input.
@@ -86,6 +117,15 @@ type SysctlUpdateResponse struct {
 	Results []SysctlMutationResult `json:"results"`
 }
 
+// HandleUpdate runs sysctl update on the target, for the endpoint server.
+func HandleUpdate(
+	ctx context.Context,
+	d dispatch.Deps,
+	in UpdateRequest,
+) (SysctlUpdateResponse, error) {
+	return dispatch.Run[SysctlUpdateResponse](ctx, d, sysctl.Behavior, "update", in.Hostname, sysctl.UpdateInput{Key: in.Key, Value: in.Body.Value})
+}
+
 // DeleteRequest is the request of sysctl delete: its target and its input.
 type DeleteRequest struct {
 	Hostname string `doc:"Target agent hostname, reserved routing value (_any, _all), or label selector (key:value)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
@@ -98,31 +138,45 @@ type SysctlDeleteResponse struct {
 	Results []SysctlMutationResult `json:"results"`
 }
 
+// HandleDelete runs sysctl delete on the target, for the endpoint server.
+func HandleDelete(
+	ctx context.Context,
+	d dispatch.Deps,
+	in DeleteRequest,
+) (SysctlDeleteResponse, error) {
+	return dispatch.Run[SysctlDeleteResponse](ctx, d, sysctl.Behavior, "delete", in.Hostname, sysctl.DeleteInput{Key: in.Key})
+}
+
 // Group is sysctl as an endpoint group, which its spec comes from.
 var Group = endpoint.Define(
 	"sysctl",
 	"Kernel parameters, written to sysctl.d files and applied",
 	endpoint.Prefix("next/node/{hostname}"),
+	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("sysctl_operations", "Node/Sysctl", "Kernel parameters, written to sysctl.d files and applied"),
 	endpoint.Get[ListRequest, SysctlCollectionResponse]("list").
+		Handle(HandleList).
 		ID("GetNodeSysctl").
 		Describe("List the kernel's parameters and which osapi manages").
 		Permission("sysctl:read").
 		Returns("Each target host's result.").
 		Explain("Lists every parameter the kernel shows under /proc/sys, with its current value, as sysctl -a does, and marks the ones osapi manages. A prefix, such as net.ipv4, limits the list to that part of the tree. The kernel can lack a parameter that osapi manages, for example when its module is not loaded. Then the list shows the value that osapi wrote."),
 	endpoint.Get[GetRequest, SysctlGetResponse]("get").
+		Handle(HandleGet).
 		ID("GetNodeSysctlByKey").
 		Describe("Get a kernel parameter's current value, and whether osapi manages it").
 		Permission("sysctl:read").
 		Returns("Each target host's result.").
 		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no sysctl with that key.")),
 	endpoint.Post[CreateRequest, SysctlCreateResponse]("create").
+		Handle(HandleCreate).
 		ID("PostNodeSysctl").
 		Describe("Manage a kernel parameter and apply it").
 		Permission("sysctl:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Writes osapi-<key>.conf to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. It fails when sysctl -p fails, because the value is not set. A second run with the same value changes nothing and reports changed: false. If the kernel has a different value, for example after a failed apply, it applies the value again."),
 	endpoint.Put[UpdateRequest, SysctlUpdateResponse]("update").
+		Handle(HandleUpdate).
 		ID("PutNodeSysctl").
 		Describe("Set a kernel parameter, manage it, and apply it").
 		Permission("sysctl:write").
@@ -130,6 +184,7 @@ var Group = endpoint.Define(
 		Explain("The same as create, addressed by the parameter: osapi manages the parameter from then on whether it did before or not. Setting the value it already has reports changed: false.").
 		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no sysctl with that key.")),
 	endpoint.Delete[DeleteRequest, SysctlDeleteResponse]("delete").
+		Handle(HandleDelete).
 		ID("DeleteNodeSysctl").
 		Describe("Stop the management of a kernel parameter").
 		Permission("sysctl:write").

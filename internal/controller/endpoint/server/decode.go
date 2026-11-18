@@ -21,6 +21,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"reflect"
@@ -29,7 +30,6 @@ import (
 
 	"github.com/labstack/echo/v5"
 
-	behaviorserver "github.com/osapi-io/osapi/internal/behavior/server"
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
@@ -39,7 +39,7 @@ func Param[T any](
 	name string,
 	field *T,
 ) (string, bool) {
-	return behaviorserver.Param(c, name, field)
+	return text(c.Param(name), "path parameter "+name, field)
 }
 
 // Query sets *field from the query parameter name, when the request has it.
@@ -48,7 +48,7 @@ func Query[T any](
 	name string,
 	field *T,
 ) (string, bool) {
-	return behaviorserver.Query(c, name, field)
+	return text(c.QueryParam(name), "query parameter "+name, field)
 }
 
 // Body decodes the JSON body into in. An empty body leaves in as it is, for
@@ -57,7 +57,40 @@ func Body(
 	c *echo.Context,
 	in any,
 ) (string, bool) {
-	return behaviorserver.Body(c, in)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return "read body: " + err.Error(), false
+	}
+	if len(body) == 0 {
+		return "", true
+	}
+	if err := json.Unmarshal(body, in); err != nil {
+		return "invalid JSON body: " + err.Error(), false
+	}
+
+	return "", true
+}
+
+// text sets *field from value: a string as it is, any other type as JSON,
+// so a number or a boolean in the path or the query is read as its type.
+func text[T any](
+	value string,
+	what string,
+	field *T,
+) (string, bool) {
+	if value == "" {
+		return "", true
+	}
+	if v := reflect.ValueOf(field).Elem(); v.Kind() == reflect.String {
+		v.SetString(value)
+
+		return "", true
+	}
+	if err := json.Unmarshal([]byte(value), field); err != nil {
+		return "invalid " + what + ": " + err.Error(), false
+	}
+
+	return "", true
 }
 
 // Valid checks in's validate tags, and each string field tagged

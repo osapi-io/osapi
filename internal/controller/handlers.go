@@ -29,7 +29,7 @@ import (
 	"github.com/labstack/echo/v5"
 
 	"github.com/osapi-io/osapi/internal/audit"
-	"github.com/osapi-io/osapi/internal/behavior/server"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	"github.com/osapi-io/osapi/internal/config"
 	nodeAPI "github.com/osapi-io/osapi/internal/controller/api/node"
 	certificateAPI "github.com/osapi-io/osapi/internal/controller/api/node/certificate"
@@ -117,6 +117,10 @@ func handlers(
 			healthEndpoint.Deps{Health: reporter},
 			fileDeps(d.nats, d.objBucket, d.fileStateBucket),
 			factsEndpoint.Deps{},
+			// Each behavior's endpoint group, which the gen packages that
+			// internal/behaviors/all/gen imports register, served under
+			// /api/next beside the hand-written routes.
+			dispatch.Deps{JobClient: d.jobs},
 		)...,
 	)
 	handlers = append(handlers, nodeAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
@@ -124,10 +128,6 @@ func handlers(
 	handlers = append(handlers, dockerAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, scheduleAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, sysctlAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
-	// Behaviors: each one's generated routes, registered by the gen packages
-	// internal/behaviors/all/gen imports, served under /api/next beside the
-	// hand-written routes.
-	handlers = append(handlers, server.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, ntpAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, powerAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, timezoneAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)

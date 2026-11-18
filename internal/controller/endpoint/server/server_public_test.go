@@ -33,7 +33,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
-	behaviorserver "github.com/osapi-io/osapi/internal/behavior/server"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
@@ -78,7 +77,7 @@ func decodeGet(
 	c *echo.Context,
 ) (getInput, string, bool) {
 	var in getInput
-	if msg, ok := behaviorserver.Param(c, "name", &in.Name); !ok {
+	if msg, ok := server.Param(c, "name", &in.Name); !ok {
 		return in, msg, false
 	}
 	if in.Name == "bad" {

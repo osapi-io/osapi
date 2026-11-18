@@ -8,7 +8,7 @@ import (
 
 	suite "github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/osapi/internal/behavior/server/servertest"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
 	sysctl "github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/behaviors/sysctl/gen"
 )
@@ -254,16 +254,6 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 				Method: http.MethodDelete,
 				Path:   "/api/next/node//sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness"}`,
-			},
-			Token:    servertest.Write,
-			WantCode: http.StatusBadRequest,
-		},
-		{
-			Name: "when the body is not JSON, it is a 400",
-			Request: servertest.Request{
-				Method: http.MethodDelete,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
-				Body:   `{`,
 			},
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,

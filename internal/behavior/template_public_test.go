@@ -141,6 +141,15 @@ func (s *TemplatePublicTestSuite) TestTemplateFields() {
 	}
 }
 
+// TestCheckRefusesTemplates holds a method's input check, which the agent and
+// behavior.Call run, to the template rule the API holds a request to.
+func (s *TemplatePublicTestSuite) TestCheckRefusesTemplates() {
+	m := behavior.Write("deploy", deploy)
+
+	s.ErrorContains(m.Check([]byte(`{"content":"{{.Vars.missing}}"}`)), "missing")
+	s.NoError(m.Check([]byte(`{"content":"{{.Vars.port}}","vars":{"port":"80"}}`)))
+}
+
 func (s *TemplatePublicTestSuite) TestCheckTemplates() {
 	vars := map[string]string{"region": "west"}
 

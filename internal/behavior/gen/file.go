@@ -34,8 +34,8 @@ const module = "github.com/osapi-io/osapi"
 
 const (
 	echoPath       = "github.com/labstack/echo/v5"
-	serverPath     = module + "/internal/behavior/server"
-	servertestPath = module + "/internal/behavior/server/servertest"
+	serverPath     = module + "/internal/controller/endpoint/server"
+	servertestPath = module + "/internal/behavior/dispatch/servertest"
 	httpPath       = "net/http"
 )
 

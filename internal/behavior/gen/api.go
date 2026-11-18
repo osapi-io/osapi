@@ -34,7 +34,6 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
-	"github.com/osapi-io/osapi/internal/behavior/server"
 )
 
 // statusNames are the net/http names of the codes a behavior answers.
@@ -45,126 +44,6 @@ var statusNames = map[int]string{
 	http.StatusForbidden:           "StatusForbidden",
 	http.StatusNotFound:            "StatusNotFound",
 	http.StatusInternalServerError: "StatusInternalServerError",
-}
-
-// handlerName and decoderName are a method's generated function names:
-// apiUpdate and decodeUpdate.
-func handlerName(
-	m *behavior.Method,
-) string {
-	return "api" + title(m.Name)
-}
-
-func decoderName(
-	m *behavior.Method,
-) string {
-	return "decode" + title(m.Name)
-}
-
-// apiFile is b's gen/api.go: the table of its routes, registered with the
-// runtime from init.
-func apiFile(
-	b *behavior.Behavior,
-) *jen.File {
-	f := genFile(b)
-
-	routes := make([]jen.Code, 0, len(b.Methods))
-	for _, m := range b.Methods {
-		routes = append(routes, multi("{", "}",
-			jen.Id("Method").Op(":").Qual(httpPath, methodConst(m)),
-			jen.Id("Path").Op(":").Lit(server.Path(b, m)),
-			jen.Id("Permission").Op(":").Lit(b.Permission(m.Verb)),
-			jen.Id("Handler").Op(":").Id(handlerName(m)).Call(jen.Id("s")),
-		))
-	}
-
-	comment(f, fmt.Sprintf("Routes are %s's API routes: each method's HTTP method, its path, the "+
-		"permission a token needs, and its handler.", b.Name))
-	f.Func().Id("Routes").Add(params(jen.Id("s").Op("*").Qual(serverPath, "Server"))).
-		Index().Qual(serverPath, "Route").Block(
-		jen.Return(jen.Index().Qual(serverPath, "Route").Add(multi("{", "}", routes...))),
-	)
-	f.Line()
-	f.Func().Id("init").Params().Block(jen.Qual(serverPath, "Register").Call(jen.Id("Routes")))
-
-	return f
-}
-
-// apiMethodFile is b's gen/api_<method>.go: the method's handler, and the
-// decoder that builds its typed input from the request.
-func apiMethodFile(
-	b *behavior.Behavior,
-	m *behavior.Method,
-) (*jen.File, error) {
-	f := genFile(b)
-	in := jen.Qual(pkgPath(b), m.In.Name())
-
-	comment(f, fmt.Sprintf("%s serves %s %s, which needs %s: %s.",
-		handlerName(m), m.HTTPMethod(), b.Route(m), b.Permission(m.Verb),
-		strings.TrimSuffix(m.Doc, ".")))
-	f.Func().Id(handlerName(m)).Add(params(jen.Id("s").Op("*").Qual(serverPath, "Server"))).
-		Qual(echoPath, "HandlerFunc").Block(
-		jen.Return(jen.Qual(serverPath, "Serve").Call(
-			jen.Id("s"), jen.Qual(pkgPath(b), "Behavior"), jen.Lit(m.Name), jen.Id(decoderName(m)),
-		)),
-	)
-	f.Line()
-
-	fls := command.Flags(m.In)
-	if len(fls) == 0 && m.In.NumField() == 0 {
-		comment(f, fmt.Sprintf("%s builds %s, which takes nothing from the request.",
-			decoderName(m), m.In.Name()))
-		f.Func().Id(decoderName(m)).Add(params(jen.Id("_").Op("*").Qual(echoPath, "Context"))).
-			Params(in.Clone(), jen.String(), jen.Bool()).Block(
-			jen.Return(in.Clone().Values(), jen.Lit(""), jen.True()),
-		)
-
-		return f, nil
-	}
-
-	var steps []jen.Code
-	var from []string
-	fail := jen.Return(jen.Id("in"), jen.Id("msg"), jen.False())
-	step := func(call jen.Code) {
-		steps = append(steps, jen.If(
-			jen.List(jen.Id("msg"), jen.Id("ok")).Op(":=").Add(call), jen.Op("!").Id("ok"),
-		).Block(fail))
-	}
-
-	if m.Verb == behavior.VerbWrite {
-		from = append(from, "the JSON body")
-		step(jen.Qual(serverPath, "Body").Call(jen.Id("c"), jen.Op("&").Id("in")))
-	} else {
-		for _, fl := range fls {
-			if fl.JSON == m.KeyField {
-				continue
-			}
-			from = append(from, fl.JSON+" from the query")
-			step(jen.Qual(serverPath, "Query").Call(
-				jen.Id("c"), jen.Lit(fl.JSON), jen.Op("&").Id("in").Dot(m.In.Field(fl.Index).Name),
-			))
-		}
-	}
-	if m.KeyField != "" {
-		field, ok := fieldByJSON(m.In, m.KeyField)
-		if !ok {
-			return nil, fmt.Errorf("%s: key %q is not an input field", b.Operation(m), m.KeyField)
-		}
-		from = append(from, m.KeyField+" from the path")
-		step(jen.Qual(serverPath, "Param").Call(
-			jen.Id("c"), jen.Lit(m.KeyField), jen.Op("&").Id("in").Dot(field.Name),
-		))
-	}
-	step(jen.Qual(serverPath, "Valid").Call(jen.Id("in")))
-
-	comment(f, fmt.Sprintf("%s builds %s from the request: %s, then checks its validate tags.",
-		decoderName(m), m.In.Name(), strings.Join(from, ", then ")))
-	body := append([]jen.Code{jen.Var().Id("in").Add(in.Clone()), jen.Line()}, steps...)
-	body = append(body, jen.Line(), jen.Return(jen.Id("in"), jen.Lit(""), jen.True()))
-	f.Func().Id(decoderName(m)).Add(params(jen.Id("c").Op("*").Qual(echoPath, "Context"))).
-		Params(in.Clone(), jen.String(), jen.Bool()).Block(body...)
-
-	return f, nil
 }
 
 // apiTestFile is gen/api.go's test: Routes lists every method with its
@@ -178,7 +57,7 @@ func apiTestFile(
 	for _, m := range b.Methods {
 		rows = append(rows, multi("{", "}",
 			jen.Id("method").Op(":").Qual(httpPath, methodConst(m)),
-			jen.Id("path").Op(":").Lit(server.Path(b, m)),
+			jen.Id("path").Op(":").Lit(echoRoute(b, m)),
 			jen.Id("permission").Op(":").Lit(b.Permission(m.Verb)),
 		))
 	}
@@ -188,7 +67,8 @@ func apiTestFile(
 	f.Func().Params(jen.Id("s").Op("*").Id("APIPublicTestSuite")).Id("TestRoutes").Params().Block(
 		jen.Id("routes").Op(":=").Qual(pkgPath(b)+"/gen", "Routes").Call(
 			jen.Qual(serverPath, "New").Call(
-				jen.Qual("log/slog", "Default").Call(), jen.Nil(), jen.Lit(""), jen.Nil(),
+				jen.Qual("log/slog", "Default").Call(), jen.Lit(""), jen.Nil(),
+				jen.Qual(dispatchPath, "Deps").Values(),
 			),
 		),
 		jen.Id("want").Op(":=").Index().Struct(
@@ -444,7 +324,14 @@ func validationCases(
 		add(c, "when "+fl.JSON+" is missing, it is a 400")
 	}
 
-	if m.Verb == behavior.VerbWrite {
+	// A write has a body when it has a field besides its key. One that has
+	// only the key, such as a delete, has no body in its spec, and its route
+	// reads none.
+	hasBody := false
+	for _, fl := range command.Flags(m.In) {
+		hasBody = hasBody || fl.JSON != m.KeyField
+	}
+	if m.Verb == behavior.VerbWrite && hasBody {
 		c := base
 		c.body = "{"
 		add(c, "when the body is not JSON, it is a 400")
@@ -472,7 +359,7 @@ func validationCases(
 		// A refusal the API cannot see, such as a parameter osapi does not
 		// manage, is the provider's, which behaviortest checks; and a keyed
 		// method with no key has no route.
-		if _, ok := server.Valid(r.Input); ok {
+		if data, _ := json.Marshal(r.Input); m.Check(data) == nil {
 			continue
 		}
 		if m.KeyField != "" {
@@ -785,4 +672,15 @@ func raw(
 	}
 
 	return jen.Id("`" + s + "`")
+}
+
+// echoRoute is the echo path of a method: its route, with {param} written
+// as :param.
+func echoRoute(
+	b *behavior.Behavior,
+	m *behavior.Method,
+) string {
+	p := strings.ReplaceAll(b.Route(m), "{", ":")
+
+	return strings.ReplaceAll(p, "}", "")
 }
