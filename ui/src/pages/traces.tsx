@@ -14,15 +14,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { getTrace } from "@/sdk/gen/telemetry-api-telemetry/telemetry-api-telemetry";
 import type { TraceResponse } from "@/sdk/gen/schemas";
-import {
-  traceRows,
-  natsCalls,
-  formatMs,
-  type TraceRow,
-} from "@/lib/trace-tree";
+import { traceRows, natsCalls, type TraceRow } from "@/lib/trace-tree";
 import { statusVariant } from "@/lib/status";
 import { PermissionDenied } from "@/components/layout/permission-denied";
 import { Spinner } from "@/components/ui/spinner";
+import { KVList } from "@/components/ui/kv-list";
+import { formatDurationMs, formatTime } from "@/lib/format";
 
 export function Traces() {
   const { can } = useAuth();
@@ -76,20 +73,24 @@ export function Traces() {
   const nats = trace ? natsCalls(trace.spans) : { count: 0, ms: 0 };
   const failed = trace?.spans.filter((s) => s.status === "error").length ?? 0;
   const services = [...new Set(trace?.spans.map((s) => s.service) ?? [])];
+  // The trace's start and its whole duration, as osapi client telemetry
+  // trace get prints them: from the first span's start to the last end.
+  const starts =
+    trace?.spans.map((s) => new Date(s.start_time).getTime()) ?? [];
+  const start = starts.length ? Math.min(...starts) : 0;
+  const end = trace?.spans.length
+    ? Math.max(
+        ...trace.spans.map(
+          (s) => new Date(s.start_time).getTime() + s.duration_ms,
+        ),
+      )
+    : 0;
 
   return (
     <ContentArea>
       <PageHeader
         title="Traces"
         subtitle="The span tree of a request, read through the controller"
-        actions={
-          trace && (
-            <>
-              <Badge variant="muted">{trace.spans.length} spans</Badge>
-              {failed > 0 && <Badge variant="error">{failed} failed</Badge>}
-            </>
-          )
-        }
       />
 
       <div className="mb-4">
@@ -125,10 +126,27 @@ export function Traces() {
 
       {!loading && trace && (
         <div className="mb-4">
+          <SectionLabel>Trace</SectionLabel>
+          <Card>
+            <CardContent>
+              <KVList
+                pairs={[
+                  ["ID", <span className="font-mono">{id}</span>],
+                  ["Started", formatTime(new Date(start).toISOString())],
+                  ["Duration", formatDurationMs(end - start)],
+                  ["Services", services.join(", ")],
+                  ["Failed spans", failed > 0 && failed],
+                ]}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {!loading && trace && (
+        <div className="mb-4">
           <div className="flex items-center justify-between">
-            <SectionLabel icon={GitBranch}>
-              Spans ({rows.length}) · {services.join(", ")}
-            </SectionLabel>
+            <SectionLabel icon={GitBranch}>Spans ({rows.length})</SectionLabel>
             {nats.count > 0 && (
               <label className="flex items-center gap-2 text-xs text-text-muted">
                 <input
@@ -136,7 +154,7 @@ export function Traces() {
                   checked={showNATS}
                   onChange={(e) => setShowNATS(e.target.checked)}
                 />
-                Show {nats.count} NATS calls ({formatMs(nats.ms)}), the
+                Show {nats.count} NATS calls ({formatDurationMs(nats.ms)}), the
                 bookkeeping of the job queue
               </label>
             )}
@@ -153,14 +171,16 @@ export function Traces() {
                 ),
               },
               {
-                header: "Host",
+                header: "Hostname",
                 cell: (r: TraceRow) => <Text variant="mono">{r.host}</Text>,
               },
               {
                 header: "Duration",
                 align: "right",
                 cell: (r: TraceRow) => (
-                  <Text variant="muted">{formatMs(r.span.duration_ms)}</Text>
+                  <Text variant="muted">
+                    {formatDurationMs(r.span.duration_ms)}
+                  </Text>
                 ),
               },
               {

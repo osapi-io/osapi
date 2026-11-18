@@ -76,7 +76,7 @@ export function EnrolledAgentCard({
       <CardContent className="flex flex-1 flex-col gap-1.5">
         <div className="space-y-0.5">
           {agent.machine_id && (
-            <CopyField label="ID" value={agent.machine_id} />
+            <CopyField label="Machine ID" value={agent.machine_id} />
           )}
         </div>
         {error && (

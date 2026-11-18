@@ -11,21 +11,11 @@ import {
   rejectAgent,
 } from "@/sdk/gen/agent-management-api-agent-operations/agent-management-api-agent-operations";
 import { statusVariant } from "@/lib/status";
+import { formatAgeSince, shortFingerprint } from "@/lib/format";
 
 interface PendingAgentCardProps {
   agent: PendingAgentInfo;
   onRefresh?: () => void;
-}
-
-function formatAge(ts?: string) {
-  if (!ts) return "-";
-  const ms = Date.now() - new Date(ts).getTime();
-  const mins = Math.floor(ms / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
 }
 
 export function PendingAgentCard({ agent, onRefresh }: PendingAgentCardProps) {
@@ -81,11 +71,15 @@ export function PendingAgentCard({ agent, onRefresh }: PendingAgentCardProps) {
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-1.5">
         <div className="space-y-0.5">
-          <CopyField label="ID" value={agent.machine_id} />
-          <CopyField label="FP" value={agent.fingerprint} />
+          <CopyField label="Machine ID" value={agent.machine_id} />
+          <CopyField
+            label="Fingerprint"
+            value={agent.fingerprint}
+            display={shortFingerprint(agent.fingerprint)}
+          />
         </div>
         <Text variant="muted" as="p">
-          Requested {formatAge(agent.requested_at)}
+          Requested {formatAgeSince(agent.requested_at) || "-"}
         </Text>
 
         <div className="mt-auto flex gap-2 border-t border-border/30 pt-2">

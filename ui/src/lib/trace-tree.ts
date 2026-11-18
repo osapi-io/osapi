@@ -159,10 +159,3 @@ export function traceRows(spans: TraceSpan[], all: boolean): TraceRow[] {
 
   return rows;
 }
-
-// formatMs is a duration in the units a reader can use: µs, ms or s.
-export function formatMs(ms: number): string {
-  if (ms < 1) return `${Math.round(ms * 1000)}µs`;
-  if (ms < 1000) return `${Math.round(ms)}ms`;
-  return `${(ms / 1000).toFixed(1)}s`;
-}

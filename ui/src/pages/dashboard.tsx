@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { ContentArea } from "@/components/layout/content-area";
 import { AgentCard } from "@/components/domain/agent-card";
@@ -9,7 +9,6 @@ import { PageHeader } from "@/components/ui/page-header";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { StatCard } from "@/components/ui/stat-card";
 import { SectionLabel } from "@/components/ui/section-label";
-import { DataTable } from "@/components/ui/data-table";
 import { Text } from "@/components/ui/text";
 import { useHealth } from "@/hooks/use-health";
 import { useAgents } from "@/hooks/use-agents";
@@ -17,14 +16,9 @@ import { Activity } from "lucide-react";
 import type { ComponentHealth, ComponentEntry } from "@/sdk/gen/schemas";
 import { statusVariant } from "@/lib/status";
 import { Spinner } from "@/components/ui/spinner";
-
-function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024)
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-}
+import { Count } from "@/components/ui/count";
+import { KVList } from "@/components/ui/kv-list";
+import { formatBytes } from "@/lib/format";
 
 type GroupedComponents = {
   controller: [string, ComponentHealth][];
@@ -53,6 +47,8 @@ function groupComponents(
   return groups;
 }
 
+// RegistryHeader is one row of osapi client health status's component
+// table: hostname, status, conditions, age, CPU and memory, in that order.
 function RegistryHeader({ entry }: { entry?: ComponentEntry }) {
   if (!entry) return null;
   return (
@@ -63,12 +59,17 @@ function RegistryHeader({ entry }: { entry?: ComponentEntry }) {
       {entry.status && (
         <Badge variant={statusVariant(entry.status)}>{entry.status}</Badge>
       )}
+      {entry.conditions && entry.conditions.length > 0 && (
+        <span className="text-status-pending">
+          {entry.conditions.join(", ")}
+        </span>
+      )}
       <div className="ml-auto flex items-center gap-3 text-text-muted">
+        {entry.age && <span>{entry.age}</span>}
         {entry.cpu_percent != null && (
-          <span>{entry.cpu_percent.toFixed(1)}% cpu</span>
+          <span>{entry.cpu_percent.toFixed(1)}%</span>
         )}
         {entry.mem_bytes != null && <span>{formatBytes(entry.mem_bytes)}</span>}
-        {entry.age && <span>{entry.age}</span>}
       </div>
     </div>
   );
@@ -120,7 +121,7 @@ export function Dashboard() {
                 {health.status}
               </Badge>
               {health.version && (
-                <Badge variant="muted">v{health.version}</Badge>
+                <Badge variant="muted">{health.version}</Badge>
               )}
               {health.uptime && <Badge variant="muted">{health.uptime}</Badge>}
             </>
@@ -148,7 +149,14 @@ export function Dashboard() {
               <StatCard
                 label="Jobs"
                 value={health.jobs.total}
-                detail={`${health.jobs.completed} done / ${health.jobs.failed} failed`}
+                detail={
+                  <>
+                    <Count n={health.jobs.completed} kind="completed" />,{" "}
+                    <Count n={health.jobs.unprocessed} kind="unprocessed" />,{" "}
+                    <Count n={health.jobs.failed} kind="failed" />,{" "}
+                    <Count n={health.jobs.dlq} kind="dlq" />
+                  </>
+                }
               />
             )}
             {health.agents && (
@@ -213,101 +221,57 @@ export function Dashboard() {
             </div>
           )}
 
-          {/* Row 3: Streams + Object Store */}
-          {health.streams && health.streams.length > 0 && (
-            <div className="mb-4 grid grid-cols-12 gap-4">
-              <div className="col-span-7">
-                <SectionLabel>Streams ({health.streams.length})</SectionLabel>
-                <DataTable
-                  columns={[
-                    {
-                      header: "Name",
-                      cell: (s) => <Text variant="mono">{s.name}</Text>,
-                    },
-                    {
-                      header: "Messages",
-                      align: "right",
-                      cell: (s) => (
-                        <Text variant="muted">
-                          {s.messages.toLocaleString()}
-                        </Text>
-                      ),
-                    },
-                    {
-                      header: "Size",
-                      align: "right",
-                      cell: (s) => (
-                        <Text variant="muted">{formatBytes(s.bytes)}</Text>
-                      ),
-                    },
-                    {
-                      header: "Consumers",
-                      align: "right",
-                      cell: (s) => <Text>{s.consumers}</Text>,
-                    },
-                  ]}
-                  rows={health.streams}
-                  getRowKey={(s) => s.name}
-                />
-              </div>
-
-              {health.object_stores && health.object_stores.length > 0 && (
-                <div className="col-span-5">
-                  <SectionLabel>
-                    Object Store ({health.object_stores.length})
-                  </SectionLabel>
-                  <DataTable
-                    columns={[
-                      {
-                        header: "Bucket",
-                        cell: (os) => <Text variant="mono">{os.name}</Text>,
-                      },
-                      {
-                        header: "Size",
-                        align: "right",
-                        cell: (os) => (
-                          <Text variant="muted">{formatBytes(os.size)}</Text>
-                        ),
-                      },
-                    ]}
-                    rows={health.object_stores}
-                    getRowKey={(os) => os.name}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Row 4: KV Stores */}
-          {health.kv_buckets && health.kv_buckets.length > 0 && (
+          {/* Storage, as osapi client health status prints it: a line
+              for each stream, bucket and object store. */}
+          {Boolean(
+            health.streams?.length ||
+            health.kv_buckets?.length ||
+            health.object_stores?.length,
+          ) && (
             <div className="mb-6">
-              <SectionLabel>
-                KV Stores ({health.kv_buckets.length})
-              </SectionLabel>
-              <DataTable
-                columns={[
-                  {
-                    header: "Bucket",
-                    cell: (kv) => <Text variant="mono">{kv.name}</Text>,
-                  },
-                  {
-                    header: "Keys",
-                    align: "right",
-                    cell: (kv) => (
-                      <Text variant="muted">{kv.keys.toLocaleString()}</Text>
-                    ),
-                  },
-                  {
-                    header: "Size",
-                    align: "right",
-                    cell: (kv) => (
-                      <Text variant="muted">{formatBytes(kv.bytes)}</Text>
-                    ),
-                  },
-                ]}
-                rows={health.kv_buckets}
-                getRowKey={(kv) => kv.name}
-              />
+              <SectionLabel>Storage</SectionLabel>
+              <Card>
+                <CardContent>
+                  <KVList
+                    pairs={[
+                      ...(health.streams ?? []).map(
+                        (st): [string, ReactNode] => [
+                          "Stream",
+                          <>
+                            {st.name}{" "}
+                            <span className="text-text-muted">
+                              ({st.messages} msgs, {formatBytes(st.bytes)},{" "}
+                              {st.consumers} consumers)
+                            </span>
+                          </>,
+                        ],
+                      ),
+                      ...(health.kv_buckets ?? []).map(
+                        (kv): [string, ReactNode] => [
+                          "Bucket",
+                          <>
+                            {kv.name}{" "}
+                            <span className="text-text-muted">
+                              ({kv.keys} keys, {formatBytes(kv.bytes)})
+                            </span>
+                          </>,
+                        ],
+                      ),
+                      ...(health.object_stores ?? []).map(
+                        (os): [string, ReactNode] => [
+                          "Object store",
+                          <>
+                            {os.name}{" "}
+                            <span className="text-text-muted">
+                              ({formatBytes(os.size)})
+                            </span>
+                          </>,
+                        ],
+                      ),
+                    ]}
+                  />
+                </CardContent>
+              </Card>
             </div>
           )}
 
@@ -316,6 +280,11 @@ export function Dashboard() {
             <SectionLabel icon={Activity}>
               Agents ({activeAgents.length})
             </SectionLabel>
+            {activeAgents.length === 0 && (
+              <Text variant="muted" as="p">
+                None.
+              </Text>
+            )}
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {activeAgents.map((agent) => (
                 <AgentCard

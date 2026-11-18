@@ -24,6 +24,9 @@ import { Text } from "@/components/ui/text";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { IconButton } from "@/components/ui/icon-button";
 import { HostGroupHeader } from "@/components/domain/host-group-header";
+import { ResultSummary } from "@/components/domain/result-summary";
+import { hostOutcome } from "@/lib/outcome";
+import { formatDurationMs, formatTime } from "@/lib/format";
 
 interface ResultCardProps {
   type: string;
@@ -145,7 +148,7 @@ function CommandHostRow({ host }: { host: CommandResultItem }) {
         <Text className="font-medium">{host.hostname}</Text>
         <div className="ml-auto flex items-center gap-2">
           {host.duration_ms !== undefined && (
-            <Text variant="muted">{host.duration_ms}ms</Text>
+            <Text variant="muted">{formatDurationMs(host.duration_ms)}</Text>
           )}
           <Text
             variant={
@@ -191,16 +194,11 @@ function CommandResult({
 }: {
   data: { job_id?: string; results: CommandResultItem[] };
 }) {
-  const allOk = data.results.every((r) => hostStatus(r) === "ok");
   return (
     <ResultShell
       jobId={data.job_id}
-      label={`${data.results.length} host${data.results.length !== 1 ? "s" : ""}`}
-      summary={
-        <div
-          className={`h-1.5 w-1.5 rounded-full ${allOk ? "bg-primary" : "bg-status-error"}`}
-        />
-      }
+      label=""
+      summary={<ResultSummary outcomes={data.results.map(hostOutcome)} />}
       data={data}
     >
       {data.results.map((host, i) => (
@@ -231,7 +229,7 @@ function HostResultRow({
     <div className="border-b border-border/50 px-4 py-2 last:border-0">
       <div className="flex items-center gap-2">
         <StatusIcon status={status} />
-        <Text className="font-medium">{hostname ?? "unknown"}</Text>
+        <Text className="font-medium">{hostname ?? "-"}</Text>
         {status === "skipped" && (
           <Text variant="muted" className="font-mono">
             skipped
@@ -268,16 +266,11 @@ function CollectionResult({
   }[];
   data: unknown;
 }) {
-  const allOk = results.every((r) => r.status !== "failed");
   return (
     <ResultShell
       jobId={jobId}
-      label={`${results.length} host${results.length !== 1 ? "s" : ""} · ${label}`}
-      summary={
-        <div
-          className={`h-1.5 w-1.5 rounded-full ${allOk ? "bg-primary" : "bg-status-error"}`}
-        />
-      }
+      label={label}
+      summary={<ResultSummary outcomes={results.map(hostOutcome)} />}
       data={data}
     >
       {results.map((r, i) => (
@@ -2425,7 +2418,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
             className="flex items-center gap-3 border-b border-border/50 px-4 py-2 last:border-0"
           >
             <Text variant="mono-muted" className="shrink-0">
-              {new Date(entry.timestamp).toLocaleString()}
+              {formatTime(entry.timestamp)}
             </Text>
             <Text variant="accent" className="shrink-0 font-mono">
               {entry.method}
@@ -2471,10 +2464,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
       <ResultShell label="audit entry" summary={null} data={data}>
         <div className="space-y-1 px-4 py-3">
           <KeyValue label="id" value={entry.id} />
-          <KeyValue
-            label="timestamp"
-            value={new Date(entry.timestamp).toLocaleString()}
-          />
+          <KeyValue label="timestamp" value={formatTime(entry.timestamp)} />
           <KeyValue label="user" value={entry.user} />
           <KeyValue label="roles" value={entry.roles.join(", ")} />
           <KeyValue label="method" value={entry.method} />

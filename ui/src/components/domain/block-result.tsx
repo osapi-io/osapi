@@ -2,6 +2,9 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Text } from "@/components/ui/text";
 import type { CommandResultItem } from "@/sdk/gen/schemas";
+import { ResultSummary } from "@/components/domain/result-summary";
+import { hostOutcome } from "@/lib/outcome";
+import { formatDurationMs } from "@/lib/format";
 
 interface BlockResultProps {
   type: string;
@@ -14,11 +17,6 @@ function CommandResultView({
   result: { job_id?: string; results: CommandResultItem[] };
 }) {
   const [expanded, setExpanded] = useState(true);
-  const allOk = result.results.every(
-    (r) => !r.error && (r.exit_code === 0 || r.exit_code === undefined),
-  );
-  const hostCount = result.results.length;
-
   return (
     <div className="mt-3 rounded-md border border-border bg-surface">
       {/* Collapsible header */}
@@ -31,19 +29,10 @@ function CommandResultView({
         ) : (
           <ChevronRight className="h-3.5 w-3.5 text-text-muted" />
         )}
-        <Text variant="label">
-          {hostCount} host{hostCount !== 1 ? "s" : ""}
-        </Text>
-        <span
-          className={`ml-auto text-xs font-medium ${allOk ? "text-primary" : "text-status-error"}`}
-        >
-          {allOk ? "ok" : "failed"}
-        </span>
-        {result.job_id && (
-          <span className="text-[10px] text-text-muted/50 font-mono">
-            {result.job_id.slice(0, 8)}
-          </span>
-        )}
+        <ResultSummary
+          outcomes={result.results.map(hostOutcome)}
+          jobId={result.job_id}
+        />
       </button>
 
       {/* Expandable body */}
@@ -59,7 +48,7 @@ function CommandResultView({
                   <div className="flex items-center gap-2">
                     {r.duration_ms !== undefined && (
                       <span className="text-[10px] text-text-muted">
-                        {r.duration_ms}ms
+                        {formatDurationMs(r.duration_ms)}
                       </span>
                     )}
                     <span
@@ -128,8 +117,8 @@ function GenericResult({ data }: { data: Record<string, unknown> }) {
         )}
         <Text variant="label">Response</Text>
         {"job_id" in data ? (
-          <span className="ml-auto text-[10px] text-text-muted/50 font-mono">
-            {String(data.job_id).slice(0, 8)}
+          <span className="ml-auto font-mono text-xs text-text-muted">
+            job {String(data.job_id)}
           </span>
         ) : null}
       </button>

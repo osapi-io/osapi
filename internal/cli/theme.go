@@ -156,20 +156,21 @@ func statusStyle(
 	return ValueStyle
 }
 
-// countStyles maps what a count counts to the style it takes when above
-// zero. A zero is dim whatever it counts: nothing happened.
-var countStyles = map[string]lipgloss.Style{
-	"completed":   OKStyle,
-	"ok":          OKStyle,
-	"changed":     OKStyle,
-	"failed":      ErrStyle,
-	"dlq":         ErrStyle,
-	"errors":      ErrStyle,
-	"submitted":   WarnStyle,
-	"unprocessed": WarnStyle,
-	"pending":     WarnStyle,
-	"partial":     WarnStyle,
-	"skipped":     WarnStyle,
+// CountTones maps what a count counts to the tone it takes when above zero.
+// A zero is dim whatever it counts: nothing happened. A kind not here is
+// plain. The UI reads the same map, from ui/src/lib/status.gen.ts.
+var CountTones = map[string]string{
+	"completed":   ToneOK,
+	"ok":          ToneOK,
+	"changed":     ToneOK,
+	"failed":      ToneErr,
+	"dlq":         ToneErr,
+	"errors":      ToneErr,
+	"submitted":   ToneWarn,
+	"unprocessed": ToneWarn,
+	"pending":     ToneWarn,
+	"partial":     ToneWarn,
+	"skipped":     ToneWarn,
 }
 
 // Count renders a count of kind, such as 3 failed, in the style of what it
@@ -192,8 +193,8 @@ func CountValue(
 	if n == 0 {
 		return DimStyle.Render(s)
 	}
-	if style, ok := countStyles[strings.ToLower(kind)]; ok {
-		return style.Render(s)
+	if tone, ok := CountTones[strings.ToLower(kind)]; ok {
+		return toneStyles[tone].Render(s)
 	}
 
 	return ValueStyle.Render(s)
