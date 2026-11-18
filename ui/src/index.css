@@ -31,23 +31,51 @@
   --color-heading-3: #ffd100; /* LogoYellow */
   --color-heading-4: #45ae17; /* LogoGreen, darker than the ok green */
   --color-heading-5: #6b5cff; /* LogoBlueText */
+  /* The dark tints of the heading colors (tints in internal/cli/theme.go).
+     The labels of a section take the tint of its heading. */
+  --color-tint-1: #0a8fb0;
+  --color-tint-2: #b030b0;
+  --color-tint-3: #b08f00;
+  --color-tint-4: #3a8f14;
+  --color-tint-5: #5a4cd8;
 }
 
-/* Set by PageLayout in page order; see the heading tokens above. */
+/* Set by PageLayout in page order; see the heading tokens above. The content
+   after a heading takes its tint, as a CLI block's labels do. */
 [data-heading-color="1"] {
   color: var(--color-heading-1);
+}
+[data-heading-color="1"] ~ * {
+  --section-tint: var(--color-tint-1);
 }
 [data-heading-color="2"] {
   color: var(--color-heading-2);
 }
+[data-heading-color="2"] ~ * {
+  --section-tint: var(--color-tint-2);
+}
 [data-heading-color="3"] {
   color: var(--color-heading-3);
+}
+[data-heading-color="3"] ~ * {
+  --section-tint: var(--color-tint-3);
 }
 [data-heading-color="4"] {
   color: var(--color-heading-4);
 }
+[data-heading-color="4"] ~ * {
+  --section-tint: var(--color-tint-4);
+}
 [data-heading-color="5"] {
   color: var(--color-heading-5);
+}
+[data-heading-color="5"] ~ * {
+  --section-tint: var(--color-tint-5);
+}
+
+/* A label: the tint of its section's heading, or gray outside a section. */
+@utility text-tint {
+  color: var(--section-tint, var(--color-text-muted));
 }
 
 body {

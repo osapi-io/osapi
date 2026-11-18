@@ -18,7 +18,11 @@ export function CopyField({ label, value }: CopyFieldProps) {
 
   return (
     <div className="flex items-center gap-1">
-      <Text variant="label" as="span" className="shrink-0 text-[10px]">
+      <Text
+        variant="label"
+        as="span"
+        className="shrink-0 text-[10px] text-tint"
+      >
         {label}:
       </Text>
       <Text

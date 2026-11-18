@@ -9,6 +9,7 @@ import { ConditionAlert } from "@/components/ui/condition-alert";
 import { CopyField } from "@/components/ui/copy-field";
 import { MetricValue } from "@/components/ui/metric-value";
 import { useAuth } from "@/hooks/use-auth";
+import { formatUptime } from "@/lib/format-uptime";
 import {
   Monitor,
   Clock,
@@ -34,6 +35,10 @@ function formatBytes(bytes: number) {
   if (bytes < 1024 * 1024 * 1024)
     return `${(bytes / (1024 * 1024)).toFixed(0)} MB`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
+function NotReported() {
+  return <span className="text-text-muted">-</span>;
 }
 
 function isHealthy(status: string) {
@@ -93,7 +98,7 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
       className="flex flex-col"
     >
       <CardHeader>
-        <Monitor className="h-4 w-4 text-primary" />
+        <Monitor className="h-4 w-4 text-tint" />
         <CardTitle className="truncate" title={agent.hostname}>
           {agent.hostname}
         </CardTitle>
@@ -126,26 +131,35 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
           </Text>
         )}
 
-        {/* Stats row */}
+        {/* Stats row: three columns on each card, so the cards line up. A
+            value that the agent does not report is a dash. */}
         <div className="grid grid-cols-3 gap-2">
-          {agent.load_average && (
-            <MetricValue icon={Cpu}>
-              {agent.load_average["1min"].toFixed(2)}
-            </MetricValue>
-          )}
-          {agent.memory && (
-            <MetricValue icon={HardDrive}>
-              {formatBytes(agent.memory.used)}/{formatBytes(agent.memory.total)}
-            </MetricValue>
-          )}
-          {agent.uptime && (
-            <MetricValue icon={Clock}>{agent.uptime}</MetricValue>
-          )}
+          <MetricValue icon={Cpu}>
+            {agent.load_average ? (
+              agent.load_average["1min"].toFixed(2)
+            ) : (
+              <NotReported />
+            )}
+          </MetricValue>
+          <MetricValue icon={HardDrive}>
+            {agent.memory ? (
+              `${formatBytes(agent.memory.used)}/${formatBytes(agent.memory.total)}`
+            ) : (
+              <NotReported />
+            )}
+          </MetricValue>
+          <MetricValue icon={Clock}>
+            {agent.uptime ? (
+              <span title={agent.uptime}>{formatUptime(agent.uptime)}</span>
+            ) : (
+              <NotReported />
+            )}
+          </MetricValue>
         </div>
 
         {/* OS + arch */}
         {agent.os_info && (
-          <Text variant="muted" as="p" className="mt-1.5">
+          <Text as="p" className="mt-1.5 text-xs">
             {agent.os_info.distribution} {agent.os_info.version}
             {agent.architecture ? ` / ${agent.architecture}` : ""}
             {agent.cpu_count ? ` / ${agent.cpu_count} cpu` : ""}

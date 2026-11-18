@@ -17,7 +17,11 @@ export function useAgents(intervalMs = 10000) {
         const result = await getAgents();
         if (cancelled) return;
         if (result.status === 200) {
-          setAgents((result.data as ListAgentsResponse).items);
+          // The registry gives no stable order, so the cards would swap
+          // places on each poll.
+          const items = [...(result.data as ListAgentsResponse).items];
+          items.sort((a, b) => a.hostname.localeCompare(b.hostname));
+          setAgents(items);
           setError(null);
         } else {
           setError("Failed to fetch agents");

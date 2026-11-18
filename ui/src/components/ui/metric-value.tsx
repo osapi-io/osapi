@@ -15,11 +15,11 @@ export function MetricValue({
   return (
     <div
       className={cn(
-        "flex items-center gap-1.5 text-xs text-text-muted",
+        "flex min-w-0 items-center gap-1.5 text-xs whitespace-nowrap text-text",
         className,
       )}
     >
-      <Icon className="h-3 w-3" />
+      <Icon className="h-3 w-3 shrink-0 text-tint" />
       {children}
     </div>
   );
