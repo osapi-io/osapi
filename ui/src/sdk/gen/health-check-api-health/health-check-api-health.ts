@@ -18,12 +18,19 @@ export type getHealthResponse200 = {
   status: 200
 }
 
+export type getHealthResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
 export type getHealthResponseSuccess = (getHealthResponse200) & {
   headers: Headers;
 };
-;
+export type getHealthResponseError = (getHealthResponse500) & {
+  headers: Headers;
+};
 
-export type getHealthResponse = (getHealthResponseSuccess)
+export type getHealthResponse = (getHealthResponseSuccess | getHealthResponseError)
 
 export const getGetHealthUrl = () => {
 
@@ -54,6 +61,11 @@ export type getHealthReadyResponse200 = {
   status: 200
 }
 
+export type getHealthReadyResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
 export type getHealthReadyResponse503 = {
   data: ReadyResponse
   status: 503
@@ -62,7 +74,7 @@ export type getHealthReadyResponse503 = {
 export type getHealthReadyResponseSuccess = (getHealthReadyResponse200) & {
   headers: Headers;
 };
-export type getHealthReadyResponseError = (getHealthReadyResponse503) & {
+export type getHealthReadyResponseError = (getHealthReadyResponse500 | getHealthReadyResponse503) & {
   headers: Headers;
 };
 
@@ -107,6 +119,11 @@ export type getHealthStatusResponse403 = {
   status: 403
 }
 
+export type getHealthStatusResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
 export type getHealthStatusResponse503 = {
   data: StatusResponse
   status: 503
@@ -115,7 +132,7 @@ export type getHealthStatusResponse503 = {
 export type getHealthStatusResponseSuccess = (getHealthStatusResponse200) & {
   headers: Headers;
 };
-export type getHealthStatusResponseError = (getHealthStatusResponse401 | getHealthStatusResponse403 | getHealthStatusResponse503) & {
+export type getHealthStatusResponseError = (getHealthStatusResponse401 | getHealthStatusResponse403 | getHealthStatusResponse500 | getHealthStatusResponse503) & {
   headers: Headers;
 };
 

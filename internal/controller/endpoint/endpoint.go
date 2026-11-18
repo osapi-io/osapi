@@ -253,6 +253,7 @@ type Method struct {
 	flags            []Flag
 	status           int
 	errors           []Error
+	answers          []Answered
 }
 
 func (m *Method) apply(
@@ -565,6 +566,51 @@ func (m *Method) Examples() []string {
 // Mapped are the errors Errors set, each with its status code.
 func (m *Method) Mapped() []Error {
 	return m.errors
+}
+
+// Answered is a status a method answers with its own output, which Answers
+// sets: such as a probe's 503, which says what is not ready.
+type Answered struct {
+	// Code is the status.
+	Code int
+	// Doc is its description in the spec.
+	Doc string
+}
+
+// Answers adds a status that the method answers with its output, not with
+// an error: such as the 503 of a probe, whose body says what failed. The
+// method returns its output with Answer(code).
+func (m *Method) Answers(
+	code int,
+	doc string,
+) *Method {
+	m.answers = append(m.answers, Answered{Code: code, Doc: doc})
+
+	return m
+}
+
+// Answering is the statuses Answers added.
+func (m *Method) Answering() []Answered {
+	return m.answers
+}
+
+// AnswerError is the error Answer makes: the status to send the output
+// with.
+type AnswerError struct {
+	// Code is the status.
+	Code int
+}
+
+func (e *AnswerError) Error() string {
+	return http.StatusText(e.Code)
+}
+
+// Answer is the error a method returns, with its output, to answer code
+// with that output: a status that Answers added.
+func Answer(
+	code int,
+) error {
+	return &AnswerError{Code: code}
 }
 
 // SuccessStatus is the status of a success: the one Status set, or 200.

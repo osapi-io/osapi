@@ -101,8 +101,9 @@ The spec:
 3. Write `<group>.go`. Copy `Title` and `Tag` from the hand-written spec. The
    UI's client files get their names from them. Give each method the
    operationId of the hand-written spec with `.ID`. Use `.Sub` for a fixed
-   segment and `.Action` for a segment after the key. Map each 404, 409 and 503
-   with `.Errors`.
+   segment and `.Action` for a segment after the key. Map each 400 that the
+   method decides, 404, 409 and 503 with `.Errors`. A status whose body is the
+   method's output, such as a probe's 503, is `.Answers`, not an error.
 4. Add the import to `internal/controller/endpoints/all/all.go`, and a row to
    `moving` in `internal/controller/endpoints/all/parity_public_test.go`.
 5. Run the checks until they pass.
@@ -133,9 +134,19 @@ The CLI:
    command, `.Example("--flag value")` with its examples, and `.Notes` and
    `.Result` with the `reference.Notes` and `reference.Result` annotations of
    the hand-written command, so its page keeps those sections. Each input field
-   is a flag, named for its json name with `_` as `-`.
-2. In `cmd/client_<group>.go`, the file of the group's command, add a `command.Render` for each method,
-   with the output code of the hand-written command.
+   is a flag, named for its json name with `_` as `-`; a field of an
+   `in:"body"` struct is a flag too. Keep the flag of the hand-written command
+   with the `flag` and `short` tags, such as `-T/--target`.
+   Each command is `<group> <resource> <verb>`, such as `telemetry trace get`:
+   the verb is `list`, `get`, `create`, `update`, `delete`, or an action such
+   as `retry`, never a noun. A verb that the group has as a method already
+   gets `.Use`, such as `agent pending list`. A command that `.Sub` makes has
+   a hand-written parent, so its help says what it holds.
+2. In `cmd/client_<group>.go`, the file of the group's command, add a
+   `command.Render` for each method, with the output code of the hand-written
+   command. A command that acts on the answer, such as an export that writes a
+   file, uses `command.Acts`, which runs with `--json` too. `--json` prints the
+   API's answer otherwise, not a shape of its own.
 3. Run `go generate ./internal/controller/endpoints/all`. It writes
    `gen/cli.go`.
 4. Before you delete the hand-written commands, save their help:
@@ -173,7 +184,7 @@ each question.
 | Is it a new operation, or one that moves? | A new one has no hand-written spec and no parity row; a move keeps every name |
 | Which permission does it need? | The default `<group>:read` or `<group>:write`, or `.Permission`, such as `agent:read` for facts |
 | Does a probe call it without a token? | `.Public()`, for the health probes only |
-| Which errors can it return, and what does each mean to the caller? | `.Errors`: 404 when it is not there, 409 for a state that does not allow it, 503 when a backend is not set. A failure of the controller is a 500, never a 409 |
+| Which errors can it return, and what does each mean to the caller? | `.Errors`: 400 (`Invalid`) for a request it cannot do, 404 when it is not there, 409 for a state that does not allow it, 503 when a backend is not set. A failure of the controller is a 500, never a 409. A status with the output as its body, such as a probe's 503, is `.Answers` |
 | Does a success answer 201 or 204? | `.Status` |
 
 ## Check it

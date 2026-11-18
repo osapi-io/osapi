@@ -13652,6 +13652,7 @@ type GetHealthResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *HealthResponse
+	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -13682,6 +13683,7 @@ type GetHealthReadyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ReadyResponse
+	JSON500      *ErrorResponse
 	JSON503      *ReadyResponse
 }
 
@@ -13715,6 +13717,7 @@ type GetHealthStatusResponse struct {
 	JSON200      *StatusResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
 	JSON503      *StatusResponse
 }
 
@@ -19544,6 +19547,13 @@ func ParseGetHealthResponse(rsp *http.Response) (*GetHealthResponse, error) {
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
 	}
 
 	return response, nil
@@ -19569,6 +19579,13 @@ func ParseGetHealthReadyResponse(rsp *http.Response) (*GetHealthReadyResponse, e
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
 		var dest ReadyResponse
@@ -19616,6 +19633,13 @@ func ParseGetHealthStatusResponse(rsp *http.Response) (*GetHealthStatusResponse,
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
 		var dest StatusResponse

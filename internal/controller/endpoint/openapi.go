@@ -151,11 +151,17 @@ func (b *builder) operation(
 	}
 	success := openapi3.NewResponse().WithDescription(returns)
 	if m.status != http.StatusNoContent {
-		s, err := b.ref(m.Out)
+		out, err := b.ref(m.Out)
 		if err != nil {
 			return nil, fmt.Errorf("response: %w", err)
 		}
-		success = success.WithJSONSchemaRef(s)
+		success = success.WithJSONSchemaRef(out)
+		// A status that Answers added has the output too.
+		for _, a := range m.answers {
+			op.Responses.Set(strconv.Itoa(a.Code), &openapi3.ResponseRef{
+				Value: openapi3.NewResponse().WithDescription(a.Doc).WithJSONSchemaRef(out),
+			})
+		}
 	}
 	op.Responses.Set(strconv.Itoa(m.status), &openapi3.ResponseRef{Value: success})
 

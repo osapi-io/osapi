@@ -23,6 +23,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
@@ -39,6 +40,10 @@ func (s *HealthService) GetLiveness(
 	resp, err := s.client.GetHealthWithResponse(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("health liveness: %w", err)
+	}
+
+	if resp.StatusCode() == http.StatusInternalServerError {
+		return nil, checkError(resp.StatusCode(), resp.JSON500)
 	}
 
 	if resp.JSON200 == nil {
@@ -60,6 +65,10 @@ func (s *HealthService) GetReady(
 	resp, err := s.client.GetHealthReadyWithResponse(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("health ready: %w", err)
+	}
+
+	if resp.StatusCode() == http.StatusInternalServerError {
+		return nil, checkError(resp.StatusCode(), resp.JSON500)
 	}
 
 	switch resp.StatusCode() {
@@ -106,6 +115,10 @@ func (s *HealthService) GetStatus(
 	resp, err := s.client.GetHealthStatusWithResponse(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("health status: %w", err)
+	}
+
+	if resp.StatusCode() == http.StatusInternalServerError {
+		return nil, checkError(resp.StatusCode(), resp.JSON500)
 	}
 
 	// Auth errors take precedence.

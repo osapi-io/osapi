@@ -1428,6 +1428,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
+        '500':
+          description: An error on the controller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/health/ready:
     servers: []
     get:
@@ -1443,6 +1449,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReadyResponse'
+        '500':
+          description: An error on the controller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '503':
           description: Service is not ready.
           content:
@@ -1477,6 +1489,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An error on the controller.
           content:
             application/json:
               schema:

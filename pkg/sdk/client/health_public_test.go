@@ -64,6 +64,20 @@ func (suite *HealthPublicTestSuite) TestLiveness() {
 		validateFunc func(*client.Response[client.HealthStatus], error)
 	}{
 		{
+			name: "when the controller fails returns ServerError",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"failed to read the health"}`))
+			}),
+			validateFunc: func(resp *client.Response[client.HealthStatus], err error) {
+				suite.Nil(resp)
+				var target *client.ServerError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusInternalServerError, target.StatusCode)
+			},
+		},
+		{
 			name: "when checking liveness returns health status",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
@@ -125,6 +139,20 @@ func (suite *HealthPublicTestSuite) TestReady() {
 		validateFunc func(*client.Response[client.ReadyStatus], error)
 	}{
 		{
+			name: "when the controller fails returns ServerError",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"failed to read the health"}`))
+			}),
+			validateFunc: func(resp *client.Response[client.ReadyStatus], err error) {
+				suite.Nil(resp)
+				var target *client.ServerError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusInternalServerError, target.StatusCode)
+			},
+		},
+		{
 			name: "when checking readiness returns ready status",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
@@ -167,7 +195,7 @@ func (suite *HealthPublicTestSuite) TestReady() {
 			name: "when unexpected status returns UnexpectedStatusError",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
+				w.WriteHeader(http.StatusTeapot)
 			}),
 			validateFunc: func(resp *client.Response[client.ReadyStatus], err error) {
 				suite.Error(err)
@@ -175,7 +203,7 @@ func (suite *HealthPublicTestSuite) TestReady() {
 
 				var target *client.UnexpectedStatusError
 				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusInternalServerError, target.StatusCode)
+				suite.Equal(http.StatusTeapot, target.StatusCode)
 				suite.Contains(target.Message, "unexpected status")
 			},
 		},
@@ -233,6 +261,20 @@ func (suite *HealthPublicTestSuite) TestStatus() {
 		serverURL    string
 		validateFunc func(*client.Response[client.SystemStatus], error)
 	}{
+		{
+			name: "when the controller fails returns ServerError",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"failed to read the health"}`))
+			}),
+			validateFunc: func(resp *client.Response[client.SystemStatus], err error) {
+				suite.Nil(resp)
+				var target *client.ServerError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusInternalServerError, target.StatusCode)
+			},
+		},
 		{
 			name: "when checking status returns system status",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {

@@ -43,10 +43,10 @@ type SpecPublicTestSuite struct {
 var notDSL = map[string]bool{
 	"OpenAPI": true, "Validate": true, "Lookup": true, "All": true,
 	"Path:Group": true, "Permission:Group": true, "Key": true, "OperationID": true, "Handler": true,
-	"Mapped": true, "SuccessStatus": true, "Method:Group": true,
+	"Mapped": true, "SuccessStatus": true, "Answering": true, "Method:Group": true,
 	"CommandShort": true, "CommandLong": true, "Examples": true, "Scaffold": true,
 	"PageNotes": true, "PageResult": true, "CommandFlags": true, "SubPath": true, "CommandName": true,
-	"Error:InternalError": true, "Unwrap:InternalError": true,
+	"Error:InternalError": true, "Unwrap:InternalError": true, "Error:AnswerError": true,
 	"String:Problem": true,
 }
 

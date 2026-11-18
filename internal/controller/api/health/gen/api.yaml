@@ -36,6 +36,12 @@ paths:
       tags:
         - health
       responses:
+        '500':
+          description: An error on the controller.
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '200':
           description: Process is alive.
           content:
@@ -50,6 +56,12 @@ paths:
       tags:
         - health
       responses:
+        '500':
+          description: An error on the controller.
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '200':
           description: Service is ready.
           content:
@@ -73,6 +85,12 @@ paths:
         - BearerAuth:
             - health:read
       responses:
+        '500':
+          description: An error on the controller.
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '200':
           description: All components healthy.
           content:
