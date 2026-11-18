@@ -21,8 +21,6 @@
 package main
 
 import (
-	"github.com/dave/jennifer/jen"
-
 	"github.com/osapi-io/osapi/internal/behavior"
 )
 
@@ -34,23 +32,18 @@ const (
 	referencePath   = "github.com/osapi-io/osapi/internal/cli/reference"
 )
 
-// allFile is the one file that imports every behavior's generated code, so
-// a binary needs a single import to get every behavior's commands and
-// routes.
-func allFile(
+// served is the gen package of each behavior with an API or a CLI, which
+// internal/behaviors/all/gen imports, so a binary gets every behavior's
+// commands and routes with one import.
+func served(
 	bs []*behavior.Behavior,
-) *jen.File {
-	f := jen.NewFilePathName(module+"/internal/behaviors/all/gen", "gen")
-	f.HeaderComment(generated)
-	for _, line := range wrap("Package gen imports the generated code of every behavior with an "+
-		"API or a CLI: its commands and its routes.", 76) {
-		f.PackageComment(line)
-	}
+) []string {
+	var out []string
 	for _, b := range bs {
 		if b.API || b.CLI {
-			f.Anon(pkgPath(b) + "/gen")
+			out = append(out, pkgPath(b)+"/gen")
 		}
 	}
 
-	return f
+	return out
 }

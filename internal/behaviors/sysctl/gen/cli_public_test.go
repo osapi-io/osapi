@@ -5,9 +5,10 @@ package gen_test
 import (
 	"testing"
 
+	suite "github.com/stretchr/testify/suite"
+
 	commandtest "github.com/osapi-io/osapi/internal/behavior/command/commandtest"
 	_ "github.com/osapi-io/osapi/internal/behaviors/sysctl/gen"
-	suite "github.com/stretchr/testify/suite"
 )
 
 // CLIPublicTestSuite runs each example's command line through the generated commands.

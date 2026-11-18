@@ -4,6 +4,7 @@ package gen
 
 import (
 	"github.com/labstack/echo/v5"
+
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
