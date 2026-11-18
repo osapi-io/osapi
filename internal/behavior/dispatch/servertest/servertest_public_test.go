@@ -26,7 +26,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/osapi/internal/behavior/server/servertest"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
 	"github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/behaviors/sysctl/gen"
 )

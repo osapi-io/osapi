@@ -32,12 +32,10 @@ import (
 	"flag"
 	"fmt"
 	"go/token"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"reflect"
-	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -47,7 +45,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
+	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/routegen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
 )
 
@@ -146,11 +144,15 @@ func (w *writer) group(
 		return err
 	}
 
-	if err := w.goFile(filepath.Join(dir, "api.go"), routes(g, pkg)); err != nil {
+	api := newFile(pkg)
+	routegen.Routes(api, g, pkg)
+	if err := w.goFile(filepath.Join(dir, "api.go"), api); err != nil {
 		return err
 	}
 
-	if err := w.goFile(filepath.Join(dir, "decode.go"), decoders(g, pkg)); err != nil {
+	decode := newFile(pkg)
+	routegen.Decoders(decode, g)
+	if err := w.goFile(filepath.Join(dir, "decode.go"), decode); err != nil {
 		return err
 	}
 
@@ -180,7 +182,7 @@ func commands(
 		// the field's json name with _ as -, or its flag tag, with the
 		// shorthand of its short tag.
 		flagFor := func(fld reflect.StructField) jen.Code {
-			flag := strings.ReplaceAll(jsonName(fld), "_", "-")
+			flag := strings.ReplaceAll(routegen.JSONName(fld), "_", "-")
 			if f := fld.Tag.Get("flag"); f != "" {
 				flag = f
 			}
@@ -224,7 +226,7 @@ func commands(
 			return jen.Id(fld.Name).Op(":").Id(local)
 		}
 		var fields []jen.Code
-		for _, fld := range structFields(m.In) {
+		for _, fld := range routegen.StructFields(m.In) {
 			if fld.Tag.Get("in") != "body" || fld.Type.Kind() != reflect.Struct {
 				fields = append(fields, flagFor(fld))
 
@@ -232,7 +234,7 @@ func commands(
 			}
 			// A named body is a flag for each of its fields.
 			var inner []jen.Code
-			for _, bf := range structFields(fld.Type) {
+			for _, bf := range routegen.StructFields(fld.Type) {
 				inner = append(inner, flagFor(bf))
 			}
 			fields = append(fields, jen.Id(fld.Name).Op(":").
@@ -382,116 +384,6 @@ func newFile(
 	return f
 }
 
-// routes is gen/api.go: the group's routes, each with its verb, its echo
-// path, its permission and the handler that Serve makes, and the init that
-// registers them.
-func routes(
-	g *endpoint.Group,
-	pkg string,
-) *jen.File {
-	f := newFile(pkg)
-	f.Comment("Routes are the " + g.Name + " group's endpoints, as its definition declares them.")
-
-	items := make([]jen.Code, 0, len(g.Methods))
-	for _, m := range g.Methods {
-		items = append(items, multi("{", "}",
-			jen.Id("Method").Op(":").Qual("net/http", verbConst(m.Verb)),
-			jen.Id("Path").Op(":").Lit(server.Path(g, m)),
-			jen.Id("Permission").Op(":").Lit(g.Permission(m)),
-			jen.Id("Handler").Op(":").Qual(serverPath, "Serve").Call(
-				jen.Id("s"),
-				jen.Qual(pkg, "Group"),
-				jen.Lit(m.Name),
-				jen.Qual(pkg, funcName(m.Handler())),
-				jen.Id(decoderName(m)),
-			),
-		))
-	}
-
-	f.Func().Id("Routes").Add(params(jen.Id("s").Op("*").Qual(serverPath, "Server"))).
-		Index().Qual(serverPath, "Route").Block(
-		jen.Return(jen.Index().Qual(serverPath, "Route").Add(multi("{", "}", items...))),
-	)
-	f.Line()
-	f.Func().Id("init").Params().Block(
-		jen.Qual(serverPath, "Register").Call(jen.Id("Routes")),
-	)
-
-	return f
-}
-
-// decoders is gen/decode.go: one function for each method that reads its
-// input from the path, the query and the body, and validates it.
-func decoders(
-	g *endpoint.Group,
-	pkg string,
-) *jen.File {
-	f := newFile(pkg)
-	for i, m := range g.Methods {
-		if i > 0 {
-			f.Line()
-		}
-		in := jen.Qual(m.In.PkgPath(), m.In.Name())
-		fail := func() jen.Code {
-			return jen.Return(jen.Id("in"), jen.Id("msg"), jen.False())
-		}
-		check := func(call jen.Code) jen.Code {
-			return jen.If(
-				jen.List(jen.Id("msg"), jen.Id("ok")).Op(":=").Add(call),
-				jen.Op("!").Id("ok"),
-			).Block(fail())
-		}
-
-		body := []jen.Code{jen.Var().Id("in").Add(in.Clone())}
-		var path, query []reflect.StructField
-		var bodyField *reflect.StructField
-		hasBody, hasForm := false, false
-		for _, fld := range structFields(m.In) {
-			switch fld.Tag.Get("in") {
-			case "path":
-				path = append(path, fld)
-			case "query":
-				query = append(query, fld)
-			case "body":
-				bodyField = &fld
-			case "form":
-				hasForm = true
-			default:
-				hasBody = true
-			}
-		}
-		switch {
-		case hasForm:
-			body = append(body, check(jen.Qual(serverPath, "Form").Call(
-				jen.Id("c"), jen.Op("&").Id("in"))))
-		case bodyField != nil:
-			body = append(body, check(jen.Qual(serverPath, "Body").Call(
-				jen.Id("c"), jen.Op("&").Id("in").Dot(bodyField.Name))))
-		case hasBody:
-			body = append(body, check(jen.Qual(serverPath, "Body").Call(
-				jen.Id("c"), jen.Op("&").Id("in"))))
-		}
-		for _, fld := range path {
-			body = append(body, check(jen.Qual(serverPath, "Param").Call(
-				jen.Id("c"), jen.Lit(jsonName(fld)), jen.Op("&").Id("in").Dot(fld.Name))))
-		}
-		for _, fld := range query {
-			body = append(body, check(jen.Qual(serverPath, "Query").Call(
-				jen.Id("c"), jen.Lit(jsonName(fld)), jen.Op("&").Id("in").Dot(fld.Name))))
-		}
-		if len(structFields(m.In)) > 0 {
-			body = append(body, check(jen.Qual(serverPath, "Valid").Call(jen.Id("in"))))
-		}
-		body = append(body, jen.Line(), jen.Return(jen.Id("in"), jen.Lit(""), jen.True()))
-
-		f.Comment(decoderName(m) + " reads the " + m.Name + " method's input from the request.")
-		f.Func().Id(decoderName(m)).Add(params(jen.Id("c").Op("*").Qual(echoPath, "Context"))).
-			Params(in.Clone(), jen.String(), jen.Bool()).Block(body...)
-	}
-
-	return f
-}
-
 // registry is internal/controller/endpoints/all/gen/gen.go: one blank
 // import of each group's gen package, so the controller registers every
 // group's routes by importing it.
@@ -510,81 +402,6 @@ func (w *writer) registry(
 	}
 
 	return w.goFile(filepath.Join(allGen, "gen.go"), f)
-}
-
-func decoderName(
-	m *endpoint.Method,
-) string {
-	return "decode" + strings.ToUpper(m.Name[:1]) + m.Name[1:]
-}
-
-// funcName is the name of the handler function, without its package.
-func funcName(
-	fn any,
-) string {
-	full := runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
-
-	return full[strings.LastIndex(full, ".")+1:]
-}
-
-func verbConst(
-	verb string,
-) string {
-	switch verb {
-	case http.MethodGet:
-		return "MethodGet"
-	case http.MethodPost:
-		return "MethodPost"
-	case http.MethodPut:
-		return "MethodPut"
-	default:
-		return "MethodDelete"
-	}
-}
-
-func structFields(
-	t reflect.Type,
-) []reflect.StructField {
-	if t.Kind() != reflect.Struct {
-		return nil
-	}
-	var out []reflect.StructField
-	for f := range t.Fields() {
-		if f.IsExported() && jsonName(f) != "-" {
-			out = append(out, f)
-		}
-	}
-
-	return out
-}
-
-func jsonName(
-	f reflect.StructField,
-) string {
-	name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
-	if name == "" {
-		return f.Name
-	}
-
-	return name
-}
-
-// multi lays out a group one item to a line, as the house style writes
-// parameter lists and literals.
-func multi(
-	open string,
-	closing string,
-	items ...jen.Code,
-) *jen.Statement {
-	return jen.Custom(
-		jen.Options{Open: open, Close: closing, Separator: ",", Multi: true},
-		items...)
-}
-
-func params(
-	items ...jen.Code,
-) *jen.Statement {
-	return multi("(", ")", items...)
 }
 
 // clean removes the generated files in dir, so a method or a group that is

@@ -21,6 +21,7 @@
 package behaviortest
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"path/filepath"
@@ -29,7 +30,6 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/behavior"
-	"github.com/osapi-io/osapi/internal/behavior/server"
 )
 
 // probeMark is in every probe, so a probe that got through is found by it.
@@ -110,7 +110,10 @@ func probe(
 	value string,
 	dirs map[string]bool,
 ) string {
-	if _, ok := server.Valid(input); !ok {
+	// The API, the agent and behavior.Call refuse an input that breaks its
+	// rules, so no probe can reach the host with one.
+	data, _ := json.Marshal(input)
+	if m.Check(data) != nil {
 		return ""
 	}
 

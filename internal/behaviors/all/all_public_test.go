@@ -37,10 +37,11 @@ import (
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
-	"github.com/osapi-io/osapi/internal/behavior/server"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all/gen"
 	"github.com/osapi-io/osapi/internal/behaviors/sysctl"
+	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
 // AllPublicTestSuite checks that every behavior all.go registers is valid
@@ -70,7 +71,7 @@ func (s *AllPublicTestSuite) TestUIPermissionsAreCurrent() {
 
 func (s *AllPublicTestSuite) TestEveryRouteIsMounted() {
 	e := echo.New()
-	for _, register := range server.Handler(slog.Default(), nil, "", nil) {
+	for _, register := range server.Handler(slog.Default(), "", nil, dispatch.Deps{}) {
 		register(e)
 	}
 	mounted := map[string]bool{}
@@ -83,7 +84,10 @@ func (s *AllPublicTestSuite) TestEveryRouteIsMounted() {
 			continue
 		}
 		for _, m := range b.Methods {
-			route := m.HTTPMethod() + " " + server.Path(b, m)
+			g := behavior.GroupOf(b)
+			s.Require().
+				NotNil(g, "%s has no endpoint group; run go generate ./internal/behaviors/all", b.Name)
+			route := m.HTTPMethod() + " " + server.Path(g, g.Method(m.Name))
 			s.Run(route, func() {
 				s.True(
 					mounted[route],

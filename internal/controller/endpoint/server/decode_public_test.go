@@ -22,6 +22,8 @@ package server_test
 
 import (
 	"bytes"
+	"errors"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -190,4 +192,44 @@ func (s *ServerPublicTestSuite) TestForm() {
 			tc.validateFunc(in, msg, ok)
 		})
 	}
+}
+
+type failingBody struct{}
+
+func (failingBody) Read([]byte) (int, error) { return 0, errors.New("broken body") }
+
+// TestReadErrors reports a body that cannot be read, and a path or query
+// value that is not the field's type.
+func (s *ServerPublicTestSuite) TestReadErrors() {
+	e := echo.New()
+	newContext := func(target string, body io.Reader) *echo.Context {
+		c := e.NewContext(httptest.NewRequest(http.MethodGet, target, body), httptest.NewRecorder())
+		c.SetPathValues(echo.PathValues{{Name: "key", Value: "seven"}})
+
+		return c
+	}
+
+	var in struct{ Key string }
+	msg, ok := server.Body(newContext("/", failingBody{}), &in)
+	s.False(ok)
+	s.Equal("read body: broken body", msg)
+
+	var key int
+	msg, ok = server.Param(newContext("/", http.NoBody), "key", &key)
+	s.False(ok)
+	s.Contains(msg, "invalid path parameter key")
+
+	var count int
+	msg, ok = server.Query(newContext("/?count=three", http.NoBody), "count", &count)
+	s.False(ok)
+	s.Contains(msg, "invalid query parameter count")
+
+	msg, ok = server.Query(newContext("/?count=3", http.NoBody), "count", &count)
+	s.True(ok, msg)
+	s.Equal(3, count)
+
+	count = 9
+	msg, ok = server.Query(newContext("/", http.NoBody), "count", &count)
+	s.True(ok, msg)
+	s.Equal(9, count, "a value that the request does not have leaves the field as it is")
 }

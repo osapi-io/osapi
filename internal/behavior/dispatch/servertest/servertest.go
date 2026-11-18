@@ -50,9 +50,10 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
-	"github.com/osapi-io/osapi/internal/behavior/server"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/api"
+	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/validation"
@@ -272,7 +273,7 @@ func (h *Harness) serve(
 	req *http.Request,
 ) *httptest.ResponseRecorder {
 	a := api.New(config.Config{}, slog.Default())
-	s := server.New(slog.Default(), jobs, signingKey, nil)
+	s := server.New(slog.Default(), signingKey, nil, dispatch.Deps{JobClient: jobs})
 	s.Mount(a.Echo, h.routes(s))
 
 	rec := httptest.NewRecorder()
@@ -359,7 +360,10 @@ func sorted(
 	t *testing.T,
 	data []byte,
 ) string {
-	var body server.Response
+	var body struct {
+		JobID   string           `json:"job_id"`
+		Results []map[string]any `json:"results"`
+	}
 	require.NoError(t, json.Unmarshal(data, &body))
 	sort.SliceStable(body.Results, func(i, j int) bool {
 		return fmt.Sprint(body.Results[i]["hostname"]) < fmt.Sprint(body.Results[j]["hostname"])

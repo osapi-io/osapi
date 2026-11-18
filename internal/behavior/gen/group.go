@@ -33,6 +33,7 @@ import (
 const (
 	endpointPath = module + "/internal/controller/endpoint"
 	behaviorPkg  = module + "/internal/behavior"
+	dispatchPath = module + "/internal/behavior/dispatch"
 )
 
 // hostnameDoc is the description of the target of each behavior method.
@@ -51,6 +52,7 @@ func groupFile(
 	f := genFile(b)
 	f.ImportName(endpointPath, "endpoint")
 	f.ImportName(behaviorPkg, "behavior")
+	f.ImportName(dispatchPath, "dispatch")
 
 	prefix, err := groupPrefix(b)
 	if err != nil {
@@ -99,7 +101,29 @@ func groupFile(
 			ok = "Each target host's result, with whether it changed."
 		}
 		verb := map[string]string{"GET": "Get", "POST": "Post", "PUT": "Put", "DELETE": "Delete"}[m.HTTPMethod()]
+		handle := "Handle" + title(m.Name)
+		f.Comment(
+			fmt.Sprintf(
+				"%s runs %s %s on the target, for the endpoint server.",
+				handle,
+				b.Name,
+				m.Name,
+			),
+		)
+		f.Func().Id(handle).Add(params(
+			jen.Id("ctx").Qual("context", "Context"),
+			jen.Id("d").Qual(dispatchPath, "Deps"),
+			jen.Id("in").Id(req),
+		)).Params(jen.Id(resp), jen.Error()).Block(
+			jen.Return(jen.Qual(dispatchPath, "Run").Types(jen.Id(resp)).Call(
+				jen.Id("ctx"), jen.Id("d"), jen.Qual(pkgPath(b), "Behavior"), jen.Lit(m.Name),
+				jen.Id("in").Dot("Hostname"), input(m),
+			)),
+		)
+		f.Line()
+
 		def := jen.Qual(endpointPath, verb).Types(jen.Id(req), jen.Id(resp)).Call(jen.Lit(m.Name)).
+			Op(".").Line().Id("Handle").Call(jen.Id(handle)).
 			Op(".").Line().Id("ID").Call(jen.Lit(b.OperationID(m))).
 			Op(".").Line().Id("Describe").Call(jen.Lit(m.Doc)).
 			Op(".").Line().Id("Permission").Call(jen.Lit(b.Permission(m.Verb))).
@@ -107,10 +131,19 @@ func groupFile(
 		if m.Long != "" {
 			def = def.Op(".").Line().Id("Explain").Call(jen.Lit(m.Long))
 		}
+		var errs []jen.Code
 		if m.KeyField != "" {
-			def = def.Op(".").Line().Id("Errors").Call(jen.Qual(endpointPath, "NotFound").Call(
+			errs = append(errs, jen.Qual(endpointPath, "NotFound").Call(
 				jen.Qual(behaviorPkg, "ErrNotFound"),
 				jen.Lit(fmt.Sprintf("The host has no %s with that %s.", b.Name, m.KeyField))))
+		}
+		if len(behavior.TemplateFields(m.In)) > 0 {
+			errs = append(errs, jen.Qual(endpointPath, "Invalid").Call(
+				jen.Qual(dispatchPath, "ErrInvalid"),
+				jen.Lit("A template reads a var that the behavior does not have.")))
+		}
+		if len(errs) > 0 {
+			def = def.Op(".").Line().Id("Errors").Call(errs...)
 		}
 		methods = append(methods, def)
 	}
@@ -118,6 +151,7 @@ func groupFile(
 	opts := append([]jen.Code{
 		jen.Lit(b.Name), jen.Lit(b.Doc),
 		jen.Qual(endpointPath, "Prefix").Call(jen.Lit(prefix)),
+		jen.Qual(endpointPath, "Uses").Index(jen.Qual(dispatchPath, "Deps")).Call(),
 		jen.Qual(endpointPath, "Tag").Call(
 			jen.Lit(b.Tag()),
 			jen.Lit(title(string(b.Placement))+"/"+title(b.Name)), jen.Lit(b.Doc)),
@@ -231,9 +265,12 @@ func rowType(
 		if v, ok := fld.Tag.Lookup("doc"); ok {
 			tags["doc"] = v
 		}
-		fields = append(fields, jen.Id(fld.Name).Add(typeOf(fld.Type)).Tag(tags))
+		fields = append(fields, jen.Id(fld.Name).Add(optional(fld.Type)).Tag(tags))
 	}
-	fields = append(fields, jen.Id("Error").String().Tag(map[string]string{
+	// A pointer keeps a value that the host sent as it was, a false or an
+	// empty string included, where omitempty would drop it; the schema is
+	// the same.
+	fields = append(fields, jen.Id("Error").Op("*").String().Tag(map[string]string{
 		"json": "error,omitempty", "doc": "Error message if the agent failed.",
 	}))
 
@@ -251,4 +288,38 @@ func responseName(
 	}
 
 	return b.TypeName() + title(m.Name) + "Response"
+}
+
+// optional is t as the type of an optional row field: a pointer, so a zero
+// value that the host sent is kept.
+func optional(
+	t reflect.Type,
+) *jen.Statement {
+	if t.Kind() == reflect.Pointer {
+		return typeOf(t)
+	}
+
+	return jen.Op("*").Add(typeOf(t))
+}
+
+// input is the method's input, made from its request: the key from the
+// path, and the rest from the query of a read or the body of a write.
+func input(
+	m *behavior.Method,
+) *jen.Statement {
+	var values []jen.Code
+	for i := range m.In.NumField() {
+		fld := m.In.Field(i)
+		name := behavior.JSONName(fld)
+		if !fld.IsExported() || name == "-" {
+			continue
+		}
+		from := jen.Id("in").Dot(fld.Name)
+		if name != m.KeyField && m.Verb != behavior.VerbRead {
+			from = jen.Id("in").Dot("Body").Dot(fld.Name)
+		}
+		values = append(values, jen.Id(fld.Name).Op(":").Add(from))
+	}
+
+	return jen.Qual(m.In.PkgPath(), m.In.Name()).Values(values...)
 }

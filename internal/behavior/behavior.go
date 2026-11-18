@@ -294,6 +294,9 @@ func check(
 	if msg, ok := validation.Struct(in); !ok {
 		return fmt.Errorf("method %s: %s", m.Name, msg)
 	}
+	if msg, ok := CheckTemplates(in); !ok {
+		return fmt.Errorf("method %s: %s", m.Name, msg)
+	}
 
 	return nil
 }
