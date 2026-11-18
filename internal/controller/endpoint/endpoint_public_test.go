@@ -195,6 +195,13 @@ func (s *EndpointPublicTestSuite) TestFlagAndInternal() {
 	s.Equal("get", m.CommandName())
 	s.Equal("list", endpoint.Get[noInput, Node]("pending").Use("list").CommandName())
 
+	probe := endpoint.Get[noInput, Node](
+		"ready",
+	).Answers(http.StatusServiceUnavailable, "Not ready.")
+	s.Equal([]endpoint.Answered{{Code: http.StatusServiceUnavailable, Doc: "Not ready."}},
+		probe.Answering())
+	s.EqualError(endpoint.Answer(http.StatusServiceUnavailable), "Service Unavailable")
+
 	cause := errors.New("dial tcp 10.0.0.9:16686: refused")
 	err := endpoint.Internal("failed to read the trace", cause)
 	s.EqualError(err, "failed to read the trace")
@@ -347,8 +354,13 @@ func (s *EndpointPublicTestSuite) TestOpenAPI() {
 			name: "when a public method has no input and answers 204",
 			methods: []endpoint.Option{
 				endpoint.Get[noInput, struct{}]("ping").Public().Status(http.StatusNoContent),
+				endpoint.Get[noInput, Node]("ready").Sub("ready").Public().
+					Answers(http.StatusServiceUnavailable, "Not ready."),
 			},
 			want: []string{
+				"op GET /api/node/ready id=getNodeReadyReady tags=[node] auth=public params=[] body= " +
+					"responses=[200=application/json:Node 500=application/json:ErrorResponse " +
+					"503=application/json:Node]",
 				"op GET /api/node id=getNodePing tags=[node] auth=public params=[] body= " +
 					"responses=[204=- 500=application/json:ErrorResponse]",
 			},

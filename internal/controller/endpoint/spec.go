@@ -183,6 +183,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: `.Answers(code, "doc")`,
+			Does: "Adds a status that the method answers with its own output, not an ErrorResponse. The method returns its output with endpoint.Answer(code).",
+			When: "For a probe whose failure has a body that says what failed, such as the 503 of health ready.",
+		},
+		{
+			Kind: KindRefine,
 			Name: `.StringFlag("name", "value", "usage", required)`,
 			Does: "Adds a string flag to the CLI command that the request does not send, with its value when the caller gives none. The renderer reads it from the command.",
 			When: "For a flag that changes only what the command does with the answer, such as --output, the file an export writes.",
@@ -247,6 +253,12 @@ var Spec = guide.Spec{
 			Name: `Conflict(err, "doc")`,
 			Does: "Maps err to 409.",
 			When: "When the state of the thing does not allow the call, such as an agent that is already drained.",
+		},
+		{
+			Kind: KindError,
+			Name: `Answer(code)`,
+			Does: "Returned with the method's output, sends that output with code: a status that .Answers added.",
+			When: "When a probe fails and its body says what failed, such as health ready's 503.",
 		},
 		{
 			Kind: KindError,

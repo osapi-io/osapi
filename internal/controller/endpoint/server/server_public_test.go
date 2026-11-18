@@ -97,7 +97,8 @@ var group = endpoint.Define("thing", "Things",
 			endpoint.Conflict(errBusy, "Busy."),
 		),
 	endpoint.Delete[getInput, struct{}]("remove").Handle(remove).Status(http.StatusNoContent),
-	endpoint.Get[getInput, thing]("open").Sub("open").Handle(get).Public(),
+	endpoint.Get[getInput, thing]("open").Sub("open").Handle(get).Public().
+		Answers(http.StatusServiceUnavailable, "Not ready."),
 )
 
 func token(
@@ -188,6 +189,14 @@ func (s *ServerPublicTestSuite) TestServe() {
 			token:    token("thing:read"),
 			wantCode: http.StatusBadRequest,
 			wantBody: `{"error":"bad name"}`,
+		},
+		{
+			name:     "when the handler answers a status with its output, the output is the body",
+			deps:     deps{result: "?", err: endpoint.Answer(http.StatusServiceUnavailable)},
+			method:   http.MethodGet,
+			path:     "/api/thing/open/web",
+			wantCode: http.StatusServiceUnavailable,
+			wantBody: `{"name":"web?"}`,
 		},
 		{
 			name:     "when the handler returns a mapped error, it is that status",

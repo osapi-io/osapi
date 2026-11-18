@@ -203,6 +203,12 @@ func Serve[D, In, Out any](
 		}
 
 		out, err := run(c.Request().Context(), deps, in)
+		var answer *endpoint.AnswerError
+		if errors.As(err, &answer) {
+			respspan.Handled(c)
+
+			return c.JSON(answer.Code, out)
+		}
 		if err != nil {
 			return c.JSON(status(s, g, m, err), ErrorResponse{Error: err.Error()})
 		}
