@@ -43,7 +43,7 @@ func (s *DockerSmokeSuite) TestDockerPull() {
 		{
 			name: "pulls alpine image and returns image id",
 			args: []string{
-				"client", "node", "container", "docker", "pull",
+				"client", "node", "container", "docker", "image", "pull",
 				"--image", "alpine:latest",
 				"--json",
 			},
@@ -84,7 +84,7 @@ func (s *DockerSmokeSuite) TestDockerCreateListInspectStopRemove() {
 
 	// Pull the image first so create does not fail.
 	pullOut, _, pullCode := runCLI(
-		"client", "node", "container", "docker", "pull",
+		"client", "node", "container", "docker", "image", "pull",
 		"--image", "alpine:latest",
 		"--json",
 	)
@@ -139,7 +139,7 @@ func (s *DockerSmokeSuite) TestDockerCreateListInspectStopRemove() {
 
 	// Inspect
 	inspectOut, _, inspectCode := runCLI(
-		"client", "node", "container", "docker", "inspect",
+		"client", "node", "container", "docker", "get",
 		"--id", "integration-test-container",
 		"--json",
 	)
