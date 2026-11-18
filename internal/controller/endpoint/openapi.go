@@ -67,7 +67,12 @@ func OpenAPI(
 		},
 	}
 
-	b := &builder{schemas: doc.Components.Schemas, docs: g.Docs, examples: g.Examples}
+	b := &builder{
+		schemas:  doc.Components.Schemas,
+		params:   openapi3.ParametersMap{},
+		docs:     g.Docs,
+		examples: g.Examples,
+	}
 	for _, m := range g.Methods {
 		op, err := b.operation(g, m)
 		if err != nil {
@@ -81,6 +86,9 @@ func OpenAPI(
 		}
 		item.SetOperation(m.Verb, op)
 	}
+	if len(b.params) > 0 {
+		doc.Components.Parameters = b.params
+	}
 
 	return doc, nil
 }
@@ -88,6 +96,7 @@ func OpenAPI(
 // builder adds each named type it meets to the components, once.
 type builder struct {
 	schemas  openapi3.Schemas
+	params   openapi3.ParametersMap
 	docs     map[reflect.Type]string
 	examples map[reflect.Type]map[string]string
 }
@@ -131,6 +140,15 @@ func (b *builder) operation(
 			// client made from the spec validates as the server does.
 			if v := f.Tag.Get("validate"); v != "" {
 				p.Extensions = extension(v)
+			}
+			// A shared parameter is in the components once, and each
+			// operation refers to it.
+			if name := f.Tag.Get("param"); name != "" {
+				b.params[name] = &openapi3.ParameterRef{Value: p}
+				op.Parameters = append(op.Parameters,
+					&openapi3.ParameterRef{Ref: "#/components/parameters/" + name})
+
+				continue
 			}
 			op.Parameters = append(op.Parameters, &openapi3.ParameterRef{Value: p})
 		default:

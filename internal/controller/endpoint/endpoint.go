@@ -29,6 +29,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -36,8 +37,12 @@ import (
 
 // Group is a set of endpoints under one path, /api/<name>, such as agent.
 type Group struct {
-	// Name is the first segment of each path and the CLI group.
+	// Name is the segment of each path after the prefix, and the CLI group.
 	Name string
+	// Prefix is the part of each path between /api/ and the name, such as
+	// next/node/{hostname}. Each {field} in it is a path field of each
+	// method's input, besides the method's key.
+	Prefix string
 	// Doc says what the group is, in one line.
 	Doc string
 	// Title is the title of the group's spec. The joined spec puts it in
@@ -142,16 +147,43 @@ func Define(
 	for _, o := range opts {
 		o.apply(g)
 	}
+	for _, m := range g.Methods {
+		m.prefix = g.prefixFields()
+	}
 
 	return g
 }
 
-// Path is the method's path: /api/<group>, then its fixed sub-path, then
-// its key, then its action, each only when it has one.
+// Prefix puts each path of the group under a prefix, between /api/ and the
+// group's name, such as next/node/{hostname} for a behavior. Each {field} of
+// the prefix is a path field of each method's input, which is not its key.
+func Prefix(
+	path string,
+) Option {
+	return optionFunc(func(g *Group) { g.Prefix = strings.Trim(path, "/") })
+}
+
+// prefixFields are the json names of the path fields that the prefix names.
+func (g *Group) prefixFields() []string {
+	var out []string
+	for _, seg := range strings.Split(g.Prefix, "/") {
+		if strings.HasPrefix(seg, "{") && strings.HasSuffix(seg, "}") {
+			out = append(out, seg[1:len(seg)-1])
+		}
+	}
+
+	return out
+}
+
+// Path is the method's path: /api/, the group's prefix, its name, then its
+// fixed sub-path, then its key, then its action, each only when it has one.
 func (g *Group) Path(
 	m *Method,
 ) string {
 	p := "/api/" + g.Name
+	if g.Prefix != "" {
+		p = "/api/" + g.Prefix + "/" + g.Name
+	}
 	if m.sub != "" {
 		p += "/" + m.sub
 	}
@@ -251,6 +283,7 @@ type Method struct {
 	cmdUse           string
 	cmdLong          string
 	examples         []string
+	prefix           []string
 	refusals         []Refusal
 	notes, result    string
 	flags            []Flag
@@ -685,7 +718,7 @@ func (m *Method) Handler() any {
 // Key is the name of the input's path parameter, or "" when it has none.
 func (m *Method) Key() string {
 	for _, f := range fields(m.In) {
-		if f.Tag.Get("in") == "path" {
+		if f.Tag.Get("in") == "path" && !slices.Contains(m.prefix, jsonName(f)) {
 			return jsonName(f)
 		}
 	}

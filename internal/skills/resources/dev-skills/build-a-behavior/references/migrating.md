@@ -7,9 +7,9 @@ this way, and you can check each step:
    serves it under `/api/next` and `osapi client next`, and it does not conflict
    with the hand-written routes and commands. Use the method names of the
    domain. Then its routes, operationIds and permissions are the same. Add a
-   row for it to `migrating` in
-   `internal/behavior/openapi/openapi_public_test.go`. That test fails until the
-   generated spec describes the same API as the hand-written spec.
+   row for it to `migrating` in `internal/behaviors/all/spec_public_test.go`.
+   That test fails until the generated spec describes the same API as the
+   hand-written spec.
 2. **Move the provider and its tests without changes.** Move them from
    `internal/provider/<category>/<domain>/` into `internal/behaviors/<name>/`,
    as `<platform>.go` and `<platform>_public_test.go`. Point the hand-written

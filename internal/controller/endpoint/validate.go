@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"slices"
 	"unicode"
 
 	"github.com/osapi-io/osapi/internal/validation"
@@ -184,13 +185,26 @@ func Validate(
 		}
 
 		keys := 0
+		paths := map[string]bool{}
 		for _, f := range fields(m.In) {
 			if f.Tag.Get("in") == "path" {
-				keys++
+				paths[jsonName(f)] = true
+				if !slices.Contains(m.prefix, jsonName(f)) {
+					keys++
+				}
 			}
 		}
 		if keys > 1 {
-			add(m.Name, RuleKey, "the input has more than one path field.")
+			add(m.Name, RuleKey, "the input has more than one path field besides the prefix.")
+		}
+		for _, p := range m.prefix {
+			if !paths[p] {
+				add(
+					m.Name,
+					RuleKey,
+					"the prefix names {"+p+"}, and the input has no path field "+p+".",
+				)
+			}
 		}
 
 		id := m.OperationID(g)

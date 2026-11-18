@@ -44,7 +44,6 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
-	"github.com/osapi-io/osapi/internal/behavior/openapi"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	_ "github.com/osapi-io/osapi/internal/validation"
 )
@@ -91,28 +90,6 @@ func run(
 ) error {
 	w := &writer{root: root}
 
-	// The behaviors still served under /api/next have their own document,
-	// outside the join; when none is left, it goes.
-	var next []*behavior.Behavior
-	for _, b := range behavior.All() {
-		if b.API && b.Next {
-			next = append(next, b)
-		}
-	}
-	if len(next) == 0 {
-		if err := w.remove(behavior.NextSpecPath); err != nil {
-			return err
-		}
-	} else {
-		spec, err := openapi.OpenAPI(next, filepath.Dir(behavior.NextSpecPath))
-		if err != nil {
-			return fmt.Errorf("spec: %w", err)
-		}
-		if err := w.write(behavior.NextSpecPath, spec); err != nil {
-			return err
-		}
-	}
-
 	for _, b := range behavior.All() {
 		// Every behavior has a docs page, internal ones included, so the
 		// docs list everything the binary has.
@@ -158,13 +135,13 @@ func (w *writer) behavior(
 	gen string,
 ) error {
 	if b.API {
-		// This behavior's part of the spec, beside its code, so a review of
-		// the behavior shows the API it produces.
-		snippet, err := openapi.OpenAPI([]*behavior.Behavior{b}, gen)
+		// The behavior's endpoint group, which internal/behavior/gen/spec
+		// makes the behavior's spec from, once this file compiles.
+		g, err := groupFile(b)
 		if err != nil {
-			return fmt.Errorf("spec: %w", err)
+			return fmt.Errorf("group: %w", err)
 		}
-		if err := w.write(filepath.Join(gen, specFile(b)), snippet); err != nil {
+		if err := w.goFile(filepath.Join(gen, "group.go"), g); err != nil {
 			return err
 		}
 		if err := w.goFile(filepath.Join(gen, "api.go"), apiFile(b)); err != nil {

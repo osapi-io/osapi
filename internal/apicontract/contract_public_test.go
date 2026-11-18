@@ -71,6 +71,23 @@ func (s *ContractPublicTestSuite) TestJoinedSpec() {
 	s.Equal(string(want), got)
 }
 
+// TestNextSpec holds the spec of the behaviors under /api/next to its golden
+// contract, as TestJoinedSpec holds the main one. The move of behaviors onto
+// the endpoint layer (osapi#826) changes their wording, not this.
+func (s *ContractPublicTestSuite) TestNextSpec() {
+	data, err := os.ReadFile(filepath.Join("..", "controller", "api", "next", "gen", "api.yaml"))
+	s.Require().NoError(err)
+
+	got := strings.Join(apicontract.Lines(s.load(string(data))), "\n") + "\n"
+	golden := filepath.Join("testdata", "next.golden")
+	if *update {
+		s.Require().NoError(os.WriteFile(golden, []byte(got), 0o644))
+	}
+	want, err := os.ReadFile(golden)
+	s.Require().NoError(err, "no golden file; run with -update")
+	s.Equal(string(want), got)
+}
+
 func (s *ContractPublicTestSuite) TestLines() {
 	tests := []struct {
 		name string

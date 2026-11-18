@@ -90,6 +90,12 @@ var Spec = guide.Spec{
 			Does: "Sets the tag of each operation, its name in the docs and its description.",
 			When: "When a group moves: copy its tag. A new group can leave it; the tag is then the group's name.",
 		},
+		{
+			Kind: KindOption,
+			Name: `Prefix("next/node/{hostname}")`,
+			Does: "Puts each path of the group under a prefix, between /api/ and the group's name. Each {field} of the prefix is an in:\"path\" field of each method's input, which is not the method's key.",
+			When: "For the groups that the behavior generator writes, whose paths start with the target host. A group of the controller has none.",
+		},
 
 		{
 			Kind: KindMethod,
@@ -294,8 +300,14 @@ var Spec = guide.Spec{
 
 		{
 			Kind: KindTag,
+			Name: `param:"Name"`,
+			Does: "Makes a path field a shared parameter: the spec has it once, under components.parameters.Name, and each operation refers to it.",
+			When: "On a path field that each method of a group has, such as the hostname of a behavior's target.",
+		},
+		{
+			Kind: KindTag,
 			Name: `in:"path"`,
-			Does: "Makes the input field the key: {name} in the path. It is required. A group has at most one.",
+			Does: "Makes the input field the key: {name} in the path. It is required. A method has at most one, besides the fields that the group's Prefix names.",
 			When: "For the field that names the thing, such as hostname or id.",
 		},
 		{
