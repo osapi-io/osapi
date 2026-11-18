@@ -23,6 +23,8 @@ package behavior
 import (
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/validation/rule"
+
 	"github.com/osapi-io/osapi/internal/guide"
 )
 
@@ -144,7 +146,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindOption,
 			Name: `Validator("tag", check, schema, message)`,
-			Does: "Declares a validate tag of the behavior, with the check that the server runs and the JSON Schema of the spec.",
+			Does: "Declares a validate tag of the behavior, with the check that the server runs and its schema in the spec, such as rule.Pattern(re).",
 			When: "When no standard validate tag checks a value.",
 		},
 		{
@@ -291,9 +293,9 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindCall,
-			Name: `ValidatorSchema("tag", Pattern(re))`,
-			Does: "Declares the JSON Schema of a custom validate tag. Format(f) sets a format.",
-			When: "When a validate tag is declared outside Validator.",
+			Name: rule.RegisterName,
+			Does: rule.RegisterDoes,
+			When: rule.RegisterWhen,
 		},
 
 		{
@@ -304,9 +306,9 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindTag,
-			Name: `validate:"..."`,
-			Does: "Checked by the API before a job is queued. Becomes the constraints of the spec.",
-			When: "On each input field that has limits.",
+			Name: rule.TagName,
+			Does: rule.TagDoes,
+			When: rule.TagWhen,
 		},
 		{
 			Kind: KindTag,

@@ -8,6 +8,8 @@ components:
           example: 550e8400-e29b-41d4-a716-446655440000
           format: uuid
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
         revision:
           description: The KV revision number.
           example: 1
@@ -57,6 +59,8 @@ components:
           description: Unique identifier of the job.
           format: uuid
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
         operation:
           additionalProperties: true
           description: The operation data.
@@ -132,6 +136,8 @@ components:
           example: _any
           minLength: 1
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,valid_target
       type: object
   securitySchemes:
     BearerAuth:

@@ -13,6 +13,8 @@ components:
           example: 550e8400-e29b-41d4-a716-446655440000
           format: uuid
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
         job_id:
           description: The job this request created, absent when it created none. Joins the entry to that job's own status timeline.
           example: 7c9e6679-7425-40de-944b-e07fc1f90ae7

@@ -838,17 +838,23 @@ paths:
                     - raw
                     - template
                   type: string
+                  x-oapi-codegen-extra-tags:
+                    validate: omitempty,oneof=raw template
                 file:
                   description: The file content.
                   format: binary
                   minLength: 1
                   type: string
+                  x-oapi-codegen-extra-tags:
+                    validate: required,min=1
                 name:
                   description: The name of the file in the Object Store.
                   example: nginx.conf
                   maxLength: 255
                   minLength: 1
                   type: string
+                  x-oapi-codegen-extra-tags:
+                    validate: required,min=1,max=255
               required:
                 - name
                 - file
@@ -1069,11 +1075,15 @@ paths:
                     - raw
                     - template
                   type: string
+                  x-oapi-codegen-extra-tags:
+                    validate: omitempty,oneof=raw template
                 file:
                   description: The file content.
                   format: binary
                   minLength: 1
                   type: string
+                  x-oapi-codegen-extra-tags:
+                    validate: required,min=1
               required:
                 - file
               type: object
@@ -1544,6 +1554,8 @@ paths:
           schema:
             pattern: ^[0-9a-f]{32}$
             type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
       responses:
         '200':
           content:
@@ -6507,12 +6519,16 @@ components:
             - Cordoned
             - Pending
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=Ready Draining Cordoned Pending
         status:
           description: The current status of the agent.
           enum:
             - Ready
             - NotReady
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=Ready NotReady
         timeline:
           description: Agent state transition history.
           items:
@@ -6616,6 +6632,8 @@ components:
             - dual
           example: dual
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=inet inet6 dual
         ipv4:
           example: 192.168.1.10
           type: string
@@ -6646,6 +6664,8 @@ components:
             - HighLoad
             - DiskPressure
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=MemoryPressure HighLoad DiskPressure
       required:
         - type
         - status
@@ -6748,6 +6768,8 @@ components:
           example: 550e8400-e29b-41d4-a716-446655440000
           format: uuid
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
         job_id:
           description: >-
             The job this request created, absent when it created none. Joins the
@@ -7327,6 +7349,8 @@ components:
           example: 550e8400-e29b-41d4-a716-446655440000
           format: uuid
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
         revision:
           description: The KV revision number.
           example: 1
@@ -7376,6 +7400,8 @@ components:
           description: Unique identifier of the job.
           format: uuid
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
         operation:
           additionalProperties: true
           description: The operation data.
@@ -7459,6 +7485,8 @@ components:
           example: _any
           minLength: 1
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,valid_target
       type: object
     TraceResponse:
       properties:
@@ -7510,6 +7538,8 @@ components:
             - ok
             - error
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok error
         status_message:
           description: The error of a failed span.
           type: string

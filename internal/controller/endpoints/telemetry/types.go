@@ -23,7 +23,7 @@ import "time"
 
 // TraceInput names the trace to read.
 type TraceInput struct {
-	ID string `json:"id" in:"path" pattern:"^[0-9a-f]{32}$" doc:"The trace ID, which a command prints after its job ID, 32 hexadecimal characters"`
+	ID string `json:"id" in:"path" validate:"required" pattern:"^[0-9a-f]{32}$" doc:"The trace ID, which a command prints after its job ID, 32 hexadecimal characters"`
 }
 
 // TraceResponse is the spans of one trace.

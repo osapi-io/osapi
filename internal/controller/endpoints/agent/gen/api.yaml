@@ -88,12 +88,16 @@ components:
             - Cordoned
             - Pending
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=Ready Draining Cordoned Pending
         status:
           description: The current status of the agent.
           enum:
             - Ready
             - NotReady
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=Ready NotReady
         timeline:
           description: Agent state transition history.
           items:
@@ -193,6 +197,8 @@ components:
             - dual
           example: dual
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=inet inet6 dual
         ipv4:
           example: 192.168.1.10
           type: string
@@ -223,6 +229,8 @@ components:
             - HighLoad
             - DiskPressure
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=MemoryPressure HighLoad DiskPressure
       required:
         - type
         - status

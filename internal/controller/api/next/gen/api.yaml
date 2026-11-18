@@ -22,6 +22,8 @@ components:
         minLength: 1
         pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]*$
         type: string
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1,sysctl_key
   schemas:
     ErrorResponse:
       $ref: ../../components/gen/api.yaml#/components/schemas/ErrorResponse
@@ -46,10 +48,14 @@ components:
           minLength: 1
           pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]*$
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,sysctl_key
         value:
           description: Value to set
           pattern: ^[^\r\n]*$
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,no_linebreak
       required:
         - key
         - value
@@ -159,6 +165,8 @@ components:
           description: Value to set
           pattern: ^[^\r\n]*$
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,no_linebreak
       required:
         - value
       type: object
@@ -199,6 +207,8 @@ paths:
           schema:
             pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]*$
             type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,sysctl_key
       responses:
         "200":
           content:

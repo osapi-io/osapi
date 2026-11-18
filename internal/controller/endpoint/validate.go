@@ -27,6 +27,8 @@ import (
 	"regexp"
 	"unicode"
 
+	"github.com/osapi-io/osapi/internal/validation/rule"
+
 	"github.com/osapi-io/osapi/internal/guide"
 )
 
@@ -46,6 +48,8 @@ const (
 	RuleRoute   = "route"
 	RuleSchema  = "schema"
 	RuleHandler = "handler"
+	// RuleValidate is the same check in the behavior DSL, from package rule.
+	RuleValidate = "validate"
 )
 
 // Checks are the rules Validate applies. osapi controller endpoint
@@ -99,9 +103,14 @@ var Checks = guide.Checks{
 		Fix:      "Add .Handle(fn) to each method, with the signature that the message names, and endpoint.Uses[Deps]() to Define.",
 	},
 	{
+		Rule:     RuleValidate,
+		Requires: rule.Requires,
+		Fix:      rule.Fix,
+	},
+	{
 		Rule:     RuleSchema,
-		Requires: "The spec builds: each input and output type is one that JSON can encode.",
-		Fix:      "Use structs, slices, maps, strings, numbers, bools and time.Time; not channels or functions.",
+		Requires: "The spec builds: each input and output type is one that JSON can encode, and each validate rule has a schema.",
+		Fix:      "Use structs, slices, maps, strings, numbers, bools and time.Time; not channels or functions. Register the schema of a custom validate rule with rule.Register, beside its validator in internal/validation.",
 	},
 }
 
@@ -183,6 +192,10 @@ func Validate(
 			add(m.Name, RuleID, "operationId "+id+" is also the ID of "+other+".")
 		}
 		ids[id] = m.Name
+
+		for _, f := range rule.Untagged(m.In) {
+			add(m.Name, RuleValidate, "input field "+f+" has no validate tag.")
+		}
 
 		if msg := handlerProblem(g, m); msg != "" {
 			add(m.Name, RuleHandler, msg)

@@ -24,6 +24,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/validation/rule"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/go-playground/validator/v10"
@@ -41,7 +43,7 @@ type motdIn struct {
 var _ = behavior.Define("motd", "Message of the day",
 	behavior.Validator("motd_text",
 		func(v string) bool { return !strings.Contains(v, "\x1b") },
-		behavior.Pattern("^[^\\x1b]*$"),
+		rule.Pattern("^[^\\x1b]*$"),
 		"is not a valid message: it has an escape sequence"),
 )
 

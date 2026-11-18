@@ -32,9 +32,16 @@ The rules:
   method's types. A group with a handler Uses a type. Fix: Add .Handle(fn) to
   each method, with the signature that the message names, and
   endpoint.Uses[Deps](<>) to Define.
+- `validate`: Each input field has a validate tag: its rules, or omitempty for
+  an optional field with none. The spec carries the whole tag, and the server
+  answers 400 to a value that breaks it. Fix: Add validate:"..." to the field,
+  such as validate:"required,min=1,max=255", or validate:"omitempty" for an
+  optional field with no other rule.
 - `schema`: The spec builds: each input and output type is one that JSON can
-  encode. Fix: Use structs, slices, maps, strings, numbers, bools and time.Time;
-  not channels or functions.
+  encode, and each validate rule has a schema. Fix: Use structs, slices, maps,
+  strings, numbers, bools and time.Time; not channels or functions. Register the
+  schema of a custom validate rule with rule.Register, beside its validator in
+  internal/validation.
 
 ```bash
 osapi controller endpoint validate

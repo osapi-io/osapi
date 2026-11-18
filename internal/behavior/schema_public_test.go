@@ -24,6 +24,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/validation/rule"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
@@ -82,8 +84,8 @@ type badBound struct {
 }
 
 func (s *SchemaPublicTestSuite) SetupSuite() {
-	behavior.ValidatorSchema("test_custom", behavior.Pattern(`^x+$`))
-	behavior.ValidatorSchema("test_format", behavior.Format("hostname"))
+	rule.Register("test_custom", rule.Pattern(`^x+$`))
+	rule.Register("test_format", rule.Format("hostname"))
 }
 
 func (s *SchemaPublicTestSuite) TestSchemaFor() {

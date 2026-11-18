@@ -1754,10 +1754,10 @@ type AgentInfo struct {
 	StartedAt *time.Time `json:"started_at,omitempty"`
 
 	// State Agent scheduling state.
-	State *AgentInfoState `json:"state,omitempty"`
+	State *AgentInfoState `json:"state,omitempty" validate:"oneof=Ready Draining Cordoned Pending"`
 
 	// Status The current status of the agent.
-	Status AgentInfoStatus `json:"status"`
+	Status AgentInfoStatus `json:"status" validate:"oneof=Ready NotReady"`
 
 	// Timeline Agent state transition history.
 	Timeline *[]TimelineEvent `json:"timeline,omitempty"`
@@ -1796,7 +1796,7 @@ type AuditEntry struct {
 	DurationMs int64 `json:"duration_ms"`
 
 	// Id Unique identifier for the audit entry.
-	Id openapi_types.UUID `json:"id"`
+	Id openapi_types.UUID `json:"id" validate:"uuid"`
 
 	// JobId The job this request created, absent when it created none. Joins the entry to that job's own status timeline.
 	JobId *string `json:"job_id,omitempty"`
@@ -2050,7 +2050,7 @@ type ConsumerStats struct {
 // CreateJobResponse defines model for CreateJobResponse.
 type CreateJobResponse struct {
 	// JobId Unique identifier for the created job.
-	JobId openapi_types.UUID `json:"job_id"`
+	JobId openapi_types.UUID `json:"job_id" validate:"uuid"`
 
 	// Revision The KV revision number.
 	Revision *int64 `json:"revision,omitempty"`
@@ -3006,7 +3006,7 @@ type JobDetailResponse struct {
 	Hostname *string `json:"hostname,omitempty"`
 
 	// Id Unique identifier of the job.
-	Id *openapi_types.UUID `json:"id,omitempty"`
+	Id *openapi_types.UUID `json:"id,omitempty" validate:"uuid"`
 
 	// Operation The operation data.
 	Operation *map[string]interface{} `json:"operation,omitempty"`
@@ -3284,7 +3284,7 @@ type NATSInfo struct {
 // NetworkInterfaceResponse defines model for NetworkInterfaceResponse.
 type NetworkInterfaceResponse struct {
 	// Family IP address family.
-	Family *NetworkInterfaceResponseFamily `json:"family,omitempty"`
+	Family *NetworkInterfaceResponseFamily `json:"family,omitempty" validate:"oneof=inet inet6 dual"`
 	Ipv4   *string                         `json:"ipv4,omitempty"`
 	Ipv6   *string                         `json:"ipv6,omitempty"`
 	Mac    *string                         `json:"mac,omitempty"`
@@ -3299,7 +3299,7 @@ type NodeCondition struct {
 	LastTransitionTime time.Time         `json:"last_transition_time"`
 	Reason             *string           `json:"reason,omitempty"`
 	Status             bool              `json:"status"`
-	Type               NodeConditionType `json:"type"`
+	Type               NodeConditionType `json:"type" validate:"oneof=MemoryPressure HighLoad DiskPressure"`
 }
 
 // NodeConditionType defines model for NodeCondition.Type.
@@ -3799,7 +3799,7 @@ type ReadyResponse struct {
 // RetryJobRequest defines model for RetryJobRequest.
 type RetryJobRequest struct {
 	// TargetHostname The target of the retried job: _any, _all, a hostname, or a label such as group:web.dev.
-	TargetHostname *string `json:"target_hostname,omitempty"`
+	TargetHostname *string `json:"target_hostname,omitempty" validate:"omitempty,min=1,valid_target"`
 }
 
 // RouteConfigRequest defines model for RouteConfigRequest.
@@ -4532,7 +4532,7 @@ type TraceSpan struct {
 	StartTime time.Time `json:"start_time"`
 
 	// Status Whether the work of the span failed.
-	Status TraceSpanStatus `json:"status"`
+	Status TraceSpanStatus `json:"status" validate:"oneof=ok error"`
 
 	// StatusMessage The error of a failed span.
 	StatusMessage *string `json:"status_message,omitempty"`
@@ -4800,13 +4800,13 @@ type GetAuditLogsParams struct {
 // PostFileMultipartBody defines parameters for PostFile.
 type PostFileMultipartBody struct {
 	// ContentType How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts.
-	ContentType *PostFileMultipartBodyContentType `json:"content_type,omitempty"`
+	ContentType *PostFileMultipartBodyContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
 
 	// File The file content.
-	File openapi_types.File `json:"file"`
+	File openapi_types.File `json:"file" validate:"required,min=1"`
 
 	// Name The name of the file in the Object Store.
-	Name string `json:"name"`
+	Name string `json:"name" validate:"required,min=1,max=255"`
 }
 
 // PostFileMultipartBodyContentType defines parameters for PostFile.
@@ -4815,10 +4815,10 @@ type PostFileMultipartBodyContentType string
 // PutFileByNameMultipartBody defines parameters for PutFileByName.
 type PutFileByNameMultipartBody struct {
 	// ContentType How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts.
-	ContentType *PutFileByNameMultipartBodyContentType `json:"content_type,omitempty"`
+	ContentType *PutFileByNameMultipartBodyContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
 
 	// File The file content.
-	File openapi_types.File `json:"file"`
+	File openapi_types.File `json:"file" validate:"required,min=1"`
 }
 
 // PutFileByNameMultipartBodyContentType defines parameters for PutFileByName.

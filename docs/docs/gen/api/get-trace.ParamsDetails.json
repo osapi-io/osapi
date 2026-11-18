@@ -1,1 +1,1 @@
-{"parameters":[{"description":"The trace ID, which a command prints after its job ID, 32 hexadecimal characters","in":"path","name":"id","required":true,"schema":{"pattern":"^[0-9a-f]{32}$","type":"string"}}]}
+{"parameters":[{"description":"The trace ID, which a command prints after its job ID, 32 hexadecimal characters","in":"path","name":"id","required":true,"schema":{"pattern":"^[0-9a-f]{32}$","type":"string"},"x-oapi-codegen-extra-tags":{"validate":"required"}}]}

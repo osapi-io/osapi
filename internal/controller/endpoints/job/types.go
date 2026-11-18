@@ -38,8 +38,8 @@ type DeleteInput struct {
 
 // RetryInput names the job to retry, and where the new job goes.
 type RetryInput struct {
-	ID   string          `json:"id" in:"path" validate:"uuid" doc:"UUID of the job to retry."`
-	Body RetryJobRequest `          in:"body"`
+	ID   string          `json:"id" in:"path" validate:"uuid"      doc:"UUID of the job to retry."`
+	Body RetryJobRequest `          in:"body" validate:"omitempty"`
 }
 
 // RetryJobRequest is where a retried job goes.

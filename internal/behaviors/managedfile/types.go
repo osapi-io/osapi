@@ -24,13 +24,13 @@ import "io/fs"
 
 // UpdateInput is a file to write and keep a record of.
 type UpdateInput struct {
-	Path     string            `json:"path"     validate:"required,startswith=/" doc:"Absolute path of the file"                                                telemetry:"attr"`
-	Content  string            `json:"content"  validate:"required"              doc:"The file's whole content"`
-	Mode     string            `json:"mode"                                      doc:"Permissions in octal, such as 0600; 0644 when empty"`
-	Owner    string            `json:"owner"                                     doc:"User that owns the file; left as written when empty"`
-	Group    string            `json:"group"                                     doc:"Group that owns the file; left as written when empty"`
-	Secret   bool              `json:"secret"                                    doc:"The content is a secret: its record keeps no checksum of it"`
-	Metadata map[string]string `json:"metadata"                                  doc:"What the caller keeps in the file's record, such as the setting it holds"`
+	Path     string            `json:"path"     validate:"required,startswith=/"  doc:"Absolute path of the file"                                                telemetry:"attr"`
+	Content  string            `json:"content"  validate:"required"               doc:"The file's whole content"`
+	Mode     string            `json:"mode"     validate:"omitempty,file_mode"    doc:"Permissions in octal, such as 0600; 0644 when empty"`
+	Owner    string            `json:"owner"    validate:"omitempty,account_name" doc:"User that owns the file; left as written when empty"`
+	Group    string            `json:"group"    validate:"omitempty,account_name" doc:"Group that owns the file; left as written when empty"`
+	Secret   bool              `json:"secret"   validate:"omitempty"              doc:"The content is a secret: its record keeps no checksum of it"`
+	Metadata map[string]string `json:"metadata" validate:"omitempty"              doc:"What the caller keeps in the file's record, such as the setting it holds"`
 }
 
 // DeleteInput is a file to stop managing.

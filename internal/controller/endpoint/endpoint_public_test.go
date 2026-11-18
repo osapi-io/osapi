@@ -42,10 +42,23 @@ var errMissing = errors.New("missing")
 
 type noInput struct{}
 
+type unknownRule struct {
+	Skip string `json:"skip" in:"query" validate:"nosuchrule"`
+}
+
+type boundsInput struct {
+	Paths []string `json:"paths" validate:"required,min=1,max=3"`
+	Dir   string   `json:"dir"   validate:"omitempty,startswith=/etc"`
+}
+
+type badBound struct {
+	Count int `json:"count" validate:"min=x"`
+}
+
 type keyInput struct {
 	Hostname string `json:"hostname"        in:"path"  validate:"required,min=1,max=255" doc:"The host."`
 	Force    bool   `json:"force"           in:"query" validate:"required"`
-	Limit    int    `json:"limit,omitempty" in:"query" validate:"min=x"`
+	Limit    int    `json:"limit,omitempty" in:"query" validate:"omitempty,min=1"`
 	Hidden   string `json:"-"`
 	private  string //nolint:unused
 }
@@ -462,7 +475,6 @@ type Sample struct {
 	Took  int64   `json:"took"`
 	Limit int     `json:"limit"                                           validate:"min=1,max=100" default:"20"`
 	Ratio float64 `json:"ratio"                                           validate:"min=0"`
-	Skip  string  `json:"skip"                                            validate:"nosuchrule"`
 	Small float32 `json:"small"`
 }
 
@@ -506,7 +518,24 @@ func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
 	s.InDelta(100.0, *limit.Max, 0)
 	s.Equal(int64(20), limit.Default)
 	s.InDelta(0.0, *sample.Properties["ratio"].Value.Min, 0)
-	s.Empty(sample.Properties["skip"].Value.Format)
+}
+
+// TestBodyValidateTags holds a body field to its whole validate tag: the
+// items of an array, a pattern from startswith, and the tag in the extension.
+func (s *EndpointPublicTestSuite) TestBodyValidateTags() {
+	doc, err := endpoint.OpenAPI(endpoint.Define("node", "The nodes",
+		endpoint.Post[boundsInput, Node]("make")), "x")
+	s.Require().NoError(err)
+
+	body := doc.Paths.Value("/api/node").Post.RequestBody.Value.
+		Content.Get("application/json").Schema.Value
+	paths := body.Properties["paths"].Value
+	s.Equal(uint64(1), paths.MinItems)
+	s.Equal(uint64(3), *paths.MaxItems)
+	s.Equal(map[string]any{
+		"x-oapi-codegen-extra-tags": map[string]string{"validate": "required,min=1,max=3"},
+	}, paths.Extensions)
+	s.Equal("^/etc", body.Properties["dir"].Value.Pattern)
 }
 
 func (s *EndpointPublicTestSuite) TestParameterValidateTags() {
@@ -550,6 +579,16 @@ func (s *EndpointPublicTestSuite) TestOpenAPIErrors() {
 			name:    "when the response has a type JSON cannot encode",
 			method:  endpoint.Get[noInput, badOut]("get"),
 			wantErr: "kind chan has no schema",
+		},
+		{
+			name:    "when a parameter's validate rule has no schema",
+			method:  endpoint.Get[unknownRule, Node]("get"),
+			wantErr: `validate tag "nosuchrule" has no schema`,
+		},
+		{
+			name:    "when a body field's bound is not a number",
+			method:  endpoint.Post[badBound, Node]("make"),
+			wantErr: "validate min=x: not a number",
 		},
 		{
 			name:    "when a named type has a field JSON cannot encode",
@@ -655,6 +694,8 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 				`path segment "Bad" is not lowercase letters and digits.`,
 				"the method has an action but no key.",
 				"the input has more than one path field.",
+				"input field a has no validate tag.",
+				"input field b has no validate tag.",
 				"operationId getLower starts with a small letter.",
 				"the spec does not build: node bad: response: badOut: C: type chan int: kind chan has no schema.",
 			},

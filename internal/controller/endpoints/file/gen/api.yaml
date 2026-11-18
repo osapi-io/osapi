@@ -219,17 +219,23 @@ paths:
                     - raw
                     - template
                   type: string
+                  x-oapi-codegen-extra-tags:
+                    validate: omitempty,oneof=raw template
                 file:
                   description: The file content.
                   format: binary
                   minLength: 1
                   type: string
+                  x-oapi-codegen-extra-tags:
+                    validate: required,min=1
                 name:
                   description: The name of the file in the Object Store.
                   example: nginx.conf
                   maxLength: 255
                   minLength: 1
                   type: string
+                  x-oapi-codegen-extra-tags:
+                    validate: required,min=1,max=255
               required:
                 - name
                 - file
@@ -444,11 +450,15 @@ paths:
                     - raw
                     - template
                   type: string
+                  x-oapi-codegen-extra-tags:
+                    validate: omitempty,oneof=raw template
                 file:
                   description: The file content.
                   format: binary
                   minLength: 1
                   type: string
+                  x-oapi-codegen-extra-tags:
+                    validate: required,min=1
               required:
                 - file
               type: object

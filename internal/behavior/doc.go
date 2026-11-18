@@ -102,8 +102,8 @@
 //	secret:"true"     on an input: redacted from the audit log, write-only in
 //	                  the spec, never on a span
 //
-// A custom validate rule needs ValidatorSchema, so the spec checks what the
-// server does.
+// A custom validate rule needs a schema, from Validator or rule.Register, so
+// the spec checks what the server does.
 //
 // # Settings
 //

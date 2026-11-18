@@ -25,6 +25,8 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/osapi-io/osapi/internal/validation/rule"
 )
 
 // Problem is one rule a behavior breaks.
@@ -61,6 +63,9 @@ const (
 	// RuleSecret: an input field tagged secret is not also recorded on the
 	// method's span.
 	RuleSecret = "secret"
+	// RuleValidate: each input field has a validate tag. The endpoint DSL
+	// holds its inputs to the same check, from package rule.
+	RuleValidate = "validate"
 	// RulePlatform: a behavior declares a provider for at least one
 	// platform, once each, and each implements every method's provider type.
 	RulePlatform = "platform"
@@ -262,6 +267,9 @@ func ValidateBehavior(
 				m.In,
 			)
 		} else {
+			for _, f := range rule.Untagged(m.In) {
+				add(m.Name, RuleValidate, "input field %s has no validate tag", f)
+			}
 			recordable := false
 			for i := range m.In.NumField() {
 				f := m.In.Field(i)

@@ -20,7 +20,11 @@
 
 package behavior
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/osapi-io/osapi/internal/validation/rule"
+)
 
 // Rule is a validate tag a behavior declares for its own input fields: the
 // check the server runs, the JSON Schema the spec says it means, and what a
@@ -31,7 +35,7 @@ type Rule struct {
 	// Check reports whether a field's value, as a string, passes.
 	Check func(value string) bool
 	// Schema is what the tag means in the generated spec.
-	Schema func(s *Schema)
+	Schema func(t rule.Target)
 	// Message follows the failing value in the error, such as "is not a
 	// valid sysctl key".
 	Message string
@@ -51,12 +55,12 @@ var (
 func Validator(
 	tag string,
 	check func(value string) bool,
-	schema func(s *Schema),
+	schema func(t rule.Target),
 	message string,
 ) Option {
 	return optionFunc(func(*Behavior) {
 		r := Rule{Tag: tag, Check: check, Schema: schema, Message: message}
-		ValidatorSchema(tag, schema)
+		rule.Register(tag, schema)
 
 		rulesMu.Lock()
 		rules = append(rules, r)
