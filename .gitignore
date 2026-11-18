@@ -13,6 +13,11 @@ test/vendor/
 tmp/
 
 /osapi
+# A go build of a generator at the root, such as
+# go build ./internal/controller/endpoint/gen/, writes its binary here, named
+# for its directory.
+/gen
+/group
 
 # UI
 ui/dist/
