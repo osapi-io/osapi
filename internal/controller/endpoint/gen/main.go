@@ -251,9 +251,9 @@ func commands(
 			jen.Id("cmd"), jen.Qual(pkg, "Group"), jen.Lit(m.Name), in))
 
 		examples := make([]string, 0, len(m.Examples()))
-		path := g.Name + " " + m.Name
-		if sub := m.SubPath(); sub != "" && sub != m.Name {
-			path = g.Name + " " + sub + " " + m.Name
+		path := g.Name + " " + m.CommandName()
+		if sub := m.SubPath(); sub != "" && sub != m.CommandName() {
+			path = g.Name + " " + sub + " " + m.CommandName()
 		}
 		for _, e := range m.Examples() {
 			examples = append(examples,
@@ -261,7 +261,7 @@ func commands(
 		}
 
 		dict := jen.Dict{
-			jen.Id("Use"):   jen.Lit(m.Name),
+			jen.Id("Use"):   jen.Lit(m.CommandName()),
 			jen.Id("Short"): jen.Lit(m.CommandShort()),
 			jen.Id("Args"):  jen.Qual(cobraPath, "NoArgs"),
 			jen.Id("Run"): jen.Func().Params(
@@ -285,7 +285,7 @@ func commands(
 		if r := m.PageResult(); r != "" {
 			notes[jen.Qual(referencePath, "Result")] = jen.Lit(r)
 		}
-		if sub := m.SubPath(); sub != "" && sub != m.Name {
+		if sub := m.SubPath(); sub != "" && sub != m.CommandName() {
 			notes[jen.Qual(commandPath, "SubKey")] = jen.Lit(sub)
 		}
 		if len(notes) > 0 {

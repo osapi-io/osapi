@@ -246,6 +246,7 @@ type Method struct {
 	public           bool
 	handler          any
 	cmdShort         string
+	cmdUse           string
 	cmdLong          string
 	examples         []string
 	notes, result    string
@@ -499,6 +500,26 @@ func (m *Method) StringFlag(
 // CommandFlags are the flags Flag and StringFlag added.
 func (m *Method) CommandFlags() []Flag {
 	return m.flags
+}
+
+// Use names the CLI command apart from the method, whose name is the key of
+// its renderer and must be unique in the group: such as list under pending,
+// when the group has a list already.
+func (m *Method) Use(
+	name string,
+) *Method {
+	m.cmdUse = name
+
+	return m
+}
+
+// CommandName is the CLI command's name: the one Use set, or the method's.
+func (m *Method) CommandName() string {
+	if m.cmdUse != "" {
+		return m.cmdUse
+	}
+
+	return m.Name
 }
 
 // SubPath is the fixed segment Sub set, or "".

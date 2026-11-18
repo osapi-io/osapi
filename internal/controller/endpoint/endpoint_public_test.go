@@ -192,6 +192,8 @@ func (s *EndpointPublicTestSuite) TestFlagAndInternal() {
 		{Name: "output", Usage: "The file to write", String: true, Required: true},
 	}, m.CommandFlags())
 	s.Equal("trace", m.SubPath())
+	s.Equal("get", m.CommandName())
+	s.Equal("list", endpoint.Get[noInput, Node]("pending").Use("list").CommandName())
 
 	cause := errors.New("dial tcp 10.0.0.9:16686: refused")
 	err := endpoint.Internal("failed to read the trace", cause)

@@ -26,15 +26,18 @@ var agentListCmd = &cobra.Command{
 }
 
 var agentPendingCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "agent:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client agent pending",
-	Long:        "When PKI is enabled, a new agent sends an enrollment request, and waits\nhere until an administrator accepts or rejects it with `agent accept` or\n`agent reject`.",
+	Annotations: map[string]string{
+		command.SubKey:       "pending",
+		reference.Permission: "agent:read",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client agent pending list",
+	Long:    "When PKI is enabled, a new agent sends an enrollment request, and waits\nhere until an administrator accepts or rejects it with `agent accept` or\n`agent reject`.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		command.Run(cmd, agent.Group, "pending", agent.ListInput{})
 	},
 	Short: "List agents awaiting enrollment",
-	Use:   "pending",
+	Use:   "list",
 }
 
 var agentGetCmd = &cobra.Command{
@@ -74,7 +77,7 @@ var agentAcceptCmd = &cobra.Command{
 	Annotations: map[string]string{reference.Permission: "agent:write"},
 	Args:        cobra.NoArgs,
 	Example:     "  osapi client agent accept --hostname web-01\n  osapi client agent accept --hostname web-01 --fingerprint SHA256:ab12cd34...",
-	Long:        "When PKI is enabled, a new agent sends an enrollment request. An\nadministrator must accept it before the agent can do work. This command\naccepts a pending agent by hostname. To accept by the public key fingerprint\nof the agent, add `--fingerprint`. Use `agent pending` to see the agents\nthat wait for approval.",
+	Long:        "When PKI is enabled, a new agent sends an enrollment request. An\nadministrator must accept it before the agent can do work. This command\naccepts a pending agent by hostname. To accept by the public key fingerprint\nof the agent, add `--fingerprint`. Use `agent pending list` to see the agents\nthat wait for approval.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("hostname")
 		fingerprint, _ := cmd.Flags().GetString("fingerprint")
@@ -89,7 +92,7 @@ var agentRejectCmd = &cobra.Command{
 	Annotations: map[string]string{reference.Permission: "agent:write"},
 	Args:        cobra.NoArgs,
 	Example:     "  osapi client agent reject --hostname web-01",
-	Long:        "When PKI is enabled, a new agent sends an enrollment request. An\nadministrator accepts or rejects it. This command rejects a pending agent,\nso the agent cannot join the fleet. The command removes the enrollment entry\nof the agent from the pending queue. Use `agent pending` to see the agents\nthat wait for approval.",
+	Long:        "When PKI is enabled, a new agent sends an enrollment request. An\nadministrator accepts or rejects it. This command rejects a pending agent,\nso the agent cannot join the fleet. The command removes the enrollment entry\nof the agent from the pending queue. Use `agent pending list` to see the agents\nthat wait for approval.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("hostname")
 
