@@ -233,7 +233,7 @@ func renderCell(
 		}
 
 		return statusStyle(cell).Render(cell)
-	case h == "HOSTNAME":
+	case h == "HOSTNAME" || h == "ON":
 		// A row that continues the one above it, such as a sub-component's
 		// url, has only the tree line.
 		if cell == "│" {

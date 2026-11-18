@@ -87,15 +87,15 @@ func traceSpans() []client.TraceSpan {
 
 func (s *TracePublicTestSuite) TestTraceRows() {
 	s.Equal([][]string{
-		{"GET /api/x", "", "50ms", "ok", "200"},
-		{"├─ job.publish", "", "30ms", "ok", "jobs.query.web-01"},
+		{"GET /api/x", "controller", "50ms", "ok", "200"},
+		{"├─ job.publish", "controller", "30ms", "ok", "jobs.query.web-01"},
 		{"│  └─ job.process", "web-01", "20ms", "failed", ""},
 		{"│     ├─ exec apt-get", "web-01", "10ms", "error", "exit status 100"},
 		{"│     └─ file.write", "web-01", "1ms", "ok", "/etc/x.conf"},
-		{"├─ job.collect", "", "19ms", "ok", ""},
-		{"├─ response.encode", "", "1ms", "ok", ""},
-		{"└─ response.write", "", "2ms", "ok", "1.5 KB"},
-		{"orphan", "", "1ms", "error", ""},
+		{"├─ job.collect", "controller", "19ms", "ok", ""},
+		{"├─ response.encode", "controller", "1ms", "ok", ""},
+		{"└─ response.write", "controller", "2ms", "ok", "1.5 KB"},
+		{"orphan", "cli", "1ms", "error", ""},
 	}, cli.TraceRows(traceSpans(), true))
 }
 
@@ -290,6 +290,66 @@ func (s *TracePublicTestSuite) TestTraceRowsWithoutNATS() {
 	n, took := cli.NATSCalls(natsTrace())
 	s.Equal(13, n)
 	s.Equal(13*time.Millisecond, took)
+}
+
+// TestSpanOn shows where each span ran: the agent below a job.process,
+// and else the role of its service, so a controller span is not a blank.
+func (s *TracePublicTestSuite) TestSpanOn() {
+	at := time.Now()
+	rows := cli.TraceRows([]client.TraceSpan{
+		{
+			ID:         "a",
+			Name:       "POST /api/x",
+			Service:    "osapi-controller",
+			Start:      at,
+			Attributes: map[string]string{},
+		},
+		{
+			ID:         "b",
+			ParentID:   "a",
+			Name:       "nats.publish",
+			Service:    "osapi-controller",
+			Start:      at.Add(1),
+			Attributes: map[string]string{},
+		},
+		{
+			ID:         "c",
+			ParentID:   "b",
+			Name:       "nats.process",
+			Service:    "osapi-agent",
+			Start:      at.Add(2),
+			Attributes: map[string]string{},
+		},
+		{
+			ID: "d", ParentID: "c", Name: "job.process", Service: "osapi-agent", Start: at.Add(3),
+			Attributes: map[string]string{"osapi.agent.hostname": "web-01"},
+		},
+		{
+			ID:         "e",
+			Name:       "osapi client node hostname get",
+			Service:    "osapi-cli",
+			Start:      at.Add(4),
+			Attributes: map[string]string{},
+		},
+		{
+			ID:         "f",
+			Name:       "other",
+			Service:    "jaeger",
+			Start:      at.Add(5),
+			Attributes: map[string]string{},
+		},
+	}, true)
+
+	on := map[string]string{}
+	for _, r := range rows {
+		on[strings.TrimLeft(r[0], "├└│─ ")] = r[1]
+	}
+	s.Equal("controller", on["POST /api/x"])
+	s.Equal("controller", on["nats.publish"])
+	s.Equal("agent", on["nats.process"], "an agent span above job.process has no host yet")
+	s.Equal("web-01", on["job.process"])
+	s.Equal("cli", on["osapi client node hostname get"])
+	s.Equal("jaeger", on["other"], "a service that is not osapi's keeps its name")
 }
 
 func (s *TracePublicTestSuite) TestKeyMeanings() {

@@ -67,14 +67,15 @@ var opCounts = []struct{ key, one, many string }{
 }
 
 // TraceRows returns the rows of a trace's span tree, each with its SPAN,
-// HOSTNAME, DURATION, STATUS and DETAIL. Without all, it leaves out the
+// ON, DURATION, STATUS and DETAIL. Without all, it leaves out the
 // spans of NATS calls, the bookkeeping of the queue, and NATSCalls counts
 // them. A child is under its parent, in
 // start order, behind tree lines. A span whose parent is not in the trace,
 // such as one under the span of a CLI that sent none, is a root.
 //
-// HOSTNAME is the agent of the nearest job.process at or above the span, so
-// each step on an agent names its host. STATUS is the job's status on a
+// ON is the agent of the nearest job.process at or above the span, so
+// each step on an agent names its host, and else the role of the service
+// that made it: controller, agent or cli. STATUS is the job's status on a
 // job.process, changed or unchanged on a behavior write, and ok or error on
 // other spans. DETAIL is the error of a failed span, or else what it acted
 // on: a behavior's recorded inputs, what a key is for, a file or a subject.
@@ -129,7 +130,7 @@ func TraceRows(
 		}
 		rows = append(rows, []string{
 			lead + branch + s.Name,
-			host,
+			spanOn(s, host),
 			FormatDuration(s.Duration.Round(time.Microsecond).String()),
 			spanStatus(s),
 			spanDetail(s),
@@ -179,6 +180,21 @@ func spanStatus(
 	}
 
 	return "ok"
+}
+
+// spanOn is where a span ran: the agent of the nearest job.process at or
+// above it, or else the role of the service that made it, such as
+// controller for osapi-controller. A blank cell would leave the reader to
+// work out that it means the controller.
+func spanOn(
+	s client.TraceSpan,
+	host string,
+) string {
+	if host != "" {
+		return host
+	}
+
+	return strings.TrimPrefix(s.Service, "osapi-")
 }
 
 // spanDetail is the error of a failed span, or else what it acted on.

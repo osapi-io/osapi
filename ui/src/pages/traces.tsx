@@ -171,7 +171,7 @@ export function Traces() {
                 ),
               },
               {
-                header: "Hostname",
+                header: "On",
                 cell: (r: TraceRow) => <Text variant="mono">{r.host}</Text>,
               },
               {

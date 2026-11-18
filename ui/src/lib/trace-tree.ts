@@ -166,7 +166,10 @@ export function traceRows(spans: TraceSpan[], all: boolean): TraceRow[] {
     rows.push({
       span: s,
       lines: lead + branch,
-      host,
+      // Where the span ran: its agent, or else its service's role, such as
+      // controller for osapi-controller, as osapi client telemetry trace
+      // get prints it.
+      host: host || s.service.replace(/^osapi-/, ""),
       status: spanStatus(s),
       detail: spanDetail(s),
       offset: (startOf(s) - begin) / total,
