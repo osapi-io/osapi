@@ -41,6 +41,11 @@ The rules:
   &lt;vars&gt; is the JSON name of an input field of type map[string]string.
   Fix: Tag the string field that holds the template with template:"vars", and
   add Vars map[string]string `json:"vars"` to the input.
+- `validate`: Each input field has a validate tag: its rules, or omitempty for
+  an optional field with none. The spec carries the whole tag, and the server
+  answers 400 to a value that breaks it. Fix: Add validate:"..." to the field,
+  such as validate:"required,min=1,max=255", or validate:"omitempty" for an
+  optional field with no other rule.
 - `secret`: No input field is both secret:"true" and telemetry:"attr". Fix:
   Remove telemetry:"attr" from the secret field. A secret is never recorded on a
   span.

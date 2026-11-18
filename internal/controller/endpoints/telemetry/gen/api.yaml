@@ -53,6 +53,8 @@ components:
             - ok
             - error
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok error
         status_message:
           description: The error of a failed span.
           type: string
@@ -87,6 +89,8 @@ paths:
           schema:
             pattern: ^[0-9a-f]{32}$
             type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
       responses:
         "200":
           content:

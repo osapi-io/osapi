@@ -24,10 +24,11 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/osapi-io/osapi/internal/validation/rule"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -122,14 +123,14 @@ func (b *builder) operation(
 				In:          in,
 				Required:    in == "path" || validates(f, "required"),
 				Description: f.Tag.Get("doc"),
-				Schema:      constrained(s, f),
+			}
+			if p.Schema, err = constrained(s, f, false); err != nil {
+				return nil, fmt.Errorf("%s: %w", f.Name, err)
 			}
 			// oapi-codegen copies this onto the parameter's field, so a Go
 			// client made from the spec validates as the server does.
 			if v := f.Tag.Get("validate"); v != "" {
-				p.Extensions = map[string]any{
-					"x-oapi-codegen-extra-tags": map[string]string{"validate": v},
-				}
+				p.Extensions = extension(v)
 			}
 			op.Parameters = append(op.Parameters, &openapi3.ParameterRef{Value: p})
 		default:
@@ -342,7 +343,9 @@ func (b *builder) object(
 		if fs.Ref == "" {
 			fs.Value.Description = f.Tag.Get("doc")
 		}
-		s.Properties[name] = constrained(fs, f)
+		if s.Properties[name], err = constrained(fs, f, true); err != nil {
+			return nil, fmt.Errorf("%s: %w", f.Name, err)
+		}
 		required := validates(f, "required")
 		if response {
 			tag := f.Tag.Get("json")
@@ -372,15 +375,16 @@ func (b *builder) field(
 	return openapi3.NewSchemaRef("", bytes), nil
 }
 
-// constrained is s with the field's example, and the constraints of its
-// validate tag: the values of oneof, and min and max as the length of a
-// string.
+// constrained is s with the field's example, pattern and default, and the
+// constraints of its validate tag. A field's own schema carries the whole tag
+// in rule.Extension; a parameter carries it itself.
 func constrained(
 	s *openapi3.SchemaRef,
 	f reflect.StructField,
-) *openapi3.SchemaRef {
+	property bool,
+) (*openapi3.SchemaRef, error) {
 	if s.Value == nil {
-		return s
+		return s, nil
 	}
 	if ex, ok := f.Tag.Lookup("example"); ok {
 		s.Value.Example = example(s.Value, ex)
@@ -391,35 +395,77 @@ func constrained(
 	if d, ok := f.Tag.Lookup("default"); ok {
 		s.Value.Default = example(s.Value, d)
 	}
-	for _, rule := range strings.Split(f.Tag.Get("validate"), ",") {
-		name, param, _ := strings.Cut(rule, "=")
-		switch name {
-		case "oneof":
-			for _, v := range strings.Fields(param) {
-				s.Value.Enum = append(s.Value.Enum, v)
-			}
-		case "min", "max":
-			n, err := strconv.ParseUint(param, 10, 64)
-			if err != nil {
-				continue
-			}
-			bound(s.Value, name == "min", n)
-		default:
-			if format, ok := formats[name]; ok {
-				s.Value.Format = format
-			}
-		}
+	v := f.Tag.Get("validate")
+	if _, err := rule.Apply(v, target{s.Value}); err != nil {
+		return nil, err
+	}
+	if property && v != "" {
+		s.Value.Extensions = extension(v)
 	}
 
-	return s
+	return s, nil
+}
+
+// extension is the extension that carries a whole validate tag.
+func extension(
+	validate string,
+) map[string]any {
+	return map[string]any{rule.Extension: map[string]string{"validate": validate}}
+}
+
+// target is a schema as a rule.Target, which the constraints of a validate
+// tag are set on.
+type target struct{ s *openapi3.Schema }
+
+func (t target) Enum(values []string) {
+	for _, v := range values {
+		t.s.Enum = append(t.s.Enum, v)
+	}
+}
+
+func (t target) Pattern(re string) { t.s.Pattern = re }
+
+func (t target) Format(format string) { t.s.Format = format }
+
+// Bound sets min, max or len as the constraint that fits the type: the
+// length of a string, the items of an array, the value of a number.
+func (t target) Bound(
+	r string,
+	n float64,
+) {
+	u := uint64(n)
+	isMin, isMax := r != "max", r != "min"
+	switch {
+	case t.s.Type.Is(openapi3.TypeString):
+		if isMin {
+			t.s.MinLength = u
+		}
+		if isMax {
+			t.s.MaxLength = &u
+		}
+	case t.s.Type.Is(openapi3.TypeArray):
+		if isMin {
+			t.s.MinItems = u
+		}
+		if isMax {
+			t.s.MaxItems = &u
+		}
+	default:
+		if isMin {
+			t.s.Min = &n
+		}
+		if isMax {
+			t.s.Max = &n
+		}
+	}
 }
 
 // validates reports whether the field's validate tag has the rule.
 func validates(
 	f reflect.StructField,
-	rule string,
+	name string,
 ) bool {
-	return slices.Contains(strings.Split(f.Tag.Get("validate"), ","), rule)
+	return rule.Has(f.Tag.Get("validate"), name)
 }
 
 // fields is the exported fields of a struct type that JSON reads, or none
@@ -490,35 +536,3 @@ func example(
 
 // formats are the validate rules that are a format, as the behavior DSL
 // maps them.
-var formats = map[string]string{
-	"uuid":     "uuid",
-	"email":    "email",
-	"hostname": "hostname",
-	"ip":       "ip",
-	"ipv4":     "ipv4",
-	"ipv6":     "ipv6",
-	"url":      "uri",
-	"uri":      "uri",
-}
-
-// bound sets a min or a max as the constraint that fits the type: the
-// length of a string, the value of an integer or a number.
-func bound(
-	s *openapi3.Schema,
-	isMin bool,
-	n uint64,
-) {
-	switch {
-	case s.Type.Is(openapi3.TypeString) && isMin:
-		s.MinLength = n
-	case s.Type.Is(openapi3.TypeString):
-		s.MaxLength = &n
-	case s.Type.Is(openapi3.TypeInteger) || s.Type.Is(openapi3.TypeNumber):
-		v := float64(n)
-		if isMin {
-			s.Min = &v
-		} else {
-			s.Max = &v
-		}
-	}
-}

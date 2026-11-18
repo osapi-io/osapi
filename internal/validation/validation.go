@@ -30,6 +30,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/validation/rule"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 
 	"github.com/go-playground/validator/v10"
@@ -173,8 +175,22 @@ func init() {
 	// The JSON Schema each custom validator means, so a behavior's generated
 	// spec validates what the server does. A tag without one fails schema
 	// generation rather than being dropped.
-	behavior.ValidatorSchema("sysctl_key", behavior.Pattern(sysctlKeyPattern.String()))
-	behavior.ValidatorSchema("no_linebreak", behavior.Pattern(`^[^\r\n]*$`))
+	rule.Register("sysctl_key", rule.Pattern(sysctlKeyPattern.String()))
+	rule.Register("no_linebreak", rule.Pattern(`^[^\r\n]*$`))
+	rule.Register("file_mode", rule.Pattern(`^[0-7]{3,4}$`))
+	rule.Register("resource_name", rule.Pattern(resourceNamePattern.String()))
+	rule.Register("nats_name", rule.Pattern(natsNamePattern.String()))
+	rule.Register("container_id", rule.Pattern(containerIDPattern.String()))
+	rule.Register("account_name", rule.Pattern(accountNamePattern.String()))
+	// A pattern cannot say what these check: a target the controller
+	// resolves, a known fact key, a duration or a cron expression that a
+	// parser reads, or a length that is config. The spec shows the type.
+	for _, tag := range []string{
+		"valid_target", "alphanum_or_fact", "ip_or_fact", "go_duration",
+		"cron_schedule", "signing_key",
+	} {
+		rule.Register(tag, rule.None)
+	}
 
 	// A behavior can declare its own rule with behavior.Validator; each one
 	// is registered here, whether its behavior was defined before this ran

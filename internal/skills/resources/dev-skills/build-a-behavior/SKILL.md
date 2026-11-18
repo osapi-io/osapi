@@ -91,6 +91,15 @@ A noun is never the verb. A required input is `validate:"required"`; `--help`
 marks it, so its `doc` does not say so. `TestCommandShape` in
 `cmd/help_style_test.go` fails on a command that breaks either rule.
 
+Each input field has a `validate` tag, such as `validate:"required,min=1,max=255"`.
+A field with no limit is `validate:"omitempty"`. The server answers 400 to a
+value that breaks a rule, and the spec carries the rule and the whole tag.
+`validate` refuses an input field with no tag. A custom rule, such as
+`sysctl_key`, needs its schema from `rule.Register`, beside its validator in
+`internal/validation`. Without one the spec does not build. The endpoint DSL
+and the behavior DSL use the same rules; `spec` prints them under
+`validate:"..."`.
+
 ## Build a new one
 
 1. Write it: `go run . behavior new --name <name> --description "<one line>"`,

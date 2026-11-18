@@ -85,7 +85,7 @@ func resultName(
 // definition: the Option values, and the functions that return an Option, a
 // *Method, a Given or an Effect, with the ones a provider calls.
 func (s *SpecPublicTestSuite) dsl() []string {
-	names := []string{"Define", "Register", "Call", "Settings", "ValidatorSchema"}
+	names := []string{"Define", "Register", "Call", "Settings"}
 	for _, f := range s.sources(".") {
 		for _, d := range f.Decls {
 			switch d := d.(type) {

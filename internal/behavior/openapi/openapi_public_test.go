@@ -29,6 +29,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/validation/rule"
+
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v3"
@@ -62,7 +64,7 @@ type OpenAPIPublicTestSuite struct {
 }
 
 func (s *OpenAPIPublicTestSuite) SetupSuite() {
-	behavior.ValidatorSchema("spec_key", behavior.Pattern("^[a-z]+$"))
+	rule.Register("spec_key", rule.Pattern("^[a-z]+$"))
 }
 
 type specProvider struct{}

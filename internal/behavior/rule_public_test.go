@@ -24,6 +24,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/validation/rule"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -41,7 +43,7 @@ func (s *RulePublicTestSuite) TestValidator() {
 	var seen []string
 	behavior.Define("early", "x",
 		behavior.Validator("rule_test_early", func(string) bool { return true },
-			behavior.Pattern("^a$"), "is wrong"),
+			rule.Pattern("^a$"), "is wrong"),
 	)
 
 	behavior.OnRule(func(r behavior.Rule) { seen = append(seen, r.Tag) })
@@ -49,7 +51,7 @@ func (s *RulePublicTestSuite) TestValidator() {
 
 	behavior.Define("late", "x",
 		behavior.Validator("rule_test_code", func(v string) bool { return v == "ok" },
-			behavior.Pattern("^ok$"), "is not ok"),
+			rule.Pattern("^ok$"), "is not ok"),
 	)
 	s.Contains(seen, "rule_test_code", "a rule declared after OnRule is passed on")
 

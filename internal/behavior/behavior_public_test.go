@@ -37,7 +37,7 @@ type fakeProvider struct{ prefix string }
 // taggedIn has a list field, which no CLI flag holds, beside a field that is
 // not an input at all.
 type taggedIn struct {
-	Tags  []string `json:"tags"`
+	Tags  []string `json:"tags" validate:"omitempty"`
 	Notes []string `json:"-"`
 }
 
@@ -65,7 +65,7 @@ func readSecret(
 
 // leakyIn records a secret on the span, which validate refuses.
 type leakyIn struct {
-	Token string `json:"token" secret:"true" telemetry:"attr"`
+	Token string `json:"token" secret:"true" telemetry:"attr" validate:"omitempty"`
 }
 
 func readLeaky(

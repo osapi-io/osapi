@@ -20,7 +20,10 @@
 
 package endpoint
 
-import "github.com/osapi-io/osapi/internal/guide"
+import (
+	"github.com/osapi-io/osapi/internal/guide"
+	"github.com/osapi-io/osapi/internal/validation/rule"
+)
 
 // The kinds of term in Spec, in the order that a group is written.
 const (
@@ -351,9 +354,15 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindTag,
-			Name: `validate:"..."`,
-			Does: "In an input, required makes the field required. oneof gives an enum, min and max the length of a string or the bounds of a number, and uuid, email, hostname, ip, ipv4, ipv6, url and uri a format, as the behavior DSL maps them.",
-			When: "On each input field with a limit. On an output field, only for oneof.",
+			Name: rule.TagName,
+			Does: rule.TagDoes,
+			When: rule.TagWhen,
+		},
+		{
+			Kind: KindTag,
+			Name: rule.RegisterName,
+			Does: rule.RegisterDoes,
+			When: rule.RegisterWhen,
 		},
 		{
 			Kind: KindTag,

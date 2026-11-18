@@ -31,6 +31,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/validation/rule"
+
 	"github.com/getkin/kin-openapi/openapi3"
 	"gopkg.in/yaml.v3"
 
@@ -83,12 +85,8 @@ func OpenAPI(
 					// redocly join requires of a component every spec defines.
 					Description: "Target agent hostname, reserved routing value (_any, _all), " +
 						"or label selector (key:value).\n",
-					Schema: openapi3.NewStringSchema().WithMinLength(1).NewRef(),
-					Extensions: map[string]any{
-						"x-oapi-codegen-extra-tags": map[string]any{
-							"validate": "required,min=1,valid_target",
-						},
-					},
+					Schema:     openapi3.NewStringSchema().WithMinLength(1).NewRef(),
+					Extensions: extension("required,min=1,valid_target"),
 				}},
 			},
 			SecuritySchemes: openapi3.SecuritySchemes{
@@ -185,6 +183,7 @@ func operation(
 			Required:    true,
 			Description: key.Description,
 			Schema:      kin(withoutDescription(key)).NewRef(),
+			Extensions:  extension(key.Validate),
 		}}
 		op.Parameters = append(op.Parameters,
 			&openapi3.ParameterRef{Ref: "#/components/parameters/" + name})
@@ -200,6 +199,7 @@ func operation(
 				Required:    slices.Contains(body.Required, name),
 				Description: p.Description,
 				Schema:      kin(withoutDescription(p)).NewRef(),
+				Extensions:  extension(p.Validate),
 			}})
 		}
 	} else if len(body.Properties) > 0 {
@@ -319,6 +319,7 @@ func kin(
 		WriteOnly:   s.WriteOnly,
 		Min:         s.Minimum,
 		Max:         s.Maximum,
+		Extensions:  extension(s.Validate),
 	}
 	if s.Type != "" {
 		o.Type = &openapi3.Types{s.Type}
@@ -392,8 +393,22 @@ func withoutDescription(
 ) *behavior.Schema {
 	c := *s
 	c.Description = ""
+	// A parameter carries the validate tag itself, not its schema.
+	c.Validate = ""
 
 	return &c
+}
+
+// extension is the extension that carries a whole validate tag, or nil for
+// a field with none.
+func extension(
+	validate string,
+) map[string]any {
+	if validate == "" {
+		return nil
+	}
+
+	return map[string]any{rule.Extension: map[string]any{"validate": validate}}
 }
 
 // title capitalizes a name the definition guarantees is not empty: a

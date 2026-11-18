@@ -24,6 +24,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/validation/rule"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
@@ -104,12 +106,20 @@ type noFields struct{}
 
 // onlySecret is an input whose only field is a secret.
 type onlySecret struct {
-	Password string `json:"password" secret:"true"`
+	Password string `json:"password" secret:"true" validate:"omitempty"`
 }
 
 // taggedName is an input whose name is tagged for the span.
+type untaggedIn struct {
+	Name string `json:"name"`
+}
+
+func readUntagged(context.Context, fakeProvider, untaggedIn) (entry, error) {
+	return entry{}, nil
+}
+
 type taggedName struct {
-	Name string `json:"name" telemetry:"attr"`
+	Name string `json:"name" telemetry:"attr" validate:"required"`
 }
 
 func setNoFields(context.Context, fakeProvider, noFields) (result, error) {
@@ -141,7 +151,7 @@ func writeStringChanged(
 }
 
 func (s *ValidatePublicTestSuite) SetupSuite() {
-	behavior.ValidatorSchema("test_custom", behavior.Pattern(`^x+$`))
+	rule.Register("test_custom", rule.Pattern(`^x+$`))
 }
 
 func (s *ValidatePublicTestSuite) TestValidateBehavior() {
@@ -378,6 +388,13 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 					Fails("", entry{}, ""),
 			),
 			wantRules: []string{behavior.RuleExample, behavior.RuleExample},
+		},
+		{
+			name: "when an input field has no validate tag",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.Read("get", readUntagged).Describe("Get"),
+			),
+			wantRules: []string{behavior.RuleValidate},
 		},
 		{
 			name: "when a secret is also recorded on the span",

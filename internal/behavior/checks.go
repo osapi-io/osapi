@@ -20,7 +20,10 @@
 
 package behavior
 
-import "github.com/osapi-io/osapi/internal/guide"
+import (
+	"github.com/osapi-io/osapi/internal/guide"
+	"github.com/osapi-io/osapi/internal/validation/rule"
+)
 
 // Checks are the rules that Validate applies, in the order that a behavior is
 // usually written. behavior validate --help prints each one, and each problem
@@ -92,6 +95,11 @@ var Checks = guide.Checks{
 		Rule:     RuleTemplate,
 		Requires: "A field tagged template:\"<vars>\" is a string, and <vars> is the JSON name of an input field of type map[string]string.",
 		Fix:      "Tag the string field that holds the template with template:\"vars\", and add Vars map[string]string `json:\"vars\"` to the input.",
+	},
+	{
+		Rule:     RuleValidate,
+		Requires: rule.Requires,
+		Fix:      rule.Fix,
 	},
 	{
 		Rule:     RuleSecret,
