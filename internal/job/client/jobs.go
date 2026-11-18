@@ -33,6 +33,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/telemetry/opspan"
 )
 
 // CreateJob creates a new job from operation data and stores it in the KV bucket.
@@ -961,10 +962,10 @@ func (c *Client) jobRecord(
 func (c *Client) GetQueueSummary(
 	ctx context.Context,
 ) (*job.QueueStats, error) {
-	ctx, span := startReadSpan(ctx, "job.summary")
+	ctx, span := opspan.Start(ctx, tracerName, "job.summary")
 	stats, err := c.queueSummary(ctx)
 
-	return stats, endReadSpan(span, err)
+	return stats, opspan.End(span, err)
 }
 
 // GetJobStatus returns one job and its computed status, in a job.get span.
@@ -972,10 +973,10 @@ func (c *Client) GetJobStatus(
 	ctx context.Context,
 	jobID string,
 ) (*job.QueuedJob, error) {
-	ctx, span := startReadSpan(ctx, "job.get", attribute.String("job.id", jobID))
+	ctx, span := opspan.Start(ctx, tracerName, "job.get", attribute.String("job.id", jobID))
 	qj, err := c.jobStatus(ctx, jobID)
 
-	return qj, endReadSpan(span, err)
+	return qj, opspan.End(span, err)
 }
 
 // ListJobs returns a page of jobs, in a job.list span that records how many
@@ -986,7 +987,7 @@ func (c *Client) ListJobs(
 	limit int,
 	offset int,
 ) (*ListJobsResult, error) {
-	ctx, span := startReadSpan(ctx, "job.list",
+	ctx, span := opspan.Start(ctx, tracerName, "job.list",
 		attribute.String("job.status_filter", statusFilter),
 	)
 	result, err := c.listJobs(ctx, statusFilter, limit, offset)
@@ -994,7 +995,7 @@ func (c *Client) ListJobs(
 		span.SetAttributes(attribute.Int("job.count", len(result.Jobs)))
 	}
 
-	return result, endReadSpan(span, err)
+	return result, opspan.End(span, err)
 }
 
 // RetryJob creates a job with the operation of another, in a job.retry span.
@@ -1003,10 +1004,10 @@ func (c *Client) RetryJob(
 	jobID string,
 	targetHostname string,
 ) (*CreateJobResult, error) {
-	ctx, span := startReadSpan(ctx, "job.retry", attribute.String("job.id", jobID))
+	ctx, span := opspan.Start(ctx, tracerName, "job.retry", attribute.String("job.id", jobID))
 	result, err := c.retryJob(ctx, jobID, targetHostname)
 
-	return result, endReadSpan(span, err)
+	return result, opspan.End(span, err)
 }
 
 // DeleteJob deletes a job and its events, in a job.delete span.
@@ -1014,7 +1015,7 @@ func (c *Client) DeleteJob(
 	ctx context.Context,
 	jobID string,
 ) error {
-	ctx, span := startReadSpan(ctx, "job.delete", attribute.String("job.id", jobID))
+	ctx, span := opspan.Start(ctx, tracerName, "job.delete", attribute.String("job.id", jobID))
 
-	return endReadSpan(span, c.deleteJob(ctx, jobID))
+	return opspan.End(span, c.deleteJob(ctx, jobID))
 }

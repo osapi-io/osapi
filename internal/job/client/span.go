@@ -104,27 +104,3 @@ func endCollectSpan(
 	)
 	span.End()
 }
-
-// startReadSpan opens the span of a job client call that reads or changes
-// the job bucket, such as job.list. The NATS calls the call makes are its
-// children, so a trace says what the time under a request was for.
-func startReadSpan(
-	ctx context.Context,
-	name string,
-	attrs ...attribute.KeyValue,
-) (context.Context, trace.Span) {
-	return otel.Tracer(tracerName).Start(ctx, name, trace.WithAttributes(attrs...))
-}
-
-// endReadSpan ends span, marked failed when err is not nil, and returns err.
-func endReadSpan(
-	span trace.Span,
-	err error,
-) error {
-	if err != nil {
-		return endSpan(span, err)
-	}
-	span.End()
-
-	return nil
-}

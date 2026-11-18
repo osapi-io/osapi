@@ -28,6 +28,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 
 	"github.com/osapi-io/osapi/internal/telemetry/traces"
 )
@@ -151,6 +156,67 @@ func (s *TracesPublicTestSuite) TestTrace() {
 
 			tc.validate(traces.NewJaeger(srv.URL+"/", nil).
 				Trace(context.Background(), "0123456789abcdef0123456789abcdef"))
+		})
+	}
+}
+
+// TestReadSpan opens traces.read for the HTTP call to Jaeger, which no
+// other span shows: with the trace ID and the span count, and the error
+// status when the read fails.
+func (s *TracesPublicTestSuite) TestReadSpan() {
+	tests := []struct {
+		name     string
+		status   int
+		validate func(span sdktrace.ReadOnlySpan)
+	}{
+		{
+			name:   "when Jaeger has the trace records how many spans it read",
+			status: http.StatusOK,
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Contains(span.Attributes(), attribute.Int("osapi.trace.spans", 3))
+				s.Equal(codes.Unset, span.Status().Code)
+			},
+		},
+		{
+			name:   "when Jaeger fails marks traces.read as an error",
+			status: http.StatusInternalServerError,
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Equal(codes.Error, span.Status().Code)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			recorder := tracetest.NewSpanRecorder()
+			previous := otel.GetTracerProvider()
+			otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+			defer otel.SetTracerProvider(previous)
+
+			srv := httptest.NewServer(
+				http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+					w.WriteHeader(tc.status)
+					_, _ = w.Write([]byte(answer))
+				}),
+			)
+			defer srv.Close()
+
+			ctx, request := otel.Tracer("test").
+				Start(context.Background(), "GET /api/telemetry/trace")
+			_, _ = traces.NewJaeger(srv.URL, nil).Trace(ctx, "0123456789abcdef0123456789abcdef")
+			request.End()
+
+			var read sdktrace.ReadOnlySpan
+			for _, sp := range recorder.Ended() {
+				if sp.Name() == "traces.read" {
+					read = sp
+				}
+			}
+			s.Require().NotNil(read)
+			s.Equal(request.SpanContext().SpanID(), read.Parent().SpanID())
+			s.Contains(read.Attributes(),
+				attribute.String("osapi.trace.id", "0123456789abcdef0123456789abcdef"))
+			tc.validate(read)
 		})
 	}
 }

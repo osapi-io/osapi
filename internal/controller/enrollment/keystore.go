@@ -29,6 +29,9 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/telemetry/opspan"
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/pki"
@@ -192,7 +195,7 @@ func (w *Watcher) RemoveAgentKey(
 // Removing the key is the trust decision. The agent keeps the controller's key
 // it was given at acceptance, so it does not enroll again by itself: an
 // operator removes the controller key on the host and restarts the agent.
-func (w *Watcher) RemoveByHostname(
+func (w *Watcher) removeByHostname(
 	ctx context.Context,
 	hostname string,
 	machineID string,
@@ -295,4 +298,19 @@ func (w *Watcher) invalidateAgentKey(
 	defer w.keyCacheMu.Unlock()
 
 	delete(w.keyCache, machineID)
+}
+
+// RemoveByHostname removes the stored key of an enrolled agent, in an
+// enrollment.remove span.
+func (w *Watcher) RemoveByHostname(
+	ctx context.Context,
+	hostname string,
+	machineID string,
+) (string, error) {
+	ctx, span := opspan.Start(ctx, tracerName, "enrollment.remove",
+		attribute.String("osapi.agent.hostname", hostname),
+	)
+	removed, err := w.removeByHostname(ctx, hostname, machineID)
+
+	return removed, opspan.End(span, err)
 }

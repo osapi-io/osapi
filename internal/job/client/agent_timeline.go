@@ -29,6 +29,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/telemetry/opspan"
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/osapi-io/osapi/internal/job"
 )
 
@@ -76,7 +79,7 @@ func (c *Client) WriteAgentTimelineEvent(
 }
 
 // GetAgentTimeline returns sorted timeline events for a hostname.
-func (c *Client) GetAgentTimeline(
+func (c *Client) agentTimeline(
 	ctx context.Context,
 	hostname string,
 ) ([]job.TimelineEvent, error) {
@@ -141,4 +144,18 @@ func ComputeAgentState(
 	default:
 		return job.AgentStateReady
 	}
+}
+
+// GetAgentTimeline returns the timeline of an agent, in an agent.timeline
+// span.
+func (c *Client) GetAgentTimeline(
+	ctx context.Context,
+	hostname string,
+) ([]job.TimelineEvent, error) {
+	ctx, span := opspan.Start(ctx, tracerName, "agent.timeline",
+		attribute.String("osapi.agent.hostname", hostname),
+	)
+	events, err := c.agentTimeline(ctx, hostname)
+
+	return events, opspan.End(span, err)
 }

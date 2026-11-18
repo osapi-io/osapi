@@ -227,6 +227,30 @@ func (s *TracePublicTestSuite) TestJobReadDetail() {
 			want:  "1 job",
 		},
 		{
+			name:  "when agent.list counts the agents it says so",
+			span:  "agent.list",
+			attrs: map[string]string{"osapi.agent.count": "3"},
+			want:  "3 agents",
+		},
+		{
+			name:  "when audit.list counts one entry the noun agrees",
+			span:  "audit.list",
+			attrs: map[string]string{"osapi.audit.count": "1"},
+			want:  "1 entry",
+		},
+		{
+			name:  "when enrollment.accept has only a fingerprint it shows it",
+			span:  "enrollment.accept",
+			attrs: map[string]string{"osapi.agent.fingerprint": "SHA256:ab"},
+			want:  "SHA256:ab",
+		},
+		{
+			name:  "when job.process has a job ID it does not show it",
+			span:  "job.process",
+			attrs: map[string]string{"job.id": "0162195c"},
+			want:  "",
+		},
+		{
 			name:  "when job.get has a job ID it shows it",
 			span:  "job.get",
 			attrs: map[string]string{"job.id": "0162195c"},

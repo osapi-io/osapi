@@ -27,6 +27,9 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/telemetry/opspan"
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/nats-io/nats.go/jetstream"
 )
 
@@ -90,7 +93,7 @@ func (s *StreamStore) Write(
 }
 
 // Get retrieves a single audit entry by ID.
-func (s *StreamStore) Get(
+func (s *StreamStore) get(
 	ctx context.Context,
 	id string,
 ) (*Entry, error) {
@@ -111,7 +114,7 @@ func (s *StreamStore) Get(
 
 // List retrieves audit entries with pagination, newest-first.
 // Returns the entries, total count, and any error.
-func (s *StreamStore) List(
+func (s *StreamStore) list(
 	ctx context.Context,
 	limit int,
 	offset int,
@@ -158,7 +161,7 @@ func (s *StreamStore) List(
 }
 
 // ListAll retrieves all audit entries without pagination, newest-first.
-func (s *StreamStore) ListAll(
+func (s *StreamStore) listAll(
 	ctx context.Context,
 ) ([]Entry, error) {
 	info, err := s.nc.StreamInfo(ctx, s.stream)
@@ -221,3 +224,48 @@ func (s *StreamStore) read(
 
 	return entries, nil
 }
+
+// Get returns one audit entry, in an audit.get span.
+func (s *StreamStore) Get(
+	ctx context.Context,
+	id string,
+) (*Entry, error) {
+	ctx, span := opspan.Start(ctx, tracerName, "audit.get",
+		attribute.String("osapi.audit.id", id),
+	)
+	entry, err := s.get(ctx, id)
+
+	return entry, opspan.End(span, err)
+}
+
+// List returns a page of audit entries and the total, in an audit.list
+// span.
+func (s *StreamStore) List(
+	ctx context.Context,
+	limit int,
+	offset int,
+) ([]Entry, int, error) {
+	ctx, span := opspan.Start(ctx, tracerName, "audit.list")
+	entries, total, err := s.list(ctx, limit, offset)
+	if err == nil {
+		span.SetAttributes(attribute.Int("osapi.audit.count", len(entries)))
+	}
+
+	return entries, total, opspan.End(span, err)
+}
+
+// ListAll returns every audit entry, for an export, in an audit.export span.
+func (s *StreamStore) ListAll(
+	ctx context.Context,
+) ([]Entry, error) {
+	ctx, span := opspan.Start(ctx, tracerName, "audit.export")
+	entries, err := s.listAll(ctx)
+	if err == nil {
+		span.SetAttributes(attribute.Int("osapi.audit.count", len(entries)))
+	}
+
+	return entries, opspan.End(span, err)
+}
+
+// tracerName names the spans of the audit store in a trace.
+const tracerName = "osapi-audit"

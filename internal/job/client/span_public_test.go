@@ -222,6 +222,30 @@ func (s *SpanPublicTestSuite) TestReads() {
 			},
 		},
 		{
+			name: "when the agents are listed records how many there are",
+			span: "agent.list",
+			call: func(c *client.Client, ctx context.Context) error {
+				_, err := c.ListAgents(ctx)
+				return err
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Contains(attrMap(span), "osapi.agent.count=0")
+				s.Equal(codes.Unset, span.Status().Code)
+			},
+		},
+		{
+			name: "when an agent is not found marks agent.get as an error",
+			span: "agent.get",
+			call: func(c *client.Client, ctx context.Context) error {
+				_, err := c.GetAgent(ctx, "web-01")
+				return err
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Contains(attrMap(span), "osapi.target=web-01")
+				s.Equal(codes.Error, span.Status().Code)
+			},
+		},
+		{
 			name: "when the queue is counted opens job.summary",
 			span: "job.summary",
 			call: func(c *client.Client, ctx context.Context) error {
@@ -261,6 +285,8 @@ func (s *SpanPublicTestSuite) TestReads() {
 		s.Run(tc.name, func() {
 			jobs, err := client.New(slog.Default(), s.nats, &client.Options{
 				Timeout: time.Second, JobsBucket: "jobs", StreamName: "JOBS",
+				// One bucket for the jobs and the registry, so one mock serves both.
+				RegistryBucket: "jobs",
 			})
 			s.Require().NoError(err)
 
@@ -292,7 +318,7 @@ func (s *SpanPublicTestSuite) TestReads() {
 			s.Equal(request.SpanContext().SpanID(), span.Parent().SpanID())
 			s.Require().NotEmpty(calls)
 			for _, c := range calls {
-				s.Equal(span.SpanContext().SpanID(), c.SpanID(),
+				s.True(s.under(c.SpanID(), span.SpanContext().SpanID()),
 					"the NATS calls run inside the read's span")
 			}
 			tc.validate(span)
@@ -318,6 +344,25 @@ func (s *SpanPublicTestSuite) TestEndCollectSpan() {
 		s.Require().Len(got.Events(), 1)
 		s.Equal("job.timeout", got.Events()[0].Name)
 	})
+}
+
+// under reports whether the span id is top or under it, such as a call
+// inside agent.list inside agent.get, from the parents of the ended spans.
+func (s *SpanPublicTestSuite) under(
+	id trace.SpanID,
+	top trace.SpanID,
+) bool {
+	parent := map[trace.SpanID]trace.SpanID{}
+	for _, sp := range s.recorder.Ended() {
+		parent[sp.SpanContext().SpanID()] = sp.Parent().SpanID()
+	}
+	for ; id.IsValid(); id = parent[id] {
+		if id == top {
+			return true
+		}
+	}
+
+	return false
 }
 
 // attrMap is the attributes of span as key=value strings.

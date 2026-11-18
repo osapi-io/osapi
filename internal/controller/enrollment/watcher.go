@@ -29,6 +29,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/telemetry/opspan"
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/nats-io/nats.go"
 
 	"github.com/osapi-io/osapi/internal/pki"
@@ -209,7 +212,7 @@ func (w *Watcher) handleEnrollmentRequest(
 }
 
 // ListPending returns all pending agents from the enrollment KV bucket.
-func (w *Watcher) ListPending(
+func (w *Watcher) listPending(
 	ctx context.Context,
 ) ([]PendingAgent, error) {
 	keys, err := w.enrollmentKV.KVKeys(ctx, w.enrollmentBucket)
@@ -264,3 +267,20 @@ func enrollSubject(
 
 	return namespace + "." + suffix
 }
+
+// ListPending returns the agents waiting for enrollment, in an
+// enrollment.list span.
+func (w *Watcher) ListPending(
+	ctx context.Context,
+) ([]PendingAgent, error) {
+	ctx, span := opspan.Start(ctx, tracerName, "enrollment.list")
+	pending, err := w.listPending(ctx)
+	if err == nil {
+		span.SetAttributes(attribute.Int("osapi.agent.count", len(pending)))
+	}
+
+	return pending, opspan.End(span, err)
+}
+
+// tracerName names the spans of enrollment in a trace.
+const tracerName = "osapi-enrollment"
