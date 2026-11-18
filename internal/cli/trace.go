@@ -37,6 +37,7 @@ var traceDetail = []string{
 	"nats.object.name",
 	"messaging.destination.name",
 	"db.namespace",
+	"job.id",
 	"http.response.status_code",
 }
 
@@ -167,6 +168,10 @@ func spanDetail(
 	}
 	if key := s.Attributes["nats.kv.key"]; key != "" {
 		return keyMeaning(key, s.Attributes["db.namespace"])
+	}
+	// job.list records how many jobs its page has.
+	if n, err := strconv.Atoi(s.Attributes["job.count"]); err == nil {
+		return Plural(n, "job", "jobs")
 	}
 	if s.Name == "kv.keys" {
 		return "list keys in " + s.Attributes["db.namespace"]

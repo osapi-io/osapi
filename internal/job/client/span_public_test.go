@@ -22,6 +22,7 @@ package client_test
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"testing"
 	"time"
@@ -166,6 +167,135 @@ func (s *SpanPublicTestSuite) TestQuery() {
 			tc.validate(spans, request.SpanContext(), sent)
 			s.Equal(spans["job.collect"].SpanContext().SpanID(), watched.SpanID(),
 				"the watch for the answers is part of job.collect")
+		})
+	}
+}
+
+// TestReads checks that each job client call on the job bucket has its own
+// span under the request, that its NATS calls are its children, and that a
+// failed call marks its span as an error.
+func (s *SpanPublicTestSuite) TestReads() {
+	errKV := errors.New("kv down")
+
+	tests := []struct {
+		name     string
+		span     string
+		keysErr  error
+		call     func(c *client.Client, ctx context.Context) error
+		validate func(span sdktrace.ReadOnlySpan)
+	}{
+		{
+			name: "when the list reads its page records how many jobs it has",
+			span: "job.list",
+			call: func(c *client.Client, ctx context.Context) error {
+				_, err := c.ListJobs(ctx, "failed", 10, 0)
+				return err
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Contains(attrMap(span), "job.count=0")
+				s.Contains(attrMap(span), "job.status_filter=failed")
+				s.Equal(codes.Unset, span.Status().Code)
+			},
+		},
+		{
+			name:    "when the list fails marks job.list as an error",
+			span:    "job.list",
+			keysErr: errKV,
+			call: func(c *client.Client, ctx context.Context) error {
+				_, err := c.ListJobs(ctx, "", 10, 0)
+				return err
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Equal(codes.Error, span.Status().Code)
+			},
+		},
+		{
+			name: "when a job is not found marks job.get as an error",
+			span: "job.get",
+			call: func(c *client.Client, ctx context.Context) error {
+				_, err := c.GetJobStatus(ctx, "j1")
+				return err
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Contains(attrMap(span), "job.id=j1")
+				s.Equal(codes.Error, span.Status().Code)
+			},
+		},
+		{
+			name: "when the queue is counted opens job.summary",
+			span: "job.summary",
+			call: func(c *client.Client, ctx context.Context) error {
+				_, err := c.GetQueueSummary(ctx)
+				return err
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Equal(codes.Unset, span.Status().Code)
+			},
+		},
+		{
+			name: "when a retry finds no job marks job.retry as an error",
+			span: "job.retry",
+			call: func(c *client.Client, ctx context.Context) error {
+				_, err := c.RetryJob(ctx, "j1", "")
+				return err
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Contains(attrMap(span), "job.id=j1")
+				s.Equal(codes.Error, span.Status().Code)
+			},
+		},
+		{
+			name: "when a delete finds no job marks job.delete as an error",
+			span: "job.delete",
+			call: func(c *client.Client, ctx context.Context) error {
+				return c.DeleteJob(ctx, "j1")
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Contains(attrMap(span), "job.id=j1")
+				s.Equal(codes.Error, span.Status().Code)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			jobs, err := client.New(slog.Default(), s.nats, &client.Options{
+				Timeout: time.Second, JobsBucket: "jobs", StreamName: "JOBS",
+			})
+			s.Require().NoError(err)
+
+			var calls []trace.SpanContext
+			s.nats.EXPECT().KVKeys(gomock.Any(), "jobs", gomock.Any()).
+				DoAndReturn(func(ctx context.Context, _ string, _ ...string) ([]string, error) {
+					calls = append(calls, trace.SpanContextFromContext(ctx))
+					return []string{}, tc.keysErr
+				}).AnyTimes()
+			s.nats.EXPECT().KVGet(gomock.Any(), "jobs", gomock.Any()).
+				DoAndReturn(func(ctx context.Context, _, _ string) (jetstream.KeyValueEntry, error) {
+					calls = append(calls, trace.SpanContextFromContext(ctx))
+					return nil, errKV
+				}).
+				AnyTimes()
+
+			s.nats.EXPECT().StreamInfo(gomock.Any(), gomock.Any()).
+				DoAndReturn(func(ctx context.Context, _ string) (*jetstream.StreamInfo, error) {
+					calls = append(calls, trace.SpanContextFromContext(ctx))
+					return nil, errKV
+				}).AnyTimes()
+
+			ctx, request := otel.Tracer("test").Start(context.Background(), "GET /api/job")
+			_ = tc.call(jobs, ctx)
+			request.End()
+
+			span := s.spans()[tc.span]
+			s.Require().NotNil(span, tc.span)
+			s.Equal(request.SpanContext().SpanID(), span.Parent().SpanID())
+			s.Require().NotEmpty(calls)
+			for _, c := range calls {
+				s.Equal(span.SpanContext().SpanID(), c.SpanID(),
+					"the NATS calls run inside the read's span")
+			}
+			tc.validate(span)
 		})
 	}
 }

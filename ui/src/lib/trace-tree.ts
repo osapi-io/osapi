@@ -1,4 +1,5 @@
 import type { TraceSpan } from "@/sdk/gen/schemas";
+import { formatBytes } from "@/lib/format";
 
 // Mirrors internal/cli/trace.go, so the CLI and the UI show a trace the same
 // way.
@@ -10,6 +11,7 @@ const DETAIL = [
   "nats.object.name",
   "messaging.destination.name",
   "db.namespace",
+  "job.id",
   "http.response.status_code",
 ];
 
@@ -83,6 +85,10 @@ function spanDetail(s: TraceSpan): string {
   if (inputs) return inputs;
   if (a["nats.kv.key"])
     return keyMeaning(a["nats.kv.key"], a["db.namespace"] ?? "");
+  // job.list records how many jobs its page has.
+  const count = a["job.count"];
+  if (count !== undefined && count !== "")
+    return Number(count) === 1 ? "1 job" : `${count} jobs`;
   if (s.name === "kv.keys") return `list keys in ${a["db.namespace"] ?? ""}`;
   // The request span has the size too, from otelecho; it shows its status.
   const size = a["http.response.body.size"];
@@ -92,15 +98,6 @@ function spanDetail(s: TraceSpan): string {
   if (a["job.type"] && a["osapi.target"])
     return `${a["job.type"]} to ${a["osapi.target"]}`;
   return DETAIL.map((k) => a[k]).find((v) => v) ?? "";
-}
-
-// formatBytes is a size as the CLI prints it: 512 B, 4.0 KB, 1.2 MB.
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024)
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
 
 // traceRows returns the spans as a tree: each child under its parent, in

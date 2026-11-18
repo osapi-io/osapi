@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/osapi-io/osapi/internal/job"
 )
@@ -168,7 +169,7 @@ func (c *Client) CreateJob(
 
 // GetQueueSummary returns job queue statistics derived from KV key names
 // only — no entry reads.
-func (c *Client) GetQueueSummary(
+func (c *Client) queueSummary(
 	ctx context.Context,
 ) (*job.QueueStats, error) {
 	keys, err := c.natsClient.KVKeys(ctx, c.jobsBucket)
@@ -208,7 +209,7 @@ func (c *Client) GetQueueSummary(
 }
 
 // GetJobStatus returns information about a specific job.
-func (c *Client) GetJobStatus(
+func (c *Client) jobStatus(
 	ctx context.Context,
 	jobID string,
 ) (*job.QueuedJob, error) {
@@ -294,7 +295,7 @@ func (c *Client) GetJobStatus(
 // Uses a two-pass approach: Pass 1 derives status from key names only (fast),
 // Pass 2 fetches full details for the paginated page only.
 // Jobs are returned newest-first (reverse insertion order).
-func (c *Client) ListJobs(
+func (c *Client) listJobs(
 	ctx context.Context,
 	statusFilter string,
 	limit int,
@@ -680,7 +681,7 @@ func (c *Client) computeStatusFromEvents(
 // RetryJob creates a new job using the same operation data as an existing job.
 // The original job is preserved. A "retried" status event is written to the
 // original job's timeline linking to the new job.
-func (c *Client) RetryJob(
+func (c *Client) retryJob(
 	ctx context.Context,
 	jobID string,
 	targetHostname string,
@@ -747,7 +748,7 @@ func (c *Client) RetryJob(
 }
 
 // DeleteJob deletes a job from the KV store by its ID.
-func (c *Client) DeleteJob(
+func (c *Client) deleteJob(
 	ctx context.Context,
 	jobID string,
 ) error {
@@ -954,4 +955,66 @@ func (c *Client) jobRecord(
 	}
 
 	return jobData, nil
+}
+
+// GetQueueSummary returns the counts of the queue, in a job.summary span.
+func (c *Client) GetQueueSummary(
+	ctx context.Context,
+) (*job.QueueStats, error) {
+	ctx, span := startReadSpan(ctx, "job.summary")
+	stats, err := c.queueSummary(ctx)
+
+	return stats, endReadSpan(span, err)
+}
+
+// GetJobStatus returns one job and its computed status, in a job.get span.
+func (c *Client) GetJobStatus(
+	ctx context.Context,
+	jobID string,
+) (*job.QueuedJob, error) {
+	ctx, span := startReadSpan(ctx, "job.get", attribute.String("job.id", jobID))
+	qj, err := c.jobStatus(ctx, jobID)
+
+	return qj, endReadSpan(span, err)
+}
+
+// ListJobs returns a page of jobs, in a job.list span that records how many
+// jobs the page has.
+func (c *Client) ListJobs(
+	ctx context.Context,
+	statusFilter string,
+	limit int,
+	offset int,
+) (*ListJobsResult, error) {
+	ctx, span := startReadSpan(ctx, "job.list",
+		attribute.String("job.status_filter", statusFilter),
+	)
+	result, err := c.listJobs(ctx, statusFilter, limit, offset)
+	if err == nil {
+		span.SetAttributes(attribute.Int("job.count", len(result.Jobs)))
+	}
+
+	return result, endReadSpan(span, err)
+}
+
+// RetryJob creates a job with the operation of another, in a job.retry span.
+func (c *Client) RetryJob(
+	ctx context.Context,
+	jobID string,
+	targetHostname string,
+) (*CreateJobResult, error) {
+	ctx, span := startReadSpan(ctx, "job.retry", attribute.String("job.id", jobID))
+	result, err := c.retryJob(ctx, jobID, targetHostname)
+
+	return result, endReadSpan(span, err)
+}
+
+// DeleteJob deletes a job and its events, in a job.delete span.
+func (c *Client) DeleteJob(
+	ctx context.Context,
+	jobID string,
+) error {
+	ctx, span := startReadSpan(ctx, "job.delete", attribute.String("job.id", jobID))
+
+	return endReadSpan(span, c.deleteJob(ctx, jobID))
 }

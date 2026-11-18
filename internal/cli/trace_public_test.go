@@ -197,6 +197,50 @@ func (s *TracePublicTestSuite) TestJobPublishDetail() {
 	}
 }
 
+// TestJobReadDetail shows what a job client read acted on: the jobs a
+// job.list page has, and the job of a job.get.
+func (s *TracePublicTestSuite) TestJobReadDetail() {
+	detail := func(name string, attrs map[string]string) string {
+		rows := cli.TraceRows([]client.TraceSpan{{
+			ID: "r", Name: name, Start: time.Now(), Attributes: attrs,
+		}}, true)
+
+		return rows[0][4]
+	}
+
+	tests := []struct {
+		name  string
+		span  string
+		attrs map[string]string
+		want  string
+	}{
+		{
+			name:  "when job.list has two jobs it says so",
+			span:  "job.list",
+			attrs: map[string]string{"job.count": "2", "job.status_filter": ""},
+			want:  "2 jobs",
+		},
+		{
+			name:  "when job.list has one job the noun agrees",
+			span:  "job.list",
+			attrs: map[string]string{"job.count": "1"},
+			want:  "1 job",
+		},
+		{
+			name:  "when job.get has a job ID it shows it",
+			span:  "job.get",
+			attrs: map[string]string{"job.id": "0162195c"},
+			want:  "0162195c",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, detail(tc.span, tc.attrs))
+		})
+	}
+}
+
 func (s *TracePublicTestSuite) TestTraceRowsWithoutNATS() {
 	s.Equal([][]string{
 		{"POST /api/x", "", "1ms", "ok", "200"},
