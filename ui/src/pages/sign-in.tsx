@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
-import { FormField } from "@/components/ui/form-field";
+import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { InfoBox } from "@/components/ui/info-box";
 import { useAuth } from "@/hooks/use-auth";
@@ -73,23 +73,19 @@ export function SignIn() {
         <Card>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <FormField id="token" label="Bearer Token">
-                <div className="relative">
-                  <Key className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-                  <input
-                    id="token"
-                    type="password"
-                    value={value}
-                    onChange={(e) => {
-                      setValue(e.target.value);
-                      setError(null);
-                    }}
-                    placeholder="eyJhbGciOiJIUzI1NiIs..."
-                    autoFocus
-                    className="h-10 w-full rounded-md border border-border bg-background pl-10 pr-3 text-sm text-text outline-none placeholder:text-text-muted/50 focus:border-primary/40 focus:ring-1 focus:ring-primary/20"
-                  />
-                </div>
-              </FormField>
+              <Input
+                id="token"
+                label="Bearer Token"
+                icon={Key}
+                type="password"
+                value={value}
+                onChange={(e) => {
+                  setValue(e.target.value);
+                  setError(null);
+                }}
+                placeholder="eyJhbGciOiJIUzI1NiIs..."
+                autoFocus
+              />
 
               {error && <ErrorBanner message={error} size="sm" />}
 

@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Input } from "@/components/ui/input";
-import { Text } from "@/components/ui/text";
+import { Input, Textarea } from "@/components/ui/input";
 import type { BlockStatus } from "@/hooks/use-stack";
 
 interface UserSSHKeyBlockProps {
@@ -40,19 +39,14 @@ export function UserSSHKeyBlock({
         value={name}
         onChange={(e) => update("name", e.target.value)}
       />
-      <div className="space-y-1">
-        <Text variant="label" size="xs">
-          Public Key
-        </Text>
-        <textarea
-          id="ssh-key-key"
-          placeholder="ssh-ed25519 AAAA... user@host"
-          value={key}
-          onChange={(e) => update("key", e.target.value)}
-          rows={3}
-          className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-text placeholder:text-text-muted/40 focus:border-primary/40 focus:outline-none"
-        />
-      </div>
+      <Textarea
+        id="ssh-key-key"
+        label="Public Key"
+        placeholder="ssh-ed25519 AAAA... user@host"
+        value={key}
+        onChange={(e) => update("key", e.target.value)}
+        rows={3}
+      />
     </div>
   );
 }

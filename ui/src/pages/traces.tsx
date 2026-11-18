@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { getTrace } from "@/sdk/gen/telemetry-api-telemetry/telemetry-api-telemetry";
 import type { TraceResponse } from "@/sdk/gen/schemas";
 import { traceRows, natsCalls, type TraceRow } from "@/lib/trace-tree";
@@ -148,15 +149,12 @@ export function Traces() {
           <div className="flex items-center justify-between">
             <SectionLabel icon={GitBranch}>Spans ({rows.length})</SectionLabel>
             {nats.count > 0 && (
-              <label className="flex items-center gap-2 text-xs text-text-muted">
-                <input
-                  type="checkbox"
-                  checked={showNATS}
-                  onChange={(e) => setShowNATS(e.target.checked)}
-                />
-                Show {nats.count} NATS calls ({formatDurationMs(nats.ms)}), the
-                bookkeeping of the job queue
-              </label>
+              <Checkbox
+                id="show-nats"
+                checked={showNATS}
+                onChange={(e) => setShowNATS(e.target.checked)}
+                label={`Show ${nats.count} NATS calls (${formatDurationMs(nats.ms)}), the bookkeeping of the job queue`}
+              />
             )}
           </div>
           <DataTable
