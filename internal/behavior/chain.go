@@ -28,8 +28,6 @@ import (
 	"runtime"
 	"slices"
 	"strings"
-
-	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // Requires declares the behaviors this one is built on. The agent builds
@@ -182,10 +180,8 @@ func Call[P any, In any, Out any](
 
 	var out Out
 	_, err := m.run(ctx, func(ctx context.Context) (any, any, error) {
-		if reflect.ValueOf(in).Kind() == reflect.Struct {
-			if msg, ok := validation.Struct(in); !ok {
-				return nil, in, fmt.Errorf("%s %s: %s", b.Name, m.Name, msg)
-			}
+		if err := check(m, in); err != nil {
+			return nil, in, err
 		}
 		var err error
 		out, err = fn(ctx, p, in)

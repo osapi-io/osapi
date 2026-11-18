@@ -30,6 +30,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/validation"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 )
@@ -83,6 +85,9 @@ func Check(
 			for _, r := range m.Refusals {
 				where := fmt.Sprintf("%s %s on %s, refusal %q", b.Name, m.Name, pp.Name, r.Doc)
 				if p := checkRefusal(b, m, pp.Name, r); p != "" {
+					problems = append(problems, where+": "+p)
+				}
+				if p := checkRefusalChecked(m, r); p != "" {
 					problems = append(problems, where+": "+p)
 				}
 			}
@@ -324,4 +329,29 @@ func jsonOf(
 	data, _ := json.Marshal(v)
 
 	return string(data)
+}
+
+// checkRefusalChecked holds the method's input check to a refusal that
+// breaks a validate rule: Method.Check, which the agent and behavior.Call
+// run before the method, must refuse it. A served behavior's API tests
+// prove the API refuses it; this proves the same of an internal one.
+func checkRefusalChecked(
+	m *behavior.Method,
+	r behavior.Refusal,
+) string {
+	broken := validation.Breaks(r.Input)
+	if len(broken) == 0 {
+		return ""
+	}
+	// An input that JSON cannot encode has no schema, which behavior
+	// validate refuses first.
+	data, _ := json.Marshal(r.Input)
+	if m.Check(data) == nil {
+		return behavior.TestFailure(behavior.TestRefusal, fmt.Sprintf(
+			"the input breaks %s, and Method.Check passed it: the agent and behavior.Call would run it",
+			strings.Join(broken, ", "),
+		))
+	}
+
+	return ""
 }

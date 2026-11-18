@@ -100,6 +100,10 @@ value that breaks a rule, and the spec carries the rule and the whole tag.
 and the behavior DSL use the same rules; `spec` prints them under
 `validate:"..."`.
 
+The API, the agent and `behavior.Call` check these rules before each method
+runs, for an internal behavior too. Do not write the check in the provider's
+method; declare the rule.
+
 Give each rule of each input field a `.Fails` input that breaks it: the
 method's input, with the other fields valid and one value wrong, such as a name
 of 256 characters for `max=255`. The API refuses each one with 400, and a test

@@ -307,7 +307,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindTag,
 			Name: rule.TagName,
-			Does: rule.TagDoes,
+			Does: rule.TagDoes + " In a behavior, the agent and behavior.Call check the same rules before each method runs, so an internal behavior's rules hold too; the author writes no check.",
 			When: rule.TagWhen,
 		},
 		{
