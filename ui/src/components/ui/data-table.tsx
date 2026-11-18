@@ -1,6 +1,6 @@
 import { cn } from "@/lib/cn";
 import { Card, CardContent } from "@/components/ui/card";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 
 interface ColumnDef<T> {
   header: string;
@@ -16,6 +16,12 @@ interface DataTableProps<T> {
   compact?: boolean;
   /** What an empty table says, in one row; the CLI says "None.". */
   empty?: string;
+  /** Called when a row is clicked, such as to expand it. */
+  onRowClick?: (row: T) => void;
+  /** What shows in a full-width row under a row, when it is not undefined. */
+  expanded?: (row: T) => ReactNode | undefined;
+  /** The group of a row: a row of its own heads each group, in order. */
+  group?: (row: T) => string;
   className?: string;
 }
 
@@ -31,6 +37,9 @@ export function DataTable<T>({
   getRowKey,
   compact = true,
   empty = "None.",
+  onRowClick,
+  expanded,
+  group,
   className,
 }: DataTableProps<T>) {
   const hPad = compact ? "px-3" : "px-4";
@@ -70,26 +79,61 @@ export function DataTable<T>({
                 </td>
               </tr>
             )}
-            {rows.map((row, rowIdx) => (
-              <tr
-                key={getRowKey(row, rowIdx)}
-                className="border-b border-border/20 last:border-0"
-              >
-                {columns.map((col, colIdx) => (
-                  <td
-                    key={colIdx}
+            {rows.map((row, rowIdx) => {
+              const heading = group?.(row);
+              const startsGroup =
+                heading !== undefined &&
+                (rowIdx === 0 || group?.(rows[rowIdx - 1]) !== heading);
+              const detail = expanded?.(row);
+
+              return (
+                <Fragment key={getRowKey(row, rowIdx)}>
+                  {startsGroup && (
+                    <tr>
+                      <td
+                        colSpan={columns.length}
+                        className={cn(
+                          hPad,
+                          cVPad,
+                          "border-t border-border/30 font-semibold text-text-muted",
+                        )}
+                      >
+                        {heading}
+                      </td>
+                    </tr>
+                  )}
+                  <tr
                     className={cn(
-                      hPad,
-                      cVPad,
-                      alignClass[col.align ?? "left"],
-                      col.className,
+                      "border-b border-border/20 last:border-0",
+                      onRowClick &&
+                        "cursor-pointer transition-colors hover:bg-white/[0.02]",
                     )}
+                    onClick={onRowClick && (() => onRowClick(row))}
                   >
-                    {col.cell(row)}
-                  </td>
-                ))}
-              </tr>
-            ))}
+                    {columns.map((col, colIdx) => (
+                      <td
+                        key={colIdx}
+                        className={cn(
+                          hPad,
+                          cVPad,
+                          alignClass[col.align ?? "left"],
+                          col.className,
+                        )}
+                      >
+                        {col.cell(row)}
+                      </td>
+                    ))}
+                  </tr>
+                  {detail !== undefined && (
+                    <tr className="border-b border-border/20">
+                      <td colSpan={columns.length} className="px-6 py-3">
+                        {detail}
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })}
           </tbody>
         </table>
       </CardContent>

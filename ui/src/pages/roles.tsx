@@ -9,7 +9,6 @@ import { Text } from "@/components/ui/text";
 import { useAuth } from "@/hooks/use-auth";
 import { ROLES, ALL_PERMISSIONS, BLOCK_PERMISSIONS } from "@/lib/permissions";
 import { Shield, Check, X } from "lucide-react";
-import { cn } from "@/lib/cn";
 
 // Group permissions by resource
 function groupPermissions(perms: string[]) {
@@ -70,19 +69,6 @@ export function Roles() {
               cell: (r) => <Badge variant="muted">{r.label}</Badge>,
             },
             {
-              header: "JWT Value",
-              cell: (r) => (
-                <span
-                  className={cn(
-                    "font-mono text-text-muted",
-                    r.name === currentRole.name && "bg-primary/5",
-                  )}
-                >
-                  {r.jwtRole}
-                </span>
-              ),
-            },
-            {
               header: "Description",
               cell: (r) => <span className="text-text">{r.description}</span>,
             },
@@ -100,66 +86,35 @@ export function Roles() {
       {/* Permission matrix */}
       <div className="mb-6">
         <SectionLabel>Permission Matrix</SectionLabel>
-        <Card>
-          <CardContent className="p-0">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-border/40 text-left text-text-muted">
-                  <th className="px-4 py-2.5 font-medium">Permission</th>
-                  {ROLES.map((r) => (
-                    <th
-                      key={r.name}
-                      className="px-4 py-2.5 text-center font-medium"
-                    >
-                      {r.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(grouped).map(([resource, perms]) => (
-                  <>
-                    <tr key={`${resource}-header`}>
-                      <td
-                        colSpan={ROLES.length + 1}
-                        className="border-t border-border/30 bg-card px-4 py-1.5 font-semibold text-text-muted"
-                      >
-                        {resource}
-                      </td>
-                    </tr>
-                    {perms.map((perm) => (
-                      <tr
-                        key={perm}
-                        className="border-b border-border/10 last:border-0"
-                      >
-                        <td className="px-4 py-1.5 font-mono text-text">
-                          {perm}
-                        </td>
-                        {ROLES.map((r) => {
-                          const has = r.permissions.has(
-                            perm as (typeof ALL_PERMISSIONS)[number],
-                          );
-                          return (
-                            <td
-                              key={r.name}
-                              className="px-4 py-1.5 text-center"
-                            >
-                              {has ? (
-                                <Check className="mx-auto h-3.5 w-3.5 text-primary" />
-                              ) : (
-                                <X className="mx-auto h-3.5 w-3.5 text-text-muted/30" />
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+        <DataTable
+          compact={false}
+          rows={Object.entries(grouped).flatMap(([resource, perms]) =>
+            perms.map((perm) => ({ resource, perm })),
+          )}
+          getRowKey={(row) => row.perm}
+          group={(row) => row.resource}
+          columns={[
+            {
+              header: "Permission",
+              cell: (row) => (
+                <span className="font-mono text-text-muted">{row.perm}</span>
+              ),
+            },
+            // A role has a permission or not: yes or a blank, as osapi
+            // token roles prints it. A yes is not a status, so it is not
+            // green.
+            ...ROLES.map((r) => ({
+              header: r.label,
+              align: "center" as const,
+              cell: (row: { resource: string; perm: string }) =>
+                r.permissions.has(
+                  row.perm as (typeof ALL_PERMISSIONS)[number],
+                ) ? (
+                  <span className="text-text">yes</span>
+                ) : null,
+            })),
+          ]}
+        />
       </div>
 
       {/* Block permissions */}
