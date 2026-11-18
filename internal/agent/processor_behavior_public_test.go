@@ -43,7 +43,7 @@ type english struct{}
 func (english) Greet(name string) string { return "hello " + name }
 
 type greetIn struct {
-	Name string `json:"name"`
+	Name string `json:"name" validate:"omitempty,max=10"`
 }
 
 type greetOut struct {
@@ -162,6 +162,12 @@ func (s *ProcessorBehaviorPublicTestSuite) TestNewBehaviorProcessor() {
 			name:            "when the provider declines this host",
 			operation:       "declined.get",
 			wantUnsupported: true,
+		},
+		{
+			name:      "when the job's input breaks a rule, the method does not run",
+			operation: "greeting.get",
+			data:      `{"name":"a name over ten"}`,
+			wantErr:   "max",
 		},
 		{
 			name:      "when the method fails",

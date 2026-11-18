@@ -91,6 +91,17 @@ func setNote(
 	return n.set(ctx, in)
 }
 
+// hiddenIn has a rule on a field that JSON leaves out, so its refusal breaks
+// the rule as a Go value and not once it is sent.
+type hiddenIn struct {
+	Text   string `json:"text" validate:"omitempty,max=3"`
+	Secret string `json:"-"    validate:"omitempty,max=1"`
+}
+
+func readHidden(context.Context, note, hiddenIn) (noteOut, error) {
+	return noteOut{}, errors.New("refused")
+}
+
 func getNote(
 	ctx context.Context,
 	n note,
@@ -300,6 +311,8 @@ func (s *CheckPublicTestSuite) TestCheck() {
 					Fails("An unmanaged note", getIn{Strict: true}, "not managed"),
 				behavior.Write("set", setNote).
 					Fails("A refused note", noteIn{Mode: "fail"}, "refused"),
+				behavior.Read("hidden", readHidden).
+					Fails("A text over 3 characters", hiddenIn{Text: "abcd"}, "refused"),
 			},
 		},
 		{
@@ -316,6 +329,17 @@ func (s *CheckPublicTestSuite) TestCheck() {
 				"refusal \"Should fail\": succeeded with",
 				"refusal \"Wrong error\": failed with",
 				"refusal \"Bad setup\": no method takes int",
+			},
+		},
+		{
+			name:     "when a refusal breaks a rule that the agent's check does not see",
+			platform: onDebian(nil),
+			methods: []behavior.Option{
+				behavior.Read("hidden", readHidden).
+					Fails("A secret over 1 character", hiddenIn{Secret: "ab"}, "refused"),
+			},
+			want: []string{
+				"refusal \"A secret over 1 character\": the input breaks Secret:max, and Method.Check passed it",
 			},
 		},
 		{

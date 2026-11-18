@@ -187,6 +187,34 @@ func (s *TelemetryPublicTestSuite) TestCall() {
 		s.Equal(codes.Error, s.spans.Ended()[0].Status().Code)
 	})
 
+	s.Run("an input that breaks a validate rule is an error, and the method does not run", func() {
+		s.SetupTest()
+
+		_, err := behavior.Call(context.Background(), b, get, fakeProvider{}, getIn{})
+
+		s.ErrorContains(err, "method list")
+		s.ErrorContains(err, "required")
+		s.Equal(codes.Error, s.spans.Ended()[0].Status().Code, "the refusal is on the span")
+	})
+
+	s.Run(
+		"Check refuses an input that breaks a rule, or does not decode, and passes the rest",
+		func() {
+			m := b.Method("get")
+
+			s.ErrorContains(m.Check([]byte(`{"key":""}`)), "required")
+			s.ErrorContains(m.Check([]byte(`{`)), "decode input")
+			s.NoError(m.Check([]byte(`{"key":"k"}`)))
+			s.ErrorContains(m.Check(nil), "required", "no input is the zero input")
+
+			bare := behavior.Read("status", readBare)
+			s.NoError(
+				bare.Check([]byte(`"x"`)),
+				"an input that is not a struct has no tags to check",
+			)
+		},
+	)
+
 	s.Run("a function that is not a method of the behavior is an error", func() {
 		s.SetupTest()
 

@@ -27,6 +27,8 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // Placement says where a behavior's work happens.
@@ -264,9 +266,43 @@ func (m *Method) ProviderType() reflect.Type {
 	return m.provider
 }
 
+// Check decodes input as the method's input type and checks it against its
+// validate tags, as the API does before it queues a job. The agent calls it
+// before Invoke, so a job that did not come through the API, such as one
+// published to NATS by hand, is held to the same rules.
+func (m *Method) Check(
+	input []byte,
+) error {
+	in := reflect.New(m.In)
+	if len(input) > 0 {
+		if err := json.Unmarshal(input, in.Interface()); err != nil {
+			return fmt.Errorf("method %s: decode input: %w", m.Name, err)
+		}
+	}
+
+	return check(m, in.Elem().Interface())
+}
+
+// check holds in, the method's input, to its validate tags.
+func check(
+	m *Method,
+	in any,
+) error {
+	if reflect.ValueOf(in).Kind() != reflect.Struct {
+		return nil
+	}
+	if msg, ok := validation.Struct(in); !ok {
+		return fmt.Errorf("method %s: %s", m.Name, msg)
+	}
+
+	return nil
+}
+
 // Invoke decodes input as the method's input type and calls it with
 // provider, inside the span and metrics every behavior gets (see
-// telemetry.go). The agent calls this; nothing else should.
+// telemetry.go). The agent calls this after Check. Invoke itself does not
+// validate: behaviortest sends each .Fails input through it to the provider,
+// to prove the provider refuses it too.
 func (m *Method) Invoke(
 	ctx context.Context,
 	provider any,

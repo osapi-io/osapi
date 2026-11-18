@@ -264,7 +264,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindCall,
 			Name: "Call(ctx, other.Behavior, other.Method, p, in)",
-			Does: "Runs a method of a required behavior in its own span, so the trace shows it as a step.",
+			Does: "Runs a method of a required behavior in its own span, so the trace shows it as a step. It checks in against its validate tags first, as the API does for a served method: an input that breaks one is an error, and the method does not run.",
 			When: "Each time a provider uses a required behavior. A direct call fails the tests.",
 		},
 		{
@@ -307,7 +307,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindTag,
 			Name: rule.TagName,
-			Does: rule.TagDoes,
+			Does: rule.TagDoes + " In a behavior, the agent and behavior.Call check the same rules before each method runs, so an internal behavior's rules hold too; the author writes no check.",
 			When: rule.TagWhen,
 		},
 		{
