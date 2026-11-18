@@ -34,13 +34,19 @@ import (
 )
 
 // Start opens the span name, from the tracer of the package that tracer
-// names, with attrs.
+// names, with attrs. Outside a trace, such as a metrics refresh or a health
+// probe, it opens none and returns ctx with its no-op span, as nats-client
+// does for a call: each refresh would otherwise start a trace of its own.
 func Start(
 	ctx context.Context,
 	tracer string,
 	name string,
 	attrs ...attribute.KeyValue,
 ) (context.Context, trace.Span) {
+	if !trace.SpanContextFromContext(ctx).IsValid() {
+		return ctx, trace.SpanFromContext(ctx)
+	}
+
 	return otel.Tracer(tracer).Start(ctx, name, trace.WithAttributes(attrs...))
 }
 
