@@ -37,6 +37,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
@@ -398,8 +399,34 @@ func (s *CommandPublicTestSuite) TestRun() {
 			})
 
 			tc.validateFunc(tc.caller, out, gotErr)
+			// The fake answers with no traceresponse header, so the call
+			// has no trace for a renderer to print.
+			s.Empty(command.TraceID())
 		})
 	}
+}
+
+// TestAttachUnderPrefix puts a group under the commands of its prefix, made
+// when the parent has none and found when it has, with its notes.
+func (s *CommandPublicTestSuite) TestAttachUnderPrefix() {
+	g := endpoint.Define("zzbehavior", "A behavior",
+		endpoint.Prefix("zznext/zznode/{hostname}"),
+		endpoint.CommandNotes("See its page."),
+		endpoint.Get[getInput, thing]("get"))
+	get := &cobra.Command{Use: "get"}
+	command.Register(g, get)
+
+	parent := &cobra.Command{Use: "client"}
+	node := &cobra.Command{Use: "zznext"}
+	parent.AddCommand(node)
+	s.Require().NoError(command.Attach(parent, command.Deps{}))
+
+	found, _, err := parent.Find([]string{"zznext", "zznode", "zzbehavior", "get"})
+	s.Require().NoError(err)
+	s.Same(get, found)
+	s.Equal("Zznode commands", found.Parent().Parent().Short, "a missing segment is made")
+	s.Same(node, found.Parent().Parent().Parent(), "a segment the parent has is used")
+	s.Equal("See its page.", found.Parent().Annotations[reference.Notes])
 }
 
 func (s *CommandPublicTestSuite) TestAttach() {

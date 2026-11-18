@@ -19,7 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Package commandtest runs a behavior's generated commands for the
-// gen/cli_public_test.go each one gets, with the SDK call mocked.
+// gen/cli_public_test.go each one gets, with the SDK call faked.
 package commandtest
 
 import (
@@ -30,10 +30,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
 
-	"github.com/osapi-io/osapi/internal/behavior/command"
-	"github.com/osapi-io/osapi/internal/behavior/command/mocks"
+	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -44,31 +42,35 @@ type Request struct {
 	Body   string
 }
 
-// Sent runs the command line args under osapi client node, such as
-// sysctl update --target server1 --key vm.swappiness, and returns the request
-// the command sent to the API.
+// caller records the request a command sends, and fails it, so the command
+// reports the error and prints nothing.
+type caller struct {
+	sent *Request
+}
+
+func (c caller) Send(
+	_ context.Context,
+	method string,
+	path string,
+	_ string,
+	body []byte,
+) (*client.Response[json.RawMessage], error) {
+	*c.sent = Request{Method: method, Path: path, Body: string(body)}
+
+	return nil, errors.New("not sent")
+}
+
+// Sent runs the command line args under osapi client, such as next node
+// sysctl update --target server1 --key vm.swappiness, through the endpoint
+// command runtime, and returns the request the command sent to the API.
 func Sent(
 	t *testing.T,
 	args []string,
 ) Request {
 	var sent Request
-	caller := mocks.NewMockCaller(gomock.NewController(t))
-	caller.EXPECT().Request(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(
-			_ context.Context,
-			method string,
-			path string,
-			body []byte,
-		) (*client.Response[json.RawMessage], error) {
-			sent = Request{Method: method, Path: path, Body: string(body)}
-
-			return nil, errors.New("not sent")
-		})
-
-	root := &cobra.Command{Use: "next"}
-	root.PersistentFlags().String("target", "", "")
-	require.NoError(t, command.Attach(root, root, command.Deps{
-		Caller: func() command.Caller { return caller },
+	root := &cobra.Command{Use: "client"}
+	require.NoError(t, command.Attach(root, command.Deps{
+		Caller: func() command.Caller { return caller{sent: &sent} },
 		// The call fails, so the command reports the error and never asks
 		// whether to print JSON.
 		JSON:  testing.Short,

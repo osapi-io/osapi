@@ -36,11 +36,11 @@ import (
 
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
-	"github.com/osapi-io/osapi/internal/behavior/command"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all/gen"
 	"github.com/osapi-io/osapi/internal/behaviors/sysctl"
+	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
@@ -108,7 +108,7 @@ func (s *AllPublicTestSuite) TestEveryCommandIsAttached() {
 	nextNode := &cobra.Command{Use: "node"}
 	root.AddCommand(node, next)
 	next.AddCommand(nextNode)
-	s.Require().NoError(command.Attach(node, nextNode, command.Deps{}))
+	s.Require().NoError(endpointcommand.Attach(root, endpointcommand.Deps{}))
 
 	for _, b := range behavior.All() {
 		if !b.CLI {

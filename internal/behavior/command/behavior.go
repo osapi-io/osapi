@@ -25,6 +25,7 @@
 package command
 
 import (
+	"encoding/json"
 	"fmt"
 	"maps"
 	"reflect"
@@ -288,4 +289,30 @@ func hasRule(
 	}
 
 	return false
+}
+
+// Print writes the answer of method of b, out, the method's response type:
+// the job ID, the trace ID of the call, and the table every behavior
+// renders. The endpoint command runtime calls it, as the renderer of each
+// behavior method.
+func Print(
+	b *behavior.Behavior,
+	method string,
+	out any,
+	traceID string,
+) {
+	var r Result
+	data, _ := json.Marshal(out)
+	_ = json.Unmarshal(data, &r)
+
+	cli.PrintJobID(r.JobID)
+	cli.PrintTraceID(traceID)
+	cli.PrintCompactTable([]cli.Section{Table(b.Method(method), r)})
+}
+
+// Result is what every behavior method answers: the job and one row per
+// host, or per element when the method returns a list.
+type Result struct {
+	JobID   string           `json:"job_id"`
+	Results []map[string]any `json:"results"`
 }

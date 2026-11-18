@@ -1,0 +1,355 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+// Command group writes what the endpoint layer makes from each behavior's
+// endpoint group: its spec, routes, decoders and commands. For each behavior
+// with an API, from its gen/group.go, which internal/behavior/gen writes: each
+// behavior's gen/api.yaml, or gen/api.next.yaml for a behavior still under
+// /api/next, and the document of every /api/next behavior. It runs after
+// internal/behavior/gen, once the groups compile.
+package main
+
+import (
+	"bytes"
+	"flag"
+	"fmt"
+	"os"
+	"path/filepath"
+	"reflect"
+	"strconv"
+	"strings"
+
+	"github.com/dave/jennifer/jen"
+	"github.com/getkin/kin-openapi/openapi3"
+	"golang.org/x/tools/imports"
+	"gopkg.in/yaml.v3"
+
+	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/command"
+	_ "github.com/osapi-io/osapi/internal/behaviors/all"
+	_ "github.com/osapi-io/osapi/internal/behaviors/all/gen"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/commandgen"
+	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/genutil"
+	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/routegen"
+)
+
+// componentsSpec is the spec that each API document shares ErrorResponse
+// from.
+const componentsSpec = "internal/controller/api/components/gen/api.yaml"
+
+const module = "github.com/osapi-io/osapi"
+
+const commandtestPath = module + "/internal/behavior/command/commandtest"
+
+func main() {
+	root := flag.String("root", ".", "the root of the repository")
+	flag.Parse()
+	if err := run(*root); err != nil {
+		fmt.Fprintln(os.Stderr, "behavior spec:", err)
+		os.Exit(1)
+	}
+}
+
+func run(
+	root string,
+) error {
+	var next []*endpoint.Group
+	for _, b := range behavior.All() {
+		if !b.API {
+			continue
+		}
+		g := behavior.GroupOf(b)
+		if g == nil {
+			return fmt.Errorf("%s has no endpoint group: run internal/behavior/gen first", b.Name)
+		}
+		dir := filepath.Join(strings.TrimPrefix(b.Methods[0].In.PkgPath(), module+"/"), "gen")
+		name := "api.yaml"
+		if b.Next {
+			name = "api.next.yaml"
+			next = append(next, g)
+		}
+		if err := write(root, filepath.Join(dir, name), []*endpoint.Group{g}); err != nil {
+			return fmt.Errorf("%s: %w", b.Name, err)
+		}
+		if err := routes(root, dir, g); err != nil {
+			return fmt.Errorf("%s: %w", b.Name, err)
+		}
+		if b.CLI {
+			if err := commands(root, dir, b, g); err != nil {
+				return fmt.Errorf("%s: %w", b.Name, err)
+			}
+		}
+	}
+
+	if len(next) == 0 {
+		err := os.Remove(filepath.Join(root, behavior.NextSpecPath))
+		if os.IsNotExist(err) {
+			return nil
+		}
+
+		return err
+	}
+
+	return write(root, behavior.NextSpecPath, next)
+}
+
+// write writes the spec of gs at path, with ErrorResponse pointing at the
+// shared components from path's directory.
+func write(
+	root string,
+	path string,
+	gs []*endpoint.Group,
+) error {
+	rel, err := filepath.Rel(filepath.Dir(path), componentsSpec)
+	if err != nil {
+		return err
+	}
+	ref := filepath.ToSlash(rel) + "#/components/schemas/ErrorResponse"
+
+	var doc *openapi3.T
+	for _, g := range gs {
+		d, err := endpoint.OpenAPI(g, ref)
+		if err != nil {
+			return err
+		}
+		if doc == nil {
+			doc = d
+
+			continue
+		}
+		for p, item := range d.Paths.Map() {
+			doc.Paths.Set(p, item)
+		}
+		doc.Tags = append(doc.Tags, d.Tags...)
+		for n, s := range d.Components.Schemas {
+			doc.Components.Schemas[n] = s
+		}
+		for n, p := range d.Components.Parameters {
+			if doc.Components.Parameters == nil {
+				doc.Components.Parameters = openapi3.ParametersMap{}
+			}
+			doc.Components.Parameters[n] = p
+		}
+	}
+	// The join puts the title in front of each tag, and the UI's client
+	// files take their names from the result, so the titles stay as the
+	// behavior generator wrote them.
+	doc.Info.Title = "OSAPI behaviors"
+	doc.Info.Description = "Behaviors served under " + behavior.NextRoutePrefix +
+		" beside the hand-written domains they replace."
+	if len(gs) == 1 {
+		doc.Info.Title = strings.ToUpper(gs[0].Name[:1]) + gs[0].Name[1:] + " API"
+		doc.Info.Description = gs[0].Doc + "."
+	}
+
+	y, err := doc.MarshalYAML()
+	if err != nil {
+		return err
+	}
+	var buf bytes.Buffer
+	buf.WriteString("# Code generated by internal/behavior/gen/group. DO NOT EDIT.\n---\n")
+	enc := yaml.NewEncoder(&buf)
+	enc.SetIndent(2)
+	if err := enc.Encode(y); err != nil {
+		return err
+	}
+
+	full := filepath.Join(root, path)
+	if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
+		return err
+	}
+
+	return os.WriteFile(full, buf.Bytes(), 0o644)
+}
+
+// routes writes the group's route table, gen/api.go, and its decoders,
+// gen/decode.go, with the endpoint layer's route writer, so a behavior is
+// served by the same code as an endpoint.
+func routes(
+	root string,
+	dir string,
+	g *endpoint.Group,
+) error {
+	pkg := module + "/" + filepath.ToSlash(dir)
+	for name, write := range map[string]func(f *jen.File){
+		"api.go":    func(f *jen.File) { routegen.Routes(f, g, pkg) },
+		"decode.go": func(f *jen.File) { routegen.Decoders(f, g) },
+	} {
+		f := newFile(pkg, "gen")
+		write(f)
+		if err := goFile(root, filepath.Join(dir, name), f); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// commands writes the group's commands, gen/cli.go, with the endpoint
+// layer's command writer, and gen/cli_public_test.go: each example's command
+// line, run through them, sends the request that the endpoint command
+// runtime builds from the example's input.
+func commands(
+	root string,
+	dir string,
+	b *behavior.Behavior,
+	g *endpoint.Group,
+) error {
+	pkg := module + "/" + filepath.ToSlash(dir)
+	cli := newFile(pkg, "gen")
+	commandgen.Commands(cli, g, pkg)
+	if err := goFile(root, filepath.Join(dir, "cli.go"), cli); err != nil {
+		return err
+	}
+
+	var rows []jen.Code
+	for _, bm := range b.Methods {
+		m := g.Method(bm.Name)
+		for _, ex := range bm.Examples {
+			path, body, _, err := endpointcommand.Build(g, m, requestOf(m.In, "server1", ex.Input))
+			if err != nil {
+				return fmt.Errorf("%s example %q: %w", bm.Name, ex.Doc, err)
+			}
+			args := append(
+				append([]string{}, g.CommandPath()...),
+				m.CommandName(),
+				"--target",
+				"server1",
+			)
+			args = append(args, command.Args(ex.Input)...)
+			lits := make([]jen.Code, 0, len(args))
+			for _, a := range args {
+				lits = append(lits, jen.Lit(a))
+			}
+			rows = append(rows, genutil.Multi("{", "}",
+				jen.Id("name").Op(":").Lit("when the example "+strconv.Quote(ex.Doc)+" is run"),
+				jen.Id("args").Op(":").Index().String().Values(lits...),
+				jen.Id("want").Op(":").Qual(commandtestPath, "Request").Add(genutil.Multi("{", "}",
+					jen.Id("Method").Op(":").Lit(m.Verb),
+					jen.Id("Path").Op(":").Lit(path),
+					jen.Id("Body").Op(":").Lit(string(body)),
+				)),
+			))
+		}
+	}
+
+	t := newFile(pkg+"_test", "gen_test")
+	t.Comment("CLIPublicTestSuite runs each example's command line through the generated commands.")
+	t.Type().Id("CLIPublicTestSuite").Struct(jen.Qual("github.com/stretchr/testify/suite", "Suite"))
+	t.Line()
+	t.Comment("TestCommands runs each example's command line and checks the request it sends.")
+	t.Func().Params(jen.Id("s").Op("*").Id("CLIPublicTestSuite")).Id("TestCommands").Params().Block(
+		jen.Id("tests").Op(":=").Index().Struct(
+			jen.Id("name").String(),
+			jen.Id("args").Index().String(),
+			jen.Id("want").Qual(commandtestPath, "Request"),
+		).Add(genutil.Multi("{", "}", rows...)),
+		jen.Line(),
+		jen.For(jen.List(jen.Id("_"), jen.Id("tc")).Op(":=").Range().Id("tests")).Block(
+			jen.Id("s").Dot("Run").Call(jen.Id("tc").Dot("name"), jen.Func().Params().Block(
+				jen.Id("s").Dot("Equal").Call(
+					jen.Id("tc").Dot("want"),
+					jen.Qual(commandtestPath, "Sent").
+						Call(jen.Id("s").Dot("T").Call(), jen.Id("tc").Dot("args")),
+				),
+			)),
+		),
+	)
+	t.Line()
+	t.Func().Id("TestCLIPublicTestSuite").Params(jen.Id("t").Op("*").Qual("testing", "T")).Block(
+		jen.Qual("github.com/stretchr/testify/suite", "Run").
+			Call(jen.Id("t"), jen.New(jen.Id("CLIPublicTestSuite"))),
+	)
+	t.Anon(pkg)
+
+	return goFile(root, filepath.Join(dir, "cli_public_test.go"), t)
+}
+
+// requestOf is the request of type t for target with input, a value of the
+// behavior method's input type: each field of the request, or of its body,
+// from the input field of the same name.
+func requestOf(
+	t reflect.Type,
+	target string,
+	input any,
+) any {
+	in := reflect.ValueOf(input)
+	req := reflect.New(t).Elem()
+	req.FieldByName("Hostname").SetString(target)
+	from := func(dst reflect.Value, dt reflect.Type) {
+		for i := range dt.NumField() {
+			if src := in.FieldByName(dt.Field(i).Name); src.IsValid() {
+				dst.Field(i).Set(src)
+			}
+		}
+	}
+	for i := range t.NumField() {
+		f := t.Field(i)
+		switch {
+		case f.Name == "Hostname":
+		case f.Tag.Get("in") == "body":
+			from(req.Field(i), f.Type)
+		default:
+			if src := in.FieldByName(f.Name); src.IsValid() {
+				req.Field(i).Set(src)
+			}
+		}
+	}
+
+	return req.Interface()
+}
+
+// newFile is a new generated file of the package at path.
+func newFile(
+	path string,
+	name string,
+) *jen.File {
+	f := jen.NewFilePathName(path, name)
+	f.HeaderComment("Code generated by internal/behavior/gen/group. DO NOT EDIT.")
+	f.ImportName("github.com/osapi-io/osapi/internal/controller/endpoint/server", "server")
+	f.ImportName("github.com/osapi-io/osapi/internal/controller/endpoint/command", "command")
+	f.ImportName("github.com/labstack/echo/v5", "echo")
+	f.ImportName("github.com/spf13/cobra", "cobra")
+
+	return f
+}
+
+// goFile renders f, groups its imports as the repository does, and writes it
+// at rel under root.
+func goFile(
+	root string,
+	rel string,
+	f *jen.File,
+) error {
+	var buf bytes.Buffer
+	if err := f.Render(&buf); err != nil {
+		return err
+	}
+	out, err := imports.Process(rel, buf.Bytes(), &imports.Options{
+		Comments: true, TabIndent: true, TabWidth: 8, FormatOnly: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(filepath.Join(root, rel), out, 0o644)
+}

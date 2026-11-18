@@ -135,7 +135,7 @@ func (w *writer) behavior(
 	gen string,
 ) error {
 	if b.API {
-		// The behavior's endpoint group, which internal/behavior/gen/spec
+		// The behavior's endpoint group, which internal/behavior/gen/group
 		// makes the behavior's spec from, once this file compiles.
 		g, err := groupFile(b)
 		if err != nil {
@@ -145,7 +145,7 @@ func (w *writer) behavior(
 			return err
 		}
 		// The routes and the decoders, gen/api.go and gen/decode.go, come
-		// from the group too: internal/behavior/gen/spec writes them with the
+		// from the group too: internal/behavior/gen/group writes them with the
 		// endpoint layer's route writer.
 		if err := w.goFile(filepath.Join(gen, "api_public_test.go"), apiTestFile(b)); err != nil {
 			return err
@@ -161,22 +161,9 @@ func (w *writer) behavior(
 		}
 	}
 
-	if b.CLI {
-		f, err := cliFile(b)
-		if err != nil {
-			return fmt.Errorf("commands: %w", err)
-		}
-		if err := w.goFile(filepath.Join(gen, "cli.go"), f); err != nil {
-			return err
-		}
-		t, err := cliTestFile(b)
-		if err != nil {
-			return fmt.Errorf("commands: %w", err)
-		}
-		if err := w.goFile(filepath.Join(gen, "cli_public_test.go"), t); err != nil {
-			return err
-		}
-	}
+	// The commands, gen/cli.go and its test, come from the group too:
+	// internal/behavior/gen/group writes them with the endpoint layer's
+	// command writer.
 
 	return nil
 }

@@ -92,9 +92,15 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: `CommandNotes("text")`,
+			Does: "Adds a Notes section to the page of the group's own command, such as a link to a page that tells more about the group.",
+			When: "When the group's command has a page of its own to point at, as each behavior's does.",
+		},
+		{
+			Kind: KindOption,
 			Name: `Prefix("next/node/{hostname}")`,
 			Does: "Puts each path of the group under a prefix, between /api/ and the group's name. Each {field} of the prefix is an in:\"path\" field of each method's input, which is not the method's key.",
-			When: "For the groups that the behavior generator writes, whose paths start with the target host. A group of the controller has none.",
+			When: "For the groups that the behavior generator writes, whose paths start with the target host. A group of the controller has none. The fixed segments are the command's path too: next node sysctl.",
 		},
 
 		{
@@ -178,8 +184,8 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
-			Name: `.Example("--flag value")`,
-			Does: "Adds an example of the CLI command: the flags after osapi client <group> <method>. The help and the CLI page show each one.",
+			Name: `.Example("--flag value", "doc")`,
+			Does: "Adds an example of the CLI command: the flags after osapi client <group> <method>, and, when given, what it shows, as a # line above it. The help and the CLI page show each one.",
 			When: "At least one for each method: the call a person makes most.",
 		},
 		{

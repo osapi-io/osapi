@@ -28,17 +28,19 @@ import (
 	"github.com/dave/jennifer/jen"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/command"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 const (
-	endpointPath = module + "/internal/controller/endpoint"
-	behaviorPkg  = module + "/internal/behavior"
-	dispatchPath = module + "/internal/behavior/dispatch"
+	endpointCommandPath = module + "/internal/controller/endpoint/command"
+	endpointPath        = module + "/internal/controller/endpoint"
+	behaviorPkg         = module + "/internal/behavior"
+	dispatchPath        = module + "/internal/behavior/dispatch"
 )
 
 // hostnameDoc is the description of the target of each behavior method.
-const hostnameDoc = "Target agent hostname, reserved routing value (_any, _all), " +
-	"or label selector (key:value)."
+const hostnameDoc = "Target: _all, _any, hostname, or label (group:web.dev)."
 
 // jobID is the example of a response's job_id.
 const jobID = "550e8400-e29b-41d4-a716-446655440000"
@@ -53,6 +55,7 @@ func groupFile(
 	f.ImportName(endpointPath, "endpoint")
 	f.ImportName(behaviorPkg, "behavior")
 	f.ImportName(dispatchPath, "dispatch")
+	f.ImportAlias(endpointCommandPath, "endpointcommand")
 
 	prefix, err := groupPrefix(b)
 	if err != nil {
@@ -131,6 +134,15 @@ func groupFile(
 		if m.Long != "" {
 			def = def.Op(".").Line().Id("Explain").Call(jen.Lit(m.Long))
 		}
+		// The CLI command's help: each example, with what it shows, and the
+		// tables of what it does on the host and what it refuses.
+		for _, ex := range m.Examples {
+			def = def.Op(".").Line().Id("Example").Call(
+				jen.Lit(command.ExampleFlags(ex.Input)), jen.Lit(ex.Doc))
+		}
+		if r := command.Annotations(b, m)[reference.Result]; r != "" {
+			def = def.Op(".").Line().Id("Result").Call(jen.Lit(r))
+		}
 		var errs []jen.Code
 		if m.KeyField != "" {
 			errs = append(errs, jen.Qual(endpointPath, "NotFound").Call(
@@ -155,13 +167,30 @@ func groupFile(
 		jen.Qual(endpointPath, "Tag").Call(
 			jen.Lit(b.Tag()),
 			jen.Lit(title(string(b.Placement))+"/"+title(b.Name)), jen.Lit(b.Doc)),
+		jen.Qual(endpointPath, "CommandNotes").Call(
+			jen.Lit(command.GroupAnnotations(b)[reference.Notes])),
 	}, methods...)
 
 	f.Comment("Group is " + b.Name + " as an endpoint group, which its spec comes from.")
 	f.Var().Id("Group").Op("=").Qual(endpointPath, "Define").Add(multi("(", ")", opts...))
 	f.Line()
-	f.Func().Id("init").Params().Block(
-		jen.Qual(behaviorPkg, "RegisterGroup").Call(jen.Lit(b.Name), jen.Id("Group")))
+	// Each method's answer prints as the behavior's result table.
+	inits := []jen.Code{
+		jen.Qual(behaviorPkg, "RegisterGroup").Call(jen.Lit(b.Name), jen.Id("Group")),
+	}
+	for _, m := range b.Methods {
+		inits = append(inits, jen.Qual(endpointCommandPath, "Render").Call(
+			jen.Id("Group"), jen.Lit(m.Name),
+			jen.Func().Params(
+				jen.Id("_").Op("*").Qual(cobraPath, "Command"),
+				jen.Id("_").Id(title(m.Name)+"Request"),
+				jen.Id("out").Id(responseName(b, m)),
+			).Block(jen.Qual(commandPath, "Print").Call(
+				jen.Qual(pkgPath(b), "Behavior"), jen.Lit(m.Name), jen.Id("out"),
+				jen.Qual(endpointCommandPath, "TraceID").Call())),
+		))
+	}
+	f.Func().Id("init").Params().Block(inits...)
 
 	return f, nil
 }
@@ -191,7 +220,7 @@ func requestFields(
 		jen.Id("Hostname").String().Tag(map[string]string{
 			"json": "hostname", "in": "path", "param": "Hostname",
 			"validate": "required,min=1,valid_target", "doc": hostnameDoc,
-			"flag": "target", "short": "T",
+			"flag": "target", "short": "T", "default": "_all",
 		}),
 	}
 

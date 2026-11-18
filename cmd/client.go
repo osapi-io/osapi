@@ -108,6 +108,11 @@ func init() {
 
 	_ = viper.BindPFlag("controller.client.url", clientCmd.PersistentFlags().Lookup("url"))
 
+	// node, next and next node exist before the groups are attached, so a
+	// behavior's group joins them: sysctl is under next node.
+	clientCmd.AddCommand(clientNodeCmd, clientNextCmd)
+	clientNextCmd.AddCommand(clientNextNodeCmd)
+
 	// The generated commands of the endpoint groups go under client. A group
 	// that also has hand-written commands, such as agent with key and
 	// status, is named, so its generated commands join that command; so is

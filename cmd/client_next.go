@@ -21,13 +21,9 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
 
-	"github.com/osapi-io/osapi/internal/behavior/command"
-	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/behavior"
 
 	// Every behavior with a CLI registers its generated commands.
 	_ "github.com/osapi-io/osapi/internal/behaviors/all/gen"
@@ -48,20 +44,19 @@ var clientNextNodeCmd = &cobra.Command{
 }
 
 func init() {
-	clientCmd.AddCommand(clientNextCmd)
-	clientNextCmd.AddCommand(clientNextNodeCmd)
+	// The commands of the behaviors are attached in client.go, with the
+	// endpoint groups': next node holds those still under /api/next.
+	clientNextCmd.Hidden = !hasNext()
+}
 
-	clientNextNodeCmd.PersistentFlags().
-		StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
-
-	clientNextCmd.Hidden = !command.HasNext()
-
-	if err := command.Attach(clientNodeCmd, clientNextNodeCmd, command.Deps{
-		Caller: func() command.Caller { return sdkClient },
-		JSON:   func() bool { return jsonOutput },
-		Error:  func(err error) { cli.HandleError(err, logger) },
-	}); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+// hasNext reports whether a behavior with commands is still under /api/next,
+// so osapi client next is shown only while one is.
+func hasNext() bool {
+	for _, b := range behavior.All() {
+		if b.Next && b.CLI {
+			return true
+		}
 	}
+
+	return false
 }

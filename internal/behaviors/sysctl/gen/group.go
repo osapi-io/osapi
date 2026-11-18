@@ -5,15 +5,19 @@ package gen
 import (
 	"context"
 
+	cobra "github.com/spf13/cobra"
+
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/command"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	sysctl "github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 )
 
 // ListRequest is the request of sysctl list: its target and its input.
 type ListRequest struct {
-	Hostname string `doc:"Target agent hostname, reserved routing value (_any, _all), or label selector (key:value)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
 	Prefix   string `doc:"Only this parameter and the ones under it, such as net.ipv4" in:"query" json:"prefix" validate:"omitempty,sysctl_key"`
 }
 
@@ -44,7 +48,7 @@ func HandleList(
 
 // GetRequest is the request of sysctl get: its target and its input.
 type GetRequest struct {
-	Hostname string `doc:"Target agent hostname, reserved routing value (_any, _all), or label selector (key:value)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
 	Key      string `doc:"Parameter name, such as net.ipv4.ip_forward" in:"path" json:"key" param:"SysctlKey" validate:"required,min=1,sysctl_key"`
 }
 
@@ -65,7 +69,7 @@ func HandleGet(
 
 // CreateRequest is the request of sysctl create: its target and its input.
 type CreateRequest struct {
-	Hostname string              `doc:"Target agent hostname, reserved routing value (_any, _all), or label selector (key:value)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Hostname string              `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
 	Body     SysctlCreateRequest `in:"body" validate:"required"`
 }
 
@@ -101,7 +105,7 @@ func HandleCreate(
 
 // UpdateRequest is the request of sysctl update: its target and its input.
 type UpdateRequest struct {
-	Hostname string              `doc:"Target agent hostname, reserved routing value (_any, _all), or label selector (key:value)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Hostname string              `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
 	Key      string              `doc:"Parameter name, such as net.ipv4.ip_forward" in:"path" json:"key" param:"SysctlKey" validate:"required,min=1,sysctl_key"`
 	Body     SysctlUpdateRequest `in:"body" validate:"required"`
 }
@@ -128,7 +132,7 @@ func HandleUpdate(
 
 // DeleteRequest is the request of sysctl delete: its target and its input.
 type DeleteRequest struct {
-	Hostname string `doc:"Target agent hostname, reserved routing value (_any, _all), or label selector (key:value)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
 	Key      string `doc:"Parameter name, such as net.ipv4.ip_forward" in:"path" json:"key" param:"SysctlKey" validate:"required,min=1,sysctl_key"`
 }
 
@@ -154,19 +158,29 @@ var Group = endpoint.Define(
 	endpoint.Prefix("next/node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("sysctl_operations", "Node/Sysctl", "Kernel parameters, written to sysctl.d files and applied"),
+	endpoint.CommandNotes("The [sysctl behavior](../../../../../../behaviors/sysctl/sysctl.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, SysctlCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeSysctl").
 		Describe("List the kernel's parameters and which osapi manages").
 		Permission("sysctl:read").
 		Returns("Each target host's result.").
-		Explain("Lists every parameter the kernel shows under /proc/sys, with its current value, as sysctl -a does, and marks the ones osapi manages. A prefix, such as net.ipv4, limits the list to that part of the tree. The kernel can lack a parameter that osapi manages, for example when its module is not loaded. Then the list shows the value that osapi wrote."),
+		Explain("Lists every parameter the kernel shows under /proc/sys, with its current value, as sysctl -a does, and marks the ones osapi manages. A prefix, such as net.ipv4, limits the list to that part of the tree. The kernel can lack a parameter that osapi manages, for example when its module is not loaded. Then the list shows the value that osapi wrote.").
+		Example("--target web-01", "Every parameter, and which osapi manages").
+		Example("--target web-01 --prefix net.ipv4", "One part of the tree").
+		Example("--target web-01 --prefix net.bridge", "A managed parameter the kernel does not have right now").
+		Result("The command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A prefix that is not a parameter name | `--prefix ../etc` | invalid sysctl key |"),
 	endpoint.Get[GetRequest, SysctlGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeSysctlByKey").
 		Describe("Get a kernel parameter's current value, and whether osapi manages it").
 		Permission("sysctl:read").
 		Returns("Each target host's result.").
+		Example("--target web-01 --key vm.swappiness", "A parameter osapi manages").
+		Example("--target web-01 --key vm.swappiness", "A parameter osapi does not manage").
+		Example("--target web-01 --key net.ipv4.ping_group_range", "A value of several fields").
+		Example("--target web-01 --key net.bridge.bridge-nf-call-iptables", "A managed parameter the kernel does not have right now").
+		Result("The command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A parameter the kernel does not have | `--key vm.nosuch` | not found |\n| No key |  | key must not be empty |\n| A key that is not a parameter name | `--key \"vm.swappiness;reboot\"` | invalid sysctl key |\n| A key holding a value | `--key vm.swappiness=1` | invalid sysctl key |").
 		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no sysctl with that key.")),
 	endpoint.Post[CreateRequest, SysctlCreateResponse]("create").
 		Handle(HandleCreate).
@@ -174,7 +188,9 @@ var Group = endpoint.Define(
 		Describe("Manage a kernel parameter and apply it").
 		Permission("sysctl:write").
 		Returns("Each target host's result, with whether it changed.").
-		Explain("Writes osapi-<key>.conf to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. It fails when sysctl -p fails, because the value is not set. A second run with the same value changes nothing and reports changed: false. If the kernel has a different value, for example after a failed apply, it applies the value again."),
+		Explain("Writes osapi-<key>.conf to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. It fails when sysctl -p fails, because the value is not set. A second run with the same value changes nothing and reports changed: false. If the kernel has a different value, for example after a failed apply, it applies the value again.").
+		Example("--target web-01 --key net.ipv4.ip_forward --value 1", "Turn on IP forwarding").
+		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Turn on IP forwarding | writes `/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf`: `net.ipv4.ip_forward = 1`; runs `sysctl -p /etc/sysctl.d/osapi-net.ipv4.ip_forward.conf` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| No key | `--value 1` | key must not be empty |\n| A key that is not a parameter name | `--key ../etc/passwd --value 1` | invalid sysctl key |\n| A key that would read as a flag | `--key -w --value 1` | invalid sysctl key |\n| A key that would be a hidden file | `--key .hidden --value 1` | invalid sysctl key |\n| No value | `--key vm.swappiness` | value must not be empty |\n| A value on two lines | `--key vm.swappiness --value \"10\\nkernel.panic = 0\"` | line breaks |"),
 	endpoint.Put[UpdateRequest, SysctlUpdateResponse]("update").
 		Handle(HandleUpdate).
 		ID("PutNodeSysctl").
@@ -182,6 +198,9 @@ var Group = endpoint.Define(
 		Permission("sysctl:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("The same as create, addressed by the parameter: osapi manages the parameter from then on whether it did before or not. Setting the value it already has reports changed: false.").
+		Example("--target web-01 --key vm.swappiness --value 10", "Lower swappiness").
+		Example("--target web-01 --key vm.swappiness --value 10", "A parameter osapi did not manage").
+		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Lower swappiness | writes `/etc/sysctl.d/osapi-vm.swappiness.conf`: `vm.swappiness = 10`; runs `sysctl -p /etc/sysctl.d/osapi-vm.swappiness.conf` |\n| A parameter osapi did not manage | writes `/etc/sysctl.d/osapi-vm.swappiness.conf`: `vm.swappiness = 10`; runs `sysctl -p /etc/sysctl.d/osapi-vm.swappiness.conf` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| No key | `--value 10` | key must not be empty |\n| A key that is not a parameter name | `--key \"vm.swappiness;reboot\" --value 1` | invalid sysctl key |\n| A key holding a value | `--key vm.swappiness=1 --value 1` | invalid sysctl key |\n| No value | `--key vm.swappiness` | value must not be empty |\n| A value on two lines | `--key vm.swappiness --value \"10\\nkernel.panic = 0\"` | line breaks |").
 		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no sysctl with that key.")),
 	endpoint.Delete[DeleteRequest, SysctlDeleteResponse]("delete").
 		Handle(HandleDelete).
@@ -190,9 +209,28 @@ var Group = endpoint.Define(
 		Permission("sysctl:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Removes the file that osapi wrote for it and reloads with sysctl --system. Then a setting for the key in a different file takes effect. If there is no such setting, the parameter keeps its current value until the next reboot. A delete of a parameter that osapi does not manage reports changed: false.").
+		Example("--target web-01 --key vm.swappiness", "Remove a parameter").
+		Example("--target web-01 --key vm.swappiness", "A parameter osapi does not manage").
+		Example("--target web-01 --key vm.swappiness", "A parameter osapi already stopped managing").
+		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Remove a parameter | removes `/etc/sysctl.d/osapi-vm.swappiness.conf`; runs `sysctl --system` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| No key |  | key must not be empty |\n| A key that is not a parameter name | `--key \"vm.swappiness;reboot\"` | invalid sysctl key |\n| A key holding a value | `--key vm.swappiness=1` | invalid sysctl key |").
 		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no sysctl with that key.")),
 )
 
 func init() {
 	behavior.RegisterGroup("sysctl", Group)
+	endpointcommand.Render(Group, "list", func(_ *cobra.Command, _ ListRequest, out SysctlCollectionResponse) {
+		command.Print(sysctl.Behavior, "list", out, endpointcommand.TraceID())
+	})
+	endpointcommand.Render(Group, "get", func(_ *cobra.Command, _ GetRequest, out SysctlGetResponse) {
+		command.Print(sysctl.Behavior, "get", out, endpointcommand.TraceID())
+	})
+	endpointcommand.Render(Group, "create", func(_ *cobra.Command, _ CreateRequest, out SysctlCreateResponse) {
+		command.Print(sysctl.Behavior, "create", out, endpointcommand.TraceID())
+	})
+	endpointcommand.Render(Group, "update", func(_ *cobra.Command, _ UpdateRequest, out SysctlUpdateResponse) {
+		command.Print(sysctl.Behavior, "update", out, endpointcommand.TraceID())
+	})
+	endpointcommand.Render(Group, "delete", func(_ *cobra.Command, _ DeleteRequest, out SysctlDeleteResponse) {
+		command.Print(sysctl.Behavior, "delete", out, endpointcommand.TraceID())
+	})
 }

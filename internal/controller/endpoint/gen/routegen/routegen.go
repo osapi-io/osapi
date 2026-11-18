@@ -32,6 +32,7 @@ import (
 	"github.com/dave/jennifer/jen"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/genutil"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
@@ -52,7 +53,7 @@ func Routes(
 
 	items := make([]jen.Code, 0, len(g.Methods))
 	for _, m := range g.Methods {
-		items = append(items, Multi("{", "}",
+		items = append(items, genutil.Multi("{", "}",
 			jen.Id("Method").Op(":").Qual("net/http", verbConst(m.Verb)),
 			jen.Id("Path").Op(":").Lit(server.Path(g, m)),
 			jen.Id("Permission").Op(":").Lit(g.Permission(m)),
@@ -66,9 +67,9 @@ func Routes(
 		))
 	}
 
-	f.Func().Id("Routes").Add(Params(jen.Id("s").Op("*").Qual(serverPath, "Server"))).
+	f.Func().Id("Routes").Add(genutil.Params(jen.Id("s").Op("*").Qual(serverPath, "Server"))).
 		Index().Qual(serverPath, "Route").Block(
-		jen.Return(jen.Index().Qual(serverPath, "Route").Add(Multi("{", "}", items...))),
+		jen.Return(jen.Index().Qual(serverPath, "Route").Add(genutil.Multi("{", "}", items...))),
 	)
 	f.Line()
 	f.Func().Id("init").Params().Block(
@@ -101,7 +102,7 @@ func Decoders(
 		var path, query []reflect.StructField
 		var bodyField *reflect.StructField
 		hasBody, hasForm := false, false
-		for _, fld := range StructFields(m.In) {
+		for _, fld := range genutil.StructFields(m.In) {
 			switch fld.Tag.Get("in") {
 			case "path":
 				path = append(path, fld)
@@ -128,20 +129,23 @@ func Decoders(
 		}
 		for _, fld := range path {
 			body = append(body, check(jen.Qual(serverPath, "Param").Call(
-				jen.Id("c"), jen.Lit(JSONName(fld)), jen.Op("&").Id("in").Dot(fld.Name))))
+				jen.Id("c"), jen.Lit(genutil.JSONName(fld)), jen.Op("&").Id("in").Dot(fld.Name))))
 		}
 		for _, fld := range query {
 			body = append(body, check(jen.Qual(serverPath, "Query").Call(
-				jen.Id("c"), jen.Lit(JSONName(fld)), jen.Op("&").Id("in").Dot(fld.Name))))
+				jen.Id("c"), jen.Lit(genutil.JSONName(fld)), jen.Op("&").Id("in").Dot(fld.Name))))
 		}
-		if len(StructFields(m.In)) > 0 {
+		if len(genutil.StructFields(m.In)) > 0 {
 			body = append(body, check(jen.Qual(serverPath, "Valid").Call(jen.Id("in"))))
 		}
 		body = append(body, jen.Line(), jen.Return(jen.Id("in"), jen.Lit(""), jen.True()))
 
 		f.Comment(decoderName(m) + " reads the " + m.Name + " method's input from the request.")
-		f.Func().Id(decoderName(m)).Add(Params(jen.Id("c").Op("*").Qual(echoPath, "Context"))).
-			Params(in.Clone(), jen.String(), jen.Bool()).Block(body...)
+		f.Func().
+			Id(decoderName(m)).
+			Add(genutil.Params(jen.Id("c").Op("*").Qual(echoPath, "Context"))).
+			Params(in.Clone(), jen.String(), jen.Bool()).
+			Block(body...)
 	}
 }
 
@@ -175,49 +179,4 @@ func verbConst(
 	default:
 		return "MethodDelete"
 	}
-}
-
-func StructFields(
-	t reflect.Type,
-) []reflect.StructField {
-	if t.Kind() != reflect.Struct {
-		return nil
-	}
-	var out []reflect.StructField
-	for f := range t.Fields() {
-		if f.IsExported() && JSONName(f) != "-" {
-			out = append(out, f)
-		}
-	}
-
-	return out
-}
-
-func JSONName(
-	f reflect.StructField,
-) string {
-	name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
-	if name == "" {
-		return f.Name
-	}
-
-	return name
-}
-
-// multi lays out a group one item to a line, as the house style writes
-// parameter lists and literals.
-func Multi(
-	open string,
-	closing string,
-	items ...jen.Code,
-) *jen.Statement {
-	return jen.Custom(
-		jen.Options{Open: open, Close: closing, Separator: ",", Multi: true},
-		items...)
-}
-
-func Params(
-	items ...jen.Code,
-) *jen.Statement {
-	return Multi("(", ")", items...)
 }

@@ -41,6 +41,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
@@ -100,15 +101,13 @@ func Register(
 	registered = append(registered, entry{group: g, cmds: cmds})
 }
 
-// Attach puts each registered group's commands under the group's command:
-// one of groups, the hand-written group commands such as osapi client
-// agent, by name; else parent's child of that name; else a new one under
-// parent. A command with a Sub goes under the command of that name in the
-// same way: one of groups, such as osapi client telemetry trace, else the
-// group's child, else a new one. Naming the hand-written ones keeps Attach free of the order in
-// which init functions run. It keeps d for Run. A generated command with
-// the name of one that is there already is a command written twice, so it
-// is an error.
+// Attach adds every registered group's commands under parent, osapi client,
+// and keeps d for the commands to call through. A group goes under the
+// commands of its command path: next node sysctl is under next, then node,
+// which Attach adds when parent does not have them. A group or a command
+// that is among groups, by name, is that one, so the generated commands
+// join a hand-written command of the same name, such as agent with key and
+// status.
 func Attach(
 	parent *cobra.Command,
 	d Deps,
@@ -116,7 +115,17 @@ func Attach(
 ) error {
 	deps = d
 	for _, e := range registered {
-		group := child(parent, e.group.Name)
+		words := e.group.CommandPath()
+		into := parent
+		for _, w := range words[:len(words)-1] {
+			next := child(into, w)
+			if next == nil {
+				next = &cobra.Command{Use: w, Short: strings.ToUpper(w[:1]) + w[1:] + " commands"}
+				into.AddCommand(next)
+			}
+			into = next
+		}
+		group := child(into, e.group.Name)
 		for _, g := range groups {
 			if g.Name() == e.group.Name {
 				group = g
@@ -124,7 +133,10 @@ func Attach(
 		}
 		if group == nil {
 			group = &cobra.Command{Use: e.group.Name, Short: e.group.Doc}
-			parent.AddCommand(group)
+			if e.group.CommandNotes != "" {
+				group.Annotations = map[string]string{reference.Notes: e.group.CommandNotes}
+			}
+			into.AddCommand(group)
 		}
 		for _, c := range e.cmds {
 			parent := group
@@ -145,8 +157,9 @@ func Attach(
 			}
 			if child(parent, c.Name()) != nil {
 				return fmt.Errorf(
-					"osapi client %s %s is both a hand-written command and the %s group's",
-					e.group.Name, c.Name(), e.group.Name)
+					"osapi client %s %s is both a hand-written command and the %s group's: "+
+						"delete the hand-written one from cmd/",
+					strings.Join(words, " "), c.Name(), e.group.Name)
 			}
 			parent.AddCommand(c)
 		}
@@ -223,6 +236,7 @@ func Run[In any](
 	if ok {
 		resp = client.NewResponse(data, []byte(data))
 	}
+	traceID = resp.TraceID()
 	render, ok := renderers[g.Name+"."+method]
 	if deps.JSON() && !render.acts {
 		cli.PrintJSON(resp.RawJSON())
@@ -371,4 +385,15 @@ func ReadFile(
 	}
 
 	return data, true
+}
+
+// traceID is the trace of the call Run made last. A command runs one call,
+// so a renderer reads it with TraceID.
+var traceID string
+
+// TraceID is the trace of the call that the running command made, from the
+// controller's traceresponse header, for a renderer that prints it, as each
+// behavior's result table does. It is "" when the answer had none.
+func TraceID() string {
+	return traceID
 }

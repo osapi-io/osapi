@@ -393,17 +393,17 @@ the cutover.
 
 ## Generated, never edited
 
-| File                                              | From                                                                                                                        |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `internal/behaviors/<name>/gen/*.go`              | the definition, its types and its examples, built with jen                                                                  |
-| `internal/behaviors/<name>/gen/api.yaml`          | `gen/group.go`, by the endpoint layer's spec builder in `internal/behavior/gen/spec`; `api.next.yaml` for a `Next` behavior |
-| `internal/controller/api/gen/api.yaml`            | the hand-written specs and every `gen/api.yaml`, by `just generate`                                                         |
-| `internal/behaviors/<name>/mocks/provider.gen.go` | the Provider interface, by mockgen                                                                                          |
-| `internal/behaviors/all/gen/gen.go`               | every behavior with `API` or `CLI`                                                                                          |
-| `internal/controller/api/next/gen/api.yaml`       | the behaviors marked `Next`, while any is                                                                                   |
-| `docs/docs/sidebar/behaviors/<name>/<name>.md`    | the definition and its settings                                                                                             |
-| `docs/docs/sidebar/usage/cli/client/...`          | the generated commands, by `just cli-docs-generate`                                                                         |
-| `docs/docs/gen/api-next/...`                      | the spec, by `just docs-generate`                                                                                           |
+| File                                              | From                                                                                                                         |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `internal/behaviors/<name>/gen/*.go`              | the definition, its types and its examples, built with jen                                                                   |
+| `internal/behaviors/<name>/gen/api.yaml`          | `gen/group.go`, by the endpoint layer's spec builder in `internal/behavior/gen/group`; `api.next.yaml` for a `Next` behavior |
+| `internal/controller/api/gen/api.yaml`            | the hand-written specs and every `gen/api.yaml`, by `just generate`                                                          |
+| `internal/behaviors/<name>/mocks/provider.gen.go` | the Provider interface, by mockgen                                                                                           |
+| `internal/behaviors/all/gen/gen.go`               | every behavior with `API` or `CLI`                                                                                           |
+| `internal/controller/api/next/gen/api.yaml`       | the behaviors marked `Next`, while any is                                                                                    |
+| `docs/docs/sidebar/behaviors/<name>/<name>.md`    | the definition and its settings                                                                                              |
+| `docs/docs/sidebar/usage/cli/client/...`          | the generated commands, by `just cli-docs-generate`                                                                          |
+| `docs/docs/gen/api-next/...`                      | the spec, by `just docs-generate`                                                                                            |
 
 `gen/cli.go` puts the docs of a method on its command. `.Describe` is the
 `Short` of the command, `.Explain` is its `Long`, and the examples are its

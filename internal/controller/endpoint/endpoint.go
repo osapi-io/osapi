@@ -39,6 +39,9 @@ import (
 type Group struct {
 	// Name is the segment of each path after the prefix, and the CLI group.
 	Name string
+	// CommandNotes is the Notes section of the page of the group's command,
+	// which CommandNotes sets.
+	CommandNotes string
 	// Prefix is the part of each path between /api/ and the name, such as
 	// next/node/{hostname}. Each {field} in it is a path field of each
 	// method's input, besides the method's key.
@@ -163,6 +166,28 @@ func Prefix(
 	return optionFunc(func(g *Group) { g.Prefix = strings.Trim(path, "/") })
 }
 
+// CommandNotes adds a Notes section to the page of the group's own command,
+// such as a link to the page that tells more about the group.
+func CommandNotes(
+	text string,
+) Option {
+	return optionFunc(func(g *Group) { g.CommandNotes = text })
+}
+
+// CommandPath is the words of the group's command under osapi client: the
+// fixed segments of its prefix, then its name. sysctl under the prefix
+// next/node/{hostname} is next node sysctl.
+func (g *Group) CommandPath() []string {
+	var out []string
+	for _, seg := range strings.Split(g.Prefix, "/") {
+		if seg != "" && !strings.HasPrefix(seg, "{") {
+			out = append(out, seg)
+		}
+	}
+
+	return append(out, g.Name)
+}
+
 // prefixFields are the json names of the path fields that the prefix names.
 func (g *Group) prefixFields() []string {
 	var out []string
@@ -282,7 +307,7 @@ type Method struct {
 	location         string
 	cmdUse           string
 	cmdLong          string
-	examples         []string
+	examples         []CommandExample
 	prefix           []string
 	refusals         []Refusal
 	notes, result    string
@@ -456,12 +481,21 @@ func (m *Method) Command(
 	return m
 }
 
+// CommandExample is an example of a CLI command: its flags, and what it
+// shows, which the help writes as a # line above it.
+type CommandExample struct {
+	Flags string
+	Doc   string
+}
+
 // Example adds an example of the CLI command: its flags, such as
-// --hostname web-01. The help shows each one after the command.
+// --hostname web-01, and, when doc is given, what it shows. The help shows
+// each one after the command, under its doc as a # line.
 func (m *Method) Example(
 	flags string,
+	doc ...string,
 ) *Method {
-	m.examples = append(m.examples, flags)
+	m.examples = append(m.examples, CommandExample{Flags: flags, Doc: strings.Join(doc, " ")})
 
 	return m
 }
@@ -637,8 +671,8 @@ func (m *Method) CommandLong() string {
 	return m.explain
 }
 
-// Examples are the CLI command's examples, the flags of each.
-func (m *Method) Examples() []string {
+// Examples are the CLI command's examples, the flags and the doc of each.
+func (m *Method) Examples() []CommandExample {
 	return m.examples
 }
 

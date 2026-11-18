@@ -22,27 +22,20 @@ package command_test
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"testing"
 
-	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
-	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
-	"github.com/osapi-io/osapi/internal/behavior/command/mocks"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/internal/config"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 type provider struct{}
@@ -399,104 +392,21 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	)
 }
 
-func (s *BehaviorcmdPublicTestSuite) TestRun() {
+// TestPrint writes a method's answer as the job, the trace and the table,
+// which the endpoint command runtime calls as each behavior method's
+// renderer.
+func (s *BehaviorcmdPublicTestSuite) TestPrint() {
 	b := behavior.Define("kv", "Key values", behavior.Node, behavior.Read("list", read))
-	body := []byte(`{"job_id":"job-1","results":[{"hostname":"web-01","status":"ok","key":"k"}]}`)
-	ok := client.NewResponse(json.RawMessage(body), body)
-
-	tests := []struct {
-		name string
-		resp *client.Response[json.RawMessage]
-		err  error
-		json bool
-		want string
-	}{
-		{name: "when the call succeeds the table prints", resp: ok, want: "web-01"},
-		{
-			name: "when --json the body prints",
-			resp: ok,
-			json: true,
-			want: `"job_id":"job-1"`,
-		},
-		{
-			name: "when the call fails the error is reported",
-			err:  errors.New("boom"),
-			want: "boom",
-		},
+	out := map[string]any{
+		"job_id":  "job-1",
+		"results": []map[string]any{{"hostname": "web-01", "status": "ok", "key": "k"}},
 	}
 
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			command.ResetRegistered()
-			caller := mocks.NewMockCaller(gomock.NewController(s.T()))
-			caller.EXPECT().Request(gomock.Any(), "GET", gomock.Any(), gomock.Nil()).
-				Return(tc.resp, tc.err)
-			var reported string
-			parent := &cobra.Command{Use: "node"}
-			parent.PersistentFlags().String("target", "_all", "")
-			cmd := &cobra.Command{Use: "list"}
-			next := &cobra.Command{Use: "next"}
-			// A hand-written command of the group's name is reused.
-			parent.AddCommand(&cobra.Command{Use: "store"})
-			s.False(command.HasNext())
-			command.Register("store", false, &cobra.Command{Use: "kv"})
-			command.Register("store", false, cmd)
-			command.Register("", true, &cobra.Command{Use: "old"})
-			s.True(command.HasNext())
-			s.Require().NoError(command.Attach(parent, next, command.Deps{
-				Caller: func() command.Caller { return caller },
-				JSON:   func() bool { return tc.json },
-				Error:  func(err error) { reported = err.Error() },
-			}))
+	got := cli.Capture(func() { command.Print(b, "list", out, "4bf92f3577b34da6a3ce929d0e0e4736") })
 
-			out := cli.Capture(func() { command.Run(cmd, b, "list", input{}) })
-			s.True(
-				strings.Contains(out, tc.want) || reported == tc.want,
-				"got %q / %q",
-				out,
-				reported,
-			)
-			s.Len(parent.Commands(), 1, "both commands sit under the one store group")
-			s.Len(next.Commands(), 1, "a Next behavior sits under next")
-		})
-	}
-}
-
-// TestAttachRefusesADuplicate: a behavior command whose name a hand-written
-// command already has, as a cutover leaves until the hand-written one is
-// deleted, is refused with what to do.
-func (s *BehaviorcmdPublicTestSuite) TestAttachRefusesADuplicate() {
-	command.ResetRegistered()
-	node := &cobra.Command{Use: "node"}
-	node.AddCommand(&cobra.Command{Use: "sysctl"})
-	command.Register("", false, &cobra.Command{Use: "sysctl"})
-
-	err := command.Attach(node, &cobra.Command{Use: "next"}, command.Deps{})
-
-	s.Require().Error(err)
-	s.Contains(err.Error(), "node sysctl is both a hand-written command and a behavior's")
-	s.Contains(err.Error(), "behavior.Next")
-}
-
-// TestAttachMakesAGroup: a behavior with a group that its parent has no
-// command for is put under a new command of that name.
-func (s *BehaviorcmdPublicTestSuite) TestAttachMakesAGroup() {
-	command.ResetRegistered()
-	node := &cobra.Command{Use: "node"}
-	command.Register("store", false, &cobra.Command{Use: "kv"})
-
-	s.Require().NoError(command.Attach(node, &cobra.Command{Use: "next"}, command.Deps{}))
-
-	s.Require().Len(node.Commands(), 1)
-	s.Equal("store", node.Commands()[0].Name())
-	s.Equal("The store behaviors", node.Commands()[0].Short)
-	s.Equal("kv", node.Commands()[0].Commands()[0].Name())
-}
-
-func TestBehaviorcmdPublicTestSuite(
-	t *testing.T,
-) {
-	suite.Run(t, new(BehaviorcmdPublicTestSuite))
+	s.Contains(got, "job-1")
+	s.Contains(got, "4bf92f3577b34da6a3ce929d0e0e4736")
+	s.Contains(got, "web-01")
 }
 
 // kvSettings is a behavior's settings, one of each kind of flag.
@@ -535,4 +445,17 @@ func (s *BehaviorcmdPublicTestSuite) TestSettingFlags() {
 	s.True(got.Verbose)
 	s.Equal(0.5, got.Ratio)
 	s.Equal([]string{"a"}, got.Tags)
+}
+
+// TestExampleFlags is an example's flags as the help writes them: the
+// target, then each field the input sets.
+func (s *BehaviorcmdPublicTestSuite) TestExampleFlags() {
+	s.Equal("--target web-01", command.ExampleFlags(input{}))
+	s.Equal("--target web-01 --key k", command.ExampleFlags(input{Key: "k"}))
+}
+
+func TestBehaviorcmdPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(BehaviorcmdPublicTestSuite))
 }
