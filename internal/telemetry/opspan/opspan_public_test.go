@@ -98,3 +98,15 @@ func (s *OpSpanPublicTestSuite) TestOperation() {
 		})
 	}
 }
+
+// TestOutsideATrace opens no span for an operation with no trace around it,
+// such as a metrics refresh: it would start a trace of its own each time.
+func (s *OpSpanPublicTestSuite) TestOutsideATrace() {
+	s.Run("when the context has no span opens none", func() {
+		ctx, span := opspan.Start(context.Background(), "osapi-test", "agent.list")
+		s.False(span.SpanContext().IsValid())
+		s.Equal(context.Background(), ctx)
+		s.NoError(opspan.End(span, nil))
+		s.Empty(s.recorder.Ended())
+	})
+}
