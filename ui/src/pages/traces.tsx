@@ -172,7 +172,7 @@ export function Traces() {
               },
               {
                 header: "On",
-                cell: (r: TraceRow) => <Text variant="mono">{r.host}</Text>,
+                cell: (r: TraceRow) => <Text variant="mono">{r.on}</Text>,
               },
               {
                 header: "Duration",

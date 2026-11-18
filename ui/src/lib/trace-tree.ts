@@ -31,20 +31,43 @@ const OP_DETAIL: Record<string, string[]> = {
   "target.resolve": ["osapi.target"],
 };
 
-// The attributes that count what an operation read, and the nouns of the
-// count: job.list's job.count is "2 jobs".
-const OP_COUNTS: [string, string, string][] = [
-  ["job.count", "job", "jobs"],
-  ["osapi.agent.count", "agent", "agents"],
-  ["osapi.audit.count", "entry", "entries"],
-  ["osapi.trace.spans", "span", "spans"],
+// The attributes that count what an operation read, and the key of the
+// count in the detail: job.list's job.count is jobs=2.
+const OP_COUNTS: [string, string][] = [
+  ["job.count", "jobs"],
+  ["osapi.agent.count", "agents"],
+  ["osapi.audit.count", "entries"],
+  ["osapi.trace.spans", "spans"],
 ];
+
+// The key that each attribute has in the detail: the word a reader uses for
+// it, not the OpenTelemetry name.
+const ATTR_KEYS: Record<string, string> = {
+  "file.path": "path",
+  "nats.object.name": "object",
+  "messaging.destination.name": "subject",
+  "db.namespace": "bucket",
+  "http.response.status_code": "status",
+  "job.id": "job",
+  "osapi.target": "target",
+  "osapi.agent.hostname": "host",
+  "osapi.agent.fingerprint": "fingerprint",
+  "osapi.audit.id": "entry",
+  "osapi.trace.id": "trace",
+};
+
+// logfmtValue quotes a value that has a space, an equals sign or a quote,
+// as logfmt does, so a reader can tell where it ends.
+const logfmtValue = (v: string) =>
+  v === "" || /[ ="]/.test(v) ? JSON.stringify(v) : v;
 
 export interface TraceRow {
   span: TraceSpan;
   // lines are the tree lines before the name, such as "│  └─ ".
   lines: string;
-  host: string;
+  // on is what ran the span, the role of its service: controller, agent or
+  // cli. An agent span's host is host= in its job.process's detail.
+  on: string;
   status: string;
   detail: string;
   // offset and width place the span's bar, as fractions of the trace.
@@ -99,32 +122,48 @@ function spanStatus(s: TraceSpan): string {
   return "ok";
 }
 
+// spanDetail is what a span acted on, as key=value pairs, led by error= on a
+// failed span.
 function spanDetail(s: TraceSpan): string {
+  const pairs: [string, string][] = [];
+  if (s.status === "error" && s.status_message)
+    pairs.push(["error", s.status_message]);
+  pairs.push(...actedOn(s));
+  return pairs.map(([k, v]) => `${k}=${logfmtValue(v)}`).join(" ");
+}
+
+// actedOn is what a span acted on, as key and value, by the first rule that
+// fits it.
+function actedOn(s: TraceSpan): [string, string][] {
   const a = s.attributes;
-  if (s.status === "error" && s.status_message) return s.status_message;
   const inputs = Object.keys(a)
     .filter((k) => k.startsWith(INPUT))
     .sort()
-    .map((k) => `${k.slice(INPUT.length)}=${a[k]}`)
-    .join(" ");
-  if (inputs) return inputs;
+    .map((k): [string, string] => [k.slice(INPUT.length), a[k]]);
+  if (inputs.length) return inputs;
+  if (s.name === "job.process" && a["osapi.agent.hostname"])
+    return [["host", a["osapi.agent.hostname"]]];
   if (a["nats.kv.key"])
-    return keyMeaning(a["nats.kv.key"], a["db.namespace"] ?? "");
-  for (const [key, one, many] of OP_COUNTS) {
-    const n = a[key];
-    if (n !== undefined && n !== "") return `${n} ${n === "1" ? one : many}`;
+    return [["key", keyMeaning(a["nats.kv.key"], a["db.namespace"] ?? "")]];
+  for (const [attr, key] of OP_COUNTS) {
+    if (a[attr] !== undefined && a[attr] !== "") return [[key, a[attr]]];
   }
-  const op = (OP_DETAIL[s.name] ?? []).map((k) => a[k]).find((v) => v);
-  if (op) return op;
-  if (s.name === "kv.keys") return `list keys in ${a["db.namespace"] ?? ""}`;
+  const op = (OP_DETAIL[s.name] ?? []).find((k) => a[k]);
+  if (op) return [[ATTR_KEYS[op], a[op]]];
+  if (s.name === "kv.keys") return [["bucket", a["db.namespace"] ?? ""]];
   // The request span has the size too, from otelecho; it shows its status.
   const size = a["http.response.body.size"];
-  if (size && s.name === "response.write") return formatBytes(Number(size));
+  if (size && s.name === "response.write")
+    return [["size", formatBytes(Number(size))]];
   // A job's subject names a host by its machine ID; the operation and the
   // target that the caller gave say the same thing in words.
   if (a["job.type"] && a["osapi.target"])
-    return `${a["job.type"]} to ${a["osapi.target"]}`;
-  return DETAIL.map((k) => a[k]).find((v) => v) ?? "";
+    return [
+      ["op", a["job.type"]],
+      ["target", a["osapi.target"]],
+    ];
+  const k = DETAIL.find((d) => a[d]);
+  return k ? [[ATTR_KEYS[k], a[k]]] : [];
 }
 
 // traceRows returns the spans as a tree: each child under its parent, in
@@ -160,16 +199,11 @@ export function traceRows(spans: TraceSpan[], all: boolean): TraceRow[] {
   const total = Math.max(end - begin, 1);
 
   const rows: TraceRow[] = [];
-  const walk = (s: TraceSpan, lead: string, branch: string, host: string) => {
-    const agent = s.attributes["osapi.agent.hostname"];
-    if (s.name === "job.process" && agent) host = agent;
+  const walk = (s: TraceSpan, lead: string, branch: string) => {
     rows.push({
       span: s,
       lines: lead + branch,
-      // Where the span ran: its agent, or else its service's role, such as
-      // controller for osapi-controller, as osapi client telemetry trace
-      // get prints it.
-      host: host || s.service.replace(/^osapi-/, ""),
+      on: s.service.replace(/^osapi-/, ""),
       status: spanStatus(s),
       detail: spanDetail(s),
       offset: (startOf(s) - begin) / total,
@@ -179,10 +213,10 @@ export function traceRows(spans: TraceSpan[], all: boolean): TraceRow[] {
       lead + (branch === "├─ " ? "│  " : branch === "└─ " ? "   " : "");
     const kids = byStart(children.get(s.span_id) ?? []);
     kids.forEach((k, i) =>
-      walk(k, next, i === kids.length - 1 ? "└─ " : "├─ ", host),
+      walk(k, next, i === kids.length - 1 ? "└─ " : "├─ "),
     );
   };
-  for (const r of byStart(roots)) walk(r, "", "", "");
+  for (const r of byStart(roots)) walk(r, "", "");
 
   return rows;
 }

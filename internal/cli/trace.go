@@ -58,12 +58,12 @@ var opDetail = map[string][]string{
 }
 
 // opCounts are the attributes that count what an operation read, and the
-// nouns of the count: job.list's job.count is "2 jobs".
-var opCounts = []struct{ key, one, many string }{
-	{"job.count", "job", "jobs"},
-	{"osapi.agent.count", "agent", "agents"},
-	{"osapi.audit.count", "entry", "entries"},
-	{"osapi.trace.spans", "span", "spans"},
+// key of the count in DETAIL: job.list's job.count is jobs=2.
+var opCounts = []struct{ attr, key string }{
+	{"job.count", "jobs"},
+	{"osapi.agent.count", "agents"},
+	{"osapi.audit.count", "entries"},
+	{"osapi.trace.spans", "spans"},
 }
 
 // TraceRows returns the rows of a trace's span tree, each with its SPAN,
@@ -73,12 +73,11 @@ var opCounts = []struct{ key, one, many string }{
 // start order, behind tree lines. A span whose parent is not in the trace,
 // such as one under the span of a CLI that sent none, is a root.
 //
-// ON is the agent of the nearest job.process at or above the span, so
-// each step on an agent names its host, and else the role of the service
-// that made it: controller, agent or cli. STATUS is the job's status on a
-// job.process, changed or unchanged on a behavior write, and ok or error on
-// other spans. DETAIL is the error of a failed span, or else what it acted
-// on: a behavior's recorded inputs, what a key is for, a file or a subject.
+// ON is what ran the span, the role of its service: controller, agent or
+// cli. STATUS is the job's status on a job.process, changed or unchanged on
+// a behavior write, and ok or error on other spans. DETAIL is what the span
+// acted on as key=value pairs, led by error= on a failed span: host= on a
+// job.process, a behavior's recorded inputs, a key, a file or a subject.
 func TraceRows(
 	spans []client.TraceSpan,
 	all bool,
@@ -123,14 +122,11 @@ func TraceRows(
 	byStart(roots)
 
 	var rows [][]string
-	var walk func(s client.TraceSpan, lead, branch, host string)
-	walk = func(s client.TraceSpan, lead, branch, host string) {
-		if h := s.Attributes["osapi.agent.hostname"]; s.Name == "job.process" && h != "" {
-			host = h
-		}
+	var walk func(s client.TraceSpan, lead, branch string)
+	walk = func(s client.TraceSpan, lead, branch string) {
 		rows = append(rows, []string{
 			lead + branch + s.Name,
-			spanOn(s, host),
+			spanOn(s),
 			FormatDuration(s.Duration.Round(time.Microsecond).String()),
 			spanStatus(s),
 			spanDetail(s),
@@ -150,11 +146,11 @@ func TraceRows(
 			if i == len(kids)-1 {
 				b = "└─ "
 			}
-			walk(k, next, b, host)
+			walk(k, next, b)
 		}
 	}
 	for _, r := range roots {
-		walk(r, "", "", "")
+		walk(r, "", "")
 	}
 
 	return rows
@@ -182,82 +178,128 @@ func spanStatus(
 	return "ok"
 }
 
-// spanOn is where a span ran: the agent of the nearest job.process at or
-// above it, or else the role of the service that made it, such as
-// controller for osapi-controller. A blank cell would leave the reader to
-// work out that it means the controller.
+// spanOn is what ran a span: the role of the service that made it, such as
+// controller for osapi-controller, agent or cli. The host an agent span ran
+// on is host= in its job.process's DETAIL, not here, so each column says one
+// kind of thing.
 func spanOn(
 	s client.TraceSpan,
-	host string,
 ) string {
-	if host != "" {
-		return host
-	}
-
 	return strings.TrimPrefix(s.Service, "osapi-")
 }
 
-// spanDetail is the error of a failed span, or else what it acted on.
+// spanDetail is what a span acted on, as key=value pairs, so each value
+// says what it is: target=_all, agents=3, host=debian-1. A failed span
+// leads with error=. A value with a space is quoted, as in logfmt.
 func spanDetail(
 	s client.TraceSpan,
 ) string {
+	var pairs [][2]string
 	if s.Failed && s.StatusMessage != "" {
-		return s.StatusMessage
+		pairs = append(pairs, [2]string{"error", s.StatusMessage})
 	}
-	if inputs := behaviorInputs(s.Attributes); inputs != "" {
+	pairs = append(pairs, actedOn(s)...)
+
+	parts := make([]string, 0, len(pairs))
+	for _, p := range pairs {
+		parts = append(parts, p[0]+"="+logfmtValue(p[1]))
+	}
+
+	return strings.Join(parts, " ")
+}
+
+// actedOn is what a span acted on, as key and value, by the first rule that
+// fits it.
+func actedOn(
+	s client.TraceSpan,
+) [][2]string {
+	a := s.Attributes
+	if inputs := behaviorInputs(a); len(inputs) > 0 {
 		return inputs
 	}
-	if key := s.Attributes["nats.kv.key"]; key != "" {
-		return keyMeaning(key, s.Attributes["db.namespace"])
+	if s.Name == "job.process" {
+		if h := a["osapi.agent.hostname"]; h != "" {
+			return [][2]string{{"host", h}}
+		}
+	}
+	if key := a["nats.kv.key"]; key != "" {
+		return [][2]string{{"key", keyMeaning(key, a["db.namespace"])}}
 	}
 	for _, c := range opCounts {
-		if n, err := strconv.Atoi(s.Attributes[c.key]); err == nil {
-			return Plural(n, c.one, c.many)
+		if _, err := strconv.Atoi(a[c.attr]); err == nil {
+			return [][2]string{{c.key, a[c.attr]}}
 		}
 	}
 	for _, k := range opDetail[s.Name] {
-		if v := s.Attributes[k]; v != "" {
-			return v
+		if v := a[k]; v != "" {
+			return [][2]string{{attrKeys[k], v}}
 		}
 	}
 	if s.Name == "kv.keys" {
-		return "list keys in " + s.Attributes["db.namespace"]
+		return [][2]string{{"bucket", a["db.namespace"]}}
 	}
 	// The request span has the size too, from otelecho; it shows its status.
-	if size, err := strconv.Atoi(s.Attributes["http.response.body.size"]); err == nil &&
+	if size, err := strconv.Atoi(a["http.response.body.size"]); err == nil &&
 		s.Name == "response.write" {
-		return FormatBytes(size)
+		return [][2]string{{"size", FormatBytes(size)}}
 	}
 	// A job's subject names a host by its machine ID; the operation and the
 	// target that the caller gave say the same thing in words.
-	if op, target := s.Attributes["job.type"], s.Attributes["osapi.target"]; op != "" &&
-		target != "" {
-		return op + " to " + target
+	if op, target := a["job.type"], a["osapi.target"]; op != "" && target != "" {
+		return [][2]string{{"op", op}, {"target", target}}
 	}
 	for _, k := range traceDetail {
-		if v := s.Attributes[k]; v != "" {
-			return v
+		if v := a[k]; v != "" {
+			return [][2]string{{attrKeys[k], v}}
 		}
 	}
 
-	return ""
+	return nil
 }
 
-// behaviorInputs are the inputs a behavior recorded on its span, as
-// key=vm.swappiness, in key order.
+// attrKeys is the key that each attribute has in DETAIL: the word a reader
+// uses for it, not the OpenTelemetry name.
+var attrKeys = map[string]string{
+	"file.path":                  "path",
+	"nats.object.name":           "object",
+	"messaging.destination.name": "subject",
+	"db.namespace":               "bucket",
+	"http.response.status_code":  "status",
+	"job.id":                     "job",
+	"osapi.target":               "target",
+	"osapi.agent.hostname":       "host",
+	"osapi.agent.fingerprint":    "fingerprint",
+	"osapi.audit.id":             "entry",
+	"osapi.trace.id":             "trace",
+}
+
+// logfmtValue quotes a value that has a space, an equals sign or a quote,
+// as logfmt does, so a reader can tell where it ends.
+func logfmtValue(
+	v string,
+) string {
+	if v == "" || strings.ContainsAny(v, " =\"") {
+		return strconv.Quote(v)
+	}
+
+	return v
+}
+
+// behaviorInputs are the inputs a behavior recorded on its span, as key
+// and value, in key order: key=vm.swappiness value=10.
 func behaviorInputs(
 	attrs map[string]string,
-) string {
+) [][2]string {
 	const prefix = "osapi.behavior.input."
-	var parts []string
+	var pairs [][2]string
 	for k, v := range attrs {
 		if name, ok := strings.CutPrefix(k, prefix); ok {
-			parts = append(parts, name+"="+v)
+			pairs = append(pairs, [2]string{name, v})
 		}
 	}
-	sort.Strings(parts)
+	sort.Slice(pairs, func(a, b int) bool { return pairs[a][0] < pairs[b][0] })
 
-	return strings.Join(parts, " ")
+	return pairs
 }
 
 // keyMeaning says what an osapi key in bucket is for, from the shape of the

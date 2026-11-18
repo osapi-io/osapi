@@ -138,24 +138,26 @@ Trace:
 
 Spans (8):
   SPAN                                     ON          DURATION  STATUS     DETAIL
-  POST /api/next/node/:hostname/sysctl     controller  20ms      ok         200
-  ├─ job.publish                           controller  2ms       ok         behavior.sysctl.create to debian-1
-  │  └─ job.process                        debian-1    11ms      completed
-  │     └─ behavior.sysctl.create          debian-1    5ms       changed    key=vm.swappiness
-  │        ├─ behavior.managedfile.update  debian-1    1ms       changed
-  │        │  └─ file.write                debian-1    147µs     ok         /etc/sysctl.d/osapi-vm.swappiness.conf
-  │        └─ exec sysctl                  debian-1    3ms       ok
+  POST /api/next/node/:hostname/sysctl     controller  20ms      ok         status=200
+  ├─ job.publish                           controller  2ms       ok         op=behavior.sysctl.create target=debian-1
+  │  └─ job.process                        agent       11ms      completed  host=debian-1
+  │     └─ behavior.sysctl.create          agent       5ms       changed    key=vm.swappiness
+  │        ├─ behavior.managedfile.update  agent       1ms       changed
+  │        │  └─ file.write                agent       147µs     ok         path=/etc/sysctl.d/osapi-vm.swappiness.conf
+  │        └─ exec sysctl                  agent       3ms       ok
   └─ job.collect                           controller  12ms      ok
   11 NATS calls left out, 20ms in all; --all shows them.
 ```
 
-- **ON** is where the span ran: the agent of the `job.process` above it, or else
-  the role of the service that made it, `controller`, `agent` or `cli`.
+- **ON** is what ran the span, the role of the service that made it:
+  `controller`, `agent` or `cli`.
 - **STATUS** is the job status on a `job.process`, `changed` or `unchanged` on a
   behavior write, and `ok` or `error` on the other spans.
-- **DETAIL** is the error of a failed span. On the other spans, it is what the
-  span acted on: the inputs that a behavior records, a file, the operation and
-  target of a job, or the size of the answer.
+- **DETAIL** is what the span acted on, as `key=value` pairs, so each value says
+  what it is: `host=` on a `job.process`, the inputs that a behavior records,
+  `path=` of a file, `op=` and `target=` of a job, `size=` of the answer. A
+  failed span leads with `error=`. A value with a space is quoted, as in logfmt.
+  `--json` gives each span's whole `attributes` map instead.
 
 The NATS calls are the bookkeeping of the job queue: the agent reads the job,
 writes its status as it goes, and writes its answer. The command leaves them out
