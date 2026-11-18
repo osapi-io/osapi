@@ -28,6 +28,8 @@ import (
 	"runtime"
 	"slices"
 	"strings"
+
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // Requires declares the behaviors this one is built on. The agent builds
@@ -152,6 +154,10 @@ func cycleFrom(
 // own step: behavior.sysctl.create, then behavior.managedfile.update under
 // it. A direct call of fn skips the span, and behaviortest.Run fails it.
 //
+// Call checks in against its validate tags before fn runs, as the API does
+// for a served method, so an internal behavior's rules hold for each
+// caller. An input that breaks one is an error, and fn does not run.
+//
 //	result, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files, in)
 func Call[P any, In any, Out any](
 	ctx context.Context,
@@ -176,6 +182,11 @@ func Call[P any, In any, Out any](
 
 	var out Out
 	_, err := m.run(ctx, func(ctx context.Context) (any, any, error) {
+		if reflect.ValueOf(in).Kind() == reflect.Struct {
+			if msg, ok := validation.Struct(in); !ok {
+				return nil, in, fmt.Errorf("%s %s: %s", b.Name, m.Name, msg)
+			}
+		}
 		var err error
 		out, err = fn(ctx, p, in)
 
