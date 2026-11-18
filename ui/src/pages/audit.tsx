@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { spinnerColor } from "@/lib/spinner-color";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { useAuth } from "@/hooks/use-auth";
 import { ContentArea } from "@/components/layout/content-area";
@@ -25,6 +24,8 @@ import {
   getAuditExport,
 } from "@/sdk/gen/audit-log-api-audit/audit-log-api-audit";
 import type { AuditEntry, ListAuditResponse } from "@/sdk/gen/schemas";
+import { PermissionDenied } from "@/components/layout/permission-denied";
+import { Spinner } from "@/components/ui/spinner";
 
 const PAGE_SIZE = 20;
 
@@ -35,28 +36,6 @@ const METHOD_OPTIONS = [
   { value: "PUT", label: "PUT" },
   { value: "DELETE", label: "DELETE" },
 ];
-
-function statusBadgeVariant(code: number) {
-  if (code >= 200 && code < 300) return "ready" as const;
-  if (code >= 400 && code < 500) return "error" as const;
-  if (code >= 500) return "error" as const;
-  return "muted" as const;
-}
-
-function methodBadgeVariant(method: string) {
-  switch (method) {
-    case "GET":
-      return "ready" as const;
-    case "POST":
-      return "running" as const;
-    case "PUT":
-      return "applied" as const;
-    case "DELETE":
-      return "error" as const;
-    default:
-      return "muted" as const;
-  }
-}
 
 function formatTimestamp(ts: string) {
   try {
@@ -146,12 +125,7 @@ export function Audit() {
   };
 
   if (!can("audit:read")) {
-    return (
-      <ContentArea>
-        <PageHeader title="Audit Log" subtitle="Insufficient permissions" />
-        <ErrorBanner message="You do not have permission to view audit logs." />
-      </ContentArea>
-    );
+    return <PermissionDenied title="Audit Log" what="audit entries" />;
   }
 
   // Client-side filtering on fetched page
@@ -201,11 +175,7 @@ export function Audit() {
         }
       />
 
-      {loading && (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className={`h-8 w-8 animate-spin ${spinnerColor}`} />
-        </div>
-      )}
+      {loading && <Spinner />}
 
       {error && <ErrorBanner message={error} />}
 
@@ -259,9 +229,7 @@ export function Audit() {
                 {
                   header: "Method",
                   cell: (e: AuditEntry) => (
-                    <Badge variant={methodBadgeVariant(e.method)}>
-                      {e.method}
-                    </Badge>
+                    <Text className="font-semibold">{e.method}</Text>
                   ),
                 },
                 {
@@ -275,11 +243,7 @@ export function Audit() {
                 {
                   header: "Status",
                   align: "center",
-                  cell: (e: AuditEntry) => (
-                    <Badge variant={statusBadgeVariant(e.response_code)}>
-                      {e.response_code}
-                    </Badge>
-                  ),
+                  cell: (e: AuditEntry) => <Text>{e.response_code}</Text>,
                 },
                 {
                   header: "Duration",

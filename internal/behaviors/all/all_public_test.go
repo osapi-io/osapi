@@ -40,6 +40,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all/gen"
 	"github.com/osapi-io/osapi/internal/behaviors/sysctl"
+	"github.com/osapi-io/osapi/internal/cli"
 	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
@@ -67,6 +68,15 @@ func (s *AllPublicTestSuite) TestUIPermissionsAreCurrent() {
 	s.Require().NoError(err)
 	s.Equal(authtoken.TypeScript(), string(got),
 		"%s is stale: run go generate ./internal/behaviors/all", authtoken.TypeScriptFile)
+}
+
+// TestUIStatusesAreCurrent checks that the UI's status tones, which go
+// generate writes from internal/cli, are the tones the CLI prints now.
+func (s *AllPublicTestSuite) TestUIStatusesAreCurrent() {
+	got, err := os.ReadFile(filepath.Join("..", "..", "..", cli.StatusTypeScriptFile))
+	s.Require().NoError(err)
+	s.Equal(cli.StatusTypeScript(), string(got),
+		"%s is stale: run go generate ./internal/behaviors/all", cli.StatusTypeScriptFile)
 }
 
 func (s *AllPublicTestSuite) TestEveryRouteIsMounted() {

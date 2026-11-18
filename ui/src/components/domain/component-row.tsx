@@ -1,6 +1,7 @@
 import { cn } from "@/lib/cn";
 import { HealthDot } from "@/components/ui/health-dot";
 import { Text } from "@/components/ui/text";
+import { statusDot, statusText } from "@/lib/status";
 
 interface ComponentRowProps {
   name: string;
@@ -16,10 +17,6 @@ function isWebURL(url: string) {
   return /^https?:\/\//i.test(url);
 }
 
-function isHealthy(status: string) {
-  return status === "ok" || status === "healthy" || status === "ready";
-}
-
 export function ComponentRow({
   name,
   status,
@@ -27,8 +24,6 @@ export function ComponentRow({
   url,
   isLast,
 }: ComponentRowProps) {
-  const ok = isHealthy(status);
-
   // The url sits on its own line under the address, as in the CLI, so a
   // long one is never cut and every row keeps the same shape.
   return (
@@ -39,10 +34,10 @@ export function ComponentRow({
       )}
     >
       <div className="flex items-center gap-2">
-        <HealthDot status={ok} />
+        <HealthDot status={statusDot(status)} />
         <Text className="font-medium">{name}</Text>
         {address && <Text variant="muted">{address}</Text>}
-        <Text variant={ok ? "primary" : "error"} className="ml-auto">
+        <Text variant={statusText(status)} className="ml-auto">
           {status}
         </Text>
       </div>

@@ -24,6 +24,7 @@ import {
   drainAgent,
   undrainAgent,
 } from "@/sdk/gen/agent-management-api-agent-operations/agent-management-api-agent-operations";
+import { statusDot, statusVariant } from "@/lib/status";
 
 interface AgentCardProps {
   agent: AgentInfo;
@@ -41,23 +42,6 @@ function NotReported() {
   return <span className="text-text-muted">-</span>;
 }
 
-function isHealthy(status: string) {
-  return status === "ok" || status === "healthy" || status === "ready";
-}
-
-function stateVariant(state?: string) {
-  switch (state) {
-    case "Draining":
-      return "running" as const;
-    case "Cordoned":
-      return "pending" as const;
-    case "Pending":
-      return "pending" as const;
-    default:
-      return undefined;
-  }
-}
-
 export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
   const { can } = useAuth();
   const [acting, setActing] = useState(false);
@@ -67,7 +51,7 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
   const isDrained = agent.state === "Draining" || agent.state === "Cordoned";
   const canWrite = can("agent:write");
   const variant = isPending ? "active" : isReady ? "active" : "error";
-  const badgeVariant = isPending ? "pending" : isReady ? "ready" : "error";
+  const badgeVariant = statusVariant(isPending ? agent.state : agent.status);
   const activeConditions = agent.conditions?.filter((c) => c.status) ?? [];
 
   const handleDrain = async () => {
@@ -94,7 +78,7 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
 
   return (
     <Card
-      variant={activeConditions.length > 0 ? "error" : variant}
+      variant={activeConditions.length > 0 ? "warn" : variant}
       className="flex flex-col"
     >
       <CardHeader>
@@ -104,7 +88,7 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
         </CardTitle>
         <div className="ml-auto flex items-center gap-1.5">
           {agent.state && agent.state !== "Ready" ? (
-            <Badge variant={stateVariant(agent.state)}>{agent.state}</Badge>
+            <Badge variant={statusVariant(agent.state)}>{agent.state}</Badge>
           ) : (
             <Badge variant={badgeVariant}>{agent.status}</Badge>
           )}
@@ -171,7 +155,7 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
           <div className="mt-2 flex items-center gap-3">
             {components.map(([name, comp]) => (
               <div key={name} className="flex items-center gap-1 text-xs">
-                <HealthDot status={isHealthy(comp.status)} />
+                <HealthDot status={statusDot(comp.status)} />
                 <span className="text-text-muted">{name}</span>
               </div>
             ))}

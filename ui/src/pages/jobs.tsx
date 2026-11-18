@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { spinnerColor } from "@/lib/spinner-color";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { useAuth } from "@/hooks/use-auth";
 import { ContentArea } from "@/components/layout/content-area";
@@ -30,6 +29,9 @@ import {
   retryJobByID,
 } from "@/sdk/gen/job-management-api-job-operations/job-management-api-job-operations";
 import type { JobDetailResponse, ListJobsResponse } from "@/sdk/gen/schemas";
+import { statusVariant } from "@/lib/status";
+import { PermissionDenied } from "@/components/layout/permission-denied";
+import { Spinner } from "@/components/ui/spinner";
 
 const PAGE_SIZE = 20;
 
@@ -42,26 +44,6 @@ const STATUS_OPTIONS = [
   { value: "partial_failure", label: "Partial Failure" },
   { value: "skipped", label: "Skipped" },
 ];
-
-function statusBadgeVariant(status?: string) {
-  switch (status) {
-    case "completed":
-      return "ready" as const;
-    case "failed":
-    case "partial_failure":
-      return "error" as const;
-    case "processing":
-      return "running" as const;
-    case "retried":
-      return "pending" as const;
-    case "submitted":
-      return "muted" as const;
-    case "skipped":
-      return "muted" as const;
-    default:
-      return "muted" as const;
-  }
-}
 
 function formatTimestamp(ts?: string) {
   if (!ts) return "-";
@@ -109,7 +91,7 @@ function JobDetailPanel({ job }: { job: JobDetailResponse }) {
         <div>
           <Text variant="label">Status</Text>
           <div className="mt-0.5">
-            <Badge variant={statusBadgeVariant(job.status)}>{job.status}</Badge>
+            <Badge variant={statusVariant(job.status)}>{job.status}</Badge>
           </div>
         </div>
         <div>
@@ -176,9 +158,7 @@ function JobDetailPanel({ job }: { job: JobDetailResponse }) {
                 <Text variant="mono-muted">
                   {formatTimestamp(evt.timestamp)}
                 </Text>
-                <Badge variant={statusBadgeVariant(evt.event)}>
-                  {evt.event}
-                </Badge>
+                <Badge variant={statusVariant(evt.event)}>{evt.event}</Badge>
                 {evt.hostname && <Text variant="muted">{evt.hostname}</Text>}
                 {evt.message && <Text variant="muted">{evt.message}</Text>}
                 {evt.error && <Text variant="error">{evt.error}</Text>}
@@ -195,7 +175,7 @@ function JobDetailPanel({ job }: { job: JobDetailResponse }) {
             {Object.entries(job.agent_states).map(([host, state]) => (
               <div key={host} className="flex items-center gap-2 text-xs">
                 <Text variant="mono">{host}</Text>
-                <Badge variant={statusBadgeVariant(state.status)}>
+                <Badge variant={statusVariant(state.status)}>
                   {state.status}
                 </Badge>
                 {state.duration && (
@@ -321,12 +301,7 @@ export function Jobs() {
   };
 
   if (!can("job:read")) {
-    return (
-      <ContentArea>
-        <PageHeader title="Jobs" subtitle="Insufficient permissions" />
-        <ErrorBanner message="You do not have permission to view jobs." />
-      </ContentArea>
-    );
+    return <PermissionDenied title="Jobs" what="jobs" />;
   }
 
   const items = data?.items ?? [];
@@ -348,9 +323,7 @@ export function Jobs() {
                   {Object.entries(data.status_counts).map(([status, count]) => (
                     <Badge
                       key={status}
-                      variant={
-                        count === 0 ? "muted" : statusBadgeVariant(status)
-                      }
+                      variant={count === 0 ? "muted" : statusVariant(status)}
                     >
                       {status}: {count}
                     </Badge>
@@ -362,11 +335,7 @@ export function Jobs() {
         }
       />
 
-      {loading && (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className={`h-8 w-8 animate-spin ${spinnerColor}`} />
-        </div>
-      )}
+      {loading && <Spinner />}
 
       {error && <ErrorBanner message={error} />}
 
@@ -435,7 +404,7 @@ export function Jobs() {
                             </Text>
                           </td>
                           <td className="px-3 py-1.5">
-                            <Badge variant={statusBadgeVariant(job.status)}>
+                            <Badge variant={statusVariant(job.status)}>
                               {job.status}
                             </Badge>
                           </td>
@@ -499,9 +468,7 @@ export function Jobs() {
                             >
                               {expandLoading ? (
                                 <div className="flex items-center justify-center py-4">
-                                  <Loader2
-                                    className={`h-5 w-5 animate-spin ${spinnerColor}`}
-                                  />
+                                  <Spinner size="inline" />
                                 </div>
                               ) : expandedJob ? (
                                 <JobDetailPanel job={expandedJob} />

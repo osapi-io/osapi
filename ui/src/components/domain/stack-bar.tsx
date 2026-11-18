@@ -15,11 +15,10 @@ interface StackBarProps {
   onNew: () => void;
 }
 
-function permVariant(perm: string) {
-  if (perm.endsWith(":write") || perm.endsWith(":execute")) {
-    return "running" as const;
-  }
-  return "muted" as const;
+// isWrite reports whether a permission changes a host, which the CLI marks
+// in bold.
+function isWrite(perm: string) {
+  return perm.endsWith(":write") || perm.endsWith(":execute");
 }
 
 function StackCard({
@@ -60,7 +59,11 @@ function StackCard({
           {stack.blocks.length} block{stack.blocks.length !== 1 ? "s" : ""}
         </Text>
         {stack.permissions.map((perm) => (
-          <Badge key={perm} variant={permVariant(perm)}>
+          <Badge
+            key={perm}
+            variant="muted"
+            className={cn(isWrite(perm) && "font-semibold text-text")}
+          >
             <Shield className="h-3 w-3" />
             {perm}
           </Badge>

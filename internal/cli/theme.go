@@ -83,37 +83,54 @@ var (
 	ErrStyle  = lipgloss.NewStyle().Foreground(Red)
 )
 
-// statusStyles maps a status word to the style that carries it. The word is
-// the first one in the cell, lowercased, so "ok nats://localhost:4222" and
-// "Ready" both match.
-var statusStyles = map[string]lipgloss.Style{
-	"ok":        OKStyle,
-	"ready":     OKStyle,
-	"changed":   OKStyle,
-	"completed": OKStyle,
-	"running":   OKStyle,
-	"healthy":   OKStyle,
-	"active":    OKStyle,
-	"enabled":   OKStyle,
-	"accepted":  OKStyle,
-	"skip":      WarnStyle,
-	"skipped":   WarnStyle,
-	"disabled":  WarnStyle,
-	"draining":  WarnStyle,
-	"drained":   WarnStyle,
-	"cordoned":  WarnStyle,
-	"pending":   WarnStyle,
-	"submitted": WarnStyle,
-	"partial":   WarnStyle,
-	"degraded":  WarnStyle,
-	"unknown":   WarnStyle,
-	"err":       ErrStyle,
-	"error":     ErrStyle,
-	"failed":    ErrStyle,
-	"timeout":   ErrStyle,
-	"notready":  ErrStyle,
-	"unhealthy": ErrStyle,
-	"rejected":  ErrStyle,
+// The tones of a status word: ok, it needs attention, or it went wrong.
+const (
+	ToneOK   = "ok"
+	ToneWarn = "warn"
+	ToneErr  = "err"
+)
+
+// StatusTones maps a status word to its tone: green for ok, amber for
+// attention, red for wrong. The word is the first one in the cell,
+// lowercased, so "ok nats://localhost:4222" and "Ready" both match. A word
+// that is not here is plain. The UI's ui/src/lib/status.gen.ts is generated
+// from this map, so a page and a terminal show a word in the same color.
+var StatusTones = map[string]string{
+	"ok":              ToneOK,
+	"ready":           ToneOK,
+	"changed":         ToneOK,
+	"completed":       ToneOK,
+	"running":         ToneOK,
+	"healthy":         ToneOK,
+	"active":          ToneOK,
+	"enabled":         ToneOK,
+	"accepted":        ToneOK,
+	"skip":            ToneWarn,
+	"skipped":         ToneWarn,
+	"disabled":        ToneWarn,
+	"draining":        ToneWarn,
+	"drained":         ToneWarn,
+	"cordoned":        ToneWarn,
+	"pending":         ToneWarn,
+	"submitted":       ToneWarn,
+	"partial":         ToneWarn,
+	"partial_failure": ToneWarn,
+	"degraded":        ToneWarn,
+	"unknown":         ToneWarn,
+	"err":             ToneErr,
+	"error":           ToneErr,
+	"failed":          ToneErr,
+	"timeout":         ToneErr,
+	"notready":        ToneErr,
+	"unhealthy":       ToneErr,
+	"rejected":        ToneErr,
+}
+
+// toneStyles is the style of each tone.
+var toneStyles = map[string]lipgloss.Style{
+	ToneOK:   OKStyle,
+	ToneWarn: WarnStyle,
+	ToneErr:  ErrStyle,
 }
 
 // RenderStatus renders a status word, such as "ok" or "disabled", in its
@@ -132,8 +149,8 @@ func statusStyle(
 	cell string,
 ) lipgloss.Style {
 	word, _, _ := strings.Cut(strings.TrimSpace(cell), " ")
-	if s, ok := statusStyles[strings.ToLower(word)]; ok {
-		return s
+	if tone, ok := StatusTones[strings.ToLower(word)]; ok {
+		return toneStyles[tone]
 	}
 
 	return ValueStyle

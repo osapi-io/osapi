@@ -11,17 +11,6 @@ import { ROLES, ALL_PERMISSIONS, BLOCK_PERMISSIONS } from "@/lib/permissions";
 import { Shield, Check, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-function roleBadgeVariant(name: string) {
-  switch (name) {
-    case "admin":
-      return "error" as const;
-    case "operator":
-      return "running" as const;
-    default:
-      return "muted" as const;
-  }
-}
-
 // Group permissions by resource
 function groupPermissions(perms: string[]) {
   const groups: Record<string, string[]> = {};
@@ -50,7 +39,7 @@ export function Roles() {
         <Card>
           <CardContent>
             <div className="flex items-center gap-3">
-              <Badge variant={roleBadgeVariant(currentRole.name)}>
+              <Badge variant="muted">
                 <Shield className="h-3 w-3" />
                 {currentRole.label}
               </Badge>
@@ -78,9 +67,7 @@ export function Roles() {
           columns={[
             {
               header: "Role",
-              cell: (r) => (
-                <Badge variant={roleBadgeVariant(r.name)}>{r.label}</Badge>
-              ),
+              cell: (r) => <Badge variant="muted">{r.label}</Badge>,
             },
             {
               header: "JWT Value",

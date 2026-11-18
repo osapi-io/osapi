@@ -10,6 +10,7 @@ import { IdBadge } from "@/components/ui/id-badge";
 import { KeyValue } from "@/components/ui/key-value";
 import { Text } from "@/components/ui/text";
 import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { statusVariant } from "@/lib/status";
 
 // Shared state between inline pill + panel for the same job ID
 const jobStates = new Map<
@@ -124,20 +125,6 @@ function useJobDetail(jobId: string) {
   return { ...snapshot, toggle };
 }
 
-function statusVariant(status?: string) {
-  switch (status) {
-    case "completed":
-      return "ready" as const;
-    case "processing":
-      return "running" as const;
-    case "failed":
-    case "partial_failure":
-      return "error" as const;
-    default:
-      return "muted" as const;
-  }
-}
-
 function TimelineRow({ event }: { event: JobDetailResponseTimelineItem }) {
   return (
     <div className="flex items-start gap-3 py-1.5">
@@ -211,7 +198,7 @@ export function JobDetail({ jobId, inline, panel }: JobDetailProps) {
     if (!job) return null;
 
     return (
-      <div className="border-b border-border/40 bg-[#050505] px-4 py-3">
+      <div className="border-b border-border/40 bg-surface px-4 py-3">
         {/* Header */}
         <div className="mb-2 flex items-center gap-2">
           <Text variant="mono-muted">{job.id}</Text>

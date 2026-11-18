@@ -1,6 +1,6 @@
 import { cn } from "@/lib/cn";
 
-type HealthDotColor = "ok" | "error" | "muted";
+type HealthDotColor = "ok" | "warn" | "error" | "muted";
 
 interface HealthDotProps {
   status: boolean | HealthDotColor;
@@ -9,6 +9,7 @@ interface HealthDotProps {
 
 const colorMap: Record<HealthDotColor, string> = {
   ok: "bg-primary",
+  warn: "bg-status-pending",
   error: "bg-status-error",
   muted: "bg-text-muted",
 };

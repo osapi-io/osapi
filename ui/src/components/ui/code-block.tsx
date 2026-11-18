@@ -10,7 +10,7 @@ interface CodeBlockProps extends HTMLAttributes<HTMLPreElement> {
 
 const variantClasses: Record<CodeBlockVariant, string> = {
   stdout:
-    "overflow-auto whitespace-pre-wrap rounded bg-[#0a0a0a] px-2 py-1.5 font-mono text-xs text-text/80",
+    "overflow-auto whitespace-pre-wrap rounded bg-background px-2 py-1.5 font-mono text-xs text-text/80",
   stderr:
     "overflow-auto whitespace-pre-wrap rounded bg-status-running/5 px-2 py-1.5 font-mono text-xs text-status-running",
   error:

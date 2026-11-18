@@ -14,6 +14,8 @@ interface DataTableProps<T> {
   rows: T[];
   getRowKey: (row: T, index: number) => string | number;
   compact?: boolean;
+  /** What an empty table says, in one row; the CLI says "None.". */
+  empty?: string;
   className?: string;
 }
 
@@ -28,6 +30,7 @@ export function DataTable<T>({
   rows,
   getRowKey,
   compact = true,
+  empty = "None.",
   className,
 }: DataTableProps<T>) {
   const hPad = compact ? "px-3" : "px-4";
@@ -39,14 +42,14 @@ export function DataTable<T>({
       <CardContent className="p-0">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-border/40 text-left text-text-muted">
+            <tr className="border-b border-border/40 text-left text-tint">
               {columns.map((col, i) => (
                 <th
                   key={i}
                   className={cn(
                     hPad,
                     hVPad,
-                    "font-medium",
+                    "font-medium uppercase tracking-wide",
                     alignClass[col.align ?? "left"],
                     col.className,
                   )}
@@ -57,6 +60,16 @@ export function DataTable<T>({
             </tr>
           </thead>
           <tbody>
+            {rows.length === 0 && (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className={cn(hPad, cVPad, "text-text-muted")}
+                >
+                  {empty}
+                </td>
+              </tr>
+            )}
             {rows.map((row, rowIdx) => (
               <tr
                 key={getRowKey(row, rowIdx)}
