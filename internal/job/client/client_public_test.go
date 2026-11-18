@@ -1554,7 +1554,7 @@ func (s *ClientPublicTestSuite) TestQueryWithTargetResolver() {
 	)
 
 	// The resolver translates hostname → machineID.
-	resolver := func(target string) string {
+	resolver := func(_ context.Context, target string) string {
 		if target == hostname {
 			return machineID
 		}

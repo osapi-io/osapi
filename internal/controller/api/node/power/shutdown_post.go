@@ -38,13 +38,13 @@ func (s *Power) PostNodePowerShutdown(
 	ctx context.Context,
 	request gen.PostNodePowerShutdownRequestObject,
 ) (gen.PostNodePowerShutdownResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PostNodePowerShutdown400JSONResponse{Error: &errMsg}, nil
 	}
 
 	opts := powerProv.Opts{}
 	if request.Body != nil {
-		if errMsg, ok := validation.Struct(request.Body); !ok {
+		if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 			return gen.PostNodePowerShutdown400JSONResponse{Error: &errMsg}, nil
 		}
 

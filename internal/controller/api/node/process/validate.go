@@ -21,6 +21,7 @@
 package process
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/osapi-io/osapi/internal/validation"
@@ -32,9 +33,10 @@ import (
 // This exists because oapi-codegen does not generate validate tags on
 // path parameters in strict-server mode (upstream limitation).
 func validateHostname(
+	ctx context.Context,
 	hostname string,
 ) (string, bool) {
-	return validation.Var(hostname, "required,min=1,valid_target")
+	return validation.Var(ctx, hostname, "required,min=1,valid_target")
 }
 
 // validatePid validates a pid path parameter against the bound the
@@ -47,9 +49,10 @@ func validateHostname(
 // anything lower is a whole process group. required only rejects 0, so without
 // min=1 a negative pid turns one signal into a fleet-wide one.
 func validatePid(
+	ctx context.Context,
 	pid int,
 ) (string, bool) {
-	errMsg, ok := validation.Var(pid, "required,min=1")
+	errMsg, ok := validation.Var(ctx, pid, "required,min=1")
 	if ok {
 		return "", true
 	}

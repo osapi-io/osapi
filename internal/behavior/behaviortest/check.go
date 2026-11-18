@@ -346,7 +346,7 @@ func checkRefusalChecked(
 	// An input that JSON cannot encode has no schema, which behavior
 	// validate refuses first.
 	data, _ := json.Marshal(r.Input)
-	if m.Check(data) == nil {
+	if m.Check(context.Background(), data) == nil {
 		return behavior.TestFailure(behavior.TestRefusal, fmt.Sprintf(
 			"the input breaks %s, and Method.Check passed it: the agent and behavior.Call would run it",
 			strings.Join(broken, ", "),

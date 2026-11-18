@@ -245,6 +245,12 @@ func (s *TracePublicTestSuite) TestJobReadDetail() {
 			want:  "SHA256:ab",
 		},
 		{
+			name:  "when validate.target has a target it shows it",
+			span:  "validate.target",
+			attrs: map[string]string{"osapi.target": "_all"},
+			want:  "_all",
+		},
+		{
 			name:  "when job.process has a job ID it does not show it",
 			span:  "job.process",
 			attrs: map[string]string{"job.id": "0162195c"},

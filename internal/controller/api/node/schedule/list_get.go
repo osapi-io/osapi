@@ -37,7 +37,7 @@ func (s *Schedule) GetNodeSchedule(
 	ctx context.Context,
 	request gen.GetNodeScheduleRequestObject,
 ) (gen.GetNodeScheduleResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeSchedule400JSONResponse{Error: &errMsg}, nil
 	}
 

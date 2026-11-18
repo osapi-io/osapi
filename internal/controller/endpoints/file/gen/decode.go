@@ -26,7 +26,7 @@ func decodeUpload(
 	if msg, ok := server.Form(c, &in); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 
@@ -41,7 +41,7 @@ func decodeGet(
 	if msg, ok := server.Param(c, "name", &in.Name); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 
@@ -59,7 +59,7 @@ func decodeUpdate(
 	if msg, ok := server.Param(c, "name", &in.Name); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 
@@ -74,7 +74,7 @@ func decodeDelete(
 	if msg, ok := server.Param(c, "name", &in.Name); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 

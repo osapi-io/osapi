@@ -36,7 +36,7 @@ func (s *Hostname) GetNodeHostname(
 	ctx context.Context,
 	request gen.GetNodeHostnameRequestObject,
 ) (gen.GetNodeHostnameResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeHostname400JSONResponse{Error: &errMsg}, nil
 	}
 

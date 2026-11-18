@@ -37,11 +37,11 @@ func (s *Container) GetNodeContainerDockerByID(
 	ctx context.Context,
 	request gen.GetNodeContainerDockerByIDRequestObject,
 ) (gen.GetNodeContainerDockerByIDResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Var(request.Id, "required,container_id"); !ok {
+	if errMsg, ok := validation.Var(ctx, request.Id, "required,container_id"); !ok {
 		return gen.GetNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
 	}
 

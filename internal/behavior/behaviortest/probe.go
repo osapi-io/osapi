@@ -21,6 +21,7 @@
 package behaviortest
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -113,7 +114,7 @@ func probe(
 	// The API, the agent and behavior.Call refuse an input that breaks its
 	// rules, so no probe can reach the host with one.
 	data, _ := json.Marshal(input)
-	if m.Check(data) != nil {
+	if m.Check(context.Background(), data) != nil {
 		return ""
 	}
 

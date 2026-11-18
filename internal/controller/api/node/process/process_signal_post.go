@@ -38,15 +38,15 @@ func (s *Process) PostNodeProcessSignal(
 	ctx context.Context,
 	request gen.PostNodeProcessSignalRequestObject,
 ) (gen.PostNodeProcessSignalResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PostNodeProcessSignal400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validatePid(request.Pid); !ok {
+	if errMsg, ok := validatePid(ctx, request.Pid); !ok {
 		return gen.PostNodeProcessSignal400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Struct(request.Body); !ok {
+	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 		return gen.PostNodeProcessSignal400JSONResponse{Error: &errMsg}, nil
 	}
 

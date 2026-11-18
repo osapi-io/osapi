@@ -37,7 +37,7 @@ func (s *Sysctl) GetNodeSysctl(
 	ctx context.Context,
 	request gen.GetNodeSysctlRequestObject,
 ) (gen.GetNodeSysctlResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeSysctl400JSONResponse{Error: &errMsg}, nil
 	}
 

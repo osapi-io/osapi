@@ -21,6 +21,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -359,7 +360,7 @@ func validationCases(
 		// A refusal the API cannot see, such as a parameter osapi does not
 		// manage, is the provider's, which behaviortest checks; and a keyed
 		// method with no key has no route.
-		if data, _ := json.Marshal(r.Input); m.Check(data) == nil {
+		if data, _ := json.Marshal(r.Input); m.Check(context.Background(), data) == nil {
 			continue
 		}
 		if m.KeyField != "" {

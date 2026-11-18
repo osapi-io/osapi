@@ -40,15 +40,15 @@ func (u *User) PutNodeGroup(
 	ctx context.Context,
 	request gen.PutNodeGroupRequestObject,
 ) (gen.PutNodeGroupResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PutNodeGroup400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateName(request.Name); !ok {
+	if errMsg, ok := validateName(ctx, request.Name); !ok {
 		return gen.PutNodeGroup400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Struct(request.Body); !ok {
+	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 		return gen.PutNodeGroup400JSONResponse{Error: &errMsg}, nil
 	}
 

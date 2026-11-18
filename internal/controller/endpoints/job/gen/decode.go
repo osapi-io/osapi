@@ -23,7 +23,7 @@ func decodeList(
 	if msg, ok := server.Query(c, "offset", &in.Offset); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 
@@ -38,7 +38,7 @@ func decodeGet(
 	if msg, ok := server.Param(c, "id", &in.ID); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 
@@ -53,7 +53,7 @@ func decodeDelete(
 	if msg, ok := server.Param(c, "id", &in.ID); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 
@@ -71,7 +71,7 @@ func decodeRetry(
 	if msg, ok := server.Param(c, "id", &in.ID); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 

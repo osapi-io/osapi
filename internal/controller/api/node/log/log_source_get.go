@@ -36,7 +36,7 @@ func (s *Log) GetNodeLogSource(
 	ctx context.Context,
 	request gen.GetNodeLogSourceRequestObject,
 ) (gen.GetNodeLogSourceResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeLogSource400JSONResponse{Error: &errMsg}, nil
 	}
 

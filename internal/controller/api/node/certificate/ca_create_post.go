@@ -38,11 +38,11 @@ func (s *Certificate) PostNodeCertificateCa(
 	ctx context.Context,
 	request gen.PostNodeCertificateCaRequestObject,
 ) (gen.PostNodeCertificateCaResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PostNodeCertificateCa400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Struct(request.Body); !ok {
+	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 		return gen.PostNodeCertificateCa400JSONResponse{Error: &errMsg}, nil
 	}
 

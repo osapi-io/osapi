@@ -36,7 +36,7 @@ func (s *Node) GetNodeDisk(
 	ctx context.Context,
 	request gen.GetNodeDiskRequestObject,
 ) (gen.GetNodeDiskResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeDisk400JSONResponse{Error: &errMsg}, nil
 	}
 

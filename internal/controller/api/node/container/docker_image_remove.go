@@ -36,11 +36,11 @@ func (s *Container) DeleteNodeContainerDockerImage(
 	ctx context.Context,
 	request gen.DeleteNodeContainerDockerImageRequestObject,
 ) (gen.DeleteNodeContainerDockerImageResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.DeleteNodeContainerDockerImage400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Var(request.Image, "required,min=1"); !ok {
+	if errMsg, ok := validation.Var(ctx, request.Image, "required,min=1"); !ok {
 		return gen.DeleteNodeContainerDockerImage400JSONResponse{Error: &errMsg}, nil
 	}
 

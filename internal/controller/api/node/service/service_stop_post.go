@@ -37,11 +37,11 @@ func (s *Service) PostNodeServiceStop(
 	ctx context.Context,
 	request gen.PostNodeServiceStopRequestObject,
 ) (gen.PostNodeServiceStopResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PostNodeServiceStop400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateName(request.Name); !ok {
+	if errMsg, ok := validateName(ctx, request.Name); !ok {
 		return gen.PostNodeServiceStop400JSONResponse{Error: &errMsg}, nil
 	}
 

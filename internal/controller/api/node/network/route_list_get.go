@@ -37,7 +37,7 @@ func (s *Network) GetNodeNetworkRoute(
 	ctx context.Context,
 	request gen.GetNodeNetworkRouteRequestObject,
 ) (gen.GetNodeNetworkRouteResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeNetworkRoute400JSONResponse{Error: &errMsg}, nil
 	}
 

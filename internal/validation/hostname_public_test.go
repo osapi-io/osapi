@@ -98,7 +98,7 @@ func (s *HostnamePublicTestSuite) TestTargetHostname() {
 				},
 			)
 
-			tt.validateFunc(validation.TargetHostname(tt.hostname))
+			tt.validateFunc(validation.TargetHostname(context.Background(), tt.hostname))
 		})
 	}
 }

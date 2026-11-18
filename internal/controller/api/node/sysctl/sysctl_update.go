@@ -40,15 +40,15 @@ func (s *Sysctl) PutNodeSysctl(
 	ctx context.Context,
 	request gen.PutNodeSysctlRequestObject,
 ) (gen.PutNodeSysctlResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PutNodeSysctl400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateKey(request.Key); !ok {
+	if errMsg, ok := validateKey(ctx, request.Key); !ok {
 		return gen.PutNodeSysctl400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Struct(request.Body); !ok {
+	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 		return gen.PutNodeSysctl400JSONResponse{Error: &errMsg}, nil
 	}
 

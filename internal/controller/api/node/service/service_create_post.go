@@ -38,11 +38,11 @@ func (s *Service) PostNodeService(
 	ctx context.Context,
 	request gen.PostNodeServiceRequestObject,
 ) (gen.PostNodeServiceResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PostNodeService400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Struct(request.Body); !ok {
+	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 		return gen.PostNodeService400JSONResponse{Error: &errMsg}, nil
 	}
 

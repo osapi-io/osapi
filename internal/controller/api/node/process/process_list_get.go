@@ -37,7 +37,7 @@ func (s *Process) GetNodeProcess(
 	ctx context.Context,
 	request gen.GetNodeProcessRequestObject,
 ) (gen.GetNodeProcessResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeProcess400JSONResponse{Error: &errMsg}, nil
 	}
 

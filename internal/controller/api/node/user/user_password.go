@@ -40,15 +40,15 @@ func (u *User) PostNodeUserPassword(
 	ctx context.Context,
 	request gen.PostNodeUserPasswordRequestObject,
 ) (gen.PostNodeUserPasswordResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PostNodeUserPassword400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateName(request.Name); !ok {
+	if errMsg, ok := validateName(ctx, request.Name); !ok {
 		return gen.PostNodeUserPassword400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Struct(request.Body); !ok {
+	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 		return gen.PostNodeUserPassword400JSONResponse{Error: &errMsg}, nil
 	}
 

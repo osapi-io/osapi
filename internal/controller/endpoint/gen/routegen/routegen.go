@@ -136,7 +136,10 @@ func Decoders(
 				jen.Id("c"), jen.Lit(genutil.JSONName(fld)), jen.Op("&").Id("in").Dot(fld.Name))))
 		}
 		if len(genutil.StructFields(m.In)) > 0 {
-			body = append(body, check(jen.Qual(serverPath, "Valid").Call(jen.Id("in"))))
+			body = append(
+				body,
+				check(jen.Qual(serverPath, "Valid").Call(jen.Id("c"), jen.Id("in"))),
+			)
 		}
 		body = append(body, jen.Line(), jen.Return(jen.Id("in"), jen.Lit(""), jen.True()))
 

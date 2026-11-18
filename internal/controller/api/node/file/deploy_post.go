@@ -37,11 +37,11 @@ func (s *File) PostNodeFileDeploy(
 	ctx context.Context,
 	request gen.PostNodeFileDeployRequestObject,
 ) (gen.PostNodeFileDeployResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PostNodeFileDeploy400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Struct(request.Body); !ok {
+	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 		return gen.PostNodeFileDeploy400JSONResponse{
 			Error: &errMsg,
 		}, nil

@@ -57,7 +57,7 @@ type Client struct {
 	pkiSigner PKISigner
 	// targetResolver resolves a target (hostname or machine ID) to the
 	// value used for NATS subject routing. When nil, the target is used as-is.
-	targetResolver func(string) string
+	targetResolver func(ctx context.Context, target string) string
 	// agentKeyStore verifies agent responses against the key recorded when
 	// the agent was accepted. Nil when the controller is not enforcing, in
 	// which case responses are handled exactly as they were before
@@ -87,7 +87,7 @@ type Options struct {
 	PKISigner PKISigner
 	// TargetResolver resolves hostname targets to machine IDs for NATS
 	// subject routing. When nil, targets are used as-is.
-	TargetResolver func(string) string
+	TargetResolver func(ctx context.Context, target string) string
 }
 
 // New creates a new jobs client using an existing NATS client.
@@ -148,10 +148,11 @@ func (c *Client) SetMachineID(
 // value for NATS subjects. When no resolver is configured, returns the
 // target unchanged.
 func (c *Client) resolveTarget(
+	ctx context.Context,
 	target string,
 ) string {
 	if c.targetResolver != nil {
-		return c.targetResolver(target)
+		return c.targetResolver(ctx, target)
 	}
 	return target
 }
@@ -176,7 +177,7 @@ func (c *Client) Query(
 		Data:      json.RawMessage(dataBytes),
 	}
 
-	resolved := c.resolveTarget(target)
+	resolved := c.resolveTarget(ctx, target)
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, resolved)
 	// The span records the target that the caller gave, such as debian-1;
 	// the subject has the machine ID that it resolves to.
@@ -213,7 +214,7 @@ func (c *Client) QueryBroadcast(
 		Data:      json.RawMessage(dataBytes),
 	}
 
-	resolved := c.resolveTarget(target)
+	resolved := c.resolveTarget(ctx, target)
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, resolved)
 	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
@@ -243,7 +244,7 @@ func (c *Client) Modify(
 		Data:      json.RawMessage(dataBytes),
 	}
 
-	resolved := c.resolveTarget(target)
+	resolved := c.resolveTarget(ctx, target)
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, resolved)
 	// The span records the target that the caller gave, such as debian-1;
 	// the subject has the machine ID that it resolves to.
@@ -280,7 +281,7 @@ func (c *Client) ModifyBroadcast(
 		Data:      json.RawMessage(dataBytes),
 	}
 
-	resolved := c.resolveTarget(target)
+	resolved := c.resolveTarget(ctx, target)
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, resolved)
 	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {

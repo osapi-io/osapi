@@ -131,7 +131,7 @@ func (s *SpanPublicTestSuite) TestQuery() {
 			jobs, err := client.New(slog.Default(), s.nats, &client.Options{
 				Timeout: timeout, JobsBucket: "jobs", StreamName: "JOBS",
 				// The controller resolves a hostname to the agent's machine ID.
-				TargetResolver: func(string) string { return "mid1" },
+				TargetResolver: func(context.Context, string) string { return "mid1" },
 			})
 			s.Require().NoError(err)
 

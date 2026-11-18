@@ -36,15 +36,15 @@ func (s *Network) PutNodeNetworkInterface(
 	ctx context.Context,
 	request gen.PutNodeNetworkInterfaceRequestObject,
 ) (gen.PutNodeNetworkInterfaceResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PutNodeNetworkInterface400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateInterfaceName(request.Name); !ok {
+	if errMsg, ok := validateInterfaceName(ctx, request.Name); !ok {
 		return gen.PutNodeNetworkInterface400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Struct(request.Body); !ok {
+	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 		return gen.PutNodeNetworkInterface400JSONResponse{Error: &errMsg}, nil
 	}
 

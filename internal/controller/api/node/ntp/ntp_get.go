@@ -37,7 +37,7 @@ func (s *Ntp) GetNodeNtp(
 	ctx context.Context,
 	request gen.GetNodeNtpRequestObject,
 ) (gen.GetNodeNtpResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeNtp400JSONResponse{Error: &errMsg}, nil
 	}
 

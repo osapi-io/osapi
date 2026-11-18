@@ -39,11 +39,11 @@ func (s *Sysctl) GetNodeSysctlByKey(
 	ctx context.Context,
 	request gen.GetNodeSysctlByKeyRequestObject,
 ) (gen.GetNodeSysctlByKeyResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeSysctlByKey400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateKey(request.Key); !ok {
+	if errMsg, ok := validateKey(ctx, request.Key); !ok {
 		return gen.GetNodeSysctlByKey400JSONResponse{Error: &errMsg}, nil
 	}
 

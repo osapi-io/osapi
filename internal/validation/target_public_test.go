@@ -26,6 +26,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 
 	"github.com/osapi-io/osapi/internal/validation"
 )
@@ -372,12 +376,12 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 				)
 
 				// First call populates cache.
-				_, ok := validation.Struct(targetInput{Target: "server1"})
+				_, ok := validation.Struct(context.Background(), targetInput{Target: "server1"})
 				s.True(ok)
 				s.Equal(1, callCount)
 
 				// Second call should use cache, not call lister again.
-				_, ok = validation.Struct(targetInput{Target: "server1"})
+				_, ok = validation.Struct(context.Background(), targetInput{Target: "server1"})
 				s.True(ok)
 				s.Equal(1, callCount)
 			},
@@ -394,7 +398,7 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 
 			tt.setupLister()
 
-			errMsg, ok := validation.Struct(tt.input)
+			errMsg, ok := validation.Struct(context.Background(), tt.input)
 			s.Equal(tt.wantOK, ok)
 
 			if !ok {
@@ -402,6 +406,138 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 					s.Contains(errMsg, c)
 				}
 			}
+		})
+	}
+}
+
+// TestValidTargetUsesRequestContext checks that valid_target lists the
+// agents with the request's context, so the lookup is in the request's
+// trace and a cancelled request stops it. Before #868 it used
+// context.Background(), and the lister saw none of the request's values.
+func (s *TargetPublicTestSuite) TestValidTargetUsesRequestContext() {
+	type key struct{}
+	type in struct {
+		Target string `validate:"valid_target"`
+	}
+
+	tests := []struct {
+		name string
+		call func(ctx context.Context) bool
+	}{
+		{
+			name: "when a struct is validated the lister gets the request's context",
+			call: func(ctx context.Context) bool {
+				_, ok := validation.Struct(ctx, in{Target: "web-01"})
+				return ok
+			},
+		},
+		{
+			name: "when a target is resolved the lister gets the caller's context",
+			call: func(ctx context.Context) bool {
+				return validation.ResolveTarget(ctx, "web-01") != ""
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var got any
+			validation.RegisterTargetValidator(
+				func(ctx context.Context) ([]validation.AgentTarget, error) {
+					got = ctx.Value(key{})
+					return []validation.AgentTarget{{MachineID: "m1", Hostname: "web-01"}}, nil
+				},
+			)
+
+			s.True(tc.call(context.WithValue(context.Background(), key{}, "request")))
+			s.Equal("request", got)
+		})
+	}
+}
+
+// TestLookupSpan checks that a registry read by a target check has a span
+// that says what it is for, with the target, so a trace tells it from the
+// agent.list of a job: validate.target for a rule, target.resolve for a
+// hostname. A read from the cache calls nothing, so it has no span.
+func (s *TargetPublicTestSuite) TestLookupSpan() {
+	type in struct {
+		Target string `validate:"valid_target"`
+	}
+
+	tests := []struct {
+		name   string
+		cached bool
+		call   func(ctx context.Context)
+		want   string
+		target string
+	}{
+		{
+			name: "when a rule validates a hostname opens validate.target",
+			call: func(ctx context.Context) {
+				_, _ = validation.Struct(ctx, in{Target: "web-01"})
+			},
+			want:   "validate.target",
+			target: "web-01",
+		},
+		{
+			name: "when a rule validates _all opens validate.target",
+			call: func(ctx context.Context) {
+				_, _ = validation.Struct(ctx, in{Target: "_all"})
+			},
+			want:   "validate.target",
+			target: "_all",
+		},
+		{
+			name: "when a hostname is resolved opens target.resolve",
+			call: func(ctx context.Context) {
+				_ = validation.ResolveTarget(ctx, "web-01")
+			},
+			want:   "target.resolve",
+			target: "web-01",
+		},
+		{
+			name:   "when the agents are cached opens no span",
+			cached: true,
+			call: func(ctx context.Context) {
+				_, _ = validation.Struct(ctx, in{Target: "web-01"})
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			validation.RegisterTargetValidator(
+				func(context.Context) ([]validation.AgentTarget, error) {
+					return []validation.AgentTarget{{MachineID: "m1", Hostname: "web-01"}}, nil
+				},
+			)
+			if tc.cached {
+				_, _ = validation.Struct(context.Background(), in{Target: "web-01"})
+			}
+			recorder := tracetest.NewSpanRecorder()
+			previous := otel.GetTracerProvider()
+			otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+			defer otel.SetTracerProvider(previous)
+
+			ctx, request := otel.Tracer("test").
+				Start(context.Background(), "GET /api/node/:hostname")
+			tc.call(ctx)
+			request.End()
+
+			var lookups []sdktrace.ReadOnlySpan
+			for _, sp := range recorder.Ended() {
+				if sp.Name() != "GET /api/node/:hostname" {
+					lookups = append(lookups, sp)
+				}
+			}
+			if tc.want == "" {
+				s.Empty(lookups)
+				return
+			}
+			s.Require().Len(lookups, 1)
+			s.Equal(tc.want, lookups[0].Name())
+			s.Equal(request.SpanContext().SpanID(), lookups[0].Parent().SpanID())
+			s.Contains(lookups[0].Attributes(), attribute.String("osapi.target", tc.target))
 		})
 	}
 }
@@ -501,7 +637,7 @@ func (s *TargetPublicTestSuite) TestResolveTarget() {
 			if tt.setupLister != nil {
 				tt.setupLister()
 			}
-			got := validation.ResolveTarget(tt.target)
+			got := validation.ResolveTarget(context.Background(), tt.target)
 			tt.validateFunc(got)
 		})
 	}
@@ -517,7 +653,7 @@ func (s *TargetPublicTestSuite) TestValidTargetMatchesMachineID() {
 	)
 
 	// Machine ID should pass validation
-	_, ok := validation.Struct(targetInput{Target: "abc123-def456"})
+	_, ok := validation.Struct(context.Background(), targetInput{Target: "abc123-def456"})
 	s.True(ok)
 }
 
@@ -603,7 +739,7 @@ func (s *TargetPublicTestSuite) TestResolveTargetEnforcing() {
 			validation.SetEnforceVerifiedRegistrations(tt.enforce)
 			defer validation.SetEnforceVerifiedRegistrations(false)
 
-			tt.validateFunc(validation.ResolveTarget(tt.target))
+			tt.validateFunc(validation.ResolveTarget(context.Background(), tt.target))
 		})
 	}
 }
@@ -672,7 +808,7 @@ func (s *TargetPublicTestSuite) TestValidTargetEnforcing() {
 			validation.SetEnforceVerifiedRegistrations(true)
 			defer validation.SetEnforceVerifiedRegistrations(false)
 
-			_, ok := validation.Struct(targetInput{Target: tt.target})
+			_, ok := validation.Struct(context.Background(), targetInput{Target: tt.target})
 			tt.validateFunc(ok)
 		})
 	}
@@ -774,7 +910,7 @@ func (s *TargetPublicTestSuite) TestPendingTarget() {
 				)
 			}
 
-			tt.validateFunc(validation.PendingTarget(tt.target))
+			tt.validateFunc(validation.PendingTarget(context.Background(), tt.target))
 		})
 	}
 }

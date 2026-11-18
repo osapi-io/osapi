@@ -28,6 +28,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/telemetry/opspan"
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/go-playground/validator/v10"
 )
 
@@ -48,6 +51,17 @@ type AgentTarget struct {
 type AgentLister func(ctx context.Context) ([]AgentTarget, error)
 
 var agentLister AgentLister
+
+// tracerName names the spans of the target checks in a trace.
+const tracerName = "osapi-validation"
+
+// The spans of a registry read by the target checks, by what the read is
+// for: a refresh when a rule validates a target, such as valid_target, and
+// one when a hostname is resolved to the machine ID a subject routes to.
+const (
+	spanValidate = "validate.target"
+	spanResolve  = "target.resolve"
+)
 
 // enforceVerified gates whether an unverified registration is allowed to
 // decide where work goes.
@@ -92,7 +106,7 @@ func RegisterTargetValidator(
 	lister AgentLister,
 ) {
 	// Cannot error: tag is non-empty and function is non-nil.
-	_ = instance.RegisterValidation("valid_target", validTarget)
+	_ = instance.RegisterValidationCtx("valid_target", validTarget)
 	agentLister = lister
 	// Reset cache so the new lister is used immediately.
 	cacheMu.Lock()
@@ -102,7 +116,11 @@ func RegisterTargetValidator(
 
 // getAgents returns the cached agent list, refreshing from NATS when
 // the cache has expired.
-func getAgents() ([]AgentTarget, error) {
+func getAgents(
+	ctx context.Context,
+	purpose string,
+	target string,
+) ([]AgentTarget, error) {
 	cacheMu.Lock()
 	defer cacheMu.Unlock()
 
@@ -110,11 +128,16 @@ func getAgents() ([]AgentTarget, error) {
 		return cachedAgents, nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	// A refresh reads the registry, so it has a span that says why: the
+	// agent.list under it would otherwise look like any other.
+	ctx, span := opspan.Start(ctx, tracerName, purpose,
+		attribute.String("osapi.target", target),
+	)
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
 	agents, err := agentLister(ctx)
-	if err != nil {
+	if err := opspan.End(span, err); err != nil {
 		return nil, err
 	}
 
@@ -127,12 +150,13 @@ func getAgents() ([]AgentTarget, error) {
 // validTarget checks whether the target is a valid routing pattern
 // (_any, _all), a label matching an active agent, or a direct hostname.
 func validTarget(
+	ctx context.Context,
 	fl validator.FieldLevel,
 ) bool {
 	target := fl.Field().String()
 
 	if target == "_any" || target == "_all" {
-		return !allAgentsPending()
+		return !allAgentsPending(ctx, target)
 	}
 
 	if agentLister == nil {
@@ -146,11 +170,11 @@ func validTarget(
 		if !isValidLabelFormat(key, value) {
 			return false
 		}
-		return matchesLabel(key, value)
+		return matchesLabel(ctx, key, value)
 	}
 
 	// Direct hostname target: check against active agents.
-	return matchesHostname(target)
+	return matchesHostname(ctx, target)
 }
 
 // isValidLabelFormat validates that label key and value segments are
@@ -173,9 +197,10 @@ func isValidLabelFormat(
 // matches and whose value is a prefix match (hierarchical). For example,
 // target "group:web" matches an agent with label group=web.dev.us-east.
 func matchesLabel(
+	ctx context.Context,
 	key, value string,
 ) bool {
-	agents, err := getAgents()
+	agents, err := getAgents(ctx, spanValidate, key+":"+value)
 	if err != nil {
 		return false
 	}
@@ -198,12 +223,15 @@ func matchesLabel(
 // allAgentsPending returns true when every registered agent is in Pending
 // state. Used to fail fast on _any/_all targets instead of timing out.
 // Returns false when no agents are registered or the lister is unavailable.
-func allAgentsPending() bool {
+func allAgentsPending(
+	ctx context.Context,
+	target string,
+) bool {
 	if agentLister == nil {
 		return false
 	}
 
-	agents, err := getAgents()
+	agents, err := getAgents(ctx, spanValidate, target)
 	if err != nil || len(agents) == 0 {
 		return false
 	}
@@ -221,9 +249,10 @@ func allAgentsPending() bool {
 // or machine ID. Returns false for agents in Pending state (awaiting
 // PKI enrollment).
 func matchesHostname(
+	ctx context.Context,
 	target string,
 ) bool {
-	agents, err := getAgents()
+	agents, err := getAgents(ctx, spanValidate, target)
 	if err != nil {
 		return false
 	}
@@ -251,13 +280,14 @@ func matchesHostname(
 // when formatting the message, which two concurrent requests could overwrite —
 // telling one operator to accept the other's agent.
 func PendingTarget(
+	ctx context.Context,
 	target string,
 ) (string, bool) {
 	if agentLister == nil {
 		return "", false
 	}
 
-	agents, err := getAgents()
+	agents, err := getAgents(ctx, spanValidate, target)
 	if err != nil || len(agents) == 0 {
 		return "", false
 	}
@@ -290,6 +320,7 @@ func PendingTarget(
 // is returned. If it matches a machine ID directly, it is returned as-is.
 // Broadcast and label targets are returned unchanged.
 func ResolveTarget(
+	ctx context.Context,
 	target string,
 ) string {
 	if target == "_any" || target == "_all" {
@@ -300,7 +331,7 @@ func ResolveTarget(
 		return target
 	}
 
-	agents, err := getAgents()
+	agents, err := getAgents(ctx, spanResolve, target)
 	if err != nil {
 		return target
 	}

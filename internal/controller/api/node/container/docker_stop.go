@@ -36,16 +36,16 @@ func (s *Container) PostNodeContainerDockerStop(
 	ctx context.Context,
 	request gen.PostNodeContainerDockerStopRequestObject,
 ) (gen.PostNodeContainerDockerStopResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Var(request.Id, "required,container_id"); !ok {
+	if errMsg, ok := validation.Var(ctx, request.Id, "required,container_id"); !ok {
 		return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
 	}
 
 	if request.Body != nil {
-		if errMsg, ok := validation.Struct(request.Body); !ok {
+		if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 			return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
 		}
 	}
