@@ -102,7 +102,14 @@ func groupFile(
 		}
 		verb := map[string]string{"GET": "Get", "POST": "Post", "PUT": "Put", "DELETE": "Delete"}[m.HTTPMethod()]
 		handle := "Handle" + title(m.Name)
-		f.Comment(fmt.Sprintf("%s runs %s %s on the target, for the endpoint server.", handle, b.Name, m.Name))
+		f.Comment(
+			fmt.Sprintf(
+				"%s runs %s %s on the target, for the endpoint server.",
+				handle,
+				b.Name,
+				m.Name,
+			),
+		)
 		f.Func().Id(handle).Add(params(
 			jen.Id("ctx").Qual("context", "Context"),
 			jen.Id("d").Qual(dispatchPath, "Deps"),
