@@ -107,7 +107,7 @@ func (s *MetricsRefreshPublicTestSuite) TestStartMetricsRefresh() {
 				s.GreaterOrEqual(callCount.Load(), int32(1))
 
 				// Verify cache is populated via GetHealthStatus.
-				r, _ := handler.Status(ctx)
+				r := handler.Status(ctx)
 				s.NotNil(r.NATS)
 			},
 		},

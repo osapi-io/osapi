@@ -124,15 +124,10 @@ export type getHealthStatusResponse500 = {
   status: 500
 }
 
-export type getHealthStatusResponse503 = {
-  data: StatusResponse
-  status: 503
-}
-
 export type getHealthStatusResponseSuccess = (getHealthStatusResponse200) & {
   headers: Headers;
 };
-export type getHealthStatusResponseError = (getHealthStatusResponse401 | getHealthStatusResponse403 | getHealthStatusResponse500 | getHealthStatusResponse503) & {
+export type getHealthStatusResponseError = (getHealthStatusResponse401 | getHealthStatusResponse403 | getHealthStatusResponse500) & {
   headers: Headers;
 };
 

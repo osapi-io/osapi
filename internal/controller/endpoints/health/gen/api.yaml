@@ -378,7 +378,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StatusResponse'
-          description: All components healthy.
+          description: The status of each component. A component that is not healthy makes the overall status degraded; the request still succeeds.
         "401":
           content:
             application/json:
@@ -397,12 +397,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
-        "503":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StatusResponse'
-          description: One or more components unhealthy.
       security:
         - BearerAuth:
             - health:read

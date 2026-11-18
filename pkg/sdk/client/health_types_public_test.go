@@ -35,10 +35,9 @@ type HealthTypesPublicTestSuite struct {
 
 func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 	tests := []struct {
-		name               string
-		input              *gen.StatusResponse
-		serviceUnavailable bool
-		validateFunc       func(client.SystemStatus)
+		name         string
+		input        *gen.StatusResponse
+		validateFunc func(client.SystemStatus)
 	}{
 		{
 			name: "when all fields are populated",
@@ -167,12 +166,10 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 					}(),
 				}
 			}(),
-			serviceUnavailable: false,
 			validateFunc: func(s client.SystemStatus) {
 				suite.Equal("degraded", s.Status)
 				suite.Equal("1.2.3", s.Version)
 				suite.Equal("5d 3h", s.Uptime)
-				suite.False(s.ServiceUnavailable)
 
 				suite.Require().Len(s.Components, 3)
 				suite.Equal("healthy", s.Components["nats"].Status)
@@ -259,12 +256,10 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 				Uptime:     "1h",
 				Components: map[string]gen.ComponentHealth{},
 			},
-			serviceUnavailable: false,
 			validateFunc: func(s client.SystemStatus) {
 				suite.Equal("ok", s.Status)
 				suite.Equal("1.0.0", s.Version)
 				suite.Equal("1h", s.Uptime)
-				suite.False(s.ServiceUnavailable)
 				suite.Empty(s.Components)
 				suite.Nil(s.NATS)
 				suite.Nil(s.Agents)
@@ -289,7 +284,6 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 					},
 				},
 			},
-			serviceUnavailable: false,
 			validateFunc: func(s client.SystemStatus) {
 				suite.Require().Len(s.Registry, 1)
 				suite.Empty(s.Registry[0].Type)
@@ -302,17 +296,15 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 			},
 		},
 		{
-			name: "when service unavailable is true",
+			name: "when a component is not healthy, the status is degraded",
 			input: &gen.StatusResponse{
 				Status:     "degraded",
 				Version:    "1.0.0",
 				Uptime:     "30m",
 				Components: map[string]gen.ComponentHealth{},
 			},
-			serviceUnavailable: true,
 			validateFunc: func(s client.SystemStatus) {
 				suite.Equal("degraded", s.Status)
-				suite.True(s.ServiceUnavailable)
 			},
 		},
 		{
@@ -329,7 +321,6 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 					Ready: 0,
 				},
 			},
-			serviceUnavailable: false,
 			validateFunc: func(s client.SystemStatus) {
 				suite.Require().NotNil(s.Agents)
 				suite.Equal(0, s.Agents.Total)
@@ -348,7 +339,6 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 					Total: 0,
 				},
 			},
-			serviceUnavailable: false,
 			validateFunc: func(s client.SystemStatus) {
 				suite.Require().NotNil(s.Consumers)
 				suite.Equal(0, s.Consumers.Total)
@@ -359,7 +349,7 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := client.ExportSystemStatusFromGen(tc.input, tc.serviceUnavailable)
+			result := client.ExportSystemStatusFromGen(tc.input)
 			tc.validateFunc(result)
 		})
 	}

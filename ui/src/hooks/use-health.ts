@@ -14,7 +14,7 @@ export function useHealth(intervalMs = 10000) {
       try {
         const result = await getHealthStatus();
         if (!mounted) return;
-        if (result.status === 200 || result.status === 503) {
+        if (result.status === 200) {
           setData(result.data as StatusResponse);
           setError(null);
         } else {

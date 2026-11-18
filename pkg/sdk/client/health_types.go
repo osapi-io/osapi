@@ -36,19 +36,18 @@ type ReadyStatus struct {
 
 // SystemStatus represents detailed system status.
 type SystemStatus struct {
-	Status             string                     `json:"status"`
-	Version            string                     `json:"version"`
-	Uptime             string                     `json:"uptime"`
-	ServiceUnavailable bool                       `json:"service_unavailable"`
-	Components         map[string]ComponentHealth `json:"components,omitempty"`
-	NATS               *NATSInfo                  `json:"nats,omitempty"`
-	Agents             *AgentStats                `json:"agents,omitempty"`
-	Jobs               *JobStats                  `json:"jobs,omitempty"`
-	Consumers          *ConsumerStats             `json:"consumers,omitempty"`
-	Streams            []StreamInfo               `json:"streams,omitempty"`
-	KVBuckets          []KVBucketInfo             `json:"kv_buckets,omitempty"`
-	ObjectStores       []ObjectStoreInfo          `json:"object_stores,omitempty"`
-	Registry           []RegistryEntry            `json:"registry,omitempty"`
+	Status       string                     `json:"status"`
+	Version      string                     `json:"version"`
+	Uptime       string                     `json:"uptime"`
+	Components   map[string]ComponentHealth `json:"components,omitempty"`
+	NATS         *NATSInfo                  `json:"nats,omitempty"`
+	Agents       *AgentStats                `json:"agents,omitempty"`
+	Jobs         *JobStats                  `json:"jobs,omitempty"`
+	Consumers    *ConsumerStats             `json:"consumers,omitempty"`
+	Streams      []StreamInfo               `json:"streams,omitempty"`
+	KVBuckets    []KVBucketInfo             `json:"kv_buckets,omitempty"`
+	ObjectStores []ObjectStoreInfo          `json:"object_stores,omitempty"`
+	Registry     []RegistryEntry            `json:"registry,omitempty"`
 }
 
 // RegistryEntry represents a unified component registration in the health registry.
@@ -165,13 +164,11 @@ func readyStatusFromGen(
 // systemStatusFromGen converts a gen.StatusResponse to a SystemStatus.
 func systemStatusFromGen(
 	g *gen.StatusResponse,
-	serviceUnavailable bool,
 ) SystemStatus {
 	s := SystemStatus{
-		Status:             g.Status,
-		Version:            g.Version,
-		Uptime:             g.Uptime,
-		ServiceUnavailable: serviceUnavailable,
+		Status:  g.Status,
+		Version: g.Version,
+		Uptime:  g.Uptime,
 	}
 
 	if g.Components != nil {
