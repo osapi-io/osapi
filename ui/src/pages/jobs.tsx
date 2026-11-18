@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Dropdown } from "@/components/ui/dropdown";
 import { Card, CardContent } from "@/components/ui/card";
-import { CodeBlock } from "@/components/ui/code-block";
 import { Modal } from "@/components/ui/modal";
 import {
   Loader2,
@@ -33,6 +32,9 @@ import { statusVariant } from "@/lib/status";
 import { PermissionDenied } from "@/components/layout/permission-denied";
 import { Spinner } from "@/components/ui/spinner";
 import { DataTable } from "@/components/ui/data-table";
+import { Count } from "@/components/ui/count";
+import { JobView } from "@/components/domain/job-detail";
+import { formatTime, operationType } from "@/lib/format";
 import { IconButton } from "@/components/ui/icon-button";
 
 /** A job as the list gives it. */
@@ -49,152 +51,6 @@ const STATUS_OPTIONS = [
   { value: "partial_failure", label: "Partial Failure" },
   { value: "skipped", label: "Skipped" },
 ];
-
-function formatTimestamp(ts?: string) {
-  if (!ts) return "-";
-  try {
-    const d = new Date(ts);
-    return d.toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  } catch {
-    return ts;
-  }
-}
-
-function truncateId(id?: string) {
-  if (!id) return "-";
-  return id.length > 12 ? `${id.slice(0, 12)}...` : id;
-}
-
-function getOperationType(job: JobDetailResponse): string {
-  if (!job.operation) return "-";
-  const keys = Object.keys(job.operation);
-  // Common keys: category, operation, hostname
-  const op = job.operation.operation as string | undefined;
-  const cat = job.operation.category as string | undefined;
-  if (cat && op) return `${cat}.${op}`;
-  if (op) return op;
-  if (keys.length > 0) return keys.join(", ");
-  return "-";
-}
-
-function JobDetailPanel({ job }: { job: JobDetailResponse }) {
-  return (
-    <div className="space-y-3 py-2">
-      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-        <div>
-          <Text variant="label">Job ID</Text>
-          <Text variant="mono" as="p">
-            {job.id}
-          </Text>
-        </div>
-        <div>
-          <Text variant="label">Status</Text>
-          <div className="mt-0.5">
-            <Badge variant={statusVariant(job.status)}>{job.status}</Badge>
-          </div>
-        </div>
-        <div>
-          <Text variant="label">Hostname</Text>
-          <Text variant="mono" as="p">
-            {job.hostname ?? "-"}
-          </Text>
-        </div>
-        <div>
-          <Text variant="label">Created</Text>
-          <Text variant="muted" as="p">
-            {formatTimestamp(job.created)}
-          </Text>
-        </div>
-        {job.updated_at && (
-          <div>
-            <Text variant="label">Updated</Text>
-            <Text variant="muted" as="p">
-              {formatTimestamp(job.updated_at)}
-            </Text>
-          </div>
-        )}
-        {job.changed != null && (
-          <div>
-            <Text variant="label">Changed</Text>
-            <Text as="p">{String(job.changed)}</Text>
-          </div>
-        )}
-      </div>
-
-      {job.error && (
-        <div>
-          <Text variant="label">Error</Text>
-          <Text variant="error" as="p" className="mt-0.5">
-            {job.error}
-          </Text>
-        </div>
-      )}
-
-      {job.operation && (
-        <div>
-          <Text variant="label">Operation</Text>
-          <CodeBlock variant="json" maxHeight="max-h-32" className="mt-1">
-            {JSON.stringify(job.operation, null, 2)}
-          </CodeBlock>
-        </div>
-      )}
-
-      {job.result != null && (
-        <div>
-          <Text variant="label">Result</Text>
-          <CodeBlock variant="json" maxHeight="max-h-32" className="mt-1">
-            {JSON.stringify(job.result, null, 2)}
-          </CodeBlock>
-        </div>
-      )}
-
-      {job.timeline && job.timeline.length > 0 && (
-        <div>
-          <Text variant="label">Timeline</Text>
-          <div className="mt-1 space-y-1">
-            {job.timeline.map((evt, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs">
-                <Text variant="mono-muted">
-                  {formatTimestamp(evt.timestamp)}
-                </Text>
-                <Badge variant={statusVariant(evt.event)}>{evt.event}</Badge>
-                {evt.hostname && <Text variant="muted">{evt.hostname}</Text>}
-                {evt.message && <Text variant="muted">{evt.message}</Text>}
-                {evt.error && <Text variant="error">{evt.error}</Text>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {job.agent_states && Object.keys(job.agent_states).length > 0 && (
-        <div>
-          <Text variant="label">Agent States</Text>
-          <div className="mt-1 space-y-1">
-            {Object.entries(job.agent_states).map(([host, state]) => (
-              <div key={host} className="flex items-center gap-2 text-xs">
-                <Text variant="mono">{host}</Text>
-                <Badge variant={statusVariant(state.status)}>
-                  {state.status}
-                </Badge>
-                {state.duration && (
-                  <Text variant="muted">{state.duration}</Text>
-                )}
-                {state.error && <Text variant="error">{state.error}</Text>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 export function Jobs() {
   useVimScroll();
@@ -321,21 +177,17 @@ export function Jobs() {
         subtitle="Async job queue and history"
         actions={
           data && (
-            <>
-              <Badge variant="muted">{totalItems.toLocaleString()} jobs</Badge>
-              {data.status_counts && (
-                <>
-                  {Object.entries(data.status_counts).map(([status, count]) => (
-                    <Badge
-                      key={status}
-                      variant={count === 0 ? "muted" : statusVariant(status)}
-                    >
-                      {status}: {count}
-                    </Badge>
-                  ))}
-                </>
-              )}
-            </>
+            // As osapi client job list prints them: N jobs, then each
+            // status's count in its tone.
+            <Text variant="muted">
+              {totalItems} jobs:{" "}
+              {Object.entries(data.status_counts ?? {}).map(([st, n], i) => (
+                <span key={st}>
+                  {i > 0 && ", "}
+                  <Count n={n} kind={st} />
+                </span>
+              ))}
+            </Text>
           )
         }
       />
@@ -369,7 +221,10 @@ export function Jobs() {
 
           {/* Table */}
           <div className="mb-4">
-            <SectionLabel>Jobs ({items.length} shown)</SectionLabel>
+            <SectionLabel>
+              Jobs{statusFilter && ` ${statusFilter}`} ({items.length} of{" "}
+              {totalItems})
+            </SectionLabel>
             <DataTable
               rows={items}
               getRowKey={(job, i) => job.id ?? i}
@@ -380,7 +235,7 @@ export function Jobs() {
                     <Spinner size="inline" />
                   </div>
                 ) : expandedJob ? (
-                  <JobDetailPanel job={expandedJob} />
+                  <JobView job={expandedJob} />
                 ) : (
                   <Text variant="muted">Failed to load details</Text>
                 )
@@ -396,11 +251,9 @@ export function Jobs() {
                     ),
                 },
                 {
-                  header: "ID",
+                  header: "Job ID",
                   cell: (job: Job) => (
-                    <Text variant="mono" title={job.id}>
-                      {truncateId(job.id)}
-                    </Text>
+                    <Text variant="mono-muted">{job.id}</Text>
                   ),
                 },
                 {
@@ -412,15 +265,14 @@ export function Jobs() {
                   ),
                 },
                 {
-                  header: "Operation",
+                  header: "Created",
                   cell: (job: Job) => (
-                    <Text variant="mono-muted">{getOperationType(job)}</Text>
+                    <Text variant="muted">{formatTime(job.created)}</Text>
                   ),
                 },
                 {
-                  // The target the request gave, as osapi client job list
-                  // shows it; a job stored before targets were kept has
-                  // only the host that answered.
+                  // The target the request gave; a job stored before targets
+                  // were kept has only the host that answered.
                   header: "Target",
                   cell: (job: Job) => (
                     <Text variant="mono-muted">
@@ -429,9 +281,11 @@ export function Jobs() {
                   ),
                 },
                 {
-                  header: "Created",
+                  header: "Operation",
                   cell: (job: Job) => (
-                    <Text variant="muted">{formatTimestamp(job.created)}</Text>
+                    <Text variant="mono-muted">
+                      {operationType(job.operation)}
+                    </Text>
                   ),
                 },
                 ...(can("job:write")
@@ -513,8 +367,8 @@ export function Jobs() {
           </Text>
           <Text variant="muted" as="p">
             Are you sure you want to delete job{" "}
-            <Text variant="mono">{truncateId(confirmDelete ?? undefined)}</Text>
-            ? This action cannot be undone.
+            <Text variant="mono">{confirmDelete}</Text>? This action cannot be
+            undone.
           </Text>
           <div className="flex justify-end gap-2">
             <Button
