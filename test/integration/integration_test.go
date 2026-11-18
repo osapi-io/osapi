@@ -119,6 +119,15 @@ func TestMain(
 		os.Exit(1)
 	}
 
+	// The controller is ready before the agent's first heartbeat. A suite
+	// that runs first then finds no agent (#806). A failed first heartbeat
+	// is written again after the 10s heartbeat interval.
+	if err := waitForAgent(30 * time.Second); err != nil {
+		fmt.Fprintf(os.Stderr, "wait for agent: %v\n", err)
+		stopServer()
+		os.Exit(1)
+	}
+
 	code := m.Run()
 
 	stopServer()
@@ -189,6 +198,28 @@ func waitForReady(
 	}
 
 	return fmt.Errorf("server not ready after %s", timeout)
+}
+
+// waitForAgent waits until agent list has at least one agent.
+func waitForAgent(
+	timeout time.Duration,
+) error {
+	deadline := time.Now().Add(timeout)
+
+	for time.Now().Before(deadline) {
+		stdout, _, exitCode := runCLI("client", "agent", "list", "--json")
+		if exitCode == 0 {
+			var resp struct {
+				Items []json.RawMessage `json:"items"`
+			}
+			if parseJSON(stdout, &resp) == nil && len(resp.Items) > 0 {
+				return nil
+			}
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	return fmt.Errorf("no agent registered after %s", timeout)
 }
 
 func stopServer() {
