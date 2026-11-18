@@ -65,6 +65,15 @@ type Request struct {
 	Reason string `json:"reason"`
 }
 
+type formInput struct {
+	Name string `json:"name" in:"form" validate:"required"`
+	File []byte `json:"file" in:"form" validate:"required"`
+}
+
+type bytesInput struct {
+	Data []byte `json:"data"`
+}
+
 type namedBodyInput struct {
 	Body Request `in:"body" validate:"required"`
 }
@@ -327,6 +336,7 @@ func (s *EndpointPublicTestSuite) TestOpenAPI() {
 						endpoint.Conflict(errMissing, "Already drained."),
 						endpoint.Unavailable(errMissing, "Not ready."),
 						endpoint.Invalid(errMissing, "Nothing to drain."),
+						endpoint.Forbidden(errMissing, "Not this one."),
 					),
 			},
 			want: []string{
@@ -382,6 +392,25 @@ func (s *EndpointPublicTestSuite) TestOpenAPI() {
 				"op PUT /api/node/note id=PutNodeNoteNote tags=[node] auth=BearerAuth:node:write params=[] " +
 					"body=application/json:{note:string} " +
 					"responses=[200=application/json:{} 400=application/json:ErrorResponse " +
+					"401=application/json:ErrorResponse 403=application/json:ErrorResponse " +
+					"500=application/json:ErrorResponse]",
+			},
+		},
+		{
+			name: "when the body is a form, a []byte is the file",
+			methods: []endpoint.Option{
+				endpoint.Post[formInput, Node]("upload").Sub("upload"),
+				endpoint.Post[bytesInput, Node]("raw").Sub("raw"),
+			},
+			want: []string{
+				"op POST /api/node/upload id=PostNodeUploadUpload tags=[node] auth=BearerAuth:node:write " +
+					"params=[] body=multipart/form-data:{file!:string/binary,name!:string}! " +
+					"responses=[200=application/json:Node 400=application/json:ErrorResponse " +
+					"401=application/json:ErrorResponse 403=application/json:ErrorResponse " +
+					"500=application/json:ErrorResponse]",
+				"op POST /api/node/raw id=PostNodeRawRaw tags=[node] auth=BearerAuth:node:write " +
+					"params=[] body=application/json:{data:string/byte} " +
+					"responses=[200=application/json:Node 400=application/json:ErrorResponse " +
 					"401=application/json:ErrorResponse 403=application/json:ErrorResponse " +
 					"500=application/json:ErrorResponse]",
 			},
