@@ -6,12 +6,12 @@
  */
 
 export interface ConsumerDetail {
+  /** Messages delivered but not yet acknowledged. */
+  ack_pending: number;
   /** Consumer name. */
   name: string;
   /** Messages not yet delivered. */
   pending: number;
-  /** Messages delivered but not yet acknowledged. */
-  ack_pending: number;
   /** Messages redelivered and not yet acknowledged. */
   redelivered: number;
 }

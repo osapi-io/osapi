@@ -7,10 +7,10 @@
 import type { AgentDetail } from './agentDetail';
 
 export interface AgentStats {
-  /** Total number of registered agents. */
-  total: number;
-  /** Number of agents with Ready status. */
-  ready: number;
   /** Per-agent registration details. */
   agents?: AgentDetail[];
+  /** Number of agents with Ready status. */
+  ready: number;
+  /** Total number of registered agents. */
+  total: number;
 }

@@ -7,8 +7,8 @@
 import type { ConsumerDetail } from './consumerDetail';
 
 export interface ConsumerStats {
-  /** Total number of JetStream consumers. */
-  total: number;
   /** Per-consumer details. */
   consumers?: ConsumerDetail[];
+  /** Total number of JetStream consumers. */
+  total: number;
 }

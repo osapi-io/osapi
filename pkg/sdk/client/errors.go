@@ -26,6 +26,21 @@ import "fmt"
 type APIError struct {
 	StatusCode int
 	Message    string
+	// Body is the answer as it came, for a status whose body is not an
+	// error, such as a probe's 503. Request sets it.
+	Body []byte
+}
+
+// Answer is the status and the body of the answer, for a caller that
+// prints a status whose body is not an error.
+func (e *APIError) Answer() (int, []byte) {
+	return e.StatusCode, e.Body
+}
+
+func (e *APIError) setBody(
+	body []byte,
+) {
+	e.Body = body
 }
 
 // Error returns a formatted error string.

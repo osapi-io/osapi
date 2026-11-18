@@ -6,12 +6,12 @@
  */
 
 export interface ComponentHealth {
-  /** Component health status. */
-  status: string;
-  /** Error message when component is unhealthy. */
-  error?: string;
   /** Listen address of the component (if applicable). */
   address?: string;
-  /** Where a person opens the component, from its `url` config key. Absent when the key is not set. osapi never requests it. */
+  /** Error message when component is unhealthy. */
+  error?: string;
+  /** Component health status. */
+  status: string;
+  /** Where a person opens the component, from its url config key. Absent when the key is not set. osapi never requests it. */
   url?: string;
 }

@@ -17,43 +17,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+package health
 
-package cmd
+import "context"
 
-import (
-	"github.com/spf13/cobra"
-
-	"github.com/osapi-io/osapi/internal/cli"
-)
-
-// clientHealthReadyCmd represents the clientHealthReady command.
-var clientHealthReadyCmd = &cobra.Command{
-	Use:   "ready",
-	Short: "Readiness probe",
-	Long:  "The command checks that the controller can reach NATS and the KV buckets.",
-	Example: `  osapi client health ready
-  osapi client health ready --json`,
-	Run: func(cmd *cobra.Command, _ []string) {
-		ctx := cmd.Context()
-		resp, err := sdkClient.Health.GetReady(ctx)
-		if err != nil {
-			cli.HandleError(err, logger)
-			return
-		}
-
-		if jsonOutput {
-			cli.PrintJSON(resp.RawJSON())
-			return
-		}
-
-		cli.PrintHeading("Health")
-		cli.PrintKV("Status", resp.Data.Status)
-		if resp.Data.Error != "" {
-			cli.PrintKV("Error", resp.Data.Error)
-		}
-	},
+// Deps is what the health group's handlers use.
+type Deps struct {
+	// Health checks the controller's dependencies and reports the status
+	// of each component.
+	Health Reporter
 }
 
-func init() {
-	clientHealthCmd.AddCommand(clientHealthReadyCmd)
+// Reporter checks the controller's health. internal/controller/health is
+// the controller's.
+type Reporter interface {
+	// Ready is nil when the controller can take traffic.
+	Ready(ctx context.Context) error
+	// Status is the health of each component, and whether each is healthy.
+	Status(ctx context.Context) (StatusResponse, bool)
 }

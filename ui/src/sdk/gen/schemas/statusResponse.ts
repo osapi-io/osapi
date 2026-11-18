@@ -15,24 +15,24 @@ import type { StatusResponseComponents } from './statusResponseComponents';
 import type { StreamInfo } from './streamInfo';
 
 export interface StatusResponse {
-  /** Overall health status. */
-  status: string;
+  agents?: AgentStats;
   /** Per-component health status. */
   components: StatusResponseComponents;
-  /** Application version. */
-  version: string;
-  /** Time since server started. */
-  uptime: string;
-  nats?: NATSInfo;
-  /** JetStream stream statistics. */
-  streams?: StreamInfo[];
+  consumers?: ConsumerStats;
+  jobs?: JobStats;
   /** KV bucket statistics. */
   kv_buckets?: KVBucketInfo[];
+  nats?: NATSInfo;
   /** Object Store statistics. */
   object_stores?: ObjectStoreInfo[];
-  jobs?: JobStats;
-  agents?: AgentStats;
-  consumers?: ConsumerStats;
   /** All registered components with health details. */
   registry?: ComponentEntry[];
+  /** Overall health status. */
+  status: string;
+  /** JetStream stream statistics. */
+  streams?: StreamInfo[];
+  /** Time since server started. */
+  uptime: string;
+  /** Application version. */
+  version: string;
 }

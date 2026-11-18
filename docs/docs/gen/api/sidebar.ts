@@ -110,6 +110,34 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Health",
+      link: {
+        type: "doc",
+        id: "gen/api/health-check-api-health",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-health",
+          label: "Liveness probe",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-health-ready",
+          label: "Readiness probe",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-health-status",
+          label: "System status and component health",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Job",
       link: {
         type: "doc",
@@ -195,34 +223,6 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/delete-file-by-name",
           label: "Delete a file",
           className: "api-method delete",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Health",
-      link: {
-        type: "doc",
-        id: "gen/api/health-check-api-health",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-health",
-          label: "Liveness probe",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-health-ready",
-          label: "Readiness probe",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-health-status",
-          label: "System status and component health",
-          className: "api-method get",
         },
       ],
     },

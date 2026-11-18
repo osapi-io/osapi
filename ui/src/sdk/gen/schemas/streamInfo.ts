@@ -6,12 +6,12 @@
  */
 
 export interface StreamInfo {
-  /** Stream name. */
-  name: string;
-  /** Number of messages in the stream. */
-  messages: number;
   /** Total bytes in the stream. */
   bytes: number;
   /** Number of consumers on the stream. */
   consumers: number;
+  /** Number of messages in the stream. */
+  messages: number;
+  /** Stream name. */
+  name: string;
 }

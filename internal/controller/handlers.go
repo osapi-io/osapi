@@ -21,6 +21,7 @@
 package controller
 
 import (
+	"context"
 	"io/fs"
 	"log/slog"
 	"time"
@@ -31,7 +32,6 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/server"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/api/file"
-	"github.com/osapi-io/osapi/internal/controller/api/health"
 	nodeAPI "github.com/osapi-io/osapi/internal/controller/api/node"
 	certificateAPI "github.com/osapi-io/osapi/internal/controller/api/node/certificate"
 	commandAPI "github.com/osapi-io/osapi/internal/controller/api/node/command"
@@ -54,9 +54,11 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 	auditEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/audit"
 	factsEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/facts"
+	healthEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 	jobEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/job"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 	"github.com/osapi-io/osapi/internal/controller/enrollment"
+	"github.com/osapi-io/osapi/internal/controller/health"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/telemetry/traces"
 	uiassets "github.com/osapi-io/osapi/ui"
@@ -99,6 +101,8 @@ func handlers(
 	// The same sub-components the heartbeat reports, so the two copies in the
 	// health response cannot disagree.
 	healthSubs := convertSubComponents(subComponents(d.cfg))
+	reporter := health.New(d.log, d.checker, startTime, "0.1.0", d.metricsProvider, healthSubs)
+	reporter.StartMetricsRefresh(context.Background())
 
 	handlers := make([]func(e *echo.Echo), 0, 16)
 	handlers = append(
@@ -111,23 +115,11 @@ func handlers(
 			telemetry.Deps{Traces: traceReader(d.cfg.Telemetry.Tracing)},
 			auditEndpoint.Deps{Store: d.auditStore},
 			jobEndpoint.Deps{Jobs: d.jobs},
+			healthEndpoint.Deps{Health: reporter},
 			factsEndpoint.Deps{},
 		)...,
 	)
 	handlers = append(handlers, nodeAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
-	handlers = append(
-		handlers,
-		health.Handler(
-			d.log,
-			d.checker,
-			startTime,
-			"0.1.0",
-			d.metricsProvider,
-			healthSubs,
-			signingKey,
-			customRoles,
-		)...,
-	)
 	handlers = append(handlers, hostnameAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, dockerAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, scheduleAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)

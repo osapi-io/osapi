@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -72,6 +73,8 @@ var group = endpoint.Define("thing", "Things",
 	endpoint.Post[retryInput, thing]("retry").Sub("retry"),
 	endpoint.Post[badBody, thing]("bad").Sub("bad"),
 	endpoint.Get[string, thing]("raw").Sub("raw"),
+	endpoint.Get[getInput, thing]("probe").Sub("probe").
+		Answers(http.StatusServiceUnavailable, "Not ready."),
 )
 
 // caller records the request, and answers with body or err.
@@ -190,6 +193,10 @@ func (s *CommandPublicTestSuite) TestRun() {
 		rendered = in.Name + ":" + out.Name
 	})
 	acted := ""
+	probed := ""
+	command.Render(group, "probe", func(_ *cobra.Command, _ getInput, out thing) {
+		probed = out.Name
+	})
 	command.Acts(group, "retry", func(_ *cobra.Command, in retryInput, out thing) {
 		acted = in.Body.Reason + ":" + out.Name
 	})
@@ -234,6 +241,28 @@ func (s *CommandPublicTestSuite) TestRun() {
 				s.Require().NoError(err)
 				s.Equal("flaky:web-03", acted)
 				s.Empty(out)
+			},
+		},
+		{
+			name:   "when the method answers a status with its output, it renders that output",
+			method: "probe",
+			in:     getInput{Name: "web"},
+			caller: &caller{err: &client.APIError{
+				StatusCode: http.StatusServiceUnavailable,
+				Body:       []byte(`{"name":"not ready"}`),
+			}},
+			validateFunc: func(_ *caller, _ string, err error) {
+				s.Require().NoError(err)
+				s.Equal("not ready", probed)
+			},
+		},
+		{
+			name:   "when a status is not one the method answers, it is the error",
+			method: "probe",
+			in:     getInput{Name: "web"},
+			caller: &caller{err: &client.APIError{StatusCode: http.StatusNotFound}},
+			validateFunc: func(_ *caller, _ string, err error) {
+				s.Error(err)
 			},
 		},
 		{

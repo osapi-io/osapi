@@ -27,7 +27,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/osapi/internal/controller/api/health"
+	"github.com/osapi-io/osapi/internal/controller/health"
 )
 
 type CheckerPublicTestSuite struct {

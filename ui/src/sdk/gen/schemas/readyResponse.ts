@@ -6,8 +6,8 @@
  */
 
 export interface ReadyResponse {
-  /** Readiness status. */
-  status: string;
   /** Error message when not ready. */
   error?: string;
+  /** Readiness status. */
+  status: string;
 }
