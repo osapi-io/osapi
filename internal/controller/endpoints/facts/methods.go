@@ -17,18 +17,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-
 package facts
 
 import (
 	"context"
 
-	"github.com/osapi-io/osapi/internal/controller/api/facts/gen"
 	factskeys "github.com/osapi-io/osapi/internal/facts"
 )
 
-// builtInDescriptions provides human-readable descriptions for built-in keys.
-var builtInDescriptions = map[string]string{
+// descriptions are the descriptions of the built-in fact keys.
+var descriptions = map[string]string{
 	factskeys.KeyInterfacePrimary: "Primary network interface name",
 	factskeys.KeyHostname:         "Agent hostname",
 	factskeys.KeyArch:             "CPU architecture",
@@ -37,27 +35,21 @@ var builtInDescriptions = map[string]string{
 	factskeys.KeyContainerized:    "Whether the agent is running inside a container",
 }
 
-// GetFactKeys returns the list of available fact keys.
-func (f *Facts) GetFactKeys(
+// Keys is each built-in fact key, with its description.
+func Keys(
 	_ context.Context,
-	_ gen.GetFactKeysRequestObject,
-) (gen.GetFactKeysResponseObject, error) {
-	builtInKeys := factskeys.BuiltInKeys()
-
-	entries := make([]gen.FactKeyEntry, 0, len(builtInKeys))
-	for _, key := range builtInKeys {
-		builtin := true
-		entry := gen.FactKeyEntry{
-			Key:     key,
-			Builtin: &builtin,
-		}
-		if desc, ok := builtInDescriptions[key]; ok {
-			entry.Description = &desc
-		}
-		entries = append(entries, entry)
+	_ Deps,
+	_ KeysInput,
+) (FactKeysResponse, error) {
+	builtIn := factskeys.BuiltInKeys()
+	keys := make([]FactKeyEntry, 0, len(builtIn))
+	for _, key := range builtIn {
+		keys = append(keys, FactKeyEntry{
+			Key:         key,
+			Description: descriptions[key],
+			Builtin:     true,
+		})
 	}
 
-	return gen.GetFactKeys200JSONResponse{
-		Keys: entries,
-	}, nil
+	return FactKeysResponse{Keys: keys}, nil
 }

@@ -30,7 +30,6 @@ import (
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/behavior/server"
 	"github.com/osapi-io/osapi/internal/config"
-	factsAPI "github.com/osapi-io/osapi/internal/controller/api/facts"
 	"github.com/osapi-io/osapi/internal/controller/api/file"
 	"github.com/osapi-io/osapi/internal/controller/api/health"
 	nodeAPI "github.com/osapi-io/osapi/internal/controller/api/node"
@@ -54,6 +53,7 @@ import (
 	endpointserver "github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 	auditEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/audit"
+	factsEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/facts"
 	jobEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/job"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 	"github.com/osapi-io/osapi/internal/controller/enrollment"
@@ -111,6 +111,7 @@ func handlers(
 			telemetry.Deps{Traces: traceReader(d.cfg.Telemetry.Tracing)},
 			auditEndpoint.Deps{Store: d.auditStore},
 			jobEndpoint.Deps{Jobs: d.jobs},
+			factsEndpoint.Deps{},
 		)...,
 	)
 	handlers = append(handlers, nodeAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
@@ -161,7 +162,6 @@ func handlers(
 			)...,
 		)
 	}
-	handlers = append(handlers, factsAPI.Handler(d.log, signingKey, customRoles)...)
 
 	if d.cfg.Controller.UI.UIEnabled() {
 		// The embedded assets are under dist/ in the ui package. fs.Sub fails

@@ -18,9 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // Package facts is the endpoint group for the fact keys: the names a
-// behavior's input can refer to as @fact.<key>. Until the group moves, the
-// controller serves the hand-written spec in internal/controller/api/facts,
-// and TestEndpointParity holds the two together.
+// behavior's input can refer to as @fact.<key>.
 package facts
 
 import "github.com/osapi-io/osapi/internal/controller/endpoint"
@@ -30,12 +28,19 @@ var Group = endpoint.Register(endpoint.Define(
 	"facts", "The fact keys",
 	endpoint.Title("Facts API"),
 	endpoint.Tag("facts", "Facts", "Fact key discovery for @fact. references."),
-	endpoint.Get[KeysInput, FactKeysResponse]("keys").
+	endpoint.Uses[Deps](),
+	endpoint.Get[KeysInput, FactKeysResponse]("list").
+		Handle(Keys).
 		Sub("keys").
 		ID("GetFactKeys").
 		Permission("agent:read").
 		Describe("List available fact keys").
 		Explain("Returns the list of fact keys that can be used in @fact. references. "+
 			"Includes built-in keys and any custom keys registered by agents.").
-		Returns("List of available fact keys."),
+		Returns("List of available fact keys.").
+		Command("List the fact keys",
+			"Lists each fact key that an input can refer to as @fact.<key>, with\n"+
+				"its description.").
+		Example("").
+		Example("--json"),
 ))

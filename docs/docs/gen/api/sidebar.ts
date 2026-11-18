@@ -94,6 +94,22 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Facts",
+      link: {
+        type: "doc",
+        id: "gen/api/facts-api-facts",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-fact-keys",
+          label: "List available fact keys",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Job",
       link: {
         type: "doc",
@@ -138,22 +154,6 @@ const sidebar: SidebarsConfig = {
           type: "doc",
           id: "gen/api/get-trace",
           label: "Get the spans of a trace",
-          className: "api-method get",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Facts",
-      link: {
-        type: "doc",
-        id: "gen/api/facts-api-facts",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-fact-keys",
-          label: "List available fact keys",
           className: "api-method get",
         },
       ],
