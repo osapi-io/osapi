@@ -108,8 +108,7 @@ func (s *HealthService) GetReady(
 
 // Status returns detailed system status including component health,
 // NATS info, stream stats, and job queue counts. Requires authentication.
-// ServiceUnavailable is set when a component is not healthy, which the
-// status says as degraded.
+// A component that is not healthy makes the status degraded.
 func (s *HealthService) GetStatus(
 	ctx context.Context,
 ) (*Response[SystemStatus], error) {
@@ -137,7 +136,7 @@ func (s *HealthService) GetStatus(
 		}
 
 		return newResponse(
-			systemStatusFromGen(resp.JSON200, resp.JSON200.Status != "ok"),
+			systemStatusFromGen(resp.JSON200),
 			resp.Body,
 			resp.HTTPResponse,
 		), nil

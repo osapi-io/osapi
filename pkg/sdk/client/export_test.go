@@ -133,9 +133,8 @@ func ExportJobListFromGen(
 
 func ExportSystemStatusFromGen(
 	input *gen.StatusResponse,
-	serviceUnavailable bool,
 ) SystemStatus {
-	return systemStatusFromGen(input, serviceUnavailable)
+	return systemStatusFromGen(input)
 }
 
 // ExportAgentFromGen exposes the private agentFromGen for testing.

@@ -88,7 +88,6 @@ func renderHealthStatus(
 	raw, _ := json.Marshal(out)
 	var status client.SystemStatus
 	_ = json.Unmarshal(raw, &status)
-	status.ServiceUnavailable = out.Status != "ok"
 
 	displayStatusHealth(&status)
 }

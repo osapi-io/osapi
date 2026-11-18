@@ -288,7 +288,6 @@ func (suite *HealthPublicTestSuite) TestStatus() {
 				suite.Equal("ok", resp.Data.Status)
 				suite.Equal("1.0.0", resp.Data.Version)
 				suite.Equal("1h", resp.Data.Uptime)
-				suite.False(resp.Data.ServiceUnavailable)
 			},
 		},
 		{
@@ -333,7 +332,7 @@ func (suite *HealthPublicTestSuite) TestStatus() {
 			},
 		},
 		{
-			name: "when a component is not healthy returns the degraded status with ServiceUnavailable",
+			name: "when a component is not healthy returns the degraded status",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
@@ -343,7 +342,6 @@ func (suite *HealthPublicTestSuite) TestStatus() {
 				suite.NoError(err)
 				suite.NotNil(resp)
 				suite.Equal("degraded", resp.Data.Status)
-				suite.True(resp.Data.ServiceUnavailable)
 			},
 		},
 		{
