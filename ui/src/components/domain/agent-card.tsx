@@ -8,17 +8,10 @@ import { LabelTag } from "@/components/ui/label-tag";
 import { ConditionAlert } from "@/components/ui/condition-alert";
 import { CopyField } from "@/components/ui/copy-field";
 import { MetricValue } from "@/components/ui/metric-value";
+import { KVList } from "@/components/ui/kv-list";
 import { useAuth } from "@/hooks/use-auth";
-import { formatUptime } from "@/lib/format-uptime";
-import {
-  Monitor,
-  Clock,
-  Cpu,
-  HardDrive,
-  Pause,
-  Play,
-  Loader2,
-} from "lucide-react";
+import { formatAgeSince, formatBytes } from "@/lib/format";
+import { Monitor, Clock, Cpu, Pause, Play, Loader2 } from "lucide-react";
 import type { AgentInfo, ComponentHealth } from "@/sdk/gen/schemas";
 import {
   drainAgent,
@@ -30,12 +23,6 @@ interface AgentCardProps {
   agent: AgentInfo;
   components?: [string, ComponentHealth][];
   onRefresh?: () => void;
-}
-
-function formatBytes(bytes: number) {
-  if (bytes < 1024 * 1024 * 1024)
-    return `${(bytes / (1024 * 1024)).toFixed(0)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
 
 function NotReported() {
@@ -95,29 +82,54 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col">
-        {/* Identity */}
-        {(agent.machine_id || agent.fingerprint || agent.version) && (
+        {/* In the order of osapi client agent list: machine ID,
+            conditions, labels, age, load, OS, version. */}
+        {(agent.machine_id || agent.fingerprint) && (
           <div className="mt-1 space-y-0.5">
             {agent.machine_id && (
-              <CopyField label="ID" value={agent.machine_id} />
+              <CopyField label="Machine ID" value={agent.machine_id} />
             )}
             {agent.fingerprint && (
-              <CopyField label="FP" value={agent.fingerprint} />
+              <CopyField label="Fingerprint" value={agent.fingerprint} />
             )}
-            {agent.version && <CopyField label="VER" value={agent.version} />}
           </div>
         )}
 
-        {/* Pending enrollment notice */}
         {isPending && (
           <Text variant="muted" as="p" className="mt-1 italic">
             Awaiting PKI enrollment
           </Text>
         )}
 
-        {/* Stats row: three columns on each card, so the cards line up. A
-            value that the agent does not report is a dash. */}
-        <div className="grid grid-cols-3 gap-2">
+        {activeConditions.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {activeConditions.map((c) => (
+              <ConditionAlert key={c.type} type={c.type} />
+            ))}
+          </div>
+        )}
+
+        {agent.labels && Object.keys(agent.labels).length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {Object.entries(agent.labels).map(([k, v]) => (
+              <LabelTag key={k}>
+                {k}:{v}
+              </LabelTag>
+            ))}
+          </div>
+        )}
+
+        {/* A value that the agent does not report is a dash. */}
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <MetricValue icon={Clock}>
+            {agent.started_at ? (
+              <span title={agent.uptime}>
+                {formatAgeSince(agent.started_at)}
+              </span>
+            ) : (
+              <NotReported />
+            )}
+          </MetricValue>
           <MetricValue icon={Cpu}>
             {agent.load_average ? (
               agent.load_average["1min"].toFixed(2)
@@ -125,32 +137,38 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
               <NotReported />
             )}
           </MetricValue>
-          <MetricValue icon={HardDrive}>
-            {agent.memory ? (
-              `${formatBytes(agent.memory.used)}/${formatBytes(agent.memory.total)}`
-            ) : (
-              <NotReported />
-            )}
-          </MetricValue>
-          <MetricValue icon={Clock}>
-            {agent.uptime ? (
-              <span title={agent.uptime}>{formatUptime(agent.uptime)}</span>
-            ) : (
-              <NotReported />
-            )}
-          </MetricValue>
         </div>
 
-        {/* OS + arch */}
-        {agent.os_info && (
-          <Text as="p" className="mt-1.5 text-xs">
-            {agent.os_info.distribution} {agent.os_info.version}
-            {agent.architecture ? ` / ${agent.architecture}` : ""}
-            {agent.cpu_count ? ` / ${agent.cpu_count} cpu` : ""}
-          </Text>
-        )}
+        <KVList
+          className="mt-1.5"
+          pairs={[
+            [
+              "Memory",
+              agent.memory &&
+                [
+                  `${formatBytes(agent.memory.total)} total`,
+                  agent.memory.used > 0 &&
+                    `${formatBytes(agent.memory.used)} used`,
+                  `${formatBytes(agent.memory.free)} free`,
+                ]
+                  .filter(Boolean)
+                  .join(", "),
+            ],
+            [
+              "OS",
+              agent.os_info && (
+                <>
+                  {agent.os_info.distribution}{" "}
+                  <span className="text-text-muted">
+                    {agent.os_info.version}
+                  </span>
+                </>
+              ),
+            ],
+            ["Version", agent.version],
+          ]}
+        />
 
-        {/* Agent components */}
         {components && components.length > 0 && (
           <div className="mt-2 flex items-center gap-3">
             {components.map(([name, comp]) => (
@@ -162,28 +180,7 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
           </div>
         )}
 
-        {/* Bottom section — pinned to bottom of card */}
         <div className="mt-auto pt-2">
-          {/* Conditions */}
-          {activeConditions.length > 0 && (
-            <div className="space-y-1">
-              {activeConditions.map((c) => (
-                <ConditionAlert key={c.type} type={c.type} />
-              ))}
-            </div>
-          )}
-
-          {/* Labels */}
-          {agent.labels && Object.keys(agent.labels).length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {Object.entries(agent.labels).map(([k, v]) => (
-                <LabelTag key={k}>
-                  {k}:{v}
-                </LabelTag>
-              ))}
-            </div>
-          )}
-
           {/* Drain / Undrain — hidden when pending */}
           {canWrite && !isPending && (
             <div className="mt-2 border-t border-border/30 pt-2">

@@ -32,8 +32,8 @@ type TypeScriptPublicTestSuite struct {
 	suite.Suite
 }
 
-// TestStatusTypeScript writes each status word and its tone, in the order
-// of the words, for the UI's badges.
+// TestStatusTypeScript writes each status word and each kind of count with
+// its tone, in order, for the UI's badges and counts.
 func (s *TypeScriptPublicTestSuite) TestStatusTypeScript() {
 	ts := cli.StatusTypeScript()
 
@@ -42,7 +42,10 @@ func (s *TypeScriptPublicTestSuite) TestStatusTypeScript() {
 	s.Contains(ts, `  skipped: "warn",`)
 	s.Contains(ts, `  failed: "err",`)
 	s.Less(strings.Index(ts, "accepted:"), strings.Index(ts, "unhealthy:"), "the words are sorted")
-	s.Len(cli.StatusTones, strings.Count(ts, `: "`))
+	s.Contains(ts, "export const COUNT_TONES: Record<string, Tone> = {\n  changed:")
+	s.Contains(ts, `  dlq: "err",`)
+	s.Len(cli.StatusTones, strings.Count(ts[:strings.Index(ts, "COUNT_TONES")], `: "`))
+	s.Len(cli.CountTones, strings.Count(ts[strings.Index(ts, "COUNT_TONES"):], `: "`))
 }
 
 func TestTypeScriptPublicTestSuite(

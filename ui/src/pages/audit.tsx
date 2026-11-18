@@ -26,6 +26,7 @@ import {
 import type { AuditEntry, ListAuditResponse } from "@/sdk/gen/schemas";
 import { PermissionDenied } from "@/components/layout/permission-denied";
 import { Spinner } from "@/components/ui/spinner";
+import { formatTime } from "@/lib/format";
 
 const PAGE_SIZE = 20;
 
@@ -36,21 +37,6 @@ const METHOD_OPTIONS = [
   { value: "PUT", label: "PUT" },
   { value: "DELETE", label: "DELETE" },
 ];
-
-function formatTimestamp(ts: string) {
-  try {
-    const d = new Date(ts);
-    return d.toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  } catch {
-    return ts;
-  }
-}
 
 export function Audit() {
   useVimScroll();
@@ -153,11 +139,7 @@ export function Audit() {
         subtitle="API request history and access trail"
         actions={
           <>
-            {data && (
-              <Badge variant="muted">
-                {totalItems.toLocaleString()} entries
-              </Badge>
-            )}
+            {data && <Badge variant="muted">{totalItems} entries</Badge>}
             <Button
               variant="secondary"
               size="sm"
@@ -211,15 +193,22 @@ export function Audit() {
 
           {/* Table */}
           <div className="mb-4">
-            <SectionLabel>Entries ({filteredItems.length} shown)</SectionLabel>
+            <SectionLabel>
+              Audit entries ({filteredItems.length} of {totalItems})
+            </SectionLabel>
             <DataTable
+              // The columns of osapi client audit list.
               columns={[
+                {
+                  header: "ID",
+                  cell: (e: AuditEntry) => (
+                    <Text variant="mono-muted">{e.id}</Text>
+                  ),
+                },
                 {
                   header: "Timestamp",
                   cell: (e: AuditEntry) => (
-                    <Text variant="mono-muted">
-                      {formatTimestamp(e.timestamp)}
-                    </Text>
+                    <Text variant="mono-muted">{formatTime(e.timestamp)}</Text>
                   ),
                 },
                 {
@@ -250,6 +239,16 @@ export function Audit() {
                   align: "right",
                   cell: (e: AuditEntry) => (
                     <Text variant="muted">{e.duration_ms}ms</Text>
+                  ),
+                },
+                {
+                  header: "Trace ID",
+                  cell: (e: AuditEntry) => (
+                    <Text variant="mono-muted" title={e.trace_id}>
+                      {e.trace_id && e.trace_id.length > 16
+                        ? `${e.trace_id.slice(0, 16)}…`
+                        : ""}
+                    </Text>
                   ),
                 },
               ]}

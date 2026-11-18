@@ -6,6 +6,10 @@ import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Text } from "@/components/ui/text";
 import { useCommands } from "@/hooks/use-commands";
+import { useAuth } from "@/hooks/use-auth";
+import { ErrorBanner } from "@/components/ui/error-banner";
+import { Spinner } from "@/components/ui/spinner";
+import { PermissionDenied } from "@/components/layout/permission-denied";
 import { ShieldAlert } from "lucide-react";
 import type {
   AgentInfo,
@@ -21,20 +25,29 @@ import {
 } from "@/sdk/gen/agent-management-api-agent-operations/agent-management-api-agent-operations";
 
 export function Enrollment() {
+  const { can } = useAuth();
+  const [error, setError] = useState<string | null>(null);
   const [pendingAgents, setPendingAgents] = useState<PendingAgentInfo[]>([]);
   const [enrolledAgents, setEnrolledAgents] = useState<AgentInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // A failed load shows as an error, as on the other pages, not as an
+  // empty page that reads as no agents.
   const fetchPending = useCallback(async () => {
+    const failed = (what: string, e?: unknown) =>
+      e instanceof Error ? e.message : `Failed to fetch ${what}`;
+    let err: string | null = null;
     try {
       const resp = await getAgentsPending();
       if (resp.status === 200) {
         setPendingAgents(
           (resp.data as { items?: PendingAgentInfo[] })?.items ?? [],
         );
+      } else {
+        err = failed("pending agents");
       }
-    } catch {
-      // silent
+    } catch (e) {
+      err = failed("pending agents", e);
     }
     try {
       // An agent whose key the controller stores is enrolled.
@@ -45,10 +58,13 @@ export function Enrollment() {
             (a) => a.key_stored,
           ),
         );
+      } else {
+        err ??= failed("agents");
       }
-    } catch {
-      // silent
+    } catch (e) {
+      err ??= failed("agents", e);
     }
+    setError(err);
     setLoading(false);
   }, []);
 
@@ -97,6 +113,10 @@ export function Enrollment() {
     [pendingAgents, enrolledAgents, fetchPending],
   );
 
+  if (!can("agent:read")) {
+    return <PermissionDenied title="PKI Enrollment" what="agents" />;
+  }
+
   return (
     <ContentArea>
       <PageHeader
@@ -104,7 +124,11 @@ export function Enrollment() {
         subtitle="Accept, reject and remove agents' PKI enrollment"
       />
 
-      {!loading && pendingAgents.length === 0 && (
+      {loading && <Spinner />}
+
+      {error && <ErrorBanner message={error} />}
+
+      {!loading && !error && pendingAgents.length === 0 && (
         <EmptyState
           icon={<ShieldAlert className="h-8 w-8 text-text-muted" />}
           message="No pending enrollment requests"

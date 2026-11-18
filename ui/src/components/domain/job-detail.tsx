@@ -9,6 +9,7 @@ import { CodeBlock } from "@/components/ui/code-block";
 import { IdBadge } from "@/components/ui/id-badge";
 import { KeyValue } from "@/components/ui/key-value";
 import { Text } from "@/components/ui/text";
+import { formatTime } from "@/lib/format";
 import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { statusVariant } from "@/lib/status";
 
@@ -135,7 +136,7 @@ function TimelineRow({ event }: { event: JobDetailResponseTimelineItem }) {
           {event.hostname && <Text variant="muted">{event.hostname}</Text>}
           {event.timestamp && (
             <span className="ml-auto text-xs text-text-muted/50">
-              {new Date(event.timestamp).toLocaleTimeString()}
+              {formatTime(event.timestamp)}
             </span>
           )}
         </div>
@@ -176,7 +177,7 @@ export function JobDetail({ jobId, inline, panel }: JobDetailProps) {
         ) : (
           <ChevronRight className="h-3 w-3" />
         )}
-        {jobId.slice(0, 8)}
+        job {jobId}
       </IdBadge>
     );
   }
@@ -214,16 +215,10 @@ export function JobDetail({ jobId, inline, panel }: JobDetailProps) {
         <div className="flex flex-col gap-1 text-xs">
           {job.hostname && <KeyValue label="Host" value={job.hostname} />}
           {job.created && (
-            <KeyValue
-              label="Created"
-              value={new Date(job.created).toLocaleString()}
-            />
+            <KeyValue label="Created" value={formatTime(job.created)} />
           )}
           {job.updated_at && job.updated_at.length > 0 && (
-            <KeyValue
-              label="Updated"
-              value={new Date(job.updated_at).toLocaleString()}
-            />
+            <KeyValue label="Updated" value={formatTime(job.updated_at)} />
           )}
         </div>
 

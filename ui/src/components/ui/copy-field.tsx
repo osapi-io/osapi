@@ -5,9 +5,11 @@ import { Copy, Check } from "lucide-react";
 interface CopyFieldProps {
   label: string;
   value: string;
+  /** What shows, when it is not the whole value; the copy is the whole value. */
+  display?: string;
 }
 
-export function CopyField({ label, value }: CopyFieldProps) {
+export function CopyField({ label, value, display }: CopyFieldProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -23,7 +25,7 @@ export function CopyField({ label, value }: CopyFieldProps) {
         as="span"
         className="shrink-0 text-[10px] text-tint"
       >
-        {label}:
+        {label}
       </Text>
       <Text
         variant="muted"
@@ -31,7 +33,7 @@ export function CopyField({ label, value }: CopyFieldProps) {
         className="truncate font-mono text-[10px]"
         title={value}
       >
-        {value}
+        {display ?? value}
       </Text>
       <button
         onClick={handleCopy}
