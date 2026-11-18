@@ -83,7 +83,7 @@ func (s *ServerPublicTestSuite) TestDecode() {
 				if msg, ok = server.Query(c, "limit", &got.Limit); !ok {
 					return nil
 				}
-				msg, _ = server.Valid(got)
+				msg, _ = server.Valid(c, got)
 
 				return nil
 			})
@@ -100,7 +100,7 @@ func (s *ServerPublicTestSuite) TestDecode() {
 		})
 	}
 
-	msg, ok := server.Valid(decodeInput{})
+	msg, ok := server.Valid(s.request(), decodeInput{})
 	s.False(ok)
 	s.NotEmpty(msg)
 
@@ -110,12 +110,12 @@ func (s *ServerPublicTestSuite) TestDecode() {
 		Count int    `          pattern:"x"`
 		Named string `          pattern:"^a$"`
 	}
-	msg, ok = server.Valid(traceInput{ID: "beef", Named: "a"})
+	msg, ok = server.Valid(s.request(), traceInput{ID: "beef", Named: "a"})
 	s.True(ok, msg)
-	msg, ok = server.Valid(traceInput{ID: "BEEF", Named: "a"})
+	msg, ok = server.Valid(s.request(), traceInput{ID: "BEEF", Named: "a"})
 	s.False(ok)
 	s.Equal("id does not match ^[0-9a-f]{4}$", msg)
-	msg, ok = server.Valid(traceInput{ID: "beef", Named: "b"})
+	msg, ok = server.Valid(s.request(), traceInput{ID: "beef", Named: "b"})
 	s.False(ok)
 	s.Equal("Named does not match ^a$", msg)
 }
@@ -232,4 +232,10 @@ func (s *ServerPublicTestSuite) TestReadErrors() {
 	msg, ok = server.Query(newContext("/", http.NoBody), "count", &count)
 	s.True(ok, msg)
 	s.Equal(9, count, "a value that the request does not have leaves the field as it is")
+}
+
+// request is an echo context of a request, for a Valid outside a route.
+func (s *ServerPublicTestSuite) request() *echo.Context {
+	return echo.New().
+		NewContext(httptest.NewRequest(http.MethodGet, "/", nil), httptest.NewRecorder())
 }

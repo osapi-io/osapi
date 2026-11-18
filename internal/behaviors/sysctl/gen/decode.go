@@ -19,7 +19,7 @@ func decodeList(
 	if msg, ok := server.Query(c, "prefix", &in.Prefix); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 
@@ -37,7 +37,7 @@ func decodeGet(
 	if msg, ok := server.Param(c, "key", &in.Key); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 
@@ -55,7 +55,7 @@ func decodeCreate(
 	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 
@@ -76,7 +76,7 @@ func decodeUpdate(
 	if msg, ok := server.Param(c, "key", &in.Key); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 
@@ -94,7 +94,7 @@ func decodeDelete(
 	if msg, ok := server.Param(c, "key", &in.Key); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 

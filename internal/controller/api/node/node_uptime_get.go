@@ -36,7 +36,7 @@ func (s *Node) GetNodeUptime(
 	ctx context.Context,
 	request gen.GetNodeUptimeRequestObject,
 ) (gen.GetNodeUptimeResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeUptime400JSONResponse{Error: &errMsg}, nil
 	}
 

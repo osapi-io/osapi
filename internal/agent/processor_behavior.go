@@ -138,7 +138,7 @@ func NewBehaviorProcessor(
 
 		// The API checked the input before it queued the job, but a job can
 		// reach NATS another way, so the agent checks it again.
-		if err := m.Check(req.Data); err != nil {
+		if err := m.Check(ctx, req.Data); err != nil {
 			return nil, err
 		}
 

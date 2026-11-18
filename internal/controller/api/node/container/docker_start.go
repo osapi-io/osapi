@@ -36,11 +36,11 @@ func (s *Container) PostNodeContainerDockerStart(
 	ctx context.Context,
 	request gen.PostNodeContainerDockerStartRequestObject,
 ) (gen.PostNodeContainerDockerStartResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PostNodeContainerDockerStart400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Var(request.Id, "required,container_id"); !ok {
+	if errMsg, ok := validation.Var(ctx, request.Id, "required,container_id"); !ok {
 		return gen.PostNodeContainerDockerStart400JSONResponse{Error: &errMsg}, nil
 	}
 

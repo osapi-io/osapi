@@ -35,7 +35,7 @@ func decodeGet(
 	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 
@@ -53,7 +53,7 @@ func decodeDelete(
 	if msg, ok := server.Query(c, "machine_id", &in.MachineID); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 
@@ -71,7 +71,7 @@ func decodeAccept(
 	if msg, ok := server.Query(c, "fingerprint", &in.Fingerprint); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 
@@ -86,7 +86,7 @@ func decodeReject(
 	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 
@@ -101,7 +101,7 @@ func decodeDrain(
 	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 
@@ -116,7 +116,7 @@ func decodeUndrain(
 	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(in); !ok {
+	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}
 

@@ -20,7 +20,11 @@
 
 package user
 
-import "github.com/osapi-io/osapi/internal/validation"
+import (
+	"context"
+
+	"github.com/osapi-io/osapi/internal/validation"
+)
 
 // validateHostname validates a hostname path parameter using the shared
 // validator. Returns the error message and false if invalid.
@@ -28,9 +32,10 @@ import "github.com/osapi-io/osapi/internal/validation"
 // This exists because oapi-codegen does not generate validate tags on
 // path parameters in strict-server mode (upstream limitation).
 func validateHostname(
+	ctx context.Context,
 	hostname string,
 ) (string, bool) {
-	return validation.Var(hostname, "required,min=1,valid_target")
+	return validation.Var(ctx, hostname, "required,min=1,valid_target")
 }
 
 // validateName validates a user or group name path parameter using the
@@ -39,14 +44,16 @@ func validateHostname(
 // This exists because oapi-codegen does not generate validate tags on
 // path parameters in strict-server mode (upstream limitation).
 func validateName(
+	ctx context.Context,
 	name string,
 ) (string, bool) {
-	return validation.Var(name, "required,account_name")
+	return validation.Var(ctx, name, "required,account_name")
 }
 
 // validateFingerprint validates the fingerprint path parameter. It is the fingerprint the user provider computes.
 func validateFingerprint(
+	ctx context.Context,
 	fingerprint string,
 ) (string, bool) {
-	return validation.Var(fingerprint, "required,ssh_fingerprint")
+	return validation.Var(ctx, fingerprint, "required,ssh_fingerprint")
 }

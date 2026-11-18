@@ -37,7 +37,7 @@ func (s *Node) GetNodeOS(
 	ctx context.Context,
 	request gen.GetNodeOSRequestObject,
 ) (gen.GetNodeOSResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeOS400JSONResponse{Error: &errMsg}, nil
 	}
 

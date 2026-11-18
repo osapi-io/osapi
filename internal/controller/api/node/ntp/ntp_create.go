@@ -38,11 +38,11 @@ func (s *Ntp) PostNodeNtp(
 	ctx context.Context,
 	request gen.PostNodeNtpRequestObject,
 ) (gen.PostNodeNtpResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PostNodeNtp400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Struct(request.Body); !ok {
+	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 		return gen.PostNodeNtp400JSONResponse{Error: &errMsg}, nil
 	}
 

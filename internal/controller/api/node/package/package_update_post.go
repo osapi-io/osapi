@@ -37,7 +37,7 @@ func (p *Package) PostNodePackageUpdate(
 	ctx context.Context,
 	request gen.PostNodePackageUpdateRequestObject,
 ) (gen.PostNodePackageUpdateResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PostNodePackageUpdate400JSONResponse{Error: &errMsg}, nil
 	}
 

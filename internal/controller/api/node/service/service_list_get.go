@@ -37,7 +37,7 @@ func (s *Service) GetNodeService(
 	ctx context.Context,
 	request gen.GetNodeServiceRequestObject,
 ) (gen.GetNodeServiceResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeService400JSONResponse{Error: &errMsg}, nil
 	}
 

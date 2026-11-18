@@ -39,11 +39,11 @@ func (u *User) GetNodeGroupByName(
 	ctx context.Context,
 	request gen.GetNodeGroupByNameRequestObject,
 ) (gen.GetNodeGroupByNameResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeGroupByName400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateName(request.Name); !ok {
+	if errMsg, ok := validateName(ctx, request.Name); !ok {
 		return gen.GetNodeGroupByName400JSONResponse{Error: &errMsg}, nil
 	}
 

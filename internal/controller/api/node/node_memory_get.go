@@ -37,7 +37,7 @@ func (s *Node) GetNodeMemory(
 	ctx context.Context,
 	request gen.GetNodeMemoryRequestObject,
 ) (gen.GetNodeMemoryResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeMemory400JSONResponse{Error: &errMsg}, nil
 	}
 

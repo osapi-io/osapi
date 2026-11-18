@@ -20,7 +20,11 @@
 
 package hostname
 
-import "github.com/osapi-io/osapi/internal/validation"
+import (
+	"context"
+
+	"github.com/osapi-io/osapi/internal/validation"
+)
 
 // validateHostname validates a hostname path parameter using the shared
 // validator. Returns the error message and false if invalid.
@@ -28,7 +32,8 @@ import "github.com/osapi-io/osapi/internal/validation"
 // This exists because oapi-codegen does not generate validate tags on
 // path parameters in strict-server mode (upstream limitation).
 func validateHostname(
+	ctx context.Context,
 	hostname string,
 ) (string, bool) {
-	return validation.Var(hostname, "required,min=1,valid_target")
+	return validation.Var(ctx, hostname, "required,min=1,valid_target")
 }

@@ -271,6 +271,7 @@ func (m *Method) ProviderType() reflect.Type {
 // before Invoke, so a job that did not come through the API, such as one
 // published to NATS by hand, is held to the same rules.
 func (m *Method) Check(
+	ctx context.Context,
 	input []byte,
 ) error {
 	in := reflect.New(m.In)
@@ -280,18 +281,19 @@ func (m *Method) Check(
 		}
 	}
 
-	return check(m, in.Elem().Interface())
+	return check(ctx, m, in.Elem().Interface())
 }
 
 // check holds in, the method's input, to its validate tags.
 func check(
+	ctx context.Context,
 	m *Method,
 	in any,
 ) error {
 	if reflect.ValueOf(in).Kind() != reflect.Struct {
 		return nil
 	}
-	if msg, ok := validation.Struct(in); !ok {
+	if msg, ok := validation.Struct(ctx, in); !ok {
 		return fmt.Errorf("method %s: %s", m.Name, msg)
 	}
 	if msg, ok := CheckTemplates(in); !ok {

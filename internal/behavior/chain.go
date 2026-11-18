@@ -180,7 +180,7 @@ func Call[P any, In any, Out any](
 
 	var out Out
 	_, err := m.run(ctx, func(ctx context.Context) (any, any, error) {
-		if err := check(m, in); err != nil {
+		if err := check(ctx, m, in); err != nil {
 			return nil, in, err
 		}
 		var err error

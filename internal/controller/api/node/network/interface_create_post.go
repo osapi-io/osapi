@@ -36,17 +36,17 @@ func (s *Network) PostNodeNetworkInterface(
 	ctx context.Context,
 	request gen.PostNodeNetworkInterfaceRequestObject,
 ) (gen.PostNodeNetworkInterfaceResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PostNodeNetworkInterface400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateInterfaceName(request.Name); !ok {
+	if errMsg, ok := validateInterfaceName(ctx, request.Name); !ok {
 		return gen.PostNodeNetworkInterface400JSONResponse{Error: &errMsg}, nil
 	}
 
 	// Defense in depth: current fields use omitempty so validation
 	// always passes, but guards against future field additions.
-	if errMsg, ok := validation.Struct(request.Body); !ok {
+	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 		return gen.PostNodeNetworkInterface400JSONResponse{Error: &errMsg}, nil
 	}
 

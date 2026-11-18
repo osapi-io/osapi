@@ -40,17 +40,17 @@ func (u *User) PutNodeUser(
 	ctx context.Context,
 	request gen.PutNodeUserRequestObject,
 ) (gen.PutNodeUserResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateName(request.Name); !ok {
+	if errMsg, ok := validateName(ctx, request.Name); !ok {
 		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
 	}
 
 	// Defense in depth: current fields use omitempty so validation
 	// always passes, but guards against future field additions.
-	if errMsg, ok := validation.Struct(request.Body); !ok {
+	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
 	}
 

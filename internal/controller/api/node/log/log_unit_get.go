@@ -46,15 +46,15 @@ func (s *Log) GetNodeLogUnit(
 	ctx context.Context,
 	request gen.GetNodeLogUnitRequestObject,
 ) (gen.GetNodeLogUnitResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeLogUnit400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateUnit(request.Name); !ok {
+	if errMsg, ok := validateUnit(ctx, request.Name); !ok {
 		return gen.GetNodeLogUnit400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Struct(request.Params); !ok {
+	if errMsg, ok := validation.Struct(ctx, request.Params); !ok {
 		return gen.GetNodeLogUnit400JSONResponse{Error: &errMsg}, nil
 	}
 

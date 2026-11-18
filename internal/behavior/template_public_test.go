@@ -146,8 +146,13 @@ func (s *TemplatePublicTestSuite) TestTemplateFields() {
 func (s *TemplatePublicTestSuite) TestCheckRefusesTemplates() {
 	m := behavior.Write("deploy", deploy)
 
-	s.ErrorContains(m.Check([]byte(`{"content":"{{.Vars.missing}}"}`)), "missing")
-	s.NoError(m.Check([]byte(`{"content":"{{.Vars.port}}","vars":{"port":"80"}}`)))
+	s.ErrorContains(
+		m.Check(context.Background(), []byte(`{"content":"{{.Vars.missing}}"}`)),
+		"missing",
+	)
+	s.NoError(
+		m.Check(context.Background(), []byte(`{"content":"{{.Vars.port}}","vars":{"port":"80"}}`)),
+	)
 }
 
 func (s *TemplatePublicTestSuite) TestCheckTemplates() {

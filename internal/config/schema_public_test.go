@@ -21,6 +21,7 @@
 package config_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -317,7 +318,7 @@ func (s *ConfigPublicTestSuite) TestValidateBuckets() {
 			}
 			s.Require().Error(err)
 			msg := err.Error()
-			if m, ok := validation.Struct(c); !ok {
+			if m, ok := validation.Struct(context.Background(), c); !ok {
 				msg = m
 			}
 			s.Contains(msg, tt.wantErr)

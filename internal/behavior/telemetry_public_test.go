@@ -202,14 +202,18 @@ func (s *TelemetryPublicTestSuite) TestCall() {
 		func() {
 			m := b.Method("get")
 
-			s.ErrorContains(m.Check([]byte(`{"key":""}`)), "required")
-			s.ErrorContains(m.Check([]byte(`{`)), "decode input")
-			s.NoError(m.Check([]byte(`{"key":"k"}`)))
-			s.ErrorContains(m.Check(nil), "required", "no input is the zero input")
+			s.ErrorContains(m.Check(context.Background(), []byte(`{"key":""}`)), "required")
+			s.ErrorContains(m.Check(context.Background(), []byte(`{`)), "decode input")
+			s.NoError(m.Check(context.Background(), []byte(`{"key":"k"}`)))
+			s.ErrorContains(
+				m.Check(context.Background(), nil),
+				"required",
+				"no input is the zero input",
+			)
 
 			bare := behavior.Read("status", readBare)
 			s.NoError(
-				bare.Check([]byte(`"x"`)),
+				bare.Check(context.Background(), []byte(`"x"`)),
 				"an input that is not a struct has no tags to check",
 			)
 		},

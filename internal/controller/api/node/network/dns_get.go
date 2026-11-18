@@ -37,11 +37,11 @@ func (s *Network) GetNodeNetworkDNSByInterface(
 	ctx context.Context,
 	request gen.GetNodeNetworkDNSByInterfaceRequestObject,
 ) (gen.GetNodeNetworkDNSByInterfaceResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeNetworkDNSByInterface400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateInterfaceName(request.InterfaceName); !ok {
+	if errMsg, ok := validateInterfaceName(ctx, request.InterfaceName); !ok {
 		return gen.GetNodeNetworkDNSByInterface400JSONResponse{Error: &errMsg}, nil
 	}
 

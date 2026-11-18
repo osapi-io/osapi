@@ -21,6 +21,7 @@
 package validation_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -163,7 +164,7 @@ func (s *ValidationPublicTestSuite) TestStruct() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			tt.validateFunc(validation.Struct(tt.input))
+			tt.validateFunc(validation.Struct(context.Background(), tt.input))
 		})
 	}
 }
@@ -205,7 +206,7 @@ func (s *ValidationPublicTestSuite) TestVar() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			tt.validateFunc(validation.Var(tt.field, tt.tag))
+			tt.validateFunc(validation.Var(context.Background(), tt.field, tt.tag))
 		})
 	}
 }
@@ -283,7 +284,7 @@ func (s *ValidationPublicTestSuite) TestAlphanumOrFact() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			_, ok := validation.Var(tt.field, "required,alphanum_or_fact")
+			_, ok := validation.Var(context.Background(), tt.field, "required,alphanum_or_fact")
 			tt.validateFunc(ok)
 		})
 	}
@@ -369,7 +370,7 @@ func (s *ValidationPublicTestSuite) TestIpOrFact() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			_, ok := validation.Var(tt.field, "required,ip_or_fact")
+			_, ok := validation.Var(context.Background(), tt.field, "required,ip_or_fact")
 			tt.validateFunc(ok)
 		})
 	}
@@ -533,9 +534,11 @@ func (s *ValidationPublicTestSuite) TestSchedule() {
 					Schedule string `validate:"required,cron_schedule"`
 				}
 
-				tt.validateFunc(validation.Struct(cronReq{Schedule: tt.field}))
+				tt.validateFunc(
+					validation.Struct(context.Background(), cronReq{Schedule: tt.field}),
+				)
 			} else {
-				tt.validateFunc(validation.Var(tt.field, "cron_schedule"))
+				tt.validateFunc(validation.Var(context.Background(), tt.field, "cron_schedule"))
 			}
 		})
 	}
@@ -620,12 +623,14 @@ func (s *ValidationPublicTestSuite) TestGoDuration() {
 					MaxAge string `validate:"required,go_duration"`
 				}
 
-				tt.validateFunc(validation.Struct(durationReq{MaxAge: tt.field}))
+				tt.validateFunc(
+					validation.Struct(context.Background(), durationReq{MaxAge: tt.field}),
+				)
 			} else if tt.field == "" {
 				// Test empty string with omitempty — validation should pass.
-				tt.validateFunc(validation.Var(tt.field, "omitempty,go_duration"))
+				tt.validateFunc(validation.Var(context.Background(), tt.field, "omitempty,go_duration"))
 			} else {
-				tt.validateFunc(validation.Var(tt.field, "go_duration"))
+				tt.validateFunc(validation.Var(context.Background(), tt.field, "go_duration"))
 			}
 		})
 	}
@@ -704,7 +709,7 @@ func (s *ValidationPublicTestSuite) TestSysctlKey() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			_, ok := validation.Var(tt.field, "sysctl_key")
+			_, ok := validation.Var(context.Background(), tt.field, "sysctl_key")
 			tt.validateFunc(ok)
 		})
 	}
@@ -714,7 +719,7 @@ func (s *ValidationPublicTestSuite) TestSysctlKey() {
 			Key string `validate:"required,sysctl_key"`
 		}
 
-		errMsg, ok := validation.Struct(keyReq{Key: "a/b"})
+		errMsg, ok := validation.Struct(context.Background(), keyReq{Key: "a/b"})
 		s.False(ok)
 		s.Contains(errMsg, "sysctl_key")
 		s.Contains(errMsg, "not a valid sysctl key")
@@ -743,7 +748,7 @@ func (s *ValidationPublicTestSuite) TestResourceName() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			_, ok := validation.Var(tt.field, "resource_name")
+			_, ok := validation.Var(context.Background(), tt.field, "resource_name")
 			s.Equal(tt.valid, ok)
 		})
 	}
@@ -753,7 +758,7 @@ func (s *ValidationPublicTestSuite) TestResourceName() {
 			Name string `validate:"required,resource_name"`
 		}
 
-		errMsg, ok := validation.Struct(nameReq{Name: "../etc/passwd"})
+		errMsg, ok := validation.Struct(context.Background(), nameReq{Name: "../etc/passwd"})
 		s.False(ok)
 		s.Contains(errMsg, "resource_name")
 		s.Contains(errMsg, "not a valid name")
@@ -780,13 +785,13 @@ func (s *ValidationPublicTestSuite) TestNATSName() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			_, ok := validation.Var(tt.field, "nats_name")
+			_, ok := validation.Var(context.Background(), tt.field, "nats_name")
 			s.Equal(tt.valid, ok)
 		})
 	}
 
 	s.Run("an invalid name shows the hint", func() {
-		errMsg, ok := validation.Var("bad name", "nats_name")
+		errMsg, ok := validation.Var(context.Background(), "bad name", "nats_name")
 		s.False(ok)
 		s.Contains(errMsg, "not a valid NATS bucket name")
 	})
@@ -861,7 +866,7 @@ func (s *ValidationPublicTestSuite) TestPathNames() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			msg, ok := validation.Var(tt.field, tt.tag)
+			msg, ok := validation.Var(context.Background(), tt.field, tt.tag)
 			s.Equal(tt.valid, ok)
 			if !tt.valid {
 				s.Contains(msg, tt.hint)
@@ -893,7 +898,7 @@ func (s *ValidationPublicTestSuite) TestPackageName() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			_, ok := validation.Var(tt.field, "package_name")
+			_, ok := validation.Var(context.Background(), tt.field, "package_name")
 			s.Equal(tt.valid, ok)
 		})
 	}
@@ -903,7 +908,7 @@ func (s *ValidationPublicTestSuite) TestPackageName() {
 			Name string `validate:"required,package_name"`
 		}
 
-		errMsg, ok := validation.Struct(pkgReq{Name: "-y"})
+		errMsg, ok := validation.Struct(context.Background(), pkgReq{Name: "-y"})
 		s.False(ok)
 		s.Contains(errMsg, "not a valid package name")
 	})
@@ -926,7 +931,7 @@ func (s *ValidationPublicTestSuite) TestContainerID() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			_, ok := validation.Var(tt.field, "container_id")
+			_, ok := validation.Var(context.Background(), tt.field, "container_id")
 			s.Equal(tt.valid, ok)
 		})
 	}
@@ -936,7 +941,7 @@ func (s *ValidationPublicTestSuite) TestContainerID() {
 			ID string `validate:"required,container_id"`
 		}
 
-		errMsg, ok := validation.Struct(idReq{ID: "-f"})
+		errMsg, ok := validation.Struct(context.Background(), idReq{ID: "-f"})
 		s.False(ok)
 		s.Contains(errMsg, "container_id")
 		s.Contains(errMsg, "not a valid container name or ID")
@@ -974,7 +979,7 @@ func (s *ValidationPublicTestSuite) TestNoLinebreak() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			_, ok := validation.Var(tt.field, "no_linebreak")
+			_, ok := validation.Var(context.Background(), tt.field, "no_linebreak")
 			tt.validateFunc(ok)
 		})
 	}
@@ -984,7 +989,10 @@ func (s *ValidationPublicTestSuite) TestNoLinebreak() {
 			Value string `validate:"required,no_linebreak"`
 		}
 
-		errMsg, ok := validation.Struct(valueReq{Value: "1\nkernel.modprobe = /tmp/evil"})
+		errMsg, ok := validation.Struct(
+			context.Background(),
+			valueReq{Value: "1\nkernel.modprobe = /tmp/evil"},
+		)
 		s.False(ok)
 		s.Contains(errMsg, "no_linebreak")
 		s.Contains(errMsg, "must not contain line breaks")
@@ -1022,7 +1030,7 @@ func (s *ValidationPublicTestSuite) TestSigningKey() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			_, ok := validation.Var(tt.field, "signing_key")
+			_, ok := validation.Var(context.Background(), tt.field, "signing_key")
 			tt.validateFunc(ok)
 		})
 	}
@@ -1032,7 +1040,7 @@ func (s *ValidationPublicTestSuite) TestSigningKey() {
 			SigningKey string `validate:"required,signing_key"`
 		}
 
-		errMsg, ok := validation.Struct(keyReq{SigningKey: "too-short"})
+		errMsg, ok := validation.Struct(context.Background(), keyReq{SigningKey: "too-short"})
 		s.False(ok)
 		s.Contains(errMsg, "signing_key")
 		s.Contains(errMsg, "openssl rand -hex 32")
@@ -1126,7 +1134,7 @@ func (s *ValidationPublicTestSuite) TestAccountName() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			_, ok := validation.Var(tt.field, "account_name")
+			_, ok := validation.Var(context.Background(), tt.field, "account_name")
 			tt.validateFunc(ok)
 		})
 	}
@@ -1136,7 +1144,7 @@ func (s *ValidationPublicTestSuite) TestAccountName() {
 			Name string `validate:"required,account_name"`
 		}
 
-		errMsg, ok := validation.Struct(nameReq{Name: "-bad"})
+		errMsg, ok := validation.Struct(context.Background(), nameReq{Name: "-bad"})
 		s.False(ok)
 		s.Contains(errMsg, "account_name")
 		s.Contains(errMsg, "not a valid account name")
@@ -1392,11 +1400,13 @@ func (s *ValidationPublicTestSuite) TestFileMode() {
 					Mode string `validate:"required,file_mode"`
 				}
 
-				tt.validateFunc(validation.Struct(modeReq{Mode: tt.field}))
+				tt.validateFunc(validation.Struct(context.Background(), modeReq{Mode: tt.field}))
 			case tt.field == "":
-				tt.validateFunc(validation.Var(tt.field, "omitempty,file_mode"))
+				tt.validateFunc(
+					validation.Var(context.Background(), tt.field, "omitempty,file_mode"),
+				)
 			default:
-				tt.validateFunc(validation.Var(tt.field, "file_mode"))
+				tt.validateFunc(validation.Var(context.Background(), tt.field, "file_mode"))
 			}
 		})
 	}

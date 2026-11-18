@@ -69,7 +69,7 @@ func Connect(
 	conn config.NATSConnection,
 	cfg config.NATS,
 	timeout time.Duration,
-	resolve func(string) string,
+	resolve func(ctx context.Context, target string) string,
 	mp *sdkmetric.MeterProvider,
 ) (*Connection, error) {
 	namespace := conn.Namespace

@@ -37,11 +37,11 @@ func (u *User) GetNodeUserSSHKey(
 	ctx context.Context,
 	request gen.GetNodeUserSSHKeyRequestObject,
 ) (gen.GetNodeUserSSHKeyResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateName(request.Name); !ok {
+	if errMsg, ok := validateName(ctx, request.Name); !ok {
 		return gen.GetNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
 	}
 

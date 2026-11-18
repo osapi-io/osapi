@@ -22,6 +22,7 @@
 package validation
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -108,7 +109,7 @@ func init() {
 	// before the controller starts, as the validate command needs. With no
 	// AgentLister it passes only _any and _all; RegisterTargetValidator gives
 	// it the agents.
-	_ = instance.RegisterValidation("valid_target", validTarget)
+	_ = instance.RegisterValidationCtx("valid_target", validTarget)
 
 	// alphanum_or_fact accepts alphanumeric values or @fact. prefixed references
 	// with a known fact key. Fact references are resolved agent-side.
@@ -262,10 +263,10 @@ func init() {
 // hintsMu guards customHints, which a behavior's rule adds to.
 var hintsMu sync.RWMutex
 
-var customHints = map[string]func(fe validator.FieldError) string{
-	"valid_target": func(fe validator.FieldError) string {
+var customHints = map[string]func(ctx context.Context, fe validator.FieldError) string{
+	"valid_target": func(ctx context.Context, fe validator.FieldError) string {
 		target, _ := fe.Value().(string)
-		if t, ok := PendingTarget(target); ok {
+		if t, ok := PendingTarget(ctx, target); ok {
 			if t == "_all" || t == "_any" {
 				return "all agents are pending PKI enrollment — accept them with: osapi client agent accept --hostname <hostname>"
 			}
@@ -279,75 +280,75 @@ var customHints = map[string]func(fe validator.FieldError) string{
 
 		return fmt.Sprintf("target agent %q not found", fe.Value())
 	},
-	"go_duration": func(fe validator.FieldError) string {
+	"go_duration": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf(
 			"%q is not a valid Go duration (e.g., 30s, 5m, 1h)",
 			fe.Value(),
 		)
 	},
-	"file_mode": func(fe validator.FieldError) string {
+	"file_mode": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf(
 			"%q is not a valid file mode (expected three or four octal digits, e.g., 0644)",
 			fe.Value(),
 		)
 	},
-	"cron_schedule": func(fe validator.FieldError) string {
+	"cron_schedule": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf(
 			"%q is not a valid cron expression (expected: minute hour day-of-month month day-of-week)",
 			fe.Value(),
 		)
 	},
-	"sysctl_key": func(fe validator.FieldError) string {
+	"sysctl_key": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf(
 			"%q is not a valid sysctl key (expected: %s)",
 			fe.Value(),
 			sysctlKeyPattern.String(),
 		)
 	},
-	"resource_name": func(fe validator.FieldError) string {
+	"resource_name": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf(
 			"%q is not a valid name (expected: %s)",
 			fe.Value(),
 			resourceNamePattern.String(),
 		)
 	},
-	"nats_name": func(fe validator.FieldError) string {
+	"nats_name": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf(
 			"%q is not a valid NATS bucket name (expected: %s)",
 			fe.Value(),
 			natsNamePattern.String(),
 		)
 	},
-	"service_name": func(fe validator.FieldError) string {
+	"service_name": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf("%q is not a valid service name (expected: %s)",
 			fe.Value(), serviceNamePattern.String())
 	},
-	"unit_name": func(fe validator.FieldError) string {
+	"unit_name": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf("%q is not a valid systemd unit name (expected: %s)",
 			fe.Value(), unitNamePattern.String())
 	},
-	"ssh_fingerprint": func(fe validator.FieldError) string {
+	"ssh_fingerprint": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf("%q is not a valid SSH key fingerprint (expected: %s)",
 			fe.Value(), sshFingerprintPattern.String())
 	},
-	"package_name": func(fe validator.FieldError) string {
+	"package_name": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf(
 			"%q is not a valid package name (expected: %s)",
 			fe.Value(),
 			packageNamePattern.String(),
 		)
 	},
-	"container_id": func(fe validator.FieldError) string {
+	"container_id": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf(
 			"%q is not a valid container name or ID (expected: %s)",
 			fe.Value(),
 			containerIDPattern.String(),
 		)
 	},
-	"no_linebreak": func(_ validator.FieldError) string {
+	"no_linebreak": func(_ context.Context, _ validator.FieldError) string {
 		return "value must not contain line breaks"
 	},
-	"account_name": func(fe validator.FieldError) string {
+	"account_name": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf(
 			"%q is not a valid account name (expected: %s, max %d characters)",
 			fe.Value(),
@@ -355,7 +356,7 @@ var customHints = map[string]func(fe validator.FieldError) string{
 			accountNameMaxLength,
 		)
 	},
-	"signing_key": func(_ validator.FieldError) string {
+	"signing_key": func(_ context.Context, _ validator.FieldError) string {
 		return fmt.Sprintf(
 			"signing key must be at least %d characters — generate one with: openssl rand -hex 32",
 			MinSigningKeyLen,
@@ -363,13 +364,16 @@ var customHints = map[string]func(fe validator.FieldError) string{
 	},
 }
 
-// Struct validates a struct and returns the error message and false if invalid.
+// Struct validates a struct and returns the error message and false if
+// invalid. ctx is the request's, so a rule that reads NATS, such as
+// valid_target, does it inside the request's trace and stops with it.
 func Struct(
+	ctx context.Context,
 	v any,
 ) (string, bool) {
-	if err := instance.Struct(v); err != nil {
+	if err := instance.StructCtx(ctx, v); err != nil {
 		validationErrors := err.(validator.ValidationErrors)
-		return formatErrors(validationErrors), false
+		return formatErrors(ctx, validationErrors), false
 	}
 
 	return "", true
@@ -379,12 +383,13 @@ func Struct(
 // message and false if invalid. This is useful for path parameters that
 // oapi-codegen does not generate validate tags for in strict-server mode.
 func Var(
+	ctx context.Context,
 	field any,
 	tag string,
 ) (string, bool) {
-	if err := instance.Var(field, tag); err != nil {
+	if err := instance.VarCtx(ctx, field, tag); err != nil {
 		validationErrors := err.(validator.ValidationErrors)
-		return formatErrors(validationErrors), false
+		return formatErrors(ctx, validationErrors), false
 	}
 
 	return "", true
@@ -393,12 +398,13 @@ func Var(
 // formatErrors builds the error string, appending a custom hint for known
 // tags while keeping the standard validator prefix.
 func formatErrors(
+	ctx context.Context,
 	errs validator.ValidationErrors,
 ) string {
 	msgs := make([]string, 0, len(errs))
 	for _, fe := range errs {
 		msg := fe.Error()
-		if hint := Hint(fe); hint != "" {
+		if hint := Hint(ctx, fe); hint != "" {
 			msg = fmt.Sprintf("%s: %s", msg, hint)
 		}
 		msgs = append(msgs, msg)
@@ -408,8 +414,10 @@ func formatErrors(
 }
 
 // Hint is what a failure of a custom validate tag means, such as what a
-// signing key must look like, or "" for a tag without one.
+// signing key must look like, or "" for a tag without one. ctx is the
+// request's: the valid_target hint looks up whether the agent is pending.
 func Hint(
+	ctx context.Context,
 	fe validator.FieldError,
 ) string {
 	hintsMu.RLock()
@@ -419,7 +427,7 @@ func Hint(
 		return ""
 	}
 
-	return fn(fe)
+	return fn(ctx, fe)
 }
 
 // AtLeastOneField checks that at least one exported pointer, slice, or map
@@ -475,7 +483,7 @@ func registerRule(
 	})
 	hintsMu.Lock()
 	defer hintsMu.Unlock()
-	customHints[r.Tag] = func(fe validator.FieldError) string {
+	customHints[r.Tag] = func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf("%q %s", fe.Value(), r.Message)
 	}
 }

@@ -37,7 +37,7 @@ func (s *Network) GetNodeNetworkInterface(
 	ctx context.Context,
 	request gen.GetNodeNetworkInterfaceRequestObject,
 ) (gen.GetNodeNetworkInterfaceResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeNetworkInterface400JSONResponse{Error: &errMsg}, nil
 	}
 

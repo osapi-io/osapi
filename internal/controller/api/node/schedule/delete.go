@@ -39,11 +39,11 @@ func (s *Schedule) DeleteNodeSchedule(
 	ctx context.Context,
 	request gen.DeleteNodeScheduleRequestObject,
 ) (gen.DeleteNodeScheduleResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.DeleteNodeSchedule400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateName(request.Name); !ok {
+	if errMsg, ok := validateName(ctx, request.Name); !ok {
 		return gen.DeleteNodeSchedule400JSONResponse{Error: &errMsg}, nil
 	}
 

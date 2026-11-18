@@ -39,11 +39,11 @@ func (p *Package) GetNodePackageByName(
 	ctx context.Context,
 	request gen.GetNodePackageByNameRequestObject,
 ) (gen.GetNodePackageByNameResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodePackageByName400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateName(request.Name); !ok {
+	if errMsg, ok := validateName(ctx, request.Name); !ok {
 		return gen.GetNodePackageByName400JSONResponse{Error: &errMsg}, nil
 	}
 

@@ -37,7 +37,7 @@ func (s *Node) GetNodeLoad(
 	ctx context.Context,
 	request gen.GetNodeLoadRequestObject,
 ) (gen.GetNodeLoadResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeLoad400JSONResponse{Error: &errMsg}, nil
 	}
 

@@ -20,6 +20,8 @@
 
 package validation
 
+import "context"
+
 // TargetHostname validates a `{hostname}` path parameter that addresses managed
 // machines. It accepts a literal hostname, the reserved routing values `_any` and
 // `_all`, or a `key:value` label selector — whatever `valid_target` admits. Returns
@@ -35,7 +37,8 @@ package validation
 // endpoint addresses one enrolled agent by its literal hostname, where a routing
 // value would be meaningless, so that domain validates differently and says so.
 func TargetHostname(
+	ctx context.Context,
 	hostname string,
 ) (string, bool) {
-	return Var(hostname, "required,min=1,valid_target")
+	return Var(ctx, hostname, "required,min=1,valid_target")
 }

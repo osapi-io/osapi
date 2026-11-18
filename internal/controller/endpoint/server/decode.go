@@ -94,11 +94,13 @@ func text[T any](
 }
 
 // Valid checks in's validate tags, and each string field tagged
-// pattern:"..." against its regular expression.
+// pattern:"..." against its regular expression, with the request's context,
+// so a rule that reads NATS, such as valid_target, is in its trace.
 func Valid(
+	c *echo.Context,
 	in any,
 ) (string, bool) {
-	if msg, ok := validation.Struct(in); !ok {
+	if msg, ok := validation.Struct(c.Request().Context(), in); !ok {
 		return msg, false
 	}
 	// A generated decoder calls Valid only for an input with fields, a

@@ -20,13 +20,18 @@
 
 package power
 
-import "github.com/osapi-io/osapi/internal/validation"
+import (
+	"context"
+
+	"github.com/osapi-io/osapi/internal/validation"
+)
 
 // validateHostname validates a `{hostname}` path parameter addressing managed
 // machines, delegating to the one implementation in internal/validation so this
 // package and its siblings cannot drift apart.
 func validateHostname(
+	ctx context.Context,
 	hostname string,
 ) (string, bool) {
-	return validation.TargetHostname(hostname)
+	return validation.TargetHostname(ctx, hostname)
 }

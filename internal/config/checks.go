@@ -21,6 +21,7 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -180,7 +181,7 @@ func valueProblems(
 			tag += "=" + fe.Param()
 		}
 		msg := fmt.Sprintf("breaks its rule %q", tag)
-		if hint := validation.Hint(fe); hint != "" {
+		if hint := validation.Hint(context.Background(), fe); hint != "" {
 			msg += ": " + hint
 		}
 		problems = append(problems, Problem{

@@ -36,11 +36,11 @@ func (s *Container) DeleteNodeContainerDockerByID(
 	ctx context.Context,
 	request gen.DeleteNodeContainerDockerByIDRequestObject,
 ) (gen.DeleteNodeContainerDockerByIDResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.DeleteNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Var(request.Id, "required,container_id"); !ok {
+	if errMsg, ok := validation.Var(ctx, request.Id, "required,container_id"); !ok {
 		return gen.DeleteNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
 	}
 

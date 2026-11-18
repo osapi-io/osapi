@@ -37,15 +37,15 @@ func (s *Container) PostNodeContainerDockerExec(
 	ctx context.Context,
 	request gen.PostNodeContainerDockerExecRequestObject,
 ) (gen.PostNodeContainerDockerExecResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.PostNodeContainerDockerExec400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Var(request.Id, "required,container_id"); !ok {
+	if errMsg, ok := validation.Var(ctx, request.Id, "required,container_id"); !ok {
 		return gen.PostNodeContainerDockerExec400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Struct(request.Body); !ok {
+	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 		return gen.PostNodeContainerDockerExec400JSONResponse{Error: &errMsg}, nil
 	}
 

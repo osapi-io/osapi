@@ -37,7 +37,7 @@ func (s *Node) GetNodeStatus(
 	ctx context.Context,
 	request gen.GetNodeStatusRequestObject,
 ) (gen.GetNodeStatusResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeStatus400JSONResponse{Error: &errMsg}, nil
 	}
 

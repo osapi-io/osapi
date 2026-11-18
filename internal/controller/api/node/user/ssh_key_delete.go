@@ -36,15 +36,15 @@ func (u *User) DeleteNodeUserSSHKey(
 	ctx context.Context,
 	request gen.DeleteNodeUserSSHKeyRequestObject,
 ) (gen.DeleteNodeUserSSHKeyResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.DeleteNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateFingerprint(request.Fingerprint); !ok {
+	if errMsg, ok := validateFingerprint(ctx, request.Fingerprint); !ok {
 		return gen.DeleteNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateName(request.Name); !ok {
+	if errMsg, ok := validateName(ctx, request.Name); !ok {
 		return gen.DeleteNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
 	}
 

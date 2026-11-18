@@ -37,11 +37,11 @@ func (s *Network) GetNodeNetworkInterfaceByName(
 	ctx context.Context,
 	request gen.GetNodeNetworkInterfaceByNameRequestObject,
 ) (gen.GetNodeNetworkInterfaceByNameResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeNetworkInterfaceByName400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validateInterfaceName(request.Name); !ok {
+	if errMsg, ok := validateInterfaceName(ctx, request.Name); !ok {
 		return gen.GetNodeNetworkInterfaceByName400JSONResponse{Error: &errMsg}, nil
 	}
 

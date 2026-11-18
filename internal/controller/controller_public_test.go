@@ -254,7 +254,7 @@ func (s *ControllerPublicTestSuite) TestRegisterTargetValidator() {
 
 			controller.ExportRegisterTargetValidator(jobs)
 
-			s.Equal(tc.want, validation.ResolveTarget("web-01"))
+			s.Equal(tc.want, validation.ResolveTarget(context.Background(), "web-01"))
 		})
 	}
 }

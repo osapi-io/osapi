@@ -37,7 +37,7 @@ func (u *User) GetNodeGroup(
 	ctx context.Context,
 	request gen.GetNodeGroupRequestObject,
 ) (gen.GetNodeGroupResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
+	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
 		return gen.GetNodeGroup400JSONResponse{Error: &errMsg}, nil
 	}
 
