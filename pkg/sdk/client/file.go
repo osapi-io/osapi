@@ -28,97 +28,47 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net/http"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
-
-// UploadOption configures Upload behavior.
-type UploadOption func(*uploadOptions)
-
-type uploadOptions struct {
-	force bool
-}
-
-// WithForce bypasses both SDK-side pre-check and server-side digest
-// check. The file is always uploaded and changed is always true.
-func WithForce() UploadOption {
-	return func(o *uploadOptions) { o.force = true }
-}
 
 // FileService provides file management operations for the Object Store.
 type FileService struct {
 	client *gen.ClientWithResponses
 }
 
-// Upload uploads a file to the Object Store via multipart/form-data.
-// By default, it computes SHA-256 locally and compares against the
-// stored hash to skip the upload when content is unchanged. Use
-// WithForce to bypass this check.
+// Upload creates a file in the Object Store. It computes the SHA-256 of
+// the content first, and skips the upload when the stored file has the
+// same content. A file with other content is a ConflictError: Update
+// replaces it.
 func (s *FileService) Upload(
 	ctx context.Context,
 	name string,
 	contentType string,
 	file io.Reader,
-	opts ...UploadOption,
 ) (*Response[FileUpload], error) {
-	var options uploadOptions
-	for _, o := range opts {
-		o(&options)
-	}
-
-	// Buffer file content for hashing and multipart construction.
 	fileData, err := io.ReadAll(file)
 	if err != nil {
 		return nil, fmt.Errorf("read file: %w", err)
 	}
 
-	// Compute SHA-256 locally.
-	hash := sha256.Sum256(fileData)
-	sha256Hex := fmt.Sprintf("%x", hash)
-
-	// SDK-side pre-check: skip upload if content unchanged.
-	// Skipped when force is set.
-	if !options.force {
-		existing, err := s.Get(ctx, name)
-		if err == nil && existing.Data.SHA256 == sha256Hex {
-			return NewResponse(FileUpload{
-				Name:        name,
-				SHA256:      sha256Hex,
-				Size:        len(fileData),
-				Changed:     false,
-				ContentType: contentType,
-			}, nil), nil
-		}
-		// On error (404, network, etc.) fall through to upload.
+	sha256Hex := fmt.Sprintf("%x", sha256.Sum256(fileData))
+	if existing, err := s.Get(ctx, name); err == nil && existing.Data.SHA256 == sha256Hex {
+		return NewResponse(FileUpload{
+			Name:        name,
+			SHA256:      sha256Hex,
+			Size:        len(fileData),
+			Changed:     false,
+			ContentType: contentType,
+		}, nil), nil
 	}
 
-	// Build multipart body from buffered content.
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-
-	_ = writer.WriteField("name", name)
-	_ = writer.WriteField("content_type", contentType)
-
-	part, _ := writer.CreateFormFile("file", name)
-	_, _ = part.Write(fileData)
-	_ = writer.Close()
-
-	// Pass force as query param.
-	params := &gen.PostFileParams{}
-	if options.force {
-		params.Force = &options.force
-	}
-
-	resp, err := s.client.PostFileWithBodyWithResponse(
-		ctx,
-		params,
-		writer.FormDataContentType(),
-		body,
-	)
+	body, formType := fileForm(name, contentType, fileData)
+	resp, err := s.client.PostFileWithBodyWithResponse(ctx, formType, body)
 	if err != nil {
 		return nil, fmt.Errorf("upload file: %w", err)
 	}
-
 	if err := checkError(
 		resp.StatusCode(),
 		resp.JSON400,
@@ -130,19 +80,81 @@ func (s *FileService) Upload(
 		return nil, err
 	}
 
-	// A new file answers 201, and one that existed 200.
-	uploaded := resp.JSON201
-	if uploaded == nil {
-		uploaded = resp.JSON200
+	return written(resp.JSON201, resp.JSON200, resp.StatusCode(), resp.Body, resp.HTTPResponse)
+}
+
+// Update replaces a file in the Object Store, or creates it when the name
+// is new.
+func (s *FileService) Update(
+	ctx context.Context,
+	name string,
+	contentType string,
+	file io.Reader,
+) (*Response[FileUpload], error) {
+	fileData, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("read file: %w", err)
 	}
-	if uploaded == nil {
+
+	body, formType := fileForm("", contentType, fileData)
+	resp, err := s.client.PutFileByNameWithBodyWithResponse(ctx, name, formType, body)
+	if err != nil {
+		return nil, fmt.Errorf("update file: %w", err)
+	}
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	return written(resp.JSON201, resp.JSON200, resp.StatusCode(), resp.Body, resp.HTTPResponse)
+}
+
+// fileForm is the multipart form of a file: its name when the body names
+// it, its content type and its content.
+func fileForm(
+	name string,
+	contentType string,
+	data []byte,
+) (*bytes.Buffer, string) {
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	if name != "" {
+		_ = writer.WriteField("name", name)
+	}
+	_ = writer.WriteField("content_type", contentType)
+	part, _ := writer.CreateFormFile("file", "upload")
+	_, _ = part.Write(data)
+	_ = writer.Close()
+
+	return body, writer.FormDataContentType()
+}
+
+// written is the answer of a write: a new file answers 201, and one that
+// existed 200.
+func written(
+	created *gen.FileUploadResponse,
+	existed *gen.FileUploadResponse,
+	code int,
+	body []byte,
+	httpResp *http.Response,
+) (*Response[FileUpload], error) {
+	result := created
+	if result == nil {
+		result = existed
+	}
+	if result == nil {
 		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
+			StatusCode: code,
 			Message:    "nil response body",
 		}}
 	}
 
-	return newResponse(fileUploadFromGen(uploaded), resp.Body, resp.HTTPResponse), nil
+	return newResponse(fileUploadFromGen(result), body, httpResp), nil
 }
 
 // List retrieves all files stored in the Object Store.

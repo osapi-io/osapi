@@ -4,7 +4,7 @@ Upload a file to the Object Store.
 
 An upload of the same content changes nothing (`Changed: false`). If the file
 exists with different content, the command rejects the upload with 409 Conflict.
-Use `--force` to replace the file.
+`file update` replaces the file.
 
 ```bash
 osapi client file upload
@@ -16,17 +16,15 @@ osapi client file upload
 osapi client file upload --name app.conf --file /tmp/app.conf
 osapi client file upload --name app.conf.tmpl --file /tmp/app.conf.tmpl \
   --content-type template
-osapi client file upload --name app.conf --file /tmp/app.conf --force
 ```
 
 ## Flags
 
-| Flag             | Description                                                     | Default |
-| ---------------- | --------------------------------------------------------------- | ------- |
-| `--content-type` | File type: raw or template (default raw)                        | `raw`   |
-| `--file`         | Path to the local file to upload (required)                     |         |
-| `--force`        | Force upload even if file already exists with different content |         |
-| `--name`         | Name for the file in the Object Store (required)                |         |
+| Flag             | Description                                      | Default |
+| ---------------- | ------------------------------------------------ | ------- |
+| `--content-type` | File type: raw or template (default raw)         | `raw`   |
+| `--file`         | Path to the local file to upload (required)      |         |
+| `--name`         | Name for the file in the Object Store (required) |         |
 
 ## Global flags
 

@@ -1612,6 +1612,24 @@ func (e PostFileMultipartBodyContentType) Valid() bool {
 	}
 }
 
+// Defines values for PutFileByNameMultipartBodyContentType.
+const (
+	Raw      PutFileByNameMultipartBodyContentType = "raw"
+	Template PutFileByNameMultipartBodyContentType = "template"
+)
+
+// Valid indicates whether the value is a known member of the PutFileByNameMultipartBodyContentType enum.
+func (e PutFileByNameMultipartBodyContentType) Valid() bool {
+	switch e {
+	case Raw:
+		return true
+	case Template:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for GetJobsParamsStatus.
 const (
 	Completed      GetJobsParamsStatus = "completed"
@@ -4793,14 +4811,20 @@ type PostFileMultipartBody struct {
 	Name string `json:"name" validate:"required,min=1,max=255"`
 }
 
-// PostFileParams defines parameters for PostFile.
-type PostFileParams struct {
-	// Force When true, bypass the digest check and always write the file. Returns changed=true regardless of whether the content differs from the existing object.
-	Force *bool `form:"force,omitempty" json:"force,omitempty" validate:"omitempty"`
-}
-
 // PostFileMultipartBodyContentType defines parameters for PostFile.
 type PostFileMultipartBodyContentType string
+
+// PutFileByNameMultipartBody defines parameters for PutFileByName.
+type PutFileByNameMultipartBody struct {
+	// ContentType How the file should be treated during deploy. "raw" writes bytes as-is; "template" renders with Go text/template and agent facts.
+	ContentType *PutFileByNameMultipartBodyContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
+
+	// File The file content.
+	File openapi_types.File `json:"file" validate:"required,min=1"`
+}
+
+// PutFileByNameMultipartBodyContentType defines parameters for PutFileByName.
+type PutFileByNameMultipartBodyContentType string
 
 // GetJobsParams defines parameters for GetJobs.
 type GetJobsParams struct {
@@ -4878,6 +4902,9 @@ type PostNodeNetworkPingJSONBody struct {
 
 // PostFileMultipartRequestBody defines body for PostFile for multipart/form-data ContentType.
 type PostFileMultipartRequestBody PostFileMultipartBody
+
+// PutFileByNameMultipartRequestBody defines body for PutFileByName for multipart/form-data ContentType.
+type PutFileByNameMultipartRequestBody PutFileByNameMultipartBody
 
 // RetryJobByIDJSONRequestBody defines body for RetryJobByID for application/json ContentType.
 type RetryJobByIDJSONRequestBody = RetryJobRequest
@@ -5106,7 +5133,7 @@ type ClientInterface interface {
 	GetFiles(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostFileWithBody request with any body
-	PostFileWithBody(ctx context.Context, params *PostFileParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostFileWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetFileStale request
 	GetFileStale(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5116,6 +5143,9 @@ type ClientInterface interface {
 
 	// GetFileByName request
 	GetFileByName(ctx context.Context, name FileName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutFileByNameWithBody request with any body
+	PutFileByNameWithBody(ctx context.Context, name FileName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetHealth request
 	GetHealth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5656,8 +5686,8 @@ func (c *Client) GetFiles(ctx context.Context, reqEditors ...RequestEditorFn) (*
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostFileWithBody(ctx context.Context, params *PostFileParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostFileRequestWithBody(c.Server, params, contentType, body)
+func (c *Client) PostFileWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostFileRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -5694,6 +5724,18 @@ func (c *Client) DeleteFileByName(ctx context.Context, name FileName, reqEditors
 
 func (c *Client) GetFileByName(ctx context.Context, name FileName, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetFileByNameRequest(c.Server, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutFileByNameWithBody(ctx context.Context, name FileName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutFileByNameRequestWithBody(c.Server, name, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -7878,7 +7920,7 @@ func NewGetFilesRequest(server string) (*http.Request, error) {
 }
 
 // NewPostFileRequestWithBody generates requests for PostFile with any type of body
-func NewPostFileRequestWithBody(server string, params *PostFileParams, contentType string, body io.Reader) (*http.Request, error) {
+func NewPostFileRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -7894,33 +7936,6 @@ func NewPostFileRequestWithBody(server string, params *PostFileParams, contentTy
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
-	}
-
-	if params != nil {
-		// queryValues collects non-styled parameters (passthrough, JSON)
-		// that are safe to round-trip through url.Values.Encode().
-		queryValues := queryURL.Query()
-		// rawQueryFragments collects pre-encoded query fragments from
-		// styled parameters, preserving literal commas as delimiters
-		// per the OpenAPI spec (e.g. "color=blue,black,brown").
-		var rawQueryFragments []string
-
-		if params.Force != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "force", *params.Force, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if encoded := queryValues.Encode(); encoded != "" {
-			rawQueryFragments = append(rawQueryFragments, encoded)
-		}
-		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
 	}
 
 	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
@@ -8024,6 +8039,42 @@ func NewGetFileByNameRequest(server string, name FileName) (*http.Request, error
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewPutFileByNameRequestWithBody generates requests for PutFileByName with any type of body
+func NewPutFileByNameRequestWithBody(server string, name FileName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/file/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -12643,7 +12694,7 @@ type ClientWithResponsesInterface interface {
 	GetFilesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFilesResponse, error)
 
 	// PostFileWithBodyWithResponse request with any body
-	PostFileWithBodyWithResponse(ctx context.Context, params *PostFileParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostFileResponse, error)
+	PostFileWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostFileResponse, error)
 
 	// GetFileStaleWithResponse request
 	GetFileStaleWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFileStaleResponse, error)
@@ -12653,6 +12704,9 @@ type ClientWithResponsesInterface interface {
 
 	// GetFileByNameWithResponse request
 	GetFileByNameWithResponse(ctx context.Context, name FileName, reqEditors ...RequestEditorFn) (*GetFileByNameResponse, error)
+
+	// PutFileByNameWithBodyWithResponse request with any body
+	PutFileByNameWithBodyWithResponse(ctx context.Context, name FileName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutFileByNameResponse, error)
 
 	// GetHealthWithResponse request
 	GetHealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthResponse, error)
@@ -13614,6 +13668,41 @@ func (r GetFileByNameResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetFileByNameResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutFileByNameResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *FileUploadResponse
+	JSON201      *FileUploadResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutFileByNameResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutFileByNameResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutFileByNameResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -17234,8 +17323,8 @@ func (c *ClientWithResponses) GetFilesWithResponse(ctx context.Context, reqEdito
 }
 
 // PostFileWithBodyWithResponse request with arbitrary body returning *PostFileResponse
-func (c *ClientWithResponses) PostFileWithBodyWithResponse(ctx context.Context, params *PostFileParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostFileResponse, error) {
-	rsp, err := c.PostFileWithBody(ctx, params, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostFileWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostFileResponse, error) {
+	rsp, err := c.PostFileWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -17267,6 +17356,15 @@ func (c *ClientWithResponses) GetFileByNameWithResponse(ctx context.Context, nam
 		return nil, err
 	}
 	return ParseGetFileByNameResponse(rsp)
+}
+
+// PutFileByNameWithBodyWithResponse request with arbitrary body returning *PutFileByNameResponse
+func (c *ClientWithResponses) PutFileByNameWithBodyWithResponse(ctx context.Context, name FileName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutFileByNameResponse, error) {
+	rsp, err := c.PutFileByNameWithBody(ctx, name, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutFileByNameResponse(rsp)
 }
 
 // GetHealthWithResponse request returning *GetHealthResponse
@@ -19431,6 +19529,67 @@ func ParseGetFileByNameResponse(rsp *http.Response) (*GetFileByNameResponse, err
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutFileByNameResponse parses an HTTP response from a PutFileByNameWithResponse call
+func ParsePutFileByNameResponse(rsp *http.Response) (*PutFileByNameResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutFileByNameResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest FileUploadResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest FileUploadResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

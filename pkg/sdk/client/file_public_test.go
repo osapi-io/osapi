@@ -57,7 +57,6 @@ func (suite *FilePublicTestSuite) TestUpload() {
 		handler      http.HandlerFunc
 		serverURL    string
 		file         io.Reader
-		opts         []client.UploadOption
 		validateFunc func(*client.Response[client.FileUpload], error)
 	}{
 		{
@@ -110,31 +109,6 @@ func (suite *FilePublicTestSuite) TestUpload() {
 				suite.Equal(contentSHA, resp.Data.SHA256)
 				suite.False(resp.Data.Changed)
 				suite.Nil(resp.RawJSON())
-			},
-		},
-		{
-			name: "when force skips pre-check and uploads",
-			opts: []client.UploadOption{client.WithForce()},
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				if r.Method == http.MethodGet {
-					// GET should NOT be called — fail if it is.
-					w.WriteHeader(http.StatusInternalServerError)
-					_, _ = w.Write([]byte(`{"error":"unexpected GET"}`))
-					return
-				}
-				suite.Contains(r.URL.RawQuery, "force=true")
-				w.WriteHeader(http.StatusCreated)
-				_, _ = w.Write(
-					[]byte(
-						`{"name":"nginx.conf","sha256":"abc123","size":7,"changed":true,"content_type":"raw"}`,
-					),
-				)
-			},
-			validateFunc: func(resp *client.Response[client.FileUpload], err error) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.True(resp.Data.Changed)
 			},
 		},
 		{
@@ -269,11 +243,115 @@ func (suite *FilePublicTestSuite) TestUpload() {
 				"nginx.conf",
 				"raw",
 				file,
-				tc.opts...,
 			)
 			tc.validateFunc(resp, err)
 		})
 	}
+}
+
+func (suite *FilePublicTestSuite) TestUpdate() {
+	body := func(changed bool) string {
+		return fmt.Sprintf(
+			`{"name":"nginx.conf","sha256":"abc","size":7,"changed":%v,"content_type":"raw"}`,
+			changed,
+		)
+	}
+
+	tests := []struct {
+		name         string
+		handler      http.HandlerFunc
+		serverURL    string
+		validateFunc func(*client.Response[client.FileUpload], error)
+	}{
+		{
+			name: "when the file existed, it is replaced: 200",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				suite.Equal(http.MethodPut, r.Method)
+				suite.Equal("/api/file/nginx.conf", r.URL.Path)
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(body(true)))
+			},
+			validateFunc: func(resp *client.Response[client.FileUpload], err error) {
+				suite.Require().NoError(err)
+				suite.True(resp.Data.Changed)
+			},
+		},
+		{
+			name: "when the name is new, it is created: 201",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Header().Set("Location", "/api/file/nginx.conf")
+				w.WriteHeader(http.StatusCreated)
+				_, _ = w.Write([]byte(body(true)))
+			},
+			validateFunc: func(resp *client.Response[client.FileUpload], err error) {
+				suite.Require().NoError(err)
+				suite.Equal("nginx.conf", resp.Data.Name)
+			},
+		},
+		{
+			name: "when the server returns 403 returns AuthError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				_, _ = w.Write([]byte(`{"error":"cannot overwrite protected osapi file"}`))
+			},
+			validateFunc: func(resp *client.Response[client.FileUpload], err error) {
+				suite.Nil(resp)
+				var target *client.AuthError
+				suite.True(errors.As(err, &target))
+			},
+		},
+		{
+			name:      "when the HTTP call fails returns error",
+			serverURL: "http://127.0.0.1:0",
+			validateFunc: func(resp *client.Response[client.FileUpload], err error) {
+				suite.Nil(resp)
+				suite.ErrorContains(err, "update file")
+			},
+		},
+		{
+			name: "when the answer has no body returns UnexpectedStatusError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			validateFunc: func(resp *client.Response[client.FileUpload], err error) {
+				suite.Nil(resp)
+				var target *client.UnexpectedStatusError
+				suite.True(errors.As(err, &target))
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			url := tc.serverURL
+			if tc.handler != nil {
+				server := httptest.NewServer(tc.handler)
+				defer server.Close()
+				url = server.URL
+			}
+			sut := client.New(url, "test-token", client.WithLogger(slog.Default()))
+
+			tc.validateFunc(sut.File.Update(
+				suite.ctx, "nginx.conf", "raw", bytes.NewReader([]byte("content")),
+			))
+		})
+	}
+}
+
+func (suite *FilePublicTestSuite) TestUpdateReadError() {
+	sut := client.New("http://127.0.0.1:0", "test-token", client.WithLogger(slog.Default()))
+
+	resp, err := sut.File.Update(
+		suite.ctx,
+		"nginx.conf",
+		"raw",
+		&errReader{err: errors.New("read failed")},
+	)
+	suite.Nil(resp)
+	suite.ErrorContains(err, "read file")
 }
 
 func (suite *FilePublicTestSuite) TestList() {

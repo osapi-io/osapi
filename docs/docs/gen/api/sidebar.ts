@@ -220,6 +220,12 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
+          id: "gen/api/put-file-by-name",
+          label: "Replace a file",
+          className: "api-method put",
+        },
+        {
+          type: "doc",
           id: "gen/api/delete-file-by-name",
           label: "Delete a file",
           className: "api-method delete",

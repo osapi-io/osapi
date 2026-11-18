@@ -133,8 +133,8 @@ osapi client node schedule list --target web-01
 osapi client node schedule get --target web-01 --name backup
 
 # Update: upload a new script version and redeploy
-osapi client file upload --name backup-script \
-  --file ./backup-v2.sh --force
+osapi client file update --name backup-script \
+  --file ./backup-v2.sh
 osapi client node schedule update --target web-01 \
   --name backup --schedule "0 3 * * *" \
   --object backup-script

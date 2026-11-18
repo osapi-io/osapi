@@ -104,7 +104,7 @@ func main() {
 	}
 
 	fmt.Println("\n=== Cleaning up uploaded object ===")
-	_, err = c.File.Delete(ctx, "internal-ca")
+	err = c.File.Delete(ctx, "internal-ca")
 	if err != nil {
 		log.Fatalf("delete object failed: %v", err)
 	}

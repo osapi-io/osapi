@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"mime/multipart"
 	"strings"
 
 	"github.com/nats-io/nats.go"
@@ -37,85 +38,131 @@ import (
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
-// PostFile upload a file to the Object Store via multipart/form-data.
+// PostFile creates a file in the Object Store from a multipart form. A name
+// that exists with the same content answers 200 and changes nothing; with
+// other content it is a 409, and PUT /api/file/{name} replaces it.
 func (f *File) PostFile(
 	ctx context.Context,
 	request gen.PostFileRequestObject,
 ) (gen.PostFileResponseObject, error) {
-	name, contentType, fileData, errResp := f.parseMultipart(request)
-	if errResp != nil {
-		return errResp, nil
+	form, errMsg := readForm(request.Body, "")
+	if errMsg != "" {
+		return gen.PostFile400JSONResponse{Error: &errMsg}, nil
+	}
+	if strings.HasPrefix(form.Name, "osapi/") {
+		msg := fmt.Sprintf("cannot overwrite protected osapi file: %s", form.Name)
+		return gen.PostFile403JSONResponse{Error: &msg}, nil
 	}
 
-	if strings.HasPrefix(name, "osapi/") {
-		errMsg := fmt.Sprintf("cannot overwrite protected osapi file: %s", name)
-		return gen.PostFile403JSONResponse{Error: &errMsg}, nil
-	}
-
-	f.logger.Debug(
-		"file upload",
-		slog.String("name", name),
-		slog.String("content_type", contentType),
-		slog.Int("size", len(fileData)),
-	)
-
-	hash := sha256.Sum256(fileData)
-	sha256Hex := fmt.Sprintf("%x", hash)
-	newDigest := "SHA-256=" + base64.URLEncoding.EncodeToString(hash[:])
-
-	force := request.Params.Force != nil && *request.Params.Force
-
-	// A file that exists answers 200; only a new one is created, 201.
-	existing, err := f.objStore.ObjectInfo(ctx, f.objBucket, name)
-	existed := err == nil && existing != nil
-	if existed && !force {
-		if existing.Digest == newDigest {
-			// Same content: skip the write.
-			return gen.PostFile200JSONResponse{
-				Name:        name,
-				Sha256:      sha256Hex,
-				Size:        len(fileData),
-				Changed:     false,
-				ContentType: contentType,
-			}, nil
+	existing, err := f.objStore.ObjectInfo(ctx, f.objBucket, form.Name)
+	if err == nil && existing != nil {
+		if existing.Digest == form.digest() {
+			return gen.PostFile200JSONResponse(form.result(false)), nil
 		}
-
-		errMsg := fmt.Sprintf(
-			"file %s already exists with different content; use force to overwrite",
-			name,
+		msg := fmt.Sprintf(
+			"file %s already exists with different content; replace it with PUT /api/file/%s",
+			form.Name, form.Name,
 		)
-		return gen.PostFile409JSONResponse{Error: &errMsg}, nil
+		return gen.PostFile409JSONResponse{Error: &msg}, nil
 	}
 
-	meta := jetstream.ObjectMeta{
-		Name: name,
-		Headers: nats.Header{
-			"Osapi-Content-Type": []string{contentType},
-		},
+	if msg := f.store(ctx, form); msg != "" {
+		return gen.PostFile500JSONResponse{Error: &msg}, nil
 	}
-	if _, err := f.objStore.ObjectPut(ctx, f.objBucket, meta, bytes.NewReader(fileData)); err != nil {
-		errMsg := fmt.Sprintf("failed to store file: %s", err.Error())
-		return gen.PostFile500JSONResponse{
-			Error: &errMsg,
-		}, nil
-	}
-
-	stored := gen.FileUploadResponse{
-		Name:        name,
-		Sha256:      sha256Hex,
-		Size:        len(fileData),
-		Changed:     true,
-		ContentType: contentType,
-	}
-	if existed {
-		return gen.PostFile200JSONResponse(stored), nil
-	}
-	location := "/api/file/" + name
+	location := "/api/file/" + form.Name
 
 	return gen.PostFile201JSONResponse{
-		Body:    stored,
+		Body:    form.result(true),
 		Headers: gen.PostFile201ResponseHeaders{Location: &location},
 	}, nil
+}
+
+// store writes the form's file to the Object Store, and says why it could
+// not.
+func (f *File) store(
+	ctx context.Context,
+	form uploadForm,
+) string {
+	f.logger.Debug(
+		"file upload",
+		slog.String("name", form.Name),
+		slog.String("content_type", form.ContentType),
+		slog.Int("size", len(form.File)),
+	)
+
+	meta := jetstream.ObjectMeta{
+		Name: form.Name,
+		Headers: nats.Header{
+			"Osapi-Content-Type": []string{form.ContentType},
+		},
+	}
+	if _, err := f.objStore.ObjectPut(ctx, f.objBucket, meta, bytes.NewReader(form.File)); err != nil {
+		return fmt.Sprintf("failed to store file: %s", err.Error())
+	}
+
+	return ""
+}
+
+// readForm reads the parts of a multipart form, and validates them. name
+// is the name from the path of a PUT; a POST gives "" and reads the name
+// part.
+func readForm(
+	r *multipart.Reader,
+	name string,
+) (uploadForm, string) {
+	form := uploadForm{Name: name}
+	for {
+		part, err := r.NextPart()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return form, fmt.Sprintf("failed to read multipart: %s", err.Error())
+		}
+
+		switch part.FormName() {
+		case "name":
+			if name == "" {
+				b, _ := io.ReadAll(part)
+				form.Name = string(b)
+			}
+		case "content_type":
+			b, _ := io.ReadAll(part)
+			form.ContentType = string(b)
+		case "file":
+			form.File, _ = io.ReadAll(part)
+		}
+		_ = part.Close()
+	}
+
+	if form.ContentType == "" {
+		form.ContentType = "raw"
+	}
+	if errMsg, ok := validation.Struct(form); !ok {
+		return form, errMsg
+	}
+
+	return form, ""
+}
+
+// digest is the Object Store digest of the form's file.
+func (u uploadForm) digest() string {
+	hash := sha256.Sum256(u.File)
+
+	return "SHA-256=" + base64.URLEncoding.EncodeToString(hash[:])
+}
+
+// result is the answer of a write of the form's file.
+func (u uploadForm) result(
+	changed bool,
+) gen.FileUploadResponse {
+	return gen.FileUploadResponse{
+		Name:        u.Name,
+		Sha256:      fmt.Sprintf("%x", sha256.Sum256(u.File)),
+		Size:        len(u.File),
+		Changed:     changed,
+		ContentType: u.ContentType,
+	}
 }
 
 // uploadForm carries the multipart form fields so they can be validated
@@ -131,51 +178,4 @@ type uploadForm struct {
 	Name        string `validate:"required,min=1,max=255"`
 	ContentType string `validate:"omitempty,oneof=raw template"`
 	File        []byte `validate:"required,min=1"`
-}
-
-// parseMultipart reads multipart parts and extracts name, content_type,
-// and file data. Returns a 400 response on validation failure.
-func (f *File) parseMultipart(
-	request gen.PostFileRequestObject,
-) (string, string, []byte, gen.PostFileResponseObject) {
-	var name string
-	var contentType string
-	var fileData []byte
-
-	for {
-		part, err := request.Body.NextPart()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			errMsg := fmt.Sprintf("failed to read multipart: %s", err.Error())
-			return "", "", nil, gen.PostFile400JSONResponse{Error: &errMsg}
-		}
-
-		switch part.FormName() {
-		case "name":
-			b, _ := io.ReadAll(part)
-			name = string(b)
-		case "content_type":
-			b, _ := io.ReadAll(part)
-			contentType = string(b)
-		case "file":
-			fileData, _ = io.ReadAll(part)
-		}
-		_ = part.Close()
-	}
-
-	if contentType == "" {
-		contentType = "raw"
-	}
-
-	if errMsg, ok := validation.Struct(uploadForm{
-		Name:        name,
-		ContentType: contentType,
-		File:        fileData,
-	}); !ok {
-		return "", "", nil, gen.PostFile400JSONResponse{Error: &errMsg}
-	}
-
-	return name, contentType, fileData, nil
 }

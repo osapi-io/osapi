@@ -33,8 +33,6 @@ import (
 	"strings"
 	"testing"
 
-	"k8s.io/utils/ptr"
-
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/assert"
@@ -99,7 +97,7 @@ func makeMultipartReader(
 
 // makeBrokenMultipartReader returns a multipart.Reader that delivers a valid
 // "name" part first, then produces a non-EOF error on the next NextPart() call.
-// This triggers the non-EOF error path (lines 126-129) in parseMultipart.
+// This triggers the non-EOF error path in readForm.
 func makeBrokenMultipartReader() *multipart.Reader {
 	boundary := "testboundary"
 
@@ -300,59 +298,6 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 			},
 		},
 		{
-			name: "when force upload bypasses digest check",
-			request: gen.PostFileRequestObject{
-				Params: gen.PostFileParams{Force: ptr.To(true)},
-				Body:   makeMultipartReader("nginx.conf", "raw", fileContent),
-			},
-			setupMock: func() {
-				s.mockObjStore.EXPECT().
-					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
-					Return(&jetstream.ObjectInfo{
-						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
-						Digest:     "SHA-256=old",
-					}, nil)
-				s.mockObjStore.EXPECT().
-					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
-					Return(&jetstream.ObjectInfo{
-						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
-						Size:       uint64(len(fileContent)),
-					}, nil)
-			},
-			validateFunc: func(resp gen.PostFileResponseObject) {
-				r, ok := resp.(gen.PostFile200JSONResponse)
-				s.True(ok)
-				s.Equal("nginx.conf", r.Name)
-				s.True(r.Changed)
-			},
-		},
-		{
-			name: "when force upload same content still writes",
-			request: gen.PostFileRequestObject{
-				Params: gen.PostFileParams{Force: ptr.To(true)},
-				Body:   makeMultipartReader("nginx.conf", "raw", fileContent),
-			},
-			setupMock: func() {
-				s.mockObjStore.EXPECT().
-					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
-					Return(&jetstream.ObjectInfo{
-						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
-						Digest:     "SHA-256=old",
-					}, nil)
-				s.mockObjStore.EXPECT().
-					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
-					Return(&jetstream.ObjectInfo{
-						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
-						Size:       uint64(len(fileContent)),
-					}, nil)
-			},
-			validateFunc: func(resp gen.PostFileResponseObject) {
-				r, ok := resp.(gen.PostFile200JSONResponse)
-				s.True(ok)
-				s.True(r.Changed)
-			},
-		},
-		{
 			name: "when multipart read error returns 400",
 			request: gen.PostFileRequestObject{
 				Body: makeBrokenMultipartReader(),
@@ -535,47 +480,6 @@ func (s *FileUploadPublicTestSuite) TestPostFileValidationHTTP() {
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusConflict, rec.Code)
 				s.Contains(rec.Body.String(), "already exists with different content")
-			},
-		},
-		{
-			name: "when force upload bypasses digest check",
-			path: "/api/file?force=true",
-			buildBody: func() (*bytes.Buffer, string) {
-				return makeMultipartBody("nginx.conf", "raw", fileContent)
-			},
-			setupMock: func() *mocks.MockObjectStoreManager {
-				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
-				mock.EXPECT().
-					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
-					Return(&jetstream.ObjectInfo{
-						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
-						Digest:     "SHA-256=old",
-					}, nil)
-				mock.EXPECT().
-					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
-					Return(&jetstream.ObjectInfo{
-						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
-						Size:       uint64(len(fileContent)),
-					}, nil)
-				return mock
-			},
-			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusOK, rec.Code)
-				s.Contains(rec.Body.String(), `"changed":true`)
-			},
-		},
-		{
-			name: "when invalid force param returns 400",
-			path: "/api/file?force=notabool",
-			buildBody: func() (*bytes.Buffer, string) {
-				return makeMultipartBody("nginx.conf", "raw", fileContent)
-			},
-			setupMock: func() *mocks.MockObjectStoreManager {
-				return mocks.NewMockObjectStoreManager(s.mockCtrl)
-			},
-			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusBadRequest, rec.Code)
-				s.Contains(rec.Body.String(), "Invalid format for parameter force")
 			},
 		},
 		{

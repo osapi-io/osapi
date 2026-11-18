@@ -37,17 +37,15 @@ var clientFileUploadCmd = &cobra.Command{
 	Short: "Upload a file to the Object Store",
 	Long: "An upload of the same content changes nothing (`Changed: false`). If the\n" +
 		"file exists with different content, the command rejects the upload with 409\n" +
-		"Conflict. Use `--force` to replace the file.",
+		"Conflict. `file update` replaces the file.",
 	Example: `  osapi client file upload --name app.conf --file /tmp/app.conf
   osapi client file upload --name app.conf.tmpl --file /tmp/app.conf.tmpl \
-    --content-type template
-  osapi client file upload --name app.conf --file /tmp/app.conf --force`,
+    --content-type template`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		name, _ := cmd.Flags().GetString("name")
 		filePath, _ := cmd.Flags().GetString("file")
 		contentType, _ := cmd.Flags().GetString("content-type")
-		force, _ := cmd.Flags().GetBool("force")
 
 		f, err := os.Open(filePath)
 		if err != nil {
@@ -55,33 +53,13 @@ var clientFileUploadCmd = &cobra.Command{
 		}
 		defer func() { _ = f.Close() }()
 
-		var opts []client.UploadOption
-		if force {
-			opts = append(opts, client.WithForce())
-		}
-
-		resp, err := sdkClient.File.Upload(ctx, name, contentType, f, opts...)
+		resp, err := sdkClient.File.Upload(ctx, name, contentType, f)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return
 		}
 
-		if jsonOutput {
-			rawJSON := resp.RawJSON()
-			if rawJSON == nil {
-				out, _ := json.Marshal(resp.Data)
-				rawJSON = out
-			}
-			cli.PrintJSON(rawJSON)
-			return
-		}
-
-		fmt.Println()
-		cli.PrintKV("Name", resp.Data.Name)
-		cli.PrintKV("SHA256", resp.Data.SHA256)
-		cli.PrintKV("Size", fmt.Sprintf("%d", resp.Data.Size))
-		cli.PrintKV("Changed", fmt.Sprintf("%v", resp.Data.Changed))
-		cli.PrintKV("Content-Type", resp.Data.ContentType)
+		printFileWrite(resp)
 	},
 }
 
@@ -94,9 +72,30 @@ func init() {
 		String("file", "", "Path to the local file to upload")
 	clientFileUploadCmd.PersistentFlags().
 		String("content-type", "raw", "File type: raw or template (default raw)")
-	clientFileUploadCmd.PersistentFlags().
-		Bool("force", false, "Force upload even if file already exists with different content")
 
 	_ = clientFileUploadCmd.MarkPersistentFlagRequired("name")
 	_ = clientFileUploadCmd.MarkPersistentFlagRequired("file")
+}
+
+// printFileWrite prints the file that an upload or an update wrote: the
+// answer as it came with --json.
+func printFileWrite(
+	resp *client.Response[client.FileUpload],
+) {
+	if jsonOutput {
+		rawJSON := resp.RawJSON()
+		if rawJSON == nil {
+			rawJSON, _ = json.Marshal(resp.Data)
+		}
+		cli.PrintJSON(rawJSON)
+
+		return
+	}
+
+	fmt.Println()
+	cli.PrintKV("Name", resp.Data.Name)
+	cli.PrintKV("SHA256", resp.Data.SHA256)
+	cli.PrintKV("Size", fmt.Sprintf("%d", resp.Data.Size))
+	cli.PrintKV("Changed", fmt.Sprintf("%v", resp.Data.Changed))
+	cli.PrintKV("Content-Type", resp.Data.ContentType)
 }
