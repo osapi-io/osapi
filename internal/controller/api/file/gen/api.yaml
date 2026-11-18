@@ -94,8 +94,20 @@ paths:
                 - name
                 - file
       responses:
+        '200':
+          description: >
+            The file existed: unchanged, or replaced with force.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadResponse'
         '201':
-          description: File uploaded successfully.
+          description: The file is new.
+          headers:
+            Location:
+              description: The URL of the file that the request created.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -269,12 +281,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/FileName'
       responses:
-        '200':
-          description: File deleted successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FileDeleteResponse'
+        '204':
+          description: File deleted.
         '400':
           description: Invalid file name.
           content:
@@ -407,18 +415,18 @@ components:
     FileListResponse:
       type: object
       properties:
-        files:
+        items:
           type: array
           items:
             $ref: '#/components/schemas/FileInfo'
           description: List of stored files.
-        total:
+        total_items:
           type: integer
           description: Total number of files.
           example: 5
       required:
-        - files
-        - total
+        - items
+        - total_items
 
     FileInfoResponse:
       type: object
@@ -446,21 +454,6 @@ components:
         - sha256
         - size
         - content_type
-
-    FileDeleteResponse:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the deleted file.
-          example: "nginx.conf"
-        deleted:
-          type: boolean
-          description: Whether the file was deleted.
-          example: true
-      required:
-        - name
-        - deleted
 
     StaleDeployment:
       type: object
@@ -505,13 +498,13 @@ components:
     StaleDeploymentsResponse:
       type: object
       properties:
-        stale:
+        items:
           type: array
           items:
             $ref: '#/components/schemas/StaleDeployment'
-        total:
+        total_items:
           type: integer
           description: Total number of stale deployments.
       required:
-        - stale
-        - total
+        - items
+        - total_items

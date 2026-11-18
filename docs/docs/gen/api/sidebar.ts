@@ -22,7 +22,7 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "gen/api/remove-agent",
+          id: "gen/api/delete-agent",
           label: "Remove an enrolled agent",
           className: "api-method delete",
         },
@@ -444,9 +444,9 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "gen/api/post-node-file-status",
+          id: "gen/api/get-node-file-status",
           label: "Check deployment status of a file on the host",
-          className: "api-method post",
+          className: "api-method get",
         },
       ],
     },

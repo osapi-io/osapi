@@ -168,7 +168,7 @@ func (suite *DNSPublicTestSuite) TestUpdate() {
 			searchDomains: nil,
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"results":[{"hostname":"dns-host","status":"completed","changed":true}]}`,
@@ -192,7 +192,7 @@ func (suite *DNSPublicTestSuite) TestUpdate() {
 			searchDomains: []string{"example.com"},
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"results":[{"hostname":"dns-host","status":"completed","changed":true}]}`,
@@ -212,7 +212,7 @@ func (suite *DNSPublicTestSuite) TestUpdate() {
 			searchDomains: []string{"example.com"},
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"results":[{"hostname":"dns-host","status":"completed","changed":true}]}`,
@@ -232,7 +232,7 @@ func (suite *DNSPublicTestSuite) TestUpdate() {
 			overrideDHCP: true,
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"results":[{"hostname":"dns-host","status":"completed","changed":true}]}`,
@@ -252,7 +252,7 @@ func (suite *DNSPublicTestSuite) TestUpdate() {
 			searchDomains: nil,
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"results":[{"hostname":"dns-host","status":"completed","changed":true}]}`,
@@ -301,7 +301,7 @@ func (suite *DNSPublicTestSuite) TestUpdate() {
 			iface:   "eth0",
 			servers: []string{"8.8.8.8"},
 			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(resp *client.Response[client.Collection[client.DNSUpdateResult]], err error) {
 				suite.Error(err)
@@ -309,7 +309,7 @@ func (suite *DNSPublicTestSuite) TestUpdate() {
 
 				var target *client.UnexpectedStatusError
 				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
 		},

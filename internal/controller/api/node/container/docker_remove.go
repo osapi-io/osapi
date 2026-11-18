@@ -86,7 +86,7 @@ func (s *Container) DeleteNodeContainerDockerByID(
 	if resp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := resp.Error
-		return gen.DeleteNodeContainerDockerByID202JSONResponse{
+		return gen.DeleteNodeContainerDockerByID200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.DockerActionResultItem{
 				{
@@ -103,7 +103,7 @@ func (s *Container) DeleteNodeContainerDockerByID(
 	changed := resp.Changed
 	msg := "container removed"
 
-	return gen.DeleteNodeContainerDockerByID202JSONResponse{
+	return gen.DeleteNodeContainerDockerByID200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.DockerActionResultItem{
 			{
@@ -172,7 +172,7 @@ func (s *Container) deleteNodeContainerDockerRemoveBroadcast(
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.DeleteNodeContainerDockerByID202JSONResponse{
+	return gen.DeleteNodeContainerDockerByID200JSONResponse{
 		JobId:   &jobUUID,
 		Results: items,
 	}, nil

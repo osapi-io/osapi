@@ -59,8 +59,8 @@ func renderFactKeys(
 	_ facts.KeysInput,
 	out facts.FactKeysResponse,
 ) {
-	rows := make([][]string, 0, len(out.Keys))
-	for _, k := range out.Keys {
+	rows := make([][]string, 0, len(out.Items))
+	for _, k := range out.Items {
 		rows = append(rows, []string{"@fact." + k.Key, k.Description})
 	}
 

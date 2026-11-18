@@ -14,9 +14,9 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-export type deleteNodeContainerDockerImageResponse202 = {
+export type deleteNodeContainerDockerImageResponse200 = {
   data: DockerActionCollectionResponse
-  status: 202
+  status: 200
 }
 
 export type deleteNodeContainerDockerImageResponse400 = {
@@ -39,7 +39,7 @@ export type deleteNodeContainerDockerImageResponse500 = {
   status: 500
 }
 
-export type deleteNodeContainerDockerImageResponseSuccess = (deleteNodeContainerDockerImageResponse202) & {
+export type deleteNodeContainerDockerImageResponseSuccess = (deleteNodeContainerDockerImageResponse200) & {
   headers: Headers;
 };
 export type deleteNodeContainerDockerImageResponseError = (deleteNodeContainerDockerImageResponse400 | deleteNodeContainerDockerImageResponse401 | deleteNodeContainerDockerImageResponse403 | deleteNodeContainerDockerImageResponse500) & {
@@ -83,9 +83,9 @@ export const deleteNodeContainerDockerImage = async (hostname: string,
 );}
 
 
-export type postNodeContainerDockerPullResponse202 = {
+export type postNodeContainerDockerPullResponse200 = {
   data: DockerPullCollectionResponse
-  status: 202
+  status: 200
 }
 
 export type postNodeContainerDockerPullResponse400 = {
@@ -108,7 +108,7 @@ export type postNodeContainerDockerPullResponse500 = {
   status: 500
 }
 
-export type postNodeContainerDockerPullResponseSuccess = (postNodeContainerDockerPullResponse202) & {
+export type postNodeContainerDockerPullResponseSuccess = (postNodeContainerDockerPullResponse200) & {
   headers: Headers;
 };
 export type postNodeContainerDockerPullResponseError = (postNodeContainerDockerPullResponse400 | postNodeContainerDockerPullResponse401 | postNodeContainerDockerPullResponse403 | postNodeContainerDockerPullResponse500) & {

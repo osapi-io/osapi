@@ -26,6 +26,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -214,6 +215,9 @@ func Serve[D, In, Out any](
 		}
 
 		respspan.Handled(c)
+		if f := m.LocationField(); f != "" {
+			c.Response().Header().Set("Location", "/api/"+g.Name+"/"+field(out, f))
+		}
 		if m.SuccessStatus() == http.StatusNoContent {
 			return c.NoContent(http.StatusNoContent)
 		}
@@ -257,4 +261,16 @@ func Path(
 	p := strings.ReplaceAll(g.Path(m), "{", ":")
 
 	return strings.ReplaceAll(p, "}", "")
+}
+
+// field is the value of the field of out whose json name is name, as text.
+func field(
+	out any,
+	name string,
+) string {
+	raw, _ := json.Marshal(out)
+	var fields map[string]any
+	_ = json.Unmarshal(raw, &fields)
+
+	return fmt.Sprint(fields[name])
 }

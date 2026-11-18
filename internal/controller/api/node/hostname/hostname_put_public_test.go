@@ -114,7 +114,7 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostname() {
 					)
 			},
 			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
-				r, ok := resp.(gen.PutNodeHostname202JSONResponse)
+				r, ok := resp.(gen.PutNodeHostname200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -150,7 +150,7 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostname() {
 					)
 			},
 			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
-				r, ok := resp.(gen.PutNodeHostname202JSONResponse)
+				r, ok := resp.(gen.PutNodeHostname200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 2)
 			},
@@ -235,7 +235,7 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostname() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
-				r, ok := resp.(gen.PutNodeHostname202JSONResponse)
+				r, ok := resp.(gen.PutNodeHostname200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("server1", r.Results[0].Hostname)
@@ -277,7 +277,7 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostname() {
 					)
 			},
 			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
-				r, ok := resp.(gen.PutNodeHostname202JSONResponse)
+				r, ok := resp.(gen.PutNodeHostname200JSONResponse)
 				s.True(ok)
 				s.Len(r.Results, 2)
 				var foundError bool
@@ -321,7 +321,7 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostname() {
 					)
 			},
 			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
-				r, ok := resp.(gen.PutNodeHostname202JSONResponse)
+				r, ok := resp.(gen.PutNodeHostname200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("server1", r.Results[0].Hostname)
@@ -360,7 +360,7 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostname() {
 					)
 			},
 			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
-				r, ok := resp.(gen.PutNodeHostname202JSONResponse)
+				r, ok := resp.(gen.PutNodeHostname200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("server1", r.Results[0].Hostname)
@@ -399,7 +399,7 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostname() {
 					)
 			},
 			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
-				r, ok := resp.(gen.PutNodeHostname202JSONResponse)
+				r, ok := resp.(gen.PutNodeHostname200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("server1", r.Results[0].Hostname)
@@ -470,7 +470,7 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostnameHTTP() {
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusAccepted, rec.Code)
+				s.Equal(http.StatusOK, rec.Code)
 				s.Contains(rec.Body.String(), `"results"`)
 				s.Contains(rec.Body.String(), `"agent1"`)
 				s.Contains(rec.Body.String(), `"ok"`)
@@ -616,7 +616,7 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostnameRBACHTTP() {
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusAccepted, rec.Code)
+				s.Equal(http.StatusOK, rec.Code)
 				s.Contains(rec.Body.String(), `"results"`)
 				s.Contains(rec.Body.String(), `"changed":true`)
 			},

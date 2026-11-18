@@ -109,7 +109,7 @@ func (s *Network) PutNodeNetworkDNS(
 		jobUUID := uuid.MustParse(jobID)
 		e := rawResp.Error
 		falseVal := false
-		return gen.PutNodeNetworkDNS202JSONResponse{
+		return gen.PutNodeNetworkDNS200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.DNSUpdateResultItem{
 				{
@@ -124,7 +124,7 @@ func (s *Network) PutNodeNetworkDNS(
 
 	changed := rawResp.Changed == nil || *rawResp.Changed
 	jobUUID := uuid.MustParse(jobID)
-	return gen.PutNodeNetworkDNS202JSONResponse{
+	return gen.PutNodeNetworkDNS200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.DNSUpdateResultItem{
 			{
@@ -198,7 +198,7 @@ func (s *Network) putNodeNetworkDNSBroadcast(
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.PutNodeNetworkDNS202JSONResponse{
+	return gen.PutNodeNetworkDNS200JSONResponse{
 		JobId:   &jobUUID,
 		Results: apiResponses,
 	}, nil

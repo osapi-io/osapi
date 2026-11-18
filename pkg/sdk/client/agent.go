@@ -27,11 +27,6 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// MessageResponse represents a simple message response from the API.
-type MessageResponse struct {
-	Message string
-}
-
 // AgentService provides agent discovery and details operations.
 type AgentService struct {
 	client *gen.ClientWithResponses
@@ -89,70 +84,40 @@ func (s *AgentService) Get(
 func (s *AgentService) Drain(
 	ctx context.Context,
 	hostname string,
-) (*Response[MessageResponse], error) {
+) error {
 	resp, err := s.client.DrainAgentWithResponse(ctx, hostname)
 	if err != nil {
-		return nil, fmt.Errorf("drain agent %s: %w", hostname, err)
+		return fmt.Errorf("drain agent %s: %w", hostname, err)
 	}
 
-	if err := checkError(
+	return checkError(
 		resp.StatusCode(),
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
 		resp.JSON409,
 		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	msg := MessageResponse{
-		Message: resp.JSON200.Message,
-	}
-
-	return newResponse(msg, resp.Body, resp.HTTPResponse), nil
+	)
 }
 
 // Undrain resumes job acceptance on a drained agent.
 func (s *AgentService) Undrain(
 	ctx context.Context,
 	hostname string,
-) (*Response[MessageResponse], error) {
+) error {
 	resp, err := s.client.UndrainAgentWithResponse(ctx, hostname)
 	if err != nil {
-		return nil, fmt.Errorf("undrain agent %s: %w", hostname, err)
+		return fmt.Errorf("undrain agent %s: %w", hostname, err)
 	}
 
-	if err := checkError(
+	return checkError(
 		resp.StatusCode(),
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
 		resp.JSON409,
 		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	msg := MessageResponse{
-		Message: resp.JSON200.Message,
-	}
-
-	return newResponse(msg, resp.Body, resp.HTTPResponse), nil
+	)
 }
 
 // ListPending retrieves all agents awaiting enrollment acceptance.
@@ -184,7 +149,7 @@ func (s *AgentService) Accept(
 	ctx context.Context,
 	hostname string,
 	fingerprint string,
-) (*Response[MessageResponse], error) {
+) error {
 	var params *gen.AcceptAgentParams
 	if fingerprint != "" {
 		params = &gen.AcceptAgentParams{
@@ -194,91 +159,46 @@ func (s *AgentService) Accept(
 
 	resp, err := s.client.AcceptAgentWithResponse(ctx, hostname, params)
 	if err != nil {
-		return nil, fmt.Errorf("accept agent %s: %w", hostname, err)
+		return fmt.Errorf("accept agent %s: %w", hostname, err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500); err != nil {
-		return nil, err
-	}
-
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	msg := MessageResponse{
-		Message: resp.JSON200.Message,
-	}
-
-	return newResponse(msg, resp.Body, resp.HTTPResponse), nil
+	return checkError(resp.StatusCode(), resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500)
 }
 
 // Reject rejects a pending agent enrollment.
 func (s *AgentService) Reject(
 	ctx context.Context,
 	hostname string,
-) (*Response[MessageResponse], error) {
+) error {
 	resp, err := s.client.RejectAgentWithResponse(ctx, hostname)
 	if err != nil {
-		return nil, fmt.Errorf("reject agent %s: %w", hostname, err)
+		return fmt.Errorf("reject agent %s: %w", hostname, err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500); err != nil {
-		return nil, err
-	}
-
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	msg := MessageResponse{
-		Message: resp.JSON200.Message,
-	}
-
-	return newResponse(msg, resp.Body, resp.HTTPResponse), nil
+	return checkError(resp.StatusCode(), resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500)
 }
 
 // Remove removes an accepted agent's stored key, so nothing it signs verifies
 // afterwards. machineID chooses one agent when more than one accepted agent
 // has the hostname; pass "" otherwise. Without it, a shared hostname returns a
 // ConflictError naming the machine IDs.
-func (s *AgentService) Remove(
+func (s *AgentService) Delete(
 	ctx context.Context,
 	hostname string,
 	machineID string,
-) (*Response[MessageResponse], error) {
-	params := &gen.RemoveAgentParams{}
+) error {
+	params := &gen.DeleteAgentParams{}
 	if machineID != "" {
 		params.MachineId = &machineID
 	}
 
-	resp, err := s.client.RemoveAgentWithResponse(ctx, hostname, params)
+	resp, err := s.client.DeleteAgentWithResponse(ctx, hostname, params)
 	if err != nil {
-		return nil, fmt.Errorf("remove agent %s: %w", hostname, err)
+		return fmt.Errorf("delete agent %s: %w", hostname, err)
 	}
 
-	if err := checkError(
+	return checkError(
 		resp.StatusCode(),
 		resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON409, resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	return newResponse(
-		MessageResponse{Message: resp.JSON200.Message},
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
+	)
 }

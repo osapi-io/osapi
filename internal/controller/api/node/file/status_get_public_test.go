@@ -28,7 +28,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -46,7 +45,7 @@ import (
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
-type FileStatusPostPublicTestSuite struct {
+type FileStatusGetPublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
@@ -57,7 +56,7 @@ type FileStatusPostPublicTestSuite struct {
 	logger        *slog.Logger
 }
 
-func (s *FileStatusPostPublicTestSuite) SetupSuite() {
+func (s *FileStatusGetPublicTestSuite) SetupSuite() {
 	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.AgentTarget, error) {
 		return []validation.AgentTarget{
 			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
@@ -66,7 +65,7 @@ func (s *FileStatusPostPublicTestSuite) SetupSuite() {
 	})
 }
 
-func (s *FileStatusPostPublicTestSuite) SetupTest() {
+func (s *FileStatusGetPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
 	s.handler = nodeFile.New(slog.Default(), s.mockJobClient)
@@ -75,7 +74,7 @@ func (s *FileStatusPostPublicTestSuite) SetupTest() {
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (s *FileStatusPostPublicTestSuite) TearDownTest() {
+func (s *FileStatusGetPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
@@ -86,20 +85,18 @@ func marshalStatusResult(
 	return b
 }
 
-func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
+func (s *FileStatusGetPublicTestSuite) TestGetNodeFileStatus() {
 	tests := []struct {
 		name         string
-		request      gen.PostNodeFileStatusRequestObject
+		request      gen.GetNodeFileStatusRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.PostNodeFileStatusResponseObject)
+		validateFunc func(resp gen.GetNodeFileStatusResponseObject)
 	}{
 		{
 			name: "when success with sha256",
-			request: gen.PostNodeFileStatusRequestObject{
+			request: gen.GetNodeFileStatusRequestObject{
 				Hostname: "_any",
-				Body: &gen.PostNodeFileStatusJSONRequestBody{
-					Path: "/etc/nginx/nginx.conf",
-				},
+				Params:   gen.GetNodeFileStatusParams{Path: "/etc/nginx/nginx.conf"},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -123,8 +120,8 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
-				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+			validateFunc: func(resp gen.GetNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.GetNodeFileStatus200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Equal("550e8400-e29b-41d4-a716-446655440000", r.JobId.String())
@@ -141,11 +138,9 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 		},
 		{
 			name: "when success missing file no sha256",
-			request: gen.PostNodeFileStatusRequestObject{
+			request: gen.GetNodeFileStatusRequestObject{
 				Hostname: "_any",
-				Body: &gen.PostNodeFileStatusJSONRequestBody{
-					Path: "/etc/missing.conf",
-				},
+				Params:   gen.GetNodeFileStatusParams{Path: "/etc/missing.conf"},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -168,8 +163,8 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
-				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+			validateFunc: func(resp gen.GetNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.GetNodeFileStatus200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				item := r.Results[0]
@@ -180,15 +175,13 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 		},
 		{
 			name: "when validation error empty hostname",
-			request: gen.PostNodeFileStatusRequestObject{
+			request: gen.GetNodeFileStatusRequestObject{
 				Hostname: "",
-				Body: &gen.PostNodeFileStatusJSONRequestBody{
-					Path: "/etc/nginx/nginx.conf",
-				},
+				Params:   gen.GetNodeFileStatusParams{Path: "/etc/nginx/nginx.conf"},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
-				r, ok := resp.(gen.PostNodeFileStatus400JSONResponse)
+			validateFunc: func(resp gen.GetNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.GetNodeFileStatus400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -196,15 +189,13 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 		},
 		{
 			name: "when validation error missing path",
-			request: gen.PostNodeFileStatusRequestObject{
+			request: gen.GetNodeFileStatusRequestObject{
 				Hostname: "_any",
-				Body: &gen.PostNodeFileStatusJSONRequestBody{
-					Path: "",
-				},
+				Params:   gen.GetNodeFileStatusParams{Path: ""},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
-				r, ok := resp.(gen.PostNodeFileStatus400JSONResponse)
+			validateFunc: func(resp gen.GetNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.GetNodeFileStatus400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "Path")
@@ -212,11 +203,9 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 		},
 		{
 			name: "when broadcast succeeds",
-			request: gen.PostNodeFileStatusRequestObject{
+			request: gen.GetNodeFileStatusRequestObject{
 				Hostname: "_all",
-				Body: &gen.PostNodeFileStatusJSONRequestBody{
-					Path: "/etc/nginx/nginx.conf",
-				},
+				Params:   gen.GetNodeFileStatusParams{Path: "/etc/nginx/nginx.conf"},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -246,8 +235,8 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
-				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+			validateFunc: func(resp gen.GetNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.GetNodeFileStatus200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
@@ -255,11 +244,9 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 		},
 		{
 			name: "when broadcast has errors",
-			request: gen.PostNodeFileStatusRequestObject{
+			request: gen.GetNodeFileStatusRequestObject{
 				Hostname: "_all",
-				Body: &gen.PostNodeFileStatusJSONRequestBody{
-					Path: "/etc/nginx/nginx.conf",
-				},
+				Params:   gen.GetNodeFileStatusParams{Path: "/etc/nginx/nginx.conf"},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -288,8 +275,8 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
-				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+			validateFunc: func(resp gen.GetNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.GetNodeFileStatus200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
@@ -305,11 +292,9 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 		},
 		{
 			name: "when broadcast with skipped host",
-			request: gen.PostNodeFileStatusRequestObject{
+			request: gen.GetNodeFileStatusRequestObject{
 				Hostname: "_all",
-				Body: &gen.PostNodeFileStatusJSONRequestBody{
-					Path: "/etc/nginx/nginx.conf",
-				},
+				Params:   gen.GetNodeFileStatusParams{Path: "/etc/nginx/nginx.conf"},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -332,8 +317,8 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
-				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+			validateFunc: func(resp gen.GetNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.GetNodeFileStatus200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -343,11 +328,9 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 		},
 		{
 			name: "broadcast with a host that never answered",
-			request: gen.PostNodeFileStatusRequestObject{
+			request: gen.GetNodeFileStatusRequestObject{
 				Hostname: "_all",
-				Body: &gen.PostNodeFileStatusJSONRequestBody{
-					Path: "/etc/nginx/nginx.conf",
-				},
+				Params:   gen.GetNodeFileStatusParams{Path: "/etc/nginx/nginx.conf"},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -370,8 +353,8 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
-				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+			validateFunc: func(resp gen.GetNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.GetNodeFileStatus200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -381,11 +364,9 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 		},
 		{
 			name: "when broadcast with failed host",
-			request: gen.PostNodeFileStatusRequestObject{
+			request: gen.GetNodeFileStatusRequestObject{
 				Hostname: "_all",
-				Body: &gen.PostNodeFileStatusJSONRequestBody{
-					Path: "/etc/nginx/nginx.conf",
-				},
+				Params:   gen.GetNodeFileStatusParams{Path: "/etc/nginx/nginx.conf"},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -408,8 +389,8 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
-				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+			validateFunc: func(resp gen.GetNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.GetNodeFileStatus200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -419,11 +400,9 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 		},
 		{
 			name: "when broadcast client error",
-			request: gen.PostNodeFileStatusRequestObject{
+			request: gen.GetNodeFileStatusRequestObject{
 				Hostname: "_all",
-				Body: &gen.PostNodeFileStatusJSONRequestBody{
-					Path: "/etc/nginx/nginx.conf",
-				},
+				Params:   gen.GetNodeFileStatusParams{Path: "/etc/nginx/nginx.conf"},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -436,18 +415,16 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
-				_, ok := resp.(gen.PostNodeFileStatus500JSONResponse)
+			validateFunc: func(resp gen.GetNodeFileStatusResponseObject) {
+				_, ok := resp.(gen.GetNodeFileStatus500JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
 			name: "when job client error",
-			request: gen.PostNodeFileStatusRequestObject{
+			request: gen.GetNodeFileStatusRequestObject{
 				Hostname: "_any",
-				Body: &gen.PostNodeFileStatusJSONRequestBody{
-					Path: "/etc/nginx/nginx.conf",
-				},
+				Params:   gen.GetNodeFileStatusParams{Path: "/etc/nginx/nginx.conf"},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -460,18 +437,16 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
-				_, ok := resp.(gen.PostNodeFileStatus500JSONResponse)
+			validateFunc: func(resp gen.GetNodeFileStatusResponseObject) {
+				_, ok := resp.(gen.GetNodeFileStatus500JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
 			name: "when job skipped",
-			request: gen.PostNodeFileStatusRequestObject{
+			request: gen.GetNodeFileStatusRequestObject{
 				Hostname: "server1",
-				Body: &gen.PostNodeFileStatusJSONRequestBody{
-					Path: "/etc/nginx/nginx.conf",
-				},
+				Params:   gen.GetNodeFileStatusParams{Path: "/etc/nginx/nginx.conf"},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -488,8 +463,8 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 						Error:    "host: operation not supported on this OS family",
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
-				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+			validateFunc: func(resp gen.GetNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.GetNodeFileStatus200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
@@ -504,25 +479,23 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			resp, err := s.handler.PostNodeFileStatus(s.ctx, tt.request)
+			resp, err := s.handler.GetNodeFileStatus(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusValidationHTTP() {
+func (s *FileStatusGetPublicTestSuite) TestGetNodeFileStatusValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string
-		body         string
 		setupJobMock func() *jobmocks.MockJobClient
 		validateFunc func(*httptest.ResponseRecorder)
 	}{
 		{
 			name: "when valid request",
-			path: "/api/node/server1/file/status",
-			body: `{"path":"/etc/nginx/nginx.conf"}`,
+			path: "/api/node/server1/file/status?path=/etc/nginx/nginx.conf",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -549,21 +522,19 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusValidationHTTP() {
 		{
 			name: "when missing path",
 			path: "/api/node/server1/file/status",
-			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusBadRequest, rec.Code)
 				s.Contains(rec.Body.String(), `"error"`)
-				s.Contains(rec.Body.String(), "Path")
+				s.Contains(rec.Body.String(), "path")
 				s.Contains(rec.Body.String(), "required")
 			},
 		},
 		{
 			name: "when target agent not found",
-			path: "/api/node/nonexistent/file/status",
-			body: `{"path":"/etc/nginx/nginx.conf"}`,
+			path: "/api/node/nonexistent/file/status?path=/etc/nginx/nginx.conf",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -586,12 +557,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusValidationHTTP() {
 			a := api.New(s.appConfig, s.logger)
 			gen.RegisterHandlers(a.Echo, strictHandler)
 
-			req := httptest.NewRequest(
-				http.MethodPost,
-				tc.path,
-				strings.NewReader(tc.body),
-			)
-			req.Header.Set("Content-Type", "application/json")
+			req := httptest.NewRequest(http.MethodGet, tc.path, nil)
 			rec := httptest.NewRecorder()
 
 			a.Echo.ServeHTTP(rec, req)
@@ -603,7 +569,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusValidationHTTP() {
 
 const rbacFileStatusTestSigningKey = "test-signing-key-for-file-status-rbac"
 
-func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusRBACHTTP() {
+func (s *FileStatusGetPublicTestSuite) TestGetNodeFileStatusRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
 
 	tests := []struct {
@@ -708,11 +674,10 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusRBACHTTP() {
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(
-				http.MethodPost,
-				"/api/node/server1/file/status",
-				strings.NewReader(`{"path":"/etc/nginx/nginx.conf"}`),
+				http.MethodGet,
+				"/api/node/server1/file/status?path=/etc/nginx/nginx.conf",
+				nil,
 			)
-			req.Header.Set("Content-Type", "application/json")
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 
@@ -723,8 +688,8 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusRBACHTTP() {
 	}
 }
 
-func TestFileStatusPostPublicTestSuite(
+func TestFileStatusGetPublicTestSuite(
 	t *testing.T,
 ) {
-	suite.Run(t, new(FileStatusPostPublicTestSuite))
+	suite.Run(t, new(FileStatusGetPublicTestSuite))
 }

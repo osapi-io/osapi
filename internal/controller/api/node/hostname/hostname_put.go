@@ -81,7 +81,7 @@ func (s *Hostname) PutNodeHostname(
 		jobUUID := uuid.MustParse(jobID)
 		e := rawResp.Error
 		falseVal := false
-		return gen.PutNodeHostname202JSONResponse{
+		return gen.PutNodeHostname200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.HostnameUpdateResultItem{
 				{
@@ -96,7 +96,7 @@ func (s *Hostname) PutNodeHostname(
 
 	changed := rawResp.Changed == nil || *rawResp.Changed
 	jobUUID := uuid.MustParse(jobID)
-	return gen.PutNodeHostname202JSONResponse{
+	return gen.PutNodeHostname200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.HostnameUpdateResultItem{
 			{
@@ -164,7 +164,7 @@ func (s *Hostname) putNodeHostnameBroadcast(
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.PutNodeHostname202JSONResponse{
+	return gen.PutNodeHostname200JSONResponse{
 		JobId:   &jobUUID,
 		Results: apiResponses,
 	}, nil

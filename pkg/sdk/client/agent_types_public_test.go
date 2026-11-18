@@ -292,7 +292,7 @@ func (suite *AgentTypesPublicTestSuite) TestAgentListFromGen() {
 		{
 			name: "when list contains agents",
 			input: &gen.ListAgentsResponse{
-				Agents: []gen.AgentInfo{
+				Items: []gen.AgentInfo{
 					{
 						Hostname: "web-01",
 						Status:   gen.AgentInfoStatus("Ready"),
@@ -302,24 +302,24 @@ func (suite *AgentTypesPublicTestSuite) TestAgentListFromGen() {
 						Status:   gen.AgentInfoStatus("Ready"),
 					},
 				},
-				Total: 2,
+				TotalItems: 2,
 			},
 			validateFunc: func(al client.AgentList) {
-				suite.Equal(2, al.Total)
-				suite.Require().Len(al.Agents, 2)
-				suite.Equal("web-01", al.Agents[0].Hostname)
-				suite.Equal("web-02", al.Agents[1].Hostname)
+				suite.Equal(2, al.TotalItems)
+				suite.Require().Len(al.Items, 2)
+				suite.Equal("web-01", al.Items[0].Hostname)
+				suite.Equal("web-02", al.Items[1].Hostname)
 			},
 		},
 		{
 			name: "when list is empty",
 			input: &gen.ListAgentsResponse{
-				Agents: []gen.AgentInfo{},
-				Total:  0,
+				Items:      []gen.AgentInfo{},
+				TotalItems: 0,
 			},
 			validateFunc: func(al client.AgentList) {
-				suite.Equal(0, al.Total)
-				suite.Empty(al.Agents)
+				suite.Equal(0, al.TotalItems)
+				suite.Empty(al.Items)
 			},
 		},
 	}

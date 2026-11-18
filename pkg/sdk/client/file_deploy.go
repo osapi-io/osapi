@@ -106,14 +106,14 @@ func (s *FileDeployService) Deploy(
 		return nil, err
 	}
 
-	if resp.JSON202 == nil {
+	if resp.JSON200 == nil {
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),
 			Message:    "nil response body",
 		}}
 	}
 
-	return newResponse(fileDeployCollectionFromGen(resp.JSON202), resp.Body, resp.HTTPResponse), nil
+	return newResponse(fileDeployCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Undeploy removes a deployed file from the target host filesystem.
@@ -134,7 +134,7 @@ func (s *FileDeployService) Undeploy(
 		return nil, err
 	}
 
-	if resp.JSON202 == nil {
+	if resp.JSON200 == nil {
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),
 			Message:    "nil response body",
@@ -142,7 +142,7 @@ func (s *FileDeployService) Undeploy(
 	}
 
 	return newResponse(
-		fileUndeployCollectionFromGen(resp.JSON202),
+		fileUndeployCollectionFromGen(resp.JSON200),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
@@ -154,11 +154,9 @@ func (s *FileDeployService) Status(
 	target string,
 	path string,
 ) (*Response[Collection[FileStatusResult]], error) {
-	body := gen.FileStatusRequest{
-		Path: path,
-	}
+	params := &gen.GetNodeFileStatusParams{Path: path}
 
-	resp, err := s.client.PostNodeFileStatusWithResponse(ctx, target, body)
+	resp, err := s.client.GetNodeFileStatusWithResponse(ctx, target, params)
 	if err != nil {
 		return nil, fmt.Errorf("file status: %w", err)
 	}

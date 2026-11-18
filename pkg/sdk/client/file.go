@@ -130,14 +130,19 @@ func (s *FileService) Upload(
 		return nil, err
 	}
 
-	if resp.JSON201 == nil {
+	// A new file answers 201, and one that existed 200.
+	uploaded := resp.JSON201
+	if uploaded == nil {
+		uploaded = resp.JSON200
+	}
+	if uploaded == nil {
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),
 			Message:    "nil response body",
 		}}
 	}
 
-	return newResponse(fileUploadFromGen(resp.JSON201), resp.Body, resp.HTTPResponse), nil
+	return newResponse(fileUploadFromGen(uploaded), resp.Body, resp.HTTPResponse), nil
 }
 
 // List retrieves all files stored in the Object Store.
@@ -203,31 +208,20 @@ func (s *FileService) Get(
 func (s *FileService) Delete(
 	ctx context.Context,
 	name string,
-) (*Response[FileDelete], error) {
+) error {
 	resp, err := s.client.DeleteFileByNameWithResponse(ctx, name)
 	if err != nil {
-		return nil, fmt.Errorf("delete file %s: %w", name, err)
+		return fmt.Errorf("delete file %s: %w", name, err)
 	}
 
-	if err := checkError(
+	return checkError(
 		resp.StatusCode(),
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
 		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	return newResponse(fileDeleteFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
+	)
 }
 
 // Stale lists deployments where the deployed file content no longer

@@ -184,7 +184,7 @@ paths:
             schema:
               $ref: '#/components/schemas/DNSConfigUpdateRequest'
       responses:
-        '202':
+        '200':
           description: DNS servers update successfully accepted.
           content:
             application/json:

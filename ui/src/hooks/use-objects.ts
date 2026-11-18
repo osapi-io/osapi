@@ -15,7 +15,7 @@ export function useObjects() {
       try {
         const result = await getFiles();
         if (mounted && result.status === 200) {
-          setObjects((result.data as FileListResponse).files ?? []);
+          setObjects((result.data as FileListResponse).items ?? []);
         }
       } catch {
         // Silently fail — dropdown just stays empty
@@ -33,7 +33,7 @@ export function useObjects() {
     try {
       const result = await getFiles();
       if (result.status === 200) {
-        setObjects((result.data as FileListResponse).files ?? []);
+        setObjects((result.data as FileListResponse).items ?? []);
       }
     } catch {
       // ignore

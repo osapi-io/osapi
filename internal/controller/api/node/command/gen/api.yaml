@@ -51,7 +51,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CommandExecRequest'
       responses:
-        '202':
+        '200':
           description: Command execution accepted.
           content:
             application/json:
@@ -104,7 +104,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CommandShellRequest'
       responses:
-        '202':
+        '200':
           description: Shell command execution accepted.
           content:
             application/json:

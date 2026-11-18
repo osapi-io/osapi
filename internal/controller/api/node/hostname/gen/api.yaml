@@ -90,7 +90,7 @@ paths:
             schema:
               $ref: '#/components/schemas/HostnameUpdateRequest'
       responses:
-        '202':
+        '200':
           description: Hostname update accepted.
           content:
             application/json:

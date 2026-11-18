@@ -124,7 +124,7 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 					)
 			},
 			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
-				r, ok := resp.(gen.PostNodeCommandExec202JSONResponse)
+				r, ok := resp.(gen.PostNodeCommandExec200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -171,7 +171,7 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 					)
 			},
 			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
-				r, ok := resp.(gen.PostNodeCommandExec202JSONResponse)
+				r, ok := resp.(gen.PostNodeCommandExec200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -260,7 +260,7 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
-				r, ok := resp.(gen.PostNodeCommandExec202JSONResponse)
+				r, ok := resp.(gen.PostNodeCommandExec200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("server1", r.Results[0].Hostname)
@@ -338,7 +338,7 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 					)
 			},
 			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
-				r, ok := resp.(gen.PostNodeCommandExec202JSONResponse)
+				r, ok := resp.(gen.PostNodeCommandExec200JSONResponse)
 				s.True(ok)
 				s.Len(r.Results, 2)
 				var foundError bool
@@ -384,7 +384,7 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 					)
 			},
 			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
-				r, ok := resp.(gen.PostNodeCommandExec202JSONResponse)
+				r, ok := resp.(gen.PostNodeCommandExec200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("server1", r.Results[0].Hostname)
@@ -425,7 +425,7 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 					)
 			},
 			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
-				r, ok := resp.(gen.PostNodeCommandExec202JSONResponse)
+				r, ok := resp.(gen.PostNodeCommandExec200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("server1", r.Results[0].Hostname)
@@ -466,7 +466,7 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 					)
 			},
 			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
-				r, ok := resp.(gen.PostNodeCommandExec202JSONResponse)
+				r, ok := resp.(gen.PostNodeCommandExec200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("server1", r.Results[0].Hostname)
@@ -544,7 +544,7 @@ func (s *CommandExecPostPublicTestSuite) TestPostCommandExecValidationHTTP() {
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusAccepted, rec.Code)
+				s.Equal(http.StatusOK, rec.Code)
 				s.Contains(rec.Body.String(), `"results"`)
 				s.Contains(rec.Body.String(), `"agent1"`)
 				s.Contains(rec.Body.String(), `"changed":true`)
@@ -717,7 +717,7 @@ func (s *CommandExecPostPublicTestSuite) TestPostCommandExecRBACHTTP() {
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusAccepted, rec.Code)
+				s.Equal(http.StatusOK, rec.Code)
 				s.Contains(rec.Body.String(), `"results"`)
 				s.Contains(rec.Body.String(), `"changed":true`)
 			},
@@ -756,7 +756,7 @@ func (s *CommandExecPostPublicTestSuite) TestPostCommandExecRBACHTTP() {
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusAccepted, rec.Code)
+				s.Equal(http.StatusOK, rec.Code)
 				s.Contains(rec.Body.String(), `"results"`)
 				s.Contains(rec.Body.String(), `"changed":true`)
 			},

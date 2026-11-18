@@ -5,17 +5,12 @@
  * OpenAPI spec version: 1.0.0
  */
 import type {
-  AcceptAgent200,
   AcceptAgentParams,
   AgentInfo,
-  DrainAgent200,
+  DeleteAgentParams,
   ErrorResponse,
   ListAgentsResponse,
-  ListPendingAgentsResponse,
-  RejectAgent200,
-  RemoveAgent200,
-  RemoveAgentParams,
-  UndrainAgent200
+  ListPendingAgentsResponse
 } from '../schemas';
 
 import { apiFetch } from '../../fetch';
@@ -73,52 +68,52 @@ export const getAgents = async ( options?: Parameters<typeof apiFetch>[1]): Prom
 );}
 
 
-export type removeAgentResponse200 = {
-  data: RemoveAgent200
-  status: 200
+export type deleteAgentResponse204 = {
+  data: void
+  status: 204
 }
 
-export type removeAgentResponse400 = {
+export type deleteAgentResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type removeAgentResponse401 = {
+export type deleteAgentResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type removeAgentResponse403 = {
+export type deleteAgentResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type removeAgentResponse404 = {
+export type deleteAgentResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type removeAgentResponse409 = {
+export type deleteAgentResponse409 = {
   data: ErrorResponse
   status: 409
 }
 
-export type removeAgentResponse500 = {
+export type deleteAgentResponse500 = {
   data: ErrorResponse
   status: 500
 }
 
-export type removeAgentResponseSuccess = (removeAgentResponse200) & {
+export type deleteAgentResponseSuccess = (deleteAgentResponse204) & {
   headers: Headers;
 };
-export type removeAgentResponseError = (removeAgentResponse400 | removeAgentResponse401 | removeAgentResponse403 | removeAgentResponse404 | removeAgentResponse409 | removeAgentResponse500) & {
+export type deleteAgentResponseError = (deleteAgentResponse400 | deleteAgentResponse401 | deleteAgentResponse403 | deleteAgentResponse404 | deleteAgentResponse409 | deleteAgentResponse500) & {
   headers: Headers;
 };
 
-export type removeAgentResponse = (removeAgentResponseSuccess | removeAgentResponseError)
+export type deleteAgentResponse = (deleteAgentResponseSuccess | deleteAgentResponseError)
 
-export const getRemoveAgentUrl = (hostname: string,
-    params?: RemoveAgentParams,) => {
+export const getDeleteAgentUrl = (hostname: string,
+    params?: DeleteAgentParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -137,10 +132,10 @@ export const getRemoveAgentUrl = (hostname: string,
  * Remove an accepted agent's stored public key. Its responses and registration stop verifying at once, so targeting no longer resolves it. The agent does not enroll again by itself: remove its controller key on the host and restart it. Two machines may share a hostname; when they do, name one with machine_id.
  * @summary Remove an enrolled agent
  */
-export const removeAgent = async (hostname: string,
-    params?: RemoveAgentParams, options?: Parameters<typeof apiFetch>[1]): Promise<removeAgentResponse> => {
+export const deleteAgent = async (hostname: string,
+    params?: DeleteAgentParams, options?: Parameters<typeof apiFetch>[1]): Promise<deleteAgentResponse> => {
 
-  return apiFetch<removeAgentResponse>(getRemoveAgentUrl(hostname,params),
+  return apiFetch<deleteAgentResponse>(getDeleteAgentUrl(hostname,params),
   {
     ...options,
     method: 'DELETE'
@@ -213,9 +208,9 @@ export const getAgentDetails = async (hostname: string, options?: Parameters<typ
 );}
 
 
-export type acceptAgentResponse200 = {
-  data: AcceptAgent200
-  status: 200
+export type acceptAgentResponse204 = {
+  data: void
+  status: 204
 }
 
 export type acceptAgentResponse400 = {
@@ -243,7 +238,7 @@ export type acceptAgentResponse500 = {
   status: 500
 }
 
-export type acceptAgentResponseSuccess = (acceptAgentResponse200) & {
+export type acceptAgentResponseSuccess = (acceptAgentResponse204) & {
   headers: Headers;
 };
 export type acceptAgentResponseError = (acceptAgentResponse400 | acceptAgentResponse401 | acceptAgentResponse403 | acceptAgentResponse404 | acceptAgentResponse500) & {
@@ -285,9 +280,9 @@ export const acceptAgent = async (hostname: string,
 );}
 
 
-export type drainAgentResponse200 = {
-  data: DrainAgent200
-  status: 200
+export type drainAgentResponse204 = {
+  data: void
+  status: 204
 }
 
 export type drainAgentResponse400 = {
@@ -320,7 +315,7 @@ export type drainAgentResponse500 = {
   status: 500
 }
 
-export type drainAgentResponseSuccess = (drainAgentResponse200) & {
+export type drainAgentResponseSuccess = (drainAgentResponse204) & {
   headers: Headers;
 };
 export type drainAgentResponseError = (drainAgentResponse400 | drainAgentResponse401 | drainAgentResponse403 | drainAgentResponse404 | drainAgentResponse409 | drainAgentResponse500) & {
@@ -353,9 +348,9 @@ export const drainAgent = async (hostname: string, options?: Parameters<typeof a
 );}
 
 
-export type rejectAgentResponse200 = {
-  data: RejectAgent200
-  status: 200
+export type rejectAgentResponse204 = {
+  data: void
+  status: 204
 }
 
 export type rejectAgentResponse400 = {
@@ -383,7 +378,7 @@ export type rejectAgentResponse500 = {
   status: 500
 }
 
-export type rejectAgentResponseSuccess = (rejectAgentResponse200) & {
+export type rejectAgentResponseSuccess = (rejectAgentResponse204) & {
   headers: Headers;
 };
 export type rejectAgentResponseError = (rejectAgentResponse400 | rejectAgentResponse401 | rejectAgentResponse403 | rejectAgentResponse404 | rejectAgentResponse500) & {
@@ -416,9 +411,9 @@ export const rejectAgent = async (hostname: string, options?: Parameters<typeof 
 );}
 
 
-export type undrainAgentResponse200 = {
-  data: UndrainAgent200
-  status: 200
+export type undrainAgentResponse204 = {
+  data: void
+  status: 204
 }
 
 export type undrainAgentResponse400 = {
@@ -451,7 +446,7 @@ export type undrainAgentResponse500 = {
   status: 500
 }
 
-export type undrainAgentResponseSuccess = (undrainAgentResponse200) & {
+export type undrainAgentResponseSuccess = (undrainAgentResponse204) & {
   headers: Headers;
 };
 export type undrainAgentResponseError = (undrainAgentResponse400 | undrainAgentResponse401 | undrainAgentResponse403 | undrainAgentResponse404 | undrainAgentResponse409 | undrainAgentResponse500) & {

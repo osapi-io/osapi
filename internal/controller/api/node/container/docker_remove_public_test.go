@@ -107,7 +107,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
-				r, ok := resp.(gen.DeleteNodeContainerDockerByID202JSONResponse)
+				r, ok := resp.(gen.DeleteNodeContainerDockerByID200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -141,7 +141,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
-				r, ok := resp.(gen.DeleteNodeContainerDockerByID202JSONResponse)
+				r, ok := resp.(gen.DeleteNodeContainerDockerByID200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 			},
@@ -221,7 +221,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
-				r, ok := resp.(gen.DeleteNodeContainerDockerByID202JSONResponse)
+				r, ok := resp.(gen.DeleteNodeContainerDockerByID200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal(gen.DockerActionResultItemStatusSkipped, r.Results[0].Status)
@@ -259,7 +259,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
-				r, ok := resp.(gen.DeleteNodeContainerDockerByID202JSONResponse)
+				r, ok := resp.(gen.DeleteNodeContainerDockerByID200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
@@ -295,7 +295,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
-				r, ok := resp.(gen.DeleteNodeContainerDockerByID202JSONResponse)
+				r, ok := resp.(gen.DeleteNodeContainerDockerByID200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
@@ -326,7 +326,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
-				r, ok := resp.(gen.DeleteNodeContainerDockerByID202JSONResponse)
+				r, ok := resp.(gen.DeleteNodeContainerDockerByID200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 1)
@@ -360,7 +360,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
-				r, ok := resp.(gen.DeleteNodeContainerDockerByID202JSONResponse)
+				r, ok := resp.(gen.DeleteNodeContainerDockerByID200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 1)
@@ -426,7 +426,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByIDValida
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusAccepted, rec.Code)
+				s.Equal(http.StatusOK, rec.Code)
 				s.Contains(rec.Body.String(), `"job_id"`)
 				s.Contains(rec.Body.String(), `"results"`)
 				s.Contains(rec.Body.String(), `"container removed"`)
@@ -545,7 +545,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByIDRBACHT
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusAccepted, rec.Code)
+				s.Equal(http.StatusOK, rec.Code)
 				s.Contains(rec.Body.String(), `"job_id"`)
 				s.Contains(rec.Body.String(), `"results"`)
 			},

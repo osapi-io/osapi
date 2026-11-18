@@ -47,7 +47,7 @@ paths:
             schema:
               $ref: '#/components/schemas/FileDeployRequest'
       responses:
-        '202':
+        '200':
           description: File deploy job accepted.
           content:
             application/json:
@@ -96,7 +96,7 @@ paths:
             schema:
               $ref: '#/components/schemas/FileUndeployRequest'
       responses:
-        '202':
+        '200':
           description: File undeploy job accepted.
           content:
             application/json:
@@ -128,8 +128,8 @@ paths:
                 $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
 
   /api/node/{hostname}/file/status:
-    post:
-      operationId: PostNodeFileStatus
+    get:
+      operationId: GetNodeFileStatus
       summary: Check deployment status of a file on the host
       tags:
         - node_file_operations
@@ -138,12 +138,14 @@ paths:
             - "file:read"
       parameters:
         - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FileStatusRequest'
+        - name: path
+          in: query
+          required: true
+          description: Filesystem path to check.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+          schema:
+            type: string
       responses:
         '200':
           description: File status.
@@ -278,16 +280,6 @@ components:
             $ref: '#/components/schemas/FileDeployResult'
       required:
         - results
-
-    FileStatusRequest:
-      type: object
-      properties:
-        path:
-          type: string
-          description: Filesystem path to check.
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1
-      required: [path]
 
     FileStatusResult:
       type: object

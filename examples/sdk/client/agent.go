@@ -54,19 +54,19 @@ func main() {
 		log.Fatalf("list agents: %v", err)
 	}
 
-	fmt.Printf("Agents: %d total\n", list.Data.Total)
+	fmt.Printf("Agents: %d total\n", list.Data.TotalItems)
 
-	for _, a := range list.Data.Agents {
+	for _, a := range list.Data.Items {
 		fmt.Printf("  %s  status=%s  labels=%v\n",
 			a.Hostname, a.Status, a.Labels)
 	}
 
-	if len(list.Data.Agents) == 0 {
+	if len(list.Data.Items) == 0 {
 		return
 	}
 
 	// Get rich facts for the first agent.
-	hostname := list.Data.Agents[0].Hostname
+	hostname := list.Data.Items[0].Hostname
 
 	resp, err := c.Agent.Get(ctx, hostname)
 	if err != nil {

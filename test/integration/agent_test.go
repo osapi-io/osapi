@@ -50,7 +50,7 @@ func (s *AgentSmokeSuite) TestAgentList() {
 				var resp struct {
 					Agents []struct {
 						Hostname string `json:"hostname"`
-					} `json:"agents"`
+					} `json:"items"`
 				}
 				s.Require().NoError(parseJSON(stdout, &resp))
 				s.GreaterOrEqual(len(resp.Agents), 1)
@@ -73,7 +73,7 @@ func (s *AgentSmokeSuite) TestAgentGet() {
 	var listResp struct {
 		Agents []struct {
 			Hostname string `json:"hostname"`
-		} `json:"agents"`
+		} `json:"items"`
 	}
 	s.Require().NoError(parseJSON(listOut, &listResp))
 	s.Require().NotEmpty(listResp.Agents, "agent list must contain at least one entry")
@@ -118,7 +118,7 @@ func (s *AgentSmokeSuite) TestAgentDrainUndrain() {
 	var listResp struct {
 		Agents []struct {
 			Hostname string `json:"hostname"`
-		} `json:"agents"`
+		} `json:"items"`
 	}
 	s.Require().NoError(parseJSON(listOut, &listResp))
 	s.Require().NotEmpty(listResp.Agents, "agent list must contain at least one entry")
@@ -134,10 +134,12 @@ func (s *AgentSmokeSuite) TestAgentDrainUndrain() {
 	s.Require().Equal(0, drainCode)
 
 	var drainResp struct {
-		Message string `json:"message"`
+		Hostname string `json:"hostname"`
+		Status   string `json:"status"`
 	}
 	s.Require().NoError(parseJSON(drainOut, &drainResp))
-	s.NotEmpty(drainResp.Message)
+	s.Equal(hostname, drainResp.Hostname)
+	s.Equal("draining", drainResp.Status)
 
 	// Undrain (always restore so later tests aren't affected)
 	undrainOut, _, undrainCode := runCLI(
@@ -148,10 +150,12 @@ func (s *AgentSmokeSuite) TestAgentDrainUndrain() {
 	s.Require().Equal(0, undrainCode)
 
 	var undrainResp struct {
-		Message string `json:"message"`
+		Hostname string `json:"hostname"`
+		Status   string `json:"status"`
 	}
 	s.Require().NoError(parseJSON(undrainOut, &undrainResp))
-	s.NotEmpty(undrainResp.Message)
+	s.Equal(hostname, undrainResp.Hostname)
+	s.Equal("ready", undrainResp.Status)
 }
 
 func TestAgentSmokeSuite(

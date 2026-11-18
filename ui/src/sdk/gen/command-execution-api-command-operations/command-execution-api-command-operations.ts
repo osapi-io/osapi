@@ -13,9 +13,9 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-export type postNodeCommandExecResponse202 = {
+export type postNodeCommandExecResponse200 = {
   data: CommandResultCollectionResponse
-  status: 202
+  status: 200
 }
 
 export type postNodeCommandExecResponse400 = {
@@ -38,7 +38,7 @@ export type postNodeCommandExecResponse500 = {
   status: 500
 }
 
-export type postNodeCommandExecResponseSuccess = (postNodeCommandExecResponse202) & {
+export type postNodeCommandExecResponseSuccess = (postNodeCommandExecResponse200) & {
   headers: Headers;
 };
 export type postNodeCommandExecResponseError = (postNodeCommandExecResponse400 | postNodeCommandExecResponse401 | postNodeCommandExecResponse403 | postNodeCommandExecResponse500) & {
@@ -86,9 +86,9 @@ return apiFetch<postNodeCommandExecResponse>(getPostNodeCommandExecUrl(hostname)
 );}
 
 
-export type postNodeCommandShellResponse202 = {
+export type postNodeCommandShellResponse200 = {
   data: CommandResultCollectionResponse
-  status: 202
+  status: 200
 }
 
 export type postNodeCommandShellResponse400 = {
@@ -111,7 +111,7 @@ export type postNodeCommandShellResponse500 = {
   status: 500
 }
 
-export type postNodeCommandShellResponseSuccess = (postNodeCommandShellResponse202) & {
+export type postNodeCommandShellResponseSuccess = (postNodeCommandShellResponse200) & {
   headers: Headers;
 };
 export type postNodeCommandShellResponseError = (postNodeCommandShellResponse400 | postNodeCommandShellResponse401 | postNodeCommandShellResponse403 | postNodeCommandShellResponse500) & {

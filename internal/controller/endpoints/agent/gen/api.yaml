@@ -117,29 +117,31 @@ components:
       $ref: ../../../api/components/gen/api.yaml#/components/schemas/ErrorResponse
     ListAgentsResponse:
       properties:
-        agents:
+        items:
+          description: The active agents.
           items:
             $ref: '#/components/schemas/AgentInfo'
           type: array
-        total:
+        total_items:
           description: Total number of active agents.
           type: integer
       required:
-        - agents
-        - total
+        - items
+        - total_items
       type: object
     ListPendingAgentsResponse:
       properties:
-        agents:
+        items:
+          description: The agents that wait for enrollment.
           items:
             $ref: '#/components/schemas/PendingAgentInfo'
           type: array
-        total:
+        total_items:
           description: Total number of pending agents.
           type: integer
       required:
-        - agents
-        - total
+        - items
+        - total_items
       type: object
     LoadAverageResponse:
       description: The system load averages for 1, 5, and 15 minutes.
@@ -324,7 +326,7 @@ paths:
   /api/agent:
     get:
       description: Discover all active agents in the fleet.
-      operationId: getAgents
+      operationId: GetAgents
       responses:
         "200":
           content:
@@ -359,7 +361,7 @@ paths:
   /api/agent/{hostname}:
     delete:
       description: 'Remove an accepted agent''s stored public key. Its responses and registration stop verifying at once, so targeting no longer resolves it. The agent does not enroll again by itself: remove its controller key on the host and restart it. Two machines may share a hostname; when they do, name one with machine_id.'
-      operationId: removeAgent
+      operationId: DeleteAgent
       parameters:
         - description: The hostname of the accepted agent to remove.
           in: path
@@ -381,16 +383,7 @@ paths:
           x-oapi-codegen-extra-tags:
             validate: omitempty,min=1,max=255
       responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                properties:
-                  message:
-                    type: string
-                required:
-                  - message
-                type: object
+        "204":
           description: Agent removed.
         "400":
           content:
@@ -436,7 +429,7 @@ paths:
         - agent_operations
     get:
       description: Get detailed information about a specific agent by hostname.
-      operationId: getAgentDetails
+      operationId: GetAgentDetails
       parameters:
         - description: The hostname of the agent to retrieve.
           in: path
@@ -494,7 +487,7 @@ paths:
   /api/agent/{hostname}/accept:
     post:
       description: Accept a pending agent enrollment request. The agent can be identified by hostname (path parameter) or by fingerprint (query parameter).
-      operationId: acceptAgent
+      operationId: AcceptAgent
       parameters:
         - description: The hostname of the pending agent to accept.
           in: path
@@ -516,16 +509,7 @@ paths:
           x-oapi-codegen-extra-tags:
             validate: omitempty,min=1,max=255
       responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                properties:
-                  message:
-                    type: string
-                required:
-                  - message
-                type: object
+        "204":
           description: Agent accepted.
         "400":
           content:
@@ -566,7 +550,7 @@ paths:
   /api/agent/{hostname}/drain:
     post:
       description: Stop the agent from accepting new jobs. In-flight jobs continue to completion.
-      operationId: drainAgent
+      operationId: DrainAgent
       parameters:
         - description: The hostname of the agent to drain.
           in: path
@@ -579,16 +563,7 @@ paths:
           x-oapi-codegen-extra-tags:
             validate: required,min=1,max=255
       responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                properties:
-                  message:
-                    type: string
-                required:
-                  - message
-                type: object
+        "204":
           description: Agent drain initiated.
         "400":
           content:
@@ -635,7 +610,7 @@ paths:
   /api/agent/{hostname}/reject:
     post:
       description: Reject a pending agent enrollment request.
-      operationId: rejectAgent
+      operationId: RejectAgent
       parameters:
         - description: The hostname of the pending agent to reject.
           in: path
@@ -648,16 +623,7 @@ paths:
           x-oapi-codegen-extra-tags:
             validate: required,min=1,max=255
       responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                properties:
-                  message:
-                    type: string
-                required:
-                  - message
-                type: object
+        "204":
           description: Agent rejected.
         "400":
           content:
@@ -698,7 +664,7 @@ paths:
   /api/agent/{hostname}/undrain:
     post:
       description: Resume accepting jobs on a drained agent.
-      operationId: undrainAgent
+      operationId: UndrainAgent
       parameters:
         - description: The hostname of the agent to undrain.
           in: path
@@ -711,16 +677,7 @@ paths:
           x-oapi-codegen-extra-tags:
             validate: required,min=1,max=255
       responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                properties:
-                  message:
-                    type: string
-                required:
-                  - message
-                type: object
+        "204":
           description: Agent undrain initiated.
         "400":
           content:
@@ -767,7 +724,7 @@ paths:
   /api/agent/pending:
     get:
       description: List all agents that have submitted enrollment requests but have not yet been accepted or rejected.
-      operationId: getAgentsPending
+      operationId: GetAgentsPending
       responses:
         "200":
           content:

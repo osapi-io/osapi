@@ -101,7 +101,7 @@ func (s *Command) PostNodeCommandExec(
 	if rawResp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := rawResp.Error
-		return gen.PostNodeCommandExec202JSONResponse{
+		return gen.PostNodeCommandExec200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.CommandResultItem{
 				{
@@ -125,7 +125,7 @@ func (s *Command) PostNodeCommandExec(
 	durationMs := result.DurationMs
 	changed := result.Changed
 
-	return gen.PostNodeCommandExec202JSONResponse{
+	return gen.PostNodeCommandExec200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.CommandResultItem{
 			{
@@ -209,7 +209,7 @@ func (s *Command) postNodeCommandExecBroadcast(
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.PostNodeCommandExec202JSONResponse{
+	return gen.PostNodeCommandExec200JSONResponse{
 		JobId:   &jobUUID,
 		Results: apiResponses,
 	}, nil

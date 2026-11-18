@@ -235,16 +235,16 @@ type PostNodeCommandExecResponseObject interface {
 	VisitPostNodeCommandExecResponse(w http.ResponseWriter) error
 }
 
-type PostNodeCommandExec202JSONResponse CommandResultCollectionResponse
+type PostNodeCommandExec200JSONResponse CommandResultCollectionResponse
 
-func (response PostNodeCommandExec202JSONResponse) VisitPostNodeCommandExecResponse(w http.ResponseWriter) error {
+func (response PostNodeCommandExec200JSONResponse) VisitPostNodeCommandExecResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
 		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
+	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -314,16 +314,16 @@ type PostNodeCommandShellResponseObject interface {
 	VisitPostNodeCommandShellResponse(w http.ResponseWriter) error
 }
 
-type PostNodeCommandShell202JSONResponse CommandResultCollectionResponse
+type PostNodeCommandShell200JSONResponse CommandResultCollectionResponse
 
-func (response PostNodeCommandShell202JSONResponse) VisitPostNodeCommandShellResponse(w http.ResponseWriter) error {
+func (response PostNodeCommandShell200JSONResponse) VisitPostNodeCommandShellResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
 		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
+	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
 }

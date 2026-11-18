@@ -52,6 +52,7 @@ func New(
 	opts ...Option,
 ) *Server {
 	e := echo.New()
+	e.HTTPErrorHandler = errorHandler
 
 	allowOrigins := appConfig.Controller.API.Security.CORS.AllowOrigins
 
@@ -204,4 +205,35 @@ func traceResponse(
 
 		return next(c)
 	}
+}
+
+// errorHandler answers each error that a route returns, such as a path or
+// query parameter that does not bind, as {"error": "..."}: the body of
+// each error of the API. It keeps the error's status, and a 500 tells only
+// its status text, so no internal detail leaves the controller.
+func errorHandler(
+	c *echo.Context,
+	err error,
+) {
+	if r, _ := echo.UnwrapResponse(c.Response()); r != nil && r.Committed {
+		return
+	}
+
+	code := http.StatusInternalServerError
+	var sc echo.HTTPStatusCoder
+	if errors.As(err, &sc) && sc.StatusCode() != 0 {
+		code = sc.StatusCode()
+	}
+	msg := http.StatusText(code)
+	var he *echo.HTTPError
+	if errors.As(err, &he) && he.Message != "" && code != http.StatusInternalServerError {
+		msg = he.Message
+	}
+
+	if c.Request().Method == http.MethodHead {
+		_ = c.NoContent(code)
+
+		return
+	}
+	_ = c.JSON(code, map[string]string{"error": msg})
 }

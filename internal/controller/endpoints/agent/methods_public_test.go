@@ -84,9 +84,9 @@ func (s *MethodsPublicTestSuite) TestList() {
 			},
 			validateFunc: func(got agent.ListAgentsResponse, err error) {
 				s.Require().NoError(err)
-				s.Equal(2, got.Total)
-				s.Equal("server1", got.Agents[0].Hostname)
-				s.Equal("Ready", got.Agents[1].Status)
+				s.Equal(2, got.TotalItems)
+				s.Equal("server1", got.Items[0].Hostname)
+				s.Equal("Ready", got.Items[1].Status)
 			},
 		},
 		{
@@ -96,8 +96,8 @@ func (s *MethodsPublicTestSuite) TestList() {
 			},
 			validateFunc: func(got agent.ListAgentsResponse, err error) {
 				s.Require().NoError(err)
-				s.NotNil(got.Agents)
-				s.Zero(got.Total)
+				s.NotNil(got.Items)
+				s.Zero(got.TotalItems)
 			},
 		},
 		{
@@ -293,10 +293,10 @@ func (s *MethodsPublicTestSuite) TestPending() {
 			validateFunc: func(got agent.ListPendingAgentsResponse, err error) {
 				s.Require().NoError(err)
 				s.Equal(agent.ListPendingAgentsResponse{
-					Agents: []agent.PendingAgentInfo{{
+					Items: []agent.PendingAgentInfo{{
 						MachineID: "m-1", Hostname: "web-01", Fingerprint: "SHA256:x", RequestedAt: at,
 					}},
-					Total: 1,
+					TotalItems: 1,
 				}, got)
 			},
 		},
@@ -307,7 +307,7 @@ func (s *MethodsPublicTestSuite) TestPending() {
 			},
 			validateFunc: func(got agent.ListPendingAgentsResponse, err error) {
 				s.Require().NoError(err)
-				s.NotNil(got.Agents)
+				s.NotNil(got.Items)
 			},
 		},
 		{
@@ -339,7 +339,6 @@ func (s *MethodsPublicTestSuite) TestDelete() {
 		noEnrollment bool
 		in           agent.DeleteInput
 		setup        func()
-		wantMsg      string
 		wantErr      error
 		wantErrMsg   string
 	}{
@@ -356,7 +355,6 @@ func (s *MethodsPublicTestSuite) TestDelete() {
 			setup: func() {
 				s.enroll.EXPECT().RemoveByHostname(gomock.Any(), "web-01", "").Return("m-1", nil)
 			},
-			wantMsg: "agent web-01 (m-1) removed",
 		},
 		{
 			name: "when no accepted agent has the hostname, it is ErrNotFound",
@@ -406,9 +404,9 @@ func (s *MethodsPublicTestSuite) TestDelete() {
 				d.Enrollment = nil
 			}
 
-			got, err := agent.Delete(s.ctx, d, tc.in)
+			_, err := agent.Delete(s.ctx, d, tc.in)
 
-			s.check(got, err, tc.wantMsg, tc.wantErr, tc.wantErrMsg)
+			s.check(err, tc.wantErr, tc.wantErrMsg)
 		})
 	}
 }
@@ -416,15 +414,12 @@ func (s *MethodsPublicTestSuite) TestDelete() {
 // check holds an action's answer to the message, or its error to the
 // sentinel and the text.
 func (s *MethodsPublicTestSuite) check(
-	got agent.Message,
 	err error,
-	wantMsg string,
 	wantErr error,
 	wantErrMsg string,
 ) {
 	if wantErr == nil && wantErrMsg == "" {
 		s.Require().NoError(err)
-		s.Equal(wantMsg, got.Message)
 
 		return
 	}
@@ -442,7 +437,6 @@ func (s *MethodsPublicTestSuite) TestAccept() {
 		noEnrollment bool
 		in           agent.AcceptInput
 		setup        func()
-		wantMsg      string
 		wantErr      error
 		wantErrMsg   string
 	}{
@@ -459,7 +453,6 @@ func (s *MethodsPublicTestSuite) TestAccept() {
 			setup: func() {
 				s.enroll.EXPECT().AcceptByHostname(gomock.Any(), "web-01").Return(nil)
 			},
-			wantMsg: "agent web-01 accepted",
 		},
 		{
 			name: "when a fingerprint is given, it accepts by fingerprint",
@@ -467,7 +460,6 @@ func (s *MethodsPublicTestSuite) TestAccept() {
 			setup: func() {
 				s.enroll.EXPECT().AcceptByFingerprint(gomock.Any(), "SHA256:x").Return(nil)
 			},
-			wantMsg: "agent with fingerprint SHA256:x accepted",
 		},
 		{
 			name: "when no pending agent has the hostname, it is ErrNotFound",
@@ -515,9 +507,9 @@ func (s *MethodsPublicTestSuite) TestAccept() {
 				d.Enrollment = nil
 			}
 
-			got, err := agent.Accept(s.ctx, d, tc.in)
+			_, err := agent.Accept(s.ctx, d, tc.in)
 
-			s.check(got, err, tc.wantMsg, tc.wantErr, tc.wantErrMsg)
+			s.check(err, tc.wantErr, tc.wantErrMsg)
 		})
 	}
 }
@@ -527,7 +519,6 @@ func (s *MethodsPublicTestSuite) TestReject() {
 		name         string
 		noEnrollment bool
 		setup        func()
-		wantMsg      string
 		wantErr      error
 		wantErrMsg   string
 	}{
@@ -544,7 +535,6 @@ func (s *MethodsPublicTestSuite) TestReject() {
 					RejectByHostname(gomock.Any(), "web-01", "rejected via API").
 					Return(nil)
 			},
-			wantMsg: "agent web-01 rejected",
 		},
 		{
 			name: "when no pending agent has the hostname, it is ErrNotFound",
@@ -573,9 +563,9 @@ func (s *MethodsPublicTestSuite) TestReject() {
 				d.Enrollment = nil
 			}
 
-			got, err := agent.Reject(s.ctx, d, agent.RejectInput{Hostname: "web-01"})
+			_, err := agent.Reject(s.ctx, d, agent.RejectInput{Hostname: "web-01"})
 
-			s.check(got, err, tc.wantMsg, tc.wantErr, tc.wantErrMsg)
+			s.check(err, tc.wantErr, tc.wantErrMsg)
 		})
 	}
 }
@@ -585,11 +575,11 @@ func (s *MethodsPublicTestSuite) TestDrainAndUndrain() {
 	draining := &job.AgentInfo{Hostname: "server1", MachineID: "m-1", State: job.AgentStateDraining}
 	cordoned := &job.AgentInfo{Hostname: "server1", MachineID: "m-1", State: job.AgentStateCordoned}
 
-	type call func(context.Context, agent.Deps, string) (agent.Message, error)
-	drain := func(ctx context.Context, d agent.Deps, h string) (agent.Message, error) {
+	type call func(context.Context, agent.Deps, string) (struct{}, error)
+	drain := func(ctx context.Context, d agent.Deps, h string) (struct{}, error) {
 		return agent.Drain(ctx, d, agent.DrainInput{Hostname: h})
 	}
-	undrain := func(ctx context.Context, d agent.Deps, h string) (agent.Message, error) {
+	undrain := func(ctx context.Context, d agent.Deps, h string) (struct{}, error) {
 		return agent.Undrain(ctx, d, agent.UndrainInput{Hostname: h})
 	}
 
@@ -597,7 +587,6 @@ func (s *MethodsPublicTestSuite) TestDrainAndUndrain() {
 		name       string
 		call       call
 		setup      func()
-		wantMsg    string
 		wantErr    error
 		wantErrMsg string
 	}{
@@ -610,7 +599,6 @@ func (s *MethodsPublicTestSuite) TestDrainAndUndrain() {
 				s.jobs.EXPECT().WriteAgentTimelineEvent(gomock.Any(), "server1", "drain",
 					"Drain initiated via API").Return(nil)
 			},
-			wantMsg: "drain initiated for agent server1",
 		},
 		{
 			name: "when the agent is not in the registry, it is ErrNotFound",
@@ -676,7 +664,6 @@ func (s *MethodsPublicTestSuite) TestDrainAndUndrain() {
 				s.jobs.EXPECT().WriteAgentTimelineEvent(gomock.Any(), "server1", "undrain",
 					"Undrain initiated via API").Return(nil)
 			},
-			wantMsg: "undrain initiated for agent server1",
 		},
 		{
 			name: "when a cordoned agent is undrained, it is allowed",
@@ -687,7 +674,6 @@ func (s *MethodsPublicTestSuite) TestDrainAndUndrain() {
 				s.jobs.EXPECT().WriteAgentTimelineEvent(gomock.Any(), "server1", "undrain",
 					"Undrain initiated via API").Return(nil)
 			},
-			wantMsg: "undrain initiated for agent server1",
 		},
 		{
 			name: "when undrain finds no agent, it is ErrNotFound",
@@ -733,9 +719,9 @@ func (s *MethodsPublicTestSuite) TestDrainAndUndrain() {
 		s.Run(tc.name, func() {
 			tc.setup()
 
-			got, err := tc.call(s.ctx, s.deps(), "server1")
+			_, err := tc.call(s.ctx, s.deps(), "server1")
 
-			s.check(got, err, tc.wantMsg, tc.wantErr, tc.wantErrMsg)
+			s.check(err, tc.wantErr, tc.wantErrMsg)
 		})
 	}
 }

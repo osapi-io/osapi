@@ -56,7 +56,7 @@ var clientFileListCmd = &cobra.Command{
 			return
 		}
 
-		files := resp.Data.Files
+		files := resp.Data.Items
 		if len(files) == 0 {
 			cli.PrintHeading("Files (0)")
 			cli.PrintNote("None. Upload one with osapi client file upload.")
@@ -75,7 +75,7 @@ var clientFileListCmd = &cobra.Command{
 
 		sections := []cli.Section{
 			{
-				Title:   fmt.Sprintf("Files (%d)", resp.Data.Total),
+				Title:   fmt.Sprintf("Files (%d)", resp.Data.TotalItems),
 				Headers: []string{"NAME", "SHA256", "SIZE", "SOURCE"},
 				Rows:    rows,
 			},

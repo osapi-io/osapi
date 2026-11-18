@@ -71,9 +71,9 @@ export const getNodeHostname = async (hostname: string, options?: Parameters<typ
 );}
 
 
-export type putNodeHostnameResponse202 = {
+export type putNodeHostnameResponse200 = {
   data: HostnameUpdateCollectionResponse
-  status: 202
+  status: 200
 }
 
 export type putNodeHostnameResponse400 = {
@@ -96,7 +96,7 @@ export type putNodeHostnameResponse500 = {
   status: 500
 }
 
-export type putNodeHostnameResponseSuccess = (putNodeHostnameResponse202) & {
+export type putNodeHostnameResponseSuccess = (putNodeHostnameResponse200) & {
   headers: Headers;
 };
 export type putNodeHostnameResponseError = (putNodeHostnameResponse400 | putNodeHostnameResponse401 | putNodeHostnameResponse403 | putNodeHostnameResponse500) & {

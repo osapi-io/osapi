@@ -953,16 +953,16 @@ type PostNodeContainerDockerResponseObject interface {
 	VisitPostNodeContainerDockerResponse(w http.ResponseWriter) error
 }
 
-type PostNodeContainerDocker202JSONResponse DockerResultCollectionResponse
+type PostNodeContainerDocker200JSONResponse DockerResultCollectionResponse
 
-func (response PostNodeContainerDocker202JSONResponse) VisitPostNodeContainerDockerResponse(w http.ResponseWriter) error {
+func (response PostNodeContainerDocker200JSONResponse) VisitPostNodeContainerDockerResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
 		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
+	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -1033,16 +1033,16 @@ type DeleteNodeContainerDockerImageResponseObject interface {
 	VisitDeleteNodeContainerDockerImageResponse(w http.ResponseWriter) error
 }
 
-type DeleteNodeContainerDockerImage202JSONResponse DockerActionCollectionResponse
+type DeleteNodeContainerDockerImage200JSONResponse DockerActionCollectionResponse
 
-func (response DeleteNodeContainerDockerImage202JSONResponse) VisitDeleteNodeContainerDockerImageResponse(w http.ResponseWriter) error {
+func (response DeleteNodeContainerDockerImage200JSONResponse) VisitDeleteNodeContainerDockerImageResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
 		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
+	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -1112,16 +1112,16 @@ type PostNodeContainerDockerPullResponseObject interface {
 	VisitPostNodeContainerDockerPullResponse(w http.ResponseWriter) error
 }
 
-type PostNodeContainerDockerPull202JSONResponse DockerPullCollectionResponse
+type PostNodeContainerDockerPull200JSONResponse DockerPullCollectionResponse
 
-func (response PostNodeContainerDockerPull202JSONResponse) VisitPostNodeContainerDockerPullResponse(w http.ResponseWriter) error {
+func (response PostNodeContainerDockerPull200JSONResponse) VisitPostNodeContainerDockerPullResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
 		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
+	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -1192,16 +1192,16 @@ type DeleteNodeContainerDockerByIDResponseObject interface {
 	VisitDeleteNodeContainerDockerByIDResponse(w http.ResponseWriter) error
 }
 
-type DeleteNodeContainerDockerByID202JSONResponse DockerActionCollectionResponse
+type DeleteNodeContainerDockerByID200JSONResponse DockerActionCollectionResponse
 
-func (response DeleteNodeContainerDockerByID202JSONResponse) VisitDeleteNodeContainerDockerByIDResponse(w http.ResponseWriter) error {
+func (response DeleteNodeContainerDockerByID200JSONResponse) VisitDeleteNodeContainerDockerByIDResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
 		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
+	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -1379,16 +1379,16 @@ type PostNodeContainerDockerExecResponseObject interface {
 	VisitPostNodeContainerDockerExecResponse(w http.ResponseWriter) error
 }
 
-type PostNodeContainerDockerExec202JSONResponse DockerExecCollectionResponse
+type PostNodeContainerDockerExec200JSONResponse DockerExecCollectionResponse
 
-func (response PostNodeContainerDockerExec202JSONResponse) VisitPostNodeContainerDockerExecResponse(w http.ResponseWriter) error {
+func (response PostNodeContainerDockerExec200JSONResponse) VisitPostNodeContainerDockerExecResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
 		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
+	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -1472,16 +1472,16 @@ type PostNodeContainerDockerStartResponseObject interface {
 	VisitPostNodeContainerDockerStartResponse(w http.ResponseWriter) error
 }
 
-type PostNodeContainerDockerStart202JSONResponse DockerActionCollectionResponse
+type PostNodeContainerDockerStart200JSONResponse DockerActionCollectionResponse
 
-func (response PostNodeContainerDockerStart202JSONResponse) VisitPostNodeContainerDockerStartResponse(w http.ResponseWriter) error {
+func (response PostNodeContainerDockerStart200JSONResponse) VisitPostNodeContainerDockerStartResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
 		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
+	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -1566,16 +1566,16 @@ type PostNodeContainerDockerStopResponseObject interface {
 	VisitPostNodeContainerDockerStopResponse(w http.ResponseWriter) error
 }
 
-type PostNodeContainerDockerStop202JSONResponse DockerActionCollectionResponse
+type PostNodeContainerDockerStop200JSONResponse DockerActionCollectionResponse
 
-func (response PostNodeContainerDockerStop202JSONResponse) VisitPostNodeContainerDockerStopResponse(w http.ResponseWriter) error {
+func (response PostNodeContainerDockerStop200JSONResponse) VisitPostNodeContainerDockerStopResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
 		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
+	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
 }

@@ -30,6 +30,7 @@ import (
 	"net/http"
 	"reflect"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -246,6 +247,7 @@ type Method struct {
 	public           bool
 	handler          any
 	cmdShort         string
+	location         string
 	cmdUse           string
 	cmdLong          string
 	examples         []string
@@ -523,6 +525,22 @@ func (m *Method) CommandName() string {
 	return m.Name
 }
 
+// Location names the field of the output that holds the ID of the resource
+// a 201 created, such as job_id: the answer's Location header is the
+// group's path and that ID, such as /api/job/7c9e6679-....
+func (m *Method) Location(
+	field string,
+) *Method {
+	m.location = field
+
+	return m
+}
+
+// LocationField is the field Location named, or "".
+func (m *Method) LocationField() string {
+	return m.location
+}
+
 // SubPath is the fixed segment Sub set, or "".
 func (m *Method) SubPath() string {
 	return m.sub
@@ -648,7 +666,7 @@ func (m *Method) Key() string {
 }
 
 // OperationID is the operationId: the one ID sets, or the verb and the
-// path in camel case.
+// path in Pascal case, as each operationId of the API is.
 func (m *Method) OperationID(
 	g *Group,
 ) string {
@@ -656,7 +674,7 @@ func (m *Method) OperationID(
 		return m.id
 	}
 
-	return lowerVerb(m.Verb) + upper(g.Name) + upper(m.sub) + upper(m.Name)
+	return upper(strings.ToLower(m.Verb)) + upper(g.Name) + upper(m.sub) + upper(m.Name)
 }
 
 // Error is an error a method can return, and the status code it maps to.

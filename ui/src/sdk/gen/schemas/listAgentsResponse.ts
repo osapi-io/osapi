@@ -7,7 +7,8 @@
 import type { AgentInfo } from './agentInfo';
 
 export interface ListAgentsResponse {
-  agents: AgentInfo[];
+  /** The active agents. */
+  items: AgentInfo[];
   /** Total number of active agents. */
-  total: number;
+  total_items: number;
 }

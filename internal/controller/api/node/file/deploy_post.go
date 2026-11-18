@@ -121,7 +121,7 @@ func (s *File) PostNodeFileDeploy(
 	if rawResp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := rawResp.Error
-		return gen.PostNodeFileDeploy202JSONResponse{
+		return gen.PostNodeFileDeploy200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.FileDeployResult{
 				{
@@ -135,7 +135,7 @@ func (s *File) PostNodeFileDeploy(
 
 	changed := rawResp.Changed == nil || *rawResp.Changed
 	jobUUID := uuid.MustParse(jobID)
-	return gen.PostNodeFileDeploy202JSONResponse{
+	return gen.PostNodeFileDeploy200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.FileDeployResult{
 			{
@@ -209,7 +209,7 @@ func (s *File) postNodeFileDeployBroadcast(
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.PostNodeFileDeploy202JSONResponse{
+	return gen.PostNodeFileDeploy200JSONResponse{
 		JobId:   &jobUUID,
 		Results: fileResults,
 	}, nil

@@ -93,14 +93,14 @@ func (s *DNSService) Update(
 		return nil, err
 	}
 
-	if resp.JSON202 == nil {
+	if resp.JSON200 == nil {
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),
 			Message:    "nil response body",
 		}}
 	}
 
-	return newResponse(dnsUpdateCollectionFromGen(resp.JSON202), resp.Body, resp.HTTPResponse), nil
+	return newResponse(dnsUpdateCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Delete removes DNS configuration for a network interface on the

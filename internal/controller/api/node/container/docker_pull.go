@@ -71,7 +71,7 @@ func (s *Container) PostNodeContainerDockerPull(
 	if resp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := resp.Error
-		return gen.PostNodeContainerDockerPull202JSONResponse{
+		return gen.PostNodeContainerDockerPull200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.DockerPullResultItem{
 				{
@@ -86,7 +86,7 @@ func (s *Container) PostNodeContainerDockerPull(
 	item := dockerPullItemFromResponse(resp)
 	jobUUID := uuid.MustParse(jobID)
 
-	return gen.PostNodeContainerDockerPull202JSONResponse{
+	return gen.PostNodeContainerDockerPull200JSONResponse{
 		JobId:   &jobUUID,
 		Results: []gen.DockerPullResultItem{item},
 	}, nil
@@ -163,7 +163,7 @@ func (s *Container) postNodeContainerDockerPullBroadcast(
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.PostNodeContainerDockerPull202JSONResponse{
+	return gen.PostNodeContainerDockerPull200JSONResponse{
 		JobId:   &jobUUID,
 		Results: items,
 	}, nil

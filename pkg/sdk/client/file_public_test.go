@@ -290,17 +290,17 @@ func (suite *FilePublicTestSuite) TestList() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"files":[{"name":"file1.txt","sha256":"aaa","size":100,"content_type":"raw"}],"total":1}`,
+						`{"items":[{"name":"file1.txt","sha256":"aaa","size":100,"content_type":"raw"}],"total_items":1}`,
 					),
 				)
 			},
 			validateFunc: func(resp *client.Response[client.FileList], err error) {
 				suite.NoError(err)
 				suite.NotNil(resp)
-				suite.Len(resp.Data.Files, 1)
-				suite.Equal(1, resp.Data.Total)
-				suite.Equal("file1.txt", resp.Data.Files[0].Name)
-				suite.Equal("raw", resp.Data.Files[0].ContentType)
+				suite.Len(resp.Data.Items, 1)
+				suite.Equal(1, resp.Data.TotalItems)
+				suite.Equal("file1.txt", resp.Data.Items[0].Name)
+				suite.Equal("raw", resp.Data.Items[0].ContentType)
 			},
 		},
 		{
@@ -517,23 +517,16 @@ func (suite *FilePublicTestSuite) TestDelete() {
 		handler      http.HandlerFunc
 		serverURL    string
 		fileName     string
-		validateFunc func(*client.Response[client.FileDelete], error)
+		validateFunc func(error)
 	}{
 		{
-			name:     "when deleting file returns result",
+			name:     "when the file is deleted, it answers 204 and no error",
 			fileName: "old.conf",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(`{"name":"old.conf","deleted":true}`),
-				)
+				w.WriteHeader(http.StatusNoContent)
 			},
-			validateFunc: func(resp *client.Response[client.FileDelete], err error) {
+			validateFunc: func(err error) {
 				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("old.conf", resp.Data.Name)
-				suite.True(resp.Data.Deleted)
 			},
 		},
 		{
@@ -544,9 +537,8 @@ func (suite *FilePublicTestSuite) TestDelete() {
 				w.WriteHeader(http.StatusBadRequest)
 				_, _ = w.Write([]byte(`{"error":"invalid file name"}`))
 			},
-			validateFunc: func(resp *client.Response[client.FileDelete], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 
 				var target *client.ValidationError
 				suite.True(errors.As(err, &target))
@@ -561,9 +553,8 @@ func (suite *FilePublicTestSuite) TestDelete() {
 				w.WriteHeader(http.StatusNotFound)
 				_, _ = w.Write([]byte(`{"error":"file not found"}`))
 			},
-			validateFunc: func(resp *client.Response[client.FileDelete], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 
 				var target *client.NotFoundError
 				suite.True(errors.As(err, &target))
@@ -578,9 +569,8 @@ func (suite *FilePublicTestSuite) TestDelete() {
 				w.WriteHeader(http.StatusForbidden)
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
-			validateFunc: func(resp *client.Response[client.FileDelete], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 
 				var target *client.AuthError
 				suite.True(errors.As(err, &target))
@@ -591,26 +581,9 @@ func (suite *FilePublicTestSuite) TestDelete() {
 			name:      "when client HTTP call fails returns error",
 			fileName:  "old.conf",
 			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(resp *client.Response[client.FileDelete], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 				suite.Contains(err.Error(), "delete file old.conf")
-			},
-		},
-		{
-			name:     "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			fileName: "old.conf",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(resp *client.Response[client.FileDelete], err error) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
 			},
 		},
 	}
@@ -638,8 +611,7 @@ func (suite *FilePublicTestSuite) TestDelete() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.File.Delete(suite.ctx, tc.fileName)
-			tc.validateFunc(resp, err)
+			tc.validateFunc(sut.File.Delete(suite.ctx, tc.fileName))
 		})
 	}
 }
@@ -657,7 +629,7 @@ func (suite *FilePublicTestSuite) TestStale() {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(`{
-					"stale": [
+					"items": [
 						{
 							"object_name": "nginx.conf",
 							"hostname": "web-01",
@@ -667,20 +639,20 @@ func (suite *FilePublicTestSuite) TestStale() {
 							"deployed_at": "2026-01-15T10:30:00Z"
 						}
 					],
-					"total": 1
+					"total_items": 1
 				}`))
 			},
 			validateFunc: func(resp *client.Response[client.StaleList], err error) {
 				suite.NoError(err)
 				suite.NotNil(resp)
-				suite.Equal(1, resp.Data.Total)
-				suite.Len(resp.Data.Stale, 1)
-				suite.Equal("nginx.conf", resp.Data.Stale[0].ObjectName)
-				suite.Equal("web-01", resp.Data.Stale[0].Hostname)
-				suite.Equal("/etc/nginx/nginx.conf", resp.Data.Stale[0].Path)
-				suite.Equal("aaa111", resp.Data.Stale[0].DeployedSHA)
-				suite.Equal("bbb222", resp.Data.Stale[0].CurrentSHA)
-				suite.Equal("2026-01-15T10:30:00Z", resp.Data.Stale[0].DeployedAt)
+				suite.Equal(1, resp.Data.TotalItems)
+				suite.Len(resp.Data.Items, 1)
+				suite.Equal("nginx.conf", resp.Data.Items[0].ObjectName)
+				suite.Equal("web-01", resp.Data.Items[0].Hostname)
+				suite.Equal("/etc/nginx/nginx.conf", resp.Data.Items[0].Path)
+				suite.Equal("aaa111", resp.Data.Items[0].DeployedSHA)
+				suite.Equal("bbb222", resp.Data.Items[0].CurrentSHA)
+				suite.Equal("2026-01-15T10:30:00Z", resp.Data.Items[0].DeployedAt)
 			},
 		},
 		{
@@ -688,13 +660,13 @@ func (suite *FilePublicTestSuite) TestStale() {
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`{"stale":[],"total":0}`))
+				_, _ = w.Write([]byte(`{"items":[],"total_items":0}`))
 			},
 			validateFunc: func(resp *client.Response[client.StaleList], err error) {
 				suite.NoError(err)
 				suite.NotNil(resp)
-				suite.Equal(0, resp.Data.Total)
-				suite.Empty(resp.Data.Stale)
+				suite.Equal(0, resp.Data.TotalItems)
+				suite.Empty(resp.Data.Items)
 			},
 		},
 		{

@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"unicode"
 
 	"github.com/osapi-io/osapi/internal/guide"
 )
@@ -84,8 +85,8 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleID,
-		Requires: "Each operationId is used once.",
-		Fix:      "Give the method its own ID with .ID, or rename it.",
+		Requires: "Each operationId is used once, and starts with a capital letter, as each operationId of the API does.",
+		Fix:      "Give the method its own ID with .ID, in Pascal case, such as GetAgents.",
 	},
 	{
 		Rule:     RuleRoute,
@@ -175,6 +176,9 @@ func Validate(
 		}
 
 		id := m.OperationID(g)
+		if id != "" && unicode.IsLower([]rune(id)[0]) {
+			add(m.Name, RuleID, "operationId "+id+" starts with a small letter.")
+		}
 		if other, ok := ids[id]; ok {
 			add(m.Name, RuleID, "operationId "+id+" is also the ID of "+other+".")
 		}

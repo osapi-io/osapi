@@ -45,7 +45,7 @@ var Group = endpoint.Register(endpoint.Define(
 		`{"submitted":5,"processing":2,"completed":30,"failed":3,"partial_failure":2}`),
 	endpoint.Get[ListInput, ListJobsResponse]("list").
 		Handle(List).
-		ID("getJobs").
+		ID("GetJobs").
 		Describe("List jobs").
 		Explain("Retrieve jobs, optionally filtered by status.").
 		Returns("A list of jobs.").
@@ -80,6 +80,7 @@ var Group = endpoint.Register(endpoint.Define(
 			"The original job is preserved. Returns the new job ID.").
 		Returns("The retry job was created successfully.").
 		Status(http.StatusCreated).
+		Location("job_id").
 		Command("Retry a failed or stuck job",
 			"The new job has the same operation as the old job. The original job stays in\n"+
 				"the history. Its timeline gets a `retried` event that links to the new job.").

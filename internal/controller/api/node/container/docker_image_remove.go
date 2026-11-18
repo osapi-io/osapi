@@ -81,7 +81,7 @@ func (s *Container) DeleteNodeContainerDockerImage(
 	if resp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := resp.Error
-		return gen.DeleteNodeContainerDockerImage202JSONResponse{
+		return gen.DeleteNodeContainerDockerImage200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.DockerActionResultItem{
 				{
@@ -98,7 +98,7 @@ func (s *Container) DeleteNodeContainerDockerImage(
 	changed := resp.Changed
 	msg := "image removed"
 
-	return gen.DeleteNodeContainerDockerImage202JSONResponse{
+	return gen.DeleteNodeContainerDockerImage200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.DockerActionResultItem{
 			{
@@ -160,7 +160,7 @@ func (s *Container) deleteNodeContainerDockerImageRemoveBroadcast(
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.DeleteNodeContainerDockerImage202JSONResponse{
+	return gen.DeleteNodeContainerDockerImage200JSONResponse{
 		JobId:   &jobUUID,
 		Results: items,
 	}, nil

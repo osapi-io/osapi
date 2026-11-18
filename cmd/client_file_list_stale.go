@@ -52,14 +52,14 @@ Requires file:read permission.
 			return
 		}
 
-		if len(resp.Data.Stale) == 0 {
+		if len(resp.Data.Items) == 0 {
 			cli.PrintHeading("Stale deployments (0)")
 			cli.PrintNote("None. Every deployment is in sync.")
 			return
 		}
 
-		rows := make([][]string, 0, len(resp.Data.Stale))
-		for _, s := range resp.Data.Stale {
+		rows := make([][]string, 0, len(resp.Data.Items))
+		for _, s := range resp.Data.Items {
 			deployedSHA := s.DeployedSHA
 			if len(deployedSHA) > 12 {
 				deployedSHA = deployedSHA[:12] + "…"
@@ -84,7 +84,7 @@ Requires file:read permission.
 
 		cli.PrintCompactTable([]cli.Section{
 			{
-				Title: fmt.Sprintf("Stale deployments (%d)", resp.Data.Total),
+				Title: fmt.Sprintf("Stale deployments (%d)", resp.Data.TotalItems),
 				Headers: []string{
 					"OBJECT",
 					"HOSTNAME",

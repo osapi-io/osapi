@@ -5,7 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type RemoveAgentParams = {
+export type DeleteAgentParams = {
   /**
    * The machine ID to remove, when more than one accepted agent has the hostname.
    * @minLength 1

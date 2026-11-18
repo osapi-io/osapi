@@ -97,6 +97,8 @@ var group = endpoint.Define("thing", "Things",
 			endpoint.Conflict(errBusy, "Busy."),
 		),
 	endpoint.Delete[getInput, struct{}]("remove").Handle(remove).Status(http.StatusNoContent),
+	endpoint.Post[getInput, thing]("make").Sub("make").Handle(get).Public().
+		Status(http.StatusCreated).Location("name"),
 	endpoint.Get[getInput, thing]("open").Sub("open").Handle(get).Public().
 		Answers(http.StatusServiceUnavailable, "Not ready."),
 )
@@ -159,7 +161,17 @@ func (s *ServerPublicTestSuite) TestServe() {
 		token    string
 		wantCode int
 		wantBody string
+		wantLoc  string
 	}{
+		{
+			name:     "when a method creates a resource, the Location header names it",
+			deps:     deps{result: "7"},
+			method:   http.MethodPost,
+			path:     "/api/thing/make/web",
+			wantCode: http.StatusCreated,
+			wantBody: `{"name":"web7"}`,
+			wantLoc:  "/api/thing/web7",
+		},
 		{
 			name:     "when the token grants the permission, the handler's output is the body",
 			deps:     deps{result: "!"},
@@ -269,6 +281,7 @@ func (s *ServerPublicTestSuite) TestServe() {
 			if tc.wantCode == http.StatusNoContent {
 				s.Empty(rec.Body.String())
 			}
+			s.Equal(tc.wantLoc, rec.Header().Get("Location"))
 		})
 	}
 }

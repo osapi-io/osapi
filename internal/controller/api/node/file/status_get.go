@@ -33,22 +33,22 @@ import (
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
-// PostNodeFileStatus post the node file status API endpoint.
-func (s *File) PostNodeFileStatus(
+// GetNodeFileStatus post the node file status API endpoint.
+func (s *File) GetNodeFileStatus(
 	ctx context.Context,
-	request gen.PostNodeFileStatusRequestObject,
-) (gen.PostNodeFileStatusResponseObject, error) {
+	request gen.GetNodeFileStatusRequestObject,
+) (gen.GetNodeFileStatusResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.PostNodeFileStatus400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeFileStatus400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Struct(request.Body); !ok {
-		return gen.PostNodeFileStatus400JSONResponse{
+	if errMsg, ok := validation.Struct(request.Params); !ok {
+		return gen.GetNodeFileStatus400JSONResponse{
 			Error: &errMsg,
 		}, nil
 	}
 
-	path := request.Body.Path
+	path := request.Params.Path
 	hostname := request.Hostname
 
 	s.logger.Debug(
@@ -71,7 +71,7 @@ func (s *File) PostNodeFileStatus(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeFileStatus500JSONResponse{
+		return gen.GetNodeFileStatus500JSONResponse{
 			Error: &errMsg,
 		}, nil
 	}
@@ -79,7 +79,7 @@ func (s *File) PostNodeFileStatus(
 	if rawResp.Status == job.StatusSkipped {
 		e := rawResp.Error
 		jobUUID := uuid.MustParse(jobID)
-		return gen.PostNodeFileStatus200JSONResponse{
+		return gen.GetNodeFileStatus200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.FileStatusResult{
 				{
@@ -107,7 +107,7 @@ func (s *File) PostNodeFileStatus(
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.PostNodeFileStatus200JSONResponse{
+	return gen.GetNodeFileStatus200JSONResponse{
 		JobId:   &jobUUID,
 		Results: []gen.FileStatusResult{item},
 	}, nil
@@ -118,7 +118,7 @@ func (s *File) postNodeFileStatusBroadcast(
 	ctx context.Context,
 	target string,
 	path string,
-) (gen.PostNodeFileStatusResponseObject, error) {
+) (gen.GetNodeFileStatusResponseObject, error) {
 	data := providerFile.StatusRequest{Path: path}
 	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
@@ -129,7 +129,7 @@ func (s *File) postNodeFileStatusBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeFileStatus500JSONResponse{
+		return gen.GetNodeFileStatus500JSONResponse{
 			Error: &errMsg,
 		}, nil
 	}
@@ -165,7 +165,7 @@ func (s *File) postNodeFileStatusBroadcast(
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.PostNodeFileStatus200JSONResponse{
+	return gen.GetNodeFileStatus200JSONResponse{
 		JobId:   &jobUUID,
 		Results: items,
 	}, nil

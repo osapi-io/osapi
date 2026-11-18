@@ -125,8 +125,8 @@ func (f *File) GetFileStale(
 	}
 
 	return gen.GetFileStale200JSONResponse{
-		Stale: stale,
-		Total: len(stale),
+		Items:      stale,
+		TotalItems: len(stale),
 	}, nil
 }
 

@@ -183,6 +183,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: `.Location("field")`,
+			Does: "Gives a 201 the Location header: the group's path and the value of the output's field with that json name.",
+			When: "For each method that creates a resource and answers 201, such as job retry with job_id.",
+		},
+		{
+			Kind: KindRefine,
 			Name: `.Answers(code, "doc")`,
 			Does: "Adds a status that the method answers with its own output, not an ErrorResponse. The method returns its output with endpoint.Answer(code).",
 			When: "For a probe whose failure has a body that says what failed, such as the 503 of health ready.",

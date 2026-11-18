@@ -6,7 +6,6 @@
  */
 import type {
   ErrorResponse,
-  FileDeleteResponse,
   FileInfoResponse,
   FileListResponse,
   FileUploadResponse,
@@ -16,6 +15,11 @@ import type {
 } from '../schemas';
 
 import { apiFetch } from '../../fetch';
+
+export type postFileResponse200 = {
+  data: FileUploadResponse
+  status: 200
+}
 
 export type postFileResponse201 = {
   data: FileUploadResponse
@@ -47,7 +51,7 @@ export type postFileResponse500 = {
   status: 500
 }
 
-export type postFileResponseSuccess = (postFileResponse201) & {
+export type postFileResponseSuccess = (postFileResponse200 | postFileResponse201) & {
   headers: Headers;
 };
 export type postFileResponseError = (postFileResponse400 | postFileResponse401 | postFileResponse403 | postFileResponse409 | postFileResponse500) & {
@@ -263,9 +267,9 @@ export const getFileByName = async (name: string, options?: Parameters<typeof ap
 );}
 
 
-export type deleteFileByNameResponse200 = {
-  data: FileDeleteResponse
-  status: 200
+export type deleteFileByNameResponse204 = {
+  data: void
+  status: 204
 }
 
 export type deleteFileByNameResponse400 = {
@@ -293,7 +297,7 @@ export type deleteFileByNameResponse500 = {
   status: 500
 }
 
-export type deleteFileByNameResponseSuccess = (deleteFileByNameResponse200) & {
+export type deleteFileByNameResponseSuccess = (deleteFileByNameResponse204) & {
   headers: Headers;
 };
 export type deleteFileByNameResponseError = (deleteFileByNameResponse400 | deleteFileByNameResponse401 | deleteFileByNameResponse403 | deleteFileByNameResponse404 | deleteFileByNameResponse500) & {

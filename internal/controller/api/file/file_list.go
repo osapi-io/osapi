@@ -76,7 +76,7 @@ func (f *File) GetFiles(
 	}
 
 	return gen.GetFiles200JSONResponse{
-		Files: files,
-		Total: len(files),
+		Items:      files,
+		TotalItems: len(files),
 	}, nil
 }

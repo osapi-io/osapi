@@ -185,7 +185,11 @@ each question.
 | Which permission does it need? | The default `<group>:read` or `<group>:write`, or `.Permission`, such as `agent:read` for facts |
 | Does a probe call it without a token? | `.Public()`, for the health probes only |
 | Which errors can it return, and what does each mean to the caller? | `.Errors`: 400 (`Invalid`) for a request it cannot do, 404 when it is not there, 409 for a state that does not allow it, 503 when a backend is not set. A failure of the controller is a 500, never a 409. A status with the output as its body, such as a probe's 503, is `.Answers` |
-| Does a success answer 201 or 204? | `.Status` |
+| Does a success answer 201 or 204? | `.Status`: 201 when it creates a resource, with `.Location` naming the output field of its ID; 204 when it has nothing to return, such as a delete or an action. Never 202: each method answers when its work is done |
+| Is it a list? | Its output is `items` and `total_items` |
+
+The conventions of the API are in `components/osapi/api.md` in osapi-io/specs.
+`TestConventions` in `internal/apicontract` fails on an operation that breaks one.
 
 ## Check it
 

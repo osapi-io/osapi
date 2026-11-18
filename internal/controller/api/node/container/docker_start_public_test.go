@@ -106,7 +106,7 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStart() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerStartResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerDockerStart202JSONResponse)
+				r, ok := resp.(gen.PostNodeContainerDockerStart200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -189,7 +189,7 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStart() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerStartResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerDockerStart202JSONResponse)
+				r, ok := resp.(gen.PostNodeContainerDockerStart200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal(gen.DockerActionResultItemStatusSkipped, r.Results[0].Status)
@@ -226,7 +226,7 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStart() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerStartResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerDockerStart202JSONResponse)
+				r, ok := resp.(gen.PostNodeContainerDockerStart200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
@@ -261,7 +261,7 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStart() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerStartResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerDockerStart202JSONResponse)
+				r, ok := resp.(gen.PostNodeContainerDockerStart200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
@@ -291,7 +291,7 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStart() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerStartResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerDockerStart202JSONResponse)
+				r, ok := resp.(gen.PostNodeContainerDockerStart200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 1)
@@ -324,7 +324,7 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStart() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerStartResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerDockerStart202JSONResponse)
+				r, ok := resp.(gen.PostNodeContainerDockerStart200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 1)
@@ -389,7 +389,7 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStartValidati
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusAccepted, rec.Code)
+				s.Equal(http.StatusOK, rec.Code)
 				s.Contains(rec.Body.String(), `"job_id"`)
 				s.Contains(rec.Body.String(), `"results"`)
 				s.Contains(rec.Body.String(), `"container started"`)
@@ -508,7 +508,7 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStartRBACHTTP
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusAccepted, rec.Code)
+				s.Equal(http.StatusOK, rec.Code)
 				s.Contains(rec.Body.String(), `"job_id"`)
 				s.Contains(rec.Body.String(), `"results"`)
 			},

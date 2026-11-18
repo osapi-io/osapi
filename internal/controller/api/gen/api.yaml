@@ -115,7 +115,7 @@ paths:
     servers: []
     get:
       description: Discover all active agents in the fleet.
-      operationId: getAgents
+      operationId: GetAgents
       responses:
         '200':
           content:
@@ -156,7 +156,7 @@ paths:
         The agent does not enroll again by itself: remove its controller key on
         the host and restart it. Two machines may share a hostname; when they
         do, name one with machine_id.
-      operationId: removeAgent
+      operationId: DeleteAgent
       parameters:
         - description: The hostname of the accepted agent to remove.
           in: path
@@ -180,16 +180,7 @@ paths:
           x-oapi-codegen-extra-tags:
             validate: omitempty,min=1,max=255
       responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                properties:
-                  message:
-                    type: string
-                required:
-                  - message
-                type: object
+        '204':
           description: Agent removed.
         '400':
           content:
@@ -237,7 +228,7 @@ paths:
         - Agent_Management_API_agent_operations
     get:
       description: Get detailed information about a specific agent by hostname.
-      operationId: getAgentDetails
+      operationId: GetAgentDetails
       parameters:
         - description: The hostname of the agent to retrieve.
           in: path
@@ -298,7 +289,7 @@ paths:
       description: >-
         Accept a pending agent enrollment request. The agent can be identified
         by hostname (path parameter) or by fingerprint (query parameter).
-      operationId: acceptAgent
+      operationId: AcceptAgent
       parameters:
         - description: The hostname of the pending agent to accept.
           in: path
@@ -320,16 +311,7 @@ paths:
           x-oapi-codegen-extra-tags:
             validate: omitempty,min=1,max=255
       responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                properties:
-                  message:
-                    type: string
-                required:
-                  - message
-                type: object
+        '204':
           description: Agent accepted.
         '400':
           content:
@@ -373,7 +355,7 @@ paths:
       description: >-
         Stop the agent from accepting new jobs. In-flight jobs continue to
         completion.
-      operationId: drainAgent
+      operationId: DrainAgent
       parameters:
         - description: The hostname of the agent to drain.
           in: path
@@ -386,16 +368,7 @@ paths:
           x-oapi-codegen-extra-tags:
             validate: required,min=1,max=255
       responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                properties:
-                  message:
-                    type: string
-                required:
-                  - message
-                type: object
+        '204':
           description: Agent drain initiated.
         '400':
           content:
@@ -443,7 +416,7 @@ paths:
     servers: []
     post:
       description: Reject a pending agent enrollment request.
-      operationId: rejectAgent
+      operationId: RejectAgent
       parameters:
         - description: The hostname of the pending agent to reject.
           in: path
@@ -456,16 +429,7 @@ paths:
           x-oapi-codegen-extra-tags:
             validate: required,min=1,max=255
       responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                properties:
-                  message:
-                    type: string
-                required:
-                  - message
-                type: object
+        '204':
           description: Agent rejected.
         '400':
           content:
@@ -507,7 +471,7 @@ paths:
     servers: []
     post:
       description: Resume accepting jobs on a drained agent.
-      operationId: undrainAgent
+      operationId: UndrainAgent
       parameters:
         - description: The hostname of the agent to undrain.
           in: path
@@ -520,16 +484,7 @@ paths:
           x-oapi-codegen-extra-tags:
             validate: required,min=1,max=255
       responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                properties:
-                  message:
-                    type: string
-                required:
-                  - message
-                type: object
+        '204':
           description: Agent undrain initiated.
         '400':
           content:
@@ -579,7 +534,7 @@ paths:
       description: >-
         List all agents that have submitted enrollment requests but have not yet
         been accepted or rejected.
-      operationId: getAgentsPending
+      operationId: GetAgentsPending
       responses:
         '200':
           content:
@@ -917,7 +872,7 @@ paths:
     servers: []
     get:
       description: Retrieve jobs, optionally filtered by status.
-      operationId: getJobs
+      operationId: GetJobs
       parameters:
         - description: Filter jobs by status.
           in: query
@@ -1129,6 +1084,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/CreateJobResponse'
           description: The retry job was created successfully.
+          headers:
+            Location:
+              description: The URL of the resource that the request created.
+              schema:
+                type: string
         '400':
           content:
             application/json:
@@ -1294,8 +1254,20 @@ paths:
                 - name
                 - file
       responses:
+        '200':
+          description: |
+            The file existed: unchanged, or replaced with force.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadResponse'
         '201':
-          description: File uploaded successfully.
+          description: The file is new.
+          headers:
+            Location:
+              description: The URL of the file that the request created.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -1467,12 +1439,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/FileName'
       responses:
-        '200':
-          description: File deleted successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FileDeleteResponse'
+        '204':
+          description: File deleted.
         '400':
           description: Invalid file name.
           content:
@@ -1991,7 +1959,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CommandExecRequest'
       responses:
-        '202':
+        '200':
           description: Command execution accepted.
           content:
             application/json:
@@ -2044,7 +2012,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CommandShellRequest'
       responses:
-        '202':
+        '200':
           description: Shell command execution accepted.
           content:
             application/json:
@@ -2097,7 +2065,7 @@ paths:
             schema:
               $ref: '#/components/schemas/DockerCreateRequest'
       responses:
-        '202':
+        '200':
           description: Container creation accepted.
           content:
             application/json:
@@ -2273,7 +2241,7 @@ paths:
             type: boolean
             default: false
       responses:
-        '202':
+        '200':
           description: Container removal accepted.
           content:
             application/json:
@@ -2325,7 +2293,7 @@ paths:
         - $ref: '#/components/parameters/Hostname'
         - $ref: '#/components/parameters/DockerId'
       responses:
-        '202':
+        '200':
           description: Container start accepted.
           content:
             application/json:
@@ -2385,7 +2353,7 @@ paths:
             schema:
               $ref: '#/components/schemas/DockerStopRequest'
       responses:
-        '202':
+        '200':
           description: Container stop accepted.
           content:
             application/json:
@@ -2444,7 +2412,7 @@ paths:
             schema:
               $ref: '#/components/schemas/DockerExecRequest'
       responses:
-        '202':
+        '200':
           description: Container exec accepted.
           content:
             application/json:
@@ -2516,7 +2484,7 @@ paths:
             default: false
             description: Force removal even if the image is in use.
       responses:
-        '202':
+        '200':
           description: Image removal accepted.
           content:
             application/json:
@@ -2568,7 +2536,7 @@ paths:
             schema:
               $ref: '#/components/schemas/DockerPullRequest'
       responses:
-        '202':
+        '200':
           description: Image pull accepted.
           content:
             application/json:
@@ -2617,7 +2585,7 @@ paths:
             schema:
               $ref: '#/components/schemas/FileDeployRequest'
       responses:
-        '202':
+        '200':
           description: File deploy job accepted.
           content:
             application/json:
@@ -2666,7 +2634,7 @@ paths:
             schema:
               $ref: '#/components/schemas/FileUndeployRequest'
       responses:
-        '202':
+        '200':
           description: File undeploy job accepted.
           content:
             application/json:
@@ -2698,8 +2666,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /api/node/{hostname}/file/status:
     servers: []
-    post:
-      operationId: PostNodeFileStatus
+    get:
+      operationId: GetNodeFileStatus
       summary: Check deployment status of a file on the host
       tags:
         - Node_File_Operations_API_node_file_operations
@@ -2708,12 +2676,14 @@ paths:
             - file:read
       parameters:
         - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FileStatusRequest'
+        - name: path
+          in: query
+          required: true
+          description: Filesystem path to check.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+          schema:
+            type: string
       responses:
         '200':
           description: File status.
@@ -2807,7 +2777,7 @@ paths:
             schema:
               $ref: '#/components/schemas/HostnameUpdateRequest'
       responses:
-        '202':
+        '200':
           description: Hostname update accepted.
           content:
             application/json:
@@ -3178,7 +3148,7 @@ paths:
             schema:
               $ref: '#/components/schemas/DNSConfigUpdateRequest'
       responses:
-        '202':
+        '200':
           description: DNS servers update successfully accepted.
           content:
             application/json:
@@ -6448,29 +6418,31 @@ components:
       type: object
     ListAgentsResponse:
       properties:
-        agents:
+        items:
+          description: The active agents.
           items:
             $ref: '#/components/schemas/AgentInfo'
           type: array
-        total:
+        total_items:
           description: Total number of active agents.
           type: integer
       required:
-        - agents
-        - total
+        - items
+        - total_items
       type: object
     ListPendingAgentsResponse:
       properties:
-        agents:
+        items:
+          description: The agents that wait for enrollment.
           items:
             $ref: '#/components/schemas/PendingAgentInfo'
           type: array
-        total:
+        total_items:
           description: Total number of pending agents.
           type: integer
       required:
-        - agents
-        - total
+        - items
+        - total_items
       type: object
     LoadAverageResponse:
       type: object
@@ -6753,13 +6725,17 @@ components:
       type: object
     FactKeysResponse:
       properties:
-        keys:
+        items:
           description: Available fact keys for @fact. references.
           items:
             $ref: '#/components/schemas/FactKeyEntry'
           type: array
+        total_items:
+          description: Total number of fact keys.
+          type: integer
       required:
-        - keys
+        - items
+        - total_items
       type: object
     AgentDetail:
       properties:
@@ -7337,18 +7313,18 @@ components:
     FileListResponse:
       type: object
       properties:
-        files:
+        items:
           type: array
           items:
             $ref: '#/components/schemas/FileInfo'
           description: List of stored files.
-        total:
+        total_items:
           type: integer
           description: Total number of files.
           example: 5
       required:
-        - files
-        - total
+        - items
+        - total_items
     FileInfoResponse:
       type: object
       properties:
@@ -7374,20 +7350,6 @@ components:
         - sha256
         - size
         - content_type
-    FileDeleteResponse:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the deleted file.
-          example: nginx.conf
-        deleted:
-          type: boolean
-          description: Whether the file was deleted.
-          example: true
-      required:
-        - name
-        - deleted
     StaleDeployment:
       type: object
       properties:
@@ -7430,16 +7392,16 @@ components:
     StaleDeploymentsResponse:
       type: object
       properties:
-        stale:
+        items:
           type: array
           items:
             $ref: '#/components/schemas/StaleDeployment'
-        total:
+        total_items:
           type: integer
           description: Total number of stale deployments.
       required:
-        - stale
-        - total
+        - items
+        - total_items
     DiskResponse:
       type: object
       description: Local disk usage information.
@@ -8526,16 +8488,6 @@ components:
             $ref: '#/components/schemas/FileDeployResult'
       required:
         - results
-    FileStatusRequest:
-      type: object
-      properties:
-        path:
-          type: string
-          description: Filesystem path to check.
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1
-      required:
-        - path
     FileStatusResult:
       type: object
       properties:
