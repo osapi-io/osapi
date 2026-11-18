@@ -23,10 +23,20 @@ package all_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"path"
+	"path/filepath"
 	"reflect"
+	"runtime"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/labstack/echo/v5"
@@ -115,8 +125,108 @@ func (s *AllPublicTestSuite) TestRefusals() {
 	s.NotZero(count)
 }
 
+// TestHandlersRunFromRoutes fails a call of a handler from code outside its
+// group. The route checks the input against its validate tags before the
+// handler runs, so a direct call would skip that check.
+func (s *AllPublicTestSuite) TestHandlersRunFromRoutes() {
+	handlers := map[string]string{}
+	dirs := map[string]string{}
+	for _, g := range endpoint.All() {
+		for _, m := range g.Methods {
+			if m.Handler() == nil {
+				continue
+			}
+			name := runtime.FuncForPC(reflect.ValueOf(m.Handler()).Pointer()).Name()
+			handlers[name] = g.Name + " " + m.Name
+			pkg := name[:strings.LastIndex(name, ".")]
+			// A group's own package, and its generated routes, which are
+			// how a handler runs.
+			dirs[strings.TrimPrefix(pkg, module+"/")] = pkg
+			dirs[strings.TrimPrefix(pkg, module+"/")+"/gen"] = pkg
+		}
+	}
+	s.Require().NotEmpty(handlers)
+
+	s.Empty(directCalls(root, handlers, dirs))
+}
+
 func TestAllPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(AllPublicTestSuite))
+}
+
+// module is the import path of the repository, and root its directory from
+// this package.
+const (
+	module = "github.com/osapi-io/osapi"
+	root   = "../../../.."
+)
+
+// directCalls is each call, in the Go files under root that are not tests
+// and not in a group's own package, of a function that handlers names.
+func directCalls(
+	root string,
+	handlers map[string]string,
+	own map[string]string,
+) []string {
+	var problems []string
+	fset := token.NewFileSet()
+	_ = filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, _ := filepath.Rel(root, p)
+		if d.IsDir() {
+			if strings.HasPrefix(d.Name(), ".") && rel != "." || d.Name() == "node_modules" {
+				return filepath.SkipDir
+			}
+
+			return nil
+		}
+		if !strings.HasSuffix(p, ".go") || strings.HasSuffix(p, "_test.go") {
+			return nil
+		}
+		if _, ok := own[filepath.ToSlash(filepath.Dir(rel))]; ok {
+			return nil
+		}
+		f, err := parser.ParseFile(fset, p, nil, parser.SkipObjectResolution)
+		if err != nil {
+			return nil //nolint:nilerr // a file that does not parse is the compiler's to report
+		}
+		imports := map[string]string{}
+		for _, imp := range f.Imports {
+			ip, _ := strconv.Unquote(imp.Path.Value)
+			local := path.Base(ip)
+			if imp.Name != nil {
+				local = imp.Name.Name
+			}
+			imports[local] = ip
+		}
+		ast.Inspect(f, func(n ast.Node) bool {
+			sel, ok := n.(*ast.SelectorExpr)
+			if !ok {
+				return true
+			}
+			x, ok := sel.X.(*ast.Ident)
+			if !ok {
+				return true
+			}
+			if m, ok := handlers[imports[x.Name]+"."+sel.Sel.Name]; ok {
+				problems = append(problems, fmt.Sprintf(
+					"%s uses %s.%s, the handler of %s, outside its route: the route checks the input first",
+					fset.Position(sel.Pos()),
+					x.Name,
+					sel.Sel.Name,
+					m,
+				))
+			}
+
+			return true
+		})
+
+		return nil
+	})
+
+	return problems
 }
