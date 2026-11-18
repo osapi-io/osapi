@@ -249,8 +249,16 @@ behavior-gen-check:
 # describes the same operations as the hand-written specs they replace, so
 # joining both would fail on duplicate operationIds.
 
+# The endpoint groups' and the behaviors' gen/api.yaml are written by go
+# generate, and the join reads them. The SDK client is generated, in the same
+# go generate pass, from the joined spec. So those specs are written first,
+# then joined, then the rest is generated: one run leaves nothing stale.
+# Temporary: the first step goes when the generators write the full spec and
+# the join is removed (#833).
+
 # Generate code
 generate:
+    go generate ./internal/controller/endpoints/all ./internal/behaviors/all
     just join-spec internal/controller/api/gen/api.yaml
     just go-generate
     just cli-docs-generate
