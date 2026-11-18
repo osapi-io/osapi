@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Create | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/node/sysctl/create"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Create | OSAPI"><meta data-rh="true" name="description" content="Manage a kernel parameter and apply it."><meta data-rh="true" property="og:description" content="Manage a kernel parameter and apply it."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/node/sysctl/create"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/node/sysctl/create" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/node/sysctl/create" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/"},{"@type":"ListItem","position":3,"name":"Client","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/"},{"@type":"ListItem","position":4,"name":"Next","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/"},{"@type":"ListItem","position":5,"name":"Node","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/node/"},{"@type":"ListItem","position":6,"name":"Sysctl","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/node/sysctl/"},{"@type":"ListItem","position":7,"name":"Create","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/node/sysctl/create"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.73099424.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.8afd72a5.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.05a0ce9d.js" defer="defer"></script>
 </head>
 <body>
@@ -18,7 +18,7 @@ and applies it with sysctl -p. It fails when sysctl -p fails, because the value
 is not set. A second run with the same value changes nothing and reports
 changed: false. If the kernel has a different value, for example after a failed
 apply, it applies the value again.</p>
-<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client next node sysctl create</span><br></div></code></pre></div></div>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client next node sysctl create [flags]</span><br></div></code></pre></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples">Examples<a href="#examples" class="hash-link" aria-label="Direct link to Examples" title="Direct link to Examples" translate="no">​</a></h2>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Turn on IP forwarding</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client next node sysctl create --target web-01 --key net.ipv4.ip_forward --value 1</span><br></div></code></pre></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="result">Result<a href="#result" class="hash-link" aria-label="Direct link to Result" title="Direct link to Result" translate="no">​</a></h2>
@@ -103,7 +103,12 @@ grant it.</p>
 
 
 
-<table><thead><tr><th>Flag</th><th>Description</th><th>Default</th></tr></thead><tbody><tr><td><code>--key</code></td><td>Parameter name, such as net.ipv4.ip_forward (required)</td><td></td></tr><tr><td><code>--value</code></td><td>Value to set (required)</td><td></td></tr></tbody></table>
+
+
+
+
+
+<table><thead><tr><th>Flag</th><th>Description</th><th>Default</th></tr></thead><tbody><tr><td><code>--key</code></td><td>Parameter name, such as net.ipv4.ip_forward (required)</td><td></td></tr><tr><td><code>-T, --target</code></td><td>Target: _all, _any, hostname, or label (group:web.dev)</td><td><code>_all</code></td></tr><tr><td><code>--value</code></td><td>Value to set (required)</td><td></td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="global-flags">Global flags<a href="#global-flags" class="hash-link" aria-label="Direct link to Global flags" title="Direct link to Global flags" translate="no">​</a></h2>
 
 
@@ -135,12 +140,7 @@ grant it.</p>
 
 
 
-
-
-
-
-
-<table><thead><tr><th>Flag</th><th>Description</th><th>Default</th></tr></thead><tbody><tr><td><code>-d, --debug</code></td><td>Enable or disable debug mode</td><td></td></tr><tr><td><code>-j, --json</code></td><td>Enable JSON output</td><td></td></tr><tr><td><code>-f, --osapi-file</code></td><td>Path to config file</td><td><code>/etc/osapi/osapi.yaml</code></td></tr><tr><td><code>-T, --target</code></td><td>Target: _all, _any, hostname, or label (group:web.dev)</td><td><code>_all</code></td></tr><tr><td><code>--url</code></td><td>URL the client will connect to</td><td><code>http://0.0.0.0:8080</code></td></tr></tbody></table>
+<table><thead><tr><th>Flag</th><th>Description</th><th>Default</th></tr></thead><tbody><tr><td><code>-d, --debug</code></td><td>Enable or disable debug mode</td><td></td></tr><tr><td><code>-j, --json</code></td><td>Enable JSON output</td><td></td></tr><tr><td><code>-f, --osapi-file</code></td><td>Path to config file</td><td><code>/etc/osapi/osapi.yaml</code></td></tr><tr><td><code>--url</code></td><td>URL the client will connect to</td><td><code>http://0.0.0.0:8080</code></td></tr></tbody></table>
 <p><a class="" href="/osapi/sidebar/usage/cli/output">Output</a> tells how the result is printed, and what
 <code>--json</code> gives.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/usage/cli/client/next/node/sysctl"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Sysctl</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/usage/cli/client/next/node/sysctl/delete"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Delete</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#examples" class="table-of-contents__link toc-highlight">Examples</a></li><li><a href="#result" class="table-of-contents__link toc-highlight">Result</a></li><li><a href="#permission" class="table-of-contents__link toc-highlight">Permission</a></li><li><a href="#flags" class="table-of-contents__link toc-highlight">Flags</a></li><li><a href="#global-flags" class="table-of-contents__link toc-highlight">Global flags</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
