@@ -180,7 +180,7 @@ export function Jobs() {
             // As osapi client job list prints them: N jobs, then each
             // status's count in its tone.
             <Text variant="muted">
-              {totalItems} jobs:{" "}
+              {totalItems} {totalItems === 1 ? "job" : "jobs"}:{" "}
               {Object.entries(data.status_counts ?? {}).map(([st, n], i) => (
                 <span key={st}>
                   {i > 0 && ", "}

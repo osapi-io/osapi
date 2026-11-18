@@ -139,7 +139,11 @@ export function Audit() {
         subtitle="API request history and access trail"
         actions={
           <>
-            {data && <Badge variant="muted">{totalItems} entries</Badge>}
+            {data && (
+              <Badge variant="muted">
+                {totalItems} {totalItems === 1 ? "entry" : "entries"}
+              </Badge>
+            )}
             <Button
               variant="secondary"
               size="sm"
