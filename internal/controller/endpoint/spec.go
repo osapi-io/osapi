@@ -119,7 +119,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindRefine,
 			Name: ".Handle(fn)",
-			Does: "Sets the function that runs the method: func(ctx context.Context, d Deps, in In) (Out, error). The generated route decodes and validates In, calls it, and maps its error with Errors.",
+			Does: "Sets the function that runs the method: func(ctx context.Context, d Deps, in In) (Out, error). The generated route decodes and validates In, calls it, and maps its error with Errors. Only the route calls it; other code that needs the work goes through the API.",
 			When: "On each method of a group that Uses a type. Validate checks the signature.",
 		},
 		{
@@ -361,7 +361,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindTag,
 			Name: rule.TagName,
-			Does: rule.TagDoes,
+			Does: rule.TagDoes + " In an endpoint, the generated route checks them before the handler runs, and a handler runs only from its route: TestHandlersRunFromRoutes, in internal/controller/endpoints/all, fails a call of it from other code. The author writes no check.",
 			When: rule.TagWhen,
 		},
 		{
