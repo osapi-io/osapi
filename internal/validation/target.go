@@ -28,6 +28,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/telemetry/opspan"
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/go-playground/validator/v10"
 )
 
@@ -48,6 +51,17 @@ type AgentTarget struct {
 type AgentLister func(ctx context.Context) ([]AgentTarget, error)
 
 var agentLister AgentLister
+
+// tracerName names the spans of the target checks in a trace.
+const tracerName = "osapi-validation"
+
+// The spans of a registry read by the target checks, by what the read is
+// for: a refresh when a rule validates a target, such as valid_target, and
+// one when a hostname is resolved to the machine ID a subject routes to.
+const (
+	spanValidate = "validate.target"
+	spanResolve  = "target.resolve"
+)
 
 // enforceVerified gates whether an unverified registration is allowed to
 // decide where work goes.
@@ -104,6 +118,8 @@ func RegisterTargetValidator(
 // the cache has expired.
 func getAgents(
 	ctx context.Context,
+	purpose string,
+	target string,
 ) ([]AgentTarget, error) {
 	cacheMu.Lock()
 	defer cacheMu.Unlock()
@@ -112,11 +128,16 @@ func getAgents(
 		return cachedAgents, nil
 	}
 
+	// A refresh reads the registry, so it has a span that says why: the
+	// agent.list under it would otherwise look like any other.
+	ctx, span := opspan.Start(ctx, tracerName, purpose,
+		attribute.String("osapi.target", target),
+	)
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
 	agents, err := agentLister(ctx)
-	if err != nil {
+	if err := opspan.End(span, err); err != nil {
 		return nil, err
 	}
 
@@ -135,7 +156,7 @@ func validTarget(
 	target := fl.Field().String()
 
 	if target == "_any" || target == "_all" {
-		return !allAgentsPending(ctx)
+		return !allAgentsPending(ctx, target)
 	}
 
 	if agentLister == nil {
@@ -179,7 +200,7 @@ func matchesLabel(
 	ctx context.Context,
 	key, value string,
 ) bool {
-	agents, err := getAgents(ctx)
+	agents, err := getAgents(ctx, spanValidate, key+":"+value)
 	if err != nil {
 		return false
 	}
@@ -204,12 +225,13 @@ func matchesLabel(
 // Returns false when no agents are registered or the lister is unavailable.
 func allAgentsPending(
 	ctx context.Context,
+	target string,
 ) bool {
 	if agentLister == nil {
 		return false
 	}
 
-	agents, err := getAgents(ctx)
+	agents, err := getAgents(ctx, spanValidate, target)
 	if err != nil || len(agents) == 0 {
 		return false
 	}
@@ -230,7 +252,7 @@ func matchesHostname(
 	ctx context.Context,
 	target string,
 ) bool {
-	agents, err := getAgents(ctx)
+	agents, err := getAgents(ctx, spanValidate, target)
 	if err != nil {
 		return false
 	}
@@ -265,7 +287,7 @@ func PendingTarget(
 		return "", false
 	}
 
-	agents, err := getAgents(ctx)
+	agents, err := getAgents(ctx, spanValidate, target)
 	if err != nil || len(agents) == 0 {
 		return "", false
 	}
@@ -309,7 +331,7 @@ func ResolveTarget(
 		return target
 	}
 
-	agents, err := getAgents(ctx)
+	agents, err := getAgents(ctx, spanResolve, target)
 	if err != nil {
 		return target
 	}

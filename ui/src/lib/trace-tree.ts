@@ -27,6 +27,8 @@ const OP_DETAIL: Record<string, string[]> = {
   "enrollment.remove": ["osapi.agent.hostname"],
   "audit.get": ["osapi.audit.id"],
   "traces.read": ["osapi.trace.id"],
+  "validate.target": ["osapi.target"],
+  "target.resolve": ["osapi.target"],
 };
 
 // The attributes that count what an operation read, and the nouns of the

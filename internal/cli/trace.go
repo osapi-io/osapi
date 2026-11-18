@@ -53,6 +53,8 @@ var opDetail = map[string][]string{
 	"enrollment.remove": {"osapi.agent.hostname"},
 	"audit.get":         {"osapi.audit.id"},
 	"traces.read":       {"osapi.trace.id"},
+	"validate.target":   {"osapi.target"},
+	"target.resolve":    {"osapi.target"},
 }
 
 // opCounts are the attributes that count what an operation read, and the
