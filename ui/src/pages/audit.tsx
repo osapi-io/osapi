@@ -201,12 +201,14 @@ export function Audit() {
               columns={[
                 {
                   header: "ID",
+                  className: "whitespace-nowrap",
                   cell: (e: AuditEntry) => (
                     <Text variant="mono-muted">{e.id}</Text>
                   ),
                 },
                 {
                   header: "Timestamp",
+                  className: "whitespace-nowrap",
                   cell: (e: AuditEntry) => (
                     <Text variant="mono-muted">{formatTime(e.timestamp)}</Text>
                   ),
