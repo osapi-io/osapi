@@ -17,11 +17,11 @@ interface TargetPickerProps {
 function GroupIcon({ group }: { group: TargetOption["group"] }) {
   switch (group) {
     case "builtin":
-      return <Globe className="h-3 w-3 shrink-0 text-primary" />;
+      return <Globe className="h-3 w-3 shrink-0 text-text-muted" />;
     case "hostname":
-      return <Monitor className="h-3 w-3 shrink-0 text-accent-light" />;
+      return <Monitor className="h-3 w-3 shrink-0 text-text-muted" />;
     case "label":
-      return <Tag className="h-3 w-3 shrink-0 text-status-running" />;
+      return <Tag className="h-3 w-3 shrink-0 text-text-muted" />;
   }
 }
 

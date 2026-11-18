@@ -31,7 +31,7 @@ const statusToBadge: Record<
   unchecked: { variant: "muted", label: "" },
   pending: { variant: "pending", label: "Pending" },
   ready: { variant: "ready", label: "Ready" },
-  applying: { variant: "running", label: "Applying" },
+  applying: { variant: "pending", label: "Applying" },
   applied: { variant: "applied", label: "Applied" },
   error: { variant: "error", label: "Error" },
 };
@@ -51,7 +51,7 @@ const statusToCardVariant: Record<
 function StatusIcon({ status }: { status: BlockStatus }) {
   switch (status) {
     case "applying":
-      return <Loader2 className="h-4 w-4 animate-spin text-status-running" />;
+      return <Loader2 className="h-4 w-4 animate-spin text-status-pending" />;
     case "applied":
       return <Check className="h-4 w-4 text-status-applied" />;
     case "error":
@@ -85,7 +85,7 @@ export const BlockCard = forwardRef<HTMLDivElement, BlockCardProps>(
           variant={statusToCardVariant[status]}
           className={cn(
             focused && "ring-1 ring-primary/30",
-            status === "applying" && "ring-1 ring-status-running/40",
+            status === "applying" && "ring-1 ring-status-pending/40",
           )}
         >
           <CardHeader>

@@ -107,7 +107,7 @@ function ResultShell({
   data: unknown;
 }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-[#030303] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+    <div className="rounded-lg border border-border/60 bg-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
       <div className="flex items-center gap-2 border-b border-border/40 px-4 py-2.5">
         {summary}
         <Text variant="muted" className="font-semibold">

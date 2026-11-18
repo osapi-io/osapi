@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Search, GitBranch } from "lucide-react";
-import { spinnerColor } from "@/lib/spinner-color";
+import { Search, GitBranch } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { ContentArea } from "@/components/layout/content-area";
 import { PageHeader } from "@/components/ui/page-header";
@@ -21,22 +20,9 @@ import {
   formatMs,
   type TraceRow,
 } from "@/lib/trace-tree";
-
-function statusVariant(status: string) {
-  switch (status) {
-    case "ok":
-    case "completed":
-    case "changed":
-      return "ready" as const;
-    case "skipped":
-      return "applied" as const;
-    case "error":
-    case "failed":
-      return "error" as const;
-    default:
-      return "muted" as const;
-  }
-}
+import { statusVariant } from "@/lib/status";
+import { PermissionDenied } from "@/components/layout/permission-denied";
+import { Spinner } from "@/components/ui/spinner";
 
 export function Traces() {
   const { can } = useAuth();
@@ -83,12 +69,7 @@ export function Traces() {
   const error = current?.error ?? null;
 
   if (!can("trace:read")) {
-    return (
-      <ContentArea>
-        <PageHeader title="Traces" subtitle="Insufficient permissions" />
-        <ErrorBanner message="You do not have permission to read traces." />
-      </ContentArea>
-    );
+    return <PermissionDenied title="Traces" what="traces" />;
   }
 
   const rows = trace ? traceRows(trace.spans, showNATS) : [];
@@ -138,11 +119,7 @@ export function Traces() {
         </Card>
       </div>
 
-      {loading && (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className={`h-8 w-8 animate-spin ${spinnerColor}`} />
-        </div>
-      )}
+      {loading && <Spinner />}
 
       {error && <ErrorBanner message={error} />}
 

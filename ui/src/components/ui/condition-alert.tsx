@@ -10,7 +10,7 @@ export function ConditionAlert({ type, className }: ConditionAlertProps) {
   return (
     <div
       className={cn(
-        "flex items-center gap-1.5 rounded bg-status-error/10 px-2 py-1 text-xs text-status-error",
+        "flex items-center gap-1.5 rounded bg-status-pending/10 px-2 py-1 text-xs text-status-pending",
         className,
       )}
     >

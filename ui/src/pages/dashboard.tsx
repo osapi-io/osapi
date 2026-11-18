@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { spinnerColor } from "@/lib/spinner-color";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { ContentArea } from "@/components/layout/content-area";
 import { AgentCard } from "@/components/domain/agent-card";
@@ -14,8 +13,10 @@ import { DataTable } from "@/components/ui/data-table";
 import { Text } from "@/components/ui/text";
 import { useHealth } from "@/hooks/use-health";
 import { useAgents } from "@/hooks/use-agents";
-import { Activity, Loader2 } from "lucide-react";
+import { Activity } from "lucide-react";
 import type { ComponentHealth, ComponentEntry } from "@/sdk/gen/schemas";
+import { statusVariant } from "@/lib/status";
+import { Spinner } from "@/components/ui/spinner";
 
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -60,15 +61,7 @@ function RegistryHeader({ entry }: { entry?: ComponentEntry }) {
         <span className="font-medium text-text">{entry.hostname}</span>
       )}
       {entry.status && (
-        <Badge
-          variant={
-            entry.status === "Ready" || entry.status === "ok"
-              ? "ready"
-              : "error"
-          }
-        >
-          {entry.status}
-        </Badge>
+        <Badge variant={statusVariant(entry.status)}>{entry.status}</Badge>
       )}
       <div className="ml-auto flex items-center gap-3 text-text-muted">
         {entry.cpu_percent != null && (
@@ -123,7 +116,7 @@ export function Dashboard() {
         actions={
           health && (
             <>
-              <Badge variant={health.status === "ok" ? "ready" : "error"}>
+              <Badge variant={statusVariant(health.status)}>
                 {health.status}
               </Badge>
               {health.version && (
@@ -135,11 +128,7 @@ export function Dashboard() {
         }
       />
 
-      {loading && (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className={`h-8 w-8 animate-spin ${spinnerColor}`} />
-        </div>
-      )}
+      {loading && <Spinner />}
 
       {error && <ErrorBanner message={error} />}
 

@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { spinnerColor } from "@/lib/spinner-color";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { useAuth } from "@/hooks/use-auth";
 import { ContentArea } from "@/components/layout/content-area";
@@ -30,6 +29,14 @@ import {
   retryJobByID,
 } from "@/sdk/gen/job-management-api-job-operations/job-management-api-job-operations";
 import type { JobDetailResponse, ListJobsResponse } from "@/sdk/gen/schemas";
+import { statusVariant } from "@/lib/status";
+import { PermissionDenied } from "@/components/layout/permission-denied";
+import { Spinner } from "@/components/ui/spinner";
+import { DataTable } from "@/components/ui/data-table";
+import { IconButton } from "@/components/ui/icon-button";
+
+/** A job as the list gives it. */
+type Job = NonNullable<ListJobsResponse["items"]>[number];
 
 const PAGE_SIZE = 20;
 
@@ -42,26 +49,6 @@ const STATUS_OPTIONS = [
   { value: "partial_failure", label: "Partial Failure" },
   { value: "skipped", label: "Skipped" },
 ];
-
-function statusBadgeVariant(status?: string) {
-  switch (status) {
-    case "completed":
-      return "ready" as const;
-    case "failed":
-    case "partial_failure":
-      return "error" as const;
-    case "processing":
-      return "running" as const;
-    case "retried":
-      return "pending" as const;
-    case "submitted":
-      return "muted" as const;
-    case "skipped":
-      return "muted" as const;
-    default:
-      return "muted" as const;
-  }
-}
 
 function formatTimestamp(ts?: string) {
   if (!ts) return "-";
@@ -109,7 +96,7 @@ function JobDetailPanel({ job }: { job: JobDetailResponse }) {
         <div>
           <Text variant="label">Status</Text>
           <div className="mt-0.5">
-            <Badge variant={statusBadgeVariant(job.status)}>{job.status}</Badge>
+            <Badge variant={statusVariant(job.status)}>{job.status}</Badge>
           </div>
         </div>
         <div>
@@ -176,9 +163,7 @@ function JobDetailPanel({ job }: { job: JobDetailResponse }) {
                 <Text variant="mono-muted">
                   {formatTimestamp(evt.timestamp)}
                 </Text>
-                <Badge variant={statusBadgeVariant(evt.event)}>
-                  {evt.event}
-                </Badge>
+                <Badge variant={statusVariant(evt.event)}>{evt.event}</Badge>
                 {evt.hostname && <Text variant="muted">{evt.hostname}</Text>}
                 {evt.message && <Text variant="muted">{evt.message}</Text>}
                 {evt.error && <Text variant="error">{evt.error}</Text>}
@@ -195,7 +180,7 @@ function JobDetailPanel({ job }: { job: JobDetailResponse }) {
             {Object.entries(job.agent_states).map(([host, state]) => (
               <div key={host} className="flex items-center gap-2 text-xs">
                 <Text variant="mono">{host}</Text>
-                <Badge variant={statusBadgeVariant(state.status)}>
+                <Badge variant={statusVariant(state.status)}>
                   {state.status}
                 </Badge>
                 {state.duration && (
@@ -321,12 +306,7 @@ export function Jobs() {
   };
 
   if (!can("job:read")) {
-    return (
-      <ContentArea>
-        <PageHeader title="Jobs" subtitle="Insufficient permissions" />
-        <ErrorBanner message="You do not have permission to view jobs." />
-      </ContentArea>
-    );
+    return <PermissionDenied title="Jobs" what="jobs" />;
   }
 
   const items = data?.items ?? [];
@@ -348,9 +328,7 @@ export function Jobs() {
                   {Object.entries(data.status_counts).map(([status, count]) => (
                     <Badge
                       key={status}
-                      variant={
-                        count === 0 ? "muted" : statusBadgeVariant(status)
-                      }
+                      variant={count === 0 ? "muted" : statusVariant(status)}
                     >
                       {status}: {count}
                     </Badge>
@@ -362,11 +340,7 @@ export function Jobs() {
         }
       />
 
-      {loading && (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className={`h-8 w-8 animate-spin ${spinnerColor}`} />
-        </div>
-      )}
+      {loading && <Spinner />}
 
       {error && <ErrorBanner message={error} />}
 
@@ -396,139 +370,100 @@ export function Jobs() {
           {/* Table */}
           <div className="mb-4">
             <SectionLabel>Jobs ({items.length} shown)</SectionLabel>
-            <Card>
-              <CardContent className="p-0">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b border-border/40 text-left text-text-muted">
-                      <th className="px-3 py-2 font-medium" />
-                      <th className="px-3 py-2 font-medium">ID</th>
-                      <th className="px-3 py-2 font-medium">Status</th>
-                      <th className="px-3 py-2 font-medium">Operation</th>
-                      <th className="px-3 py-2 font-medium">Hostname</th>
-                      <th className="px-3 py-2 font-medium">Created</th>
-                      {can("job:write") && (
-                        <th className="px-3 py-2 text-right font-medium">
-                          Actions
-                        </th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((job) => (
-                      <>
-                        <tr
-                          key={job.id ?? "unknown"}
-                          className="cursor-pointer border-b border-border/20 transition-colors hover:bg-white/[0.02] last:border-0"
-                          onClick={() => job.id && handleExpand(job.id)}
-                        >
-                          <td className="px-3 py-1.5">
-                            {expandedId === job.id ? (
-                              <ChevronUp className="h-3.5 w-3.5 text-text-muted" />
-                            ) : (
-                              <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
-                            )}
-                          </td>
-                          <td className="px-3 py-1.5">
-                            <Text variant="mono" title={job.id}>
-                              {truncateId(job.id)}
-                            </Text>
-                          </td>
-                          <td className="px-3 py-1.5">
-                            <Badge variant={statusBadgeVariant(job.status)}>
-                              {job.status}
-                            </Badge>
-                          </td>
-                          <td className="px-3 py-1.5">
-                            <Text variant="mono-muted">
-                              {getOperationType(job)}
-                            </Text>
-                          </td>
-                          <td className="px-3 py-1.5">
-                            <Text variant="mono-muted">
-                              {job.hostname ?? "-"}
-                            </Text>
-                          </td>
-                          <td className="px-3 py-1.5">
-                            <Text variant="muted">
-                              {formatTimestamp(job.created)}
-                            </Text>
-                          </td>
-                          {can("job:write") && (
-                            <td className="px-3 py-1.5 text-right">
-                              {(job.status === "failed" ||
-                                job.status === "partial_failure") && (
-                                <div className="flex items-center justify-end gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (job.id) handleRetry(job.id);
-                                    }}
-                                    disabled={actionLoading}
-                                    title="Retry job"
-                                  >
-                                    <RefreshCw className="h-3.5 w-3.5" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setConfirmDelete(job.id ?? null);
-                                    }}
-                                    disabled={actionLoading}
-                                    title="Delete job"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5 text-status-error" />
-                                  </Button>
-                                </div>
-                              )}
-                            </td>
-                          )}
-                        </tr>
-                        {expandedId === job.id && (
-                          <tr
-                            key={`${job.id}-detail`}
-                            className="border-b border-border/20"
-                          >
-                            <td
-                              colSpan={can("job:write") ? 7 : 6}
-                              className="px-6 py-3"
-                            >
-                              {expandLoading ? (
-                                <div className="flex items-center justify-center py-4">
-                                  <Loader2
-                                    className={`h-5 w-5 animate-spin ${spinnerColor}`}
-                                  />
-                                </div>
-                              ) : expandedJob ? (
-                                <JobDetailPanel job={expandedJob} />
-                              ) : (
-                                <Text variant="muted">
-                                  Failed to load details
-                                </Text>
-                              )}
-                            </td>
-                          </tr>
-                        )}
-                      </>
-                    ))}
-                    {items.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={can("job:write") ? 7 : 6}
-                          className="px-3 py-8 text-center"
-                        >
-                          <Text variant="muted">No jobs found</Text>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
+            <DataTable
+              rows={items}
+              getRowKey={(job, i) => job.id ?? i}
+              onRowClick={(job) => job.id && handleExpand(job.id)}
+              expanded={(job) =>
+                expandedId !== job.id ? undefined : expandLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Spinner size="inline" />
+                  </div>
+                ) : expandedJob ? (
+                  <JobDetailPanel job={expandedJob} />
+                ) : (
+                  <Text variant="muted">Failed to load details</Text>
+                )
+              }
+              columns={[
+                {
+                  header: "",
+                  cell: (job: Job) =>
+                    expandedId === job.id ? (
+                      <ChevronUp className="h-3.5 w-3.5 text-text-muted" />
+                    ) : (
+                      <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
+                    ),
+                },
+                {
+                  header: "ID",
+                  cell: (job: Job) => (
+                    <Text variant="mono" title={job.id}>
+                      {truncateId(job.id)}
+                    </Text>
+                  ),
+                },
+                {
+                  header: "Status",
+                  cell: (job: Job) => (
+                    <Badge variant={statusVariant(job.status)}>
+                      {job.status}
+                    </Badge>
+                  ),
+                },
+                {
+                  header: "Operation",
+                  cell: (job: Job) => (
+                    <Text variant="mono-muted">{getOperationType(job)}</Text>
+                  ),
+                },
+                {
+                  header: "Hostname",
+                  cell: (job: Job) => (
+                    <Text variant="mono-muted">{job.hostname ?? "-"}</Text>
+                  ),
+                },
+                {
+                  header: "Created",
+                  cell: (job: Job) => (
+                    <Text variant="muted">{formatTimestamp(job.created)}</Text>
+                  ),
+                },
+                ...(can("job:write")
+                  ? [
+                      {
+                        header: "Actions",
+                        align: "right" as const,
+                        cell: (job: Job) =>
+                          (job.status === "failed" ||
+                            job.status === "partial_failure") && (
+                            <div className="flex items-center justify-end gap-1">
+                              <IconButton
+                                icon={RefreshCw}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (job.id) handleRetry(job.id);
+                                }}
+                                disabled={actionLoading}
+                                title="Retry job"
+                              />
+                              <IconButton
+                                icon={Trash2}
+                                variant="danger"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setConfirmDelete(job.id ?? null);
+                                }}
+                                disabled={actionLoading}
+                                title="Delete job"
+                              />
+                            </div>
+                          ),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
           </div>
 
           {/* Pagination */}

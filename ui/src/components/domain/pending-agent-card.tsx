@@ -10,6 +10,7 @@ import {
   acceptAgent,
   rejectAgent,
 } from "@/sdk/gen/agent-management-api-agent-operations/agent-management-api-agent-operations";
+import { statusVariant } from "@/lib/status";
 
 interface PendingAgentCardProps {
   agent: PendingAgentInfo;
@@ -59,7 +60,7 @@ export function PendingAgentCard({ agent, onRefresh }: PendingAgentCardProps) {
     return (
       <Card variant="active" className="flex flex-col opacity-60">
         <CardContent className="flex items-center justify-center py-4">
-          <Badge variant={result === "accepted" ? "ready" : "muted"}>
+          <Badge variant={statusVariant(result)}>
             {result === "accepted" ? "Accepted" : "Rejected"}
           </Badge>
         </CardContent>

@@ -38,17 +38,6 @@ const adminLinks: {
   { to: "/admin/traces", label: "Traces", icon: GitBranch, perm: "trace:read" },
 ];
 
-function roleBadgeVariant(name: string) {
-  switch (name) {
-    case "admin":
-      return "muted" as const;
-    case "operator":
-      return "running" as const;
-    default:
-      return "muted" as const;
-  }
-}
-
 export function Navbar() {
   const location = useLocation();
   const { role, roleOverride, setRoleOverride, clearToken, can, tokenRoles } =
@@ -132,7 +121,7 @@ export function Navbar() {
 
       {/* Role selector */}
       <div className="ml-auto flex items-center gap-3">
-        <Badge variant={roleBadgeVariant(role.name)}>
+        <Badge variant="muted">
           <Shield className="h-3 w-3" />
           {role.label}
         </Badge>

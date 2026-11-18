@@ -30,21 +30,21 @@ const ADMIN_PERMISSIONS: Permission[] = ROLE_PERMISSIONS.admin;
 export const ROLES: RoleDefinition[] = [
   {
     name: "admin",
-    label: "Admin",
+    label: "admin",
     description: "Full access including audit logs",
     jwtRole: "admin",
     permissions: new Set(ADMIN_PERMISSIONS),
   },
   {
     name: "operator",
-    label: "Operator",
+    label: "write",
     description: "Deploy, execute, and manage resources",
     jwtRole: "write",
     permissions: new Set(OPERATOR_PERMISSIONS),
   },
   {
     name: "viewer",
-    label: "Viewer",
+    label: "read",
     description: "Read-only access to all resources",
     jwtRole: "read",
     permissions: new Set(VIEWER_PERMISSIONS),

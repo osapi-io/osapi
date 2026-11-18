@@ -6,6 +6,9 @@
 @theme {
   --color-background: #0a0a0a;
   --color-card: #000000;
+  /* A panel inside a card, such as a result or a job's detail: a step
+     lighter than the card, so its edge shows. */
+  --color-surface: #050505;
   --color-primary: #67ea94; /* the CLI's Green (OKStyle) */
   --color-primary-dark: #1a8a50;
   --color-primary-light: #67ea94; /* one green, the CLI's */

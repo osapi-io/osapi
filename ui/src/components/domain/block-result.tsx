@@ -20,7 +20,7 @@ function CommandResultView({
   const hostCount = result.results.length;
 
   return (
-    <div className="mt-3 rounded-md border border-border bg-[#050505]">
+    <div className="mt-3 rounded-md border border-border bg-surface">
       {/* Collapsible header */}
       <button
         onClick={() => setExpanded(!expanded)}
@@ -116,7 +116,7 @@ function GenericResult({ data }: { data: Record<string, unknown> }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="mt-3 rounded-md border border-border bg-[#050505]">
+    <div className="mt-3 rounded-md border border-border bg-surface">
       <button
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center gap-2 px-3 py-2 text-left"

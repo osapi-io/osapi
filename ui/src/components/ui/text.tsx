@@ -9,6 +9,7 @@ type TextVariant =
   | "mono-muted"
   | "mono-primary"
   | "error"
+  | "warn"
   | "primary"
   | "accent";
 
@@ -29,6 +30,7 @@ const variantClasses: Record<TextVariant, string> = {
   "mono-muted": "font-mono text-text-muted",
   "mono-primary": "font-mono text-primary",
   error: "text-status-error",
+  warn: "text-status-pending",
   primary: "text-primary",
   accent: "text-accent-light",
 };
