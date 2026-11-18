@@ -296,7 +296,7 @@ func renderAgentDetail(
 	timeline := make([][]string, 0, len(data.Timeline))
 	for _, te := range data.Timeline {
 		timeline = append(timeline, []string{
-			te.Timestamp.Format(time.RFC3339), te.Event, te.Hostname, te.Message, te.Error,
+			cli.LocalTime(te.Timestamp), te.Event, te.Hostname, te.Message, te.Error,
 		})
 	}
 	sections = append(sections, cli.Section{

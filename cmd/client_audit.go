@@ -69,7 +69,7 @@ func renderAuditList(
 
 		rows = append(rows, []string{
 			entry.ID,
-			entry.Timestamp.Format("2006-01-02 15:04:05"),
+			cli.LocalTime(entry.Timestamp),
 			entry.User,
 			entry.Method,
 			entry.Path,
@@ -107,7 +107,7 @@ func renderAuditEntry(
 
 	cli.PrintHeading("Audit entry")
 	cli.PrintKV("ID", entry.ID)
-	cli.PrintKV("Timestamp", entry.Timestamp.Format("2006-01-02 15:04:05"))
+	cli.PrintKV("Timestamp", cli.LocalTime(entry.Timestamp))
 	cli.PrintKV("User", entry.User)
 	cli.PrintKV("Roles", strings.Join(entry.Roles, ", "))
 	cli.PrintKV("Method", entry.Method, "Path", entry.Path)

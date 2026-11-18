@@ -67,8 +67,8 @@ var tokenValidateCmd = &cobra.Command{
 
 		cli.PrintKV("Audience", strings.Join(claims.Audience, ", "))
 		cli.PrintKV(
-			"Issued", claims.IssuedAt.Local().Format("2006-01-02 15:04:05"),
-			"Expires", claims.ExpiresAt.Local().Format("2006-01-02 15:04:05"),
+			"Issued", cli.LocalTime(claims.IssuedAt.Time),
+			"Expires", cli.LocalTime(claims.ExpiresAt.Time),
 		)
 	},
 }
