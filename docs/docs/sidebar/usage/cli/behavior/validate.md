@@ -47,12 +47,13 @@ The rules:
   such as validate:"required,min=1,max=255", or validate:"omitempty" for an
   optional field with no other rule.
 - `fails`: Each rule of an input field has a .Fails input that breaks it, which
-  the API refuses with 400. required needs none: the generated tests leave the
-  field out. A min of 1 on a string that is required, optional or in the path
-  needs none: its only bad value is empty. Fix: Add .Fails("&lt;what is
-  wrong&gt;", &lt;Input&gt;&#123;...&#125;) to the method, with the other fields
-  valid and the field's value breaking the rule that the message names, such as
-  a name of 256 characters for max=255.
+  the API refuses with 400. An endpoint's required needs one, with the field
+  empty; a behavior's needs none, as its generated tests leave the field out. A
+  path field's required, and a min of 1 on a string that is required, optional
+  or in the path, need none: their only bad value is empty. Fix: Add
+  .Fails("&lt;what is wrong&gt;", &lt;Input&gt;&#123;...&#125;) to the method,
+  with the other fields valid and the field's value breaking the rule that the
+  message names, such as a name of 256 characters for max=255.
 - `secret`: No input field is both secret:"true" and telemetry:"attr". Fix:
   Remove telemetry:"attr" from the secret field. A secret is never recorded on a
   span.

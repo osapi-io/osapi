@@ -104,7 +104,7 @@ Give each rule of each input field a `.Fails` input that breaks it: the
 method's input, with the other fields valid and one value wrong, such as a name
 of 256 characters for `max=255`. The API refuses each one with 400, and a test
 sends each one through the routes. `validate` names a rule that has none.
-`required` needs none, because the generated tests leave the field out. You
+In an endpoint, a required field needs one too, with the field empty. In a behavior it needs none, because the generated tests leave the field out. You
 write the bad value, because a generator cannot know one for a custom rule.
 
 ## Build a new one

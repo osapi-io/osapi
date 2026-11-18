@@ -64,6 +64,8 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--json").
 		Errors(noStore503),
 	endpoint.Post[UploadInput, FileUploadResponse]("upload").
+		Fails("no name", UploadInput{File: content}).
+		Fails("no file", UploadInput{Name: "app.conf"}).
 		Fails("a name over 255 characters", UploadInput{Name: long, File: content}).
 		Fails("a content type that is not raw or template", UploadInput{Name: "app.conf", ContentType: "zip", File: content}).
 		Fails("an empty file", UploadInput{Name: "app.conf", File: []byte{}}).
@@ -99,6 +101,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--name app.conf --json").
 		Errors(endpoint.NotFound(ErrNotFound, "File not found."), noStore503),
 	endpoint.Put[UpdateInput, FileUploadResponse]("update").
+		Fails("no file", UpdateInput{Name: "app.conf"}).
 		Fails("a name over 255 characters", UpdateInput{Name: long, File: content}).
 		Fails("a content type that is not raw or template", UpdateInput{Name: "app.conf", ContentType: "zip", File: content}).
 		Fails("an empty file", UpdateInput{Name: "app.conf", File: []byte{}}).

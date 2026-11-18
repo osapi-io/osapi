@@ -485,7 +485,7 @@ func unrefused(
 	}
 
 	var out []rule.Need
-	for _, n := range rule.Needs(m.In) {
+	for _, n := range rule.Needs(m.In, false) {
 		if !broken[n.Key()] {
 			out = append(out, n)
 		}

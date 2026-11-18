@@ -269,7 +269,7 @@ func refusalProblems(
 			broken[b] = true
 		}
 	}
-	for _, n := range rule.Needs(m.In) {
+	for _, n := range rule.Needs(m.In, true) {
 		if !broken[n.Key()] {
 			out = append(out, "no .Fails input breaks "+n.Rule+" on "+n.Field+".")
 		}

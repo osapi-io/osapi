@@ -223,8 +223,10 @@ const (
 		"an input field with no tag."
 
 	FailsRequires = "Each rule of an input field has a .Fails input that breaks it, which the API " +
-		"refuses with 400. required needs none: the generated tests leave the field out. A min of 1 " +
-		"on a string that is required, optional or in the path needs none: its only bad value is empty."
+		"refuses with 400. An endpoint's required needs one, with the field empty; a behavior's " +
+		"needs none, as its generated tests leave the field out. A path field's required, and a min " +
+		"of 1 on a string that is required, optional or in the path, need none: their only bad " +
+		"value is empty."
 	FailsWhen = "For each rule of each input field, as validate requires, and for each input " +
 		"that the method refuses for another reason."
 	FailsFix = `Add .Fails("<what is wrong>", <Input>{...}) to the method, with the other fields valid ` +
@@ -310,12 +312,16 @@ func (n Need) Key() string {
 }
 
 // Needs is each rule of t's input fields that needs a bad input: each rule
-// but the flags, as a field left out tests required. A min of 1 or less on a
-// string that is optional, in the path or required is not one: its only bad
-// value is empty, which the tag lets through, the route cannot carry, or
-// required refuses first.
+// but omitempty and dive. A min of 1 or less on a string that is optional,
+// in the path or required is not one: its only bad value is empty, which the
+// tag lets through, the route cannot carry, or required refuses first. A
+// path field's required is not one either: the route cannot carry an empty
+// key. Required is one only when withRequired: the behavior DSL's generated
+// tests leave each required field out, and the endpoint DSL has no such
+// tests.
 func Needs(
 	t reflect.Type,
+	withRequired bool,
 ) []Need {
 	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
@@ -333,13 +339,17 @@ func Needs(
 		tag := f.Tag.Get("validate")
 		for _, r := range strings.Split(tag, ",") {
 			name, param, _ := strings.Cut(r, "=")
-			if r == "" || flags[name] || emptyOnly(f, tag, name, param) {
+			switch {
+			case r == "", name == "omitempty", name == "dive",
+				emptyOnly(f, tag, name, param):
+				continue
+			case name == "required" && (!withRequired || f.Tag.Get("in") == "path"):
 				continue
 			}
 			out = append(out, Need{Field: f.Name, Rule: r})
 		}
 		if f.Tag.Get("in") == "body" {
-			for _, n := range Needs(f.Type) {
+			for _, n := range Needs(f.Type, withRequired) {
 				n.Field = f.Name + "." + n.Field
 				out = append(out, n)
 			}

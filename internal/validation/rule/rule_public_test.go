@@ -21,6 +21,7 @@ package rule_test
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -183,7 +184,7 @@ type needsInput struct {
 // TestNeeds names each rule that needs a bad input, and leaves out what a
 // left-out field tests and a min whose only bad value is empty.
 func (s *RulePublicTestSuite) TestNeeds() {
-	got := rule.Needs(reflect.TypeFor[*needsInput]())
+	got := rule.Needs(reflect.TypeFor[*needsInput](), false)
 	keys := make([]string, 0, len(got))
 	for _, n := range got {
 		keys = append(keys, n.Key())
@@ -193,7 +194,16 @@ func (s *RulePublicTestSuite) TestNeeds() {
 		"Key:max", "Name:uuid", "Note:min", "Count:min", "Tags:min", "Bad:min", "Body.Target:max",
 	}, keys)
 	s.Equal(rule.Need{Field: "Key", Rule: "max=255"}, got[0])
-	s.Nil(rule.Needs(reflect.TypeFor[string]()))
+	s.Nil(rule.Needs(reflect.TypeFor[string](), false))
+
+	required := []string{}
+	for _, n := range rule.Needs(reflect.TypeFor[needsInput](), true) {
+		if strings.HasSuffix(n.Key(), ":required") {
+			required = append(required, n.Key())
+		}
+	}
+	s.Equal([]string{"Name:required", "Tags:required"}, required,
+		"with required, each required field but a path field needs one")
 }
 
 func (s *RulePublicTestSuite) TestDeclare() {
