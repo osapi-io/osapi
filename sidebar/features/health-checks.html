@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Health checks | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/health-checks"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Health checks | OSAPI"><meta data-rh="true" name="description" content="osapi has health endpoints for load balancers, monitoring systems and operations"><meta data-rh="true" property="og:description" content="osapi has health endpoints for load balancers, monitoring systems and operations"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/health-checks"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/health-checks" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/health-checks" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Health checks","item":"https://osapi-io.github.io/osapi/sidebar/features/health-checks"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.1542c38d.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.573d3b1a.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.94bcf34e.js" defer="defer"></script>
 </head>
 <body>
@@ -56,7 +56,9 @@ instance.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="status-healthstatus">Status (<code>/health/status</code>)<a href="#status-healthstatus" class="hash-link" aria-label="Direct link to status-healthstatus" title="Direct link to status-healthstatus" translate="no">​</a></h3>
 <p>Returns the health of each component, with system metrics (uptime, goroutine
 count, memory use). It needs authentication with the <code>health:read</code> permission.
-Use it for dashboards and monitoring.</p>
+Use it for dashboards and monitoring. It answers 200 when a component is not
+healthy, with the overall status <code>degraded</code>: the request worked. Use
+<code>/health/ready</code> to route traffic.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="component-registry">Component registry<a href="#component-registry" class="hash-link" aria-label="Direct link to Component registry" title="Direct link to Component registry" translate="no">​</a></h2>
 <p>The three components write a heartbeat to a shared registry KV bucket at a
 regular interval. Each heartbeat writes a JSON record. The key is the component
