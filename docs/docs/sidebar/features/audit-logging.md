@@ -122,6 +122,9 @@ nats:
     replicas: 1 # Number of stream replicas
 ```
 
+When `stream` is empty, the controller keeps no audit log. Each audit endpoint
+then answers 503, with a message that names `nats.audit.stream`.
+
 When distributed tracing is enabled, each audit entry has a `trace_id` field.
 Use it to find the OpenTelemetry trace of the entry.
 

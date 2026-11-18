@@ -6,30 +6,30 @@
  */
 
 export interface AuditEntry {
-  /** Unique identifier for the audit entry. */
-  id: string;
-  /** When the request was processed. */
-  timestamp: string;
-  /** Authenticated user (JWT subject). */
-  user: string;
-  /** Roles from the JWT token. */
-  roles: string[];
-  /** HTTP method. */
-  method: string;
-  /** Request URL path. */
-  path: string;
-  /** OpenAPI operation ID. */
-  operation_id?: string;
-  /** Client IP address. */
-  source_ip: string;
-  /** HTTP response status code. */
-  response_code: number;
   /** Request duration in milliseconds. */
   duration_ms: number;
-  /** OpenTelemetry trace ID for correlation. */
-  trace_id?: string;
+  /** Unique identifier for the audit entry. */
+  id: string;
   /** The job this request created, absent when it created none. Joins the entry to that job's own status timeline. */
   job_id?: string;
+  /** HTTP method. */
+  method: string;
+  /** OpenAPI operation ID. */
+  operation_id?: string;
+  /** Request URL path. */
+  path: string;
   /** What the request asked for, with sensitive values replaced. Recorded for methods that change something. */
   request_summary?: string;
+  /** HTTP response status code. */
+  response_code: number;
+  /** Roles from the JWT token. */
+  roles: string[];
+  /** Client IP address. */
+  source_ip: string;
+  /** When the request was processed. */
+  timestamp: string;
+  /** OpenTelemetry trace ID for correlation. */
+  trace_id?: string;
+  /** Authenticated user (JWT subject). */
+  user: string;
 }

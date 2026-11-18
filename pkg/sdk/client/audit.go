@@ -56,6 +56,7 @@ func (s *AuditService) List(
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,
+		resp.JSON503,
 	); err != nil {
 		return nil, err
 	}
@@ -92,6 +93,7 @@ func (s *AuditService) Get(
 		resp.JSON403,
 		resp.JSON404,
 		resp.JSON500,
+		resp.JSON503,
 	); err != nil {
 		return nil, err
 	}
@@ -120,6 +122,7 @@ func (s *AuditService) Export(
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON500,
+		resp.JSON503,
 	); err != nil {
 		return nil, err
 	}

@@ -38,10 +38,15 @@ export type getAuditLogsResponse500 = {
   status: 500
 }
 
+export type getAuditLogsResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getAuditLogsResponseSuccess = (getAuditLogsResponse200) & {
   headers: Headers;
 };
-export type getAuditLogsResponseError = (getAuditLogsResponse400 | getAuditLogsResponse401 | getAuditLogsResponse403 | getAuditLogsResponse500) & {
+export type getAuditLogsResponseError = (getAuditLogsResponse400 | getAuditLogsResponse401 | getAuditLogsResponse403 | getAuditLogsResponse500 | getAuditLogsResponse503) & {
   headers: Headers;
 };
 
@@ -69,59 +74,6 @@ export const getGetAuditLogsUrl = (params?: GetAuditLogsParams,) => {
 export const getAuditLogs = async (params?: GetAuditLogsParams, options?: Parameters<typeof apiFetch>[1]): Promise<getAuditLogsResponse> => {
 
   return apiFetch<getAuditLogsResponse>(getGetAuditLogsUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-export type getAuditExportResponse200 = {
-  data: ListAuditResponse
-  status: 200
-}
-
-export type getAuditExportResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type getAuditExportResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type getAuditExportResponse500 = {
-  data: ErrorResponse
-  status: 500
-}
-
-export type getAuditExportResponseSuccess = (getAuditExportResponse200) & {
-  headers: Headers;
-};
-export type getAuditExportResponseError = (getAuditExportResponse401 | getAuditExportResponse403 | getAuditExportResponse500) & {
-  headers: Headers;
-};
-
-export type getAuditExportResponse = (getAuditExportResponseSuccess | getAuditExportResponseError)
-
-export const getGetAuditExportUrl = () => {
-
-
-
-
-  return `/api/audit/export`
-}
-
-/**
- * Returns all audit log entries without pagination for export.
- * @summary Export all audit log entries
- */
-export const getAuditExport = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getAuditExportResponse> => {
-
-  return apiFetch<getAuditExportResponse>(getGetAuditExportUrl(),
   {
     ...options,
     method: 'GET'
@@ -161,10 +113,15 @@ export type getAuditLogByIDResponse500 = {
   status: 500
 }
 
+export type getAuditLogByIDResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getAuditLogByIDResponseSuccess = (getAuditLogByIDResponse200) & {
   headers: Headers;
 };
-export type getAuditLogByIDResponseError = (getAuditLogByIDResponse400 | getAuditLogByIDResponse401 | getAuditLogByIDResponse403 | getAuditLogByIDResponse404 | getAuditLogByIDResponse500) & {
+export type getAuditLogByIDResponseError = (getAuditLogByIDResponse400 | getAuditLogByIDResponse401 | getAuditLogByIDResponse403 | getAuditLogByIDResponse404 | getAuditLogByIDResponse500 | getAuditLogByIDResponse503) & {
   headers: Headers;
 };
 
@@ -185,6 +142,64 @@ export const getGetAuditLogByIDUrl = (id: string,) => {
 export const getAuditLogByID = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<getAuditLogByIDResponse> => {
 
   return apiFetch<getAuditLogByIDResponse>(getGetAuditLogByIDUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+export type getAuditExportResponse200 = {
+  data: ListAuditResponse
+  status: 200
+}
+
+export type getAuditExportResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getAuditExportResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getAuditExportResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type getAuditExportResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
+export type getAuditExportResponseSuccess = (getAuditExportResponse200) & {
+  headers: Headers;
+};
+export type getAuditExportResponseError = (getAuditExportResponse401 | getAuditExportResponse403 | getAuditExportResponse500 | getAuditExportResponse503) & {
+  headers: Headers;
+};
+
+export type getAuditExportResponse = (getAuditExportResponseSuccess | getAuditExportResponseError)
+
+export const getGetAuditExportUrl = () => {
+
+
+
+
+  return `/api/audit/export`
+}
+
+/**
+ * Returns all audit log entries without pagination for export.
+ * @summary Export all audit log entries
+ */
+export const getAuditExport = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getAuditExportResponse> => {
+
+  return apiFetch<getAuditExportResponse>(getGetAuditExportUrl(),
   {
     ...options,
     method: 'GET'

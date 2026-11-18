@@ -7,8 +7,8 @@
 import type { AuditEntry } from './auditEntry';
 
 export interface ListAuditResponse {
-  /** Total number of audit entries. */
-  total_items: number;
   /** The audit entries for this page. */
   items: AuditEntry[];
+  /** Total number of audit entries. */
+  total_items: number;
 }

@@ -38,6 +38,7 @@ import (
 	"reflect"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/dave/jennifer/jen"
@@ -177,7 +178,7 @@ func commands(
 		var fields []jen.Code
 		for _, fld := range structFields(m.In) {
 			flag := strings.ReplaceAll(jsonName(fld), "_", "-")
-			kind, zero := flagKind(fld.Type)
+			kind, zero := flagKind(fld.Type, fld.Tag)
 			local := lowerFirst(fld.Name)
 			reads = append(reads, jen.List(jen.Id(local), jen.Id("_")).Op(":=").
 				Id("cmd").Dot("Flags").Call().Dot("Get"+kind).Call(jen.Lit(flag)))
@@ -191,8 +192,18 @@ func commands(
 			}
 		}
 		for _, extra := range m.CommandFlags() {
-			inits = append(inits, jen.Id(name).Dot("Flags").Call().Dot("Bool").Call(
-				jen.Lit(extra.Name), jen.False(), jen.Lit(extra.Usage)))
+			if !extra.String {
+				inits = append(inits, jen.Id(name).Dot("Flags").Call().Dot("Bool").Call(
+					jen.Lit(extra.Name), jen.False(), jen.Lit(extra.Usage)))
+
+				continue
+			}
+			inits = append(inits, jen.Id(name).Dot("Flags").Call().Dot("String").Call(
+				jen.Lit(extra.Name), jen.Lit(extra.Value), jen.Lit(extra.Usage)))
+			if extra.Required {
+				inits = append(inits, jen.Id("_").Op("=").Id(name).Dot("MarkFlagRequired").
+					Call(jen.Lit(extra.Name)))
+			}
 		}
 		in := jen.Qual(m.In.PkgPath(), m.In.Name())
 		if len(fields) > 0 {
@@ -262,17 +273,22 @@ func commands(
 }
 
 // flagKind is the pflag kind of a field's type, such as String, and its
-// zero value.
+// value when the caller gives none: the field's default tag, or the zero
+// value.
 func flagKind(
 	t reflect.Type,
+	tag reflect.StructTag,
 ) (string, jen.Code) {
+	d, ok := tag.Lookup("default")
 	switch t.Kind() {
 	case reflect.Bool:
-		return "Bool", jen.False()
+		return "Bool", jen.Lit(ok && d == "true")
 	case reflect.Int:
-		return "Int", jen.Lit(0)
+		n, _ := strconv.Atoi(d)
+
+		return "Int", jen.Lit(n)
 	default:
-		return "String", jen.Lit("")
+		return "String", jen.Lit(d)
 	}
 }
 

@@ -77,6 +77,8 @@ var (
 type renderer struct {
 	fn  func(cmd *cobra.Command, in, out any)
 	out reflect.Type
+	// acts is true for a renderer that Acts set, which runs with --json too.
+	acts bool
 }
 
 // SubKey is the annotation of a generated command that goes under a
@@ -175,6 +177,20 @@ func Render[In, Out any](
 	}
 }
 
+// Acts sets what a command does with a method's answer, with or without
+// --json: such as export, which writes the answer to a file. fn prints its
+// own output, and reads --json from the command when it prints differently.
+func Acts[In, Out any](
+	g *endpoint.Group,
+	method string,
+	fn func(cmd *cobra.Command, in In, out Out),
+) {
+	Render(g, method, fn)
+	r := renderers[g.Name+"."+method]
+	r.acts = true
+	renderers[g.Name+"."+method] = r
+}
+
 // Run sends method m of g with in, and prints the answer. The answer
 // decodes into the type of the method's renderer, so the generated command
 // does not name its output type.
@@ -198,13 +214,12 @@ func Run[In any](
 
 		return
 	}
-	if deps.JSON() {
+	render, ok := renderers[g.Name+"."+method]
+	if deps.JSON() && !render.acts {
 		cli.PrintJSON(resp.RawJSON())
 
 		return
 	}
-
-	render, ok := renderers[g.Name+"."+method]
 	if !ok {
 		cli.PrintJSON(resp.RawJSON())
 

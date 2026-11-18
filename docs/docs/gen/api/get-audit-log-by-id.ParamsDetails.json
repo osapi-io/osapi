@@ -1,1 +1,1 @@
-{"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"},"description":"The audit entry ID."}]}
+{"parameters":[{"description":"The audit entry ID.","in":"path","name":"id","required":true,"schema":{"format":"uuid","type":"string"},"x-oapi-codegen-extra-tags":{"validate":"uuid"}}]}

@@ -66,22 +66,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Telemetry",
-      link: {
-        type: "doc",
-        id: "gen/api/telemetry-api-telemetry",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-trace",
-          label: "Get the spans of a trace",
-          className: "api-method get",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Audit",
       link: {
         type: "doc",
@@ -96,14 +80,30 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "gen/api/get-audit-export",
-          label: "Export all audit log entries",
+          id: "gen/api/get-audit-log-by-id",
+          label: "Get a single audit log entry",
           className: "api-method get",
         },
         {
           type: "doc",
-          id: "gen/api/get-audit-log-by-id",
-          label: "Get a single audit log entry",
+          id: "gen/api/get-audit-export",
+          label: "Export all audit log entries",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Telemetry",
+      link: {
+        type: "doc",
+        id: "gen/api/telemetry-api-telemetry",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-trace",
+          label: "Get the spans of a trace",
           className: "api-method get",
         },
       ],

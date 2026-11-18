@@ -2,8 +2,10 @@
 
 Get a single audit log entry.
 
+Returns a single audit log entry by ID.
+
 ```bash
-osapi client audit get
+osapi client audit get [flags]
 ```
 
 ## Examples
@@ -20,9 +22,9 @@ grant it.
 
 ## Flags
 
-| Flag   | Description                           | Default |
-| ------ | ------------------------------------- | ------- |
-| `--id` | Audit entry ID to retrieve (required) |         |
+| Flag   | Description                   | Default |
+| ------ | ----------------------------- | ------- |
+| `--id` | The audit entry ID (required) |         |
 
 ## Global flags
 

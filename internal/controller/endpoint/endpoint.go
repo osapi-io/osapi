@@ -456,6 +456,13 @@ type Flag struct {
 	Name string
 	// Usage is its help.
 	Usage string
+	// String is true for a string flag, which StringFlag adds; false for a
+	// bool flag.
+	String bool
+	// Value is a string flag's value when the caller gives none.
+	Value string
+	// Required is true for a string flag the caller must give.
+	Required bool
 }
 
 // Flag adds a bool flag to the CLI command that the request does not send,
@@ -469,7 +476,27 @@ func (m *Method) Flag(
 	return m
 }
 
-// CommandFlags are the flags Flag added.
+// StringFlag adds a string flag to the CLI command that the request does
+// not send, for the renderer: such as --output, the file an export writes.
+// value is its value when the caller gives none.
+func (m *Method) StringFlag(
+	name string,
+	value string,
+	usage string,
+	required bool,
+) *Method {
+	m.flags = append(m.flags, Flag{
+		Name:     name,
+		Usage:    usage,
+		String:   true,
+		Value:    value,
+		Required: required,
+	})
+
+	return m
+}
+
+// CommandFlags are the flags Flag and StringFlag added.
 func (m *Method) CommandFlags() []Flag {
 	return m.flags
 }

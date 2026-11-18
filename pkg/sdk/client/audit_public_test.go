@@ -69,6 +69,21 @@ func (suite *AuditPublicTestSuite) TestList() {
 			},
 		},
 		{
+			name: "when the audit log is not configured returns its 503 message",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusServiceUnavailable)
+				_, _ = w.Write([]byte(`{"error":"the audit log is not configured"}`))
+			}),
+			validateFunc: func(resp *client.Response[client.AuditList], err error) {
+				suite.Nil(resp)
+				var target *client.UnexpectedStatusError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusServiceUnavailable, target.StatusCode)
+				suite.Contains(err.Error(), "the audit log is not configured")
+			},
+		},
+		{
 			name:   "when server returns 401 returns AuthError",
 			limit:  20,
 			offset: 0,
@@ -200,6 +215,22 @@ func (suite *AuditPublicTestSuite) TestGet() {
 			},
 		},
 		{
+			name: "when the audit log is not configured returns its 503 message",
+			id:   "550e8400-e29b-41d4-a716-446655440000",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusServiceUnavailable)
+				_, _ = w.Write([]byte(`{"error":"the audit log is not configured"}`))
+			}),
+			validateFunc: func(resp *client.Response[client.AuditEntry], err error) {
+				suite.Nil(resp)
+				var target *client.UnexpectedStatusError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusServiceUnavailable, target.StatusCode)
+				suite.Contains(err.Error(), "the audit log is not configured")
+			},
+		},
+		{
 			name: "when server returns 404 returns NotFoundError",
 			id:   "550e8400-e29b-41d4-a716-446655440000",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -285,6 +316,21 @@ func (suite *AuditPublicTestSuite) TestExport() {
 				suite.NotNil(resp)
 				suite.Equal(0, resp.Data.TotalItems)
 				suite.Empty(resp.Data.Items)
+			},
+		},
+		{
+			name: "when the audit log is not configured returns its 503 message",
+			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusServiceUnavailable)
+				_, _ = w.Write([]byte(`{"error":"the audit log is not configured"}`))
+			}),
+			validateFunc: func(resp *client.Response[client.AuditList], err error) {
+				suite.Nil(resp)
+				var target *client.UnexpectedStatusError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusServiceUnavailable, target.StatusCode)
+				suite.Contains(err.Error(), "the audit log is not configured")
 			},
 		},
 		{

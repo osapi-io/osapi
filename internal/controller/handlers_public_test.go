@@ -70,10 +70,10 @@ func (s *HandlersPublicTestSuite) TestHandlers() {
 		want  int
 	}{
 		{
-			name:  "when the audit store is there adds the audit handler",
+			name:  "when the audit store is there the endpoint groups serve it, with no handler of its own",
 			cfg:   func() config.Config { return cfg },
 			audit: true,
-			want:  base + 1,
+			want:  base,
 		},
 		{
 			name:  "when the Object Store is there adds the file handler",
