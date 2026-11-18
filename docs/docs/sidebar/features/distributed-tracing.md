@@ -126,12 +126,12 @@ You can read a trace without access to the tracing backend. The controller reads
 it for you:
 
 ```bash
-osapi client telemetry trace get --id 0f91d3706eb84f9b3d4c211d7e6ebbca
+osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9
 ```
 
 ```text
 Trace:
-  ID:        0f91d3706eb84f9b3d4c211d7e6ebbca
+  ID:        26e448c9dbe1c4a8d216a98c675079c9
   Started:   2026-11-15 15:18:49
   Duration:  20ms
   Services:  osapi-controller, osapi-agent
