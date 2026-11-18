@@ -44,6 +44,10 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Example[ListJobsResponse]("status_counts",
 		`{"submitted":5,"processing":2,"completed":30,"failed":3,"partial_failure":2}`),
 	endpoint.Get[ListInput, ListJobsResponse]("list").
+		Fails("a status that is not a job status", ListInput{Status: "lost"}).
+		Fails("a limit below 1", ListInput{Limit: -1}).
+		Fails("a limit over 100", ListInput{Limit: 101}).
+		Fails("a negative offset", ListInput{Offset: -1}).
 		Handle(List).
 		ID("GetJobs").
 		Describe("List jobs").
@@ -53,6 +57,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("").
 		Example("--status completed --limit 3"),
 	endpoint.Get[GetInput, JobDetailResponse]("get").
+		Fails("an ID that is not a UUID", GetInput{ID: "not-a-uuid"}).
 		Handle(Get).
 		ID("GetJobByID").
 		Describe("Get job detail").
@@ -62,6 +67,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--id 550e8400-e29b-41d4-a716-446655440000").
 		Errors(endpoint.NotFound(ErrNotFound, "Job not found.")),
 	endpoint.Delete[DeleteInput, struct{}]("delete").
+		Fails("an ID that is not a UUID", DeleteInput{ID: "not-a-uuid"}).
 		Handle(Delete).
 		ID("DeleteJobByID").
 		Describe("Delete a job").
@@ -72,6 +78,8 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--id 550e8400-e29b-41d4-a716-446655440000").
 		Errors(endpoint.NotFound(ErrNotFound, "Job not found.")),
 	endpoint.Post[RetryInput, CreateJobResponse]("retry").
+		Fails("an ID that is not a UUID", RetryInput{ID: "not-a-uuid"}).
+		Fails("a target that is not a hostname, a label or _any or _all", RetryInput{ID: "7c9e6679-7425-40de-944b-e07fc1f90ae7", Body: RetryJobRequest{TargetHostname: "web 01!"}}).
 		Handle(Retry).
 		Action("retry").
 		ID("RetryJobByID").

@@ -251,6 +251,7 @@ type Method struct {
 	cmdUse           string
 	cmdLong          string
 	examples         []string
+	refusals         []Refusal
 	notes, result    string
 	flags            []Flag
 	status           int
@@ -430,6 +431,33 @@ func (m *Method) Example(
 	m.examples = append(m.examples, flags)
 
 	return m
+}
+
+// Refusal is an input that the API refuses with 400, as Fails declares it.
+type Refusal struct {
+	// Doc says what is wrong with the input, such as "a name over 255
+	// characters".
+	Doc string
+	// Input is the method's input, with one rule broken.
+	Input any
+}
+
+// Fails declares an input that the API refuses with 400: the method's input
+// with the other fields valid and one rule broken. Validate requires one for
+// each rule of each input field, and a test sends each one through the
+// routes.
+func (m *Method) Fails(
+	doc string,
+	input any,
+) *Method {
+	m.refusals = append(m.refusals, Refusal{Doc: doc, Input: input})
+
+	return m
+}
+
+// Refusals are the inputs Fails declared.
+func (m *Method) Refusals() []Refusal {
+	return m.refusals
 }
 
 // Notes adds a Notes section to the CLI command's page: what a person needs

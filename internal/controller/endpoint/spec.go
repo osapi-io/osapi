@@ -166,6 +166,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: `.Fails("doc", in)`,
+			Does: "Declares an input that the API refuses with 400: the method's input, with the other fields valid and one rule broken. A test sends each one through the routes. " + rule.FailsRequires,
+			When: rule.FailsWhen,
+		},
+		{
+			Kind: KindRefine,
 			Name: `.Example("--flag value")`,
 			Does: "Adds an example of the CLI command: the flags after osapi client <group> <method>. The help and the CLI page show each one.",
 			When: "At least one for each method: the call a person makes most.",

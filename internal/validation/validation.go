@@ -32,8 +32,6 @@ import (
 
 	"github.com/osapi-io/osapi/internal/validation/rule"
 
-	"github.com/osapi-io/osapi/internal/behavior"
-
 	"github.com/go-playground/validator/v10"
 	cronparser "github.com/robfig/cron/v3"
 
@@ -89,6 +87,12 @@ var natsNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 var containerIDPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_.-]*$`)
 
 func init() {
+	// valid_target is registered here, so a struct that has it validates
+	// before the controller starts, as the validate command needs. With no
+	// AgentLister it passes only _any and _all; RegisterTargetValidator gives
+	// it the agents.
+	_ = instance.RegisterValidation("valid_target", validTarget)
+
 	// alphanum_or_fact accepts alphanumeric values or @fact. prefixed references
 	// with a known fact key. Fact references are resolved agent-side.
 	_ = instance.RegisterValidation("alphanum_or_fact", func(fl validator.FieldLevel) bool {
@@ -192,10 +196,11 @@ func init() {
 		rule.Register(tag, rule.None)
 	}
 
-	// A behavior can declare its own rule with behavior.Validator; each one
+	// An author can declare a rule with rule.Declare, as behavior.Validator
+	// does; each one
 	// is registered here, whether its behavior was defined before this ran
 	// or after.
-	behavior.OnRule(registerRule)
+	rule.OnDeclare(registerRule)
 
 	// account_name validates a system user or group name: it rejects a
 	// leading hyphen, path separators, colons, whitespace, and control
@@ -405,7 +410,7 @@ func Instance() *validator.Validate {
 // registerRule adds a rule a behavior declared to the validator, and its
 // message to the hints a failure reads.
 func registerRule(
-	r behavior.Rule,
+	r rule.Custom,
 ) {
 	_ = instance.RegisterValidation(r.Tag, func(fl validator.FieldLevel) bool {
 		return r.Check(fl.Field().String())
@@ -415,4 +420,36 @@ func registerRule(
 	customHints[r.Tag] = func(fe validator.FieldError) string {
 		return fmt.Sprintf("%q %s", fe.Value(), r.Message)
 	}
+}
+
+// Breaks is each rule that in breaks, as "<field>:<tag>", with the field as
+// its Go path below in, such as "Name:max" or "Body.Target:valid_target". A
+// method's declared bad inputs are checked against it, so each rule of an
+// input has an input that breaks it.
+func Breaks(
+	in any,
+) (out []string) {
+	// A tag the validator has no function for panics. The spec check of
+	// each DSL reports that tag, so here it breaks nothing.
+	defer func() {
+		if recover() != nil {
+			out = nil
+		}
+	}()
+
+	err := instance.Struct(in)
+	if err == nil {
+		return nil
+	}
+	errs, ok := err.(validator.ValidationErrors)
+	if !ok {
+		return nil
+	}
+
+	for _, fe := range errs {
+		_, field, _ := strings.Cut(fe.StructNamespace(), ".")
+		out = append(out, field+":"+fe.Tag())
+	}
+
+	return out
 }

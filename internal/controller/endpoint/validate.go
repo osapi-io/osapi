@@ -27,6 +27,8 @@ import (
 	"regexp"
 	"unicode"
 
+	"github.com/osapi-io/osapi/internal/validation"
+
 	"github.com/osapi-io/osapi/internal/validation/rule"
 
 	"github.com/osapi-io/osapi/internal/guide"
@@ -50,6 +52,8 @@ const (
 	RuleHandler = "handler"
 	// RuleValidate is the same check in the behavior DSL, from package rule.
 	RuleValidate = "validate"
+	// RuleFails is the same check in the behavior DSL, from package rule.
+	RuleFails = "fails"
 )
 
 // Checks are the rules Validate applies. osapi controller endpoint
@@ -106,6 +110,11 @@ var Checks = guide.Checks{
 		Rule:     RuleValidate,
 		Requires: rule.Requires,
 		Fix:      rule.Fix,
+	},
+	{
+		Rule:     RuleFails,
+		Requires: rule.FailsRequires,
+		Fix:      rule.FailsFix,
 	},
 	{
 		Rule:     RuleSchema,
@@ -196,6 +205,9 @@ func Validate(
 		for _, f := range rule.Untagged(m.In) {
 			add(m.Name, RuleValidate, "input field "+f+" has no validate tag.")
 		}
+		for _, msg := range refusalProblems(m) {
+			add(m.Name, RuleFails, msg)
+		}
 
 		if msg := handlerProblem(g, m); msg != "" {
 			add(m.Name, RuleHandler, msg)
@@ -238,4 +250,30 @@ func handlerProblem(
 	}
 
 	return ""
+}
+
+// refusalProblems is each Fails input that is not the method's input, and
+// each rule of the input that no Fails input breaks.
+func refusalProblems(
+	m *Method,
+) []string {
+	var out []string
+	broken := map[string]bool{}
+	for _, r := range m.refusals {
+		if got := reflect.TypeOf(r.Input); got != m.In {
+			out = append(out, fmt.Sprintf("the .Fails input %q is %v, not %v.", r.Doc, got, m.In))
+
+			continue
+		}
+		for _, b := range validation.Breaks(r.Input) {
+			broken[b] = true
+		}
+	}
+	for _, n := range rule.Needs(m.In, true) {
+		if !broken[n.Key()] {
+			out = append(out, "no .Fails input breaks "+n.Rule+" on "+n.Field+".")
+		}
+	}
+
+	return out
 }

@@ -196,8 +196,8 @@ var Spec = guide.Spec{
 		{
 			Kind: KindRefine,
 			Name: `.Fails("doc", in, "error text", host...)`,
-			Does: "A call that the method refuses. The docs page lists it, and the provider tests check the error.",
-			When: "For each input or host that the method refuses.",
+			Does: "A call that the method refuses. The docs page lists it, the provider tests check the error, and an input that breaks a validate rule is a generated HTTP test that answers 400. " + rule.FailsRequires,
+			When: rule.FailsWhen,
 		},
 
 		{

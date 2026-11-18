@@ -42,6 +42,10 @@ var errMissing = errors.New("missing")
 
 type noInput struct{}
 
+type limited struct {
+	Name string `json:"name" in:"query" validate:"omitempty,max=3"`
+}
+
 type unknownRule struct {
 	Skip string `json:"skip" in:"query" validate:"nosuchrule"`
 }
@@ -522,6 +526,14 @@ func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
 
 // TestBodyValidateTags holds a body field to its whole validate tag: the
 // items of an array, a pattern from startswith, and the tag in the extension.
+func (s *EndpointPublicTestSuite) TestRefusals() {
+	m := endpoint.Get[limited, Node]("get").Fails("a name over 3 characters", limited{Name: "abcd"})
+
+	s.Equal([]endpoint.Refusal{
+		{Doc: "a name over 3 characters", Input: limited{Name: "abcd"}},
+	}, m.Refusals())
+}
+
 func (s *EndpointPublicTestSuite) TestBodyValidateTags() {
 	doc, err := endpoint.OpenAPI(endpoint.Define("node", "The nodes",
 		endpoint.Post[boundsInput, Node]("make")), "x")
@@ -685,6 +697,9 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 				endpoint.Get[twoKeys, Node]("two"),
 				endpoint.Get[noInput, badOut]("bad").Sub("bad"),
 				endpoint.Get[noInput, Node]("lower").Sub("lower").ID("getLower"),
+				endpoint.Get[limited, Node]("short").Sub("short").Fails("not the input", "x"),
+				endpoint.Get[limited, Node]("refused").Sub("refused").
+					Fails("a name over 3 characters", limited{Name: "abcd"}),
 			),
 			want: []string{
 				`method name "List" is not lowercase letters and digits.`,
@@ -697,6 +712,8 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 				"input field a has no validate tag.",
 				"input field b has no validate tag.",
 				"operationId getLower starts with a small letter.",
+				`the .Fails input "not the input" is string, not endpoint_test.limited.`,
+				"no .Fails input breaks max=3 on Name.",
 				"the spec does not build: node bad: response: badOut: C: type chan int: kind chan has no schema.",
 			},
 		},

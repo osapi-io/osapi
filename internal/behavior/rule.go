@@ -20,32 +20,7 @@
 
 package behavior
 
-import (
-	"sync"
-
-	"github.com/osapi-io/osapi/internal/validation/rule"
-)
-
-// Rule is a validate tag a behavior declares for its own input fields: the
-// check the server runs, the JSON Schema the spec says it means, and what a
-// caller is told when a value fails it.
-type Rule struct {
-	// Tag is the name used in validate tags, such as sysctl_key.
-	Tag string
-	// Check reports whether a field's value, as a string, passes.
-	Check func(value string) bool
-	// Schema is what the tag means in the generated spec.
-	Schema func(t rule.Target)
-	// Message follows the failing value in the error, such as "is not a
-	// valid sysctl key".
-	Message string
-}
-
-var (
-	rulesMu sync.Mutex
-	rules   []Rule
-	onRule  func(r Rule)
-)
+import "github.com/osapi-io/osapi/internal/validation/rule"
 
 // Validator declares a validate tag for the behavior's input fields, so a
 // behavior that needs its own rule keeps it in its own directory. The server
@@ -59,32 +34,6 @@ func Validator(
 	message string,
 ) Option {
 	return optionFunc(func(*Behavior) {
-		r := Rule{Tag: tag, Check: check, Schema: schema, Message: message}
-		rule.Register(tag, schema)
-
-		rulesMu.Lock()
-		rules = append(rules, r)
-		hook := onRule
-		rulesMu.Unlock()
-
-		if hook != nil {
-			hook(r)
-		}
+		rule.Declare(rule.Custom{Tag: tag, Check: check, Schema: schema, Message: message})
 	})
-}
-
-// OnRule has fn called for every rule a behavior declares: those declared
-// already, then each one after. The validation package calls it once, to
-// register each rule with the validator the server uses.
-func OnRule(
-	fn func(r Rule),
-) {
-	rulesMu.Lock()
-	onRule = fn
-	declared := append([]Rule(nil), rules...)
-	rulesMu.Unlock()
-
-	for _, r := range declared {
-		fn(r)
-	}
 }
