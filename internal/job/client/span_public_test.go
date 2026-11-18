@@ -22,6 +22,7 @@ package client_test
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"testing"
 	"time"
@@ -170,6 +171,161 @@ func (s *SpanPublicTestSuite) TestQuery() {
 	}
 }
 
+// TestReads checks that each job client call on the job bucket has its own
+// span under the request, that its NATS calls are its children, and that a
+// failed call marks its span as an error.
+func (s *SpanPublicTestSuite) TestReads() {
+	errKV := errors.New("kv down")
+
+	tests := []struct {
+		name     string
+		span     string
+		keysErr  error
+		call     func(c *client.Client, ctx context.Context) error
+		validate func(span sdktrace.ReadOnlySpan)
+	}{
+		{
+			name: "when the list reads its page records how many jobs it has",
+			span: "job.list",
+			call: func(c *client.Client, ctx context.Context) error {
+				_, err := c.ListJobs(ctx, "failed", 10, 0)
+				return err
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Contains(attrMap(span), "job.count=0")
+				s.Contains(attrMap(span), "job.status_filter=failed")
+				s.Equal(codes.Unset, span.Status().Code)
+			},
+		},
+		{
+			name:    "when the list fails marks job.list as an error",
+			span:    "job.list",
+			keysErr: errKV,
+			call: func(c *client.Client, ctx context.Context) error {
+				_, err := c.ListJobs(ctx, "", 10, 0)
+				return err
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Equal(codes.Error, span.Status().Code)
+			},
+		},
+		{
+			name: "when a job is not found marks job.get as an error",
+			span: "job.get",
+			call: func(c *client.Client, ctx context.Context) error {
+				_, err := c.GetJobStatus(ctx, "j1")
+				return err
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Contains(attrMap(span), "job.id=j1")
+				s.Equal(codes.Error, span.Status().Code)
+			},
+		},
+		{
+			name: "when the agents are listed records how many there are",
+			span: "agent.list",
+			call: func(c *client.Client, ctx context.Context) error {
+				_, err := c.ListAgents(ctx)
+				return err
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Contains(attrMap(span), "osapi.agent.count=0")
+				s.Equal(codes.Unset, span.Status().Code)
+			},
+		},
+		{
+			name: "when an agent is not found marks agent.get as an error",
+			span: "agent.get",
+			call: func(c *client.Client, ctx context.Context) error {
+				_, err := c.GetAgent(ctx, "web-01")
+				return err
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Contains(attrMap(span), "osapi.target=web-01")
+				s.Equal(codes.Error, span.Status().Code)
+			},
+		},
+		{
+			name: "when the queue is counted opens job.summary",
+			span: "job.summary",
+			call: func(c *client.Client, ctx context.Context) error {
+				_, err := c.GetQueueSummary(ctx)
+				return err
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Equal(codes.Unset, span.Status().Code)
+			},
+		},
+		{
+			name: "when a retry finds no job marks job.retry as an error",
+			span: "job.retry",
+			call: func(c *client.Client, ctx context.Context) error {
+				_, err := c.RetryJob(ctx, "j1", "")
+				return err
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Contains(attrMap(span), "job.id=j1")
+				s.Equal(codes.Error, span.Status().Code)
+			},
+		},
+		{
+			name: "when a delete finds no job marks job.delete as an error",
+			span: "job.delete",
+			call: func(c *client.Client, ctx context.Context) error {
+				return c.DeleteJob(ctx, "j1")
+			},
+			validate: func(span sdktrace.ReadOnlySpan) {
+				s.Contains(attrMap(span), "job.id=j1")
+				s.Equal(codes.Error, span.Status().Code)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			jobs, err := client.New(slog.Default(), s.nats, &client.Options{
+				Timeout: time.Second, JobsBucket: "jobs", StreamName: "JOBS",
+				// One bucket for the jobs and the registry, so one mock serves both.
+				RegistryBucket: "jobs",
+			})
+			s.Require().NoError(err)
+
+			var calls []trace.SpanContext
+			s.nats.EXPECT().KVKeys(gomock.Any(), "jobs", gomock.Any()).
+				DoAndReturn(func(ctx context.Context, _ string, _ ...string) ([]string, error) {
+					calls = append(calls, trace.SpanContextFromContext(ctx))
+					return []string{}, tc.keysErr
+				}).AnyTimes()
+			s.nats.EXPECT().KVGet(gomock.Any(), "jobs", gomock.Any()).
+				DoAndReturn(func(ctx context.Context, _, _ string) (jetstream.KeyValueEntry, error) {
+					calls = append(calls, trace.SpanContextFromContext(ctx))
+					return nil, errKV
+				}).
+				AnyTimes()
+
+			s.nats.EXPECT().StreamInfo(gomock.Any(), gomock.Any()).
+				DoAndReturn(func(ctx context.Context, _ string) (*jetstream.StreamInfo, error) {
+					calls = append(calls, trace.SpanContextFromContext(ctx))
+					return nil, errKV
+				}).AnyTimes()
+
+			ctx, request := otel.Tracer("test").Start(context.Background(), "GET /api/job")
+			_ = tc.call(jobs, ctx)
+			request.End()
+
+			span := s.spans()[tc.span]
+			s.Require().NotNil(span, tc.span)
+			s.Equal(request.SpanContext().SpanID(), span.Parent().SpanID())
+			s.Require().NotEmpty(calls)
+			for _, c := range calls {
+				s.True(s.under(c.SpanID(), span.SpanContext().SpanID()),
+					"the NATS calls run inside the read's span")
+			}
+			tc.validate(span)
+		})
+	}
+}
+
 func (s *SpanPublicTestSuite) TestEndCollectSpan() {
 	s.Run("when an agent times out counts it and names it in an event", func() {
 		_, span := otel.Tracer("test").Start(context.Background(), "job.collect")
@@ -188,6 +344,25 @@ func (s *SpanPublicTestSuite) TestEndCollectSpan() {
 		s.Require().Len(got.Events(), 1)
 		s.Equal("job.timeout", got.Events()[0].Name)
 	})
+}
+
+// under reports whether the span id is top or under it, such as a call
+// inside agent.list inside agent.get, from the parents of the ended spans.
+func (s *SpanPublicTestSuite) under(
+	id trace.SpanID,
+	top trace.SpanID,
+) bool {
+	parent := map[trace.SpanID]trace.SpanID{}
+	for _, sp := range s.recorder.Ended() {
+		parent[sp.SpanContext().SpanID()] = sp.Parent().SpanID()
+	}
+	for ; id.IsValid(); id = parent[id] {
+		if id == top {
+			return true
+		}
+	}
+
+	return false
 }
 
 // attrMap is the attributes of span as key=value strings.

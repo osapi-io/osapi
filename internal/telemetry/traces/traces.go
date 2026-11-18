@@ -34,6 +34,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/osapi-io/osapi/internal/telemetry/opspan"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // ErrNotFound is returned when the backend has no trace with the ID. The
@@ -81,8 +84,8 @@ func NewJaeger(
 	return &Jaeger{base: strings.TrimSuffix(base, "/"), client: client}
 }
 
-// Trace returns the trace id from Jaeger, or ErrNotFound.
-func (j *Jaeger) Trace(
+// read returns the trace id from Jaeger, or ErrNotFound.
+func (j *Jaeger) read(
 	ctx context.Context,
 	id string,
 ) (*Trace, error) {
@@ -253,4 +256,22 @@ func text(
 	default:
 		return fmt.Sprint(t)
 	}
+}
+
+// Trace returns the trace id from Jaeger, or ErrNotFound, in a traces.read
+// span: the read is an HTTP call to Jaeger, which no other span shows.
+func (j *Jaeger) Trace(
+	ctx context.Context,
+	id string,
+) (*Trace, error) {
+	ctx, span := opspan.Start(ctx, "osapi-traces", "traces.read",
+		attribute.String("osapi.trace.id", id),
+		attribute.String("server.address", j.base),
+	)
+	t, err := j.read(ctx, id)
+	if err == nil {
+		span.SetAttributes(attribute.Int("osapi.trace.spans", len(t.Spans)))
+	}
+
+	return t, opspan.End(span, err)
 }

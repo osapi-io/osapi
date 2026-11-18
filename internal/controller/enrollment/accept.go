@@ -26,6 +26,9 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/telemetry/opspan"
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/osapi-io/osapi/internal/pki"
 )
 
@@ -67,7 +70,7 @@ func (w *Watcher) AcceptAgent(
 	}
 
 	subject := enrollSubject(w.namespace, pki.EnrollResponsePrefix+"."+machineID)
-	if err := w.nc.PublishCore(context.Background(), subject, data); err != nil {
+	if err := w.nc.PublishCore(ctx, subject, data); err != nil {
 		return fmt.Errorf("publish acceptance for %s: %w", machineID, err)
 	}
 
@@ -116,7 +119,7 @@ func (w *Watcher) RejectAgent(
 	}
 
 	subject := enrollSubject(w.namespace, pki.EnrollResponsePrefix+"."+machineID)
-	if err := w.nc.PublishCore(context.Background(), subject, data); err != nil {
+	if err := w.nc.PublishCore(ctx, subject, data); err != nil {
 		return fmt.Errorf("publish rejection for %s: %w", machineID, err)
 	}
 
@@ -142,7 +145,7 @@ func (w *Watcher) RejectAgent(
 
 // AcceptByHostname scans the pending KV for an agent matching the given
 // hostname and accepts it. Returns an error if no matching agent is found.
-func (w *Watcher) AcceptByHostname(
+func (w *Watcher) acceptByHostname(
 	ctx context.Context,
 	hostname string,
 ) error {
@@ -163,7 +166,7 @@ func (w *Watcher) AcceptByHostname(
 // AcceptByFingerprint scans the pending KV for an agent matching the
 // given fingerprint and accepts it. Returns an error if no matching
 // agent is found.
-func (w *Watcher) AcceptByFingerprint(
+func (w *Watcher) acceptByFingerprint(
 	ctx context.Context,
 	fingerprint string,
 ) error {
@@ -183,7 +186,7 @@ func (w *Watcher) AcceptByFingerprint(
 
 // RejectByHostname scans the pending KV for an agent matching the given
 // hostname and rejects it. Returns an error if no matching agent is found.
-func (w *Watcher) RejectByHostname(
+func (w *Watcher) rejectByHostname(
 	ctx context.Context,
 	hostname string,
 	reason string,
@@ -244,4 +247,42 @@ func (w *Watcher) findPendingBy(
 	}
 
 	return nil, nil
+}
+
+// AcceptByHostname accepts the pending agent with a hostname, in an enrollment.accept span.
+func (w *Watcher) AcceptByHostname(
+	ctx context.Context,
+	hostname string,
+) error {
+	ctx, span := opspan.Start(ctx, tracerName, "enrollment.accept",
+		attribute.String("osapi.agent.hostname", hostname),
+	)
+
+	return opspan.End(span, w.acceptByHostname(ctx, hostname))
+}
+
+// AcceptByFingerprint accepts the pending agent with a fingerprint, in an enrollment.accept span.
+func (w *Watcher) AcceptByFingerprint(
+	ctx context.Context,
+	fingerprint string,
+) error {
+	ctx, span := opspan.Start(ctx, tracerName, "enrollment.accept",
+		attribute.String("osapi.agent.fingerprint", fingerprint),
+	)
+
+	return opspan.End(span, w.acceptByFingerprint(ctx, fingerprint))
+}
+
+// RejectByHostname rejects the pending agent with a hostname, in an
+// enrollment.reject span.
+func (w *Watcher) RejectByHostname(
+	ctx context.Context,
+	hostname string,
+	reason string,
+) error {
+	ctx, span := opspan.Start(ctx, tracerName, "enrollment.reject",
+		attribute.String("osapi.agent.hostname", hostname),
+	)
+
+	return opspan.End(span, w.rejectByHostname(ctx, hostname, reason))
 }

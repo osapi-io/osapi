@@ -29,6 +29,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/telemetry/opspan"
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
@@ -199,7 +202,7 @@ func (c *Client) CreateOrUpdateConsumer(
 
 // ListAgents reads the agent registry KV bucket and returns all registered
 // agents. Agents register via heartbeat, so only live agents appear.
-func (c *Client) ListAgents(
+func (c *Client) listAgents(
 	ctx context.Context,
 ) ([]job.AgentInfo, error) {
 	if c.registryBucket == "" {
@@ -241,7 +244,7 @@ func (c *Client) ListAgents(
 // GetAgent reads a single agent's registration from the KV registry.
 // It tries a direct machine ID lookup first, then falls back to scanning
 // all agents by hostname.
-func (c *Client) GetAgent(
+func (c *Client) getAgent(
 	ctx context.Context,
 	target string,
 ) (*job.AgentInfo, error) {
@@ -441,4 +444,31 @@ func sanitizeKeyForNATS(
 	// Replace invalid characters with underscores
 	reg := regexp.MustCompile(`[^a-zA-Z0-9_\-]`)
 	return reg.ReplaceAllString(input, "_")
+}
+
+// ListAgents returns each agent in the registry, in an agent.list span.
+func (c *Client) ListAgents(
+	ctx context.Context,
+) ([]job.AgentInfo, error) {
+	ctx, span := opspan.Start(ctx, tracerName, "agent.list")
+	agents, err := c.listAgents(ctx)
+	if err == nil {
+		span.SetAttributes(attribute.Int("osapi.agent.count", len(agents)))
+	}
+
+	return agents, opspan.End(span, err)
+}
+
+// GetAgent returns one agent by its hostname or machine ID, in an agent.get
+// span.
+func (c *Client) GetAgent(
+	ctx context.Context,
+	target string,
+) (*job.AgentInfo, error) {
+	ctx, span := opspan.Start(ctx, tracerName, "agent.get",
+		attribute.String("osapi.target", target),
+	)
+	info, err := c.getAgent(ctx, target)
+
+	return info, opspan.End(span, err)
 }

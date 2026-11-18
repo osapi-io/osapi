@@ -1,4 +1,5 @@
 import type { TraceSpan } from "@/sdk/gen/schemas";
+import { formatBytes } from "@/lib/format";
 
 // Mirrors internal/cli/trace.go, so the CLI and the UI show a trace the same
 // way.
@@ -11,6 +12,30 @@ const DETAIL = [
   "messaging.destination.name",
   "db.namespace",
   "http.response.status_code",
+];
+
+// The attribute that a store or client operation's detail shows, by span
+// name: what it acted on. Its first attribute that is set wins.
+const OP_DETAIL: Record<string, string[]> = {
+  "job.get": ["job.id"],
+  "job.retry": ["job.id"],
+  "job.delete": ["job.id"],
+  "agent.get": ["osapi.target"],
+  "agent.timeline": ["osapi.agent.hostname"],
+  "enrollment.accept": ["osapi.agent.hostname", "osapi.agent.fingerprint"],
+  "enrollment.reject": ["osapi.agent.hostname"],
+  "enrollment.remove": ["osapi.agent.hostname"],
+  "audit.get": ["osapi.audit.id"],
+  "traces.read": ["osapi.trace.id"],
+};
+
+// The attributes that count what an operation read, and the nouns of the
+// count: job.list's job.count is "2 jobs".
+const OP_COUNTS: [string, string, string][] = [
+  ["job.count", "job", "jobs"],
+  ["osapi.agent.count", "agent", "agents"],
+  ["osapi.audit.count", "entry", "entries"],
+  ["osapi.trace.spans", "span", "spans"],
 ];
 
 export interface TraceRow {
@@ -83,6 +108,12 @@ function spanDetail(s: TraceSpan): string {
   if (inputs) return inputs;
   if (a["nats.kv.key"])
     return keyMeaning(a["nats.kv.key"], a["db.namespace"] ?? "");
+  for (const [key, one, many] of OP_COUNTS) {
+    const n = a[key];
+    if (n !== undefined && n !== "") return `${n} ${n === "1" ? one : many}`;
+  }
+  const op = (OP_DETAIL[s.name] ?? []).map((k) => a[k]).find((v) => v);
+  if (op) return op;
   if (s.name === "kv.keys") return `list keys in ${a["db.namespace"] ?? ""}`;
   // The request span has the size too, from otelecho; it shows its status.
   const size = a["http.response.body.size"];
@@ -92,15 +123,6 @@ function spanDetail(s: TraceSpan): string {
   if (a["job.type"] && a["osapi.target"])
     return `${a["job.type"]} to ${a["osapi.target"]}`;
   return DETAIL.map((k) => a[k]).find((v) => v) ?? "";
-}
-
-// formatBytes is a size as the CLI prints it: 512 B, 4.0 KB, 1.2 MB.
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024)
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
 
 // traceRows returns the spans as a tree: each child under its parent, in

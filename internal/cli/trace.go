@@ -40,6 +40,30 @@ var traceDetail = []string{
 	"http.response.status_code",
 }
 
+// opDetail is the attribute that a store or client operation's DETAIL shows,
+// by span name: what it acted on. Its first attribute that is set wins.
+var opDetail = map[string][]string{
+	"job.get":           {"job.id"},
+	"job.retry":         {"job.id"},
+	"job.delete":        {"job.id"},
+	"agent.get":         {"osapi.target"},
+	"agent.timeline":    {"osapi.agent.hostname"},
+	"enrollment.accept": {"osapi.agent.hostname", "osapi.agent.fingerprint"},
+	"enrollment.reject": {"osapi.agent.hostname"},
+	"enrollment.remove": {"osapi.agent.hostname"},
+	"audit.get":         {"osapi.audit.id"},
+	"traces.read":       {"osapi.trace.id"},
+}
+
+// opCounts are the attributes that count what an operation read, and the
+// nouns of the count: job.list's job.count is "2 jobs".
+var opCounts = []struct{ key, one, many string }{
+	{"job.count", "job", "jobs"},
+	{"osapi.agent.count", "agent", "agents"},
+	{"osapi.audit.count", "entry", "entries"},
+	{"osapi.trace.spans", "span", "spans"},
+}
+
 // TraceRows returns the rows of a trace's span tree, each with its SPAN,
 // HOSTNAME, DURATION, STATUS and DETAIL. Without all, it leaves out the
 // spans of NATS calls, the bookkeeping of the queue, and NATSCalls counts
@@ -167,6 +191,16 @@ func spanDetail(
 	}
 	if key := s.Attributes["nats.kv.key"]; key != "" {
 		return keyMeaning(key, s.Attributes["db.namespace"])
+	}
+	for _, c := range opCounts {
+		if n, err := strconv.Atoi(s.Attributes[c.key]); err == nil {
+			return Plural(n, c.one, c.many)
+		}
+	}
+	for _, k := range opDetail[s.Name] {
+		if v := s.Attributes[k]; v != "" {
+			return v
+		}
 	}
 	if s.Name == "kv.keys" {
 		return "list keys in " + s.Attributes["db.namespace"]
