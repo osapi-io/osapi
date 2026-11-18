@@ -29,18 +29,15 @@
 package main
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
-	"github.com/dave/jennifer/jen"
+	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/genfile"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"golang.org/x/tools/imports"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
@@ -77,24 +74,16 @@ func main() {
 	}
 }
 
-// writer writes the generated files under root and remembers the Go ones,
-// relative to root, where the formatter runs, to format them once at the
-// end.
-type writer struct {
-	root string
-	gofs []string
-}
-
 func run(
 	root string,
 ) error {
-	w := &writer{root: root}
+	w := &genfile.Writer{Root: root}
 
 	for _, b := range behavior.All() {
 		// Every behavior has a docs page, internal ones included, so the
 		// docs list everything the binary has.
 		dir := command.DocsDir(b)
-		if err := w.write(filepath.Join(dir, b.Name+".md"), []byte(command.IndexPage(b))); err != nil {
+		if err := w.Write(filepath.Join(dir, b.Name+".md"), []byte(command.IndexPage(b))); err != nil {
 			return err
 		}
 		if !b.API && !b.CLI {
@@ -102,35 +91,38 @@ func run(
 		}
 
 		gen := filepath.Join(strings.TrimPrefix(pkgPath(b), module+"/"), "gen")
-		if err := w.clean(gen); err != nil {
+		if err := w.Clean(gen); err != nil {
 			return err
 		}
-		if err := w.behavior(b, gen); err != nil {
+		if err := writeBehavior(w, b, gen); err != nil {
 			return fmt.Errorf("%s: %w", b.Name, err)
 		}
 
 		// A behavior with commands had a page per method here. Its commands
 		// have their pages in the CLI reference now, so the old ones go.
 		for _, m := range b.Methods {
-			if err := w.remove(filepath.Join(dir, m.Name+".mdx")); err != nil {
+			if err := w.Remove(filepath.Join(dir, m.Name+".mdx")); err != nil {
 				return err
 			}
 		}
 	}
 
 	catalog := filepath.Join(filepath.Dir(command.DocsDir(behavior.All()[0])), "_catalog.mdx")
-	if err := w.write(catalog, []byte(command.CatalogPage(behavior.All()))); err != nil {
+	if err := w.Write(catalog, []byte(command.CatalogPage(behavior.All()))); err != nil {
 		return err
 	}
-	if err := w.goFile("internal/behaviors/all/gen/gen.go", allFile(behavior.All())); err != nil {
+	if err := w.Registry("internal/behaviors/all/gen", generated, wrap("Package gen imports the "+
+		"generated code of every behavior with an API or a CLI: its commands and its routes.", 76),
+		served(behavior.All())); err != nil {
 		return err
 	}
 
-	return w.format()
+	return w.Format()
 }
 
 // behavior writes b's gen directory.
-func (w *writer) behavior(
+func writeBehavior(
+	w *genfile.Writer,
 	b *behavior.Behavior,
 	gen string,
 ) error {
@@ -141,13 +133,13 @@ func (w *writer) behavior(
 		if err != nil {
 			return fmt.Errorf("group: %w", err)
 		}
-		if err := w.goFile(filepath.Join(gen, "group.go"), g); err != nil {
+		if err := w.Go(filepath.Join(gen, "group.go"), g); err != nil {
 			return err
 		}
 		// The routes and the decoders, gen/api.go and gen/decode.go, come
 		// from the group too: internal/behavior/gen/group writes them with the
 		// endpoint layer's route writer.
-		if err := w.goFile(filepath.Join(gen, "api_public_test.go"), apiTestFile(b)); err != nil {
+		if err := w.Go(filepath.Join(gen, "api_public_test.go"), apiTestFile(b)); err != nil {
 			return err
 		}
 		for _, m := range b.Methods {
@@ -155,7 +147,7 @@ func (w *writer) behavior(
 			if err != nil {
 				return err
 			}
-			if err := w.goFile(filepath.Join(gen, "api_"+m.Name+"_public_test.go"), t); err != nil {
+			if err := w.Go(filepath.Join(gen, "api_"+m.Name+"_public_test.go"), t); err != nil {
 				return err
 			}
 		}
@@ -166,99 +158,4 @@ func (w *writer) behavior(
 	// command writer.
 
 	return nil
-}
-
-// clean removes the generated files in dir, so a method that is gone
-// leaves no handler behind.
-func (w *writer) clean(
-	dir string,
-) error {
-	entries, err := os.ReadDir(filepath.Join(w.root, dir))
-	if os.IsNotExist(err) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	for _, e := range entries {
-		p := filepath.Join(w.root, dir, e.Name())
-		data, err := os.ReadFile(p)
-		if err != nil {
-			return err
-		}
-		if strings.HasPrefix(string(data), "// Code generated") ||
-			strings.HasPrefix(string(data), "# Code generated") {
-			if err := os.Remove(p); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-// goFile renders f to rel.
-func (w *writer) goFile(
-	rel string,
-	f *jen.File,
-) error {
-	var buf bytes.Buffer
-	if err := f.Render(&buf); err != nil {
-		return fmt.Errorf("%s: %w", rel, err)
-	}
-	// jen puts every import in one block; goimports groups them the way the
-	// repository does: the standard library, then other modules, then this
-	// one.
-	imports.LocalPrefix = module
-	src, err := imports.Process(rel, buf.Bytes(), &imports.Options{
-		Comments:   true,
-		TabIndent:  true,
-		TabWidth:   8,
-		FormatOnly: true,
-	})
-	if err != nil {
-		return fmt.Errorf("%s: %w", rel, err)
-	}
-	w.gofs = append(w.gofs, rel)
-
-	return w.write(rel, src)
-}
-
-// format runs the repository's formatters over every Go file written, so
-// the generated code reads, and passes the format check, like the rest.
-func (w *writer) format() error {
-	args := append([]string{
-		"tool", "github.com/segmentio/golines",
-		"--base-formatter=go tool mvdan.cc/gofumpt", "-w",
-	}, w.gofs...)
-	cmd := exec.Command("go", args...)
-	cmd.Dir = w.root
-	if out, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("format: %w: %s", err, out)
-	}
-
-	return nil
-}
-
-// remove deletes rel if it is there.
-func (w *writer) remove(
-	rel string,
-) error {
-	if err := os.Remove(filepath.Join(w.root, rel)); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return err
-	}
-
-	return nil
-}
-
-func (w *writer) write(
-	rel string,
-	data []byte,
-) error {
-	p := filepath.Join(w.root, rel)
-	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-		return err
-	}
-
-	return os.WriteFile(p, data, 0o644)
 }

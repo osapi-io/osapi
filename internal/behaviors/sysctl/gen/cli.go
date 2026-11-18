@@ -3,9 +3,10 @@
 package gen
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
-	"github.com/spf13/cobra"
 )
 
 var sysctlListCmd = &cobra.Command{
