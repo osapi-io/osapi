@@ -140,8 +140,8 @@ type PackageInfo struct {
 
 // PackageInstallRequest defines model for PackageInstallRequest.
 type PackageInstallRequest struct {
-	// Name Name of the package to install.
-	Name string `json:"name" validate:"required,min=1"`
+	// Name Name of the package to install. It starts with a letter or digit, and may have an architecture or a version.
+	Name string `json:"name" validate:"required,package_name"`
 }
 
 // PackageMutationResponse defines model for PackageMutationResponse.
@@ -743,7 +743,7 @@ func (response PostNodePackageUpdate500JSONResponse) VisitPostNodePackageUpdateR
 
 type DeleteNodePackageRequestObject struct {
 	Hostname Hostname    `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     PackageName `json:"name" validate:"required,min=1"`
+	Name     PackageName `json:"name" validate:"required,package_name"`
 }
 
 type DeleteNodePackageResponseObject interface {
@@ -836,7 +836,7 @@ func (response DeleteNodePackage500JSONResponse) VisitDeleteNodePackageResponse(
 
 type GetNodePackageByNameRequestObject struct {
 	Hostname Hostname    `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     PackageName `json:"name" validate:"required,min=1"`
+	Name     PackageName `json:"name" validate:"required,package_name"`
 }
 
 type GetNodePackageByNameResponseObject interface {

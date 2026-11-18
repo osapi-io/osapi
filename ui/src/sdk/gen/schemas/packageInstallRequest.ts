@@ -6,6 +6,9 @@
  */
 
 export interface PackageInstallRequest {
-  /** Name of the package to install. */
+  /**
+     * Name of the package to install. It starts with a letter or digit, and may have an architecture or a version.
+     * @pattern ^[a-zA-Z0-9][a-zA-Z0-9.+_:~=-]*$
+     */
   name: string;
 }

@@ -792,6 +792,45 @@ func (s *ValidationPublicTestSuite) TestNATSName() {
 	})
 }
 
+func (s *ValidationPublicTestSuite) TestPackageName() {
+	tests := []struct {
+		name  string
+		field string
+		valid bool
+	}{
+		{name: "when a plain name", field: "nginx", valid: true},
+		{name: "when a name with a plus and a dot", field: "libstdc++6.0", valid: true},
+		{name: "when a name with an architecture", field: "nginx:amd64", valid: true},
+		{name: "when a name with a version", field: "nginx=1.24.0-1~deb12u1", valid: true},
+		{
+			name:  "when it starts with a hyphen, which reads as an option",
+			field: "-oDpkg::Pre-Invoke::=x",
+			valid: false,
+		},
+		{name: "when it starts with a dot", field: ".hidden", valid: false},
+		{name: "when it has a space", field: "nginx curl", valid: false},
+		{name: "when it has a slash", field: "../nginx", valid: false},
+		{name: "when empty", field: "", valid: false},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			_, ok := validation.Var(tt.field, "package_name")
+			s.Equal(tt.valid, ok)
+		})
+	}
+
+	s.Run("an invalid name shows its hint through struct validation", func() {
+		type pkgReq struct {
+			Name string `validate:"required,package_name"`
+		}
+
+		errMsg, ok := validation.Struct(pkgReq{Name: "-y"})
+		s.False(ok)
+		s.Contains(errMsg, "not a valid package name")
+	})
+}
+
 func (s *ValidationPublicTestSuite) TestContainerID() {
 	tests := []struct {
 		name  string

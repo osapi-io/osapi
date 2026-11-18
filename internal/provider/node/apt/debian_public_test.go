@@ -196,6 +196,13 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			errContains: "package \"removed-pkg\": not found",
 		},
 		{
+			name:        "when the name would be read as an option, nothing runs",
+			pkgName:     "-oAPT::Get::Assume-Yes=true",
+			setupMock:   func() {},
+			wantErr:     true,
+			errContains: "invalid name",
+		},
+		{
 			name:    "when exec error",
 			pkgName: "vim",
 			setupMock: func() {
@@ -251,6 +258,13 @@ func (suite *DebianPublicTestSuite) TestInstall() {
 			},
 		},
 		{
+			name:        "when the name would be read as an option, nothing runs",
+			pkgName:     "-oAPT::Get::Assume-Yes=true",
+			setupMock:   func() {},
+			wantErr:     true,
+			errContains: "invalid name",
+		},
+		{
 			name:    "when exec error",
 			pkgName: "badpkg",
 			setupMock: func() {
@@ -304,6 +318,13 @@ func (suite *DebianPublicTestSuite) TestRemove() {
 				suite.Equal("vim", result.Name)
 				suite.True(result.Changed)
 			},
+		},
+		{
+			name:        "when the name would be read as an option, nothing runs",
+			pkgName:     "-oAPT::Get::Assume-Yes=true",
+			setupMock:   func() {},
+			wantErr:     true,
+			errContains: "invalid name",
 		},
 		{
 			name:    "when exec error",

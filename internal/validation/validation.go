@@ -86,6 +86,11 @@ var natsNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 // cannot be mistaken for a command-line option.
 var containerIDPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_.-]*$`)
 
+// packageNamePattern matches a package name as apt and dpkg take it, with an
+// architecture (:amd64) or a version (=1.2-1). The first character is a
+// letter or digit, so the package manager cannot read the name as an option.
+var packageNamePattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9.+_:~=-]*$`)
+
 func init() {
 	// valid_target is registered here, so a struct that has it validates
 	// before the controller starts, as the validate command needs. With no
@@ -170,6 +175,12 @@ func init() {
 		return containerIDPattern.MatchString(fl.Field().String())
 	})
 
+	// package_name validates a package name, which reaches the package
+	// manager's command line as root.
+	_ = instance.RegisterValidation("package_name", func(fl validator.FieldLevel) bool {
+		return packageNamePattern.MatchString(fl.Field().String())
+	})
+
 	// no_linebreak rejects values containing a carriage return or line feed,
 	// which would let the value inject additional lines into a config file.
 	_ = instance.RegisterValidation("no_linebreak", func(fl validator.FieldLevel) bool {
@@ -185,6 +196,7 @@ func init() {
 	rule.Register("resource_name", rule.Pattern(resourceNamePattern.String()))
 	rule.Register("nats_name", rule.Pattern(natsNamePattern.String()))
 	rule.Register("container_id", rule.Pattern(containerIDPattern.String()))
+	rule.Register("package_name", rule.Pattern(packageNamePattern.String()))
 	rule.Register("account_name", rule.Pattern(accountNamePattern.String()))
 	// A pattern cannot say what these check: a target the controller
 	// resolves, a known fact key, a duration or a cron expression that a
@@ -277,6 +289,13 @@ var customHints = map[string]func(fe validator.FieldError) string{
 			"%q is not a valid NATS bucket name (expected: %s)",
 			fe.Value(),
 			natsNamePattern.String(),
+		)
+	},
+	"package_name": func(fe validator.FieldError) string {
+		return fmt.Sprintf(
+			"%q is not a valid package name (expected: %s)",
+			fe.Value(),
+			packageNamePattern.String(),
 		)
 	},
 	"container_id": func(fe validator.FieldError) string {

@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -75,11 +76,31 @@ func (d *Debian) List(
 	return d.parsePackages(output), nil
 }
 
+// validName matches a package name that apt and dpkg cannot read as an
+// option: a letter or digit first. The API checks the same rule,
+// package_name; this one holds for any caller.
+var validName = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9.+_:~=-]*$`)
+
+// checkName refuses a package name that the package manager could read as
+// an option.
+func checkName(
+	name string,
+) error {
+	if !validName.MatchString(name) {
+		return fmt.Errorf("package: invalid name %q: want %s", name, validName)
+	}
+
+	return nil
+}
+
 // Get returns details for a single installed package.
 func (d *Debian) Get(
 	ctx context.Context,
 	name string,
 ) (*Package, error) {
+	if err := checkName(name); err != nil {
+		return nil, err
+	}
 	output, err := d.execManager.RunCmd(
 		ctx,
 		"dpkg-query",
@@ -102,6 +123,9 @@ func (d *Debian) Install(
 	ctx context.Context,
 	name string,
 ) (*Result, error) {
+	if err := checkName(name); err != nil {
+		return nil, err
+	}
 	_, err := d.execManager.RunPrivilegedCmd(
 		ctx,
 		"apt-get",
@@ -127,6 +151,9 @@ func (d *Debian) Remove(
 	ctx context.Context,
 	name string,
 ) (*Result, error) {
+	if err := checkName(name); err != nil {
+		return nil, err
+	}
 	_, err := d.execManager.RunPrivilegedCmd(
 		ctx,
 		"apt-get",
