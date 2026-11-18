@@ -184,7 +184,7 @@ func main() {
 	// Clean up uploaded objects from the Object Store.
 	fmt.Println("\n=== Cleaning up uploaded objects ===")
 	for _, name := range []string{"backup-script", "backup-script-v2", "logrotate-script"} {
-		_, err = c.File.Delete(ctx, name)
+		err = c.File.Delete(ctx, name)
 		if err != nil {
 			log.Fatalf("delete object %s failed: %v", name, err)
 		}

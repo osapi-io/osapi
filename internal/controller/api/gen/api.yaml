@@ -1205,19 +1205,6 @@ paths:
       security:
         - BearerAuth:
             - file:write
-      parameters:
-        - name: force
-          in: query
-          required: false
-          x-oapi-codegen-extra-tags:
-            validate: omitempty
-          description: >
-            When true, bypass the digest check and always write the file.
-            Returns changed=true regardless of whether the content differs from
-            the existing object.
-          schema:
-            type: boolean
-            default: false
       requestBody:
         description: The file to upload.
         required: true
@@ -1256,7 +1243,7 @@ paths:
       responses:
         '200':
           description: |
-            The file existed: unchanged, or replaced with force.
+            The file exists with the same content. Nothing changed.
           content:
             application/json:
               schema:
@@ -1292,8 +1279,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '409':
           description: >
-            File already exists with different content. Use ?force=true to
-            overwrite.
+            The file exists with different content. Replace it with PUT
+            /api/file/{name}.
           content:
             application/json:
               schema:
@@ -1423,6 +1410,89 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Error retrieving file metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Replace a file
+      description: |
+        Replace a file in the Object Store, or create it when the name is new.
+      tags:
+        - File_Management_API_file_operations
+      operationId: PutFileByName
+      security:
+        - BearerAuth:
+            - file:write
+      parameters:
+        - $ref: '#/components/parameters/FileName'
+      requestBody:
+        description: The new content of the file.
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                content_type:
+                  type: string
+                  description: >
+                    How the file should be treated during deploy. "raw" writes
+                    bytes as-is; "template" renders with Go text/template and
+                    agent facts.
+                  default: raw
+                  enum:
+                    - raw
+                    - template
+                  x-oapi-codegen-extra-tags:
+                    validate: omitempty,oneof=raw template
+                file:
+                  type: string
+                  format: binary
+                  description: The file content.
+                  x-oapi-codegen-extra-tags:
+                    validate: required,min=1
+              required:
+                - file
+      responses:
+        '200':
+          description: |
+            The file existed. changed says whether its content changed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadResponse'
+        '201':
+          description: The file is new.
+          headers:
+            Location:
+              description: The URL of the file that the request created.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error replacing file.
           content:
             application/json:
               schema:

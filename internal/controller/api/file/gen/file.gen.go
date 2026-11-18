@@ -23,16 +23,34 @@ const (
 
 // Defines values for PostFileMultipartBodyContentType.
 const (
-	Raw      PostFileMultipartBodyContentType = "raw"
-	Template PostFileMultipartBodyContentType = "template"
+	PostFileMultipartBodyContentTypeRaw      PostFileMultipartBodyContentType = "raw"
+	PostFileMultipartBodyContentTypeTemplate PostFileMultipartBodyContentType = "template"
 )
 
 // Valid indicates whether the value is a known member of the PostFileMultipartBodyContentType enum.
 func (e PostFileMultipartBodyContentType) Valid() bool {
 	switch e {
-	case Raw:
+	case PostFileMultipartBodyContentTypeRaw:
 		return true
-	case Template:
+	case PostFileMultipartBodyContentTypeTemplate:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PutFileByNameMultipartBodyContentType.
+const (
+	PutFileByNameMultipartBodyContentTypeRaw      PutFileByNameMultipartBodyContentType = "raw"
+	PutFileByNameMultipartBodyContentTypeTemplate PutFileByNameMultipartBodyContentType = "template"
+)
+
+// Valid indicates whether the value is a known member of the PutFileByNameMultipartBodyContentType enum.
+func (e PutFileByNameMultipartBodyContentType) Valid() bool {
+	switch e {
+	case PutFileByNameMultipartBodyContentTypeRaw:
+		return true
+	case PutFileByNameMultipartBodyContentTypeTemplate:
 		return true
 	default:
 		return false
@@ -152,17 +170,26 @@ type PostFileMultipartBody struct {
 	Name string `json:"name" validate:"required,min=1,max=255"`
 }
 
-// PostFileParams defines parameters for PostFile.
-type PostFileParams struct {
-	// Force When true, bypass the digest check and always write the file. Returns changed=true regardless of whether the content differs from the existing object.
-	Force *bool `form:"force,omitempty" json:"force,omitempty" validate:"omitempty"`
-}
-
 // PostFileMultipartBodyContentType defines parameters for PostFile.
 type PostFileMultipartBodyContentType string
 
+// PutFileByNameMultipartBody defines parameters for PutFileByName.
+type PutFileByNameMultipartBody struct {
+	// ContentType How the file should be treated during deploy. "raw" writes bytes as-is; "template" renders with Go text/template and agent facts.
+	ContentType *PutFileByNameMultipartBodyContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
+
+	// File The file content.
+	File openapi_types.File `json:"file" validate:"required,min=1"`
+}
+
+// PutFileByNameMultipartBodyContentType defines parameters for PutFileByName.
+type PutFileByNameMultipartBodyContentType string
+
 // PostFileMultipartRequestBody defines body for PostFile for multipart/form-data ContentType.
 type PostFileMultipartRequestBody PostFileMultipartBody
+
+// PutFileByNameMultipartRequestBody defines body for PutFileByName for multipart/form-data ContentType.
+type PutFileByNameMultipartRequestBody PutFileByNameMultipartBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -171,7 +198,7 @@ type ServerInterface interface {
 	GetFiles(ctx *echo.Context) error
 	// Upload a file
 	// (POST /api/file)
-	PostFile(ctx *echo.Context, params PostFileParams) error
+	PostFile(ctx *echo.Context) error
 	// List stale file deployments
 	// (GET /api/file/stale)
 	GetFileStale(ctx *echo.Context) error
@@ -181,6 +208,9 @@ type ServerInterface interface {
 	// Get file metadata
 	// (GET /api/file/{name})
 	GetFileByName(ctx *echo.Context, name FileName) error
+	// Replace a file
+	// (PUT /api/file/{name})
+	PutFileByName(ctx *echo.Context, name FileName) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -205,17 +235,8 @@ func (w *ServerInterfaceWrapper) PostFile(ctx *echo.Context) error {
 
 	ctx.Set(string(BearerAuthScopes), []string{"file:write"})
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params PostFileParams
-	// ------------- Optional query parameter "force" -------------
-
-	err = runtime.BindQueryParameterWithOptions("form", true, false, "force", ctx.QueryParams(), &params.Force, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter force: %s", err))
-	}
-
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostFile(ctx, params)
+	err = w.Handler.PostFile(ctx)
 	return err
 }
 
@@ -263,6 +284,24 @@ func (w *ServerInterfaceWrapper) GetFileByName(ctx *echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetFileByName(ctx, name)
+	return err
+}
+
+// PutFileByName converts echo context to params.
+func (w *ServerInterfaceWrapper) PutFileByName(ctx *echo.Context) error {
+	var err error
+	// ------------- Path parameter "name" -------------
+	var name FileName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", ctx.Param("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter name: %s", err))
+	}
+
+	ctx.Set(string(BearerAuthScopes), []string{"file:write"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PutFileByName(ctx, name)
 	return err
 }
 
@@ -318,6 +357,7 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 	router.GET(options.BaseURL+"/api/file/stale", wrapper.GetFileStale, options.OperationMiddlewares["GetFileStale"]...)
 	router.DELETE(options.BaseURL+"/api/file/:name", wrapper.DeleteFileByName, options.OperationMiddlewares["DeleteFileByName"]...)
 	router.GET(options.BaseURL+"/api/file/:name", wrapper.GetFileByName, options.OperationMiddlewares["GetFileByName"]...)
+	router.PUT(options.BaseURL+"/api/file/:name", wrapper.PutFileByName, options.OperationMiddlewares["PutFileByName"]...)
 
 }
 
@@ -385,8 +425,7 @@ func (response GetFiles500JSONResponse) VisitGetFilesResponse(w http.ResponseWri
 }
 
 type PostFileRequestObject struct {
-	Params PostFileParams
-	Body   *multipart.Reader
+	Body *multipart.Reader
 }
 
 type PostFileResponseObject interface {
@@ -742,6 +781,109 @@ func (response GetFileByName500JSONResponse) VisitGetFileByNameResponse(w http.R
 	return err
 }
 
+type PutFileByNameRequestObject struct {
+	Name FileName `json:"name" validate:"required,min=1,max=255"`
+	Body *multipart.Reader
+}
+
+type PutFileByNameResponseObject interface {
+	VisitPutFileByNameResponse(w http.ResponseWriter) error
+}
+
+type PutFileByName200JSONResponse FileUploadResponse
+
+func (response PutFileByName200JSONResponse) VisitPutFileByNameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutFileByName201ResponseHeaders struct {
+	Location *string
+}
+
+type PutFileByName201JSONResponse struct {
+	Body    FileUploadResponse
+	Headers PutFileByName201ResponseHeaders
+}
+
+func (response PutFileByName201JSONResponse) VisitPutFileByNameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.Location != nil {
+		w.Header().Set("Location", fmt.Sprint(*response.Headers.Location))
+	}
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutFileByName400JSONResponse externalRef0.ErrorResponse
+
+func (response PutFileByName400JSONResponse) VisitPutFileByNameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutFileByName401JSONResponse externalRef0.ErrorResponse
+
+func (response PutFileByName401JSONResponse) VisitPutFileByNameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutFileByName403JSONResponse externalRef0.ErrorResponse
+
+func (response PutFileByName403JSONResponse) VisitPutFileByNameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutFileByName500JSONResponse externalRef0.ErrorResponse
+
+func (response PutFileByName500JSONResponse) VisitPutFileByNameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List stored files
@@ -759,6 +901,9 @@ type StrictServerInterface interface {
 	// Get file metadata
 	// (GET /api/file/{name})
 	GetFileByName(ctx context.Context, request GetFileByNameRequestObject) (GetFileByNameResponseObject, error)
+	// Replace a file
+	// (PUT /api/file/{name})
+	PutFileByName(ctx context.Context, request PutFileByNameRequestObject) (PutFileByNameResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx *echo.Context, request any) (any, error)
@@ -797,10 +942,8 @@ func (sh *strictHandler) GetFiles(ctx *echo.Context) error {
 }
 
 // PostFile operation middleware
-func (sh *strictHandler) PostFile(ctx *echo.Context, params PostFileParams) error {
+func (sh *strictHandler) PostFile(ctx *echo.Context) error {
 	var request PostFileRequestObject
-
-	request.Params = params
 
 	if reader, err := ctx.Request().MultipartReader(); err != nil {
 		return err
@@ -894,6 +1037,37 @@ func (sh *strictHandler) GetFileByName(ctx *echo.Context, name FileName) error {
 		return err
 	} else if validResponse, ok := response.(GetFileByNameResponseObject); ok {
 		return validResponse.VisitGetFileByNameResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// PutFileByName operation middleware
+func (sh *strictHandler) PutFileByName(ctx *echo.Context, name FileName) error {
+	var request PutFileByNameRequestObject
+
+	request.Name = name
+
+	if reader, err := ctx.Request().MultipartReader(); err != nil {
+		return err
+	} else {
+		request.Body = reader
+	}
+
+	handler := func(ctx *echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PutFileByName(ctx.Request().Context(), request.(PutFileByNameRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutFileByName")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(PutFileByNameResponseObject); ok {
+		return validResponse.VisitPutFileByNameResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

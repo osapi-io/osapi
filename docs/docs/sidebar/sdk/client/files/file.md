@@ -11,14 +11,15 @@ delete files that you can deploy to agents with `Node.FileDeploy`.
 
 ### Object Store
 
-| Method                          | Description                                          |
-| ------------------------------- | ---------------------------------------------------- |
-| `Upload(ctx, name, ct, r, ...)` | Upload file content to Object Store                  |
-| `Changed(ctx, name, r)`         | Check if local content differs from stored file      |
-| `List(ctx)`                     | List all stored files                                |
-| `Get(ctx, name)`                | Get file metadata by name                            |
-| `Delete(ctx, name)`             | Delete a file from Object Store                      |
-| `Stale(ctx)`                    | List stale deployments (object updated since deploy) |
+| Method                     | Description                                          |
+| -------------------------- | ---------------------------------------------------- |
+| `Upload(ctx, name, ct, r)` | Create a file in the Object Store                    |
+| `Update(ctx, name, ct, r)` | Replace a file, or create it when the name is new    |
+| `Changed(ctx, name, r)`    | Check if local content differs from stored file      |
+| `List(ctx)`                | List all stored files                                |
+| `Get(ctx, name)`           | Get file metadata by name                            |
+| `Delete(ctx, name)`        | Delete a file from Object Store                      |
+| `Stale(ctx)`               | List stale deployments (object updated since deploy) |
 
 ### Node File Operations
 
@@ -44,12 +45,6 @@ specific host:
 | `Vars`        | map[string]any | No       | Template variables for `"template"`  |
 | `Target`      | string         | Yes      | Host target (see Targeting below)    |
 
-## Upload Options
-
-| Option        | Description                                             |
-| ------------- | ------------------------------------------------------- |
-| `WithForce()` | Bypass SDK-side and server-side SHA check; always write |
-
 ## Usage
 
 ```go
@@ -58,10 +53,9 @@ resp, err := client.File.Upload(
     ctx, "nginx.conf", "raw", bytes.NewReader(data),
 )
 
-// Force upload — skip SHA-256 check, always write.
-resp, err := client.File.Upload(
+// Replace a file that exists, or create it.
+resp, err := client.File.Update(
     ctx, "nginx.conf", "raw", bytes.NewReader(data),
-    client.WithForce(),
 )
 
 // Check if content differs without uploading.
@@ -109,7 +103,7 @@ resp, err := client.FileDeploy.Status(
 
 // List stale deployments (objects updated since deploy).
 stale, err := client.File.Stale(ctx)
-for _, s := range stale.Data.Stale {
+for _, s := range stale.Data.Items {
     fmt.Printf("%s on %s is stale\n", s.ObjectName, s.Hostname)
 }
 ```
@@ -126,7 +120,8 @@ do not use targeting.
 
 `Upload` calculates the SHA-256 of the file content locally before it uploads
 the file. If the hash matches the stored file, the upload is skipped and
-`Changed: false` is returned. Use `WithForce()` to bypass this check.
+`Changed: false` is returned. A file with other content is a `ConflictError`;
+`Update` replaces it.
 
 `Changed` does the same SHA-256 comparison, but does not upload. It returns
 `Changed: true` when the file does not exist or the content differs.

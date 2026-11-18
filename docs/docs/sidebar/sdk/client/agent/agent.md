@@ -17,7 +17,7 @@ Agent discovery, details, and lifecycle management.
 | `ListPending(ctx)`                   | List agents awaiting PKI enrollment   |
 | `Accept(ctx, hostname, fingerprint)` | Accept a pending enrollment request   |
 | `Reject(ctx, hostname)`              | Reject a pending enrollment request   |
-| `Remove(ctx, hostname, machineID)`   | Remove an enrolled agent's stored key |
+| `Delete(ctx, hostname, machineID)`   | Delete an enrolled agent's stored key |
 
 ## Usage
 
@@ -28,7 +28,7 @@ c := client.New("http://localhost:8080", token)
 
 // List all agents
 resp, err := c.Agent.List(ctx)
-for _, a := range resp.Data.Agents {
+for _, a := range resp.Data.Items {
     fmt.Printf("%s  status=%s\n", a.Hostname, a.Status)
 }
 
@@ -36,10 +36,10 @@ for _, a := range resp.Data.Agents {
 resp, err := c.Agent.Get(ctx, "web-01")
 
 // Drain an agent (stop new jobs)
-resp, err := c.Agent.Drain(ctx, "web-01")
+err := c.Agent.Drain(ctx, "web-01")
 
 // Undrain an agent (resume jobs)
-resp, err := c.Agent.Undrain(ctx, "web-01")
+err := c.Agent.Undrain(ctx, "web-01")
 ```
 
 ### Enrollment
@@ -50,23 +50,23 @@ before they join the fleet.
 ```go
 // List pending enrollment requests
 pending, err := c.Agent.ListPending(ctx)
-for _, a := range pending.Data.Agents {
+for _, a := range pending.Data.Items {
     fmt.Printf("%s  fingerprint=%s\n",
         a.Hostname, a.Fingerprint)
 }
 
 // Accept by hostname
-resp, err := c.Agent.Accept(ctx, "web-01", "")
+err := c.Agent.Accept(ctx, "web-01", "")
 
 // Accept by fingerprint
-resp, err := c.Agent.Accept(ctx, "web-01", "SHA256:ab12cd34...")
+err := c.Agent.Accept(ctx, "web-01", "SHA256:ab12cd34...")
 
 // Reject
-resp, err := c.Agent.Reject(ctx, "web-01")
+err := c.Agent.Reject(ctx, "web-01")
 
-// Remove an enrolled agent. Pass a machine ID when two agents share the
+// Delete an enrolled agent. Pass a machine ID when two agents share the
 // hostname; otherwise the call returns a ConflictError naming both.
-resp, err := c.Agent.Remove(ctx, "web-01", "")
+err := c.Agent.Delete(ctx, "web-01", "")
 ```
 
 ## Examples
@@ -92,12 +92,13 @@ for PKI enrollment operations.
 
 ### `PendingAgentList`
 
-| Field    | Type             | Description                    |
-| -------- | ---------------- | ------------------------------ |
-| `Agents` | `[]PendingAgent` | List of pending agents         |
-| `Total`  | `int`            | Total number of pending agents |
+| Field        | Type             | Description                    |
+| ------------ | ---------------- | ------------------------------ |
+| `Items`      | `[]PendingAgent` | List of pending agents         |
+| `TotalItems` | `int`            | Total number of pending agents |
 
 ## Permissions
 
 Requires `agent:read` for List, Get, and ListPending. Drain, Undrain, Accept,
-Reject, and Remove require `agent:write`.
+Reject, and Delete require `agent:write`. Drain, Undrain, Accept, Reject and
+Delete return only an error: the API answers 204.

@@ -72,20 +72,19 @@ func main() {
 
 	fmt.Printf("Changed: name=%s changed=%v\n", chk.Data.Name, chk.Data.Changed)
 
-	// Force upload bypasses both SDK-side and server-side checks.
-	force, err := c.File.Upload(
+	// Update replaces the file, or creates it when the name is new.
+	updated, err := c.File.Update(
 		ctx,
 		"app.conf",
 		"raw",
 		bytes.NewReader(content),
-		client.WithForce(),
 	)
 	if err != nil {
-		log.Fatalf("force upload: %v", err)
+		log.Fatalf("update: %v", err)
 	}
 
-	fmt.Printf("Force upload: name=%s changed=%v\n",
-		force.Data.Name, force.Data.Changed)
+	fmt.Printf("Update: name=%s changed=%v\n",
+		updated.Data.Name, updated.Data.Changed)
 
 	// List all stored files.
 	list, err := c.File.List(ctx)
@@ -148,11 +147,9 @@ func main() {
 	}
 
 	// Clean up — delete the file from the Object Store.
-	del, err := c.File.Delete(ctx, "app.conf")
-	if err != nil {
+	if err := c.File.Delete(ctx, "app.conf"); err != nil {
 		log.Fatalf("delete: %v", err)
 	}
 
-	fmt.Printf("\nDeleted: name=%s deleted=%v\n",
-		del.Data.Name, del.Data.Deleted)
+	fmt.Println("\nDeleted: app.conf")
 }

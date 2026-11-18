@@ -10,7 +10,7 @@ import type {
   FileListResponse,
   FileUploadResponse,
   PostFileBody,
-  PostFileParams,
+  PutFileByNameBody,
   StaleDeploymentsResponse
 } from '../schemas';
 
@@ -60,27 +60,19 @@ export type postFileResponseError = (postFileResponse400 | postFileResponse401 |
 
 export type postFileResponse = (postFileResponseSuccess | postFileResponseError)
 
-export const getPostFileUrl = (params?: PostFileParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getPostFileUrl = () => {
 
-  Object.entries(params || {}).forEach(([key, value]) => {
 
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
 
-  const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/file?${stringifiedParams}` : `/api/file`
+  return `/api/file`
 }
 
 /**
  * Upload a file to the Object Store.
  * @summary Upload a file
  */
-export const postFile = async (postFileBody: PostFileBody,
-    params?: PostFileParams, options?: Parameters<typeof apiFetch>[1]): Promise<postFileResponse> => {
+export const postFile = async (postFileBody: PostFileBody, options?: Parameters<typeof apiFetch>[1]): Promise<postFileResponse> => {
     const formData = new FormData();
 formData.append(`name`, postFileBody.name);
 if(postFileBody.content_type !== undefined) {
@@ -88,7 +80,7 @@ if(postFileBody.content_type !== undefined) {
  }
 formData.append(`file`, postFileBody.file);
 
-  return apiFetch<postFileResponse>(getPostFileUrl(params),
+  return apiFetch<postFileResponse>(getPostFileUrl(),
   {
     ...options,
     method: 'POST'
@@ -263,6 +255,75 @@ export const getFileByName = async (name: string, options?: Parameters<typeof ap
     method: 'GET'
 
 
+  }
+);}
+
+
+export type putFileByNameResponse200 = {
+  data: FileUploadResponse
+  status: 200
+}
+
+export type putFileByNameResponse201 = {
+  data: FileUploadResponse
+  status: 201
+}
+
+export type putFileByNameResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type putFileByNameResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type putFileByNameResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type putFileByNameResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type putFileByNameResponseSuccess = (putFileByNameResponse200 | putFileByNameResponse201) & {
+  headers: Headers;
+};
+export type putFileByNameResponseError = (putFileByNameResponse400 | putFileByNameResponse401 | putFileByNameResponse403 | putFileByNameResponse500) & {
+  headers: Headers;
+};
+
+export type putFileByNameResponse = (putFileByNameResponseSuccess | putFileByNameResponseError)
+
+export const getPutFileByNameUrl = (name: string,) => {
+
+
+
+
+  return `/api/file/${name}`
+}
+
+/**
+ * Replace a file in the Object Store, or create it when the name is new.
+ * @summary Replace a file
+ */
+export const putFileByName = async (name: string,
+    putFileByNameBody: PutFileByNameBody, options?: Parameters<typeof apiFetch>[1]): Promise<putFileByNameResponse> => {
+    const formData = new FormData();
+if(putFileByNameBody.content_type !== undefined) {
+ formData.append(`content_type`, putFileByNameBody.content_type);
+ }
+formData.append(`file`, putFileByNameBody.file);
+
+  return apiFetch<putFileByNameResponse>(getPutFileByNameUrl(name),
+  {
+    ...options,
+    method: 'PUT'
+    ,
+    body: formData
   }
 );}
 

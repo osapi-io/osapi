@@ -47,12 +47,12 @@ expected SHA-256 from the file-state KV bucket. It reports one of three states:
 1. If the file is new or the SHA is different, the CLI sends the file in a
    multipart upload.
 1. On the server, if a file with the same name exists and the content is
-   different, the server rejects the upload with **409 Conflict**. To replace
-   the file, add `?force=true`.
+   different, the server rejects the upload with **409 Conflict**.
 1. If the content is the same, the server returns `changed: false` and does not
    write the object again.
-1. With `--force`, the SDK does not check first, and the server does not compare
-   the digests. The server always writes the file and returns `changed: true`.
+1. To replace a file, use `osapi client file update`, which sends
+   `PUT /api/file/{name}`. The server writes the new content and answers 200, or
+   201 when the name is new. The same content changes nothing.
 
 ### File deploy flow
 
