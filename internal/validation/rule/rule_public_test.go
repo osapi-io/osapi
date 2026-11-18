@@ -163,6 +163,54 @@ func (s *RulePublicTestSuite) TestUntagged() {
 	}
 }
 
+type needsBody struct {
+	Target string `json:"target" validate:"omitempty,min=1,max=3"`
+}
+
+type needsInput struct {
+	Key    string    `json:"key"   in:"path" validate:"required,min=1,max=255"`
+	Name   string    `json:"name"            validate:"required,min=1,uuid"`
+	Note   string    `json:"note"            validate:"min=1"`
+	Count  int       `json:"count"           validate:"omitempty,min=1"`
+	Tags   []string  `json:"tags"            validate:"required,min=1,dive"`
+	Bad    string    `json:"bad"             validate:"min=x"`
+	Skip   string    `json:"-"               validate:"max=1"`
+	Free   string    `json:"free"`
+	hidden string    //nolint:unused
+	Body   needsBody `             in:"body" validate:"omitempty"`
+}
+
+// TestNeeds names each rule that needs a bad input, and leaves out what a
+// left-out field tests and a min whose only bad value is empty.
+func (s *RulePublicTestSuite) TestNeeds() {
+	got := rule.Needs(reflect.TypeFor[*needsInput]())
+	keys := make([]string, 0, len(got))
+	for _, n := range got {
+		keys = append(keys, n.Key())
+	}
+
+	s.Equal([]string{
+		"Key:max", "Name:uuid", "Note:min", "Count:min", "Tags:min", "Bad:min", "Body.Target:max",
+	}, keys)
+	s.Equal(rule.Need{Field: "Key", Rule: "max=255"}, got[0])
+	s.Nil(rule.Needs(reflect.TypeFor[string]()))
+}
+
+func (s *RulePublicTestSuite) TestDeclare() {
+	var seen []string
+	rule.Declare(rule.Custom{Tag: "rule_test_before", Schema: rule.Pattern("^b$")})
+	rule.OnDeclare(func(c rule.Custom) { seen = append(seen, c.Tag) })
+	s.Contains(seen, "rule_test_before", "a rule declared before OnDeclare is replayed")
+
+	rule.Declare(rule.Custom{Tag: "rule_test_after", Schema: rule.None})
+	s.Contains(seen, "rule_test_after", "a rule declared after OnDeclare is passed on")
+
+	g := newGot()
+	_, err := rule.Apply("rule_test_before", g)
+	s.NoError(err)
+	s.Equal("^b$", g.pattern, "Declare registers the rule's schema")
+}
+
 func TestRulePublicTestSuite(t *testing.T) {
 	suite.Run(t, new(RulePublicTestSuite))
 }

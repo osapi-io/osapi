@@ -102,6 +102,11 @@ var Checks = guide.Checks{
 		Fix:      rule.Fix,
 	},
 	{
+		Rule:     RuleFails,
+		Requires: rule.FailsRequires,
+		Fix:      rule.FailsFix,
+	},
+	{
 		Rule:     RuleSecret,
 		Requires: "No input field is both secret:\"true\" and telemetry:\"attr\".",
 		Fix:      "Remove telemetry:\"attr\" from the secret field. A secret is never recorded on a span.",

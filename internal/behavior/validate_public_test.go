@@ -114,6 +114,14 @@ type untaggedIn struct {
 	Name string `json:"name"`
 }
 
+type limitedIn struct {
+	Name string `json:"name" validate:"omitempty,max=3"`
+}
+
+func readLimited(context.Context, fakeProvider, limitedIn) (entry, error) {
+	return entry{}, nil
+}
+
 func readUntagged(context.Context, fakeProvider, untaggedIn) (entry, error) {
 	return entry{}, nil
 }
@@ -388,6 +396,20 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 					Fails("", entry{}, ""),
 			),
 			wantRules: []string{behavior.RuleExample, behavior.RuleExample},
+		},
+		{
+			name: "when no .Fails input breaks a rule",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.Read("get", readLimited).Describe("Get"),
+			),
+			wantRules: []string{behavior.RuleFails},
+		},
+		{
+			name: "when a .Fails input breaks each rule",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.Read("get", readLimited).Describe("Get").
+					Fails("a name over 3 characters", limitedIn{Name: "abcd"}, "too long"),
+			),
 		},
 		{
 			name: "when an input field has no validate tag",

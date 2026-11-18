@@ -65,7 +65,8 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.After(UpdateInput{Path: path, Content: "on\n", Metadata: map[string]string{"setting": "on"}}),
 			behavior.After(DeleteInput{Path: path}),
 		).
-		Fails("A file osapi never wrote", GetInput{Path: path}, "not managed"),
+		Fails("A file osapi never wrote", GetInput{Path: path}, "not managed").
+		Fails("A relative path", GetInput{Path: "etc/app.conf"}, "want an absolute path"),
 	behavior.Write("update", Update).
 		Describe("Write a file and keep a record of it").
 		Explain("Leaves a file already holding the content alone and reports changed: false, "+
@@ -89,6 +90,14 @@ var Behavior = behavior.Register(behavior.Define(
 			UpdateInput{Path: path, Content: "on\n", Mode: "rw-------"}, "invalid mode").
 		Fails("An owner that is not a user name",
 			UpdateInput{Path: path, Content: "on\n", Owner: "root;reboot"}, "invalid owner").
+		Fails("A group that is not a group name",
+			UpdateInput{
+				Path:    path,
+				Content: "on\n",
+				Group:   "wheel;reboot",
+			}, "invalid owner or group").
+		Fails("A relative path",
+			UpdateInput{Path: "etc/app.conf", Content: "on\n"}, "want an absolute path").
 		Example("A file whose mode was changed by hand",
 			UpdateInput{Path: path, Content: "on\n", Mode: "0600"},
 			Result{Path: path, Changed: true},
@@ -105,6 +114,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Describe("Remove a file osapi wrote and stop managing it").
 		Explain("Leaves a file osapi has no record of alone, so it never removes what "+
 			"it did not write.").
+		Fails("A relative path", DeleteInput{Path: "etc/app.conf"}, "want an absolute path").
 		Example("A file osapi wrote", DeleteInput{Path: path},
 			Result{Path: path, Changed: true},
 			behavior.After(UpdateInput{Path: path, Content: "on\n"}),

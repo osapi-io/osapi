@@ -46,14 +46,14 @@ func (s *RulePublicTestSuite) TestValidator() {
 			rule.Pattern("^a$"), "is wrong"),
 	)
 
-	behavior.OnRule(func(r behavior.Rule) { seen = append(seen, r.Tag) })
-	s.Contains(seen, "rule_test_early", "a rule declared before OnRule is replayed")
+	rule.OnDeclare(func(c rule.Custom) { seen = append(seen, c.Tag) })
+	s.Contains(seen, "rule_test_early", "a rule declared before OnDeclare is replayed")
 
 	behavior.Define("late", "x",
 		behavior.Validator("rule_test_code", func(v string) bool { return v == "ok" },
 			rule.Pattern("^ok$"), "is not ok"),
 	)
-	s.Contains(seen, "rule_test_code", "a rule declared after OnRule is passed on")
+	s.Contains(seen, "rule_test_code", "a rule declared after OnDeclare is passed on")
 
 	schema, err := behavior.SchemaFor(reflect.TypeFor[ruled]())
 	s.Require().NoError(err)

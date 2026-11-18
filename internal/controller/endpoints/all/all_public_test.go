@@ -21,12 +21,24 @@
 package all_test
 
 import (
+	"bytes"
+	"encoding/json"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"reflect"
 	"testing"
+
+	"github.com/labstack/echo/v5"
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all/gen"
 )
 
 type AllPublicTestSuite struct {
@@ -41,6 +53,56 @@ func (s *AllPublicTestSuite) TestValidate() {
 			s.Empty(endpoint.Validate(g))
 		})
 	}
+}
+
+// TestRefusals sends each input that a method's Fails declares through the
+// routes of every group, as a client does, and expects a 400 with an error
+// body. Validate makes each rule of an input have one, so this covers each
+// rule of each endpoint.
+func (s *AllPublicTestSuite) TestRefusals() {
+	const key = "test-signing-key-for-the-refusals"
+	token, err := authtoken.New(slog.Default()).Generate(key, []string{"admin"}, "test", nil)
+	s.Require().NoError(err)
+
+	// Each group gets an empty Deps: the API refuses each input before a
+	// handler would use one.
+	var deps []any
+	for _, g := range endpoint.All() {
+		if g.Deps != nil {
+			deps = append(deps, reflect.New(g.Deps).Elem().Interface())
+		}
+	}
+	e := echo.New()
+	for _, mount := range server.Handler(slog.Default(), key, nil, deps...) {
+		mount(e)
+	}
+
+	count := 0
+	for _, g := range endpoint.All() {
+		for _, m := range g.Methods {
+			for _, r := range m.Refusals() {
+				count++
+				s.Run(g.Name+" "+m.Name+": "+r.Doc, func() {
+					path, body, contentType, err := command.Build(g, m, r.Input)
+					s.Require().NoError(err)
+					req := httptest.NewRequest(m.Verb, path, bytes.NewReader(body))
+					req.Header.Set("Content-Type", contentType)
+					req.Header.Set("Authorization", "Bearer "+token)
+					rec := httptest.NewRecorder()
+					e.ServeHTTP(rec, req)
+
+					s.Equal(http.StatusBadRequest, rec.Code, rec.Body.String())
+					var answer struct {
+						Error string `json:"error"`
+					}
+					s.Require().
+						NoError(json.Unmarshal(rec.Body.Bytes(), &answer), rec.Body.String())
+					s.NotEmpty(answer.Error)
+				})
+			}
+		}
+	}
+	s.NotZero(count)
 }
 
 func TestAllPublicTestSuite(

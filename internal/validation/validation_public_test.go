@@ -51,6 +51,55 @@ type ValidationPublicTestSuite struct {
 	suite.Suite
 }
 
+type breaksBody struct {
+	Target string `validate:"omitempty,max=3"`
+}
+
+type breaksInput struct {
+	Name string     `validate:"required,max=3"`
+	Body breaksBody `validate:"omitempty"`
+}
+
+type breaksUnknown struct {
+	Name string `validate:"breaks_not_registered"`
+}
+
+// TestBreaks names the field and the rule that each input breaks, so a
+// method's .Fails inputs can be held to its rules.
+func (s *ValidationPublicTestSuite) TestBreaks() {
+	tests := []struct {
+		name string
+		in   any
+		want []string
+	}{
+		{
+			name: "when the input is valid, it breaks nothing",
+			in:   breaksInput{Name: "abc"},
+			want: nil,
+		},
+		{
+			name: "when fields break rules, each is named with its Go path",
+			in:   breaksInput{Name: "abcd", Body: breaksBody{Target: "abcd"}},
+			want: []string{"Name:max", "Body.Target:max"},
+		},
+		{
+			name: "when the input is not a struct, it breaks nothing",
+			in:   "x",
+			want: nil,
+		},
+		{
+			name: "when a tag has no validator, it breaks nothing",
+			in:   breaksUnknown{Name: "x"},
+			want: nil,
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, validation.Breaks(tc.in))
+		})
+	}
+}
+
 func (s *ValidationPublicTestSuite) TestStruct() {
 	type testStruct struct {
 		Name  string `validate:"required"`

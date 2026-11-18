@@ -24,6 +24,7 @@ package file
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
@@ -63,6 +64,9 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--json").
 		Errors(noStore503),
 	endpoint.Post[UploadInput, FileUploadResponse]("upload").
+		Fails("a name over 255 characters", UploadInput{Name: long, File: content}).
+		Fails("a content type that is not raw or template", UploadInput{Name: "app.conf", ContentType: "zip", File: content}).
+		Fails("an empty file", UploadInput{Name: "app.conf", File: []byte{}}).
 		Handle(Upload).
 		ID("PostFile").
 		Describe("Upload a file").
@@ -84,6 +88,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--name app.conf --file /tmp/app.conf").
 		Example("--name app.conf.tmpl --file /tmp/app.conf.tmpl --content-type template"),
 	endpoint.Get[GetInput, FileInfoResponse]("get").
+		Fails("a name over 255 characters", GetInput{Name: long}).
 		Handle(Get).
 		ID("GetFileByName").
 		Describe("Get file metadata").
@@ -94,6 +99,9 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--name app.conf --json").
 		Errors(endpoint.NotFound(ErrNotFound, "File not found."), noStore503),
 	endpoint.Put[UpdateInput, FileUploadResponse]("update").
+		Fails("a name over 255 characters", UpdateInput{Name: long, File: content}).
+		Fails("a content type that is not raw or template", UpdateInput{Name: "app.conf", ContentType: "zip", File: content}).
+		Fails("an empty file", UpdateInput{Name: "app.conf", File: []byte{}}).
 		Handle(Update).
 		ID("PutFileByName").
 		Describe("Replace a file").
@@ -111,6 +119,7 @@ var Group = endpoint.Register(endpoint.Define(
 			noStore503,
 		),
 	endpoint.Delete[DeleteInput, struct{}]("delete").
+		Fails("a name over 255 characters", DeleteInput{Name: long}).
 		Handle(Delete).
 		ID("DeleteFileByName").
 		Describe("Delete a file").
@@ -145,3 +154,10 @@ var Group = endpoint.Register(endpoint.Define(
 			endpoint.Unavailable(ErrNoState, "The Object Store or the file state KV is not configured."),
 		),
 ))
+
+// long is a name over the 255 characters a file name may have, and content
+// is a file's content, for the inputs that Fails declares.
+var (
+	long    = strings.Repeat("a", 256)
+	content = []byte("data")
+)

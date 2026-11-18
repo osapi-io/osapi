@@ -26,6 +26,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/validation"
+
 	"github.com/osapi-io/osapi/internal/validation/rule"
 )
 
@@ -66,6 +68,9 @@ const (
 	// RuleValidate: each input field has a validate tag. The endpoint DSL
 	// holds its inputs to the same check, from package rule.
 	RuleValidate = "validate"
+	// RuleFails: each rule of an input field has a .Fails input that breaks
+	// it. The endpoint DSL holds its inputs to the same check.
+	RuleFails = "fails"
 	// RulePlatform: a behavior declares a provider for at least one
 	// platform, once each, and each implements every method's provider type.
 	RulePlatform = "platform"
@@ -270,6 +275,9 @@ func ValidateBehavior(
 			for _, f := range rule.Untagged(m.In) {
 				add(m.Name, RuleValidate, "input field %s has no validate tag", f)
 			}
+			for _, n := range unrefused(m) {
+				add(m.Name, RuleFails, "no .Fails input breaks %s on %s", n.Rule, n.Field)
+			}
 			recordable := false
 			for i := range m.In.NumField() {
 				f := m.In.Field(i)
@@ -458,4 +466,30 @@ func unflaggable(
 	}
 
 	return names
+}
+
+// unrefused is each rule of m's input that no .Fails input breaks.
+func unrefused(
+	m *Method,
+) []rule.Need {
+	// An input whose spec does not build has a tag the validator may not
+	// know; RuleSchema reports it.
+	if _, err := SchemaFor(m.In); err != nil {
+		return nil
+	}
+	broken := map[string]bool{}
+	for _, r := range m.Refusals {
+		for _, b := range validation.Breaks(r.Input) {
+			broken[b] = true
+		}
+	}
+
+	var out []rule.Need
+	for _, n := range rule.Needs(m.In) {
+		if !broken[n.Key()] {
+			out = append(out, n)
+		}
+	}
+
+	return out
 }

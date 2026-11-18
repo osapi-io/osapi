@@ -28,6 +28,7 @@ package agent
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
@@ -79,6 +80,7 @@ var Group = endpoint.Register(endpoint.Define(
 			"not yet been accepted or rejected.").
 		Returns("List of pending agents."),
 	endpoint.Get[GetInput, AgentInfo]("get").
+		Fails("a hostname over 255 characters", GetInput{Hostname: long}).
 		Command("Get agent details",
 			"This command reads the agent heartbeat registry directly. It makes no job.\nThe data comes from the last heartbeat of the agent. `node status` runs a\nfull inspection through the job system, with disk usage and more metrics.").
 		Example("--hostname web-01").
@@ -89,6 +91,8 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("Agent details.").
 		Errors(endpoint.NotFound(ErrNotFound, "Agent not found")),
 	endpoint.Delete[DeleteInput, struct{}]("delete").
+		Fails("a hostname over 255 characters", DeleteInput{Hostname: long}).
+		Fails("a machine ID over 255 characters", DeleteInput{Hostname: "web-01", MachineID: long}).
 		Status(http.StatusNoContent).
 		Result("Two machines can have the same hostname, because the identity of an agent\n"+
 			"is its machine ID. When more than one accepted agent has the hostname, the\n"+
@@ -118,6 +122,8 @@ var Group = endpoint.Register(endpoint.Define(
 				"More than one accepted agent has the hostname; name one with machine_id."),
 		),
 	endpoint.Post[AcceptInput, struct{}]("accept").
+		Fails("a hostname over 255 characters", AcceptInput{Hostname: long}).
+		Fails("a fingerprint over 255 characters", AcceptInput{Hostname: "web-01", Fingerprint: long}).
 		Status(http.StatusNoContent).
 		Command("Accept a pending agent enrollment",
 			"When PKI is enabled, a new agent sends an enrollment request. An\nadministrator must accept it before the agent can do work. This command\naccepts a pending agent by hostname. To accept by the public key fingerprint\nof the agent, add `--fingerprint`. Use `agent pending list` to see the agents\nthat wait for approval.").
@@ -132,6 +138,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("Agent accepted.").
 		Errors(endpoint.NotFound(ErrNotFound, "Pending agent not found.")),
 	endpoint.Post[RejectInput, struct{}]("reject").
+		Fails("a hostname over 255 characters", RejectInput{Hostname: long}).
 		Status(http.StatusNoContent).
 		Command("Reject a pending agent enrollment",
 			"When PKI is enabled, a new agent sends an enrollment request. An\nadministrator accepts or rejects it. This command rejects a pending agent,\nso the agent cannot join the fleet. The command removes the enrollment entry\nof the agent from the pending queue. Use `agent pending list` to see the agents\nthat wait for approval.").
@@ -144,6 +151,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("Agent rejected.").
 		Errors(endpoint.NotFound(ErrNotFound, "Pending agent not found.")),
 	endpoint.Post[DrainInput, struct{}]("drain").
+		Fails("a hostname over 255 characters", DrainInput{Hostname: long}).
 		Status(http.StatusNoContent).
 		Command("Drain an agent",
 			"The agent changes from `Ready` to `Draining`. When all its running jobs are\ncomplete, the state is `Cordoned`. The agent continues to run and to send\nheartbeats. It only stops the intake of new work from the job queue. Use\n`agent undrain` to accept jobs again. The jobs that it runs now continue\nuntil they are complete.").
@@ -160,6 +168,7 @@ var Group = endpoint.Register(endpoint.Define(
 			endpoint.Conflict(ErrState, "Agent already in requested state."),
 		),
 	endpoint.Post[UndrainInput, struct{}]("undrain").
+		Fails("a hostname over 255 characters", UndrainInput{Hostname: long}).
 		Status(http.StatusNoContent).
 		Command("Undrain an agent",
 			"The agent subscribes to the NATS JetStream consumers again and changes back\nto `Ready`.").
@@ -175,3 +184,7 @@ var Group = endpoint.Register(endpoint.Define(
 			endpoint.Conflict(ErrState, "Agent not in draining or cordoned state."),
 		),
 ))
+
+// long is a name over the 255 characters each name may have, for the inputs
+// that Fails declares.
+var long = strings.Repeat("a", 256)

@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"path/filepath"
 	"regexp"
 	"strconv"
 )
@@ -34,6 +35,9 @@ func Update(
 	p Provider,
 	in UpdateInput,
 ) (Result, error) {
+	if err := absolute(in.Path); err != nil {
+		return Result{}, err
+	}
 	f, err := file(in)
 	if err != nil {
 		return Result{}, err
@@ -52,6 +56,9 @@ func Delete(
 	p Provider,
 	in DeleteInput,
 ) (Result, error) {
+	if err := absolute(in.Path); err != nil {
+		return Result{}, err
+	}
 	changed, err := p.Remove(ctx, in.Path)
 	if err != nil {
 		return Result{}, err
@@ -66,7 +73,23 @@ func Get(
 	p Provider,
 	in GetInput,
 ) (Record, error) {
+	if err := absolute(in.Path); err != nil {
+		return Record{}, err
+	}
+
 	return p.Read(ctx, in.Path)
+}
+
+// absolute refuses a relative path, which would resolve against the agent's
+// working directory, as the API does before a job is queued.
+func absolute(
+	path string,
+) error {
+	if !filepath.IsAbs(path) {
+		return fmt.Errorf("invalid path %q: want an absolute path", path)
+	}
+
+	return nil
 }
 
 // account is a user or group name chown can be given safely.
