@@ -10366,8 +10366,9 @@ components:
           type: string
           description: Service unit name.
           example: my-app
+          pattern: ^[a-zA-Z0-9_@.-]+$
           x-oapi-codegen-extra-tags:
-            validate: required,min=1
+            validate: required,service_name
         object:
           type: string
           description: Object Store reference for the unit file.
@@ -11262,10 +11263,11 @@ components:
       description: |
         Systemd unit name (e.g., "nginx.service", "sshd.service").
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,unit_name
       schema:
         type: string
         minLength: 1
+        pattern: ^[a-zA-Z0-9:_.@-]+$
     InterfaceName:
       name: name
       in: path
@@ -11332,10 +11334,11 @@ components:
       description: |
         Service unit name (e.g., nginx, sshd).
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,service_name
       schema:
         type: string
         minLength: 1
+        pattern: ^[a-zA-Z0-9_@.-]+$
     SysctlKey:
       name: key
       in: path
@@ -11385,10 +11388,11 @@ components:
       description: |
         SSH key SHA256 fingerprint (e.g., SHA256:abc123...).
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,ssh_fingerprint
       schema:
         type: string
         minLength: 1
+        pattern: ^SHA256:[A-Za-z0-9+/]+=*$
 x-tagGroups:
   - name: Agent Management API
     tags:

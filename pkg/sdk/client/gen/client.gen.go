@@ -4145,7 +4145,7 @@ type ScheduleUpdateResponse struct {
 // ServiceCreateRequest defines model for ServiceCreateRequest.
 type ServiceCreateRequest struct {
 	// Name Service unit name.
-	Name string `json:"name" validate:"required,min=1"`
+	Name string `json:"name" validate:"required,service_name"`
 
 	// Object Object Store reference for the unit file.
 	Object string `json:"object" validate:"required,min=1"`

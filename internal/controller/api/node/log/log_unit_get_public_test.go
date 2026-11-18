@@ -144,6 +144,20 @@ func (s *LogUnitPublicTestSuite) TestGetNodeLogUnit() {
 			},
 		},
 		{
+			name: "when the name is not valid, it is a 400 and no job is sent",
+			request: gen.GetNodeLogUnitRequestObject{
+				Hostname: "server1",
+				Name:     "nginx.service;reboot",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.GetNodeLogUnitResponseObject) {
+				r, ok := resp.(gen.GetNodeLogUnit400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "unit_name")
+			},
+		},
+		{
 			name: "validation error empty hostname",
 			request: gen.GetNodeLogUnitRequestObject{
 				Hostname: "",

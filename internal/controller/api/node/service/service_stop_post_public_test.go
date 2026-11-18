@@ -131,6 +131,18 @@ func (s *ServiceStopPostPublicTestSuite) TestPostNodeServiceStop() {
 			},
 		},
 		{
+			name: "when the name is not valid, it is a 400 and no job is sent",
+			request: gen.PostNodeServiceStopRequestObject{
+				Hostname: "server1",
+				Name:     "nginx service;reboot",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeServiceStopResponseObject) {
+				_, ok := resp.(gen.PostNodeServiceStop400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name:      "validation error empty hostname",
 			request:   gen.PostNodeServiceStopRequestObject{Hostname: "", Name: "nginx.service"},
 			setupMock: func() {},

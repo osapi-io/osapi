@@ -6,7 +6,10 @@
  */
 
 export interface ServiceCreateRequest {
-  /** Service unit name. */
+  /**
+     * Service unit name.
+     * @pattern ^[a-zA-Z0-9_@.-]+$
+     */
   name: string;
   /** Object Store reference for the unit file. */
   object: string;

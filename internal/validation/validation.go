@@ -86,6 +86,18 @@ var natsNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 // cannot be mistaken for a command-line option.
 var containerIDPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_.-]*$`)
 
+// serviceNamePattern matches a service name as the service provider takes
+// it, which it checks again before systemctl runs.
+var serviceNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_@.-]+$`)
+
+// unitNamePattern matches a systemd unit name: letters, digits and :_.@-,
+// with its type, such as nginx.service or user@1000.service.
+var unitNamePattern = regexp.MustCompile(`^[a-zA-Z0-9:_.@-]+$`)
+
+// sshFingerprintPattern matches an SSH key fingerprint as the user provider
+// computes it: SHA256: and the base64 of the digest.
+var sshFingerprintPattern = regexp.MustCompile(`^SHA256:[A-Za-z0-9+/]+=*$`)
+
 // packageNamePattern matches a package name as apt and dpkg take it, with an
 // architecture (:amd64) or a version (=1.2-1). The first character is a
 // letter or digit, so the package manager cannot read the name as an option.
@@ -175,6 +187,18 @@ func init() {
 		return containerIDPattern.MatchString(fl.Field().String())
 	})
 
+	// service_name, unit_name and ssh_fingerprint validate what a path
+	// names: a service, a systemd unit, an SSH key.
+	_ = instance.RegisterValidation("service_name", func(fl validator.FieldLevel) bool {
+		return serviceNamePattern.MatchString(fl.Field().String())
+	})
+	_ = instance.RegisterValidation("unit_name", func(fl validator.FieldLevel) bool {
+		return unitNamePattern.MatchString(fl.Field().String())
+	})
+	_ = instance.RegisterValidation("ssh_fingerprint", func(fl validator.FieldLevel) bool {
+		return sshFingerprintPattern.MatchString(fl.Field().String())
+	})
+
 	// package_name validates a package name, which reaches the package
 	// manager's command line as root.
 	_ = instance.RegisterValidation("package_name", func(fl validator.FieldLevel) bool {
@@ -197,6 +221,9 @@ func init() {
 	rule.Register("nats_name", rule.Pattern(natsNamePattern.String()))
 	rule.Register("container_id", rule.Pattern(containerIDPattern.String()))
 	rule.Register("package_name", rule.Pattern(packageNamePattern.String()))
+	rule.Register("service_name", rule.Pattern(serviceNamePattern.String()))
+	rule.Register("unit_name", rule.Pattern(unitNamePattern.String()))
+	rule.Register("ssh_fingerprint", rule.Pattern(sshFingerprintPattern.String()))
 	rule.Register("account_name", rule.Pattern(accountNamePattern.String()))
 	// A pattern cannot say what these check: a target the controller
 	// resolves, a known fact key, a duration or a cron expression that a
@@ -290,6 +317,18 @@ var customHints = map[string]func(fe validator.FieldError) string{
 			fe.Value(),
 			natsNamePattern.String(),
 		)
+	},
+	"service_name": func(fe validator.FieldError) string {
+		return fmt.Sprintf("%q is not a valid service name (expected: %s)",
+			fe.Value(), serviceNamePattern.String())
+	},
+	"unit_name": func(fe validator.FieldError) string {
+		return fmt.Sprintf("%q is not a valid systemd unit name (expected: %s)",
+			fe.Value(), unitNamePattern.String())
+	},
+	"ssh_fingerprint": func(fe validator.FieldError) string {
+		return fmt.Sprintf("%q is not a valid SSH key fingerprint (expected: %s)",
+			fe.Value(), sshFingerprintPattern.String())
 	},
 	"package_name": func(fe validator.FieldError) string {
 		return fmt.Sprintf(

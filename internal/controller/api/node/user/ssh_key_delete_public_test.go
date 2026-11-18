@@ -170,6 +170,21 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSSHKey() {
 			},
 		},
 		{
+			name: "when the fingerprint is not valid, it is a 400 and no job is sent",
+			request: gen.DeleteNodeUserSSHKeyRequestObject{
+				Hostname:    "server1",
+				Name:        "testuser",
+				Fingerprint: "md5:ab:cd",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.DeleteNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.DeleteNodeUserSSHKey400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "ssh_fingerprint")
+			},
+		},
+		{
 			name: "validation error empty hostname",
 			request: gen.DeleteNodeUserSSHKeyRequestObject{
 				Hostname:    "",

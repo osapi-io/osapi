@@ -156,6 +156,18 @@ func (s *ServiceGetPublicTestSuite) TestGetNodeServiceByName() {
 			},
 		},
 		{
+			name: "when the name is not valid, it is a 400 and no job is sent",
+			request: gen.GetNodeServiceByNameRequestObject{
+				Hostname: "server1",
+				Name:     "nginx service;reboot",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.GetNodeServiceByNameResponseObject) {
+				_, ok := resp.(gen.GetNodeServiceByName400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "validation error empty hostname",
 			request: gen.GetNodeServiceByNameRequestObject{
 				Hostname: "",

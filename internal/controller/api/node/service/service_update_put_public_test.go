@@ -144,6 +144,20 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeService() {
 			},
 		},
 		{
+			name: "when the name is not valid, it is a 400 and no job is sent",
+			request: gen.PutNodeServiceRequestObject{
+				Hostname: "server1", Name: "nginx service;reboot",
+				Body: &gen.PutNodeServiceJSONRequestBody{Object: "my-app-unit-object-v2"},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNodeServiceResponseObject) {
+				r, ok := resp.(gen.PutNodeService400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "service_name")
+			},
+		},
+		{
 			name: "validation error empty hostname",
 			request: gen.PutNodeServiceRequestObject{
 				Hostname: "", Name: "my-app.service",

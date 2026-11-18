@@ -44,6 +44,10 @@ func (s *Service) PutNodeService(
 		return gen.PutNodeService400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validateName(request.Name); !ok {
+		return gen.PutNodeService400JSONResponse{Error: &errMsg}, nil
+	}
+
 	if errMsg, ok := validation.Struct(request.Body); !ok {
 		return gen.PutNodeService400JSONResponse{Error: &errMsg}, nil
 	}

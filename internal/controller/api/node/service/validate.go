@@ -32,3 +32,10 @@ func validateHostname(
 ) (string, bool) {
 	return validation.Var(hostname, "required,min=1,valid_target")
 }
+
+// validateName validates the name path parameter. It is the same rule the service provider checks before systemctl runs.
+func validateName(
+	name string,
+) (string, bool) {
+	return validation.Var(name, "required,service_name")
+}
