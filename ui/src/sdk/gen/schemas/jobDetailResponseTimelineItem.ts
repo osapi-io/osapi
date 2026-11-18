@@ -6,14 +6,14 @@
  */
 
 export type JobDetailResponseTimelineItem = {
-  /** ISO 8601 timestamp of the event. */
-  timestamp?: string;
+  /** Error details if applicable. */
+  error?: string;
   /** Event type (submitted, acknowledged, started, completed, failed, retried). */
   event?: string;
   /** Agent or source that generated the event. */
   hostname?: string;
   /** Human-readable description of the event. */
   message?: string;
-  /** Error details if applicable. */
-  error?: string;
+  /** ISO 8601 timestamp of the event. */
+  timestamp?: string;
 };

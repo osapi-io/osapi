@@ -2,6 +2,8 @@
 
 List jobs.
 
+Retrieve jobs, optionally filtered by status.
+
 ```bash
 osapi client job list [flags]
 ```
@@ -13,12 +15,17 @@ osapi client job list
 osapi client job list --status completed --limit 3
 ```
 
+## Permission
+
+It needs the `job:read` permission. `osapi token roles` lists the roles that
+grant it.
+
 ## Flags
 
 | Flag       | Description                                                                       | Default |
 | ---------- | --------------------------------------------------------------------------------- | ------- |
-| `--limit`  | Maximum number of jobs per page (1-100, default 10)                               | `10`    |
-| `--offset` | Skip the first N jobs (for pagination)                                            |         |
+| `--limit`  | Maximum number of jobs per page (1-100)                                           | `10`    |
+| `--offset` | Number of jobs to skip for pagination                                             |         |
 | `--status` | Filter jobs by status (submitted, processing, completed, failed, partial_failure) |         |
 
 ## Global flags

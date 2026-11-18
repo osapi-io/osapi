@@ -44,7 +44,7 @@ type RetryInput struct {
 
 // RetryJobRequest is where a retried job goes.
 type RetryJobRequest struct {
-	TargetHostname string `json:"target_hostname,omitempty" validate:"omitempty,min=1,valid_target" doc:"Override target hostname for the retried job. Defaults to _any if not specified." example:"_any"`
+	TargetHostname string `json:"target_hostname,omitempty" validate:"omitempty,min=1,valid_target" doc:"The target of the retried job: _any, _all, a hostname, or a label such as group:web.dev." example:"_any" flag:"target" short:"T" default:"_any"`
 }
 
 // CreateJobResponse is the job that a request created.

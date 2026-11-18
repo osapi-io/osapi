@@ -653,6 +653,15 @@ func (e *InternalError) Unwrap() error {
 	return e.Cause
 }
 
+// Invalid maps err to 400: a request that is well formed, but that the
+// method cannot do, such as a retry of a job with nothing to run again.
+func Invalid(
+	err error,
+	doc string,
+) Error {
+	return Error{Err: err, Code: http.StatusBadRequest, Doc: doc}
+}
+
 // NotFound maps err to 404.
 func NotFound(
 	err error,

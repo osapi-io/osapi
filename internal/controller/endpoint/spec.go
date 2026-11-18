@@ -244,6 +244,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindError,
+			Name: `Invalid(err, "doc")`,
+			Does: "Maps err to 400. Its doc is the 400's description, so say the decode failures too.",
+			When: "When the request is well formed but the method cannot do it, such as a retry of a job with no operation data.",
+		},
+		{
+			Kind: KindError,
 			Name: `Unavailable(err, "doc")`,
 			Does: "Maps err to 503.",
 			When: "When a backend the method needs is not set, such as the trace backend.",
@@ -266,6 +272,18 @@ var Spec = guide.Spec{
 			Name: `in:"body"`,
 			Does: "Makes the field's type the whole request body. Without it, the input's other fields are the body, as one object. The body is optional unless the field is validate:\"required\".",
 			When: "When the body is a named schema, such as a retry request.",
+		},
+		{
+			Kind: KindTag,
+			Name: `flag:"name"`,
+			Does: "Names the field's CLI flag. Without it, the flag is the json name with _ as -. A field of an in:\"body\" struct is a flag too.",
+			When: "When the flag has a name that the CLI uses elsewhere, such as --target for target_hostname.",
+		},
+		{
+			Kind: KindTag,
+			Name: `short:"T"`,
+			Does: "Gives the field's CLI flag a one-letter shorthand.",
+			When: "When the CLI uses that shorthand elsewhere, such as -T for a target.",
 		},
 		{
 			Kind: KindTag,

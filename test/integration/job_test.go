@@ -49,7 +49,8 @@ func (s *JobSmokeSuite) TestJobList() {
 
 				var result map[string]any
 				s.Require().NoError(parseJSON(stdout, &result))
-				s.Contains(result, "jobs")
+				// --json prints the API's answer, as each generated command does.
+				s.Contains(result, "items")
 			},
 		},
 	}

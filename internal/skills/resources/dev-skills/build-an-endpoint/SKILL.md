@@ -25,7 +25,7 @@ Ask these tools. Do not use your memory. If a tool and this skill do not agree,
 the tool is correct.
 
 The DSL makes the spec, the routes, the decoders and the CLI commands of a
-group. A group's handlers are typed functions. The agent, telemetry and audit groups are served, and
+group. A group's handlers are typed functions. The agent, telemetry, audit and job groups are served, and
 their commands are made, from their definitions. The other groups still have a
 hand-written spec, handler and commands, until they move. Some parts are not
 built yet.

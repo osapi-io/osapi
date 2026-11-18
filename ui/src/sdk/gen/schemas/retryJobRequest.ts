@@ -6,6 +6,9 @@
  */
 
 export interface RetryJobRequest {
-  /** Override target hostname for the retried job. Defaults to _any if not specified. */
+  /**
+     * The target of the retried job: _any, _all, a hostname, or a label such as group:web.dev.
+     * @minLength 1
+     */
   target_hostname?: string;
 }

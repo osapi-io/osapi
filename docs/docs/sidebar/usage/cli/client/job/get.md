@@ -2,8 +2,10 @@
 
 Get job details and status.
 
+Retrieve details of a specific job by its ID.
+
 ```bash
-osapi client job get
+osapi client job get [flags]
 ```
 
 ## Examples
@@ -12,11 +14,16 @@ osapi client job get
 osapi client job get --id 550e8400-e29b-41d4-a716-446655440000
 ```
 
+## Permission
+
+It needs the `job:read` permission. `osapi token roles` lists the roles that
+grant it.
+
 ## Flags
 
-| Flag   | Description                   | Default |
-| ------ | ----------------------------- | ------- |
-| `--id` | Job ID to retrieve (required) |         |
+| Flag   | Description                            | Default |
+| ------ | -------------------------------------- | ------- |
+| `--id` | UUID of the job to retrieve (required) |         |
 
 ## Global flags
 

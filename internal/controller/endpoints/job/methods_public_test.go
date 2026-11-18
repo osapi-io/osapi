@@ -1,0 +1,559 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+package job_test
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/labstack/echo/v5"
+	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
+
+	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
+	jobgroup "github.com/osapi-io/osapi/internal/controller/endpoints/job"
+	"github.com/osapi-io/osapi/internal/controller/endpoints/job/gen"
+	"github.com/osapi-io/osapi/internal/controller/endpoints/job/mocks"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/validation"
+)
+
+const (
+	signingKey = "test-signing-key-for-the-job-group"
+	jobID      = "550e8400-e29b-41d4-a716-446655440000"
+	newJobID   = "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+)
+
+var when = time.Date(2026, 11, 17, 8, 0, 0, 0, time.UTC)
+
+func ptr[T any](v T) *T { return &v }
+
+// queued is a job with each field the list and the get read.
+func queued() *job.QueuedJob {
+	return &job.QueuedJob{
+		ID: jobID, Status: "completed", Created: "2026-11-17T08:00:00Z",
+		Operation: map[string]any{
+			"type": "user.create",
+			"data": map[string]any{"name": "ops", "password": "hunter2"},
+		},
+		Result:    json.RawMessage(`{"ok":true}`),
+		Changed:   ptr(true),
+		Hostname:  "web-01",
+		UpdatedAt: "2026-11-17T08:00:01Z",
+	}
+}
+
+type MethodsPublicTestSuite struct {
+	suite.Suite
+
+	ctrl *gomock.Controller
+	jobs *mocks.MockJobs
+}
+
+func (s *MethodsPublicTestSuite) SetupSuite() {
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.AgentTarget, error) {
+		return []validation.AgentTarget{
+			{Hostname: "web-01", Labels: map[string]string{"group": "web"}},
+		}, nil
+	})
+}
+
+func (s *MethodsPublicTestSuite) SetupSubTest() {
+	s.ctrl = gomock.NewController(s.T())
+	s.jobs = mocks.NewMockJobs(s.ctrl)
+}
+
+func (s *MethodsPublicTestSuite) TearDownSubTest() {
+	s.ctrl.Finish()
+}
+
+func (s *MethodsPublicTestSuite) deps() jobgroup.Deps {
+	return jobgroup.Deps{Jobs: s.jobs}
+}
+
+func (s *MethodsPublicTestSuite) TestList() {
+	tests := []struct {
+		name         string
+		in           jobgroup.ListInput
+		setup        func()
+		validateFunc func(jobgroup.ListJobsResponse, error)
+	}{
+		{
+			name: "when the caller gives no limit, it reads the default page and masks secrets",
+			setup: func() {
+				s.jobs.EXPECT().ListJobs(gomock.Any(), "", client.DefaultPageSize, 0).
+					Return(&client.ListJobsResult{
+						Jobs: []*job.QueuedJob{
+							queued(),
+							{ID: newJobID, Status: "submitted"},
+						},
+						TotalCount:   42,
+						StatusCounts: map[string]int{"completed": 41, "submitted": 1},
+					}, nil)
+			},
+			validateFunc: func(got jobgroup.ListJobsResponse, err error) {
+				s.Require().NoError(err)
+				s.Equal(42, got.TotalItems)
+				s.Equal(41, got.StatusCounts["completed"])
+				s.Require().Len(got.Items, 2)
+				first := got.Items[0]
+				s.Equal(jobID, first.ID)
+				s.Equal("web-01", first.Hostname)
+				s.Equal(map[string]any{"ok": true}, first.Result)
+				s.Equal(ptr(true), first.Changed)
+				data, _ := first.Operation["data"].(map[string]any)
+				s.NotEqual("hunter2", data["password"])
+				s.Nil(got.Items[1].Result)
+				s.Nil(got.Items[1].Operation)
+			},
+		},
+		{
+			name: "when the caller gives a status, a limit and an offset, it reads that page",
+			in:   jobgroup.ListInput{Status: "failed", Limit: 3, Offset: 6},
+			setup: func() {
+				s.jobs.EXPECT().ListJobs(gomock.Any(), "failed", 3, 6).
+					Return(&client.ListJobsResult{}, nil)
+			},
+			validateFunc: func(got jobgroup.ListJobsResponse, err error) {
+				s.Require().NoError(err)
+				s.Empty(got.Items)
+			},
+		},
+		{
+			name: "when the job client fails, the caller gets a message without its error",
+			setup: func() {
+				s.jobs.EXPECT().ListJobs(gomock.Any(), "", client.DefaultPageSize, 0).
+					Return(nil, errors.New("nats: timeout"))
+			},
+			validateFunc: func(_ jobgroup.ListJobsResponse, err error) {
+				s.EqualError(err, "failed to list jobs")
+			},
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.setup()
+			tc.validateFunc(jobgroup.List(context.Background(), s.deps(), tc.in))
+		})
+	}
+}
+
+func (s *MethodsPublicTestSuite) TestGet() {
+	tests := []struct {
+		name         string
+		setup        func()
+		validateFunc func(jobgroup.JobDetailResponse, error)
+	}{
+		{
+			name: "when the job is a broadcast, it has each agent's answer, state and the timeline",
+			setup: func() {
+				qj := queued()
+				qj.Responses = map[string]job.Response{
+					"web-01": {
+						Status: job.StatusCompleted, Hostname: "web-01",
+						Data: json.RawMessage(`{"uptime":5}`), Changed: ptr(false),
+					},
+					"web-02": {Status: job.StatusFailed, Hostname: "web-02", Error: "boom"},
+				}
+				qj.AgentStates = map[string]job.AgentState{
+					"web-01": {Status: "completed", Duration: "1.2s"},
+					"web-02": {Status: "failed", Error: "boom"},
+				}
+				qj.Timeline = []job.TimelineEvent{
+					{Timestamp: when, Event: "submitted", Hostname: "_all", Message: "sent"},
+					{Timestamp: when, Event: "failed", Hostname: "web-02", Error: "boom"},
+				}
+				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(qj, nil)
+			},
+			validateFunc: func(got jobgroup.JobDetailResponse, err error) {
+				s.Require().NoError(err)
+				s.Equal(map[string]any{"uptime": float64(5)}, got.Responses["web-01"].Data)
+				s.Equal(ptr(false), got.Responses["web-01"].Changed)
+				s.Equal("boom", got.Responses["web-02"].Error)
+				s.Nil(got.Responses["web-02"].Data)
+				s.Equal("1.2s", got.AgentStates["web-01"].Duration)
+				s.Equal("boom", got.AgentStates["web-02"].Error)
+				s.Require().Len(got.Timeline, 2)
+				s.Equal("2026-11-17T08:00:00Z", got.Timeline[0].Timestamp)
+				s.Equal("boom", got.Timeline[1].Error)
+			},
+		},
+		{
+			name: "when the job has no agents and no timeline, those fields are absent",
+			setup: func() {
+				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(queued(), nil)
+			},
+			validateFunc: func(got jobgroup.JobDetailResponse, err error) {
+				s.Require().NoError(err)
+				s.Nil(got.Responses)
+				s.Nil(got.AgentStates)
+				s.Nil(got.Timeline)
+			},
+		},
+		{
+			name: "when the job is not there, it is ErrNotFound and names the ID",
+			setup: func() {
+				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(nil, job.ErrNotFound)
+			},
+			validateFunc: func(_ jobgroup.JobDetailResponse, err error) {
+				s.ErrorIs(err, jobgroup.ErrNotFound)
+				s.ErrorContains(err, jobID)
+			},
+		},
+		{
+			name: "when the job client fails, the caller gets a message without its error",
+			setup: func() {
+				s.jobs.EXPECT().
+					GetJobStatus(gomock.Any(), jobID).
+					Return(nil, errors.New("nats: timeout"))
+			},
+			validateFunc: func(_ jobgroup.JobDetailResponse, err error) {
+				s.EqualError(err, "failed to get job")
+			},
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.setup()
+			tc.validateFunc(
+				jobgroup.Get(context.Background(), s.deps(), jobgroup.GetInput{ID: jobID}),
+			)
+		})
+	}
+}
+
+func (s *MethodsPublicTestSuite) TestDelete() {
+	tests := []struct {
+		name         string
+		setup        func()
+		validateFunc func(error)
+	}{
+		{
+			name:         "when the job is there, it goes",
+			setup:        func() { s.jobs.EXPECT().DeleteJob(gomock.Any(), jobID).Return(nil) },
+			validateFunc: func(err error) { s.NoError(err) },
+		},
+		{
+			name: "when the job is not there, it is ErrNotFound",
+			setup: func() {
+				s.jobs.EXPECT().DeleteJob(gomock.Any(), jobID).Return(job.ErrNotFound)
+			},
+			validateFunc: func(err error) { s.ErrorIs(err, jobgroup.ErrNotFound) },
+		},
+		{
+			name: "when the job client fails, the caller gets a message without its error",
+			setup: func() {
+				s.jobs.EXPECT().DeleteJob(gomock.Any(), jobID).Return(errors.New("nats: timeout"))
+			},
+			validateFunc: func(err error) { s.EqualError(err, "failed to delete job") },
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.setup()
+			_, err := jobgroup.Delete(
+				context.Background(),
+				s.deps(),
+				jobgroup.DeleteInput{ID: jobID},
+			)
+			tc.validateFunc(err)
+		})
+	}
+}
+
+func (s *MethodsPublicTestSuite) TestRetry() {
+	tests := []struct {
+		name         string
+		target       string
+		setup        func()
+		validateFunc func(jobgroup.CreateJobResponse, error)
+	}{
+		{
+			name:   "when the job is there, it answers the new job",
+			target: "web-01",
+			setup: func() {
+				s.jobs.EXPECT().
+					RetryJob(gomock.Any(), jobID, "web-01").
+					Return(&client.CreateJobResult{
+						JobID: newJobID, Status: "submitted", Revision: 7, Timestamp: "2026-11-17T08:00:00Z",
+					}, nil)
+			},
+			validateFunc: func(got jobgroup.CreateJobResponse, err error) {
+				s.Require().NoError(err)
+				s.Equal(jobgroup.CreateJobResponse{
+					JobID: newJobID, Status: "submitted", Revision: 7, Timestamp: "2026-11-17T08:00:00Z",
+				}, got)
+			},
+		},
+		{
+			name: "when the job is not there, it is ErrNotFound",
+			setup: func() {
+				s.jobs.EXPECT().RetryJob(gomock.Any(), jobID, "").Return(nil, job.ErrNotFound)
+			},
+			validateFunc: func(_ jobgroup.CreateJobResponse, err error) {
+				s.ErrorIs(err, jobgroup.ErrNotFound)
+			},
+		},
+		{
+			name: "when the job has no operation data, it is ErrNoOperation",
+			setup: func() {
+				s.jobs.EXPECT().
+					RetryJob(gomock.Any(), jobID, "").
+					Return(nil, job.ErrNoOperationData)
+			},
+			validateFunc: func(_ jobgroup.CreateJobResponse, err error) {
+				s.ErrorIs(err, jobgroup.ErrNoOperation)
+				s.ErrorContains(err, jobID)
+			},
+		},
+		{
+			name: "when the job client fails, the caller gets a message without its error",
+			setup: func() {
+				s.jobs.EXPECT().
+					RetryJob(gomock.Any(), jobID, "").
+					Return(nil, errors.New("nats: timeout"))
+			},
+			validateFunc: func(_ jobgroup.CreateJobResponse, err error) {
+				s.EqualError(err, "failed to retry job")
+			},
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.setup()
+			tc.validateFunc(jobgroup.Retry(context.Background(), s.deps(), jobgroup.RetryInput{
+				ID: jobID, Body: jobgroup.RetryJobRequest{TargetHostname: tc.target},
+			}))
+		})
+	}
+}
+
+func token(
+	perms ...string,
+) string {
+	t, _ := authtoken.New(slog.Default()).Generate(signingKey, []string{"read"}, "test", perms)
+
+	return t
+}
+
+// TestRoutes runs requests through the generated routes, with the auth, the
+// decoding, the validation and the status mapping of the endpoint runtime.
+func (s *MethodsPublicTestSuite) TestRoutes() {
+	tests := []struct {
+		name     string
+		method   string
+		path     string
+		body     string
+		token    string
+		setup    func()
+		wantCode int
+		wantBody string
+	}{
+		{
+			name:   "when the token has job:read, list is a 200",
+			method: http.MethodGet,
+			path:   "/api/job?status=completed&limit=5&offset=10",
+			token:  token("job:read"),
+			setup: func() {
+				s.jobs.EXPECT().ListJobs(gomock.Any(), "completed", 5, 10).
+					Return(&client.ListJobsResult{TotalCount: 0}, nil)
+			},
+			wantCode: http.StatusOK,
+			wantBody: `{}`,
+		},
+		{
+			name:     "when the status is not one of the five, it is a 400",
+			method:   http.MethodGet,
+			path:     "/api/job?status=lost",
+			token:    token("job:read"),
+			setup:    func() {},
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:     "when the limit is over 100, it is a 400",
+			method:   http.MethodGet,
+			path:     "/api/job?limit=101",
+			token:    token("job:read"),
+			setup:    func() {},
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:     "when the offset is negative, it is a 400",
+			method:   http.MethodGet,
+			path:     "/api/job?offset=-1",
+			token:    token("job:read"),
+			setup:    func() {},
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:     "when there is no token, it is a 401",
+			method:   http.MethodGet,
+			path:     "/api/job",
+			setup:    func() {},
+			wantCode: http.StatusUnauthorized,
+		},
+		{
+			name:     "when the token lacks job:read, it is a 403",
+			method:   http.MethodGet,
+			path:     "/api/job/" + jobID,
+			token:    token("agent:read"),
+			setup:    func() {},
+			wantCode: http.StatusForbidden,
+		},
+		{
+			name:   "when the job is there, get is a 200",
+			method: http.MethodGet,
+			path:   "/api/job/" + jobID,
+			token:  token("job:read"),
+			setup: func() {
+				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).
+					Return(&job.QueuedJob{ID: jobID, Status: "completed"}, nil)
+			},
+			wantCode: http.StatusOK,
+			wantBody: `{"id":"` + jobID + `","status":"completed"}`,
+		},
+		{
+			name:     "when the ID is not a UUID, it is a 400",
+			method:   http.MethodGet,
+			path:     "/api/job/not-a-uuid",
+			token:    token("job:read"),
+			setup:    func() {},
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:   "when the job is not there, it is a 404",
+			method: http.MethodGet,
+			path:   "/api/job/" + jobID,
+			token:  token("job:read"),
+			setup: func() {
+				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(nil, job.ErrNotFound)
+			},
+			wantCode: http.StatusNotFound,
+		},
+		{
+			name:     "when the token has only job:read, delete is a 403",
+			method:   http.MethodDelete,
+			path:     "/api/job/" + jobID,
+			token:    token("job:read"),
+			setup:    func() {},
+			wantCode: http.StatusForbidden,
+		},
+		{
+			name:   "when the token has job:write, delete is a 204",
+			method: http.MethodDelete,
+			path:   "/api/job/" + jobID,
+			token:  token("job:write"),
+			setup: func() {
+				s.jobs.EXPECT().DeleteJob(gomock.Any(), jobID).Return(nil)
+			},
+			wantCode: http.StatusNoContent,
+		},
+		{
+			name:   "when a retry has no body, it goes to the default target and is a 201",
+			method: http.MethodPost,
+			path:   "/api/job/" + jobID + "/retry",
+			token:  token("job:write"),
+			setup: func() {
+				s.jobs.EXPECT().RetryJob(gomock.Any(), jobID, "").
+					Return(&client.CreateJobResult{JobID: newJobID, Status: "submitted"}, nil)
+			},
+			wantCode: http.StatusCreated,
+			wantBody: `{"job_id":"` + newJobID + `","status":"submitted"}`,
+		},
+		{
+			name:   "when a retry names a target, the new job goes there",
+			method: http.MethodPost,
+			path:   "/api/job/" + jobID + "/retry",
+			body:   `{"target_hostname":"_all"}`,
+			token:  token("job:write"),
+			setup: func() {
+				s.jobs.EXPECT().RetryJob(gomock.Any(), jobID, "_all").
+					Return(&client.CreateJobResult{JobID: newJobID, Status: "submitted"}, nil)
+			},
+			wantCode: http.StatusCreated,
+		},
+		{
+			name:     "when the retry's target is not a valid target, it is a 400",
+			method:   http.MethodPost,
+			path:     "/api/job/" + jobID + "/retry",
+			body:     `{"target_hostname":"not a target!"}`,
+			token:    token("job:write"),
+			setup:    func() {},
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:   "when the old job has no operation data, the retry is a 400",
+			method: http.MethodPost,
+			path:   "/api/job/" + jobID + "/retry",
+			token:  token("job:write"),
+			setup: func() {
+				s.jobs.EXPECT().
+					RetryJob(gomock.Any(), jobID, "").
+					Return(nil, job.ErrNoOperationData)
+			},
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:   "when the job client fails, it is a 500 that does not name its error",
+			method: http.MethodDelete,
+			path:   "/api/job/" + jobID,
+			token:  token("job:write"),
+			setup: func() {
+				s.jobs.EXPECT().DeleteJob(gomock.Any(), jobID).Return(errors.New("nats: timeout"))
+			},
+			wantCode: http.StatusInternalServerError,
+			wantBody: `{"error":"failed to delete job"}`,
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.setup()
+			srv := server.New(slog.Default(), signingKey, nil, s.deps())
+			e := echo.New()
+			srv.Mount(e, gen.Routes(srv))
+			req := httptest.NewRequest(tc.method, tc.path, strings.NewReader(tc.body))
+			if tc.body != "" {
+				req.Header.Set("Content-Type", "application/json")
+			}
+			if tc.token != "" {
+				req.Header.Set("Authorization", "Bearer "+tc.token)
+			}
+			rec := httptest.NewRecorder()
+			e.ServeHTTP(rec, req)
+			s.Equal(tc.wantCode, rec.Code, rec.Body.String())
+			if tc.wantBody != "" {
+				s.JSONEq(tc.wantBody, rec.Body.String())
+			}
+		})
+	}
+}
+
+func TestMethodsPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(MethodsPublicTestSuite))
+}

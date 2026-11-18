@@ -43,9 +43,9 @@ var auditGetCmd = &cobra.Command{
 	Example:     "  osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000\n  osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000 --json",
 	Long:        "Returns a single audit log entry by ID.",
 	Run: func(cmd *cobra.Command, _ []string) {
-		iD, _ := cmd.Flags().GetString("id")
+		id, _ := cmd.Flags().GetString("id")
 
-		command.Run(cmd, audit.Group, "get", audit.GetInput{ID: iD})
+		command.Run(cmd, audit.Group, "get", audit.GetInput{ID: id})
 	},
 	Short: "Get a single audit log entry",
 	Use:   "get",

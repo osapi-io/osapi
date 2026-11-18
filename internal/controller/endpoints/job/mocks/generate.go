@@ -17,49 +17,6 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+package mocks
 
-package job
-
-import (
-	"log/slog"
-
-	"github.com/labstack/echo/v5"
-
-	"github.com/osapi-io/osapi/internal/authtoken"
-	"github.com/osapi-io/osapi/internal/controller/api"
-	gen "github.com/osapi-io/osapi/internal/controller/api/job/gen"
-	"github.com/osapi-io/osapi/internal/job/client"
-)
-
-// Handler returns job route registration functions.
-func Handler(
-	logger *slog.Logger,
-	jobClient client.JobClient,
-	signingKey string,
-	customRoles map[string][]string,
-) []func(e *echo.Echo) {
-	var tokenManager api.TokenValidator = authtoken.New(logger)
-
-	jobHandler := New(logger, jobClient)
-
-	strictHandler := gen.NewStrictHandler(
-		jobHandler,
-		[]gen.StrictMiddlewareFunc{
-			func(handler gen.StrictHandlerFunc, _ string) gen.StrictHandlerFunc {
-				return gen.StrictHandlerFunc(api.ScopeMiddleware(
-					api.StrictHandlerFunc(handler),
-					tokenManager,
-					signingKey,
-					string(gen.BearerAuthScopes),
-					customRoles,
-				))
-			},
-		},
-	)
-
-	return []func(e *echo.Echo){
-		func(e *echo.Echo) {
-			gen.RegisterHandlers(e, strictHandler)
-		},
-	}
-}
+//go:generate go tool go.uber.org/mock/mockgen -source=../deps.go -destination=deps.gen.go -package=mocks
