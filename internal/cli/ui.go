@@ -863,7 +863,7 @@ func DisplayJobDetail(
 	for _, te := range resp.Timeline {
 		timelineRows = append(
 			timelineRows,
-			[]string{te.Timestamp, te.Event, te.Hostname, te.Message, te.Error},
+			[]string{FormatTime(te.Timestamp), te.Event, te.Hostname, te.Message, te.Error},
 		)
 	}
 	sections = append(sections, Section{
@@ -950,6 +950,14 @@ func FormatTime(
 		return s
 	}
 
+	return LocalTime(t)
+}
+
+// LocalTime renders a time as local "2006-01-02 15:04:05", the one format
+// human output uses, whatever zone the time came in.
+func LocalTime(
+	t time.Time,
+) string {
 	return t.Local().Format("2006-01-02 15:04:05")
 }
 

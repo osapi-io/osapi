@@ -65,10 +65,7 @@ func renderJobList(
 
 	rows := make([][]string, 0, len(out.Items))
 	for _, j := range out.Items {
-		created := j.Created
-		if t, err := time.Parse(time.RFC3339, created); err == nil {
-			created = t.Local().Format("2006-01-02 15:04:05")
-		}
+		created := cli.FormatTime(j.Created)
 
 		operation := "Unknown"
 		if kind, ok := j.Operation["type"].(string); ok {

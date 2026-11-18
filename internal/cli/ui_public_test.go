@@ -97,6 +97,38 @@ func (suite *UIPublicTestSuite) TestFormatTime() {
 	}
 }
 
+// TestLocalTime prints a time in the local zone whatever zone it came in,
+// as audit list does for an entry the controller stored in UTC. The local
+// zone is fixed at UTC-8, so a time printed in its own zone fails.
+func (suite *UIPublicTestSuite) TestLocalTime() {
+	previous := time.Local
+	time.Local = time.FixedZone("UTC-8", -8*60*60)
+	defer func() { time.Local = previous }()
+
+	tests := []struct {
+		name string
+		in   time.Time
+		want string
+	}{
+		{
+			name: "when the time is in UTC it prints in the local zone",
+			in:   time.Date(2026, 11, 18, 21, 55, 48, 0, time.UTC),
+			want: "2026-11-18 13:55:48",
+		},
+		{
+			name: "when the time is in another zone it prints in the local zone",
+			in:   time.Date(2026, 11, 19, 6, 55, 48, 0, time.FixedZone("UTC+9", 9*60*60)),
+			want: "2026-11-18 13:55:48",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			suite.Equal(tc.want, cli.LocalTime(tc.in))
+		})
+	}
+}
+
 func (suite *UIPublicTestSuite) TestFormatDuration() {
 	tests := []struct {
 		name string
