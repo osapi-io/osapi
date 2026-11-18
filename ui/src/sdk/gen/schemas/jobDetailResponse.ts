@@ -30,6 +30,8 @@ export interface JobDetailResponse {
   result?: unknown;
   /** Current status of the job. */
   status?: string;
+  /** The target the request gave: _any, _all, a hostname, or a label such as group:web.dev. */
+  target?: string;
   /** Chronological sequence of job lifecycle events. */
   timeline?: JobDetailResponseTimelineItem[];
   /** Last update timestamp. */

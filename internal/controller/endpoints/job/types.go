@@ -72,6 +72,7 @@ type JobDetailResponse struct { //nolint:revive // the schema name is part of th
 	Changed     *bool                 `json:"changed,omitempty"                      doc:"Whether the operation modified system state. Null for pending/failed jobs; true/false for completed jobs."`
 	Error       string                `json:"error,omitempty"                        doc:"Error message if failed."`
 	Hostname    string                `json:"hostname,omitempty"                     doc:"Agent hostname that processed the job."`
+	Target      string                `json:"target,omitempty"                       doc:"The target the request gave: _any, _all, a hostname, or a label such as group:web.dev."`
 	UpdatedAt   string                `json:"updated_at,omitempty"                   doc:"Last update timestamp."`
 	Responses   map[string]Response   `json:"responses,omitempty"                    doc:"Per-agent response data for broadcast jobs."`
 	AgentStates map[string]AgentState `json:"agent_states,omitempty"                 doc:"Per-agent processing state for broadcast jobs."`

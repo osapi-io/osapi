@@ -3028,6 +3028,9 @@ type JobDetailResponse struct {
 	// Status Current status of the job.
 	Status *string `json:"status,omitempty"`
 
+	// Target The target the request gave: _any, _all, a hostname, or a label such as group:web.dev.
+	Target *string `json:"target,omitempty"`
+
 	// Timeline Chronological sequence of job lifecycle events.
 	Timeline *[]struct {
 		// Error Error details if applicable.

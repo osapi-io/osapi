@@ -77,6 +77,7 @@ func (c *Client) CreateJob(
 		"status":    "unprocessed",
 		"created":   createdTime,
 		"subject":   notificationSubject,
+		"target":    targetHostname,
 		"operation": operationData,
 		"status_history": []interface{}{
 			map[string]interface{}{
@@ -222,9 +223,9 @@ func (c *Client) GetJobStatus(
 		return nil, fmt.Errorf("job %s: %w", jobID, job.ErrNotFound)
 	}
 
-	var jobData map[string]interface{}
-	if err := json.Unmarshal(entry.Value(), &jobData); err != nil {
-		return nil, fmt.Errorf("failed to parse job data: %w", err)
+	jobData, err := c.jobRecord(entry.Value())
+	if err != nil {
+		return nil, err
 	}
 
 	// Get status event keys for this job (server-side filtered)
@@ -250,6 +251,7 @@ func (c *Client) GetJobStatus(
 		Status:      computedStatus.Status,
 		Created:     getStringField(jobData, "created"),
 		Subject:     getStringField(jobData, "subject"),
+		Target:      getStringField(jobData, "target"),
 		Hostname:    computedStatus.Hostname,
 		Error:       computedStatus.Error,
 		UpdatedAt:   computedStatus.UpdatedAt,
@@ -413,9 +415,9 @@ func (c *Client) getJobStatusFromKeys(
 		return nil, fmt.Errorf("job %s: %w", jobID, job.ErrNotFound)
 	}
 
-	var jobData map[string]interface{}
-	if err := json.Unmarshal(entry.Value(), &jobData); err != nil {
-		return nil, fmt.Errorf("failed to parse job data: %w", err)
+	jobData, err := c.jobRecord(entry.Value())
+	if err != nil {
+		return nil, err
 	}
 
 	computedStatus := c.computeStatusFromEvents(ctx, allKeys, jobID)
@@ -426,6 +428,7 @@ func (c *Client) getJobStatusFromKeys(
 		Status:      computedStatus.Status,
 		Created:     getStringField(jobData, "created"),
 		Subject:     getStringField(jobData, "subject"),
+		Target:      getStringField(jobData, "target"),
 		Hostname:    computedStatus.Hostname,
 		Error:       computedStatus.Error,
 		UpdatedAt:   computedStatus.UpdatedAt,
@@ -695,9 +698,9 @@ func (c *Client) RetryJob(
 		return nil, fmt.Errorf("job %s: %w", jobID, job.ErrNotFound)
 	}
 
-	var jobData map[string]interface{}
-	if err := json.Unmarshal(entry.Value(), &jobData); err != nil {
-		return nil, fmt.Errorf("failed to parse job data: %w", err)
+	jobData, err := c.jobRecord(entry.Value())
+	if err != nil {
+		return nil, err
 	}
 
 	// Extract operation data
@@ -928,4 +931,27 @@ func (c *Client) getJobResponses(
 	}
 
 	return responses
+}
+
+// jobRecord is the stored record of a job. With PKI on, the controller
+// writes the record inside a signed envelope, so the record is the
+// envelope's payload, its signature checked with the controller's key.
+// Without PKI, the value is the record itself.
+func (c *Client) jobRecord(
+	value []byte,
+) (map[string]interface{}, error) {
+	if c.pkiSigner != nil {
+		payload, _, err := unwrapSignedEnvelope(value, c.pkiSigner.ControllerPublicKey())
+		if err != nil {
+			return nil, fmt.Errorf("failed to verify job data: %w", err)
+		}
+		value = payload
+	}
+
+	var jobData map[string]interface{}
+	if err := json.Unmarshal(value, &jobData); err != nil {
+		return nil, fmt.Errorf("failed to parse job data: %w", err)
+	}
+
+	return jobData, nil
 }

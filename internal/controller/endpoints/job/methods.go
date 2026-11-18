@@ -168,6 +168,7 @@ func summary(
 		Changed:   qj.Changed,
 		Error:     qj.Error,
 		Hostname:  qj.Hostname,
+		Target:    qj.Target,
 		UpdatedAt: qj.UpdatedAt,
 	}
 }

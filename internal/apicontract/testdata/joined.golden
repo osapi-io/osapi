@@ -477,6 +477,7 @@ schema JobDetailResponse.operation = map[any]
 schema JobDetailResponse.responses = map[{changed:boolean,data:,error:string,hostname:string,status:string}]
 schema JobDetailResponse.result = 
 schema JobDetailResponse.status = string
+schema JobDetailResponse.target = string
 schema JobDetailResponse.timeline = [{error:string,event:string,hostname:string,message:string,timestamp:string}]
 schema JobDetailResponse.updated_at = string
 schema JobStats.completed! = integer

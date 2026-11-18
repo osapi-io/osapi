@@ -2626,6 +2626,72 @@ func (s *JobsPublicTestSuite) TestGetJobStatusWithPKISigner() {
 	}
 }
 
+// TestSignedJobRecord reads a job record that the controller signed, as it
+// does with PKI on: the created time, the operation and the target are the
+// envelope's payload, and a record whose signature fails is an error.
+func (s *JobsPublicTestSuite) TestSignedJobRecord() {
+	signer, _ := newSignerWithControllerKey(gomock.NewController(s.T()))
+	jobID := "signed-job-1"
+	record := []byte(fmt.Sprintf(
+		`{"id":"%s","status":"unprocessed","created":"2026-11-18T20:57:13Z","subject":"jobs.query._all","target":"_all","operation":{"type":"node.hostname.get"}}`,
+		jobID,
+	))
+	signed, err := client.ExportWrapInSignedEnvelope(signer, "", record)
+	s.Require().NoError(err)
+	var envelope job.SignedEnvelope
+	s.Require().NoError(json.Unmarshal(signed, &envelope))
+	envelope.Signature[0] ^= 0xFF
+	tampered, _ := json.Marshal(envelope)
+
+	tests := []struct {
+		name         string
+		value        []byte
+		validateFunc func(qj *job.QueuedJob, err error)
+	}{
+		{
+			name:  "when the record is signed, its fields are the payload's",
+			value: signed,
+			validateFunc: func(qj *job.QueuedJob, err error) {
+				s.Require().NoError(err)
+				s.Equal("2026-11-18T20:57:13Z", qj.Created)
+				s.Equal("_all", qj.Target)
+				s.Equal("node.hostname.get", qj.Operation["type"])
+			},
+		},
+		{
+			name:  "when the record's signature fails, it is an error",
+			value: tampered,
+			validateFunc: func(_ *job.QueuedJob, err error) {
+				s.ErrorContains(err, "failed to verify job data")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+			entry.EXPECT().Value().Return(tt.value)
+			s.mockNATSClient.EXPECT().
+				KVGet(gomock.Any(), "jobs", "jobs."+jobID).
+				Return(entry, nil)
+			s.mockNATSClient.EXPECT().
+				KVKeys(gomock.Any(), "jobs", gomock.Any()).
+				Return([]string{}, nil).
+				AnyTimes()
+
+			c, err := client.New(slog.Default(), s.mockNATSClient, &client.Options{
+				Timeout:    30 * time.Second,
+				JobsBucket: "jobs",
+				StreamName: "JOBS",
+				PKISigner:  signer,
+			})
+			s.Require().NoError(err)
+
+			tt.validateFunc(c.GetJobStatus(s.ctx, jobID))
+		})
+	}
+}
+
 func TestJobsPublicTestSuite(
 	t *testing.T,
 ) {

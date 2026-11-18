@@ -418,9 +418,14 @@ export function Jobs() {
                   ),
                 },
                 {
-                  header: "Hostname",
+                  // The target the request gave, as osapi client job list
+                  // shows it; a job stored before targets were kept has
+                  // only the host that answered.
+                  header: "Target",
                   cell: (job: Job) => (
-                    <Text variant="mono-muted">{job.hostname ?? "-"}</Text>
+                    <Text variant="mono-muted">
+                      {job.target ?? job.hostname ?? "-"}
+                    </Text>
                   ),
                 },
                 {

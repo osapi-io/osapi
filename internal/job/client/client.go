@@ -324,6 +324,7 @@ func (c *Client) publishAndWait(
 		"status":    "unprocessed",
 		"created":   createdTime,
 		"subject":   subject,
+		"target":    target,
 		"operation": operationData,
 	}
 
@@ -494,6 +495,7 @@ func (c *Client) publishAndCollect(
 		"status":    "unprocessed",
 		"created":   createdTime,
 		"subject":   subject,
+		"target":    target,
 		"operation": operationData,
 	}
 
