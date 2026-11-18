@@ -91,7 +91,7 @@ func (s *Container) PostNodeContainerDockerStop(
 	if resp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := resp.Error
-		return gen.PostNodeContainerDockerStop202JSONResponse{
+		return gen.PostNodeContainerDockerStop200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.DockerActionResultItem{
 				{
@@ -108,7 +108,7 @@ func (s *Container) PostNodeContainerDockerStop(
 	changed := resp.Changed
 	msg := "container stopped"
 
-	return gen.PostNodeContainerDockerStop202JSONResponse{
+	return gen.PostNodeContainerDockerStop200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.DockerActionResultItem{
 			{
@@ -177,7 +177,7 @@ func (s *Container) postNodeContainerDockerStopBroadcast(
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.PostNodeContainerDockerStop202JSONResponse{
+	return gen.PostNodeContainerDockerStop200JSONResponse{
 		JobId:   &jobUUID,
 		Results: items,
 	}, nil

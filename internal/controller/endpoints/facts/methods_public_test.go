@@ -46,9 +46,9 @@ func (s *MethodsPublicTestSuite) TestKeys() {
 	got, err := facts.Keys(context.Background(), facts.Deps{}, facts.KeysInput{})
 	s.Require().NoError(err)
 
-	s.Len(got.Keys, len(factskeys.BuiltInKeys()))
-	names := make([]string, 0, len(got.Keys))
-	for _, k := range got.Keys {
+	s.Len(got.Items, len(factskeys.BuiltInKeys()))
+	names := make([]string, 0, len(got.Items))
+	for _, k := range got.Items {
 		names = append(names, k.Key)
 		s.True(k.Builtin, k.Key)
 		s.NotEmpty(k.Description, k.Key)

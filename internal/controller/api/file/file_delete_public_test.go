@@ -89,10 +89,8 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByName() {
 					Return(nil)
 			},
 			validateFunc: func(resp gen.DeleteFileByNameResponseObject) {
-				r, ok := resp.(gen.DeleteFileByName200JSONResponse)
+				_, ok := resp.(gen.DeleteFileByName204Response)
 				s.True(ok)
-				s.Equal("nginx.conf", r.Name)
-				s.True(r.Deleted)
 			},
 		},
 		{
@@ -213,9 +211,7 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByNameValidationHTTP() {
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusOK, rec.Code)
-				s.Contains(rec.Body.String(), `"name":"nginx.conf"`)
-				s.Contains(rec.Body.String(), `"deleted":true`)
+				s.Equal(http.StatusNoContent, rec.Code)
 			},
 		},
 		{
@@ -321,7 +317,7 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByNameRBACHTTP() {
 			},
 		},
 		{
-			name: "when valid token with file:write returns 200",
+			name: "when valid token with file:write returns 204",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
 					rbacDeleteTestSigningKey,
@@ -346,9 +342,7 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByNameRBACHTTP() {
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusOK, rec.Code)
-				s.Contains(rec.Body.String(), `"name":"nginx.conf"`)
-				s.Contains(rec.Body.String(), `"deleted":true`)
+				s.Equal(http.StatusNoContent, rec.Code)
 			},
 		},
 	}

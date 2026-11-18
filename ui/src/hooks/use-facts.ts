@@ -14,7 +14,7 @@ export function useFacts() {
       try {
         const result = await getFactKeys();
         if (mounted && result.status === 200) {
-          setFacts((result.data as FactKeysResponse).keys);
+          setFacts((result.data as FactKeysResponse).items);
         }
       } catch {
         // silent — fact suggestions are non-critical

@@ -75,9 +75,9 @@ export const getNodeNetworkDNSByInterface = async (hostname: string,
 );}
 
 
-export type putNodeNetworkDNSResponse202 = {
+export type putNodeNetworkDNSResponse200 = {
   data: DNSUpdateCollectionResponse
-  status: 202
+  status: 200
 }
 
 export type putNodeNetworkDNSResponse400 = {
@@ -100,7 +100,7 @@ export type putNodeNetworkDNSResponse500 = {
   status: 500
 }
 
-export type putNodeNetworkDNSResponseSuccess = (putNodeNetworkDNSResponse202) & {
+export type putNodeNetworkDNSResponseSuccess = (putNodeNetworkDNSResponse200) & {
   headers: Headers;
 };
 export type putNodeNetworkDNSResponseError = (putNodeNetworkDNSResponse400 | putNodeNetworkDNSResponse401 | putNodeNetworkDNSResponse403 | putNodeNetworkDNSResponse500) & {

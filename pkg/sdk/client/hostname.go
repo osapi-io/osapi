@@ -81,7 +81,7 @@ func (s *HostnameService) Update(
 		return nil, err
 	}
 
-	if resp.JSON202 == nil {
+	if resp.JSON200 == nil {
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),
 			Message:    "nil response body",
@@ -89,7 +89,7 @@ func (s *HostnameService) Update(
 	}
 
 	return newResponse(
-			hostnameUpdateCollectionFromGen(resp.JSON202), resp.Body, resp.HTTPResponse),
+			hostnameUpdateCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse),
 
 		nil
 }

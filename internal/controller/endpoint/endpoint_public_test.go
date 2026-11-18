@@ -244,14 +244,14 @@ func (s *EndpointPublicTestSuite) TestPathPermissionAndID() {
 			method: endpoint.Get[noInput, Node]("list"),
 			path:   "/api/node",
 			perm:   "node:read",
-			id:     "getNodeList",
+			id:     "GetNodeList",
 		},
 		{
 			name:   "when a GET has a sub-path and a key",
 			method: endpoint.Get[keyInput, Node]("get").Sub("trace"),
 			path:   "/api/node/trace/{hostname}",
 			perm:   "node:read",
-			id:     "getNodeTraceGet",
+			id:     "GetNodeTraceGet",
 		},
 		{
 			name: "when a POST has an action, an ID and a permission",
@@ -269,14 +269,14 @@ func (s *EndpointPublicTestSuite) TestPathPermissionAndID() {
 			method: endpoint.Put[keyInput, Node]("update"),
 			path:   "/api/node/{hostname}",
 			perm:   "node:write",
-			id:     "putNodeUpdate",
+			id:     "PutNodeUpdate",
 		},
 		{
 			name:   "when a DELETE is public",
 			method: endpoint.Delete[keyInput, Node]("remove").Public(),
 			path:   "/api/node/{hostname}",
 			perm:   "",
-			id:     "deleteNodeRemove",
+			id:     "DeleteNodeRemove",
 		},
 	}
 
@@ -330,7 +330,7 @@ func (s *EndpointPublicTestSuite) TestOpenAPI() {
 					),
 			},
 			want: []string{
-				"op POST /api/node/{hostname}/drain id=postNodeDrain tags=[node] " +
+				"op POST /api/node/{hostname}/drain id=PostNodeDrain tags=[node] " +
 					"auth=BearerAuth:node:write " +
 					"params=[path:hostname!:string query:force!:boolean query:limit:integer] body= " +
 					"responses=[201=application/json:Node 400=application/json:ErrorResponse " +
@@ -345,7 +345,7 @@ func (s *EndpointPublicTestSuite) TestOpenAPI() {
 				endpoint.Get[string, Node]("raw"),
 			},
 			want: []string{
-				"op GET /api/node id=getNodeRaw tags=[node] auth=BearerAuth:node:read params=[] body= " +
+				"op GET /api/node id=GetNodeRaw tags=[node] auth=BearerAuth:node:read params=[] body= " +
 					"responses=[200=application/json:Node 401=application/json:ErrorResponse " +
 					"403=application/json:ErrorResponse 500=application/json:ErrorResponse]",
 			},
@@ -358,10 +358,10 @@ func (s *EndpointPublicTestSuite) TestOpenAPI() {
 					Answers(http.StatusServiceUnavailable, "Not ready."),
 			},
 			want: []string{
-				"op GET /api/node/ready id=getNodeReadyReady tags=[node] auth=public params=[] body= " +
+				"op GET /api/node/ready id=GetNodeReadyReady tags=[node] auth=public params=[] body= " +
 					"responses=[200=application/json:Node 500=application/json:ErrorResponse " +
 					"503=application/json:Node]",
-				"op GET /api/node id=getNodePing tags=[node] auth=public params=[] body= " +
+				"op GET /api/node id=GetNodePing tags=[node] auth=public params=[] body= " +
 					"responses=[204=- 500=application/json:ErrorResponse]",
 			},
 		},
@@ -374,12 +374,12 @@ func (s *EndpointPublicTestSuite) TestOpenAPI() {
 				endpoint.Put[optionalBody, struct{}]("note").Sub("note"),
 			},
 			want: []string{
-				"op POST /api/node id=postNodeCreate tags=[node] auth=BearerAuth:node:write params=[] " +
+				"op POST /api/node id=PostNodeCreate tags=[node] auth=BearerAuth:node:write params=[] " +
 					"body=application/json:{count:integer,name!:string(a|b),ratio:number,tags:[string]}! " +
 					"responses=[200=application/json:{ok!:boolean} 400=application/json:ErrorResponse " +
 					"401=application/json:ErrorResponse 403=application/json:ErrorResponse " +
 					"500=application/json:ErrorResponse]",
-				"op PUT /api/node/note id=putNodeNoteNote tags=[node] auth=BearerAuth:node:write params=[] " +
+				"op PUT /api/node/note id=PutNodeNoteNote tags=[node] auth=BearerAuth:node:write params=[] " +
 					"body=application/json:{note:string} " +
 					"responses=[200=application/json:{} 400=application/json:ErrorResponse " +
 					"401=application/json:ErrorResponse 403=application/json:ErrorResponse " +
@@ -393,13 +393,13 @@ func (s *EndpointPublicTestSuite) TestOpenAPI() {
 				endpoint.Post[optionalNamedBodyInput, *Node]("redo").Sub("redo"),
 			},
 			want: []string{
-				"op POST /api/node id=postNodeRetry tags=[node] auth=BearerAuth:node:write params=[] " +
+				"op POST /api/node id=PostNodeRetry tags=[node] auth=BearerAuth:node:write params=[] " +
 					"body=application/json:Request! " +
 					"responses=[200=application/json:Node 400=application/json:ErrorResponse " +
 					"401=application/json:ErrorResponse 403=application/json:ErrorResponse " +
 					"500=application/json:ErrorResponse]",
 				"schema Request.reason! = string",
-				"op POST /api/node/redo id=postNodeRedoRedo tags=[node] auth=BearerAuth:node:write " +
+				"op POST /api/node/redo id=PostNodeRedoRedo tags=[node] auth=BearerAuth:node:write " +
 					"params=[] body=application/json:Request " +
 					"responses=[200=application/json:Node 400=application/json:ErrorResponse " +
 					"401=application/json:ErrorResponse 403=application/json:ErrorResponse " +
@@ -435,6 +435,16 @@ type Sample struct {
 	Ratio float64 `json:"ratio"                                           validate:"min=0"`
 	Skip  string  `json:"skip"                                            validate:"nosuchrule"`
 	Small float32 `json:"small"`
+}
+
+func (s *EndpointPublicTestSuite) TestLocation() {
+	m := endpoint.Post[noInput, Node]("make").Status(http.StatusCreated).Location("name")
+	s.Equal("name", m.LocationField())
+
+	doc, err := endpoint.OpenAPI(endpoint.Define("node", "The nodes", m), "x")
+	s.Require().NoError(err)
+	created := doc.Paths.Find("/api/node").Post.Responses.Value("201").Value
+	s.Contains(created.Headers, "Location")
 }
 
 func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
@@ -601,20 +611,22 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 			name: "when methods break the rules",
 			group: endpoint.Define("node", "The nodes",
 				endpoint.Get[noInput, Node]("List"),
-				endpoint.Get[noInput, Node]("list").ID("getNodeList"),
+				endpoint.Get[noInput, Node]("list").ID("GetNodeList"),
 				endpoint.Get[noInput, Node]("list").Sub("Bad"),
 				endpoint.Post[noInput, Node]("act").Action("go"),
 				endpoint.Get[twoKeys, Node]("two"),
 				endpoint.Get[noInput, badOut]("bad").Sub("bad"),
+				endpoint.Get[noInput, Node]("lower").Sub("lower").ID("getLower"),
 			),
 			want: []string{
 				`method name "List" is not lowercase letters and digits.`,
-				"operationId getNodeList is also the ID of List.",
+				"operationId GetNodeList is also the ID of List.",
 				"GET /api/node is also the route of List.",
 				"two methods have the name list.",
 				`path segment "Bad" is not lowercase letters and digits.`,
 				"the method has an action but no key.",
 				"the input has more than one path field.",
+				"operationId getLower starts with a small letter.",
 				"the spec does not build: node bad: response: badOut: C: type chan int: kind chan has no schema.",
 			},
 		},

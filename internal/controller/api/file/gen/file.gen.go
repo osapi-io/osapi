@@ -42,15 +42,6 @@ func (e PostFileMultipartBodyContentType) Valid() bool {
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse = externalRef0.ErrorResponse
 
-// FileDeleteResponse defines model for FileDeleteResponse.
-type FileDeleteResponse struct {
-	// Deleted Whether the file was deleted.
-	Deleted bool `json:"deleted"`
-
-	// Name The name of the deleted file.
-	Name string `json:"name"`
-}
-
 // FileInfo defines model for FileInfo.
 type FileInfo struct {
 	// ContentType How the file should be treated during deploy (raw or template).
@@ -86,11 +77,11 @@ type FileInfoResponse struct {
 
 // FileListResponse defines model for FileListResponse.
 type FileListResponse struct {
-	// Files List of stored files.
-	Files []FileInfo `json:"files"`
+	// Items List of stored files.
+	Items []FileInfo `json:"items"`
 
-	// Total Total number of files.
-	Total int `json:"total"`
+	// TotalItems Total number of files.
+	TotalItems int `json:"total_items"`
 }
 
 // FileUploadResponse defines model for FileUploadResponse.
@@ -137,10 +128,10 @@ type StaleDeployment struct {
 
 // StaleDeploymentsResponse defines model for StaleDeploymentsResponse.
 type StaleDeploymentsResponse struct {
-	Stale []StaleDeployment `json:"stale"`
+	Items []StaleDeployment `json:"items"`
 
-	// Total Total number of stale deployments.
-	Total int `json:"total"`
+	// TotalItems Total number of stale deployments.
+	TotalItems int `json:"total_items"`
 }
 
 // FileName defines model for FileName.
@@ -402,15 +393,39 @@ type PostFileResponseObject interface {
 	VisitPostFileResponse(w http.ResponseWriter) error
 }
 
-type PostFile201JSONResponse FileUploadResponse
+type PostFile200JSONResponse FileUploadResponse
 
-func (response PostFile201JSONResponse) VisitPostFileResponse(w http.ResponseWriter) error {
+func (response PostFile200JSONResponse) VisitPostFileResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
 		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PostFile201ResponseHeaders struct {
+	Location *string
+}
+
+type PostFile201JSONResponse struct {
+	Body    FileUploadResponse
+	Headers PostFile201ResponseHeaders
+}
+
+func (response PostFile201JSONResponse) VisitPostFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.Location != nil {
+		w.Header().Set("Location", fmt.Sprint(*response.Headers.Location))
+	}
 	w.WriteHeader(201)
 	_, err := buf.WriteTo(w)
 	return err
@@ -557,18 +572,12 @@ type DeleteFileByNameResponseObject interface {
 	VisitDeleteFileByNameResponse(w http.ResponseWriter) error
 }
 
-type DeleteFileByName200JSONResponse FileDeleteResponse
+type DeleteFileByName204Response struct {
+}
 
-func (response DeleteFileByName200JSONResponse) VisitDeleteFileByNameResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	_, err := buf.WriteTo(w)
-	return err
+func (response DeleteFileByName204Response) VisitDeleteFileByNameResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type DeleteFileByName400JSONResponse externalRef0.ErrorResponse

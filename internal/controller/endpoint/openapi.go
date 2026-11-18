@@ -156,6 +156,14 @@ func (b *builder) operation(
 			return nil, fmt.Errorf("response: %w", err)
 		}
 		success = success.WithJSONSchemaRef(out)
+		if m.location != "" {
+			success.Headers = openapi3.Headers{"Location": &openapi3.HeaderRef{
+				Value: &openapi3.Header{Parameter: openapi3.Parameter{
+					Description: "The URL of the resource that the request created.",
+					Schema:      openapi3.NewStringSchema().NewRef(),
+				}},
+			}}
+		}
 		// A status that Answers added has the output too.
 		for _, a := range m.answers {
 			op.Responses.Set(strconv.Itoa(a.Code), &openapi3.ResponseRef{
@@ -418,12 +426,6 @@ func jsonName(
 	}
 
 	return name
-}
-
-func lowerVerb(
-	verb string,
-) string {
-	return strings.ToLower(verb)
 }
 
 // upper is s with its first letter in upper case, and "" for "".

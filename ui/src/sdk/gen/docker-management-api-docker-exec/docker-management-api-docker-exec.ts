@@ -12,9 +12,9 @@ import type {
 
 import { apiFetch } from '../../fetch';
 
-export type postNodeContainerDockerExecResponse202 = {
+export type postNodeContainerDockerExecResponse200 = {
   data: DockerExecCollectionResponse
-  status: 202
+  status: 200
 }
 
 export type postNodeContainerDockerExecResponse400 = {
@@ -42,7 +42,7 @@ export type postNodeContainerDockerExecResponse500 = {
   status: 500
 }
 
-export type postNodeContainerDockerExecResponseSuccess = (postNodeContainerDockerExecResponse202) & {
+export type postNodeContainerDockerExecResponseSuccess = (postNodeContainerDockerExecResponse200) & {
   headers: Headers;
 };
 export type postNodeContainerDockerExecResponseError = (postNodeContainerDockerExecResponse400 | postNodeContainerDockerExecResponse401 | postNodeContainerDockerExecResponse403 | postNodeContainerDockerExecResponse404 | postNodeContainerDockerExecResponse500) & {

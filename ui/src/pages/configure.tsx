@@ -176,7 +176,7 @@ import {
 import {
   postNodeFileDeploy,
   postNodeFileUndeploy,
-  postNodeFileStatus,
+  getNodeFileStatus,
 } from "@/sdk/gen/node-file-operations-api-node-file-operations/node-file-operations-api-node-file-operations";
 import {
   getNodeDisk,
@@ -523,7 +523,7 @@ export function Configure() {
             });
             break;
           case "file-status":
-            result = await postNodeFileStatus(t, {
+            result = await getNodeFileStatus(t, {
               path: block.data.path as string,
             });
             break;

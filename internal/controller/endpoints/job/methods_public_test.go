@@ -374,6 +374,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 		setup    func()
 		wantCode int
 		wantBody string
+		wantLoc  string
 	}{
 		{
 			name:   "when the token has job:read, list is a 200",
@@ -485,6 +486,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 			},
 			wantCode: http.StatusCreated,
 			wantBody: `{"job_id":"` + newJobID + `","status":"submitted"}`,
+			wantLoc:  "/api/job/" + newJobID,
 		},
 		{
 			name:   "when a retry names a target, the new job goes there",
@@ -497,6 +499,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 					Return(&client.CreateJobResult{JobID: newJobID, Status: "submitted"}, nil)
 			},
 			wantCode: http.StatusCreated,
+			wantLoc:  "/api/job/" + newJobID,
 		},
 		{
 			name:     "when the retry's target is not a valid target, it is a 400",
@@ -550,6 +553,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 			if tc.wantBody != "" {
 				s.JSONEq(tc.wantBody, rec.Body.String())
 			}
+			s.Equal(tc.wantLoc, rec.Header().Get("Location"))
 		})
 	}
 }

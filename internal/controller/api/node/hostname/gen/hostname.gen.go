@@ -325,16 +325,16 @@ type PutNodeHostnameResponseObject interface {
 	VisitPutNodeHostnameResponse(w http.ResponseWriter) error
 }
 
-type PutNodeHostname202JSONResponse HostnameUpdateCollectionResponse
+type PutNodeHostname200JSONResponse HostnameUpdateCollectionResponse
 
-func (response PutNodeHostname202JSONResponse) VisitPutNodeHostnameResponse(w http.ResponseWriter) error {
+func (response PutNodeHostname200JSONResponse) VisitPutNodeHostnameResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
 		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
+	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
 }

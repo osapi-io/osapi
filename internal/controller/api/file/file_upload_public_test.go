@@ -175,8 +175,10 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 					})
 			},
 			validateFunc: func(resp gen.PostFileResponseObject) {
-				r, ok := resp.(gen.PostFile201JSONResponse)
+				created, ok := resp.(gen.PostFile201JSONResponse)
 				s.True(ok)
+				r := created.Body
+				s.Equal("/api/file/"+r.Name, *created.Headers.Location)
 				s.Equal("nginx.conf", r.Name)
 				s.Equal(len(fileContent), r.Size)
 				s.NotEmpty(r.Sha256)
@@ -209,8 +211,10 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 					})
 			},
 			validateFunc: func(resp gen.PostFileResponseObject) {
-				r, ok := resp.(gen.PostFile201JSONResponse)
+				created, ok := resp.(gen.PostFile201JSONResponse)
 				s.True(ok)
+				r := created.Body
+				s.Equal("/api/file/"+r.Name, *created.Headers.Location)
 				s.Equal("tmpl.conf", r.Name)
 				s.True(r.Changed)
 				s.Equal("template", r.ContentType)
@@ -234,8 +238,10 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostFileResponseObject) {
-				r, ok := resp.(gen.PostFile201JSONResponse)
+				created, ok := resp.(gen.PostFile201JSONResponse)
 				s.True(ok)
+				r := created.Body
+				s.Equal("/api/file/"+r.Name, *created.Headers.Location)
 				s.Equal("raw", r.ContentType)
 			},
 		},
@@ -259,7 +265,7 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostFileResponseObject) {
-				r, ok := resp.(gen.PostFile201JSONResponse)
+				r, ok := resp.(gen.PostFile200JSONResponse)
 				s.True(ok)
 				s.Equal("nginx.conf", r.Name)
 				s.Equal(len(fileContent), r.Size)
@@ -301,6 +307,12 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 			},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
+					Return(&jetstream.ObjectInfo{
+						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
+						Digest:     "SHA-256=old",
+					}, nil)
+				s.mockObjStore.EXPECT().
 					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
@@ -308,7 +320,7 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostFileResponseObject) {
-				r, ok := resp.(gen.PostFile201JSONResponse)
+				r, ok := resp.(gen.PostFile200JSONResponse)
 				s.True(ok)
 				s.Equal("nginx.conf", r.Name)
 				s.True(r.Changed)
@@ -322,6 +334,12 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 			},
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
+					Return(&jetstream.ObjectInfo{
+						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
+						Digest:     "SHA-256=old",
+					}, nil)
+				s.mockObjStore.EXPECT().
 					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
@@ -329,7 +347,7 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostFileResponseObject) {
-				r, ok := resp.(gen.PostFile201JSONResponse)
+				r, ok := resp.(gen.PostFile200JSONResponse)
 				s.True(ok)
 				s.True(r.Changed)
 			},
@@ -528,6 +546,12 @@ func (s *FileUploadPublicTestSuite) TestPostFileValidationHTTP() {
 			setupMock: func() *mocks.MockObjectStoreManager {
 				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
 				mock.EXPECT().
+					ObjectInfo(gomock.Any(), "objects", "nginx.conf").
+					Return(&jetstream.ObjectInfo{
+						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
+						Digest:     "SHA-256=old",
+					}, nil)
+				mock.EXPECT().
 					ObjectPut(gomock.Any(), "objects", gomock.Any(), gomock.Any()).
 					Return(&jetstream.ObjectInfo{
 						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
@@ -536,7 +560,7 @@ func (s *FileUploadPublicTestSuite) TestPostFileValidationHTTP() {
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusCreated, rec.Code)
+				s.Equal(http.StatusOK, rec.Code)
 				s.Contains(rec.Body.String(), `"changed":true`)
 			},
 		},

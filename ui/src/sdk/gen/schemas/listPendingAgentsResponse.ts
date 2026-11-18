@@ -7,7 +7,8 @@
 import type { PendingAgentInfo } from './pendingAgentInfo';
 
 export interface ListPendingAgentsResponse {
-  agents: PendingAgentInfo[];
+  /** The agents that wait for enrollment. */
+  items: PendingAgentInfo[];
   /** Total number of pending agents. */
-  total: number;
+  total_items: number;
 }

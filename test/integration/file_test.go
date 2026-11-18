@@ -49,8 +49,8 @@ func (s *FileSmokeSuite) TestFileList() {
 
 				var result map[string]any
 				s.Require().NoError(parseJSON(stdout, &result))
-				s.Contains(result, "files")
-				s.Contains(result, "total")
+				s.Contains(result, "items")
+				s.Contains(result, "total_items")
 			},
 		},
 	}
@@ -111,12 +111,12 @@ func (s *FileSmokeSuite) TestFileUploadGetDelete() {
 	s.Require().Equal(0, deleteCode)
 
 	var deleteResp struct {
-		Name    string `json:"name"`
-		Deleted bool   `json:"deleted"`
+		Name   string `json:"name"`
+		Status string `json:"status"`
 	}
 	s.Require().NoError(parseJSON(deleteOut, &deleteResp))
 	s.Equal("test-int.conf", deleteResp.Name)
-	s.True(deleteResp.Deleted)
+	s.Equal("deleted", deleteResp.Status)
 }
 
 func (s *FileSmokeSuite) TestFileDeployStatus() {
@@ -161,7 +161,9 @@ func (s *FileSmokeSuite) TestFileDeployStatus() {
 				var result map[string]any
 				s.Require().NoError(parseJSON(stdout, &result))
 				s.NotEmpty(result["job_id"])
-				s.Contains(result, "changed")
+				results, _ := result["results"].([]any)
+				s.Require().NotEmpty(results)
+				s.Contains(results[0], "changed")
 			},
 		},
 		{
@@ -180,7 +182,9 @@ func (s *FileSmokeSuite) TestFileDeployStatus() {
 				var result map[string]any
 				s.Require().NoError(parseJSON(stdout, &result))
 				s.NotEmpty(result["job_id"])
-				s.Contains(result, "changed")
+				results, _ := result["results"].([]any)
+				s.Require().NotEmpty(results)
+				s.Contains(results[0], "status")
 			},
 		},
 	}

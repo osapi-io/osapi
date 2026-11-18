@@ -19,13 +19,17 @@ components:
       type: object
     FactKeysResponse:
       properties:
-        keys:
+        items:
           description: Available fact keys for @fact. references.
           items:
             $ref: '#/components/schemas/FactKeyEntry'
           type: array
+        total_items:
+          description: Total number of fact keys.
+          type: integer
       required:
-        - keys
+        - items
+        - total_items
       type: object
   securitySchemes:
     BearerAuth:

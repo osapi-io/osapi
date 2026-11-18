@@ -59,7 +59,7 @@ func (suite *CommandPublicTestSuite) TestExec() {
 			},
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"results":[{"hostname":"exec-host","stdout":"root\n","exit_code":0,"changed":true}]}`,
@@ -86,7 +86,7 @@ func (suite *CommandPublicTestSuite) TestExec() {
 			},
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"results":[{"hostname":"exec-host","stdout":"root\n","exit_code":0,"changed":true}]}`,
@@ -137,7 +137,7 @@ func (suite *CommandPublicTestSuite) TestExec() {
 				Target:  "_any",
 			},
 			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(resp *client.Response[client.Collection[client.CommandResult]], err error) {
 				suite.Error(err)
@@ -145,7 +145,7 @@ func (suite *CommandPublicTestSuite) TestExec() {
 
 				var target *client.UnexpectedStatusError
 				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
 		},
@@ -196,7 +196,7 @@ func (suite *CommandPublicTestSuite) TestShell() {
 			},
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"results":[{"hostname":"shell-host","exit_code":0,"changed":false}]}`,
@@ -220,7 +220,7 @@ func (suite *CommandPublicTestSuite) TestShell() {
 			},
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"results":[{"hostname":"shell-host","exit_code":0,"changed":false}]}`,
@@ -271,7 +271,7 @@ func (suite *CommandPublicTestSuite) TestShell() {
 				Target:  "_any",
 			},
 			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(resp *client.Response[client.Collection[client.CommandResult]], err error) {
 				suite.Error(err)
@@ -279,7 +279,7 @@ func (suite *CommandPublicTestSuite) TestShell() {
 
 				var target *client.UnexpectedStatusError
 				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
 		},

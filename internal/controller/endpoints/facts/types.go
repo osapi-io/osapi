@@ -24,7 +24,8 @@ type KeysInput struct{}
 
 // FactKeysResponse is each fact key.
 type FactKeysResponse struct {
-	Keys []FactKeyEntry `json:"keys" doc:"Available fact keys for @fact. references."`
+	Items      []FactKeyEntry `json:"items"       doc:"Available fact keys for @fact. references."`
+	TotalItems int            `json:"total_items" doc:"Total number of fact keys."`
 }
 
 // FactKeyEntry is one fact key.

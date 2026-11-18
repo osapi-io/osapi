@@ -74,8 +74,5 @@ func (f *File) DeleteFileByName(
 		}, nil
 	}
 
-	return gen.DeleteFileByName200JSONResponse{
-		Name:    request.Name,
-		Deleted: true,
-	}, nil
+	return gen.DeleteFileByName204Response{}, nil
 }

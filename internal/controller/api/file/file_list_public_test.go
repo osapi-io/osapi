@@ -104,19 +104,19 @@ func (s *FileListPublicTestSuite) TestGetFiles() {
 			validateFunc: func(resp gen.GetFilesResponseObject) {
 				r, ok := resp.(gen.GetFiles200JSONResponse)
 				s.True(ok)
-				s.Equal(2, r.Total)
-				s.Len(r.Files, 2)
-				s.Equal("nginx.conf", r.Files[0].Name)
+				s.Equal(2, r.TotalItems)
+				s.Len(r.Items, 2)
+				s.Equal("nginx.conf", r.Items[0].Name)
 				s.Equal(
 					"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-					r.Files[0].Sha256,
+					r.Items[0].Sha256,
 				)
-				s.Equal(1024, r.Files[0].Size)
-				s.Equal("raw", r.Files[0].ContentType)
-				s.Equal("user", r.Files[0].Source)
-				s.Equal("osapi/cron-wrapper.tmpl", r.Files[1].Name)
-				s.Equal("template", r.Files[1].ContentType)
-				s.Equal("osapi", r.Files[1].Source)
+				s.Equal(1024, r.Items[0].Size)
+				s.Equal("raw", r.Items[0].ContentType)
+				s.Equal("user", r.Items[0].Source)
+				s.Equal("osapi/cron-wrapper.tmpl", r.Items[1].Name)
+				s.Equal("template", r.Items[1].ContentType)
+				s.Equal("osapi", r.Items[1].Source)
 			},
 		},
 		{
@@ -129,8 +129,8 @@ func (s *FileListPublicTestSuite) TestGetFiles() {
 			validateFunc: func(resp gen.GetFilesResponseObject) {
 				r, ok := resp.(gen.GetFiles200JSONResponse)
 				s.True(ok)
-				s.Equal(0, r.Total)
-				s.Empty(r.Files)
+				s.Equal(0, r.TotalItems)
+				s.Empty(r.Items)
 			},
 		},
 		{
@@ -160,9 +160,9 @@ func (s *FileListPublicTestSuite) TestGetFiles() {
 			validateFunc: func(resp gen.GetFilesResponseObject) {
 				r, ok := resp.(gen.GetFiles200JSONResponse)
 				s.True(ok)
-				s.Equal(1, r.Total)
-				s.Len(r.Files, 1)
-				s.Equal("active.conf", r.Files[0].Name)
+				s.Equal(1, r.TotalItems)
+				s.Len(r.Items, 1)
+				s.Equal("active.conf", r.Items[0].Name)
 			},
 		},
 		{
@@ -218,9 +218,9 @@ func (s *FileListPublicTestSuite) TestGetFilesHTTP() {
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusOK, rec.Code)
-				s.Contains(rec.Body.String(), `"files"`)
+				s.Contains(rec.Body.String(), `"items"`)
 				s.Contains(rec.Body.String(), `"nginx.conf"`)
-				s.Contains(rec.Body.String(), `"total":1`)
+				s.Contains(rec.Body.String(), `"total_items":1`)
 				s.Contains(rec.Body.String(), `"content_type":"raw"`)
 			},
 		},
@@ -325,8 +325,8 @@ func (s *FileListPublicTestSuite) TestGetFilesRBACHTTP() {
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusOK, rec.Code)
-				s.Contains(rec.Body.String(), `"files"`)
-				s.Contains(rec.Body.String(), `"total":0`)
+				s.Contains(rec.Body.String(), `"items"`)
+				s.Contains(rec.Body.String(), `"total_items":0`)
 			},
 		},
 	}

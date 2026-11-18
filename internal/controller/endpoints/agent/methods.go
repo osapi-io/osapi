@@ -51,7 +51,7 @@ func List(
 		infos = append(infos, buildAgentInfo(&agents[i]))
 	}
 
-	return ListAgentsResponse{Agents: infos, Total: len(infos)}, nil
+	return ListAgentsResponse{Items: infos, TotalItems: len(infos)}, nil
 }
 
 // Pending is the agents that wait for enrollment.
@@ -79,7 +79,7 @@ func Pending(
 		})
 	}
 
-	return ListPendingAgentsResponse{Agents: agents, Total: len(agents)}, nil
+	return ListPendingAgentsResponse{Items: agents, TotalItems: len(agents)}, nil
 }
 
 // Get is one agent.
@@ -105,12 +105,12 @@ func Delete(
 	ctx context.Context,
 	d Deps,
 	in DeleteInput,
-) (Message, error) {
+) (struct{}, error) {
 	if d.Enrollment == nil {
-		return Message{}, errNoEnrollment
+		return struct{}{}, errNoEnrollment
 	}
 
-	removed, err := d.Enrollment.RemoveByHostname(ctx, in.Hostname, in.MachineID)
+	_, err := d.Enrollment.RemoveByHostname(ctx, in.Hostname, in.MachineID)
 	switch {
 	case errors.Is(err, enrollment.ErrNoAcceptedAgent):
 		msg := fmt.Sprintf("no accepted agent with hostname %q", in.Hostname)
@@ -118,14 +118,18 @@ func Delete(
 			msg += fmt.Sprintf(" and machine ID %q", in.MachineID)
 		}
 
-		return Message{}, endpoint.Errorf(ErrNotFound, "%s", msg)
+		return struct{}{}, endpoint.Errorf(ErrNotFound, "%s", msg)
 	case errors.Is(err, enrollment.ErrAmbiguousHostname):
-		return Message{}, endpoint.Errorf(ErrAmbiguous, "%s; name one with machine_id", err.Error())
+		return struct{}{}, endpoint.Errorf(
+			ErrAmbiguous,
+			"%s; name one with machine_id",
+			err.Error(),
+		)
 	case err != nil:
-		return Message{}, err
+		return struct{}{}, err
 	}
 
-	return Message{Message: fmt.Sprintf("agent %s (%s) removed", in.Hostname, removed)}, nil
+	return struct{}{}, nil
 }
 
 // Accept accepts a pending agent, by its fingerprint when the request names
@@ -134,36 +138,34 @@ func Accept(
 	ctx context.Context,
 	d Deps,
 	in AcceptInput,
-) (Message, error) {
+) (struct{}, error) {
 	if d.Enrollment == nil {
-		return Message{}, errNoEnrollment
+		return struct{}{}, errNoEnrollment
 	}
 
 	if in.Fingerprint != "" {
 		if err := d.Enrollment.AcceptByFingerprint(ctx, in.Fingerprint); err != nil {
 			if errors.Is(err, enrollment.ErrNoPendingAgent) {
-				return Message{}, endpoint.Errorf(ErrNotFound,
+				return struct{}{}, endpoint.Errorf(ErrNotFound,
 					"no pending agent with fingerprint %q", in.Fingerprint)
 			}
 
-			return Message{}, err
+			return struct{}{}, err
 		}
 
-		return Message{
-			Message: fmt.Sprintf("agent with fingerprint %s accepted", in.Fingerprint),
-		}, nil
+		return struct{}{}, nil
 	}
 
 	if err := d.Enrollment.AcceptByHostname(ctx, in.Hostname); err != nil {
 		if errors.Is(err, enrollment.ErrNoPendingAgent) {
-			return Message{}, endpoint.Errorf(ErrNotFound,
+			return struct{}{}, endpoint.Errorf(ErrNotFound,
 				"no pending agent with hostname %q", in.Hostname)
 		}
 
-		return Message{}, err
+		return struct{}{}, err
 	}
 
-	return Message{Message: fmt.Sprintf("agent %s accepted", in.Hostname)}, nil
+	return struct{}{}, nil
 }
 
 // Reject rejects a pending agent.
@@ -171,21 +173,21 @@ func Reject(
 	ctx context.Context,
 	d Deps,
 	in RejectInput,
-) (Message, error) {
+) (struct{}, error) {
 	if d.Enrollment == nil {
-		return Message{}, errNoEnrollment
+		return struct{}{}, errNoEnrollment
 	}
 
 	if err := d.Enrollment.RejectByHostname(ctx, in.Hostname, "rejected via API"); err != nil {
 		if errors.Is(err, enrollment.ErrNoPendingAgent) {
-			return Message{}, endpoint.Errorf(ErrNotFound,
+			return struct{}{}, endpoint.Errorf(ErrNotFound,
 				"no pending agent with hostname %q", in.Hostname)
 		}
 
-		return Message{}, err
+		return struct{}{}, err
 	}
 
-	return Message{Message: fmt.Sprintf("agent %s rejected", in.Hostname)}, nil
+	return struct{}{}, nil
 }
 
 // Drain stops an agent taking new jobs. A failure of the registry or of a
@@ -194,25 +196,25 @@ func Drain(
 	ctx context.Context,
 	d Deps,
 	in DrainInput,
-) (Message, error) {
+) (struct{}, error) {
 	info, err := lookup(ctx, d, in.Hostname)
 	if err != nil {
-		return Message{}, err
+		return struct{}{}, err
 	}
 	if info.State == job.AgentStateDraining || info.State == job.AgentStateCordoned {
-		return Message{}, endpoint.Errorf(ErrState,
+		return struct{}{}, endpoint.Errorf(ErrState,
 			"agent %s is already in %s state", in.Hostname, info.State)
 	}
 	if err := d.Jobs.SetDrainFlag(ctx, info.MachineID); err != nil {
-		return Message{}, fmt.Errorf("failed to set drain flag: %w", err)
+		return struct{}{}, fmt.Errorf("failed to set drain flag: %w", err)
 	}
 	if err := d.Jobs.WriteAgentTimelineEvent(
 		ctx, in.Hostname, "drain", "Drain initiated via API",
 	); err != nil {
-		return Message{}, err
+		return struct{}{}, err
 	}
 
-	return Message{Message: fmt.Sprintf("drain initiated for agent %s", in.Hostname)}, nil
+	return struct{}{}, nil
 }
 
 // Undrain lets a drained agent take jobs again.
@@ -220,26 +222,26 @@ func Undrain(
 	ctx context.Context,
 	d Deps,
 	in UndrainInput,
-) (Message, error) {
+) (struct{}, error) {
 	info, err := lookup(ctx, d, in.Hostname)
 	if err != nil {
-		return Message{}, err
+		return struct{}{}, err
 	}
 	if info.State != job.AgentStateDraining && info.State != job.AgentStateCordoned {
-		return Message{}, endpoint.Errorf(ErrState,
+		return struct{}{}, endpoint.Errorf(ErrState,
 			"agent %s is not in draining or cordoned state (current: %s)",
 			in.Hostname, info.State)
 	}
 	if err := d.Jobs.DeleteDrainFlag(ctx, info.MachineID); err != nil {
-		return Message{}, fmt.Errorf("failed to delete drain flag: %w", err)
+		return struct{}{}, fmt.Errorf("failed to delete drain flag: %w", err)
 	}
 	if err := d.Jobs.WriteAgentTimelineEvent(
 		ctx, in.Hostname, "undrain", "Undrain initiated via API",
 	); err != nil {
-		return Message{}, err
+		return struct{}{}, err
 	}
 
-	return Message{Message: fmt.Sprintf("undrain initiated for agent %s", in.Hostname)}, nil
+	return struct{}{}, nil
 }
 
 // lookup is the agent with the hostname: ErrNotFound when the registry has

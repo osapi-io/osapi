@@ -73,7 +73,7 @@ func (s *Container) PostNodeContainerDockerStart(
 	if resp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := resp.Error
-		return gen.PostNodeContainerDockerStart202JSONResponse{
+		return gen.PostNodeContainerDockerStart200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.DockerActionResultItem{
 				{
@@ -90,7 +90,7 @@ func (s *Container) PostNodeContainerDockerStart(
 	changed := resp.Changed
 	msg := "container started"
 
-	return gen.PostNodeContainerDockerStart202JSONResponse{
+	return gen.PostNodeContainerDockerStart200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.DockerActionResultItem{
 			{
@@ -151,7 +151,7 @@ func (s *Container) postNodeContainerDockerStartBroadcast(
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.PostNodeContainerDockerStart202JSONResponse{
+	return gen.PostNodeContainerDockerStart200JSONResponse{
 		JobId:   &jobUUID,
 		Results: items,
 	}, nil

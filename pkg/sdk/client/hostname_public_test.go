@@ -160,7 +160,7 @@ func (suite *HostnamePublicTestSuite) TestUpdate() {
 			hostname: "new-host",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"new-host","status":"ok","changed":true}]}`,
@@ -211,7 +211,7 @@ func (suite *HostnamePublicTestSuite) TestUpdate() {
 			target:   "_any",
 			hostname: "new-host",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(resp *client.Response[client.Collection[client.HostnameUpdateResult]], err error) {
 				suite.Error(err)
@@ -219,7 +219,7 @@ func (suite *HostnamePublicTestSuite) TestUpdate() {
 
 				var target *client.UnexpectedStatusError
 				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
 		},

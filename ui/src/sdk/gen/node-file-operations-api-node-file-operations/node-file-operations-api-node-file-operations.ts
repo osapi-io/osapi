@@ -9,16 +9,16 @@ import type {
   FileDeployCollectionResponse,
   FileDeployRequest,
   FileStatusCollectionResponse,
-  FileStatusRequest,
   FileUndeployCollectionResponse,
-  FileUndeployRequest
+  FileUndeployRequest,
+  GetNodeFileStatusParams
 } from '../schemas';
 
 import { apiFetch } from '../../fetch';
 
-export type postNodeFileDeployResponse202 = {
+export type postNodeFileDeployResponse200 = {
   data: FileDeployCollectionResponse
-  status: 202
+  status: 200
 }
 
 export type postNodeFileDeployResponse400 = {
@@ -41,7 +41,7 @@ export type postNodeFileDeployResponse500 = {
   status: 500
 }
 
-export type postNodeFileDeployResponseSuccess = (postNodeFileDeployResponse202) & {
+export type postNodeFileDeployResponseSuccess = (postNodeFileDeployResponse200) & {
   headers: Headers;
 };
 export type postNodeFileDeployResponseError = (postNodeFileDeployResponse400 | postNodeFileDeployResponse401 | postNodeFileDeployResponse403 | postNodeFileDeployResponse500) & {
@@ -88,9 +88,9 @@ return apiFetch<postNodeFileDeployResponse>(getPostNodeFileDeployUrl(hostname),
 );}
 
 
-export type postNodeFileUndeployResponse202 = {
+export type postNodeFileUndeployResponse200 = {
   data: FileUndeployCollectionResponse
-  status: 202
+  status: 200
 }
 
 export type postNodeFileUndeployResponse400 = {
@@ -113,7 +113,7 @@ export type postNodeFileUndeployResponse500 = {
   status: 500
 }
 
-export type postNodeFileUndeployResponseSuccess = (postNodeFileUndeployResponse202) & {
+export type postNodeFileUndeployResponseSuccess = (postNodeFileUndeployResponse200) & {
   headers: Headers;
 };
 export type postNodeFileUndeployResponseError = (postNodeFileUndeployResponse400 | postNodeFileUndeployResponse401 | postNodeFileUndeployResponse403 | postNodeFileUndeployResponse500) & {
@@ -160,74 +160,68 @@ return apiFetch<postNodeFileUndeployResponse>(getPostNodeFileUndeployUrl(hostnam
 );}
 
 
-export type postNodeFileStatusResponse200 = {
+export type getNodeFileStatusResponse200 = {
   data: FileStatusCollectionResponse
   status: 200
 }
 
-export type postNodeFileStatusResponse400 = {
+export type getNodeFileStatusResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type postNodeFileStatusResponse401 = {
+export type getNodeFileStatusResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type postNodeFileStatusResponse403 = {
+export type getNodeFileStatusResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type postNodeFileStatusResponse500 = {
+export type getNodeFileStatusResponse500 = {
   data: ErrorResponse
   status: 500
 }
 
-export type postNodeFileStatusResponseSuccess = (postNodeFileStatusResponse200) & {
+export type getNodeFileStatusResponseSuccess = (getNodeFileStatusResponse200) & {
   headers: Headers;
 };
-export type postNodeFileStatusResponseError = (postNodeFileStatusResponse400 | postNodeFileStatusResponse401 | postNodeFileStatusResponse403 | postNodeFileStatusResponse500) & {
+export type getNodeFileStatusResponseError = (getNodeFileStatusResponse400 | getNodeFileStatusResponse401 | getNodeFileStatusResponse403 | getNodeFileStatusResponse500) & {
   headers: Headers;
 };
 
-export type postNodeFileStatusResponse = (postNodeFileStatusResponseSuccess | postNodeFileStatusResponseError)
+export type getNodeFileStatusResponse = (getNodeFileStatusResponseSuccess | getNodeFileStatusResponseError)
 
-export const getPostNodeFileStatusUrl = (hostname: string,) => {
+export const getGetNodeFileStatusUrl = (hostname: string,
+    params: GetNodeFileStatusParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/node/${hostname}/file/status`
+  return stringifiedParams.length > 0 ? `/api/node/${hostname}/file/status?${stringifiedParams}` : `/api/node/${hostname}/file/status`
 }
 
 /**
  * @summary Check deployment status of a file on the host
  */
-export const postNodeFileStatus = async (hostname: string,
-    fileStatusRequest: FileStatusRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeFileStatusResponse> => {
+export const getNodeFileStatus = async (hostname: string,
+    params: GetNodeFileStatusParams, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeFileStatusResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<postNodeFileStatusResponse>(getPostNodeFileStatusUrl(hostname),
+  return apiFetch<getNodeFileStatusResponse>(getGetNodeFileStatusUrl(hostname,params),
   {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(fileStatusRequest)
+    method: 'GET'
+
+
   }
 );}
 

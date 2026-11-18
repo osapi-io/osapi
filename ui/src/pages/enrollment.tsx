@@ -17,7 +17,7 @@ import {
   getAgentsPending,
   acceptAgent,
   rejectAgent,
-  removeAgent,
+  deleteAgent,
 } from "@/sdk/gen/agent-management-api-agent-operations/agent-management-api-agent-operations";
 
 export function Enrollment() {
@@ -30,7 +30,7 @@ export function Enrollment() {
       const resp = await getAgentsPending();
       if (resp.status === 200) {
         setPendingAgents(
-          (resp.data as { agents?: PendingAgentInfo[] })?.agents ?? [],
+          (resp.data as { items?: PendingAgentInfo[] })?.items ?? [],
         );
       }
     } catch {
@@ -41,7 +41,7 @@ export function Enrollment() {
       const resp = await getAgents();
       if (resp.status === 200) {
         setEnrolledAgents(
-          ((resp.data as ListAgentsResponse).agents ?? []).filter(
+          ((resp.data as ListAgentsResponse).items ?? []).filter(
             (a) => a.key_stored,
           ),
         );
@@ -89,7 +89,7 @@ export function Enrollment() {
         description: `Remove the enrolled agent ${a.hostname}; its key stops verifying`,
         category: "actions",
         action: async () => {
-          await removeAgent(a.hostname, { machine_id: a.machine_id });
+          await deleteAgent(a.hostname, { machine_id: a.machine_id });
           fetchPending();
         },
       })),

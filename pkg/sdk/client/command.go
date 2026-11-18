@@ -97,14 +97,14 @@ func (s *CommandService) Exec(
 		return nil, err
 	}
 
-	if resp.JSON202 == nil {
+	if resp.JSON200 == nil {
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),
 			Message:    "nil response body",
 		}}
 	}
 
-	return newResponse(commandCollectionFromGen(resp.JSON202), resp.Body, resp.HTTPResponse), nil
+	return newResponse(commandCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // Shell executes a command through /bin/sh -c with shell features
@@ -134,12 +134,12 @@ func (s *CommandService) Shell(
 		return nil, err
 	}
 
-	if resp.JSON202 == nil {
+	if resp.JSON200 == nil {
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),
 			Message:    "nil response body",
 		}}
 	}
 
-	return newResponse(commandCollectionFromGen(resp.JSON202), resp.Body, resp.HTTPResponse), nil
+	return newResponse(commandCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }

@@ -55,13 +55,13 @@ func (suite *AgentPublicTestSuite) TestList() {
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`{"agents":[],"total":0}`))
+				_, _ = w.Write([]byte(`{"items":[],"total_items":0}`))
 			},
 			validateFunc: func(resp *client.Response[client.AgentList], err error) {
 				suite.NoError(err)
 				suite.NotNil(resp)
-				suite.Equal(0, resp.Data.Total)
-				suite.Empty(resp.Data.Agents)
+				suite.Equal(0, resp.Data.TotalItems)
+				suite.Empty(resp.Data.Items)
 			},
 		},
 		{
@@ -225,20 +225,17 @@ func (suite *AgentPublicTestSuite) TestDrain() {
 		handler      http.HandlerFunc
 		serverURL    string
 		hostname     string
-		validateFunc func(*client.Response[client.MessageResponse], error)
+		validateFunc func(error)
 	}{
 		{
 			name:     "when draining agent returns success",
 			hostname: "server1",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`{"message":"drain initiated for agent server1"}`))
+				w.WriteHeader(http.StatusNoContent)
 			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("drain initiated for agent server1", resp.Data.Message)
 			},
 		},
 		{
@@ -249,9 +246,8 @@ func (suite *AgentPublicTestSuite) TestDrain() {
 				w.WriteHeader(http.StatusConflict)
 				_, _ = w.Write([]byte(`{"error":"agent already draining"}`))
 			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 
 				var target *client.ConflictError
 				suite.True(errors.As(err, &target))
@@ -267,9 +263,8 @@ func (suite *AgentPublicTestSuite) TestDrain() {
 				w.WriteHeader(http.StatusInternalServerError)
 				_, _ = w.Write([]byte(`{"error":"nats: timeout"}`))
 			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 
 				var target *client.ServerError
 				suite.True(errors.As(err, &target))
@@ -285,9 +280,8 @@ func (suite *AgentPublicTestSuite) TestDrain() {
 				w.WriteHeader(http.StatusNotFound)
 				_, _ = w.Write([]byte(`{"error":"agent not found"}`))
 			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 
 				var target *client.NotFoundError
 				suite.True(errors.As(err, &target))
@@ -298,27 +292,9 @@ func (suite *AgentPublicTestSuite) TestDrain() {
 			name:      "when client HTTP error returns wrapped error",
 			hostname:  "test-host",
 			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 				suite.Contains(err.Error(), "drain agent")
-			},
-		},
-		{
-			name:     "when response JSON200 is nil returns UnexpectedStatusError",
-			hostname: "test-host",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "text/plain")
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Contains(target.Message, "nil response body")
 			},
 		},
 	}
@@ -338,8 +314,7 @@ func (suite *AgentPublicTestSuite) TestDrain() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Agent.Drain(suite.ctx, tc.hostname)
-			tc.validateFunc(resp, err)
+			tc.validateFunc(sut.Agent.Drain(suite.ctx, tc.hostname))
 		})
 	}
 }
@@ -350,20 +325,17 @@ func (suite *AgentPublicTestSuite) TestUndrain() {
 		handler      http.HandlerFunc
 		serverURL    string
 		hostname     string
-		validateFunc func(*client.Response[client.MessageResponse], error)
+		validateFunc func(error)
 	}{
 		{
 			name:     "when undraining agent returns success",
 			hostname: "server1",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`{"message":"undrain initiated for agent server1"}`))
+				w.WriteHeader(http.StatusNoContent)
 			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("undrain initiated for agent server1", resp.Data.Message)
 			},
 		},
 		{
@@ -374,9 +346,8 @@ func (suite *AgentPublicTestSuite) TestUndrain() {
 				w.WriteHeader(http.StatusConflict)
 				_, _ = w.Write([]byte(`{"error":"agent not in draining state"}`))
 			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 
 				var target *client.ConflictError
 				suite.True(errors.As(err, &target))
@@ -392,9 +363,8 @@ func (suite *AgentPublicTestSuite) TestUndrain() {
 				w.WriteHeader(http.StatusInternalServerError)
 				_, _ = w.Write([]byte(`{"error":"nats: timeout"}`))
 			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 
 				var target *client.ServerError
 				suite.True(errors.As(err, &target))
@@ -410,9 +380,8 @@ func (suite *AgentPublicTestSuite) TestUndrain() {
 				w.WriteHeader(http.StatusNotFound)
 				_, _ = w.Write([]byte(`{"error":"agent not found"}`))
 			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 
 				var target *client.NotFoundError
 				suite.True(errors.As(err, &target))
@@ -423,27 +392,9 @@ func (suite *AgentPublicTestSuite) TestUndrain() {
 			name:      "when client HTTP error returns wrapped error",
 			hostname:  "test-host",
 			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 				suite.Contains(err.Error(), "undrain agent")
-			},
-		},
-		{
-			name:     "when response JSON200 is nil returns UnexpectedStatusError",
-			hostname: "test-host",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "text/plain")
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Contains(target.Message, "nil response body")
 			},
 		},
 	}
@@ -463,8 +414,7 @@ func (suite *AgentPublicTestSuite) TestUndrain() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Agent.Undrain(suite.ctx, tc.hostname)
-			tc.validateFunc(resp, err)
+			tc.validateFunc(sut.Agent.Undrain(suite.ctx, tc.hostname))
 		})
 	}
 }
@@ -483,18 +433,18 @@ func (suite *AgentPublicTestSuite) TestListPending() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"agents":[{"machine_id":"m1","hostname":"web-01","fingerprint":"SHA256:abc","requested_at":"2026-01-01T00:00:00Z"}],"total":1}`,
+						`{"items":[{"machine_id":"m1","hostname":"web-01","fingerprint":"SHA256:abc","requested_at":"2026-01-01T00:00:00Z"}],"total_items":1}`,
 					),
 				)
 			},
 			validateFunc: func(resp *client.Response[client.PendingAgentList], err error) {
 				suite.NoError(err)
 				suite.NotNil(resp)
-				suite.Equal(1, resp.Data.Total)
-				suite.Require().Len(resp.Data.Agents, 1)
-				suite.Equal("m1", resp.Data.Agents[0].MachineID)
-				suite.Equal("web-01", resp.Data.Agents[0].Hostname)
-				suite.Equal("SHA256:abc", resp.Data.Agents[0].Fingerprint)
+				suite.Equal(1, resp.Data.TotalItems)
+				suite.Require().Len(resp.Data.Items, 1)
+				suite.Equal("m1", resp.Data.Items[0].MachineID)
+				suite.Equal("web-01", resp.Data.Items[0].Hostname)
+				suite.Equal("SHA256:abc", resp.Data.Items[0].Fingerprint)
 			},
 		},
 		{
@@ -568,7 +518,7 @@ func (suite *AgentPublicTestSuite) TestAccept() {
 		serverURL    string
 		hostname     string
 		fingerprint  string
-		validateFunc func(*client.Response[client.MessageResponse], error)
+		validateFunc func(error)
 	}{
 		{
 			name:        "when accepting agent returns success",
@@ -576,13 +526,10 @@ func (suite *AgentPublicTestSuite) TestAccept() {
 			fingerprint: "",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`{"message":"agent web-01 accepted"}`))
+				w.WriteHeader(http.StatusNoContent)
 			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("agent web-01 accepted", resp.Data.Message)
 			},
 		},
 		{
@@ -591,13 +538,10 @@ func (suite *AgentPublicTestSuite) TestAccept() {
 			fingerprint: "SHA256:abc123",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`{"message":"agent web-01 accepted"}`))
+				w.WriteHeader(http.StatusNoContent)
 			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("agent web-01 accepted", resp.Data.Message)
 			},
 		},
 		{
@@ -608,9 +552,8 @@ func (suite *AgentPublicTestSuite) TestAccept() {
 				w.WriteHeader(http.StatusNotFound)
 				_, _ = w.Write([]byte(`{"error":"agent not found"}`))
 			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 
 				var target *client.NotFoundError
 				suite.True(errors.As(err, &target))
@@ -621,27 +564,9 @@ func (suite *AgentPublicTestSuite) TestAccept() {
 			name:      "when client HTTP error returns wrapped error",
 			hostname:  "web-01",
 			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 				suite.Contains(err.Error(), "accept agent")
-			},
-		},
-		{
-			name:     "when response JSON200 is nil returns UnexpectedStatusError",
-			hostname: "web-01",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "text/plain")
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Contains(target.Message, "nil response body")
 			},
 		},
 	}
@@ -661,8 +586,7 @@ func (suite *AgentPublicTestSuite) TestAccept() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Agent.Accept(suite.ctx, tc.hostname, tc.fingerprint)
-			tc.validateFunc(resp, err)
+			tc.validateFunc(sut.Agent.Accept(suite.ctx, tc.hostname, tc.fingerprint))
 		})
 	}
 }
@@ -673,20 +597,17 @@ func (suite *AgentPublicTestSuite) TestReject() {
 		handler      http.HandlerFunc
 		serverURL    string
 		hostname     string
-		validateFunc func(*client.Response[client.MessageResponse], error)
+		validateFunc func(error)
 	}{
 		{
 			name:     "when rejecting agent returns success",
 			hostname: "web-01",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`{"message":"agent web-01 rejected"}`))
+				w.WriteHeader(http.StatusNoContent)
 			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("agent web-01 rejected", resp.Data.Message)
 			},
 		},
 		{
@@ -697,9 +618,8 @@ func (suite *AgentPublicTestSuite) TestReject() {
 				w.WriteHeader(http.StatusNotFound)
 				_, _ = w.Write([]byte(`{"error":"agent not found"}`))
 			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 
 				var target *client.NotFoundError
 				suite.True(errors.As(err, &target))
@@ -710,27 +630,9 @@ func (suite *AgentPublicTestSuite) TestReject() {
 			name:      "when client HTTP error returns wrapped error",
 			hostname:  "web-01",
 			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.Error(err)
-				suite.Nil(resp)
 				suite.Contains(err.Error(), "reject agent")
-			},
-		},
-		{
-			name:     "when response JSON200 is nil returns UnexpectedStatusError",
-			hostname: "web-01",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "text/plain")
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Contains(target.Message, "nil response body")
 			},
 		},
 	}
@@ -750,19 +652,18 @@ func (suite *AgentPublicTestSuite) TestReject() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Agent.Reject(suite.ctx, tc.hostname)
-			tc.validateFunc(resp, err)
+			tc.validateFunc(sut.Agent.Reject(suite.ctx, tc.hostname))
 		})
 	}
 }
 
-func (suite *AgentPublicTestSuite) TestRemove() {
+func (suite *AgentPublicTestSuite) TestDelete() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
 		machineID    string
-		validateFunc func(*client.Response[client.MessageResponse], error)
+		validateFunc func(error)
 	}{
 		{
 			name: "when removing the agent returns success",
@@ -771,12 +672,10 @@ func (suite *AgentPublicTestSuite) TestRemove() {
 				suite.Equal("/api/agent/web-01", r.URL.Path)
 				suite.Empty(r.URL.Query().Get("machine_id"))
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`{"message":"agent web-01 (machine-001) removed"}`))
+				w.WriteHeader(http.StatusNoContent)
 			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.NoError(err)
-				suite.Equal("agent web-01 (machine-001) removed", resp.Data.Message)
 			},
 		},
 		{
@@ -785,10 +684,9 @@ func (suite *AgentPublicTestSuite) TestRemove() {
 			handler: func(w http.ResponseWriter, r *http.Request) {
 				suite.Equal("machine-002", r.URL.Query().Get("machine_id"))
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`{"message":"ok"}`))
+				w.WriteHeader(http.StatusNoContent)
 			},
-			validateFunc: func(_ *client.Response[client.MessageResponse], err error) {
+			validateFunc: func(err error) {
 				suite.NoError(err)
 			},
 		},
@@ -799,8 +697,7 @@ func (suite *AgentPublicTestSuite) TestRemove() {
 				w.WriteHeader(http.StatusConflict)
 				_, _ = w.Write([]byte(`{"error":"machine IDs a, b"}`))
 			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
-				suite.Nil(resp)
+			validateFunc: func(err error) {
 				var target *client.ConflictError
 				suite.True(errors.As(err, &target))
 				suite.Equal("machine IDs a, b", target.Message)
@@ -809,21 +706,8 @@ func (suite *AgentPublicTestSuite) TestRemove() {
 		{
 			name:      "when client HTTP error returns wrapped error",
 			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
-				suite.Nil(resp)
-				suite.ErrorContains(err, "remove agent web-01")
-			},
-		},
-		{
-			name: "when response JSON200 is nil returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "text/plain")
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(resp *client.Response[client.MessageResponse], err error) {
-				suite.Nil(resp)
-				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+			validateFunc: func(err error) {
+				suite.ErrorContains(err, "delete agent web-01")
 			},
 		},
 	}
@@ -839,8 +723,7 @@ func (suite *AgentPublicTestSuite) TestRemove() {
 
 			sut := client.New(url, "test-token", client.WithLogger(slog.Default()))
 
-			resp, err := sut.Agent.Remove(suite.ctx, "web-01", tc.machineID)
-			tc.validateFunc(resp, err)
+			tc.validateFunc(sut.Agent.Delete(suite.ctx, "web-01", tc.machineID))
 		})
 	}
 }

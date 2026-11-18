@@ -8,5 +8,7 @@ import type { FactKeyEntry } from './factKeyEntry';
 
 export interface FactKeysResponse {
   /** Available fact keys for @fact. references. */
-  keys: FactKeyEntry[];
+  items: FactKeyEntry[];
+  /** Total number of fact keys. */
+  total_items: number;
 }

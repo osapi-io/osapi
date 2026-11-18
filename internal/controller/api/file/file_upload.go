@@ -65,28 +65,26 @@ func (f *File) PostFile(
 
 	force := request.Params.Force != nil && *request.Params.Force
 
-	// Unless forced, check if the Object Store already has this file.
-	if !force {
-		existing, err := f.objStore.ObjectInfo(ctx, f.objBucket, name)
-		if err == nil && existing != nil {
-			if existing.Digest == newDigest {
-				// Same content — skip the write.
-				return gen.PostFile201JSONResponse{
-					Name:        name,
-					Sha256:      sha256Hex,
-					Size:        len(fileData),
-					Changed:     false,
-					ContentType: contentType,
-				}, nil
-			}
-
-			// Different content — reject without force.
-			errMsg := fmt.Sprintf(
-				"file %s already exists with different content; use force to overwrite",
-				name,
-			)
-			return gen.PostFile409JSONResponse{Error: &errMsg}, nil
+	// A file that exists answers 200; only a new one is created, 201.
+	existing, err := f.objStore.ObjectInfo(ctx, f.objBucket, name)
+	existed := err == nil && existing != nil
+	if existed && !force {
+		if existing.Digest == newDigest {
+			// Same content: skip the write.
+			return gen.PostFile200JSONResponse{
+				Name:        name,
+				Sha256:      sha256Hex,
+				Size:        len(fileData),
+				Changed:     false,
+				ContentType: contentType,
+			}, nil
 		}
+
+		errMsg := fmt.Sprintf(
+			"file %s already exists with different content; use force to overwrite",
+			name,
+		)
+		return gen.PostFile409JSONResponse{Error: &errMsg}, nil
 	}
 
 	meta := jetstream.ObjectMeta{
@@ -95,20 +93,28 @@ func (f *File) PostFile(
 			"Osapi-Content-Type": []string{contentType},
 		},
 	}
-	_, err := f.objStore.ObjectPut(ctx, f.objBucket, meta, bytes.NewReader(fileData))
-	if err != nil {
+	if _, err := f.objStore.ObjectPut(ctx, f.objBucket, meta, bytes.NewReader(fileData)); err != nil {
 		errMsg := fmt.Sprintf("failed to store file: %s", err.Error())
 		return gen.PostFile500JSONResponse{
 			Error: &errMsg,
 		}, nil
 	}
 
-	return gen.PostFile201JSONResponse{
+	stored := gen.FileUploadResponse{
 		Name:        name,
 		Sha256:      sha256Hex,
 		Size:        len(fileData),
 		Changed:     true,
 		ContentType: contentType,
+	}
+	if existed {
+		return gen.PostFile200JSONResponse(stored), nil
+	}
+	location := "/api/file/" + name
+
+	return gen.PostFile201JSONResponse{
+		Body:    stored,
+		Headers: gen.PostFile201ResponseHeaders{Location: &location},
 	}, nil
 }
 

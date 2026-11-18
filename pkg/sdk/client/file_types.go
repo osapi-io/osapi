@@ -42,8 +42,8 @@ type FileItem struct {
 
 // FileList is a collection of files with total count.
 type FileList struct {
-	Files []FileItem `json:"files"`
-	Total int        `json:"total"`
+	Items      []FileItem `json:"items"`
+	TotalItems int        `json:"total_items"`
 }
 
 // FileMetadata represents metadata for a single file.
@@ -52,12 +52,6 @@ type FileMetadata struct {
 	SHA256      string `json:"sha256"`
 	Size        int    `json:"size"`
 	ContentType string `json:"content_type"`
-}
-
-// FileDelete represents the result of a file deletion.
-type FileDelete struct {
-	Name    string `json:"name"`
-	Deleted bool   `json:"deleted"`
 }
 
 // FileChanged represents the result of a change detection check.
@@ -110,8 +104,8 @@ type StaleDeployment struct {
 
 // StaleList is a list of stale deployments.
 type StaleList struct {
-	Stale []StaleDeployment `json:"stale"`
-	Total int               `json:"total"`
+	Items      []StaleDeployment `json:"items"`
+	TotalItems int               `json:"total_items"`
 }
 
 // fileUploadFromGen converts a gen.FileUploadResponse to a FileUpload.
@@ -131,8 +125,8 @@ func fileUploadFromGen(
 func fileListFromGen(
 	g *gen.FileListResponse,
 ) FileList {
-	files := make([]FileItem, 0, len(g.Files))
-	for _, f := range g.Files {
+	files := make([]FileItem, 0, len(g.Items))
+	for _, f := range g.Items {
 		files = append(files, FileItem{
 			Name:        f.Name,
 			SHA256:      f.Sha256,
@@ -143,8 +137,8 @@ func fileListFromGen(
 	}
 
 	return FileList{
-		Files: files,
-		Total: g.Total,
+		Items:      files,
+		TotalItems: g.TotalItems,
 	}
 }
 
@@ -157,16 +151,6 @@ func fileMetadataFromGen(
 		SHA256:      g.Sha256,
 		Size:        g.Size,
 		ContentType: g.ContentType,
-	}
-}
-
-// fileDeleteFromGen converts a gen.FileDeleteResponse to a FileDelete.
-func fileDeleteFromGen(
-	g *gen.FileDeleteResponse,
-) FileDelete {
-	return FileDelete{
-		Name:    g.Name,
-		Deleted: g.Deleted,
 	}
 }
 
@@ -265,10 +249,10 @@ func staleDeploymentFromGen(
 func staleListFromGen(
 	g *gen.StaleDeploymentsResponse,
 ) StaleList {
-	items := make([]StaleDeployment, 0, len(g.Stale))
-	for _, s := range g.Stale {
+	items := make([]StaleDeployment, 0, len(g.Items))
+	for _, s := range g.Items {
 		items = append(items, staleDeploymentFromGen(s))
 	}
 
-	return StaleList{Stale: items, Total: g.Total}
+	return StaleList{Items: items, TotalItems: g.TotalItems}
 }

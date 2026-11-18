@@ -114,8 +114,8 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			validateFunc: func(resp gen.GetFileStaleResponseObject) {
 				r, ok := resp.(gen.GetFileStale200JSONResponse)
 				s.True(ok)
-				s.Equal(0, r.Total)
-				s.Empty(r.Stale)
+				s.Equal(0, r.TotalItems)
+				s.Empty(r.Items)
 			},
 		},
 		{
@@ -161,15 +161,15 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			validateFunc: func(resp gen.GetFileStaleResponseObject) {
 				r, ok := resp.(gen.GetFileStale200JSONResponse)
 				s.True(ok)
-				s.Equal(1, r.Total)
-				s.Require().Len(r.Stale, 1)
-				s.Equal("hello-echo", r.Stale[0].ObjectName)
-				s.Equal("web-01", r.Stale[0].Hostname)
-				s.Equal("service", r.Stale[0].Provider)
-				s.Equal("/etc/systemd/system/osapi-hello.service", r.Stale[0].Path)
-				s.Equal(oldSHA, r.Stale[0].DeployedSha)
-				s.Equal(newSHA, r.Stale[0].CurrentSha)
-				s.Equal("2026-04-01T18:00:00Z", r.Stale[0].DeployedAt)
+				s.Equal(1, r.TotalItems)
+				s.Require().Len(r.Items, 1)
+				s.Equal("hello-echo", r.Items[0].ObjectName)
+				s.Equal("web-01", r.Items[0].Hostname)
+				s.Equal("service", r.Items[0].Provider)
+				s.Equal("/etc/systemd/system/osapi-hello.service", r.Items[0].Path)
+				s.Equal(oldSHA, r.Items[0].DeployedSha)
+				s.Equal(newSHA, r.Items[0].CurrentSha)
+				s.Equal("2026-04-01T18:00:00Z", r.Items[0].DeployedAt)
 			},
 		},
 		{
@@ -202,8 +202,8 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			validateFunc: func(resp gen.GetFileStaleResponseObject) {
 				r, ok := resp.(gen.GetFileStale200JSONResponse)
 				s.True(ok)
-				s.Equal(0, r.Total)
-				s.Empty(r.Stale)
+				s.Equal(0, r.TotalItems)
+				s.Empty(r.Items)
 			},
 		},
 		{
@@ -233,8 +233,8 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			validateFunc: func(resp gen.GetFileStaleResponseObject) {
 				r, ok := resp.(gen.GetFileStale200JSONResponse)
 				s.True(ok)
-				s.Equal(0, r.Total)
-				s.Empty(r.Stale)
+				s.Equal(0, r.TotalItems)
+				s.Empty(r.Items)
 			},
 		},
 		{
@@ -267,11 +267,11 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			validateFunc: func(resp gen.GetFileStaleResponseObject) {
 				r, ok := resp.(gen.GetFileStale200JSONResponse)
 				s.True(ok)
-				s.Equal(1, r.Total)
-				s.Require().Len(r.Stale, 1)
-				s.Equal("service", r.Stale[0].Provider)
-				s.Equal("", r.Stale[0].CurrentSha)
-				s.Equal(oldSHA, r.Stale[0].DeployedSha)
+				s.Equal(1, r.TotalItems)
+				s.Require().Len(r.Items, 1)
+				s.Equal("service", r.Items[0].Provider)
+				s.Equal("", r.Items[0].CurrentSha)
+				s.Equal(oldSHA, r.Items[0].DeployedSha)
 			},
 		},
 		{
@@ -289,8 +289,8 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			validateFunc: func(resp gen.GetFileStaleResponseObject) {
 				r, ok := resp.(gen.GetFileStale200JSONResponse)
 				s.True(ok)
-				s.Equal(0, r.Total)
-				s.Empty(r.Stale)
+				s.Equal(0, r.TotalItems)
+				s.Empty(r.Items)
 			},
 		},
 		{
@@ -311,8 +311,8 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			validateFunc: func(resp gen.GetFileStaleResponseObject) {
 				r, ok := resp.(gen.GetFileStale200JSONResponse)
 				s.True(ok)
-				s.Equal(0, r.Total)
-				s.Empty(r.Stale)
+				s.Equal(0, r.TotalItems)
+				s.Empty(r.Items)
 			},
 		},
 		{
@@ -350,9 +350,9 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			validateFunc: func(resp gen.GetFileStaleResponseObject) {
 				r, ok := resp.(gen.GetFileStale200JSONResponse)
 				s.True(ok)
-				s.Equal(1, r.Total)
-				s.Require().Len(r.Stale, 1)
-				s.Equal("certificate", r.Stale[0].Provider)
+				s.Equal(1, r.TotalItems)
+				s.Require().Len(r.Items, 1)
+				s.Equal("certificate", r.Items[0].Provider)
 			},
 		},
 		{
@@ -388,9 +388,9 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			validateFunc: func(resp gen.GetFileStaleResponseObject) {
 				r, ok := resp.(gen.GetFileStale200JSONResponse)
 				s.True(ok)
-				s.Equal(1, r.Total)
-				s.Require().Len(r.Stale, 1)
-				s.Equal("cron", r.Stale[0].Provider)
+				s.Equal(1, r.TotalItems)
+				s.Require().Len(r.Items, 1)
+				s.Equal("cron", r.Items[0].Provider)
 			},
 		},
 		{
@@ -426,9 +426,9 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			validateFunc: func(resp gen.GetFileStaleResponseObject) {
 				r, ok := resp.(gen.GetFileStale200JSONResponse)
 				s.True(ok)
-				s.Equal(1, r.Total)
-				s.Require().Len(r.Stale, 1)
-				s.Equal("file", r.Stale[0].Provider)
+				s.Equal(1, r.TotalItems)
+				s.Require().Len(r.Items, 1)
+				s.Equal("file", r.Items[0].Provider)
 			},
 		},
 		{
@@ -463,9 +463,9 @@ func (s *FileStalePublicTestSuite) TestGetFileStale() {
 			validateFunc: func(resp gen.GetFileStaleResponseObject) {
 				r, ok := resp.(gen.GetFileStale200JSONResponse)
 				s.True(ok)
-				s.Equal(1, r.Total)
-				s.Require().Len(r.Stale, 1)
-				s.Equal("short", r.Stale[0].Hostname)
+				s.Equal(1, r.TotalItems)
+				s.Require().Len(r.Items, 1)
+				s.Equal("short", r.Items[0].Hostname)
 			},
 		},
 	}
@@ -500,8 +500,8 @@ func (s *FileStalePublicTestSuite) TestGetFileStaleHTTP() {
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusOK, rec.Code)
-				s.Contains(rec.Body.String(), `"stale":[]`)
-				s.Contains(rec.Body.String(), `"total":0`)
+				s.Contains(rec.Body.String(), `"items":[]`)
+				s.Contains(rec.Body.String(), `"total_items":0`)
 			},
 		},
 		{
@@ -613,8 +613,8 @@ func (s *FileStalePublicTestSuite) TestGetFileStaleRBACHTTP() {
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusOK, rec.Code)
-				s.Contains(rec.Body.String(), `"stale"`)
-				s.Contains(rec.Body.String(), `"total":0`)
+				s.Contains(rec.Body.String(), `"items"`)
+				s.Contains(rec.Body.String(), `"total_items":0`)
 			},
 		},
 	}

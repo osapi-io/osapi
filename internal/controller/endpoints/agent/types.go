@@ -65,14 +65,14 @@ type Message = struct {
 
 // ListAgentsResponse is the agents that report.
 type ListAgentsResponse struct {
-	Agents []AgentInfo `json:"agents"`
-	Total  int         `json:"total"  doc:"Total number of active agents."`
+	Items      []AgentInfo `json:"items"       doc:"The active agents."`
+	TotalItems int         `json:"total_items" doc:"Total number of active agents."`
 }
 
 // ListPendingAgentsResponse is the agents that wait for enrollment.
 type ListPendingAgentsResponse struct {
-	Agents []PendingAgentInfo `json:"agents"`
-	Total  int                `json:"total"  doc:"Total number of pending agents."`
+	Items      []PendingAgentInfo `json:"items"       doc:"The agents that wait for enrollment."`
+	TotalItems int                `json:"total_items" doc:"Total number of pending agents."`
 }
 
 // PendingAgentInfo is an agent that asked to enroll.

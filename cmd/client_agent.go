@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -63,47 +64,32 @@ func init() {
 			renderAgentDetail(out)
 		},
 	)
-	command.Render(
+	// accept, reject, delete, drain and undrain answer 204, with no body:
+	// each prints what it did, with --json too.
+	command.Acts(
 		agent.Group,
 		"accept",
-		func(_ *cobra.Command, _ agent.AcceptInput, out agent.Message) {
-			fmt.Println()
-			cli.PrintKV("Status", "Accepted", "Message", out.Message)
-		},
+		func(_ *cobra.Command, in agent.AcceptInput, _ struct{}) { agentDone(in.Hostname, "accepted") },
 	)
-	command.Render(
+	command.Acts(
 		agent.Group,
 		"reject",
-		func(_ *cobra.Command, _ agent.RejectInput, out agent.Message) {
-			fmt.Println()
-			cli.PrintKV("Status", "Rejected", "Message", out.Message)
-		},
+		func(_ *cobra.Command, in agent.RejectInput, _ struct{}) { agentDone(in.Hostname, "rejected") },
 	)
-	command.Render(
+	command.Acts(
 		agent.Group,
 		"delete",
-		func(_ *cobra.Command, _ agent.DeleteInput, out agent.Message) {
-			fmt.Println()
-			cli.PrintKV("Status", "Removed", "Message", out.Message)
-		},
+		func(_ *cobra.Command, in agent.DeleteInput, _ struct{}) { agentDone(in.Hostname, "deleted") },
 	)
-	command.Render(
+	command.Acts(
 		agent.Group,
 		"drain",
-		func(_ *cobra.Command, in agent.DrainInput, out agent.Message) {
-			fmt.Println()
-			cli.PrintKV("Hostname", in.Hostname, "Status", "Draining")
-			cli.PrintKV("Message", out.Message)
-		},
+		func(_ *cobra.Command, in agent.DrainInput, _ struct{}) { agentDone(in.Hostname, "draining") },
 	)
-	command.Render(
+	command.Acts(
 		agent.Group,
 		"undrain",
-		func(_ *cobra.Command, in agent.UndrainInput, out agent.Message) {
-			fmt.Println()
-			cli.PrintKV("Hostname", in.Hostname, "Status", "Ready")
-			cli.PrintKV("Message", out.Message)
-		},
+		func(_ *cobra.Command, in agent.UndrainInput, _ struct{}) { agentDone(in.Hostname, "ready") },
 	)
 }
 
@@ -112,15 +98,15 @@ func renderAgentList(
 	_ agent.ListInput,
 	out agent.ListAgentsResponse,
 ) {
-	if len(out.Agents) == 0 {
+	if len(out.Items) == 0 {
 		cli.PrintHeading("Agents (0)")
 		cli.PrintNote("None. An agent appears here once it starts and connects.")
 
 		return
 	}
 
-	rows := make([][]string, 0, len(out.Agents))
-	for _, a := range out.Agents {
+	rows := make([][]string, 0, len(out.Items))
+	for _, a := range out.Items {
 		status := a.State
 		if status == "" {
 			status = "Ready"
@@ -154,7 +140,7 @@ func renderAgentList(
 	}
 
 	cli.PrintCompactTable([]cli.Section{{
-		Title: fmt.Sprintf("Agents (%d)", out.Total),
+		Title: fmt.Sprintf("Agents (%d)", out.TotalItems),
 		Headers: []string{
 			"MACHINE ID", "HOSTNAME", "STATUS", "CONDITIONS", "LABELS",
 			"AGE", "LOAD (1m)", "OS", "VERSION",
@@ -168,15 +154,15 @@ func renderAgentPending(
 	_ agent.ListInput,
 	out agent.ListPendingAgentsResponse,
 ) {
-	if len(out.Agents) == 0 {
+	if len(out.Items) == 0 {
 		cli.PrintHeading("Pending agents (0)")
 		cli.PrintNote("None.")
 
 		return
 	}
 
-	rows := make([][]string, 0, len(out.Agents))
-	for _, a := range out.Agents {
+	rows := make([][]string, 0, len(out.Items))
+	for _, a := range out.Items {
 		fingerprint := a.Fingerprint
 		if len(fingerprint) > 20 {
 			fingerprint = fingerprint[:20] + "..."
@@ -187,7 +173,7 @@ func renderAgentPending(
 	}
 
 	cli.PrintCompactTable([]cli.Section{{
-		Title:   fmt.Sprintf("Pending agents (%d)", out.Total),
+		Title:   fmt.Sprintf("Pending agents (%d)", out.TotalItems),
 		Headers: []string{"MACHINE ID", "HOSTNAME", "FINGERPRINT", "REQUESTED"},
 		Rows:    rows,
 	}})
@@ -322,4 +308,21 @@ func renderAgentDetail(
 	for _, sec := range sections {
 		cli.PrintCompactTable([]cli.Section{sec})
 	}
+}
+
+// agentDone prints what a write that answers 204 did to an agent: as JSON
+// with --json, as job and file delete do.
+func agentDone(
+	hostname string,
+	status string,
+) {
+	if jsonOutput {
+		result, _ := json.Marshal(map[string]string{"hostname": hostname, "status": status})
+		cli.PrintJSON(result)
+
+		return
+	}
+
+	cli.PrintHeading("Agent")
+	cli.PrintKV("Hostname", hostname, "Status", strings.ToUpper(status[:1])+status[1:])
 }

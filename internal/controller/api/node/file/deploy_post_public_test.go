@@ -120,7 +120,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 					)
 			},
 			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
-				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				r, ok := resp.(gen.PostNodeFileDeploy200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Equal("550e8400-e29b-41d4-a716-446655440000", r.JobId.String())
@@ -162,7 +162,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 					)
 			},
 			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
-				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				r, ok := resp.(gen.PostNodeFileDeploy200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -272,7 +272,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 					)
 			},
 			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
-				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				r, ok := resp.(gen.PostNodeFileDeploy200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
@@ -311,7 +311,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 					)
 			},
 			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
-				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				r, ok := resp.(gen.PostNodeFileDeploy200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
@@ -357,7 +357,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 					)
 			},
 			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
-				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				r, ok := resp.(gen.PostNodeFileDeploy200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -398,7 +398,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 					)
 			},
 			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
-				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				r, ok := resp.(gen.PostNodeFileDeploy200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -439,7 +439,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 					)
 			},
 			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
-				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				r, ok := resp.(gen.PostNodeFileDeploy200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -526,7 +526,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
-				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				r, ok := resp.(gen.PostNodeFileDeploy200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
@@ -574,7 +574,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployValidationHTTP() {
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusAccepted, rec.Code)
+				s.Equal(http.StatusOK, rec.Code)
 				s.Contains(rec.Body.String(), `"job_id"`)
 				s.Contains(rec.Body.String(), `"agent1"`)
 				s.Contains(rec.Body.String(), `"changed":true`)
@@ -805,7 +805,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployRBACHTTP() {
 				return mock
 			},
 			validateFunc: func(rec *httptest.ResponseRecorder) {
-				s.Equal(http.StatusAccepted, rec.Code)
+				s.Equal(http.StatusOK, rec.Code)
 				s.Contains(rec.Body.String(), `"job_id"`)
 				s.Contains(rec.Body.String(), `"changed":true`)
 				s.Contains(rec.Body.String(), `"results"`)

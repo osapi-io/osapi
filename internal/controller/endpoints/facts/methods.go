@@ -51,5 +51,5 @@ func Keys(
 		})
 	}
 
-	return FactKeysResponse{Keys: keys}, nil
+	return FactKeysResponse{Items: keys, TotalItems: len(keys)}, nil
 }

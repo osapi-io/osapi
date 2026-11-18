@@ -114,7 +114,7 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 			token:    read,
 			setup:    func() { s.jobs.EXPECT().ListAgents(gomock.Any()).Return(nil, nil) },
 			wantCode: http.StatusOK,
-			wantBody: `{"agents":[],"total":0}`,
+			wantBody: `{"items":[],"total_items":0}`,
 		},
 		{
 			name:     "when there is no token, it is a 401",
@@ -138,7 +138,7 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 			token:    read,
 			setup:    func() { s.enroll.EXPECT().ListPending(gomock.Any()).Return(nil, nil) },
 			wantCode: http.StatusOK,
-			wantBody: `{"agents":[],"total":0}`,
+			wantBody: `{"items":[],"total_items":0}`,
 		},
 		{
 			name:     "when the hostname is longer than 255, it is a 400",
@@ -197,8 +197,7 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 			setup: func() {
 				s.enroll.EXPECT().AcceptByFingerprint(gomock.Any(), "SHA256:x").Return(nil)
 			},
-			wantCode: http.StatusOK,
-			wantBody: `{"message":"agent with fingerprint SHA256:x accepted"}`,
+			wantCode: http.StatusNoContent,
 		},
 		{
 			name:   "when reject finds no pending agent, it is a 404",
@@ -236,7 +235,7 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 			wantCode: http.StatusInternalServerError,
 		},
 		{
-			name:   "when undrain succeeds, the message is the body",
+			name:   "when undrain succeeds, it is a 204",
 			method: http.MethodPost,
 			path:   "/api/agent/server1/undrain",
 			token:  write,
@@ -247,8 +246,7 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 				s.jobs.EXPECT().WriteAgentTimelineEvent(gomock.Any(), "server1", "undrain",
 					"Undrain initiated via API").Return(nil)
 			},
-			wantCode: http.StatusOK,
-			wantBody: `{"message":"undrain initiated for agent server1"}`,
+			wantCode: http.StatusNoContent,
 		},
 		{
 			name:     "when a write has only agent:read, it is a 403",

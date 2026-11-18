@@ -1,0 +1,69 @@
+---
+id: delete-agent
+title: "Remove an enrolled agent"
+description: "Remove an accepted agent's stored public key. Its responses and registration stop verifying at once, so targeting no longer resolves it. The agent does not enroll again by itself: remove its controller key on the host and restart it. Two machines may share a hostname; when they do, name one with machine_id."
+sidebar_label: "Remove an enrolled agent"
+hide_title: true
+hide_table_of_contents: true
+api: eJztWN9v20YM/leIe9kGKHbSNQ9T0QcPTQcPyVB0KfaQBAEt0RIb6U69oxy7hv73gSf5R5ygWIdhQIA8WTofyY/8eCeSa5NTyDw3ws6a1Hyk2i0I0AJmGTVCOWBBVn4IEMR5yqFpZxVncEerEUwlgKfQOBsoANocPBUcxKOqU4kGFuR5vmJbAAo4m1ECwYGgL0h01TqonC3IqyZXLSgAywguS+otQ+4ogHUCZL2rKsAC2cJsBSyBqnkKvsfMEiBzVnQTeQUIzoKUBKULMqALgl56A/cOasxKthSgxhWEEj0Bxt0Wa3oD9yVFBSvIXQK6Bs4S3LOUG9FbzkcmMa6h3udpblLzjioSmih6k5gGPdYk5INJr9YH8b4c4PXK5xHuw8iDuMFDNcQq1KCUJjEqY1KzETeJ8fSlZU+5ScW3lJiQlVSjSdemxuU52UJKk746PU1MzXbzfpIYWTWqKYhnW5guMcsjhw0fZS6nguwRLcXjkWARVNcCK85RVGJjMKnZvj1Jaly+fXV6arouecrRIWYwfbdzKumjXDtPICXaGOGDCJQYtjyqp9tAfGnJr3aR2HFi/gffXc1CdSOrR87fKBPDqVChV8ev9edhQGJ6DEHIR2r49fGxbtMc1sxJ1wabpuIsJtb4c1Cx9Z5fA3I3+0xZTDSvaSjcGyXvnd/bNjiYHMKAvfdNBkZZpUPAZVnrPcUspyXWTaXK3iNXlPcsimdaEARBaUN0JCdBrsI/MJ7nrI9YwSADOHOt7EA8aTZvSU1bknvn70C4JtdKNK2s7dllK1SQf2T4cuukCjwwcnp83HWJEZZo8kx3fRzYNF3XPaVKjwEFAe4vqpgkA6UnL5Q+O0o/WWyldJ6/Ug5HMPkwjV+T7e0aif35hdhnR+x752ec52ThCKY2tPM5Z6zXcEO+5hDY2dCz+/qF3WfH7h/usHCIlVoM3q50iPT+8kLvs6P34ntKxDffKNe7xJy+lFrPMAMmdtA09HW7bm+kLYcJlLWeZRX7rF8JPflJq2X+lYlZkt57FjI3WqD3Bf1VX4bfXqDFgmp9nHyY3sbdt9umLpibxNQkpdPuLo/dXWzsVLcZY8PjKDFeb9Kv0waE/KJv+m520P7UlOqzZh/gNoqlSLNpXvR9FjeZZHh473yNYlLz+1+X0WW2cxfFhxi6gA0/5mDVUJ6Ap4ZQcFYR7HyDufNwzrZdxsMTRvAbLwhWrvXD2UKYV0SSaG17bRFCSVU1urbXNlqDikSbf5hMB4E6RnNfKUjpXVuUoG7me9YHpZu/ESpXsB3BGWblbpsW1ggzKnHBzqfxWEup0wNnh449ubY5zdmqdv2Xa20t9egjzHlJObBt2n4M4FppWhlBDz8rKbsLQJiV13ZTyc9ortcNC3xpqR1mEhMIlDmdI7QWshJt0U8mFMkAuV8FDqoqcz6nfHRtTWI0FXoyTkbHo2OTxMsHs3j5tL4auA/peFywlO1slLl6HBEesesf9NRVnJEej3S96XovppdwPqwmB6pcQza41mc0cr4YD8JhfDHt06dxQWq0e9p2A6B+3LK5YQ9zau/yfBka/buh0XDkhZYybipkq/xG/tbD3XJl+tO8YSDdznpukjj30S3r9QwDffJV1+lyPxOJkyYOetZzk86xCvQNAv/r4cyTnt3R6nBGs8Cq1Y1Gb+QFela834n9x49DW/YTfO8w7UmYwyLa1T7ADfwtAd1Nl5iSMCcfAfd/T6K1PcFHZUW3/yl5d3Z+dnmmBD/8Chzc+tHAk7jW637Hpbsj23VbmKLvirHr/gbW9KPm
+sidebar_class_name: "delete api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Remove an enrolled agent"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/api/agent/{hostname}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Remove an accepted agent's stored public key. Its responses and registration stop verifying at once, so targeting no longer resolves it. The agent does not enroll again by itself: remove its controller key on the host and restart it. Two machines may share a hostname; when they do, name one with machine_id.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./delete-agent.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./delete-agent.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./delete-agent.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

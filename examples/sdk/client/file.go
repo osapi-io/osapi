@@ -93,8 +93,8 @@ func main() {
 		log.Fatalf("list: %v", err)
 	}
 
-	fmt.Printf("\nStored files (%d):\n", list.Data.Total)
-	for _, f := range list.Data.Files {
+	fmt.Printf("\nStored files (%d):\n", list.Data.TotalItems)
+	for _, f := range list.Data.Items {
 		fmt.Printf("  %s  size=%d\n", f.Name, f.Size)
 	}
 
@@ -141,8 +141,8 @@ func main() {
 		log.Fatalf("stale: %v", err)
 	}
 
-	fmt.Printf("\nStale deployments: %d\n", stale.Data.Total)
-	for _, s := range stale.Data.Stale {
+	fmt.Printf("\nStale deployments: %d\n", stale.Data.TotalItems)
+	for _, s := range stale.Data.Items {
 		fmt.Printf("  %s on %s: deployed=%s current=%s\n",
 			s.ObjectName, s.Hostname, s.DeployedSHA[:12], s.CurrentSHA[:12])
 	}

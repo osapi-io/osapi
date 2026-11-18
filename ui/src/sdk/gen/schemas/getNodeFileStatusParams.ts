@@ -5,6 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type RemoveAgent200 = {
-  message: string;
+export type GetNodeFileStatusParams = {
+  /** Filesystem path to check. */
+  path: string;
 };

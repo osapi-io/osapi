@@ -54,38 +54,36 @@ func main() {
 		log.Fatalf("list pending: %v", err)
 	}
 
-	fmt.Printf("Pending agents: %d\n", pending.Data.Total)
+	fmt.Printf("Pending agents: %d\n", pending.Data.TotalItems)
 
-	for _, a := range pending.Data.Agents {
+	for _, a := range pending.Data.Items {
 		fmt.Printf("  %s  machine_id=%s  fingerprint=%s  requested=%s\n",
 			a.Hostname, a.MachineID,
 			a.Fingerprint, a.RequestedAt.Format("2006-01-02 15:04:05"))
 	}
 
-	if len(pending.Data.Agents) == 0 {
+	if len(pending.Data.Items) == 0 {
 		fmt.Println("No pending agents to accept or reject.")
 		return
 	}
 
 	// Accept the first pending agent.
-	first := pending.Data.Agents[0]
+	first := pending.Data.Items[0]
 
-	resp, err := c.Agent.Accept(ctx, first.Hostname, "")
-	if err != nil {
+	if err := c.Agent.Accept(ctx, first.Hostname, ""); err != nil {
 		log.Fatalf("accept %s: %v", first.Hostname, err)
 	}
 
-	fmt.Printf("\nAccepted: %s\n", resp.Data.Message)
+	fmt.Printf("\nAccepted: %s\n", first.Hostname)
 
 	// If there is a second pending agent, reject it.
-	if len(pending.Data.Agents) > 1 {
-		second := pending.Data.Agents[1]
+	if len(pending.Data.Items) > 1 {
+		second := pending.Data.Items[1]
 
-		rejectResp, err := c.Agent.Reject(ctx, second.Hostname)
-		if err != nil {
+		if err := c.Agent.Reject(ctx, second.Hostname); err != nil {
 			log.Fatalf("reject %s: %v", second.Hostname, err)
 		}
 
-		fmt.Printf("Rejected: %s\n", rejectResp.Data.Message)
+		fmt.Printf("Rejected: %s\n", second.Hostname)
 	}
 }

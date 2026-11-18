@@ -39,7 +39,7 @@ export function ObjectPicker({
       try {
         const result = await getFiles();
         if (mounted && result.status === 200) {
-          setObjects((result.data as FileListResponse).files ?? []);
+          setObjects((result.data as FileListResponse).items ?? []);
         }
       } catch {
         // silent

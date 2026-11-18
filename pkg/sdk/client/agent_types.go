@@ -65,8 +65,8 @@ type Condition struct {
 
 // AgentList is a collection of agents.
 type AgentList struct {
-	Agents []Agent `json:"agents"`
-	Total  int     `json:"total"`
+	Items      []Agent `json:"items"`
+	TotalItems int     `json:"total_items"`
 }
 
 // NetworkInterface represents a network interface on an agent.
@@ -299,16 +299,16 @@ type PendingAgent struct {
 
 // PendingAgentList is a collection of pending agents.
 type PendingAgentList struct {
-	Agents []PendingAgent `json:"agents"`
-	Total  int            `json:"total"`
+	Items      []PendingAgent `json:"items"`
+	TotalItems int            `json:"total_items"`
 }
 
 // pendingAgentListFromGen converts a gen.ListPendingAgentsResponse to a PendingAgentList.
 func pendingAgentListFromGen(
 	g *gen.ListPendingAgentsResponse,
 ) PendingAgentList {
-	agents := make([]PendingAgent, 0, len(g.Agents))
-	for _, a := range g.Agents {
+	agents := make([]PendingAgent, 0, len(g.Items))
+	for _, a := range g.Items {
 		agents = append(agents, PendingAgent{
 			MachineID:   a.MachineId,
 			Hostname:    a.Hostname,
@@ -318,8 +318,8 @@ func pendingAgentListFromGen(
 	}
 
 	return PendingAgentList{
-		Agents: agents,
-		Total:  g.Total,
+		Items:      agents,
+		TotalItems: g.TotalItems,
 	}
 }
 
@@ -327,13 +327,13 @@ func pendingAgentListFromGen(
 func agentListFromGen(
 	g *gen.ListAgentsResponse,
 ) AgentList {
-	agents := make([]Agent, 0, len(g.Agents))
-	for i := range g.Agents {
-		agents = append(agents, agentFromGen(&g.Agents[i]))
+	agents := make([]Agent, 0, len(g.Items))
+	for i := range g.Items {
+		agents = append(agents, agentFromGen(&g.Items[i]))
 	}
 
 	return AgentList{
-		Agents: agents,
-		Total:  g.Total,
+		Items:      agents,
+		TotalItems: g.TotalItems,
 	}
 }

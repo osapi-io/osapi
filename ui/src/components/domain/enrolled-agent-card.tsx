@@ -6,7 +6,7 @@ import { CopyField } from "@/components/ui/copy-field";
 import { Text } from "@/components/ui/text";
 import { Loader2, ShieldCheck, Trash2 } from "lucide-react";
 import type { AgentInfo } from "@/sdk/gen/schemas";
-import { removeAgent } from "@/sdk/gen/agent-management-api-agent-operations/agent-management-api-agent-operations";
+import { deleteAgent } from "@/sdk/gen/agent-management-api-agent-operations/agent-management-api-agent-operations";
 
 interface EnrolledAgentCardProps {
   agent: AgentInfo;
@@ -34,10 +34,10 @@ export function EnrolledAgentCard({
     setActing(true);
     setError(null);
     try {
-      const resp = await removeAgent(agent.hostname, {
+      const resp = await deleteAgent(agent.hostname, {
         machine_id: agent.machine_id,
       });
-      if (resp.status === 200) {
+      if (resp.status === 204) {
         setRemoved(true);
         setTimeout(() => onRefresh?.(), 1000);
       } else {

@@ -2506,17 +2506,11 @@ type FactKeyEntry struct {
 
 // FactKeysResponse defines model for FactKeysResponse.
 type FactKeysResponse struct {
-	// Keys Available fact keys for @fact. references.
-	Keys []FactKeyEntry `json:"keys"`
-}
+	// Items Available fact keys for @fact. references.
+	Items []FactKeyEntry `json:"items"`
 
-// FileDeleteResponse defines model for FileDeleteResponse.
-type FileDeleteResponse struct {
-	// Deleted Whether the file was deleted.
-	Deleted bool `json:"deleted"`
-
-	// Name The name of the deleted file.
-	Name string `json:"name"`
+	// TotalItems Total number of fact keys.
+	TotalItems int `json:"total_items"`
 }
 
 // FileDeployCollectionResponse defines model for FileDeployCollectionResponse.
@@ -2606,11 +2600,11 @@ type FileInfoResponse struct {
 
 // FileListResponse defines model for FileListResponse.
 type FileListResponse struct {
-	// Files List of stored files.
-	Files []FileInfo `json:"files"`
+	// Items List of stored files.
+	Items []FileInfo `json:"items"`
 
-	// Total Total number of files.
-	Total int `json:"total"`
+	// TotalItems Total number of files.
+	TotalItems int `json:"total_items"`
 }
 
 // FileStatusCollectionResponse defines model for FileStatusCollectionResponse.
@@ -2618,12 +2612,6 @@ type FileStatusCollectionResponse struct {
 	// JobId The job ID used to process this request.
 	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
 	Results []FileStatusResult  `json:"results"`
-}
-
-// FileStatusRequest defines model for FileStatusRequest.
-type FileStatusRequest struct {
-	// Path Filesystem path to check.
-	Path string `json:"path" validate:"required,min=1"`
 }
 
 // FileStatusResult defines model for FileStatusResult.
@@ -3079,10 +3067,11 @@ type KVBucketInfo struct {
 
 // ListAgentsResponse defines model for ListAgentsResponse.
 type ListAgentsResponse struct {
-	Agents []AgentInfo `json:"agents"`
+	// Items The active agents.
+	Items []AgentInfo `json:"items"`
 
-	// Total Total number of active agents.
-	Total int `json:"total"`
+	// TotalItems Total number of active agents.
+	TotalItems int `json:"total_items"`
 }
 
 // ListAuditResponse defines model for ListAuditResponse.
@@ -3107,10 +3096,11 @@ type ListJobsResponse struct {
 
 // ListPendingAgentsResponse defines model for ListPendingAgentsResponse.
 type ListPendingAgentsResponse struct {
-	Agents []PendingAgentInfo `json:"agents"`
+	// Items The agents that wait for enrollment.
+	Items []PendingAgentInfo `json:"items"`
 
-	// Total Total number of pending agents.
-	Total int `json:"total"`
+	// TotalItems Total number of pending agents.
+	TotalItems int `json:"total_items"`
 }
 
 // LoadAverageResponse The system load averages for 1, 5, and 15 minutes.
@@ -4271,10 +4261,10 @@ type StaleDeployment struct {
 
 // StaleDeploymentsResponse defines model for StaleDeploymentsResponse.
 type StaleDeploymentsResponse struct {
-	Stale []StaleDeployment `json:"stale"`
+	Items []StaleDeployment `json:"items"`
 
-	// Total Total number of stale deployments.
-	Total int `json:"total"`
+	// TotalItems Total number of stale deployments.
+	TotalItems int `json:"total_items"`
 }
 
 // StatusResponse defines model for StatusResponse.
@@ -4770,8 +4760,8 @@ type UserName = string
 // bearerAuthContextKey is the context key for BearerAuth security scheme
 type bearerAuthContextKey string
 
-// RemoveAgentParams defines parameters for RemoveAgent.
-type RemoveAgentParams struct {
+// DeleteAgentParams defines parameters for DeleteAgent.
+type DeleteAgentParams struct {
 	// MachineId The machine ID to remove, when more than one accepted agent has the hostname.
 	MachineId *string `form:"machine_id,omitempty" json:"machine_id,omitempty" validate:"omitempty,min=1,max=255"`
 }
@@ -4850,6 +4840,12 @@ type DeleteNodeContainerDockerByIDParams struct {
 	Force *bool `form:"force,omitempty" json:"force,omitempty" validate:"omitempty"`
 }
 
+// GetNodeFileStatusParams defines parameters for GetNodeFileStatus.
+type GetNodeFileStatusParams struct {
+	// Path Filesystem path to check.
+	Path string `form:"path" json:"path" validate:"required,min=1"`
+}
+
 // GetNodeLogParams defines parameters for GetNodeLog.
 type GetNodeLogParams struct {
 	// Lines Maximum number of log lines to return.
@@ -4912,9 +4908,6 @@ type PostNodeContainerDockerStopJSONRequestBody = DockerStopRequest
 
 // PostNodeFileDeployJSONRequestBody defines body for PostNodeFileDeploy for application/json ContentType.
 type PostNodeFileDeployJSONRequestBody = FileDeployRequest
-
-// PostNodeFileStatusJSONRequestBody defines body for PostNodeFileStatus for application/json ContentType.
-type PostNodeFileStatusJSONRequestBody = FileStatusRequest
 
 // PostNodeFileUndeployJSONRequestBody defines body for PostNodeFileUndeploy for application/json ContentType.
 type PostNodeFileUndeployJSONRequestBody = FileUndeployRequest
@@ -5079,8 +5072,8 @@ type ClientInterface interface {
 	// GetAgentsPending request
 	GetAgentsPending(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// RemoveAgent request
-	RemoveAgent(ctx context.Context, hostname string, params *RemoveAgentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteAgent request
+	DeleteAgent(ctx context.Context, hostname string, params *DeleteAgentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetAgentDetails request
 	GetAgentDetails(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5219,10 +5212,8 @@ type ClientInterface interface {
 
 	PostNodeFileDeploy(ctx context.Context, hostname Hostname, body PostNodeFileDeployJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostNodeFileStatusWithBody request with any body
-	PostNodeFileStatusWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostNodeFileStatus(ctx context.Context, hostname Hostname, body PostNodeFileStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeFileStatus request
+	GetNodeFileStatus(ctx context.Context, hostname Hostname, params *GetNodeFileStatusParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostNodeFileUndeployWithBody request with any body
 	PostNodeFileUndeployWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5533,8 +5524,8 @@ func (c *Client) GetAgentsPending(ctx context.Context, reqEditors ...RequestEdit
 	return c.Client.Do(req)
 }
 
-func (c *Client) RemoveAgent(ctx context.Context, hostname string, params *RemoveAgentParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewRemoveAgentRequest(c.Server, hostname, params)
+func (c *Client) DeleteAgent(ctx context.Context, hostname string, params *DeleteAgentParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAgentRequest(c.Server, hostname, params)
 	if err != nil {
 		return nil, err
 	}
@@ -6133,20 +6124,8 @@ func (c *Client) PostNodeFileDeploy(ctx context.Context, hostname Hostname, body
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeFileStatusWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeFileStatusRequestWithBody(c.Server, hostname, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostNodeFileStatus(ctx context.Context, hostname Hostname, body PostNodeFileStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeFileStatusRequest(c.Server, hostname, body)
+func (c *Client) GetNodeFileStatus(ctx context.Context, hostname Hostname, params *GetNodeFileStatusParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeFileStatusRequest(c.Server, hostname, params)
 	if err != nil {
 		return nil, err
 	}
@@ -7459,8 +7438,8 @@ func NewGetAgentsPendingRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewRemoveAgentRequest generates requests for RemoveAgent
-func NewRemoveAgentRequest(server string, hostname string, params *RemoveAgentParams) (*http.Request, error) {
+// NewDeleteAgentRequest generates requests for DeleteAgent
+func NewDeleteAgentRequest(server string, hostname string, params *DeleteAgentParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -9201,19 +9180,8 @@ func NewPostNodeFileDeployRequestWithBody(server string, hostname Hostname, cont
 	return req, nil
 }
 
-// NewPostNodeFileStatusRequest calls the generic PostNodeFileStatus builder with application/json body
-func NewPostNodeFileStatusRequest(server string, hostname Hostname, body PostNodeFileStatusJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostNodeFileStatusRequestWithBody(server, hostname, "application/json", bodyReader)
-}
-
-// NewPostNodeFileStatusRequestWithBody generates requests for PostNodeFileStatus with any type of body
-func NewPostNodeFileStatusRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+// NewGetNodeFileStatusRequest generates requests for GetNodeFileStatus
+func NewGetNodeFileStatusRequest(server string, hostname Hostname, params *GetNodeFileStatusParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -9238,12 +9206,33 @@ func NewPostNodeFileStatusRequestWithBody(server string, hostname Hostname, cont
 		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "path", params.Path, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-
-	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -12620,8 +12609,8 @@ type ClientWithResponsesInterface interface {
 	// GetAgentsPendingWithResponse request
 	GetAgentsPendingWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAgentsPendingResponse, error)
 
-	// RemoveAgentWithResponse request
-	RemoveAgentWithResponse(ctx context.Context, hostname string, params *RemoveAgentParams, reqEditors ...RequestEditorFn) (*RemoveAgentResponse, error)
+	// DeleteAgentWithResponse request
+	DeleteAgentWithResponse(ctx context.Context, hostname string, params *DeleteAgentParams, reqEditors ...RequestEditorFn) (*DeleteAgentResponse, error)
 
 	// GetAgentDetailsWithResponse request
 	GetAgentDetailsWithResponse(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*GetAgentDetailsResponse, error)
@@ -12760,10 +12749,8 @@ type ClientWithResponsesInterface interface {
 
 	PostNodeFileDeployWithResponse(ctx context.Context, hostname Hostname, body PostNodeFileDeployJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeFileDeployResponse, error)
 
-	// PostNodeFileStatusWithBodyWithResponse request with any body
-	PostNodeFileStatusWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeFileStatusResponse, error)
-
-	PostNodeFileStatusWithResponse(ctx context.Context, hostname Hostname, body PostNodeFileStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeFileStatusResponse, error)
+	// GetNodeFileStatusWithResponse request
+	GetNodeFileStatusWithResponse(ctx context.Context, hostname Hostname, params *GetNodeFileStatusParams, reqEditors ...RequestEditorFn) (*GetNodeFileStatusResponse, error)
 
 	// PostNodeFileUndeployWithBodyWithResponse request with any body
 	PostNodeFileUndeployWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeFileUndeployResponse, error)
@@ -13116,22 +13103,19 @@ func (r GetAgentsPendingResponse) ContentType() string {
 	return ""
 }
 
-type RemoveAgentResponse struct {
+type DeleteAgentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		Message string `json:"message"`
-	}
-	JSON400 *ErrorResponse
-	JSON401 *ErrorResponse
-	JSON403 *ErrorResponse
-	JSON404 *ErrorResponse
-	JSON409 *ErrorResponse
-	JSON500 *ErrorResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
+	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r RemoveAgentResponse) Status() string {
+func (r DeleteAgentResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -13139,7 +13123,7 @@ func (r RemoveAgentResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r RemoveAgentResponse) StatusCode() int {
+func (r DeleteAgentResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -13147,7 +13131,7 @@ func (r RemoveAgentResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r RemoveAgentResponse) ContentType() string {
+func (r DeleteAgentResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -13192,14 +13176,11 @@ func (r GetAgentDetailsResponse) ContentType() string {
 type AcceptAgentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		Message string `json:"message"`
-	}
-	JSON400 *ErrorResponse
-	JSON401 *ErrorResponse
-	JSON403 *ErrorResponse
-	JSON404 *ErrorResponse
-	JSON500 *ErrorResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -13229,15 +13210,12 @@ func (r AcceptAgentResponse) ContentType() string {
 type DrainAgentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		Message string `json:"message"`
-	}
-	JSON400 *ErrorResponse
-	JSON401 *ErrorResponse
-	JSON403 *ErrorResponse
-	JSON404 *ErrorResponse
-	JSON409 *ErrorResponse
-	JSON500 *ErrorResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
+	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -13267,14 +13245,11 @@ func (r DrainAgentResponse) ContentType() string {
 type RejectAgentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		Message string `json:"message"`
-	}
-	JSON400 *ErrorResponse
-	JSON401 *ErrorResponse
-	JSON403 *ErrorResponse
-	JSON404 *ErrorResponse
-	JSON500 *ErrorResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -13304,15 +13279,12 @@ func (r RejectAgentResponse) ContentType() string {
 type UndrainAgentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		Message string `json:"message"`
-	}
-	JSON400 *ErrorResponse
-	JSON401 *ErrorResponse
-	JSON403 *ErrorResponse
-	JSON404 *ErrorResponse
-	JSON409 *ErrorResponse
-	JSON500 *ErrorResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
+	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -13513,6 +13485,7 @@ func (r GetFilesResponse) ContentType() string {
 type PostFileResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
+	JSON200      *FileUploadResponse
 	JSON201      *FileUploadResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
@@ -13581,7 +13554,6 @@ func (r GetFileStaleResponse) ContentType() string {
 type DeleteFileByNameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *FileDeleteResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -14056,7 +14028,7 @@ func (r PutNodeCertificateCaResponse) ContentType() string {
 type PostNodeCommandExecResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *CommandResultCollectionResponse
+	JSON200      *CommandResultCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -14090,7 +14062,7 @@ func (r PostNodeCommandExecResponse) ContentType() string {
 type PostNodeCommandShellResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *CommandResultCollectionResponse
+	JSON200      *CommandResultCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -14158,7 +14130,7 @@ func (r GetNodeContainerDockerResponse) ContentType() string {
 type PostNodeContainerDockerResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *DockerResultCollectionResponse
+	JSON200      *DockerResultCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -14192,7 +14164,7 @@ func (r PostNodeContainerDockerResponse) ContentType() string {
 type DeleteNodeContainerDockerImageResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *DockerActionCollectionResponse
+	JSON200      *DockerActionCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -14226,7 +14198,7 @@ func (r DeleteNodeContainerDockerImageResponse) ContentType() string {
 type PostNodeContainerDockerPullResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *DockerPullCollectionResponse
+	JSON200      *DockerPullCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -14260,7 +14232,7 @@ func (r PostNodeContainerDockerPullResponse) ContentType() string {
 type DeleteNodeContainerDockerByIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *DockerActionCollectionResponse
+	JSON200      *DockerActionCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -14330,7 +14302,7 @@ func (r GetNodeContainerDockerByIDResponse) ContentType() string {
 type PostNodeContainerDockerExecResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *DockerExecCollectionResponse
+	JSON200      *DockerExecCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -14365,7 +14337,7 @@ func (r PostNodeContainerDockerExecResponse) ContentType() string {
 type PostNodeContainerDockerStartResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *DockerActionCollectionResponse
+	JSON200      *DockerActionCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -14400,7 +14372,7 @@ func (r PostNodeContainerDockerStartResponse) ContentType() string {
 type PostNodeContainerDockerStopResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *DockerActionCollectionResponse
+	JSON200      *DockerActionCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -14469,7 +14441,7 @@ func (r GetNodeDiskResponse) ContentType() string {
 type PostNodeFileDeployResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *FileDeployCollectionResponse
+	JSON200      *FileDeployCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -14500,7 +14472,7 @@ func (r PostNodeFileDeployResponse) ContentType() string {
 	return ""
 }
 
-type PostNodeFileStatusResponse struct {
+type GetNodeFileStatusResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *FileStatusCollectionResponse
@@ -14511,7 +14483,7 @@ type PostNodeFileStatusResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostNodeFileStatusResponse) Status() string {
+func (r GetNodeFileStatusResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -14519,7 +14491,7 @@ func (r PostNodeFileStatusResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostNodeFileStatusResponse) StatusCode() int {
+func (r GetNodeFileStatusResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -14527,7 +14499,7 @@ func (r PostNodeFileStatusResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostNodeFileStatusResponse) ContentType() string {
+func (r GetNodeFileStatusResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -14537,7 +14509,7 @@ func (r PostNodeFileStatusResponse) ContentType() string {
 type PostNodeFileUndeployResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *FileUndeployCollectionResponse
+	JSON200      *FileUndeployCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -14778,7 +14750,7 @@ func (r GetNodeHostnameResponse) ContentType() string {
 type PutNodeHostnameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *HostnameUpdateCollectionResponse
+	JSON200      *HostnameUpdateCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -15016,7 +14988,7 @@ func (r DeleteNodeNetworkDNSResponse) ContentType() string {
 type PutNodeNetworkDNSResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *DNSUpdateCollectionResponse
+	JSON200      *DNSUpdateCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -17162,13 +17134,13 @@ func (c *ClientWithResponses) GetAgentsPendingWithResponse(ctx context.Context, 
 	return ParseGetAgentsPendingResponse(rsp)
 }
 
-// RemoveAgentWithResponse request returning *RemoveAgentResponse
-func (c *ClientWithResponses) RemoveAgentWithResponse(ctx context.Context, hostname string, params *RemoveAgentParams, reqEditors ...RequestEditorFn) (*RemoveAgentResponse, error) {
-	rsp, err := c.RemoveAgent(ctx, hostname, params, reqEditors...)
+// DeleteAgentWithResponse request returning *DeleteAgentResponse
+func (c *ClientWithResponses) DeleteAgentWithResponse(ctx context.Context, hostname string, params *DeleteAgentParams, reqEditors ...RequestEditorFn) (*DeleteAgentResponse, error) {
+	rsp, err := c.DeleteAgent(ctx, hostname, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseRemoveAgentResponse(rsp)
+	return ParseDeleteAgentResponse(rsp)
 }
 
 // GetAgentDetailsWithResponse request returning *GetAgentDetailsResponse
@@ -17602,21 +17574,13 @@ func (c *ClientWithResponses) PostNodeFileDeployWithResponse(ctx context.Context
 	return ParsePostNodeFileDeployResponse(rsp)
 }
 
-// PostNodeFileStatusWithBodyWithResponse request with arbitrary body returning *PostNodeFileStatusResponse
-func (c *ClientWithResponses) PostNodeFileStatusWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeFileStatusResponse, error) {
-	rsp, err := c.PostNodeFileStatusWithBody(ctx, hostname, contentType, body, reqEditors...)
+// GetNodeFileStatusWithResponse request returning *GetNodeFileStatusResponse
+func (c *ClientWithResponses) GetNodeFileStatusWithResponse(ctx context.Context, hostname Hostname, params *GetNodeFileStatusParams, reqEditors ...RequestEditorFn) (*GetNodeFileStatusResponse, error) {
+	rsp, err := c.GetNodeFileStatus(ctx, hostname, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeFileStatusResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostNodeFileStatusWithResponse(ctx context.Context, hostname Hostname, body PostNodeFileStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeFileStatusResponse, error) {
-	rsp, err := c.PostNodeFileStatus(ctx, hostname, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostNodeFileStatusResponse(rsp)
+	return ParseGetNodeFileStatusResponse(rsp)
 }
 
 // PostNodeFileUndeployWithBodyWithResponse request with arbitrary body returning *PostNodeFileUndeployResponse
@@ -18621,29 +18585,20 @@ func ParseGetAgentsPendingResponse(rsp *http.Response) (*GetAgentsPendingRespons
 	return response, nil
 }
 
-// ParseRemoveAgentResponse parses an HTTP response from a RemoveAgentWithResponse call
-func ParseRemoveAgentResponse(rsp *http.Response) (*RemoveAgentResponse, error) {
+// ParseDeleteAgentResponse parses an HTTP response from a DeleteAgentWithResponse call
+func ParseDeleteAgentResponse(rsp *http.Response) (*DeleteAgentResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &RemoveAgentResponse{
+	response := &DeleteAgentResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Message string `json:"message"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -18766,15 +18721,6 @@ func ParseAcceptAgentResponse(rsp *http.Response) (*AcceptAgentResponse, error) 
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Message string `json:"message"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -18829,15 +18775,6 @@ func ParseDrainAgentResponse(rsp *http.Response) (*DrainAgentResponse, error) {
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Message string `json:"message"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -18899,15 +18836,6 @@ func ParseRejectAgentResponse(rsp *http.Response) (*RejectAgentResponse, error) 
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Message string `json:"message"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -18962,15 +18890,6 @@ func ParseUndrainAgentResponse(rsp *http.Response) (*UndrainAgentResponse, error
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Message string `json:"message"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -19309,6 +19228,13 @@ func ParsePostFileResponse(rsp *http.Response) (*PostFileResponse, error) {
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest FileUploadResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
 		var dest FileUploadResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -19417,13 +19343,6 @@ func ParseDeleteFileByNameResponse(rsp *http.Response) (*DeleteFileByNameRespons
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest FileDeleteResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -20166,12 +20085,12 @@ func ParsePostNodeCommandExecResponse(rsp *http.Response) (*PostNodeCommandExecR
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest CommandResultCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON202 = &dest
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
@@ -20220,12 +20139,12 @@ func ParsePostNodeCommandShellResponse(rsp *http.Response) (*PostNodeCommandShel
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest CommandResultCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON202 = &dest
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
@@ -20328,12 +20247,12 @@ func ParsePostNodeContainerDockerResponse(rsp *http.Response) (*PostNodeContaine
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest DockerResultCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON202 = &dest
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
@@ -20382,12 +20301,12 @@ func ParseDeleteNodeContainerDockerImageResponse(rsp *http.Response) (*DeleteNod
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest DockerActionCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON202 = &dest
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
@@ -20436,12 +20355,12 @@ func ParsePostNodeContainerDockerPullResponse(rsp *http.Response) (*PostNodeCont
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest DockerPullCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON202 = &dest
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
@@ -20490,12 +20409,12 @@ func ParseDeleteNodeContainerDockerByIDResponse(rsp *http.Response) (*DeleteNode
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest DockerActionCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON202 = &dest
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
@@ -20612,12 +20531,12 @@ func ParsePostNodeContainerDockerExecResponse(rsp *http.Response) (*PostNodeCont
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest DockerExecCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON202 = &dest
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
@@ -20673,12 +20592,12 @@ func ParsePostNodeContainerDockerStartResponse(rsp *http.Response) (*PostNodeCon
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest DockerActionCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON202 = &dest
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
@@ -20734,12 +20653,12 @@ func ParsePostNodeContainerDockerStopResponse(rsp *http.Response) (*PostNodeCont
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest DockerActionCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON202 = &dest
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
@@ -20849,12 +20768,12 @@ func ParsePostNodeFileDeployResponse(rsp *http.Response) (*PostNodeFileDeployRes
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest FileDeployCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON202 = &dest
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
@@ -20889,15 +20808,15 @@ func ParsePostNodeFileDeployResponse(rsp *http.Response) (*PostNodeFileDeployRes
 	return response, nil
 }
 
-// ParsePostNodeFileStatusResponse parses an HTTP response from a PostNodeFileStatusWithResponse call
-func ParsePostNodeFileStatusResponse(rsp *http.Response) (*PostNodeFileStatusResponse, error) {
+// ParseGetNodeFileStatusResponse parses an HTTP response from a GetNodeFileStatusWithResponse call
+func ParseGetNodeFileStatusResponse(rsp *http.Response) (*GetNodeFileStatusResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostNodeFileStatusResponse{
+	response := &GetNodeFileStatusResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -20957,12 +20876,12 @@ func ParsePostNodeFileUndeployResponse(rsp *http.Response) (*PostNodeFileUndeplo
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest FileUndeployCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON202 = &dest
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
@@ -21356,12 +21275,12 @@ func ParsePutNodeHostnameResponse(rsp *http.Response) (*PutNodeHostnameResponse,
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest HostnameUpdateCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON202 = &dest
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
@@ -21734,12 +21653,12 @@ func ParsePutNodeNetworkDNSResponse(rsp *http.Response) (*PutNodeNetworkDNSRespo
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest DNSUpdateCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON202 = &dest
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse

@@ -635,6 +635,18 @@ go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -
 The diff of the file shows the change to the API. A change that you did not
 make, such as a schema that a generator changed, fails the test.
 
+Each operation obeys the conventions of the API, which
+`components/osapi/api.md` in osapi-io/specs states. `TestConventions`, in
+`internal/apicontract`, fails on an operation that breaks one:
+
+- An operationId is Pascal case, such as `GetJobs`.
+- An operation answers when its work is done, so no operation answers 202.
+- A 201 has a `Location` header that names what it created.
+- Each error is `{"error": "..."}`. The readiness probe's 503 is the one
+  exception.
+- A delete of the controller answers 204.
+- A list of the controller answers `items` and `total_items`.
+
 The operations of the controller itself, such as the agents and the jobs, move
 to definitions in `internal/controller/endpoints/`. `osapi controller endpoint`
 lists them, and `osapi controller endpoint spec` lists each part of the DSL.

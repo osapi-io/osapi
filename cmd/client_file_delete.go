@@ -21,7 +21,7 @@
 package cmd
 
 import (
-	"fmt"
+	"encoding/json"
 
 	"github.com/spf13/cobra"
 
@@ -38,20 +38,21 @@ var clientFileDeleteCmd = &cobra.Command{
 		ctx := cmd.Context()
 		name, _ := cmd.Flags().GetString("name")
 
-		resp, err := sdkClient.File.Delete(ctx, name)
-		if err != nil {
+		if err := sdkClient.File.Delete(ctx, name); err != nil {
 			cli.HandleError(err, logger)
 			return
 		}
 
+		// A delete answers with no body, so --json prints what it did, as
+		// job delete does.
 		if jsonOutput {
-			cli.PrintJSON(resp.RawJSON())
+			result, _ := json.Marshal(map[string]any{"name": name, "status": "deleted"})
+			cli.PrintJSON(result)
 			return
 		}
 
-		fmt.Println()
-		cli.PrintKV("Name", resp.Data.Name)
-		cli.PrintKV("Deleted", fmt.Sprintf("%v", resp.Data.Deleted))
+		cli.PrintHeading("File")
+		cli.PrintKV("Name", name, "Status", "Deleted")
 	},
 }
 

@@ -57,7 +57,7 @@ func (suite *DockerPublicTestSuite) TestCreate() {
 			name: "when creating container returns result",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","id":"abc123","name":"my-nginx","image":"nginx:latest","state":"running","created":"2026-01-01T00:00:00Z","changed":true}]}`,
@@ -89,7 +89,7 @@ func (suite *DockerPublicTestSuite) TestCreate() {
 			name: "when creating container with all optional fields returns result",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"web-01","id":"def456","name":"my-app","image":"myapp:v1","state":"running","created":"2026-01-01T00:00:00Z","changed":true}]}`,
@@ -121,7 +121,7 @@ func (suite *DockerPublicTestSuite) TestCreate() {
 			name: "when creating container with hostname and dns returns result",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"00000000-0000-0000-0000-000000000003","results":[{"hostname":"web-01","id":"ghi789","name":"my-dns","image":"nginx:latest","state":"running","created":"2026-01-01T00:00:00Z","changed":true}]}`,
@@ -186,7 +186,7 @@ func (suite *DockerPublicTestSuite) TestCreate() {
 		{
 			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 			},
 			opts: client.DockerCreateOpts{
 				Image: "nginx:latest",
@@ -200,7 +200,7 @@ func (suite *DockerPublicTestSuite) TestCreate() {
 
 				var target *client.UnexpectedStatusError
 				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
 		},
@@ -531,7 +531,7 @@ func (suite *DockerPublicTestSuite) TestStart() {
 			name: "when starting container returns result",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","id":"abc123","message":"container started","changed":true}]}`,
@@ -605,7 +605,7 @@ func (suite *DockerPublicTestSuite) TestStart() {
 		{
 			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(
 				resp *client.Response[client.Collection[client.DockerActionResult]],
@@ -616,7 +616,7 @@ func (suite *DockerPublicTestSuite) TestStart() {
 
 				var target *client.UnexpectedStatusError
 				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
 		},
@@ -663,7 +663,7 @@ func (suite *DockerPublicTestSuite) TestStop() {
 			name: "when stopping container returns result",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","id":"abc123","message":"container stopped","changed":true}]}`,
@@ -688,7 +688,7 @@ func (suite *DockerPublicTestSuite) TestStop() {
 			name: "when stopping container with timeout returns result",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"web-01","id":"abc123","message":"container stopped","changed":true}]}`,
@@ -762,7 +762,7 @@ func (suite *DockerPublicTestSuite) TestStop() {
 		{
 			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(
 				resp *client.Response[client.Collection[client.DockerActionResult]],
@@ -773,7 +773,7 @@ func (suite *DockerPublicTestSuite) TestStop() {
 
 				var target *client.UnexpectedStatusError
 				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
 		},
@@ -825,7 +825,7 @@ func (suite *DockerPublicTestSuite) TestRemove() {
 			name: "when removing container returns result",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","id":"abc123","message":"container removed","changed":true}]}`,
@@ -852,7 +852,7 @@ func (suite *DockerPublicTestSuite) TestRemove() {
 				suite.Equal("true", r.URL.Query().Get("force"))
 
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"web-01","id":"abc123","message":"container removed","changed":true}]}`,
@@ -926,7 +926,7 @@ func (suite *DockerPublicTestSuite) TestRemove() {
 		{
 			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(
 				resp *client.Response[client.Collection[client.DockerActionResult]],
@@ -937,7 +937,7 @@ func (suite *DockerPublicTestSuite) TestRemove() {
 
 				var target *client.UnexpectedStatusError
 				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
 		},
@@ -984,7 +984,7 @@ func (suite *DockerPublicTestSuite) TestExec() {
 			name: "when executing command returns result",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","stdout":"hello\n","stderr":"","exit_code":0,"changed":true}]}`,
@@ -1013,7 +1013,7 @@ func (suite *DockerPublicTestSuite) TestExec() {
 			name: "when executing command with env and working dir returns result",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"web-01","stdout":"bar\n","stderr":"","exit_code":0,"changed":true}]}`,
@@ -1098,7 +1098,7 @@ func (suite *DockerPublicTestSuite) TestExec() {
 		{
 			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 			},
 			opts: client.DockerExecOpts{
 				Command: []string{"echo", "hello"},
@@ -1112,7 +1112,7 @@ func (suite *DockerPublicTestSuite) TestExec() {
 
 				var target *client.UnexpectedStatusError
 				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
 		},
@@ -1163,7 +1163,7 @@ func (suite *DockerPublicTestSuite) TestPull() {
 			name: "when pulling image returns result",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","image_id":"sha256:abc123","tag":"latest","size":52428800,"changed":true}]}`,
@@ -1219,7 +1219,7 @@ func (suite *DockerPublicTestSuite) TestPull() {
 		{
 			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(
 				resp *client.Response[client.Collection[client.DockerPullResult]],
@@ -1230,7 +1230,7 @@ func (suite *DockerPublicTestSuite) TestPull() {
 
 				var target *client.UnexpectedStatusError
 				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
 		},
@@ -1283,7 +1283,7 @@ func (suite *DockerPublicTestSuite) TestImageRemove() {
 			name: "when removing image returns result",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","id":"nginx:latest","message":"image removed","changed":true}]}`,
@@ -1310,7 +1310,7 @@ func (suite *DockerPublicTestSuite) TestImageRemove() {
 				suite.Equal("true", r.URL.Query().Get("force"))
 
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"web-01","id":"nginx:latest","message":"image removed","changed":true}]}`,
@@ -1365,7 +1365,7 @@ func (suite *DockerPublicTestSuite) TestImageRemove() {
 		{
 			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(
 				resp *client.Response[client.Collection[client.DockerActionResult]],
@@ -1376,7 +1376,7 @@ func (suite *DockerPublicTestSuite) TestImageRemove() {
 
 				var target *client.UnexpectedStatusError
 				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
 		},

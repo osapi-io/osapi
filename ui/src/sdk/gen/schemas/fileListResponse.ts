@@ -8,7 +8,7 @@ import type { FileInfo } from './fileInfo';
 
 export interface FileListResponse {
   /** List of stored files. */
-  files: FileInfo[];
+  items: FileInfo[];
   /** Total number of files. */
-  total: number;
+  total_items: number;
 }

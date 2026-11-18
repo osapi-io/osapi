@@ -22,8 +22,9 @@ The rules:
   Fix: Tag the field the action is on in:"path", or use Sub for a fixed path.
 - `key`: An input has at most one field tagged in:"path". Fix: Tag one field
   in:"path"; a group has one key.
-- `id`: Each operationId is used once. Fix: Give the method its own ID with .ID,
-  or rename it.
+- `id`: Each operationId is used once, and starts with a capital letter, as each
+  operationId of the API does. Fix: Give the method its own ID with .ID, in
+  Pascal case, such as GetAgents.
 - `route`: No two methods have one verb and path. Fix: Change the verb, the Sub
   or the Action.
 - `handler`: A group that Uses a type gives each method a handler,

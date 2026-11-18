@@ -17,7 +17,7 @@ export function useAgents(intervalMs = 10000) {
         const result = await getAgents();
         if (cancelled) return;
         if (result.status === 200) {
-          setAgents((result.data as ListAgentsResponse).agents);
+          setAgents((result.data as ListAgentsResponse).items);
           setError(null);
         } else {
           setError("Failed to fetch agents");

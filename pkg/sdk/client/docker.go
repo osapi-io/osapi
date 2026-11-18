@@ -81,7 +81,7 @@ func (s *DockerService) Create(
 		return nil, err
 	}
 
-	if resp.JSON202 == nil {
+	if resp.JSON200 == nil {
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),
 			Message:    "nil response body",
@@ -89,7 +89,7 @@ func (s *DockerService) Create(
 	}
 
 	return newResponse(
-		dockerResultCollectionFromGen(resp.JSON202),
+		dockerResultCollectionFromGen(resp.JSON200),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
@@ -196,7 +196,7 @@ func (s *DockerService) Start(
 		return nil, err
 	}
 
-	if resp.JSON202 == nil {
+	if resp.JSON200 == nil {
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),
 			Message:    "nil response body",
@@ -204,7 +204,7 @@ func (s *DockerService) Start(
 	}
 
 	return newResponse(
-		dockerActionCollectionFromGen(resp.JSON202),
+		dockerActionCollectionFromGen(resp.JSON200),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
@@ -238,7 +238,7 @@ func (s *DockerService) Stop(
 		return nil, err
 	}
 
-	if resp.JSON202 == nil {
+	if resp.JSON200 == nil {
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),
 			Message:    "nil response body",
@@ -246,7 +246,7 @@ func (s *DockerService) Stop(
 	}
 
 	return newResponse(
-		dockerActionCollectionFromGen(resp.JSON202),
+		dockerActionCollectionFromGen(resp.JSON200),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
@@ -282,7 +282,7 @@ func (s *DockerService) Remove(
 		return nil, err
 	}
 
-	if resp.JSON202 == nil {
+	if resp.JSON200 == nil {
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),
 			Message:    "nil response body",
@@ -290,7 +290,7 @@ func (s *DockerService) Remove(
 	}
 
 	return newResponse(
-		dockerActionCollectionFromGen(resp.JSON202),
+		dockerActionCollectionFromGen(resp.JSON200),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
@@ -329,14 +329,14 @@ func (s *DockerService) Exec(
 		return nil, err
 	}
 
-	if resp.JSON202 == nil {
+	if resp.JSON200 == nil {
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),
 			Message:    "nil response body",
 		}}
 	}
 
-	return newResponse(dockerExecCollectionFromGen(resp.JSON202), resp.Body, resp.HTTPResponse), nil
+	return newResponse(dockerExecCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
 // ImageRemove removes a container image from the target host.
@@ -373,7 +373,7 @@ func (s *DockerService) RemoveImage(
 		return nil, err
 	}
 
-	if resp.JSON202 == nil {
+	if resp.JSON200 == nil {
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),
 			Message:    "nil response body",
@@ -381,7 +381,7 @@ func (s *DockerService) RemoveImage(
 	}
 
 	return newResponse(
-		dockerActionCollectionFromGen(resp.JSON202),
+		dockerActionCollectionFromGen(resp.JSON200),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
@@ -412,12 +412,12 @@ func (s *DockerService) Pull(
 		return nil, err
 	}
 
-	if resp.JSON202 == nil {
+	if resp.JSON200 == nil {
 		return nil, &UnexpectedStatusError{APIError{
 			StatusCode: resp.StatusCode(),
 			Message:    "nil response body",
 		}}
 	}
 
-	return newResponse(dockerPullCollectionFromGen(resp.JSON202), resp.Body, resp.HTTPResponse), nil
+	return newResponse(dockerPullCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }

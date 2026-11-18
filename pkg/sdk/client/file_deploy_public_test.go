@@ -61,7 +61,7 @@ func (suite *FileDeployPublicTestSuite) TestDeploy() {
 			},
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"web-01","changed":true}]}`,
@@ -91,7 +91,7 @@ func (suite *FileDeployPublicTestSuite) TestDeploy() {
 			},
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"550e8400-e29b-41d4-a716-446655440001","results":[{"hostname":"web-01","changed":true}]}`,
@@ -168,7 +168,7 @@ func (suite *FileDeployPublicTestSuite) TestDeploy() {
 				Target:      "_any",
 			},
 			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(resp *client.Response[client.Collection[client.FileDeployResult]], err error) {
 				suite.Error(err)
@@ -176,7 +176,7 @@ func (suite *FileDeployPublicTestSuite) TestDeploy() {
 
 				var target *client.UnexpectedStatusError
 				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
 		},
@@ -356,7 +356,7 @@ func (suite *FileDeployPublicTestSuite) TestUndeploy() {
 			},
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
 						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"web-01","changed":true}]}`,
@@ -436,7 +436,7 @@ func (suite *FileDeployPublicTestSuite) TestUndeploy() {
 				Target: "_any",
 			},
 			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(resp *client.Response[client.Collection[client.FileUndeployResult]], err error) {
 				suite.Error(err)
@@ -444,7 +444,7 @@ func (suite *FileDeployPublicTestSuite) TestUndeploy() {
 
 				var target *client.UnexpectedStatusError
 				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
 		},
