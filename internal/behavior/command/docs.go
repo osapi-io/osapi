@@ -473,3 +473,11 @@ func spanInputs(
 
 	return strings.Join(parts, ", ")
 }
+
+// ExampleFlags is the flags of an example's command line: --target and the
+// flags of input, as the help and the pages write them.
+func ExampleFlags(
+	input any,
+) string {
+	return "--target " + exampleHost + exampleArgs(input)
+}

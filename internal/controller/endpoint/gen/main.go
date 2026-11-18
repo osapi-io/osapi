@@ -31,13 +31,10 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"go/token"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/dave/jennifer/jen"
@@ -45,6 +42,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/commandgen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/routegen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
 )
@@ -156,219 +154,10 @@ func (w *writer) group(
 		return err
 	}
 
-	return w.goFile(filepath.Join(dir, "cli.go"), commands(g, pkg))
-}
+	cli := newFile(pkg)
+	commandgen.Commands(cli, g, pkg)
 
-// commands is gen/cli.go: one cobra command for each method, with its help,
-// its permission, its examples and a flag for each input field, and the
-// init that registers them under osapi client <group>.
-func commands(
-	g *endpoint.Group,
-	pkg string,
-) *jen.File {
-	f := newFile(pkg)
-	f.ImportName(commandPath, "command")
-	f.ImportName(referencePath, "reference")
-	f.ImportName(cobraPath, "cobra")
-
-	var inits []jen.Code
-	names := make([]jen.Code, 0, len(g.Methods))
-	for _, m := range g.Methods {
-		name := g.Name + upperFirst(m.Name) + "Cmd"
-		names = append(names, jen.Id(name))
-
-		var reads []jen.Code
-		// flagFor reads fld from its flag, and declares the flag: named for
-		// the field's json name with _ as -, or its flag tag, with the
-		// shorthand of its short tag.
-		flagFor := func(fld reflect.StructField) jen.Code {
-			flag := strings.ReplaceAll(routegen.JSONName(fld), "_", "-")
-			if f := fld.Tag.Get("flag"); f != "" {
-				flag = f
-			}
-			kind, zero := flagKind(fld.Type, fld.Tag)
-			local := lowerFirst(fld.Name)
-			// A local that is a keyword, or the name of the group's package,
-			// would hide it.
-			if token.IsKeyword(local) || local == g.Name {
-				local += "Flag"
-			}
-			reads = append(reads, jen.List(jen.Id(local), jen.Id("_")).Op(":=").
-				Id("cmd").Dot("Flags").Call().Dot("Get"+kind).Call(jen.Lit(flag)))
-			// Flag help has no period at its end, as cobra's own has none.
-			help := strings.TrimSuffix(fld.Tag.Get("doc"), ".")
-			// A []byte is a file: its flag is the path of a local file, and
-			// the command sends the file's content.
-			if fld.Type == reflect.TypeFor[[]byte]() {
-				path := local
-				local += "Data"
-				reads = append(reads,
-					jen.List(jen.Id(local), jen.Id("ok")).Op(":=").
-						Qual(commandPath, "ReadFile").Call(jen.Id(path)),
-					jen.If(jen.Op("!").Id("ok")).Block(jen.Return()))
-				help = "Path to the local file with " + strings.ToLower(help[:1]) + help[1:]
-			}
-			if values := oneOf(fld); values != "" {
-				help += " (" + values + ")"
-			}
-			usage := jen.Lit(help)
-			declare := jen.Id(name).Dot("Flags").Call().Dot(kind).Call(jen.Lit(flag), zero, usage)
-			if short := fld.Tag.Get("short"); short != "" {
-				declare = jen.Id(name).Dot("Flags").Call().Dot(kind+"P").
-					Call(jen.Lit(flag), jen.Lit(short), zero, usage)
-			}
-			inits = append(inits, declare)
-			if fld.Tag.Get("in") == "path" || validates(fld, "required") {
-				inits = append(inits, jen.Id("_").Op("=").Id(name).Dot("MarkFlagRequired").
-					Call(jen.Lit(flag)))
-			}
-
-			return jen.Id(fld.Name).Op(":").Id(local)
-		}
-		var fields []jen.Code
-		for _, fld := range routegen.StructFields(m.In) {
-			if fld.Tag.Get("in") != "body" || fld.Type.Kind() != reflect.Struct {
-				fields = append(fields, flagFor(fld))
-
-				continue
-			}
-			// A named body is a flag for each of its fields.
-			var inner []jen.Code
-			for _, bf := range routegen.StructFields(fld.Type) {
-				inner = append(inner, flagFor(bf))
-			}
-			fields = append(fields, jen.Id(fld.Name).Op(":").
-				Qual(fld.Type.PkgPath(), fld.Type.Name()).Values(inner...))
-		}
-		for _, extra := range m.CommandFlags() {
-			if !extra.String {
-				inits = append(inits, jen.Id(name).Dot("Flags").Call().Dot("Bool").Call(
-					jen.Lit(extra.Name), jen.False(), jen.Lit(extra.Usage)))
-
-				continue
-			}
-			inits = append(inits, jen.Id(name).Dot("Flags").Call().Dot("String").Call(
-				jen.Lit(extra.Name), jen.Lit(extra.Value), jen.Lit(extra.Usage)))
-			if extra.Required {
-				inits = append(inits, jen.Id("_").Op("=").Id(name).Dot("MarkFlagRequired").
-					Call(jen.Lit(extra.Name)))
-			}
-		}
-		in := jen.Qual(m.In.PkgPath(), m.In.Name())
-		if len(fields) > 0 {
-			in = in.Values(fields...)
-		} else {
-			in = in.Values()
-		}
-		// The flags are read first, then a blank line, then the call; a
-		// method with no flags has only the call.
-		run := reads
-		if len(reads) > 0 {
-			run = append(run, jen.Line())
-		}
-		run = append(run, jen.Qual(commandPath, "Run").Call(
-			jen.Id("cmd"), jen.Qual(pkg, "Group"), jen.Lit(m.Name), in))
-
-		examples := make([]string, 0, len(m.Examples()))
-		path := g.Name + " " + m.CommandName()
-		if sub := m.SubPath(); sub != "" && sub != m.CommandName() {
-			path = g.Name + " " + sub + " " + m.CommandName()
-		}
-		for _, e := range m.Examples() {
-			examples = append(examples,
-				strings.TrimRight("  osapi client "+path+" "+e, " "))
-		}
-
-		dict := jen.Dict{
-			jen.Id("Use"):   jen.Lit(m.CommandName()),
-			jen.Id("Short"): jen.Lit(m.CommandShort()),
-			jen.Id("Args"):  jen.Qual(cobraPath, "NoArgs"),
-			jen.Id("Run"): jen.Func().Params(
-				jen.Id("cmd").Op("*").Qual(cobraPath, "Command"),
-				jen.Id("_").Index().String(),
-			).Block(run...),
-		}
-		if long := m.CommandLong(); long != "" {
-			dict[jen.Id("Long")] = jen.Lit(long)
-		}
-		if len(examples) > 0 {
-			dict[jen.Id("Example")] = jen.Lit(strings.Join(examples, "\n"))
-		}
-		notes := jen.Dict{}
-		if perm := g.Permission(m); perm != "" {
-			notes[jen.Qual(referencePath, "Permission")] = jen.Lit(perm)
-		}
-		if n := m.PageNotes(); n != "" {
-			notes[jen.Qual(referencePath, "Notes")] = jen.Lit(n)
-		}
-		if r := m.PageResult(); r != "" {
-			notes[jen.Qual(referencePath, "Result")] = jen.Lit(r)
-		}
-		if sub := m.SubPath(); sub != "" && sub != m.CommandName() {
-			notes[jen.Qual(commandPath, "SubKey")] = jen.Lit(sub)
-		}
-		if len(notes) > 0 {
-			dict[jen.Id("Annotations")] = jen.Map(jen.String()).String().Values(notes)
-		}
-		f.Var().Id(name).Op("=").Op("&").Qual(cobraPath, "Command").Values(dict)
-		f.Line()
-	}
-
-	inits = append(inits, jen.Qual(commandPath, "Register").Call(
-		append([]jen.Code{jen.Qual(pkg, "Group")}, names...)...))
-	f.Func().Id("init").Params().Block(inits...)
-
-	return f
-}
-
-// flagKind is the pflag kind of a field's type, such as String, and its
-// value when the caller gives none: the field's default tag, or the zero
-// value.
-func flagKind(
-	t reflect.Type,
-	tag reflect.StructTag,
-) (string, jen.Code) {
-	d, ok := tag.Lookup("default")
-	switch t.Kind() {
-	case reflect.Bool:
-		return "Bool", jen.Lit(ok && d == "true")
-	case reflect.Int:
-		n, _ := strconv.Atoi(d)
-
-		return "Int", jen.Lit(n)
-	default:
-		return "String", jen.Lit(d)
-	}
-}
-
-func validates(
-	f reflect.StructField,
-	rule string,
-) bool {
-	for _, r := range strings.Split(f.Tag.Get("validate"), ",") {
-		if r == rule {
-			return true
-		}
-	}
-
-	return false
-}
-
-func upperFirst(
-	s string,
-) string {
-	return strings.ToUpper(s[:1]) + s[1:]
-}
-
-func lowerFirst(
-	s string,
-) string {
-	// An initialism, such as ID, is lower case whole.
-	if s == strings.ToUpper(s) {
-		return strings.ToLower(s)
-	}
-
-	return strings.ToLower(s[:1]) + s[1:]
+	return w.goFile(filepath.Join(dir, "cli.go"), cli)
 }
 
 // newFile is a file of a group's gen package.
@@ -480,17 +269,4 @@ func (w *writer) format() error {
 	}
 
 	return nil
-}
-
-// oneOf is the values of a field's oneof rule, joined with ", ", or "".
-func oneOf(
-	f reflect.StructField,
-) string {
-	for _, r := range strings.Split(f.Tag.Get("validate"), ",") {
-		if values, ok := strings.CutPrefix(r, "oneof="); ok {
-			return strings.Join(strings.Fields(values), ", ")
-		}
-	}
-
-	return ""
 }

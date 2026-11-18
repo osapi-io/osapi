@@ -7,7 +7,7 @@ then on whether it did before or not. Setting the value it already has reports
 changed: false.
 
 ```bash
-osapi client next node sysctl update
+osapi client next node sysctl update [flags]
 ```
 
 ## Examples
@@ -46,20 +46,20 @@ grant it.
 
 ## Flags
 
-| Flag      | Description                                            | Default |
-| --------- | ------------------------------------------------------ | ------- |
-| `--key`   | Parameter name, such as net.ipv4.ip_forward (required) |         |
-| `--value` | Value to set (required)                                |         |
+| Flag           | Description                                            | Default |
+| -------------- | ------------------------------------------------------ | ------- |
+| `--key`        | Parameter name, such as net.ipv4.ip_forward (required) |         |
+| `-T, --target` | Target: _all, _any, hostname, or label (group:web.dev) | `_all`  |
+| `--value`      | Value to set (required)                                |         |
 
 ## Global flags
 
-| Flag               | Description                                            | Default                 |
-| ------------------ | ------------------------------------------------------ | ----------------------- |
-| `-d, --debug`      | Enable or disable debug mode                           |                         |
-| `-j, --json`       | Enable JSON output                                     |                         |
-| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
-| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
-| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+| Flag               | Description                    | Default                 |
+| ------------------ | ------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode   |                         |
+| `-j, --json`       | Enable JSON output             |                         |
+| `-f, --osapi-file` | Path to config file            | `/etc/osapi/osapi.yaml` |
+| `--url`            | URL the client will connect to | `http://0.0.0.0:8080`   |
 
 [Output](../../../../output.md) tells how the result is printed, and what
 `--json` gives.

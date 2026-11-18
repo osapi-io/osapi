@@ -211,7 +211,7 @@ func (s *EndpointPublicTestSuite) TestCommandHelp() {
 		Example("--all")
 	s.Equal("List the nodes", cli.CommandShort())
 	s.Equal("Shell words.", cli.CommandLong())
-	s.Equal([]string{"", "--all"}, cli.Examples())
+	s.Equal([]endpoint.CommandExample{{Flags: ""}, {Flags: "--all"}}, cli.Examples())
 	s.Empty(cli.PageNotes())
 	s.Empty(cli.PageResult())
 
@@ -578,6 +578,21 @@ func (s *EndpointPublicTestSuite) TestPrefix() {
 		msgs = append(msgs, p.Message)
 	}
 	s.Contains(msgs, "the prefix names {hostname}, and the input has no path field hostname.")
+}
+
+// TestCommandPath is the words of a group's command: the fixed segments of
+// its prefix, then its name; and CommandNotes is its page's Notes.
+func (s *EndpointPublicTestSuite) TestCommandPath() {
+	g := endpoint.Define("sysctl", "Kernel parameters",
+		endpoint.Prefix("next/node/{hostname}"),
+		endpoint.CommandNotes("See the sysctl page."),
+	)
+	s.Equal([]string{"next", "node", "sysctl"}, g.CommandPath())
+	s.Equal("See the sysctl page.", g.CommandNotes)
+	s.Equal([]string{"job"}, endpoint.Define("job", "Jobs").CommandPath())
+
+	m := endpoint.Get[noInput, Node]("list").Example("--all", "Every one", "of them").Example("")
+	s.Equal([]endpoint.CommandExample{{Flags: "--all", Doc: "Every one of them"}, {}}, m.Examples())
 }
 
 func (s *EndpointPublicTestSuite) TestRefusals() {
