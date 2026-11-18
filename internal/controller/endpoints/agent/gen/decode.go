@@ -42,11 +42,11 @@ func decodeGet(
 	return in, "", true
 }
 
-// decodeRemove reads the remove method's input from the request.
-func decodeRemove(
+// decodeDelete reads the delete method's input from the request.
+func decodeDelete(
 	c *echo.Context,
-) (agent.RemoveInput, string, bool) {
-	var in agent.RemoveInput
+) (agent.DeleteInput, string, bool) {
+	var in agent.DeleteInput
 	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
 		return in, msg, false
 	}

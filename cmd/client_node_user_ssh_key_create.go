@@ -93,9 +93,9 @@ func init() {
 	clientNodeUserSSHKeyCmd.AddCommand(clientNodeUserSSHKeyCreateCmd)
 
 	clientNodeUserSSHKeyCreateCmd.PersistentFlags().
-		String("name", "", "Username to add SSH key for (required)")
+		String("name", "", "Username to add SSH key for")
 	clientNodeUserSSHKeyCreateCmd.PersistentFlags().
-		String("key", "", "Full SSH public key line (required)")
+		String("key", "", "Full SSH public key line")
 
 	_ = clientNodeUserSSHKeyCreateCmd.MarkPersistentFlagRequired("name")
 	_ = clientNodeUserSSHKeyCreateCmd.MarkPersistentFlagRequired("key")

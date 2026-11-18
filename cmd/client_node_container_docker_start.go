@@ -85,7 +85,7 @@ func init() {
 	clientContainerDockerCmd.AddCommand(clientContainerDockerStartCmd)
 
 	clientContainerDockerStartCmd.PersistentFlags().
-		String("id", "", "Container ID to start (required)")
+		String("id", "", "Container ID to start")
 
 	_ = clientContainerDockerStartCmd.MarkPersistentFlagRequired("id")
 }

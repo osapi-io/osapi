@@ -96,9 +96,9 @@ func init() {
 	clientNodeProcessCmd.AddCommand(clientNodeProcessSignalCmd)
 
 	clientNodeProcessSignalCmd.PersistentFlags().
-		Int("pid", 0, "Process ID to signal (required)")
+		Int("pid", 0, "Process ID to signal")
 	clientNodeProcessSignalCmd.PersistentFlags().
-		String("signal", "", "Signal to send: TERM, KILL, HUP, INT, USR1 or USR2 (required)")
+		String("signal", "", "Signal to send: TERM, KILL, HUP, INT, USR1 or USR2")
 
 	_ = clientNodeProcessSignalCmd.MarkPersistentFlagRequired("pid")
 	_ = clientNodeProcessSignalCmd.MarkPersistentFlagRequired("signal")

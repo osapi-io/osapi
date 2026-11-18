@@ -67,7 +67,7 @@ that is not the hostname that the agent enrolled with.
 When a key changes, a grace period (`controller.pki.rotation_grace_period`)
 starts. During it, osapi accepts the old key and the new key.
 
-`osapi client agent remove` removes the stored key of an enrolled agent. After
+`osapi client agent delete` removes the stored key of an enrolled agent. After
 that, osapi does not accept anything that the agent signs.
 
 ## What the agent can run

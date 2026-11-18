@@ -124,7 +124,7 @@ func init() {
 	clientNodeCommandCmd.AddCommand(clientNodeCommandShellCmd)
 
 	clientNodeCommandShellCmd.PersistentFlags().
-		String("command", "", "The shell command to execute (required)")
+		String("command", "", "The shell command to execute")
 	clientNodeCommandShellCmd.PersistentFlags().
 		String("cwd", "", "Working directory for the command")
 	clientNodeCommandShellCmd.PersistentFlags().

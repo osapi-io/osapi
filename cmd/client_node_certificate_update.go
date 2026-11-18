@@ -93,9 +93,9 @@ func init() {
 	clientNodeCertificateCmd.AddCommand(clientNodeCertificateUpdateCmd)
 
 	clientNodeCertificateUpdateCmd.PersistentFlags().
-		String("name", "", "Certificate name (required)")
+		String("name", "", "Certificate name")
 	clientNodeCertificateUpdateCmd.PersistentFlags().
-		String("object", "", "Object store reference for the PEM file (required)")
+		String("object", "", "Object store reference for the PEM file")
 
 	_ = clientNodeCertificateUpdateCmd.MarkPersistentFlagRequired("name")
 	_ = clientNodeCertificateUpdateCmd.MarkPersistentFlagRequired("object")

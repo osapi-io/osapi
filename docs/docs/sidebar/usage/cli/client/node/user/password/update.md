@@ -1,25 +1,30 @@
-# Pull
+# Update
 
-Pull a container image.
+Update a user's password.
+
+The client sends the password to the controller in plaintext over TLS. The
+controller hashes it before it stores the job. The agent and the provider see
+only the hash. osapi never writes the plaintext to disk or to logs.
 
 ```bash
-osapi client node container docker pull
+osapi client node user password update
 ```
 
 ## Examples
 
 ```bash
-osapi client node container docker pull --image nginx:latest
-osapi client node container docker pull --image alpine:3.18
-osapi client node container docker pull \
-  --image registry.example.com/myapp:v1.2.3
+osapi client node user password update --target web-01 \
+  --name deploy --password 'newpass123'
+osapi client node user password update --target _all \
+  --name deploy --password 'newpass123'
 ```
 
 ## Flags
 
-| Flag      | Description                        | Default |
-| --------- | ---------------------------------- | ------- |
-| `--image` | Image reference to pull (required) |         |
+| Flag         | Description                                                       | Default |
+| ------------ | ----------------------------------------------------------------- | ------- |
+| `--name`     | Username to change password for (required)                        |         |
+| `--password` | New password (hashed by the controller before storage) (required) |         |
 
 ## Global flags
 

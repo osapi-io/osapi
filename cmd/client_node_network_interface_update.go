@@ -94,7 +94,7 @@ func init() {
 	clientNodeNetworkInterfaceCmd.AddCommand(clientNodeNetworkInterfaceUpdateCmd)
 
 	clientNodeNetworkInterfaceUpdateCmd.PersistentFlags().
-		String("name", "", "Interface name (required)")
+		String("name", "", "Interface name")
 	clientNodeNetworkInterfaceUpdateCmd.PersistentFlags().
 		Bool("dhcp4", false, "Enable DHCPv4")
 	clientNodeNetworkInterfaceUpdateCmd.PersistentFlags().

@@ -92,7 +92,7 @@ func init() {
 	clientContainerDockerCmd.AddCommand(clientContainerDockerStopCmd)
 
 	clientContainerDockerStopCmd.PersistentFlags().
-		String("id", "", "Container ID to stop (required)")
+		String("id", "", "Container ID to stop")
 	clientContainerDockerStopCmd.PersistentFlags().
 		Int("timeout", 10, "Seconds to wait before killing the container")
 

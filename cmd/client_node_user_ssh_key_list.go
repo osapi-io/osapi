@@ -93,7 +93,7 @@ func init() {
 	clientNodeUserSSHKeyCmd.AddCommand(clientNodeUserSSHKeyListCmd)
 
 	clientNodeUserSSHKeyListCmd.PersistentFlags().
-		String("name", "", "Username to list SSH keys for (required)")
+		String("name", "", "Username to list SSH keys for")
 
 	_ = clientNodeUserSSHKeyListCmd.MarkPersistentFlagRequired("name")
 }

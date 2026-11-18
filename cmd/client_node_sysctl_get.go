@@ -77,7 +77,7 @@ func init() {
 	clientNodeSysctlCmd.AddCommand(clientNodeSysctlGetCmd)
 
 	clientNodeSysctlGetCmd.PersistentFlags().
-		String("key", "", "Sysctl parameter key (required)")
+		String("key", "", "Sysctl parameter key")
 
 	_ = clientNodeSysctlGetCmd.MarkPersistentFlagRequired("key")
 }

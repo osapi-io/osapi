@@ -26,13 +26,20 @@ import (
 	"github.com/osapi-io/osapi/internal/cli"
 )
 
-// clientNodeLogListSourcesCmd represents the log list-sources command.
-var clientNodeLogListSourcesCmd = &cobra.Command{
-	Use:   "list-sources",
+// clientNodeLogSourceCmd holds the commands of the log sources, such as
+// osapi client node log source list.
+var clientNodeLogSourceCmd = &cobra.Command{
+	Use:   "source",
+	Short: "Read the log sources of a node",
+}
+
+// clientNodeLogSourceListCmd represents the log list-sources command.
+var clientNodeLogSourceListCmd = &cobra.Command{
+	Use:   "list",
 	Short: "List available log sources",
-	Example: `  osapi client node log list-sources --target web-01
-  osapi client node log list-sources --target _all
-  osapi client node log list-sources --target web-01 --json`,
+	Example: `  osapi client node log source list --target web-01
+  osapi client node log source list --target _all
+  osapi client node log source list --target web-01 --json`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
@@ -85,5 +92,6 @@ var clientNodeLogListSourcesCmd = &cobra.Command{
 }
 
 func init() {
-	clientNodeLogCmd.AddCommand(clientNodeLogListSourcesCmd)
+	clientNodeLogCmd.AddCommand(clientNodeLogSourceCmd)
+	clientNodeLogSourceCmd.AddCommand(clientNodeLogSourceListCmd)
 }

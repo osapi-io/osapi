@@ -59,7 +59,7 @@ func init() {
 	clientFileCmd.AddCommand(clientFileDeleteCmd)
 
 	clientFileDeleteCmd.PersistentFlags().
-		String("name", "", "Name of the file in the Object Store (required)")
+		String("name", "", "Name of the file in the Object Store")
 
 	_ = clientFileDeleteCmd.MarkPersistentFlagRequired("name")
 }

@@ -104,7 +104,7 @@ func init() {
 	clientNodeUserCmd.AddCommand(clientNodeUserUpdateCmd)
 
 	clientNodeUserUpdateCmd.PersistentFlags().
-		String("name", "", "Username to update (required)")
+		String("name", "", "Username to update")
 	clientNodeUserUpdateCmd.PersistentFlags().
 		String("shell", "", "New login shell path")
 	clientNodeUserUpdateCmd.PersistentFlags().

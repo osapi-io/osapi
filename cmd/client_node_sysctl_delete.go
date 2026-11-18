@@ -90,7 +90,7 @@ func init() {
 	clientNodeSysctlCmd.AddCommand(clientNodeSysctlDeleteCmd)
 
 	clientNodeSysctlDeleteCmd.PersistentFlags().
-		String("key", "", "Sysctl parameter key to delete (required)")
+		String("key", "", "Sysctl parameter key to delete")
 
 	_ = clientNodeSysctlDeleteCmd.MarkPersistentFlagRequired("key")
 }

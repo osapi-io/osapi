@@ -104,7 +104,7 @@ func init() {
 	clientNodeProcessCmd.AddCommand(clientNodeProcessGetCmd)
 
 	clientNodeProcessGetCmd.PersistentFlags().
-		Int("pid", 0, "Process ID to inspect (required)")
+		Int("pid", 0, "Process ID to inspect")
 
 	_ = clientNodeProcessGetCmd.MarkPersistentFlagRequired("pid")
 }

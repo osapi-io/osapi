@@ -100,7 +100,7 @@ func init() {
 	clientNodeNetworkRouteCmd.AddCommand(clientNodeNetworkRouteUpdateCmd)
 
 	clientNodeNetworkRouteUpdateCmd.PersistentFlags().
-		String("interface", "", "Interface name (required)")
+		String("interface", "", "Interface name")
 	clientNodeNetworkRouteUpdateCmd.PersistentFlags().
 		StringSlice("route", []string{}, "Route in TO:VIA or TO:VIA:METRIC format (repeatable, required)")
 

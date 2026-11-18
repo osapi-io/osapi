@@ -89,9 +89,9 @@ func init() {
 	clientFileCmd.AddCommand(clientFileUploadCmd)
 
 	clientFileUploadCmd.PersistentFlags().
-		String("name", "", "Name for the file in the Object Store (required)")
+		String("name", "", "Name for the file in the Object Store")
 	clientFileUploadCmd.PersistentFlags().
-		String("file", "", "Path to the local file to upload (required)")
+		String("file", "", "Path to the local file to upload")
 	clientFileUploadCmd.PersistentFlags().
 		String("content-type", "raw", "File type: raw or template (default raw)")
 	clientFileUploadCmd.PersistentFlags().

@@ -28,13 +28,13 @@ import (
 	"github.com/osapi-io/osapi/internal/cli"
 )
 
-// clientContainerDockerInspectCmd represents the clientContainerDockerInspect command.
-var clientContainerDockerInspectCmd = &cobra.Command{
-	Use:   "inspect",
-	Short: "Inspect a container",
-	Example: `  osapi client node container docker inspect --id a1b2c3d4e5f6
-  osapi client node container docker inspect --id my-nginx
-  osapi client node container docker inspect --id my-nginx --target web-01`,
+// clientContainerDockerGetCmd represents the docker get command.
+var clientContainerDockerGetCmd = &cobra.Command{
+	Use:   "get",
+	Short: "Get a container",
+	Example: `  osapi client node container docker get --id a1b2c3d4e5f6
+  osapi client node container docker get --id my-nginx
+  osapi client node container docker get --id my-nginx --target web-01`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
@@ -124,10 +124,10 @@ var clientContainerDockerInspectCmd = &cobra.Command{
 }
 
 func init() {
-	clientContainerDockerCmd.AddCommand(clientContainerDockerInspectCmd)
+	clientContainerDockerCmd.AddCommand(clientContainerDockerGetCmd)
 
-	clientContainerDockerInspectCmd.PersistentFlags().
-		String("id", "", "Container ID to inspect (required)")
+	clientContainerDockerGetCmd.PersistentFlags().
+		String("id", "", "Container ID to inspect")
 
-	_ = clientContainerDockerInspectCmd.MarkPersistentFlagRequired("id")
+	_ = clientContainerDockerGetCmd.MarkPersistentFlagRequired("id")
 }

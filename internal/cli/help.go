@@ -29,6 +29,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // usageTemplate is cobra's default usage template with the headings, command
@@ -54,10 +55,10 @@ const usageTemplate = `{{heading "Usage:"}}{{if runnable .}}
   {{sub (rpad .Name .NamePadding) }} {{.Short}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
 
 {{heading "Flags:"}}
-{{flags (.LocalFlags.FlagUsages | trimTrailingWhitespaces)}}{{end}}{{if .HasAvailableInheritedFlags}}
+{{flags (usages .LocalFlags | trimTrailingWhitespaces)}}{{end}}{{if .HasAvailableInheritedFlags}}
 
 {{heading "Global Flags:"}}
-{{flags (.InheritedFlags.FlagUsages | trimTrailingWhitespaces)}}{{end}}{{if .HasHelpSubCommands}}
+{{flags (usages .InheritedFlags | trimTrailingWhitespaces)}}{{end}}{{if .HasHelpSubCommands}}
 
 {{heading "Additional help topics:"}}{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
   {{sub (rpad .CommandPath .CommandPathPadding)}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
@@ -120,6 +121,7 @@ func ApplyTheme(
 	cobra.AddTemplateFunc("sub", func(s string) string { return Sub(out, s) })
 	cobra.AddTemplateFunc("mute", func(s string) string { return Mute(out, s) })
 	cobra.AddTemplateFunc("flags", func(s string) string { return Flags(out, s) })
+	cobra.AddTemplateFunc("usages", Usages)
 	cobra.AddTemplateFunc("runnable", runnable)
 	cobra.AddTemplateFunc("plain", Plain)
 	cobra.AddTemplateFunc("sentence", sentence)
@@ -318,4 +320,20 @@ func PrintError(
 		_, _ = fmt.Fprintln(w)
 		_, _ = fmt.Fprint(w, cmd.UsageString())
 	}
+}
+
+// Usages is the help of each flag in fs, with each required flag marked
+// (required). Thus a flag says that it is required in one place, the
+// MarkFlagRequired of its command, and not in its own words.
+func Usages(
+	fs *pflag.FlagSet,
+) string {
+	fs.VisitAll(func(f *pflag.Flag) {
+		if _, ok := f.Annotations[cobra.BashCompOneRequiredFlag]; ok &&
+			!strings.Contains(f.Usage, "(required)") {
+			f.Usage += " (required)"
+		}
+	})
+
+	return fs.FlagUsages()
 }

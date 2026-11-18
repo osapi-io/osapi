@@ -83,7 +83,7 @@ func init() {
 	clientNodeNetworkDNSCmd.AddCommand(clientNodeNetworkDNSGetCmd)
 
 	clientNodeNetworkDNSGetCmd.PersistentFlags().
-		String("interface", "", "Name of the network interface to retrieve DNS server configurations (required)")
+		String("interface", "", "Name of the network interface to retrieve DNS server configurations")
 
 	_ = clientNodeNetworkDNSGetCmd.MarkPersistentFlagRequired("interface")
 }

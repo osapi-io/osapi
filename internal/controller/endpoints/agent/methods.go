@@ -100,11 +100,11 @@ func Get(
 	return buildAgentInfo(info), nil
 }
 
-// Remove removes an accepted agent's stored key.
-func Remove(
+// Delete removes an accepted agent's stored key.
+func Delete(
 	ctx context.Context,
 	d Deps,
-	in RemoveInput,
+	in DeleteInput,
 ) (Message, error) {
 	if d.Enrollment == nil {
 		return Message{}, errNoEnrollment

@@ -89,7 +89,7 @@ func init() {
 	clientNodeNetworkDNSCmd.AddCommand(clientNodeNetworkDNSDeleteCmd)
 
 	clientNodeNetworkDNSDeleteCmd.PersistentFlags().
-		String("interface", "", "Name of the network interface (required)")
+		String("interface", "", "Name of the network interface")
 
 	_ = clientNodeNetworkDNSDeleteCmd.MarkPersistentFlagRequired("interface")
 }

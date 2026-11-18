@@ -81,8 +81,8 @@ func init() {
 	)
 	command.Render(
 		agent.Group,
-		"remove",
-		func(_ *cobra.Command, _ agent.RemoveInput, out agent.Message) {
+		"delete",
+		func(_ *cobra.Command, _ agent.DeleteInput, out agent.Message) {
 			fmt.Println()
 			cli.PrintKV("Status", "Removed", "Message", out.Message)
 		},

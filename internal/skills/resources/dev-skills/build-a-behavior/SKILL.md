@@ -84,6 +84,13 @@ The request can leave these open: what the behavior manages, where its truth is,
 - inputs, not settings
 - no `Requires`, unless an internal behavior already does part of the work
 
+Name each method for the command it becomes: each command under `osapi
+client` is `<resource> <verb>`. The verb is `list`, `get`, `create`, `update`
+or `delete`, or an action that a CRUD verb does not say, such as `restart`.
+A noun is never the verb. A required input is `validate:"required"`; `--help`
+marks it, so its `doc` does not say so. `TestCommandShape` in
+`cmd/help_style_test.go` fails on a command that breaks either rule.
+
 ## Build a new one
 
 1. Write it: `go run . behavior new --name <name> --description "<one line>"`,

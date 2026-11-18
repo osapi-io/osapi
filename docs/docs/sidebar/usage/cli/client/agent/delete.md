@@ -1,4 +1,4 @@
-# Remove
+# Delete
 
 Remove an enrolled agent.
 
@@ -8,14 +8,14 @@ responses or the registration of the agent. Thus a target does not find the
 agent, and a broadcast gives it no row.
 
 ```bash
-osapi client agent remove [flags]
+osapi client agent delete [flags]
 ```
 
 ## Examples
 
 ```bash
-osapi client agent remove --hostname web-01
-osapi client agent remove --hostname web-01 --machine-id 3f2a9c...
+osapi client agent delete --hostname web-01
+osapi client agent delete --hostname web-01 --machine-id 3f2a9c...
 ```
 
 ## Result

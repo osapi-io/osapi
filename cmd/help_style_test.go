@@ -57,6 +57,62 @@ func (s *HelpStyleTestSuite) TestEveryCommand() {
 	walk(rootCmd)
 }
 
+// verbs are the verbs of a resource: each command under osapi client is
+// <resource> <verb>, and a verb that is not one of these is an action in
+// actions.
+var verbs = map[string]bool{
+	"list":   true,
+	"get":    true,
+	"create": true,
+	"update": true,
+	"delete": true,
+}
+
+// actions are the commands that do something a CRUD verb does not say.
+// Add one here only for a real action, never for a noun: list the noun's
+// items with list under it instead, such as agent pending list.
+var actions = map[string]bool{
+	"accept": true, "reject": true, "drain": true, "undrain": true, "retry": true,
+	"export": true, "exec": true, "shell": true, "start": true, "stop": true,
+	"restart": true, "enable": true, "disable": true, "install": true,
+	"uninstall": true, "upload": true, "deploy": true, "undeploy": true,
+	"pull": true, "signal": true, "reboot": true, "shutdown": true, "ping": true,
+	"status": true, "fingerprint": true, "liveness": true, "ready": true,
+}
+
+// TestCommandShape holds each command under osapi client to
+// <resource> <verb>, and each flag's help to its own words: a required flag
+// is marked by MarkFlagRequired, which --help shows, not by its text.
+func (s *HelpStyleTestSuite) TestCommandShape() {
+	client, _, err := rootCmd.Find([]string{"client"})
+	s.Require().NoError(err)
+
+	var walk func(c *cobra.Command)
+	walk = func(c *cobra.Command) {
+		if c.Name() == "help" || c.Hidden {
+			return
+		}
+		c.LocalFlags().VisitAll(func(f *pflag.Flag) {
+			s.NotContainsf(
+				f.Usage,
+				"(required",
+				"%s --%s: say that a flag is required with MarkFlagRequired",
+				c.CommandPath(),
+				f.Name,
+			)
+		})
+		if len(c.Commands()) == 0 && c.Runnable() {
+			s.Truef(verbs[c.Name()] || actions[c.Name()],
+				"%s: %q is not a verb; a command is <resource> <verb>, such as agent pending list",
+				c.CommandPath(), c.Name())
+		}
+		for _, sub := range c.Commands() {
+			walk(sub)
+		}
+	}
+	walk(client)
+}
+
 // styled fails on text that is empty, starts with a small letter, or ends
 // with a period.
 func (s *HelpStyleTestSuite) styled(

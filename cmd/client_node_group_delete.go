@@ -77,7 +77,7 @@ func init() {
 	clientNodeGroupCmd.AddCommand(clientNodeGroupDeleteCmd)
 
 	clientNodeGroupDeleteCmd.PersistentFlags().
-		String("name", "", "Name of the group to delete (required)")
+		String("name", "", "Name of the group to delete")
 
 	_ = clientNodeGroupDeleteCmd.MarkPersistentFlagRequired("name")
 }

@@ -28,7 +28,7 @@ import (
 )
 
 // clientContainerDockerImageCmd groups the image commands: docker image
-// delete.
+// pull and delete.
 var clientContainerDockerImageCmd = &cobra.Command{
 	Use:   "image",
 	Short: "Manage container images",
@@ -107,7 +107,7 @@ func init() {
 	clientContainerDockerImageCmd.AddCommand(clientContainerDockerImageDeleteCmd)
 
 	clientContainerDockerImageDeleteCmd.PersistentFlags().
-		String("image", "", "Image name or ID to remove (required)")
+		String("image", "", "Image name or ID to remove")
 	clientContainerDockerImageDeleteCmd.PersistentFlags().
 		Bool("force", false, "Force removal even if image is in use")
 

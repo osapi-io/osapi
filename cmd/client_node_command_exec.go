@@ -158,7 +158,7 @@ func init() {
 	clientNodeCommandCmd.AddCommand(clientNodeCommandExecCmd)
 
 	clientNodeCommandExecCmd.PersistentFlags().
-		String("command", "", "The command to execute (required)")
+		String("command", "", "The command to execute")
 	clientNodeCommandExecCmd.PersistentFlags().
 		StringSlice("args", []string{}, "Command arguments (comma-separated)")
 	clientNodeCommandExecCmd.PersistentFlags().

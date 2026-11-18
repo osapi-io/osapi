@@ -27,17 +27,17 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
-// clientNodeLogQueryCmd represents the log query command.
-var clientNodeLogQueryCmd = &cobra.Command{
-	Use:   "query",
-	Short: "Query journal entries",
-	Example: `  osapi client node log query --target web-01
-  osapi client node log query --target web-01 \
+// clientNodeLogListCmd represents the log list command.
+var clientNodeLogListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List journal entries",
+	Example: `  osapi client node log list --target web-01
+  osapi client node log list --target web-01 \
     --lines 50 --since 1h --priority err
-  osapi client node log query --target _all --lines 5`,
+  osapi client node log list --target _all --lines 5`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if unit, _ := cmd.Flags().GetString("unit"); unit != "" {
-			clientNodeLogQueryUnitCmd.Run(cmd, args)
+			clientNodeLogListUnitCmd.Run(cmd, args)
 
 			return
 		}
@@ -120,15 +120,15 @@ var clientNodeLogQueryCmd = &cobra.Command{
 }
 
 func init() {
-	clientNodeLogCmd.AddCommand(clientNodeLogQueryCmd)
+	clientNodeLogCmd.AddCommand(clientNodeLogListCmd)
 
-	clientNodeLogQueryCmd.PersistentFlags().
+	clientNodeLogListCmd.PersistentFlags().
 		String("unit", "", "Only entries from this systemd unit, such as ssh")
 
-	clientNodeLogQueryCmd.PersistentFlags().
+	clientNodeLogListCmd.PersistentFlags().
 		Int("lines", 100, "Maximum number of log lines to return")
-	clientNodeLogQueryCmd.PersistentFlags().
+	clientNodeLogListCmd.PersistentFlags().
 		String("since", "", "Return entries since this time (e.g., '1h', '2026-01-01 00:00:00')")
-	clientNodeLogQueryCmd.PersistentFlags().
+	clientNodeLogListCmd.PersistentFlags().
 		String("priority", "", "Filter by priority level (e.g., 'err', 'warning', 'info')")
 }

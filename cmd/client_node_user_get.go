@@ -96,7 +96,7 @@ func init() {
 	clientNodeUserCmd.AddCommand(clientNodeUserGetCmd)
 
 	clientNodeUserGetCmd.PersistentFlags().
-		String("name", "", "Name of the user account (required)")
+		String("name", "", "Name of the user account")
 
 	_ = clientNodeUserGetCmd.MarkPersistentFlagRequired("name")
 }

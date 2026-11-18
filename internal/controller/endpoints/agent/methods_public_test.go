@@ -333,11 +333,11 @@ func (s *MethodsPublicTestSuite) TestPending() {
 	}
 }
 
-func (s *MethodsPublicTestSuite) TestRemove() {
+func (s *MethodsPublicTestSuite) TestDelete() {
 	tests := []struct {
 		name         string
 		noEnrollment bool
-		in           agent.RemoveInput
+		in           agent.DeleteInput
 		setup        func()
 		wantMsg      string
 		wantErr      error
@@ -346,13 +346,13 @@ func (s *MethodsPublicTestSuite) TestRemove() {
 		{
 			name:         "when enrollment is not enabled, it is an error",
 			noEnrollment: true,
-			in:           agent.RemoveInput{Hostname: "web-01"},
+			in:           agent.DeleteInput{Hostname: "web-01"},
 			setup:        func() {},
 			wantErrMsg:   "enrollment not enabled",
 		},
 		{
 			name: "when the agent is removed, the message names it and its machine",
-			in:   agent.RemoveInput{Hostname: "web-01"},
+			in:   agent.DeleteInput{Hostname: "web-01"},
 			setup: func() {
 				s.enroll.EXPECT().RemoveByHostname(gomock.Any(), "web-01", "").Return("m-1", nil)
 			},
@@ -360,7 +360,7 @@ func (s *MethodsPublicTestSuite) TestRemove() {
 		},
 		{
 			name: "when no accepted agent has the hostname, it is ErrNotFound",
-			in:   agent.RemoveInput{Hostname: "web-01"},
+			in:   agent.DeleteInput{Hostname: "web-01"},
 			setup: func() {
 				s.enroll.EXPECT().RemoveByHostname(gomock.Any(), "web-01", "").
 					Return("", enrollment.ErrNoAcceptedAgent)
@@ -370,7 +370,7 @@ func (s *MethodsPublicTestSuite) TestRemove() {
 		},
 		{
 			name: "when a machine ID was named and not found, the message names it",
-			in:   agent.RemoveInput{Hostname: "web-01", MachineID: "m-9"},
+			in:   agent.DeleteInput{Hostname: "web-01", MachineID: "m-9"},
 			setup: func() {
 				s.enroll.EXPECT().RemoveByHostname(gomock.Any(), "web-01", "m-9").
 					Return("", enrollment.ErrNoAcceptedAgent)
@@ -380,7 +380,7 @@ func (s *MethodsPublicTestSuite) TestRemove() {
 		},
 		{
 			name: "when two accepted agents have the hostname, it is ErrAmbiguous",
-			in:   agent.RemoveInput{Hostname: "web-01"},
+			in:   agent.DeleteInput{Hostname: "web-01"},
 			setup: func() {
 				s.enroll.EXPECT().RemoveByHostname(gomock.Any(), "web-01", "").
 					Return("", enrollment.ErrAmbiguousHostname)
@@ -390,7 +390,7 @@ func (s *MethodsPublicTestSuite) TestRemove() {
 		},
 		{
 			name: "when the store fails, it is that error",
-			in:   agent.RemoveInput{Hostname: "web-01"},
+			in:   agent.DeleteInput{Hostname: "web-01"},
 			setup: func() {
 				s.enroll.EXPECT().RemoveByHostname(gomock.Any(), "web-01", "").Return("", errBoom)
 			},
@@ -406,7 +406,7 @@ func (s *MethodsPublicTestSuite) TestRemove() {
 				d.Enrollment = nil
 			}
 
-			got, err := agent.Remove(s.ctx, d, tc.in)
+			got, err := agent.Delete(s.ctx, d, tc.in)
 
 			s.check(got, err, tc.wantMsg, tc.wantErr, tc.wantErrMsg)
 		})

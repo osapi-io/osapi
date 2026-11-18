@@ -101,7 +101,7 @@ func init() {
 	clientNodeNetworkDNSUpdateCmd.PersistentFlags().
 		StringSlice("search-domains", []string{}, "List of DNS search domains (comma-separated)")
 	clientNodeNetworkDNSUpdateCmd.PersistentFlags().
-		String("interface", "", "Name of the network interface to retrieve DNS server configurations (required)")
+		String("interface", "", "Name of the network interface to retrieve DNS server configurations")
 
 	clientNodeNetworkDNSUpdateCmd.PersistentFlags().
 		Bool("override-dhcp", false, "When true, disables DHCP-provided DNS servers so only the configured servers are used")

@@ -87,7 +87,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Explain("Get detailed information about a specific agent by hostname.").
 		Returns("Agent details.").
 		Errors(endpoint.NotFound(ErrNotFound, "Agent not found")),
-	endpoint.Delete[RemoveInput, Message]("remove").
+	endpoint.Delete[DeleteInput, Message]("delete").
 		Result("Two machines can have the same hostname, because the identity of an agent\n"+
 			"is its machine ID. When more than one accepted agent has the hostname, the\n"+
 			"command fails and names their machine IDs. Run it again with\n"+
@@ -101,7 +101,7 @@ var Group = endpoint.Register(endpoint.Define(
 			"When PKI is enabled, the controller keeps the public key of each accepted\nagent. This command deletes it. After that, the controller does not verify\nthe responses or the registration of the agent. Thus a target does not\nfind the agent, and a broadcast gives it no row.").
 		Example("--hostname web-01").
 		Example("--hostname web-01 --machine-id 3f2a9c...").
-		Handle(Remove).
+		Handle(Delete).
 		ID("removeAgent").
 		Describe("Remove an enrolled agent").
 		Explain("Remove an accepted agent's stored public key. Its responses and "+

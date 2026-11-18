@@ -94,9 +94,9 @@ func init() {
 	clientNodeSysctlCmd.AddCommand(clientNodeSysctlUpdateCmd)
 
 	clientNodeSysctlUpdateCmd.PersistentFlags().
-		String("key", "", "Sysctl parameter key (required)")
+		String("key", "", "Sysctl parameter key")
 	clientNodeSysctlUpdateCmd.PersistentFlags().
-		String("value", "", "Sysctl parameter value (required)")
+		String("value", "", "Sysctl parameter value")
 
 	_ = clientNodeSysctlUpdateCmd.MarkPersistentFlagRequired("key")
 	_ = clientNodeSysctlUpdateCmd.MarkPersistentFlagRequired("value")

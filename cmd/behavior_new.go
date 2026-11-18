@@ -107,9 +107,9 @@ func init() {
 	behaviorCmd.AddCommand(behaviorNewCmd)
 
 	behaviorNewCmd.Flags().
-		String("name", "", "The behavior's name: lowercase letters and digits (required)")
+		String("name", "", "The behavior's name: lowercase letters and digits")
 	behaviorNewCmd.Flags().
-		String("description", "", "What it manages, in one line (required)")
+		String("description", "", "What it manages, in one line")
 	behaviorNewCmd.Flags().
 		String("group", "", "Nest it under a group, such as network: its routes, commands and directory")
 	behaviorNewCmd.Flags().

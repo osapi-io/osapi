@@ -77,7 +77,7 @@ func init() {
 	clientNodeScheduleCmd.AddCommand(clientNodeScheduleGetCmd)
 
 	clientNodeScheduleGetCmd.PersistentFlags().
-		String("name", "", "Name of the scheduled entry (required)")
+		String("name", "", "Name of the scheduled entry")
 
 	_ = clientNodeScheduleGetCmd.MarkPersistentFlagRequired("name")
 }

@@ -36,7 +36,7 @@ func Routes(
 			Method:     http.MethodDelete,
 			Path:       "/api/agent/:hostname",
 			Permission: "agent:write",
-			Handler:    server.Serve(s, agent.Group, "remove", agent.Remove, decodeRemove),
+			Handler:    server.Serve(s, agent.Group, "delete", agent.Delete, decodeDelete),
 		},
 		{
 			Method:     http.MethodPost,

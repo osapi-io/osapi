@@ -113,22 +113,22 @@ func init() {
 	sysctlListCmd.PersistentFlags().String("prefix", "", "Only this parameter and the ones under it, such as net.ipv4")
 
 	sysctlCmd.AddCommand(sysctlGetCmd)
-	sysctlGetCmd.PersistentFlags().String("key", "", "Parameter name, such as net.ipv4.ip_forward (required)")
+	sysctlGetCmd.PersistentFlags().String("key", "", "Parameter name, such as net.ipv4.ip_forward")
 	_ = sysctlGetCmd.MarkPersistentFlagRequired("key")
 
 	sysctlCmd.AddCommand(sysctlCreateCmd)
-	sysctlCreateCmd.PersistentFlags().String("key", "", "Parameter name, such as net.ipv4.ip_forward (required)")
-	sysctlCreateCmd.PersistentFlags().String("value", "", "Value to set (required)")
+	sysctlCreateCmd.PersistentFlags().String("key", "", "Parameter name, such as net.ipv4.ip_forward")
+	sysctlCreateCmd.PersistentFlags().String("value", "", "Value to set")
 	_ = sysctlCreateCmd.MarkPersistentFlagRequired("key")
 	_ = sysctlCreateCmd.MarkPersistentFlagRequired("value")
 
 	sysctlCmd.AddCommand(sysctlUpdateCmd)
-	sysctlUpdateCmd.PersistentFlags().String("key", "", "Parameter name, such as net.ipv4.ip_forward (required)")
-	sysctlUpdateCmd.PersistentFlags().String("value", "", "Value to set (required)")
+	sysctlUpdateCmd.PersistentFlags().String("key", "", "Parameter name, such as net.ipv4.ip_forward")
+	sysctlUpdateCmd.PersistentFlags().String("value", "", "Value to set")
 	_ = sysctlUpdateCmd.MarkPersistentFlagRequired("key")
 	_ = sysctlUpdateCmd.MarkPersistentFlagRequired("value")
 
 	sysctlCmd.AddCommand(sysctlDeleteCmd)
-	sysctlDeleteCmd.PersistentFlags().String("key", "", "Parameter name, such as net.ipv4.ip_forward (required)")
+	sysctlDeleteCmd.PersistentFlags().String("key", "", "Parameter name, such as net.ipv4.ip_forward")
 	_ = sysctlDeleteCmd.MarkPersistentFlagRequired("key")
 }

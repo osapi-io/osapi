@@ -94,7 +94,7 @@ func init() {
 	clientNodeGroupCmd.AddCommand(clientNodeGroupGetCmd)
 
 	clientNodeGroupGetCmd.PersistentFlags().
-		String("name", "", "Name of the group (required)")
+		String("name", "", "Name of the group")
 
 	_ = clientNodeGroupGetCmd.MarkPersistentFlagRequired("name")
 }

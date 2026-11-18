@@ -89,7 +89,7 @@ func init() {
 	clientNodeCertificateCmd.AddCommand(clientNodeCertificateDeleteCmd)
 
 	clientNodeCertificateDeleteCmd.PersistentFlags().
-		String("name", "", "Certificate name to delete (required)")
+		String("name", "", "Certificate name to delete")
 
 	_ = clientNodeCertificateDeleteCmd.MarkPersistentFlagRequired("name")
 }
