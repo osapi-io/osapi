@@ -6,6 +6,7 @@ package gen
 import (
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/agent/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/audit/gen"
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/facts/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/job/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/telemetry/gen"
 )

@@ -2500,7 +2500,7 @@ type FactKeyEntry struct {
 	// Description Human-readable description of the fact.
 	Description *string `json:"description,omitempty"`
 
-	// Key The fact key (e.g. "interface.primary").
+	// Key The fact key, such as 'interface.primary'.
 	Key string `json:"key"`
 }
 

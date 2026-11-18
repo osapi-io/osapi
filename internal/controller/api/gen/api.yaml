@@ -23,15 +23,15 @@ tags:
   - description: Audit log endpoints for viewing API activity.
     name: Audit_Log_API_audit
     x-displayName: Audit
+  - description: Fact key discovery for @fact. references.
+    name: Facts_API_facts
+    x-displayName: Facts
   - description: Operations related to the job queue.
     name: Job_Management_API_job_operations
     x-displayName: Job
   - description: Telemetry endpoints, such as the spans of a trace.
     name: Telemetry_API_telemetry
     x-displayName: Telemetry
-  - name: Facts_API_facts
-    x-displayName: Facts
-    description: Fact key discovery for @fact. references.
   - name: File_Management_API_file_operations
     x-displayName: File
     description: Object Store file management operations.
@@ -785,6 +785,44 @@ paths:
       summary: Export all audit log entries
       tags:
         - Audit_Log_API_audit
+  /api/facts/keys:
+    servers: []
+    get:
+      description: >-
+        Returns the list of fact keys that can be used in @fact. references.
+        Includes built-in keys and any custom keys registered by agents.
+      operationId: GetFactKeys
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FactKeysResponse'
+          description: List of available fact keys.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - agent:read
+      summary: List available fact keys
+      tags:
+        - Facts_API_facts
   /api/job:
     servers: []
     get:
@@ -1106,44 +1144,6 @@ paths:
       summary: Get the spans of a trace
       tags:
         - Telemetry_API_telemetry
-  /api/facts/keys:
-    servers: []
-    get:
-      summary: List available fact keys
-      description: >
-        Returns the list of fact keys that can be used in @fact. references.
-        Includes built-in keys and any custom keys registered by agents.
-      operationId: GetFactKeys
-      tags:
-        - Facts_API_facts
-      security:
-        - BearerAuth:
-            - agent:read
-      responses:
-        '200':
-          description: List of available fact keys.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FactKeysResponse'
-        '401':
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/file:
     servers: []
     post:
@@ -6721,6 +6721,30 @@ components:
         - total_items
         - items
       type: object
+    FactKeyEntry:
+      properties:
+        builtin:
+          description: Whether this is a built-in fact key.
+          type: boolean
+        description:
+          description: Human-readable description of the fact.
+          type: string
+        key:
+          description: The fact key, such as 'interface.primary'.
+          type: string
+      required:
+        - key
+      type: object
+    FactKeysResponse:
+      properties:
+        keys:
+          description: Available fact keys for @fact. references.
+          items:
+            $ref: '#/components/schemas/FactKeyEntry'
+          type: array
+      required:
+        - keys
+      type: object
     CreateJobResponse:
       properties:
         job_id:
@@ -6923,30 +6947,6 @@ components:
         - status
         - attributes
       type: object
-    FactKeysResponse:
-      type: object
-      required:
-        - keys
-      properties:
-        keys:
-          type: array
-          description: Available fact keys for @fact. references.
-          items:
-            $ref: '#/components/schemas/FactKeyEntry'
-    FactKeyEntry:
-      type: object
-      required:
-        - key
-      properties:
-        key:
-          type: string
-          description: The fact key (e.g. "interface.primary").
-        description:
-          type: string
-          description: Human-readable description of the fact.
-        builtin:
-          type: boolean
-          description: Whether this is a built-in fact key.
     FileInfo:
       type: object
       properties:
@@ -11286,15 +11286,15 @@ x-tagGroups:
   - name: Audit Log API
     tags:
       - Audit_Log_API_audit
+  - name: Facts API
+    tags:
+      - Facts_API_facts
   - name: Job Management API
     tags:
       - Job_Management_API_job_operations
   - name: Telemetry API
     tags:
       - Telemetry_API_telemetry
-  - name: Facts API
-    tags:
-      - Facts_API_facts
   - name: File Management API
     tags:
       - File_Management_API_file_operations

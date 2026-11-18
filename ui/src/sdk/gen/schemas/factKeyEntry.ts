@@ -6,10 +6,10 @@
  */
 
 export interface FactKeyEntry {
-  /** The fact key (e.g. "interface.primary"). */
-  key: string;
-  /** Human-readable description of the fact. */
-  description?: string;
   /** Whether this is a built-in fact key. */
   builtin?: boolean;
+  /** Human-readable description of the fact. */
+  description?: string;
+  /** The fact key, such as 'interface.primary'. */
+  key: string;
 }
