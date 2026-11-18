@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"slices"
 	"testing"
 	"time"
 
@@ -41,6 +42,15 @@ type EndpointPublicTestSuite struct {
 var errMissing = errors.New("missing")
 
 type noInput struct{}
+
+type hostKey struct {
+	Hostname string `json:"hostname" in:"path" param:"Hostname" validate:"required,min=1"`
+	Key      string `json:"key"      in:"path" param:"NodeKey"  validate:"required,min=1"`
+}
+
+type hostOnly struct {
+	Hostname string `json:"hostname" in:"path" param:"Hostname" validate:"required,min=1"`
+}
 
 type limited struct {
 	Name string `json:"name" in:"query" validate:"omitempty,max=3"`
@@ -526,6 +536,50 @@ func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
 
 // TestBodyValidateTags holds a body field to its whole validate tag: the
 // items of an array, a pattern from startswith, and the tag in the extension.
+// TestPrefix puts a group under a prefix whose {field} is a shared path
+// parameter of each method, and keeps the method's own key after the name.
+func (s *EndpointPublicTestSuite) TestPrefix() {
+	g := endpoint.Define("sysctl", "Kernel parameters", endpoint.Prefix("/next/node/{hostname}/"),
+		endpoint.Get[hostOnly, Node]("list"),
+		endpoint.Get[hostKey, Node]("get"),
+	)
+
+	s.Equal("next/node/{hostname}", g.Prefix)
+	s.Equal("/api/next/node/{hostname}/sysctl", g.Path(g.Method("list")))
+	s.Equal("/api/next/node/{hostname}/sysctl/{key}", g.Path(g.Method("get")))
+	s.Empty(g.Method("list").Key(), "the prefix's field is not the key")
+	s.Equal("key", g.Method("get").Key())
+	s.Empty(endpoint.Validate(g))
+
+	doc, err := endpoint.OpenAPI(g, "x")
+	s.Require().NoError(err)
+	s.Equal([]string{"Hostname", "NodeKey"}, func() []string {
+		names := make([]string, 0, len(doc.Components.Parameters))
+		for name := range doc.Components.Parameters {
+			names = append(names, name)
+		}
+		slices.Sort(names)
+
+		return names
+	}())
+	get := doc.Paths.Value("/api/next/node/{hostname}/sysctl/{key}").Get
+	s.Equal("#/components/parameters/Hostname", get.Parameters[0].Ref)
+	s.Equal("#/components/parameters/NodeKey", get.Parameters[1].Ref)
+
+	missing := endpoint.Define(
+		"sysctl",
+		"Kernel parameters",
+		endpoint.Prefix("next/node/{hostname}"),
+		endpoint.Get[noInput, Node]("list"),
+	)
+	problems := endpoint.Validate(missing)
+	msgs := make([]string, 0, len(problems))
+	for _, p := range problems {
+		msgs = append(msgs, p.Message)
+	}
+	s.Contains(msgs, "the prefix names {hostname}, and the input has no path field hostname.")
+}
+
 func (s *EndpointPublicTestSuite) TestRefusals() {
 	m := endpoint.Get[limited, Node]("get").Fails("a name over 3 characters", limited{Name: "abcd"})
 
@@ -708,7 +762,7 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 				"two methods have the name list.",
 				`path segment "Bad" is not lowercase letters and digits.`,
 				"the method has an action but no key.",
-				"the input has more than one path field.",
+				"the input has more than one path field besides the prefix.",
 				"input field a has no validate tag.",
 				"input field b has no validate tag.",
 				"operationId getLower starts with a small letter.",

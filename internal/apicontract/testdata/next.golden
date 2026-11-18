@@ -1,0 +1,30 @@
+op DELETE /api/next/node/{hostname}/sysctl/{key} id=DeleteNodeSysctl tags=[sysctl_operations] auth=BearerAuth:sysctl:write params=[path:hostname!:string path:key!:string] body= responses=[200=application/json:SysctlDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/next/node/{hostname}/sysctl id=GetNodeSysctl tags=[sysctl_operations] auth=BearerAuth:sysctl:read params=[path:hostname!:string query:prefix:string] body= responses=[200=application/json:SysctlCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/next/node/{hostname}/sysctl/{key} id=GetNodeSysctlByKey tags=[sysctl_operations] auth=BearerAuth:sysctl:read params=[path:hostname!:string path:key!:string] body= responses=[200=application/json:SysctlGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op POST /api/next/node/{hostname}/sysctl id=PostNodeSysctl tags=[sysctl_operations] auth=BearerAuth:sysctl:write params=[path:hostname!:string] body=application/json:SysctlCreateRequest! responses=[200=application/json:SysctlCreateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op PUT /api/next/node/{hostname}/sysctl/{key} id=PutNodeSysctl tags=[sysctl_operations] auth=BearerAuth:sysctl:write params=[path:hostname!:string path:key!:string] body=application/json:SysctlUpdateRequest! responses=[200=application/json:SysctlUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+schema SysctlCollectionResponse.job_id = string/uuid
+schema SysctlCollectionResponse.results! = [SysctlEntry]
+schema SysctlCreateRequest.key! = string
+schema SysctlCreateRequest.value! = string
+schema SysctlCreateResponse.job_id = string/uuid
+schema SysctlCreateResponse.results! = [SysctlMutationResult]
+schema SysctlDeleteResponse.job_id = string/uuid
+schema SysctlDeleteResponse.results! = [SysctlMutationResult]
+schema SysctlEntry.error = string
+schema SysctlEntry.hostname! = string
+schema SysctlEntry.key = string
+schema SysctlEntry.managed = boolean
+schema SysctlEntry.status! = string(ok|failed|skipped|timeout)
+schema SysctlEntry.value = string
+schema SysctlGetResponse.job_id = string/uuid
+schema SysctlGetResponse.results! = [SysctlEntry]
+schema SysctlMutationResult.changed = boolean
+schema SysctlMutationResult.error = string
+schema SysctlMutationResult.hostname! = string
+schema SysctlMutationResult.key = string
+schema SysctlMutationResult.status! = string(ok|failed|skipped|timeout)
+schema SysctlUpdateRequest.value! = string
+schema SysctlUpdateResponse.job_id = string/uuid
+schema SysctlUpdateResponse.results! = [SysctlMutationResult]
+tag sysctl_operations
