@@ -41,6 +41,10 @@ func (s *Service) PostNodeServiceStart(
 		return gen.PostNodeServiceStart400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validateName(request.Name); !ok {
+		return gen.PostNodeServiceStart400JSONResponse{Error: &errMsg}, nil
+	}
+
 	hostname := request.Hostname
 	name := request.Name
 

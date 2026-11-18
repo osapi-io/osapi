@@ -32,3 +32,10 @@ func validateHostname(
 ) (string, bool) {
 	return validation.Var(hostname, "required,min=1,valid_target")
 }
+
+// validateUnit validates the name path parameter. It is a systemd unit name, which journalctl -u reads.
+func validateUnit(
+	name string,
+) (string, bool) {
+	return validation.Var(name, "required,unit_name")
+}

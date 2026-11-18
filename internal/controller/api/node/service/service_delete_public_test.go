@@ -131,6 +131,18 @@ func (s *ServiceDeletePublicTestSuite) TestDeleteNodeService() {
 			},
 		},
 		{
+			name: "when the name is not valid, it is a 400 and no job is sent",
+			request: gen.DeleteNodeServiceRequestObject{
+				Hostname: "server1",
+				Name:     "nginx service;reboot",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.DeleteNodeServiceResponseObject) {
+				_, ok := resp.(gen.DeleteNodeService400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name:      "validation error empty hostname",
 			request:   gen.DeleteNodeServiceRequestObject{Hostname: "", Name: "my-app.service"},
 			setupMock: func() {},

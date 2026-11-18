@@ -513,7 +513,7 @@ func (response GetNodeLogSource500JSONResponse) VisitGetNodeLogSourceResponse(w 
 
 type GetNodeLogUnitRequestObject struct {
 	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     UnitName `json:"name" validate:"required,min=1"`
+	Name     UnitName `json:"name" validate:"required,unit_name"`
 	Params   GetNodeLogUnitParams
 }
 

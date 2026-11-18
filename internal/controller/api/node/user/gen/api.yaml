@@ -832,10 +832,11 @@ components:
       # validate tags in strict-server mode. Validation is handled
       # manually in the handler.
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,ssh_fingerprint
       schema:
         type: string
         minLength: 1
+        pattern: '^SHA256:[A-Za-z0-9+/]+=*$'
 
   securitySchemes:
     BearerAuth:

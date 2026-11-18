@@ -260,10 +260,11 @@ components:
       # validate tags in strict-server mode. Validation is handled
       # manually in the handler.
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,unit_name
       schema:
         type: string
         minLength: 1
+        pattern: '^[a-zA-Z0-9:_.@-]+$'
 
   securitySchemes:
     BearerAuth:

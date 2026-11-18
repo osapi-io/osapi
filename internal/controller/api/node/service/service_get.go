@@ -43,6 +43,10 @@ func (s *Service) GetNodeServiceByName(
 		return gen.GetNodeServiceByName400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validateName(request.Name); !ok {
+		return gen.GetNodeServiceByName400JSONResponse{Error: &errMsg}, nil
+	}
+
 	hostname := request.Hostname
 	name := request.Name
 

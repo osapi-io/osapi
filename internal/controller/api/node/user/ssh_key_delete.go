@@ -40,6 +40,10 @@ func (u *User) DeleteNodeUserSSHKey(
 		return gen.DeleteNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validateFingerprint(request.Fingerprint); !ok {
+		return gen.DeleteNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
+	}
+
 	if errMsg, ok := validateName(request.Name); !ok {
 		return gen.DeleteNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
 	}

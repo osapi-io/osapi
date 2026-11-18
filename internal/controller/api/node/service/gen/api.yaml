@@ -547,10 +547,11 @@ components:
       # validate tags in strict-server mode. Validation is handled
       # manually in the handler.
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,service_name
       schema:
         type: string
         minLength: 1
+        pattern: '^[a-zA-Z0-9_@.-]+$'
 
   securitySchemes:
     BearerAuth:
@@ -574,8 +575,9 @@ components:
           type: string
           description: Service unit name.
           example: "my-app"
+          pattern: '^[a-zA-Z0-9_@.-]+$'
           x-oapi-codegen-extra-tags:
-            validate: "required,min=1"
+            validate: "required,service_name"
         object:
           type: string
           description: Object Store reference for the unit file.

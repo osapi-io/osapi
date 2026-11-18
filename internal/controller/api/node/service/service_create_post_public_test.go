@@ -165,6 +165,23 @@ func (s *ServiceCreatePostPublicTestSuite) TestPostNodeService() {
 			},
 		},
 		{
+			name: "when the name is not valid, it is a 400 and no job is sent",
+			request: gen.PostNodeServiceRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeServiceJSONRequestBody{
+					Name:   "nginx service;reboot",
+					Object: "my-app-unit-object",
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeServiceResponseObject) {
+				r, ok := resp.(gen.PostNodeService400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "service_name")
+			},
+		},
+		{
 			name: "validation error empty hostname",
 			request: gen.PostNodeServiceRequestObject{
 				Hostname: "",

@@ -50,6 +50,10 @@ func (s *Log) GetNodeLogUnit(
 		return gen.GetNodeLogUnit400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validateUnit(request.Name); !ok {
+		return gen.GetNodeLogUnit400JSONResponse{Error: &errMsg}, nil
+	}
+
 	if errMsg, ok := validation.Struct(request.Params); !ok {
 		return gen.GetNodeLogUnit400JSONResponse{Error: &errMsg}, nil
 	}

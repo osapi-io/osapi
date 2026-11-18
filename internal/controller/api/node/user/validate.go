@@ -43,3 +43,10 @@ func validateName(
 ) (string, bool) {
 	return validation.Var(name, "required,account_name")
 }
+
+// validateFingerprint validates the fingerprint path parameter. It is the fingerprint the user provider computes.
+func validateFingerprint(
+	fingerprint string,
+) (string, bool) {
+	return validation.Var(fingerprint, "required,ssh_fingerprint")
+}

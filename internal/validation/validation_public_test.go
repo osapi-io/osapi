@@ -792,6 +792,84 @@ func (s *ValidationPublicTestSuite) TestNATSName() {
 	})
 }
 
+// TestPathNames holds the rules of what a hand-written route's path names:
+// a service, a systemd unit, an SSH key.
+func (s *ValidationPublicTestSuite) TestPathNames() {
+	tests := []struct {
+		name  string
+		tag   string
+		field string
+		valid bool
+		hint  string
+	}{
+		{name: "when a service name is plain", tag: "service_name", field: "nginx", valid: true},
+		{
+			name:  "when a service name has an instance",
+			tag:   "service_name",
+			field: "getty@tty1",
+			valid: true,
+		},
+		{
+			name:  "when a service name has a space",
+			tag:   "service_name",
+			field: "nginx reboot",
+			hint:  "not a valid service name",
+		},
+		{
+			name:  "when a service name has a slash",
+			tag:   "service_name",
+			field: "../nginx",
+			hint:  "not a valid service name",
+		},
+		{
+			name:  "when a unit name has its type",
+			tag:   "unit_name",
+			field: "nginx.service",
+			valid: true,
+		},
+		{
+			name:  "when a unit name is a user's",
+			tag:   "unit_name",
+			field: "user@1000.service",
+			valid: true,
+		},
+		{
+			name:  "when a unit name has a semicolon",
+			tag:   "unit_name",
+			field: "nginx;reboot",
+			hint:  "not a valid systemd unit name",
+		},
+		{
+			name:  "when a fingerprint is SHA256",
+			tag:   "ssh_fingerprint",
+			field: "SHA256:fs7cRe+Lieb9g9TQ7a4HbYTDyVWnO8tXg6D9H2cAWIY",
+			valid: true,
+		},
+		{
+			name:  "when a fingerprint is MD5",
+			tag:   "ssh_fingerprint",
+			field: "MD5:ab:cd",
+			hint:  "not a valid SSH key fingerprint",
+		},
+		{
+			name:  "when a fingerprint has no digest",
+			tag:   "ssh_fingerprint",
+			field: "SHA256:",
+			hint:  "not a valid SSH key fingerprint",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			msg, ok := validation.Var(tt.field, tt.tag)
+			s.Equal(tt.valid, ok)
+			if !tt.valid {
+				s.Contains(msg, tt.hint)
+			}
+		})
+	}
+}
+
 func (s *ValidationPublicTestSuite) TestPackageName() {
 	tests := []struct {
 		name  string

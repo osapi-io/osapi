@@ -2061,7 +2061,7 @@ func (response PostNodeUserSSHKey500JSONResponse) VisitPostNodeUserSSHKeyRespons
 type DeleteNodeUserSSHKeyRequestObject struct {
 	Hostname    Hostname          `json:"hostname" validate:"required,min=1,valid_target"`
 	Name        UserName          `json:"name" validate:"required,account_name"`
-	Fingerprint SSHKeyFingerprint `json:"fingerprint" validate:"required,min=1"`
+	Fingerprint SSHKeyFingerprint `json:"fingerprint" validate:"required,ssh_fingerprint"`
 }
 
 type DeleteNodeUserSSHKeyResponseObject interface {

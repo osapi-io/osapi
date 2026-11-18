@@ -98,7 +98,7 @@ type ErrorResponse = externalRef0.ErrorResponse
 // ServiceCreateRequest defines model for ServiceCreateRequest.
 type ServiceCreateRequest struct {
 	// Name Service unit name.
-	Name string `json:"name" validate:"required,min=1"`
+	Name string `json:"name" validate:"required,service_name"`
 
 	// Object Object Store reference for the unit file.
 	Object string `json:"object" validate:"required,min=1"`
@@ -723,7 +723,7 @@ func (response PostNodeService500JSONResponse) VisitPostNodeServiceResponse(w ht
 
 type DeleteNodeServiceRequestObject struct {
 	Hostname Hostname    `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     ServiceName `json:"name" validate:"required,min=1"`
+	Name     ServiceName `json:"name" validate:"required,service_name"`
 }
 
 type DeleteNodeServiceResponseObject interface {
@@ -802,7 +802,7 @@ func (response DeleteNodeService500JSONResponse) VisitDeleteNodeServiceResponse(
 
 type GetNodeServiceByNameRequestObject struct {
 	Hostname Hostname    `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     ServiceName `json:"name" validate:"required,min=1"`
+	Name     ServiceName `json:"name" validate:"required,service_name"`
 }
 
 type GetNodeServiceByNameResponseObject interface {
@@ -895,7 +895,7 @@ func (response GetNodeServiceByName500JSONResponse) VisitGetNodeServiceByNameRes
 
 type PutNodeServiceRequestObject struct {
 	Hostname Hostname    `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     ServiceName `json:"name" validate:"required,min=1"`
+	Name     ServiceName `json:"name" validate:"required,service_name"`
 	Body     *PutNodeServiceJSONRequestBody
 }
 
@@ -989,7 +989,7 @@ func (response PutNodeService500JSONResponse) VisitPutNodeServiceResponse(w http
 
 type PostNodeServiceDisableRequestObject struct {
 	Hostname Hostname    `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     ServiceName `json:"name" validate:"required,min=1"`
+	Name     ServiceName `json:"name" validate:"required,service_name"`
 }
 
 type PostNodeServiceDisableResponseObject interface {
@@ -1068,7 +1068,7 @@ func (response PostNodeServiceDisable500JSONResponse) VisitPostNodeServiceDisabl
 
 type PostNodeServiceEnableRequestObject struct {
 	Hostname Hostname    `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     ServiceName `json:"name" validate:"required,min=1"`
+	Name     ServiceName `json:"name" validate:"required,service_name"`
 }
 
 type PostNodeServiceEnableResponseObject interface {
@@ -1147,7 +1147,7 @@ func (response PostNodeServiceEnable500JSONResponse) VisitPostNodeServiceEnableR
 
 type PostNodeServiceRestartRequestObject struct {
 	Hostname Hostname    `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     ServiceName `json:"name" validate:"required,min=1"`
+	Name     ServiceName `json:"name" validate:"required,service_name"`
 }
 
 type PostNodeServiceRestartResponseObject interface {
@@ -1226,7 +1226,7 @@ func (response PostNodeServiceRestart500JSONResponse) VisitPostNodeServiceRestar
 
 type PostNodeServiceStartRequestObject struct {
 	Hostname Hostname    `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     ServiceName `json:"name" validate:"required,min=1"`
+	Name     ServiceName `json:"name" validate:"required,service_name"`
 }
 
 type PostNodeServiceStartResponseObject interface {
@@ -1305,7 +1305,7 @@ func (response PostNodeServiceStart500JSONResponse) VisitPostNodeServiceStartRes
 
 type PostNodeServiceStopRequestObject struct {
 	Hostname Hostname    `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     ServiceName `json:"name" validate:"required,min=1"`
+	Name     ServiceName `json:"name" validate:"required,service_name"`
 }
 
 type PostNodeServiceStopResponseObject interface {
