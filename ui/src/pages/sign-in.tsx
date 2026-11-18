@@ -28,8 +28,8 @@ export function SignIn() {
       return;
     }
 
-    // Ask the server once. Only a 401 means it refused the token; a 403 or a
-    // 503 still means the signature and expiry are good.
+    // Ask the server once. Only a 401 means it refused the token; a 403
+    // still means the signature and expiry are good.
     setChecking(true);
     try {
       const res = await getHealthStatus({

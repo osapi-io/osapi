@@ -590,7 +590,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 			}
 			handler := health.New(slog.Default(), checker, time.Now(), "0.1.0", tt.metrics, nil)
 
-			tt.validateFunc(handler.Status(s.ctx))
+			r := handler.Status(s.ctx)
+			tt.validateFunc(r, r.Status == "ok")
 		})
 	}
 }
@@ -659,7 +660,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusSubComponents() {
 
 			handler := health.New(slog.Default(), checker, time.Now(), "0.1.0", nil, tt.subs)
 
-			tt.validateFunc(handler.Status(s.ctx))
+			r := handler.Status(s.ctx)
+			tt.validateFunc(r, r.Status == "ok")
 		})
 	}
 }
@@ -699,10 +701,10 @@ func (s *HealthStatusGetPublicTestSuite) TestMetricsCache() {
 			name: "when cache is fresh serves cached metrics",
 			validateFunc: func(handler *health.Health) {
 				// First call populates cache.
-				resp1, _ := handler.Status(s.ctx)
+				resp1 := handler.Status(s.ctx)
 
 				// Second call should serve from cache with identical data.
-				resp2, _ := handler.Status(s.ctx)
+				resp2 := handler.Status(s.ctx)
 				s.Equal(resp1.NATS, resp2.NATS)
 				s.Equal(resp1.KVBuckets, resp2.KVBuckets)
 			},

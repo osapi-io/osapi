@@ -42,11 +42,11 @@ func (h *Health) Ready(
 	return h.Checker.CheckHealth(ctx)
 }
 
-// Status is the health of each component, with the metrics of the system,
-// and whether each component is healthy.
+// Status is the health of each component, with the metrics of the system.
+// Its status is degraded when a component is not healthy.
 func (h *Health) Status(
 	ctx context.Context,
-) (api.StatusResponse, bool) {
+) api.StatusResponse {
 	checker, ok := h.Checker.(*NATSChecker)
 	if !ok {
 		return h.buildStatusResponse(ctx, nil, nil)
@@ -63,7 +63,7 @@ func (h *Health) buildStatusResponse(
 	ctx context.Context,
 	natsErr error,
 	kvErr error,
-) (api.StatusResponse, bool) {
+) api.StatusResponse {
 	natsComponent := api.ComponentHealth{Status: "ok"}
 	if natsErr != nil {
 		natsComponent = api.ComponentHealth{Status: "error", Error: natsErr.Error()}
@@ -105,7 +105,7 @@ func (h *Health) buildStatusResponse(
 		h.populateMetricsWithCache(ctx, &resp)
 	}
 
-	return resp, overall == "ok"
+	return resp
 }
 
 // populateMetricsWithCache serves cached metrics if fresh enough,

@@ -108,7 +108,8 @@ func (s *HealthService) GetReady(
 
 // Status returns detailed system status including component health,
 // NATS info, stream stats, and job queue counts. Requires authentication.
-// A 503 response is treated as success with the ServiceUnavailable flag set.
+// ServiceUnavailable is set when a component is not healthy, which the
+// status says as degraded.
 func (s *HealthService) GetStatus(
 	ctx context.Context,
 ) (*Response[SystemStatus], error) {
@@ -136,20 +137,7 @@ func (s *HealthService) GetStatus(
 		}
 
 		return newResponse(
-			systemStatusFromGen(resp.JSON200, false),
-			resp.Body,
-			resp.HTTPResponse,
-		), nil
-	case 503:
-		if resp.JSON503 == nil {
-			return nil, &UnexpectedStatusError{APIError{
-				StatusCode: 503,
-				Message:    "nil response body",
-			}}
-		}
-
-		return newResponse(
-			systemStatusFromGen(resp.JSON503, true),
+			systemStatusFromGen(resp.JSON200, resp.JSON200.Status != "ok"),
 			resp.Body,
 			resp.HTTPResponse,
 		), nil

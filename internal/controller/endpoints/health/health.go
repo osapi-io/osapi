@@ -65,8 +65,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Describe("System status and component health").
 		Explain("Returns per-component health status with system metrics. "+
 			"Requires authentication.").
-		Returns("All components healthy.").
-		Answers(http.StatusServiceUnavailable, "One or more components unhealthy.").
+		Returns("The status of each component. A component that is not healthy makes the overall status degraded; the request still succeeds.").
 		Command("System status and component health",
 			"The table has each component that registered: its status, its active\n"+
 				"conditions, its uptime, and the CPU and memory of its process.").

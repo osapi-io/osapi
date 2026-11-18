@@ -35,7 +35,9 @@ instance.
 
 Returns the health of each component, with system metrics (uptime, goroutine
 count, memory use). It needs authentication with the `health:read` permission.
-Use it for dashboards and monitoring.
+Use it for dashboards and monitoring. It answers 200 when a component is not
+healthy, with the overall status `degraded`: the request worked. Use
+`/health/ready` to route traffic.
 
 ## Component registry
 

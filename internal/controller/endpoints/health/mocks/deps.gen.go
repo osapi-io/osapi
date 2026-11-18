@@ -56,12 +56,11 @@ func (mr *MockReporterMockRecorder) Ready(ctx any) *gomock.Call {
 }
 
 // Status mocks base method.
-func (m *MockReporter) Status(ctx context.Context) (health.StatusResponse, bool) {
+func (m *MockReporter) Status(ctx context.Context) health.StatusResponse {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Status", ctx)
 	ret0, _ := ret[0].(health.StatusResponse)
-	ret1, _ := ret[1].(bool)
-	return ret0, ret1
+	return ret0
 }
 
 // Status indicates an expected call of Status.

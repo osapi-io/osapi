@@ -333,10 +333,10 @@ func (suite *HealthPublicTestSuite) TestStatus() {
 			},
 		},
 		{
-			name: "when server returns 503 returns status with ServiceUnavailable",
+			name: "when a component is not healthy returns the degraded status with ServiceUnavailable",
 			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusServiceUnavailable)
+				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(`{"status":"degraded","version":"1.0.0","uptime":"1h"}`))
 			}),
 			validateFunc: func(resp *client.Response[client.SystemStatus], err error) {
@@ -344,22 +344,6 @@ func (suite *HealthPublicTestSuite) TestStatus() {
 				suite.NotNil(resp)
 				suite.Equal("degraded", resp.Data.Status)
 				suite.True(resp.Data.ServiceUnavailable)
-			},
-		},
-		{
-			name: "when 503 response body is nil returns UnexpectedStatusError",
-			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "text/plain")
-				w.WriteHeader(http.StatusServiceUnavailable)
-			}),
-			validateFunc: func(resp *client.Response[client.SystemStatus], err error) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
-				suite.Equal(http.StatusServiceUnavailable, target.StatusCode)
-				suite.Contains(target.Message, "nil response body")
 			},
 		},
 		{

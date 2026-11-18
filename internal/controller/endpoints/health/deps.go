@@ -33,6 +33,7 @@ type Deps struct {
 type Reporter interface {
 	// Ready is nil when the controller can take traffic.
 	Ready(ctx context.Context) error
-	// Status is the health of each component, and whether each is healthy.
-	Status(ctx context.Context) (StatusResponse, bool)
+	// Status is the health of each component. Its status is degraded when
+	// one is not healthy.
+	Status(ctx context.Context) StatusResponse
 }

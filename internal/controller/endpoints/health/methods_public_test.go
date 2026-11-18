@@ -107,36 +107,25 @@ func (s *MethodsPublicTestSuite) TestReady() {
 
 func (s *MethodsPublicTestSuite) TestStatus() {
 	tests := []struct {
-		name    string
-		resp    health.StatusResponse
-		healthy bool
-		want503 bool
+		name string
+		resp health.StatusResponse
 	}{
 		{
-			name:    "when each component is healthy, it answers the status",
-			resp:    health.StatusResponse{Status: "ok", Version: "0.1.0", Uptime: "1m0s"},
-			healthy: true,
+			name: "when each component is healthy, it answers the status",
+			resp: health.StatusResponse{Status: "ok", Version: "0.1.0", Uptime: "1m0s"},
 		},
 		{
-			name:    "when a component is not healthy, it answers 503 with the status",
-			resp:    degraded,
-			want503: true,
+			name: "when a component is not healthy, it answers the degraded status, not an error",
+			resp: degraded,
 		},
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.reporter.EXPECT().Status(gomock.Any()).Return(tc.resp, tc.healthy)
+			s.reporter.EXPECT().Status(gomock.Any()).Return(tc.resp)
 			got, err := health.Status(context.Background(),
 				health.Deps{Health: s.reporter}, health.StatusInput{})
+			s.Require().NoError(err)
 			s.Equal(tc.resp, got)
-			if !tc.want503 {
-				s.NoError(err)
-
-				return
-			}
-			var answer *endpoint.AnswerError
-			s.Require().ErrorAs(err, &answer)
-			s.Equal(http.StatusServiceUnavailable, answer.Code)
 		})
 	}
 }
@@ -203,19 +192,19 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 			setup: func() {
 				s.reporter.EXPECT().Status(gomock.Any()).Return(health.StatusResponse{
 					Status: "ok", Version: "0.1.0", Uptime: "1m0s",
-				}, true)
+				})
 			},
 			wantCode: http.StatusOK,
 			wantBody: `{"status":"ok","components":null,"version":"0.1.0","uptime":"1m0s"}`,
 		},
 		{
-			name:  "when a component is not healthy, status is a 503 with the status",
+			name:  "when a component is not healthy, status is a 200 with the degraded status",
 			path:  "/api/health/status",
 			token: token("health:read"),
 			setup: func() {
-				s.reporter.EXPECT().Status(gomock.Any()).Return(degraded, false)
+				s.reporter.EXPECT().Status(gomock.Any()).Return(degraded)
 			},
-			wantCode: http.StatusServiceUnavailable,
+			wantCode: http.StatusOK,
 		},
 	}
 	for _, tc := range tests {

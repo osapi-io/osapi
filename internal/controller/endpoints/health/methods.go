@@ -50,17 +50,13 @@ func Ready(
 	return ReadyResponse{Status: "ready"}, nil
 }
 
-// Status is the health of each component, with a 503 when one is not
-// healthy.
+// Status is the health of each component. A component that is not healthy
+// makes the status degraded; the request still succeeds, because it is a
+// report and not a probe. Ready is the probe.
 func Status(
 	ctx context.Context,
 	d Deps,
 	_ StatusInput,
 ) (StatusResponse, error) {
-	resp, healthy := d.Health.Status(ctx)
-	if !healthy {
-		return resp, endpoint.Answer(http.StatusServiceUnavailable)
-	}
-
-	return resp, nil
+	return d.Health.Status(ctx), nil
 }
