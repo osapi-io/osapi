@@ -71,6 +71,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("").
 		Handle(Pending).
 		Sub("pending").
+		Use("list").
 		ID("getAgentsPending").
 		Describe("List agents awaiting enrollment").
 		Explain("List all agents that have submitted enrollment requests but have "+
@@ -116,7 +117,7 @@ var Group = endpoint.Register(endpoint.Define(
 		),
 	endpoint.Post[AcceptInput, Message]("accept").
 		Command("Accept a pending agent enrollment",
-			"When PKI is enabled, a new agent sends an enrollment request. An\nadministrator must accept it before the agent can do work. This command\naccepts a pending agent by hostname. To accept by the public key fingerprint\nof the agent, add `--fingerprint`. Use `agent pending` to see the agents\nthat wait for approval.").
+			"When PKI is enabled, a new agent sends an enrollment request. An\nadministrator must accept it before the agent can do work. This command\naccepts a pending agent by hostname. To accept by the public key fingerprint\nof the agent, add `--fingerprint`. Use `agent pending list` to see the agents\nthat wait for approval.").
 		Example("--hostname web-01").
 		Example("--hostname web-01 --fingerprint SHA256:ab12cd34...").
 		Handle(Accept).
@@ -129,7 +130,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Errors(endpoint.NotFound(ErrNotFound, "Pending agent not found.")),
 	endpoint.Post[RejectInput, Message]("reject").
 		Command("Reject a pending agent enrollment",
-			"When PKI is enabled, a new agent sends an enrollment request. An\nadministrator accepts or rejects it. This command rejects a pending agent,\nso the agent cannot join the fleet. The command removes the enrollment entry\nof the agent from the pending queue. Use `agent pending` to see the agents\nthat wait for approval.").
+			"When PKI is enabled, a new agent sends an enrollment request. An\nadministrator accepts or rejects it. This command rejects a pending agent,\nso the agent cannot join the fleet. The command removes the enrollment entry\nof the agent from the pending queue. Use `agent pending list` to see the agents\nthat wait for approval.").
 		Example("--hostname web-01").
 		Handle(Reject).
 		Action("reject").

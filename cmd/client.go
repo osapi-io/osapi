@@ -116,7 +116,7 @@ func init() {
 		Caller: func() command.Caller { return sdkClient },
 		JSON:   func() bool { return jsonOutput },
 		Error:  func(err error) { cli.HandleError(err, logger) },
-	}, clientAgentCmd, clientAuditCmd, clientFactsCmd, clientFactsKeysCmd, clientJobCmd, clientTelemetryCmd, clientTelemetryTraceCmd); err != nil {
+	}, clientAgentCmd, clientAgentPendingCmd, clientAuditCmd, clientFactsCmd, clientFactsKeysCmd, clientJobCmd, clientTelemetryCmd, clientTelemetryTraceCmd); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

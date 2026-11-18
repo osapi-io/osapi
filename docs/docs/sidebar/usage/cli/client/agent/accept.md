@@ -5,7 +5,8 @@ Accept a pending agent enrollment.
 When PKI is enabled, a new agent sends an enrollment request. An administrator
 must accept it before the agent can do work. This command accepts a pending
 agent by hostname. To accept by the public key fingerprint of the agent, add
-`--fingerprint`. Use `agent pending` to see the agents that wait for approval.
+`--fingerprint`. Use `agent pending list` to see the agents that wait for
+approval.
 
 ```bash
 osapi client agent accept [flags]

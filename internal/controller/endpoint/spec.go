@@ -177,6 +177,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: `.Use("name")`,
+			Does: "Names the CLI command apart from the method. A method whose Sub differs from its command name goes under a command of the Sub.",
+			When: "When the command's verb is a method name the group has already, such as list under pending beside the group's own list.",
+		},
+		{
+			Kind: KindRefine,
 			Name: `.StringFlag("name", "value", "usage", required)`,
 			Does: "Adds a string flag to the CLI command that the request does not send, with its value when the caller gives none. The renderer reads it from the command.",
 			When: "For a flag that changes only what the command does with the answer, such as --output, the file an export writes.",

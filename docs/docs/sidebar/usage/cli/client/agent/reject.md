@@ -5,7 +5,8 @@ Reject a pending agent enrollment.
 When PKI is enabled, a new agent sends an enrollment request. An administrator
 accepts or rejects it. This command rejects a pending agent, so the agent cannot
 join the fleet. The command removes the enrollment entry of the agent from the
-pending queue. Use `agent pending` to see the agents that wait for approval.
+pending queue. Use `agent pending list` to see the agents that wait for
+approval.
 
 ```bash
 osapi client agent reject [flags]

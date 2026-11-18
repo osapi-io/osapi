@@ -1,4 +1,4 @@
-# Pending
+# List
 
 List agents awaiting enrollment.
 
@@ -7,13 +7,13 @@ until an administrator accepts or rejects it with `agent accept` or
 `agent reject`.
 
 ```bash
-osapi client agent pending
+osapi client agent pending list
 ```
 
 ## Examples
 
 ```bash
-osapi client agent pending
+osapi client agent pending list
 ```
 
 ## Permission
@@ -30,5 +30,5 @@ grant it.
 | `-f, --osapi-file` | Path to config file            | `/etc/osapi/osapi.yaml` |
 | `--url`            | URL the client will connect to | `http://0.0.0.0:8080`   |
 
-[Output](../../output.md) tells how the result is printed, and what `--json`
+[Output](../../../output.md) tells how the result is printed, and what `--json`
 gives.

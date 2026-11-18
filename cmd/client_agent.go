@@ -39,8 +39,16 @@ var clientAgentCmd = &cobra.Command{
 	Long:  "Most commands read the NATS KV heartbeat registry directly, and make no job.",
 }
 
+// clientAgentPendingCmd holds the commands of the agents that wait for
+// enrollment, such as osapi client agent pending list.
+var clientAgentPendingCmd = &cobra.Command{
+	Use:   "pending",
+	Short: "Read the agents that wait for enrollment",
+}
+
 func init() {
 	clientCmd.AddCommand(clientAgentCmd)
+	clientAgentCmd.AddCommand(clientAgentPendingCmd)
 }
 
 // The agent group's commands are generated from its definition. These are
