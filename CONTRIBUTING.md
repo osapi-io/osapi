@@ -635,9 +635,9 @@ go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -
 The diff of the file shows the change to the API. A change that you did not
 make, such as a schema that a generator changed, fails the test.
 
-Each operation obeys the conventions of the API, which
-`components/osapi/api.md` in osapi-io/specs states. `TestConventions`, in
-`internal/apicontract`, fails on an operation that breaks one:
+Each operation obeys the conventions of the API, which `components/osapi/api.md`
+in osapi-io/specs states. `TestConventions`, in `internal/apicontract`, fails on
+an operation that breaks one:
 
 - An operationId is Pascal case, such as `GetJobs`.
 - An operation answers when its work is done, so no operation answers 202.
