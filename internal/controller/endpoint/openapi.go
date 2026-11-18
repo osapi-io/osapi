@@ -187,14 +187,15 @@ func (b *builder) fail(
 
 // body is the request body: the type of a field tagged in:"body", or an
 // object of the input's other fields. It reports whether the body is
-// required, which it is when one of its fields is.
+// required: a field tagged in:"body" when it is validate:"required", an
+// object when one of its fields is.
 func (b *builder) body(
 	fs []reflect.StructField,
 ) (*openapi3.SchemaRef, bool, error) {
 	if len(fs) == 1 && fs[0].Tag.Get("in") == "body" {
 		s, err := b.ref(fs[0].Type)
 
-		return s, true, err
+		return s, validates(fs[0], "required"), err
 	}
 	s, err := b.object(fs, false)
 	if err != nil {

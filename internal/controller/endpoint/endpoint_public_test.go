@@ -66,6 +66,10 @@ type Request struct {
 }
 
 type namedBodyInput struct {
+	Body Request `in:"body" validate:"required"`
+}
+
+type optionalNamedBodyInput struct {
 	Body Request `in:"body"`
 }
 
@@ -371,6 +375,7 @@ func (s *EndpointPublicTestSuite) TestOpenAPI() {
 			name: "when the body is a named type",
 			methods: []endpoint.Option{
 				endpoint.Post[namedBodyInput, *Node]("retry"),
+				endpoint.Post[optionalNamedBodyInput, *Node]("redo").Sub("redo"),
 			},
 			want: []string{
 				"op POST /api/node id=postNodeRetry tags=[node] auth=BearerAuth:node:write params=[] " +
@@ -379,6 +384,11 @@ func (s *EndpointPublicTestSuite) TestOpenAPI() {
 					"401=application/json:ErrorResponse 403=application/json:ErrorResponse " +
 					"500=application/json:ErrorResponse]",
 				"schema Request.reason! = string",
+				"op POST /api/node/redo id=postNodeRedoRedo tags=[node] auth=BearerAuth:node:write " +
+					"params=[] body=application/json:Request " +
+					"responses=[200=application/json:Node 400=application/json:ErrorResponse " +
+					"401=application/json:ErrorResponse 403=application/json:ErrorResponse " +
+					"500=application/json:ErrorResponse]",
 			},
 		},
 	}
