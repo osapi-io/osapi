@@ -93,7 +93,7 @@ func init() {
 	clientNodeFileCmd.AddCommand(clientNodeFileUndeployCmd)
 
 	clientNodeFileUndeployCmd.PersistentFlags().
-		String("path", "", "Path of the file to undeploy on the target filesystem (required)")
+		String("path", "", "Path of the file to undeploy on the target filesystem")
 
 	_ = clientNodeFileUndeployCmd.MarkPersistentFlagRequired("path")
 }

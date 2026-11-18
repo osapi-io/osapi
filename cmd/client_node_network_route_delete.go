@@ -83,7 +83,7 @@ func init() {
 	clientNodeNetworkRouteCmd.AddCommand(clientNodeNetworkRouteDeleteCmd)
 
 	clientNodeNetworkRouteDeleteCmd.PersistentFlags().
-		String("interface", "", "Interface name (required)")
+		String("interface", "", "Interface name")
 
 	_ = clientNodeNetworkRouteDeleteCmd.MarkPersistentFlagRequired("interface")
 }

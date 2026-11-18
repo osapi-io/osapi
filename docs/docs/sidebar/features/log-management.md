@@ -44,20 +44,20 @@ the unit names before you query.
 
 ```bash
 # Query last 100 log entries on a host (default)
-osapi client node log query --target web-01
+osapi client node log list --target web-01
 
 # Query last 50 error entries in the past hour
-osapi client node log query --target web-01 \
+osapi client node log list --target web-01 \
   --lines 50 --since 1h --priority err
 
 # Query journal entries for the sshd unit
-osapi client node log query --target web-01 --unit sshd.service
+osapi client node log list --target web-01 --unit sshd.service
 
 # List available log sources
-osapi client node log list-sources --target web-01
+osapi client node log source list --target web-01
 
-# Broadcast log query to all hosts
-osapi client node log query --target _all --lines 20
+# List the logs of each host
+osapi client node log list --target _all --lines 20
 ```
 
 All commands accept `--json` to give the raw JSON output.

@@ -91,7 +91,7 @@ func init() {
 	clientNodeNtpCmd.AddCommand(clientNodeNtpUpdateCmd)
 
 	clientNodeNtpUpdateCmd.PersistentFlags().
-		StringSlice("servers", nil, "NTP server addresses (required)")
+		StringSlice("servers", nil, "NTP server addresses")
 
 	_ = clientNodeNtpUpdateCmd.MarkPersistentFlagRequired("servers")
 }

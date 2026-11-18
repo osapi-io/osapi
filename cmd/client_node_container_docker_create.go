@@ -111,7 +111,7 @@ func init() {
 	clientContainerDockerCmd.AddCommand(clientContainerDockerCreateCmd)
 
 	clientContainerDockerCreateCmd.PersistentFlags().
-		String("image", "", "Container image reference (required)")
+		String("image", "", "Container image reference")
 	clientContainerDockerCreateCmd.PersistentFlags().
 		String("name", "", "Optional name for the container")
 	clientContainerDockerCreateCmd.PersistentFlags().

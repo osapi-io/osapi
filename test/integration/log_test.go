@@ -32,9 +32,9 @@ type LogSmokeSuite struct {
 	suite.Suite
 }
 
-// TestLogQuery verifies the log query endpoint is reachable and returns
+// TestLogList verifies the log list command is reachable and returns
 // a valid JSON response with a results array.
-func (s *LogSmokeSuite) TestLogQuery() {
+func (s *LogSmokeSuite) TestLogList() {
 	tests := []struct {
 		name         string
 		args         []string
@@ -43,7 +43,7 @@ func (s *LogSmokeSuite) TestLogQuery() {
 		{
 			name: "query endpoint responds",
 			args: []string{
-				"client", "node", "log", "query",
+				"client", "node", "log", "list",
 				"--target", "_any",
 				"--json",
 			},
@@ -72,9 +72,9 @@ func (s *LogSmokeSuite) TestLogQuery() {
 	}
 }
 
-// TestLogQueryUnit verifies the log query --unit command is reachable and returns
+// TestLogListUnit verifies the log list --unit command is reachable and returns
 // a valid JSON response with a results array.
-func (s *LogSmokeSuite) TestLogQueryUnit() {
+func (s *LogSmokeSuite) TestLogListUnit() {
 	tests := []struct {
 		name         string
 		args         []string
@@ -83,7 +83,7 @@ func (s *LogSmokeSuite) TestLogQueryUnit() {
 		{
 			name: "unit endpoint responds",
 			args: []string{
-				"client", "node", "log", "query",
+				"client", "node", "log", "list",
 				"--target", "_any",
 				"--unit", "sshd.service",
 				"--json",

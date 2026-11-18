@@ -76,7 +76,7 @@ func init() {
 	clientNodeFileCmd.AddCommand(clientNodeFileStatusCmd)
 
 	clientNodeFileStatusCmd.PersistentFlags().
-		String("path", "", "Filesystem path to check (required)")
+		String("path", "", "Filesystem path to check")
 
 	_ = clientNodeFileStatusCmd.MarkPersistentFlagRequired("path")
 }

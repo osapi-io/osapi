@@ -1,17 +1,17 @@
-# Inspect
+# Get
 
-Inspect a container.
+Get a container.
 
 ```bash
-osapi client node container docker inspect
+osapi client node container docker get
 ```
 
 ## Examples
 
 ```bash
-osapi client node container docker inspect --id a1b2c3d4e5f6
-osapi client node container docker inspect --id my-nginx
-osapi client node container docker inspect --id my-nginx --target web-01
+osapi client node container docker get --id a1b2c3d4e5f6
+osapi client node container docker get --id my-nginx
+osapi client node container docker get --id my-nginx --target web-01
 ```
 
 ## Flags

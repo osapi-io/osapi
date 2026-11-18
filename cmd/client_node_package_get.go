@@ -88,7 +88,7 @@ func init() {
 	clientNodePackageCmd.AddCommand(clientNodePackageGetCmd)
 
 	clientNodePackageGetCmd.PersistentFlags().
-		String("name", "", "Name of the package (required)")
+		String("name", "", "Name of the package")
 
 	_ = clientNodePackageGetCmd.MarkPersistentFlagRequired("name")
 }

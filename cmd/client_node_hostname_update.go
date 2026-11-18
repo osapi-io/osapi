@@ -76,6 +76,6 @@ var clientNodeHostnameUpdateCmd = &cobra.Command{
 
 func init() {
 	clientNodeHostnameCmd.AddCommand(clientNodeHostnameUpdateCmd)
-	clientNodeHostnameUpdateCmd.Flags().String("name", "", "New hostname to set (required)")
+	clientNodeHostnameUpdateCmd.Flags().String("name", "", "New hostname to set")
 	_ = clientNodeHostnameUpdateCmd.MarkFlagRequired("name")
 }

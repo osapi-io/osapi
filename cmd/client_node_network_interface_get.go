@@ -88,7 +88,7 @@ func init() {
 	clientNodeNetworkInterfaceCmd.AddCommand(clientNodeNetworkInterfaceGetCmd)
 
 	clientNodeNetworkInterfaceGetCmd.PersistentFlags().
-		String("name", "", "Interface name (required)")
+		String("name", "", "Interface name")
 
 	_ = clientNodeNetworkInterfaceGetCmd.MarkPersistentFlagRequired("name")
 }

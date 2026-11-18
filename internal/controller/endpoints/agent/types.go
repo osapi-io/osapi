@@ -29,8 +29,8 @@ type GetInput struct {
 	Hostname string `json:"hostname" in:"path" validate:"required,min=1,max=255" doc:"The hostname of the agent to retrieve."`
 }
 
-// RemoveInput names the accepted agent to remove.
-type RemoveInput struct {
+// DeleteInput names the accepted agent to remove.
+type DeleteInput struct {
 	Hostname  string `json:"hostname"   in:"path"  validate:"required,min=1,max=255"  doc:"The hostname of the accepted agent to remove."`
 	MachineID string `json:"machine_id" in:"query" validate:"omitempty,min=1,max=255" doc:"The machine ID to remove, when more than one accepted agent has the hostname."`
 }

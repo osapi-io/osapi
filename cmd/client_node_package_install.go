@@ -79,7 +79,7 @@ func init() {
 	clientNodePackageCmd.AddCommand(clientNodePackageInstallCmd)
 
 	clientNodePackageInstallCmd.PersistentFlags().
-		String("name", "", "Name of the package to install (required)")
+		String("name", "", "Name of the package to install")
 
 	_ = clientNodePackageInstallCmd.MarkPersistentFlagRequired("name")
 }

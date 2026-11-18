@@ -17,9 +17,9 @@ osapi client node timezone update --target _all \
 
 ## Flags
 
-| Flag         | Description                                           | Default |
-| ------------ | ----------------------------------------------------- | ------- |
-| `--timezone` | IANA timezone name (required, e.g., America/New_York) |         |
+| Flag         | Description                                            | Default |
+| ------------ | ------------------------------------------------------ | ------- |
+| `--timezone` | IANA timezone name (e.g., America/New_York) (required) |         |
 
 ## Global flags
 

@@ -132,9 +132,9 @@ func init() {
 	clientNodeFileCmd.AddCommand(clientNodeFileDeployCmd)
 
 	clientNodeFileDeployCmd.PersistentFlags().
-		String("object", "", "Name of the file in the Object Store (required)")
+		String("object", "", "Name of the file in the Object Store")
 	clientNodeFileDeployCmd.PersistentFlags().
-		String("path", "", "Destination path on the target filesystem (required)")
+		String("path", "", "Destination path on the target filesystem")
 	clientNodeFileDeployCmd.PersistentFlags().
 		String("content-type", "raw", "Content type: raw or template (default raw)")
 	clientNodeFileDeployCmd.PersistentFlags().

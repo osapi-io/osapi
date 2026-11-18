@@ -27,9 +27,9 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
-// clientNodeLogQueryUnitCmd is run by `log query --unit`; it is not a command of
+// clientNodeLogListUnitCmd is run by `log list --unit`; it is not a command of
 // its own.
-var clientNodeLogQueryUnitCmd = &cobra.Command{
+var clientNodeLogListUnitCmd = &cobra.Command{
 	Use:   "unit",
 	Short: "Query journal entries for a unit",
 	Long:  `Query journal log entries for a specific systemd unit on the target node.`,

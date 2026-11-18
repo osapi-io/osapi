@@ -111,9 +111,9 @@ func init() {
 	clientContainerDockerCmd.AddCommand(clientContainerDockerExecCmd)
 
 	clientContainerDockerExecCmd.PersistentFlags().
-		String("id", "", "Container ID to exec in (required)")
+		String("id", "", "Container ID to exec in")
 	clientContainerDockerExecCmd.PersistentFlags().
-		StringSlice("command", []string{}, "Command to execute (required, comma-separated)")
+		StringSlice("command", []string{}, "Command to execute (comma-separated)")
 	clientContainerDockerExecCmd.PersistentFlags().
 		StringSlice("env", []string{}, "Environment variable in KEY=VALUE format (repeatable)")
 	clientContainerDockerExecCmd.PersistentFlags().

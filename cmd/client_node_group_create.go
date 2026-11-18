@@ -84,7 +84,7 @@ func init() {
 	clientNodeGroupCmd.AddCommand(clientNodeGroupCreateCmd)
 
 	clientNodeGroupCreateCmd.PersistentFlags().
-		String("name", "", "Group name (required)")
+		String("name", "", "Group name")
 	clientNodeGroupCreateCmd.PersistentFlags().
 		Int("gid", 0, "Numeric group ID (system assigns if omitted)")
 	clientNodeGroupCreateCmd.PersistentFlags().

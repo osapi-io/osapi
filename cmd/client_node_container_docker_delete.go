@@ -92,7 +92,7 @@ func init() {
 	clientContainerDockerCmd.AddCommand(clientContainerDockerDeleteCmd)
 
 	clientContainerDockerDeleteCmd.PersistentFlags().
-		String("id", "", "Container ID to remove (required)")
+		String("id", "", "Container ID to remove")
 	clientContainerDockerDeleteCmd.PersistentFlags().
 		Bool("force", false, "Force removal of a running container")
 

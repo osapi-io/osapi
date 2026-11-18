@@ -117,7 +117,7 @@ osapi client agent accept --hostname web-01 \
 osapi client agent reject --hostname web-01
 
 # Remove an enrolled agent: its key stops verifying at once
-osapi client agent remove --hostname web-01
+osapi client agent delete --hostname web-01
 
 # Show the local agent key fingerprint
 osapi client agent key fingerprint

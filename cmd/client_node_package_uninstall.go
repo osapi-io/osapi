@@ -79,7 +79,7 @@ func init() {
 	clientNodePackageCmd.AddCommand(clientNodePackageUninstallCmd)
 
 	clientNodePackageUninstallCmd.PersistentFlags().
-		String("name", "", "Name of the package to remove (required)")
+		String("name", "", "Name of the package to remove")
 
 	_ = clientNodePackageUninstallCmd.MarkPersistentFlagRequired("name")
 }

@@ -25,7 +25,7 @@ osapi client node container docker exec \
 
 | Flag            | Description                                           | Default |
 | --------------- | ----------------------------------------------------- | ------- |
-| `--command`     | Command to execute (required, comma-separated)        |         |
+| `--command`     | Command to execute (comma-separated) (required)       |         |
 | `--env`         | Environment variable in KEY=VALUE format (repeatable) |         |
 | `--id`          | Container ID to exec in (required)                    |         |
 | `--working-dir` | Working directory inside the container                |         |

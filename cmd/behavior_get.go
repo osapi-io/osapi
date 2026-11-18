@@ -550,7 +550,7 @@ func init() {
 	behaviorCmd.AddCommand(behaviorGetCmd)
 
 	behaviorGetCmd.Flags().
-		String("name", "", "The behavior, from 'osapi behavior list' (required)")
+		String("name", "", "The behavior, from 'osapi behavior list'")
 	behaviorGetCmd.Flags().
 		String("method", "", "One method to show in full: its fields, constraints and examples")
 	_ = behaviorGetCmd.MarkFlagRequired("name")

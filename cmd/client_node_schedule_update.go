@@ -98,7 +98,7 @@ func init() {
 	clientNodeScheduleCmd.AddCommand(clientNodeScheduleUpdateCmd)
 
 	clientNodeScheduleUpdateCmd.PersistentFlags().
-		String("name", "", "Name of the scheduled entry to update (required)")
+		String("name", "", "Name of the scheduled entry to update")
 	clientNodeScheduleUpdateCmd.PersistentFlags().
 		String("object", "", "New object to deploy")
 	clientNodeScheduleUpdateCmd.PersistentFlags().

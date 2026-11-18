@@ -77,7 +77,7 @@ func init() {
 	clientNodeScheduleCmd.AddCommand(clientNodeScheduleDeleteCmd)
 
 	clientNodeScheduleDeleteCmd.PersistentFlags().
-		String("name", "", "Name of the scheduled entry to delete (required)")
+		String("name", "", "Name of the scheduled entry to delete")
 
 	_ = clientNodeScheduleDeleteCmd.MarkPersistentFlagRequired("name")
 }

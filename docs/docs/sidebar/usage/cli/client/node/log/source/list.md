@@ -1,17 +1,17 @@
-# List Sources
+# List
 
 List available log sources.
 
 ```bash
-osapi client node log list-sources
+osapi client node log source list
 ```
 
 ## Examples
 
 ```bash
-osapi client node log list-sources --target web-01
-osapi client node log list-sources --target _all
-osapi client node log list-sources --target web-01 --json
+osapi client node log source list --target web-01
+osapi client node log source list --target _all
+osapi client node log source list --target web-01 --json
 ```
 
 ## Global flags
@@ -24,5 +24,5 @@ osapi client node log list-sources --target web-01 --json
 | `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
 | `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
 
-[Output](../../../output.md) tells how the result is printed, and what `--json`
-gives.
+[Output](../../../../output.md) tells how the result is printed, and what
+`--json` gives.

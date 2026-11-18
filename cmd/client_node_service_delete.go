@@ -89,7 +89,7 @@ func init() {
 	clientNodeServiceCmd.AddCommand(clientNodeServiceDeleteCmd)
 
 	clientNodeServiceDeleteCmd.PersistentFlags().
-		String("name", "", "Service unit name to delete (required)")
+		String("name", "", "Service unit name to delete")
 
 	_ = clientNodeServiceDeleteCmd.MarkPersistentFlagRequired("name")
 }

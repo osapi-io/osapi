@@ -82,7 +82,7 @@ func init() {
 	clientNodeTimezoneCmd.AddCommand(clientNodeTimezoneUpdateCmd)
 
 	clientNodeTimezoneUpdateCmd.PersistentFlags().
-		String("timezone", "", "IANA timezone name (required, e.g., America/New_York)")
+		String("timezone", "", "IANA timezone name (e.g., America/New_York)")
 
 	_ = clientNodeTimezoneUpdateCmd.MarkPersistentFlagRequired("timezone")
 }

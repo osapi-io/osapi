@@ -94,7 +94,7 @@ func (s *BehaviorcmdPublicTestSuite) TestFlags() {
 					Name:     "key",
 					JSON:     "key",
 					Kind:     reflect.String,
-					Usage:    "The key (required)",
+					Usage:    "The key",
 					Required: true,
 					Index:    0,
 				},

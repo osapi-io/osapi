@@ -60,7 +60,7 @@ func init() {
 	clientFileCmd.AddCommand(clientFileGetCmd)
 
 	clientFileGetCmd.PersistentFlags().
-		String("name", "", "Name of the file in the Object Store (required)")
+		String("name", "", "Name of the file in the Object Store")
 
 	_ = clientFileGetCmd.MarkPersistentFlagRequired("name")
 }

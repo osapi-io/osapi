@@ -87,7 +87,7 @@ func init() {
 	clientNodeServiceCmd.AddCommand(clientNodeServiceDisableCmd)
 
 	clientNodeServiceDisableCmd.PersistentFlags().
-		String("name", "", "Service name to disable (required)")
+		String("name", "", "Service name to disable")
 
 	_ = clientNodeServiceDisableCmd.MarkPersistentFlagRequired("name")
 }

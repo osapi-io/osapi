@@ -84,7 +84,7 @@ func init() {
 	clientNodeNetworkInterfaceCmd.AddCommand(clientNodeNetworkInterfaceDeleteCmd)
 
 	clientNodeNetworkInterfaceDeleteCmd.PersistentFlags().
-		String("name", "", "Interface name to delete (required)")
+		String("name", "", "Interface name to delete")
 
 	_ = clientNodeNetworkInterfaceDeleteCmd.MarkPersistentFlagRequired("name")
 }

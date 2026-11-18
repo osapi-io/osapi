@@ -110,7 +110,7 @@ var endpointGetCmd = &cobra.Command{
 
 func init() {
 	endpointCmd.AddCommand(endpointGetCmd)
-	endpointGetCmd.Flags().String("name", "", "The endpoint group, such as agent (required)")
+	endpointGetCmd.Flags().String("name", "", "The endpoint group, such as agent")
 	endpointGetCmd.Flags().
 		Bool("openapi", false, "Print the group's part of the OpenAPI spec as YAML")
 	_ = endpointGetCmd.MarkFlagRequired("name")

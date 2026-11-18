@@ -95,9 +95,9 @@ func init() {
 	clientNodeServiceCmd.AddCommand(clientNodeServiceCreateCmd)
 
 	clientNodeServiceCreateCmd.PersistentFlags().
-		String("name", "", "Service unit name (required)")
+		String("name", "", "Service unit name")
 	clientNodeServiceCreateCmd.PersistentFlags().
-		String("object", "", "Object store reference for the unit file (required)")
+		String("object", "", "Object store reference for the unit file")
 
 	_ = clientNodeServiceCreateCmd.MarkPersistentFlagRequired("name")
 	_ = clientNodeServiceCreateCmd.MarkPersistentFlagRequired("object")

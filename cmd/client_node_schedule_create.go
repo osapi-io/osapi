@@ -100,9 +100,9 @@ func init() {
 	clientNodeScheduleCmd.AddCommand(clientNodeScheduleCreateCmd)
 
 	clientNodeScheduleCreateCmd.PersistentFlags().
-		String("name", "", "Name for the scheduled entry (required)")
+		String("name", "", "Name for the scheduled entry")
 	clientNodeScheduleCreateCmd.PersistentFlags().
-		String("object", "", "Name of the uploaded file in the object store (required)")
+		String("object", "", "Name of the uploaded file in the object store")
 	clientNodeScheduleCreateCmd.PersistentFlags().
 		String("schedule", "", "Cron schedule expression, e.g. \"*/5 * * * *\"")
 	clientNodeScheduleCreateCmd.PersistentFlags().

@@ -86,7 +86,7 @@ func init() {
 	clientNodeGroupCmd.AddCommand(clientNodeGroupUpdateCmd)
 
 	clientNodeGroupUpdateCmd.PersistentFlags().
-		String("name", "", "Group name to update (required)")
+		String("name", "", "Group name to update")
 	clientNodeGroupUpdateCmd.PersistentFlags().
 		StringSlice("members", nil, "Group members (replaces existing, required)")
 

@@ -97,7 +97,7 @@ func init() {
 	clientNodeUserCmd.AddCommand(clientNodeUserCreateCmd)
 
 	clientNodeUserCreateCmd.PersistentFlags().
-		String("name", "", "Username for the new account (required)")
+		String("name", "", "Username for the new account")
 	clientNodeUserCreateCmd.PersistentFlags().
 		Int("uid", 0, "Numeric user ID (system assigns if omitted)")
 	clientNodeUserCreateCmd.PersistentFlags().

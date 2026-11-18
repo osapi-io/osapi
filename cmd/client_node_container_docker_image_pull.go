@@ -24,26 +24,27 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
-// clientNodeUserSetPasswordCmd represents the user set-password command.
-var clientNodeUserSetPasswordCmd = &cobra.Command{
-	Use:   "set-password",
-	Short: "Set a user's password",
-	Long: "The client sends the password to the controller in plaintext over TLS. The\n" +
-		"controller hashes it before it stores the job. The agent and the provider\n" +
-		"see only the hash. osapi never writes the plaintext to disk or to logs.",
-	Example: `  osapi client node user set-password --target web-01 \
-    --name deploy --password 'newpass123'
-  osapi client node user set-password --target _all \
-    --name deploy --password 'newpass123'`,
+// clientContainerDockerImagePullCmd represents the docker image pull command.
+var clientContainerDockerImagePullCmd = &cobra.Command{
+	Use:   "pull",
+	Short: "Pull a container image",
+	Example: `  osapi client node container docker image pull --image nginx:latest
+  osapi client node container docker image pull --image alpine:3.18
+  osapi client node container docker image pull \
+    --image registry.example.com/myapp:v1.2.3`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
-		name, _ := cmd.Flags().GetString("name")
-		password, _ := cmd.Flags().GetString("password")
+		image, _ := cmd.Flags().GetString("image")
 
-		resp, err := sdkClient.User.ChangePassword(ctx, host, name, password)
+		opts := client.DockerPullOpts{
+			Image: image,
+		}
+
+		resp, err := sdkClient.Docker.Pull(ctx, host, opts)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return
@@ -58,11 +59,12 @@ var clientNodeUserSetPasswordCmd = &cobra.Command{
 
 		cli.PrintTraceID(resp.TraceID())
 
-		results := make([]cli.ResultRow, 0, len(resp.Data.Results))
+		results := make([]cli.ResultRow, 0)
 		for _, r := range resp.Data.Results {
 			var errPtr *string
 			if r.Error != "" {
-				errPtr = &r.Error
+				e := r.Error
+				errPtr = &e
 			}
 			changed := r.Changed
 			results = append(results, cli.ResultRow{
@@ -70,10 +72,17 @@ var clientNodeUserSetPasswordCmd = &cobra.Command{
 				Status:   r.Status,
 				Changed:  &changed,
 				Error:    errPtr,
-				Fields:   []string{r.Name},
+				Fields: []string{
+					r.ImageID,
+					r.Tag,
+					cli.FormatBytes(int(r.Size)),
+				},
 			})
 		}
-		tr := cli.BuildMutationTable(results, []string{"NAME"})
+		tr := cli.BuildMutationTable(
+			results,
+			[]string{"IMAGE ID", "TAG", "SIZE"},
+		)
 		cli.PrintCompactTable(
 			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
 		)
@@ -81,13 +90,10 @@ var clientNodeUserSetPasswordCmd = &cobra.Command{
 }
 
 func init() {
-	clientNodeUserCmd.AddCommand(clientNodeUserSetPasswordCmd)
+	clientContainerDockerImageCmd.AddCommand(clientContainerDockerImagePullCmd)
 
-	clientNodeUserSetPasswordCmd.PersistentFlags().
-		String("name", "", "Username to change password for (required)")
-	clientNodeUserSetPasswordCmd.PersistentFlags().
-		String("password", "", "New password (hashed by the controller before storage) (required)")
+	clientContainerDockerImagePullCmd.PersistentFlags().
+		String("image", "", "Image reference to pull")
 
-	_ = clientNodeUserSetPasswordCmd.MarkPersistentFlagRequired("name")
-	_ = clientNodeUserSetPasswordCmd.MarkPersistentFlagRequired("password")
+	_ = clientContainerDockerImagePullCmd.MarkPersistentFlagRequired("image")
 }

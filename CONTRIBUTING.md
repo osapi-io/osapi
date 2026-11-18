@@ -230,6 +230,15 @@ The CLI reference pages under `docs/docs/sidebar/usage/cli/` are generated from
 the cobra commands. Do not edit them. Change the command in `cmd/`, then run
 `just cli-docs-generate`:
 
+- Each command under `osapi client` is `<resource> <verb>`, such as
+  `agent pending list` or `node log source list`. The verb is `list`, `get`,
+  `create`, `update` or `delete`, or an action that a CRUD verb does not say,
+  such as `drain`, `exec` or `restart`. A noun is never the verb: list a noun's
+  items with `list` under it. `TestCommandShape` in `cmd/help_style_test.go`
+  fails on a verb that is not in its lists; add an action there only for a real
+  action.
+- Mark a required flag with `MarkFlagRequired`. `--help` and the page say
+  "(required)" from it, so the flag's help does not.
 - `Short` is one line, and `Long` tells what the command does in a few
   sentences. `--help` shows both.
 - `Example` has one to three command lines, and no output.

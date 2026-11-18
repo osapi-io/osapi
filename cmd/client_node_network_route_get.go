@@ -98,7 +98,7 @@ func init() {
 	clientNodeNetworkRouteCmd.AddCommand(clientNodeNetworkRouteGetCmd)
 
 	clientNodeNetworkRouteGetCmd.PersistentFlags().
-		String("interface", "", "Interface name (required)")
+		String("interface", "", "Interface name")
 
 	_ = clientNodeNetworkRouteGetCmd.MarkPersistentFlagRequired("interface")
 }

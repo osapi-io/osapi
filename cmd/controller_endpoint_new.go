@@ -68,8 +68,8 @@ var endpointNewCmd = &cobra.Command{
 func init() {
 	endpointCmd.AddCommand(endpointNewCmd)
 	endpointNewCmd.Flags().
-		String("name", "", "The group's name: its path segment and CLI group (required)")
-	endpointNewCmd.Flags().String("description", "", "What the group is, in one line (required)")
+		String("name", "", "The group's name: its path segment and CLI group")
+	endpointNewCmd.Flags().String("description", "", "What the group is, in one line")
 	_ = endpointNewCmd.MarkFlagRequired("name")
 	_ = endpointNewCmd.MarkFlagRequired("description")
 }

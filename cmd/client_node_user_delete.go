@@ -78,7 +78,7 @@ func init() {
 	clientNodeUserCmd.AddCommand(clientNodeUserDeleteCmd)
 
 	clientNodeUserDeleteCmd.PersistentFlags().
-		String("name", "", "Name of the user account to delete (required)")
+		String("name", "", "Name of the user account to delete")
 
 	_ = clientNodeUserDeleteCmd.MarkPersistentFlagRequired("name")
 }

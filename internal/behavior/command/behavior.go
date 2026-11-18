@@ -80,10 +80,9 @@ func Flags(
 		if behavior.Secret(f) {
 			usage += " (secret: kept out of the audit log and traces)"
 		}
+		// A required flag says so through MarkFlagRequired, which --help
+		// shows, as each command's flag does.
 		required := hasRule(f.Tag.Get("validate"), "required")
-		if required {
-			usage += " (required)"
-		}
 
 		flags = append(flags, Flag{
 			Name:     strings.ReplaceAll(name, "_", "-"),

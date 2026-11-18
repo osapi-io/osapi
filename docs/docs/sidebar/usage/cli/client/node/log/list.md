@@ -1,30 +1,28 @@
-# Set Password
+# List
 
-Set a user's password.
-
-The client sends the password to the controller in plaintext over TLS. The
-controller hashes it before it stores the job. The agent and the provider see
-only the hash. osapi never writes the plaintext to disk or to logs.
+List journal entries.
 
 ```bash
-osapi client node user set-password
+osapi client node log list
 ```
 
 ## Examples
 
 ```bash
-osapi client node user set-password --target web-01 \
-  --name deploy --password 'newpass123'
-osapi client node user set-password --target _all \
-  --name deploy --password 'newpass123'
+osapi client node log list --target web-01
+osapi client node log list --target web-01 \
+  --lines 50 --since 1h --priority err
+osapi client node log list --target _all --lines 5
 ```
 
 ## Flags
 
-| Flag         | Description                                                       | Default |
-| ------------ | ----------------------------------------------------------------- | ------- |
-| `--name`     | Username to change password for (required)                        |         |
-| `--password` | New password (hashed by the controller before storage) (required) |         |
+| Flag         | Description                                                        | Default |
+| ------------ | ------------------------------------------------------------------ | ------- |
+| `--lines`    | Maximum number of log lines to return                              | `100`   |
+| `--priority` | Filter by priority level (e.g., 'err', 'warning', 'info')          |         |
+| `--since`    | Return entries since this time (e.g., '1h', '2026-01-01 00:00:00') |         |
+| `--unit`     | Only entries from this systemd unit, such as ssh                   |         |
 
 ## Global flags
 

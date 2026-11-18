@@ -89,9 +89,9 @@ func init() {
 	clientNodeUserSSHKeyCmd.AddCommand(clientNodeUserSSHKeyDeleteCmd)
 
 	clientNodeUserSSHKeyDeleteCmd.PersistentFlags().
-		String("name", "", "Username to remove SSH key from (required)")
+		String("name", "", "Username to remove SSH key from")
 	clientNodeUserSSHKeyDeleteCmd.PersistentFlags().
-		String("fingerprint", "", "Fingerprint of the SSH key to remove (required)")
+		String("fingerprint", "", "Fingerprint of the SSH key to remove")
 
 	_ = clientNodeUserSSHKeyDeleteCmd.MarkPersistentFlagRequired("name")
 	_ = clientNodeUserSSHKeyDeleteCmd.MarkPersistentFlagRequired("fingerprint")
