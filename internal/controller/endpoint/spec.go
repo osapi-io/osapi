@@ -264,7 +264,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindTag,
 			Name: `in:"body"`,
-			Does: "Makes the field's type the whole request body. Without it, the input's other fields are the body, as one object.",
+			Does: "Makes the field's type the whole request body. Without it, the input's other fields are the body, as one object. The body is optional unless the field is validate:\"required\".",
 			When: "When the body is a named schema, such as a retry request.",
 		},
 		{
