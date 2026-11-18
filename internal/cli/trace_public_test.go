@@ -87,15 +87,15 @@ func traceSpans() []client.TraceSpan {
 
 func (s *TracePublicTestSuite) TestTraceRows() {
 	s.Equal([][]string{
-		{"GET /api/x", "", "50ms", "ok", "200"},
-		{"├─ job.publish", "", "30ms", "ok", "jobs.query.web-01"},
-		{"│  └─ job.process", "web-01", "20ms", "failed", ""},
-		{"│     ├─ exec apt-get", "web-01", "10ms", "error", "exit status 100"},
-		{"│     └─ file.write", "web-01", "1ms", "ok", "/etc/x.conf"},
-		{"├─ job.collect", "", "19ms", "ok", ""},
-		{"├─ response.encode", "", "1ms", "ok", ""},
-		{"└─ response.write", "", "2ms", "ok", "1.5 KB"},
-		{"orphan", "", "1ms", "error", ""},
+		{"GET /api/x", "controller", "50ms", "ok", "status=200"},
+		{"├─ job.publish", "controller", "30ms", "ok", "subject=jobs.query.web-01"},
+		{"│  └─ job.process", "agent", "20ms", "failed", "host=web-01"},
+		{"│     ├─ exec apt-get", "agent", "10ms", "error", `error="exit status 100"`},
+		{"│     └─ file.write", "agent", "1ms", "ok", "path=/etc/x.conf"},
+		{"├─ job.collect", "controller", "19ms", "ok", ""},
+		{"├─ response.encode", "controller", "1ms", "ok", ""},
+		{"└─ response.write", "controller", "2ms", "ok", `size="1.5 KB"`},
+		{"orphan", "cli", "1ms", "error", ""},
 	}, cli.TraceRows(traceSpans(), true))
 }
 
@@ -179,14 +179,14 @@ func (s *TracePublicTestSuite) TestJobPublishDetail() {
 				"osapi.target":               "debian-1",
 				"messaging.destination.name": "osapi.jobs.query.host.d530664edc1c431eb5ef1e9dfd6617a5",
 			},
-			want: "behavior.sysctl.get to debian-1",
+			want: "op=behavior.sysctl.get target=debian-1",
 		},
 		{
 			name: "when an older trace has only the subject it shows the subject",
 			attrs: map[string]string{
 				"messaging.destination.name": "osapi.jobs.query._all",
 			},
-			want: "osapi.jobs.query._all",
+			want: "subject=osapi.jobs.query._all",
 		},
 	}
 
@@ -218,37 +218,37 @@ func (s *TracePublicTestSuite) TestJobReadDetail() {
 			name:  "when job.list has two jobs it says so",
 			span:  "job.list",
 			attrs: map[string]string{"job.count": "2", "job.status_filter": ""},
-			want:  "2 jobs",
+			want:  "jobs=2",
 		},
 		{
-			name:  "when job.list has one job the noun agrees",
+			name:  "when job.list has one job it counts it",
 			span:  "job.list",
 			attrs: map[string]string{"job.count": "1"},
-			want:  "1 job",
+			want:  "jobs=1",
 		},
 		{
 			name:  "when agent.list counts the agents it says so",
 			span:  "agent.list",
 			attrs: map[string]string{"osapi.agent.count": "3"},
-			want:  "3 agents",
+			want:  "agents=3",
 		},
 		{
-			name:  "when audit.list counts one entry the noun agrees",
+			name:  "when audit.list counts one entry it counts it",
 			span:  "audit.list",
 			attrs: map[string]string{"osapi.audit.count": "1"},
-			want:  "1 entry",
+			want:  "entries=1",
 		},
 		{
 			name:  "when enrollment.accept has only a fingerprint it shows it",
 			span:  "enrollment.accept",
 			attrs: map[string]string{"osapi.agent.fingerprint": "SHA256:ab"},
-			want:  "SHA256:ab",
+			want:  "fingerprint=SHA256:ab",
 		},
 		{
 			name:  "when validate.target has a target it shows it",
 			span:  "validate.target",
 			attrs: map[string]string{"osapi.target": "_all"},
-			want:  "_all",
+			want:  "target=_all",
 		},
 		{
 			name:  "when job.process has a job ID it does not show it",
@@ -260,7 +260,7 @@ func (s *TracePublicTestSuite) TestJobReadDetail() {
 			name:  "when job.get has a job ID it shows it",
 			span:  "job.get",
 			attrs: map[string]string{"job.id": "0162195c"},
-			want:  "0162195c",
+			want:  "job=0162195c",
 		},
 	}
 
@@ -273,17 +273,17 @@ func (s *TracePublicTestSuite) TestJobReadDetail() {
 
 func (s *TracePublicTestSuite) TestTraceRowsWithoutNATS() {
 	s.Equal([][]string{
-		{"POST /api/x", "", "1ms", "ok", "200"},
+		{"POST /api/x", "", "1ms", "ok", "status=200"},
 		{"├─ job.publish", "", "1ms", "ok", ""},
-		{"│  └─ job.process", "web-01", "1ms", "completed", ""},
+		{"│  └─ job.process", "", "1ms", "completed", "host=web-01"},
 		{
 			"│     └─ behavior.sysctl.create",
-			"web-01",
+			"",
 			"1ms",
 			"changed",
 			"key=vm.swappiness value=10",
 		},
-		{"│        └─ behavior.managedfile.get", "web-01", "1ms", "unchanged", ""},
+		{"│        └─ behavior.managedfile.get", "", "1ms", "unchanged", ""},
 		{"└─ job.collect", "", "1ms", "ok", ""},
 	}, cli.TraceRows(natsTrace(), false), "a span under a NATS span moves up to the span above it")
 
@@ -292,15 +292,78 @@ func (s *TracePublicTestSuite) TestTraceRowsWithoutNATS() {
 	s.Equal(13*time.Millisecond, took)
 }
 
+// TestSpanOn shows what ran each span, the role of its service, and the
+// host of an agent's job as host= in its DETAIL, so each column says one
+// kind of thing.
+func (s *TracePublicTestSuite) TestSpanOn() {
+	at := time.Now()
+	rows := cli.TraceRows([]client.TraceSpan{
+		{
+			ID:         "a",
+			Name:       "POST /api/x",
+			Service:    "osapi-controller",
+			Start:      at,
+			Attributes: map[string]string{},
+		},
+		{
+			ID:         "b",
+			ParentID:   "a",
+			Name:       "nats.publish",
+			Service:    "osapi-controller",
+			Start:      at.Add(1),
+			Attributes: map[string]string{},
+		},
+		{
+			ID:         "c",
+			ParentID:   "b",
+			Name:       "nats.process",
+			Service:    "osapi-agent",
+			Start:      at.Add(2),
+			Attributes: map[string]string{},
+		},
+		{
+			ID: "d", ParentID: "c", Name: "job.process", Service: "osapi-agent", Start: at.Add(3),
+			Attributes: map[string]string{"osapi.agent.hostname": "web-01"},
+		},
+		{
+			ID:         "e",
+			Name:       "osapi client node hostname get",
+			Service:    "osapi-cli",
+			Start:      at.Add(4),
+			Attributes: map[string]string{},
+		},
+		{
+			ID:         "f",
+			Name:       "other",
+			Service:    "jaeger",
+			Start:      at.Add(5),
+			Attributes: map[string]string{},
+		},
+	}, true)
+
+	on, detail := map[string]string{}, map[string]string{}
+	for _, r := range rows {
+		name := strings.TrimLeft(r[0], "├└│─ ")
+		on[name], detail[name] = r[1], r[4]
+	}
+	s.Equal("controller", on["POST /api/x"])
+	s.Equal("controller", on["nats.publish"])
+	s.Equal("agent", on["nats.process"])
+	s.Equal("agent", on["job.process"])
+	s.Equal("host=web-01", detail["job.process"], "the host is a key=value in DETAIL")
+	s.Equal("cli", on["osapi client node hostname get"])
+	s.Equal("jaeger", on["other"], "a service that is not osapi's keeps its name")
+}
+
 func (s *TracePublicTestSuite) TestKeyMeanings() {
 	details := map[string]string{}
 	for _, r := range cli.TraceRows(natsTrace(), true) {
 		details[strings.TrimLeft(r[0], "│├└─ ")+" "+r[4]] = r[4]
 	}
 	for _, want := range []string{
-		"kv.put job", "kv.get registration", "kv.get facts", "kv.get drain flag",
-		"kv.keys list keys in osapi-job-queue", "kv.put status: started", "kv.put timeline: drain",
-		"kv.put file record", "kv.get other.key", "kv.put response", "kv.watch answers",
+		"kv.put key=job", "kv.get key=registration", "kv.get key=facts", `kv.get key="drain flag"`,
+		"kv.keys bucket=osapi-job-queue", `kv.put key="status: started"`, `kv.put key="timeline: drain"`,
+		`kv.put key="file record"`, "kv.get key=other.key", "kv.put key=response", "kv.watch key=answers",
 	} {
 		s.Contains(details, want)
 	}

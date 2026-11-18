@@ -107,7 +107,7 @@ func renderTrace(
 	rows := cli.TraceRows(spans, all)
 	cli.PrintCompactTable([]cli.Section{{
 		Title:     "Spans (" + strconv.Itoa(len(rows)) + ")",
-		Headers:   []string{"SPAN", "HOSTNAME", "DURATION", "STATUS", "DETAIL"},
+		Headers:   []string{"SPAN", "ON", "DURATION", "STATUS", "DETAIL"},
 		Rows:      rows,
 		Reference: true,
 	}})

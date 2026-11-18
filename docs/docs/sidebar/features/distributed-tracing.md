@@ -82,20 +82,26 @@ its own under it, for example `behavior.managedfile.update` under
 that a behavior can make. The tree above leaves out the `kv.put` of each status
 event.
 
-| Span                                         | Service            | Attributes that tell you the most                                                                   |
-| -------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------- |
-| the command                                  | `osapi-cli`        | The name is the command                                                                             |
-| `GET /api/...`                               | `osapi-controller` | `http.route`, `http.response.status_code`, `osapi.target`                                           |
-| `job.publish`                                | `osapi-controller` | `job.id`, `job.type`, `osapi.target`, `messaging.destination.name`                                  |
-| `job.collect`                                | `osapi-controller` | `job.expected`, `job.answered`, `job.timed_out`; a `job.timeout` event names each silent agent      |
-| `response.encode`                            | `osapi-controller` | The time to encode the answer as JSON                                                               |
-| `response.write`                             | `osapi-controller` | `http.response.body.size`. The time to write the answer; a slow network or client makes it long     |
-| `job.process`                                | `osapi-agent`      | `osapi.agent.hostname`, `osapi.agent.machine_id`, `host.arch`, `job.status`, `job.changed`          |
-| `behavior.<name>.<method>`                   | `osapi-agent`      | `osapi.behavior.name`, `osapi.behavior.method`, `osapi.behavior.outcome`                            |
-| `exec <program>`                             | `osapi-agent`      | `process.executable.name`, `osapi.exec.sudo`, `process.exit.code`. The arguments are not recorded   |
-| `file.write`, `file.remove`, `file.chmod`    | `osapi-agent`      | `file.path`, and `file.mode` and `file.size` where they apply. The content is not recorded          |
-| `kv.<op>`, `objectstore.<op>`, `stream.<op>` | both               | `db.operation.name`, `db.namespace` (the bucket or the stream), `nats.kv.key` or `nats.object.name` |
-| `nats.publish`, `nats.process`               | both               | `messaging.destination.name`, the subject                                                           |
+| Span                                                            | Service            | Attributes that tell you the most                                                                   |
+| --------------------------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------- |
+| the command                                                     | `osapi-cli`        | The name is the command                                                                             |
+| `GET /api/...`                                                  | `osapi-controller` | `http.route`, `http.response.status_code`, `osapi.target`                                           |
+| `job.publish`                                                   | `osapi-controller` | `job.id`, `job.type`, `osapi.target`, `messaging.destination.name`                                  |
+| `job.collect`                                                   | `osapi-controller` | `job.expected`, `job.answered`, `job.timed_out`; a `job.timeout` event names each silent agent      |
+| `response.encode`                                               | `osapi-controller` | The time to encode the answer as JSON                                                               |
+| `response.write`                                                | `osapi-controller` | `http.response.body.size`. The time to write the answer; a slow network or client makes it long     |
+| `validate.target`, `target.resolve`                             | `osapi-controller` | `osapi.target`. A refresh of the agent cache that checks or resolves a target                       |
+| `job.list`, `job.get`, `job.summary`, `job.retry`, `job.delete` | `osapi-controller` | `job.count` or `job.id`. A read or change of the job bucket, with its NATS calls under it           |
+| `agent.list`, `agent.get`, `agent.timeline`                     | `osapi-controller` | `osapi.agent.count` or `osapi.target`. A read of the agent registry                                 |
+| `enrollment.list`, `.accept`, `.reject`, `.remove`              | `osapi-controller` | `osapi.agent.count` or `osapi.agent.hostname`                                                       |
+| `audit.list`, `audit.get`, `audit.export`                       | `osapi-controller` | `osapi.audit.count` or `osapi.audit.id`                                                             |
+| `traces.read`                                                   | `osapi-controller` | `osapi.trace.id`, `osapi.trace.spans`. The read of a trace from Jaeger                              |
+| `job.process`                                                   | `osapi-agent`      | `osapi.agent.hostname`, `osapi.agent.machine_id`, `host.arch`, `job.status`, `job.changed`          |
+| `behavior.<name>.<method>`                                      | `osapi-agent`      | `osapi.behavior.name`, `osapi.behavior.method`, `osapi.behavior.outcome`                            |
+| `exec <program>`                                                | `osapi-agent`      | `process.executable.name`, `osapi.exec.sudo`, `process.exit.code`. The arguments are not recorded   |
+| `file.write`, `file.remove`, `file.chmod`                       | `osapi-agent`      | `file.path`, and `file.mode` and `file.size` where they apply. The content is not recorded          |
+| `kv.<op>`, `objectstore.<op>`, `stream.<op>`                    | both               | `db.operation.name`, `db.namespace` (the bucket or the stream), `nats.kv.key` or `nats.object.name` |
+| `nats.publish`, `nats.process`                                  | both               | `messaging.destination.name`, the subject                                                           |
 
 Each span has `service.version`, the version of the binary that made it.
 
@@ -125,30 +131,33 @@ osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9
 
 ```text
 Trace:
-  ID:        0f91d3706eb84f9b3d4c211d7e6ebbca
+  ID:        26e448c9dbe1c4a8d216a98c675079c9
   Started:   2026-11-15 15:18:49
   Duration:  20ms
   Services:  osapi-controller, osapi-agent
 
 Spans (8):
-  SPAN                                     HOSTNAME  DURATION  STATUS     DETAIL
-  POST /api/next/node/:hostname/sysctl               20ms      ok         200
-  ├─ job.publish                                     2ms       ok         behavior.sysctl.create to debian-1
-  │  └─ job.process                        debian-1  11ms      completed
-  │     └─ behavior.sysctl.create          debian-1  5ms       changed    key=vm.swappiness
-  │        ├─ behavior.managedfile.update  debian-1  1ms       changed
-  │        │  └─ file.write                debian-1  147µs     ok         /etc/sysctl.d/osapi-vm.swappiness.conf
-  │        └─ exec sysctl                  debian-1  3ms       ok
-  └─ job.collect                                     12ms      ok
+  SPAN                                     ON          DURATION  STATUS     DETAIL
+  POST /api/next/node/:hostname/sysctl     controller  20ms      ok         status=200
+  ├─ job.publish                           controller  2ms       ok         op=behavior.sysctl.create target=debian-1
+  │  └─ job.process                        agent       11ms      completed  host=debian-1
+  │     └─ behavior.sysctl.create          agent       5ms       changed    key=vm.swappiness
+  │        ├─ behavior.managedfile.update  agent       1ms       changed
+  │        │  └─ file.write                agent       147µs     ok         path=/etc/sysctl.d/osapi-vm.swappiness.conf
+  │        └─ exec sysctl                  agent       3ms       ok
+  └─ job.collect                           controller  12ms      ok
   11 NATS calls left out, 20ms in all; --all shows them.
 ```
 
-- **HOSTNAME** is the agent of the `job.process` above the span.
+- **ON** is what ran the span, the role of the service that made it:
+  `controller`, `agent` or `cli`.
 - **STATUS** is the job status on a `job.process`, `changed` or `unchanged` on a
   behavior write, and `ok` or `error` on the other spans.
-- **DETAIL** is the error of a failed span. On the other spans, it is what the
-  span acted on: the inputs that a behavior records, a file, the operation and
-  target of a job, or the size of the answer.
+- **DETAIL** is what the span acted on, as `key=value` pairs, so each value says
+  what it is: `host=` on a `job.process`, the inputs that a behavior records,
+  `path=` of a file, `op=` and `target=` of a job, `size=` of the answer. A
+  failed span leads with `error=`. A value with a space is quoted, as in logfmt.
+  `--json` gives each span's whole `attributes` map instead.
 
 The NATS calls are the bookkeeping of the job queue: the agent reads the job,
 writes its status as it goes, and writes its answer. The command leaves them out
