@@ -23,6 +23,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"maps"
+	"slices"
 	"time"
 
 	"github.com/osapi-io/osapi/internal/controller/api/apierr"
@@ -75,17 +77,15 @@ func Get(
 	}
 
 	out := summary(qj)
-	if len(qj.Responses) > 0 {
-		out.Responses = make(map[string]Response, len(qj.Responses))
-		for hostname, r := range qj.Responses {
-			out.Responses[hostname] = Response{
-				Status:   string(r.Status),
-				Data:     decode(r.Data),
-				Changed:  r.Changed,
-				Error:    r.Error,
-				Hostname: r.Hostname,
-			}
-		}
+	for _, hostname := range slices.Sorted(maps.Keys(qj.Responses)) {
+		r := qj.Responses[hostname]
+		out.Responses = append(out.Responses, Response{
+			Hostname: hostname,
+			Status:   string(r.Status),
+			Changed:  r.Changed,
+			Error:    r.Error,
+			Data:     decode(r.Data),
+		})
 	}
 	for _, te := range qj.Timeline {
 		out.Timeline = append(out.Timeline, TimelineEvent{
@@ -96,15 +96,14 @@ func Get(
 			Error:     te.Error,
 		})
 	}
-	if len(qj.AgentStates) > 0 {
-		out.AgentStates = make(map[string]AgentState, len(qj.AgentStates))
-		for hostname, s := range qj.AgentStates {
-			out.AgentStates[hostname] = AgentState{
-				Status:   s.Status,
-				Error:    s.Error,
-				Duration: s.Duration,
-			}
-		}
+	for _, hostname := range slices.Sorted(maps.Keys(qj.AgentStates)) {
+		s := qj.AgentStates[hostname]
+		out.AgentStates = append(out.AgentStates, AgentState{
+			Hostname: hostname,
+			Status:   s.Status,
+			Duration: s.Duration,
+			Error:    s.Error,
+		})
 	}
 
 	return out, nil
@@ -159,18 +158,39 @@ func Retry(
 func summary(
 	qj *job.QueuedJob,
 ) JobDetailResponse {
+	// A job stored before targets were kept has only the host that
+	// answered.
+	target := qj.Target
+	if target == "" {
+		target = qj.Hostname
+	}
+
 	return JobDetailResponse{
 		ID:        qj.ID,
 		Status:    qj.Status,
 		Created:   qj.Created,
-		Operation: redactOperation(qj.Operation),
-		Result:    decode(qj.Result),
+		Target:    target,
+		Operation: operation(qj.Operation),
+		Hostname:  qj.Hostname,
+		UpdatedAt: qj.UpdatedAt,
 		Changed:   qj.Changed,
 		Error:     qj.Error,
-		Hostname:  qj.Hostname,
-		Target:    qj.Target,
-		UpdatedAt: qj.UpdatedAt,
+		Result:    decode(qj.Result),
 	}
+}
+
+// operation is the stored operation of a job, with its secrets masked, as
+// its type and its data. It is nil for a job with no operation.
+func operation(
+	stored map[string]any,
+) *Operation {
+	redacted := redactOperation(stored)
+	if redacted == nil {
+		return nil
+	}
+	kind, _ := redacted["type"].(string)
+
+	return &Operation{Type: kind, Data: redacted["data"]}
 }
 
 // decode is the value of raw JSON, or nil when there is none.

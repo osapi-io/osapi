@@ -102,11 +102,3 @@ func ExportRenderCell(
 ) string {
 	return renderCell(header, cell)
 }
-
-// ExportPrintObject exposes printObject for testing.
-func ExportPrintObject(
-	title string,
-	v any,
-) {
-	printObject(title, v)
-}

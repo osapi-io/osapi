@@ -7642,17 +7642,21 @@ components:
     JobDetailResponse:
       properties:
         agent_states:
-          additionalProperties:
+          description: How far each agent got, by hostname.
+          items:
             properties:
               duration:
                 type: string
               error:
                 type: string
+              hostname:
+                type: string
               status:
                 type: string
+            required:
+              - hostname
             type: object
-          description: Per-agent processing state for broadcast jobs.
-          type: object
+          type: array
         changed:
           description: >-
             Whether the operation modified system state. Null for pending/failed
@@ -7674,11 +7678,19 @@ components:
           x-oapi-codegen-extra-tags:
             validate: uuid
         operation:
-          additionalProperties: true
-          description: The operation data.
+          description: What the job asked for, with each secret masked.
+          properties:
+            data:
+              description: The data of the operation, with each secret masked.
+            type:
+              description: The operation, such as node.hostname.get.
+              type: string
+          required:
+            - type
           type: object
         responses:
-          additionalProperties:
+          description: What each agent answered, by hostname.
+          items:
             properties:
               changed:
                 type: boolean
@@ -7690,9 +7702,10 @@ components:
                 type: string
               status:
                 type: string
+            required:
+              - hostname
             type: object
-          description: Per-agent response data for broadcast jobs.
-          type: object
+          type: array
         result:
           description: The result data if completed.
         status:
@@ -7701,7 +7714,8 @@ components:
         target:
           description: >-
             The target the request gave: _any, _all, a hostname, or a label such
-            as group:web.dev.
+            as group:web.dev. A job stored before targets were kept has the host
+            that answered.
           type: string
         timeline:
           description: Chronological sequence of job lifecycle events.

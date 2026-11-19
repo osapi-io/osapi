@@ -100,39 +100,44 @@ func (suite *JobTypesPublicTestSuite) TestJobDetailFromGen() {
 				created := "2026-03-04T12:00:00Z"
 				updatedAt := "2026-03-04T12:01:00Z"
 				errMsg := "something failed"
-				operation := map[string]interface{}{"type": "node.hostname"}
+				target := "_all"
+				operation := struct {
+					Data interface{} `json:"data,omitempty"`
+					Type string      `json:"type"`
+				}{Type: "node.hostname", Data: map[string]interface{}{"x": 1}}
 				result := map[string]interface{}{"hostname": "web-01"}
 				changed := true
 
 				agentStatus := "completed"
 				agentDuration := "1.5s"
 				agentError := ""
-				agentStates := map[string]struct {
+				agentStates := []struct {
 					Duration *string `json:"duration,omitempty"`
 					Error    *string `json:"error,omitempty"`
+					Hostname string  `json:"hostname"`
 					Status   *string `json:"status,omitempty"`
 				}{
-					"web-01": {
+					{
+						Hostname: "web-01",
 						Status:   &agentStatus,
 						Duration: &agentDuration,
 						Error:    &agentError,
 					},
 				}
 
-				respHostname := "web-01"
 				respStatus := "completed"
 				respError := ""
 				respChanged := true
 				respData := map[string]interface{}{"hostname": "web-01"}
-				responses := map[string]struct {
+				responses := []struct {
 					Changed  *bool       `json:"changed,omitempty"`
 					Data     interface{} `json:"data,omitempty"`
 					Error    *string     `json:"error,omitempty"`
-					Hostname *string     `json:"hostname,omitempty"`
+					Hostname string      `json:"hostname"`
 					Status   *string     `json:"status,omitempty"`
 				}{
-					"web-01": {
-						Hostname: &respHostname,
+					{
+						Hostname: "web-01",
 						Status:   &respStatus,
 						Error:    &respError,
 						Changed:  &respChanged,
@@ -165,6 +170,7 @@ func (suite *JobTypesPublicTestSuite) TestJobDetailFromGen() {
 					Id:          &id,
 					Status:      &status,
 					Hostname:    &hostname,
+					Target:      &target,
 					Created:     &created,
 					UpdatedAt:   &updatedAt,
 					Error:       &errMsg,
@@ -183,25 +189,30 @@ func (suite *JobTypesPublicTestSuite) TestJobDetailFromGen() {
 				suite.Equal("2026-03-04T12:00:00Z", j.Created)
 				suite.Equal("2026-03-04T12:01:00Z", j.UpdatedAt)
 				suite.Equal("something failed", j.Error)
-				suite.Equal(map[string]interface{}{"type": "node.hostname"}, j.Operation)
+				suite.Equal("_all", j.Target)
+				suite.Equal(&client.JobRequest{
+					Type: "node.hostname",
+					Data: map[string]interface{}{"x": 1},
+				}, j.Operation)
 				suite.Equal(map[string]interface{}{"hostname": "web-01"}, j.Result)
 				suite.NotNil(j.Changed)
 				suite.True(*j.Changed)
 
 				suite.Len(j.AgentStates, 1)
-				suite.Equal("completed", j.AgentStates["web-01"].Status)
-				suite.Equal("1.5s", j.AgentStates["web-01"].Duration)
-				suite.Empty(j.AgentStates["web-01"].Error)
+				suite.Equal("web-01", j.AgentStates[0].Hostname)
+				suite.Equal("completed", j.AgentStates[0].Status)
+				suite.Equal("1.5s", j.AgentStates[0].Duration)
+				suite.Empty(j.AgentStates[0].Error)
 
 				suite.Len(j.Responses, 1)
-				suite.Equal("web-01", j.Responses["web-01"].Hostname)
-				suite.Equal("completed", j.Responses["web-01"].Status)
-				suite.Empty(j.Responses["web-01"].Error)
-				suite.NotNil(j.Responses["web-01"].Changed)
-				suite.True(*j.Responses["web-01"].Changed)
+				suite.Equal("web-01", j.Responses[0].Hostname)
+				suite.Equal("completed", j.Responses[0].Status)
+				suite.Empty(j.Responses[0].Error)
+				suite.NotNil(j.Responses[0].Changed)
+				suite.True(*j.Responses[0].Changed)
 				suite.Equal(
 					map[string]interface{}{"hostname": "web-01"},
-					j.Responses["web-01"].Data,
+					j.Responses[0].Data,
 				)
 
 				suite.Len(j.Timeline, 1)

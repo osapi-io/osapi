@@ -5,11 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
-/**
- * Per-agent processing state for broadcast jobs.
- */
-export type JobDetailResponseAgentStates = {[key: string]: {
+export type JobDetailResponseAgentStatesItem = {
   duration?: string;
   error?: string;
+  hostname: string;
   status?: string;
-}};
+};

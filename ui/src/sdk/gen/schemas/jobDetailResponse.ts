@@ -4,14 +4,14 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { JobDetailResponseAgentStates } from './jobDetailResponseAgentStates';
+import type { JobDetailResponseAgentStatesItem } from './jobDetailResponseAgentStatesItem';
 import type { JobDetailResponseOperation } from './jobDetailResponseOperation';
-import type { JobDetailResponseResponses } from './jobDetailResponseResponses';
+import type { JobDetailResponseResponsesItem } from './jobDetailResponseResponsesItem';
 import type { JobDetailResponseTimelineItem } from './jobDetailResponseTimelineItem';
 
 export interface JobDetailResponse {
-  /** Per-agent processing state for broadcast jobs. */
-  agent_states?: JobDetailResponseAgentStates;
+  /** How far each agent got, by hostname. */
+  agent_states?: JobDetailResponseAgentStatesItem[];
   /** Whether the operation modified system state. Null for pending/failed jobs; true/false for completed jobs. */
   changed?: boolean;
   /** Creation timestamp. */
@@ -22,15 +22,15 @@ export interface JobDetailResponse {
   hostname?: string;
   /** Unique identifier of the job. */
   id?: string;
-  /** The operation data. */
+  /** What the job asked for, with each secret masked. */
   operation?: JobDetailResponseOperation;
-  /** Per-agent response data for broadcast jobs. */
-  responses?: JobDetailResponseResponses;
+  /** What each agent answered, by hostname. */
+  responses?: JobDetailResponseResponsesItem[];
   /** The result data if completed. */
   result?: unknown;
   /** Current status of the job. */
   status?: string;
-  /** The target the request gave: _any, _all, a hostname, or a label such as group:web.dev. */
+  /** The target the request gave: _any, _all, a hostname, or a label such as group:web.dev. A job stored before targets were kept has the host that answered. */
   target?: string;
   /** Chronological sequence of job lifecycle events. */
   timeline?: JobDetailResponseTimelineItem[];

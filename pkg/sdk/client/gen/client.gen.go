@@ -3034,10 +3034,11 @@ type InterfaceMutationResponse struct {
 
 // JobDetailResponse defines model for JobDetailResponse.
 type JobDetailResponse struct {
-	// AgentStates Per-agent processing state for broadcast jobs.
-	AgentStates *map[string]struct {
+	// AgentStates How far each agent got, by hostname.
+	AgentStates *[]struct {
 		Duration *string `json:"duration,omitempty"`
 		Error    *string `json:"error,omitempty"`
+		Hostname string  `json:"hostname"`
 		Status   *string `json:"status,omitempty"`
 	} `json:"agent_states,omitempty"`
 
@@ -3056,17 +3057,23 @@ type JobDetailResponse struct {
 	// Id Unique identifier of the job.
 	Id *openapi_types.UUID `json:"id,omitempty" validate:"uuid"`
 
-	// Operation The operation data.
-	Operation *map[string]interface{} `json:"operation,omitempty"`
+	// Operation What the job asked for, with each secret masked.
+	Operation *struct {
+		// Data The data of the operation, with each secret masked.
+		Data interface{} `json:"data,omitempty"`
 
-	// Responses Per-agent response data for broadcast jobs.
-	Responses *map[string]struct {
+		// Type The operation, such as node.hostname.get.
+		Type string `json:"type"`
+	} `json:"operation,omitempty"`
+
+	// Responses What each agent answered, by hostname.
+	Responses *[]struct {
 		Changed *bool `json:"changed,omitempty"`
 
 		// Data Agent result data.
 		Data     interface{} `json:"data,omitempty"`
 		Error    *string     `json:"error,omitempty"`
-		Hostname *string     `json:"hostname,omitempty"`
+		Hostname string      `json:"hostname"`
 		Status   *string     `json:"status,omitempty"`
 	} `json:"responses,omitempty"`
 
@@ -3076,7 +3083,7 @@ type JobDetailResponse struct {
 	// Status Current status of the job.
 	Status *string `json:"status,omitempty"`
 
-	// Target The target the request gave: _any, _all, a hostname, or a label such as group:web.dev.
+	// Target The target the request gave: _any, _all, a hostname, or a label such as group:web.dev. A job stored before targets were kept has the host that answered.
 	Target *string `json:"target,omitempty"`
 
 	// Timeline Chronological sequence of job lifecycle events.

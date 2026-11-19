@@ -194,14 +194,11 @@ function ObjectKV({ v }: { v: unknown }) {
  * The Jobs page and a Configure result's job panel both show it.
  */
 export function JobView({ job }: { job: JobDetailResponse }) {
-  const states = Object.entries(job.agent_states ?? {}).sort(([a], [b]) =>
-    a.localeCompare(b),
-  );
-  const responses = Object.entries(job.responses ?? {}).sort(([a], [b]) =>
-    a.localeCompare(b),
-  );
+  // The API sorts both by hostname.
+  const states = job.agent_states ?? [];
+  const responses = job.responses ?? [];
   const count = (status: string) =>
-    states.filter(([, s]) => s.status === status).length;
+    states.filter((s) => s.status === status).length;
   const skipped = count("skipped");
 
   return (
@@ -246,19 +243,19 @@ export function JobView({ job }: { job: JobDetailResponse }) {
           <SectionLabel>Agent Responses</SectionLabel>
           <DataTable
             rows={responses}
-            getRowKey={([h]) => h}
+            getRowKey={(r) => r.hostname}
             columns={[
-              { header: "Hostname", cell: ([h]) => h },
+              { header: "Hostname", cell: (r) => r.hostname },
               {
                 header: "Status",
-                cell: ([, r]) => (
+                cell: (r) => (
                   <Badge variant={statusVariant(r.status)}>{r.status}</Badge>
                 ),
               },
-              { header: "Data", cell: ([, r]) => summarize(r.data) },
+              { header: "Data", cell: (r) => summarize(r.data) },
               {
                 header: "Error",
-                cell: ([, r]) => (
+                cell: (r) => (
                   <span className="text-status-error">{r.error}</span>
                 ),
               },
@@ -272,18 +269,18 @@ export function JobView({ job }: { job: JobDetailResponse }) {
           <SectionLabel>Agent States</SectionLabel>
           <DataTable
             rows={states}
-            getRowKey={([h]) => h}
+            getRowKey={(st) => st.hostname}
             columns={[
-              { header: "Hostname", cell: ([h]) => h },
+              { header: "Hostname", cell: (st) => st.hostname },
               {
                 header: "Status",
-                cell: ([, st]) => (
+                cell: (st) => (
                   <Badge variant={statusVariant(st.status)}>{st.status}</Badge>
                 ),
               },
               {
                 header: "Duration",
-                cell: ([, st]) => (
+                cell: (st) => (
                   <span className="text-text-muted">
                     {formatDuration(st.duration)}
                   </span>
@@ -291,7 +288,7 @@ export function JobView({ job }: { job: JobDetailResponse }) {
               },
               {
                 header: "Error",
-                cell: ([, st]) => (
+                cell: (st) => (
                   <span className="text-status-error">{st.error}</span>
                 ),
               },
