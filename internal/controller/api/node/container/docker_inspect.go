@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/container/gen"
@@ -68,6 +70,9 @@ func (s *Container) GetNodeContainerDockerByID(
 	)
 	if err != nil {
 		errMsg := err.Error()
+		if apierr.IsMissing(err) {
+			return gen.GetNodeContainerDockerByID404JSONResponse{Error: &errMsg}, nil
+		}
 		return gen.GetNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
 	}
 

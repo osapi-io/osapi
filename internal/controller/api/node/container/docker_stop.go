@@ -24,6 +24,8 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/container/gen"
@@ -85,6 +87,9 @@ func (s *Container) PostNodeContainerDockerStop(
 	)
 	if err != nil {
 		errMsg := err.Error()
+		if apierr.IsMissing(err) {
+			return gen.PostNodeContainerDockerStop404JSONResponse{Error: &errMsg}, nil
+		}
 		return gen.PostNodeContainerDockerStop500JSONResponse{Error: &errMsg}, nil
 	}
 

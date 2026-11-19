@@ -208,6 +208,29 @@ func (s *NetworkInterfaceUpdatePutPublicTestSuite) TestPutNodeNetworkInterface()
 			},
 		},
 		{
+			name: "when the host does not have it, it is a 404",
+			request: gen.PutNodeNetworkInterfaceRequestObject{
+				Hostname: "server1",
+				Name:     "eth0",
+				Body:     &gen.InterfaceConfigRequest{Dhcp4: &trueVal},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"network",
+						job.OperationNetworkInterfaceUpdate,
+						gomock.Any(),
+					).
+					Return("", nil, fmt.Errorf("on server1: %w", job.ErrNotFound))
+			},
+			validateFunc: func(resp gen.PutNodeNetworkInterfaceResponseObject) {
+				_, ok := resp.(gen.PutNodeNetworkInterface404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "when job skipped",
 			request: gen.PutNodeNetworkInterfaceRequestObject{
 				Hostname: "server1",

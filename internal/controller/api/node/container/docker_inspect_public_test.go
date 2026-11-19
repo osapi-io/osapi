@@ -175,6 +175,28 @@ func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerDockerByID() {
 			},
 		},
 		{
+			name: "when the host does not have it, it is a 404",
+			request: gen.GetNodeContainerDockerByIDRequestObject{
+				Hostname: "server1",
+				Id:       "abc123",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(
+						gomock.Any(),
+						"server1",
+						"docker",
+						job.OperationDockerInspect,
+						gomock.Any(),
+					).
+					Return("", nil, fmt.Errorf("on server1: %w", job.ErrNotFound))
+			},
+			validateFunc: func(resp gen.GetNodeContainerDockerByIDResponseObject) {
+				_, ok := resp.(gen.GetNodeContainerDockerByID404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "when job skipped",
 			request: gen.GetNodeContainerDockerByIDRequestObject{
 				Hostname: "server1",

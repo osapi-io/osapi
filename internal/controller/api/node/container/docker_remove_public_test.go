@@ -199,6 +199,29 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 			},
 		},
 		{
+			name: "when the host does not have it, it is a 404",
+			request: gen.DeleteNodeContainerDockerByIDRequestObject{
+				Hostname: "server1",
+				Id:       "abc123",
+				Params:   gen.DeleteNodeContainerDockerByIDParams{},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"docker",
+						job.OperationDockerRemove,
+						gomock.Any(),
+					).
+					Return("", nil, fmt.Errorf("on server1: %w", job.ErrNotFound))
+			},
+			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
+				_, ok := resp.(gen.DeleteNodeContainerDockerByID404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "when job skipped",
 			request: gen.DeleteNodeContainerDockerByIDRequestObject{
 				Hostname: "server1",

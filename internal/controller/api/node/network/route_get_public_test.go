@@ -149,6 +149,21 @@ func (s *NetworkRouteGetPublicTestSuite) TestGetNodeNetworkRouteByInterface() {
 			},
 		},
 		{
+			name: "when the host does not have it, it is a 404",
+			request: gen.GetNodeNetworkRouteByInterfaceRequestObject{
+				Hostname: "server1", InterfaceName: "eth0",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(gomock.Any(), "server1", "network", job.OperationNetworkRouteGet, gomock.Any()).
+					Return("", nil, fmt.Errorf("on server1: %w", job.ErrNotFound))
+			},
+			validateFunc: func(resp gen.GetNodeNetworkRouteByInterfaceResponseObject) {
+				_, ok := resp.(gen.GetNodeNetworkRouteByInterface404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "when job skipped",
 			request: gen.GetNodeNetworkRouteByInterfaceRequestObject{
 				Hostname: "server1", InterfaceName: "eth0",

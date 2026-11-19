@@ -217,6 +217,28 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStop() {
 			},
 		},
 		{
+			name: "when the host does not have it, it is a 404",
+			request: gen.PostNodeContainerDockerStopRequestObject{
+				Hostname: "server1",
+				Id:       "abc123",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"docker",
+						job.OperationDockerStop,
+						gomock.Any(),
+					).
+					Return("", nil, fmt.Errorf("on server1: %w", job.ErrNotFound))
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
+				_, ok := resp.(gen.PostNodeContainerDockerStop404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "when job skipped",
 			request: gen.PostNodeContainerDockerStopRequestObject{
 				Hostname: "server1",
