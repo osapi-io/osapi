@@ -34,13 +34,23 @@ default:
     @just --list
 
 # Fetch shared justfiles from osapi-justfiles
+#
+# It fetches the commit that main is at, not refs/heads/main: the raw URL of a
+# branch is cached for five minutes, so a run just after a merge got the old
+# modules and said nothing (osapi-io/osapi-justfiles#108). git ls-remote asks
+# the server and has no cache, and the URL of a commit never changes. The
+# commit goes to .just/remote/VERSION, so a build records what it used.
 fetch:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    sha=$(git ls-remote https://github.com/osapi-io/osapi-justfiles refs/heads/main | cut -f1)
+    base="https://raw.githubusercontent.com/osapi-io/osapi-justfiles/$sha"
     mkdir -p .just/remote
-    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/go/go.just -o .just/remote/go.just
-    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docusaurus/docusaurus.just -o .just/remote/docusaurus.just
-    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/md/md.just -o .just/remote/md.just
-    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/just/just.just -o .just/remote/just.just
-    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/react/react.just -o .just/remote/react.just
+    for module in go docusaurus md just react; do
+        curl -sSfL "$base/$module/$module.just" -o ".just/remote/$module.just"
+    done
+    echo "$sha" > .just/remote/VERSION
+    echo "osapi-justfiles $sha"
 
 # --- Top-level orchestration ---
 
