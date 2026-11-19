@@ -870,7 +870,7 @@ func (s *AgentPublicTestSuite) TestListAgents() {
 			},
 		},
 		{
-			name: "when drain flag set overlays state to Cordoned",
+			name: "when drain flag set and not applied overlays state to Draining",
 			setupClient: func() *client.Client {
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "registry").
@@ -889,7 +889,7 @@ func (s *AgentPublicTestSuite) TestListAgents() {
 			},
 			validateFunc: func(agents []job.AgentInfo) {
 				s.Len(agents, 1)
-				s.Equal(job.AgentStateCordoned, agents[0].State)
+				s.Equal(job.AgentStateDraining, agents[0].State)
 			},
 		},
 		{
@@ -1114,7 +1114,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 			},
 		},
 		{
-			name:   "when drain flag set state is Cordoned",
+			name:   "when drain flag set and not applied state is Draining",
 			target: "abc123",
 			setupClient: func() *client.Client {
 				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -1134,7 +1134,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 			},
 			validateFunc: func(info *job.AgentInfo) {
 				s.NotNil(info)
-				s.Equal(job.AgentStateCordoned, info.State)
+				s.Equal(job.AgentStateDraining, info.State)
 			},
 		},
 		{

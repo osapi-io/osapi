@@ -273,7 +273,7 @@ func (s *AgentDrainPublicTestSuite) TestOverlayDrainState() {
 		validateFunc func(string)
 	}{
 		{
-			name:     "when drain flag exists sets state to Cordoned",
+			name:     "when drain flag exists and the agent has not applied it is Draining",
 			useState: true,
 			setupMocks: func(_ *jobmocks.MockNATSClient) {
 				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -282,11 +282,11 @@ func (s *AgentDrainPublicTestSuite) TestOverlayDrainState() {
 					Return(entry, nil)
 			},
 			validateFunc: func(got string) {
-				s.Equal(job.AgentStateCordoned, got)
+				s.Equal(job.AgentStateDraining, got)
 			},
 		},
 		{
-			name:     "when drain flag missing keeps original state",
+			name:     "when drain flag missing the agent with no state is Ready",
 			useState: true,
 			setupMocks: func(_ *jobmocks.MockNATSClient) {
 				s.mockNATSClient.EXPECT().
@@ -294,7 +294,7 @@ func (s *AgentDrainPublicTestSuite) TestOverlayDrainState() {
 					Return(nil, errors.New("key not found"))
 			},
 			validateFunc: func(got string) {
-				s.Equal("", got)
+				s.Equal(job.AgentStateReady, got)
 			},
 		},
 		{

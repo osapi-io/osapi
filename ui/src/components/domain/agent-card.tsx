@@ -48,16 +48,22 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
   const badgeVariant = statusVariant(isPending ? agent.state : agent.status);
   const activeConditions = agent.conditions?.filter((c) => c.status) ?? [];
 
-  // The request is done when the state the agent reports matches it.
+  // The request is done when the state the agent reports matches it: a
+  // drain when the agent is Cordoned, its jobs stopped, not when it is
+  // only Draining.
   const caughtUp =
-    (pending === "drain" && isDrained) || (pending === "undrain" && !isDrained);
+    (pending === "drain" && agent.state === "Cordoned") ||
+    (pending === "undrain" && !isDrained);
 
   useEffect(() => {
     if (!pending || caughtUp) return;
     const poll = setInterval(() => onRefresh?.(), 2000);
     const giveUp = setTimeout(() => {
       setNote({
-        text: `${agent.hostname} has not picked up the ${pending} yet; it applies at the agent's next heartbeat.`,
+        text:
+          pending === "drain" && agent.state === "Draining"
+            ? `${agent.hostname} is still draining: its jobs have not stopped.`
+            : `${agent.hostname} has not picked up the ${pending} yet; it applies at the agent's next heartbeat.`,
         error: true,
       });
       setPending(null);
@@ -66,7 +72,7 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
       clearInterval(poll);
       clearTimeout(giveUp);
     };
-  }, [pending, caughtUp, onRefresh, agent.hostname]);
+  }, [pending, caughtUp, onRefresh, agent.hostname, agent.state]);
 
   // Once the state matches, the request is done.
   if (pending && caughtUp) {

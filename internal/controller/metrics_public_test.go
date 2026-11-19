@@ -342,7 +342,21 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 		s.nc.EXPECT().KVKeys(gomock.Any(), "registry").Return([]string{
 			"agents.web-01", "agents.bad-json", "controller.ctl-01",
 			"nats.bad-json", "nodot", "unknown.x", "agents.gone", "agents.app-01",
+			"agents.drain-01",
 		}, nil)
+		// Only drain-01 has its drain flag set, and it has not applied it.
+		s.jobs.EXPECT().CheckDrainFlag(gomock.Any(), gomock.Any()).
+			DoAndReturn(func(_ context.Context, machineID string) bool {
+				return machineID == "m-drain"
+			}).
+			AnyTimes()
+		s.nc.EXPECT().
+			KVGet(gomock.Any(), "registry", "agents.drain-01").
+			Return(s.entry(job.AgentRegistration{
+				Hostname:  "drain-01",
+				MachineID: "m-drain",
+				State:     string(job.AgentStateReady),
+			}), nil)
 		s.nc.EXPECT().
 			KVGet(gomock.Any(), "registry", "agents.web-01").
 			Return(s.entry(job.AgentRegistration{
@@ -378,11 +392,14 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 		got, err := s.provider("registry").ComponentRegistryFn(context.Background())
 
 		s.Require().NoError(err)
-		s.Require().Len(got, 3)
+		s.Require().Len(got, 4)
 		s.Equal("agent", got[0].Type)
 		s.Equal("app-01", got[0].Hostname)
 		s.Equal("Cordoned", got[0].Status, "a drained agent shows its state")
 		s.Nil(got[0].SubComponents)
+		s.Equal("drain-01", got[1].Hostname)
+		s.Equal("Draining", got[1].Status, "a drain the agent has not applied is Draining")
+		got = append(got[:1], got[2:]...)
 		s.Equal("web-01", got[1].Hostname)
 		s.Equal("Ready", got[1].Status, "an agent with no state is Ready")
 		s.Equal([]string{"HighCPU"}, got[1].Conditions)
