@@ -489,6 +489,32 @@ target. Change the two together.
 `/mocks/`, `/ui/` and `main.go`. A percentage that includes these paths does not
 agree with the gate.
 
+### How CI runs the tests
+
+`just test` runs the checks of `go_quick_checks` and `go_slow_checks` in the
+justfile, then the unit tests and the coverage gate. CI runs the same checks in
+parallel jobs (`.github/workflows/go.yml`). Thus a check that you add to a list
+runs on your machine and in CI. The recipes are in the shared `go` module of
+osapi-justfiles, and each Go repository of osapi-io has the same workflow:
+
+- `just go-ci-checks` prints the lists as a job matrix. The quick checks share
+  one job, and each slow check is a job.
+- `just go-unit-plan` divides the packages into shards. It weighs each package
+  by its lines of test code, and gives each package to the lightest shard,
+  heaviest first. Thus a new package goes into a shard, and you do not change
+  the workflow.
+- `just go-unit-shard <shard> "<packages>"` runs one shard with the race
+  detector. `just go-cover-merge` joins the profiles of the shards, and fails
+  below the target.
+- golangci-lint keeps its cache between runs. A run with no cache takes about
+  two minutes. A run with the cache takes a few seconds.
+
+A package is the smallest part of a shard. Thus the package with the most tests
+sets the minimum time of the slowest shard. Today that package is
+`pkg/sdk/client`.
+
+Integration tests run in their own workflow, `.github/workflows/go-int.yml`.
+
 ### Test file conventions
 
 - Public tests: `*_public_test.go`, in the `_test` package of the package. They

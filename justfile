@@ -65,19 +65,15 @@ build:
 # md-fmt-check is deliberately absent: it needs uv, which the Go workflow does
 # not install, and Markdown Lint already runs it with uv available.
 test: linux-tune
-    just just-fmt-check
-    just docs-fmt-check
-    just react-fmt-check
-    just behavior-gen-check
-    just go-generate-check
-    just docs-gen-check
-    just go-pkg-check
     just react-build
-    just cli-docs-gen-check
-    just behavior-scaffold-check
-    just endpoint-scaffold-check
     just go-test
-    just behavior-cover-check
+
+# The checks of `just test`, which the shared go-test runs and CI reads
+# (`just go-ci-checks`): the quick checks share one job, and each slow check is
+# a job. A check added here runs on a laptop and in CI, with no change to the
+# workflow.
+go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check go-mod-check go-pkg-check"
+go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check behavior-cover-check go-fmt-check go-vet"
 
 # Fail when a behavior that osapi behavior new writes does not pass its tests
 #
