@@ -5,14 +5,15 @@ package gen
 import (
 	"github.com/spf13/cobra"
 
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 )
 
 var telemetryGetCmd = &cobra.Command{
 	Annotations: map[string]string{
-		command.SubKey:       "trace",
+		clicommand.SubKey:    "trace",
 		reference.Permission: "trace:read",
 	},
 	Args:    cobra.NoArgs,
@@ -21,7 +22,7 @@ var telemetryGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		id, _ := cmd.Flags().GetString("id")
 
-		command.Run(cmd, telemetry.Group, "get", telemetry.TraceInput{ID: id})
+		endpointcommand.Run(cmd, telemetry.Group, "get", telemetry.TraceInput{ID: id})
 	},
 	Short: "Show the span tree of a trace",
 	Use:   "get",
@@ -31,5 +32,5 @@ func init() {
 	telemetryGetCmd.Flags().String("id", "", "The trace ID, which a command prints after its job ID, 32 hexadecimal characters")
 	_ = telemetryGetCmd.MarkFlagRequired("id")
 	telemetryGetCmd.Flags().Bool("all", false, "Show the NATS calls too, the reads and writes of the job queue")
-	command.Register(telemetry.Group, telemetryGetCmd)
+	clicommand.Register(telemetry.Group, telemetryGetCmd)
 }

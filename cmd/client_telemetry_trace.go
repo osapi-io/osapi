@@ -28,8 +28,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
@@ -47,7 +47,7 @@ func init() {
 
 	// osapi client telemetry trace get is generated from the telemetry
 	// group's definition; this is how its answer prints.
-	command.Render(telemetry.Group, "get", renderTrace)
+	clicommand.Render(telemetry.Group, "get", renderTrace)
 }
 
 // renderTrace prints a trace as its span tree, with the NATS calls left out

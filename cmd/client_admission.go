@@ -28,15 +28,15 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/admission"
 )
 
 // The admission group's commands are generated from its definition. These
 // are how each answer prints without --json.
 func init() {
-	command.Render(admission.Group, "list", renderAdmissionList)
-	command.Render(
+	clicommand.Render(admission.Group, "list", renderAdmissionList)
+	clicommand.Render(
 		admission.Group,
 		"get",
 		func(_ *cobra.Command, _ admission.MachineInput, out admission.Admission) {
@@ -45,22 +45,22 @@ func init() {
 	)
 	// admit, reject, revoke and delete answer 204, with no body: each prints what
 	// it did, with --json too.
-	command.Acts(
+	clicommand.Acts(
 		admission.Group,
 		"admit",
 		func(_ *cobra.Command, in admission.AdmitInput, _ struct{}) { admissionDone(in.MachineID, "admitted") },
 	)
-	command.Acts(
+	clicommand.Acts(
 		admission.Group,
 		"reject",
 		func(_ *cobra.Command, in admission.RejectInput, _ struct{}) { admissionDone(in.MachineID, "rejected") },
 	)
-	command.Acts(
+	clicommand.Acts(
 		admission.Group,
 		"delete",
 		func(_ *cobra.Command, in admission.MachineInput, _ struct{}) { admissionDone(in.MachineID, "deleted") },
 	)
-	command.Acts(
+	clicommand.Acts(
 		admission.Group,
 		"revoke",
 		func(_ *cobra.Command, in admission.MachineInput, _ struct{}) { admissionDone(in.MachineID, "revoked") },

@@ -30,16 +30,15 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
-	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/osapi/internal/cli/reference"
+	"github.com/osapi-io/osapi/internal/cli"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -117,26 +116,6 @@ type CommandPublicTestSuite struct {
 	suite.Suite
 }
 
-func (s *CommandPublicTestSuite) TestReadFile() {
-	var reported error
-	parent := &cobra.Command{Use: "client"}
-	s.Require().NoError(command.Attach(parent, command.Deps{
-		Caller: func() command.Caller { return &caller{} },
-		JSON:   func() bool { return false },
-		Error:  func(err error) { reported = err },
-	}))
-
-	path := filepath.Join(s.T().TempDir(), "a.conf")
-	s.Require().NoError(os.WriteFile(path, []byte("data"), 0o600))
-	data, ok := command.ReadFile(path)
-	s.True(ok)
-	s.Equal("data", string(data))
-
-	_, ok = command.ReadFile(filepath.Join(s.T().TempDir(), "missing"))
-	s.False(ok)
-	s.ErrorContains(reported, "missing")
-}
-
 func (s *CommandPublicTestSuite) TestBuild() {
 	tests := []struct {
 		name     string
@@ -196,7 +175,11 @@ func (s *CommandPublicTestSuite) TestBuild() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			path, body, contentType, err := command.Build(group, group.Method(tc.method), tc.in)
+			path, body, contentType, err := endpointcommand.Build(
+				group,
+				group.Method(tc.method),
+				tc.in,
+			)
 
 			if tc.wantErr {
 				s.Error(err)
@@ -247,15 +230,15 @@ func capture(
 
 func (s *CommandPublicTestSuite) TestRun() {
 	rendered := ""
-	command.Render(group, "get", func(_ *cobra.Command, in getInput, out thing) {
+	clicommand.Render(group, "get", func(_ *cobra.Command, in getInput, out thing) {
 		rendered = in.Name + ":" + out.Name
 	})
 	acted := ""
 	probed := ""
-	command.Render(group, "probe", func(_ *cobra.Command, _ getInput, out thing) {
+	clicommand.Render(group, "probe", func(_ *cobra.Command, _ getInput, out thing) {
 		probed = out.Name
 	})
-	command.Acts(group, "retry", func(_ *cobra.Command, in retryInput, out thing) {
+	clicommand.Acts(group, "retry", func(_ *cobra.Command, in retryInput, out thing) {
 		acted = in.Body.Reason + ":" + out.Name
 	})
 
@@ -377,10 +360,11 @@ func (s *CommandPublicTestSuite) TestRun() {
 		s.Run(tc.name, func() {
 			var gotErr error
 			parent := &cobra.Command{Use: "client"}
-			s.Require().NoError(command.Attach(parent, command.Deps{
-				Caller: func() command.Caller { return tc.caller },
-				JSON:   func() bool { return tc.json },
-				Error:  func(err error) { gotErr = err },
+			endpointcommand.Use(func() endpointcommand.Caller { return tc.caller })
+			s.Require().NoError(clicommand.Attach(parent, clicommand.Deps{
+				JSON:      func() bool { return tc.json },
+				Error:     func(err error) { gotErr = err },
+				PrintJSON: cli.PrintJSON,
 			}))
 			cmd := &cobra.Command{}
 			cmd.SetContext(context.Background())
@@ -388,115 +372,22 @@ func (s *CommandPublicTestSuite) TestRun() {
 			out := capture(func() {
 				switch in := tc.in.(type) {
 				case getInput:
-					command.Run(cmd, group, tc.method, in)
+					endpointcommand.Run(cmd, group, tc.method, in)
 				case setInput:
-					command.Run(cmd, group, tc.method, in)
+					endpointcommand.Run(cmd, group, tc.method, in)
 				case retryInput:
-					command.Run(cmd, group, tc.method, in)
+					endpointcommand.Run(cmd, group, tc.method, in)
 				case badBody:
-					command.Run(cmd, group, tc.method, in)
+					endpointcommand.Run(cmd, group, tc.method, in)
 				}
 			})
 
 			tc.validateFunc(tc.caller, out, gotErr)
 			// The fake answers with no traceresponse header, so the call
 			// has no trace for a renderer to print.
-			s.Empty(command.TraceID())
+			s.Empty(clicommand.TraceID())
 		})
 	}
-}
-
-// TestAttachUnderPrefix puts a group under the commands of its prefix, made
-// when the parent has none and found when it has, with its notes.
-func (s *CommandPublicTestSuite) TestAttachUnderPrefix() {
-	g := endpoint.Define("zzbehavior", "A behavior",
-		endpoint.Prefix("zznext/zznode/{hostname}"),
-		endpoint.CommandNotes("See its page."),
-		endpoint.Get[getInput, thing]("get"))
-	get := &cobra.Command{Use: "get"}
-	command.Register(g, get)
-
-	parent := &cobra.Command{Use: "client"}
-	node := &cobra.Command{Use: "zznext"}
-	parent.AddCommand(node)
-	s.Require().NoError(command.Attach(parent, command.Deps{}))
-
-	found, _, err := parent.Find([]string{"zznext", "zznode", "zzbehavior", "get"})
-	s.Require().NoError(err)
-	s.Same(get, found)
-	s.Equal("Zznode commands", found.Parent().Parent().Short, "a missing segment is made")
-	s.Same(node, found.Parent().Parent().Parent(), "a segment the parent has is used")
-	s.Equal("See its page.", found.Parent().Annotations[reference.Notes])
-}
-
-func (s *CommandPublicTestSuite) TestAttach() {
-	g := endpoint.Define("zzattach", "Attached things", endpoint.Get[getInput, thing]("get"))
-	get := &cobra.Command{Use: "get"}
-	command.Register(g, get)
-
-	parent := &cobra.Command{Use: "client"}
-	s.Require().NoError(command.Attach(parent, command.Deps{}))
-	var made *cobra.Command
-	for _, c := range parent.Commands() {
-		if c.Name() == "zzattach" {
-			made = c
-		}
-	}
-	s.Require().NotNil(made, "the group's command is made")
-	s.Equal("Attached things", made.Short)
-	s.Contains(made.Commands(), get)
-
-	// A parent that has the group, and a command of the same name, is a
-	// command written twice.
-	parent = &cobra.Command{Use: "client"}
-	existing := &cobra.Command{Use: "zzattach"}
-	existing.AddCommand(&cobra.Command{Use: "get"})
-	parent.AddCommand(existing)
-	err := command.Attach(parent, command.Deps{})
-	s.Require().Error(err)
-	s.True(strings.Contains(err.Error(), "both a hand-written command"))
-
-	// A command with a Sub annotation goes under that command: a new one
-	// when the group has none, the one there when it has.
-	g2 := endpoint.Define("zznested", "Nested things", endpoint.Get[getInput, thing]("get"))
-	nested := &cobra.Command{Use: "get", Annotations: map[string]string{command.SubKey: "trace"}}
-	nested2 := &cobra.Command{Use: "list", Annotations: map[string]string{command.SubKey: "trace"}}
-	command.Register(g2, nested, nested2)
-	parent = &cobra.Command{Use: "client"}
-	s.Require().NoError(command.Attach(parent, command.Deps{}))
-	var trace *cobra.Command
-	for _, c := range parent.Commands() {
-		if c.Name() == "zznested" {
-			for _, sub := range c.Commands() {
-				if sub.Name() == "trace" {
-					trace = sub
-				}
-			}
-		}
-	}
-	s.Require().NotNil(trace, "the sub command is made")
-	s.Equal("Trace commands", trace.Short)
-	s.Len(trace.Commands(), 2)
-
-	// A named sub command that is not under its group yet gets them.
-	parent = &cobra.Command{Use: "client"}
-	group := &cobra.Command{Use: "zznested"}
-	namedTrace := &cobra.Command{Use: "trace", Short: "Read a trace"}
-	s.Require().NoError(command.Attach(parent, command.Deps{}, group, namedTrace))
-	s.Len(namedTrace.Commands(), 2)
-	for _, c := range group.Commands() {
-		s.NotEqual("trace", c.Name(), "the named trace gets them, not a second one")
-	}
-
-	// A hand-written group command that is named, but not under parent yet,
-	// gets the commands, and parent gets no second one.
-	parent = &cobra.Command{Use: "client"}
-	named := &cobra.Command{Use: "zzattach"}
-	s.Require().NoError(command.Attach(parent, command.Deps{}, named))
-	for _, c := range parent.Commands() {
-		s.NotEqual("zzattach", c.Name(), "the named command gets them, not a second one")
-	}
-	s.Len(named.Commands(), 1)
 }
 
 func TestCommandPublicTestSuite(

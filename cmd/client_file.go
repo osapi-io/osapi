@@ -26,8 +26,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/file"
 )
 
@@ -53,12 +53,12 @@ func init() {
 
 	// The file group's commands are generated from its definition; this is
 	// how each answer prints.
-	command.Render(file.Group, "list", renderFileList)
-	command.Render(file.Group, "get", renderFileGet)
-	command.Render(file.Group, "upload", renderFileWrite[file.UploadInput])
-	command.Render(file.Group, "update", renderFileWrite[file.UpdateInput])
-	command.Acts(file.Group, "delete", renderFileDeleted)
-	command.Render(file.Group, "stale", renderFileStale)
+	clicommand.Render(file.Group, "list", renderFileList)
+	clicommand.Render(file.Group, "get", renderFileGet)
+	clicommand.Render(file.Group, "upload", renderFileWrite[file.UploadInput])
+	clicommand.Render(file.Group, "update", renderFileWrite[file.UpdateInput])
+	clicommand.Acts(file.Group, "delete", renderFileDeleted)
+	clicommand.Render(file.Group, "stale", renderFileStale)
 }
 
 // renderFileList prints each stored file.

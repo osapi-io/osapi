@@ -23,8 +23,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/facts"
 )
 
@@ -50,7 +50,7 @@ func init() {
 
 	// osapi client facts keys list is generated from the facts group's
 	// definition; this is how its answer prints.
-	command.Render(facts.Group, "list", renderFactKeys)
+	clicommand.Render(facts.Group, "list", renderFactKeys)
 }
 
 // renderFactKeys prints each fact key with its description.

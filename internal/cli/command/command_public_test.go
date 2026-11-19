@@ -1,0 +1,300 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package command_test
+
+import (
+	"errors"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/cli/reference"
+)
+
+// group is a group of commands with no endpoint under it.
+type group struct {
+	name, doc, notes string
+	path             []string
+}
+
+func (g group) GroupName() string                       { return g.name }
+func (g group) GroupDoc() string                        { return g.doc }
+func (g group) GroupNotes() string                      { return g.notes }
+func (g group) Commands() []command.Method              { return nil }
+func (g group) CommandPermission(command.Method) string { return "" }
+
+func (g group) CommandPath() []string {
+	if g.path != nil {
+		return g.path
+	}
+
+	return []string{g.name}
+}
+
+type input struct {
+	Name string
+}
+
+type thing struct {
+	Name string `json:"name"`
+}
+
+type CommandPublicTestSuite struct {
+	suite.Suite
+}
+
+func (s *CommandPublicTestSuite) TestReadFile() {
+	var reported error
+	parent := &cobra.Command{Use: "client"}
+	s.Require().NoError(command.Attach(parent, command.Deps{
+		JSON:  func() bool { return false },
+		Error: func(err error) { reported = err },
+	}))
+
+	path := filepath.Join(s.T().TempDir(), "a.conf")
+	s.Require().NoError(os.WriteFile(path, []byte("data"), 0o600))
+	data, ok := command.ReadFile(path)
+	s.True(ok)
+	s.Equal("data", string(data))
+
+	_, ok = command.ReadFile(filepath.Join(s.T().TempDir(), "missing"))
+	s.False(ok)
+	s.ErrorContains(reported, "missing")
+}
+
+func (s *CommandPublicTestSuite) TestReport() {
+	var reported error
+	s.Require().NoError(command.Attach(&cobra.Command{Use: "client"}, command.Deps{
+		Error: func(err error) { reported = err },
+	}))
+
+	command.Report(errors.New("api error (404): not found"))
+
+	s.EqualError(reported, "api error (404): not found")
+}
+
+func (s *CommandPublicTestSuite) TestTraceID() {
+	command.SetTraceID("4bf92f3577b34da6a3ce929d0e0e4736")
+	s.Equal("4bf92f3577b34da6a3ce929d0e0e4736", command.TraceID())
+	command.SetTraceID("")
+	s.Empty(command.TraceID())
+}
+
+func (s *CommandPublicTestSuite) TestOutput() {
+	g := group{name: "zzoutput"}
+	rendered := ""
+	command.Render(g, "get", func(_ *cobra.Command, in input, out thing) {
+		rendered = in.Name + ":" + out.Name
+	})
+	acted := ""
+	command.Acts(g, "export", func(_ *cobra.Command, in input, out thing) {
+		acted = in.Name + ":" + out.Name
+	})
+
+	tests := []struct {
+		name         string
+		method       string
+		json         bool
+		answer       []byte
+		validateFunc func(printed string, err error)
+	}{
+		{
+			name:   "when the method has a renderer, it gets the input and the output",
+			method: "get",
+			answer: []byte(`{"name":"web-01"}`),
+			validateFunc: func(printed string, err error) {
+				s.Require().NoError(err)
+				s.Empty(printed)
+				s.Equal("web:web-01", rendered)
+			},
+		},
+		{
+			name:   "when --json is given, the body prints as it came",
+			method: "get",
+			json:   true,
+			answer: []byte(`{"name":"web-01"}`),
+			validateFunc: func(printed string, err error) {
+				s.Require().NoError(err)
+				s.Equal(`{"name":"web-01"}`, printed)
+			},
+		},
+		{
+			name:   "when the method acts on its answer, it runs with --json too",
+			method: "export",
+			json:   true,
+			answer: []byte(`{"name":"web-03"}`),
+			validateFunc: func(printed string, err error) {
+				s.Require().NoError(err)
+				s.Equal("web:web-03", acted)
+				s.Empty(printed)
+			},
+		},
+		{
+			name:   "when the method has no renderer, the body prints as JSON",
+			method: "set",
+			answer: []byte(`{"name":"web-02"}`),
+			validateFunc: func(printed string, err error) {
+				s.Require().NoError(err)
+				s.Equal(`{"name":"web-02"}`, printed)
+			},
+		},
+		{
+			name:   "when the answer does not decode, the error is reported",
+			method: "get",
+			answer: []byte(`{"name":3}`),
+			validateFunc: func(_ string, err error) {
+				s.ErrorContains(err, "decode zzoutput get")
+			},
+		},
+		{
+			name:   "when the answer is empty, the renderer gets a zero output",
+			method: "get",
+			answer: nil,
+			validateFunc: func(_ string, err error) {
+				s.Require().NoError(err)
+				s.Equal("web:", rendered)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var gotErr error
+			printed := ""
+			s.Require().NoError(command.Attach(&cobra.Command{Use: "client"}, command.Deps{
+				JSON:      func() bool { return tc.json },
+				Error:     func(err error) { gotErr = err },
+				PrintJSON: func(body []byte) { printed = string(body) },
+			}))
+
+			command.Output(&cobra.Command{}, g.name, tc.method, input{Name: "web"}, tc.answer)
+
+			tc.validateFunc(printed, gotErr)
+		})
+	}
+}
+
+// TestAttachUnderPrefix puts a group under the commands of its path, made
+// when the parent has none and found when it has, with its notes.
+func (s *CommandPublicTestSuite) TestAttachUnderPrefix() {
+	g := group{
+		name:  "zzbehavior",
+		doc:   "A behavior",
+		notes: "See its page.",
+		path:  []string{"zznext", "zznode", "zzbehavior"},
+	}
+	get := &cobra.Command{Use: "get"}
+	command.Register(g, get)
+
+	parent := &cobra.Command{Use: "client"}
+	node := &cobra.Command{Use: "zznext"}
+	parent.AddCommand(node)
+	s.Require().NoError(command.Attach(parent, command.Deps{}))
+
+	found, _, err := parent.Find([]string{"zznext", "zznode", "zzbehavior", "get"})
+	s.Require().NoError(err)
+	s.Same(get, found)
+	s.Equal("Zznode commands", found.Parent().Parent().Short, "a missing segment is made")
+	s.Same(node, found.Parent().Parent().Parent(), "a segment the parent has is used")
+	s.Equal("See its page.", found.Parent().Annotations[reference.Notes])
+}
+
+func (s *CommandPublicTestSuite) TestAttach() {
+	g := group{name: "zzattach", doc: "Attached things"}
+	get := &cobra.Command{Use: "get"}
+	command.Register(g, get)
+
+	parent := &cobra.Command{Use: "client"}
+	s.Require().NoError(command.Attach(parent, command.Deps{}))
+	var made *cobra.Command
+	for _, c := range parent.Commands() {
+		if c.Name() == "zzattach" {
+			made = c
+		}
+	}
+	s.Require().NotNil(made, "the group's command is made")
+	s.Equal("Attached things", made.Short)
+	s.Nil(made.Annotations, "a group with no notes has none")
+	s.Contains(made.Commands(), get)
+
+	// A parent that has the group, and a command of the same name, is a
+	// command written twice.
+	parent = &cobra.Command{Use: "client"}
+	existing := &cobra.Command{Use: "zzattach"}
+	existing.AddCommand(&cobra.Command{Use: "get"})
+	parent.AddCommand(existing)
+	err := command.Attach(parent, command.Deps{})
+	s.Require().Error(err)
+	s.ErrorContains(err, "osapi client zzattach get is both a hand-written command "+
+		"and the zzattach group's")
+
+	// A command with a Sub annotation goes under that command: a new one
+	// when the group has none, the one there when it has.
+	g2 := group{name: "zznested", doc: "Nested things"}
+	nested := &cobra.Command{Use: "get", Annotations: map[string]string{command.SubKey: "trace"}}
+	nested2 := &cobra.Command{Use: "list", Annotations: map[string]string{command.SubKey: "trace"}}
+	command.Register(g2, nested, nested2)
+	parent = &cobra.Command{Use: "client"}
+	s.Require().NoError(command.Attach(parent, command.Deps{}))
+	var trace *cobra.Command
+	for _, c := range parent.Commands() {
+		if c.Name() == "zznested" {
+			for _, sub := range c.Commands() {
+				if sub.Name() == "trace" {
+					trace = sub
+				}
+			}
+		}
+	}
+	s.Require().NotNil(trace, "the sub command is made")
+	s.Equal("Trace commands", trace.Short)
+	s.Len(trace.Commands(), 2)
+
+	// A named sub command that is not under its group yet gets them.
+	parent = &cobra.Command{Use: "client"}
+	nestedGroup := &cobra.Command{Use: "zznested"}
+	namedTrace := &cobra.Command{Use: "trace", Short: "Read a trace"}
+	s.Require().NoError(command.Attach(parent, command.Deps{}, nestedGroup, namedTrace))
+	s.Len(namedTrace.Commands(), 2)
+	for _, c := range nestedGroup.Commands() {
+		s.NotEqual("trace", c.Name(), "the named trace gets them, not a second one")
+	}
+
+	// A hand-written group command that is named, but not under parent yet,
+	// gets the commands, and parent gets no second one.
+	parent = &cobra.Command{Use: "client"}
+	named := &cobra.Command{Use: "zzattach"}
+	s.Require().NoError(command.Attach(parent, command.Deps{}, named))
+	for _, c := range parent.Commands() {
+		s.NotEqual("zzattach", c.Name(), "the named command gets them, not a second one")
+	}
+	s.Len(named.Commands(), 1)
+}
+
+func TestCommandPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(CommandPublicTestSuite))
+}

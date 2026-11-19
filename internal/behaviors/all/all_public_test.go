@@ -41,7 +41,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/all/gen"
 	"github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/cli"
-	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
@@ -118,7 +118,7 @@ func (s *AllPublicTestSuite) TestEveryCommandIsAttached() {
 	nextNode := &cobra.Command{Use: "node"}
 	root.AddCommand(node, next)
 	next.AddCommand(nextNode)
-	s.Require().NoError(endpointcommand.Attach(root, endpointcommand.Deps{}))
+	s.Require().NoError(clicommand.Attach(root, clicommand.Deps{}))
 
 	for _, b := range behavior.All() {
 		if !b.CLI {

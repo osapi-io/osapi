@@ -34,8 +34,8 @@ import (
 
 	"github.com/dave/jennifer/jen"
 
+	commandgen "github.com/osapi-io/osapi/internal/cli/command/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/commandgen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/genfile"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/routegen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/specgen"
@@ -48,7 +48,6 @@ const module = "github.com/osapi-io/osapi"
 
 const (
 	serverPath    = module + "/internal/controller/endpoint/server"
-	commandPath   = module + "/internal/controller/endpoint/command"
 	referencePath = module + "/internal/cli/reference"
 	cobraPath     = "github.com/spf13/cobra"
 	echoPath      = "github.com/labstack/echo/v5"

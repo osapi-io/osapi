@@ -5,26 +5,27 @@ package gen
 import (
 	"github.com/spf13/cobra"
 
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/facts"
 )
 
 var factsListCmd = &cobra.Command{
 	Annotations: map[string]string{
-		command.SubKey:       "keys",
+		clicommand.SubKey:    "keys",
 		reference.Permission: "agent:read",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client facts keys list\n  osapi client facts keys list --json",
 	Long:    "Lists each fact key that an input can refer to as @fact.<key>, with\nits description.",
 	Run: func(cmd *cobra.Command, _ []string) {
-		command.Run(cmd, facts.Group, "list", facts.KeysInput{})
+		endpointcommand.Run(cmd, facts.Group, "list", facts.KeysInput{})
 	},
 	Short: "List the fact keys",
 	Use:   "list",
 }
 
 func init() {
-	command.Register(facts.Group, factsListCmd)
+	clicommand.Register(facts.Group, factsListCmd)
 }

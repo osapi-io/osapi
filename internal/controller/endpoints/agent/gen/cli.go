@@ -5,8 +5,9 @@ package gen
 import (
 	"github.com/spf13/cobra"
 
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 )
 
@@ -19,7 +20,7 @@ var agentListCmd = &cobra.Command{
 	Example: "  osapi client agent list",
 	Long:    "This command reads the agent heartbeat registry directly. It makes no job.\nEach agent writes a heartbeat every 10 seconds, with a 30-second TTL. When\nan agent stops its heartbeat, it goes from the list.",
 	Run: func(cmd *cobra.Command, _ []string) {
-		command.Run(cmd, agent.Group, "list", agent.ListInput{})
+		endpointcommand.Run(cmd, agent.Group, "list", agent.ListInput{})
 	},
 	Short: "List active agents",
 	Use:   "list",
@@ -33,7 +34,7 @@ var agentGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("hostname")
 
-		command.Run(cmd, agent.Group, "get", agent.GetInput{Hostname: hostname})
+		endpointcommand.Run(cmd, agent.Group, "get", agent.GetInput{Hostname: hostname})
 	},
 	Short: "Get agent details",
 	Use:   "get",
@@ -47,7 +48,7 @@ var agentDrainCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("hostname")
 
-		command.Run(cmd, agent.Group, "drain", agent.DrainInput{Hostname: hostname})
+		endpointcommand.Run(cmd, agent.Group, "drain", agent.DrainInput{Hostname: hostname})
 	},
 	Short: "Drain an agent",
 	Use:   "drain",
@@ -61,7 +62,7 @@ var agentUndrainCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("hostname")
 
-		command.Run(cmd, agent.Group, "undrain", agent.UndrainInput{Hostname: hostname})
+		endpointcommand.Run(cmd, agent.Group, "undrain", agent.UndrainInput{Hostname: hostname})
 	},
 	Short: "Undrain an agent",
 	Use:   "undrain",
@@ -74,5 +75,5 @@ func init() {
 	_ = agentDrainCmd.MarkFlagRequired("hostname")
 	agentUndrainCmd.Flags().String("hostname", "", "The hostname of the agent to undrain")
 	_ = agentUndrainCmd.MarkFlagRequired("hostname")
-	command.Register(agent.Group, agentListCmd, agentGetCmd, agentDrainCmd, agentUndrainCmd)
+	clicommand.Register(agent.Group, agentListCmd, agentGetCmd, agentDrainCmd, agentUndrainCmd)
 }

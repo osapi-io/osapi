@@ -42,9 +42,9 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/command"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all/gen"
+	commandgen "github.com/osapi-io/osapi/internal/cli/command/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/commandgen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/genfile"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/genutil"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/routegen"
@@ -308,7 +308,6 @@ func newFile(
 	f := jen.NewFilePathName(path, name)
 	f.HeaderComment(generated)
 	f.ImportName("github.com/osapi-io/osapi/internal/controller/endpoint/server", "server")
-	f.ImportName("github.com/osapi-io/osapi/internal/controller/endpoint/command", "command")
 	f.ImportName("github.com/labstack/echo/v5", "echo")
 	f.ImportName("github.com/spf13/cobra", "cobra")
 

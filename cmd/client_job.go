@@ -29,7 +29,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/job"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
@@ -45,10 +45,10 @@ func init() {
 
 	// osapi client job list, get, delete and retry are generated from the
 	// job group's definition; this is how each answer prints.
-	command.Render(job.Group, "list", renderJobList)
-	command.Render(job.Group, "get", renderJob)
-	command.Acts(job.Group, "delete", renderJobDeleted)
-	command.Render(job.Group, "retry", renderJobRetried)
+	clicommand.Render(job.Group, "list", renderJobList)
+	clicommand.Render(job.Group, "get", renderJob)
+	clicommand.Acts(job.Group, "delete", renderJobDeleted)
+	clicommand.Render(job.Group, "retry", renderJobRetried)
 }
 
 // renderJobList prints a page of jobs as a table, then the count of each

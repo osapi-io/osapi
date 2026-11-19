@@ -18,9 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package commandgen writes the cobra commands of an endpoint group, gen/cli.go:
-// one command for each method, with its help, its flags and its examples, for
-// the endpoint generator and the behavior generator alike.
+// Package commandgen writes the cobra commands of a group of the command
+// layer, gen/cli.go: one command for each method, with its help, its flags
+// and its examples, for the endpoint generator and the behavior generator
+// alike.
 package commandgen
 
 import (
@@ -31,12 +32,16 @@ import (
 
 	"github.com/dave/jennifer/jen"
 
-	"github.com/osapi-io/osapi/internal/controller/endpoint"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/genutil"
+	"github.com/osapi-io/osapi/internal/cli/command"
 )
 
 const (
-	commandPath   = "github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	// commandPath is the command layer, which registers the generated
+	// commands and reads their files.
+	commandPath = "github.com/osapi-io/osapi/internal/cli/command"
+	// runPath is the endpoint layer's runner: its Run sends a command's
+	// request.
+	runPath       = "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	referencePath = "github.com/osapi-io/osapi/internal/cli/reference"
 	cobraPath     = "github.com/spf13/cobra"
 )
@@ -46,17 +51,19 @@ const (
 // init that registers them under osapi client <group>.
 func Commands(
 	f *jen.File,
-	g *endpoint.Group,
+	g command.Group,
 	pkg string,
 ) {
-	f.ImportName(commandPath, "command")
+	f.ImportAlias(commandPath, "clicommand")
+	f.ImportAlias(runPath, "endpointcommand")
 	f.ImportName(referencePath, "reference")
 	f.ImportName(cobraPath, "cobra")
 
 	var inits []jen.Code
-	names := make([]jen.Code, 0, len(g.Methods))
-	for _, m := range g.Methods {
-		name := g.Name + upperFirst(m.Name) + "Cmd"
+	methods := g.Commands()
+	names := make([]jen.Code, 0, len(methods))
+	for _, m := range methods {
+		name := g.GroupName() + upperFirst(m.MethodName()) + "Cmd"
 		names = append(names, jen.Id(name))
 
 		var reads []jen.Code
@@ -64,7 +71,7 @@ func Commands(
 		// the field's json name with _ as -, or its flag tag, with the
 		// shorthand of its short tag.
 		flagFor := func(fld reflect.StructField) jen.Code {
-			flag := strings.ReplaceAll(genutil.JSONName(fld), "_", "-")
+			flag := strings.ReplaceAll(jsonName(fld), "_", "-")
 			if f := fld.Tag.Get("flag"); f != "" {
 				flag = f
 			}
@@ -72,7 +79,7 @@ func Commands(
 			local := lowerFirst(fld.Name)
 			// A local that is a keyword, or the name of the group's package,
 			// would hide it.
-			if token.IsKeyword(local) || local == g.Name {
+			if token.IsKeyword(local) || local == g.GroupName() {
 				local += "Flag"
 			}
 			reads = append(reads, jen.List(jen.Id(local), jen.Id("_")).Op(":=").
@@ -114,7 +121,7 @@ func Commands(
 			return jen.Id(fld.Name).Op(":").Id(local)
 		}
 		var fields []jen.Code
-		for _, fld := range genutil.StructFields(m.In) {
+		for _, fld := range structFields(m.Input()) {
 			if fld.Tag.Get("in") != "body" || fld.Type.Kind() != reflect.Struct {
 				fields = append(fields, flagFor(fld))
 
@@ -122,7 +129,7 @@ func Commands(
 			}
 			// A named body is a flag for each of its fields.
 			var inner []jen.Code
-			for _, bf := range genutil.StructFields(fld.Type) {
+			for _, bf := range structFields(fld.Type) {
 				inner = append(inner, flagFor(bf))
 			}
 			fields = append(fields, jen.Id(fld.Name).Op(":").
@@ -142,7 +149,7 @@ func Commands(
 					Call(jen.Lit(extra.Name)))
 			}
 		}
-		in := jen.Qual(m.In.PkgPath(), m.In.Name())
+		in := jen.Qual(m.Input().PkgPath(), m.Input().Name())
 		if len(fields) > 0 {
 			in = in.Values(fields...)
 		} else {
@@ -154,8 +161,8 @@ func Commands(
 		if len(reads) > 0 {
 			run = append(run, jen.Line())
 		}
-		run = append(run, jen.Qual(commandPath, "Run").Call(
-			jen.Id("cmd"), jen.Qual(pkg, "Group"), jen.Lit(m.Name), in))
+		run = append(run, jen.Qual(runPath, "Run").Call(
+			jen.Id("cmd"), jen.Qual(pkg, "Group"), jen.Lit(m.MethodName()), in))
 
 		examples := make([]string, 0, len(m.Examples()))
 		group := strings.Join(g.CommandPath(), " ")
@@ -191,7 +198,7 @@ func Commands(
 			dict[jen.Id("Example")] = jen.Lit(strings.Join(examples, sep))
 		}
 		notes := jen.Dict{}
-		if perm := g.Permission(m); perm != "" {
+		if perm := g.CommandPermission(m); perm != "" {
 			notes[jen.Qual(referencePath, "Permission")] = jen.Lit(perm)
 		}
 		if n := m.PageNotes(); n != "" {
@@ -279,4 +286,34 @@ func oneOf(
 	}
 
 	return ""
+}
+
+// structFields are the exported fields of t that JSON reads, when t is a
+// struct: those with no json:"-".
+func structFields(
+	t reflect.Type,
+) []reflect.StructField {
+	if t.Kind() != reflect.Struct {
+		return nil
+	}
+	var out []reflect.StructField
+	for f := range t.Fields() {
+		if f.IsExported() && jsonName(f) != "-" {
+			out = append(out, f)
+		}
+	}
+
+	return out
+}
+
+// jsonName is the name of f in JSON: its json tag's, or the field's.
+func jsonName(
+	f reflect.StructField,
+) string {
+	name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
+	if name == "" {
+		return f.Name
+	}
+
+	return name
 }

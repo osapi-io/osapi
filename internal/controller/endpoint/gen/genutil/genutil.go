@@ -20,8 +20,8 @@
 
 // Package genutil holds what the endpoint layer's writers share: the fields
 // of an input as JSON reads them, and the house layout of a jen group.
-// routegen writes routes and decoders, and commandgen writes commands, with
-// it.
+// routegen writes routes and decoders with it, and the command layer's
+// commandgen writes commands with its own copy of the field helpers.
 package genutil
 
 import (

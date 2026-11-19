@@ -33,10 +33,10 @@ import (
 )
 
 const (
-	endpointCommandPath = module + "/internal/controller/endpoint/command"
-	endpointPath        = module + "/internal/controller/endpoint"
-	behaviorPkg         = module + "/internal/behavior"
-	dispatchPath        = module + "/internal/behavior/dispatch"
+	cliCommandPath = module + "/internal/cli/command"
+	endpointPath   = module + "/internal/controller/endpoint"
+	behaviorPkg    = module + "/internal/behavior"
+	dispatchPath   = module + "/internal/behavior/dispatch"
 )
 
 // hostnameDoc is the description of the target of each behavior method.
@@ -55,7 +55,7 @@ func groupFile(
 	f.ImportName(endpointPath, "endpoint")
 	f.ImportName(behaviorPkg, "behavior")
 	f.ImportName(dispatchPath, "dispatch")
-	f.ImportAlias(endpointCommandPath, "endpointcommand")
+	f.ImportAlias(cliCommandPath, "clicommand")
 
 	prefix, err := groupPrefix(b)
 	if err != nil {
@@ -179,7 +179,7 @@ func groupFile(
 		jen.Qual(behaviorPkg, "RegisterGroup").Call(jen.Lit(b.Name), jen.Id("Group")),
 	}
 	for _, m := range b.Methods {
-		inits = append(inits, jen.Qual(endpointCommandPath, "Render").Call(
+		inits = append(inits, jen.Qual(cliCommandPath, "Render").Call(
 			jen.Id("Group"), jen.Lit(m.Name),
 			jen.Func().Params(
 				jen.Id("_").Op("*").Qual(cobraPath, "Command"),
@@ -187,7 +187,7 @@ func groupFile(
 				jen.Id("out").Id(responseName(b, m)),
 			).Block(jen.Qual(commandPath, "Print").Call(
 				jen.Qual(pkgPath(b), "Behavior"), jen.Lit(m.Name), jen.Id("out"),
-				jen.Qual(endpointCommandPath, "TraceID").Call())),
+				jen.Qual(cliCommandPath, "TraceID").Call())),
 		))
 	}
 	f.Func().Id("init").Params().Block(inits...)

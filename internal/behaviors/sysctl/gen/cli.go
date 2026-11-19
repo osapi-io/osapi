@@ -5,8 +5,9 @@ package gen
 import (
 	"github.com/spf13/cobra"
 
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 )
 
 var sysctlListCmd = &cobra.Command{
@@ -21,7 +22,7 @@ var sysctlListCmd = &cobra.Command{
 		hostname, _ := cmd.Flags().GetString("target")
 		prefix, _ := cmd.Flags().GetString("prefix")
 
-		command.Run(cmd, Group, "list", ListRequest{Hostname: hostname, Prefix: prefix})
+		endpointcommand.Run(cmd, Group, "list", ListRequest{Hostname: hostname, Prefix: prefix})
 	},
 	Short: "List the kernel's parameters and which osapi manages",
 	Use:   "list",
@@ -38,7 +39,7 @@ var sysctlGetCmd = &cobra.Command{
 		hostname, _ := cmd.Flags().GetString("target")
 		key, _ := cmd.Flags().GetString("key")
 
-		command.Run(cmd, Group, "get", GetRequest{Hostname: hostname, Key: key})
+		endpointcommand.Run(cmd, Group, "get", GetRequest{Hostname: hostname, Key: key})
 	},
 	Short: "Get a kernel parameter's current value, and whether osapi manages it",
 	Use:   "get",
@@ -57,7 +58,7 @@ var sysctlCreateCmd = &cobra.Command{
 		key, _ := cmd.Flags().GetString("key")
 		value, _ := cmd.Flags().GetString("value")
 
-		command.Run(cmd, Group, "create", CreateRequest{Hostname: hostname, Body: SysctlCreateRequest{Key: key, Value: value}})
+		endpointcommand.Run(cmd, Group, "create", CreateRequest{Hostname: hostname, Body: SysctlCreateRequest{Key: key, Value: value}})
 	},
 	Short: "Manage a kernel parameter and apply it",
 	Use:   "create",
@@ -76,7 +77,7 @@ var sysctlUpdateCmd = &cobra.Command{
 		key, _ := cmd.Flags().GetString("key")
 		value, _ := cmd.Flags().GetString("value")
 
-		command.Run(cmd, Group, "update", UpdateRequest{Hostname: hostname, Key: key, Body: SysctlUpdateRequest{Value: value}})
+		endpointcommand.Run(cmd, Group, "update", UpdateRequest{Hostname: hostname, Key: key, Body: SysctlUpdateRequest{Value: value}})
 	},
 	Short: "Set a kernel parameter, manage it, and apply it",
 	Use:   "update",
@@ -94,7 +95,7 @@ var sysctlDeleteCmd = &cobra.Command{
 		hostname, _ := cmd.Flags().GetString("target")
 		key, _ := cmd.Flags().GetString("key")
 
-		command.Run(cmd, Group, "delete", DeleteRequest{Hostname: hostname, Key: key})
+		endpointcommand.Run(cmd, Group, "delete", DeleteRequest{Hostname: hostname, Key: key})
 	},
 	Short: "Stop the management of a kernel parameter",
 	Use:   "delete",
@@ -119,5 +120,5 @@ func init() {
 	sysctlDeleteCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
 	sysctlDeleteCmd.Flags().String("key", "", "Parameter name, such as net.ipv4.ip_forward")
 	_ = sysctlDeleteCmd.MarkFlagRequired("key")
-	command.Register(Group, sysctlListCmd, sysctlGetCmd, sysctlCreateCmd, sysctlUpdateCmd, sysctlDeleteCmd)
+	clicommand.Register(Group, sysctlListCmd, sysctlGetCmd, sysctlCreateCmd, sysctlUpdateCmd, sysctlDeleteCmd)
 }

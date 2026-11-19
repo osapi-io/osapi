@@ -29,8 +29,8 @@ import (
 
 	"github.com/osapi-io/osapi/internal/audit/export"
 	"github.com/osapi-io/osapi/internal/cli"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/audit"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
@@ -49,9 +49,9 @@ func init() {
 
 	// osapi client audit list, get and export are generated from the audit
 	// group's definition; this is how each answer prints.
-	command.Render(audit.Group, "list", renderAuditList)
-	command.Render(audit.Group, "get", renderAuditEntry)
-	command.Acts(audit.Group, "export", exportAudit)
+	clicommand.Render(audit.Group, "list", renderAuditList)
+	clicommand.Render(audit.Group, "get", renderAuditEntry)
+	clicommand.Acts(audit.Group, "export", exportAudit)
 }
 
 // renderAuditList prints a page of the audit log as a table.

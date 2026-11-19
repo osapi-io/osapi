@@ -5,8 +5,9 @@ package gen
 import (
 	"github.com/spf13/cobra"
 
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/file"
 )
 
@@ -16,7 +17,7 @@ var fileListCmd = &cobra.Command{
 	Example:     "  osapi client file list\n  osapi client file list --json",
 	Long:        "List all files stored in the Object Store.",
 	Run: func(cmd *cobra.Command, _ []string) {
-		command.Run(cmd, file.Group, "list", file.ListInput{})
+		endpointcommand.Run(cmd, file.Group, "list", file.ListInput{})
 	},
 	Short: "List stored files",
 	Use:   "list",
@@ -31,12 +32,12 @@ var fileUploadCmd = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		contentType, _ := cmd.Flags().GetString("content-type")
 		fileFlag, _ := cmd.Flags().GetString("file")
-		fileFlagData, ok := command.ReadFile(fileFlag)
+		fileFlagData, ok := clicommand.ReadFile(fileFlag)
 		if !ok {
 			return
 		}
 
-		command.Run(cmd, file.Group, "upload", file.UploadInput{Name: name, ContentType: contentType, File: fileFlagData})
+		endpointcommand.Run(cmd, file.Group, "upload", file.UploadInput{Name: name, ContentType: contentType, File: fileFlagData})
 	},
 	Short: "Upload a file to the Object Store",
 	Use:   "upload",
@@ -50,7 +51,7 @@ var fileGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		name, _ := cmd.Flags().GetString("name")
 
-		command.Run(cmd, file.Group, "get", file.GetInput{Name: name})
+		endpointcommand.Run(cmd, file.Group, "get", file.GetInput{Name: name})
 	},
 	Short: "Get file metadata",
 	Use:   "get",
@@ -65,12 +66,12 @@ var fileUpdateCmd = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		contentType, _ := cmd.Flags().GetString("content-type")
 		fileFlag, _ := cmd.Flags().GetString("file")
-		fileFlagData, ok := command.ReadFile(fileFlag)
+		fileFlagData, ok := clicommand.ReadFile(fileFlag)
 		if !ok {
 			return
 		}
 
-		command.Run(cmd, file.Group, "update", file.UpdateInput{Name: name, ContentType: contentType, File: fileFlagData})
+		endpointcommand.Run(cmd, file.Group, "update", file.UpdateInput{Name: name, ContentType: contentType, File: fileFlagData})
 	},
 	Short: "Replace a file in the Object Store",
 	Use:   "update",
@@ -84,7 +85,7 @@ var fileDeleteCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		name, _ := cmd.Flags().GetString("name")
 
-		command.Run(cmd, file.Group, "delete", file.DeleteInput{Name: name})
+		endpointcommand.Run(cmd, file.Group, "delete", file.DeleteInput{Name: name})
 	},
 	Short: "Delete a file from the Object Store",
 	Use:   "delete",
@@ -92,14 +93,14 @@ var fileDeleteCmd = &cobra.Command{
 
 var fileStaleCmd = &cobra.Command{
 	Annotations: map[string]string{
-		command.SubKey:       "stale",
+		clicommand.SubKey:    "stale",
 		reference.Permission: "file:read",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client file stale list\n  osapi client file stale list --json",
 	Long:    "The list shows the deployments whose object changed after the last\ndeploy. Those are the files that you must deploy again.",
 	Run: func(cmd *cobra.Command, _ []string) {
-		command.Run(cmd, file.Group, "stale", file.StaleInput{})
+		endpointcommand.Run(cmd, file.Group, "stale", file.StaleInput{})
 	},
 	Short: "List stale file deployments",
 	Use:   "list",
@@ -120,5 +121,5 @@ func init() {
 	_ = fileUpdateCmd.MarkFlagRequired("file")
 	fileDeleteCmd.Flags().String("name", "", "The name of the file in the Object Store")
 	_ = fileDeleteCmd.MarkFlagRequired("name")
-	command.Register(file.Group, fileListCmd, fileUploadCmd, fileGetCmd, fileUpdateCmd, fileDeleteCmd, fileStaleCmd)
+	clicommand.Register(file.Group, fileListCmd, fileUploadCmd, fileGetCmd, fileUpdateCmd, fileDeleteCmd, fileStaleCmd)
 }

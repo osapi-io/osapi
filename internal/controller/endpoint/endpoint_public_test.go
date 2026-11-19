@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"reflect"
 	"slices"
 	"testing"
 	"time"
@@ -593,6 +594,26 @@ func (s *EndpointPublicTestSuite) TestCommandPath() {
 
 	m := endpoint.Get[noInput, Node]("list").Example("--all", "Every one", "of them").Example("")
 	s.Equal([]endpoint.CommandExample{{Flags: "--all", Doc: "Every one of them"}, {}}, m.Examples())
+}
+
+// TestCommandLayer is the group and its methods as the command layer reads
+// them.
+func (s *EndpointPublicTestSuite) TestCommandLayer() {
+	g := endpoint.Define("sysctl", "Kernel parameters",
+		endpoint.CommandNotes("See the sysctl page."),
+		endpoint.Get[noInput, Node]("list"),
+		endpoint.Put[noInput, Node]("set").Permission("sysctl:admin"),
+	)
+	s.Equal("sysctl", g.GroupName())
+	s.Equal("Kernel parameters", g.GroupDoc())
+	s.Equal("See the sysctl page.", g.GroupNotes())
+
+	methods := g.Commands()
+	s.Require().Len(methods, 2)
+	s.Equal("list", methods[0].MethodName())
+	s.Equal(reflect.TypeFor[noInput](), methods[0].Input())
+	s.Equal("sysctl:read", g.CommandPermission(methods[0]))
+	s.Equal("sysctl:admin", g.CommandPermission(methods[1]))
 }
 
 func (s *EndpointPublicTestSuite) TestRefusals() {
