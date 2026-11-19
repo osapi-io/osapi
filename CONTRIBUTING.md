@@ -489,6 +489,29 @@ target. Change the two together.
 `/mocks/`, `/ui/` and `main.go`. A percentage that includes these paths does not
 agree with the gate.
 
+### How CI runs the tests
+
+`just test` runs each check and the unit tests in series. CI does the same work
+in parallel jobs (`.github/workflows/go.yml`), so the slowest job sets the time:
+
+- Each slow check is a job of its own. The quick checks share one job.
+- `just go-unit-plan` divides the packages into shards. It weighs each package
+  by its lines of test code, and gives each package to the lightest shard,
+  heaviest first. A plan job runs it, and each shard is a job. Thus a new
+  package goes into a shard, and you do not change the workflow.
+- `just go-unit-shard <shard> "<packages>"` runs the tests of one shard with the
+  race detector, and writes `.coverage/shard-<shard>.out`.
+- `just go-cover-merge` joins the profiles of the shards, filters them through
+  `.coverignore`, and fails below the target.
+- golangci-lint keeps its cache between runs. A run with no cache takes about
+  two minutes. A run with the cache takes a few seconds.
+
+A package is the smallest part of a shard. Thus the package with the most tests
+sets the minimum time of the slowest shard. Today that package is
+`pkg/sdk/client`.
+
+Integration tests run in their own workflow, `.github/workflows/go-int.yml`.
+
 ### Test file conventions
 
 - Public tests: `*_public_test.go`, in the `_test` package of the package. They
