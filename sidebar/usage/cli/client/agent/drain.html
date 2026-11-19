@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Drain | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/agent/drain"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Drain | OSAPI"><meta data-rh="true" name="description" content="Drain an agent."><meta data-rh="true" property="og:description" content="Drain an agent."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/agent/drain"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/agent/drain" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/agent/drain" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/"},{"@type":"ListItem","position":3,"name":"Client","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/"},{"@type":"ListItem","position":4,"name":"Agent","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/agent/"},{"@type":"ListItem","position":5,"name":"Drain","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/agent/drain"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.16b6cbd0.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.e9dbb312.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.4c954b19.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.e66a9d22.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -22,8 +22,8 @@ they are complete.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples">Examples<a href="#examples" class="hash-link" aria-label="Direct link to Examples" title="Direct link to Examples" translate="no">​</a></h2>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client agent drain --hostname web-01</span><br></div></code></pre></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="permission">Permission<a href="#permission" class="hash-link" aria-label="Direct link to Permission" title="Direct link to Permission" translate="no">​</a></h2>
-<p>It needs the <code>agent:write</code> permission. <code>osapi token roles list</code> lists the roles
-that grant it.</p>
+<p>It needs the <code>agent:write</code> permission. <code>osapi token roles get --name &lt;role&gt;</code>
+shows what a role grants.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="flags">Flags<a href="#flags" class="hash-link" aria-label="Direct link to Flags" title="Direct link to Flags" translate="no">​</a></h2>
 
 

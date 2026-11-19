@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Get | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/node/sysctl/get"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Get | OSAPI"><meta data-rh="true" name="description" content="Get a kernel parameter&#x27;s current value, and whether osapi manages it."><meta data-rh="true" property="og:description" content="Get a kernel parameter&#x27;s current value, and whether osapi manages it."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/node/sysctl/get"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/node/sysctl/get" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/node/sysctl/get" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/"},{"@type":"ListItem","position":3,"name":"Client","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/"},{"@type":"ListItem","position":4,"name":"Next","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/"},{"@type":"ListItem","position":5,"name":"Node","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/node/"},{"@type":"ListItem","position":6,"name":"Sysctl","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/node/sysctl/"},{"@type":"ListItem","position":7,"name":"Get","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/next/node/sysctl/get"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.16b6cbd0.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.e9dbb312.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.4c954b19.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.e66a9d22.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -50,8 +50,8 @@
 
 <table><thead><tr><th>Call</th><th>Flags</th><th>Fails with</th></tr></thead><tbody><tr><td>A parameter the kernel does not have</td><td><code>--key vm.nosuch</code></td><td>not found</td></tr><tr><td>No key</td><td></td><td>key must not be empty</td></tr><tr><td>A key that is not a parameter name</td><td><code>--key &quot;vm.swappiness;reboot&quot;</code></td><td>invalid sysctl key</td></tr><tr><td>A key holding a value</td><td><code>--key vm.swappiness=1</code></td><td>invalid sysctl key</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="permission">Permission<a href="#permission" class="hash-link" aria-label="Direct link to Permission" title="Direct link to Permission" translate="no">​</a></h2>
-<p>It needs the <code>sysctl:read</code> permission. <code>osapi token roles list</code> lists the roles
-that grant it.</p>
+<p>It needs the <code>sysctl:read</code> permission. <code>osapi token roles get --name &lt;role&gt;</code>
+shows what a role grants.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="flags">Flags<a href="#flags" class="hash-link" aria-label="Direct link to Flags" title="Direct link to Flags" translate="no">​</a></h2>
 
 
