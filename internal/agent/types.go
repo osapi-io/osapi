@@ -144,6 +144,14 @@ type Agent struct {
 	consumerCtx    context.Context
 	consumerCancel context.CancelFunc
 	consumerWg     sync.WaitGroup
+	// consumerSetWg counts the consumers of the running set only, so a drain
+	// waits for the set it cancelled and not for one started after it.
+	// Guarded by lifecycleMu.
+	consumerSetWg *sync.WaitGroup
+	// drainStuck is set when a drain's consumers have not stopped within
+	// drainStuckAfter; the heartbeat reports it as the DrainStuck condition.
+	// Guarded by lifecycleMu.
+	drainStuck bool
 
 	// subComponents reports the status of internal services in heartbeat.
 	subComponents map[string]job.SubComponentInfo

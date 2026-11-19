@@ -189,6 +189,32 @@ func ExportHandleJobMessageJS(
 	return a.handleJobMessageJS(context.Background(), msg)
 }
 
+// SetDrainStuckAfter sets how long a drain waits before it reports the
+// DrainStuck condition, and returns a func that restores it.
+func SetDrainStuckAfter(
+	d time.Duration,
+) func() {
+	prev := drainStuckAfter
+	drainStuckAfter = d
+
+	return func() { drainStuckAfter = prev }
+}
+
+// ExportDrainCondition exposes drainCondition for testing.
+func ExportDrainCondition(
+	a *Agent,
+) job.Condition {
+	return a.drainCondition()
+}
+
+// ExportStartConsumers exposes startConsumers, the start of the job
+// consumers at startup, for testing.
+func ExportStartConsumers(
+	a *Agent,
+) {
+	a.startConsumers()
+}
+
 // ExportCheckDrainFlag exposes the private checkDrainFlag method for testing.
 func ExportCheckDrainFlag(
 	ctx context.Context,

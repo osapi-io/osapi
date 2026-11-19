@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -108,6 +109,10 @@ func (a *Agent) consumeQueryJobs(
 		}
 
 		a.consumerWg.Add(1)
+		set := a.consumerSetWg
+		if set != nil {
+			set.Add(1)
+		}
 		go func(c struct {
 			name       string
 			filter     string
@@ -115,6 +120,9 @@ func (a *Agent) consumeQueryJobs(
 		},
 		) {
 			defer a.consumerWg.Done()
+			if set != nil {
+				defer set.Done()
+			}
 
 			opts := &natsclient.ConsumeOptions{
 				QueueGroup:  c.queueGroup,
@@ -205,6 +213,10 @@ func (a *Agent) consumeModifyJobs(
 		}
 
 		a.consumerWg.Add(1)
+		set := a.consumerSetWg
+		if set != nil {
+			set.Add(1)
+		}
 		go func(c struct {
 			name       string
 			filter     string
@@ -212,6 +224,9 @@ func (a *Agent) consumeModifyJobs(
 		},
 		) {
 			defer a.consumerWg.Done()
+			if set != nil {
+				defer set.Done()
+			}
 
 			opts := &natsclient.ConsumeOptions{
 				QueueGroup:  c.queueGroup,
@@ -253,35 +268,56 @@ func (a *Agent) setState(
 	a.state = state
 }
 
-// startConsumers creates a consumer context and starts all job consumers.
+// startConsumers starts the job consumers at startup, when the agent is
+// Ready. The heartbeat starts before it and can find the drain flag first:
+// then the agent is already Cordoned, and it must not take jobs. Starting
+// the consumers anyway left them running while cordoned, and the undrain
+// started a second set over them, whose cancel replaced the first's; the
+// next drain then waited for the first set forever (#876).
 func (a *Agent) startConsumers() {
 	a.lifecycleMu.Lock()
 	defer a.lifecycleMu.Unlock()
 
+	if a.state != job.AgentStateReady {
+		a.logger.Info(
+			"job consumers not started",
+			slog.String("state", a.state),
+		)
+
+		return
+	}
 	a.startConsumersLocked()
 }
 
 // startConsumersLocked is startConsumers for a caller that already holds
 // lifecycleMu, so a state change and the consumers it implies are one step.
+// When the consumers already run, it does nothing: a second set would
+// replace the cancel of the first, and cancelConsumersLocked could not stop
+// it.
 func (a *Agent) startConsumersLocked() {
+	if a.consumerCancel != nil {
+		return
+	}
 	a.consumerCtx, a.consumerCancel = context.WithCancel(a.ctx)
+	a.consumerSetWg = &sync.WaitGroup{}
 	_ = a.consumeQueryJobs(a.consumerCtx, a.machineID)
 	_ = a.consumeModifyJobs(a.consumerCtx, a.machineID)
 }
 
-// stopConsumersLocked cancels the consumer context and waits for all consumer
-// goroutines to finish. After this returns, the agent is no longer receiving new
-// jobs.
-//
-// The caller holds lifecycleMu, and this waits for the consumer goroutines while
-// holding it. That is deliberate: a transition that has cancelled the consumers
-// is not finished until they have stopped, and the next transition must not
-// start before then.
-func (a *Agent) stopConsumersLocked() {
-	if a.consumerCancel != nil {
-		a.consumerCancel()
+// cancelConsumersLocked cancels the running set of consumers and returns
+// its wait group, or nil when no set runs. It does not wait: a drain waits
+// for the set in its own goroutine, so a consumer that is slow to stop
+// never holds lifecycleMu or the heartbeat. The caller holds lifecycleMu.
+func (a *Agent) cancelConsumersLocked() *sync.WaitGroup {
+	if a.consumerCancel == nil {
+		return nil
 	}
-	a.consumerWg.Wait()
+	a.consumerCancel()
+	a.consumerCancel = nil
+	set := a.consumerSetWg
+	a.consumerSetWg = nil
+
+	return set
 }
 
 // handleJobMessageJS is the JetStream handler of a job message.
