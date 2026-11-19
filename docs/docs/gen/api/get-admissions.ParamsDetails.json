@@ -1,0 +1,1 @@
+{"parameters":[{"description":"Only the records in this state: pending, admitted, rejected or revoked.","in":"query","name":"state","schema":{"enum":["pending","admitted","rejected","revoked"],"type":"string"},"x-oapi-codegen-extra-tags":{"validate":"omitempty,oneof=pending admitted rejected revoked"}}]}

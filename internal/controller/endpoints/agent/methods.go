@@ -21,19 +21,13 @@ package agent
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
-	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	"github.com/osapi-io/osapi/internal/job"
 )
-
-// errNoEnrollment is the answer of a method that needs enrollment when the
-// controller runs without it.
-var errNoEnrollment = errors.New("enrollment not enabled")
 
 // List is the agents that report.
 func List(
@@ -54,34 +48,6 @@ func List(
 	return ListAgentsResponse{Items: infos, TotalItems: len(infos)}, nil
 }
 
-// Pending is the agents that wait for enrollment.
-func Pending(
-	ctx context.Context,
-	d Deps,
-	_ ListInput,
-) (ListPendingAgentsResponse, error) {
-	if d.Enrollment == nil {
-		return ListPendingAgentsResponse{}, errNoEnrollment
-	}
-
-	pending, err := d.Enrollment.ListPending(ctx)
-	if err != nil {
-		return ListPendingAgentsResponse{}, err
-	}
-
-	agents := make([]PendingAgentInfo, 0, len(pending))
-	for _, p := range pending {
-		agents = append(agents, PendingAgentInfo{
-			MachineID:   p.MachineID,
-			Hostname:    p.Hostname,
-			Fingerprint: p.Fingerprint,
-			RequestedAt: p.RequestedAt,
-		})
-	}
-
-	return ListPendingAgentsResponse{Items: agents, TotalItems: len(agents)}, nil
-}
-
 // Get is one agent.
 func Get(
 	ctx context.Context,
@@ -98,96 +64,6 @@ func Get(
 	}
 
 	return buildAgentInfo(info), nil
-}
-
-// Delete removes an accepted agent's stored key.
-func Delete(
-	ctx context.Context,
-	d Deps,
-	in DeleteInput,
-) (struct{}, error) {
-	if d.Enrollment == nil {
-		return struct{}{}, errNoEnrollment
-	}
-
-	_, err := d.Enrollment.RemoveByHostname(ctx, in.Hostname, in.MachineID)
-	switch {
-	case errors.Is(err, enrollment.ErrNoAcceptedAgent):
-		msg := fmt.Sprintf("no accepted agent with hostname %q", in.Hostname)
-		if in.MachineID != "" {
-			msg += fmt.Sprintf(" and machine ID %q", in.MachineID)
-		}
-
-		return struct{}{}, endpoint.Errorf(ErrNotFound, "%s", msg)
-	case errors.Is(err, enrollment.ErrAmbiguousHostname):
-		return struct{}{}, endpoint.Errorf(
-			ErrAmbiguous,
-			"%s; name one with machine_id",
-			err.Error(),
-		)
-	case err != nil:
-		return struct{}{}, err
-	}
-
-	return struct{}{}, nil
-}
-
-// Accept accepts a pending agent, by its fingerprint when the request names
-// one, or by its hostname.
-func Accept(
-	ctx context.Context,
-	d Deps,
-	in AcceptInput,
-) (struct{}, error) {
-	if d.Enrollment == nil {
-		return struct{}{}, errNoEnrollment
-	}
-
-	if in.Fingerprint != "" {
-		if err := d.Enrollment.AcceptByFingerprint(ctx, in.Fingerprint); err != nil {
-			if errors.Is(err, enrollment.ErrNoPendingAgent) {
-				return struct{}{}, endpoint.Errorf(ErrNotFound,
-					"no pending agent with fingerprint %q", in.Fingerprint)
-			}
-
-			return struct{}{}, err
-		}
-
-		return struct{}{}, nil
-	}
-
-	if err := d.Enrollment.AcceptByHostname(ctx, in.Hostname); err != nil {
-		if errors.Is(err, enrollment.ErrNoPendingAgent) {
-			return struct{}{}, endpoint.Errorf(ErrNotFound,
-				"no pending agent with hostname %q", in.Hostname)
-		}
-
-		return struct{}{}, err
-	}
-
-	return struct{}{}, nil
-}
-
-// Reject rejects a pending agent.
-func Reject(
-	ctx context.Context,
-	d Deps,
-	in RejectInput,
-) (struct{}, error) {
-	if d.Enrollment == nil {
-		return struct{}{}, errNoEnrollment
-	}
-
-	if err := d.Enrollment.RejectByHostname(ctx, in.Hostname, "rejected via API"); err != nil {
-		if errors.Is(err, enrollment.ErrNoPendingAgent) {
-			return struct{}{}, endpoint.Errorf(ErrNotFound,
-				"no pending agent with hostname %q", in.Hostname)
-		}
-
-		return struct{}{}, err
-	}
-
-	return struct{}{}, nil
 }
 
 // Drain stops an agent taking new jobs. A failure of the registry or of a

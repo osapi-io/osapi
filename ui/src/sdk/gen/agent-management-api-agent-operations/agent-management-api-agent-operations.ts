@@ -5,12 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 import type {
-  AcceptAgentParams,
   AgentInfo,
-  DeleteAgentParams,
   ErrorResponse,
-  ListAgentsResponse,
-  ListPendingAgentsResponse
+  ListAgentsResponse
 } from '../schemas';
 
 import { apiFetch } from '../../fetch';
@@ -62,83 +59,6 @@ export const getAgents = async ( options?: Parameters<typeof apiFetch>[1]): Prom
   {
     ...options,
     method: 'GET'
-
-
-  }
-);}
-
-
-export type deleteAgentResponse204 = {
-  data: void
-  status: 204
-}
-
-export type deleteAgentResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type deleteAgentResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type deleteAgentResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type deleteAgentResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type deleteAgentResponse409 = {
-  data: ErrorResponse
-  status: 409
-}
-
-export type deleteAgentResponse500 = {
-  data: ErrorResponse
-  status: 500
-}
-
-export type deleteAgentResponseSuccess = (deleteAgentResponse204) & {
-  headers: Headers;
-};
-export type deleteAgentResponseError = (deleteAgentResponse400 | deleteAgentResponse401 | deleteAgentResponse403 | deleteAgentResponse404 | deleteAgentResponse409 | deleteAgentResponse500) & {
-  headers: Headers;
-};
-
-export type deleteAgentResponse = (deleteAgentResponseSuccess | deleteAgentResponseError)
-
-export const getDeleteAgentUrl = (hostname: string,
-    params?: DeleteAgentParams,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/agent/${hostname}?${stringifiedParams}` : `/api/agent/${hostname}`
-}
-
-/**
- * Remove an accepted agent's stored public key. Its responses and registration stop verifying at once, so targeting no longer resolves it. The agent does not enroll again by itself: remove its controller key on the host and restart it. Two machines may share a hostname; when they do, name one with machine_id.
- * @summary Remove an enrolled agent
- */
-export const deleteAgent = async (hostname: string,
-    params?: DeleteAgentParams, options?: Parameters<typeof apiFetch>[1]): Promise<deleteAgentResponse> => {
-
-  return apiFetch<deleteAgentResponse>(getDeleteAgentUrl(hostname,params),
-  {
-    ...options,
-    method: 'DELETE'
 
 
   }
@@ -202,78 +122,6 @@ export const getAgentDetails = async (hostname: string, options?: Parameters<typ
   {
     ...options,
     method: 'GET'
-
-
-  }
-);}
-
-
-export type acceptAgentResponse204 = {
-  data: void
-  status: 204
-}
-
-export type acceptAgentResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type acceptAgentResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type acceptAgentResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type acceptAgentResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type acceptAgentResponse500 = {
-  data: ErrorResponse
-  status: 500
-}
-
-export type acceptAgentResponseSuccess = (acceptAgentResponse204) & {
-  headers: Headers;
-};
-export type acceptAgentResponseError = (acceptAgentResponse400 | acceptAgentResponse401 | acceptAgentResponse403 | acceptAgentResponse404 | acceptAgentResponse500) & {
-  headers: Headers;
-};
-
-export type acceptAgentResponse = (acceptAgentResponseSuccess | acceptAgentResponseError)
-
-export const getAcceptAgentUrl = (hostname: string,
-    params?: AcceptAgentParams,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/agent/${hostname}/accept?${stringifiedParams}` : `/api/agent/${hostname}/accept`
-}
-
-/**
- * Accept a pending agent enrollment request. The agent can be identified by hostname (path parameter) or by fingerprint (query parameter).
- * @summary Accept a pending agent
- */
-export const acceptAgent = async (hostname: string,
-    params?: AcceptAgentParams, options?: Parameters<typeof apiFetch>[1]): Promise<acceptAgentResponse> => {
-
-  return apiFetch<acceptAgentResponse>(getAcceptAgentUrl(hostname,params),
-  {
-    ...options,
-    method: 'POST'
 
 
   }
@@ -348,69 +196,6 @@ export const drainAgent = async (hostname: string, options?: Parameters<typeof a
 );}
 
 
-export type rejectAgentResponse204 = {
-  data: void
-  status: 204
-}
-
-export type rejectAgentResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type rejectAgentResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type rejectAgentResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type rejectAgentResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type rejectAgentResponse500 = {
-  data: ErrorResponse
-  status: 500
-}
-
-export type rejectAgentResponseSuccess = (rejectAgentResponse204) & {
-  headers: Headers;
-};
-export type rejectAgentResponseError = (rejectAgentResponse400 | rejectAgentResponse401 | rejectAgentResponse403 | rejectAgentResponse404 | rejectAgentResponse500) & {
-  headers: Headers;
-};
-
-export type rejectAgentResponse = (rejectAgentResponseSuccess | rejectAgentResponseError)
-
-export const getRejectAgentUrl = (hostname: string,) => {
-
-
-
-
-  return `/api/agent/${hostname}/reject`
-}
-
-/**
- * Reject a pending agent enrollment request.
- * @summary Reject a pending agent
- */
-export const rejectAgent = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<rejectAgentResponse> => {
-
-  return apiFetch<rejectAgentResponse>(getRejectAgentUrl(hostname),
-  {
-    ...options,
-    method: 'POST'
-
-
-  }
-);}
-
-
 export type undrainAgentResponse204 = {
   data: void
   status: 204
@@ -473,59 +258,6 @@ export const undrainAgent = async (hostname: string, options?: Parameters<typeof
   {
     ...options,
     method: 'POST'
-
-
-  }
-);}
-
-
-export type getAgentsPendingResponse200 = {
-  data: ListPendingAgentsResponse
-  status: 200
-}
-
-export type getAgentsPendingResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type getAgentsPendingResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type getAgentsPendingResponse500 = {
-  data: ErrorResponse
-  status: 500
-}
-
-export type getAgentsPendingResponseSuccess = (getAgentsPendingResponse200) & {
-  headers: Headers;
-};
-export type getAgentsPendingResponseError = (getAgentsPendingResponse401 | getAgentsPendingResponse403 | getAgentsPendingResponse500) & {
-  headers: Headers;
-};
-
-export type getAgentsPendingResponse = (getAgentsPendingResponseSuccess | getAgentsPendingResponseError)
-
-export const getGetAgentsPendingUrl = () => {
-
-
-
-
-  return `/api/agent/pending`
-}
-
-/**
- * List all agents that have submitted enrollment requests but have not yet been accepted or rejected.
- * @summary List agents awaiting enrollment
- */
-export const getAgentsPending = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getAgentsPendingResponse> => {
-
-  return apiFetch<getAgentsPendingResponse>(getGetAgentsPendingUrl(),
-  {
-    ...options,
-    method: 'GET'
 
 
   }

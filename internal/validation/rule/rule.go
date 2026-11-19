@@ -345,6 +345,10 @@ func Needs(
 				continue
 			case name == "required" && (!withRequired || f.Tag.Get("in") == "path"):
 				continue
+			// The validator does not check required on a struct value; the
+			// rules of its fields are what refuse an empty body.
+			case name == "required" && f.Type.Kind() == reflect.Struct:
+				continue
 			}
 			out = append(out, Need{Field: f.Name, Rule: r})
 		}

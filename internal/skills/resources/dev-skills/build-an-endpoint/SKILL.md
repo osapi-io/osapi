@@ -160,7 +160,7 @@ The CLI:
    Each command is `<group> <resource> <verb>`, such as `telemetry trace get`:
    the verb is `list`, `get`, `create`, `update`, `delete`, or an action such
    as `retry`, never a noun. A verb that the group has as a method already
-   gets `.Use`, such as `agent pending list`. A command that `.Sub` makes has
+   gets `.Use`, such as `facts keys list`. A command that `.Sub` makes has
    a hand-written parent, so its help says what it holds.
 2. In `cmd/client_<group>.go`, the file of the group's command, add a
    `command.Render` for each method, with the output code of the hand-written

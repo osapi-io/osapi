@@ -12,6 +12,7 @@ package mocks
 import (
 	context "context"
 	reflect "reflect"
+	time "time"
 
 	jetstream "github.com/nats-io/nats.go/jetstream"
 	client "github.com/osapi-io/nats-client/pkg/client"
@@ -42,6 +43,21 @@ func NewMockJobClient(ctrl *gomock.Controller) *MockJobClient {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockJobClient) EXPECT() *MockJobClientMockRecorder {
 	return m.recorder
+}
+
+// AgentsLastSeen mocks base method.
+func (m *MockJobClient) AgentsLastSeen(ctx context.Context) (map[string]time.Time, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AgentsLastSeen", ctx)
+	ret0, _ := ret[0].(map[string]time.Time)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AgentsLastSeen indicates an expected call of AgentsLastSeen.
+func (mr *MockJobClientMockRecorder) AgentsLastSeen(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AgentsLastSeen", reflect.TypeOf((*MockJobClient)(nil).AgentsLastSeen), ctx)
 }
 
 // CheckDrainFlag mocks base method.
@@ -361,6 +377,20 @@ func (m *MockJobClient) SetPKISigner(signer client0.PKISigner) {
 func (mr *MockJobClientMockRecorder) SetPKISigner(signer any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPKISigner", reflect.TypeOf((*MockJobClient)(nil).SetPKISigner), signer)
+}
+
+// WriteAgentSeen mocks base method.
+func (m *MockJobClient) WriteAgentSeen(ctx context.Context, machineID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WriteAgentSeen", ctx, machineID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WriteAgentSeen indicates an expected call of WriteAgentSeen.
+func (mr *MockJobClientMockRecorder) WriteAgentSeen(ctx, machineID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteAgentSeen", reflect.TypeOf((*MockJobClient)(nil).WriteAgentSeen), ctx, machineID)
 }
 
 // WriteAgentTimelineEvent mocks base method.

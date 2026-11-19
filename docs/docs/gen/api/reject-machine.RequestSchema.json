@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"properties":{"reason":{"description":"Why the machine is rejected; the machine and the record keep it.","example":"unknown host","maxLength":1024,"type":"string","x-oapi-codegen-extra-tags":{"validate":"omitempty,max=1024"}}},"required":["reason"],"type":"object","title":"RejectRequest"}}},"required":true}}

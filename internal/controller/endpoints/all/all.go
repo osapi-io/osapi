@@ -22,6 +22,7 @@ package all
 
 import (
 	// Each import registers its group.
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/admission"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/audit"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/facts"

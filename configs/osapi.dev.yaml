@@ -19,7 +19,7 @@ controller:
   # pki:
   #   enabled: false
   #   key_dir: /etc/osapi/pki
-  #   auto_accept: false
+  #   auto_admit: false
   #   rotation_grace_period: 24h
 
 agent:

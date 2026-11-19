@@ -31,6 +31,7 @@ import (
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/admission"
 	nodeAPI "github.com/osapi-io/osapi/internal/controller/api/node"
 	certificateAPI "github.com/osapi-io/osapi/internal/controller/api/node/certificate"
 	commandAPI "github.com/osapi-io/osapi/internal/controller/api/node/command"
@@ -50,13 +51,13 @@ import (
 	userAPI "github.com/osapi-io/osapi/internal/controller/api/node/user"
 	uihandler "github.com/osapi-io/osapi/internal/controller/api/ui"
 	endpointserver "github.com/osapi-io/osapi/internal/controller/endpoint/server"
+	admissionEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/admission"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 	auditEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/audit"
 	factsEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/facts"
 	healthEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 	jobEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/job"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
-	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	"github.com/osapi-io/osapi/internal/controller/health"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/telemetry/traces"
@@ -77,7 +78,7 @@ type handlerDeps struct {
 	nats            fileBuckets
 	objBucket       string
 	fileStateBucket string
-	enrollment      *enrollment.Watcher
+	admission       *admission.Watcher
 	// version is the build version of the binary.
 	version string
 }
@@ -112,7 +113,8 @@ func handlers(
 			d.log,
 			signingKey,
 			customRoles,
-			agentDeps(d),
+			agent.Deps{Jobs: d.jobs},
+			admissionDeps(d),
 			telemetry.Deps{Traces: traceReader(d.cfg.Telemetry.Tracing)},
 			auditEndpoint.Deps{Store: d.auditStore},
 			jobEndpoint.Deps{Jobs: d.jobs},
@@ -167,15 +169,15 @@ func traceReader(
 	return traces.NewJaeger(cfg.URL, nil)
 }
 
-// agentDeps is what the agent group's handlers use. A controller without
-// enrollment has no watcher, and the group must see a nil interface, not an
-// interface that holds a nil pointer, to answer that enrollment is off.
-func agentDeps(
+// admissionDeps is what the admission group's handlers use. A controller
+// with PKI off has no watcher, and the group must see a nil interface, not
+// an interface that holds a nil pointer, to answer that admission is off.
+func admissionDeps(
 	d handlerDeps,
-) agent.Deps {
-	deps := agent.Deps{Jobs: d.jobs}
-	if d.enrollment != nil {
-		deps.Enrollment = d.enrollment
+) admissionEndpoint.Deps {
+	deps := admissionEndpoint.Deps{Jobs: d.jobs}
+	if d.admission != nil {
+		deps.Store = d.admission
 	}
 
 	return deps

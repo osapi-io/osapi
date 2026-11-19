@@ -13,7 +13,6 @@ import (
 	context "context"
 	reflect "reflect"
 
-	enrollment "github.com/osapi-io/osapi/internal/controller/enrollment"
 	job "github.com/osapi-io/osapi/internal/job"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -112,100 +111,4 @@ func (m *MockJobs) WriteAgentTimelineEvent(ctx context.Context, hostname, event,
 func (mr *MockJobsMockRecorder) WriteAgentTimelineEvent(ctx, hostname, event, message any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteAgentTimelineEvent", reflect.TypeOf((*MockJobs)(nil).WriteAgentTimelineEvent), ctx, hostname, event, message)
-}
-
-// MockEnrollment is a mock of Enrollment interface.
-type MockEnrollment struct {
-	ctrl     *gomock.Controller
-	recorder *MockEnrollmentMockRecorder
-	isgomock struct{}
-}
-
-// MockEnrollmentMockRecorder is the mock recorder for MockEnrollment.
-type MockEnrollmentMockRecorder struct {
-	mock *MockEnrollment
-}
-
-// NewMockEnrollment creates a new mock instance.
-func NewMockEnrollment(ctrl *gomock.Controller) *MockEnrollment {
-	mock := &MockEnrollment{ctrl: ctrl}
-	mock.recorder = &MockEnrollmentMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockEnrollment) EXPECT() *MockEnrollmentMockRecorder {
-	return m.recorder
-}
-
-// AcceptByFingerprint mocks base method.
-func (m *MockEnrollment) AcceptByFingerprint(ctx context.Context, fingerprint string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AcceptByFingerprint", ctx, fingerprint)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// AcceptByFingerprint indicates an expected call of AcceptByFingerprint.
-func (mr *MockEnrollmentMockRecorder) AcceptByFingerprint(ctx, fingerprint any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcceptByFingerprint", reflect.TypeOf((*MockEnrollment)(nil).AcceptByFingerprint), ctx, fingerprint)
-}
-
-// AcceptByHostname mocks base method.
-func (m *MockEnrollment) AcceptByHostname(ctx context.Context, hostname string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AcceptByHostname", ctx, hostname)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// AcceptByHostname indicates an expected call of AcceptByHostname.
-func (mr *MockEnrollmentMockRecorder) AcceptByHostname(ctx, hostname any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcceptByHostname", reflect.TypeOf((*MockEnrollment)(nil).AcceptByHostname), ctx, hostname)
-}
-
-// ListPending mocks base method.
-func (m *MockEnrollment) ListPending(ctx context.Context) ([]enrollment.PendingAgent, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListPending", ctx)
-	ret0, _ := ret[0].([]enrollment.PendingAgent)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListPending indicates an expected call of ListPending.
-func (mr *MockEnrollmentMockRecorder) ListPending(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPending", reflect.TypeOf((*MockEnrollment)(nil).ListPending), ctx)
-}
-
-// RejectByHostname mocks base method.
-func (m *MockEnrollment) RejectByHostname(ctx context.Context, hostname, reason string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RejectByHostname", ctx, hostname, reason)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RejectByHostname indicates an expected call of RejectByHostname.
-func (mr *MockEnrollmentMockRecorder) RejectByHostname(ctx, hostname, reason any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RejectByHostname", reflect.TypeOf((*MockEnrollment)(nil).RejectByHostname), ctx, hostname, reason)
-}
-
-// RemoveByHostname mocks base method.
-func (m *MockEnrollment) RemoveByHostname(ctx context.Context, hostname, machineID string) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveByHostname", ctx, hostname, machineID)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RemoveByHostname indicates an expected call of RemoveByHostname.
-func (mr *MockEnrollmentMockRecorder) RemoveByHostname(ctx, hostname, machineID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveByHostname", reflect.TypeOf((*MockEnrollment)(nil).RemoveByHostname), ctx, hostname, machineID)
 }

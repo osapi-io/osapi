@@ -22,7 +22,6 @@ package agent
 import (
 	"context"
 
-	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	"github.com/osapi-io/osapi/internal/job"
 )
 
@@ -31,9 +30,6 @@ import (
 type Deps struct {
 	// Jobs reads the registry and writes the drain flag and the timeline.
 	Jobs Jobs
-	// Enrollment accepts, rejects and removes agent keys. Nil when
-	// enrollment is not enabled; the methods that need it fail with 500.
-	Enrollment Enrollment
 }
 
 // Jobs is the part of the job client the agent group uses.
@@ -43,13 +39,4 @@ type Jobs interface {
 	SetDrainFlag(ctx context.Context, hostname string) error
 	DeleteDrainFlag(ctx context.Context, hostname string) error
 	WriteAgentTimelineEvent(ctx context.Context, hostname, event, message string) error
-}
-
-// Enrollment is the part of the enrollment manager the agent group uses.
-type Enrollment interface {
-	ListPending(ctx context.Context) ([]enrollment.PendingAgent, error)
-	AcceptByHostname(ctx context.Context, hostname string) error
-	AcceptByFingerprint(ctx context.Context, fingerprint string) error
-	RejectByHostname(ctx context.Context, hostname string, reason string) error
-	RemoveByHostname(ctx context.Context, hostname string, machineID string) (string, error)
 }

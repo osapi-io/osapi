@@ -1,0 +1,69 @@
+---
+id: revoke-machine
+title: "Revoke an admitted machine"
+description: "Removes an admitted machine's key, and keeps a record of the decision. Nothing the machine signs verifies afterwards; to return, it asks again."
+sidebar_label: "Revoke an admitted machine"
+hide_title: true
+hide_table_of_contents: true
+api: eJztWN9v20YM/leIe9kGKHbSNS8a+uCh7eCh7Yo2xR6SoKB1tMRaulPvKMeuof994El23CQr9rgAebJ05o+P/HjU8XbGUiwCt8Lemdx8oMavKQI6QNuwCFlosKjY0U8RVrTNAJ2FFVEbASFQ4YMFvwSpCCwVHNm7CbzzUrEr0+qoDpFLF2FNgZesHpZC4QaDjb+BeAgkXXAZsADGVQQskd3EZMa3FFDRzW3Ct/YrejuYNJlpMWBDQiGa/HJ3J5iLI+/zl3uUzltSw6wiLUplMuOwIZObUfgzW5OZQF87DmRNLqGjzMSiogZNvjMNbt6QK6Uy+bPz88w07PbvZ5mRbau2ogR2pekzsznx2PJJ4S2V5E5oIwFPBMuottZYs0VRjb3DrGH34ixrcPPi2fm56ftrBRNb7yIlnWenz/Xn34PlCCElyk4UwPPTU5UvvBNyoo/YtjUXKa3TL1H1d0fxjRH4xRcqRJMclAThwTuF4MOR2BhodgfPDI7e97lPuiAVCvii6EJQhJmhDTZtrcZeI9dkx4IITGuCKChdTIFYEuQ6/gfn1rI+Yg2jDuDCd3IL4kG3tiN17UhufFiBcEO+k+Ra2Tvyy06opHDP8cUhyGIss4OT89PTvs+MsCSXr1Tqw0ir6fv+IVNaEhRFCXVeIBXLSOnZE6WPjtJPDjupfOBvZOEEZu/n2lLh0GkSsb8+EfvoiH3tw4KtJQcnMHexWy65YHICLYWGo34U48Du8yd2Hx277/y9wxDcsFQphvnLhOr86Rv7CJmdudGSdwm20hd8XVMYSX1qxo+QVDu23P2xqfBuyWUXyOYQSY5Zblc8IYeLOh2V+8xEKrrAsk3jxO+EgcKs05P9pcG93fwmsJC51oP5cI6/vHX6efZ+/vkgaq4z05BUXoeX1sdUFTpz5GaKLU8PgtPd7fDRT4fTu1E4YT0MN9e32D5qwQ01dYzwkONKpDXjwKLviyRksvHhtQ8NisnNn39fpJjZLX1SHzPsI7Z8n6FtSzaDQC2haMbgMJpFWPoAb9h1G6h8lDiBP3hNsPVdACz1Q4iwrIkkU0KuHEKsqK4nV+7KJW9Qk6SpczYfFRp0WNKxUZAq+K6sQMO0R95Ho/u/EWpfspvAKyyqWzGtBoQFVbhmH3LwjmCYUr0DTC6yK2dpyU6t67/cUDZ0eoQlb8gCu7aTNAL7TtpOJjDALyoqVhEIi+rK7U/tC1r6QDrSfu2oowgsE5hBpMI7C6FzUFToSkpVqkhGyMMqcFRTOmCTnVw5kxkthYGMs8np5NRkqTVhkVpTF+qR+5hPpyVL1S0mhW+mCeEJ++FB92TNBenmyXf7yfft/ALejKvZHVO+JRd9Fwqa+FBOR+U4fTsfykfLukF3ZG2Y0h+6RLhbVUfN9X949zDuJ6GNTNsa2WnyUnJ24y6+NMNWud3wmcnvXCOkrXydGa0w1djtFhjpU6j7Xpe/dhS2wwZfY2DdWcNdBsfUl0y+xDrSDxL384dxgPgFfnzl8WA84yK6rVYY1p2+mcysaPv9lUh/3WemIrQUEsBBYFYU1MqR6r1PZH/cA9//9fFC8/V9x7rToZL5B3HtdoPEhV+R6/sDTNF3Rdj3/wCPW43X
+sidebar_class_name: "post api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Revoke an admitted machine"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/admission/{machine_id}/revoke"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Removes an admitted machine's key, and keeps a record of the decision. Nothing the machine signs verifies afterwards; to return, it asks again.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./revoke-machine.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./revoke-machine.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./revoke-machine.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

@@ -94,33 +94,30 @@ Enrollment uses an accept and reject model, like Salt:
    `controller.pub`, and starts to verify job signatures. At the next restarts,
    the agent loads the controller key from disk and does not enroll again.
 
-### Auto-accept mode
+### Auto-admit mode
 
-For development and tests, set `controller.pki.auto_accept: true`. Then the
-controller accepts all enrollment requests automatically, without an
-administrator. Do not use this in production.
+For development and tests, set `controller.pki.auto_admit: true`. Then the
+controller admits each machine that asks to join, without an administrator. Do
+not use this in production.
 
 ### CLI commands
 
 ```bash
-# List pending enrollment requests
-osapi client agent pending list
+# On the machine: show its machine ID and key fingerprint
+osapi agent admission
 
-# Accept a pending agent by hostname
-osapi client agent accept --hostname web-01
+# List the machines that wait for a decision
+osapi client admission list --state pending
 
-# Accept by fingerprint (for verification)
-osapi client agent accept --hostname web-01 \
-  --fingerprint sha256:a1b2c3...
+# Admit a machine, with the fingerprint that the machine printed
+osapi client admission admit --machine-id <machine-id> \
+  --fingerprint SHA256:a1b2c3...
 
-# Reject a pending agent
-osapi client agent reject --hostname web-01
+# Reject a machine, with the reason
+osapi client admission reject --machine-id <machine-id> --reason "unknown host"
 
-# Remove an enrolled agent: its key stops verifying at once
-osapi client agent delete --hostname web-01
-
-# Show the local agent key fingerprint
-osapi client agent key fingerprint
+# Revoke an admitted machine: its key stops verifying at once
+osapi client admission revoke --machine-id <machine-id>
 
 # Show the local controller key fingerprint
 osapi client controller key fingerprint
@@ -309,17 +306,17 @@ controller:
     # Directory for controller keypair storage.
     key_dir: /etc/osapi/pki
     # Automatically accept all enrollment requests (dev only).
-    auto_accept: false
+    auto_admit: false
     # Grace period for key rotation (Go duration).
     rotation_grace_period: 24h
 ```
 
-| Field                   | Type   | Default          | Description                                                    |
-| ----------------------- | ------ | ---------------- | -------------------------------------------------------------- |
-| `enabled`               | bool   | `false`          | Turn on PKI enrollment and job signing                         |
-| `key_dir`               | string | `/etc/osapi/pki` | Directory for the controller key pair                          |
-| `auto_accept`           | bool   | `false`          | Accept agent enrollments automatically (development and tests) |
-| `rotation_grace_period` | string | `24h`            | osapi accepts both keys during rotation                        |
+| Field                   | Type   | Default          | Description                                                  |
+| ----------------------- | ------ | ---------------- | ------------------------------------------------------------ |
+| `enabled`               | bool   | `false`          | Turn on PKI enrollment and job signing                       |
+| `key_dir`               | string | `/etc/osapi/pki` | Directory for the controller key pair                        |
+| `auto_admit`            | bool   | `false`          | Admit each machine that asks to join (development and tests) |
+| `rotation_grace_period` | string | `24h`            | osapi accepts both keys during rotation                      |
 
 ## What does not change
 

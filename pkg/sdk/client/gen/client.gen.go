@@ -1594,6 +1594,30 @@ func (e UserMutationResultStatus) Valid() bool {
 	}
 }
 
+// Defines values for GetAdmissionsParamsState.
+const (
+	Admitted GetAdmissionsParamsState = "admitted"
+	Pending  GetAdmissionsParamsState = "pending"
+	Rejected GetAdmissionsParamsState = "rejected"
+	Revoked  GetAdmissionsParamsState = "revoked"
+)
+
+// Valid indicates whether the value is a known member of the GetAdmissionsParamsState enum.
+func (e GetAdmissionsParamsState) Valid() bool {
+	switch e {
+	case Admitted:
+		return true
+	case Pending:
+		return true
+	case Rejected:
+		return true
+	case Revoked:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PostFileMultipartBodyContentType.
 const (
 	PostFileMultipartBodyContentTypeRaw      PostFileMultipartBodyContentType = "raw"
@@ -1676,6 +1700,51 @@ func (e GetNodeContainerDockerParamsState) Valid() bool {
 	default:
 		return false
 	}
+}
+
+// Admission defines model for Admission.
+type Admission struct {
+	// AdmittedAt When the node was admitted.
+	AdmittedAt *time.Time `json:"admitted_at,omitempty"`
+
+	// DecidedAt When the node was rejected or revoked.
+	DecidedAt *time.Time `json:"decided_at,omitempty"`
+
+	// Fingerprint The fingerprint of the node's key.
+	Fingerprint string `json:"fingerprint"`
+
+	// Hostname The hostname the node gave.
+	Hostname string `json:"hostname"`
+
+	// LastSeen When the node last reported.
+	LastSeen *time.Time `json:"last_seen,omitempty"`
+
+	// MachineId The machine ID of the node.
+	MachineId string `json:"machine_id"`
+
+	// Online Whether the node is running now: it is in the registry.
+	Online bool `json:"online"`
+
+	// Previous On a pending record, the state of the node's earlier record: a returning node.
+	Previous *string `json:"previous,omitempty"`
+
+	// PreviousFingerprint On a pending record, the fingerprint of the earlier record; a different one is a new key.
+	PreviousFingerprint *string `json:"previous_fingerprint,omitempty"`
+
+	// Reason Why the node was rejected.
+	Reason *string `json:"reason,omitempty"`
+
+	// RequestedAt When the node asked to join.
+	RequestedAt *time.Time `json:"requested_at,omitempty"`
+
+	// State pending, admitted, rejected or revoked.
+	State string `json:"state"`
+}
+
+// AdmitRequest defines model for AdmitRequest.
+type AdmitRequest struct {
+	// Fingerprint The fingerprint that osapi agent admission prints on the machine.
+	Fingerprint string `json:"fingerprint" validate:"required,min=1,max=255"`
 }
 
 // AgentDetail defines model for AgentDetail.
@@ -3089,6 +3158,15 @@ type KVBucketInfo struct {
 	Name string `json:"name"`
 }
 
+// ListAdmissionResponse defines model for ListAdmissionResponse.
+type ListAdmissionResponse struct {
+	// Items The admission records, in hostname order.
+	Items []Admission `json:"items"`
+
+	// TotalItems The number of records.
+	TotalItems int `json:"total_items"`
+}
+
 // ListAgentsResponse defines model for ListAgentsResponse.
 type ListAgentsResponse struct {
 	// Items The active agents.
@@ -3116,15 +3194,6 @@ type ListJobsResponse struct {
 
 	// TotalItems Total number of jobs matching the filter.
 	TotalItems *int `json:"total_items,omitempty"`
-}
-
-// ListPendingAgentsResponse defines model for ListPendingAgentsResponse.
-type ListPendingAgentsResponse struct {
-	// Items The agents that wait for enrollment.
-	Items []PendingAgentInfo `json:"items"`
-
-	// TotalItems Total number of pending agents.
-	TotalItems int `json:"total_items"`
 }
 
 // LoadAverageResponse The system load averages for 1, 5, and 15 minutes.
@@ -3568,21 +3637,6 @@ type PackageMutationResult struct {
 // PackageMutationResultStatus The status of the operation for this host.
 type PackageMutationResultStatus string
 
-// PendingAgentInfo defines model for PendingAgentInfo.
-type PendingAgentInfo struct {
-	// Fingerprint The SHA256 fingerprint of the agent's public key.
-	Fingerprint string `json:"fingerprint"`
-
-	// Hostname The hostname of the agent.
-	Hostname string `json:"hostname"`
-
-	// MachineId The permanent machine identifier.
-	MachineId string `json:"machine_id"`
-
-	// RequestedAt When the enrollment request was received.
-	RequestedAt time.Time `json:"requested_at"`
-}
-
 // PingCollectionResponse defines model for PingCollectionResponse.
 type PingCollectionResponse struct {
 	// JobId The job ID used to process this request.
@@ -3800,6 +3854,12 @@ type ReadyResponse struct {
 
 	// Status Readiness status.
 	Status string `json:"status"`
+}
+
+// RejectRequest defines model for RejectRequest.
+type RejectRequest struct {
+	// Reason Why the machine is rejected; the machine and the record keep it.
+	Reason string `json:"reason" validate:"omitempty,max=1024"`
 }
 
 // RetryJobRequest defines model for RetryJobRequest.
@@ -4782,17 +4842,14 @@ type UserName = string
 // bearerAuthContextKey is the context key for BearerAuth security scheme
 type bearerAuthContextKey string
 
-// DeleteAgentParams defines parameters for DeleteAgent.
-type DeleteAgentParams struct {
-	// MachineId The machine ID to remove, when more than one accepted agent has the hostname.
-	MachineId *string `form:"machine_id,omitempty" json:"machine_id,omitempty" validate:"omitempty,min=1,max=255"`
+// GetAdmissionsParams defines parameters for GetAdmissions.
+type GetAdmissionsParams struct {
+	// State Only the records in this state: pending, admitted, rejected or revoked.
+	State *GetAdmissionsParamsState `form:"state,omitempty" json:"state,omitempty" validate:"omitempty,oneof=pending admitted rejected revoked"`
 }
 
-// AcceptAgentParams defines parameters for AcceptAgent.
-type AcceptAgentParams struct {
-	// Fingerprint Accept by fingerprint instead of hostname.
-	Fingerprint *string `form:"fingerprint,omitempty" json:"fingerprint,omitempty" validate:"omitempty,min=1,max=255"`
-}
+// GetAdmissionsParamsState defines parameters for GetAdmissions.
+type GetAdmissionsParamsState string
 
 // GetAuditLogsParams defines parameters for GetAuditLogs.
 type GetAuditLogsParams struct {
@@ -4903,6 +4960,12 @@ type PostNodeNetworkPingJSONBody struct {
 	// Address The IP address of the server to ping. Supports both IPv4 and IPv6. Also accepts @fact. references that are resolved agent-side.
 	Address string `json:"address" validate:"required,ip_or_fact"`
 }
+
+// AdmitMachineJSONRequestBody defines body for AdmitMachine for application/json ContentType.
+type AdmitMachineJSONRequestBody = AdmitRequest
+
+// RejectMachineJSONRequestBody defines body for RejectMachine for application/json ContentType.
+type RejectMachineJSONRequestBody = RejectRequest
 
 // PostFileMultipartRequestBody defines body for PostFile for multipart/form-data ContentType.
 type PostFileMultipartRequestBody PostFileMultipartBody
@@ -5097,26 +5160,33 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// GetAdmissions request
+	GetAdmissions(ctx context.Context, params *GetAdmissionsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAdmission request
+	GetAdmission(ctx context.Context, machineId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AdmitMachineWithBody request with any body
+	AdmitMachineWithBody(ctx context.Context, machineId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	AdmitMachine(ctx context.Context, machineId string, body AdmitMachineJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RejectMachineWithBody request with any body
+	RejectMachineWithBody(ctx context.Context, machineId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	RejectMachine(ctx context.Context, machineId string, body RejectMachineJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RevokeMachine request
+	RevokeMachine(ctx context.Context, machineId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetAgents request
 	GetAgents(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetAgentsPending request
-	GetAgentsPending(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// DeleteAgent request
-	DeleteAgent(ctx context.Context, hostname string, params *DeleteAgentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetAgentDetails request
 	GetAgentDetails(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// AcceptAgent request
-	AcceptAgent(ctx context.Context, hostname string, params *AcceptAgentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// DrainAgent request
 	DrainAgent(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// RejectAgent request
-	RejectAgent(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// UndrainAgent request
 	UndrainAgent(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5534,32 +5604,92 @@ type ClientInterface interface {
 	GetTrace(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
+func (c *Client) GetAdmissions(ctx context.Context, params *GetAdmissionsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAdmissionsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAdmission(ctx context.Context, machineId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAdmissionRequest(c.Server, machineId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AdmitMachineWithBody(ctx context.Context, machineId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAdmitMachineRequestWithBody(c.Server, machineId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AdmitMachine(ctx context.Context, machineId string, body AdmitMachineJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAdmitMachineRequest(c.Server, machineId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RejectMachineWithBody(ctx context.Context, machineId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRejectMachineRequestWithBody(c.Server, machineId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RejectMachine(ctx context.Context, machineId string, body RejectMachineJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRejectMachineRequest(c.Server, machineId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RevokeMachine(ctx context.Context, machineId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRevokeMachineRequest(c.Server, machineId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) GetAgents(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAgentsRequest(c.Server)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetAgentsPending(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetAgentsPendingRequest(c.Server)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) DeleteAgent(ctx context.Context, hostname string, params *DeleteAgentParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteAgentRequest(c.Server, hostname, params)
 	if err != nil {
 		return nil, err
 	}
@@ -5582,32 +5712,8 @@ func (c *Client) GetAgentDetails(ctx context.Context, hostname string, reqEditor
 	return c.Client.Do(req)
 }
 
-func (c *Client) AcceptAgent(ctx context.Context, hostname string, params *AcceptAgentParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewAcceptAgentRequest(c.Server, hostname, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) DrainAgent(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDrainAgentRequest(c.Server, hostname)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) RejectAgent(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewRejectAgentRequest(c.Server, hostname)
 	if err != nil {
 		return nil, err
 	}
@@ -7430,6 +7536,222 @@ func (c *Client) GetTrace(ctx context.Context, id string, reqEditors ...RequestE
 	return c.Client.Do(req)
 }
 
+// NewGetAdmissionsRequest generates requests for GetAdmissions
+func NewGetAdmissionsRequest(server string, params *GetAdmissionsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/admission")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.State != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "state", *params.State, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAdmissionRequest generates requests for GetAdmission
+func NewGetAdmissionRequest(server string, machineId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machine_id", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/admission/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAdmitMachineRequest calls the generic AdmitMachine builder with application/json body
+func NewAdmitMachineRequest(server string, machineId string, body AdmitMachineJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAdmitMachineRequestWithBody(server, machineId, "application/json", bodyReader)
+}
+
+// NewAdmitMachineRequestWithBody generates requests for AdmitMachine with any type of body
+func NewAdmitMachineRequestWithBody(server string, machineId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machine_id", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/admission/%s/admit", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRejectMachineRequest calls the generic RejectMachine builder with application/json body
+func NewRejectMachineRequest(server string, machineId string, body RejectMachineJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRejectMachineRequestWithBody(server, machineId, "application/json", bodyReader)
+}
+
+// NewRejectMachineRequestWithBody generates requests for RejectMachine with any type of body
+func NewRejectMachineRequestWithBody(server string, machineId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machine_id", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/admission/%s/reject", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRevokeMachineRequest generates requests for RevokeMachine
+func NewRevokeMachineRequest(server string, machineId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machine_id", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/admission/%s/revoke", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetAgentsRequest generates requests for GetAgents
 func NewGetAgentsRequest(server string) (*http.Request, error) {
 	var err error
@@ -7450,94 +7772,6 @@ func NewGetAgentsRequest(server string) (*http.Request, error) {
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetAgentsPendingRequest generates requests for GetAgentsPending
-func NewGetAgentsPendingRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/agent/pending")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewDeleteAgentRequest generates requests for DeleteAgent
-func NewDeleteAgentRequest(server string, hostname string, params *DeleteAgentParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/agent/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		// queryValues collects non-styled parameters (passthrough, JSON)
-		// that are safe to round-trip through url.Values.Encode().
-		queryValues := queryURL.Query()
-		// rawQueryFragments collects pre-encoded query fragments from
-		// styled parameters, preserving literal commas as delimiters
-		// per the OpenAPI spec (e.g. "color=blue,black,brown").
-		var rawQueryFragments []string
-
-		if params.MachineId != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "machine_id", *params.MachineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if encoded := queryValues.Encode(); encoded != "" {
-			rawQueryFragments = append(rawQueryFragments, encoded)
-		}
-		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
-	}
-
-	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -7579,67 +7813,6 @@ func NewGetAgentDetailsRequest(server string, hostname string) (*http.Request, e
 	return req, nil
 }
 
-// NewAcceptAgentRequest generates requests for AcceptAgent
-func NewAcceptAgentRequest(server string, hostname string, params *AcceptAgentParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/agent/%s/accept", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		// queryValues collects non-styled parameters (passthrough, JSON)
-		// that are safe to round-trip through url.Values.Encode().
-		queryValues := queryURL.Query()
-		// rawQueryFragments collects pre-encoded query fragments from
-		// styled parameters, preserving literal commas as delimiters
-		// per the OpenAPI spec (e.g. "color=blue,black,brown").
-		var rawQueryFragments []string
-
-		if params.Fingerprint != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "fingerprint", *params.Fingerprint, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if encoded := queryValues.Encode(); encoded != "" {
-			rawQueryFragments = append(rawQueryFragments, encoded)
-		}
-		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
-	}
-
-	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewDrainAgentRequest generates requests for DrainAgent
 func NewDrainAgentRequest(server string, hostname string) (*http.Request, error) {
 	var err error
@@ -7657,40 +7830,6 @@ func NewDrainAgentRequest(server string, hostname string) (*http.Request, error)
 	}
 
 	operationPath := fmt.Sprintf("/api/agent/%s/drain", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewRejectAgentRequest generates requests for RejectAgent
-func NewRejectAgentRequest(server string, hostname string) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/agent/%s/reject", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -12658,26 +12797,33 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// GetAdmissionsWithResponse request
+	GetAdmissionsWithResponse(ctx context.Context, params *GetAdmissionsParams, reqEditors ...RequestEditorFn) (*GetAdmissionsResponse, error)
+
+	// GetAdmissionWithResponse request
+	GetAdmissionWithResponse(ctx context.Context, machineId string, reqEditors ...RequestEditorFn) (*GetAdmissionResponse, error)
+
+	// AdmitMachineWithBodyWithResponse request with any body
+	AdmitMachineWithBodyWithResponse(ctx context.Context, machineId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AdmitMachineResponse, error)
+
+	AdmitMachineWithResponse(ctx context.Context, machineId string, body AdmitMachineJSONRequestBody, reqEditors ...RequestEditorFn) (*AdmitMachineResponse, error)
+
+	// RejectMachineWithBodyWithResponse request with any body
+	RejectMachineWithBodyWithResponse(ctx context.Context, machineId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RejectMachineResponse, error)
+
+	RejectMachineWithResponse(ctx context.Context, machineId string, body RejectMachineJSONRequestBody, reqEditors ...RequestEditorFn) (*RejectMachineResponse, error)
+
+	// RevokeMachineWithResponse request
+	RevokeMachineWithResponse(ctx context.Context, machineId string, reqEditors ...RequestEditorFn) (*RevokeMachineResponse, error)
+
 	// GetAgentsWithResponse request
 	GetAgentsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAgentsResponse, error)
-
-	// GetAgentsPendingWithResponse request
-	GetAgentsPendingWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAgentsPendingResponse, error)
-
-	// DeleteAgentWithResponse request
-	DeleteAgentWithResponse(ctx context.Context, hostname string, params *DeleteAgentParams, reqEditors ...RequestEditorFn) (*DeleteAgentResponse, error)
 
 	// GetAgentDetailsWithResponse request
 	GetAgentDetailsWithResponse(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*GetAgentDetailsResponse, error)
 
-	// AcceptAgentWithResponse request
-	AcceptAgentWithResponse(ctx context.Context, hostname string, params *AcceptAgentParams, reqEditors ...RequestEditorFn) (*AcceptAgentResponse, error)
-
 	// DrainAgentWithResponse request
 	DrainAgentWithResponse(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*DrainAgentResponse, error)
-
-	// RejectAgentWithResponse request
-	RejectAgentWithResponse(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*RejectAgentResponse, error)
 
 	// UndrainAgentWithResponse request
 	UndrainAgentWithResponse(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*UndrainAgentResponse, error)
@@ -13095,6 +13241,183 @@ type ClientWithResponsesInterface interface {
 	GetTraceWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetTraceResponse, error)
 }
 
+type GetAdmissionsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ListAdmissionResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+	JSON503      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAdmissionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAdmissionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetAdmissionsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetAdmissionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Admission
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+	JSON503      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAdmissionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAdmissionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetAdmissionResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AdmitMachineResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
+	JSON500      *ErrorResponse
+	JSON503      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r AdmitMachineResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AdmitMachineResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AdmitMachineResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type RejectMachineResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+	JSON503      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r RejectMachineResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RejectMachineResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r RejectMachineResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type RevokeMachineResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+	JSON503      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r RevokeMachineResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RevokeMachineResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r RevokeMachineResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetAgentsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -13122,74 +13445,6 @@ func (r GetAgentsResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetAgentsResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type GetAgentsPendingResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *ListPendingAgentsResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetAgentsPendingResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetAgentsPendingResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetAgentsPendingResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type DeleteAgentResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON404      *ErrorResponse
-	JSON409      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r DeleteAgentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r DeleteAgentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r DeleteAgentResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -13231,40 +13486,6 @@ func (r GetAgentDetailsResponse) ContentType() string {
 	return ""
 }
 
-type AcceptAgentResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON404      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r AcceptAgentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r AcceptAgentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r AcceptAgentResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
 type DrainAgentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -13294,40 +13515,6 @@ func (r DrainAgentResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r DrainAgentResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type RejectAgentResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON404      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r RejectAgentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r RejectAgentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r RejectAgentResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -17215,6 +17402,67 @@ func (r GetTraceResponse) ContentType() string {
 	return ""
 }
 
+// GetAdmissionsWithResponse request returning *GetAdmissionsResponse
+func (c *ClientWithResponses) GetAdmissionsWithResponse(ctx context.Context, params *GetAdmissionsParams, reqEditors ...RequestEditorFn) (*GetAdmissionsResponse, error) {
+	rsp, err := c.GetAdmissions(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAdmissionsResponse(rsp)
+}
+
+// GetAdmissionWithResponse request returning *GetAdmissionResponse
+func (c *ClientWithResponses) GetAdmissionWithResponse(ctx context.Context, machineId string, reqEditors ...RequestEditorFn) (*GetAdmissionResponse, error) {
+	rsp, err := c.GetAdmission(ctx, machineId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAdmissionResponse(rsp)
+}
+
+// AdmitMachineWithBodyWithResponse request with arbitrary body returning *AdmitMachineResponse
+func (c *ClientWithResponses) AdmitMachineWithBodyWithResponse(ctx context.Context, machineId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AdmitMachineResponse, error) {
+	rsp, err := c.AdmitMachineWithBody(ctx, machineId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAdmitMachineResponse(rsp)
+}
+
+func (c *ClientWithResponses) AdmitMachineWithResponse(ctx context.Context, machineId string, body AdmitMachineJSONRequestBody, reqEditors ...RequestEditorFn) (*AdmitMachineResponse, error) {
+	rsp, err := c.AdmitMachine(ctx, machineId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAdmitMachineResponse(rsp)
+}
+
+// RejectMachineWithBodyWithResponse request with arbitrary body returning *RejectMachineResponse
+func (c *ClientWithResponses) RejectMachineWithBodyWithResponse(ctx context.Context, machineId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RejectMachineResponse, error) {
+	rsp, err := c.RejectMachineWithBody(ctx, machineId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRejectMachineResponse(rsp)
+}
+
+func (c *ClientWithResponses) RejectMachineWithResponse(ctx context.Context, machineId string, body RejectMachineJSONRequestBody, reqEditors ...RequestEditorFn) (*RejectMachineResponse, error) {
+	rsp, err := c.RejectMachine(ctx, machineId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRejectMachineResponse(rsp)
+}
+
+// RevokeMachineWithResponse request returning *RevokeMachineResponse
+func (c *ClientWithResponses) RevokeMachineWithResponse(ctx context.Context, machineId string, reqEditors ...RequestEditorFn) (*RevokeMachineResponse, error) {
+	rsp, err := c.RevokeMachine(ctx, machineId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRevokeMachineResponse(rsp)
+}
+
 // GetAgentsWithResponse request returning *GetAgentsResponse
 func (c *ClientWithResponses) GetAgentsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAgentsResponse, error) {
 	rsp, err := c.GetAgents(ctx, reqEditors...)
@@ -17222,24 +17470,6 @@ func (c *ClientWithResponses) GetAgentsWithResponse(ctx context.Context, reqEdit
 		return nil, err
 	}
 	return ParseGetAgentsResponse(rsp)
-}
-
-// GetAgentsPendingWithResponse request returning *GetAgentsPendingResponse
-func (c *ClientWithResponses) GetAgentsPendingWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAgentsPendingResponse, error) {
-	rsp, err := c.GetAgentsPending(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetAgentsPendingResponse(rsp)
-}
-
-// DeleteAgentWithResponse request returning *DeleteAgentResponse
-func (c *ClientWithResponses) DeleteAgentWithResponse(ctx context.Context, hostname string, params *DeleteAgentParams, reqEditors ...RequestEditorFn) (*DeleteAgentResponse, error) {
-	rsp, err := c.DeleteAgent(ctx, hostname, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseDeleteAgentResponse(rsp)
 }
 
 // GetAgentDetailsWithResponse request returning *GetAgentDetailsResponse
@@ -17251,15 +17481,6 @@ func (c *ClientWithResponses) GetAgentDetailsWithResponse(ctx context.Context, h
 	return ParseGetAgentDetailsResponse(rsp)
 }
 
-// AcceptAgentWithResponse request returning *AcceptAgentResponse
-func (c *ClientWithResponses) AcceptAgentWithResponse(ctx context.Context, hostname string, params *AcceptAgentParams, reqEditors ...RequestEditorFn) (*AcceptAgentResponse, error) {
-	rsp, err := c.AcceptAgent(ctx, hostname, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseAcceptAgentResponse(rsp)
-}
-
 // DrainAgentWithResponse request returning *DrainAgentResponse
 func (c *ClientWithResponses) DrainAgentWithResponse(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*DrainAgentResponse, error) {
 	rsp, err := c.DrainAgent(ctx, hostname, reqEditors...)
@@ -17267,15 +17488,6 @@ func (c *ClientWithResponses) DrainAgentWithResponse(ctx context.Context, hostna
 		return nil, err
 	}
 	return ParseDrainAgentResponse(rsp)
-}
-
-// RejectAgentWithResponse request returning *RejectAgentResponse
-func (c *ClientWithResponses) RejectAgentWithResponse(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*RejectAgentResponse, error) {
-	rsp, err := c.RejectAgent(ctx, hostname, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseRejectAgentResponse(rsp)
 }
 
 // UndrainAgentWithResponse request returning *UndrainAgentResponse
@@ -18599,26 +18811,33 @@ func (c *ClientWithResponses) GetTraceWithResponse(ctx context.Context, id strin
 	return ParseGetTraceResponse(rsp)
 }
 
-// ParseGetAgentsResponse parses an HTTP response from a GetAgentsWithResponse call
-func ParseGetAgentsResponse(rsp *http.Response) (*GetAgentsResponse, error) {
+// ParseGetAdmissionsResponse parses an HTTP response from a GetAdmissionsWithResponse call
+func ParseGetAdmissionsResponse(rsp *http.Response) (*GetAdmissionsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetAgentsResponse{
+	response := &GetAdmissionsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ListAgentsResponse
+		var dest ListAdmissionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -18641,31 +18860,45 @@ func ParseGetAgentsResponse(rsp *http.Response) (*GetAgentsResponse, error) {
 		}
 		response.JSON500 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
 	}
 
 	return response, nil
 }
 
-// ParseGetAgentsPendingResponse parses an HTTP response from a GetAgentsPendingWithResponse call
-func ParseGetAgentsPendingResponse(rsp *http.Response) (*GetAgentsPendingResponse, error) {
+// ParseGetAdmissionResponse parses an HTTP response from a GetAdmissionWithResponse call
+func ParseGetAdmissionResponse(rsp *http.Response) (*GetAdmissionResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetAgentsPendingResponse{
+	response := &GetAdmissionResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ListPendingAgentsResponse
+		var dest Admission
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -18681,6 +18914,13 @@ func ParseGetAgentsPendingResponse(rsp *http.Response) (*GetAgentsPendingRespons
 		}
 		response.JSON403 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -18688,20 +18928,27 @@ func ParseGetAgentsPendingResponse(rsp *http.Response) (*GetAgentsPendingRespons
 		}
 		response.JSON500 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
 	}
 
 	return response, nil
 }
 
-// ParseDeleteAgentResponse parses an HTTP response from a DeleteAgentWithResponse call
-func ParseDeleteAgentResponse(rsp *http.Response) (*DeleteAgentResponse, error) {
+// ParseAdmitMachineResponse parses an HTTP response from a AdmitMachineWithResponse call
+func ParseAdmitMachineResponse(rsp *http.Response) (*AdmitMachineResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteAgentResponse{
+	response := &AdmitMachineResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -18749,32 +18996,32 @@ func ParseDeleteAgentResponse(rsp *http.Response) (*DeleteAgentResponse, error) 
 		}
 		response.JSON500 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
 	}
 
 	return response, nil
 }
 
-// ParseGetAgentDetailsResponse parses an HTTP response from a GetAgentDetailsWithResponse call
-func ParseGetAgentDetailsResponse(rsp *http.Response) (*GetAgentDetailsResponse, error) {
+// ParseRejectMachineResponse parses an HTTP response from a RejectMachineWithResponse call
+func ParseRejectMachineResponse(rsp *http.Response) (*RejectMachineResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetAgentDetailsResponse{
+	response := &RejectMachineResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest AgentInfo
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -18810,25 +19057,147 @@ func ParseGetAgentDetailsResponse(rsp *http.Response) (*GetAgentDetailsResponse,
 		}
 		response.JSON500 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
 	}
 
 	return response, nil
 }
 
-// ParseAcceptAgentResponse parses an HTTP response from a AcceptAgentWithResponse call
-func ParseAcceptAgentResponse(rsp *http.Response) (*AcceptAgentResponse, error) {
+// ParseRevokeMachineResponse parses an HTTP response from a RevokeMachineWithResponse call
+func ParseRevokeMachineResponse(rsp *http.Response) (*RevokeMachineResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &AcceptAgentResponse{
+	response := &RevokeMachineResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAgentsResponse parses an HTTP response from a GetAgentsWithResponse call
+func ParseGetAgentsResponse(rsp *http.Response) (*GetAgentsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAgentsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ListAgentsResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAgentDetailsResponse parses an HTTP response from a GetAgentDetailsWithResponse call
+func ParseGetAgentDetailsResponse(rsp *http.Response) (*GetAgentDetailsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAgentDetailsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AgentInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -18917,60 +19286,6 @@ func ParseDrainAgentResponse(rsp *http.Response) (*DrainAgentResponse, error) {
 			return nil, err
 		}
 		response.JSON409 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseRejectAgentResponse parses an HTTP response from a RejectAgentWithResponse call
-func ParseRejectAgentResponse(rsp *http.Response) (*RejectAgentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &RejectAgentResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

@@ -4,6 +4,7 @@
 package gen
 
 import (
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/admission/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/agent/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/audit/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/facts/gen"

@@ -18,71 +18,11 @@ func decodeList(
 	return in, "", true
 }
 
-// decodePending reads the pending method's input from the request.
-func decodePending(
-	c *echo.Context,
-) (agent.ListInput, string, bool) {
-	var in agent.ListInput
-
-	return in, "", true
-}
-
 // decodeGet reads the get method's input from the request.
 func decodeGet(
 	c *echo.Context,
 ) (agent.GetInput, string, bool) {
 	var in agent.GetInput
-	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
-		return in, msg, false
-	}
-	if msg, ok := server.Valid(c, in); !ok {
-		return in, msg, false
-	}
-
-	return in, "", true
-}
-
-// decodeDelete reads the delete method's input from the request.
-func decodeDelete(
-	c *echo.Context,
-) (agent.DeleteInput, string, bool) {
-	var in agent.DeleteInput
-	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
-		return in, msg, false
-	}
-	if msg, ok := server.Query(c, "machine_id", &in.MachineID); !ok {
-		return in, msg, false
-	}
-	if msg, ok := server.Valid(c, in); !ok {
-		return in, msg, false
-	}
-
-	return in, "", true
-}
-
-// decodeAccept reads the accept method's input from the request.
-func decodeAccept(
-	c *echo.Context,
-) (agent.AcceptInput, string, bool) {
-	var in agent.AcceptInput
-	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
-		return in, msg, false
-	}
-	if msg, ok := server.Query(c, "fingerprint", &in.Fingerprint); !ok {
-		return in, msg, false
-	}
-	if msg, ok := server.Valid(c, in); !ok {
-		return in, msg, false
-	}
-
-	return in, "", true
-}
-
-// decodeReject reads the reject method's input from the request.
-func decodeReject(
-	c *echo.Context,
-) (agent.RejectInput, string, bool) {
-	var in agent.RejectInput
 	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
 		return in, msg, false
 	}

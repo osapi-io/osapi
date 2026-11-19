@@ -22,33 +22,9 @@ func Routes(
 		},
 		{
 			Method:     http.MethodGet,
-			Path:       "/api/agent/pending",
-			Permission: "agent:read",
-			Handler:    server.Serve(s, agent.Group, "pending", agent.Pending, decodePending),
-		},
-		{
-			Method:     http.MethodGet,
 			Path:       "/api/agent/:hostname",
 			Permission: "agent:read",
 			Handler:    server.Serve(s, agent.Group, "get", agent.Get, decodeGet),
-		},
-		{
-			Method:     http.MethodDelete,
-			Path:       "/api/agent/:hostname",
-			Permission: "agent:write",
-			Handler:    server.Serve(s, agent.Group, "delete", agent.Delete, decodeDelete),
-		},
-		{
-			Method:     http.MethodPost,
-			Path:       "/api/agent/:hostname/accept",
-			Permission: "agent:write",
-			Handler:    server.Serve(s, agent.Group, "accept", agent.Accept, decodeAccept),
-		},
-		{
-			Method:     http.MethodPost,
-			Path:       "/api/agent/:hostname/reject",
-			Permission: "agent:write",
-			Handler:    server.Serve(s, agent.Group, "reject", agent.Reject, decodeReject),
 		},
 		{
 			Method:     http.MethodPost,

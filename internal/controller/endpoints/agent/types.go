@@ -21,29 +21,12 @@ package agent
 
 import "time"
 
-// ListInput is the input of list and pending, which have none.
+// ListInput is the input of list, which has none.
 type ListInput struct{}
 
 // GetInput names the agent to read.
 type GetInput struct {
 	Hostname string `json:"hostname" in:"path" validate:"required,min=1,max=255" doc:"The hostname of the agent to retrieve."`
-}
-
-// DeleteInput names the accepted agent to remove.
-type DeleteInput struct {
-	Hostname  string `json:"hostname"   in:"path"  validate:"required,min=1,max=255"  doc:"The hostname of the accepted agent to remove."`
-	MachineID string `json:"machine_id" in:"query" validate:"omitempty,min=1,max=255" doc:"The machine ID to remove, when more than one accepted agent has the hostname."`
-}
-
-// AcceptInput names the pending agent to accept.
-type AcceptInput struct {
-	Hostname    string `json:"hostname"    in:"path"  validate:"required,min=1,max=255"  doc:"The hostname of the pending agent to accept."`
-	Fingerprint string `json:"fingerprint" in:"query" validate:"omitempty,min=1,max=255" doc:"Accept by fingerprint instead of hostname."`
-}
-
-// RejectInput names the pending agent to reject.
-type RejectInput struct {
-	Hostname string `json:"hostname" in:"path" validate:"required,min=1,max=255" doc:"The hostname of the pending agent to reject."`
 }
 
 // DrainInput names the agent to drain.
@@ -67,20 +50,6 @@ type Message = struct {
 type ListAgentsResponse struct {
 	Items      []AgentInfo `json:"items"       doc:"The active agents."`
 	TotalItems int         `json:"total_items" doc:"Total number of active agents."`
-}
-
-// ListPendingAgentsResponse is the agents that wait for enrollment.
-type ListPendingAgentsResponse struct {
-	Items      []PendingAgentInfo `json:"items"       doc:"The agents that wait for enrollment."`
-	TotalItems int                `json:"total_items" doc:"Total number of pending agents."`
-}
-
-// PendingAgentInfo is an agent that asked to enroll.
-type PendingAgentInfo struct {
-	MachineID   string    `json:"machine_id"   doc:"The permanent machine identifier."`
-	Hostname    string    `json:"hostname"     doc:"The hostname of the agent."`
-	Fingerprint string    `json:"fingerprint"  doc:"The SHA256 fingerprint of the agent's public key."`
-	RequestedAt time.Time `json:"requested_at" doc:"When the enrollment request was received."`
 }
 
 // AgentInfo is one agent: its identity, its host's facts and its state. The

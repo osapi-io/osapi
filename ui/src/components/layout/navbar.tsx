@@ -33,7 +33,7 @@ const adminLinks: {
   perm?: Permission;
 }[] = [
   { to: "/admin/audit", label: "Audit Log", icon: FileText },
-  { to: "/admin/enrollment", label: "Enrollment", icon: ShieldAlert },
+  { to: "/admin/admission", label: "Admission", icon: ShieldAlert },
   { to: "/admin/jobs", label: "Jobs", icon: Briefcase },
   { to: "/admin/roles", label: "Roles", icon: Shield },
   { to: "/admin/traces", label: "Traces", icon: GitBranch, perm: "trace:read" },

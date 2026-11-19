@@ -35,7 +35,6 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent/mocks"
-	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	"github.com/osapi-io/osapi/internal/job"
 )
 
@@ -47,15 +46,13 @@ const signingKey = "test-signing-key-for-the-agent-group"
 type HTTPPublicTestSuite struct {
 	suite.Suite
 
-	ctrl   *gomock.Controller
-	jobs   *mocks.MockJobs
-	enroll *mocks.MockEnrollment
+	ctrl *gomock.Controller
+	jobs *mocks.MockJobs
 }
 
 func (s *HTTPPublicTestSuite) SetupSubTest() {
 	s.ctrl = gomock.NewController(s.T())
 	s.jobs = mocks.NewMockJobs(s.ctrl)
-	s.enroll = mocks.NewMockEnrollment(s.ctrl)
 }
 
 func (s *HTTPPublicTestSuite) TearDownSubTest() {
@@ -79,7 +76,7 @@ func (s *HTTPPublicTestSuite) serve(
 		slog.Default(),
 		signingKey,
 		nil,
-		agent.Deps{Jobs: s.jobs, Enrollment: s.enroll},
+		agent.Deps{Jobs: s.jobs},
 	)
 	e := echo.New()
 	srv.Mount(e, gen.Routes(srv))
@@ -132,15 +129,6 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 			wantCode: http.StatusForbidden,
 		},
 		{
-			name:     "when pending is called, the fixed path wins over the hostname",
-			method:   http.MethodGet,
-			path:     "/api/agent/pending",
-			token:    read,
-			setup:    func() { s.enroll.EXPECT().ListPending(gomock.Any()).Return(nil, nil) },
-			wantCode: http.StatusOK,
-			wantBody: `{"items":[],"total_items":0}`,
-		},
-		{
 			name:     "when the hostname is longer than 255, it is a 400",
 			method:   http.MethodGet,
 			path:     "/api/agent/" + long,
@@ -169,47 +157,6 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 				s.jobs.EXPECT().GetAgent(gomock.Any(), "server9").Return(nil, job.ErrNotFound)
 			},
 			wantCode: http.StatusNotFound,
-		},
-		{
-			name:     "when remove has a machine ID longer than 255, it is a 400",
-			method:   http.MethodDelete,
-			path:     "/api/agent/web-01?machine_id=" + long,
-			token:    write,
-			setup:    func() {},
-			wantCode: http.StatusBadRequest,
-		},
-		{
-			name:   "when remove finds two agents, it is a 409",
-			method: http.MethodDelete,
-			path:   "/api/agent/web-01",
-			token:  write,
-			setup: func() {
-				s.enroll.EXPECT().RemoveByHostname(gomock.Any(), "web-01", "").
-					Return("", enrollment.ErrAmbiguousHostname)
-			},
-			wantCode: http.StatusConflict,
-		},
-		{
-			name:   "when accept is given a fingerprint, it accepts by fingerprint",
-			method: http.MethodPost,
-			path:   "/api/agent/web-01/accept?fingerprint=SHA256:x",
-			token:  write,
-			setup: func() {
-				s.enroll.EXPECT().AcceptByFingerprint(gomock.Any(), "SHA256:x").Return(nil)
-			},
-			wantCode: http.StatusNoContent,
-		},
-		{
-			name:   "when reject finds no pending agent, it is a 404",
-			method: http.MethodPost,
-			path:   "/api/agent/web-01/reject",
-			token:  write,
-			setup: func() {
-				s.enroll.EXPECT().RejectByHostname(gomock.Any(), "web-01", "rejected via API").
-					Return(enrollment.ErrNoPendingAgent)
-			},
-			wantCode: http.StatusNotFound,
-			wantBody: `{"error":"no pending agent with hostname \"web-01\""}`,
 		},
 		{
 			name:   "when drain finds the agent already draining, it is a 409",

@@ -68,6 +68,8 @@ type HeartbeatPublicTestSuite struct {
 func (s *HeartbeatPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
+	// The last-seen write is checked in TestWriteSeen; the rest allow it.
+	s.mockJobClient.EXPECT().WriteAgentSeen(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	s.mockKV = agentMocks.NewMockNATSClient(s.mockCtrl)
 	s.appFs = memfs.New()
 	s.logger = slog.Default()
@@ -243,6 +245,8 @@ type HeartbeatLowLevelPublicTestSuite struct {
 func (s *HeartbeatLowLevelPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
+	// The last-seen write is checked in TestWriteSeen; the rest allow it.
+	s.mockJobClient.EXPECT().WriteAgentSeen(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	s.mockKV = agentMocks.NewMockNATSClient(s.mockCtrl)
 
 	appConfig := config.Config{
@@ -575,6 +579,7 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatHostnameChange() {
 
 			mockKV := agentMocks.NewMockNATSClient(ctrl)
 			mockJobClient := mocks.NewMockJobClient(ctrl)
+			mockJobClient.EXPECT().WriteAgentSeen(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 			appConfig := config.Config{
 				Agent: config.AgentConfig{
@@ -758,4 +763,31 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistrationSigning() {
 			tt.validateFunc(written, m)
 		})
 	}
+}
+
+// TestWriteSeen records when the agent last reported at most once each
+// seenInterval, and tries again at the next heartbeat when a write fails.
+func (s *HeartbeatLowLevelPublicTestSuite) TestWriteSeen() {
+	s.Run("when the interval has passed writes, then not again until it passes", func() {
+		ctrl := gomock.NewController(s.T())
+		jobs := mocks.NewMockJobClient(ctrl)
+		a := newTestAgent(newTestAgentParams{jobClient: jobs})
+		jobs.EXPECT().WriteAgentSeen(gomock.Any(), "m-1").Return(nil).Times(1)
+
+		agent.ExportWriteSeen(context.Background(), a, "m-1")
+		agent.ExportWriteSeen(context.Background(), a, "m-1")
+	})
+
+	s.Run("when the write fails tries again at the next heartbeat", func() {
+		ctrl := gomock.NewController(s.T())
+		jobs := mocks.NewMockJobClient(ctrl)
+		a := newTestAgent(newTestAgentParams{jobClient: jobs})
+		gomock.InOrder(
+			jobs.EXPECT().WriteAgentSeen(gomock.Any(), "m-1").Return(errors.New("kv down")),
+			jobs.EXPECT().WriteAgentSeen(gomock.Any(), "m-1").Return(nil),
+		)
+
+		agent.ExportWriteSeen(context.Background(), a, "m-1")
+		agent.ExportWriteSeen(context.Background(), a, "m-1")
+	})
 }

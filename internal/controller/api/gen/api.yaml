@@ -17,6 +17,9 @@ info:
     name: MIT License
     url: https://opensource.org/licenses/MIT
 tags:
+  - description: Admit, reject and revoke the nodes that ask to join.
+    name: Admission_API_admission
+    x-displayName: Admission
   - description: Operations related to agent discovery and details.
     name: Agent_Management_API_agent_operations
     x-displayName: Agent
@@ -111,6 +114,344 @@ tags:
     x-displayName: Node/Group
     description: Group management on a target node.
 paths:
+  /api/admission:
+    servers: []
+    get:
+      description: >-
+        Returns each machine's admission record: pending, admitted, rejected or
+        revoked, with whether it is online and when it was last seen.
+      operationId: GetAdmissions
+      parameters:
+        - description: >-
+            Only the records in this state: pending, admitted, rejected or
+            revoked.
+          in: query
+          name: state
+          schema:
+            enum:
+              - pending
+              - admitted
+              - rejected
+              - revoked
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,oneof=pending admitted rejected revoked
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAdmissionResponse'
+          description: The admission records.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'Admission is not configured: set controller.pki.enabled.'
+      security:
+        - BearerAuth:
+            - admission:read
+      summary: List admission records
+      tags:
+        - Admission_API_admission
+  /api/admission/{machine_id}:
+    servers: []
+    get:
+      description: Returns one machine's admission record by machine ID.
+      operationId: GetAdmission
+      parameters:
+        - description: The machine ID of the node.
+          in: path
+          name: machine_id
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Admission'
+          description: The admission record.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: No admission record for the machine.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'Admission is not configured: set controller.pki.enabled.'
+      security:
+        - BearerAuth:
+            - admission:read
+      summary: Get a machine's admission record
+      tags:
+        - Admission_API_admission
+  /api/admission/{machine_id}/admit:
+    servers: []
+    post:
+      description: >-
+        Admits a pending machine. The fingerprint must be the one that `osapi
+        agent admission` prints on the machine: it proves that the request came
+        from the machine the operator is looking at.
+      operationId: AdmitMachine
+      parameters:
+        - description: The machine ID of the node.
+          in: path
+          name: machine_id
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdmitRequest'
+        required: true
+      responses:
+        '204':
+          description: The machine is admitted.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: No pending request from the machine.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The fingerprint does not match the request.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'Admission is not configured: set controller.pki.enabled.'
+      security:
+        - BearerAuth:
+            - admission:write
+      summary: Admit a pending machine
+      tags:
+        - Admission_API_admission
+  /api/admission/{machine_id}/reject:
+    servers: []
+    post:
+      description: >-
+        Rejects a pending machine, and keeps a record of the decision, so a
+        machine that asks again is flagged.
+      operationId: RejectMachine
+      parameters:
+        - description: The machine ID of the node.
+          in: path
+          name: machine_id
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectRequest'
+        required: true
+      responses:
+        '204':
+          description: The machine is rejected.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: No pending request from the machine.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'Admission is not configured: set controller.pki.enabled.'
+      security:
+        - BearerAuth:
+            - admission:write
+      summary: Reject a pending machine
+      tags:
+        - Admission_API_admission
+  /api/admission/{machine_id}/revoke:
+    servers: []
+    post:
+      description: >-
+        Removes an admitted machine's key, and keeps a record of the decision.
+        Nothing the machine signs verifies afterwards; to return, it asks again.
+      operationId: RevokeMachine
+      parameters:
+        - description: The machine ID of the node.
+          in: path
+          name: machine_id
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+      responses:
+        '204':
+          description: The machine is revoked.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: No admitted machine with the ID.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'Admission is not configured: set controller.pki.enabled.'
+      security:
+        - BearerAuth:
+            - admission:write
+      summary: Revoke an admitted machine
+      tags:
+        - Admission_API_admission
   /api/agent:
     servers: []
     get:
@@ -149,83 +490,6 @@ paths:
         - Agent_Management_API_agent_operations
   /api/agent/{hostname}:
     servers: []
-    delete:
-      description: >-
-        Remove an accepted agent's stored public key. Its responses and
-        registration stop verifying at once, so targeting no longer resolves it.
-        The agent does not enroll again by itself: remove its controller key on
-        the host and restart it. Two machines may share a hostname; when they
-        do, name one with machine_id.
-      operationId: DeleteAgent
-      parameters:
-        - description: The hostname of the accepted agent to remove.
-          in: path
-          name: hostname
-          required: true
-          schema:
-            maxLength: 255
-            minLength: 1
-            type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=255
-        - description: >-
-            The machine ID to remove, when more than one accepted agent has the
-            hostname.
-          in: query
-          name: machine_id
-          schema:
-            maxLength: 255
-            minLength: 1
-            type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1,max=255
-      responses:
-        '204':
-          description: Agent removed.
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid.
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: No accepted agent with that hostname.
-        '409':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: >-
-            More than one accepted agent has the hostname; name one with
-            machine_id.
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - agent:write
-      summary: Remove an enrolled agent
-      tags:
-        - Agent_Management_API_agent_operations
     get:
       description: Get detailed information about a specific agent by hostname.
       operationId: GetAgentDetails
@@ -281,72 +545,6 @@ paths:
         - BearerAuth:
             - agent:read
       summary: Get agent details
-      tags:
-        - Agent_Management_API_agent_operations
-  /api/agent/{hostname}/accept:
-    servers: []
-    post:
-      description: >-
-        Accept a pending agent enrollment request. The agent can be identified
-        by hostname (path parameter) or by fingerprint (query parameter).
-      operationId: AcceptAgent
-      parameters:
-        - description: The hostname of the pending agent to accept.
-          in: path
-          name: hostname
-          required: true
-          schema:
-            maxLength: 255
-            minLength: 1
-            type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=255
-        - description: Accept by fingerprint instead of hostname.
-          in: query
-          name: fingerprint
-          schema:
-            maxLength: 255
-            minLength: 1
-            type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1,max=255
-      responses:
-        '204':
-          description: Agent accepted.
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid.
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Pending agent not found.
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - agent:write
-      summary: Accept a pending agent
       tags:
         - Agent_Management_API_agent_operations
   /api/agent/{hostname}/drain:
@@ -412,61 +610,6 @@ paths:
       summary: Drain an agent
       tags:
         - Agent_Management_API_agent_operations
-  /api/agent/{hostname}/reject:
-    servers: []
-    post:
-      description: Reject a pending agent enrollment request.
-      operationId: RejectAgent
-      parameters:
-        - description: The hostname of the pending agent to reject.
-          in: path
-          name: hostname
-          required: true
-          schema:
-            maxLength: 255
-            minLength: 1
-            type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=255
-      responses:
-        '204':
-          description: Agent rejected.
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid.
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Pending agent not found.
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - agent:write
-      summary: Reject a pending agent
-      tags:
-        - Agent_Management_API_agent_operations
   /api/agent/{hostname}/undrain:
     servers: []
     post:
@@ -526,44 +669,6 @@ paths:
         - BearerAuth:
             - agent:write
       summary: Undrain an agent
-      tags:
-        - Agent_Management_API_agent_operations
-  /api/agent/pending:
-    servers: []
-    get:
-      description: >-
-        List all agents that have submitted enrollment requests but have not yet
-        been accepted or rejected.
-      operationId: GetAgentsPending
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListPendingAgentsResponse'
-          description: List of pending agents.
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - agent:read
-      summary: List agents awaiting enrollment
       tags:
         - Agent_Management_API_agent_operations
   /api/audit:
@@ -6426,6 +6531,106 @@ components:
           type: integer
           description: The error code.
           example: 500
+    Admission:
+      properties:
+        admitted_at:
+          description: When the node was admitted.
+          format: date-time
+          type: string
+        decided_at:
+          description: When the node was rejected or revoked.
+          format: date-time
+          type: string
+        fingerprint:
+          description: The fingerprint of the node's key.
+          example: >-
+            SHA256:1f53dea6dba17ae38388b931df5c6370076c8236018d6e8a2adecc8474ae93ef
+          type: string
+        hostname:
+          description: The hostname the node gave.
+          example: web-01
+          type: string
+        last_seen:
+          description: When the node last reported.
+          format: date-time
+          type: string
+        machine_id:
+          description: The machine ID of the node.
+          example: d530664edc1c431eb5ef1e9dfd6617a5
+          type: string
+        online:
+          description: 'Whether the node is running now: it is in the registry.'
+          type: boolean
+        previous:
+          description: >-
+            On a pending record, the state of the node's earlier record: a
+            returning node.
+          example: revoked
+          type: string
+        previous_fingerprint:
+          description: >-
+            On a pending record, the fingerprint of the earlier record; a
+            different one is a new key.
+          type: string
+        reason:
+          description: Why the node was rejected.
+          type: string
+        requested_at:
+          description: When the node asked to join.
+          format: date-time
+          type: string
+        state:
+          description: pending, admitted, rejected or revoked.
+          example: admitted
+          type: string
+      required:
+        - machine_id
+        - hostname
+        - fingerprint
+        - state
+        - online
+      type: object
+    AdmitRequest:
+      properties:
+        fingerprint:
+          description: The fingerprint that osapi agent admission prints on the machine.
+          example: >-
+            SHA256:1f53dea6dba17ae38388b931df5c6370076c8236018d6e8a2adecc8474ae93ef
+          maxLength: 255
+          minLength: 1
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+      required:
+        - fingerprint
+      type: object
+    ListAdmissionResponse:
+      properties:
+        items:
+          description: The admission records, in hostname order.
+          items:
+            $ref: '#/components/schemas/Admission'
+          type: array
+        total_items:
+          description: The number of records.
+          example: 3
+          type: integer
+      required:
+        - total_items
+        - items
+      type: object
+    RejectRequest:
+      properties:
+        reason:
+          description: Why the machine is rejected; the machine and the record keep it.
+          example: unknown host
+          maxLength: 1024
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,max=1024
+      required:
+        - reason
+      type: object
     AgentInfo:
       properties:
         architecture:
@@ -6568,20 +6773,6 @@ components:
         - items
         - total_items
       type: object
-    ListPendingAgentsResponse:
-      properties:
-        items:
-          description: The agents that wait for enrollment.
-          items:
-            $ref: '#/components/schemas/PendingAgentInfo'
-          type: array
-        total_items:
-          description: Total number of pending agents.
-          type: integer
-      required:
-        - items
-        - total_items
-      type: object
     LoadAverageResponse:
       type: object
       description: The system load averages for 1, 5, and 15 minutes.
@@ -6686,27 +6877,6 @@ components:
       required:
         - distribution
         - version
-    PendingAgentInfo:
-      properties:
-        fingerprint:
-          description: The SHA256 fingerprint of the agent's public key.
-          type: string
-        hostname:
-          description: The hostname of the agent.
-          type: string
-        machine_id:
-          description: The permanent machine identifier.
-          type: string
-        requested_at:
-          description: When the enrollment request was received.
-          format: date-time
-          type: string
-      required:
-        - machine_id
-        - hostname
-        - fingerprint
-        - requested_at
-      type: object
     RouteResponse:
       description: A network routing table entry.
       properties:
@@ -11403,6 +11573,9 @@ components:
         minLength: 1
         pattern: ^SHA256:[A-Za-z0-9+/]+=*$
 x-tagGroups:
+  - name: Admission API
+    tags:
+      - Admission_API_admission
   - name: Agent Management API
     tags:
       - Agent_Management_API_agent_operations

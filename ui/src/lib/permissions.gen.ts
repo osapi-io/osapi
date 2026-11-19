@@ -2,6 +2,8 @@
 // From AllPermissions and RolePermissions in internal/authtoken.
 
 export type Permission =
+  | "admission:read"
+  | "admission:write"
   | "agent:read"
   | "agent:write"
   | "node:read"
@@ -42,6 +44,8 @@ export type Permission =
   | "service:write";
 
 export const ALL_PERMISSIONS: Permission[] = [
+  "admission:read",
+  "admission:write",
   "agent:read",
   "agent:write",
   "node:read",
@@ -85,6 +89,8 @@ export const ALL_PERMISSIONS: Permission[] = [
 /** The permissions of each built-in role, by its JWT role. */
 export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   admin: [
+    "admission:read",
+    "admission:write",
     "agent:read",
     "agent:write",
     "node:read",
@@ -125,6 +131,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "service:write",
   ],
   write: [
+    "admission:read",
     "agent:read",
     "node:read",
     "node:write",
@@ -158,6 +165,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "service:write",
   ],
   read: [
+    "admission:read",
     "agent:read",
     "node:read",
     "network:read",

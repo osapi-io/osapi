@@ -53,10 +53,12 @@ work until an administrator accepts it:
 
 1. When the agent starts for the first time, it makes an Ed25519 key pair in
    `agent.pki.key_dir`.
-1. It sends an enrollment request and waits. `osapi client agent pending list`
-   shows it.
-1. An administrator accepts it, by hostname or by key fingerprint. Or the
-   controller accepts each agent itself, with `controller.pki.auto_accept`.
+1. It sends an enrollment request and waits. `osapi client admission list` shows
+   it as pending.
+1. An administrator runs `osapi agent admission` on the machine, and admits it
+   with the fingerprint that the command prints. The controller admits it only
+   when the fingerprint is the one of the key in the request. Or the controller
+   admits each agent itself, with `controller.pki.auto_admit`.
 1. After that, the controller signs each job. The agent refuses a job that the
    controller did not sign. The agent signs its results and its heartbeats.
 
@@ -67,8 +69,8 @@ that is not the hostname that the agent enrolled with.
 When a key changes, a grace period (`controller.pki.rotation_grace_period`)
 starts. During it, osapi accepts the old key and the new key.
 
-`osapi client agent delete` removes the stored key of an enrolled agent. After
-that, osapi does not accept anything that the agent signs.
+`osapi client admission revoke` removes the stored key of an admitted machine.
+After that, osapi does not accept anything that the agent signs.
 
 ## What the agent can run
 
