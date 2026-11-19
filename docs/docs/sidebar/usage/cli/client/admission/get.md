@@ -16,8 +16,8 @@ osapi client admission get --machine-id d530664edc1c431eb5ef1e9dfd6617a5
 
 ## Permission
 
-It needs the `admission:read` permission. `osapi token roles` lists the roles
-that grant it.
+It needs the `admission:read` permission. `osapi token roles list` lists the
+roles that grant it.
 
 ## Flags
 

@@ -121,5 +121,5 @@ func init() {
 	_ = fileUpdateCmd.MarkFlagRequired("file")
 	fileDeleteCmd.Flags().String("name", "", "The name of the file in the Object Store")
 	_ = fileDeleteCmd.MarkFlagRequired("name")
-	clicommand.Register(file.Group, fileListCmd, fileUploadCmd, fileGetCmd, fileUpdateCmd, fileDeleteCmd, fileStaleCmd)
+	clicommand.AddCommands(file.Group, fileListCmd, fileUploadCmd, fileGetCmd, fileUpdateCmd, fileDeleteCmd, fileStaleCmd)
 }

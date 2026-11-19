@@ -1,4 +1,4 @@
-# Roles
+# List
 
 List the roles and the permissions each grants.
 
@@ -10,14 +10,14 @@ group's when it is nested under one. `admin` and `write` grant both, and `read`
 grants the read permission. Use this list, not a table in the docs.
 
 ```bash
-osapi token roles
+osapi token roles list
 ```
 
 ## Examples
 
 ```bash
-osapi token roles
-osapi token roles --json
+osapi token roles list
+osapi token roles list --json
 ```
 
 ## Global flags
@@ -28,4 +28,5 @@ osapi token roles --json
 | `-j, --json`       | Enable JSON output           |                         |
 | `-f, --osapi-file` | Path to config file          | `/etc/osapi/osapi.yaml` |
 
-[Output](../output.md) tells how the result is printed, and what `--json` gives.
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

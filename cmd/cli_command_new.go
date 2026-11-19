@@ -1,0 +1,74 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package cmd
+
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+
+	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/command"
+)
+
+var cliCommandNewCmd = &cobra.Command{
+	Use:   "new",
+	Short: "Write a new local group that builds and passes its tests",
+	Long: "It writes `internal/cli/commands/<name>/` in the osapi checkout in the\n" +
+		"current directory, and adds its import to `internal/cli/commands/all`. The\n" +
+		"group has a list and a get, an empty `Deps` and the tests of its methods.\n" +
+		"Then run `go generate ./internal/cli/commands/all`. While its `Deps` is\n" +
+		"empty, the CLI needs no wiring. `osapi cli command spec` lists each part\n" +
+		"of the DSL.",
+	Example: `  osapi cli command new --name widget --description "The widgets of this host"`,
+	Args:    cobra.NoArgs,
+	Run: func(cmd *cobra.Command, _ []string) {
+		name, _ := cmd.Flags().GetString("name")
+		doc, _ := cmd.Flags().GetString("description")
+
+		files, err := command.Scaffold(".", name, doc)
+		if err != nil {
+			cli.LogFatal(logger, "command new", err)
+		}
+
+		cli.PrintHeading(fmt.Sprintf("Wrote (%d)", len(files)))
+		for _, f := range files {
+			fmt.Println("  " + f)
+		}
+		cli.PrintHeading("Next")
+		for _, step := range []string{
+			"go generate ./internal/cli/commands/all",
+			"go test ./internal/cli/commands/" + name + "/...",
+			"go run . cli command validate",
+			"mise exec -- just cli-docs-generate",
+		} {
+			fmt.Println("  " + step)
+		}
+	},
+}
+
+func init() {
+	cliCommandCmd.AddCommand(cliCommandNewCmd)
+	cliCommandNewCmd.Flags().String("name", "", "The group's name: its command under osapi")
+	cliCommandNewCmd.Flags().String("description", "", "What the group is, in one line")
+	_ = cliCommandNewCmd.MarkFlagRequired("name")
+	_ = cliCommandNewCmd.MarkFlagRequired("description")
+}

@@ -19,8 +19,8 @@ osapi client file upload --name app.conf.tmpl --file /tmp/app.conf.tmpl --conten
 
 ## Permission
 
-It needs the `file:write` permission. `osapi token roles` lists the roles that
-grant it.
+It needs the `file:write` permission. `osapi token roles list` lists the roles
+that grant it.
 
 ## Flags
 

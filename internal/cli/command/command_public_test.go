@@ -39,11 +39,11 @@ type group struct {
 	path             []string
 }
 
-func (g group) GroupName() string                       { return g.name }
-func (g group) GroupDoc() string                        { return g.doc }
-func (g group) GroupNotes() string                      { return g.notes }
-func (g group) Commands() []command.Method              { return nil }
-func (g group) CommandPermission(command.Method) string { return "" }
+func (g group) GroupName() string                        { return g.name }
+func (g group) GroupDoc() string                         { return g.doc }
+func (g group) GroupNotes() string                       { return g.notes }
+func (g group) Commands() []command.Command              { return nil }
+func (g group) CommandPermission(command.Command) string { return "" }
 
 func (g group) CommandPath() []string {
 	if g.path != nil {
@@ -206,7 +206,7 @@ func (s *CommandPublicTestSuite) TestAttachUnderPrefix() {
 		path:  []string{"zznext", "zznode", "zzbehavior"},
 	}
 	get := &cobra.Command{Use: "get"}
-	command.Register(g, get)
+	command.AddCommands(g, get)
 
 	parent := &cobra.Command{Use: "client"}
 	node := &cobra.Command{Use: "zznext"}
@@ -224,7 +224,7 @@ func (s *CommandPublicTestSuite) TestAttachUnderPrefix() {
 func (s *CommandPublicTestSuite) TestAttach() {
 	g := group{name: "zzattach", doc: "Attached things"}
 	get := &cobra.Command{Use: "get"}
-	command.Register(g, get)
+	command.AddCommands(g, get)
 
 	parent := &cobra.Command{Use: "client"}
 	s.Require().NoError(command.Attach(parent, command.Deps{}))
@@ -255,7 +255,7 @@ func (s *CommandPublicTestSuite) TestAttach() {
 	g2 := group{name: "zznested", doc: "Nested things"}
 	nested := &cobra.Command{Use: "get", Annotations: map[string]string{command.SubKey: "trace"}}
 	nested2 := &cobra.Command{Use: "list", Annotations: map[string]string{command.SubKey: "trace"}}
-	command.Register(g2, nested, nested2)
+	command.AddCommands(g2, nested, nested2)
 	parent = &cobra.Command{Use: "client"}
 	s.Require().NoError(command.Attach(parent, command.Deps{}))
 	var trace *cobra.Command
@@ -291,6 +291,47 @@ func (s *CommandPublicTestSuite) TestAttach() {
 		s.NotEqual("zzattach", c.Name(), "the named command gets them, not a second one")
 	}
 	s.Len(named.Commands(), 1)
+}
+
+// TestAttachLocal puts a local group under the root, under the words of
+// Under, and leaves it out of Attach; Origin names the group of each
+// command it added.
+func (s *CommandPublicTestSuite) TestAttachLocal() {
+	g := command.Define("zzlocalattach", "Local things", command.Under("zzup"))
+	get := &cobra.Command{Use: "get"}
+	command.AddCommands(g, get)
+
+	client := &cobra.Command{Use: "client"}
+	s.Require().NoError(command.Attach(client, command.Deps{}))
+	_, ok := command.Origin(get)
+	s.False(ok, "Attach leaves a local group out")
+
+	// A named command for a word of Under is used, and is added by the code
+	// that wrote it.
+	root := &cobra.Command{Use: "osapi"}
+	up := &cobra.Command{Use: "zzup", Short: "Up things"}
+	s.Require().NoError(command.AttachLocal(root, command.Deps{}, up))
+	s.Empty(root.Commands(), "the named parent is not added here")
+	root.AddCommand(up)
+	found, _, err := root.Find([]string{"zzup", "zzlocalattach", "get"})
+	s.Require().NoError(err)
+	s.Same(get, found)
+	origin, ok := command.Origin(get)
+	s.True(ok)
+	s.Same(g, origin)
+	_, ok = command.Origin(root)
+	s.False(ok, "a hand-written command has no group")
+
+	// A command of the same name under the root is a command written twice.
+	root = &cobra.Command{Use: "osapi"}
+	group := &cobra.Command{Use: "zzlocalattach"}
+	group.AddCommand(&cobra.Command{Use: "get"})
+	up = &cobra.Command{Use: "zzup"}
+	up.AddCommand(group)
+	root.AddCommand(up)
+	err = command.AttachLocal(root, command.Deps{})
+	s.ErrorContains(err, "osapi zzup zzlocalattach get is both a hand-written command "+
+		"and the zzlocalattach group's")
 }
 
 func TestCommandPublicTestSuite(

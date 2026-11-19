@@ -27,6 +27,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/internal/cli/command"
 )
 
 // HelpStyleTestSuite holds the help of every command to one style, whether
@@ -57,35 +59,21 @@ func (s *HelpStyleTestSuite) TestEveryCommand() {
 	walk(rootCmd)
 }
 
-// verbs are the verbs of a resource: each command under osapi client is
-// <resource> <verb>, and a verb that is not one of these is an action in
-// actions.
-var verbs = map[string]bool{
-	"list":   true,
-	"get":    true,
-	"create": true,
-	"update": true,
-	"delete": true,
-}
-
-// actions are the commands that do something a CRUD verb does not say.
-// Add one here only for a real action, never for a noun: list the noun's
-// items with list under it instead, such as facts keys list.
-var actions = map[string]bool{
-	"admit": true, "reject": true, "revoke": true, "drain": true, "undrain": true, "retry": true,
-	"export": true, "exec": true, "shell": true, "start": true, "stop": true,
-	"restart": true, "enable": true, "disable": true, "install": true,
-	"uninstall": true, "upload": true, "deploy": true, "undeploy": true,
-	"pull": true, "signal": true, "reboot": true, "shutdown": true, "ping": true,
-	"status": true, "fingerprint": true, "liveness": true, "ready": true,
-}
-
-// TestCommandShape holds each command under osapi client to
-// <resource> <verb>, and each flag's help to its own words: a required flag
-// is marked by MarkFlagRequired, which --help shows, not by its text.
+// TestCommandShape holds each command under osapi client, and each command
+// of a local group, to <resource> <verb>, with the verbs and actions of the
+// command layer, and each flag's help to its own words: a required flag is
+// marked by MarkFlagRequired, which --help shows, not by its text.
 func (s *HelpStyleTestSuite) TestCommandShape() {
 	client, _, err := rootCmd.Find([]string{"client"})
 	s.Require().NoError(err)
+	roots := make([]*cobra.Command, 0, 1+len(command.All()))
+	roots = append(roots, client)
+	s.Require().NotEmpty(command.All())
+	for _, g := range command.All() {
+		c, _, err := rootCmd.Find(g.CommandPath())
+		s.Require().NoError(err)
+		roots = append(roots, c)
+	}
 
 	var walk func(c *cobra.Command)
 	walk = func(c *cobra.Command) {
@@ -102,7 +90,7 @@ func (s *HelpStyleTestSuite) TestCommandShape() {
 			)
 		})
 		if len(c.Commands()) == 0 && c.Runnable() {
-			s.Truef(verbs[c.Name()] || actions[c.Name()],
+			s.Truef(command.Verbs[c.Name()] || command.Actions[c.Name()],
 				"%s: %q is not a verb; a command is <resource> <verb>, such as facts keys list",
 				c.CommandPath(), c.Name())
 		}
@@ -110,7 +98,9 @@ func (s *HelpStyleTestSuite) TestCommandShape() {
 			walk(sub)
 		}
 	}
-	walk(client)
+	for _, r := range roots {
+		walk(r)
+	}
 }
 
 // styled fails on text that is empty, starts with a small letter, or ends

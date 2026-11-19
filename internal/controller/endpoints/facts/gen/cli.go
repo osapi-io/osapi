@@ -27,5 +27,5 @@ var factsListCmd = &cobra.Command{
 }
 
 func init() {
-	clicommand.Register(facts.Group, factsListCmd)
+	clicommand.AddCommands(facts.Group, factsListCmd)
 }

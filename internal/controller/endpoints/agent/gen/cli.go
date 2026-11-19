@@ -75,5 +75,5 @@ func init() {
 	_ = agentDrainCmd.MarkFlagRequired("hostname")
 	agentUndrainCmd.Flags().String("hostname", "", "The hostname of the agent to undrain")
 	_ = agentUndrainCmd.MarkFlagRequired("hostname")
-	clicommand.Register(agent.Group, agentListCmd, agentGetCmd, agentDrainCmd, agentUndrainCmd)
+	clicommand.AddCommands(agent.Group, agentListCmd, agentGetCmd, agentDrainCmd, agentUndrainCmd)
 }

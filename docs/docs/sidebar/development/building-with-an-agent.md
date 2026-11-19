@@ -15,7 +15,9 @@ A behavior is work on a host. An operation of the controller itself, such as the
 agents, the jobs or the audit log, is an endpoint. A second skill,
 `build-an-endpoint`, covers it in the same way. The endpoint DSL makes the spec
 of a group today, and the skill says to stop at the parts that are not built
-yet.
+yet. A command that runs in the CLI and calls no API, such as
+`osapi token generate`, is a local command. A third skill, `build-a-command`,
+covers it.
 
 ## Set it up
 

@@ -219,7 +219,7 @@ func Page(
 		if p := c.Annotations[Permission]; p != "" {
 			fmt.Fprintf(
 				&b,
-				"\n## Permission\n\nEach command needs the `%s` permission. `osapi token roles` lists the roles that grant it.\n",
+				"\n## Permission\n\nEach command needs the `%s` permission. `osapi token roles list` lists the roles that grant it.\n",
 				p,
 			)
 		}
@@ -248,7 +248,7 @@ func Page(
 	if p := c.Annotations[Permission]; p != "" {
 		fmt.Fprintf(
 			&b,
-			"\n## Permission\n\nIt needs the `%s` permission. `osapi token roles` lists the roles that grant it.\n",
+			"\n## Permission\n\nIt needs the `%s` permission. `osapi token roles list` lists the roles that grant it.\n",
 			p,
 		)
 	}

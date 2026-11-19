@@ -112,5 +112,5 @@ func init() {
 	_ = admissionRevokeCmd.MarkFlagRequired("machine-id")
 	admissionDeleteCmd.Flags().String("machine-id", "", "The machine ID of the node")
 	_ = admissionDeleteCmd.MarkFlagRequired("machine-id")
-	clicommand.Register(admission.Group, admissionListCmd, admissionGetCmd, admissionAdmitCmd, admissionRejectCmd, admissionRevokeCmd, admissionDeleteCmd)
+	clicommand.AddCommands(admission.Group, admissionListCmd, admissionGetCmd, admissionAdmitCmd, admissionRejectCmd, admissionRevokeCmd, admissionDeleteCmd)
 }

@@ -30,6 +30,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/osapi-io/osapi/internal/cli/command"
 )
 
 // usageTemplate is cobra's default usage template with the headings, command
@@ -96,6 +98,11 @@ func IsUsageError(
 ) bool {
 	var ue *usageError
 	if errors.As(err, &ue) {
+		return true
+	}
+	// A local command's input that breaks a rule of its field.
+	var ce *command.UsageError
+	if errors.As(err, &ce) {
 		return true
 	}
 

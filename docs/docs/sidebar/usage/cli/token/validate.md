@@ -3,7 +3,7 @@
 Validate a token for authenticity and claims.
 
 ```bash
-osapi token validate
+osapi token validate [flags]
 ```
 
 ## Examples

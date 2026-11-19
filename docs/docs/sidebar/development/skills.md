@@ -22,6 +22,7 @@ internal/skills/resources/
       SKILL.md             the frontmatter and the procedure
       references/          files that the procedure sends the agent to
       evals/               the requests that measure the skill, and run.sh
+    build-a-command/
     build-an-endpoint/
 ```
 

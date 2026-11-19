@@ -101,7 +101,7 @@ export function Roles() {
               ),
             },
             // A role has a permission or not: yes or a blank, as osapi
-            // token roles prints it. A yes is not a status, so it is not
+            // token roles list prints it. A yes is not a status, so it is not
             // green.
             ...ROLES.map((r) => ({
               header: r.label,

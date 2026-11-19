@@ -1,0 +1,59 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package widget
+
+import (
+	"context"
+	"errors"
+	"fmt"
+)
+
+// ErrNotFound is an item that is not there.
+var ErrNotFound = errors.New("not found")
+
+// items stand in for what the group reads, such as a file: a method gets
+// it from Deps.
+var items = []WidgetItem{{Name: "example"}}
+
+// List is every item.
+func List(
+	_ context.Context,
+	_ Deps,
+	_ ListInput,
+) (WidgetList, error) {
+	return WidgetList{Items: items, Total: len(items)}, nil
+}
+
+// Get is the item with the name. An item that is not there is ErrNotFound,
+// with the name in the message.
+func Get(
+	_ context.Context,
+	_ Deps,
+	in GetInput,
+) (WidgetItem, error) {
+	for _, it := range items {
+		if it.Name == in.Name {
+			return it, nil
+		}
+	}
+
+	return WidgetItem{}, fmt.Errorf("no item named %q: %w", in.Name, ErrNotFound)
+}

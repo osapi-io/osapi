@@ -55,7 +55,7 @@ graph TD
   a different place, and the answer always agrees with the build that you run.
 - **The permissions come from the methods.** The permissions of a behavior are
   `<name>:read` and `<name>:write`. The built-in roles give them.
-  `osapi token roles` lists each permission of each role.
+  `osapi token roles list` lists each permission of each role.
 - **Skipped is not failed.** In a fleet with more than one platform, the hosts
   that a behavior does not run on report `skipped`. When the agent starts, it
   writes to the log the behaviors that it cannot run.

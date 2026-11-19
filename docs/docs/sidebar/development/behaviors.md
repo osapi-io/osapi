@@ -256,7 +256,7 @@ Written once in the platform, so a behavior writes none of it:
   agent.
 - **Permissions** `<name>:read` and `<name>:write`. The built-in roles give
   them: `admin` and `write` give both, and `read` gives the read permission.
-  `osapi token roles` lists them.
+  `osapi token roles list` lists them.
 - **Audit entries**, through the same middleware as every route.
 
 ## Testing

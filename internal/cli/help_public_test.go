@@ -35,6 +35,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/command"
 )
 
 type HelpPublicTestSuite struct {
@@ -139,6 +140,11 @@ func (suite *HelpPublicTestSuite) TestIsUsageError() {
 		{
 			name: "when a required flag is missing",
 			args: []string{"get"},
+			want: true,
+		},
+		{
+			name: "when a local command's flag breaks a rule of its field",
+			err:  fmt.Errorf("run: %w", &command.UsageError{Msg: "--roles is required"}),
 			want: true,
 		},
 		{

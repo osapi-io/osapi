@@ -83,7 +83,7 @@ test: linux-tune
 # a job. A check added here runs on a laptop and in CI, with no change to the
 # workflow.
 go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check go-mod-check go-pkg-check"
-go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check behavior-cover-check go-fmt-check go-vet"
+go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check go-vet"
 
 # Fail when a behavior that osapi behavior new writes does not pass its tests
 #
@@ -120,6 +120,25 @@ endpoint-scaffold-check:
     go generate ./internal/controller/endpoints/all
     go run . controller endpoint validate >/dev/null
     go test -count=1 ./internal/controller/endpoints/scaffoldcheck/... ./internal/controller/endpoints/all/ ./internal/controller/
+
+# Fail when a group that osapi cli command new writes does not pass its tests
+#
+# As endpoint-scaffold-check does for endpoint groups: the recipe writes a
+# local group in a copy of the checkout, generates it, and runs its tests,
+# the tests of every local group and the tests of cmd/, which hold each
+# command to the CLI's rules. The checkout itself does not change.
+command-scaffold-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    rsync -a --exclude .git --exclude .worktrees --exclude node_modules \
+        --exclude /dist --exclude /examples --exclude /docs/build ./ "$tmp/"
+    cd "$tmp"
+    go run . cli command new --name scaffoldcheck --description "A scaffold check" >/dev/null
+    go generate ./internal/cli/commands/all
+    go run . cli command validate >/dev/null
+    go test -count=1 ./internal/cli/commands/scaffoldcheck/... ./internal/cli/commands/all/ ./cmd/
 
 # Fail when a behavior's own code is not fully covered
 #
@@ -264,7 +283,7 @@ behavior-gen-check:
 
 # Generate code
 generate:
-    go generate ./internal/controller/endpoints/all ./internal/behaviors/all
+    go generate ./internal/controller/endpoints/all ./internal/behaviors/all ./internal/cli/commands/all
     just join-spec internal/controller/api/gen/api.yaml
     just go-generate
     just cli-docs-generate

@@ -17,8 +17,8 @@ osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000 --json
 
 ## Permission
 
-It needs the `audit:read` permission. `osapi token roles` lists the roles that
-grant it.
+It needs the `audit:read` permission. `osapi token roles list` lists the roles
+that grant it.
 
 ## Flags
 

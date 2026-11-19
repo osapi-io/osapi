@@ -49,5 +49,5 @@ var healthStatusCmd = &cobra.Command{
 }
 
 func init() {
-	clicommand.Register(health.Group, healthLivenessCmd, healthReadyCmd, healthStatusCmd)
+	clicommand.AddCommands(health.Group, healthLivenessCmd, healthReadyCmd, healthStatusCmd)
 }

@@ -120,5 +120,5 @@ func init() {
 	sysctlDeleteCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
 	sysctlDeleteCmd.Flags().String("key", "", "Parameter name, such as net.ipv4.ip_forward")
 	_ = sysctlDeleteCmd.MarkFlagRequired("key")
-	clicommand.Register(Group, sysctlListCmd, sysctlGetCmd, sysctlCreateCmd, sysctlUpdateCmd, sysctlDeleteCmd)
+	clicommand.AddCommands(Group, sysctlListCmd, sysctlGetCmd, sysctlCreateCmd, sysctlUpdateCmd, sysctlDeleteCmd)
 }

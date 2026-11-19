@@ -245,8 +245,8 @@ func (g *Group) Permission(
 // A group is a group of the command layer, and a method one of its
 // commands: the CLI's commands are made from them.
 var (
-	_ command.Group  = (*Group)(nil)
-	_ command.Method = (*Method)(nil)
+	_ command.Group   = (*Group)(nil)
+	_ command.Command = (*Method)(nil)
 )
 
 // GroupName is the group's Name, for the command layer.
@@ -266,8 +266,8 @@ func (g *Group) GroupNotes() string {
 }
 
 // Commands are the group's methods, for the command layer.
-func (g *Group) Commands() []command.Method {
-	out := make([]command.Method, 0, len(g.Methods))
+func (g *Group) Commands() []command.Command {
+	out := make([]command.Command, 0, len(g.Methods))
 	for _, m := range g.Methods {
 		out = append(out, m)
 	}
@@ -278,7 +278,7 @@ func (g *Group) Commands() []command.Method {
 // CommandPermission is the permission of method m, which is one of the
 // group's methods, for the command layer.
 func (g *Group) CommandPermission(
-	m command.Method,
+	m command.Command,
 ) string {
 	return g.Permission(m.(*Method))
 }

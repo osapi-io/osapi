@@ -81,5 +81,5 @@ func init() {
 	jobRetryCmd.Flags().String("id", "", "UUID of the job to retry")
 	_ = jobRetryCmd.MarkFlagRequired("id")
 	jobRetryCmd.Flags().StringP("target", "T", "_any", "The target of the retried job: _any, _all, a hostname, or a label such as group:web.dev")
-	clicommand.Register(job.Group, jobListCmd, jobGetCmd, jobDeleteCmd, jobRetryCmd)
+	clicommand.AddCommands(job.Group, jobListCmd, jobGetCmd, jobDeleteCmd, jobRetryCmd)
 }
