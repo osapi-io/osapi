@@ -32,6 +32,7 @@ import (
 	"strings"
 	"time"
 
+	cerrdefs "github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/image"
@@ -198,6 +199,10 @@ func (d *Client) Start(
 	id string,
 ) (*ActionResult, error) {
 	if err := d.client.ContainerStart(ctx, id, container.StartOptions{}); err != nil {
+		if cerrdefs.IsNotFound(err) {
+			return nil, fmt.Errorf("start container %q: %w", id, provider.ErrNotFound)
+		}
+
 		return nil, fmt.Errorf("start container: %w", err)
 	}
 
@@ -220,6 +225,10 @@ func (d *Client) Stop(
 	}
 
 	if err := d.client.ContainerStop(ctx, id, opts); err != nil {
+		if cerrdefs.IsNotFound(err) {
+			return nil, fmt.Errorf("stop container %q: %w", id, provider.ErrNotFound)
+		}
+
 		return nil, fmt.Errorf("stop container: %w", err)
 	}
 
@@ -240,6 +249,13 @@ func (d *Client) Remove(
 	}
 
 	if err := d.client.ContainerRemove(ctx, id, opts); err != nil {
+		if cerrdefs.IsNotFound(err) {
+			return &ActionResult{
+				Message: "Container not present",
+				Changed: false,
+			}, nil
+		}
+
 		return nil, fmt.Errorf("remove container: %w", err)
 	}
 
@@ -307,6 +323,10 @@ func (d *Client) Inspect(
 ) (*ContainerDetail, error) {
 	resp, err := d.client.ContainerInspect(ctx, id)
 	if err != nil {
+		if cerrdefs.IsNotFound(err) {
+			return nil, fmt.Errorf("inspect container %q: %w", id, provider.ErrNotFound)
+		}
+
 		return nil, fmt.Errorf("inspect container: %w", err)
 	}
 
@@ -408,6 +428,10 @@ func (d *Client) Exec(
 	// Create exec instance
 	execResp, err := d.client.ContainerExecCreate(ctx, id, execConfig)
 	if err != nil {
+		if cerrdefs.IsNotFound(err) {
+			return nil, fmt.Errorf("exec in container %q: %w", id, provider.ErrNotFound)
+		}
+
 		return nil, fmt.Errorf("create exec: %w", err)
 	}
 
@@ -450,6 +474,13 @@ func (d *Client) ImageRemove(
 
 	_, err := d.client.ImageRemove(ctx, imageName, opts)
 	if err != nil {
+		if cerrdefs.IsNotFound(err) {
+			return &ActionResult{
+				Message: "Image not present",
+				Changed: false,
+			}, nil
+		}
+
 		return nil, fmt.Errorf("remove image: %w", err)
 	}
 

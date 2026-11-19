@@ -226,7 +226,7 @@ func (d *Debian) Update(
 
 	filePath, perm := d.findEntryPath(entry.Name)
 	if filePath == "" {
-		return nil, fmt.Errorf("schedule %q: %w", entry.Name, provider.ErrNotManaged)
+		return nil, fmt.Errorf("schedule update %q: %w", entry.Name, provider.ErrNotFound)
 	}
 
 	// If no new object was specified, preserve the current one.

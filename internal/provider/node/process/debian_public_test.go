@@ -32,6 +32,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/node/process"
 	"github.com/osapi-io/osapi/internal/provider/node/process/mocks"
 )
@@ -242,6 +243,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 		pid          int
 		setupMock    func()
 		wantErr      bool
+		wantNotFound bool
 		wantErrMsg   string
 		validateFunc func(result *process.Info)
 	}{
@@ -291,15 +293,27 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			},
 		},
 		{
-			name: "when pid not found returns error",
+			name: "when pid is not running returns not found",
 			pid:  99999,
 			setupMock: func() {
 				suite.mockLister.EXPECT().
 					NewProcess(int32(99999)).
-					Return(nil, errors.New("process not found"))
+					Return(nil, gopsutil.ErrorProcessNotRunning)
+			},
+			wantErr:      true,
+			wantNotFound: true,
+			wantErrMsg:   "process: get 99999: not found",
+		},
+		{
+			name: "when the lister fails returns error",
+			pid:  42,
+			setupMock: func() {
+				suite.mockLister.EXPECT().
+					NewProcess(int32(42)).
+					Return(nil, errors.New("read /proc failed"))
 			},
 			wantErr:    true,
-			wantErrMsg: "process: get: process not found",
+			wantErrMsg: "process: get: read /proc failed",
 		},
 		{
 			name: "when gather info errors returns error",
@@ -324,6 +338,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			if tc.wantErr {
 				suite.Error(err)
 				suite.Contains(err.Error(), tc.wantErrMsg)
+				suite.Equal(tc.wantNotFound, errors.Is(err, provider.ErrNotFound))
 				suite.Nil(got)
 
 				return

@@ -38,6 +38,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/file"
 	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 	"github.com/osapi-io/osapi/internal/provider/node/service"
@@ -300,7 +301,7 @@ func (suite *DebianUnitPublicTestSuite) TestUpdate() {
 			},
 		},
 		{
-			name: "when service unit: not found",
+			name: "when unit file is missing returns not found",
 			entry: service.Entry{
 				Name:   "nonexistent",
 				Object: "some-unit",
@@ -312,7 +313,8 @@ func (suite *DebianUnitPublicTestSuite) TestUpdate() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "not managed")
+				suite.True(errors.Is(err, provider.ErrNotFound))
+				suite.Contains(err.Error(), `service "nonexistent": not found`)
 			},
 		},
 		{

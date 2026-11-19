@@ -148,7 +148,11 @@ func (d *Debian) Update(
 ) (*UpdateResult, error) {
 	existing, err := d.fs.ReadFile(sourcesFile)
 	if err != nil {
-		return nil, fmt.Errorf("ntp update: %w", provider.ErrNotManaged)
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, fmt.Errorf("ntp update: %s: %w", sourcesFile, provider.ErrNotFound)
+		}
+
+		return nil, fmt.Errorf("ntp update: read %s: %w", sourcesFile, err)
 	}
 
 	content := generateContent(config.Servers)

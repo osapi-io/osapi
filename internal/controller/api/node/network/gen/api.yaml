@@ -158,6 +158,12 @@ paths:
             application/json:
               schema:
                 $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: The host has no interface with that name.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error retrieving DNS servers.
           content:
@@ -204,6 +210,12 @@ paths:
                 $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: The host has no interface with that name.
           content:
             application/json:
               schema:

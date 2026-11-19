@@ -40,11 +40,13 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	dockerclient "github.com/docker/docker/client"
+	"github.com/docker/docker/errdefs"
 	"github.com/docker/go-connections/nat"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/provider"
 	dockerprov "github.com/osapi-io/osapi/internal/provider/container/docker"
 	dockermocks "github.com/osapi-io/osapi/internal/provider/container/docker/mocks"
 )
@@ -669,6 +671,25 @@ func (s *DockerDriverPublicTestSuite) TestStart() {
 		validateFunc func(err error)
 	}{
 		{
+			name: "returns ErrNotFound when container does not exist",
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockAPIClient {
+				m := dockermocks.NewMockAPIClient(ctrl)
+				m.EXPECT().
+					ContainerStart(gomock.Any(), "missing-id", gomock.Any()).
+					Return(errdefs.NotFound(errors.New("No such container: missing-id")))
+				return m
+			},
+			containerID: "missing-id",
+			validateFunc: func(
+				err error,
+			) {
+				s.ErrorIs(err, provider.ErrNotFound)
+				s.Contains(err.Error(), `start container "missing-id"`)
+			},
+		},
+		{
 			name: "successful start",
 			setupMock: func(
 				ctrl *gomock.Controller,
@@ -727,6 +748,25 @@ func (s *DockerDriverPublicTestSuite) TestStop() {
 		timeout      *time.Duration
 		validateFunc func(err error)
 	}{
+		{
+			name: "returns ErrNotFound when container does not exist",
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockAPIClient {
+				m := dockermocks.NewMockAPIClient(ctrl)
+				m.EXPECT().
+					ContainerStop(gomock.Any(), "missing-id", gomock.Any()).
+					Return(errdefs.NotFound(errors.New("No such container: missing-id")))
+				return m
+			},
+			containerID: "missing-id",
+			validateFunc: func(
+				err error,
+			) {
+				s.ErrorIs(err, provider.ErrNotFound)
+				s.Contains(err.Error(), `stop container "missing-id"`)
+			},
+		},
 		{
 			name: "successful stop with timeout",
 			setupMock: func(
@@ -818,8 +858,30 @@ func (s *DockerDriverPublicTestSuite) TestRemove() {
 		setupMock    func(ctrl *gomock.Controller) *dockermocks.MockAPIClient
 		containerID  string
 		force        bool
-		validateFunc func(err error)
+		validateFunc func(result *dockerprov.ActionResult, err error)
 	}{
+		{
+			name: "returns unchanged when container does not exist",
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockAPIClient {
+				m := dockermocks.NewMockAPIClient(ctrl)
+				m.EXPECT().
+					ContainerRemove(gomock.Any(), "missing-id", gomock.Any()).
+					Return(errdefs.NotFound(errors.New("No such container: missing-id")))
+				return m
+			},
+			containerID: "missing-id",
+			force:       false,
+			validateFunc: func(
+				result *dockerprov.ActionResult,
+				err error,
+			) {
+				s.NoError(err)
+				s.Require().NotNil(result)
+				s.False(result.Changed)
+			},
+		},
 		{
 			name: "successful remove with force",
 			setupMock: func(
@@ -834,6 +896,7 @@ func (s *DockerDriverPublicTestSuite) TestRemove() {
 			containerID: "test-id",
 			force:       true,
 			validateFunc: func(
+				_ *dockerprov.ActionResult,
 				err error,
 			) {
 				s.NoError(err)
@@ -853,6 +916,7 @@ func (s *DockerDriverPublicTestSuite) TestRemove() {
 			containerID: "running-id",
 			force:       false,
 			validateFunc: func(
+				_ *dockerprov.ActionResult,
 				err error,
 			) {
 				s.Error(err)
@@ -866,8 +930,8 @@ func (s *DockerDriverPublicTestSuite) TestRemove() {
 			ctrl := gomock.NewController(s.T())
 			mockClient := tt.setupMock(ctrl)
 			d := dockerprov.NewWithClient(mockClient)
-			_, err := d.Remove(s.ctx, tt.containerID, tt.force)
-			tt.validateFunc(err)
+			result, err := d.Remove(s.ctx, tt.containerID, tt.force)
+			tt.validateFunc(result, err)
 		})
 	}
 }
@@ -1089,6 +1153,27 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 		containerID  string
 		validateFunc func(detail *dockerprov.ContainerDetail, err error)
 	}{
+		{
+			name: "returns ErrNotFound when container does not exist",
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockAPIClient {
+				m := dockermocks.NewMockAPIClient(ctrl)
+				m.EXPECT().
+					ContainerInspect(gomock.Any(), "missing-id").
+					Return(container.InspectResponse{}, errdefs.NotFound(errors.New("No such container: missing-id")))
+				return m
+			},
+			containerID: "missing-id",
+			validateFunc: func(
+				detail *dockerprov.ContainerDetail,
+				err error,
+			) {
+				s.Nil(detail)
+				s.ErrorIs(err, provider.ErrNotFound)
+				s.Contains(err.Error(), `inspect container "missing-id"`)
+			},
+		},
 		{
 			name: "successful inspect",
 			setupMock: func(
@@ -1369,6 +1454,30 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 		params       dockerprov.ExecParams
 		validateFunc func(result *dockerprov.ExecResult, err error)
 	}{
+		{
+			name: "returns ErrNotFound when container does not exist",
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockAPIClient {
+				m := dockermocks.NewMockAPIClient(ctrl)
+				m.EXPECT().
+					ContainerExecCreate(gomock.Any(), "missing-id", gomock.Any()).
+					Return(common.IDResponse{}, errdefs.NotFound(errors.New("No such container: missing-id")))
+				return m
+			},
+			containerID: "missing-id",
+			params: dockerprov.ExecParams{
+				Command: []string{"echo", "hello"},
+			},
+			validateFunc: func(
+				result *dockerprov.ExecResult,
+				err error,
+			) {
+				s.Nil(result)
+				s.ErrorIs(err, provider.ErrNotFound)
+				s.Contains(err.Error(), `exec in container "missing-id"`)
+			},
+		},
 		{
 			name: "successful exec",
 			setupMock: func(
@@ -1846,6 +1955,28 @@ func (s *DockerDriverPublicTestSuite) TestImageRemove() {
 		force        bool
 		validateFunc func(result *dockerprov.ActionResult, err error)
 	}{
+		{
+			name: "returns unchanged when image does not exist",
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockAPIClient {
+				m := dockermocks.NewMockAPIClient(ctrl)
+				m.EXPECT().
+					ImageRemove(gomock.Any(), "missing:latest", gomock.Any()).
+					Return(nil, errdefs.NotFound(errors.New("No such image: missing:latest")))
+				return m
+			},
+			imageName: "missing:latest",
+			force:     false,
+			validateFunc: func(
+				result *dockerprov.ActionResult,
+				err error,
+			) {
+				s.NoError(err)
+				s.Require().NotNil(result)
+				s.False(result.Changed)
+			},
+		},
 		{
 			name: "successful image remove",
 			setupMock: func(

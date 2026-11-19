@@ -33,6 +33,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/exec/mocks"
+	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan/dns"
 )
 
@@ -129,10 +130,31 @@ func (suite *DebianGetResolvConfPublicTestSuite) TestGetResolvConfByInterface() 
 			interfaceName: "eth!",
 			validateFunc: func(_ any, err error) {
 				suite.Error(err)
+				suite.ErrorIs(err, provider.ErrNotFound)
 				suite.Contains(
 					err.Error(),
-					fmt.Errorf("interface %q: not found", "eth!").Error(),
+					fmt.Errorf("dns get: interface %q: not found", "eth!").Error(),
 				)
+			},
+		},
+		{
+			name: "when resolvectl exits non-zero for a missing interface",
+			setupMock: func() *mocks.MockManager {
+				mock := mocks.NewPlainMockManager(suite.ctrl)
+				output := `Failed to resolve interface "eth9", ignoring: No such device`
+
+				mock.EXPECT().
+					RunCmd(gomock.Any(), mocks.ResolveCommand, []string{"status", "eth9"}).
+					Return(output, fmt.Errorf("exit status 1")).
+					AnyTimes()
+
+				return mock
+			},
+			interfaceName: "eth9",
+			validateFunc: func(_ any, err error) {
+				suite.Error(err)
+				suite.ErrorIs(err, provider.ErrNotFound)
+				suite.Contains(err.Error(), `dns get: interface "eth9": not found`)
 			},
 		},
 		{

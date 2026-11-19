@@ -166,6 +166,22 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 		},
 		{
+			name: "when the host does not have it, it is a 404",
+			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
+				Hostname:      "_any",
+				InterfaceName: "eth0",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(gomock.Any(), "_any", "network", job.OperationNetworkDNSGet, gomock.Any()).
+					Return("", nil, fmt.Errorf("on server1: %w", job.ErrNotFound))
+			},
+			validateFunc: func(resp gen.GetNodeNetworkDNSByInterfaceResponseObject) {
+				_, ok := resp.(gen.GetNodeNetworkDNSByInterface404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "when job skipped",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "server1",

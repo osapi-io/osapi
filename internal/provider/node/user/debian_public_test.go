@@ -34,6 +34,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
+	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/node/user"
 )
 
@@ -682,6 +683,35 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 			},
 		},
 		{
+			name:     "when user does not exist",
+			userName: "nobody",
+			opts: user.UpdateUserOpts{
+				Shell: "/bin/zsh",
+			},
+			setup: func() {},
+			validateFunc: func(result *user.Result, err error) {
+				suite.Nil(result)
+				suite.ErrorIs(err, provider.ErrNotFound)
+				suite.EqualError(err, `user update: user "nobody": not found`)
+			},
+		},
+		{
+			name:     "when passwd file cannot be read",
+			userName: "john",
+			opts: user.UpdateUserOpts{
+				Shell: "/bin/zsh",
+			},
+			setup: func() {
+				suite.Require().NoError(suite.memFs.Remove("/etc/passwd"))
+			},
+			validateFunc: func(result *user.Result, err error) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.NotErrorIs(err, provider.ErrNotFound)
+				suite.Contains(err.Error(), "user update: open /etc/passwd")
+			},
+		},
+		{
 			name:     "when user name is invalid",
 			userName: "Invalid",
 			opts: user.UpdateUserOpts{
@@ -698,6 +728,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
+			suite.writePasswd(passwdContent)
 			tc.setup()
 
 			result, err := suite.provider.UpdateUser(suite.ctx, tc.userName, tc.opts)
@@ -730,16 +761,39 @@ func (suite *DebianPublicTestSuite) TestDeleteUser() {
 		},
 		{
 			name:     "when userdel fails",
-			userName: "nonexistent",
+			userName: "john",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd(gomock.Any(), "userdel", []string{"-r", "--", "nonexistent"}).
-					Return("", errors.New("user: not found"))
+					RunPrivilegedCmd(gomock.Any(), "userdel", []string{"-r", "--", "john"}).
+					Return("", errors.New("userdel error"))
 			},
 			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "user delete: userdel")
+			},
+		},
+		{
+			name:     "when user does not exist",
+			userName: "nobody",
+			setup:    func() {},
+			validateFunc: func(result *user.Result, err error) {
+				suite.NoError(err)
+				suite.Require().NotNil(result)
+				suite.Equal("nobody", result.Name)
+				suite.False(result.Changed)
+			},
+		},
+		{
+			name:     "when passwd file cannot be read",
+			userName: "john",
+			setup: func() {
+				suite.Require().NoError(suite.memFs.Remove("/etc/passwd"))
+			},
+			validateFunc: func(result *user.Result, err error) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "user delete: open /etc/passwd")
 			},
 		},
 		{
@@ -756,6 +810,7 @@ func (suite *DebianPublicTestSuite) TestDeleteUser() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
+			suite.writePasswd(passwdContent)
 			tc.setup()
 
 			result, err := suite.provider.DeleteUser(suite.ctx, tc.userName)
@@ -801,6 +856,31 @@ func (suite *DebianPublicTestSuite) TestChangePassword() {
 				suite.Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "chpasswd")
+			},
+		},
+		{
+			name:         "when user does not exist",
+			userName:     "nobody",
+			passwordHash: "$6$abcd$deadbeef",
+			setup:        func() {},
+			validateFunc: func(result *user.Result, err error) {
+				suite.Nil(result)
+				suite.ErrorIs(err, provider.ErrNotFound)
+				suite.EqualError(err, `user set-password: user "nobody": not found`)
+			},
+		},
+		{
+			name:         "when passwd file cannot be read",
+			userName:     "john",
+			passwordHash: "$6$abcd$deadbeef",
+			setup: func() {
+				suite.Require().NoError(suite.memFs.Remove("/etc/passwd"))
+			},
+			validateFunc: func(result *user.Result, err error) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.NotErrorIs(err, provider.ErrNotFound)
+				suite.Contains(err.Error(), "user set-password: open /etc/passwd")
 			},
 		},
 		{
@@ -867,6 +947,7 @@ func (suite *DebianPublicTestSuite) TestChangePassword() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
+			suite.writePasswd(passwdContent)
 			tc.setup()
 
 			result, err := suite.provider.ChangePassword(suite.ctx, tc.userName, tc.passwordHash)
@@ -1185,6 +1266,35 @@ func (suite *DebianPublicTestSuite) TestUpdateGroup() {
 			},
 		},
 		{
+			name:      "when group does not exist",
+			groupName: "nogroup",
+			opts: user.UpdateGroupOpts{
+				Members: []string{"john"},
+			},
+			setup: func() {},
+			validateFunc: func(result *user.GroupResult, err error) {
+				suite.Nil(result)
+				suite.ErrorIs(err, provider.ErrNotFound)
+				suite.EqualError(err, `group update: group "nogroup": not found`)
+			},
+		},
+		{
+			name:      "when group file cannot be read",
+			groupName: "developers",
+			opts: user.UpdateGroupOpts{
+				Members: []string{"john"},
+			},
+			setup: func() {
+				suite.Require().NoError(suite.memFs.Remove("/etc/group"))
+			},
+			validateFunc: func(result *user.GroupResult, err error) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.NotErrorIs(err, provider.ErrNotFound)
+				suite.Contains(err.Error(), "group update: open /etc/group")
+			},
+		},
+		{
 			name:      "when group name is invalid",
 			groupName: "Invalid",
 			opts: user.UpdateGroupOpts{
@@ -1201,6 +1311,7 @@ func (suite *DebianPublicTestSuite) TestUpdateGroup() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
+			suite.writeGroup(groupContent)
 			tc.setup()
 
 			result, err := suite.provider.UpdateGroup(suite.ctx, tc.groupName, tc.opts)
@@ -1233,16 +1344,39 @@ func (suite *DebianPublicTestSuite) TestDeleteGroup() {
 		},
 		{
 			name:      "when groupdel fails",
-			groupName: "nonexistent",
+			groupName: "developers",
 			setup: func() {
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd(gomock.Any(), "groupdel", []string{"--", "nonexistent"}).
-					Return("", errors.New("group: not found"))
+					RunPrivilegedCmd(gomock.Any(), "groupdel", []string{"--", "developers"}).
+					Return("", errors.New("groupdel error"))
 			},
 			validateFunc: func(result *user.GroupResult, err error) {
 				suite.Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "group delete: groupdel")
+			},
+		},
+		{
+			name:      "when group does not exist",
+			groupName: "nogroup",
+			setup:     func() {},
+			validateFunc: func(result *user.GroupResult, err error) {
+				suite.NoError(err)
+				suite.Require().NotNil(result)
+				suite.Equal("nogroup", result.Name)
+				suite.False(result.Changed)
+			},
+		},
+		{
+			name:      "when group file cannot be read",
+			groupName: "developers",
+			setup: func() {
+				suite.Require().NoError(suite.memFs.Remove("/etc/group"))
+			},
+			validateFunc: func(result *user.GroupResult, err error) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "group delete: open /etc/group")
 			},
 		},
 		{
@@ -1259,6 +1393,7 @@ func (suite *DebianPublicTestSuite) TestDeleteGroup() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
+			suite.writeGroup(groupContent)
 			tc.setup()
 
 			result, err := suite.provider.DeleteGroup(suite.ctx, tc.groupName)

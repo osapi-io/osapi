@@ -267,6 +267,31 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 		},
 		{
+			name: "when the host does not have it, it is a 404",
+			request: gen.PutNodeNetworkDNSRequestObject{
+				Hostname: "_any",
+				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
+					InterfaceName: "eth0",
+					Servers:       &[]string{"1.1.1.1"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"_any",
+						"network",
+						job.OperationNetworkDNSUpdate,
+						gomock.Any(),
+					).
+					Return("", nil, fmt.Errorf("on server1: %w", job.ErrNotFound))
+			},
+			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
+				_, ok := resp.(gen.PutNodeNetworkDNS404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "when job skipped",
 			request: gen.PutNodeNetworkDNSRequestObject{
 				Hostname: "server1",

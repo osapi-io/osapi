@@ -325,6 +325,12 @@ paths:
             application/json:
               schema:
                 $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: The host has no unit with that name.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error starting service.
           content:
@@ -367,6 +373,12 @@ paths:
                 $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: The host has no unit with that name.
           content:
             application/json:
               schema:
@@ -417,6 +429,12 @@ paths:
             application/json:
               schema:
                 $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: The host has no unit with that name.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error restarting service.
           content:
@@ -459,6 +477,12 @@ paths:
                 $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: The host has no unit with that name.
           content:
             application/json:
               schema:
@@ -506,6 +530,12 @@ paths:
                 $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../components/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: The host has no unit with that name.
           content:
             application/json:
               schema:

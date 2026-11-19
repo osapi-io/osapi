@@ -33,6 +33,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
+	"github.com/osapi-io/osapi/internal/provider"
 	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 	"github.com/osapi-io/osapi/internal/provider/node/service"
 )
@@ -78,12 +79,12 @@ func (suite *DebianGetPublicTestSuite) TestGet() {
 			name:        "when active enabled service with PID returns info",
 			serviceName: "nginx.service",
 			setup: func() {
-				output := "ActiveState=active\nUnitFileState=enabled\nDescription=A high performance web server\nMainPID=1234\n"
+				output := "LoadState=loaded\nActiveState=active\nUnitFileState=enabled\nDescription=A high performance web server\nMainPID=1234\n"
 				suite.mockExecManager.EXPECT().
 					RunCmd(gomock.Any(), "systemctl", []string{
 						"show",
 						"nginx.service",
-						"--property=ActiveState,UnitFileState,Description,MainPID",
+						"--property=LoadState,ActiveState,UnitFileState,Description,MainPID",
 						"--no-pager",
 					}).
 					Return(output, nil)
@@ -105,12 +106,12 @@ func (suite *DebianGetPublicTestSuite) TestGet() {
 			name:        "when inactive disabled service with zero PID returns info",
 			serviceName: "cron.service",
 			setup: func() {
-				output := "ActiveState=inactive\nUnitFileState=disabled\nDescription=Regular background program processing daemon\nMainPID=0\n"
+				output := "LoadState=loaded\nActiveState=inactive\nUnitFileState=disabled\nDescription=Regular background program processing daemon\nMainPID=0\n"
 				suite.mockExecManager.EXPECT().
 					RunCmd(gomock.Any(), "systemctl", []string{
 						"show",
 						"cron.service",
-						"--property=ActiveState,UnitFileState,Description,MainPID",
+						"--property=LoadState,ActiveState,UnitFileState,Description,MainPID",
 						"--no-pager",
 					}).
 					Return(output, nil)
@@ -136,7 +137,7 @@ func (suite *DebianGetPublicTestSuite) TestGet() {
 					RunCmd(gomock.Any(), "systemctl", []string{
 						"show",
 						"missing.service",
-						"--property=ActiveState,UnitFileState,Description,MainPID",
+						"--property=LoadState,ActiveState,UnitFileState,Description,MainPID",
 						"--no-pager",
 					}).
 					Return("", errors.New("unit not found"))
@@ -151,6 +152,31 @@ func (suite *DebianGetPublicTestSuite) TestGet() {
 			},
 		},
 		{
+			name:        "when unit does not exist returns not found",
+			serviceName: "missing.service",
+			setup: func() {
+				// Real output: systemctl show exits 0 for a unit that does not exist.
+				output := "MainPID=0\nLoadState=not-found\nActiveState=inactive\nUnitFileState=\nDescription=missing.service\n"
+				suite.mockExecManager.EXPECT().
+					RunCmd(gomock.Any(), "systemctl", []string{
+						"show",
+						"missing.service",
+						"--property=LoadState,ActiveState,UnitFileState,Description,MainPID",
+						"--no-pager",
+					}).
+					Return(output, nil)
+			},
+			validateFunc: func(
+				info *service.Info,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(info)
+				suite.True(errors.Is(err, provider.ErrNotFound))
+				suite.Contains(err.Error(), `service "missing.service": not found`)
+			},
+		},
+		{
 			name:        "when output has malformed line returns error",
 			serviceName: "bad.service",
 			setup: func() {
@@ -159,7 +185,7 @@ func (suite *DebianGetPublicTestSuite) TestGet() {
 					RunCmd(gomock.Any(), "systemctl", []string{
 						"show",
 						"bad.service",
-						"--property=ActiveState,UnitFileState,Description,MainPID",
+						"--property=LoadState,ActiveState,UnitFileState,Description,MainPID",
 						"--no-pager",
 					}).
 					Return(output, nil)
@@ -182,7 +208,7 @@ func (suite *DebianGetPublicTestSuite) TestGet() {
 					RunCmd(gomock.Any(), "systemctl", []string{
 						"show",
 						"blanks.service",
-						"--property=ActiveState,UnitFileState,Description,MainPID",
+						"--property=LoadState,ActiveState,UnitFileState,Description,MainPID",
 						"--no-pager",
 					}).
 					Return(output, nil)

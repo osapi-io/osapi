@@ -26,6 +26,8 @@ import (
 	"log/slog"
 	"strconv"
 	"strings"
+
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // Get returns a single systemd service by name using systemctl show.
@@ -45,7 +47,7 @@ func (d *Debian) Get(
 	output, err := d.execManager.RunCmd(ctx, "systemctl", []string{
 		"show",
 		name,
-		"--property=ActiveState,UnitFileState,Description,MainPID",
+		"--property=LoadState,ActiveState,UnitFileState,Description,MainPID",
 		"--no-pager",
 	})
 	if err != nil {
@@ -55,6 +57,12 @@ func (d *Debian) Get(
 	props, err := parseProperties(output)
 	if err != nil {
 		return nil, fmt.Errorf("service get: %w", err)
+	}
+
+	// systemctl show exits 0 for a unit that does not exist and reports it
+	// only through LoadState.
+	if props["LoadState"] == loadStateNotFound {
+		return nil, fmt.Errorf("service %q: %w", name, provider.ErrNotFound)
 	}
 
 	pid, _ := strconv.Atoi(props["MainPID"])

@@ -23,7 +23,9 @@ package route
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"strings"
 
@@ -224,10 +226,15 @@ func (d *Debian) Update(
 
 	// Fail if the managed file does not exist on disk.
 	if _, statErr := d.fs.Stat(path); statErr != nil {
-		return nil, fmt.Errorf(
-			"route update: %q not managed",
-			entry.Interface,
-		)
+		if errors.Is(statErr, fs.ErrNotExist) {
+			return nil, fmt.Errorf(
+				"route update %q: %w",
+				entry.Interface,
+				provider.ErrNotFound,
+			)
+		}
+
+		return nil, fmt.Errorf("route update %q: %w", entry.Interface, statErr)
 	}
 
 	ifaceSection := netplan.SectionForInterface(ctx, d.execManager, entry.Interface)

@@ -35,6 +35,11 @@ export type getNodeNetworkDNSByInterfaceResponse403 = {
   status: 403
 }
 
+export type getNodeNetworkDNSByInterfaceResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
 export type getNodeNetworkDNSByInterfaceResponse500 = {
   data: ErrorResponse
   status: 500
@@ -43,7 +48,7 @@ export type getNodeNetworkDNSByInterfaceResponse500 = {
 export type getNodeNetworkDNSByInterfaceResponseSuccess = (getNodeNetworkDNSByInterfaceResponse200) & {
   headers: Headers;
 };
-export type getNodeNetworkDNSByInterfaceResponseError = (getNodeNetworkDNSByInterfaceResponse400 | getNodeNetworkDNSByInterfaceResponse401 | getNodeNetworkDNSByInterfaceResponse403 | getNodeNetworkDNSByInterfaceResponse500) & {
+export type getNodeNetworkDNSByInterfaceResponseError = (getNodeNetworkDNSByInterfaceResponse400 | getNodeNetworkDNSByInterfaceResponse401 | getNodeNetworkDNSByInterfaceResponse403 | getNodeNetworkDNSByInterfaceResponse404 | getNodeNetworkDNSByInterfaceResponse500) & {
   headers: Headers;
 };
 
@@ -95,6 +100,11 @@ export type putNodeNetworkDNSResponse403 = {
   status: 403
 }
 
+export type putNodeNetworkDNSResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
 export type putNodeNetworkDNSResponse500 = {
   data: ErrorResponse
   status: 500
@@ -103,7 +113,7 @@ export type putNodeNetworkDNSResponse500 = {
 export type putNodeNetworkDNSResponseSuccess = (putNodeNetworkDNSResponse200) & {
   headers: Headers;
 };
-export type putNodeNetworkDNSResponseError = (putNodeNetworkDNSResponse400 | putNodeNetworkDNSResponse401 | putNodeNetworkDNSResponse403 | putNodeNetworkDNSResponse500) & {
+export type putNodeNetworkDNSResponseError = (putNodeNetworkDNSResponse400 | putNodeNetworkDNSResponse401 | putNodeNetworkDNSResponse403 | putNodeNetworkDNSResponse404 | putNodeNetworkDNSResponse500) & {
   headers: Headers;
 };
 
