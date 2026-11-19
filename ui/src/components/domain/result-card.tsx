@@ -21,11 +21,12 @@ import { CodeBlock } from "@/components/ui/code-block";
 import { KeyValue } from "@/components/ui/key-value";
 import { StatusIcon } from "@/components/ui/status-icon";
 import { Text } from "@/components/ui/text";
+import { HealthDot } from "@/components/ui/health-dot";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { IconButton } from "@/components/ui/icon-button";
 import { HostGroupHeader } from "@/components/domain/host-group-header";
 import { ResultSummary } from "@/components/domain/result-summary";
-import { hostOutcome } from "@/lib/outcome";
+import { hostOutcome, hostOutcomes } from "@/lib/outcome";
 import { formatDurationMs, formatTime } from "@/lib/format";
 
 interface ResultCardProps {
@@ -37,6 +38,15 @@ interface ResultCardProps {
 // ---------------------------------------------------------------------------
 // Shared
 // ---------------------------------------------------------------------------
+
+/** HostError is the error of one host, under its row. */
+function HostError({ children }: { children: React.ReactNode }) {
+  return (
+    <Text variant="error" as="p" className="px-4 pb-2">
+      {children}
+    </Text>
+  );
+}
 
 /** Derive status from a result that has the status field. */
 function hostStatus(r: {
@@ -105,14 +115,18 @@ function ResultShell({
 }: {
   jobId?: string;
   label: string;
-  summary: React.ReactNode;
+  /** The summary line; for a result with per-host results, it is counted from them. */
+  summary?: React.ReactNode;
   children?: React.ReactNode;
   data: unknown;
 }) {
   return (
     <div className="rounded-lg border border-border/60 bg-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
       <div className="flex items-center gap-2 border-b border-border/40 px-4 py-2.5">
-        {summary}
+        {summary ??
+          (resultsOf(data).length > 0 && (
+            <ResultSummary outcomes={hostOutcomes(resultsOf(data))} />
+          ))}
         <Text variant="muted" className="font-semibold">
           {label}
         </Text>
@@ -288,11 +302,7 @@ function FileUploadResult({ data }: { data: FileUploadResponse }) {
   return (
     <ResultShell
       label="uploaded"
-      summary={
-        <div
-          className={`h-1.5 w-1.5 rounded-full ${data.changed ? "bg-primary" : "bg-text-muted"}`}
-        />
-      }
+      summary={<HealthDot status={data.changed ? "ok" : "muted"} />}
       data={data}
     >
       <div className="flex items-center gap-4 px-4 py-2.5">
@@ -379,8 +389,7 @@ function ScheduleListResult({
   return (
     <ResultShell
       jobId={data.job_id as string | undefined}
-      label={`${byHost.size} host${byHost.size !== 1 ? "s" : ""} · cron list`}
-      summary={<div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+      label="cron list"
       data={data}
     >
       <ListSearchBar
@@ -413,9 +422,7 @@ function ScheduleListResult({
               }
             />
             {hostError && (
-              <Text variant="error" as="p" className="px-4 pb-2">
-                {(hostError as ScheduleListEntry).error}
-              </Text>
+              <HostError>{(hostError as ScheduleListEntry).error}</HostError>
             )}
             {scheduleEntries.map((e, i) => (
               <div
@@ -468,8 +475,7 @@ function DockerListResult({ data }: { data: Record<string, unknown> }) {
   return (
     <ResultShell
       jobId={data.job_id as string | undefined}
-      label={`${hosts.length} host${hosts.length !== 1 ? "s" : ""} · ${totalContainers} container${totalContainers !== 1 ? "s" : ""}`}
-      summary={<div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+      label={`${totalContainers} container${totalContainers !== 1 ? "s" : ""}`}
       data={data}
     >
       <ListSearchBar
@@ -510,9 +516,7 @@ function DockerListResult({ data }: { data: Record<string, unknown> }) {
               }
             />
             {host.error && host.status !== "skipped" && (
-              <Text variant="error" as="p" className="px-4 pb-2">
-                {host.error}
-              </Text>
+              <HostError>{host.error}</HostError>
             )}
             {host.status !== "skipped" &&
               containers.map((c, i) => (
@@ -566,8 +570,7 @@ function ServiceListResult({ data }: { data: Record<string, unknown> }) {
   return (
     <ResultShell
       jobId={data.job_id as string | undefined}
-      label={`${hosts.length} host${hosts.length !== 1 ? "s" : ""} · ${totalServices} service${totalServices !== 1 ? "s" : ""}`}
-      summary={<div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+      label={`${totalServices} service${totalServices !== 1 ? "s" : ""}`}
       data={data}
     >
       <ListSearchBar
@@ -608,9 +611,7 @@ function ServiceListResult({ data }: { data: Record<string, unknown> }) {
               }
             />
             {host.error && host.status !== "skipped" && (
-              <Text variant="error" as="p" className="px-4 pb-2">
-                {host.error}
-              </Text>
+              <HostError>{host.error}</HostError>
             )}
             {host.status !== "skipped" &&
               services.map((s, i) => (
@@ -674,8 +675,7 @@ function PackageListResult({
   return (
     <ResultShell
       jobId={data.job_id as string | undefined}
-      label={`${hosts.length} host${hosts.length !== 1 ? "s" : ""} · ${label}`}
-      summary={<div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+      label={`${label}`}
       data={data}
     >
       <ListSearchBar
@@ -716,9 +716,7 @@ function PackageListResult({
               }
             />
             {host.error && host.status !== "skipped" && (
-              <Text variant="error" as="p" className="px-4 pb-2">
-                {host.error}
-              </Text>
+              <HostError>{host.error}</HostError>
             )}
             {host.status !== "skipped" &&
               packages.map((p, i) => (
@@ -766,8 +764,7 @@ function SysctlListResult({ data }: { data: Record<string, unknown> }) {
   return (
     <ResultShell
       jobId={data.job_id as string | undefined}
-      label={`${byHost.size} host${byHost.size !== 1 ? "s" : ""} · sysctl list`}
-      summary={<div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+      label="sysctl list"
       data={data}
     >
       <ListSearchBar
@@ -800,9 +797,7 @@ function SysctlListResult({ data }: { data: Record<string, unknown> }) {
               }
             />
             {hostError && (
-              <Text variant="error" as="p" className="px-4 pb-2">
-                {(hostError as SysctlEntry).error}
-              </Text>
+              <HostError>{(hostError as SysctlEntry).error}</HostError>
             )}
             {kvEntries.map((e, i) => (
               <div
@@ -846,8 +841,7 @@ function InterfaceListResult({ data }: { data: Record<string, unknown> }) {
   return (
     <ResultShell
       jobId={data.job_id as string | undefined}
-      label={`${hosts.length} host${hosts.length !== 1 ? "s" : ""} · interface list`}
-      summary={<div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+      label="interface list"
       data={data}
     >
       <ListSearchBar
@@ -895,9 +889,7 @@ function InterfaceListResult({ data }: { data: Record<string, unknown> }) {
               }
             />
             {host.error && host.status !== "skipped" && (
-              <Text variant="error" as="p" className="px-4 pb-2">
-                {host.error}
-              </Text>
+              <HostError>{host.error}</HostError>
             )}
             {host.status !== "skipped" &&
               interfaces.map((iface, i) => (
@@ -946,8 +938,7 @@ function RouteListResult({ data }: { data: Record<string, unknown> }) {
   return (
     <ResultShell
       jobId={data.job_id as string | undefined}
-      label={`${hosts.length} host${hosts.length !== 1 ? "s" : ""} · route list`}
-      summary={<div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+      label="route list"
       data={data}
     >
       <ListSearchBar
@@ -988,9 +979,7 @@ function RouteListResult({ data }: { data: Record<string, unknown> }) {
               }
             />
             {host.error && host.status !== "skipped" && (
-              <Text variant="error" as="p" className="px-4 pb-2">
-                {host.error}
-              </Text>
+              <HostError>{host.error}</HostError>
             )}
             {host.status !== "skipped" &&
               routes.map((r, i) => (
@@ -1039,8 +1028,7 @@ function UserListResult({ data }: { data: Record<string, unknown> }) {
   return (
     <ResultShell
       jobId={data.job_id as string | undefined}
-      label={`${hosts.length} host${hosts.length !== 1 ? "s" : ""} · user list`}
-      summary={<div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+      label="user list"
       data={data}
     >
       <ListSearchBar
@@ -1081,9 +1069,7 @@ function UserListResult({ data }: { data: Record<string, unknown> }) {
               }
             />
             {host.error && host.status !== "skipped" && (
-              <Text variant="error" as="p" className="px-4 pb-2">
-                {host.error}
-              </Text>
+              <HostError>{host.error}</HostError>
             )}
             {host.status !== "skipped" &&
               users.map((u, i) => (
@@ -1120,8 +1106,7 @@ function GroupListResult({ data }: { data: Record<string, unknown> }) {
   return (
     <ResultShell
       jobId={data.job_id as string | undefined}
-      label={`${hosts.length} host${hosts.length !== 1 ? "s" : ""} · group list`}
-      summary={<div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+      label="group list"
       data={data}
     >
       <ListSearchBar
@@ -1162,9 +1147,7 @@ function GroupListResult({ data }: { data: Record<string, unknown> }) {
               }
             />
             {host.error && host.status !== "skipped" && (
-              <Text variant="error" as="p" className="px-4 pb-2">
-                {host.error}
-              </Text>
+              <HostError>{host.error}</HostError>
             )}
             {host.status !== "skipped" &&
               groups.map((g, i) => (
@@ -1206,8 +1189,7 @@ function CertificateListResult({ data }: { data: Record<string, unknown> }) {
   return (
     <ResultShell
       jobId={data.job_id as string | undefined}
-      label={`${hosts.length} host${hosts.length !== 1 ? "s" : ""} · certificate list`}
-      summary={<div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+      label="certificate list"
       data={data}
     >
       <ListSearchBar
@@ -1248,9 +1230,7 @@ function CertificateListResult({ data }: { data: Record<string, unknown> }) {
               }
             />
             {host.error && host.status !== "skipped" && (
-              <Text variant="error" as="p" className="px-4 pb-2">
-                {host.error}
-              </Text>
+              <HostError>{host.error}</HostError>
             )}
             {host.status !== "skipped" &&
               certs.map((c, i) => (
@@ -1294,8 +1274,7 @@ function ProcessListResult({ data }: { data: Record<string, unknown> }) {
   return (
     <ResultShell
       jobId={data.job_id as string | undefined}
-      label={`${hosts.length} host${hosts.length !== 1 ? "s" : ""} · process list`}
-      summary={<div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+      label="process list"
       data={data}
     >
       <ListSearchBar
@@ -1336,9 +1315,7 @@ function ProcessListResult({ data }: { data: Record<string, unknown> }) {
               }
             />
             {host.error && host.status !== "skipped" && (
-              <Text variant="error" as="p" className="px-4 pb-2">
-                {host.error}
-              </Text>
+              <HostError>{host.error}</HostError>
             )}
             {host.status !== "skipped" &&
               processes.map((p, i) => (
@@ -1387,8 +1364,7 @@ function LogSourcesResult({ data }: { data: Record<string, unknown> }) {
   return (
     <ResultShell
       jobId={data.job_id as string | undefined}
-      label={`${hosts.length} host${hosts.length !== 1 ? "s" : ""} · log sources`}
-      summary={<div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+      label="log sources"
       data={data}
     >
       <ListSearchBar
@@ -1427,9 +1403,7 @@ function LogSourcesResult({ data }: { data: Record<string, unknown> }) {
               }
             />
             {host.error && host.status !== "skipped" && (
-              <Text variant="error" as="p" className="px-4 pb-2">
-                {host.error}
-              </Text>
+              <HostError>{host.error}</HostError>
             )}
             {host.status !== "skipped" &&
               sources.map((s, i) => (
@@ -1476,7 +1450,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     return (
       <ResultShell
         label={`${files.length} file${files.length !== 1 ? "s" : ""}`}
-        summary={<div className="h-1.5 w-1.5 rounded-full bg-primary" />}
         data={data}
       >
         {files.map((f, i) => (
@@ -2141,11 +2114,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     return (
       <ResultShell
         label={`${entries.length} stale deployment${entries.length !== 1 ? "s" : ""}`}
-        summary={
-          <div
-            className={`h-1.5 w-1.5 rounded-full ${entries.length > 0 ? "bg-status-error" : "bg-primary"}`}
-          />
-        }
+        summary={<HealthDot status={entries.length > 0 ? "error" : "ok"} />}
         data={data}
       >
         {entries.map((e, i) => (
@@ -2164,7 +2133,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
         ))}
         {entries.length === 0 && (
           <div className="px-4 py-3">
-            <Text variant="muted">No stale deployments found.</Text>
+            <Text variant="muted">None.</Text>
           </div>
         )}
       </ResultShell>
@@ -2319,8 +2288,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     return (
       <ResultShell
         jobId={data.job_id as string | undefined}
-        label={`${results.length} host${results.length !== 1 ? "s" : ""} · disk`}
-        summary={<div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+        label="disk"
         data={data}
       >
         {results.map((r, i) => (
@@ -2334,11 +2302,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
                   : `${r.disks?.length ?? 0} disk${(r.disks?.length ?? 0) !== 1 ? "s" : ""}`
               }
             />
-            {r.error && (
-              <Text variant="error" as="p" className="px-4 pb-2">
-                {r.error}
-              </Text>
-            )}
+            {r.error && <HostError>{r.error}</HostError>}
             {!r.error &&
               r.disks?.map((d, j) => (
                 <div
@@ -2409,7 +2373,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     return (
       <ResultShell
         label={`${total ?? items.length} entr${(total ?? items.length) !== 1 ? "ies" : "y"}`}
-        summary={<div className="h-1.5 w-1.5 rounded-full bg-primary" />}
         data={data}
       >
         {items.map((entry, i) => (
@@ -2437,7 +2400,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
         ))}
         {items.length === 0 && (
           <div className="px-4 py-3">
-            <Text variant="muted">No audit entries found.</Text>
+            <Text variant="muted">None.</Text>
           </div>
         )}
       </ResultShell>
@@ -2491,4 +2454,10 @@ function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// resultsOf is a result's per-host results, or none.
+function resultsOf(data: unknown): Parameters<typeof hostOutcomes>[0] {
+  const r = (data as { results?: unknown })?.results;
+  return Array.isArray(r) ? r : [];
 }

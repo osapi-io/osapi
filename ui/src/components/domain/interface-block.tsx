@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { FactInput } from "@/components/ui/fact-input";
-import { Text } from "@/components/ui/text";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { BlockStatus } from "@/hooks/use-stack";
 
 interface InterfaceBlockProps {
@@ -90,33 +90,24 @@ export function InterfaceBlock({
         />
       </div>
       <div className="flex items-center gap-6">
-        <label className="flex cursor-pointer items-center gap-2">
-          <input
-            type="checkbox"
-            checked={dhcp4}
-            onChange={(e) => updateBool("dhcp4", e.target.checked)}
-            className="accent-primary"
-          />
-          <Text variant="muted">DHCP4</Text>
-        </label>
-        <label className="flex cursor-pointer items-center gap-2">
-          <input
-            type="checkbox"
-            checked={dhcp6}
-            onChange={(e) => updateBool("dhcp6", e.target.checked)}
-            className="accent-primary"
-          />
-          <Text variant="muted">DHCP6</Text>
-        </label>
-        <label className="flex cursor-pointer items-center gap-2">
-          <input
-            type="checkbox"
-            checked={wakeonlan}
-            onChange={(e) => updateBool("wakeonlan", e.target.checked)}
-            className="accent-primary"
-          />
-          <Text variant="muted">Wake-on-LAN</Text>
-        </label>
+        <Checkbox
+          id="iface-dhcp4"
+          checked={dhcp4}
+          onChange={(e) => updateBool("dhcp4", e.target.checked)}
+          label="DHCP4"
+        />
+        <Checkbox
+          id="iface-dhcp6"
+          checked={dhcp6}
+          onChange={(e) => updateBool("dhcp6", e.target.checked)}
+          label="DHCP6"
+        />
+        <Checkbox
+          id="iface-wakeonlan"
+          checked={wakeonlan}
+          onChange={(e) => updateBool("wakeonlan", e.target.checked)}
+          label="Wake-on-LAN"
+        />
       </div>
     </div>
   );

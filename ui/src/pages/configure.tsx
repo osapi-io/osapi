@@ -196,7 +196,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { SectionLabel } from "@/components/ui/section-label";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Text } from "@/components/ui/text";
-import { cn } from "@/lib/cn";
+import { Chip } from "@/components/ui/chip";
 import { useAuth } from "@/hooks/use-auth";
 import { BLOCK_PERMISSIONS } from "@/lib/permissions";
 import {
@@ -1702,18 +1702,14 @@ export function Configure() {
           {/* Group pills */}
           <div className="flex flex-wrap gap-1.5">
             {BLOCK_GROUPS.map((group) => (
-              <button
+              <Chip
                 key={group.name}
+                size="sm"
+                active={activeGroup === group.name}
                 onClick={() => setActiveGroup(group.name)}
-                className={cn(
-                  "rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
-                  activeGroup === group.name
-                    ? "border-primary/40 bg-primary/10 text-primary"
-                    : "border-border bg-card text-text-muted hover:border-primary/20 hover:text-text",
-                )}
               >
                 {group.label}
-              </button>
+              </Chip>
             ))}
           </div>
 
@@ -1734,27 +1730,20 @@ export function Configure() {
                       const perm = BLOCK_PERMISSIONS[bt.type];
                       const allowed = perm ? can(perm) : true;
                       return (
-                        <button
+                        <Chip
                           key={bt.type}
                           onClick={(e) => {
-                            if (!allowed) return;
                             (e.target as HTMLElement).blur();
                             addBlockAndFocus(bt);
                           }}
                           disabled={!allowed}
                           title={allowed ? bt.description : `Requires ${perm}`}
-                          className={cn(
-                            "flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
-                            allowed
-                              ? "border-border bg-card text-text hover:border-primary/30 hover:text-primary"
-                              : "cursor-not-allowed border-border/30 bg-card/50 text-text-muted/40",
-                          )}
                         >
                           {bt.label}
                           {!allowed && (
                             <Lock className="h-3 w-3 text-text-muted/40" />
                           )}
-                        </button>
+                        </Chip>
                       );
                     })}
                   </div>

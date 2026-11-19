@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Layers, Plus, Search, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Text } from "@/components/ui/text";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import type { Stack } from "@/hooks/use-stacks";
 import { SearchBox } from "@/components/ui/search-box";
@@ -147,13 +148,10 @@ export function StackBar({
               onClick={() => setShowSearch(true)}
             />
           )}
-          <button
-            onClick={onNew}
-            className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10"
-          >
+          <Button variant="ghost" size="sm" onClick={onNew}>
             <Plus className="h-3.5 w-3.5" />
             New
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -171,7 +169,7 @@ export function StackBar({
         >
           {filtered.length === 0 ? (
             <Text variant="muted" as="p" className="py-2">
-              {search ? "No stacks match your search" : "No saved stacks"}
+              {search ? "None match." : "None."}
             </Text>
           ) : (
             filtered.map((stack) => (

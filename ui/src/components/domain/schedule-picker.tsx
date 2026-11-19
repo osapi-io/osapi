@@ -1,16 +1,6 @@
-import { useEffect, useState, useRef } from "react";
-import { Text } from "@/components/ui/text";
-import { FormField } from "@/components/ui/form-field";
-import { PopoverPanel, PopoverItem } from "@/components/ui/popover";
-import { useOutsideClick } from "@/hooks/use-outside-click";
-import { usePopoverKeyboard } from "@/hooks/use-popover-keyboard";
-import { getNodeSchedule } from "@/sdk/gen/schedule-management-api-schedule-operations/schedule-management-api-schedule-operations";
-import type {
-  ScheduleEntry,
-  ScheduleCollectionResponse,
-} from "@/sdk/gen/schemas";
-import { ChevronDown, Calendar } from "lucide-react";
-import { cn } from "@/lib/cn";
+import { Picker } from "@/components/ui/popover";
+import { useSchedules } from "@/hooks/use-schedules";
+import { Calendar } from "lucide-react";
 
 interface SchedulePickerProps {
   id: string;
@@ -19,101 +9,30 @@ interface SchedulePickerProps {
   onChange: (value: string) => void;
 }
 
+/** SchedulePicker picks a cron entry by name, once for all the agents that have it. */
 export function SchedulePicker({
   id,
   label,
   value,
   onChange,
 }: SchedulePickerProps) {
-  const [entries, setEntries] = useState<ScheduleEntry[]>([]);
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const ref = useRef<HTMLDivElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
-
-  useOutsideClick(ref, () => setOpen(false), open);
-
-  useEffect(() => {
-    let mounted = true;
-    const fetch = async () => {
-      try {
-        const result = await getNodeSchedule("_all");
-        if (mounted && result.status === 200) {
-          setEntries((result.data as ScheduleCollectionResponse).results ?? []);
-        }
-      } catch {
-        // silent
-      }
-      if (mounted) setLoading(false);
-    };
-    fetch();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  // Dedupe cron names across hosts
+  const { entries, loading } = useSchedules();
   const names = [
     ...new Set(entries.map((e) => e.name).filter(Boolean)),
   ] as string[];
 
-  const { activeIndex, handleKeyDown } = usePopoverKeyboard({
-    itemCount: names.length,
-    onSelect: (i) => {
-      onChange(names[i]);
-      setOpen(false);
-    },
-    onClose: () => setOpen(false),
-    onOpen: () => setOpen(true),
-    open,
-    listRef,
-  });
-
   return (
-    <FormField id={id} label={label}>
-      <div className="relative" ref={ref}>
-        <button
-          id={id}
-          type="button"
-          onClick={() => setOpen(!open)}
-          onKeyDown={handleKeyDown}
-          className={cn(
-            "flex h-9 w-full items-center justify-between rounded-md border border-border bg-background px-3 text-sm text-text",
-            "focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20",
-          )}
-        >
-          <span className={value ? "text-text" : "text-text-muted"}>
-            {value || (loading ? "Loading..." : "Select a cron entry")}
-          </span>
-          <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
-        </button>
-
-        {open && (
-          <PopoverPanel onClose={() => setOpen(false)}>
-            <div ref={listRef}>
-              {names.length === 0 && (
-                <Text variant="muted" as="p" className="px-3 py-2">
-                  No cron entries found
-                </Text>
-              )}
-              {names.map((name, i) => (
-                <PopoverItem
-                  key={name}
-                  selected={value === name}
-                  active={i === activeIndex}
-                  onClick={() => {
-                    onChange(name);
-                    setOpen(false);
-                  }}
-                >
-                  <Calendar className="h-3 w-3 shrink-0 text-text-muted" />
-                  <span className="text-text">{name}</span>
-                </PopoverItem>
-              ))}
-            </div>
-          </PopoverPanel>
-        )}
-      </div>
-    </FormField>
+    <Picker
+      id={id}
+      label={label}
+      value={value}
+      onChange={onChange}
+      loading={loading}
+      placeholder="Select a cron entry"
+      options={names.map((name) => ({
+        value: name,
+        icon: <Calendar className="h-3 w-3 shrink-0 text-text-muted" />,
+      }))}
+    />
   );
 }

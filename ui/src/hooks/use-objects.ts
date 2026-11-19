@@ -1,44 +1,18 @@
-import { useEffect, useState } from "react";
 import { getFiles } from "@/sdk/gen/file-management-api-file-operations/file-management-api-file-operations";
 import type { FileInfo, FileListResponse } from "@/sdk/gen/schemas";
+import { useLoad } from "@/hooks/use-load";
 
 export type { FileInfo };
 
+const load = async () => {
+  const r = await getFiles();
+  return r.status === 200
+    ? ((r.data as FileListResponse).items ?? [])
+    : undefined;
+};
+
+/** The objects in the file store. */
 export function useObjects() {
-  const [objects, setObjects] = useState<FileInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const fetch = async () => {
-      try {
-        const result = await getFiles();
-        if (mounted && result.status === 200) {
-          setObjects((result.data as FileListResponse).items ?? []);
-        }
-      } catch {
-        // Silently fail — dropdown just stays empty
-      }
-      if (mounted) setLoading(false);
-    };
-
-    fetch();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const refresh = async () => {
-    try {
-      const result = await getFiles();
-      if (result.status === 200) {
-        setObjects((result.data as FileListResponse).items ?? []);
-      }
-    } catch {
-      // ignore
-    }
-  };
-
-  return { objects, loading, refresh };
+  const { value, loading, refresh } = useLoad<FileInfo[]>(load, []);
+  return { objects: value, loading, refresh };
 }

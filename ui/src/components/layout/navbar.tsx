@@ -12,6 +12,7 @@ import {
   GitBranch,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { IconButton } from "@/components/ui/icon-button";
 import { useAuth } from "@/hooks/use-auth";
 import { ROLES, type Permission } from "@/lib/permissions";
 import { Badge } from "@/components/ui/badge";
@@ -137,13 +138,13 @@ export function Navbar() {
             className="w-40"
           />
         )}
-        <button
+        <IconButton
+          icon={LogOut}
+          variant="danger"
+          size="md"
           onClick={clearToken}
-          className="rounded-md p-1.5 text-text-muted transition-colors hover:bg-white/5 hover:text-status-error"
           title="Sign out"
-        >
-          <LogOut className="h-4 w-4" />
-        </button>
+        />
       </div>
     </nav>
   );
