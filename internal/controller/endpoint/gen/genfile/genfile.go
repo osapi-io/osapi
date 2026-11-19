@@ -125,15 +125,41 @@ func (w *Writer) Remove(
 	return nil
 }
 
-// Format runs the repository's formatters, golines with gofumpt, over every
-// Go file written, once.
+// formatConfig is the golangci-lint configuration that Format runs: the
+// formatters of the repository's .golangci.yml. golangci-lint skips a file
+// that says it is generated, and each file that Format gets is generated, so
+// this configuration does not skip them.
+const formatConfig = `version: "2"
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+    - golines
+  exclusions:
+    generated: disable
+`
+
+// Format runs the repository's formatters, through golangci-lint fmt, over
+// every Go file written, once. They are the formatters of just go-fmt, so a
+// generated file has the format of the rest of the repository.
 func (w *Writer) Format() error {
 	if len(w.gofs) == 0 {
 		return nil
 	}
+	cfg, err := os.CreateTemp("", "genfile-*.yml")
+	if err != nil {
+		return fmt.Errorf("format: %w", err)
+	}
+	defer func() { _ = os.Remove(cfg.Name()) }()
+	if _, err := cfg.WriteString(formatConfig); err != nil {
+		return fmt.Errorf("format: %w", err)
+	}
+	if err := cfg.Close(); err != nil {
+		return fmt.Errorf("format: %w", err)
+	}
 	args := append([]string{
-		"tool", "github.com/segmentio/golines",
-		"--base-formatter=go tool mvdan.cc/gofumpt", "-w",
+		"tool", "github.com/golangci/golangci-lint/v2/cmd/golangci-lint",
+		"fmt", "--config", cfg.Name(),
 	}, w.gofs...)
 	cmd := exec.Command("go", args...)
 	cmd.Dir = w.Root

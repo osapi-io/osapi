@@ -34,7 +34,16 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"One part of the tree\" is run",
-			args: []string{"next", "node", "sysctl", "list", "--target", "server1", "--prefix", "net.ipv4"},
+			args: []string{
+				"next",
+				"node",
+				"sysctl",
+				"list",
+				"--target",
+				"server1",
+				"--prefix",
+				"net.ipv4",
+			},
 			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/next/node/server1/sysctl?prefix=net.ipv4",
@@ -43,7 +52,16 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"A managed parameter the kernel does not have right now\" is run",
-			args: []string{"next", "node", "sysctl", "list", "--target", "server1", "--prefix", "net.bridge"},
+			args: []string{
+				"next",
+				"node",
+				"sysctl",
+				"list",
+				"--target",
+				"server1",
+				"--prefix",
+				"net.bridge",
+			},
 			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/next/node/server1/sysctl?prefix=net.bridge",
@@ -52,7 +70,16 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"A parameter osapi manages\" is run",
-			args: []string{"next", "node", "sysctl", "get", "--target", "server1", "--key", "vm.swappiness"},
+			args: []string{
+				"next",
+				"node",
+				"sysctl",
+				"get",
+				"--target",
+				"server1",
+				"--key",
+				"vm.swappiness",
+			},
 			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
@@ -61,7 +88,16 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"A parameter osapi does not manage\" is run",
-			args: []string{"next", "node", "sysctl", "get", "--target", "server1", "--key", "vm.swappiness"},
+			args: []string{
+				"next",
+				"node",
+				"sysctl",
+				"get",
+				"--target",
+				"server1",
+				"--key",
+				"vm.swappiness",
+			},
 			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
@@ -70,7 +106,16 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"A value of several fields\" is run",
-			args: []string{"next", "node", "sysctl", "get", "--target", "server1", "--key", "net.ipv4.ping_group_range"},
+			args: []string{
+				"next",
+				"node",
+				"sysctl",
+				"get",
+				"--target",
+				"server1",
+				"--key",
+				"net.ipv4.ping_group_range",
+			},
 			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/next/node/server1/sysctl/net.ipv4.ping_group_range",
@@ -79,7 +124,16 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"A managed parameter the kernel does not have right now\" is run",
-			args: []string{"next", "node", "sysctl", "get", "--target", "server1", "--key", "net.bridge.bridge-nf-call-iptables"},
+			args: []string{
+				"next",
+				"node",
+				"sysctl",
+				"get",
+				"--target",
+				"server1",
+				"--key",
+				"net.bridge.bridge-nf-call-iptables",
+			},
 			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/next/node/server1/sysctl/net.bridge.bridge-nf-call-iptables",
@@ -88,7 +142,18 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"Turn on IP forwarding\" is run",
-			args: []string{"next", "node", "sysctl", "create", "--target", "server1", "--key", "net.ipv4.ip_forward", "--value", "1"},
+			args: []string{
+				"next",
+				"node",
+				"sysctl",
+				"create",
+				"--target",
+				"server1",
+				"--key",
+				"net.ipv4.ip_forward",
+				"--value",
+				"1",
+			},
 			want: commandtest.Request{
 				Method: "POST",
 				Path:   "/api/next/node/server1/sysctl",
@@ -97,7 +162,18 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"Lower swappiness\" is run",
-			args: []string{"next", "node", "sysctl", "update", "--target", "server1", "--key", "vm.swappiness", "--value", "10"},
+			args: []string{
+				"next",
+				"node",
+				"sysctl",
+				"update",
+				"--target",
+				"server1",
+				"--key",
+				"vm.swappiness",
+				"--value",
+				"10",
+			},
 			want: commandtest.Request{
 				Method: "PUT",
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
@@ -106,7 +182,18 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"A parameter osapi did not manage\" is run",
-			args: []string{"next", "node", "sysctl", "update", "--target", "server1", "--key", "vm.swappiness", "--value", "10"},
+			args: []string{
+				"next",
+				"node",
+				"sysctl",
+				"update",
+				"--target",
+				"server1",
+				"--key",
+				"vm.swappiness",
+				"--value",
+				"10",
+			},
 			want: commandtest.Request{
 				Method: "PUT",
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
@@ -115,7 +202,16 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"Remove a parameter\" is run",
-			args: []string{"next", "node", "sysctl", "delete", "--target", "server1", "--key", "vm.swappiness"},
+			args: []string{
+				"next",
+				"node",
+				"sysctl",
+				"delete",
+				"--target",
+				"server1",
+				"--key",
+				"vm.swappiness",
+			},
 			want: commandtest.Request{
 				Method: "DELETE",
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
@@ -124,7 +220,16 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"A parameter osapi does not manage\" is run",
-			args: []string{"next", "node", "sysctl", "delete", "--target", "server1", "--key", "vm.swappiness"},
+			args: []string{
+				"next",
+				"node",
+				"sysctl",
+				"delete",
+				"--target",
+				"server1",
+				"--key",
+				"vm.swappiness",
+			},
 			want: commandtest.Request{
 				Method: "DELETE",
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
@@ -133,7 +238,16 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"A parameter osapi already stopped managing\" is run",
-			args: []string{"next", "node", "sysctl", "delete", "--target", "server1", "--key", "vm.swappiness"},
+			args: []string{
+				"next",
+				"node",
+				"sysctl",
+				"delete",
+				"--target",
+				"server1",
+				"--key",
+				"vm.swappiness",
+			},
 			want: commandtest.Request{
 				Method: "DELETE",
 				Path:   "/api/next/node/server1/sysctl/vm.swappiness",

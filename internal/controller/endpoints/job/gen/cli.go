@@ -20,7 +20,12 @@ var jobListCmd = &cobra.Command{
 		limit, _ := cmd.Flags().GetInt("limit")
 		offset, _ := cmd.Flags().GetInt("offset")
 
-		command.Run(cmd, job.Group, "list", job.ListInput{Status: status, Limit: limit, Offset: offset})
+		command.Run(
+			cmd,
+			job.Group,
+			"list",
+			job.ListInput{Status: status, Limit: limit, Offset: offset},
+		)
 	},
 	Short: "List jobs",
 	Use:   "list",
@@ -63,14 +68,20 @@ var jobRetryCmd = &cobra.Command{
 		id, _ := cmd.Flags().GetString("id")
 		targetHostname, _ := cmd.Flags().GetString("target")
 
-		command.Run(cmd, job.Group, "retry", job.RetryInput{ID: id, Body: job.RetryJobRequest{TargetHostname: targetHostname}})
+		command.Run(
+			cmd,
+			job.Group,
+			"retry",
+			job.RetryInput{ID: id, Body: job.RetryJobRequest{TargetHostname: targetHostname}},
+		)
 	},
 	Short: "Retry a failed or stuck job",
 	Use:   "retry",
 }
 
 func init() {
-	jobListCmd.Flags().String("status", "", "Filter jobs by status (submitted, processing, completed, failed, partial_failure)")
+	jobListCmd.Flags().
+		String("status", "", "Filter jobs by status (submitted, processing, completed, failed, partial_failure)")
 	jobListCmd.Flags().Int("limit", 10, "Maximum number of jobs per page (1-100)")
 	jobListCmd.Flags().Int("offset", 0, "Number of jobs to skip for pagination")
 	jobGetCmd.Flags().String("id", "", "UUID of the job to retrieve")
@@ -79,6 +90,7 @@ func init() {
 	_ = jobDeleteCmd.MarkFlagRequired("id")
 	jobRetryCmd.Flags().String("id", "", "UUID of the job to retry")
 	_ = jobRetryCmd.MarkFlagRequired("id")
-	jobRetryCmd.Flags().StringP("target", "T", "_any", "The target of the retried job: _any, _all, a hostname, or a label such as group:web.dev")
+	jobRetryCmd.Flags().
+		StringP("target", "T", "_any", "The target of the retried job: _any, _all, a hostname, or a label such as group:web.dev")
 	command.Register(job.Group, jobListCmd, jobGetCmd, jobDeleteCmd, jobRetryCmd)
 }
