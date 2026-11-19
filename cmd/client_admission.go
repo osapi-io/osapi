@@ -77,7 +77,12 @@ func renderAdmissionList(
 	rows := make([][]string, 0, len(out.Items))
 	for _, a := range out.Items {
 		rows = append(rows, []string{
-			a.MachineID, a.Hostname, a.State, online(a.Online), since(a.LastSeen), shortFingerprint(a.Fingerprint),
+			a.MachineID,
+			a.Hostname,
+			a.State,
+			online(a.Online),
+			since(a.LastSeen),
+			shortFingerprint(a.Fingerprint),
 		})
 	}
 

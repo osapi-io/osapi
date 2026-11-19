@@ -109,8 +109,12 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 		want   string
 	}{
 		{
-			name: "when list has admission:read, it is a 200 with the records", method: http.MethodGet,
-			path: "/api/admission", tok: read, code: http.StatusOK, want: `"machine_id":"m-1"`,
+			name:   "when list has admission:read, it is a 200 with the records",
+			method: http.MethodGet,
+			path:   "/api/admission",
+			tok:    read,
+			code:   http.StatusOK,
+			want:   `"machine_id":"m-1"`,
 			setup: func() {
 				s.store.EXPECT().List(gomock.Any()).
 					Return([]store.Record{{MachineID: "m-1", State: store.StatePending}}, nil)
@@ -125,9 +129,12 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 			path: "/api/admission", code: http.StatusUnauthorized,
 		},
 		{
-			name: "when get finds no record, it is a 404", method: http.MethodGet,
-			path: "/api/admission/m-x", tok: read, code: http.StatusNotFound,
-			setup: func() { s.store.EXPECT().Get(gomock.Any(), "m-x").Return(store.Record{}, store.ErrNotFound) },
+			name:   "when get finds no record, it is a 404",
+			method: http.MethodGet,
+			path:   "/api/admission/m-x",
+			tok:    read,
+			code:   http.StatusNotFound,
+			setup:  func() { s.store.EXPECT().Get(gomock.Any(), "m-x").Return(store.Record{}, store.ErrNotFound) },
 		},
 		{
 			name: "when admit matches, it is a 204", method: http.MethodPost,
@@ -159,20 +166,29 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 			code: http.StatusForbidden,
 		},
 		{
-			name: "when admit has agent:write but not admission:write, it is a 403", method: http.MethodPost,
-			path: "/api/admission/m-1/admit", body: `{"fingerprint":"SHA256:ab"}`, tok: agentWrite,
-			code: http.StatusForbidden,
+			name:   "when admit has agent:write but not admission:write, it is a 403",
+			method: http.MethodPost,
+			path:   "/api/admission/m-1/admit",
+			body:   `{"fingerprint":"SHA256:ab"}`,
+			tok:    agentWrite,
+			code:   http.StatusForbidden,
 		},
 		{
-			name: "when reject has a reason, it is a 204", method: http.MethodPost,
-			path: "/api/admission/m-1/reject", body: `{"reason":"unknown host"}`, tok: write,
-			code:  http.StatusNoContent,
-			setup: func() { s.store.EXPECT().Reject(gomock.Any(), "m-1", "unknown host").Return(nil) },
+			name:   "when reject has a reason, it is a 204",
+			method: http.MethodPost,
+			path:   "/api/admission/m-1/reject",
+			body:   `{"reason":"unknown host"}`,
+			tok:    write,
+			code:   http.StatusNoContent,
+			setup:  func() { s.store.EXPECT().Reject(gomock.Any(), "m-1", "unknown host").Return(nil) },
 		},
 		{
-			name: "when revoke finds no admitted machine, it is a 404", method: http.MethodPost,
-			path: "/api/admission/m-1/revoke", tok: write, code: http.StatusNotFound,
-			setup: func() { s.store.EXPECT().Revoke(gomock.Any(), "m-1").Return(store.ErrNoAcceptedAgent) },
+			name:   "when revoke finds no admitted machine, it is a 404",
+			method: http.MethodPost,
+			path:   "/api/admission/m-1/revoke",
+			tok:    write,
+			code:   http.StatusNotFound,
+			setup:  func() { s.store.EXPECT().Revoke(gomock.Any(), "m-1").Return(store.ErrNoAcceptedAgent) },
 		},
 		{
 			name: "when PKI is off, it is a 503", method: http.MethodGet,

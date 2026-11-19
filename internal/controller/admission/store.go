@@ -386,7 +386,12 @@ func (w *Watcher) keep(
 			err,
 		)
 	}
-	if _, err := w.enrollmentKV.KVPut(ctx, w.enrollmentBucket, prefix+r.MachineID, data); err != nil {
+	if _, err := w.enrollmentKV.KVPut(
+		ctx,
+		w.enrollmentBucket,
+		prefix+r.MachineID,
+		data,
+	); err != nil {
 		return fmt.Errorf(
 			"store %s record %s: %w",
 			strings.TrimSuffix(prefix, "."),
