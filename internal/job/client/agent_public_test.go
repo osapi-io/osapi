@@ -191,6 +191,7 @@ func (s *AgentPublicTestSuite) TestWriteJobResponse() {
 		responseData []byte
 		status       string
 		errorMsg     string
+		errorCode    job.ErrorCode
 		changed      *bool
 		kvError      error
 		validateFunc func(error)
@@ -212,6 +213,18 @@ func (s *AgentPublicTestSuite) TestWriteJobResponse() {
 			responseData: []byte(`{"error": "processing failed"}`),
 			status:       "failed",
 			errorMsg:     "job execution failed",
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
+		{
+			name:         "when the failure has a cause, the stored response keeps its code",
+			jobID:        "job-404",
+			hostname:     "agent-2",
+			responseData: []byte{},
+			status:       "failed",
+			errorMsg:     `user "nobody": not found`,
+			errorCode:    job.ErrorCodeNotFound,
 			validateFunc: func(err error) {
 				s.NoError(err)
 			},
@@ -267,9 +280,13 @@ func (s *AgentPublicTestSuite) TestWriteJobResponse() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			var stored job.Response
 			s.mockNATSClient.EXPECT().
 				KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
-				Return(uint64(0), tt.kvError)
+				DoAndReturn(func(_ context.Context, _, _ string, value []byte) (uint64, error) {
+					s.Require().NoError(json.Unmarshal(value, &stored))
+					return uint64(0), tt.kvError
+				})
 
 			tt.validateFunc(s.jobsClient.WriteJobResponse(
 				s.ctx,
@@ -278,8 +295,14 @@ func (s *AgentPublicTestSuite) TestWriteJobResponse() {
 				tt.responseData,
 				tt.status,
 				tt.errorMsg,
+				tt.errorCode,
 				tt.changed,
 			))
+			s.Equal(
+				tt.errorCode,
+				stored.ErrorCode,
+				"the controller reads the cause from the stored response",
+			)
 		})
 	}
 }
@@ -368,6 +391,7 @@ func (s *AgentPublicTestSuite) TestWriteJobResponseWithPKISigner() {
 				tt.responseData,
 				tt.status,
 				tt.errorMsg,
+				"",
 				tt.changed,
 			))
 		})

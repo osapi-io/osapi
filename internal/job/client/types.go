@@ -267,6 +267,7 @@ type JobClient interface {
 		responseData []byte,
 		status string,
 		errorMsg string,
+		errorCode job.ErrorCode,
 		changed *bool,
 	) error
 	ConsumeJobs(

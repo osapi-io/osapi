@@ -114,6 +114,7 @@ func (c *Client) WriteJobResponse(
 	responseData []byte,
 	status string,
 	errorMsg string,
+	errorCode job.ErrorCode,
 	changed *bool,
 ) error {
 	// Create response key with timestamp to ensure uniqueness
@@ -125,6 +126,7 @@ func (c *Client) WriteJobResponse(
 		Status:    job.Status(status),
 		Data:      responseData,
 		Error:     errorMsg,
+		ErrorCode: errorCode,
 		Changed:   changed,
 		Hostname:  hostname,
 		Timestamp: time.Now(),

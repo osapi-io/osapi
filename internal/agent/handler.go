@@ -512,7 +512,7 @@ func (a *Agent) handleJobMessage(
 	}
 
 	err = a.jobClient.WriteJobResponse(ctx, jobKey, hostname,
-		response.Data, string(response.Status), errorMsg, response.Changed)
+		response.Data, string(response.Status), errorMsg, response.ErrorCode, response.Changed)
 	if err != nil {
 		// The operation already ran. Returning an error here would leave
 		// the message unacked, and JetStream would redeliver it — but
