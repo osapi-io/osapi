@@ -99,3 +99,25 @@ func EnrollSubject(
 ) string {
 	return enrollSubject(namespace, suffix)
 }
+
+// SetStaleInterval overrides how often RunStaleCleanup looks.
+func SetStaleInterval(
+	d time.Duration,
+) {
+	staleInterval = d
+}
+
+// ResetStaleInterval restores how often RunStaleCleanup looks.
+func ResetStaleInterval() {
+	staleInterval = time.Minute
+}
+
+// RejectedKVPrefix is the key prefix of a rejected record.
+func RejectedKVPrefix() string {
+	return rejectedKVPrefix
+}
+
+// RevokedKVPrefix is the key prefix of a revoked record.
+func RevokedKVPrefix() string {
+	return revokedKVPrefix
+}

@@ -82,6 +82,20 @@ var admissionRevokeCmd = &cobra.Command{
 	Use:   "revoke",
 }
 
+var admissionDeleteCmd = &cobra.Command{
+	Annotations: map[string]string{reference.Permission: "admission:write"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi client admission delete --machine-id d530664edc1c431eb5ef1e9dfd6617a5",
+	Long:        "The controller removes the key of the machine and each record of it. Unlike\nrevoke, it keeps no record, so a machine that asks again is new. Use it\nbefore a machine is rebuilt or removed.",
+	Run: func(cmd *cobra.Command, _ []string) {
+		machineID, _ := cmd.Flags().GetString("machine-id")
+
+		command.Run(cmd, admission.Group, "delete", admission.MachineInput{MachineID: machineID})
+	},
+	Short: "Delete a machine",
+	Use:   "delete",
+}
+
 func init() {
 	admissionListCmd.Flags().String("state", "", "Only the records in this state: pending, admitted, rejected or revoked (pending, admitted, rejected, revoked)")
 	admissionGetCmd.Flags().String("machine-id", "", "The machine ID of the node")
@@ -95,5 +109,7 @@ func init() {
 	admissionRejectCmd.Flags().String("reason", "", "Why the machine is rejected; the machine and the record keep it")
 	admissionRevokeCmd.Flags().String("machine-id", "", "The machine ID of the node")
 	_ = admissionRevokeCmd.MarkFlagRequired("machine-id")
-	command.Register(admission.Group, admissionListCmd, admissionGetCmd, admissionAdmitCmd, admissionRejectCmd, admissionRevokeCmd)
+	admissionDeleteCmd.Flags().String("machine-id", "", "The machine ID of the node")
+	_ = admissionDeleteCmd.MarkFlagRequired("machine-id")
+	command.Register(admission.Group, admissionListCmd, admissionGetCmd, admissionAdmitCmd, admissionRejectCmd, admissionRevokeCmd, admissionDeleteCmd)
 }

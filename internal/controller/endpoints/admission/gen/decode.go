@@ -89,3 +89,18 @@ func decodeRevoke(
 
 	return in, "", true
 }
+
+// decodeDelete reads the delete method's input from the request.
+func decodeDelete(
+	c *echo.Context,
+) (admission.MachineInput, string, bool) {
+	var in admission.MachineInput
+	if msg, ok := server.Param(c, "machine_id", &in.MachineID); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Valid(c, in); !ok {
+		return in, msg, false
+	}
+
+	return in, "", true
+}

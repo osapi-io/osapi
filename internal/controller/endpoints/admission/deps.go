@@ -45,6 +45,7 @@ type Store interface {
 	Admit(ctx context.Context, machineID string, fingerprint string) error
 	Reject(ctx context.Context, machineID string, reason string) error
 	Revoke(ctx context.Context, machineID string) error
+	Delete(ctx context.Context, machineID string) error
 }
 
 // Jobs is the part of the job client the admission group uses.

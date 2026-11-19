@@ -181,6 +181,68 @@ paths:
         - Admission_API_admission
   /api/admission/{machine_id}:
     servers: []
+    delete:
+      description: >-
+        Removes a machine's key and each record of it, and keeps none. A machine
+        that asks again is new. Use it for a machine that goes away on purpose,
+        such as a VM that is rebuilt; revoke a machine that is not trusted.
+      operationId: DeleteMachine
+      parameters:
+        - description: The machine ID of the node.
+          in: path
+          name: machine_id
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+      responses:
+        '204':
+          description: The machine is deleted.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: No record of the machine.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'Admission is not configured: set controller.pki.enabled.'
+      security:
+        - BearerAuth:
+            - admission:write
+      summary: Delete a machine
+      tags:
+        - Admission_API_admission
     get:
       description: Returns one machine's admission record by machine ID.
       operationId: GetAdmission

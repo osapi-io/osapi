@@ -88,6 +88,13 @@ func (s *SpanPublicTestSuite) TestOperations() {
 			},
 		},
 		{
+			name: "when a machine is deleted opens admission.delete",
+			span: "admission.delete",
+			call: func(w *admission.Watcher, ctx context.Context) error {
+				return w.Delete(ctx, "m-1")
+			},
+		},
+		{
 			name: "when a machine is revoked opens admission.revoke",
 			span: "admission.revoke",
 			call: func(w *admission.Watcher, ctx context.Context) error {

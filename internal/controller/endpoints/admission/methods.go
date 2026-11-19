@@ -231,3 +231,23 @@ func notConfigured() error {
 	return endpoint.Errorf(ErrNotConfigured,
 		"admission is not configured: set controller.pki.enabled on the controller")
 }
+
+// Delete removes a machine's key and each record of it.
+func Delete(
+	ctx context.Context,
+	d Deps,
+	in MachineInput,
+) (struct{}, error) {
+	if d.Store == nil {
+		return struct{}{}, notConfigured()
+	}
+	err := d.Store.Delete(ctx, in.MachineID)
+	switch {
+	case err == nil:
+		return struct{}{}, nil
+	case errors.Is(err, admission.ErrNotFound):
+		return struct{}{}, endpoint.Errorf(ErrNotFound, "no record of machine %s", in.MachineID)
+	default:
+		return struct{}{}, endpoint.Internal("failed to delete the machine", err)
+	}
+}

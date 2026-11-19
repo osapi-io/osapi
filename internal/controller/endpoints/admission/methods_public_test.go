@@ -261,6 +261,14 @@ func (s *MethodsPublicTestSuite) TestDecisions() {
 		)
 		return err
 	}
+	del := func(d admission.Deps) error {
+		_, err := admission.Delete(
+			context.Background(),
+			d,
+			admission.MachineInput{MachineID: "m-1"},
+		)
+		return err
+	}
 
 	tests := []struct {
 		name  string
@@ -326,6 +334,23 @@ func (s *MethodsPublicTestSuite) TestDecisions() {
 			call:  revoke,
 			code:  500,
 		},
+		{
+			name:  "when delete finds the machine deletes it",
+			setup: func() { s.store.EXPECT().Delete(gomock.Any(), "m-1").Return(nil) },
+			call:  del,
+		},
+		{
+			name:  "when delete finds no record is not found",
+			setup: func() { s.store.EXPECT().Delete(gomock.Any(), "m-1").Return(store.ErrNotFound) },
+			call:  del,
+			kind:  admission.ErrNotFound,
+		},
+		{
+			name:  "when delete fails is a 500",
+			setup: func() { s.store.EXPECT().Delete(gomock.Any(), "m-1").Return(errors.New("kv down")) },
+			call:  del,
+			code:  500,
+		},
 	}
 
 	for _, tc := range tests {
@@ -346,7 +371,7 @@ func (s *MethodsPublicTestSuite) TestDecisions() {
 	}
 
 	s.Run("when PKI is off each decision is not configured", func() {
-		for _, call := range []func(admission.Deps) error{admit, reject, revoke} {
+		for _, call := range []func(admission.Deps) error{admit, reject, revoke, del} {
 			s.True(is(call(admission.Deps{}), admission.ErrNotConfigured))
 		}
 	})

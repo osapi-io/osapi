@@ -17,6 +17,7 @@ machine can be revoked later.
 | `Admit(ctx, machineID, fingerprint)` | Admit a pending machine                 |
 | `Reject(ctx, machineID, reason)`     | Reject a pending machine                |
 | `Revoke(ctx, machineID)`             | Remove the key of an admitted machine   |
+| `Delete(ctx, machineID)`             | Remove a machine and each record of it  |
 
 The state is `pending`, `admitted`, `rejected` or `revoked`.
 
@@ -40,8 +41,13 @@ err := c.Admission.Admit(ctx, "d530664edc1c431eb5ef1e9dfd6617a5", "SHA256:1f53de
 // Reject, with the reason
 err := c.Admission.Reject(ctx, "d530664edc1c431eb5ef1e9dfd6617a5", "unknown host")
 
-// Revoke: nothing that the machine signs verifies after this
+// Revoke a machine that is not trusted: nothing that it signs verifies
+// after this, and a record shows it if it asks again
 err := c.Admission.Revoke(ctx, "d530664edc1c431eb5ef1e9dfd6617a5")
+
+// Delete a machine that goes away on purpose, such as before a rebuild: it
+// leaves no record, and is new if it asks again
+err := c.Admission.Delete(ctx, "d530664edc1c431eb5ef1e9dfd6617a5")
 ```
 
 Admit compares the fingerprint with the key in the request of the machine. A
@@ -82,6 +88,6 @@ Refer to
 
 ## Permissions
 
-List and Get need `admission:read`. Admit, Reject and Revoke need
+List and Get need `admission:read`. Admit, Reject, Revoke and Delete need
 `admission:write`, and return only an error: the API answers 204. When PKI is
 off, each method returns the 503 error of the API.

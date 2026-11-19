@@ -100,5 +100,13 @@ func startEnrollment(
 
 	background(ctx, log, "enrollment watcher", watcher.Start)
 
+	// A machine that went away without a delete keeps its key until an
+	// operator removes it, unless delete_after removes it.
+	if after, err := time.ParseDuration(cfg.Controller.PKI.DeleteAfter); err == nil && after > 0 {
+		background(ctx, log, "stale machine cleanup", func(ctx context.Context) error {
+			return watcher.RunStaleCleanup(ctx, conn.Jobs, after)
+		})
+	}
+
 	return watcher, nil
 }

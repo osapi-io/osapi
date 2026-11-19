@@ -118,6 +118,23 @@ func (s *AdmissionService) Reject(
 		resp.JSON404, resp.JSON500, resp.JSON503)
 }
 
+// Delete removes a machine's key and each record of it, and keeps none: a
+// machine that asks again is new. Use it for a machine that goes away on
+// purpose, such as a VM that is rebuilt; Revoke a machine that is not
+// trusted.
+func (s *AdmissionService) Delete(
+	ctx context.Context,
+	machineID string,
+) error {
+	resp, err := s.client.DeleteMachineWithResponse(ctx, machineID)
+	if err != nil {
+		return fmt.Errorf("delete machine %s: %w", machineID, err)
+	}
+
+	return checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403,
+		resp.JSON404, resp.JSON500, resp.JSON503)
+}
+
 // Revoke removes an admitted machine's key. Nothing it signs verifies
 // afterwards; to return, it asks again.
 func (s *AdmissionService) Revoke(

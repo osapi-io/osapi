@@ -5163,6 +5163,9 @@ type ClientInterface interface {
 	// GetAdmissions request
 	GetAdmissions(ctx context.Context, params *GetAdmissionsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteMachine request
+	DeleteMachine(ctx context.Context, machineId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetAdmission request
 	GetAdmission(ctx context.Context, machineId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -5606,6 +5609,18 @@ type ClientInterface interface {
 
 func (c *Client) GetAdmissions(ctx context.Context, params *GetAdmissionsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAdmissionsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteMachine(ctx context.Context, machineId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteMachineRequest(c.Server, machineId)
 	if err != nil {
 		return nil, err
 	}
@@ -7583,6 +7598,40 @@ func NewGetAdmissionsRequest(server string, params *GetAdmissionsParams) (*http.
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeleteMachineRequest generates requests for DeleteMachine
+func NewDeleteMachineRequest(server string, machineId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machine_id", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/admission/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -12800,6 +12849,9 @@ type ClientWithResponsesInterface interface {
 	// GetAdmissionsWithResponse request
 	GetAdmissionsWithResponse(ctx context.Context, params *GetAdmissionsParams, reqEditors ...RequestEditorFn) (*GetAdmissionsResponse, error)
 
+	// DeleteMachineWithResponse request
+	DeleteMachineWithResponse(ctx context.Context, machineId string, reqEditors ...RequestEditorFn) (*DeleteMachineResponse, error)
+
 	// GetAdmissionWithResponse request
 	GetAdmissionWithResponse(ctx context.Context, machineId string, reqEditors ...RequestEditorFn) (*GetAdmissionResponse, error)
 
@@ -13270,6 +13322,41 @@ func (r GetAdmissionsResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetAdmissionsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteMachineResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+	JSON503      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteMachineResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteMachineResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteMachineResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -17411,6 +17498,15 @@ func (c *ClientWithResponses) GetAdmissionsWithResponse(ctx context.Context, par
 	return ParseGetAdmissionsResponse(rsp)
 }
 
+// DeleteMachineWithResponse request returning *DeleteMachineResponse
+func (c *ClientWithResponses) DeleteMachineWithResponse(ctx context.Context, machineId string, reqEditors ...RequestEditorFn) (*DeleteMachineResponse, error) {
+	rsp, err := c.DeleteMachine(ctx, machineId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteMachineResponse(rsp)
+}
+
 // GetAdmissionWithResponse request returning *GetAdmissionResponse
 func (c *ClientWithResponses) GetAdmissionWithResponse(ctx context.Context, machineId string, reqEditors ...RequestEditorFn) (*GetAdmissionResponse, error) {
 	rsp, err := c.GetAdmission(ctx, machineId, reqEditors...)
@@ -18852,6 +18948,67 @@ func ParseGetAdmissionsResponse(rsp *http.Response) (*GetAdmissionsResponse, err
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteMachineResponse parses an HTTP response from a DeleteMachineWithResponse call
+func ParseDeleteMachineResponse(rsp *http.Response) (*DeleteMachineResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteMachineResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

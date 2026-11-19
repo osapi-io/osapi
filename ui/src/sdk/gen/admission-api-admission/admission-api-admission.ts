@@ -85,6 +85,74 @@ export const getAdmissions = async (params?: GetAdmissionsParams, options?: Para
 );}
 
 
+export type deleteMachineResponse204 = {
+  data: void
+  status: 204
+}
+
+export type deleteMachineResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type deleteMachineResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type deleteMachineResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type deleteMachineResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteMachineResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type deleteMachineResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
+export type deleteMachineResponseSuccess = (deleteMachineResponse204) & {
+  headers: Headers;
+};
+export type deleteMachineResponseError = (deleteMachineResponse400 | deleteMachineResponse401 | deleteMachineResponse403 | deleteMachineResponse404 | deleteMachineResponse500 | deleteMachineResponse503) & {
+  headers: Headers;
+};
+
+export type deleteMachineResponse = (deleteMachineResponseSuccess | deleteMachineResponseError)
+
+export const getDeleteMachineUrl = (machineId: string,) => {
+
+
+
+
+  return `/api/admission/${machineId}`
+}
+
+/**
+ * Removes a machine's key and each record of it, and keeps none. A machine that asks again is new. Use it for a machine that goes away on purpose, such as a VM that is rebuilt; revoke a machine that is not trusted.
+ * @summary Delete a machine
+ */
+export const deleteMachine = async (machineId: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteMachineResponse> => {
+
+  return apiFetch<deleteMachineResponse>(getDeleteMachineUrl(machineId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
 export type getAdmissionResponse200 = {
   data: Admission
   status: 200

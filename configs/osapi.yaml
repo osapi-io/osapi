@@ -17,6 +17,7 @@ controller:
   #   key_dir: /etc/osapi/pki
   #   auto_admit: false
   #   rotation_grace_period: 24h
+  #   delete_after: ""
   api:
     # Host the API, and the UI on its listener, binds to. Empty binds every
     # interface.

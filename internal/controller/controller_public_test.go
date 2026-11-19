@@ -148,11 +148,12 @@ func (s *ControllerPublicTestSuite) TestNew() {
 			cfg:  func() config.Config { return startServer(s.T()) },
 		},
 		{
-			name: "when PKI, notifications and metrics are on starts each of them",
+			name: "when PKI, stale cleanup, notifications and metrics are on starts each of them",
 			cfg: func() config.Config {
 				cfg := startServer(s.T())
 				cfg.Controller.PKI.Enabled = true
 				cfg.Controller.PKI.RotationGracePeriod = "1h"
+				cfg.Controller.PKI.DeleteAfter = "720h"
 				cfg.Controller.Notifications.Enabled = true
 				return cfg
 			},

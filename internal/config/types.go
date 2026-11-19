@@ -440,6 +440,9 @@ type ControllerPKI struct {
 	// RotationGracePeriod is how long both old and new keys are accepted
 	// during key rotation. Uses Go duration format.
 	RotationGracePeriod string `mapstructure:"rotation_grace_period" doc:"Grace period during key rotation where both old and new keys are accepted. Go duration format." validate:"omitempty,go_duration"`
+	// DeleteAfter deletes an admitted machine that has not reported for
+	// this long. Empty is never. Uses Go duration format.
+	DeleteAfter string `mapstructure:"delete_after" doc:"Delete an admitted machine that has not reported for this long, such as 720h. Empty is never. Go duration format." validate:"omitempty,go_duration"`
 }
 
 // AgentConfig configuration settings.

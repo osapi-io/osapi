@@ -182,13 +182,15 @@ func (suite *AdmissionPublicTestSuite) TestDecisions() {
 	admit := func(c *client.Client) error { return c.Admission.Admit(suite.ctx, "m-1", "SHA256:ab") }
 	reject := func(c *client.Client) error { return c.Admission.Reject(suite.ctx, "m-1", "unknown") }
 	revoke := func(c *client.Client) error { return c.Admission.Revoke(suite.ctx, "m-1") }
+	del := func(c *client.Client) error { return c.Admission.Delete(suite.ctx, "m-1") }
 
 	tests := []struct {
-		name string
-		call call
-		path string
-		body map[string]string
-		fail string
+		name   string
+		call   call
+		method string
+		path   string
+		body   map[string]string
+		fail   string
 	}{
 		{
 			name: "admit", call: admit, path: "/api/admission/m-1/admit",
@@ -204,6 +206,13 @@ func (suite *AdmissionPublicTestSuite) TestDecisions() {
 			path: "/api/admission/m-1/revoke",
 			fail: "revoke machine m-1:",
 		},
+		{
+			name:   "delete",
+			call:   del,
+			method: http.MethodDelete,
+			path:   "/api/admission/m-1",
+			fail:   "delete machine m-1:",
+		},
 	}
 
 	for _, tc := range tests {
@@ -212,7 +221,11 @@ func (suite *AdmissionPublicTestSuite) TestDecisions() {
 			var body string
 			suite.Require().NoError(tc.call(suite.sut(http.StatusNoContent, "", &req, &body)))
 
-			suite.Equal(http.MethodPost, req.Method)
+			method := tc.method
+			if method == "" {
+				method = http.MethodPost
+			}
+			suite.Equal(method, req.Method)
 			suite.Equal(tc.path, req.URL.Path)
 			if tc.body != nil {
 				var got map[string]string

@@ -45,6 +45,7 @@ var Defaults = map[string]any{
 	"controller.pki.key_dir":               "/etc/osapi/pki",
 	"controller.pki.auto_admit":            false,
 	"controller.pki.rotation_grace_period": "24h",
+	"controller.pki.delete_after":          "",
 
 	"nats.server.host":         "localhost",
 	"nats.server.port":         4222,
