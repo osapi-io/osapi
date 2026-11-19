@@ -20,37 +20,38 @@ is wrong. The operator does not need to read the raw metrics.
 | `HighLoad`       | Load1 > 2x CPU count | Heartbeat load   |
 | `DiskPressure`   | Any disk > 90% used  | Heartbeat disk   |
 
-Each condition tracks:
+The agent evaluates each condition at each heartbeat, and keeps:
 
-- **Status**: `true` when the value is more than the limit, `false` when it is
-  not
 - **Reason**: an explanation for a person, for example "memory 94% used,
   15.1/16.0 GB"
-- **LastTransitionTime**: the last time that the condition changed between true
-  and false
+- **LastTransitionTime**: the last time that the condition started or stopped
+
+The API and the CLI show only the conditions that hold now. A condition that
+does not hold is not in the answer. The notifier uses the full list of the
+agent, so it also sees when a condition stops.
 
 ### CLI display
 
-`agent list` shows active conditions in the CONDITIONS column:
+`agent list` shows the conditions that hold in the CONDITIONS column:
 
 ```
-HOSTNAME  STATUS  CONDITIONS               LABELS  AGE    LOAD (1m)  OS            VERSION
-web-01    Ready   HighLoad,MemoryPressure  -       3d 4h  4.12       Ubuntu 24.04  v1.4.0
-web-02    Ready   -                        -       12h    0.31       Ubuntu 24.04  v1.4.0
-db-01     Ready   DiskPressure             -       5d     1.22       Ubuntu 24.04  v1.3.2
+HOSTNAME  MACHINE ID  STATE  CONDITIONS                LABELS  AGE    LOAD            OS            VERSION
+web-01    m-1         Ready  HighLoad, MemoryPressure          3d 4h  4.12 3.90 3.71  Ubuntu 24.04  v1.4.0
+web-02    m-2         Ready                                    12h    0.31 0.28 0.25  Ubuntu 24.04  v1.4.0
+db-01     m-3         Ready  DiskPressure                      5d     1.22 1.10 1.05  Ubuntu 24.04  v1.3.2
 ```
 
 The VERSION column is the build of each agent. During an upgrade, it shows which
-agents run the new build.
+agents run the new build. The STATE column is the scheduling state: `Ready`,
+`Draining`, `Cordoned` or `Pending`.
 
-`agent get` shows full condition details:
+`agent get` shows each condition that holds, with its reason:
 
 ```
-Conditions:
-  TYPE              STATUS  REASON                                     SINCE
-  MemoryPressure    true    memory 94% used (15.1/16.0 GB)             2m ago
-  HighLoad          true    load 4.12, threshold 4.00 for 2 CPUs       5m ago
-  DiskPressure      false
+Conditions (2):
+  TYPE            REASON                                SINCE
+  MemoryPressure  memory 94% used (15.1/16.0 GB)        2m
+  HighLoad        load 4.12, threshold 4.00 for 2 CPUs  5m
 ```
 
 ### Configuration

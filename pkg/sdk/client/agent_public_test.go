@@ -142,13 +142,13 @@ func (suite *AgentPublicTestSuite) TestGet() {
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`{"hostname":"server1","status":"Ready"}`))
+				_, _ = w.Write([]byte(`{"hostname":"server1","state":"Ready"}`))
 			},
 			validateFunc: func(resp *client.Response[client.Agent], err error) {
 				suite.NoError(err)
 				suite.NotNil(resp)
 				suite.Equal("server1", resp.Data.Hostname)
-				suite.Equal("Ready", resp.Data.Status)
+				suite.Equal("Ready", resp.Data.State)
 			},
 		},
 		{

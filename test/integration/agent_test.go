@@ -91,11 +91,11 @@ func (s *AgentSmokeSuite) TestAgentGet() {
 			validateFunc: func(stdout string) {
 				var resp struct {
 					Hostname string `json:"hostname"`
-					Status   string `json:"status"`
+					State    string `json:"state"`
 				}
 				s.Require().NoError(parseJSON(stdout, &resp))
 				s.Equal(hostname, resp.Hostname)
-				s.Equal("Ready", resp.Status)
+				s.Equal("Ready", resp.State)
 			},
 		},
 	}

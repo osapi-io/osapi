@@ -146,7 +146,7 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 					Return(&job.AgentInfo{Hostname: "server1"}, nil)
 			},
 			wantCode: http.StatusOK,
-			wantBody: `{"hostname":"server1","status":"Ready","key_stored":false,"verified":false}`,
+			wantBody: `{"hostname":"server1","state":"Ready","key_stored":false,"verified":false}`,
 		},
 		{
 			name:   "when get finds no agent, it is a 404",

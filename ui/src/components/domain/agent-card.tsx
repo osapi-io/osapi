@@ -40,13 +40,12 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
     null,
   );
 
-  const isReady = agent.status === "Ready";
   const isPending = agent.state === "Pending";
   const isDrained = agent.state === "Draining" || agent.state === "Cordoned";
   const canWrite = can("agent:write");
-  const variant = isPending ? "active" : isReady ? "active" : "error";
-  const badgeVariant = statusVariant(isPending ? agent.state : agent.status);
-  const activeConditions = agent.conditions?.filter((c) => c.status) ?? [];
+  const badgeVariant = statusVariant(agent.state);
+  // The API lists only the conditions that hold.
+  const activeConditions = agent.conditions ?? [];
 
   // The request is done when the state the agent reports matches it: a
   // drain when the agent is Cordoned, its jobs stopped, not when it is
@@ -120,7 +119,7 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
 
   return (
     <Card
-      variant={activeConditions.length > 0 ? "warn" : variant}
+      variant={activeConditions.length > 0 ? "warn" : "active"}
       className="flex flex-col"
     >
       <CardHeader>
@@ -134,7 +133,7 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
               {shownState}
             </Badge>
           ) : (
-            <Badge variant={badgeVariant}>{agent.status}</Badge>
+            <Badge variant={badgeVariant}>{agent.state}</Badge>
           )}
         </div>
       </CardHeader>

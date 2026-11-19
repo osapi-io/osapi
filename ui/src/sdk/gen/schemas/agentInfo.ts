@@ -7,7 +7,6 @@
 import type { AgentInfoFacts } from './agentInfoFacts';
 import type { AgentInfoLabels } from './agentInfoLabels';
 import type { AgentInfoState } from './agentInfoState';
-import type { AgentInfoStatus } from './agentInfoStatus';
 import type { LoadAverageResponse } from './loadAverageResponse';
 import type { MemoryResponse } from './memoryResponse';
 import type { NetworkInterfaceResponse } from './networkInterfaceResponse';
@@ -19,7 +18,7 @@ import type { TimelineEvent } from './timelineEvent';
 export interface AgentInfo {
   /** CPU architecture. */
   architecture?: string;
-  /** Evaluated node conditions. */
+  /** The conditions that hold now, such as HighLoad. A condition that does not hold is not in the list. */
   conditions?: NodeCondition[];
   /** Number of logical CPUs. */
   cpu_count?: number;
@@ -55,10 +54,8 @@ export interface AgentInfo {
   service_mgr?: string;
   /** When the agent process started. */
   started_at?: string;
-  /** Agent scheduling state. */
-  state?: AgentInfoState;
-  /** The current status of the agent. */
-  status: AgentInfoStatus;
+  /** The scheduling state of the agent: Ready, Draining, Cordoned or Pending. A drain that the agent has not applied yet is Draining. */
+  state: AgentInfoState;
   /** Agent state transition history. */
   timeline?: TimelineEvent[];
   /** The system uptime. */

@@ -279,6 +279,10 @@ func (c Column) format(
 		return p.Duration(time.Duration(n) * time.Millisecond)
 	case c.Render == RenderStatus && isString:
 		return p.Status(s)
+	case isObject(c.Type) && isMap(v):
+		return c.inline(p, v.(map[string]any))
+	case isList(c.Type) && isItems(v):
+		return c.names(p, v.([]any))
 	case strings.HasPrefix(c.Render, RenderShort) && isString:
 		if n, err := strconv.Atoi(strings.TrimPrefix(c.Render, RenderShort)); err == nil &&
 			len(s) > n {
@@ -287,6 +291,60 @@ func (c Column) format(
 	}
 
 	return scalar(v)
+}
+
+// inline is an object in one cell: the value of each of its fields, by its
+// tags, in the order of the fields, with a space between them: an OS is
+// Ubuntu 24.04, and a load average is 0.32 0.28 0.25.
+func (c Column) inline(
+	p Printer,
+	obj map[string]any,
+) string {
+	parts := []string{}
+	for _, f := range Columns(c.Type) {
+		if text := f.FormatKV(p, obj[f.JSON]); text != "" {
+			parts = append(parts, text)
+		}
+	}
+
+	return strings.Join(parts, " ")
+}
+
+// names is a list of objects in one cell: the first field of each, which
+// names it, with commas between them: the conditions of an agent are
+// HighLoad, DiskPressure.
+func (c Column) names(
+	p Printer,
+	items []any,
+) string {
+	fields := Columns(c.Type)
+	parts := make([]string, 0, len(items))
+	for _, item := range items {
+		obj, _ := item.(map[string]any)
+		if text := fields[0].FormatKV(p, obj[fields[0].JSON]); text != "" {
+			parts = append(parts, text)
+		}
+	}
+
+	return strings.Join(parts, ", ")
+}
+
+// isMap reports whether v is a JSON object.
+func isMap(
+	v any,
+) bool {
+	_, ok := v.(map[string]any)
+
+	return ok
+}
+
+// isItems reports whether v is a JSON list.
+func isItems(
+	v any,
+) bool {
+	_, ok := v.([]any)
+
+	return ok
 }
 
 // scalar is the text of a value with no render tag: a bool is yes or no, a
