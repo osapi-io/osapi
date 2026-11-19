@@ -32,8 +32,7 @@ type Agent struct {
 	MachineID        string             `json:"machine_id,omitempty"`
 	Fingerprint      string             `json:"fingerprint,omitempty"`
 	Version          string             `json:"version,omitempty"`
-	Status           string             `json:"status"`
-	State            string             `json:"state,omitempty"`
+	State            string             `json:"state"`
 	Labels           map[string]string  `json:"labels,omitempty"`
 	Architecture     string             `json:"architecture,omitempty"`
 	CPUCount         int                `json:"cpu_count"`
@@ -55,10 +54,9 @@ type Agent struct {
 	Facts            map[string]any     `json:"facts,omitempty"`
 }
 
-// Condition represents a node condition evaluated agent-side.
+// Condition is a node condition that holds now, evaluated agent-side.
 type Condition struct {
 	Type               string    `json:"type"`
-	Status             bool      `json:"status"`
 	Reason             string    `json:"reason,omitempty"`
 	LastTransitionTime time.Time `json:"last_transition_time"`
 }
@@ -114,7 +112,7 @@ func agentFromGen(
 ) Agent {
 	a := Agent{
 		Hostname: g.Hostname,
-		Status:   string(g.Status),
+		State:    string(g.State),
 	}
 
 	if g.MachineId != nil {
@@ -237,16 +235,11 @@ func agentFromGen(
 		a.Facts = *g.Facts
 	}
 
-	if g.State != nil {
-		a.State = string(*g.State)
-	}
-
 	if g.Conditions != nil {
 		conditions := make([]Condition, 0, len(*g.Conditions))
 		for _, c := range *g.Conditions {
 			cond := Condition{
 				Type:               string(c.Type),
-				Status:             c.Status,
 				LastTransitionTime: c.LastTransitionTime,
 			}
 

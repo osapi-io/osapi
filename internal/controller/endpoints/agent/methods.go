@@ -151,7 +151,6 @@ func buildAgentInfo(
 		Fingerprint:      a.Fingerprint,
 		Version:          a.AgentVersion,
 		Hostname:         a.Hostname,
-		Status:           "Ready",
 		RegisteredAt:     a.RegisteredAt,
 		StartedAt:        a.StartedAt,
 		Architecture:     a.Architecture,
@@ -161,7 +160,7 @@ func buildAgentInfo(
 		ServiceMgr:       a.ServiceMgr,
 		PackageMgr:       a.PackageMgr,
 		PrimaryInterface: a.PrimaryInterface,
-		State:            a.State,
+		State:            job.EffectiveState(a.State, false),
 		KeyStored:        &keyStored,
 		Verified:         &verified,
 	}
@@ -205,10 +204,14 @@ func buildAgentInfo(
 			Mask: r.Mask, Metric: r.Metric, Flags: r.Flags,
 		})
 	}
+	// A condition that does not hold is not in the answer. The registry
+	// keeps it, for the transition time and the notifier.
 	for _, c := range a.Conditions {
+		if !c.Status {
+			continue
+		}
 		info.Conditions = append(info.Conditions, NodeCondition{
-			Type: c.Type, Status: c.Status, Reason: c.Reason,
-			LastTransitionTime: c.LastTransitionTime,
+			Type: c.Type, Reason: c.Reason, LastTransitionTime: c.LastTransitionTime,
 		})
 	}
 	for _, te := range a.Timeline {

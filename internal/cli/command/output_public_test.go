@@ -134,6 +134,20 @@ type (
 		Meta  map[string]any `json:"meta,omitempty"`
 		Name  string         `json:"name,omitempty"`
 	}
+	osInfo struct {
+		Name    string `json:"name"`
+		Version string `json:"version"`
+		Size    int    `json:"size,omitempty" render:"bytes"`
+	}
+	cond struct {
+		Type   string `json:"type"`
+		Reason string `json:"reason"`
+	}
+	host struct {
+		Name  string  `json:"name"`
+		OS    *osInfo `json:"os"`
+		Conds []cond  `json:"conds"`
+	}
 	nothing  struct{}
 	deleteIn struct {
 		MachineID string `json:"machine_id"`
@@ -169,6 +183,7 @@ func (s *OutputPublicTestSuite) TestOutput() {
 		method("count", reflect.TypeFor[counted]()),
 		method("values", reflect.TypeFor[values]()),
 		method("map", reflect.TypeFor[map[string]string]()),
+		method("hosts", reflect.TypeFor[[]host]()),
 		keyed{method("delete", reflect.TypeFor[nothing]()), "machine_id"},
 		method("drain", reflect.TypeFor[nothing]()).Says("draining"),
 	}
@@ -256,6 +271,16 @@ func (s *OutputPublicTestSuite) TestOutput() {
 			method: "map",
 			answer: `{"a":"b"}`,
 			want:   "# Zzderive\n",
+		},
+		{
+			name:   "when a table cell is an object, it is its values; when a list of objects, the first field of each",
+			method: "hosts",
+			answer: `[{"name":"a","os":{"name":"Ubuntu","version":"24.04","size":2048},` +
+				`"conds":[{"type":"HighLoad","reason":"r"},{"type":""},{"type":"DiskPressure"}]},` +
+				`{"name":"b","os":"text","conds":"text"}]`,
+			want: "# Zzderives (2)\nNAME | OS | CONDS\n" +
+				"a | Ubuntu 24.04 2048B | HighLoad, DiskPressure\n" +
+				"b | text | text\n",
 		},
 		{
 			name:   "when the method answers nothing, one line names the key and what it did",

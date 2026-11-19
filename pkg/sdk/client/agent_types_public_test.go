@@ -79,7 +79,6 @@ func (suite *AgentTypesPublicTestSuite) TestAgentFromGen() {
 					MachineId:     &machineID,
 					Fingerprint:   &fingerprint,
 					Version:       &version,
-					Status:        gen.AgentInfoStatus("Ready"),
 					Labels:        &labels,
 					Architecture:  &arch,
 					CpuCount:      &cpuCount,
@@ -125,11 +124,10 @@ func (suite *AgentTypesPublicTestSuite) TestAgentFromGen() {
 					StartedAt:    &startedAt,
 					RegisteredAt: &now,
 					Facts:        &facts,
-					State:        &state,
+					State:        state,
 					Conditions: &[]gen.NodeCondition{
 						{
 							Type:               gen.HighLoad,
-							Status:             false,
 							Reason:             &reason,
 							LastTransitionTime: condTime,
 						},
@@ -155,7 +153,6 @@ func (suite *AgentTypesPublicTestSuite) TestAgentFromGen() {
 				suite.Equal("abc123-machine-id", a.MachineID)
 				suite.Equal("SHA256:abc123def456", a.Fingerprint)
 				suite.Equal("v1.4.0", a.Version)
-				suite.Equal("Ready", a.Status)
 				suite.Equal("Ready", a.State)
 				suite.Equal(map[string]string{"group": "web", "env": "prod"}, a.Labels)
 				suite.Equal("amd64", a.Architecture)
@@ -203,7 +200,6 @@ func (suite *AgentTypesPublicTestSuite) TestAgentFromGen() {
 
 				suite.Require().Len(a.Conditions, 1)
 				suite.Equal("HighLoad", a.Conditions[0].Type)
-				suite.False(a.Conditions[0].Status)
 				suite.Equal("load avg 0.50 < 4.00", a.Conditions[0].Reason)
 				suite.Equal(
 					now.Add(-30*time.Minute),
@@ -228,13 +224,12 @@ func (suite *AgentTypesPublicTestSuite) TestAgentFromGen() {
 			name: "when only required fields are set",
 			input: &gen.AgentInfo{
 				Hostname: "minimal-host",
-				Status:   gen.AgentInfoStatus("Ready"),
+				State:    gen.AgentInfoStateReady,
 			},
 			validateFunc: func(a client.Agent) {
 				suite.Equal("minimal-host", a.Hostname)
 				suite.Empty(a.MachineID)
-				suite.Equal("Ready", a.Status)
-				suite.Empty(a.State)
+				suite.Equal("Ready", a.State)
 				suite.Nil(a.Labels)
 				suite.Empty(a.Architecture)
 				suite.Zero(a.CPUCount)
@@ -263,7 +258,6 @@ func (suite *AgentTypesPublicTestSuite) TestAgentFromGen() {
 
 				return &gen.AgentInfo{
 					Hostname:   "no-ifaces",
-					Status:     gen.AgentInfoStatus("Ready"),
 					Interfaces: &ifaces,
 				}
 			}(),
@@ -295,11 +289,9 @@ func (suite *AgentTypesPublicTestSuite) TestAgentListFromGen() {
 				Items: []gen.AgentInfo{
 					{
 						Hostname: "web-01",
-						Status:   gen.AgentInfoStatus("Ready"),
 					},
 					{
 						Hostname: "web-02",
-						Status:   gen.AgentInfoStatus("Ready"),
 					},
 				},
 				TotalItems: 2,

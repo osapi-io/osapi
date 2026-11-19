@@ -6742,7 +6742,9 @@ components:
           example: amd64
           type: string
         conditions:
-          description: Evaluated node conditions.
+          description: >-
+            The conditions that hold now, such as HighLoad. A condition that
+            does not hold is not in the list.
           items:
             $ref: '#/components/schemas/NodeCondition'
           type: array
@@ -6821,7 +6823,9 @@ components:
           format: date-time
           type: string
         state:
-          description: Agent scheduling state.
+          description: >-
+            The scheduling state of the agent: Ready, Draining, Cordoned or
+            Pending. A drain that the agent has not applied yet is Draining.
           enum:
             - Ready
             - Draining
@@ -6830,14 +6834,6 @@ components:
           type: string
           x-oapi-codegen-extra-tags:
             validate: oneof=Ready Draining Cordoned Pending
-        status:
-          description: The current status of the agent.
-          enum:
-            - Ready
-            - NotReady
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=Ready NotReady
         timeline:
           description: Agent state transition history.
           items:
@@ -6861,7 +6857,7 @@ components:
           type: string
       required:
         - hostname
-        - status
+        - state
       type: object
     ListAgentsResponse:
       properties:
@@ -6951,8 +6947,6 @@ components:
           type: string
         reason:
           type: string
-        status:
-          type: boolean
         type:
           enum:
             - MemoryPressure
@@ -6963,7 +6957,6 @@ components:
             validate: oneof=MemoryPressure HighLoad DiskPressure
       required:
         - type
-        - status
         - last_transition_time
       type: object
     OSInfoResponse:

@@ -83,7 +83,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 				s.Require().NoError(err)
 				s.Equal(2, got.TotalItems)
 				s.Equal("server1", got.Items[0].Hostname)
-				s.Equal("Ready", got.Items[1].Status)
+				s.Equal("Ready", got.Items[1].State, "an agent that reported no state is Ready")
 			},
 		},
 		{
@@ -148,6 +148,8 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 				State: job.AgentStateDraining,
 				Conditions: []job.Condition{{
 					Type: "HighLoad", Status: true, Reason: "load", LastTransitionTime: at,
+				}, {
+					Type: "DiskPressure", Status: false, LastTransitionTime: at,
 				}},
 				Timeline: []job.TimelineEvent{{
 					Timestamp: at, Event: "drain", Hostname: "server1", Message: "m", Error: "e",
@@ -173,7 +175,13 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 				s.Equal(100, got.Routes[0].Metric)
 				s.Equal(map[string]any{"rack": "a1"}, got.Facts)
 				s.Equal("Draining", got.State)
-				s.Equal("load", got.Conditions[0].Reason)
+				s.Equal(
+					[]agent.NodeCondition{
+						{Type: "HighLoad", Reason: "load", LastTransitionTime: at},
+					},
+					got.Conditions,
+					"a condition that does not hold is left out",
+				)
 				s.Equal("e", got.Timeline[0].Error)
 				s.True(*got.KeyStored)
 				s.True(*got.Verified)

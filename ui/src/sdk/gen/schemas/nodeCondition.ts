@@ -9,6 +9,5 @@ import type { NodeConditionType } from './nodeConditionType';
 export interface NodeCondition {
   last_transition_time: string;
   reason?: string;
-  status: boolean;
   type: NodeConditionType;
 }

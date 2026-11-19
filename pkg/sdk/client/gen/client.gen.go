@@ -46,24 +46,6 @@ func (e AgentInfoState) Valid() bool {
 	}
 }
 
-// Defines values for AgentInfoStatus.
-const (
-	AgentInfoStatusNotReady AgentInfoStatus = "NotReady"
-	AgentInfoStatusReady    AgentInfoStatus = "Ready"
-)
-
-// Valid indicates whether the value is a known member of the AgentInfoStatus enum.
-func (e AgentInfoStatus) Valid() bool {
-	switch e {
-	case AgentInfoStatusNotReady:
-		return true
-	case AgentInfoStatusReady:
-		return true
-	default:
-		return false
-	}
-}
-
 // Defines values for CertificateCAEntryStatus.
 const (
 	CertificateCAEntryStatusFailed  CertificateCAEntryStatus = "failed"
@@ -1596,22 +1578,22 @@ func (e UserMutationResultStatus) Valid() bool {
 
 // Defines values for GetAdmissionsParamsState.
 const (
-	Admitted GetAdmissionsParamsState = "admitted"
-	Pending  GetAdmissionsParamsState = "pending"
-	Rejected GetAdmissionsParamsState = "rejected"
-	Revoked  GetAdmissionsParamsState = "revoked"
+	GetAdmissionsParamsStateAdmitted GetAdmissionsParamsState = "admitted"
+	GetAdmissionsParamsStatePending  GetAdmissionsParamsState = "pending"
+	GetAdmissionsParamsStateRejected GetAdmissionsParamsState = "rejected"
+	GetAdmissionsParamsStateRevoked  GetAdmissionsParamsState = "revoked"
 )
 
 // Valid indicates whether the value is a known member of the GetAdmissionsParamsState enum.
 func (e GetAdmissionsParamsState) Valid() bool {
 	switch e {
-	case Admitted:
+	case GetAdmissionsParamsStateAdmitted:
 		return true
-	case Pending:
+	case GetAdmissionsParamsStatePending:
 		return true
-	case Rejected:
+	case GetAdmissionsParamsStateRejected:
 		return true
-	case Revoked:
+	case GetAdmissionsParamsStateRevoked:
 		return true
 	default:
 		return false
@@ -1764,7 +1746,7 @@ type AgentInfo struct {
 	// Architecture CPU architecture.
 	Architecture *string `json:"architecture,omitempty"`
 
-	// Conditions Evaluated node conditions.
+	// Conditions The conditions that hold now, such as HighLoad. A condition that does not hold is not in the list.
 	Conditions *[]NodeCondition `json:"conditions,omitempty"`
 
 	// CpuCount Number of logical CPUs.
@@ -1822,11 +1804,8 @@ type AgentInfo struct {
 	// StartedAt When the agent process started.
 	StartedAt *time.Time `json:"started_at,omitempty"`
 
-	// State Agent scheduling state.
-	State *AgentInfoState `json:"state,omitempty" validate:"oneof=Ready Draining Cordoned Pending"`
-
-	// Status The current status of the agent.
-	Status AgentInfoStatus `json:"status" validate:"oneof=Ready NotReady"`
+	// State The scheduling state of the agent: Ready, Draining, Cordoned or Pending. A drain that the agent has not applied yet is Draining.
+	State AgentInfoState `json:"state" validate:"oneof=Ready Draining Cordoned Pending"`
 
 	// Timeline Agent state transition history.
 	Timeline *[]TimelineEvent `json:"timeline,omitempty"`
@@ -1841,11 +1820,8 @@ type AgentInfo struct {
 	Version *string `json:"version,omitempty"`
 }
 
-// AgentInfoState Agent scheduling state.
+// AgentInfoState The scheduling state of the agent: Ready, Draining, Cordoned or Pending. A drain that the agent has not applied yet is Draining.
 type AgentInfoState string
-
-// AgentInfoStatus The current status of the agent.
-type AgentInfoStatus string
 
 // AgentStats defines model for AgentStats.
 type AgentStats struct {
@@ -3373,7 +3349,6 @@ type NetworkInterfaceResponseFamily string
 type NodeCondition struct {
 	LastTransitionTime time.Time         `json:"last_transition_time"`
 	Reason             *string           `json:"reason,omitempty"`
-	Status             bool              `json:"status"`
 	Type               NodeConditionType `json:"type" validate:"oneof=MemoryPressure HighLoad DiskPressure"`
 }
 

@@ -6,7 +6,7 @@
  */
 
 /**
- * Agent scheduling state.
+ * The scheduling state of the agent: Ready, Draining, Cordoned or Pending. A drain that the agent has not applied yet is Draining.
  */
 export type AgentInfoState = typeof AgentInfoState[keyof typeof AgentInfoState];
 

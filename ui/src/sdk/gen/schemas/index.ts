@@ -12,7 +12,6 @@ export * from './agentInfo';
 export * from './agentInfoFacts';
 export * from './agentInfoLabels';
 export * from './agentInfoState';
-export * from './agentInfoStatus';
 export * from './agentStats';
 export * from './auditEntry';
 export * from './auditEntryResponse';
