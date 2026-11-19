@@ -1052,6 +1052,20 @@ func (response PostNodeServiceDisable403JSONResponse) VisitPostNodeServiceDisabl
 	return err
 }
 
+type PostNodeServiceDisable404JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeServiceDisable404JSONResponse) VisitPostNodeServiceDisableResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type PostNodeServiceDisable500JSONResponse externalRef0.ErrorResponse
 
 func (response PostNodeServiceDisable500JSONResponse) VisitPostNodeServiceDisableResponse(w http.ResponseWriter) error {
@@ -1127,6 +1141,20 @@ func (response PostNodeServiceEnable403JSONResponse) VisitPostNodeServiceEnableR
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PostNodeServiceEnable404JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeServiceEnable404JSONResponse) VisitPostNodeServiceEnableResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -1210,6 +1238,20 @@ func (response PostNodeServiceRestart403JSONResponse) VisitPostNodeServiceRestar
 	return err
 }
 
+type PostNodeServiceRestart404JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeServiceRestart404JSONResponse) VisitPostNodeServiceRestartResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type PostNodeServiceRestart500JSONResponse externalRef0.ErrorResponse
 
 func (response PostNodeServiceRestart500JSONResponse) VisitPostNodeServiceRestartResponse(w http.ResponseWriter) error {
@@ -1289,6 +1331,20 @@ func (response PostNodeServiceStart403JSONResponse) VisitPostNodeServiceStartRes
 	return err
 }
 
+type PostNodeServiceStart404JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeServiceStart404JSONResponse) VisitPostNodeServiceStartResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type PostNodeServiceStart500JSONResponse externalRef0.ErrorResponse
 
 func (response PostNodeServiceStart500JSONResponse) VisitPostNodeServiceStartResponse(w http.ResponseWriter) error {
@@ -1364,6 +1420,20 @@ func (response PostNodeServiceStop403JSONResponse) VisitPostNodeServiceStopRespo
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PostNodeServiceStop404JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeServiceStop404JSONResponse) VisitPostNodeServiceStopResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
 	_, err := buf.WriteTo(w)
 	return err
 }

@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/network/gen"
@@ -67,6 +69,9 @@ func (s *Network) GetNodeNetworkDNSByInterface(
 	)
 	if err != nil {
 		errMsg := err.Error()
+		if apierr.IsMissing(err) {
+			return gen.GetNodeNetworkDNSByInterface404JSONResponse{Error: &errMsg}, nil
+		}
 		return gen.GetNodeNetworkDNSByInterface500JSONResponse{
 			Error: &errMsg,
 		}, nil

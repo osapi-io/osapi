@@ -196,6 +196,22 @@ func (s *ServiceRestartPostPublicTestSuite) TestPostNodeServiceRestart() {
 			},
 		},
 		{
+			name: "when the host does not have it, it is a 404",
+			request: gen.PostNodeServiceRestartRequestObject{
+				Hostname: "server1",
+				Name:     "nginx.service",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(gomock.Any(), "server1", "node", job.OperationServiceRestart, gomock.Any()).
+					Return("", nil, fmt.Errorf("on server1: %w", job.ErrNotFound))
+			},
+			validateFunc: func(resp gen.PostNodeServiceRestartResponseObject) {
+				_, ok := resp.(gen.PostNodeServiceRestart404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "broadcast success",
 			request: gen.PostNodeServiceRestartRequestObject{
 				Hostname: "_all",

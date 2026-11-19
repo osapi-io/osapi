@@ -196,6 +196,22 @@ func (s *ServiceStopPostPublicTestSuite) TestPostNodeServiceStop() {
 			},
 		},
 		{
+			name: "when the host does not have it, it is a 404",
+			request: gen.PostNodeServiceStopRequestObject{
+				Hostname: "server1",
+				Name:     "nginx.service",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(gomock.Any(), "server1", "node", job.OperationServiceStop, gomock.Any()).
+					Return("", nil, fmt.Errorf("on server1: %w", job.ErrNotFound))
+			},
+			validateFunc: func(resp gen.PostNodeServiceStopResponseObject) {
+				_, ok := resp.(gen.PostNodeServiceStop404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name:    "broadcast success",
 			request: gen.PostNodeServiceStopRequestObject{Hostname: "_all", Name: "nginx.service"},
 			setupMock: func() {

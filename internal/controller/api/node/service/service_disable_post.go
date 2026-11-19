@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/service/gen"
@@ -68,6 +70,9 @@ func (s *Service) PostNodeServiceDisable(
 	)
 	if err != nil {
 		errMsg := err.Error()
+		if apierr.IsMissing(err) {
+			return gen.PostNodeServiceDisable404JSONResponse{Error: &errMsg}, nil
+		}
 		return gen.PostNodeServiceDisable500JSONResponse{Error: &errMsg}, nil
 	}
 

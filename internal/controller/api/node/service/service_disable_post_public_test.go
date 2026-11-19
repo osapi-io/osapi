@@ -196,6 +196,22 @@ func (s *ServiceDisablePostPublicTestSuite) TestPostNodeServiceDisable() {
 			},
 		},
 		{
+			name: "when the host does not have it, it is a 404",
+			request: gen.PostNodeServiceDisableRequestObject{
+				Hostname: "server1",
+				Name:     "nginx.service",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(gomock.Any(), "server1", "node", job.OperationServiceDisable, gomock.Any()).
+					Return("", nil, fmt.Errorf("on server1: %w", job.ErrNotFound))
+			},
+			validateFunc: func(resp gen.PostNodeServiceDisableResponseObject) {
+				_, ok := resp.(gen.PostNodeServiceDisable404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "broadcast success",
 			request: gen.PostNodeServiceDisableRequestObject{
 				Hostname: "_all",

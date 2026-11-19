@@ -196,6 +196,22 @@ func (s *ServiceEnablePostPublicTestSuite) TestPostNodeServiceEnable() {
 			},
 		},
 		{
+			name: "when the host does not have it, it is a 404",
+			request: gen.PostNodeServiceEnableRequestObject{
+				Hostname: "server1",
+				Name:     "nginx.service",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(gomock.Any(), "server1", "node", job.OperationServiceEnable, gomock.Any()).
+					Return("", nil, fmt.Errorf("on server1: %w", job.ErrNotFound))
+			},
+			validateFunc: func(resp gen.PostNodeServiceEnableResponseObject) {
+				_, ok := resp.(gen.PostNodeServiceEnable404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "broadcast success",
 			request: gen.PostNodeServiceEnableRequestObject{
 				Hostname: "_all",
