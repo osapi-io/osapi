@@ -102,6 +102,9 @@ type Agent struct {
 
 	// prevProcessConditions tracks process condition state between heartbeats.
 	prevProcessConditions []job.Condition
+	// seenWrittenAt is when the heartbeat last wrote the agent's last-seen
+	// time; it writes it at most once each seenInterval.
+	seenWrittenAt time.Time
 
 	// cpuCount cached from facts for HighLoad evaluation.
 	cpuCount int

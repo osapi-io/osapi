@@ -25,21 +25,6 @@ var agentListCmd = &cobra.Command{
 	Use:   "list",
 }
 
-var agentPendingCmd = &cobra.Command{
-	Annotations: map[string]string{
-		command.SubKey:       "pending",
-		reference.Permission: "agent:read",
-	},
-	Args:    cobra.NoArgs,
-	Example: "  osapi client agent pending list",
-	Long:    "When PKI is enabled, a new agent sends an enrollment request, and waits\nhere until an administrator accepts or rejects it with `agent accept` or\n`agent reject`.",
-	Run: func(cmd *cobra.Command, _ []string) {
-		command.Run(cmd, agent.Group, "pending", agent.ListInput{})
-	},
-	Short: "List agents awaiting enrollment",
-	Use:   "list",
-}
-
 var agentGetCmd = &cobra.Command{
 	Annotations: map[string]string{reference.Permission: "agent:read"},
 	Args:        cobra.NoArgs,
@@ -52,54 +37,6 @@ var agentGetCmd = &cobra.Command{
 	},
 	Short: "Get agent details",
 	Use:   "get",
-}
-
-var agentDeleteCmd = &cobra.Command{
-	Annotations: map[string]string{
-		reference.Notes:      "The agent does not get a message. It keeps the controller key that it got\nat acceptance, and it does not enroll again by itself. To enroll it again,\ndelete `controller.pub` from its key directory on the host\n(`/etc/osapi/pki` by default), and restart the agent. Then it sends a new\nrequest, and `agent accept` accepts it.",
-		reference.Permission: "agent:write",
-		reference.Result:     "Two machines can have the same hostname, because the identity of an agent\nis its machine ID. When more than one accepted agent has the hostname, the\ncommand fails and names their machine IDs. Run it again with\n`--machine-id`.",
-	},
-	Args:    cobra.NoArgs,
-	Example: "  osapi client agent delete --hostname web-01\n  osapi client agent delete --hostname web-01 --machine-id 3f2a9c...",
-	Long:    "When PKI is enabled, the controller keeps the public key of each accepted\nagent. This command deletes it. After that, the controller does not verify\nthe responses or the registration of the agent. Thus a target does not\nfind the agent, and a broadcast gives it no row.",
-	Run: func(cmd *cobra.Command, _ []string) {
-		hostname, _ := cmd.Flags().GetString("hostname")
-		machineID, _ := cmd.Flags().GetString("machine-id")
-
-		command.Run(cmd, agent.Group, "delete", agent.DeleteInput{Hostname: hostname, MachineID: machineID})
-	},
-	Short: "Remove an enrolled agent",
-	Use:   "delete",
-}
-
-var agentAcceptCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "agent:write"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client agent accept --hostname web-01\n  osapi client agent accept --hostname web-01 --fingerprint SHA256:ab12cd34...",
-	Long:        "When PKI is enabled, a new agent sends an enrollment request. An\nadministrator must accept it before the agent can do work. This command\naccepts a pending agent by hostname. To accept by the public key fingerprint\nof the agent, add `--fingerprint`. Use `agent pending list` to see the agents\nthat wait for approval.",
-	Run: func(cmd *cobra.Command, _ []string) {
-		hostname, _ := cmd.Flags().GetString("hostname")
-		fingerprint, _ := cmd.Flags().GetString("fingerprint")
-
-		command.Run(cmd, agent.Group, "accept", agent.AcceptInput{Hostname: hostname, Fingerprint: fingerprint})
-	},
-	Short: "Accept a pending agent enrollment",
-	Use:   "accept",
-}
-
-var agentRejectCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "agent:write"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client agent reject --hostname web-01",
-	Long:        "When PKI is enabled, a new agent sends an enrollment request. An\nadministrator accepts or rejects it. This command rejects a pending agent,\nso the agent cannot join the fleet. The command removes the enrollment entry\nof the agent from the pending queue. Use `agent pending list` to see the agents\nthat wait for approval.",
-	Run: func(cmd *cobra.Command, _ []string) {
-		hostname, _ := cmd.Flags().GetString("hostname")
-
-		command.Run(cmd, agent.Group, "reject", agent.RejectInput{Hostname: hostname})
-	},
-	Short: "Reject a pending agent enrollment",
-	Use:   "reject",
 }
 
 var agentDrainCmd = &cobra.Command{
@@ -133,17 +70,9 @@ var agentUndrainCmd = &cobra.Command{
 func init() {
 	agentGetCmd.Flags().String("hostname", "", "The hostname of the agent to retrieve")
 	_ = agentGetCmd.MarkFlagRequired("hostname")
-	agentDeleteCmd.Flags().String("hostname", "", "The hostname of the accepted agent to remove")
-	_ = agentDeleteCmd.MarkFlagRequired("hostname")
-	agentDeleteCmd.Flags().String("machine-id", "", "The machine ID to remove, when more than one accepted agent has the hostname")
-	agentAcceptCmd.Flags().String("hostname", "", "The hostname of the pending agent to accept")
-	_ = agentAcceptCmd.MarkFlagRequired("hostname")
-	agentAcceptCmd.Flags().String("fingerprint", "", "Accept by fingerprint instead of hostname")
-	agentRejectCmd.Flags().String("hostname", "", "The hostname of the pending agent to reject")
-	_ = agentRejectCmd.MarkFlagRequired("hostname")
 	agentDrainCmd.Flags().String("hostname", "", "The hostname of the agent to drain")
 	_ = agentDrainCmd.MarkFlagRequired("hostname")
 	agentUndrainCmd.Flags().String("hostname", "", "The hostname of the agent to undrain")
 	_ = agentUndrainCmd.MarkFlagRequired("hostname")
-	command.Register(agent.Group, agentListCmd, agentPendingCmd, agentGetCmd, agentDeleteCmd, agentAcceptCmd, agentRejectCmd, agentDrainCmd, agentUndrainCmd)
+	command.Register(agent.Group, agentListCmd, agentGetCmd, agentDrainCmd, agentUndrainCmd)
 }

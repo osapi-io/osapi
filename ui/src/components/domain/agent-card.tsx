@@ -154,7 +154,7 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
 
         {isPending && (
           <Text variant="muted" as="p" className="mt-1 italic">
-            Awaiting PKI enrollment
+            Awaiting admission
           </Text>
         )}
 

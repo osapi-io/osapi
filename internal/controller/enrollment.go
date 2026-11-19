@@ -30,7 +30,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
-	"github.com/osapi-io/osapi/internal/controller/enrollment"
+	"github.com/osapi-io/osapi/internal/controller/admission"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/validation"
@@ -47,7 +47,7 @@ func startEnrollment(
 	conn *jobclient.Connection,
 	namespace string,
 	cfg config.Config,
-) (*enrollment.Watcher, error) {
+) (*admission.Watcher, error) {
 	enrollmentCfg := bus.EnrollmentKV(namespace, cfg.NATS.Enrollment)
 	if err := conn.NATS.KVCreateOrUpdate(ctx, enrollmentCfg); err != nil {
 		log.Warn(
@@ -72,13 +72,13 @@ func startEnrollment(
 	// answers of agents as they arrive.
 	conn.Jobs.SetPKISigner(keys)
 
-	watcher := enrollment.NewWatcher(
+	watcher := admission.NewWatcher(
 		log,
 		conn.NATS,
 		conn.NATS,
 		enrollmentCfg.Bucket,
 		keys,
-		cfg.Controller.PKI.AutoAccept,
+		cfg.Controller.PKI.AutoAdmit,
 		namespace,
 	)
 

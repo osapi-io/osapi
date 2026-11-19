@@ -12,6 +12,17 @@ Thank you for your contribution to osapi.
   the behavior, change the design page in the same work. A design page in this
   repository becomes incorrect when the code changes. No check finds the
   difference.
+
+  | When you change                                          | Change this page                       |
+  | -------------------------------------------------------- | -------------------------------------- |
+  | `internal/controller/endpoint/`, its generators or rules | `components/osapi/endpoints.md`        |
+  | `internal/behavior/`, `internal/validation/rule/`        | `components/osapi/behaviors.md`        |
+  | an endpoint group under `internal/controller/endpoints/` | the page of that group                 |
+  | a permission or a role                                   | `components/osapi/permissions.md`      |
+
+  A change to a generator or to a rule is a change to the DSL, also when no
+  person asked for it. Change the page in the same work, and do not wait for a
+  review to find it.
 - **Learn the project.** Read these pages in this order:
   1. [Guiding Principles][principles]. The design philosophy and the values of
      the project.
@@ -233,7 +244,7 @@ the cobra commands. Do not edit them. Change the command in `cmd/`, then run
 `just cli-docs-generate`:
 
 - Each command under `osapi client` is `<resource> <verb>`, such as
-  `agent pending list` or `node log source list`. The verb is `list`, `get`,
+  `facts keys list` or `node log source list`. The verb is `list`, `get`,
   `create`, `update` or `delete`, or an action that a CRUD verb does not say,
   such as `drain`, `exec` or `restart`. A noun is never the verb: list a noun's
   items with `list` under it. `TestCommandShape` in `cmd/help_style_test.go`

@@ -142,7 +142,7 @@ func (a *Agent) retryEnrollmentIfPending() {
 	}
 
 	a.pkiLogger.Info(
-		"enrollment request republished, still waiting to be accepted",
+		"enrollment request republished, still waiting for admission",
 		slog.String("machine_id", a.machineID),
 	)
 }
@@ -290,7 +290,7 @@ func (a *Agent) handleEnrollmentResponse(
 	a.lifecycleMu.Unlock()
 
 	a.pkiLogger.Info(
-		"enrollment accepted, agent is now ready",
+		"admitted, agent is now ready",
 		slog.String("controller_fingerprint", a.pkiManager.Fingerprint()),
 	)
 }

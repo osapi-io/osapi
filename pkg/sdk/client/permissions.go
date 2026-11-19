@@ -27,6 +27,8 @@ type Permission = string
 
 // Permission constants.
 const (
+	PermAdmissionRead    Permission = "admission:read"
+	PermAdmissionWrite   Permission = "admission:write"
 	PermAgentRead        Permission = "agent:read"
 	PermAgentWrite       Permission = "agent:write"
 	PermNodeRead         Permission = "node:read"

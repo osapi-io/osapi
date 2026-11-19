@@ -9,7 +9,7 @@ import { Roles } from "./pages/roles";
 import { Audit } from "./pages/audit";
 import { Traces } from "./pages/traces";
 import { Jobs } from "./pages/jobs";
-import { Enrollment } from "./pages/enrollment";
+import { Admission } from "./pages/admission";
 import { SignIn } from "./pages/sign-in";
 
 function AuthenticatedApp() {
@@ -30,7 +30,7 @@ function AuthenticatedApp() {
         <Route path="/admin/traces" element={<Traces />} />
         <Route path="/admin/traces/:id" element={<Traces />} />
         <Route path="/admin/roles" element={<Roles />} />
-        <Route path="/admin/enrollment" element={<Enrollment />} />
+        <Route path="/admin/admission" element={<Admission />} />
       </Routes>
     </PageLayout>
   );

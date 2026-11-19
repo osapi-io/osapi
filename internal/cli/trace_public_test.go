@@ -286,10 +286,10 @@ func (s *TracePublicTestSuite) TestJobReadDetail() {
 			want:  "entries=1",
 		},
 		{
-			name:  "when enrollment.accept has only a fingerprint it shows it",
-			span:  "enrollment.accept",
-			attrs: map[string]string{"osapi.agent.fingerprint": "SHA256:ab"},
-			want:  "fingerprint=SHA256:ab",
+			name:  "when admission.admit has a machine ID it shows it",
+			span:  "admission.admit",
+			attrs: map[string]string{"osapi.agent.machine_id": "m-1"},
+			want:  "machine=m-1",
 		},
 		{
 			name:  "when validate.target has a target it shows it",

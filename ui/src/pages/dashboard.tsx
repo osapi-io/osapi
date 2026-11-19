@@ -109,7 +109,7 @@ export function Dashboard() {
     refresh: refreshAgents,
   } = useAgents();
 
-  // Filter out pending agents — they're managed in Admin > Enrollment.
+  // Filter out pending agents — they're managed in Admin > Admission.
   const activeAgents = useMemo(
     () => agents.filter((a) => a.state !== "Pending"),
     [agents],
@@ -295,7 +295,7 @@ export function Dashboard() {
             </div>
           )}
 
-          {/* Agents — pending agents are managed in Admin > Enrollment */}
+          {/* Agents — pending agents are managed in Admin > Admission */}
           <section>
             <SectionLabel icon={Activity}>
               Agents ({activeAgents.length})

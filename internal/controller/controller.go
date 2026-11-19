@@ -33,8 +33,8 @@ import (
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/admission"
 	"github.com/osapi-io/osapi/internal/controller/api"
-	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	"github.com/osapi-io/osapi/internal/controller/health"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
@@ -149,7 +149,7 @@ func newController(
 		apiOpts = append(apiOpts, api.WithAuditStore(auditStore))
 	}
 
-	var watcher *enrollment.Watcher
+	var watcher *admission.Watcher
 	if cfg.Controller.PKI.Enabled {
 		watcher, err = startEnrollment(ctx, log, conn, namespace, cfg)
 		if err != nil {
@@ -179,7 +179,7 @@ func newController(
 		nats:            conn.NATS,
 		objBucket:       objBucket,
 		fileStateBucket: fileStateBucket,
-		enrollment:      watcher,
+		admission:       watcher,
 		version:         o.version,
 	}))
 

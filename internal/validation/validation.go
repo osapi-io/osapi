@@ -268,12 +268,11 @@ var customHints = map[string]func(ctx context.Context, fe validator.FieldError) 
 		target, _ := fe.Value().(string)
 		if t, ok := PendingTarget(ctx, target); ok {
 			if t == "_all" || t == "_any" {
-				return "all agents are pending PKI enrollment — accept them with: osapi client agent accept --hostname <hostname>"
+				return "all agents are pending PKI enrollment; list them with: osapi client admission list --state pending"
 			}
 
 			return fmt.Sprintf(
-				"agent %q is pending PKI enrollment — accept it with: osapi client agent accept --hostname %s",
-				t,
+				"agent %q is pending PKI enrollment; admit it with: osapi client admission admit",
 				t,
 			)
 		}

@@ -5,8 +5,8 @@ export type Tone = "ok" | "warn" | "err";
 
 /** The tone of each status word, as the CLI colors it. */
 export const STATUS_TONES: Record<string, Tone> = {
-  accepted: "ok",
   active: "ok",
+  admitted: "ok",
   changed: "ok",
   completed: "ok",
   cordoned: "warn",
@@ -26,6 +26,7 @@ export const STATUS_TONES: Record<string, Tone> = {
   pending: "warn",
   ready: "ok",
   rejected: "err",
+  revoked: "err",
   running: "ok",
   skip: "warn",
   skipped: "warn",

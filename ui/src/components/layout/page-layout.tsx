@@ -71,14 +71,14 @@ export function PageLayout({ children }: PageLayoutProps) {
             },
           ]
         : []),
-      ...(pathname !== "/admin/enrollment"
+      ...(pathname !== "/admin/admission"
         ? [
             {
-              id: "nav:enrollment",
-              name: "admin enrollment",
-              description: "Go to PKI Enrollment",
+              id: "nav:admission",
+              name: "admin admission",
+              description: "Go to Admission",
               category: "admin",
-              action: () => navigate("/admin/enrollment"),
+              action: () => navigate("/admin/admission"),
             },
           ]
         : []),

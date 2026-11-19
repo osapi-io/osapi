@@ -133,20 +133,6 @@ components:
         - items
         - total_items
       type: object
-    ListPendingAgentsResponse:
-      properties:
-        items:
-          description: The agents that wait for enrollment.
-          items:
-            $ref: '#/components/schemas/PendingAgentInfo'
-          type: array
-        total_items:
-          description: Total number of pending agents.
-          type: integer
-      required:
-        - items
-        - total_items
-      type: object
     LoadAverageResponse:
       description: The system load averages for 1, 5, and 15 minutes.
       properties:
@@ -251,27 +237,6 @@ components:
         - distribution
         - version
       type: object
-    PendingAgentInfo:
-      properties:
-        fingerprint:
-          description: The SHA256 fingerprint of the agent's public key.
-          type: string
-        hostname:
-          description: The hostname of the agent.
-          type: string
-        machine_id:
-          description: The permanent machine identifier.
-          type: string
-        requested_at:
-          description: When the enrollment request was received.
-          format: date-time
-          type: string
-      required:
-        - machine_id
-        - hostname
-        - fingerprint
-        - requested_at
-      type: object
     RouteResponse:
       description: A network routing table entry.
       properties:
@@ -367,74 +332,6 @@ paths:
       tags:
         - agent_operations
   /api/agent/{hostname}:
-    delete:
-      description: 'Remove an accepted agent''s stored public key. Its responses and registration stop verifying at once, so targeting no longer resolves it. The agent does not enroll again by itself: remove its controller key on the host and restart it. Two machines may share a hostname; when they do, name one with machine_id.'
-      operationId: DeleteAgent
-      parameters:
-        - description: The hostname of the accepted agent to remove.
-          in: path
-          name: hostname
-          required: true
-          schema:
-            maxLength: 255
-            minLength: 1
-            type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=255
-        - description: The machine ID to remove, when more than one accepted agent has the hostname.
-          in: query
-          name: machine_id
-          schema:
-            maxLength: 255
-            minLength: 1
-            type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1,max=255
-      responses:
-        "204":
-          description: Agent removed.
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid.
-        "401":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: No accepted agent with that hostname.
-        "409":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: More than one accepted agent has the hostname; name one with machine_id.
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - agent:write
-      summary: Remove an enrolled agent
-      tags:
-        - agent_operations
     get:
       description: Get detailed information about a specific agent by hostname.
       operationId: GetAgentDetails
@@ -490,69 +387,6 @@ paths:
         - BearerAuth:
             - agent:read
       summary: Get agent details
-      tags:
-        - agent_operations
-  /api/agent/{hostname}/accept:
-    post:
-      description: Accept a pending agent enrollment request. The agent can be identified by hostname (path parameter) or by fingerprint (query parameter).
-      operationId: AcceptAgent
-      parameters:
-        - description: The hostname of the pending agent to accept.
-          in: path
-          name: hostname
-          required: true
-          schema:
-            maxLength: 255
-            minLength: 1
-            type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=255
-        - description: Accept by fingerprint instead of hostname.
-          in: query
-          name: fingerprint
-          schema:
-            maxLength: 255
-            minLength: 1
-            type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1,max=255
-      responses:
-        "204":
-          description: Agent accepted.
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid.
-        "401":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Pending agent not found.
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - agent:write
-      summary: Accept a pending agent
       tags:
         - agent_operations
   /api/agent/{hostname}/drain:
@@ -615,60 +449,6 @@ paths:
       summary: Drain an agent
       tags:
         - agent_operations
-  /api/agent/{hostname}/reject:
-    post:
-      description: Reject a pending agent enrollment request.
-      operationId: RejectAgent
-      parameters:
-        - description: The hostname of the pending agent to reject.
-          in: path
-          name: hostname
-          required: true
-          schema:
-            maxLength: 255
-            minLength: 1
-            type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=255
-      responses:
-        "204":
-          description: Agent rejected.
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid.
-        "401":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Pending agent not found.
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - agent:write
-      summary: Reject a pending agent
-      tags:
-        - agent_operations
   /api/agent/{hostname}/undrain:
     post:
       description: Resume accepting jobs on a drained agent.
@@ -727,41 +507,6 @@ paths:
         - BearerAuth:
             - agent:write
       summary: Undrain an agent
-      tags:
-        - agent_operations
-  /api/agent/pending:
-    get:
-      description: List all agents that have submitted enrollment requests but have not yet been accepted or rejected.
-      operationId: GetAgentsPending
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListPendingAgentsResponse'
-          description: List of pending agents.
-        "401":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - agent:read
-      summary: List agents awaiting enrollment
       tags:
         - agent_operations
 tags:

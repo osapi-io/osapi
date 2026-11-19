@@ -484,6 +484,11 @@ const config: Config = {
               docId: 'sidebar/sdk/client/agent/agent'
             },
             {
+              type: 'doc',
+              label: 'Admission',
+              docId: 'sidebar/sdk/client/agent/admission'
+            },
+            {
               type: 'html',
               value:
                 '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Health</small>',

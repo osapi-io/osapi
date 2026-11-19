@@ -46,6 +46,8 @@ import (
 type Client struct {
 	// Agent provides agent discovery and details operations.
 	Agent *AgentService
+	// Admission admits, rejects and revokes the nodes that ask to join.
+	Admission *AdmissionService
 
 	// Status provides full node status queries (OS, disk, memory, load).
 	Status *StatusService
@@ -212,6 +214,7 @@ func New(
 	c.httpClient = httpClient
 	c.hc = hc
 	c.Agent = &AgentService{client: httpClient}
+	c.Admission = &AdmissionService{client: httpClient}
 	c.Status = &StatusService{client: httpClient}
 	c.Hostname = &HostnameService{client: httpClient}
 	c.Disk = &DiskService{client: httpClient}

@@ -36,6 +36,11 @@ import (
 // heartbeatInterval is the interval between heartbeat refreshes.
 var heartbeatInterval = 10 * time.Second
 
+// seenInterval is how often the heartbeat records when the agent last
+// reported, for admission: often enough to say when an offline agent was
+// last seen, and a sixth of the writes of the heartbeat itself.
+var seenInterval = time.Minute
+
 // getAgentHostnameFn is a package-level variable for testing hostname re-reads.
 var getAgentHostnameFn = job.GetAgentHostname
 
@@ -119,6 +124,7 @@ func (a *Agent) writeRegistration(
 	hostname string,
 ) {
 	a.handleDrainDetection(ctx, machineID, hostname)
+	a.writeSeen(ctx, machineID)
 
 	reg := job.AgentRegistration{
 		MachineID:     machineID,
@@ -273,4 +279,25 @@ func registryKey(
 	machineID string,
 ) string {
 	return "agents." + job.SanitizeHostname(machineID)
+}
+
+// writeSeen records when the agent last reported, at most once each
+// seenInterval. A failed write is logged and tried again at the next
+// heartbeat: the registration is what keeps the agent in the fleet.
+func (a *Agent) writeSeen(
+	ctx context.Context,
+	machineID string,
+) {
+	if time.Since(a.seenWrittenAt) < seenInterval {
+		return
+	}
+	if err := a.jobClient.WriteAgentSeen(ctx, machineID); err != nil {
+		a.heartbeatLogger.Debug(
+			"failed to record last seen",
+			slog.String("error", err.Error()),
+		)
+
+		return
+	}
+	a.seenWrittenAt = time.Now()
 }

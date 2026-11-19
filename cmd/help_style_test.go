@@ -70,9 +70,9 @@ var verbs = map[string]bool{
 
 // actions are the commands that do something a CRUD verb does not say.
 // Add one here only for a real action, never for a noun: list the noun's
-// items with list under it instead, such as agent pending list.
+// items with list under it instead, such as facts keys list.
 var actions = map[string]bool{
-	"accept": true, "reject": true, "drain": true, "undrain": true, "retry": true,
+	"admit": true, "reject": true, "revoke": true, "drain": true, "undrain": true, "retry": true,
 	"export": true, "exec": true, "shell": true, "start": true, "stop": true,
 	"restart": true, "enable": true, "disable": true, "install": true,
 	"uninstall": true, "upload": true, "deploy": true, "undeploy": true,
@@ -103,7 +103,7 @@ func (s *HelpStyleTestSuite) TestCommandShape() {
 		})
 		if len(c.Commands()) == 0 && c.Runnable() {
 			s.Truef(verbs[c.Name()] || actions[c.Name()],
-				"%s: %q is not a verb; a command is <resource> <verb>, such as agent pending list",
+				"%s: %q is not a verb; a command is <resource> <verb>, such as facts keys list",
 				c.CommandPath(), c.Name())
 		}
 		for _, sub := range c.Commands() {

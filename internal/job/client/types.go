@@ -206,6 +206,16 @@ type JobClient interface {
 		hostname string,
 	) ([]job.TimelineEvent, error)
 
+	// Agent last seen, for admission: an admitted agent that is offline
+	// keeps when it last reported, which its registry entry does not.
+	WriteAgentSeen(
+		ctx context.Context,
+		machineID string,
+	) error
+	AgentsLastSeen(
+		ctx context.Context,
+	) (map[string]time.Time, error)
+
 	// Agent drain flag
 	CheckDrainFlag(
 		ctx context.Context,

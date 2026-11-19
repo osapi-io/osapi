@@ -133,7 +133,11 @@ func (a *Agent) Start() {
 	if a.State() != job.AgentStatePending {
 		a.startConsumers()
 	} else {
-		a.logger.Info("skipping job consumers — agent is pending PKI enrollment")
+		a.logger.Info(
+			"waiting for admission; run osapi agent admission on this machine, and give its fingerprint to osapi client admission admit",
+			slog.String("machine_id", a.machineID),
+			slog.String("fingerprint", a.pkiManager.Fingerprint()),
+		)
 	}
 
 	a.logger.Info("node agent started successfully")

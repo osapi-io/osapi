@@ -104,7 +104,7 @@ var StatusTones = map[string]string{
 	"healthy":         ToneOK,
 	"active":          ToneOK,
 	"enabled":         ToneOK,
-	"accepted":        ToneOK,
+	"admitted":        ToneOK,
 	"skip":            ToneWarn,
 	"skipped":         ToneWarn,
 	"disabled":        ToneWarn,
@@ -124,6 +124,7 @@ var StatusTones = map[string]string{
 	"notready":        ToneErr,
 	"unhealthy":       ToneErr,
 	"rejected":        ToneErr,
+	"revoked":         ToneErr,
 }
 
 // toneStyles is the style of each tone.

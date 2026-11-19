@@ -435,8 +435,8 @@ type ControllerPKI struct {
 	Enabled bool `mapstructure:"enabled" doc:"Enable PKI enrollment and job signing."`
 	// KeyDir is the directory for controller keypair storage.
 	KeyDir string `mapstructure:"key_dir" doc:"Directory for controller keypair storage."`
-	// AutoAccept automatically accepts all agent enrollment requests.
-	AutoAccept bool `mapstructure:"auto_accept" doc:"Automatically accept all enrollment requests (dev/test only)."`
+	// AutoAdmit admits each machine that asks to join, with no operator.
+	AutoAdmit bool `mapstructure:"auto_admit" doc:"Admit each machine that asks to join, with no operator (dev/test only)."`
 	// RotationGracePeriod is how long both old and new keys are accepted
 	// during key rotation. Uses Go duration format.
 	RotationGracePeriod string `mapstructure:"rotation_grace_period" doc:"Grace period during key rotation where both old and new keys are accepted. Go duration format." validate:"omitempty,go_duration"`

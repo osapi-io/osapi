@@ -8,6 +8,46 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Admission",
+      link: {
+        type: "doc",
+        id: "gen/api/admission-api-admission",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-admissions",
+          label: "List admission records",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-admission",
+          label: "Get a machine's admission record",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/admit-machine",
+          label: "Admit a pending machine",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/reject-machine",
+          label: "Reject a pending machine",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/revoke-machine",
+          label: "Revoke an admitted machine",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Agent",
       link: {
         type: "doc",
@@ -22,21 +62,9 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "gen/api/delete-agent",
-          label: "Remove an enrolled agent",
-          className: "api-method delete",
-        },
-        {
-          type: "doc",
           id: "gen/api/get-agent-details",
           label: "Get agent details",
           className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/accept-agent",
-          label: "Accept a pending agent",
-          className: "api-method post",
         },
         {
           type: "doc",
@@ -46,21 +74,9 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "gen/api/reject-agent",
-          label: "Reject a pending agent",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
           id: "gen/api/undrain-agent",
           label: "Undrain an agent",
           className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-agents-pending",
-          label: "List agents awaiting enrollment",
-          className: "api-method get",
         },
       ],
     },

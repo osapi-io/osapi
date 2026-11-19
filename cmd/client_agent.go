@@ -40,23 +40,14 @@ var clientAgentCmd = &cobra.Command{
 	Long:  "Most commands read the NATS KV heartbeat registry directly, and make no job.",
 }
 
-// clientAgentPendingCmd holds the commands of the agents that wait for
-// enrollment, such as osapi client agent pending list.
-var clientAgentPendingCmd = &cobra.Command{
-	Use:   "pending",
-	Short: "Read the agents that wait for enrollment",
-}
-
 func init() {
 	clientCmd.AddCommand(clientAgentCmd)
-	clientAgentCmd.AddCommand(clientAgentPendingCmd)
 }
 
 // The agent group's commands are generated from its definition. These are
 // how each answer prints without --json.
 func init() {
 	command.Render(agent.Group, "list", renderAgentList)
-	command.Render(agent.Group, "pending", renderAgentPending)
 	command.Render(
 		agent.Group,
 		"get",
@@ -64,23 +55,8 @@ func init() {
 			renderAgentDetail(out)
 		},
 	)
-	// accept, reject, delete, drain and undrain answer 204, with no body:
+	// drain and undrain answer 204, with no body:
 	// each prints what it did, with --json too.
-	command.Acts(
-		agent.Group,
-		"accept",
-		func(_ *cobra.Command, in agent.AcceptInput, _ struct{}) { agentDone(in.Hostname, "accepted") },
-	)
-	command.Acts(
-		agent.Group,
-		"reject",
-		func(_ *cobra.Command, in agent.RejectInput, _ struct{}) { agentDone(in.Hostname, "rejected") },
-	)
-	command.Acts(
-		agent.Group,
-		"delete",
-		func(_ *cobra.Command, in agent.DeleteInput, _ struct{}) { agentDone(in.Hostname, "deleted") },
-	)
 	command.Acts(
 		agent.Group,
 		"drain",
@@ -146,36 +122,6 @@ func renderAgentList(
 			"AGE", "LOAD (1m)", "OS", "VERSION",
 		},
 		Rows: rows,
-	}})
-}
-
-func renderAgentPending(
-	_ *cobra.Command,
-	_ agent.ListInput,
-	out agent.ListPendingAgentsResponse,
-) {
-	if len(out.Items) == 0 {
-		cli.PrintHeading("Pending agents (0)")
-		cli.PrintNote("None.")
-
-		return
-	}
-
-	rows := make([][]string, 0, len(out.Items))
-	for _, a := range out.Items {
-		fingerprint := a.Fingerprint
-		if len(fingerprint) > 20 {
-			fingerprint = fingerprint[:20] + "..."
-		}
-		rows = append(rows, []string{
-			a.MachineID, a.Hostname, fingerprint, cli.FormatAge(time.Since(a.RequestedAt)),
-		})
-	}
-
-	cli.PrintCompactTable([]cli.Section{{
-		Title:   fmt.Sprintf("Pending agents (%d)", out.TotalItems),
-		Headers: []string{"MACHINE ID", "HOSTNAME", "FINGERPRINT", "REQUESTED"},
-		Rows:    rows,
 	}})
 }
 

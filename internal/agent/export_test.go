@@ -207,6 +207,15 @@ func ExportDrainCondition(
 	return a.drainCondition()
 }
 
+// ExportWriteSeen exposes writeSeen for testing.
+func ExportWriteSeen(
+	ctx context.Context,
+	a *Agent,
+	machineID string,
+) {
+	a.writeSeen(ctx, machineID)
+}
+
 // ExportStartConsumers exposes startConsumers, the start of the job
 // consumers at startup, for testing.
 func ExportStartConsumers(

@@ -43,18 +43,19 @@ var traceDetail = []string{
 // opDetail is the attribute that a store or client operation's DETAIL shows,
 // by span name: what it acted on. Its first attribute that is set wins.
 var opDetail = map[string][]string{
-	"job.get":           {"job.id"},
-	"job.retry":         {"job.id"},
-	"job.delete":        {"job.id"},
-	"agent.get":         {"osapi.target"},
-	"agent.timeline":    {"osapi.agent.hostname"},
-	"enrollment.accept": {"osapi.agent.hostname", "osapi.agent.fingerprint"},
-	"enrollment.reject": {"osapi.agent.hostname"},
-	"enrollment.remove": {"osapi.agent.hostname"},
-	"audit.get":         {"osapi.audit.id"},
-	"traces.read":       {"osapi.trace.id"},
-	"validate.target":   {"osapi.target"},
-	"target.resolve":    {"osapi.target"},
+	"job.get":          {"job.id"},
+	"job.retry":        {"job.id"},
+	"job.delete":       {"job.id"},
+	"agent.get":        {"osapi.target"},
+	"agent.timeline":   {"osapi.agent.hostname"},
+	"admission.get":    {"osapi.agent.machine_id"},
+	"admission.admit":  {"osapi.agent.machine_id"},
+	"admission.reject": {"osapi.agent.machine_id"},
+	"admission.revoke": {"osapi.agent.machine_id"},
+	"audit.get":        {"osapi.audit.id"},
+	"traces.read":      {"osapi.trace.id"},
+	"validate.target":  {"osapi.target"},
+	"target.resolve":   {"osapi.target"},
 }
 
 // opCounts are the attributes that count what an operation read, and the
@@ -269,6 +270,7 @@ var attrKeys = map[string]string{
 	"osapi.target":               "target",
 	"osapi.agent.hostname":       "host",
 	"osapi.agent.fingerprint":    "fingerprint",
+	"osapi.agent.machine_id":     "machine",
 	"osapi.audit.id":             "entry",
 	"osapi.trace.id":             "trace",
 }

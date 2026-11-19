@@ -32,6 +32,8 @@ type Permission = client.Permission
 
 // Permission constants re-exported from the SDK.
 const (
+	PermAdmissionRead    = client.PermAdmissionRead
+	PermAdmissionWrite   = client.PermAdmissionWrite
 	PermAgentRead        = client.PermAgentRead
 	PermAgentWrite       = client.PermAgentWrite
 	PermNodeRead         = client.PermNodeRead
@@ -75,6 +77,8 @@ const (
 // builtinPermissions are the hand-written domains' permissions. A behavior's
 // are not listed here: AllPermissions adds them from its definition.
 var builtinPermissions = []Permission{
+	PermAdmissionRead,
+	PermAdmissionWrite,
 	PermAgentRead,
 	PermAgentWrite,
 	PermNodeRead,
@@ -119,6 +123,9 @@ var builtinPermissions = []Permission{
 // permissions each grants. RolePermissions adds each behavior's.
 var builtinRolePermissions = map[string][]Permission{
 	client.RoleAdmin: {
+		// Admitting a node is a trust decision: only admin may make it.
+		PermAdmissionRead,
+		PermAdmissionWrite,
 		PermAgentRead,
 		PermAgentWrite,
 		PermNodeRead,
@@ -159,6 +166,7 @@ var builtinRolePermissions = map[string][]Permission{
 		PermServiceWrite,
 	},
 	client.RoleWrite: {
+		PermAdmissionRead,
 		PermAgentRead,
 		PermNodeRead,
 		PermNodeWrite,
@@ -192,6 +200,7 @@ var builtinRolePermissions = map[string][]Permission{
 		PermServiceWrite,
 	},
 	client.RoleRead: {
+		PermAdmissionRead,
 		PermAgentRead,
 		PermNodeRead,
 		PermNetworkRead,

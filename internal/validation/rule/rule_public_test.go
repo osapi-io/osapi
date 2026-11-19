@@ -178,7 +178,7 @@ type needsInput struct {
 	Skip   string    `json:"-"               validate:"max=1"`
 	Free   string    `json:"free"`
 	hidden string    //nolint:unused
-	Body   needsBody `             in:"body" validate:"omitempty"`
+	Body   needsBody `             in:"body" validate:"required"`
 }
 
 // TestNeeds names each rule that needs a bad input, and leaves out what a
@@ -203,7 +203,7 @@ func (s *RulePublicTestSuite) TestNeeds() {
 		}
 	}
 	s.Equal([]string{"Name:required", "Tags:required"}, required,
-		"with required, each required field but a path field needs one")
+		"with required, each required field but a path field or a struct value needs one")
 }
 
 func (s *RulePublicTestSuite) TestDeclare() {

@@ -15,7 +15,7 @@ controller:
   # pki:
   #   enabled: false
   #   key_dir: /etc/osapi/pki
-  #   auto_accept: false
+  #   auto_admit: false
   #   rotation_grace_period: 24h
   api:
     # Host the API, and the UI on its listener, binds to. Empty binds every

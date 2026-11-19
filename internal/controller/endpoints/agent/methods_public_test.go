@@ -31,7 +31,6 @@ import (
 
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent/mocks"
-	"github.com/osapi-io/osapi/internal/controller/enrollment"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -41,16 +40,14 @@ import (
 type MethodsPublicTestSuite struct {
 	suite.Suite
 
-	ctrl   *gomock.Controller
-	jobs   *mocks.MockJobs
-	enroll *mocks.MockEnrollment
-	ctx    context.Context
+	ctrl *gomock.Controller
+	jobs *mocks.MockJobs
+	ctx  context.Context
 }
 
 func (s *MethodsPublicTestSuite) SetupSubTest() {
 	s.ctrl = gomock.NewController(s.T())
 	s.jobs = mocks.NewMockJobs(s.ctrl)
-	s.enroll = mocks.NewMockEnrollment(s.ctrl)
 	s.ctx = context.Background()
 }
 
@@ -59,7 +56,7 @@ func (s *MethodsPublicTestSuite) TearDownSubTest() {
 }
 
 func (s *MethodsPublicTestSuite) deps() agent.Deps {
-	return agent.Deps{Jobs: s.jobs, Enrollment: s.enroll}
+	return agent.Deps{Jobs: s.jobs}
 }
 
 var errBoom = errors.New("nats: timeout")
@@ -266,156 +263,6 @@ func (s *MethodsPublicTestSuite) TestGet() {
 	}
 }
 
-func (s *MethodsPublicTestSuite) TestPending() {
-	at := time.Date(2026, 11, 17, 8, 0, 0, 0, time.UTC)
-
-	tests := []struct {
-		name         string
-		noEnrollment bool
-		setup        func()
-		validateFunc func(agent.ListPendingAgentsResponse, error)
-	}{
-		{
-			name:         "when enrollment is not enabled, it is an error",
-			noEnrollment: true,
-			setup:        func() {},
-			validateFunc: func(_ agent.ListPendingAgentsResponse, err error) {
-				s.EqualError(err, "enrollment not enabled")
-			},
-		},
-		{
-			name: "when agents wait, each is listed with the total",
-			setup: func() {
-				s.enroll.EXPECT().ListPending(gomock.Any()).Return([]enrollment.PendingAgent{{
-					MachineID: "m-1", Hostname: "web-01", Fingerprint: "SHA256:x", RequestedAt: at,
-				}}, nil)
-			},
-			validateFunc: func(got agent.ListPendingAgentsResponse, err error) {
-				s.Require().NoError(err)
-				s.Equal(agent.ListPendingAgentsResponse{
-					Items: []agent.PendingAgentInfo{
-						{
-							MachineID:   "m-1",
-							Hostname:    "web-01",
-							Fingerprint: "SHA256:x",
-							RequestedAt: at,
-						},
-					},
-					TotalItems: 1,
-				}, got)
-			},
-		},
-		{
-			name: "when none wait, the list is empty, not null",
-			setup: func() {
-				s.enroll.EXPECT().ListPending(gomock.Any()).Return(nil, nil)
-			},
-			validateFunc: func(got agent.ListPendingAgentsResponse, err error) {
-				s.Require().NoError(err)
-				s.NotNil(got.Items)
-			},
-		},
-		{
-			name: "when the list fails, the error is returned",
-			setup: func() {
-				s.enroll.EXPECT().ListPending(gomock.Any()).Return(nil, errBoom)
-			},
-			validateFunc: func(_ agent.ListPendingAgentsResponse, err error) {
-				s.ErrorIs(err, errBoom)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.setup()
-			d := s.deps()
-			if tc.noEnrollment {
-				d.Enrollment = nil
-			}
-			tc.validateFunc(agent.Pending(s.ctx, d, agent.ListInput{}))
-		})
-	}
-}
-
-func (s *MethodsPublicTestSuite) TestDelete() {
-	tests := []struct {
-		name         string
-		noEnrollment bool
-		in           agent.DeleteInput
-		setup        func()
-		wantErr      error
-		wantErrMsg   string
-	}{
-		{
-			name:         "when enrollment is not enabled, it is an error",
-			noEnrollment: true,
-			in:           agent.DeleteInput{Hostname: "web-01"},
-			setup:        func() {},
-			wantErrMsg:   "enrollment not enabled",
-		},
-		{
-			name: "when the agent is removed, the message names it and its machine",
-			in:   agent.DeleteInput{Hostname: "web-01"},
-			setup: func() {
-				s.enroll.EXPECT().RemoveByHostname(gomock.Any(), "web-01", "").Return("m-1", nil)
-			},
-		},
-		{
-			name: "when no accepted agent has the hostname, it is ErrNotFound",
-			in:   agent.DeleteInput{Hostname: "web-01"},
-			setup: func() {
-				s.enroll.EXPECT().RemoveByHostname(gomock.Any(), "web-01", "").
-					Return("", enrollment.ErrNoAcceptedAgent)
-			},
-			wantErr:    agent.ErrNotFound,
-			wantErrMsg: `no accepted agent with hostname "web-01"`,
-		},
-		{
-			name: "when a machine ID was named and not found, the message names it",
-			in:   agent.DeleteInput{Hostname: "web-01", MachineID: "m-9"},
-			setup: func() {
-				s.enroll.EXPECT().RemoveByHostname(gomock.Any(), "web-01", "m-9").
-					Return("", enrollment.ErrNoAcceptedAgent)
-			},
-			wantErr:    agent.ErrNotFound,
-			wantErrMsg: `no accepted agent with hostname "web-01" and machine ID "m-9"`,
-		},
-		{
-			name: "when two accepted agents have the hostname, it is ErrAmbiguous",
-			in:   agent.DeleteInput{Hostname: "web-01"},
-			setup: func() {
-				s.enroll.EXPECT().RemoveByHostname(gomock.Any(), "web-01", "").
-					Return("", enrollment.ErrAmbiguousHostname)
-			},
-			wantErr:    agent.ErrAmbiguous,
-			wantErrMsg: enrollment.ErrAmbiguousHostname.Error() + "; name one with machine_id",
-		},
-		{
-			name: "when the store fails, it is that error",
-			in:   agent.DeleteInput{Hostname: "web-01"},
-			setup: func() {
-				s.enroll.EXPECT().RemoveByHostname(gomock.Any(), "web-01", "").Return("", errBoom)
-			},
-			wantErr: errBoom,
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.setup()
-			d := s.deps()
-			if tc.noEnrollment {
-				d.Enrollment = nil
-			}
-
-			_, err := agent.Delete(s.ctx, d, tc.in)
-
-			s.check(err, tc.wantErr, tc.wantErrMsg)
-		})
-	}
-}
-
 // check holds an action's answer to the message, or its error to the
 // sentinel and the text.
 func (s *MethodsPublicTestSuite) check(
@@ -433,145 +280,6 @@ func (s *MethodsPublicTestSuite) check(
 	}
 	if wantErrMsg != "" {
 		s.EqualError(err, wantErrMsg)
-	}
-}
-
-func (s *MethodsPublicTestSuite) TestAccept() {
-	tests := []struct {
-		name         string
-		noEnrollment bool
-		in           agent.AcceptInput
-		setup        func()
-		wantErr      error
-		wantErrMsg   string
-	}{
-		{
-			name:         "when enrollment is not enabled, it is an error",
-			noEnrollment: true,
-			in:           agent.AcceptInput{Hostname: "web-01"},
-			setup:        func() {},
-			wantErrMsg:   "enrollment not enabled",
-		},
-		{
-			name: "when accepted by hostname, the message names it",
-			in:   agent.AcceptInput{Hostname: "web-01"},
-			setup: func() {
-				s.enroll.EXPECT().AcceptByHostname(gomock.Any(), "web-01").Return(nil)
-			},
-		},
-		{
-			name: "when a fingerprint is given, it accepts by fingerprint",
-			in:   agent.AcceptInput{Hostname: "web-01", Fingerprint: "SHA256:x"},
-			setup: func() {
-				s.enroll.EXPECT().AcceptByFingerprint(gomock.Any(), "SHA256:x").Return(nil)
-			},
-		},
-		{
-			name: "when no pending agent has the hostname, it is ErrNotFound",
-			in:   agent.AcceptInput{Hostname: "web-01"},
-			setup: func() {
-				s.enroll.EXPECT().AcceptByHostname(gomock.Any(), "web-01").
-					Return(enrollment.ErrNoPendingAgent)
-			},
-			wantErr:    agent.ErrNotFound,
-			wantErrMsg: `no pending agent with hostname "web-01"`,
-		},
-		{
-			name: "when no pending agent has the fingerprint, it is ErrNotFound",
-			in:   agent.AcceptInput{Hostname: "web-01", Fingerprint: "SHA256:x"},
-			setup: func() {
-				s.enroll.EXPECT().AcceptByFingerprint(gomock.Any(), "SHA256:x").
-					Return(enrollment.ErrNoPendingAgent)
-			},
-			wantErr:    agent.ErrNotFound,
-			wantErrMsg: `no pending agent with fingerprint "SHA256:x"`,
-		},
-		{
-			name: "when accepting by hostname fails, it is that error",
-			in:   agent.AcceptInput{Hostname: "web-01"},
-			setup: func() {
-				s.enroll.EXPECT().AcceptByHostname(gomock.Any(), "web-01").Return(errBoom)
-			},
-			wantErr: errBoom,
-		},
-		{
-			name: "when accepting by fingerprint fails, it is that error",
-			in:   agent.AcceptInput{Hostname: "web-01", Fingerprint: "SHA256:x"},
-			setup: func() {
-				s.enroll.EXPECT().AcceptByFingerprint(gomock.Any(), "SHA256:x").Return(errBoom)
-			},
-			wantErr: errBoom,
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.setup()
-			d := s.deps()
-			if tc.noEnrollment {
-				d.Enrollment = nil
-			}
-
-			_, err := agent.Accept(s.ctx, d, tc.in)
-
-			s.check(err, tc.wantErr, tc.wantErrMsg)
-		})
-	}
-}
-
-func (s *MethodsPublicTestSuite) TestReject() {
-	tests := []struct {
-		name         string
-		noEnrollment bool
-		setup        func()
-		wantErr      error
-		wantErrMsg   string
-	}{
-		{
-			name:         "when enrollment is not enabled, it is an error",
-			noEnrollment: true,
-			setup:        func() {},
-			wantErrMsg:   "enrollment not enabled",
-		},
-		{
-			name: "when rejected, the message names it",
-			setup: func() {
-				s.enroll.EXPECT().
-					RejectByHostname(gomock.Any(), "web-01", "rejected via API").
-					Return(nil)
-			},
-		},
-		{
-			name: "when no pending agent has the hostname, it is ErrNotFound",
-			setup: func() {
-				s.enroll.EXPECT().RejectByHostname(gomock.Any(), "web-01", "rejected via API").
-					Return(enrollment.ErrNoPendingAgent)
-			},
-			wantErr:    agent.ErrNotFound,
-			wantErrMsg: `no pending agent with hostname "web-01"`,
-		},
-		{
-			name: "when the store fails, it is that error",
-			setup: func() {
-				s.enroll.EXPECT().RejectByHostname(gomock.Any(), "web-01", "rejected via API").
-					Return(errBoom)
-			},
-			wantErr: errBoom,
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.setup()
-			d := s.deps()
-			if tc.noEnrollment {
-				d.Enrollment = nil
-			}
-
-			_, err := agent.Reject(s.ctx, d, agent.RejectInput{Hostname: "web-01"})
-
-			s.check(err, tc.wantErr, tc.wantErrMsg)
-		})
 	}
 }
 

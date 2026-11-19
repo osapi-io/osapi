@@ -18,8 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // Package agent is the endpoint group for the agents of the fleet: the
-// agents that report, the ones that wait for enrollment, and the actions on
-// one agent. Its spec part comes from this definition; until the group
+// agents that report, and the actions on one agent. Admitting an agent is
+// the admission group. Its spec part comes from this definition; until the group
 // moves, the controller serves the hand-written spec in
 // internal/controller/api/agent, and TestEndpointParity holds the two
 // together.
@@ -37,8 +37,6 @@ var (
 	// ErrNotFound is an agent that is not there: not registered, or not
 	// pending.
 	ErrNotFound = errors.New("agent not found")
-	// ErrAmbiguous is a hostname that more than one accepted agent has.
-	ErrAmbiguous = errors.New("more than one accepted agent has the hostname")
 	// ErrState is an agent that is already in the state that was asked
 	// for, or cannot go to it.
 	ErrState = errors.New("agent is not in a state that allows it")
@@ -67,18 +65,6 @@ var Group = endpoint.Register(endpoint.Define(
 		Describe("List active agents").
 		Explain("Discover all active agents in the fleet.").
 		Returns("List of active agents."),
-	endpoint.Get[ListInput, ListPendingAgentsResponse]("pending").
-		Command("List agents awaiting enrollment",
-			"When PKI is enabled, a new agent sends an enrollment request, and waits\nhere until an administrator accepts or rejects it with `agent accept` or\n`agent reject`.").
-		Example("").
-		Handle(Pending).
-		Sub("pending").
-		Use("list").
-		ID("GetAgentsPending").
-		Describe("List agents awaiting enrollment").
-		Explain("List all agents that have submitted enrollment requests but have "+
-			"not yet been accepted or rejected.").
-		Returns("List of pending agents."),
 	endpoint.Get[GetInput, AgentInfo]("get").
 		Fails("a hostname over 255 characters", GetInput{Hostname: long}).
 		Command("Get agent details",
@@ -90,66 +76,6 @@ var Group = endpoint.Register(endpoint.Define(
 		Explain("Get detailed information about a specific agent by hostname.").
 		Returns("Agent details.").
 		Errors(endpoint.NotFound(ErrNotFound, "Agent not found")),
-	endpoint.Delete[DeleteInput, struct{}]("delete").
-		Fails("a hostname over 255 characters", DeleteInput{Hostname: long}).
-		Fails("a machine ID over 255 characters", DeleteInput{Hostname: "web-01", MachineID: long}).
-		Status(http.StatusNoContent).
-		Result("Two machines can have the same hostname, because the identity of an agent\n"+
-			"is its machine ID. When more than one accepted agent has the hostname, the\n"+
-			"command fails and names their machine IDs. Run it again with\n"+
-			"`--machine-id`.").
-		Notes("The agent does not get a message. It keeps the controller key that it got\n"+
-			"at acceptance, and it does not enroll again by itself. To enroll it again,\n"+
-			"delete `controller.pub` from its key directory on the host\n"+
-			"(`/etc/osapi/pki` by default), and restart the agent. Then it sends a new\n"+
-			"request, and `agent accept` accepts it.").
-		Command("Remove an enrolled agent",
-			"When PKI is enabled, the controller keeps the public key of each accepted\nagent. This command deletes it. After that, the controller does not verify\nthe responses or the registration of the agent. Thus a target does not\nfind the agent, and a broadcast gives it no row.").
-		Example("--hostname web-01").
-		Example("--hostname web-01 --machine-id 3f2a9c...").
-		Handle(Delete).
-		ID("DeleteAgent").
-		Describe("Remove an enrolled agent").
-		Explain("Remove an accepted agent's stored public key. Its responses and "+
-			"registration stop verifying at once, so targeting no longer resolves it. "+
-			"The agent does not enroll again by itself: remove its controller key on the "+
-			"host and restart it. Two machines may share a hostname; when they do, name "+
-			"one with machine_id.").
-		Returns("Agent removed.").
-		Errors(
-			endpoint.NotFound(ErrNotFound, "No accepted agent with that hostname."),
-			endpoint.Conflict(ErrAmbiguous,
-				"More than one accepted agent has the hostname; name one with machine_id."),
-		),
-	endpoint.Post[AcceptInput, struct{}]("accept").
-		Fails("a hostname over 255 characters", AcceptInput{Hostname: long}).
-		Fails("a fingerprint over 255 characters", AcceptInput{Hostname: "web-01", Fingerprint: long}).
-		Status(http.StatusNoContent).
-		Command("Accept a pending agent enrollment",
-			"When PKI is enabled, a new agent sends an enrollment request. An\nadministrator must accept it before the agent can do work. This command\naccepts a pending agent by hostname. To accept by the public key fingerprint\nof the agent, add `--fingerprint`. Use `agent pending list` to see the agents\nthat wait for approval.").
-		Example("--hostname web-01").
-		Example("--hostname web-01 --fingerprint SHA256:ab12cd34...").
-		Handle(Accept).
-		Action("accept").
-		ID("AcceptAgent").
-		Describe("Accept a pending agent").
-		Explain("Accept a pending agent enrollment request. The agent can be "+
-			"identified by hostname (path parameter) or by fingerprint (query parameter).").
-		Returns("Agent accepted.").
-		Errors(endpoint.NotFound(ErrNotFound, "Pending agent not found.")),
-	endpoint.Post[RejectInput, struct{}]("reject").
-		Fails("a hostname over 255 characters", RejectInput{Hostname: long}).
-		Status(http.StatusNoContent).
-		Command("Reject a pending agent enrollment",
-			"When PKI is enabled, a new agent sends an enrollment request. An\nadministrator accepts or rejects it. This command rejects a pending agent,\nso the agent cannot join the fleet. The command removes the enrollment entry\nof the agent from the pending queue. Use `agent pending list` to see the agents\nthat wait for approval.").
-		Example("--hostname web-01").
-		Handle(Reject).
-		Action("reject").
-		ID("RejectAgent").
-		Describe("Reject a pending agent").
-		Explain("Reject a pending agent enrollment request.").
-		Returns("Agent rejected.").
-		Errors(endpoint.NotFound(ErrNotFound, "Pending agent not found.")),
 	endpoint.Post[DrainInput, struct{}]("drain").
 		Fails("a hostname over 255 characters", DrainInput{Hostname: long}).
 		Status(http.StatusNoContent).
