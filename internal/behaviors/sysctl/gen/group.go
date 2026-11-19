@@ -17,24 +17,24 @@ import (
 
 // ListRequest is the request of sysctl list: its target and its input.
 type ListRequest struct {
-	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)."     flag:"target" in:"path"  json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	Prefix   string `               doc:"Only this parameter and the ones under it, such as net.ipv4"               in:"query" json:"prefix"                              validate:"omitempty,sysctl_key"`
+	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Prefix   string `doc:"Only this parameter and the ones under it, such as net.ipv4" in:"query" json:"prefix" validate:"omitempty,sysctl_key"`
 }
 
 // SysctlEntry is the result of sysctl on one host.
 type SysctlEntry struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result."            json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host."                  json:"status"            validate:"oneof=ok failed skipped timeout"`
-	Key      *string `doc:"Parameter name"                                              json:"key,omitempty"`
-	Value    *string `doc:"Current runtime value"                                       json:"value,omitempty"`
+	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
+	Key      *string `doc:"Parameter name" json:"key,omitempty"`
+	Value    *string `doc:"Current runtime value" json:"value,omitempty"`
 	Managed  *bool   `doc:"Whether osapi manages it: a file of its own sets it at boot" json:"managed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed."                          json:"error,omitempty"`
+	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // SysctlCollectionResponse is each target host's result.
 type SysctlCollectionResponse struct {
 	JobID   string        `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []SysctlEntry `                                                                                              json:"results"`
+	Results []SysctlEntry `json:"results"`
 }
 
 // HandleList runs sysctl list on the target, for the endpoint server.
@@ -43,26 +43,19 @@ func HandleList(
 	d dispatch.Deps,
 	in ListRequest,
 ) (SysctlCollectionResponse, error) {
-	return dispatch.Run[SysctlCollectionResponse](
-		ctx,
-		d,
-		sysctl.Behavior,
-		"list",
-		in.Hostname,
-		sysctl.ListInput{Prefix: in.Prefix},
-	)
+	return dispatch.Run[SysctlCollectionResponse](ctx, d, sysctl.Behavior, "list", in.Hostname, sysctl.ListInput{Prefix: in.Prefix})
 }
 
 // GetRequest is the request of sysctl get: its target and its input.
 type GetRequest struct {
-	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname"  short:"T" validate:"required,min=1,valid_target"`
-	Key      string `               doc:"Parameter name, such as net.ipv4.ip_forward"                           in:"path" json:"key"      param:"SysctlKey"           validate:"required,min=1,sysctl_key"`
+	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Key      string `doc:"Parameter name, such as net.ipv4.ip_forward" in:"path" json:"key" param:"SysctlKey" validate:"required,min=1,sysctl_key"`
 }
 
 // SysctlGetResponse is each target host's result.
 type SysctlGetResponse struct {
 	JobID   string        `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []SysctlEntry `                                                                                              json:"results"`
+	Results []SysctlEntry `json:"results"`
 }
 
 // HandleGet runs sysctl get on the target, for the endpoint server.
@@ -71,41 +64,34 @@ func HandleGet(
 	d dispatch.Deps,
 	in GetRequest,
 ) (SysctlGetResponse, error) {
-	return dispatch.Run[SysctlGetResponse](
-		ctx,
-		d,
-		sysctl.Behavior,
-		"get",
-		in.Hostname,
-		sysctl.GetInput{Key: in.Key},
-	)
+	return dispatch.Run[SysctlGetResponse](ctx, d, sysctl.Behavior, "get", in.Hostname, sysctl.GetInput{Key: in.Key})
 }
 
 // CreateRequest is the request of sysctl create: its target and its input.
 type CreateRequest struct {
 	Hostname string              `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	Body     SysctlCreateRequest `                                                                                           in:"body"                                            validate:"required"`
+	Body     SysctlCreateRequest `in:"body" validate:"required"`
 }
 
 // SysctlCreateRequest is the body of sysctl create.
 type SysctlCreateRequest struct {
-	Key   string `doc:"Parameter name, such as net.ipv4.ip_forward" json:"key"   validate:"required,min=1,sysctl_key"`
-	Value string `doc:"Value to set"                                json:"value" validate:"required,no_linebreak"`
+	Key   string `doc:"Parameter name, such as net.ipv4.ip_forward" json:"key" validate:"required,min=1,sysctl_key"`
+	Value string `doc:"Value to set" json:"value" validate:"required,no_linebreak"`
 }
 
 // SysctlMutationResult is the result of sysctl on one host.
 type SysctlMutationResult struct {
 	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host."       json:"status"            validate:"oneof=ok failed skipped timeout"`
-	Key      *string `doc:"Parameter name"                                   json:"key,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed"                         json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed."               json:"error,omitempty"`
+	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
+	Key      *string `doc:"Parameter name" json:"key,omitempty"`
+	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // SysctlCreateResponse is each target host's result.
 type SysctlCreateResponse struct {
 	JobID   string                 `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []SysctlMutationResult `                                                                                              json:"results"`
+	Results []SysctlMutationResult `json:"results"`
 }
 
 // HandleCreate runs sysctl create on the target, for the endpoint server.
@@ -114,21 +100,14 @@ func HandleCreate(
 	d dispatch.Deps,
 	in CreateRequest,
 ) (SysctlCreateResponse, error) {
-	return dispatch.Run[SysctlCreateResponse](
-		ctx,
-		d,
-		sysctl.Behavior,
-		"create",
-		in.Hostname,
-		sysctl.CreateInput{Key: in.Body.Key, Value: in.Body.Value},
-	)
+	return dispatch.Run[SysctlCreateResponse](ctx, d, sysctl.Behavior, "create", in.Hostname, sysctl.CreateInput{Key: in.Body.Key, Value: in.Body.Value})
 }
 
 // UpdateRequest is the request of sysctl update: its target and its input.
 type UpdateRequest struct {
-	Hostname string              `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname"  short:"T" validate:"required,min=1,valid_target"`
-	Key      string              `               doc:"Parameter name, such as net.ipv4.ip_forward"                           in:"path" json:"key"      param:"SysctlKey"           validate:"required,min=1,sysctl_key"`
-	Body     SysctlUpdateRequest `                                                                                           in:"body"                                             validate:"required"`
+	Hostname string              `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Key      string              `doc:"Parameter name, such as net.ipv4.ip_forward" in:"path" json:"key" param:"SysctlKey" validate:"required,min=1,sysctl_key"`
+	Body     SysctlUpdateRequest `in:"body" validate:"required"`
 }
 
 // SysctlUpdateRequest is the body of sysctl update.
@@ -139,7 +118,7 @@ type SysctlUpdateRequest struct {
 // SysctlUpdateResponse is each target host's result.
 type SysctlUpdateResponse struct {
 	JobID   string                 `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []SysctlMutationResult `                                                                                              json:"results"`
+	Results []SysctlMutationResult `json:"results"`
 }
 
 // HandleUpdate runs sysctl update on the target, for the endpoint server.
@@ -148,26 +127,19 @@ func HandleUpdate(
 	d dispatch.Deps,
 	in UpdateRequest,
 ) (SysctlUpdateResponse, error) {
-	return dispatch.Run[SysctlUpdateResponse](
-		ctx,
-		d,
-		sysctl.Behavior,
-		"update",
-		in.Hostname,
-		sysctl.UpdateInput{Key: in.Key, Value: in.Body.Value},
-	)
+	return dispatch.Run[SysctlUpdateResponse](ctx, d, sysctl.Behavior, "update", in.Hostname, sysctl.UpdateInput{Key: in.Key, Value: in.Body.Value})
 }
 
 // DeleteRequest is the request of sysctl delete: its target and its input.
 type DeleteRequest struct {
-	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname"  short:"T" validate:"required,min=1,valid_target"`
-	Key      string `               doc:"Parameter name, such as net.ipv4.ip_forward"                           in:"path" json:"key"      param:"SysctlKey"           validate:"required,min=1,sysctl_key"`
+	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Key      string `doc:"Parameter name, such as net.ipv4.ip_forward" in:"path" json:"key" param:"SysctlKey" validate:"required,min=1,sysctl_key"`
 }
 
 // SysctlDeleteResponse is each target host's result.
 type SysctlDeleteResponse struct {
 	JobID   string                 `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []SysctlMutationResult `                                                                                              json:"results"`
+	Results []SysctlMutationResult `json:"results"`
 }
 
 // HandleDelete runs sysctl delete on the target, for the endpoint server.
@@ -176,14 +148,7 @@ func HandleDelete(
 	d dispatch.Deps,
 	in DeleteRequest,
 ) (SysctlDeleteResponse, error) {
-	return dispatch.Run[SysctlDeleteResponse](
-		ctx,
-		d,
-		sysctl.Behavior,
-		"delete",
-		in.Hostname,
-		sysctl.DeleteInput{Key: in.Key},
-	)
+	return dispatch.Run[SysctlDeleteResponse](ctx, d, sysctl.Behavior, "delete", in.Hostname, sysctl.DeleteInput{Key: in.Key})
 }
 
 // Group is sysctl as an endpoint group, which its spec comes from.
@@ -192,14 +157,8 @@ var Group = endpoint.Define(
 	"Kernel parameters, written to sysctl.d files and applied",
 	endpoint.Prefix("next/node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag(
-		"sysctl_operations",
-		"Node/Sysctl",
-		"Kernel parameters, written to sysctl.d files and applied",
-	),
-	endpoint.CommandNotes(
-		"The [sysctl behavior](../../../../../../behaviors/sysctl/sysctl.md) page tells where the behavior runs, what it is built on and its settings.",
-	),
+	endpoint.Tag("sysctl_operations", "Node/Sysctl", "Kernel parameters, written to sysctl.d files and applied"),
+	endpoint.CommandNotes("The [sysctl behavior](../../../../../../behaviors/sysctl/sysctl.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, SysctlCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeSysctl").
@@ -259,39 +218,19 @@ var Group = endpoint.Define(
 
 func init() {
 	behavior.RegisterGroup("sysctl", Group)
-	endpointcommand.Render(
-		Group,
-		"list",
-		func(_ *cobra.Command, _ ListRequest, out SysctlCollectionResponse) {
-			command.Print(sysctl.Behavior, "list", out, endpointcommand.TraceID())
-		},
-	)
-	endpointcommand.Render(
-		Group,
-		"get",
-		func(_ *cobra.Command, _ GetRequest, out SysctlGetResponse) {
-			command.Print(sysctl.Behavior, "get", out, endpointcommand.TraceID())
-		},
-	)
-	endpointcommand.Render(
-		Group,
-		"create",
-		func(_ *cobra.Command, _ CreateRequest, out SysctlCreateResponse) {
-			command.Print(sysctl.Behavior, "create", out, endpointcommand.TraceID())
-		},
-	)
-	endpointcommand.Render(
-		Group,
-		"update",
-		func(_ *cobra.Command, _ UpdateRequest, out SysctlUpdateResponse) {
-			command.Print(sysctl.Behavior, "update", out, endpointcommand.TraceID())
-		},
-	)
-	endpointcommand.Render(
-		Group,
-		"delete",
-		func(_ *cobra.Command, _ DeleteRequest, out SysctlDeleteResponse) {
-			command.Print(sysctl.Behavior, "delete", out, endpointcommand.TraceID())
-		},
-	)
+	endpointcommand.Render(Group, "list", func(_ *cobra.Command, _ ListRequest, out SysctlCollectionResponse) {
+		command.Print(sysctl.Behavior, "list", out, endpointcommand.TraceID())
+	})
+	endpointcommand.Render(Group, "get", func(_ *cobra.Command, _ GetRequest, out SysctlGetResponse) {
+		command.Print(sysctl.Behavior, "get", out, endpointcommand.TraceID())
+	})
+	endpointcommand.Render(Group, "create", func(_ *cobra.Command, _ CreateRequest, out SysctlCreateResponse) {
+		command.Print(sysctl.Behavior, "create", out, endpointcommand.TraceID())
+	})
+	endpointcommand.Render(Group, "update", func(_ *cobra.Command, _ UpdateRequest, out SysctlUpdateResponse) {
+		command.Print(sysctl.Behavior, "update", out, endpointcommand.TraceID())
+	})
+	endpointcommand.Render(Group, "delete", func(_ *cobra.Command, _ DeleteRequest, out SysctlDeleteResponse) {
+		command.Print(sysctl.Behavior, "delete", out, endpointcommand.TraceID())
+	})
 }

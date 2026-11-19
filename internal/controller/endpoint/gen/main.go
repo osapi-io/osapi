@@ -105,7 +105,7 @@ func run(
 		return err
 	}
 
-	return w.Format()
+	return nil
 }
 
 func group(

@@ -107,7 +107,7 @@ func run(
 		return err
 	}
 
-	return w.Format()
+	return nil
 }
 
 // write writes the spec of gs at path, with ErrorResponse pointing at the

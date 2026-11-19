@@ -120,7 +120,7 @@ func run(
 		return err
 	}
 
-	return w.Format()
+	return nil
 }
 
 // behavior writes b's gen directory.

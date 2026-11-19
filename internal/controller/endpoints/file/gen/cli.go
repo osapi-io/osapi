@@ -36,12 +36,7 @@ var fileUploadCmd = &cobra.Command{
 			return
 		}
 
-		command.Run(
-			cmd,
-			file.Group,
-			"upload",
-			file.UploadInput{Name: name, ContentType: contentType, File: fileFlagData},
-		)
+		command.Run(cmd, file.Group, "upload", file.UploadInput{Name: name, ContentType: contentType, File: fileFlagData})
 	},
 	Short: "Upload a file to the Object Store",
 	Use:   "upload",
@@ -75,12 +70,7 @@ var fileUpdateCmd = &cobra.Command{
 			return
 		}
 
-		command.Run(
-			cmd,
-			file.Group,
-			"update",
-			file.UpdateInput{Name: name, ContentType: contentType, File: fileFlagData},
-		)
+		command.Run(cmd, file.Group, "update", file.UpdateInput{Name: name, ContentType: contentType, File: fileFlagData})
 	},
 	Short: "Replace a file in the Object Store",
 	Use:   "update",
@@ -118,27 +108,17 @@ var fileStaleCmd = &cobra.Command{
 func init() {
 	fileUploadCmd.Flags().String("name", "", "The name of the file in the Object Store")
 	_ = fileUploadCmd.MarkFlagRequired("name")
-	fileUploadCmd.Flags().
-		String("content-type", "raw", "How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts (raw, template)")
+	fileUploadCmd.Flags().String("content-type", "raw", "How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts (raw, template)")
 	fileUploadCmd.Flags().String("file", "", "Path to the local file with the file content")
 	_ = fileUploadCmd.MarkFlagRequired("file")
 	fileGetCmd.Flags().String("name", "", "The name of the file in the Object Store")
 	_ = fileGetCmd.MarkFlagRequired("name")
 	fileUpdateCmd.Flags().String("name", "", "The name of the file in the Object Store")
 	_ = fileUpdateCmd.MarkFlagRequired("name")
-	fileUpdateCmd.Flags().
-		String("content-type", "raw", "How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts (raw, template)")
+	fileUpdateCmd.Flags().String("content-type", "raw", "How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts (raw, template)")
 	fileUpdateCmd.Flags().String("file", "", "Path to the local file with the file content")
 	_ = fileUpdateCmd.MarkFlagRequired("file")
 	fileDeleteCmd.Flags().String("name", "", "The name of the file in the Object Store")
 	_ = fileDeleteCmd.MarkFlagRequired("name")
-	command.Register(
-		file.Group,
-		fileListCmd,
-		fileUploadCmd,
-		fileGetCmd,
-		fileUpdateCmd,
-		fileDeleteCmd,
-		fileStaleCmd,
-	)
+	command.Register(file.Group, fileListCmd, fileUploadCmd, fileGetCmd, fileUpdateCmd, fileDeleteCmd, fileStaleCmd)
 }

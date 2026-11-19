@@ -57,12 +57,7 @@ var sysctlCreateCmd = &cobra.Command{
 		key, _ := cmd.Flags().GetString("key")
 		value, _ := cmd.Flags().GetString("value")
 
-		command.Run(
-			cmd,
-			Group,
-			"create",
-			CreateRequest{Hostname: hostname, Body: SysctlCreateRequest{Key: key, Value: value}},
-		)
+		command.Run(cmd, Group, "create", CreateRequest{Hostname: hostname, Body: SysctlCreateRequest{Key: key, Value: value}})
 	},
 	Short: "Manage a kernel parameter and apply it",
 	Use:   "create",
@@ -81,12 +76,7 @@ var sysctlUpdateCmd = &cobra.Command{
 		key, _ := cmd.Flags().GetString("key")
 		value, _ := cmd.Flags().GetString("value")
 
-		command.Run(
-			cmd,
-			Group,
-			"update",
-			UpdateRequest{Hostname: hostname, Key: key, Body: SysctlUpdateRequest{Value: value}},
-		)
+		command.Run(cmd, Group, "update", UpdateRequest{Hostname: hostname, Key: key, Body: SysctlUpdateRequest{Value: value}})
 	},
 	Short: "Set a kernel parameter, manage it, and apply it",
 	Use:   "update",
@@ -111,36 +101,23 @@ var sysctlDeleteCmd = &cobra.Command{
 }
 
 func init() {
-	sysctlListCmd.Flags().
-		StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
-	sysctlListCmd.Flags().
-		String("prefix", "", "Only this parameter and the ones under it, such as net.ipv4")
-	sysctlGetCmd.Flags().
-		StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
+	sysctlListCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
+	sysctlListCmd.Flags().String("prefix", "", "Only this parameter and the ones under it, such as net.ipv4")
+	sysctlGetCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
 	sysctlGetCmd.Flags().String("key", "", "Parameter name, such as net.ipv4.ip_forward")
 	_ = sysctlGetCmd.MarkFlagRequired("key")
-	sysctlCreateCmd.Flags().
-		StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
+	sysctlCreateCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
 	sysctlCreateCmd.Flags().String("key", "", "Parameter name, such as net.ipv4.ip_forward")
 	_ = sysctlCreateCmd.MarkFlagRequired("key")
 	sysctlCreateCmd.Flags().String("value", "", "Value to set")
 	_ = sysctlCreateCmd.MarkFlagRequired("value")
-	sysctlUpdateCmd.Flags().
-		StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
+	sysctlUpdateCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
 	sysctlUpdateCmd.Flags().String("key", "", "Parameter name, such as net.ipv4.ip_forward")
 	_ = sysctlUpdateCmd.MarkFlagRequired("key")
 	sysctlUpdateCmd.Flags().String("value", "", "Value to set")
 	_ = sysctlUpdateCmd.MarkFlagRequired("value")
-	sysctlDeleteCmd.Flags().
-		StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
+	sysctlDeleteCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
 	sysctlDeleteCmd.Flags().String("key", "", "Parameter name, such as net.ipv4.ip_forward")
 	_ = sysctlDeleteCmd.MarkFlagRequired("key")
-	command.Register(
-		Group,
-		sysctlListCmd,
-		sysctlGetCmd,
-		sysctlCreateCmd,
-		sysctlUpdateCmd,
-		sysctlDeleteCmd,
-	)
+	command.Register(Group, sysctlListCmd, sysctlGetCmd, sysctlCreateCmd, sysctlUpdateCmd, sysctlDeleteCmd)
 }

@@ -28,10 +28,8 @@ var telemetryGetCmd = &cobra.Command{
 }
 
 func init() {
-	telemetryGetCmd.Flags().
-		String("id", "", "The trace ID, which a command prints after its job ID, 32 hexadecimal characters")
+	telemetryGetCmd.Flags().String("id", "", "The trace ID, which a command prints after its job ID, 32 hexadecimal characters")
 	_ = telemetryGetCmd.MarkFlagRequired("id")
-	telemetryGetCmd.Flags().
-		Bool("all", false, "Show the NATS calls too, the reads and writes of the job queue")
+	telemetryGetCmd.Flags().Bool("all", false, "Show the NATS calls too, the reads and writes of the job queue")
 	command.Register(telemetry.Group, telemetryGetCmd)
 }

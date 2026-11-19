@@ -67,12 +67,7 @@ var agentDeleteCmd = &cobra.Command{
 		hostname, _ := cmd.Flags().GetString("hostname")
 		machineID, _ := cmd.Flags().GetString("machine-id")
 
-		command.Run(
-			cmd,
-			agent.Group,
-			"delete",
-			agent.DeleteInput{Hostname: hostname, MachineID: machineID},
-		)
+		command.Run(cmd, agent.Group, "delete", agent.DeleteInput{Hostname: hostname, MachineID: machineID})
 	},
 	Short: "Remove an enrolled agent",
 	Use:   "delete",
@@ -87,12 +82,7 @@ var agentAcceptCmd = &cobra.Command{
 		hostname, _ := cmd.Flags().GetString("hostname")
 		fingerprint, _ := cmd.Flags().GetString("fingerprint")
 
-		command.Run(
-			cmd,
-			agent.Group,
-			"accept",
-			agent.AcceptInput{Hostname: hostname, Fingerprint: fingerprint},
-		)
+		command.Run(cmd, agent.Group, "accept", agent.AcceptInput{Hostname: hostname, Fingerprint: fingerprint})
 	},
 	Short: "Accept a pending agent enrollment",
 	Use:   "accept",
@@ -145,8 +135,7 @@ func init() {
 	_ = agentGetCmd.MarkFlagRequired("hostname")
 	agentDeleteCmd.Flags().String("hostname", "", "The hostname of the accepted agent to remove")
 	_ = agentDeleteCmd.MarkFlagRequired("hostname")
-	agentDeleteCmd.Flags().
-		String("machine-id", "", "The machine ID to remove, when more than one accepted agent has the hostname")
+	agentDeleteCmd.Flags().String("machine-id", "", "The machine ID to remove, when more than one accepted agent has the hostname")
 	agentAcceptCmd.Flags().String("hostname", "", "The hostname of the pending agent to accept")
 	_ = agentAcceptCmd.MarkFlagRequired("hostname")
 	agentAcceptCmd.Flags().String("fingerprint", "", "Accept by fingerprint instead of hostname")
@@ -156,15 +145,5 @@ func init() {
 	_ = agentDrainCmd.MarkFlagRequired("hostname")
 	agentUndrainCmd.Flags().String("hostname", "", "The hostname of the agent to undrain")
 	_ = agentUndrainCmd.MarkFlagRequired("hostname")
-	command.Register(
-		agent.Group,
-		agentListCmd,
-		agentPendingCmd,
-		agentGetCmd,
-		agentDeleteCmd,
-		agentAcceptCmd,
-		agentRejectCmd,
-		agentDrainCmd,
-		agentUndrainCmd,
-	)
+	command.Register(agent.Group, agentListCmd, agentPendingCmd, agentGetCmd, agentDeleteCmd, agentAcceptCmd, agentRejectCmd, agentDrainCmd, agentUndrainCmd)
 }
