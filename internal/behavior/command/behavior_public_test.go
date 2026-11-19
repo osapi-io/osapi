@@ -203,8 +203,8 @@ func (s *BehaviorcmdPublicTestSuite) TestTable() {
 					[]string{"HOSTNAME", "STATUS", "KEY", "SIZE", "AGE", "RATIO", "EXTRA"},
 					sec.Headers,
 				)
-				s.Equal([]string{"web-01", "ok", "k", "2.0 KB", "1m", "0.5", ""}, sec.Rows[0])
-				s.Equal("2", sec.Rows[1][5], "a whole number prints with no decimals")
+				s.Equal([]string{"web-01", "ok", "k", "2.0 KB", "1m", "0.50", ""}, sec.Rows[0])
+				s.Equal("2.00", sec.Rows[1][5], "a float prints with two decimals")
 				s.Len(sec.Errors, 1)
 			},
 		},
