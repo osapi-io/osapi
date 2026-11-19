@@ -89,8 +89,11 @@ go-unit-shard index count:
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir -p .coverage
+    # The shared go.just defines the tags; just fetch writes it, so it is
+    # read when the recipe runs, not when the justfile is parsed.
+    tags=$(just --evaluate go_os_tags)
     pkgs=$(go list ./... | grep -v /node_modules/ | awk -v n={{ count }} -v i={{ index }} '(NR - 1) % n == i')
-    go test {{ go_os_tags }} -race -coverprofile=.coverage/shard-{{ index }}.out $pkgs
+    go test $tags -race -coverprofile=.coverage/shard-{{ index }}.out $pkgs
 
 # Join the coverage of the unit test shards, and fail below the target
 #
@@ -103,10 +106,11 @@ go-cover-merge:
         echo "mode: atomic"
         for f in .coverage/shard-*.out; do tail -n +2 "$f"; done
     } | grep -v -f .coverignore > .coverage/cover.out
+    target=$(just --evaluate go_coverage_target)
     total=$(go tool cover -func=.coverage/cover.out | awk '$1=="total:"{print $NF}' | tr -d '%')
-    awk -v t="$total" -v g="{{ go_coverage_target }}" 'BEGIN{exit !(t+0 < g+0)}' \
-      && { go tool cover -func=.coverage/cover.out | grep -v '100.0%$' >&2; echo "coverage ${total}% is below target {{ go_coverage_target }}%" >&2; exit 1; } \
-      || echo "coverage ${total}% meets target {{ go_coverage_target }}%"
+    awk -v t="$total" -v g="$target" 'BEGIN{exit !(t+0 < g+0)}' \
+      && { go tool cover -func=.coverage/cover.out | grep -v '100.0%$' >&2; echo "coverage ${total}% is below target ${target}%" >&2; exit 1; } \
+      || echo "coverage ${total}% meets target ${target}%"
 
 # Fail when a behavior that osapi behavior new writes does not pass its tests
 #
