@@ -35,8 +35,8 @@ import (
 	"github.com/dave/jennifer/jen"
 
 	commandgen "github.com/osapi-io/osapi/internal/cli/command/gen"
+	"github.com/osapi-io/osapi/internal/cli/command/gen/genfile"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/genfile"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/routegen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/specgen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"

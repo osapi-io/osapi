@@ -28,9 +28,9 @@ Each operation needs one permission, for example `sysctl:read` or
 `command:execute`. A token gets permissions from its roles, or it has its own
 list of permissions:
 
-- **Built-in roles**: `admin`, `write` and `read`. `osapi token roles` prints
-  each permission and the role that gives it, as the binary that you run has
-  them.
+- **Built-in roles**: `admin`, `write` and `read`. `osapi token roles list`
+  prints each permission and the role that gives it, as the binary that you run
+  has them.
 - **Custom roles.** You define them in `controller.api.security.roles`. Each one
   is a list of permissions. A custom role with the name of a built-in role
   replaces the built-in role.

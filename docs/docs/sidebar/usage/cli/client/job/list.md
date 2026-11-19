@@ -17,8 +17,8 @@ osapi client job list --status completed --limit 3
 
 ## Permission
 
-It needs the `job:read` permission. `osapi token roles` lists the roles that
-grant it.
+It needs the `job:read` permission. `osapi token roles list` lists the roles
+that grant it.
 
 ## Flags
 

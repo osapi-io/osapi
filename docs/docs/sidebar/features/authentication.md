@@ -66,13 +66,13 @@ There are three built-in roles, `admin`, `write` and `read`. To see every
 permission each grants, as the binary you run has them, list them:
 
 ```bash
-osapi token roles
+osapi token roles list
 ```
 
 Use that list, because it changes when osapi gets new behaviors. The permissions
 of a behavior are `<name>:read` and `<name>:write`. `admin` and `write` give the
 two permissions. `read` gives the read permission.
-[`token roles`](../usage/cli/token/roles.md) shows its output.
+[`token roles list`](../usage/cli/token/roles/list.md) shows its output.
 
 `command:execute` and `command:shell` are two different permissions.
 `command:execute` controls the `exec` endpoint, which takes an argument list.

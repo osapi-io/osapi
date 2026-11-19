@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,18 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package widget
 
-import (
-	"github.com/spf13/cobra"
-)
-
-// tokenCmd represents the token command.
-var tokenCmd = &cobra.Command{
-	Use:   "token",
-	Short: "Generate and validate API tokens",
-}
-
-func init() {
-	rootCmd.AddCommand(tokenCmd)
-}
+// Deps is what the group's methods use, such as the config or the file
+// system. Give each one as an interface, so a test can fake it. While it
+// is empty, the CLI needs no wiring; once it has a field, give it with
+// command.Provide in cmd/commands.go, as the token group's is.
+type Deps struct{}

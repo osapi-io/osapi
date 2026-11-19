@@ -3,7 +3,7 @@
 Generate a new token.
 
 ```bash
-osapi token generate
+osapi token generate [flags]
 ```
 
 ## Examples
@@ -16,11 +16,11 @@ osapi token generate --subject svc@example.com --roles=read \
 
 ## Flags
 
-| Flag                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Default |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `-p, --permissions` | Direct permissions (overrides role expansion; allowed: admission:read, admission:write, agent:read, agent:write, node:read, node:write, network:read, network:write, job:read, job:write, health:read, audit:read, trace:read, command:execute, command:shell, file:read, file:write, docker:read, docker:write, docker:execute, schedule:read, schedule:write, sysctl:read, sysctl:write, ntp:read, ntp:write, timezone:read, timezone:write, power:execute, process:read, process:execute, user:read, user:write, package:read, package:write, log:read, certificate:read, certificate:write, service:read, service:write) |         |
-| `-r, --roles`       | Roles for the token (allowed: admin, read, write) (required)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |         |
-| `-u, --subject`     | Subject for the token (e.g., user ID or unique identifier) (required)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |         |
+| Flag                | Description                                                                     | Default |
+| ------------------- | ------------------------------------------------------------------------------- | ------- |
+| `-p, --permissions` | Direct permissions, which override the roles; osapi token roles list lists them |         |
+| `-r, --roles`       | Roles for the token (admin, read, write) (required)                             |         |
+| `-u, --subject`     | Subject for the token (e.g., user ID or unique identifier) (required)           |         |
 
 ## Global flags
 

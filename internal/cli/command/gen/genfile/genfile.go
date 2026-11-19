@@ -18,8 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package genfile writes generated files for the endpoint generator and the
-// behavior generator alike: it removes the files a run made before, writes
+// Package genfile writes generated files for the local, endpoint and
+// behavior generators alike: it removes the files a run made before, writes
 // each file under the repository's root, groups a Go file's imports as the
 // repository does, and formats every Go file it wrote once, at the end.
 package genfile

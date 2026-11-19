@@ -18,8 +18,8 @@ osapi client file stale list --json
 
 ## Permission
 
-It needs the `file:read` permission. `osapi token roles` lists the roles that
-grant it.
+It needs the `file:read` permission. `osapi token roles list` lists the roles
+that grant it.
 
 ## Global flags
 

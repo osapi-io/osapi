@@ -97,8 +97,16 @@ just deps
 
 ## Project structure
 
-- **`cmd/`.** The Cobra CLI commands (`client`, `node agent`, `controller.api`,
+- **`cmd/`.** The root command, the wiring of the CLI, and the Cobra commands
+  that no definition makes yet (`node agent`, `controller start`,
   `nats server`).
+- **`internal/cli/command/`.** The command DSL: a definition of a group of local
+  commands, which run in the CLI and call no API, and the runtime of each
+  generated command. The endpoint and behavior commands use its runtime too.
+  `gen/` is the generator of the cobra commands.
+- **`internal/cli/commands/`.** The groups of local commands, such as `token`.
+  Each group is a directory, and its definition makes its commands, flags, help
+  and pages. The `build-a-command` skill has the layout.
 - **`internal/controller/`.** `controller.New` makes the controller process: the
   NATS connection, the REST API with each handler, the heartbeat and the
   watchers. A new API handler goes in `handlers.go`.
@@ -245,16 +253,19 @@ just docs-fmt         # Auto-fix formatting of the site
 ```
 
 The CLI reference pages under `docs/docs/sidebar/usage/cli/` are generated from
-the cobra commands. Do not edit them. Change the command in `cmd/`, then run
+the cobra commands. Do not edit them. Change the definition that makes the
+command, or the command in `cmd/` when no definition makes it, then run
 `just cli-docs-generate`:
 
 - Each command under `osapi client` is `<resource> <verb>`, such as
   `facts keys list` or `node log source list`. The verb is `list`, `get`,
   `create`, `update` or `delete`, or an action that a CRUD verb does not say,
   such as `drain`, `exec` or `restart`. A noun is never the verb: list a noun's
-  items with `list` under it. `TestCommandShape` in `cmd/help_style_test.go`
-  fails on a verb that is not in its lists; add an action there only for a real
-  action.
+  items with `list` under it. A local command has the same shape, such as
+  `token roles list`. `TestCommandShape` in `cmd/help_style_test.go` and
+  `osapi cli command validate` fail on a verb that is not in `command.Verbs` or
+  `command.Actions`, in `internal/cli/command/validate.go`. Add an action there
+  only for a real action.
 - Mark a required flag with `MarkFlagRequired`. `--help` and the page say
   "(required)" from it, so the flag's help does not.
 - `Short` is one line, and `Long` tells what the command does in a few
@@ -269,6 +280,13 @@ the cobra commands. Do not edit them. Change the command in `cmd/`, then run
 - A behavior command is generated from the behavior definition, with its
   `Short`, `Long`, `Example` and annotations. Change the definition, run
   `go generate ./internal/behaviors/all`, then `just cli-docs-generate`.
+- A new command that runs in the CLI and calls no API is a local command. Write
+  it with the command DSL, in a group under `internal/cli/commands/`, not as a
+  file in `cmd/`. Start a group with `osapi cli command new`, then run
+  `go generate ./internal/cli/commands/all` and `just cli-docs-generate`.
+  `osapi cli command spec` lists each part of the DSL, and
+  `osapi cli command validate` checks each group. The `build-a-command` skill
+  has the steps.
 
 ```bash
 just cli-docs-generate   # Write the CLI reference pages
@@ -376,6 +394,11 @@ The generators that use jen:
   the tests of each behavior.
 - `osapi behavior new` writes the first files of a new behavior, from
   `internal/behavior/scaffold_files.go`.
+- `internal/cli/command/gen` writes the CLI commands of each local group, each
+  endpoint group and each behavior.
+- `osapi cli command new` writes the first files of a new local group, from
+  `internal/cli/command/scaffold_files.go`, with golden copies in
+  `internal/cli/command/testdata/scaffold/`.
 
 A generator built with jen is hard to read as the code that it writes. Thus the
 output of `osapi behavior new` has golden copies in

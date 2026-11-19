@@ -20,8 +20,10 @@
 
 // Package commandgen writes the cobra commands of a group of the command
 // layer, gen/cli.go: one command for each method, with its help, its flags
-// and its examples, for the endpoint generator and the behavior generator
-// alike.
+// and its examples, for the local generator, the endpoint generator and the
+// behavior generator alike. A local group's command runs its method in the
+// CLI with command.Run; an endpoint group's sends a request with the
+// endpoint layer's Run.
 package commandgen
 
 import (
@@ -40,7 +42,7 @@ const (
 	// commands and reads their files.
 	commandPath = "github.com/osapi-io/osapi/internal/cli/command"
 	// runPath is the endpoint layer's runner: its Run sends a command's
-	// request.
+	// request. A local group's command calls the command layer's Run.
 	runPath       = "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	referencePath = "github.com/osapi-io/osapi/internal/cli/reference"
 	cobraPath     = "github.com/spf13/cobra"
@@ -48,14 +50,18 @@ const (
 
 // Commands writes gen/cli.go: one cobra command for each method, with its help,
 // its permission, its examples and a flag for each input field, and the
-// init that registers them under osapi client <group>.
+// init that registers them under osapi client <group>, or under osapi for a
+// local group.
 func Commands(
 	f *jen.File,
 	g command.Group,
 	pkg string,
 ) {
+	_, isLocal := g.(*command.LocalGroup)
 	f.ImportAlias(commandPath, "clicommand")
-	f.ImportAlias(runPath, "endpointcommand")
+	if !isLocal {
+		f.ImportAlias(runPath, "endpointcommand")
+	}
 	f.ImportName(referencePath, "reference")
 	f.ImportName(cobraPath, "cobra")
 
@@ -94,7 +100,7 @@ func Commands(
 				reads = append(reads,
 					jen.List(jen.Id(local), jen.Id("ok")).Op(":=").
 						Qual(commandPath, "ReadFile").Call(jen.Id(path)),
-					jen.If(jen.Op("!").Id("ok")).Block(jen.Return()))
+					jen.If(jen.Op("!").Id("ok")).Block(ret(isLocal)))
 				help = "Path to the local file with " + strings.ToLower(help[:1]) + help[1:]
 			}
 			if values := oneOf(fld); values != "" {
@@ -161,11 +167,20 @@ func Commands(
 		if len(reads) > 0 {
 			run = append(run, jen.Line())
 		}
-		run = append(run, jen.Qual(runPath, "Run").Call(
-			jen.Id("cmd"), jen.Qual(pkg, "Group"), jen.Lit(m.MethodName()), in))
+		call := jen.Qual(runPath, "Run").Call(
+			jen.Id("cmd"), jen.Qual(pkg, "Group"), jen.Lit(m.MethodName()), in)
+		if isLocal {
+			call = jen.Return(jen.Qual(commandPath, "Run").Call(
+				jen.Id("cmd"), jen.Qual(pkg, "Group"), jen.Lit(m.MethodName()), in))
+		}
+		run = append(run, call)
 
 		examples := make([]string, 0, len(m.Examples()))
 		group := strings.Join(g.CommandPath(), " ")
+		under := "osapi client "
+		if isLocal {
+			under = "osapi "
+		}
 		path := group + " " + m.CommandName()
 		if sub := m.SubPath(); sub != "" && sub != m.CommandName() {
 			path = group + " " + sub + " " + m.CommandName()
@@ -174,7 +189,7 @@ func Commands(
 		// between examples; examples with none are one to a line.
 		sep := "\n"
 		for _, e := range m.Examples() {
-			line := strings.TrimRight("  osapi client "+path+" "+e.Flags, " ")
+			line := strings.TrimRight("  "+under+path+" "+e.Flags, " ")
 			if e.Doc != "" {
 				line = "  # " + e.Doc + "\n" + line
 				sep = "\n\n"
@@ -190,6 +205,17 @@ func Commands(
 				jen.Id("cmd").Op("*").Qual(cobraPath, "Command"),
 				jen.Id("_").Index().String(),
 			).Block(run...),
+		}
+		if isLocal {
+			dict = jen.Dict{
+				jen.Id("Use"):   jen.Lit(m.CommandName()),
+				jen.Id("Short"): jen.Lit(m.CommandShort()),
+				jen.Id("Args"):  jen.Qual(cobraPath, "NoArgs"),
+				jen.Id("RunE"): jen.Func().Params(
+					jen.Id("cmd").Op("*").Qual(cobraPath, "Command"),
+					jen.Id("_").Index().String(),
+				).Error().Block(run...),
+			}
 		}
 		if long := m.CommandLong(); long != "" {
 			dict[jen.Id("Long")] = jen.Lit(long)
@@ -217,9 +243,21 @@ func Commands(
 		f.Line()
 	}
 
-	inits = append(inits, jen.Qual(commandPath, "Register").Call(
+	inits = append(inits, jen.Qual(commandPath, "AddCommands").Call(
 		append([]jen.Code{jen.Qual(pkg, "Group")}, names...)...))
 	f.Func().Id("init").Params().Block(inits...)
+}
+
+// ret is the return of a generated command that stops early: a local
+// command's RunE returns nil, as the failure is reported already.
+func ret(
+	local bool,
+) jen.Code {
+	if local {
+		return jen.Return(jen.Nil())
+	}
+
+	return jen.Return()
 }
 
 // flagKind is the pflag kind of a field's type, such as String, and its
@@ -234,6 +272,14 @@ func flagKind(
 	case reflect.Map:
 		// A map[string]string is key=value pairs, a flag given once each.
 		return "StringToString", jen.Nil()
+	case reflect.Slice:
+		if t.Elem().Kind() == reflect.String {
+			// A []string is a flag given once for each value, or with the
+			// values joined with commas.
+			return "StringSlice", jen.Nil()
+		}
+
+		return "String", jen.Lit(d)
 	case reflect.Bool:
 		return "Bool", jen.Lit(ok && d == "true")
 	case reflect.Int:

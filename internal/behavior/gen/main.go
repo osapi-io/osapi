@@ -34,7 +34,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/genfile"
+	"github.com/osapi-io/osapi/internal/cli/command/gen/genfile"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

@@ -55,13 +55,13 @@ struct name. Place it in the category directory its concern belongs to.
 | `docs/docusaurus.config.ts` | the feature in the Features dropdown, the service in the SDK dropdown |
 | `features/features.md` | a row for the domain |
 | `sdk/client/client.md` | the service in its category table |
-| `features/authentication.md` | nothing: it points to `osapi token roles`, which prints the permissions from the binary |
+| `features/authentication.md` | nothing: it points to `osapi token roles list`, which prints the permissions from the binary |
 | `usage/configuration.md` | the same permission, in the roles table and the YAML reference comments |
 | `architecture/system-architecture.md` | endpoints, if they belong in the health or endpoint tables |
 
 A new permission occurs in three places: the spec, the role expansion in code,
 and `configuration.md`. If you forget the last one, the YAML reference of the
-operator is not complete. `osapi token roles` shows it in all cases.
+operator is not complete. `osapi token roles list` shows it in all cases.
 
 **There is no API guidelines page to update.** For a new path pattern, the
 question is if it obeys the [design

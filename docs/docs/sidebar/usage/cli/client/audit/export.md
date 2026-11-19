@@ -17,8 +17,8 @@ osapi client audit export --output audit.jsonl
 
 ## Permission
 
-It needs the `audit:read` permission. `osapi token roles` lists the roles that
-grant it.
+It needs the `audit:read` permission. `osapi token roles list` lists the roles
+that grant it.
 
 ## Flags
 

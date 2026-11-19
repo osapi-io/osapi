@@ -60,5 +60,5 @@ func init() {
 	auditExportCmd.Flags().String("type", "file", "Export backend type")
 	auditGetCmd.Flags().String("id", "", "The audit entry ID")
 	_ = auditGetCmd.MarkFlagRequired("id")
-	clicommand.Register(audit.Group, auditListCmd, auditExportCmd, auditGetCmd)
+	clicommand.AddCommands(audit.Group, auditListCmd, auditExportCmd, auditGetCmd)
 }

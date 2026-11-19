@@ -17,8 +17,8 @@ osapi client file update --name app.conf --file /tmp/app.conf
 
 ## Permission
 
-It needs the `file:write` permission. `osapi token roles` lists the roles that
-grant it.
+It needs the `file:write` permission. `osapi token roles list` lists the roles
+that grant it.
 
 ## Flags
 

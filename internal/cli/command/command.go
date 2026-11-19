@@ -18,12 +18,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package command is the command layer of the CLI: the commands of a group
-// under osapi client, with no HTTP. A group's gen/cli.go makes one cobra
-// command for each method and registers it here; Attach puts them under
-// osapi client <group>. The layer that sends a command's request, such as
-// the endpoint layer, gives the answer to Output, which prints it: the body
-// for --json, or the group's renderer for the method.
+// Package command is the command layer of the CLI, and the DSL of its local
+// commands. A group's gen/cli.go makes one cobra command for each method and
+// registers it here: Attach puts the commands of the endpoint groups and the
+// behaviors under osapi client, and AttachLocal puts the commands of the
+// local groups under osapi. A local group, which Define makes, runs in the
+// CLI and calls no API: Run checks its input and calls its handler. The
+// layer that sends an endpoint command's request gives the answer to Output,
+// as Run gives a local method's output, and Output prints it: as JSON for
+// --json, or through the group's renderer for the method.
 package command
 
 import (
@@ -52,14 +55,14 @@ type Group interface {
 	// such as next node sysctl.
 	CommandPath() []string
 	// Commands are the group's methods, in the order they were declared.
-	Commands() []Method
+	Commands() []Command
 	// CommandPermission is the permission the command of method m needs, or
 	// "" for one that needs none.
-	CommandPermission(m Method) string
+	CommandPermission(m Command) string
 }
 
-// Method is one command of a group.
-type Method interface {
+// Command is one method of a group: one command.
+type Command interface {
 	// MethodName is the method's name in its group, the key of its renderer.
 	MethodName() string
 	// Input is the type of the method's input: a flag for each field.
@@ -140,9 +143,9 @@ type renderer struct {
 // osapi client telemetry trace get.
 const SubKey = "osapi.endpoint.sub"
 
-// Register adds a group's generated commands. Each gen/cli.go calls it from
-// init.
-func Register(
+// AddCommands adds a group's generated commands. Each gen/cli.go calls it
+// from init.
+func AddCommands(
 	g Group,
 	cmds ...*cobra.Command,
 ) {
@@ -155,19 +158,50 @@ func Register(
 // which Attach adds when parent does not have them. A group or a command
 // that is among groups, by name, is that one, so the generated commands
 // join a hand-written command of the same name, such as agent with key and
-// status.
+// status. A local group is not attached here: AttachLocal puts it under the
+// root.
 func Attach(
 	parent *cobra.Command,
 	d Deps,
 	groups ...*cobra.Command,
 ) error {
+	return attach(parent, d, false, groups)
+}
+
+// AttachLocal adds the commands of every registered local group under root,
+// osapi, as Attach does for the groups under osapi client: a group goes
+// under the commands that Under names, such as controller.
+func AttachLocal(
+	root *cobra.Command,
+	d Deps,
+	groups ...*cobra.Command,
+) error {
+	return attach(root, d, true, groups)
+}
+
+func attach(
+	parent *cobra.Command,
+	d Deps,
+	local bool,
+	groups []*cobra.Command,
+) error {
 	deps = d
 	for _, e := range registered {
+		if _, ok := e.group.(*LocalGroup); ok != local {
+			continue
+		}
 		name := e.group.GroupName()
 		words := e.group.CommandPath()
 		into := parent
 		for _, w := range words[:len(words)-1] {
 			next := child(into, w)
+			// A named command that is not under into yet is added by the
+			// code that wrote it.
+			for _, g := range groups {
+				if next == nil && g.Name() == w {
+					next = g
+				}
+			}
 			if next == nil {
 				next = &cobra.Command{Use: w, Short: strings.ToUpper(w[:1]) + w[1:] + " commands"}
 				into.AddCommand(next)
@@ -206,15 +240,41 @@ func Attach(
 			}
 			if child(parent, c.Name()) != nil {
 				return fmt.Errorf(
-					"osapi client %s %s is both a hand-written command and the %s group's: "+
+					"%s %s %s is both a hand-written command and the %s group's: "+
 						"delete the hand-written one from cmd/",
-					strings.Join(words, " "), c.Name(), name)
+					prefix(local), strings.Join(words, " "), c.Name(), name)
 			}
 			parent.AddCommand(c)
+			origins[c] = e.group
 		}
 	}
 
 	return nil
+}
+
+// prefix is the command that a group's command path is under: osapi for a
+// local group, and osapi client for the others.
+func prefix(
+	local bool,
+) string {
+	if local {
+		return "osapi"
+	}
+
+	return "osapi client"
+}
+
+// origins is the group that made each attached command.
+var origins = map[*cobra.Command]Group{}
+
+// Origin is the group whose definition made c, a command that Attach or
+// AttachLocal added, and false for a command that a person wrote.
+func Origin(
+	c *cobra.Command,
+) (Group, bool) {
+	g, ok := origins[c]
+
+	return g, ok
 }
 
 func child(

@@ -32,5 +32,5 @@ func init() {
 	telemetryGetCmd.Flags().String("id", "", "The trace ID, which a command prints after its job ID, 32 hexadecimal characters")
 	_ = telemetryGetCmd.MarkFlagRequired("id")
 	telemetryGetCmd.Flags().Bool("all", false, "Show the NATS calls too, the reads and writes of the job queue")
-	clicommand.Register(telemetry.Group, telemetryGetCmd)
+	clicommand.AddCommands(telemetry.Group, telemetryGetCmd)
 }
