@@ -183,7 +183,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindOutput,
 			Name: "the rules with no options",
-			Does: "The columns and the keys have the order of the fields. A field with omitempty or omitzero and no value is not shown. A bool is yes or no. A []string is its values, joined with commas. A time.Time is in the one time format of the CLI. A label is the json name in sentence case, with an initialism such as ID in capitals: machine_id is Machine ID. A column header is the label in capitals. A table leaves out a column that has no value in any row. In a table cell, an object is its values, with a space between them, such as Ubuntu 24.04. A list of objects is the first field of each, with commas, such as HighLoad, DiskPressure. The heading is the name of the group in sentence case, with s for a list.",
+			Does: "The columns and the keys have the order of the fields. A field with omitempty or omitzero and no value is not shown. A bool is yes or no. A float32 or float64 has two decimals, such as 0.00. A []string is its values, joined with commas. A time.Time is in the one time format of the CLI. A label is the json name in sentence case, with an initialism such as ID in capitals: machine_id is Machine ID. A column header is the label in capitals. A table leaves out a column that has no value in any row. In a table cell, an object is its values, with a space between them, such as Ubuntu 24.04. A list of objects is the first field of each, with commas, such as HighLoad, DiskPressure. The heading is the name of the group in sentence case, with s for a list.",
 			When: "To change the order of the output, change the order of the fields.",
 		},
 		{

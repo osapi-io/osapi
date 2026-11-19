@@ -283,6 +283,8 @@ func (c Column) format(
 		return c.inline(p, v.(map[string]any))
 	case isList(c.Type) && isItems(v):
 		return c.names(p, v.([]any))
+	case isNumber && isFloat(c.Type):
+		return strconv.FormatFloat(n, 'f', 2, 64)
 	case strings.HasPrefix(c.Render, RenderShort) && isString:
 		if n, err := strconv.Atoi(strings.TrimPrefix(c.Render, RenderShort)); err == nil &&
 			len(s) > n {
@@ -419,6 +421,19 @@ func count(
 	}
 
 	return strconv.Itoa(n) + " " + noun + "s"
+}
+
+// isFloat reports whether t is a float32 or a float64, or a pointer to one:
+// its value prints with two decimals, such as 0.00 and 0.32, so the values of
+// a column line up.
+func isFloat(
+	t reflect.Type,
+) bool {
+	for t != nil && t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+
+	return t != nil && (t.Kind() == reflect.Float32 || t.Kind() == reflect.Float64)
 }
 
 var timeType = reflect.TypeFor[time.Time]()

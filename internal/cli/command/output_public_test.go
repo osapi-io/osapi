@@ -366,6 +366,8 @@ func (s *OutputPublicTestSuite) TestFormat() {
 		When   string     `json:"when"   render:"time"`
 		Ref    string     `json:"ref"                         prefix:"@fact."`
 		Plain  any        `json:"plain"`
+		Load   float32    `json:"load"`
+		Ratio  *float64   `json:"ratio"`
 		hidden string     //nolint:unused // an unexported field is not a column
 		NoJSON string
 		Skip   string `json:"-"`
@@ -374,7 +376,7 @@ func (s *OutputPublicTestSuite) TestFormat() {
 	for _, c := range command.Columns(reflect.TypeFor[*[]fields]()) {
 		cols[c.JSON] = c
 	}
-	s.Len(cols, 10)
+	s.Len(cols, 12)
 	s.Nil(command.Columns(reflect.TypeFor[string]()))
 	r := &recorder{}
 	recent := time.Now().Add(-30 * time.Second).Format(time.RFC3339)
@@ -407,6 +409,9 @@ func (s *OutputPublicTestSuite) TestFormat() {
 		{"false", "plain", false, "no"},
 		{"a whole number", "plain", float64(4), "4"},
 		{"a fraction", "plain", 0.25, "0.25"},
+		{"a float field with a whole value", "load", float64(0), "0.00"},
+		{"a float field", "load", 0.5, "0.50"},
+		{"a pointer to a float field", "ratio", 1.25, "1.25"},
 		{"a list of values", "plain", []any{"a", float64(1)}, "a, 1"},
 		{"a list of objects", "plain", []any{map[string]any{}}, "1 item"},
 		{"a list of lists", "plain", []any{[]any{}, []any{}}, "2 items"},
