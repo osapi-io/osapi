@@ -34,6 +34,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
+	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/node/ntp"
 )
 
@@ -423,7 +424,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			},
 		},
 		{
-			name: "when config not managed returns error",
+			name: "when config file does not exist returns not found",
 			config: ntp.Config{
 				Servers: []string{"0.pool.ntp.org"},
 			},
@@ -432,7 +433,51 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			validateFunc: func(got *ntp.UpdateResult, err error) {
 				suite.Require().Error(err)
 				suite.Nil(got)
-				suite.Contains(err.Error(), "ntp update: not managed by osapi")
+				suite.ErrorIs(err, provider.ErrNotFound)
+				suite.Contains(err.Error(), "ntp update:")
+			},
+		},
+		{
+			name: "when config file read fails returns the cause",
+			config: ntp.Config{
+				Servers: []string{"0.pool.ntp.org"},
+			},
+			setupFs: func() {
+				baseFs := memfs.New()
+				_ = baseFs.MkdirAll(sourcesDir, 0o755)
+				_ = baseFs.WriteFile(
+					sourcesFile,
+					[]byte("server 0.pool.ntp.org iburst\n"),
+					0o644,
+				)
+				readErr := errors.New("input/output error")
+				vfs := failfs.New(baseFs)
+				_ = vfs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					if fn == avfs.FnOpenFile {
+						return readErr
+					}
+
+					return nil
+				})
+				suite.memFs = vfs
+				suite.provider = ntp.NewDebianProvider(
+					suite.logger,
+					suite.memFs,
+					suite.mockExec,
+				)
+			},
+			setupMock: func() {},
+			validateFunc: func(got *ntp.UpdateResult, err error) {
+				suite.Require().Error(err)
+				suite.Nil(got)
+				suite.NotErrorIs(err, provider.ErrNotFound)
+				suite.NotErrorIs(err, provider.ErrNotManaged)
+				suite.Contains(err.Error(), "ntp update: read")
+				suite.Contains(err.Error(), "input/output error")
 			},
 		},
 		{

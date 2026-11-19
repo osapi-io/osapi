@@ -22,7 +22,9 @@ package iface
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"regexp"
 	"sort"
@@ -197,10 +199,15 @@ func (d *Debian) Update(
 
 	// Fail if the managed file does not exist on disk.
 	if _, statErr := d.fs.Stat(path); statErr != nil {
-		return nil, fmt.Errorf(
-			"interface update: %q not managed",
-			entry.Name,
-		)
+		if errors.Is(statErr, fs.ErrNotExist) {
+			return nil, fmt.Errorf(
+				"interface update %q: %w",
+				entry.Name,
+				provider.ErrNotFound,
+			)
+		}
+
+		return nil, fmt.Errorf("interface update %q: %w", entry.Name, statErr)
 	}
 
 	ifaceSection := netplan.SectionForInterface(ctx, d.execManager, entry.Name)

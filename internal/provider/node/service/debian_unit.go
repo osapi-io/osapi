@@ -89,7 +89,7 @@ func (d *Debian) Update(
 	filePath := unitFilePath(entry.Name)
 
 	if _, err := d.fs.Stat(filePath); err != nil {
-		return nil, fmt.Errorf("service unit %q: %w", entry.Name, provider.ErrNotManaged)
+		return nil, fmt.Errorf("service %q: %w", entry.Name, provider.ErrNotFound)
 	}
 
 	// If no new object was specified, preserve the current one.

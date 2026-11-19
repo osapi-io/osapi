@@ -116,6 +116,10 @@ func (d *Debian) UpdateGroup(
 		return nil, fmt.Errorf("group: %w", err)
 	}
 
+	if err := d.requireGroup(name); err != nil {
+		return nil, fmt.Errorf("group update: %w", err)
+	}
+
 	members := strings.Join(opts.Members, ",")
 
 	_, err := d.execManager.RunPrivilegedCmd(ctx, "gpasswd", []string{"-M", members, "--", name})
@@ -145,7 +149,21 @@ func (d *Debian) DeleteGroup(
 		return nil, fmt.Errorf("group: %w", err)
 	}
 
-	_, err := d.execManager.RunPrivilegedCmd(ctx, "groupdel", []string{"--", name})
+	exists, err := d.groupExists(name)
+	if err != nil {
+		return nil, fmt.Errorf("group delete: %w", err)
+	}
+
+	// Deleting a group that is not there leaves the host as asked, so it is
+	// not an error.
+	if !exists {
+		return &GroupResult{
+			Name:    name,
+			Changed: false,
+		}, nil
+	}
+
+	_, err = d.execManager.RunPrivilegedCmd(ctx, "groupdel", []string{"--", name})
 	if err != nil {
 		return nil, fmt.Errorf("group delete: groupdel: %w", err)
 	}
@@ -205,6 +223,42 @@ func (d *Debian) parseGroup() ([]Group, error) {
 	}
 
 	return groups, nil
+}
+
+// groupExists reports whether /etc/group has a group with the name. The file
+// is read instead of the exit status or the output of a command, because the
+// output is localized and the exit status differs between commands.
+func (d *Debian) groupExists(
+	name string,
+) (bool, error) {
+	groups, err := d.parseGroup()
+	if err != nil {
+		return false, err
+	}
+
+	for _, g := range groups {
+		if g.Name == name {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// requireGroup returns provider.ErrNotFound when the group is not on the host.
+func (d *Debian) requireGroup(
+	name string,
+) error {
+	exists, err := d.groupExists(name)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return fmt.Errorf("group %q: %w", name, provider.ErrNotFound)
+	}
+
+	return nil
 }
 
 // buildGroupaddArgs constructs command-line arguments for groupadd.

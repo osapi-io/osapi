@@ -33,6 +33,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
+	"github.com/osapi-io/osapi/internal/provider"
 	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 	"github.com/osapi-io/osapi/internal/provider/node/service"
 )
@@ -67,6 +68,20 @@ func (suite *DebianActionPublicTestSuite) SetupSubTest() {
 	suite.SetupTest()
 }
 
+func (suite *DebianActionPublicTestSuite) expectLoadState(
+	output string,
+	err error,
+) {
+	suite.mockExecManager.EXPECT().
+		RunCmd(gomock.Any(), "systemctl", []string{
+			"show",
+			"osapi-nginx.service",
+			"--property=LoadState",
+			"--value",
+		}).
+		Return(output, err)
+}
+
 func (suite *DebianActionPublicTestSuite) TestStart() {
 	tests := []struct {
 		name         string
@@ -78,6 +93,7 @@ func (suite *DebianActionPublicTestSuite) TestStart() {
 			name:        "when service is inactive starts it",
 			serviceName: "nginx",
 			setup: func() {
+				suite.expectLoadState("loaded\n", nil)
 				suite.mockExecManager.EXPECT().
 					RunCmd(gomock.Any(), "systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("inactive\n", errors.New("exit status 3"))
@@ -99,6 +115,7 @@ func (suite *DebianActionPublicTestSuite) TestStart() {
 			name:        "when service is already active returns changed false",
 			serviceName: "nginx",
 			setup: func() {
+				suite.expectLoadState("loaded\n", nil)
 				suite.mockExecManager.EXPECT().
 					RunCmd(gomock.Any(), "systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("active\n", nil)
@@ -117,6 +134,7 @@ func (suite *DebianActionPublicTestSuite) TestStart() {
 			name:        "when start command fails returns error",
 			serviceName: "nginx",
 			setup: func() {
+				suite.expectLoadState("loaded\n", nil)
 				suite.mockExecManager.EXPECT().
 					RunCmd(gomock.Any(), "systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("inactive\n", errors.New("exit status 3"))
@@ -130,6 +148,39 @@ func (suite *DebianActionPublicTestSuite) TestStart() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
+				suite.Contains(err.Error(), "service start:")
+			},
+		},
+		{
+			name:        "when unit does not exist returns not found",
+			serviceName: "nginx",
+			setup: func() {
+				// Real output: systemctl show exits 0 for a unit that does not exist.
+				suite.expectLoadState("not-found\n", nil)
+			},
+			validateFunc: func(
+				result *service.ActionResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.True(errors.Is(err, provider.ErrNotFound))
+				suite.Contains(err.Error(), `service "nginx": not found`)
+			},
+		},
+		{
+			name:        "when load state query fails returns error",
+			serviceName: "nginx",
+			setup: func() {
+				suite.expectLoadState("", errors.New("exit status 1"))
+			},
+			validateFunc: func(
+				result *service.ActionResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.False(errors.Is(err, provider.ErrNotFound))
 				suite.Contains(err.Error(), "service start:")
 			},
 		},
@@ -170,6 +221,7 @@ func (suite *DebianActionPublicTestSuite) TestStop() {
 			name:        "when service is active stops it",
 			serviceName: "nginx",
 			setup: func() {
+				suite.expectLoadState("loaded\n", nil)
 				suite.mockExecManager.EXPECT().
 					RunCmd(gomock.Any(), "systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("active\n", nil)
@@ -191,6 +243,7 @@ func (suite *DebianActionPublicTestSuite) TestStop() {
 			name:        "when service is already stopped returns changed false",
 			serviceName: "nginx",
 			setup: func() {
+				suite.expectLoadState("loaded\n", nil)
 				suite.mockExecManager.EXPECT().
 					RunCmd(gomock.Any(), "systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("inactive\n", errors.New("exit status 3"))
@@ -209,6 +262,7 @@ func (suite *DebianActionPublicTestSuite) TestStop() {
 			name:        "when stop command fails returns error",
 			serviceName: "nginx",
 			setup: func() {
+				suite.expectLoadState("loaded\n", nil)
 				suite.mockExecManager.EXPECT().
 					RunCmd(gomock.Any(), "systemctl", []string{"is-active", "osapi-nginx.service"}).
 					Return("active\n", nil)
@@ -222,6 +276,39 @@ func (suite *DebianActionPublicTestSuite) TestStop() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
+				suite.Contains(err.Error(), "service stop:")
+			},
+		},
+		{
+			name:        "when unit does not exist returns not found",
+			serviceName: "nginx",
+			setup: func() {
+				// Real output: systemctl show exits 0 for a unit that does not exist.
+				suite.expectLoadState("not-found\n", nil)
+			},
+			validateFunc: func(
+				result *service.ActionResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.True(errors.Is(err, provider.ErrNotFound))
+				suite.Contains(err.Error(), `service "nginx": not found`)
+			},
+		},
+		{
+			name:        "when load state query fails returns error",
+			serviceName: "nginx",
+			setup: func() {
+				suite.expectLoadState("", errors.New("exit status 1"))
+			},
+			validateFunc: func(
+				result *service.ActionResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.False(errors.Is(err, provider.ErrNotFound))
 				suite.Contains(err.Error(), "service stop:")
 			},
 		},
@@ -262,6 +349,7 @@ func (suite *DebianActionPublicTestSuite) TestRestart() {
 			name:        "when restart succeeds returns changed true",
 			serviceName: "nginx",
 			setup: func() {
+				suite.expectLoadState("loaded\n", nil)
 				suite.mockExecManager.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "systemctl", []string{"restart", "osapi-nginx.service"}).
 					Return("", nil)
@@ -280,6 +368,7 @@ func (suite *DebianActionPublicTestSuite) TestRestart() {
 			name:        "when restart command fails returns error",
 			serviceName: "nginx",
 			setup: func() {
+				suite.expectLoadState("loaded\n", nil)
 				suite.mockExecManager.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "systemctl", []string{"restart", "osapi-nginx.service"}).
 					Return("", errors.New("restart failed"))
@@ -290,6 +379,39 @@ func (suite *DebianActionPublicTestSuite) TestRestart() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
+				suite.Contains(err.Error(), "service restart:")
+			},
+		},
+		{
+			name:        "when unit does not exist returns not found",
+			serviceName: "nginx",
+			setup: func() {
+				// Real output: systemctl show exits 0 for a unit that does not exist.
+				suite.expectLoadState("not-found\n", nil)
+			},
+			validateFunc: func(
+				result *service.ActionResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.True(errors.Is(err, provider.ErrNotFound))
+				suite.Contains(err.Error(), `service "nginx": not found`)
+			},
+		},
+		{
+			name:        "when load state query fails returns error",
+			serviceName: "nginx",
+			setup: func() {
+				suite.expectLoadState("", errors.New("exit status 1"))
+			},
+			validateFunc: func(
+				result *service.ActionResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.False(errors.Is(err, provider.ErrNotFound))
 				suite.Contains(err.Error(), "service restart:")
 			},
 		},
@@ -330,6 +452,7 @@ func (suite *DebianActionPublicTestSuite) TestEnable() {
 			name:        "when service is disabled enables it",
 			serviceName: "nginx",
 			setup: func() {
+				suite.expectLoadState("loaded\n", nil)
 				suite.mockExecManager.EXPECT().
 					RunCmd(gomock.Any(), "systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("disabled\n", errors.New("exit status 1"))
@@ -351,6 +474,7 @@ func (suite *DebianActionPublicTestSuite) TestEnable() {
 			name:        "when service is already enabled returns changed false",
 			serviceName: "nginx",
 			setup: func() {
+				suite.expectLoadState("loaded\n", nil)
 				suite.mockExecManager.EXPECT().
 					RunCmd(gomock.Any(), "systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("enabled\n", nil)
@@ -369,6 +493,7 @@ func (suite *DebianActionPublicTestSuite) TestEnable() {
 			name:        "when enable command fails returns error",
 			serviceName: "nginx",
 			setup: func() {
+				suite.expectLoadState("loaded\n", nil)
 				suite.mockExecManager.EXPECT().
 					RunCmd(gomock.Any(), "systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("disabled\n", errors.New("exit status 1"))
@@ -382,6 +507,39 @@ func (suite *DebianActionPublicTestSuite) TestEnable() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
+				suite.Contains(err.Error(), "service enable:")
+			},
+		},
+		{
+			name:        "when unit does not exist returns not found",
+			serviceName: "nginx",
+			setup: func() {
+				// Real output: systemctl show exits 0 for a unit that does not exist.
+				suite.expectLoadState("not-found\n", nil)
+			},
+			validateFunc: func(
+				result *service.ActionResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.True(errors.Is(err, provider.ErrNotFound))
+				suite.Contains(err.Error(), `service "nginx": not found`)
+			},
+		},
+		{
+			name:        "when load state query fails returns error",
+			serviceName: "nginx",
+			setup: func() {
+				suite.expectLoadState("", errors.New("exit status 1"))
+			},
+			validateFunc: func(
+				result *service.ActionResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.False(errors.Is(err, provider.ErrNotFound))
 				suite.Contains(err.Error(), "service enable:")
 			},
 		},
@@ -422,6 +580,7 @@ func (suite *DebianActionPublicTestSuite) TestDisable() {
 			name:        "when service is enabled disables it",
 			serviceName: "nginx",
 			setup: func() {
+				suite.expectLoadState("loaded\n", nil)
 				suite.mockExecManager.EXPECT().
 					RunCmd(gomock.Any(), "systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("enabled\n", nil)
@@ -443,6 +602,7 @@ func (suite *DebianActionPublicTestSuite) TestDisable() {
 			name:        "when service is already disabled returns changed false",
 			serviceName: "nginx",
 			setup: func() {
+				suite.expectLoadState("loaded\n", nil)
 				suite.mockExecManager.EXPECT().
 					RunCmd(gomock.Any(), "systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("disabled\n", errors.New("exit status 1"))
@@ -461,6 +621,7 @@ func (suite *DebianActionPublicTestSuite) TestDisable() {
 			name:        "when disable command fails returns error",
 			serviceName: "nginx",
 			setup: func() {
+				suite.expectLoadState("loaded\n", nil)
 				suite.mockExecManager.EXPECT().
 					RunCmd(gomock.Any(), "systemctl", []string{"is-enabled", "osapi-nginx.service"}).
 					Return("enabled\n", nil)
@@ -474,6 +635,39 @@ func (suite *DebianActionPublicTestSuite) TestDisable() {
 			) {
 				suite.Error(err)
 				suite.Nil(result)
+				suite.Contains(err.Error(), "service disable:")
+			},
+		},
+		{
+			name:        "when unit does not exist returns not found",
+			serviceName: "nginx",
+			setup: func() {
+				// Real output: systemctl show exits 0 for a unit that does not exist.
+				suite.expectLoadState("not-found\n", nil)
+			},
+			validateFunc: func(
+				result *service.ActionResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.True(errors.Is(err, provider.ErrNotFound))
+				suite.Contains(err.Error(), `service "nginx": not found`)
+			},
+		},
+		{
+			name:        "when load state query fails returns error",
+			serviceName: "nginx",
+			setup: func() {
+				suite.expectLoadState("", errors.New("exit status 1"))
+			},
+			validateFunc: func(
+				result *service.ActionResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.False(errors.Is(err, provider.ErrNotFound))
 				suite.Contains(err.Error(), "service disable:")
 			},
 		},

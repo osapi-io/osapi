@@ -60,16 +60,18 @@ func (u *Debian) GetResolvConfByInterface(
 	cmd := "resolvectl"
 	args := []string{"status", interfaceName}
 	output, err := u.execManager.RunCmd(ctx, cmd, args)
-	if err != nil {
-		return nil, fmt.Errorf("failed to run resolvectl: %w - %s", err, output)
-	}
 
-	//  Gross.... `resolvectl` fails to exit != 0 when interface does not exist
+	// `resolvectl` reports a missing interface in its output. Some versions
+	// exit 0 and some exit non-zero, so check the output before the error.
 	//
 	// $ resolvectl status invalid
 	// Failed to resolve interface "invalid", ignoring: No such device
 	if strings.Contains(output, "No such device") {
-		return nil, fmt.Errorf("interface %q: %w", interfaceName, provider.ErrNotFound)
+		return nil, fmt.Errorf("dns get: interface %q: %w", interfaceName, provider.ErrNotFound)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to run resolvectl: %w - %s", err, output)
 	}
 
 	config := &GetResult{}

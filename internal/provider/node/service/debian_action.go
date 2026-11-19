@@ -25,7 +25,13 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+
+	"github.com/osapi-io/osapi/internal/provider"
 )
+
+// loadStateNotFound is the LoadState systemd reports for a unit it has no
+// unit file for.
+const loadStateNotFound = "not-found"
 
 // Start starts a systemd service. If the service is already active, it
 // returns Changed: false without taking action.
@@ -40,6 +46,10 @@ func (d *Debian) Start(
 	unitName := managedPrefix + name + ".service"
 
 	d.logger.Debug("executing service.Start", slog.String("name", unitName))
+
+	if err := d.requireUnit(ctx, "start", name, unitName); err != nil {
+		return nil, err
+	}
 
 	output, _ := d.execManager.RunCmd(ctx, "systemctl", []string{"is-active", unitName})
 	if strings.TrimSpace(output) == "active" {
@@ -71,6 +81,10 @@ func (d *Debian) Stop(
 
 	d.logger.Debug("executing service.Stop", slog.String("name", unitName))
 
+	if err := d.requireUnit(ctx, "stop", name, unitName); err != nil {
+		return nil, err
+	}
+
 	output, _ := d.execManager.RunCmd(ctx, "systemctl", []string{"is-active", unitName})
 	if strings.TrimSpace(output) != "active" {
 		return &ActionResult{Name: name, Changed: false}, nil
@@ -100,6 +114,10 @@ func (d *Debian) Restart(
 
 	d.logger.Debug("executing service.Restart", slog.String("name", unitName))
 
+	if err := d.requireUnit(ctx, "restart", name, unitName); err != nil {
+		return nil, err
+	}
+
 	if _, err := d.execManager.RunPrivilegedCmd(
 		ctx,
 		"systemctl",
@@ -124,6 +142,10 @@ func (d *Debian) Enable(
 	unitName := managedPrefix + name + ".service"
 
 	d.logger.Debug("executing service.Enable", slog.String("name", unitName))
+
+	if err := d.requireUnit(ctx, "enable", name, unitName); err != nil {
+		return nil, err
+	}
 
 	output, _ := d.execManager.RunCmd(ctx, "systemctl", []string{"is-enabled", unitName})
 	if strings.TrimSpace(output) == "enabled" {
@@ -155,6 +177,10 @@ func (d *Debian) Disable(
 
 	d.logger.Debug("executing service.Disable", slog.String("name", unitName))
 
+	if err := d.requireUnit(ctx, "disable", name, unitName); err != nil {
+		return nil, err
+	}
+
 	output, _ := d.execManager.RunCmd(ctx, "systemctl", []string{"is-enabled", unitName})
 	if strings.TrimSpace(output) != "enabled" {
 		return &ActionResult{Name: name, Changed: false}, nil
@@ -169,4 +195,31 @@ func (d *Debian) Disable(
 	}
 
 	return &ActionResult{Name: name, Changed: true}, nil
+}
+
+// requireUnit returns provider.ErrNotFound when systemd has no unit by this
+// name. An action on a missing unit fails in systemctl with only a message, and
+// is-active and is-enabled report a missing unit as inactive or disabled, so
+// LoadState is the one signal that tells missing from stopped.
+func (d *Debian) requireUnit(
+	ctx context.Context,
+	operation string,
+	name string,
+	unitName string,
+) error {
+	output, err := d.execManager.RunCmd(ctx, "systemctl", []string{
+		"show",
+		unitName,
+		"--property=LoadState",
+		"--value",
+	})
+	if err != nil {
+		return fmt.Errorf("service %s: %w", operation, err)
+	}
+
+	if strings.TrimSpace(output) == loadStateNotFound {
+		return fmt.Errorf("service %q: %w", name, provider.ErrNotFound)
+	}
+
+	return nil
 }

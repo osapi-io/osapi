@@ -22,6 +22,7 @@ package process
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"syscall"
@@ -186,6 +187,10 @@ func (d *Debian) Get(
 
 	p, err := d.lister.NewProcess(int32(pid))
 	if err != nil {
+		if errors.Is(err, gopsutil.ErrorProcessNotRunning) {
+			return nil, fmt.Errorf("process: get %d: %w", pid, provider.ErrNotFound)
+		}
+
 		return nil, fmt.Errorf("process: get: %w", err)
 	}
 

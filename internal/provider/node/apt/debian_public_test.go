@@ -22,6 +22,7 @@ package apt_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -153,6 +154,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 		pkgName      string
 		setupMock    func()
 		wantErr      bool
+		wantNotFound bool
 		errContains  string
 		wantIs       error
 		validateFunc func(*apt.Package)
@@ -175,18 +177,16 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			},
 		},
 		{
-			// dpkg-query prints this and exits 1 for a package it does not
-			// know. That is the answer, not a failure of the command.
-			name:    "when dpkg-query does not know the package, it is not found",
+			name:    "when dpkg-query has no record of the package",
 			pkgName: "nonexistent",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
 					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "nonexistent"}).
 					Return("dpkg-query: no packages found matching nonexistent\n", fmt.Errorf("exit status 1"))
 			},
-			wantErr:     true,
-			errContains: "package \"nonexistent\": not found",
-			wantIs:      provider.ErrNotFound,
+			wantErr:      true,
+			wantNotFound: true,
+			errContains:  "package \"nonexistent\": not found",
 		},
 		{
 			name:    "when package in removed state",
@@ -197,9 +197,9 @@ func (suite *DebianPublicTestSuite) TestGet() {
 					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "removed-pkg"}).
 					Return(output, nil)
 			},
-			wantErr:     true,
-			errContains: "package \"removed-pkg\": not found",
-			wantIs:      provider.ErrNotFound,
+			wantErr:      true,
+			wantNotFound: true,
+			errContains:  "package \"removed-pkg\": not found",
 		},
 		{
 			name:        "when the name would be read as an option, nothing runs",
@@ -230,9 +230,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			if tc.wantErr {
 				suite.Require().Error(err)
 				suite.Contains(err.Error(), tc.errContains)
-				if tc.wantIs != nil {
-					suite.ErrorIs(err, tc.wantIs)
-				}
+				suite.Equal(tc.wantNotFound, errors.Is(err, provider.ErrNotFound))
 
 				return
 			}
@@ -319,6 +317,9 @@ func (suite *DebianPublicTestSuite) TestRemove() {
 			pkgName: "vim",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
+					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "vim"}).
+					Return("vim\t2:9.0.1378-2\tVi IMproved - enhanced vi editor\tii \t3826\n", nil)
+				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "apt-get", []string{"remove", "-y", "vim"}).
 					Return("", nil)
 			},
@@ -329,6 +330,34 @@ func (suite *DebianPublicTestSuite) TestRemove() {
 			},
 		},
 		{
+			name:    "when apt has no record of the package, nothing changes",
+			pkgName: "nonexistent",
+			setupMock: func() {
+				suite.mockExec.EXPECT().
+					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "nonexistent"}).
+					Return("dpkg-query: no packages found matching nonexistent\n", fmt.Errorf("exit status 1"))
+			},
+			validateFunc: func(result *apt.Result) {
+				suite.Require().NotNil(result)
+				suite.Equal("nonexistent", result.Name)
+				suite.False(result.Changed)
+			},
+		},
+		{
+			name:    "when the package is known but not installed, nothing changes",
+			pkgName: "removed-pkg",
+			setupMock: func() {
+				suite.mockExec.EXPECT().
+					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "removed-pkg"}).
+					Return("removed-pkg\t1.0-1\tA removed package\trc \t100\n", nil)
+			},
+			validateFunc: func(result *apt.Result) {
+				suite.Require().NotNil(result)
+				suite.Equal("removed-pkg", result.Name)
+				suite.False(result.Changed)
+			},
+		},
+		{
 			name:        "when the name would be read as an option, nothing runs",
 			pkgName:     "-oAPT::Get::Assume-Yes=true",
 			setupMock:   func() {},
@@ -336,9 +365,23 @@ func (suite *DebianPublicTestSuite) TestRemove() {
 			errContains: "invalid name",
 		},
 		{
+			name:    "when dpkg-query fails",
+			pkgName: "vim",
+			setupMock: func() {
+				suite.mockExec.EXPECT().
+					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "vim"}).
+					Return("", fmt.Errorf("exec failed"))
+			},
+			wantErr:     true,
+			errContains: "package: remove \"vim\":",
+		},
+		{
 			name:    "when exec error",
 			pkgName: "vim",
 			setupMock: func() {
+				suite.mockExec.EXPECT().
+					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "vim"}).
+					Return("vim\t2:9.0.1378-2\tVi IMproved - enhanced vi editor\tii \t3826\n", nil)
 				suite.mockExec.EXPECT().
 					RunPrivilegedCmd(gomock.Any(), "apt-get", []string{"remove", "-y", "vim"}).
 					Return("", fmt.Errorf("permission denied"))

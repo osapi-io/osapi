@@ -160,6 +160,10 @@ func (d *Debian) UpdateUser(
 		return nil, fmt.Errorf("user: %w", err)
 	}
 
+	if err := d.requireUser(name); err != nil {
+		return nil, fmt.Errorf("user update: %w", err)
+	}
+
 	args := d.buildUsermodArgs(name, opts)
 	if len(args) == 0 {
 		return &Result{
@@ -195,7 +199,21 @@ func (d *Debian) DeleteUser(
 		return nil, fmt.Errorf("user: %w", err)
 	}
 
-	_, err := d.execManager.RunPrivilegedCmd(ctx, "userdel", []string{"-r", "--", name})
+	exists, err := d.userExists(name)
+	if err != nil {
+		return nil, fmt.Errorf("user delete: %w", err)
+	}
+
+	// Deleting a user that is not there leaves the host as asked, so it is
+	// not an error.
+	if !exists {
+		return &Result{
+			Name:    name,
+			Changed: false,
+		}, nil
+	}
+
+	_, err = d.execManager.RunPrivilegedCmd(ctx, "userdel", []string{"-r", "--", name})
 	if err != nil {
 		return nil, fmt.Errorf("user delete: userdel: %w", err)
 	}
@@ -225,6 +243,10 @@ func (d *Debian) ChangePassword(
 
 	if err := validatePasswordInput(name, passwordHash); err != nil {
 		return nil, fmt.Errorf("user: %w", err)
+	}
+
+	if err := d.requireUser(name); err != nil {
+		return nil, fmt.Errorf("user set-password: %w", err)
 	}
 
 	if err := d.setPassword(ctx, name, passwordHash); err != nil {
@@ -288,6 +310,42 @@ func (d *Debian) parsePasswd() ([]User, error) {
 	}
 
 	return users, nil
+}
+
+// userExists reports whether /etc/passwd has an account with the name. The
+// file is read instead of the exit status or the output of a command, because
+// the output is localized and the exit status differs between commands.
+func (d *Debian) userExists(
+	name string,
+) (bool, error) {
+	entries, err := d.parsePasswd()
+	if err != nil {
+		return false, err
+	}
+
+	for _, u := range entries {
+		if u.Name == name {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// requireUser returns provider.ErrNotFound when the account is not on the host.
+func (d *Debian) requireUser(
+	name string,
+) error {
+	exists, err := d.userExists(name)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return fmt.Errorf("user %q: %w", name, provider.ErrNotFound)
+	}
+
+	return nil
 }
 
 // getUserDetails returns a user's supplementary groups and locked status.

@@ -31,12 +31,14 @@ import (
 	providermocks "github.com/osapi-io/osapi/internal/provider/mocks"
 
 	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
 	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan/route"
 )
 
@@ -685,7 +687,7 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 			},
 		},
 		{
-			name: "when route file not managed",
+			name: "when route file does not exist returns not found",
 			entry: route.Entry{
 				Interface: "eth0",
 				Routes: []route.Route{
@@ -698,7 +700,46 @@ func (suite *RoutePublicTestSuite) TestUpdate() {
 			validateFunc: func(result *route.Result, err error) {
 				suite.Require().Error(err)
 				suite.Nil(result)
-				suite.Contains(err.Error(), "not managed")
+				suite.ErrorIs(err, provider.ErrNotFound)
+				suite.Contains(err.Error(), "route update \"eth0\"")
+			},
+		},
+		{
+			name: "when route file stat fails returns the cause",
+			entry: route.Entry{
+				Interface: "eth0",
+				Routes: []route.Route{
+					{To: "10.1.0.0/16", Via: "10.0.0.1"},
+				},
+			},
+			setup: func() {
+				baseFs := memfs.New()
+				_ = baseFs.MkdirAll("/etc/netplan", 0o755)
+				vfs := failfs.New(baseFs)
+				_ = vfs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					if fn == avfs.FnStat {
+						return errors.New("permission denied")
+					}
+
+					return nil
+				})
+				suite.provider = route.NewDebianProvider(
+					suite.logger,
+					vfs,
+					suite.mockStateKV, "file-state",
+					suite.mockExec,
+					testHostname,
+				)
+			},
+			validateFunc: func(result *route.Result, err error) {
+				suite.Require().Error(err)
+				suite.Nil(result)
+				suite.NotErrorIs(err, provider.ErrNotFound)
+				suite.Contains(err.Error(), "route update \"eth0\": permission denied")
 			},
 		},
 		{

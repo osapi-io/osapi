@@ -22,6 +22,7 @@ package apt
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"regexp"
@@ -152,14 +153,24 @@ func (d *Debian) Install(
 	}, nil
 }
 
-// Remove removes a package by name using apt-get.
+// Remove removes a package by name using apt-get. A package that is not
+// installed is already in the wanted state: Remove returns Changed false
+// and no error, and apt-get does not run.
 func (d *Debian) Remove(
 	ctx context.Context,
 	name string,
 ) (*Result, error) {
-	if err := checkName(name); err != nil {
-		return nil, err
+	if _, err := d.Get(ctx, name); err != nil {
+		if errors.Is(err, provider.ErrNotFound) {
+			return &Result{
+				Name:    name,
+				Changed: false,
+			}, nil
+		}
+
+		return nil, fmt.Errorf("package: remove %q: %w", name, err)
 	}
+
 	_, err := d.execManager.RunPrivilegedCmd(
 		ctx,
 		"apt-get",
