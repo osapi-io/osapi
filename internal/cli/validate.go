@@ -52,7 +52,7 @@ var supportedFamilies = []OSFamily{
 		Name: "Debian",
 		Distributions: map[string][]string{
 			"debian": {"12", "13"},
-			"ubuntu": {"20.04", "22.04", "24.04"},
+			"ubuntu": {"20.04", "22.04", "24.04", "26.04"},
 		},
 	},
 }
