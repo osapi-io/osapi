@@ -132,6 +132,22 @@ var Group = endpoint.Register(endpoint.Define(
 				"registration stop verifying at once, so a target does not find it.").
 		Example("--machine-id d530664edc1c431eb5ef1e9dfd6617a5").
 		Errors(endpoint.NotFound(ErrNotFound, "No admitted machine with the ID."), notConfigured503),
+	endpoint.Delete[MachineInput, struct{}]("delete").
+		Fails("a machine ID over 255 characters", MachineInput{MachineID: long}).
+		Status(http.StatusNoContent).
+		Handle(Delete).
+		ID("DeleteMachine").
+		Describe("Delete a machine").
+		Explain("Removes a machine's key and each record of it, and keeps none. A machine "+
+			"that asks again is new. Use it for a machine that goes away on purpose, such "+
+			"as a VM that is rebuilt; revoke a machine that is not trusted.").
+		Returns("The machine is deleted.").
+		Command("Delete a machine",
+			"The controller removes the key of the machine and each record of it. Unlike\n"+
+				"revoke, it keeps no record, so a machine that asks again is new. Use it\n"+
+				"before a machine is rebuilt or removed.").
+		Example("--machine-id d530664edc1c431eb5ef1e9dfd6617a5").
+		Errors(endpoint.NotFound(ErrNotFound, "No record of the machine."), notConfigured503),
 ))
 
 // long is a name over the 255 characters a name may have, for the inputs

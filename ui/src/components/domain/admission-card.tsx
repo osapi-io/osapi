@@ -13,12 +13,14 @@ import {
   ShieldAlert,
   ShieldCheck,
   ShieldOff,
+  Trash2,
 } from "lucide-react";
 import type { Admission } from "@/sdk/gen/schemas";
 import {
   admitMachine,
   rejectMachine,
   revokeMachine,
+  deleteMachine,
 } from "@/sdk/gen/admission-api-admission/admission-api-admission";
 import { statusVariant } from "@/lib/status";
 import { formatAgeSince, shortFingerprint } from "@/lib/format";
@@ -32,7 +34,7 @@ interface AdmissionCardProps {
 
 // Which form is open: admit asks for the fingerprint that the machine
 // prints, reject for a reason, revoke for a second click.
-type Form = "admit" | "reject" | "revoke" | null;
+type Form = "admit" | "reject" | "revoke" | "delete" | null;
 
 const icons = {
   pending: ShieldAlert,
@@ -66,7 +68,9 @@ export function AdmissionCard({
           ? await admitMachine(record.machine_id, { fingerprint: value.trim() })
           : form === "reject"
             ? await rejectMachine(record.machine_id, { reason: value.trim() })
-            : await revokeMachine(record.machine_id);
+            : form === "revoke"
+              ? await revokeMachine(record.machine_id)
+              : await deleteMachine(record.machine_id);
       if (resp.status === 204) {
         setForm(null);
         onRefresh?.();
@@ -144,71 +148,81 @@ export function AdmissionCard({
           </Text>
         )}
 
-        {canWrite &&
-          (record.state === "pending" || record.state === "admitted") && (
-            <div className="mt-auto flex gap-2 border-t border-border/30 pt-2">
-              {form ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={submit}
-                    disabled={acting || (form === "admit" && !value.trim())}
-                    className={
-                      form === "admit" ? "text-primary" : "text-status-error"
-                    }
-                  >
-                    {acting ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Check className="h-3 w-3" />
-                    )}
-                    {form === "admit"
-                      ? "Admit"
-                      : form === "reject"
-                        ? "Reject"
-                        : "Confirm revoke"}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setForm(null)}
-                  >
-                    Cancel
-                  </Button>
-                </>
-              ) : record.state === "pending" ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => open("admit")}
-                    className="text-primary"
-                  >
-                    <Check className="h-3 w-3" />
-                    Admit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => open("reject")}
-                  >
-                    <X className="h-3 w-3" />
-                    Reject
-                  </Button>
-                </>
-              ) : (
+        {canWrite && (
+          <div className="mt-auto flex gap-2 border-t border-border/30 pt-2">
+            {form ? (
+              <>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => open("revoke")}
+                  onClick={submit}
+                  disabled={acting || (form === "admit" && !value.trim())}
+                  className={
+                    form === "admit" ? "text-primary" : "text-status-error"
+                  }
                 >
-                  <ShieldOff className="h-3 w-3" />
-                  Revoke
+                  {acting ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Check className="h-3 w-3" />
+                  )}
+                  {form === "admit"
+                    ? "Admit"
+                    : form === "reject"
+                      ? "Reject"
+                      : form === "revoke"
+                        ? "Confirm revoke"
+                        : "Confirm delete"}
                 </Button>
-              )}
-            </div>
-          )}
+                <Button variant="ghost" size="sm" onClick={() => setForm(null)}>
+                  Cancel
+                </Button>
+              </>
+            ) : record.state === "pending" ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => open("admit")}
+                  className="text-primary"
+                >
+                  <Check className="h-3 w-3" />
+                  Admit
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => open("reject")}
+                >
+                  <X className="h-3 w-3" />
+                  Reject
+                </Button>
+              </>
+            ) : (
+              <>
+                {record.state === "admitted" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => open("revoke")}
+                  >
+                    <ShieldOff className="h-3 w-3" />
+                    Revoke
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => open("delete")}
+                  title="Remove the machine and each record of it, such as before a rebuild"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  Delete
+                </Button>
+              </>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

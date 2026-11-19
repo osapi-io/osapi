@@ -52,6 +52,7 @@ var opDetail = map[string][]string{
 	"admission.admit":  {"osapi.agent.machine_id"},
 	"admission.reject": {"osapi.agent.machine_id"},
 	"admission.revoke": {"osapi.agent.machine_id"},
+	"admission.delete": {"osapi.agent.machine_id"},
 	"audit.get":        {"osapi.audit.id"},
 	"traces.read":      {"osapi.trace.id"},
 	"validate.target":  {"osapi.target"},

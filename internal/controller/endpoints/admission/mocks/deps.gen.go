@@ -57,6 +57,20 @@ func (mr *MockStoreMockRecorder) Admit(ctx, machineID, fingerprint any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Admit", reflect.TypeOf((*MockStore)(nil).Admit), ctx, machineID, fingerprint)
 }
 
+// Delete mocks base method.
+func (m *MockStore) Delete(ctx context.Context, machineID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", ctx, machineID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockStoreMockRecorder) Delete(ctx, machineID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockStore)(nil).Delete), ctx, machineID)
+}
+
 // Get mocks base method.
 func (m *MockStore) Get(ctx context.Context, machineID string) (admission.Record, error) {
 	m.ctrl.T.Helper()

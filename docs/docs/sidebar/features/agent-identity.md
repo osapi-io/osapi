@@ -116,8 +116,13 @@ osapi client admission admit --machine-id <machine-id> \
 # Reject a machine, with the reason
 osapi client admission reject --machine-id <machine-id> --reason "unknown host"
 
-# Revoke an admitted machine: its key stops verifying at once
+# Revoke an admitted machine that is not trusted: its key stops verifying at
+# once, and a record shows it if it asks again
 osapi client admission revoke --machine-id <machine-id>
+
+# Delete a machine that goes away on purpose, such as before a rebuild: its key
+# and each record of it go, and it is new if it asks again
+osapi client admission delete --machine-id <machine-id>
 
 # Show the local controller key fingerprint
 osapi client controller key fingerprint
@@ -305,18 +310,22 @@ controller:
     enabled: false
     # Directory for controller keypair storage.
     key_dir: /etc/osapi/pki
-    # Automatically accept all enrollment requests (dev only).
+    # Admit each machine that asks to join (development and tests).
     auto_admit: false
     # Grace period for key rotation (Go duration).
     rotation_grace_period: 24h
+    # Delete an admitted machine that has not reported for this long
+    # (Go duration, such as 720h). Empty is never.
+    delete_after: ''
 ```
 
-| Field                   | Type   | Default          | Description                                                  |
-| ----------------------- | ------ | ---------------- | ------------------------------------------------------------ |
-| `enabled`               | bool   | `false`          | Turn on PKI enrollment and job signing                       |
-| `key_dir`               | string | `/etc/osapi/pki` | Directory for the controller key pair                        |
-| `auto_admit`            | bool   | `false`          | Admit each machine that asks to join (development and tests) |
-| `rotation_grace_period` | string | `24h`            | osapi accepts both keys during rotation                      |
+| Field                   | Type   | Default          | Description                                                    |
+| ----------------------- | ------ | ---------------- | -------------------------------------------------------------- |
+| `enabled`               | bool   | `false`          | Turn on PKI enrollment and job signing                         |
+| `key_dir`               | string | `/etc/osapi/pki` | Directory for the controller key pair                          |
+| `auto_admit`            | bool   | `false`          | Admit each machine that asks to join (development and tests)   |
+| `rotation_grace_period` | string | `24h`            | osapi accepts both keys during rotation                        |
+| `delete_after`          | string | empty            | Delete an admitted machine that has not reported for this long |
 
 ## What does not change
 

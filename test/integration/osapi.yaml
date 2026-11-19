@@ -14,6 +14,7 @@ controller:
   #   key_dir: /etc/osapi/pki
   #   auto_admit: false
   #   rotation_grace_period: 24h
+  #   delete_after: ""
   api:
     port: 8080
     job_timeout: 30s

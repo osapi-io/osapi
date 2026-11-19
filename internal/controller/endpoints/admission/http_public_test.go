@@ -191,6 +191,15 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 			setup:  func() { s.store.EXPECT().Revoke(gomock.Any(), "m-1").Return(store.ErrNoAcceptedAgent) },
 		},
 		{
+			name: "when delete finds the machine, it is a 204", method: http.MethodDelete,
+			path: "/api/admission/m-1", tok: write, code: http.StatusNoContent,
+			setup: func() { s.store.EXPECT().Delete(gomock.Any(), "m-1").Return(nil) },
+		},
+		{
+			name: "when delete has only admission:read, it is a 403", method: http.MethodDelete,
+			path: "/api/admission/m-1", tok: read, code: http.StatusForbidden,
+		},
+		{
 			name: "when PKI is off, it is a 503", method: http.MethodGet,
 			path: "/api/admission", tok: read, off: true, code: http.StatusServiceUnavailable,
 			want: "controller.pki.enabled",

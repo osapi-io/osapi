@@ -43,7 +43,7 @@ func init() {
 			renderAdmission(out)
 		},
 	)
-	// admit, reject and revoke answer 204, with no body: each prints what
+	// admit, reject, revoke and delete answer 204, with no body: each prints what
 	// it did, with --json too.
 	command.Acts(
 		admission.Group,
@@ -54,6 +54,11 @@ func init() {
 		admission.Group,
 		"reject",
 		func(_ *cobra.Command, in admission.RejectInput, _ struct{}) { admissionDone(in.MachineID, "rejected") },
+	)
+	command.Acts(
+		admission.Group,
+		"delete",
+		func(_ *cobra.Command, in admission.MachineInput, _ struct{}) { admissionDone(in.MachineID, "deleted") },
 	)
 	command.Acts(
 		admission.Group,

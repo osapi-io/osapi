@@ -44,6 +44,12 @@ func Routes(
 			Permission: "admission:write",
 			Handler:    server.Serve(s, admission.Group, "revoke", admission.Revoke, decodeRevoke),
 		},
+		{
+			Method:     http.MethodDelete,
+			Path:       "/api/admission/:machine_id",
+			Permission: "admission:write",
+			Handler:    server.Serve(s, admission.Group, "delete", admission.Delete, decodeDelete),
+		},
 	}
 }
 

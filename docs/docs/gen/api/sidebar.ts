@@ -22,6 +22,12 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
+          id: "gen/api/delete-machine",
+          label: "Delete a machine",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
           id: "gen/api/get-admission",
           label: "Get a machine's admission record",
           className: "api-method get",
