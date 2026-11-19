@@ -112,11 +112,11 @@ func (s *FileSmokeSuite) TestFileUploadGetDelete() {
 
 	var deleteResp struct {
 		Name   string `json:"name"`
-		Status string `json:"status"`
+		Result string `json:"result"`
 	}
 	s.Require().NoError(parseJSON(deleteOut, &deleteResp))
 	s.Equal("test-int.conf", deleteResp.Name)
-	s.Equal("deleted", deleteResp.Status)
+	s.Equal("deleted", deleteResp.Result)
 }
 
 func (s *FileSmokeSuite) TestFileDeployStatus() {

@@ -32,6 +32,7 @@ const (
 	KindMethod     = "method"
 	KindRefine     = "refine"
 	KindTag        = "tag"
+	KindOutput     = "output"
 	KindWiring     = "wiring"
 	KindCheck      = "check"
 	KindGenerated  = "generated"
@@ -48,7 +49,8 @@ var Spec = guide.Spec{
 		{Kind: KindMethod, Title: "Methods"},
 		{Kind: KindRefine, Title: "Refinements of a method"},
 		{Kind: KindTag, Title: "Tags on input fields"},
-		{Kind: KindWiring, Title: "Output and wiring"},
+		{Kind: KindOutput, Title: "Output, from the output type"},
+		{Kind: KindWiring, Title: "Renderers and wiring"},
 		{Kind: KindCheck, Title: "What holds a group to its rules"},
 		{Kind: KindGenerated, Title: "Generated, never edited"},
 	},
@@ -76,7 +78,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindMethod,
 			Name: `Method[In, Out]("name")`,
-			Does: "A command, osapi <group> <name>, that takes In and prints Out. Each field of In is a flag. Out prints as JSON with --json, and through the method's renderer without it.",
+			Does: "A command, osapi <group> <name>, that takes In and prints Out. Each field of In is a flag. Out prints as JSON with --json, and from its type without it, by the output style of the CLI.",
 			When: "For each command of the group. Its name is the command's last word: a verb (list, get, create, update, delete) or an action in command.Actions, never a noun.",
 		},
 
@@ -109,6 +111,12 @@ var Spec = guide.Spec{
 			Name: `.Sub("segment")`,
 			Does: "Puts the command under a command of its own in the group: osapi <group> <segment> <method>, such as token roles list.",
 			When: "When the command is about a noun of the group: the noun is the Sub, and the method is the verb.",
+		},
+		{
+			Kind: KindRefine,
+			Name: `.Says("state")`,
+			Does: "Sets what the one line of a method with no output says, after the key of the input: a state, such as draining. Without it, the line says the past tense of the method, such as admitted for admit. An endpoint method has the same refinement.",
+			When: "On a method with no output whose result is a state, not the past tense of its name. validate fails a method with no output, no past tense and no Says.",
 		},
 		{
 			Kind: KindRefine,
@@ -155,16 +163,77 @@ var Spec = guide.Spec{
 		},
 
 		{
-			Kind: KindWiring,
-			Name: `Render(Group, "method", fn)`,
-			Does: "Sets how a method's output prints without --json: fn gets the command, the input and the output. A method without a renderer prints its output as JSON. With --json the output prints as JSON, and the renderer does not run.",
-			When: "In render.go of the group, in its init, for each method a person reads at a shell, such as a table or a key-value block.",
+			Kind: KindOutput,
+			Name: "a list: Items []T, with TotalItems or not, or []T",
+			Does: "Prints a heading with the count, such as Files (6):, then a table with one column for each field of T. A list with fewer items than TotalItems counts as (3 of 120). An empty list prints its heading with (0), then None. and the hint of its empty tag.",
+			When: "For each method that returns a list. Name the fields Items and TotalItems, and add no other field.",
 		},
 		{
+			Kind: KindOutput,
+			Name: "one object",
+			Does: "Prints a heading, then an aligned key-value block, one pair for each field. An object in it is a section under the block, with its label as the heading. A list in it is a table under the block, with its count. An object with one field that is an object or a list is an envelope: the value of the field prints, and the envelope does not.",
+			When: "For each method that returns one thing.",
+		},
+		{
+			Kind: KindOutput,
+			Name: "no output",
+			Does: "A method whose output type has no field, such as struct{}, or whose answer has no body (204), prints one line: the key of the input and what occurred, such as m-1 admitted. With --json, it prints nothing.",
+			When: "For a write with nothing to return. The text is the past tense of the method, or what .Says gives.",
+		},
+		{
+			Kind: KindOutput,
+			Name: "the rules with no options",
+			Does: "The columns and the keys have the order of the fields. A field with omitempty or omitzero and no value is not shown. A bool is yes or no. A []string is its values, joined with commas. A time.Time is in the one time format of the CLI. A label is the json name in sentence case, with an initialism such as ID in capitals: machine_id is Machine ID. A column header is the label in capitals. A table leaves out a column that has no value in any row. The heading is the name of the group in sentence case, with s for a list.",
+			When: "To change the order of the output, change the order of the fields.",
+		},
+		{
+			Kind: KindOutput,
+			Name: `render:"-|bytes|age|time|duration|duration=ms|status|short=N"`,
+			Does: "Changes how a field prints: - leaves it out (--json has it), bytes is a size such as 3.4 GB, age is the time since a time or a number of seconds, time is a time as text in the one time format, duration is a Go duration, duration=ms is an integer of milliseconds as a duration, status is a status word in its color, and short=N is the first N characters with ... after them, in a table only: a key-value block shows all of the value.",
+			When: "On an output field whose raw value a person cannot read at a glance. validate fails a value that is not one of these.",
+		},
+		{
+			Kind: KindOutput,
+			Name: `label:"..."`,
+			Does: "Gives the field a different label, and the column the same text in capitals.",
+			When: "When the json name does not say what the value is to a person, such as Last seen for registered_at.",
+		},
+		{
+			Kind: KindOutput,
+			Name: `none:"..."`,
+			Does: "Is the text of a field with no value: absent, null, empty or a zero time. A field with omitempty and a none tag is shown, with the text.",
+			When: "When no value means something, such as never for a time or (deleted) for a hash.",
+		},
+		{
+			Kind: KindOutput,
+			Name: `empty:"..."`,
+			Does: "On a list field: the hint that an empty list prints after None., such as Upload one with osapi client file upload.",
+			When: "On each list that a person can add to, to tell what to do next.",
+		},
+		{
+			Kind: KindOutput,
+			Name: `prefix:"..."`,
+			Does: "Is text in front of each value of the field, such as @fact. in front of a fact key.",
+			When: "When a person types the value with the prefix.",
+		},
+		{
+			Kind: KindOutput,
+			Name: `table:"-"`,
+			Does: "Leaves the field out of a table. The key-value block of a get shows it.",
+			When: "On a field that a list does not need and a get does, such as a reason or a time of each change.",
+		},
+		{
+			Kind: KindOutput,
+			Name: `title:"..."`,
+			Does: "On the field _ struct{} of the output type: a different heading. The blank field is not in the JSON or the spec.",
+			When: "When the name of the group is not what the output is, such as Stale deployments in the file group.",
+		},
+
+		{
 			Kind: KindWiring,
-			Name: `Acts(Group, "method", fn)`,
-			Does: "Sets what a command does with a method's output, with or without --json, such as write it to a file. fn prints its own output.",
-			When: "In render.go, for a method whose output is not only printed.",
+			Name: `Render(Group, "method", fn).Because("...")`,
+			Does: "Prints a method's output without --json in place of the output from its type: fn gets the command, the input and the output. Because says why the output type cannot print it, and osapi cli command get shows it. With --json the output prints as JSON, and the renderer does not run.",
+			When: "Almost never. Only when no output type can give the shape, such as a tree. In the init of the group's file of the CLI. validate fails a renderer with no Because.",
 		},
 		{
 			Kind: KindWiring,
@@ -176,7 +245,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindCheck,
 			Name: "osapi cli command validate",
-			Does: "Checks every local group against the rules of a definition. Each problem names the rule and ends with its fix. validate --help lists each rule. go generate fails on a group that breaks one.",
+			Does: "Checks every local group against the rules of a definition, and the output of every group: each renderer has a reason, each output tag is one the output knows, and each method with no output says what occurred. Each problem names the rule and ends with its fix. validate --help lists each rule. go generate fails on a local group that breaks one.",
 			When: "After each change to a group.",
 		},
 		{
@@ -202,6 +271,12 @@ var Spec = guide.Spec{
 			Name: "osapi cli command new --name <group> --description \"...\"",
 			Does: "Writes a new group under internal/cli/commands/<group>: a list and a get, an empty Deps, its types and the tests of its methods, and adds its import to internal/cli/commands/all. It builds, validates and passes its tests; command-scaffold-check in just test holds it to that.",
 			When: "To start a new group. Then run go generate ./internal/cli/commands/all and just cli-docs-generate, and change it.",
+		},
+		{
+			Kind: KindCheck,
+			Name: "osapi cli command get --name <group>",
+			Does: "Describes a group, local, endpoint or behavior: each command, and whether it prints from its output type or has a renderer, with the reason. A local group's commands also have their flags and the inputs they refuse.",
+			When: "To see which commands have a renderer, and why.",
 		},
 		{
 			Kind: KindCheck,

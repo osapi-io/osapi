@@ -35,6 +35,19 @@ var tokenListCmd = &cobra.Command{
 	Use:   "list",
 }
 
+var tokenGetCmd = &cobra.Command{
+	Annotations: map[string]string{clicommand.SubKey: "roles"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi token roles get --name admin",
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		name, _ := cmd.Flags().GetString("name")
+
+		return clicommand.Run(cmd, token.Group, "get", token.RoleInput{Name: name})
+	},
+	Short: "Show a role and each permission it grants",
+	Use:   "get",
+}
+
 var tokenValidateCmd = &cobra.Command{
 	Args:    cobra.NoArgs,
 	Example: "  osapi token validate --token eyJhbGciOiJIUzI1NiIs...",
@@ -52,8 +65,10 @@ func init() {
 	_ = tokenGenerateCmd.MarkFlagRequired("roles")
 	tokenGenerateCmd.Flags().StringP("subject", "u", "", "Subject for the token (e.g., user ID or unique identifier)")
 	_ = tokenGenerateCmd.MarkFlagRequired("subject")
-	tokenGenerateCmd.Flags().StringSliceP("permissions", "p", nil, "Direct permissions, which override the roles; osapi token roles list lists them")
+	tokenGenerateCmd.Flags().StringSliceP("permissions", "p", nil, "Direct permissions, which override the roles; osapi token roles get --name admin lists each one")
+	tokenGetCmd.Flags().String("name", "", "The role, such as admin, or a custom role of the config")
+	_ = tokenGetCmd.MarkFlagRequired("name")
 	tokenValidateCmd.Flags().StringP("token", "t", "", "The Token string")
 	_ = tokenValidateCmd.MarkFlagRequired("token")
-	clicommand.AddCommands(token.Group, tokenGenerateCmd, tokenListCmd, tokenValidateCmd)
+	clicommand.AddCommands(token.Group, tokenGenerateCmd, tokenListCmd, tokenGetCmd, tokenValidateCmd)
 }

@@ -356,6 +356,7 @@ type Method struct {
 	notes, result    string
 	flags            []Flag
 	status           int
+	says             string
 	errors           []Error
 	answers          []Answered
 }
@@ -491,6 +492,27 @@ func (m *Method) Status(
 	return m
 }
 
+// Says is what the CLI prints for a method that answers with no body, when
+// it is a state and not the past tense of the method: the agent's key and
+// draining, for drain.
+func (m *Method) Says(
+	text string,
+) *Method {
+	m.says = text
+
+	return m
+}
+
+// Saying is the text Says set, or "", for the command layer.
+func (m *Method) Saying() string {
+	return m.says
+}
+
+// Output is the method's Out, which the command layer prints from.
+func (m *Method) Output() reflect.Type {
+	return m.Out
+}
+
 // Errors are the errors the method can return, each with its status code.
 // An error that is not in the list is a 500.
 func (m *Method) Errors(
@@ -603,27 +625,7 @@ func (m *Method) Flag(
 	return m
 }
 
-// StringFlag adds a string flag to the CLI command that the request does
-// not send, for the renderer: such as --output, the file an export writes.
-// value is its value when the caller gives none.
-func (m *Method) StringFlag(
-	name string,
-	value string,
-	usage string,
-	required bool,
-) *Method {
-	m.flags = append(m.flags, Flag{
-		Name:     name,
-		Usage:    usage,
-		String:   true,
-		Value:    value,
-		Required: required,
-	})
-
-	return m
-}
-
-// CommandFlags are the flags Flag and StringFlag added.
+// CommandFlags are the flags Flag added.
 func (m *Method) CommandFlags() []Flag {
 	return m.flags
 }

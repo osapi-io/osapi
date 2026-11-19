@@ -57,8 +57,8 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
    then `go generate ./internal/cli/commands/all`. The group has a list and a
    get, an empty `Deps`, its types and the tests of its methods. It builds,
    validates and passes its tests before you change it.
-2. Change it in this order: `types.go`, `deps.go`, `methods.go`, `render.go`,
-   then `<group>.go`. Decide each method with the user first. "Decide first"
+2. Change it in this order: `types.go`, `deps.go`, `methods.go`, then
+   `<group>.go`. Decide each method with the user first. "Decide first"
    below has the questions.
 3. When `Deps` gets its first field, give it with `command.Provide` in
    `cmd/commands.go`, as the token group does. Add a `mocks/` package for the
@@ -74,9 +74,11 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
    with its json name, its `short` tag, its `doc` and its `validate` tag. A
    check in the old command, such as a list of the roles that are allowed, is a
    validate rule now. Do not write the check in the handler; declare the rule.
-3. Move the logic into `methods.go`, one function for each method, and the
-   output code into `render.go`. Each thing that the logic reads from the
-   process, such as the config or a client, goes into `Deps` as an interface.
+3. Move the logic into `methods.go`, one function for each method. Each thing
+   that the logic reads from the process, such as the config or a client, goes
+   into `Deps` as an interface. Delete the output code: the output type prints
+   the output. Tag the fields of the output type until it prints as the old
+   command did. Tell the user each difference.
 4. Delete the hand-written files from `cmd/`, and run
    `go generate ./internal/cli/commands/all`.
 5. Compare the help with the saved help: the same flags, types, defaults and
@@ -97,6 +99,14 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
 - A rule that the standard tags cannot say is a custom rule. Declare it with
   `rule.Declare`, with its check and its message.
 - `--json` prints the output of the method. Do not make a second shape for it.
+- The output type prints the output. Give each field the tags that it needs:
+  `render`, `label`, `none`, `empty`, `prefix` and `table:"-"`, and a heading
+  with `_ struct{} \`title:"..."\``. `osapi cli command spec` has each tag.
+- If the output type cannot print the output, change the output type first.
+  A method that does a different thing with each value, such as a matrix, is
+  two methods: a list and a get. Write a renderer only when no output type can
+  give the shape, such as a tree. Give it `.Because("...")`.
+  `osapi cli command validate` fails a renderer without a reason.
 
 ## Decide first
 
@@ -109,7 +119,7 @@ each question.
 | Is it a new command, or one that moves? | A move keeps the name, the flags and the output; tell the user each difference |
 | Where does it go in the tree? | Under the root, or under a command with `Under`, such as `controller` |
 | What does it read from the machine? | A field of `Deps` for each: the config, the file system, a clock |
-| What does a person read at a shell? | A renderer in `render.go`; without one, the output prints as JSON |
+| What does a person read at a shell? | The tags of the output type; a renderer only for a shape no type gives, with `.Because` |
 
 ## Check it
 

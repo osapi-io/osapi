@@ -1,31 +1,25 @@
 # Export
 
-Export audit log entries to a file.
+Show all audit log entries, with no pages.
 
-The command gets all entries through the export endpoint of the REST API, and
-writes each entry as a JSON line (JSONL).
+To save them, send the JSON to a file: osapi client audit export --json &gt;
+audit.json
 
 ```bash
-osapi client audit export [flags]
+osapi client audit export
 ```
 
 ## Examples
 
 ```bash
-osapi client audit export --output audit.jsonl
+osapi client audit export
+osapi client audit export --json
 ```
 
 ## Permission
 
-It needs the `audit:read` permission. `osapi token roles list` lists the roles
-that grant it.
-
-## Flags
-
-| Flag       | Description                 | Default |
-| ---------- | --------------------------- | ------- |
-| `--output` | Output file path (required) |         |
-| `--type`   | Export backend type         | `file`  |
+It needs the `audit:read` permission. `osapi token roles get --name <role>`
+shows what a role grants.
 
 ## Global flags
 

@@ -29,12 +29,12 @@ var auditListCmd = &cobra.Command{
 var auditExportCmd = &cobra.Command{
 	Annotations: map[string]string{reference.Permission: "audit:read"},
 	Args:        cobra.NoArgs,
-	Example:     "  osapi client audit export --output audit.jsonl",
-	Long:        "The command gets all entries through the export endpoint of the REST API,\nand writes each entry as a JSON line (JSONL).",
+	Example:     "  osapi client audit export\n  osapi client audit export --json",
+	Long:        "To save them, send the JSON to a file:\nosapi client audit export --json > audit.json",
 	Run: func(cmd *cobra.Command, _ []string) {
 		endpointcommand.Run(cmd, audit.Group, "export", audit.ExportInput{})
 	},
-	Short: "Export audit log entries to a file",
+	Short: "Show all audit log entries, with no pages",
 	Use:   "export",
 }
 
@@ -55,9 +55,6 @@ var auditGetCmd = &cobra.Command{
 func init() {
 	auditListCmd.Flags().Int("limit", 20, "Maximum number of entries to return")
 	auditListCmd.Flags().Int("offset", 0, "Number of entries to skip")
-	auditExportCmd.Flags().String("output", "", "Output file path")
-	_ = auditExportCmd.MarkFlagRequired("output")
-	auditExportCmd.Flags().String("type", "file", "Export backend type")
 	auditGetCmd.Flags().String("id", "", "The audit entry ID")
 	_ = auditGetCmd.MarkFlagRequired("id")
 	clicommand.AddCommands(audit.Group, auditListCmd, auditExportCmd, auditGetCmd)

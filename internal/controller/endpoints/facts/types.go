@@ -24,13 +24,14 @@ type KeysInput struct{}
 
 // FactKeysResponse is each fact key.
 type FactKeysResponse struct {
-	Items      []FactKeyEntry `json:"items"       doc:"Available fact keys for @fact. references."`
-	TotalItems int            `json:"total_items" doc:"Total number of fact keys."`
+	_          struct{}       `title:"Fact keys"`
+	Items      []FactKeyEntry `                  json:"items"       doc:"Available fact keys for @fact. references."`
+	TotalItems int            `                  json:"total_items" doc:"Total number of fact keys."`
 }
 
 // FactKeyEntry is one fact key.
 type FactKeyEntry struct {
-	Key         string `json:"key"                   doc:"The fact key, such as 'interface.primary'."`
+	Key         string `json:"key"                   doc:"The fact key, such as 'interface.primary'." label:"Reference" prefix:"@fact."`
 	Description string `json:"description,omitempty" doc:"Human-readable description of the fact."`
-	Builtin     bool   `json:"builtin,omitempty"     doc:"Whether this is a built-in fact key."`
+	Builtin     bool   `json:"builtin,omitempty"     doc:"Whether this is a built-in fact key."                                         render:"-"`
 }

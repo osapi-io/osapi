@@ -222,12 +222,11 @@ func (s *EndpointPublicTestSuite) TestCommandHelp() {
 }
 
 func (s *EndpointPublicTestSuite) TestFlagAndInternal() {
-	m := endpoint.Get[noInput, Node]("get").Sub("trace").Flag("all", "Show everything").
-		StringFlag("output", "", "The file to write", true)
-	s.Equal([]endpoint.Flag{
-		{Name: "all", Usage: "Show everything"},
-		{Name: "output", Usage: "The file to write", String: true, Required: true},
-	}, m.CommandFlags())
+	m := endpoint.Get[noInput, Node]("get").Sub("trace").Flag("all", "Show everything")
+	s.Equal([]endpoint.Flag{{Name: "all", Usage: "Show everything"}}, m.CommandFlags())
+	s.Empty(m.Saying())
+	s.Equal("draining", endpoint.Post[noInput, struct{}]("drain").Says("draining").Saying())
+	s.Equal(reflect.TypeFor[Node](), m.Output())
 	s.Equal("trace", m.SubPath())
 	s.Equal("get", m.CommandName())
 	s.Equal("list", endpoint.Get[noInput, Node]("pending").Use("list").CommandName())

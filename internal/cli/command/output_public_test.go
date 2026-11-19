@@ -1,0 +1,442 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+package command_test
+
+import (
+	"context"
+	"fmt"
+	"reflect"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/internal/cli/command"
+)
+
+// recorder is a Printer that writes what it is asked to print as text.
+type recorder struct {
+	b strings.Builder
+}
+
+func (r *recorder) Heading(title string) { fmt.Fprintf(&r.b, "# %s\n", title) }
+
+func (r *recorder) KV(pairs ...string) {
+	for i := 0; i+1 < len(pairs); i += 2 {
+		fmt.Fprintf(&r.b, "%s: %s\n", pairs[i], pairs[i+1])
+	}
+}
+
+func (r *recorder) Table(t command.Table) {
+	fmt.Fprintf(&r.b, "# %s\n%s\n", t.Title, strings.Join(t.Headers, " | "))
+	for _, row := range t.Rows {
+		fmt.Fprintf(&r.b, "%s\n", strings.Join(row, " | "))
+	}
+	if len(t.Rows) == 0 {
+		fmt.Fprintf(&r.b, "None. %s\n", t.Empty)
+	}
+}
+
+func (r *recorder) Verdict(text string)             { fmt.Fprintf(&r.b, "[ok] %s\n", text) }
+func (r *recorder) Status(word string) string       { return "<" + word + ">" }
+func (r *recorder) Bytes(n int64) string            { return fmt.Sprintf("%dB", n) }
+func (r *recorder) Time(t time.Time) string         { return t.UTC().Format(time.DateTime) }
+func (r *recorder) Duration(d time.Duration) string { return d.String() }
+
+func (r *recorder) Age(d time.Duration) string {
+	if d > time.Hour {
+		return "long ago"
+	}
+
+	return d.Truncate(time.Second).String() + " ago"
+}
+
+// keyed is a method that names the input field it acts on, as an endpoint
+// method does.
+type keyed struct {
+	*command.LocalMethod
+	key string
+}
+
+func (k keyed) Key() string { return k.key }
+
+// outGroup is a registered group with the methods under test.
+type outGroup struct {
+	group
+	cmds []command.Command
+}
+
+func (g outGroup) Commands() []command.Command { return g.cmds }
+
+type (
+	row struct {
+		Name    string `json:"name"`
+		Size    int    `json:"size"    render:"bytes"`
+		Note    string `json:"note"                   table:"-"`
+		Nothing string `json:"nothing"`
+	}
+	rows struct {
+		_          struct{} `title:"Things"`
+		TotalItems int      `               json:"total_items"`
+		Items      []row    `               json:"items"       empty:"Add one."`
+	}
+	plain struct {
+		Items []row `json:"items"`
+	}
+	part struct {
+		_     struct{} `title:"Part"`
+		Value string   `             json:"value"`
+	}
+	envelope struct {
+		Entry part `json:"entry"`
+	}
+	listEnvelope struct {
+		Rows []row `json:"rows"`
+	}
+	detail struct {
+		ID       string    `json:"id"                render:"short=4"`
+		LastSeen *string   `json:"last_seen"                          none:"never"`
+		Skipped  string    `json:"skipped,omitempty"`
+		Off      bool      `json:"off,omitempty"`
+		Hidden   string    `json:"hidden"            render:"-"`
+		Part     *part     `json:"part,omitempty"`
+		Rows     []row     `json:"rows,omitempty"`
+		More     []row     `json:"more"`
+		At       time.Time `json:"at"`
+	}
+	counted struct {
+		TotalItems int   `json:"total_items"`
+		Items      []row `json:"items"`
+	}
+	values struct {
+		On    bool           `json:"on,omitempty"`
+		Count int            `json:"count,omitempty"`
+		Tags  []string       `json:"tags,omitempty"`
+		Meta  map[string]any `json:"meta,omitempty"`
+		Name  string         `json:"name,omitempty"`
+	}
+	nothing  struct{}
+	deleteIn struct {
+		MachineID string `json:"machine_id"`
+	}
+)
+
+func handle[Out any](context.Context, struct{}, struct{}) (Out, error) {
+	var out Out
+
+	return out, nil
+}
+
+type OutputPublicTestSuite struct {
+	suite.Suite
+}
+
+func (s *OutputPublicTestSuite) TestOutput() {
+	g := outGroup{group: group{name: "zzderive"}}
+	method := func(name string, out reflect.Type) *command.LocalMethod {
+		m := command.Method[struct{}, struct{}](name).Handle(handle[struct{}])
+		m.Out = out
+
+		return m
+	}
+	g.cmds = []command.Command{
+		method("list", reflect.TypeFor[rows]()),
+		method("plain", reflect.TypeFor[plain]()),
+		method("each", reflect.TypeFor[[]row]()),
+		method("names", reflect.TypeFor[[]string]()),
+		method("get", reflect.TypeFor[envelope]()),
+		method("rows", reflect.TypeFor[listEnvelope]()),
+		method("show", reflect.TypeFor[*detail]()),
+		method("count", reflect.TypeFor[counted]()),
+		method("values", reflect.TypeFor[values]()),
+		method("map", reflect.TypeFor[map[string]string]()),
+		keyed{method("delete", reflect.TypeFor[nothing]()), "machine_id"},
+		method("drain", reflect.TypeFor[nothing]()).Says("draining"),
+	}
+	command.AddCommands(g)
+
+	tests := []struct {
+		name   string
+		method string
+		in     any
+		answer string
+		json   bool
+		want   string
+	}{
+		{
+			name:   "when the output is a list with its count, it is a table under the title",
+			method: "list",
+			answer: `{"total_items":5,"items":[{"name":"a","size":10,"note":"n"},{"name":"b","size":0}]}`,
+			want:   "# Things (2 of 5)\nNAME | SIZE\na | 10B\nb | 0B\n",
+		},
+		{
+			name:   "when the list is empty, it says None. and the hint",
+			method: "list",
+			answer: `{"total_items":0,"items":[]}`,
+			want:   "# Things (0)\n\nNone. Add one.\n",
+		},
+		{
+			name:   "when a list has no title, its heading is the group in the plural",
+			method: "plain",
+			answer: `{"items":[{"name":"a"}]}`,
+			want:   "# Zzderives (1)\nNAME\na\n",
+		},
+		{
+			name:   "when the output is a list, each item is a row",
+			method: "each",
+			answer: `[{"name":"a","size":1}]`,
+			want:   "# Zzderives (1)\nNAME | SIZE\na | 1B\n",
+		},
+		{
+			name:   "when the output is a list of values, each is a row",
+			method: "names",
+			answer: `["a","b"]`,
+			want:   "# Zzderives (2)\nVALUE\na\nb\n",
+		},
+		{
+			name:   "when the output is an envelope of an object, the object prints",
+			method: "get",
+			answer: `{"entry":{"value":"v"}}`,
+			want:   "# Part\nValue: v\n",
+		},
+		{
+			name:   "when the output is an envelope of a list, the list prints",
+			method: "rows",
+			answer: `{"rows":[{"name":"a"}]}`,
+			want:   "# Zzderives (1)\nNAME\na\n",
+		},
+		{
+			name:   "when the output is an object, it is a block, then its objects and lists",
+			method: "show",
+			answer: `{"id":"abcdefgh","last_seen":null,"skipped":"","off":false,"hidden":"x",` +
+				`"part":{"value":"v"},"rows":[],"more":[{"name":"a","note":"n"}],"at":"2026-11-12T18:15:13Z"}`,
+			want: "# Zzderive\nID: abcdefgh\nLast seen: never\nAt: 2026-11-12 18:15:13\n" +
+				"# Part\nValue: v\n" +
+				"# More (1)\nNAME\na\n",
+		},
+		{
+			name:   "when a list with its count has no title, its heading is the group in the plural",
+			method: "count",
+			answer: `{"total_items":1,"items":[{"name":"a"}]}`,
+			want:   "# Zzderives (1)\nNAME\na\n",
+		},
+		{
+			name:   "when a field with omitempty has its zero value, it is left out",
+			method: "values",
+			answer: `{"on":false,"count":0,"tags":[],"meta":{},"name":"x"}`,
+			want:   "# Zzderive\nName: x\n",
+		},
+		{
+			name:   "when a field with omitempty has a value, it is shown",
+			method: "values",
+			answer: `{"on":true,"count":2,"tags":["a"],"meta":{"k":"v"},"name":"x"}`,
+			want:   "# Zzderive\nOn: yes\nCount: 2\nTags: a\nMeta: k:v\nName: x\n",
+		},
+		{
+			name:   "when the output is not an object or a list, it has only its heading",
+			method: "map",
+			answer: `{"a":"b"}`,
+			want:   "# Zzderive\n",
+		},
+		{
+			name:   "when the method answers nothing, one line names the key and what it did",
+			method: "delete",
+			in:     deleteIn{MachineID: "m-1"},
+			want:   "[ok] m-1 deleted\n",
+		},
+		{
+			name:   "when the method has no key, the line names the group, and Says what it is",
+			method: "drain",
+			in:     struct{}{},
+			want:   "[ok] zzderive draining\n",
+		},
+		{
+			name:   "when --json is given to a method that answers nothing, it prints the key and the result",
+			method: "delete",
+			in:     deleteIn{MachineID: "m-1"},
+			json:   true,
+			want:   `{"machine_id":"m-1","result":"deleted"}`,
+		},
+		{
+			name:   "when --json is given to a method with no key, the key is name",
+			method: "drain",
+			in:     struct{}{},
+			json:   true,
+			want:   `{"name":"zzderive","result":"draining"}`,
+		},
+		{
+			name:   "when the method is not registered, the answer prints as JSON",
+			method: "missing",
+			answer: `{"a":1}`,
+			want:   `{"a":1}`,
+		},
+		{
+			name:   "when the answer does not decode, the error is reported",
+			method: "list",
+			answer: `{`,
+			want:   "error: decode zzderive list: unexpected end of JSON input",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			r := &recorder{}
+			s.Require().NoError(command.Attach(&cobra.Command{Use: "client"}, command.Deps{
+				JSON:      func() bool { return tc.json },
+				Error:     func(err error) { fmt.Fprintf(&r.b, "error: %s", err) },
+				PrintJSON: func(body []byte) { r.b.Write(body) },
+				Print:     r,
+			}))
+			var answer []byte
+			if tc.answer != "" {
+				answer = []byte(tc.answer)
+			}
+
+			command.Output(&cobra.Command{}, "zzderive", tc.method, tc.in, answer)
+
+			s.Equal(tc.want, r.b.String())
+		})
+	}
+}
+
+func (s *OutputPublicTestSuite) TestFormat() {
+	type fields struct {
+		Bytes  int        `json:"bytes"  render:"bytes"`
+		Age    int        `json:"age"    render:"age"`
+		Dur    int64      `json:"dur"    render:"duration"`
+		Ms     int        `json:"ms"     render:"duration=ms"`
+		Status string     `json:"status" render:"status"`
+		Short  string     `json:"short"  render:"short=3"`
+		At     *time.Time `json:"at"`
+		When   string     `json:"when"   render:"time"`
+		Ref    string     `json:"ref"                         prefix:"@fact."`
+		Plain  any        `json:"plain"`
+		hidden string     //nolint:unused // an unexported field is not a column
+		NoJSON string
+		Skip   string `json:"-"`
+	}
+	cols := map[string]command.Column{}
+	for _, c := range command.Columns(reflect.TypeFor[*[]fields]()) {
+		cols[c.JSON] = c
+	}
+	s.Len(cols, 10)
+	s.Nil(command.Columns(reflect.TypeFor[string]()))
+	r := &recorder{}
+	recent := time.Now().Add(-30 * time.Second).Format(time.RFC3339)
+
+	tests := []struct {
+		name  string
+		col   string
+		value any
+		want  string
+	}{
+		{"a size", "bytes", float64(3480), "3480B"},
+		{"an age in seconds", "age", float64(30), "30s ago"},
+		{"an age from a time", "age", recent, "30s ago"},
+		{"an age that is not a time", "age", "soon", "soon"},
+		{"a duration in nanoseconds", "dur", float64(time.Second), "1s"},
+		{"a duration as a string", "dur", "1m0s", "1m0s"},
+		{"a duration that does not parse", "dur", "long", "long"},
+		{"milliseconds", "ms", float64(42), "42ms"},
+		{"a status", "status", "ok", "<ok>"},
+		{"a long value cut", "short", "abcdef", "abc..."},
+		{"a short value kept", "short", "ab", "ab"},
+		{"a time by its type", "at", "2026-11-12T18:15:13Z", "2026-11-12 18:15:13"},
+		{"a zero time is no value", "at", "0001-01-01T00:00:00Z", ""},
+		{"a time by its tag", "when", "2026-11-12T18:15:13Z", "2026-11-12 18:15:13"},
+		{"a time that does not parse", "when", "later", "later"},
+		{"a prefix", "ref", "x", "@fact.x"},
+		{"no value", "plain", nil, ""},
+		{"an empty string", "plain", "", ""},
+		{"true", "plain", true, "yes"},
+		{"false", "plain", false, "no"},
+		{"a whole number", "plain", float64(4), "4"},
+		{"a fraction", "plain", 0.25, "0.25"},
+		{"a list of values", "plain", []any{"a", float64(1)}, "a, 1"},
+		{"a list of objects", "plain", []any{map[string]any{}}, "1 item"},
+		{"a list of lists", "plain", []any{[]any{}, []any{}}, "2 items"},
+		{"an object of values", "plain", map[string]any{"b": "2", "a": "1"}, "a:1, b:2"},
+		{"an object of objects", "plain", map[string]any{"a": map[string]any{}}, "1 field"},
+		{"another value", "plain", "text", "text"},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, cols[tc.col].Format(r, tc.value))
+		})
+	}
+
+	s.Equal("abcdef", cols["short"].FormatKV(r, "abcdef"), "a block does not cut a value")
+}
+
+func (s *OutputPublicTestSuite) TestPlural() {
+	g := outGroup{group: group{name: "zzlogs"}}
+	m := command.Method[struct{}, struct{}]("list").Handle(handle[struct{}])
+	m.Out = reflect.TypeFor[[]string]()
+	g.cmds = []command.Command{m}
+	command.AddCommands(g)
+	r := &recorder{}
+	s.Require().NoError(command.Attach(&cobra.Command{Use: "client"}, command.Deps{
+		JSON:  func() bool { return false },
+		Print: r,
+	}))
+
+	command.Output(&cobra.Command{}, "zzlogs", "list", struct{}{}, []byte(`["a"]`))
+
+	s.Equal("# Zzlogs (1)\nVALUE\na\n", r.b.String(), "a name in s is its own plural")
+}
+
+func (s *OutputPublicTestSuite) TestPrintsGroups() {
+	g := outGroup{group: group{name: "zzprinted"}}
+	m := command.Method[struct{}, struct{}]("list").Handle(handle[struct{}])
+	m.Out = reflect.TypeFor[rows]()
+	g.cmds = []command.Command{m}
+	command.AddCommands(g)
+	printed := ""
+	command.PrintsGroups(func(group, method string, answer []byte) bool {
+		if group != "zzprinted" {
+			return false
+		}
+		printed = method + ":" + string(answer)
+
+		return true
+	})
+	s.Require().NoError(command.Attach(&cobra.Command{Use: "client"}, command.Deps{
+		JSON: func() bool { return false },
+	}))
+
+	command.Output(&cobra.Command{}, "zzprinted", "list", struct{}{}, []byte(`{}`))
+
+	s.Equal("list:{}", printed)
+}
+
+func (s *OutputPublicTestSuite) TestBecause() {
+	g := group{name: "zzbecause"}
+	command.Render(g, "get", func(*cobra.Command, input, thing) {}).Because("a tree")
+	r, ok := command.Rendered("zzbecause", "get")
+	s.True(ok)
+	s.Equal("a tree", r.Reason())
+}
+
+func TestOutputPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(OutputPublicTestSuite))
+}

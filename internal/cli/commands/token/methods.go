@@ -22,6 +22,7 @@ package token
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 
@@ -76,6 +77,28 @@ func Roles(
 
 	return RolesOutput{Roles: roles}, nil
 }
+
+// RoleGet is one role, built-in or of the config, with what it grants.
+func RoleGet(
+	ctx context.Context,
+	d Deps,
+	in RoleInput,
+) (Role, error) {
+	all, err := Roles(ctx, d, RolesInput{})
+	if err != nil {
+		return Role{}, err
+	}
+	for _, r := range all.Roles {
+		if r.Name == in.Name {
+			return r, nil
+		}
+	}
+
+	return Role{}, fmt.Errorf("role %q: %w", in.Name, ErrNoRole)
+}
+
+// ErrNoRole is a role that neither the built-in roles nor the config have.
+var ErrNoRole = errors.New("no such role")
 
 // Validate checks a token against the config's signing key, and is its
 // claims.

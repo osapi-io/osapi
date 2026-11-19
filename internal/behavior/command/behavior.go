@@ -30,12 +30,11 @@ import (
 	"maps"
 	"reflect"
 	"slices"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/cli"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 )
 
 // Flag is one CLI flag derived from an input field.
@@ -128,55 +127,17 @@ func Args(
 	return args
 }
 
-// Render values for the render tag on an output field.
-const (
-	// RenderHidden leaves the field out of the table. It is still in --json.
-	RenderHidden = "-"
-	// RenderBytes prints a byte count as 4.0 KB.
-	RenderBytes = "bytes"
-	// RenderAge prints a number of seconds as 3d 4h.
-	RenderAge = "age"
-	// RenderStatus colors the value as a status, like the STATUS column.
-	RenderStatus = "status"
-)
-
-// Column is one table column, from one field of the output type.
-type Column struct {
-	// JSON is the field's JSON name, the key its value has in a result row.
-	JSON string
-	// Header is the column header: the JSON name in capitals.
-	Header string
-	// Render is the field's render tag, empty for a plain value.
-	Render string
-}
-
-// Columns returns the output fields shown as table columns, in field order:
-// every field of the output type, or of its element type for a list, except
-// changed, which the table renders as the row's status, and any field tagged
-// render:"-".
+// Columns are the output fields that a behavior's result table shows, in
+// field order: the command layer's columns of the output type, except
+// changed, which the table renders as the row's status.
 func Columns(
 	out reflect.Type,
-) []Column {
-	for out.Kind() == reflect.Slice || out.Kind() == reflect.Pointer {
-		out = out.Elem()
-	}
-	if out.Kind() != reflect.Struct {
-		return nil
-	}
-
-	cols := make([]Column, 0, out.NumField())
-	for i := range out.NumField() {
-		f := out.Field(i)
-		name := jsonName(f)
-		render := f.Tag.Get("render")
-		if !f.IsExported() || name == "" || name == "changed" || render == RenderHidden {
-			continue
+) []clicommand.Column {
+	var cols []clicommand.Column
+	for _, c := range clicommand.Columns(out) {
+		if c.JSON != "changed" {
+			cols = append(cols, c)
 		}
-		cols = append(cols, Column{
-			JSON:   name,
-			Header: strings.ToUpper(strings.ReplaceAll(name, "_", " ")),
-			Render: render,
-		})
 	}
 
 	return cols
@@ -185,7 +146,8 @@ func Columns(
 // Table renders a result the one way every behavior command prints: one row
 // per result, the output fields as columns, and changed folded into the
 // row's status for a write. A host that failed or was skipped is listed under
-// the table with its reason.
+// the table with its reason. Each value prints as the command layer prints
+// it, by its field's tags.
 func Table(
 	m *behavior.Method,
 	r Result,
@@ -211,7 +173,7 @@ func Table(
 			}
 		}
 		for _, c := range cols {
-			row.Fields = append(row.Fields, format(c, res[c.JSON]))
+			row.Fields = append(row.Fields, c.Format(cli.Printer{}, res[c.JSON]))
 		}
 		rows = append(rows, row)
 	}
@@ -222,28 +184,6 @@ func Table(
 	}
 
 	return cli.Section{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}
-}
-
-// format renders one value by its column's render tag.
-func format(
-	c Column,
-	v any,
-) string {
-	if v == nil {
-		return ""
-	}
-
-	n, isNumber := v.(float64)
-	switch {
-	case c.Render == RenderBytes && isNumber:
-		return cli.FormatBytes(int(n))
-	case c.Render == RenderAge && isNumber:
-		return cli.FormatAge(time.Duration(n) * time.Second)
-	case isNumber && n == float64(int64(n)):
-		return strconv.FormatInt(int64(n), 10)
-	default:
-		return fmt.Sprint(v)
-	}
 }
 
 func jsonName(
@@ -291,10 +231,29 @@ func hasRule(
 	return false
 }
 
+func init() {
+	clicommand.PrintsGroups(printResults)
+}
+
+// printResults prints the answer of a behavior's method as its result
+// table, and is false for a group that is not a behavior.
+func printResults(
+	group string,
+	method string,
+	answer []byte,
+) bool {
+	b := behavior.Lookup(group)
+	if b == nil || b.Method(method) == nil {
+		return false
+	}
+	Print(b, method, json.RawMessage(answer), clicommand.TraceID())
+
+	return true
+}
+
 // Print writes the answer of method of b, out, the method's response type:
 // the job ID, the trace ID of the call, and the table every behavior
-// renders. The endpoint command runtime calls it, as the renderer of each
-// behavior method.
+// renders. The command runtime calls it through printResults.
 func Print(
 	b *behavior.Behavior,
 	method string,

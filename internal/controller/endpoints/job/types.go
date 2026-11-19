@@ -52,7 +52,7 @@ type CreateJobResponse struct {
 	JobID     string `json:"job_id"              validate:"uuid" doc:"Unique identifier for the created job." example:"550e8400-e29b-41d4-a716-446655440000"`
 	Status    string `json:"status"                              doc:"Initial status of the job."             example:"unprocessed"`
 	Revision  int64  `json:"revision,omitempty"                  doc:"The KV revision number."                example:"1"`
-	Timestamp string `json:"timestamp,omitempty"                 doc:"Creation timestamp."                    example:"2025-06-14T10:00:00Z"`
+	Timestamp string `json:"timestamp,omitempty"                 doc:"Creation timestamp."                    example:"2025-06-14T10:00:00Z"                 render:"-"`
 }
 
 // ListJobsResponse is a page of the job queue.

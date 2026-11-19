@@ -68,9 +68,9 @@ components:
         - roles
         - method
         - path
-        - source_ip
         - response_code
         - duration_ms
+        - source_ip
       type: object
     AuditEntryResponse:
       properties:

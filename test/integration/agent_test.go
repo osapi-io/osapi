@@ -135,11 +135,11 @@ func (s *AgentSmokeSuite) TestAgentDrainUndrain() {
 
 	var drainResp struct {
 		Hostname string `json:"hostname"`
-		Status   string `json:"status"`
+		Result   string `json:"result"`
 	}
 	s.Require().NoError(parseJSON(drainOut, &drainResp))
 	s.Equal(hostname, drainResp.Hostname)
-	s.Equal("draining", drainResp.Status)
+	s.Equal("draining", drainResp.Result)
 
 	// Undrain (always restore so later tests aren't affected)
 	undrainOut, _, undrainCode := runCLI(
@@ -151,11 +151,11 @@ func (s *AgentSmokeSuite) TestAgentDrainUndrain() {
 
 	var undrainResp struct {
 		Hostname string `json:"hostname"`
-		Status   string `json:"status"`
+		Result   string `json:"result"`
 	}
 	s.Require().NoError(parseJSON(undrainOut, &undrainResp))
 	s.Equal(hostname, undrainResp.Hostname)
-	s.Equal("ready", undrainResp.Status)
+	s.Equal("ready", undrainResp.Result)
 }
 
 func TestAgentSmokeSuite(

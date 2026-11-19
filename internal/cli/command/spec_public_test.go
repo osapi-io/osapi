@@ -78,6 +78,16 @@ var notDSL = map[string]bool{
 	"CommandPermission:LocalGroup": true,
 	"Error:UsageError":             true,
 	"String:Problem":               true,
+	"Rendered":                     true,
+	"Reason":                       true,
+	"Groups":                       true,
+	"ValidateOutput":               true,
+	"Columns":                      true,
+	"Format:Column":                true,
+	"FormatKV:Column":              true,
+	"PrintsGroups":                 true,
+	"Key":                          true,
+	"Saying":                       true,
 }
 
 // TestSpecCoversTheDSL fails on an exported function of the package, or an
@@ -114,7 +124,7 @@ func (s *SpecPublicTestSuite) TestSpecCoversTheDSL() {
 				if id == nil || !id.IsExported() {
 					continue
 				}
-				if id.Name != "LocalMethod" {
+				if id.Name != "LocalMethod" && id.Name != "Renderer" {
 					name += ":" + id.Name
 				}
 			}

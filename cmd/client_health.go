@@ -48,33 +48,8 @@ func init() {
 	// osapi client health liveness, ready and status are generated from the
 	// health group's definition; this is how each answer prints. ready and
 	// status print their 503 too, which says what is not healthy.
-	clicommand.Render(health.Group, "liveness", renderHealthLiveness)
-	clicommand.Render(health.Group, "ready", renderHealthReady)
-	clicommand.Render(health.Group, "status", renderHealthStatus)
-}
-
-// renderHealthLiveness prints that the process is alive.
-func renderHealthLiveness(
-	_ *cobra.Command,
-	_ health.LivenessInput,
-	out health.HealthResponse,
-) {
-	cli.PrintHeading("Health")
-	cli.PrintKV("Status", out.Status)
-}
-
-// renderHealthReady prints whether the controller can take traffic, and
-// why not.
-func renderHealthReady(
-	_ *cobra.Command,
-	_ health.ReadyInput,
-	out health.ReadyResponse,
-) {
-	cli.PrintHeading("Health")
-	cli.PrintKV("Status", out.Status)
-	if out.Error != "" {
-		cli.PrintKV("Error", out.Error)
-	}
+	clicommand.Render(health.Group, "status", renderHealthStatus).
+		Because("the components are a tree, and storage puts several counts in one value")
 }
 
 // renderHealthStatus prints the controller, each component and the

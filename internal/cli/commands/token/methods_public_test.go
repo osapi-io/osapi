@@ -156,6 +156,69 @@ func (s *MethodsPublicTestSuite) TestRoles() {
 	}
 }
 
+func (s *MethodsPublicTestSuite) TestRoleGet() {
+	tests := []struct {
+		name         string
+		role         string
+		setup        func()
+		validateFunc func(token.Role, error)
+	}{
+		{
+			name:  "when the role is built in, it is the role",
+			role:  "read",
+			setup: func() { s.config.EXPECT().CustomRoles().Return(nil, nil) },
+			validateFunc: func(got token.Role, err error) {
+				s.Require().NoError(err)
+				s.Equal("read", got.Name)
+				s.Equal("built-in", got.Source)
+			},
+		},
+		{
+			name: "when the role is of the config, it is the role",
+			role: "ops",
+			setup: func() {
+				s.config.EXPECT().
+					CustomRoles().
+					Return(map[string][]string{"ops": {"node:read"}}, nil)
+			},
+			validateFunc: func(got token.Role, err error) {
+				s.Require().NoError(err)
+				s.Equal(
+					token.Role{Name: "ops", Source: "config", Permissions: []string{"node:read"}},
+					got,
+				)
+			},
+		},
+		{
+			name:  "when no role has the name, it is ErrNoRole",
+			role:  "nope",
+			setup: func() { s.config.EXPECT().CustomRoles().Return(nil, nil) },
+			validateFunc: func(_ token.Role, err error) {
+				s.ErrorIs(err, token.ErrNoRole)
+				s.EqualError(err, `role "nope": no such role`)
+			},
+		},
+		{
+			name:  "when the config cannot be read, it is the error",
+			role:  "read",
+			setup: func() { s.config.EXPECT().CustomRoles().Return(nil, errors.New("bad yaml")) },
+			validateFunc: func(_ token.Role, err error) {
+				s.EqualError(err, "bad yaml")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.setup()
+
+			got, err := token.RoleGet(context.Background(), s.deps, token.RoleInput{Name: tc.role})
+
+			tc.validateFunc(got, err)
+		})
+	}
+}
+
 func (s *MethodsPublicTestSuite) TestValidate() {
 	issued := time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
 	expires := issued.Add(time.Hour)

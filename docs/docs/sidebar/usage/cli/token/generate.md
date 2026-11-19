@@ -16,11 +16,11 @@ osapi token generate --subject svc@example.com --roles=read \
 
 ## Flags
 
-| Flag                | Description                                                                     | Default |
-| ------------------- | ------------------------------------------------------------------------------- | ------- |
-| `-p, --permissions` | Direct permissions, which override the roles; osapi token roles list lists them |         |
-| `-r, --roles`       | Roles for the token (admin, read, write) (required)                             |         |
-| `-u, --subject`     | Subject for the token (e.g., user ID or unique identifier) (required)           |         |
+| Flag                | Description                                                                                     | Default |
+| ------------------- | ----------------------------------------------------------------------------------------------- | ------- |
+| `-p, --permissions` | Direct permissions, which override the roles; osapi token roles get --name admin lists each one |         |
+| `-r, --roles`       | Roles for the token (admin, read, write) (required)                                             |         |
+| `-u, --subject`     | Subject for the token (e.g., user ID or unique identifier) (required)                           |         |
 
 ## Global flags
 

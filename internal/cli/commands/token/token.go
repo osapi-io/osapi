@@ -61,6 +61,12 @@ var Group = command.Register(command.Define(
 		Example("").
 		Example("--json").
 		Handle(Roles),
+	command.Method[RoleInput, Role]("get").
+		Sub("roles").
+		Short("Show a role and each permission it grants").
+		Example("--name admin").
+		Fails("no name", RoleInput{}).
+		Handle(RoleGet),
 	command.Method[ValidateInput, Claims]("validate").
 		Short("Validate a token for authenticity and claims").
 		Example("--token eyJhbGciOiJIUzI1NiIs...").
@@ -77,6 +83,6 @@ func init() {
 		Tag:     Permission,
 		Check:   func(p string) bool { return slices.Contains(authtoken.AllPermissions(), p) },
 		Schema:  rule.None,
-		Message: "is not a permission: osapi token roles list lists them",
+		Message: "is not a permission: osapi token roles get --name admin lists each one",
 	})
 }

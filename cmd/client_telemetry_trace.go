@@ -47,7 +47,8 @@ func init() {
 
 	// osapi client telemetry trace get is generated from the telemetry
 	// group's definition; this is how its answer prints.
-	clicommand.Render(telemetry.Group, "get", renderTrace)
+	clicommand.Render(telemetry.Group, "get", renderTrace).
+		Because("the spans are a tree")
 }
 
 // renderTrace prints a trace as its span tree, with the NATS calls left out

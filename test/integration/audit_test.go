@@ -23,8 +23,6 @@
 package integration_test
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -65,25 +63,26 @@ func (s *AuditSmokeSuite) TestAuditList() {
 }
 
 func (s *AuditSmokeSuite) TestAuditExport() {
-	exportPath := filepath.Join(tempDir, "audit-export.json")
-
 	tests := []struct {
 		name         string
 		args         []string
 		validateFunc func(stdout string, exitCode int)
 	}{
 		{
-			name: "exports audit log to file",
-			args: []string{"client", "audit", "export", "--output", exportPath, "--json"},
+			name: "returns every audit entry, with no pages",
+			args: []string{"client", "audit", "export", "--json"},
 			validateFunc: func(
 				stdout string,
 				exitCode int,
 			) {
 				s.Require().Equal(0, exitCode)
 
-				info, err := os.Stat(exportPath)
-				s.Require().NoError(err)
-				s.Greater(info.Size(), int64(0))
+				var result struct {
+					TotalItems int              `json:"total_items"`
+					Items      []map[string]any `json:"items"`
+				}
+				s.Require().NoError(parseJSON(stdout, &result))
+				s.Len(result.Items, result.TotalItems)
 			},
 		},
 	}

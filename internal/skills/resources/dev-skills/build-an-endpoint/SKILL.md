@@ -73,9 +73,11 @@ Ask the code and the binary before you read prose:
 3. When `Deps` gets its first field, give it in
    `internal/controller/handlers.go`, as `agentDeps` does. While it is empty,
    the controller needs no wiring.
-4. In `cmd/client_<group>.go`, the file of the group's command, add a
-   `command.Render` from `internal/cli/command` for each method a person reads
-   at a shell. A method without one prints its answer as JSON.
+4. Tag the fields of each output type, so that the command prints what a
+   person needs at a shell: `render`, `label`, `none`, `empty`, `prefix`,
+   `table:"-"`, and a heading with `_ struct{} \`title:"..."\``. A method that
+   answers with no body prints one line, such as `[ok] web-01 drained`; give it
+   `.Says("...")` when the line is a state, such as `draining`.
 5. A new operation changes the API: run `TestJoinedSpec` with `-update`, and
    keep the diff.
 
@@ -163,12 +165,13 @@ The CLI:
    as `retry`, never a noun. A verb that the group has as a method already
    gets `.Use`, such as `facts keys list`. A command that `.Sub` makes has
    a hand-written parent, so its help says what it holds.
-2. In `cmd/client_<group>.go`, the file of the group's command, add a
-   `command.Render` from `internal/cli/command` for each method, with the output
-   code of the hand-written command. A command that acts on the answer, such as
-   an export that writes a file, uses `command.Acts` from the same package,
-   which runs with `--json` too. `--json` prints the
-   API's answer otherwise, not a shape of its own.
+2. Tag the fields of each output type until the command prints as the
+   hand-written command did. Delete the output code of the hand-written
+   command. If no tag gives the shape, change the output type: the CLI, the UI
+   and the SDK then get the same values. Write a renderer,
+   `command.Render` in `cmd/client_<group>.go`, only for a shape that no output
+   type gives, such as a tree, and give it `.Because("...")`. `--json` prints
+   the API's answer, not a shape of its own.
 3. Run `go generate ./internal/controller/endpoints/all`. It writes
    `gen/cli.go`.
 4. Before you delete the hand-written commands, save their help:

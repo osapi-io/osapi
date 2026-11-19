@@ -108,7 +108,7 @@ not write its own target parser.
 two operations can do different amounts of damage, they need two permissions,
 also if their shape is the same. Add a new permission to the permission
 constants, `builtinPermissions`, `builtinRolePermissions` and the SDK.
-`osapi token roles list` then prints it. Also add it to the roles table in
+`osapi token roles get --name admin` then shows it. Also add it to the roles table in
 `usage/configuration.md`. Refer to [docs.md](docs.md). A permission that is in
 the spec but in no role gets to nobody.
 

@@ -238,7 +238,7 @@ func (s *CommandPublicTestSuite) TestRun() {
 	clicommand.Render(group, "probe", func(_ *cobra.Command, _ getInput, out thing) {
 		probed = out.Name
 	})
-	clicommand.Acts(group, "retry", func(_ *cobra.Command, in retryInput, out thing) {
+	clicommand.Render(group, "retry", func(_ *cobra.Command, in retryInput, out thing) {
 		acted = in.Body.Reason + ":" + out.Name
 	})
 
@@ -273,15 +273,13 @@ func (s *CommandPublicTestSuite) TestRun() {
 			},
 		},
 		{
-			name:   "when the method acts on its answer, it runs with --json too",
+			name:   "when the input has a body, the renderer gets it",
 			method: "retry",
 			in:     retryInput{Body: Retry{Reason: "flaky"}},
-			json:   true,
 			caller: &caller{answer: []byte(`{"name":"web-03"}`)},
-			validateFunc: func(_ *caller, out string, err error) {
+			validateFunc: func(_ *caller, _ string, err error) {
 				s.Require().NoError(err)
 				s.Equal("flaky:web-03", acted)
-				s.Empty(out)
 			},
 		},
 		{

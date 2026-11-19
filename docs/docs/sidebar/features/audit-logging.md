@@ -82,24 +82,24 @@ the [API Reference](/gen/api/audit-log-api-audit) for the REST endpoints.
 
 ## Export
 
-Export gets all audit entries and writes them to a local file in JSONL format,
-one JSON object on each line. Use it to keep entries for a long time. The audit
-entries in the NATS stream have a `max_age` that you can set (30 days by
-default). An export keeps them before they expire.
+Export gets all audit entries in one response, with no pages. Use it to keep
+entries for a long time. The audit entries in the NATS stream have a `max_age`
+that you can set (30 days by default). An export keeps them before they expire.
 
-The export endpoint returns all entries in a single response. The CLI writes
-each entry as a JSON line to the output file. JSONL files are easy to process
-with standard tools:
+Without `--json`, the command shows the entries as a table. To keep them, send
+the JSON to a file:
 
 ```bash
-# Count entries
-wc -l audit.jsonl
+osapi client audit export --json > audit.json
 
-# Filter by user
-grep '"user":"ops@example.com"' audit.jsonl
+# Count the entries
+jq '.items | length' audit.json
 
-# Pretty-print with jq
-cat audit.jsonl | jq .
+# Find the entries of a user
+jq '.items[] | select(.user == "ops@example.com")' audit.json
+
+# Write one entry on each line (JSONL)
+jq -c '.items[]' audit.json > audit.jsonl
 ```
 
 ## Retention

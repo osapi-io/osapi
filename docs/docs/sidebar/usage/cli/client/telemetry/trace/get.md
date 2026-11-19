@@ -27,8 +27,8 @@ osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9 --json
 
 ## Permission
 
-It needs the `trace:read` permission. `osapi token roles list` lists the roles
-that grant it.
+It needs the `trace:read` permission. `osapi token roles get --name <role>`
+shows what a role grants.
 
 ## Flags
 

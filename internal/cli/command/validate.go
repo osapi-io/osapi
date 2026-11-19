@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/guide"
@@ -71,6 +72,9 @@ const (
 	RuleValidate = "validate"
 	RuleFails    = "fails"
 	RuleHandler  = "handler"
+	RuleReason   = "reason"
+	RuleTag      = "tag"
+	RuleSays     = "says"
 )
 
 // Checks are the rules Validate applies. osapi cli command validate --help
@@ -127,6 +131,21 @@ var Checks = guide.Checks{
 		Rule:     RuleHandler,
 		Requires: "The group Uses a type, and each method has a handler, func(context.Context, D, In) (Out, error), with D that type and In and Out the method's types.",
 		Fix:      "Add command.Uses[Deps]() to Define, and .Handle(fn) to each method, with the signature that the message names.",
+	},
+	{
+		Rule:     RuleReason,
+		Requires: "A method of any group, endpoint, behavior or local, prints from its output type. A renderer that Render sets in its place says why the output type cannot print the answer, with .Because.",
+		Fix:      "Delete the renderer, and give the output fields the tags that osapi cli command spec lists. When the output type cannot print the answer, such as a tree, add .Because(\"<why>\") to the renderer.",
+	},
+	{
+		Rule:     RuleTag,
+		Requires: "Each render tag of an output field is one the output knows: -, bytes, age, time, duration, duration=ms, status or short=N with N above 0. An empty tag is on a list, and a title tag is on the blank field _ of the output type.",
+		Fix:      "Use a render value that osapi cli command spec lists, put empty on a list field, and put title on a field _ struct{} of the output type.",
+	},
+	{
+		Rule:     RuleSays,
+		Requires: "A method that answers with no body says what occurred: its name has a past tense, such as admitted for admit, or .Says gives the text.",
+		Fix:      "Add .Says(\"<state>\") to the method, such as .Says(\"draining\") for drain.",
 	},
 }
 
@@ -327,4 +346,90 @@ func refusalProblems(
 	}
 
 	return out
+}
+
+// renderValues are the render tags that the output knows, besides short=N.
+var renderValues = map[string]bool{
+	RenderHidden: true, RenderBytes: true, RenderAge: true, RenderTime: true,
+	RenderDuration: true, RenderDurationMs: true, RenderStatus: true,
+}
+
+// ValidateOutput is each rule that the output of a registered group breaks:
+// each group whose commands AddCommands added, endpoint, behavior and local.
+// A renderer has a reason, each tag of an output type has a value that the
+// output knows, and a method with no body says what occurred.
+func ValidateOutput() []Problem {
+	var out []Problem
+	for _, g := range Groups() {
+		group := strings.Join(g.CommandPath(), " ")
+		add := func(method, rule, message string) {
+			out = append(out, Problem{
+				Group: group, Method: method, Rule: rule, Message: message, Fix: Checks.Fix(rule),
+			})
+		}
+		for _, m := range g.Commands() {
+			r, rendered := Rendered(g.GroupName(), m.MethodName())
+			if rendered && r.Reason() == "" {
+				add(m.MethodName(), RuleReason, "the renderer has no Because.")
+			}
+			for _, msg := range tagProblems(m.Output(), map[reflect.Type]bool{}) {
+				add(m.MethodName(), RuleTag, msg)
+			}
+			t := m.Output()
+			if !rendered && t.Kind() == reflect.Struct && answersNothing(t) && said(m) == "" {
+				add(m.MethodName(), RuleSays, fmt.Sprintf("%q has no past tense.", m.MethodName()))
+			}
+		}
+	}
+
+	return out
+}
+
+// tagProblems says which output tags of t, and of each type in it, the
+// output does not know.
+func tagProblems(
+	t reflect.Type,
+	seen map[reflect.Type]bool,
+) []string {
+	t = element(t)
+	if t.Kind() != reflect.Struct || seen[t] {
+		return nil
+	}
+	seen[t] = true
+
+	var out []string
+	for f := range t.Fields() {
+		if f.Name == "_" {
+			continue
+		}
+		where := t.Name() + "." + f.Name
+		if render, ok := f.Tag.Lookup("render"); ok && !knownRender(render) {
+			out = append(
+				out,
+				fmt.Sprintf("%s has render:%q, which the output does not know.", where, render),
+			)
+		}
+		if _, ok := f.Tag.Lookup("empty"); ok && f.Type.Kind() != reflect.Slice {
+			out = append(out, where+" has an empty tag and is not a list.")
+		}
+		if _, ok := f.Tag.Lookup("title"); ok {
+			out = append(out, where+" has a title tag: it goes on the field _ struct{}.")
+		}
+		out = append(out, tagProblems(f.Type, seen)...)
+	}
+
+	return out
+}
+
+// knownRender reports whether a render tag is one the output knows.
+func knownRender(
+	render string,
+) bool {
+	if n, ok := strings.CutPrefix(render, RenderShort); ok {
+		v, err := strconv.Atoi(n)
+
+		return err == nil && v > 0
+	}
+
+	return renderValues[render]
 }

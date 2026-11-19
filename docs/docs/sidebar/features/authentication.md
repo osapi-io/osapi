@@ -62,17 +62,19 @@ flowchart TD
 
 ## Roles and permissions
 
-There are three built-in roles, `admin`, `write` and `read`. To see every
-permission each grants, as the binary you run has them, list them:
+There are three built-in roles, `admin`, `write` and `read`. A config can add
+more. To see the roles, and then each permission that a role grants, as the
+binary you run has them:
 
 ```bash
 osapi token roles list
+osapi token roles get --name write
 ```
 
-Use that list, because it changes when osapi gets new behaviors. The permissions
-of a behavior are `<name>:read` and `<name>:write`. `admin` and `write` give the
-two permissions. `read` gives the read permission.
-[`token roles list`](../usage/cli/token/roles/list.md) shows its output.
+Use these commands, because the permissions change when osapi gets new
+behaviors. The permissions of a behavior are `<name>:read` and `<name>:write`.
+`admin` and `write` give the two permissions. `read` gives the read permission.
+[`token roles get`](../usage/cli/token/roles/get.md) shows its output.
 
 `command:execute` and `command:shell` are two different permissions.
 `command:execute` controls the `exec` endpoint, which takes an argument list.
