@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,14 @@ function NotReported() {
 
 export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
   const { can } = useAuth();
+  // A drain or undrain the controller accepted, until the agent's state
+  // shows it. The agent acts on it at its next heartbeat, which can be 20s
+  // away, so the card shows the request at once and polls faster till then.
+  const [pending, setPending] = useState<"drain" | "undrain" | null>(null);
   const [acting, setActing] = useState(false);
+  const [note, setNote] = useState<{ text: string; error?: boolean } | null>(
+    null,
+  );
 
   const isReady = agent.status === "Ready";
   const isPending = agent.state === "Pending";
@@ -41,27 +48,69 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
   const badgeVariant = statusVariant(isPending ? agent.state : agent.status);
   const activeConditions = agent.conditions?.filter((c) => c.status) ?? [];
 
-  const handleDrain = async () => {
+  // The request is done when the state the agent reports matches it.
+  const caughtUp =
+    (pending === "drain" && isDrained) || (pending === "undrain" && !isDrained);
+
+  useEffect(() => {
+    if (!pending || caughtUp) return;
+    const poll = setInterval(() => onRefresh?.(), 2000);
+    const giveUp = setTimeout(() => {
+      setNote({
+        text: `${agent.hostname} has not picked up the ${pending} yet; it applies at the agent's next heartbeat.`,
+        error: true,
+      });
+      setPending(null);
+    }, 60000);
+    return () => {
+      clearInterval(poll);
+      clearTimeout(giveUp);
+    };
+  }, [pending, caughtUp, onRefresh, agent.hostname]);
+
+  // Once the state matches, the request is done.
+  if (pending && caughtUp) {
+    setPending(null);
+    setNote(null);
+  }
+
+  const act = async (kind: "drain" | "undrain") => {
     setActing(true);
+    setNote(null);
     try {
-      await drainAgent(agent.hostname);
+      const res =
+        kind === "drain"
+          ? await drainAgent(agent.hostname)
+          : await undrainAgent(agent.hostname);
+      if (res.status >= 300) {
+        const body = res.data as { error?: string } | undefined;
+        throw new Error(body?.error ?? `${kind} failed: ${res.status}`);
+      }
+      setPending(kind);
+      setNote({
+        text:
+          kind === "drain"
+            ? `Drain accepted. ${agent.hostname} takes no new jobs from its next heartbeat.`
+            : `Undrain accepted. ${agent.hostname} takes jobs again from its next heartbeat.`,
+      });
       onRefresh?.();
-    } catch {
-      // silent — next poll will show state
+    } catch (e) {
+      setNote({
+        text: e instanceof Error ? e.message : `${kind} failed`,
+        error: true,
+      });
     }
     setActing(false);
   };
 
-  const handleUndrain = async () => {
-    setActing(true);
-    try {
-      await undrainAgent(agent.hostname);
-      onRefresh?.();
-    } catch {
-      // silent
-    }
-    setActing(false);
-  };
+  // What the badge shows: the request while the agent has not acted on it,
+  // else the state the agent reports.
+  const shownState =
+    pending === "drain"
+      ? "Draining"
+      : pending === "undrain"
+        ? "Undraining"
+        : agent.state;
 
   return (
     <Card
@@ -74,8 +123,10 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
           {agent.hostname}
         </CardTitle>
         <div className="ml-auto flex items-center gap-1.5">
-          {agent.state && agent.state !== "Ready" ? (
-            <Badge variant={statusVariant(agent.state)}>{agent.state}</Badge>
+          {shownState && shownState !== "Ready" ? (
+            <Badge variant={pending ? "pending" : statusVariant(shownState)}>
+              {shownState}
+            </Badge>
           ) : (
             <Badge variant={badgeVariant}>{agent.status}</Badge>
           )}
@@ -184,34 +235,43 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
           {/* Drain / Undrain — hidden when pending */}
           {canWrite && !isPending && (
             <div className="mt-2 border-t border-border/30 pt-2">
-              {isDrained ? (
+              {(pending ? pending === "drain" : isDrained) ? (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleUndrain}
-                  disabled={acting}
+                  onClick={() => act("undrain")}
+                  disabled={acting || pending !== null}
                 >
-                  {acting ? (
+                  {acting || pending ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
                     <Play className="h-3 w-3" />
                   )}
-                  Undrain
+                  {pending === "drain" ? "Draining" : "Undrain"}
                 </Button>
               ) : (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleDrain}
-                  disabled={acting}
+                  onClick={() => act("drain")}
+                  disabled={acting || pending !== null}
                 >
-                  {acting ? (
+                  {acting || pending ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
                     <Pause className="h-3 w-3" />
                   )}
-                  Drain
+                  {pending === "undrain" ? "Undraining" : "Drain"}
                 </Button>
+              )}
+              {note && (
+                <Text
+                  variant={note.error ? "warn" : "muted"}
+                  as="p"
+                  className="mt-1 text-xs"
+                >
+                  {note.text}
+                </Text>
               )}
             </div>
           )}
