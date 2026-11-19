@@ -87,6 +87,9 @@ const (
 	ConditionMemoryPressure ConditionType = "MemoryPressure"
 	ConditionHighLoad       ConditionType = "HighLoad"
 	ConditionDiskPressure   ConditionType = "DiskPressure"
+	// ConditionDrainStuck is set when a drain's consumers have not stopped
+	// within the agent's limit, so the agent cannot reach Cordoned.
+	ConditionDrainStuck ConditionType = "DrainStuck"
 )
 
 // StatusService provides node status operations.

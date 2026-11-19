@@ -576,6 +576,7 @@ const (
 	ConditionMemoryPressure = client.ConditionMemoryPressure
 	ConditionHighLoad       = client.ConditionHighLoad
 	ConditionDiskPressure   = client.ConditionDiskPressure
+	ConditionDrainStuck     = client.ConditionDrainStuck
 )
 
 // Agent state constants re-exported from the SDK.

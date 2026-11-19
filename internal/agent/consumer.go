@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -108,6 +109,10 @@ func (a *Agent) consumeQueryJobs(
 		}
 
 		a.consumerWg.Add(1)
+		set := a.consumerSetWg
+		if set != nil {
+			set.Add(1)
+		}
 		go func(c struct {
 			name       string
 			filter     string
@@ -115,6 +120,9 @@ func (a *Agent) consumeQueryJobs(
 		},
 		) {
 			defer a.consumerWg.Done()
+			if set != nil {
+				defer set.Done()
+			}
 
 			opts := &natsclient.ConsumeOptions{
 				QueueGroup:  c.queueGroup,
@@ -205,6 +213,10 @@ func (a *Agent) consumeModifyJobs(
 		}
 
 		a.consumerWg.Add(1)
+		set := a.consumerSetWg
+		if set != nil {
+			set.Add(1)
+		}
 		go func(c struct {
 			name       string
 			filter     string
@@ -212,6 +224,9 @@ func (a *Agent) consumeModifyJobs(
 		},
 		) {
 			defer a.consumerWg.Done()
+			if set != nil {
+				defer set.Done()
+			}
 
 			opts := &natsclient.ConsumeOptions{
 				QueueGroup:  c.queueGroup,
@@ -277,31 +292,32 @@ func (a *Agent) startConsumers() {
 // startConsumersLocked is startConsumers for a caller that already holds
 // lifecycleMu, so a state change and the consumers it implies are one step.
 // When the consumers already run, it does nothing: a second set would
-// replace the cancel of the first, and stopConsumersLocked could not stop
+// replace the cancel of the first, and cancelConsumersLocked could not stop
 // it.
 func (a *Agent) startConsumersLocked() {
 	if a.consumerCancel != nil {
 		return
 	}
 	a.consumerCtx, a.consumerCancel = context.WithCancel(a.ctx)
+	a.consumerSetWg = &sync.WaitGroup{}
 	_ = a.consumeQueryJobs(a.consumerCtx, a.machineID)
 	_ = a.consumeModifyJobs(a.consumerCtx, a.machineID)
 }
 
-// stopConsumersLocked cancels the consumer context and waits for all consumer
-// goroutines to finish. After this returns, the agent is no longer receiving new
-// jobs.
-//
-// The caller holds lifecycleMu, and this waits for the consumer goroutines while
-// holding it. That is deliberate: a transition that has cancelled the consumers
-// is not finished until they have stopped, and the next transition must not
-// start before then.
-func (a *Agent) stopConsumersLocked() {
-	if a.consumerCancel != nil {
-		a.consumerCancel()
-		a.consumerCancel = nil
+// cancelConsumersLocked cancels the running set of consumers and returns
+// its wait group, or nil when no set runs. It does not wait: a drain waits
+// for the set in its own goroutine, so a consumer that is slow to stop
+// never holds lifecycleMu or the heartbeat. The caller holds lifecycleMu.
+func (a *Agent) cancelConsumersLocked() *sync.WaitGroup {
+	if a.consumerCancel == nil {
+		return nil
 	}
-	a.consumerWg.Wait()
+	a.consumerCancel()
+	a.consumerCancel = nil
+	set := a.consumerSetWg
+	a.consumerSetWg = nil
+
+	return set
 }
 
 // handleJobMessageJS is the JetStream handler of a job message.

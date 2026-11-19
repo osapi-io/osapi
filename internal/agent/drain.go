@@ -22,6 +22,9 @@ package agent
 
 import (
 	"context"
+	"log/slog"
+	"sync"
+	"time"
 
 	"github.com/osapi-io/osapi/internal/job"
 )
@@ -35,11 +38,19 @@ func (a *Agent) checkDrainFlag(
 	return a.jobClient.CheckDrainFlag(ctx, machineID)
 }
 
-// handleDrainDetection checks drain flag on each heartbeat tick.
-// When drain is requested and agent is Ready, it transitions to Draining
-// and stops accepting new jobs by stopping consumer message handlers.
-// When drain flag is removed and agent is Cordoned, it transitions back
-// to Ready and resumes accepting jobs.
+// drainStuckAfter is how long a drain waits for its consumers before it
+// reports the DrainStuck condition. A consumer stops once its fetch ends,
+// so a healthy drain takes well under this.
+var drainStuckAfter = time.Minute
+
+// handleDrainDetection checks the drain flag on each heartbeat tick. On a
+// drain of a Ready agent it cancels the consumers and moves to Draining at
+// once; finishDrain waits for them in its own goroutine and moves to
+// Cordoned. The heartbeat never waits for a consumer, so a slow or stuck
+// consumer cannot stop the agent from heartbeating (#876). On an undrain of
+// a Cordoned agent it starts the consumers and moves to Ready. An undrain
+// that comes while the agent is still Draining waits for the drain to
+// finish, and applies at the next tick.
 func (a *Agent) handleDrainDetection(
 	ctx context.Context,
 	machineID string,
@@ -47,7 +58,7 @@ func (a *Agent) handleDrainDetection(
 ) {
 	drainRequested := a.checkDrainFlag(ctx, machineID)
 
-	// The whole transition is taken under the lock: reading the state, moving the
+	// The transition is taken under the lock: reading the state, moving the
 	// consumers, and recording the new state are one step, so an enrollment
 	// acceptance arriving now waits rather than interleaving with it.
 	a.lifecycleMu.Lock()
@@ -56,17 +67,15 @@ func (a *Agent) handleDrainDetection(
 	switch {
 	case drainRequested && a.state == job.AgentStateReady:
 		a.logger.Info("drain detected, stopping job consumption")
-		a.stopConsumersLocked()
-		a.state = job.AgentStateCordoned
-		a.logger.Info("all consumers stopped, agent cordoned")
+		set := a.cancelConsumersLocked()
+		a.state = job.AgentStateDraining
 		_ = a.jobClient.WriteAgentTimelineEvent(
 			ctx, hostname, "drain", "Drain initiated",
 		)
-		_ = a.jobClient.WriteAgentTimelineEvent(
-			ctx, hostname, "cordoned", "All jobs completed",
-		)
+		a.wg.Add(1)
+		go a.finishDrain(ctx, set, hostname)
 
-	case !drainRequested && (a.state == job.AgentStateDraining || a.state == job.AgentStateCordoned):
+	case !drainRequested && a.state == job.AgentStateCordoned:
 		a.logger.Info("undrain detected, resuming job consumption")
 		a.startConsumersLocked()
 		a.state = job.AgentStateReady
@@ -74,4 +83,71 @@ func (a *Agent) handleDrainDetection(
 			ctx, hostname, "undrain", "Resumed accepting jobs",
 		)
 	}
+}
+
+// finishDrain waits for the consumers of a drained set to stop, then moves
+// the agent from Draining to Cordoned. When they take longer than
+// drainStuckAfter it logs a warning and sets drainStuck, which the
+// heartbeat reports as the DrainStuck condition, and goes on waiting.
+func (a *Agent) finishDrain(
+	ctx context.Context,
+	set *sync.WaitGroup,
+	hostname string,
+) {
+	defer a.wg.Done()
+
+	if set != nil {
+		done := make(chan struct{})
+		go func() {
+			set.Wait()
+			close(done)
+		}()
+
+		select {
+		case <-done:
+		case <-time.After(drainStuckAfter):
+			a.logger.Warn(
+				"drain stuck: job consumers have not stopped",
+				slog.Duration("after", drainStuckAfter),
+			)
+			a.lifecycleMu.Lock()
+			a.drainStuck = true
+			a.lifecycleMu.Unlock()
+			<-done
+		}
+	}
+
+	a.lifecycleMu.Lock()
+	a.drainStuck = false
+	cordoned := a.state == job.AgentStateDraining
+	if cordoned {
+		a.state = job.AgentStateCordoned
+	}
+	a.lifecycleMu.Unlock()
+
+	if cordoned {
+		a.logger.Info("all consumers stopped, agent cordoned")
+		_ = a.jobClient.WriteAgentTimelineEvent(
+			ctx, hostname, "cordoned", "All jobs completed",
+		)
+	}
+}
+
+// drainCondition is the DrainStuck condition of the agent, for the
+// heartbeat.
+func (a *Agent) drainCondition() job.Condition {
+	a.lifecycleMu.RLock()
+	stuck := a.drainStuck
+	a.lifecycleMu.RUnlock()
+
+	c := job.Condition{
+		Type:               job.ConditionDrainStuck,
+		Status:             stuck,
+		LastTransitionTime: transitionTime(job.ConditionDrainStuck, stuck, a.prevConditions),
+	}
+	if stuck {
+		c.Reason = "job consumers have not stopped since the drain"
+	}
+
+	return c
 }

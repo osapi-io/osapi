@@ -174,6 +174,7 @@ func (a *Agent) writeRegistration(
 			a.appConfig.Agent.Conditions.DiskPressureThreshold,
 			a.prevConditions,
 		),
+		a.drainCondition(),
 	}
 	a.prevConditions = conditions
 
