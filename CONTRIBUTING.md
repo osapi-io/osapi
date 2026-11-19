@@ -6,6 +6,7 @@ Thank you for your contribution to osapi.
 
 - Read the [Code of Conduct](CODE_OF_CONDUCT.md). It applies to all
   communication in this repository.
+
 - **Design pages.** The design pages of this repository are in
   [osapi-io/specs](https://github.com/osapi-io/specs), under
   `components/osapi/`. Read them before you change the behavior. When you change
@@ -13,17 +14,19 @@ Thank you for your contribution to osapi.
   repository becomes incorrect when the code changes. No check finds the
   difference.
 
-  | When you change                                          | Change this page                       |
-  | -------------------------------------------------------- | -------------------------------------- |
-  | `internal/controller/endpoint/`, its generators or rules | `components/osapi/endpoints.md`        |
-  | `internal/behavior/`, `internal/validation/rule/`        | `components/osapi/behaviors.md`        |
-  | an endpoint group under `internal/controller/endpoints/` | the page of that group                 |
-  | a permission or a role                                   | `components/osapi/permissions.md`      |
+  | When you change                                          | Change this page                  |
+  | -------------------------------------------------------- | --------------------------------- |
+  | `internal/controller/endpoint/`, its generators or rules | `components/osapi/endpoints.md`   |
+  | `internal/behavior/`, `internal/validation/rule/`        | `components/osapi/behaviors.md`   |
+  | an endpoint group under `internal/controller/endpoints/` | the page of that group            |
+  | a permission or a role                                   | `components/osapi/permissions.md` |
 
   A change to a generator or to a rule is a change to the DSL, also when no
   person asked for it. Change the page in the same work, and do not wait for a
   review to find it.
+
 - **Learn the project.** Read these pages in this order:
+
   1. [Guiding Principles][principles]. The design philosophy and the values of
      the project.
   2. [Architecture][system-architecture]. The processes, where the state is, and
@@ -32,8 +35,10 @@ Thank you for your contribution to osapi.
      structure of an endpoint.
   4. [How a request runs][job-architecture]. Targets, the KV-first job, the
      dispatch in the agent, the statuses and broadcast.
+
 - **Examine the work that exists.** Look for a pull request or an issue about
   the change. If you find one, use what it says in your work.
+
 - **Backward compatibility.** Make sure that your change does not stop a program
   that uses osapi. A change that keeps compatibility is more likely to merge. If
   your change cannot keep it, open an issue first. Then the maintainers can
