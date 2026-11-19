@@ -50,9 +50,13 @@ jobs:
         run: just fetch
       - name: Plan the jobs
         id: plan
+        # Each recipe runs on a line of its own, so that its failure fails the
+        # step. Inside `echo "$(...)"`, a failure leaves an empty matrix.
         run: |
-          echo "checks=$(just go-ci-checks)" >> "$GITHUB_OUTPUT"
-          echo "units=$(just go-unit-plan)" >> "$GITHUB_OUTPUT"
+          checks=$(just go-ci-checks)
+          units=$(just go-unit-plan)
+          echo "checks=$checks" >> "$GITHUB_OUTPUT"
+          echo "units=$units" >> "$GITHUB_OUTPUT"
 
   check:
     needs: plan
