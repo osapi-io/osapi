@@ -308,7 +308,6 @@ func newFile(
 	f := jen.NewFilePathName(path, name)
 	f.HeaderComment(generated)
 	f.ImportName("github.com/osapi-io/osapi/internal/controller/endpoint/server", "server")
-	f.ImportName("github.com/osapi-io/osapi/internal/controller/endpoint/command", "command")
 	f.ImportName("github.com/labstack/echo/v5", "echo")
 	f.ImportName("github.com/spf13/cobra", "cobra")
 

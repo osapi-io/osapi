@@ -48,7 +48,6 @@ const module = "github.com/osapi-io/osapi"
 
 const (
 	serverPath    = module + "/internal/controller/endpoint/server"
-	commandPath   = module + "/internal/controller/endpoint/command"
 	referencePath = module + "/internal/cli/reference"
 	cobraPath     = "github.com/spf13/cobra"
 	echoPath      = "github.com/labstack/echo/v5"

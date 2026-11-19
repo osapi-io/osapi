@@ -29,7 +29,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/health"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
@@ -48,9 +48,9 @@ func init() {
 	// osapi client health liveness, ready and status are generated from the
 	// health group's definition; this is how each answer prints. ready and
 	// status print their 503 too, which says what is not healthy.
-	command.Render(health.Group, "liveness", renderHealthLiveness)
-	command.Render(health.Group, "ready", renderHealthReady)
-	command.Render(health.Group, "status", renderHealthStatus)
+	clicommand.Render(health.Group, "liveness", renderHealthLiveness)
+	clicommand.Render(health.Group, "ready", renderHealthReady)
+	clicommand.Render(health.Group, "status", renderHealthStatus)
 }
 
 // renderHealthLiveness prints that the process is alive.

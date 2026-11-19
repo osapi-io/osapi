@@ -30,14 +30,15 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/cli"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -115,26 +116,6 @@ type CommandPublicTestSuite struct {
 	suite.Suite
 }
 
-func (s *CommandPublicTestSuite) TestReadFile() {
-	var reported error
-	parent := &cobra.Command{Use: "client"}
-	s.Require().NoError(command.Attach(parent, command.Deps{
-		Caller: func() command.Caller { return &caller{} },
-		JSON:   func() bool { return false },
-		Error:  func(err error) { reported = err },
-	}))
-
-	path := filepath.Join(s.T().TempDir(), "a.conf")
-	s.Require().NoError(os.WriteFile(path, []byte("data"), 0o600))
-	data, ok := command.ReadFile(path)
-	s.True(ok)
-	s.Equal("data", string(data))
-
-	_, ok = command.ReadFile(filepath.Join(s.T().TempDir(), "missing"))
-	s.False(ok)
-	s.ErrorContains(reported, "missing")
-}
-
 func (s *CommandPublicTestSuite) TestBuild() {
 	tests := []struct {
 		name     string
@@ -194,7 +175,11 @@ func (s *CommandPublicTestSuite) TestBuild() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			path, body, contentType, err := command.Build(group, group.Method(tc.method), tc.in)
+			path, body, contentType, err := endpointcommand.Build(
+				group,
+				group.Method(tc.method),
+				tc.in,
+			)
 
 			if tc.wantErr {
 				s.Error(err)
@@ -245,15 +230,15 @@ func capture(
 
 func (s *CommandPublicTestSuite) TestRun() {
 	rendered := ""
-	command.Render(group, "get", func(_ *cobra.Command, in getInput, out thing) {
+	clicommand.Render(group, "get", func(_ *cobra.Command, in getInput, out thing) {
 		rendered = in.Name + ":" + out.Name
 	})
 	acted := ""
 	probed := ""
-	command.Render(group, "probe", func(_ *cobra.Command, _ getInput, out thing) {
+	clicommand.Render(group, "probe", func(_ *cobra.Command, _ getInput, out thing) {
 		probed = out.Name
 	})
-	command.Acts(group, "retry", func(_ *cobra.Command, in retryInput, out thing) {
+	clicommand.Acts(group, "retry", func(_ *cobra.Command, in retryInput, out thing) {
 		acted = in.Body.Reason + ":" + out.Name
 	})
 
@@ -375,10 +360,11 @@ func (s *CommandPublicTestSuite) TestRun() {
 		s.Run(tc.name, func() {
 			var gotErr error
 			parent := &cobra.Command{Use: "client"}
-			s.Require().NoError(command.Attach(parent, command.Deps{
-				Caller: func() command.Caller { return tc.caller },
-				JSON:   func() bool { return tc.json },
-				Error:  func(err error) { gotErr = err },
+			endpointcommand.Use(func() endpointcommand.Caller { return tc.caller })
+			s.Require().NoError(clicommand.Attach(parent, clicommand.Deps{
+				JSON:      func() bool { return tc.json },
+				Error:     func(err error) { gotErr = err },
+				PrintJSON: cli.PrintJSON,
 			}))
 			cmd := &cobra.Command{}
 			cmd.SetContext(context.Background())
@@ -386,37 +372,22 @@ func (s *CommandPublicTestSuite) TestRun() {
 			out := capture(func() {
 				switch in := tc.in.(type) {
 				case getInput:
-					command.Run(cmd, group, tc.method, in)
+					endpointcommand.Run(cmd, group, tc.method, in)
 				case setInput:
-					command.Run(cmd, group, tc.method, in)
+					endpointcommand.Run(cmd, group, tc.method, in)
 				case retryInput:
-					command.Run(cmd, group, tc.method, in)
+					endpointcommand.Run(cmd, group, tc.method, in)
 				case badBody:
-					command.Run(cmd, group, tc.method, in)
+					endpointcommand.Run(cmd, group, tc.method, in)
 				}
 			})
 
 			tc.validateFunc(tc.caller, out, gotErr)
 			// The fake answers with no traceresponse header, so the call
 			// has no trace for a renderer to print.
-			s.Empty(command.TraceID())
+			s.Empty(clicommand.TraceID())
 		})
 	}
-}
-
-// TestAttach registers a group's commands with the command layer, and
-// attaches them under the parent.
-func (s *CommandPublicTestSuite) TestAttach() {
-	g := endpoint.Define("zzattach", "Attached things", endpoint.Get[getInput, thing]("get"))
-	get := &cobra.Command{Use: "get", Annotations: map[string]string{command.SubKey: "sub"}}
-	command.Register(g, get)
-
-	parent := &cobra.Command{Use: "client"}
-	s.Require().NoError(command.Attach(parent, command.Deps{}))
-	found, _, err := parent.Find([]string{"zzattach", "sub", "get"})
-	s.Require().NoError(err)
-	s.Same(get, found)
-	s.Equal("Attached things", found.Parent().Parent().Short)
 }
 
 func TestCommandPublicTestSuite(

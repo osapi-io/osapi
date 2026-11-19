@@ -21,9 +21,9 @@
 // Package command is the endpoint layer's runner of the generated CLI
 // commands of the endpoint groups. Each group's gen/cli.go makes one cobra
 // command for each method and registers it with the command layer,
-// internal/cli/command, through here. Run builds the method's request from
-// its typed input, sends it through the SDK, and gives the answer to the
-// command layer, which prints it.
+// internal/cli/command. Run builds the method's request from its typed
+// input, sends it through the SDK client that Use set, and gives the answer
+// to the command layer, which prints it.
 package command
 
 import (
@@ -39,7 +39,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/osapi-io/osapi/internal/cli"
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
@@ -56,64 +55,15 @@ type Caller interface {
 	) (*client.Response[json.RawMessage], error)
 }
 
-// Deps is what the commands need from the CLI.
-type Deps struct {
-	// Caller returns the SDK client.
-	Caller func() Caller
-	// JSON reports whether --json was given.
-	JSON func() bool
-	// Error reports a failed call.
-	Error func(err error)
-}
+// caller returns the SDK client, which Use sets.
+var caller func() Caller
 
-var deps Deps
-
-// SubKey is the command layer's SubKey, which the generated commands name.
-const SubKey = clicommand.SubKey
-
-// Register adds a group's generated commands to the command layer. Each
-// gen/cli.go calls it from init.
-func Register(
-	g *endpoint.Group,
-	cmds ...*cobra.Command,
+// Use sets what Run sends each request through: a function that returns
+// the SDK client, so the client is made only when a command runs.
+func Use(
+	c func() Caller,
 ) {
-	clicommand.Register(g, cmds...)
-}
-
-// Attach keeps d for Run, and attaches every registered group's commands
-// under parent, osapi client, with the command layer's Attach.
-func Attach(
-	parent *cobra.Command,
-	d Deps,
-	groups ...*cobra.Command,
-) error {
-	deps = d
-
-	return clicommand.Attach(parent, clicommand.Deps{
-		JSON:      d.JSON,
-		Error:     d.Error,
-		PrintJSON: cli.PrintJSON,
-	}, groups...)
-}
-
-// Render sets how a method's answer prints without --json, with the
-// command layer's Render.
-func Render[In, Out any](
-	g *endpoint.Group,
-	method string,
-	fn func(cmd *cobra.Command, in In, out Out),
-) {
-	clicommand.Render(g, method, fn)
-}
-
-// Acts sets what a command does with a method's answer, with or without
-// --json, with the command layer's Acts.
-func Acts[In, Out any](
-	g *endpoint.Group,
-	method string,
-	fn func(cmd *cobra.Command, in In, out Out),
-) {
-	clicommand.Acts(g, method, fn)
+	caller = c
 }
 
 // Run sends method m of g with in, and gives the answer to the command
@@ -128,15 +78,15 @@ func Run[In any](
 	m := g.Method(method)
 	path, body, contentType, err := Build(g, m, in)
 	if err != nil {
-		deps.Error(err)
+		clicommand.Report(err)
 
 		return
 	}
 
-	resp, err := deps.Caller().Send(cmd.Context(), m.Verb, path, contentType, body)
+	resp, err := caller().Send(cmd.Context(), m.Verb, path, contentType, body)
 	data, ok := answered(m, err)
 	if err != nil && !ok {
-		deps.Error(err)
+		clicommand.Report(err)
 
 		return
 	}
@@ -258,18 +208,4 @@ func answered(
 	}
 
 	return nil, false
-}
-
-// ReadFile is the command layer's ReadFile, which the generated commands
-// name for a flag of a []byte field.
-func ReadFile(
-	path string,
-) ([]byte, bool) {
-	return clicommand.ReadFile(path)
-}
-
-// TraceID is the command layer's TraceID: the trace of the call that the
-// running command made, for a renderer that prints it.
-func TraceID() string {
-	return clicommand.TraceID()
 }

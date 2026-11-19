@@ -5,8 +5,9 @@ package gen
 import (
 	"github.com/spf13/cobra"
 
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/audit"
 )
 
@@ -19,7 +20,7 @@ var auditListCmd = &cobra.Command{
 		limit, _ := cmd.Flags().GetInt("limit")
 		offset, _ := cmd.Flags().GetInt("offset")
 
-		command.Run(cmd, audit.Group, "list", audit.ListInput{Limit: limit, Offset: offset})
+		endpointcommand.Run(cmd, audit.Group, "list", audit.ListInput{Limit: limit, Offset: offset})
 	},
 	Short: "List audit log entries",
 	Use:   "list",
@@ -31,7 +32,7 @@ var auditExportCmd = &cobra.Command{
 	Example:     "  osapi client audit export --output audit.jsonl",
 	Long:        "The command gets all entries through the export endpoint of the REST API,\nand writes each entry as a JSON line (JSONL).",
 	Run: func(cmd *cobra.Command, _ []string) {
-		command.Run(cmd, audit.Group, "export", audit.ExportInput{})
+		endpointcommand.Run(cmd, audit.Group, "export", audit.ExportInput{})
 	},
 	Short: "Export audit log entries to a file",
 	Use:   "export",
@@ -45,7 +46,7 @@ var auditGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		id, _ := cmd.Flags().GetString("id")
 
-		command.Run(cmd, audit.Group, "get", audit.GetInput{ID: id})
+		endpointcommand.Run(cmd, audit.Group, "get", audit.GetInput{ID: id})
 	},
 	Short: "Get a single audit log entry",
 	Use:   "get",
@@ -59,5 +60,5 @@ func init() {
 	auditExportCmd.Flags().String("type", "file", "Export backend type")
 	auditGetCmd.Flags().String("id", "", "The audit entry ID")
 	_ = auditGetCmd.MarkFlagRequired("id")
-	command.Register(audit.Group, auditListCmd, auditExportCmd, auditGetCmd)
+	clicommand.Register(audit.Group, auditListCmd, auditExportCmd, auditGetCmd)
 }

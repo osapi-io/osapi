@@ -11,8 +11,8 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/command"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	sysctl "github.com/osapi-io/osapi/internal/behaviors/sysctl"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
-	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 )
 
 // ListRequest is the request of sysctl list: its target and its input.
@@ -218,19 +218,19 @@ var Group = endpoint.Define(
 
 func init() {
 	behavior.RegisterGroup("sysctl", Group)
-	endpointcommand.Render(Group, "list", func(_ *cobra.Command, _ ListRequest, out SysctlCollectionResponse) {
-		command.Print(sysctl.Behavior, "list", out, endpointcommand.TraceID())
+	clicommand.Render(Group, "list", func(_ *cobra.Command, _ ListRequest, out SysctlCollectionResponse) {
+		command.Print(sysctl.Behavior, "list", out, clicommand.TraceID())
 	})
-	endpointcommand.Render(Group, "get", func(_ *cobra.Command, _ GetRequest, out SysctlGetResponse) {
-		command.Print(sysctl.Behavior, "get", out, endpointcommand.TraceID())
+	clicommand.Render(Group, "get", func(_ *cobra.Command, _ GetRequest, out SysctlGetResponse) {
+		command.Print(sysctl.Behavior, "get", out, clicommand.TraceID())
 	})
-	endpointcommand.Render(Group, "create", func(_ *cobra.Command, _ CreateRequest, out SysctlCreateResponse) {
-		command.Print(sysctl.Behavior, "create", out, endpointcommand.TraceID())
+	clicommand.Render(Group, "create", func(_ *cobra.Command, _ CreateRequest, out SysctlCreateResponse) {
+		command.Print(sysctl.Behavior, "create", out, clicommand.TraceID())
 	})
-	endpointcommand.Render(Group, "update", func(_ *cobra.Command, _ UpdateRequest, out SysctlUpdateResponse) {
-		command.Print(sysctl.Behavior, "update", out, endpointcommand.TraceID())
+	clicommand.Render(Group, "update", func(_ *cobra.Command, _ UpdateRequest, out SysctlUpdateResponse) {
+		command.Print(sysctl.Behavior, "update", out, clicommand.TraceID())
 	})
-	endpointcommand.Render(Group, "delete", func(_ *cobra.Command, _ DeleteRequest, out SysctlDeleteResponse) {
-		command.Print(sysctl.Behavior, "delete", out, endpointcommand.TraceID())
+	clicommand.Render(Group, "delete", func(_ *cobra.Command, _ DeleteRequest, out SysctlDeleteResponse) {
+		command.Print(sysctl.Behavior, "delete", out, clicommand.TraceID())
 	})
 }

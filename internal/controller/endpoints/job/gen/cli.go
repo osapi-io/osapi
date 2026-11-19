@@ -5,8 +5,9 @@ package gen
 import (
 	"github.com/spf13/cobra"
 
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/job"
 )
 
@@ -20,7 +21,7 @@ var jobListCmd = &cobra.Command{
 		limit, _ := cmd.Flags().GetInt("limit")
 		offset, _ := cmd.Flags().GetInt("offset")
 
-		command.Run(cmd, job.Group, "list", job.ListInput{Status: status, Limit: limit, Offset: offset})
+		endpointcommand.Run(cmd, job.Group, "list", job.ListInput{Status: status, Limit: limit, Offset: offset})
 	},
 	Short: "List jobs",
 	Use:   "list",
@@ -34,7 +35,7 @@ var jobGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		id, _ := cmd.Flags().GetString("id")
 
-		command.Run(cmd, job.Group, "get", job.GetInput{ID: id})
+		endpointcommand.Run(cmd, job.Group, "get", job.GetInput{ID: id})
 	},
 	Short: "Get job details and status",
 	Use:   "get",
@@ -48,7 +49,7 @@ var jobDeleteCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		id, _ := cmd.Flags().GetString("id")
 
-		command.Run(cmd, job.Group, "delete", job.DeleteInput{ID: id})
+		endpointcommand.Run(cmd, job.Group, "delete", job.DeleteInput{ID: id})
 	},
 	Short: "Delete a job",
 	Use:   "delete",
@@ -63,7 +64,7 @@ var jobRetryCmd = &cobra.Command{
 		id, _ := cmd.Flags().GetString("id")
 		targetHostname, _ := cmd.Flags().GetString("target")
 
-		command.Run(cmd, job.Group, "retry", job.RetryInput{ID: id, Body: job.RetryJobRequest{TargetHostname: targetHostname}})
+		endpointcommand.Run(cmd, job.Group, "retry", job.RetryInput{ID: id, Body: job.RetryJobRequest{TargetHostname: targetHostname}})
 	},
 	Short: "Retry a failed or stuck job",
 	Use:   "retry",
@@ -80,5 +81,5 @@ func init() {
 	jobRetryCmd.Flags().String("id", "", "UUID of the job to retry")
 	_ = jobRetryCmd.MarkFlagRequired("id")
 	jobRetryCmd.Flags().StringP("target", "T", "_any", "The target of the retried job: _any, _all, a hostname, or a label such as group:web.dev")
-	command.Register(job.Group, jobListCmd, jobGetCmd, jobDeleteCmd, jobRetryCmd)
+	clicommand.Register(job.Group, jobListCmd, jobGetCmd, jobDeleteCmd, jobRetryCmd)
 }

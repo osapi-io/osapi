@@ -291,6 +291,14 @@ func Output(
 	render.fn(cmd, in, out.Elem().Interface())
 }
 
+// Report reports a failed call of the running command, through the Error
+// that Attach got.
+func Report(
+	err error,
+) {
+	deps.Error(err)
+}
+
 // ReadFile is the content of the local file at path, for a flag of a []byte
 // field. A file that it cannot read is reported, and ok is false.
 func ReadFile(

@@ -36,10 +36,12 @@ import (
 )
 
 const (
-	// commandPath is the endpoint layer's runner, which the generated
-	// commands call: Run sends the request, and Register, ReadFile and
-	// SubKey are the command layer's, through it.
-	commandPath   = "github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	// commandPath is the command layer, which registers the generated
+	// commands and reads their files.
+	commandPath = "github.com/osapi-io/osapi/internal/cli/command"
+	// runPath is the endpoint layer's runner: its Run sends a command's
+	// request.
+	runPath       = "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	referencePath = "github.com/osapi-io/osapi/internal/cli/reference"
 	cobraPath     = "github.com/spf13/cobra"
 )
@@ -52,7 +54,8 @@ func Commands(
 	g command.Group,
 	pkg string,
 ) {
-	f.ImportName(commandPath, "command")
+	f.ImportAlias(commandPath, "clicommand")
+	f.ImportAlias(runPath, "endpointcommand")
 	f.ImportName(referencePath, "reference")
 	f.ImportName(cobraPath, "cobra")
 
@@ -158,7 +161,7 @@ func Commands(
 		if len(reads) > 0 {
 			run = append(run, jen.Line())
 		}
-		run = append(run, jen.Qual(commandPath, "Run").Call(
+		run = append(run, jen.Qual(runPath, "Run").Call(
 			jen.Id("cmd"), jen.Qual(pkg, "Group"), jen.Lit(m.MethodName()), in))
 
 		examples := make([]string, 0, len(m.Examples()))

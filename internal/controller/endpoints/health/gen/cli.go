@@ -5,8 +5,9 @@ package gen
 import (
 	"github.com/spf13/cobra"
 
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/health"
 )
 
@@ -15,7 +16,7 @@ var healthLivenessCmd = &cobra.Command{
 	Example: "  osapi client health liveness\n  osapi client health liveness --json",
 	Long:    "Returns 200 if the process is alive. No checks performed.",
 	Run: func(cmd *cobra.Command, _ []string) {
-		command.Run(cmd, health.Group, "liveness", health.LivenessInput{})
+		endpointcommand.Run(cmd, health.Group, "liveness", health.LivenessInput{})
 	},
 	Short: "Liveness probe",
 	Use:   "liveness",
@@ -26,7 +27,7 @@ var healthReadyCmd = &cobra.Command{
 	Example: "  osapi client health ready\n  osapi client health ready --json",
 	Long:    "The command checks that the controller can reach NATS and the KV buckets.",
 	Run: func(cmd *cobra.Command, _ []string) {
-		command.Run(cmd, health.Group, "ready", health.ReadyInput{})
+		endpointcommand.Run(cmd, health.Group, "ready", health.ReadyInput{})
 	},
 	Short: "Readiness probe",
 	Use:   "ready",
@@ -41,12 +42,12 @@ var healthStatusCmd = &cobra.Command{
 	Example: "  osapi client health status\n  osapi client health status --json",
 	Long:    "The table has each component that registered: its status, its active\nconditions, its uptime, and the CPU and memory of its process.",
 	Run: func(cmd *cobra.Command, _ []string) {
-		command.Run(cmd, health.Group, "status", health.StatusInput{})
+		endpointcommand.Run(cmd, health.Group, "status", health.StatusInput{})
 	},
 	Short: "System status and component health",
 	Use:   "status",
 }
 
 func init() {
-	command.Register(health.Group, healthLivenessCmd, healthReadyCmd, healthStatusCmd)
+	clicommand.Register(health.Group, healthLivenessCmd, healthReadyCmd, healthStatusCmd)
 }

@@ -29,7 +29,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 )
 
@@ -47,8 +47,8 @@ func init() {
 // The agent group's commands are generated from its definition. These are
 // how each answer prints without --json.
 func init() {
-	command.Render(agent.Group, "list", renderAgentList)
-	command.Render(
+	clicommand.Render(agent.Group, "list", renderAgentList)
+	clicommand.Render(
 		agent.Group,
 		"get",
 		func(_ *cobra.Command, _ agent.GetInput, out agent.AgentInfo) {
@@ -57,12 +57,12 @@ func init() {
 	)
 	// drain and undrain answer 204, with no body:
 	// each prints what it did, with --json too.
-	command.Acts(
+	clicommand.Acts(
 		agent.Group,
 		"drain",
 		func(_ *cobra.Command, in agent.DrainInput, _ struct{}) { agentDone(in.Hostname, "draining") },
 	)
-	command.Acts(
+	clicommand.Acts(
 		agent.Group,
 		"undrain",
 		func(_ *cobra.Command, in agent.UndrainInput, _ struct{}) { agentDone(in.Hostname, "ready") },

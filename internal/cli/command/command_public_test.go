@@ -21,6 +21,7 @@
 package command_test
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -81,6 +82,17 @@ func (s *CommandPublicTestSuite) TestReadFile() {
 	_, ok = command.ReadFile(filepath.Join(s.T().TempDir(), "missing"))
 	s.False(ok)
 	s.ErrorContains(reported, "missing")
+}
+
+func (s *CommandPublicTestSuite) TestReport() {
+	var reported error
+	s.Require().NoError(command.Attach(&cobra.Command{Use: "client"}, command.Deps{
+		Error: func(err error) { reported = err },
+	}))
+
+	command.Report(errors.New("api error (404): not found"))
+
+	s.EqualError(reported, "api error (404): not found")
 }
 
 func (s *CommandPublicTestSuite) TestTraceID() {

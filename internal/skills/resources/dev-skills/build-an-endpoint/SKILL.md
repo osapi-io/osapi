@@ -73,8 +73,9 @@ Ask the code and the binary before you read prose:
 3. When `Deps` gets its first field, give it in
    `internal/controller/handlers.go`, as `agentDeps` does. While it is empty,
    the controller needs no wiring.
-4. In `cmd/client_<group>.go`, the file of the group's command, add a `command.Render` for each method
-   a person reads at a shell. A method without one prints its answer as JSON.
+4. In `cmd/client_<group>.go`, the file of the group's command, add a
+   `command.Render` from `internal/cli/command` for each method a person reads
+   at a shell. A method without one prints its answer as JSON.
 5. A new operation changes the API: run `TestJoinedSpec` with `-update`, and
    keep the diff.
 
@@ -163,9 +164,10 @@ The CLI:
    gets `.Use`, such as `facts keys list`. A command that `.Sub` makes has
    a hand-written parent, so its help says what it holds.
 2. In `cmd/client_<group>.go`, the file of the group's command, add a
-   `command.Render` for each method, with the output code of the hand-written
-   command. A command that acts on the answer, such as an export that writes a
-   file, uses `command.Acts`, which runs with `--json` too. `--json` prints the
+   `command.Render` from `internal/cli/command` for each method, with the output
+   code of the hand-written command. A command that acts on the answer, such as
+   an export that writes a file, uses `command.Acts` from the same package,
+   which runs with `--json` too. `--json` prints the
    API's answer otherwise, not a shape of its own.
 3. Run `go generate ./internal/controller/endpoints/all`. It writes
    `gen/cli.go`.

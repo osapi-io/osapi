@@ -31,7 +31,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
+	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -61,16 +62,17 @@ func (c caller) Send(
 }
 
 // Sent runs the command line args under osapi client, such as next node
-// sysctl update --target server1 --key vm.swappiness, through the endpoint
-// command runtime, and returns the request the command sent to the API.
+// sysctl update --target server1 --key vm.swappiness, through the command
+// layer and the endpoint layer's runner, and returns the request the
+// command sent to the API.
 func Sent(
 	t *testing.T,
 	args []string,
 ) Request {
 	var sent Request
 	root := &cobra.Command{Use: "client"}
-	require.NoError(t, command.Attach(root, command.Deps{
-		Caller: func() command.Caller { return caller{sent: &sent} },
+	endpointcommand.Use(func() endpointcommand.Caller { return caller{sent: &sent} })
+	require.NoError(t, clicommand.Attach(root, clicommand.Deps{
 		// The call fails, so the command reports the error and never asks
 		// whether to print JSON.
 		JSON:  testing.Short,

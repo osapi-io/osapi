@@ -5,8 +5,9 @@ package gen
 import (
 	"github.com/spf13/cobra"
 
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
-	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/admission"
 )
 
@@ -18,7 +19,7 @@ var admissionListCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		state, _ := cmd.Flags().GetString("state")
 
-		command.Run(cmd, admission.Group, "list", admission.ListInput{State: state})
+		endpointcommand.Run(cmd, admission.Group, "list", admission.ListInput{State: state})
 	},
 	Short: "List admission records",
 	Use:   "list",
@@ -32,7 +33,7 @@ var admissionGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		machineID, _ := cmd.Flags().GetString("machine-id")
 
-		command.Run(cmd, admission.Group, "get", admission.MachineInput{MachineID: machineID})
+		endpointcommand.Run(cmd, admission.Group, "get", admission.MachineInput{MachineID: machineID})
 	},
 	Short: "Get a machine's admission record",
 	Use:   "get",
@@ -47,7 +48,7 @@ var admissionAdmitCmd = &cobra.Command{
 		machineID, _ := cmd.Flags().GetString("machine-id")
 		fingerprint, _ := cmd.Flags().GetString("fingerprint")
 
-		command.Run(cmd, admission.Group, "admit", admission.AdmitInput{MachineID: machineID, Body: admission.AdmitRequest{Fingerprint: fingerprint}})
+		endpointcommand.Run(cmd, admission.Group, "admit", admission.AdmitInput{MachineID: machineID, Body: admission.AdmitRequest{Fingerprint: fingerprint}})
 	},
 	Short: "Admit a pending machine",
 	Use:   "admit",
@@ -62,7 +63,7 @@ var admissionRejectCmd = &cobra.Command{
 		machineID, _ := cmd.Flags().GetString("machine-id")
 		reason, _ := cmd.Flags().GetString("reason")
 
-		command.Run(cmd, admission.Group, "reject", admission.RejectInput{MachineID: machineID, Body: admission.RejectRequest{Reason: reason}})
+		endpointcommand.Run(cmd, admission.Group, "reject", admission.RejectInput{MachineID: machineID, Body: admission.RejectRequest{Reason: reason}})
 	},
 	Short: "Reject a pending machine",
 	Use:   "reject",
@@ -76,7 +77,7 @@ var admissionRevokeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		machineID, _ := cmd.Flags().GetString("machine-id")
 
-		command.Run(cmd, admission.Group, "revoke", admission.MachineInput{MachineID: machineID})
+		endpointcommand.Run(cmd, admission.Group, "revoke", admission.MachineInput{MachineID: machineID})
 	},
 	Short: "Revoke an admitted machine",
 	Use:   "revoke",
@@ -90,7 +91,7 @@ var admissionDeleteCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		machineID, _ := cmd.Flags().GetString("machine-id")
 
-		command.Run(cmd, admission.Group, "delete", admission.MachineInput{MachineID: machineID})
+		endpointcommand.Run(cmd, admission.Group, "delete", admission.MachineInput{MachineID: machineID})
 	},
 	Short: "Delete a machine",
 	Use:   "delete",
@@ -111,5 +112,5 @@ func init() {
 	_ = admissionRevokeCmd.MarkFlagRequired("machine-id")
 	admissionDeleteCmd.Flags().String("machine-id", "", "The machine ID of the node")
 	_ = admissionDeleteCmd.MarkFlagRequired("machine-id")
-	command.Register(admission.Group, admissionListCmd, admissionGetCmd, admissionAdmitCmd, admissionRejectCmd, admissionRevokeCmd, admissionDeleteCmd)
+	clicommand.Register(admission.Group, admissionListCmd, admissionGetCmd, admissionAdmitCmd, admissionRejectCmd, admissionRevokeCmd, admissionDeleteCmd)
 }
