@@ -263,12 +263,9 @@ func newMetricsProvider(
 					if err := json.Unmarshal(kvEntry.Value(), &reg); err != nil {
 						continue
 					}
-					// The agent's scheduling state, as agent list shows it: a
-					// drained agent is Draining or Cordoned, not Ready.
-					status := reg.State
-					if status == "" {
-						status = string(job.AgentStateReady)
-					}
+					// The agent's scheduling state, by the same rule as agent
+					// list: a drain the agent has not applied yet is Draining.
+					status := job.EffectiveState(reg.State, jc.CheckDrainFlag(fnCtx, reg.MachineID))
 					entry = health.ComponentEntry{
 						Type:     "agent",
 						Hostname: reg.Hostname,

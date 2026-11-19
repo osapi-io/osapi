@@ -294,10 +294,10 @@ func (c *Client) getAgent(
 	return nil, fmt.Errorf("agent %s: %w", target, job.ErrNotFound)
 }
 
-// overlayDrainState checks if a drain flag exists for the agent and
-// overrides the reported state. The agent always reports its own view
-// (Ready), but the operator may have drained it via the API. Drain
-// flags are stored in the agent-state KV bucket (no TTL).
+// overlayDrainState sets the agent's state by job.EffectiveState, from the
+// state the agent reported at its last heartbeat and its drain flag. A
+// drain the agent has not applied yet is Draining. Drain flags are stored
+// in the agent-state KV bucket (no TTL).
 func (c *Client) overlayDrainState(
 	ctx context.Context,
 	info *job.AgentInfo,
@@ -308,9 +308,7 @@ func (c *Client) overlayDrainState(
 
 	key := "drain." + info.MachineID
 	_, err := c.natsClient.KVGet(ctx, c.stateBucket, key)
-	if err == nil {
-		info.State = job.AgentStateCordoned
-	}
+	info.State = job.EffectiveState(info.State, err == nil)
 }
 
 // mergeFacts reads facts from the facts KV bucket and merges them into the
