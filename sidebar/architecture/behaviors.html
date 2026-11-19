@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Behaviors | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/behaviors"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Behaviors | OSAPI"><meta data-rh="true" name="description" content="A behavior is one thing that osapi manages on a host, for example kernel"><meta data-rh="true" property="og:description" content="A behavior is one thing that osapi manages on a host, for example kernel"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/behaviors"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/behaviors" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/behaviors" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"Behaviors","item":"https://osapi-io.github.io/osapi/sidebar/architecture/behaviors"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.053c18c5.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.4cfa9d87.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.16b6cbd0.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.e9dbb312.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -50,7 +50,7 @@ routes, permissions, platforms, settings and types. You do not need to look in
 a different place, and the answer always agrees with the build that you run.</li>
 <li class=""><strong>The permissions come from the methods.</strong> The permissions of a behavior are
 <code>&lt;name&gt;:read</code> and <code>&lt;name&gt;:write</code>. The built-in roles give them.
-<code>osapi token roles</code> lists each permission of each role.</li>
+<code>osapi token roles list</code> lists each permission of each role.</li>
 <li class=""><strong>Skipped is not failed.</strong> In a fleet with more than one platform, the hosts
 that a behavior does not run on report <code>skipped</code>. When the agent starts, it
 writes to the log the behaviors that it cannot run.</li>

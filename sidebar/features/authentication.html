@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Authentication &amp; RBAC | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/authentication"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Authentication &amp; RBAC | OSAPI"><meta data-rh="true" name="description" content="OSAPI uses JWT bearer tokens for authentication and fine-grained resource:verb"><meta data-rh="true" property="og:description" content="OSAPI uses JWT bearer tokens for authentication and fine-grained resource:verb"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/authentication"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/authentication" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/authentication" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Authentication & RBAC","item":"https://osapi-io.github.io/osapi/sidebar/features/authentication"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.053c18c5.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.4cfa9d87.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.16b6cbd0.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.e9dbb312.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -44,11 +44,11 @@ permissions:</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="roles-and-permissions">Roles and permissions<a href="#roles-and-permissions" class="hash-link" aria-label="Direct link to Roles and permissions" title="Direct link to Roles and permissions" translate="no">​</a></h2>
 <p>There are three built-in roles, <code>admin</code>, <code>write</code> and <code>read</code>. To see every
 permission each grants, as the binary you run has them, list them:</p>
-<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi token roles</span><br></div></code></pre></div></div>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi token roles list</span><br></div></code></pre></div></div>
 <p>Use that list, because it changes when osapi gets new behaviors. The permissions
 of a behavior are <code>&lt;name&gt;:read</code> and <code>&lt;name&gt;:write</code>. <code>admin</code> and <code>write</code> give the
 two permissions. <code>read</code> gives the read permission.
-<a class="" href="/osapi/sidebar/usage/cli/token/roles"><code>token roles</code></a> shows its output.</p>
+<a class="" href="/osapi/sidebar/usage/cli/token/roles/list"><code>token roles list</code></a> shows its output.</p>
 <p><code>command:execute</code> and <code>command:shell</code> are two different permissions.
 <code>command:execute</code> controls the <code>exec</code> endpoint, which takes an argument list.
 <code>command:shell</code> controls the <code>shell</code> endpoint, which uses <code>/bin/sh -c</code>. By
