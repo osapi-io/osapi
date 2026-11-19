@@ -23,12 +23,73 @@ on:
       - 'internal/controller/api/**/*.yaml'
       - 'cfg.yaml'
       - '.github/workflows/go.yml'
+      - '.github/actions/setup/**'
 
 permissions:
   contents: read
 
+# Each check is a job of its own, and the unit tests are split across shards,
+# so the slowest job sets the time and not the sum of them. `just test` runs
+# the same checks in series on a laptop.
 jobs:
-  build:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        check:
+          - just-fmt-check
+          - docs-fmt-check
+          - react-fmt-check
+          - behavior-gen-check
+          - go-generate-check
+          - docs-gen-check
+          - go-pkg-check
+          - cli-docs-gen-check
+          - behavior-scaffold-check
+          - endpoint-scaffold-check
+          - behavior-cover-check
+          - go-mod-check
+          - go-fmt-check
+          - go-vet
+    name: ${{ matrix.check }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      # golangci-lint keeps the result of each package in its own cache. A
+      # cold run takes about two minutes, a warm one a few seconds.
+      - name: Restore the lint cache
+        if: matrix.check == 'go-vet'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/golangci-lint
+          key: golangci-${{ hashFiles('go.sum', '.golangci.yml') }}-${{ github.sha }}
+          restore-keys: golangci-${{ hashFiles('go.sum', '.golangci.yml') }}-
+      - name: ${{ matrix.check }}
+        run: just ${{ matrix.check }}
+
+  unit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
+    name: unit ${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - name: Linux tuning
+        run: just linux-tune
+      - name: Unit tests, shard ${{ matrix.shard }} of 6
+        run: just go-unit-shard ${{ matrix.shard }} 6
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cover-${{ matrix.shard }}
+          path: .coverage/shard-${{ matrix.shard }}.out
+          retention-days: 1
+
+  coverage:
+    needs: unit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -36,28 +97,23 @@ jobs:
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
-      - name: Set up Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 24
-      - name: Install Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       - name: Install just
         uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
       - name: Fetch justfiles
         run: just fetch
-      - name: Deps
-        run: |
-          just go-deps
-          just react-deps
-      - name: Test
-        run: just test
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: cover-*
+          path: .coverage
+          merge-multiple: true
+      - name: Merge the shards and check the coverage target
+        run: just go-cover-merge
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
-          # Name the profile explicitly. `just test` filters it through
-          # .coverignore; auto-discovery could pick up an unfiltered one and
-          # report a different number for the same commit.
+          # Name the profile explicitly. go-cover-merge filters it through
+          # .coverignore; auto-discovery could pick up a shard's unfiltered
+          # one and report a different number for the same commit.
           files: .coverage/cover.out
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

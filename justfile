@@ -79,6 +79,35 @@ test: linux-tune
     just go-test
     just behavior-cover-check
 
+# Run one shard of the unit tests, with the race detector and coverage
+#
+# CI splits the packages into count shards and runs each in a job of its own.
+# A package goes to shard index by its place in go list, so a new package
+# joins a shard with no change here. Each shard writes
+# .coverage/shard-<index>.out, and go-cover-merge joins them.
+go-unit-shard index count:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p .coverage
+    pkgs=$(go list ./... | grep -v /node_modules/ | awk -v n={{ count }} -v i={{ index }} '(NR - 1) % n == i')
+    go test {{ go_os_tags }} -race -coverprofile=.coverage/shard-{{ index }}.out $pkgs
+
+# Join the coverage of the unit test shards, and fail below the target
+#
+# The profile that it writes is the one that go-unit-cov writes for one run:
+# filtered through .coverignore, at .coverage/cover.out.
+go-cover-merge:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    {
+        echo "mode: atomic"
+        for f in .coverage/shard-*.out; do tail -n +2 "$f"; done
+    } | grep -v -f .coverignore > .coverage/cover.out
+    total=$(go tool cover -func=.coverage/cover.out | awk '$1=="total:"{print $NF}' | tr -d '%')
+    awk -v t="$total" -v g="{{ go_coverage_target }}" 'BEGIN{exit !(t+0 < g+0)}' \
+      && { go tool cover -func=.coverage/cover.out | grep -v '100.0%$' >&2; echo "coverage ${total}% is below target {{ go_coverage_target }}%" >&2; exit 1; } \
+      || echo "coverage ${total}% meets target {{ go_coverage_target }}%"
+
 # Fail when a behavior that osapi behavior new writes does not pass its tests
 #
 # The scaffold must keep up with the checks of behaviortest, as each behavior
