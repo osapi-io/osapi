@@ -53,26 +53,44 @@ function groupComponents(
 function RegistryHeader({ entry }: { entry?: ComponentEntry }) {
   if (!entry) return null;
   return (
-    <div className="flex items-center gap-3 border-b border-border/30 px-3 py-2 text-xs">
-      {entry.hostname && (
-        <span className="font-medium text-text">{entry.hostname}</span>
-      )}
-      {entry.status && (
-        <Badge variant={statusVariant(entry.status)}>{entry.status}</Badge>
-      )}
-      {entry.conditions && entry.conditions.length > 0 && (
-        <span className="text-status-pending">
-          {entry.conditions.join(", ")}
-        </span>
-      )}
-      <div className="ml-auto flex items-center gap-3 text-text-muted">
-        {entry.age && <span>{entry.age}</span>}
-        {entry.cpu_percent != null && (
-          <span>{entry.cpu_percent.toFixed(1)}%</span>
+    <div className="border-b border-border/30 px-3 py-2 text-xs">
+      <div className="flex items-center gap-3 whitespace-nowrap">
+        {entry.hostname && (
+          <span
+            className="min-w-0 truncate font-medium text-text"
+            title={entry.hostname}
+          >
+            {entry.hostname}
+          </span>
         )}
-        {entry.mem_bytes != null && <span>{formatBytes(entry.mem_bytes)}</span>}
-        {entry.version && <span className="font-mono">{entry.version}</span>}
+        {entry.status && (
+          <Badge variant={statusVariant(entry.status)}>{entry.status}</Badge>
+        )}
+        {entry.conditions && entry.conditions.length > 0 && (
+          <span className="text-status-pending">
+            {entry.conditions.join(", ")}
+          </span>
+        )}
+        <div className="ml-auto flex shrink-0 items-center gap-3 text-text-muted">
+          {entry.age && <span>{entry.age}</span>}
+          {entry.cpu_percent != null && (
+            <span>{entry.cpu_percent.toFixed(1)}%</span>
+          )}
+          {entry.mem_bytes != null && (
+            <span>{formatBytes(entry.mem_bytes)}</span>
+          )}
+        </div>
       </div>
+      {/* The version on a line of its own: it is long, and its end, the
+          commit, is the part a reader compares. */}
+      {entry.version && (
+        <p
+          className="mt-0.5 truncate font-mono text-[10px] text-text-muted"
+          title={entry.version}
+        >
+          {entry.version}
+        </p>
+      )}
     </div>
   );
 }

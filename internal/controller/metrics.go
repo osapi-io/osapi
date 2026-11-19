@@ -204,7 +204,13 @@ func newMetricsProvider(
 			}
 
 			details := make([]health.AgentDetail, 0, len(agents))
+			ready := 0
 			for _, a := range agents {
+				// A drained agent is registered but takes no jobs, so it is
+				// not ready.
+				if a.State == "" || a.State == job.AgentStateReady {
+					ready++
+				}
 				labels := ""
 				for k, v := range a.Labels {
 					if labels != "" {
@@ -222,7 +228,7 @@ func newMetricsProvider(
 
 			return &health.AgentMetrics{
 				Total:  len(agents),
-				Ready:  len(agents), // presence in KV = Ready
+				Ready:  ready,
 				Agents: details,
 			}, nil
 		},
